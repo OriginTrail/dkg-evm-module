@@ -1,0 +1,11 @@
+.DS_Store
+/.idea/*
+/node_modules/*
+/build/*
+
+coverage/*
+metadata/*
+coverage.json
+.rpc
+.secret
+.env
