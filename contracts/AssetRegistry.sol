@@ -77,7 +77,6 @@ contract AssetRegistry is Ownable {
 
     function createAsset(bytes32 assertionId, uint256 size, uint256 visibility, uint256 holdingTimeInYears, uint256 tokenAmount) public returns (uint256 _UAI) {
         require(assertionId != 0, "assertionId cannot be zero");
-        require(AssertionRegistry(hub.getContractAddress("AssertionRegistry")).getTimestamp(assertionId) == 0, "assertionId already exists!");
 
         IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
         require(tokenContract.allowance(msg.sender, address(this)) >= tokenAmount, "Sender allowance must be equal to or higher than chosen amount");
@@ -88,7 +87,9 @@ contract AssetRegistry is Ownable {
         require(assetRecords[UAI].timestamp == 0, "UAI already exists!");
 
         // TODO introduce old holding contract?
-        AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(assertionId, msg.sender, size, visibility);
+        if (AssertionRegistry(hub.getContractAddress("AssertionRegistry")).getTimestamp(assertionId) == 0) {
+            AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(assertionId, msg.sender, size, visibility);
+        }
         tokenContract.transferFrom(msg.sender, address(this), tokenAmount);
         assetRecords[UAI].assetStake += tokenAmount;
 
@@ -117,12 +118,13 @@ contract AssetRegistry is Ownable {
 
     function updateAsset(uint256 UAI, bytes32 assertionId, uint256 size, uint256 visibility, uint256 tokenAmount) public {
         require(assertionId != 0, "assertionId cannot be zero");
-        require(AssertionRegistry(hub.getContractAddress("AssertionRegistry")).getTimestamp(assertionId) == 0, "assertionId already exists!");
 
         address owner = UAIRegistry(hub.getContractAddress("UAIRegistry")).ownerOf(UAI);
         require(owner == msg.sender, "Only owner can update an asset");
 
-        AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(assertionId, msg.sender, size, visibility);
+        if (AssertionRegistry(hub.getContractAddress("AssertionRegistry")).getTimestamp(assertionId) == 0) {
+            AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(assertionId, msg.sender, size, visibility);
+        }
 
         IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
         tokenContract.transferFrom(msg.sender, address(this), tokenAmount);
@@ -143,169 +145,169 @@ contract AssetRegistry is Ownable {
         return epochs;
     }
 
-//    function getEpochs(uint256 UAI) public view returns (uint256 [] memory) {
-//        return assetRecords[UAI].epochs;
-//    }
-//
-//    function getEpoch(uint256 UAI) public view returns (uint) {
-//        uint i;
-//        require(block.number >= assetRecords[UAI].epochs[0] && block.number <= assetRecords[UAI].epochs[assetRecords[UAI].epochs.length - 1], "UAI has expired.");
-//        for (i = 1; i < assetRecords[UAI].epochs.length - 1; i++) {
-//            if (block.number < assetRecords[UAI].epochs[i]) {
-//                return i - 1;
-//            }
-//        }
-//
-//        return i - 1;
-//    }
-//
-//    function getEpoch(uint256 UAI, uint256 blockNumber) public view returns (uint256) {
-//        uint i;
-//        require(block.number >= assetRecords[UAI].epochs[0] && block.number <= assetRecords[UAI].epochs[assetRecords[UAI].epochs.length - 1], "UAI has expired.");
-//        for (i = 1; i < assetRecords[UAI].epochs.length - 1; i++) {
-//            if (blockNumber < assetRecords[UAI].epochs[i]) {
-//                return i - 1;
-//            }
-//        }
-//
-//        return i - 1;
-//    }
-//
-//    function isEpochActive(uint256 UAI, uint256 epoch) public view returns (bool) {
-//        if (assetRecords[UAI].epochs.length - 1 > epoch) {
-//            if (assetRecords[UAI].epochs[epoch] <= block.number && assetRecords[UAI].epochs[epoch] + _epochValidityInBlocks >= block.number) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-//
-//    function hammingDistance(bytes32 x, bytes32 y) public view returns (uint) {
-//        bytes32 xor = x ^ y;
-//        uint distance = 0;
-//        for (uint i = 0; i < xor.length; i++) {
-//            distance += bytesLookup[xor[i] >> 4];
-//            distance += bytesLookup[(xor[i] << 4) >> 4];
-//        }
-//
-//        return distance;
-//    }
-//
-//    function getChallenge(uint256 UAI, uint256 blockNumber, address identity) public view returns (uint256) {
-////        require(ERC734(identity).keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 2), "Sender does not have action permission for identity!");
-//        uint256 epoch = getEpoch(UAI, blockNumber);
-//        bool isActive = isEpochActive(UAI, epoch);
-//
-//        if (isActive) {
-//            return calculateChallenge(UAI, blockNumber, identity);
-//        } else {
-//            return 0;
-//        }
-//    }
-//
-//    function calculateChallenge(uint256 UAI, uint256 blockNumber, address identity) public view returns (uint256) {
-//        return uint256(sha256(abi.encodePacked(blockhash(blockNumber), identity))) % assetRecords[UAI].size;
-//    }
-//
-//
-//    function getContributionRank(uint256 UAI, uint256 epoch, address identity) public view returns (uint256) {
-//        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-//        bytes32 nodeId = profileStorage.getNodeId(identity);
-//        uint256 distance = hammingDistance(nodeId, sha256(abi.encodePacked(UAI)));
-//        uint i;
-//        for (i = 0; i < assetRecords[UAI].holderCount[epoch]; i++) {
-//            if (assetRecords[UAI].holderDistances[epoch][i] > distance)
-//            {
-//                return i;
-//            }
-//        }
-//        return i;
-//    }
-//
-//    function getContributors(uint256 UAI) public view returns (bytes32 [][] memory, uint256[][] memory, uint256[][] memory, uint256 [] memory) {
-//        return (assetRecords[UAI].holderIds, assetRecords[UAI].holderDistances, assetRecords[UAI].holderPrices, assetRecords[UAI].holderCount);
-//    }
-//
-//
-//    function addContributor(uint256 UAI, uint256 epoch, uint rank, uint256 price, address identity) internal {
-//        uint256 length = assetRecords[UAI].holderCount[epoch];
-//        for (uint i = length; i >= rank + 1; i--) {
-//            if (i == 3) {
-//                continue;
-//            }
-//            assetRecords[UAI].holderIds[epoch][i] = assetRecords[UAI].holderIds[epoch][i - 1];
-//            assetRecords[UAI].holderDistances[epoch][i] = assetRecords[UAI].holderDistances[epoch][i - 1];
-//            assetRecords[UAI].holderPrices[epoch][i] = assetRecords[UAI].holderPrices[epoch][i - 1];
-//        }
-//
-//        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-//        bytes32 nodeId = profileStorage.getNodeId(identity);
-//
-//        assetRecords[UAI].holderIds[epoch][rank] = nodeId;
-//        assetRecords[UAI].holderDistances[epoch][rank] = hammingDistance(nodeId, sha256(abi.encodePacked(UAI)));
-//        assetRecords[UAI].holderPrices[epoch][rank] = price;
-//
-//        if (length < 3) {
+    //    function getEpochs(uint256 UAI) public view returns (uint256 [] memory) {
+    //        return assetRecords[UAI].epochs;
+    //    }
+    //
+    //    function getEpoch(uint256 UAI) public view returns (uint) {
+    //        uint i;
+    //        require(block.number >= assetRecords[UAI].epochs[0] && block.number <= assetRecords[UAI].epochs[assetRecords[UAI].epochs.length - 1], "UAI has expired.");
+    //        for (i = 1; i < assetRecords[UAI].epochs.length - 1; i++) {
+    //            if (block.number < assetRecords[UAI].epochs[i]) {
+    //                return i - 1;
+    //            }
+    //        }
+    //
+    //        return i - 1;
+    //    }
+    //
+    //    function getEpoch(uint256 UAI, uint256 blockNumber) public view returns (uint256) {
+    //        uint i;
+    //        require(block.number >= assetRecords[UAI].epochs[0] && block.number <= assetRecords[UAI].epochs[assetRecords[UAI].epochs.length - 1], "UAI has expired.");
+    //        for (i = 1; i < assetRecords[UAI].epochs.length - 1; i++) {
+    //            if (blockNumber < assetRecords[UAI].epochs[i]) {
+    //                return i - 1;
+    //            }
+    //        }
+    //
+    //        return i - 1;
+    //    }
+    //
+    //    function isEpochActive(uint256 UAI, uint256 epoch) public view returns (bool) {
+    //        if (assetRecords[UAI].epochs.length - 1 > epoch) {
+    //            if (assetRecords[UAI].epochs[epoch] <= block.number && assetRecords[UAI].epochs[epoch] + _epochValidityInBlocks >= block.number) {
+    //                return true;
+    //            }
+    //        }
+    //        return false;
+    //    }
+    //
+    //    function hammingDistance(bytes32 x, bytes32 y) public view returns (uint) {
+    //        bytes32 xor = x ^ y;
+    //        uint distance = 0;
+    //        for (uint i = 0; i < xor.length; i++) {
+    //            distance += bytesLookup[xor[i] >> 4];
+    //            distance += bytesLookup[(xor[i] << 4) >> 4];
+    //        }
+    //
+    //        return distance;
+    //    }
+    //
+    //    function getChallenge(uint256 UAI, uint256 blockNumber, address identity) public view returns (uint256) {
+    ////        require(ERC734(identity).keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 2), "Sender does not have action permission for identity!");
+    //        uint256 epoch = getEpoch(UAI, blockNumber);
+    //        bool isActive = isEpochActive(UAI, epoch);
+    //
+    //        if (isActive) {
+    //            return calculateChallenge(UAI, blockNumber, identity);
+    //        } else {
+    //            return 0;
+    //        }
+    //    }
+    //
+    //    function calculateChallenge(uint256 UAI, uint256 blockNumber, address identity) public view returns (uint256) {
+    //        return uint256(sha256(abi.encodePacked(blockhash(blockNumber), identity))) % assetRecords[UAI].size;
+    //    }
+    //
+    //
+    //    function getContributionRank(uint256 UAI, uint256 epoch, address identity) public view returns (uint256) {
+    //        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+    //        bytes32 nodeId = profileStorage.getNodeId(identity);
+    //        uint256 distance = hammingDistance(nodeId, sha256(abi.encodePacked(UAI)));
+    //        uint i;
+    //        for (i = 0; i < assetRecords[UAI].holderCount[epoch]; i++) {
+    //            if (assetRecords[UAI].holderDistances[epoch][i] > distance)
+    //            {
+    //                return i;
+    //            }
+    //        }
+    //        return i;
+    //    }
+    //
+    //    function getContributors(uint256 UAI) public view returns (bytes32 [][] memory, uint256[][] memory, uint256[][] memory, uint256 [] memory) {
+    //        return (assetRecords[UAI].holderIds, assetRecords[UAI].holderDistances, assetRecords[UAI].holderPrices, assetRecords[UAI].holderCount);
+    //    }
+    //
+    //
+    //    function addContributor(uint256 UAI, uint256 epoch, uint rank, uint256 price, address identity) internal {
+    //        uint256 length = assetRecords[UAI].holderCount[epoch];
+    //        for (uint i = length; i >= rank + 1; i--) {
+    //            if (i == 3) {
+    //                continue;
+    //            }
+    //            assetRecords[UAI].holderIds[epoch][i] = assetRecords[UAI].holderIds[epoch][i - 1];
+    //            assetRecords[UAI].holderDistances[epoch][i] = assetRecords[UAI].holderDistances[epoch][i - 1];
+    //            assetRecords[UAI].holderPrices[epoch][i] = assetRecords[UAI].holderPrices[epoch][i - 1];
+    //        }
+    //
+    //        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+    //        bytes32 nodeId = profileStorage.getNodeId(identity);
+    //
+    //        assetRecords[UAI].holderIds[epoch][rank] = nodeId;
+    //        assetRecords[UAI].holderDistances[epoch][rank] = hammingDistance(nodeId, sha256(abi.encodePacked(UAI)));
+    //        assetRecords[UAI].holderPrices[epoch][rank] = price;
+    //
+    //        if (length < 3) {
 
-//            assetRecords[UAI].holderCount[epoch] += 1;
-//        }
-//    }
-//
-//    function answerChallenge(uint256 UAI, uint256 blockNumber, bytes32 [] memory proof, bytes32 leaf, uint256 price, address identity) public {
-//        require(UAIRegistry(hub.getContractAddress("UAIRegistry")).exists(UAI) == true, "ERC721 token doesn't exist!");
-//        require(price <= assetRecords[UAI].priceLimit, "Price limit has been exceeded!");
-//        require(UAIRegistry(hub.getContractAddress("UAIRegistry")).exists(UAI) == true, "ERC721 token doesn't exist!");
-////        require(ERC734(identity).keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 2), "Sender does not have action permission for identity!");
-//
-//        uint256 epoch = getEpoch(UAI, blockNumber);
-//        bool isActive = isEpochActive(UAI, epoch);
-//
-//        require(isActive);
-//
-//        // TODO Bid with lower price
-//        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-//        bytes32 nodeId = profileStorage.getNodeId(identity);
-//        for (uint256 i = 0; i < assetRecords[UAI].holderCount[epoch]; i++) {
-//            require(nodeId != assetRecords[UAI].holderIds[epoch][i], "Node has already answered the challenge!");
-//        }
-//
-//        uint256 challenge = calculateChallenge(UAI, blockNumber, identity);
-//        uint256 rank = getContributionRank(UAI, epoch, identity);
-//        // 0, 1, 2, 3
-//        require(rank < 3, "Contribution rank is too low");
-//
-//        require(MerkleProof.verify(proof, assetRecords[UAI].stateCommitHash, keccak256(abi.encodePacked(leaf, challenge))), "Root hash doesn't match");
-//        addContributor(UAI, epoch, rank, price, identity);
-//    }
-//
-//
-//    function getReward(uint256 UAI, uint256 epoch, address identity) public {
-//        require(ERC734(identity).keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 2), "Sender does not have action permission for identity!");
-//        require(UAIRegistry(hub.getContractAddress("UAIRegistry")).exists(UAI) == true, "ERC721 token doesn't exist!");
-//
-//        bool isActive = isEpochActive(UAI, epoch);
-//
-//        require(isActive == false);
-//
-//        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-//        bytes32 nodeId = profileStorage.getNodeId(identity);
-//
-//        for (uint i = 0; i < assetRecords[UAI].holderCount[epoch]; i++) {
-//            if (assetRecords[UAI].holderIds[epoch][i] == nodeId) {
-//                uint256 amount = assetRecords[UAI].holderPrices[epoch][i];
-//                require(amount > 0);
-//                assetRecords[UAI].holderPrices[epoch][i] = 0;
-//                assetRecords[UAI].stake -= amount;
-//                profileStorage.setStake(identity, profileStorage.getStake(identity) + amount);
-//                IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
-//                //                require(tokenContract.allowance(msg.sender, address(this)) >= tokenAmount, "Sender allowance must be equal to or higher than chosen amount");
-//                //                require(tokenContract.balanceOf(msg.sender) >= tokenAmount, "Sender balance must be equal to or higher than chosen amount!");
-//                tokenContract.transfer(hub.getContractAddress("ProfileStorage"), amount);
-//
-//                break;
-//            }
-//        }
-//    }
+    //            assetRecords[UAI].holderCount[epoch] += 1;
+    //        }
+    //    }
+    //
+    //    function answerChallenge(uint256 UAI, uint256 blockNumber, bytes32 [] memory proof, bytes32 leaf, uint256 price, address identity) public {
+    //        require(UAIRegistry(hub.getContractAddress("UAIRegistry")).exists(UAI) == true, "ERC721 token doesn't exist!");
+    //        require(price <= assetRecords[UAI].priceLimit, "Price limit has been exceeded!");
+    //        require(UAIRegistry(hub.getContractAddress("UAIRegistry")).exists(UAI) == true, "ERC721 token doesn't exist!");
+    ////        require(ERC734(identity).keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 2), "Sender does not have action permission for identity!");
+    //
+    //        uint256 epoch = getEpoch(UAI, blockNumber);
+    //        bool isActive = isEpochActive(UAI, epoch);
+    //
+    //        require(isActive);
+    //
+    //        // TODO Bid with lower price
+    //        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+    //        bytes32 nodeId = profileStorage.getNodeId(identity);
+    //        for (uint256 i = 0; i < assetRecords[UAI].holderCount[epoch]; i++) {
+    //            require(nodeId != assetRecords[UAI].holderIds[epoch][i], "Node has already answered the challenge!");
+    //        }
+    //
+    //        uint256 challenge = calculateChallenge(UAI, blockNumber, identity);
+    //        uint256 rank = getContributionRank(UAI, epoch, identity);
+    //        // 0, 1, 2, 3
+    //        require(rank < 3, "Contribution rank is too low");
+    //
+    //        require(MerkleProof.verify(proof, assetRecords[UAI].stateCommitHash, keccak256(abi.encodePacked(leaf, challenge))), "Root hash doesn't match");
+    //        addContributor(UAI, epoch, rank, price, identity);
+    //    }
+    //
+    //
+    //    function getReward(uint256 UAI, uint256 epoch, address identity) public {
+    //        require(ERC734(identity).keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 2), "Sender does not have action permission for identity!");
+    //        require(UAIRegistry(hub.getContractAddress("UAIRegistry")).exists(UAI) == true, "ERC721 token doesn't exist!");
+    //
+    //        bool isActive = isEpochActive(UAI, epoch);
+    //
+    //        require(isActive == false);
+    //
+    //        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+    //        bytes32 nodeId = profileStorage.getNodeId(identity);
+    //
+    //        for (uint i = 0; i < assetRecords[UAI].holderCount[epoch]; i++) {
+    //            if (assetRecords[UAI].holderIds[epoch][i] == nodeId) {
+    //                uint256 amount = assetRecords[UAI].holderPrices[epoch][i];
+    //                require(amount > 0);
+    //                assetRecords[UAI].holderPrices[epoch][i] = 0;
+    //                assetRecords[UAI].stake -= amount;
+    //                profileStorage.setStake(identity, profileStorage.getStake(identity) + amount);
+    //                IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
+    //                //                require(tokenContract.allowance(msg.sender, address(this)) >= tokenAmount, "Sender allowance must be equal to or higher than chosen amount");
+    //                //                require(tokenContract.balanceOf(msg.sender) >= tokenAmount, "Sender balance must be equal to or higher than chosen amount!");
+    //                tokenContract.transfer(hub.getContractAddress("ProfileStorage"), amount);
+    //
+    //                break;
+    //            }
+    //        }
+    //    }
 
     // getters
     function getCommitHash(uint256 UAI, uint256 offset) public view returns (bytes32 commitHash){
