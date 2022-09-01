@@ -1,5 +1,3 @@
-const {assert} = require('chai');
-
 var AssertionRegistry = artifacts.require('AssertionRegistry'); // eslint-disable-line no-undef
 var AssetRegistry = artifacts.require('AssetRegistry'); // eslint-disable-line no-undef
 var UAIRegistry = artifacts.require('UAIRegistry'); // eslint-disable-line no-undef
@@ -8,22 +6,6 @@ var ProfileStorage = artifacts.require('ProfileStorage'); // eslint-disable-line
 var Profile = artifacts.require('Profile'); // eslint-disable-line no-undef
 var Identity = artifacts.require('Identity'); // eslint-disable-line no-undef
 
-const {sha256} = require('multiformats/hashes/sha2');
-var {xor} = require('uint8arrays/xor');
-var hexToBinary = require('hex-to-binary');
-const {MerkleTree} = require('merkletreejs')
-const keccak256 = require('keccak256')
-const PeerId = require('peer-id')
-
-const {
-    BN,
-    time,
-} = require('@openzeppelin/test-helpers');
-
-const {
-    formatAssertion,
-    calculateRoot
-} = require('assertion-tools');
 
 
 
