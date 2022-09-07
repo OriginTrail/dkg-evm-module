@@ -44,6 +44,7 @@ module.exports = async (deployer, network, accounts) => {
     switch (network) {
         case 'development':
         case 'ganache':
+        case 'rinkeby':
         case 'test':
         case 'mumbai':
             await deployer.deploy(Hub, {gas: 6000000, from: accounts[0]})
