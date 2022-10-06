@@ -6,11 +6,6 @@
   "directories": {
     "test": "test"
   },
-  "exports": {
-    ".": {
-        "default": "./index.js"
-    }
-  },
   "scripts": {
     "test": "truffle test",
     "coverage": "truffle run coverage",
