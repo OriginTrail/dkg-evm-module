@@ -57,20 +57,20 @@ contract('DKG v6 Sharding Table', async (accounts) => {
     it('Push new peers; Update peer params; Remove peers; Getters', async () => {
         var peer1 = {
             "id": "QmHNJmNvsJo8jmEjrGGzNCZNoQhnjqT6m87xGcSGHSmpB",
-            "stake": 50000,
             "ask": 1,
+            "stake": 50000,
         };
 
         var peer2 = {
             "id": "ZmHNfmNvsJo8jPEjrGJzNCZNoQknjqT6m87xGcSGHSmpA",
-            "stake": 75000,
             "ask": 4,
+            "stake": 75000,
         }
 
         var peer3 = {
             "id": "FmHNJm4vsJo8pmEjrGGVNCZloQhJjqT6m87xGcSGHSmpC",
-            "stake": 66000,
             "ask": 2,
+            "stake": 66000,
         }
 
         var head, tail, peerCount, table;
@@ -82,7 +82,7 @@ contract('DKG v6 Sharding Table', async (accounts) => {
         assert.equal(tail.toString(), "");
         assert.equal(peerCount.toNumber(), 0);
 
-        await shardingTable.pushBack(peer1.id, peer1.stake, peer1.ask);
+        await shardingTable.pushBack(peer1.id, peer1.ask, peer1.stake);
 
         head = await shardingTable.head();
         tail = await shardingTable.tail();
@@ -93,16 +93,16 @@ contract('DKG v6 Sharding Table', async (accounts) => {
 
         var peer1Params = await shardingTable.getPeer("QmHNJmNvsJo8jmEjrGGzNCZNoQhnjqT6m87xGcSGHSmpB");
         assert.equal(peer1Params[0], "QmHNJmNvsJo8jmEjrGGzNCZNoQhnjqT6m87xGcSGHSmpB");
-        assert.equal(peer1Params[1], 50000);
-        assert.equal(peer1Params[2], 1);
+        assert.equal(peer1Params[1], 1);
+        assert.equal(peer1Params[2], 50000);
 
-        await shardingTable.updateParams("QmHNJmNvsJo8jmEjrGGzNCZNoQhnjqT6m87xGcSGHSmpB", 55000, 2);
+        await shardingTable.updateParams("QmHNJmNvsJo8jmEjrGGzNCZNoQhnjqT6m87xGcSGHSmpB", 2, 55000);
         var peer1Params = await shardingTable.getPeer("QmHNJmNvsJo8jmEjrGGzNCZNoQhnjqT6m87xGcSGHSmpB");
         assert.equal(peer1Params[0], "QmHNJmNvsJo8jmEjrGGzNCZNoQhnjqT6m87xGcSGHSmpB");
-        assert.equal(peer1Params[1], 55000);
-        assert.equal(peer1Params[2], 2);
+        assert.equal(peer1Params[1], 2);
+        assert.equal(peer1Params[2], 55000);
 
-        await shardingTable.pushFront(peer2.id, peer2.stake, peer2.ask);
+        await shardingTable.pushFront(peer2.id, peer2.ask, peer2.stake);
 
         head = await shardingTable.head();
         tail = await shardingTable.tail();
@@ -111,7 +111,7 @@ contract('DKG v6 Sharding Table', async (accounts) => {
         assert.equal(tail, "QmHNJmNvsJo8jmEjrGGzNCZNoQhnjqT6m87xGcSGHSmpB");
         assert.equal(peerCount, 2);
 
-        await shardingTable.pushBack(peer3.id, peer3.stake, peer3.ask);
+        await shardingTable.pushBack(peer3.id, peer3.ask, peer3.stake);
 
         head = await shardingTable.head();
         tail = await shardingTable.tail();
@@ -129,22 +129,22 @@ contract('DKG v6 Sharding Table', async (accounts) => {
                     "",  // prevPeer
                     "QmHNJmNvsJo8jmEjrGGzNCZNoQhnjqT6m87xGcSGHSmpB",  // nextPeer
                     "ZmHNfmNvsJo8jPEjrGJzNCZNoQknjqT6m87xGcSGHSmpA",  // id
+                    "4",  // ask
                     "75000",  // stake
-                    "4"  // ask
                 ],
                 [
                     "ZmHNfmNvsJo8jPEjrGJzNCZNoQknjqT6m87xGcSGHSmpA",  // prevPeer
                     "FmHNJm4vsJo8pmEjrGGVNCZloQhJjqT6m87xGcSGHSmpC",  // nextPeer
                     "QmHNJmNvsJo8jmEjrGGzNCZNoQhnjqT6m87xGcSGHSmpB",  // id
+                    "2",  // ask
                     "55000",  // stake
-                    "2"  // ask
                 ],
                 [
                     "QmHNJmNvsJo8jmEjrGGzNCZNoQhnjqT6m87xGcSGHSmpB",  // prevPeer
                     "",  // nextPeer
                     "FmHNJm4vsJo8pmEjrGGVNCZloQhJjqT6m87xGcSGHSmpC",  // id
+                    "2",  // ask
                     "66000",  // stake
-                    "2"  // ask
                 ]
             ]
         );
@@ -166,15 +166,15 @@ contract('DKG v6 Sharding Table', async (accounts) => {
                     "",  // prevPeer
                     "FmHNJm4vsJo8pmEjrGGVNCZloQhJjqT6m87xGcSGHSmpC",  // nextPeer
                     "ZmHNfmNvsJo8jPEjrGJzNCZNoQknjqT6m87xGcSGHSmpA",  // id
+                    "4",  // ask
                     "75000",  // stake
-                    "4"  // ask
                 ],
                 [
                     "ZmHNfmNvsJo8jPEjrGJzNCZNoQknjqT6m87xGcSGHSmpA",  // prevPeer
                     "",  // nextPeer
                     "FmHNJm4vsJo8pmEjrGGVNCZloQhJjqT6m87xGcSGHSmpC",  // id
+                    "2",  // ask
                     "66000",  // stake
-                    "2"  // ask
                 ]
             ]
         );
@@ -196,8 +196,8 @@ contract('DKG v6 Sharding Table', async (accounts) => {
                     "",  // prevPeer
                     "",  // nextPeer
                     "FmHNJm4vsJo8pmEjrGGVNCZloQhJjqT6m87xGcSGHSmpC",  // id
+                    "2",  // ask
                     "66000",  // stake
-                    "2"  // ask
                 ]
             ]
         );
