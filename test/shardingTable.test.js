@@ -210,5 +210,11 @@ contract('DKG v6 Sharding Table', async (accounts) => {
         assert.equal(head, "");
         assert.equal(tail, "");
         assert.equal(peerCount, 0);
+
+        table = await shardingTable.getShardingTable();
+        assert.deepEqual(
+            table,
+            [],
+        );
     });
 });

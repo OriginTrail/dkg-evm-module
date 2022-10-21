@@ -45,9 +45,15 @@ contract ShardingTable {
         view
         returns (Peer[] memory)
     {
-        require(nodesNumber > 0, "Nodes number must be positive!");
+        require(nodesNumber >= 0, "Nodes number must be non-negative!");
 
-        Peer[] memory peersPage = new Peer[](nodesNumber);
+        Peer[] memory peersPage;
+
+        if (nodesNumber == 0) {
+            return peersPage;
+        }
+
+        peersPage = new Peer[](nodesNumber);
 
         peersPage[0] = peers[startingPeerId];
         uint16 i = 1;
