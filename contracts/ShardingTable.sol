@@ -22,22 +22,13 @@ contract ShardingTable {
     uint16 public peerCount;
 
     mapping(string => Peer) peers;
+    mapping(string => bytes32) peerIdKeccak256;
 
     constructor() {
         emptyPointer = "";
         head = emptyPointer;
         tail = emptyPointer;
         peerCount = 0;
-    }
-
-    function getPeer(string calldata peerId)
-        external
-        view
-        returns (string memory, uint8, uint32)
-    {
-        Peer memory peer = peers[peerId];
-
-        return (peer.id, peer.ask, peer.stake);
     }
 
     function getShardingTable(string memory startingPeerId, uint16 nodesNumber)
@@ -121,6 +112,7 @@ contract ShardingTable {
         }
 
         delete peers[peerId];
+        delete peerIdKeccak256[peerId];
 
         peerCount -= 1;
     
@@ -150,6 +142,7 @@ contract ShardingTable {
         );
 
         peers[peerId] = newPeer;
+        peerIdKeccak256[peerId] = keccak256(bytes(peerId));
 
         emit PeerObjCreated(peerId, ask, stake);
     }
@@ -175,9 +168,9 @@ contract ShardingTable {
 
     function _equalIds(string memory _firstId, string memory _secondId)
         internal
-        pure
+        view
         returns (bool)
     {
-        return keccak256(bytes(_firstId)) == keccak256(bytes(_secondId));
+        return peerIdKeccak256[_firstId] == peerIdKeccak256[_secondId];
     }
 }
