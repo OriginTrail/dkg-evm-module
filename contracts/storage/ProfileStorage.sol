@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Hub} from '../Hub.sol';
 
 contract ProfileStorage {
-    event StakeUpdated(address identity, uint256 stake);
+    event StakeUpdated(bytes32 nodeId, uint256 stake);
 
     Hub public hub;
     
@@ -78,7 +78,7 @@ contract ProfileStorage {
     public onlyContracts {
         profile[identity].stake = stake;
 
-        emit StakeUpdated(identity, stake);
+        emit StakeUpdated(this.getNodeId(identity), stake);
     }
     function setStakeReserved(address identity, uint256 stakeReserved) 
     public onlyContracts {
