@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {ProfileStorage} from './storage/ProfileStorage.sol';
+import {ShardingTable} from './ShardingTable.sol';
 import {Ownable, Hub} from './Hub.sol';
 import {Identity, ERC734} from './Identity.sol';
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -11,7 +12,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract Profile {
     Hub public hub;
 
-    uint256 public minimalStake = 3*10**21;
+    uint256 public minimalStake = 5*10**22;
     uint256 public withdrawalTime = 5 minutes;
 
     constructor(address hubAddress) {
@@ -40,18 +41,23 @@ contract Profile {
     event TokensReleased(address profile, uint256 amount);
     event TokensTransferred(address sender, address receiver, uint256 amount);
 
-    function createProfile(address managementWallet, bytes32 nodeId, uint256 initialBalance, address identity) public {
-        require(managementWallet!=address(0));
+    function createProfile(address managementWallet, bytes32 nodeId, uint256 initialBalance, address identity, uint256 initialAsk) public {
+        require(managementWallet != address(0));
         ERC20 tokenContract = ERC20(hub.getContractAddress("Token"));
         require(tokenContract.allowance(msg.sender, address(this)) >= initialBalance, "Sender allowance must be equal to or higher than initial balance");
         require(tokenContract.balanceOf(msg.sender) >= initialBalance, "Sender balance must be equal to or higher than initial balance!");
         require(uint256(nodeId) != 0, "Cannot create a profile without a nodeId submitted");
 
+        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
+
         tokenContract.transferFrom(msg.sender, hub.getContractAddress("ProfileStorage"), initialBalance);
         require(ERC734(identity).keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 2),  "Sender does not have action permission for identity!");
 
-        ProfileStorage(hub.getContractAddress("ProfileStorage")).setStake(identity, initialBalance);
-        ProfileStorage(hub.getContractAddress("ProfileStorage")).setNodeId(identity, nodeId);
+        profileStorage.setStake(identity, initialBalance);
+        profileStorage.setNodeId(identity, nodeId);
+
+        shardingTable.pushBack(identity, initialAsk);
 
         emit ProfileCreated(identity, initialBalance);
     }
@@ -100,6 +106,7 @@ contract Profile {
         require(ERC734(identity).keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 1),  "Sender does not have management permission for identity!");
 
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
 
         require(profileStorage.getWithdrawalPending(identity) == true, "Cannot withdraw tokens before starting token withdrawal!");
         require(profileStorage.getWithdrawalTimestamp(identity) < block.timestamp, "Cannot withdraw tokens before withdrawal timestamp!");
@@ -113,6 +120,10 @@ contract Profile {
         );
 
         profileStorage.setWithdrawalPending(identity, false);
+
+        if (profileStorage.getStake(identity) == 0) {
+            shardingTable.removeNode(identity);
+        }
 
         emit TokensWithdrawn(
             identity,

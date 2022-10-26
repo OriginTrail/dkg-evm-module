@@ -2,175 +2,199 @@
 
 pragma solidity^0.8.0;
 
+import {Hub} from './Hub.sol';
+import {ProfileStorage} from './storage/ProfileStorage.sol';
+
 
 contract ShardingTable {
-    event PeerObjCreated(string peerId, uint8 ask, uint32 stake);
-    event PeerRemoved(string peerId);
-    event PeerParamsUpdated(string peerId, uint8 ask, uint32 stake);
+    event NodeObjCreated(bytes32 nodeId, uint256 ask, uint256 stake);
+    event NodeRemoved(bytes32 nodeId);
 
-    struct Peer {
-        string prevPeer;
-        string nextPeer;
-        string id;
-        uint8 ask;
-        uint32 stake;
+    struct Node {
+        bytes32 prevNodeId;
+        bytes32 nextNodeId;
+        bytes32 id;
+        address identity;
+        uint256 ask;
     }
 
-    string private emptyPointer;
-    string public head;
-    string public tail;
-    uint16 public peerCount;
+    struct NodeInfo {
+        bytes32 id;
+        uint256 ask;
+        uint256 stake;
+    }
 
-    mapping(string => Peer) peers;
-    mapping(string => bytes32) peerIdKeccak256;
+    Hub public hub;
 
-    constructor() {
-        emptyPointer = "";
+    bytes32 private emptyPointer;
+    bytes32 public head;
+    bytes32 public tail;
+    uint16 public nodeCount;
+
+    mapping(bytes32 => Node) nodes;
+
+    constructor(address hubAddress) {
+        require(hubAddress != address(0));
+        hub = Hub(hubAddress);
+
+        emptyPointer = bytes32(0);
         head = emptyPointer;
         tail = emptyPointer;
-        peerCount = 0;
+        nodeCount = 0;
     }
 
-    function getShardingTable(string memory startingPeerId, uint16 nodesNumber)
+    function getShardingTable(bytes32 startingNodeId, uint16 nodesNumber)
         public
         view
-        returns (Peer[] memory)
+        returns (NodeInfo[] memory)
     {
         require(nodesNumber >= 0, "Nodes number must be non-negative!");
 
-        Peer[] memory peersPage;
+        NodeInfo[] memory nodesPage;
 
         if (nodesNumber == 0) {
-            return peersPage;
+            return nodesPage;
         }
 
-        peersPage = new Peer[](nodesNumber);
+        nodesPage = new NodeInfo[](nodesNumber);
 
-        peersPage[0] = peers[startingPeerId];
+        ProfileStorage profileStorageContract = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+
+        nodesPage[0] = NodeInfo(
+            startingNodeId,
+            nodes[startingNodeId].ask,  // TODO: profileStorageContract.getAsk(nodes[startingNodeId].identity),
+            profileStorageContract.getStake(nodes[startingNodeId].identity)
+        );
+
         uint16 i = 1;
+        while (i < nodesNumber && !_equalIds(nodes[nodesPage[i-1].id].nextNodeId, emptyPointer)) {
+            bytes32 nextNodeId = nodes[nodesPage[i-1].id].nextNodeId;
 
-        while (i < nodesNumber && !_equalIds(peersPage[i-1].nextPeer, emptyPointer)) {
-            peersPage[i] = peers[peersPage[i-1].nextPeer];
+            nodesPage[i] = NodeInfo(
+                nextNodeId,
+                nodes[nextNodeId].ask,  // TODO: profileStorageContract.getAsk(nodes[nextNodeId].identity),
+                profileStorageContract.getStake(nodes[nextNodeId].identity)
+            );
             i += 1;
         }
-        return peersPage;
+        return nodesPage;
     }
 
     function getShardingTable()
         public
         view
-        returns (Peer[] memory)
+        returns (NodeInfo[] memory)
     {
-        return getShardingTable(head, peerCount);
+        return getShardingTable(head, nodeCount);
     }
 
-    function pushBack(string memory peerId, uint8 ask, uint32 stake)
+    function pushBack(address identity, uint256 ask)
         public
     {
-        _createPeer(peerId, ask, stake);
+        _createNodeObj(identity, ask);
+    
+        ProfileStorage profileStorageContract = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        bytes32 nodeId = profileStorageContract.getNodeId(identity);
 
-        if (!_equalIds(tail, emptyPointer)) _link(tail, peerId);
-        _setTail(peerId);
+        if (!_equalIds(tail, emptyPointer)) _link(tail, nodeId);
+        _setTail(nodeId);
 
-        if (_equalIds(head, emptyPointer)) _setHead(peerId);
+        if (_equalIds(head, emptyPointer)) _setHead(nodeId);
 
-        peerCount += 1;
+        nodeCount += 1;
     }
 
-    function pushFront(string memory peerId, uint8 ask, uint32 stake)
+    function pushFront(address identity, uint256 ask)
         public
     {
-        _createPeer(peerId, ask, stake);
+        _createNodeObj(identity, ask);
 
-        if (!_equalIds(head, emptyPointer)) _link(peerId, head);
-        _setHead(peerId);
+        ProfileStorage profileStorageContract = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        bytes32 nodeId = profileStorageContract.getNodeId(identity);
 
-        if (_equalIds(tail, emptyPointer)) _setTail(peerId);
+        if (!_equalIds(head, emptyPointer)) _link(nodeId, head);
+        _setHead(nodeId);
 
-        peerCount += 1;
+        if (_equalIds(tail, emptyPointer)) _setTail(nodeId);
+
+        nodeCount += 1;
     }
 
-    function removePeer(string memory peerId)
+    function removeNode(address identity)
         public
     {
-        Peer memory removedPeer = peers[peerId];
+        ProfileStorage profileStorageContract = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        bytes32 nodeId = profileStorageContract.getNodeId(identity);
 
-        if (_equalIds(head, peerId) && _equalIds(tail, peerId)) {
+        Node memory nodeToRemove = nodes[nodeId];
+
+        if (_equalIds(head, nodeId) && _equalIds(tail, nodeId)) {
             _setHead(emptyPointer);
             _setTail(emptyPointer);
         }
-        else if (_equalIds(head, peerId)) {
-            _setHead(removedPeer.nextPeer);
-            peers[head].prevPeer = emptyPointer;
+        else if (_equalIds(head, nodeId)) {
+            _setHead(nodeToRemove.nextNodeId);
+            nodes[head].prevNodeId = emptyPointer;
         }
-        else if (_equalIds(tail, peerId)) {
-            _setTail(removedPeer.prevPeer);
-            peers[tail].nextPeer = emptyPointer;
+        else if (_equalIds(tail, nodeId)) {
+            _setTail(nodeToRemove.prevNodeId);
+            nodes[tail].nextNodeId = emptyPointer;
         }
         else {
-            _link(removedPeer.prevPeer, removedPeer.nextPeer);
+            _link(nodeToRemove.prevNodeId, nodeToRemove.nextNodeId);
         }
 
-        delete peers[peerId];
-        delete peerIdKeccak256[peerId];
+        delete nodes[nodeId];
 
-        peerCount -= 1;
+        nodeCount -= 1;
     
-        emit PeerRemoved(peerId);
+        emit NodeRemoved(nodeId);
     }
 
-    function updateParams(string memory peerId, uint8 newAsk, uint32 newStake)
-        external
-    {
-        Peer storage peer = peers[peerId];
-
-        peer.ask = newAsk;
-        peer.stake = newStake;
-
-        emit PeerParamsUpdated(peerId, peer.ask, peer.stake);
-    }
-
-    function _createPeer(string memory peerId, uint8 ask, uint32 stake)
+    function _createNodeObj(address identity, uint256 ask)
         internal
     {
-        Peer memory newPeer = Peer(
+        ProfileStorage profileStorageContract = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+
+        bytes32 nodeId = profileStorageContract.getNodeId(identity);
+
+        Node memory newNode = Node(
             emptyPointer,
             emptyPointer,
-            peerId,
-            ask,
-            stake
+            nodeId,
+            identity,
+            ask
         );
 
-        peers[peerId] = newPeer;
-        peerIdKeccak256[peerId] = keccak256(bytes(peerId));
+        nodes[nodeId] = newNode;
 
-        emit PeerObjCreated(peerId, ask, stake);
+        emit NodeObjCreated(nodeId, ask, profileStorageContract.getStake(identity));
     }
 
-    function _setHead(string memory peerId)
+    function _setHead(bytes32 nodeId)
         internal
     {
-        head = peerId;
+        head = nodeId;
     }
 
-    function _setTail(string memory peerId)
+    function _setTail(bytes32 nodeId)
         internal
     {
-        tail = peerId;
+        tail = nodeId;
     }
 
-    function _link(string memory _leftPeerId, string memory _rightPeerId)
+    function _link(bytes32 _leftNodeId, bytes32 _rightNodeId)
         internal
     {
-        peers[_leftPeerId].nextPeer = _rightPeerId;
-        peers[_rightPeerId].prevPeer = _leftPeerId;
+        nodes[_leftNodeId].nextNodeId = _rightNodeId;
+        nodes[_rightNodeId].prevNodeId = _leftNodeId;
     }
 
-    function _equalIds(string memory _firstId, string memory _secondId)
+    function _equalIds(bytes32 _firstId, bytes32 _secondId)
         internal
-        view
+        pure
         returns (bool)
     {
-        return peerIdKeccak256[_firstId] == peerIdKeccak256[_secondId];
+        return _firstId == _secondId;
     }
 }
