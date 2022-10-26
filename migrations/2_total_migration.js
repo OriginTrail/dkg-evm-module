@@ -104,7 +104,7 @@ module.exports = async (deployer, network, accounts) => {
                 });
             await hub.setContractAddress('Profile', profile.address);
 
-            await deployer.deploy(ShardingTable, {gas: 6000000, from: accounts[0]})
+            await deployer.deploy(ShardingTable, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     shardingTable = result;
                 });
