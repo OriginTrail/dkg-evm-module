@@ -1,13 +1,13 @@
 var BN = require('bn.js');
 
 var Hub = artifacts.require('Hub'); // eslint-disable-line no-undef
+var ShardingTable = artifacts.require('ShardingTable'); // eslint-disable-line no-undef
 var AssertionRegistry = artifacts.require('AssertionRegistry'); // eslint-disable-line no-undef
 var UAIRegistry = artifacts.require('UAIRegistry'); // eslint-disable-line no-undef
 var assetRegistry = artifacts.require('assetRegistry'); // eslint-disable-line no-undef
 var ERC20Token = artifacts.require('ERC20Token'); // eslint-disable-line no-undef
 var ProfileStorage = artifacts.require('ProfileStorage'); // eslint-disable-line no-undef
 var Profile = artifacts.require('Profile'); // eslint-disable-line no-undef
-var ShardingTable = artifacts.require('ShardingTable'); // eslint-disable-line no-undef
 
 const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
     "0x2f2697b2a7BB4555687EF76f8fb4C3DFB3028E57",
@@ -53,6 +53,12 @@ module.exports = async (deployer, network, accounts) => {
                     hub = result;
                 });
             await hub.setContractAddress('Owner', accounts[0]);
+
+            await deployer.deploy(ShardingTable, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    shardingTable = result;
+                });
+            await hub.setContractAddress('ShardingTable', shardingTable.address);
 
             await deployer.deploy(AssertionRegistry, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
@@ -104,20 +110,14 @@ module.exports = async (deployer, network, accounts) => {
                 });
             await hub.setContractAddress('Profile', profile.address);
 
-            await deployer.deploy(ShardingTable, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    shardingTable = result;
-                });
-            await hub.setContractAddress('ShardingTable', shardingTable.address);
-
             console.log('\n\n \t Contract adresses on ganache:');
             console.log(`\t Hub address: ${hub.address}`);
+            console.log(`\t Sharding table: ${shardingTable.address}`);
             console.log(`\t Assertion registry address: ${assertionRegistry.address}`);
             console.log(`\t Asset registry address: ${assetRegistry.address}`);
             console.log(`\t Token address: ${erc20Token.address}`);
             console.log(`\t Profile storage address: ${profileStorage.address}`);
             console.log(`\t Profile address: ${profile.address}`);
-            console.log(`\t Sharding table: ${shardingTable.address}`)
 
             break;
         default:
