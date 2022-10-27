@@ -7,43 +7,44 @@ import {ProfileStorage} from './storage/ProfileStorage.sol';
 
 
 contract ShardingTable {
-    event NodeObjCreated(bytes32 nodeId, uint256 ask, uint256 stake);
-    event NodeRemoved(bytes32 nodeId);
+    event NodeObjCreated(bytes nodeId, uint256 ask, uint256 stake, bytes32 nodeIdSha256);
+    event NodeRemoved(bytes nodeId);
 
     struct Node {
-        bytes32 prevNodeId;
-        bytes32 nextNodeId;
-        bytes32 id;
         address identity;
-        uint256 ask;
+        bytes id;
+        bytes prevNodeId;
+        bytes nextNodeId;
+        bytes32 id_sha256;
     }
 
     struct NodeInfo {
-        bytes32 id;
+        bytes id;
         uint256 ask;
         uint256 stake;
+        bytes32 id_sha256;
     }
 
     Hub public hub;
 
-    bytes32 private emptyPointer;
-    bytes32 public head;
-    bytes32 public tail;
+    bytes private emptyPointer;
+    bytes public head;
+    bytes public tail;
     uint16 public nodeCount;
 
-    mapping(bytes32 => Node) nodes;
+    mapping(bytes => Node) nodes;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
         hub = Hub(hubAddress);
 
-        emptyPointer = bytes32(0);
+        emptyPointer = "";
         head = emptyPointer;
         tail = emptyPointer;
         nodeCount = 0;
     }
 
-    function getShardingTable(bytes32 startingNodeId, uint16 nodesNumber)
+    function getShardingTable(bytes memory startingNodeId, uint16 nodesNumber)
         public
         view
         returns (NodeInfo[] memory)
@@ -62,18 +63,20 @@ contract ShardingTable {
 
         nodesPage[0] = NodeInfo(
             startingNodeId,
-            nodes[startingNodeId].ask,  // TODO: profileStorageContract.getAsk(nodes[startingNodeId].identity),
-            profileStorageContract.getStake(nodes[startingNodeId].identity)
+            profileStorageContract.getAsk(nodes[startingNodeId].identity),
+            profileStorageContract.getStake(nodes[startingNodeId].identity),
+            nodes[startingNodeId].id_sha256
         );
 
         uint16 i = 1;
         while (i < nodesNumber && !_equalIds(nodes[nodesPage[i-1].id].nextNodeId, emptyPointer)) {
-            bytes32 nextNodeId = nodes[nodesPage[i-1].id].nextNodeId;
+            bytes memory nextNodeId = nodes[nodesPage[i-1].id].nextNodeId;
 
             nodesPage[i] = NodeInfo(
                 nextNodeId,
-                nodes[nextNodeId].ask,  // TODO: profileStorageContract.getAsk(nodes[nextNodeId].identity),
-                profileStorageContract.getStake(nodes[nextNodeId].identity)
+                profileStorageContract.getAsk(nodes[nextNodeId].identity),
+                profileStorageContract.getStake(nodes[nextNodeId].identity),
+                nodes[nextNodeId].id_sha256
             );
             i += 1;
         }
@@ -88,13 +91,13 @@ contract ShardingTable {
         return getShardingTable(head, nodeCount);
     }
 
-    function pushBack(address identity, uint256 ask)
+    function pushBack(address identity)
         public
     {
-        _createNodeObj(identity, ask);
+        _createNodeObj(identity);
     
         ProfileStorage profileStorageContract = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        bytes32 nodeId = profileStorageContract.getNodeId(identity);
+        bytes memory nodeId = profileStorageContract.getNodeId(identity);
 
         if (!_equalIds(tail, emptyPointer)) _link(tail, nodeId);
         _setTail(nodeId);
@@ -104,13 +107,13 @@ contract ShardingTable {
         nodeCount += 1;
     }
 
-    function pushFront(address identity, uint256 ask)
+    function pushFront(address identity)
         public
     {
-        _createNodeObj(identity, ask);
+        _createNodeObj(identity);
 
         ProfileStorage profileStorageContract = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        bytes32 nodeId = profileStorageContract.getNodeId(identity);
+        bytes memory nodeId = profileStorageContract.getNodeId(identity);
 
         if (!_equalIds(head, emptyPointer)) _link(nodeId, head);
         _setHead(nodeId);
@@ -124,7 +127,7 @@ contract ShardingTable {
         public
     {
         ProfileStorage profileStorageContract = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        bytes32 nodeId = profileStorageContract.getNodeId(identity);
+        bytes memory nodeId = profileStorageContract.getNodeId(identity);
 
         Node memory nodeToRemove = nodes[nodeId];
 
@@ -151,50 +154,56 @@ contract ShardingTable {
         emit NodeRemoved(nodeId);
     }
 
-    function _createNodeObj(address identity, uint256 ask)
+    function _createNodeObj(address identity)
         internal
     {
         ProfileStorage profileStorageContract = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
-        bytes32 nodeId = profileStorageContract.getNodeId(identity);
+        bytes memory nodeId = profileStorageContract.getNodeId(identity);
+        bytes32 nodeIdSha256 = sha256(nodeId);
 
         Node memory newNode = Node(
-            emptyPointer,
-            emptyPointer,
-            nodeId,
             identity,
-            ask
+            nodeId,
+            emptyPointer,
+            emptyPointer,
+            nodeIdSha256
         );
 
         nodes[nodeId] = newNode;
 
-        emit NodeObjCreated(nodeId, ask, profileStorageContract.getStake(identity));
+        emit NodeObjCreated(
+            nodeId,
+            profileStorageContract.getAsk(identity),
+            profileStorageContract.getStake(identity),
+            nodeIdSha256
+        );
     }
 
-    function _setHead(bytes32 nodeId)
+    function _setHead(bytes memory nodeId)
         internal
     {
         head = nodeId;
     }
 
-    function _setTail(bytes32 nodeId)
+    function _setTail(bytes memory nodeId)
         internal
     {
         tail = nodeId;
     }
 
-    function _link(bytes32 _leftNodeId, bytes32 _rightNodeId)
+    function _link(bytes memory _leftNodeId, bytes memory _rightNodeId)
         internal
     {
         nodes[_leftNodeId].nextNodeId = _rightNodeId;
         nodes[_rightNodeId].prevNodeId = _leftNodeId;
     }
 
-    function _equalIds(bytes32 _firstId, bytes32 _secondId)
+    function _equalIds(bytes memory _firstId, bytes memory _secondId)
         internal
         pure
         returns (bool)
     {
-        return _firstId == _secondId;
+        return keccak256(_firstId) == keccak256(_secondId);
     }
 }

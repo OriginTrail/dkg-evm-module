@@ -28,7 +28,7 @@ contract Profile {
 
     event ProfileCreated(address profile, uint256 initialBalance);
     event IdentityCreated(address profile, address newIdentity);
-    event IdentityTransferred(bytes20 nodeId, address oldIdentity, address newIdentity);
+    event IdentityTransferred(bytes nodeId, address oldIdentity, address newIdentity);
     event TokenDeposit(address profile, uint256 amount);
 
     event TokensDeposited(address profile, uint256 amountDeposited, uint256 newBalance);
@@ -41,12 +41,12 @@ contract Profile {
     event TokensReleased(address profile, uint256 amount);
     event TokensTransferred(address sender, address receiver, uint256 amount);
 
-    function createProfile(address managementWallet, bytes32 nodeId, uint256 initialBalance, address identity, uint256 initialAsk) public {
+    function createProfile(address managementWallet, bytes memory nodeId, uint256 initialAsk, uint256 initialBalance, address identity) public {
         require(managementWallet != address(0));
         ERC20 tokenContract = ERC20(hub.getContractAddress("Token"));
         require(tokenContract.allowance(msg.sender, address(this)) >= initialBalance, "Sender allowance must be equal to or higher than initial balance");
         require(tokenContract.balanceOf(msg.sender) >= initialBalance, "Sender balance must be equal to or higher than initial balance!");
-        require(uint256(nodeId) != 0, "Cannot create a profile without a nodeId submitted");
+        require(nodeId.length != 0, "Cannot create a profile without a nodeId submitted");
 
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
@@ -55,9 +55,10 @@ contract Profile {
         require(ERC734(identity).keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 2),  "Sender does not have action permission for identity!");
 
         profileStorage.setStake(identity, initialBalance);
+        profileStorage.setAsk(identity, initialAsk);
         profileStorage.setNodeId(identity, nodeId);
 
-        shardingTable.pushBack(identity, initialAsk);
+        shardingTable.pushBack(identity);
 
         emit ProfileCreated(identity, initialBalance);
     }

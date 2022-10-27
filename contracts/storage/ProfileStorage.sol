@@ -6,7 +6,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Hub} from '../Hub.sol';
 
 contract ProfileStorage {
-    event StakeUpdated(bytes32 nodeId, uint256 stake);
+    event AskUpdated(bytes nodeId, uint256 ask);
+    event StakeUpdated(bytes nodeId, uint256 stake);
 
     Hub public hub;
     
@@ -35,15 +36,21 @@ contract ProfileStorage {
     }
 
     struct ProfileDefinition{
+        uint256 ask;
         uint256 stake;
         uint256 stakeReserved;
         uint256 reputation;
         bool withdrawalPending;
         uint256 withdrawalTimestamp;
         uint256 withdrawalAmount;
-        bytes32 nodeId;
+        bytes nodeId;
     }
     mapping(address => ProfileDefinition) public profile;
+
+    function getAsk(address identity)
+    public view returns(uint256) {
+        return profile[identity].ask;
+    }
 
     function getStake(address identity) 
     public view returns(uint256) {
@@ -70,8 +77,15 @@ contract ProfileStorage {
         return profile[identity].withdrawalAmount;
     }
     function getNodeId(address identity) 
-    public view returns(bytes32) {
+    public view returns(bytes memory) {
         return profile[identity].nodeId;
+    }
+
+    function setAsk(address identity, uint256 ask)
+    public onlyContracts {
+        profile[identity].ask = ask;
+
+        emit AskUpdated(this.getNodeId(identity), ask);
     }
     
     function setStake(address identity, uint256 stake) 
@@ -100,7 +114,7 @@ contract ProfileStorage {
     public onlyContracts {
         profile[identity].withdrawalAmount = withdrawalAmount;
     }
-    function setNodeId(address identity, bytes32 nodeId)
+    function setNodeId(address identity, bytes memory nodeId)
     public onlyContracts {
         profile[identity].nodeId = nodeId;
     }
