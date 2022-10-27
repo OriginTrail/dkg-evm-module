@@ -15,14 +15,14 @@ contract ShardingTable {
         bytes id;
         bytes prevNodeId;
         bytes nextNodeId;
-        bytes32 id_sha256;
+        bytes32 idSha256;
     }
 
     struct NodeInfo {
         bytes id;
         uint256 ask;
         uint256 stake;
-        bytes32 id_sha256;
+        bytes32 idSha256;
     }
 
     Hub public hub;
@@ -65,7 +65,7 @@ contract ShardingTable {
             startingNodeId,
             profileStorageContract.getAsk(nodes[startingNodeId].identity),
             profileStorageContract.getStake(nodes[startingNodeId].identity),
-            nodes[startingNodeId].id_sha256
+            nodes[startingNodeId].idSha256
         );
 
         uint16 i = 1;
@@ -76,7 +76,7 @@ contract ShardingTable {
                 nextNodeId,
                 profileStorageContract.getAsk(nodes[nextNodeId].identity),
                 profileStorageContract.getStake(nodes[nextNodeId].identity),
-                nodes[nextNodeId].id_sha256
+                nodes[nextNodeId].idSha256
             );
             i += 1;
         }
