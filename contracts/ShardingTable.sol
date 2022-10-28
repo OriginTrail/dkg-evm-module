@@ -15,7 +15,6 @@ contract ShardingTable {
         bytes id;
         bytes prevNodeId;
         bytes nextNodeId;
-        bytes32 idSha256;
     }
 
     struct NodeInfo {
@@ -30,18 +29,20 @@ contract ShardingTable {
     bytes private emptyPointer;
     bytes public head;
     bytes public tail;
-    uint16 public nodeCount;
+    uint16 public nodesCount;
 
     mapping(bytes => Node) nodes;
+    mapping(bytes => bytes32) nodeIdsSha256;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
         hub = Hub(hubAddress);
 
         emptyPointer = "";
+        nodeIdsSha256[emptyPointer] = sha256(emptyPointer);
         head = emptyPointer;
         tail = emptyPointer;
-        nodeCount = 0;
+        nodesCount = 0;
     }
 
     function getShardingTable(bytes memory startingNodeId, uint16 nodesNumber)
@@ -49,11 +50,14 @@ contract ShardingTable {
         view
         returns (NodeInfo[] memory)
     {
-        require(nodesNumber >= 0, "Nodes number must be non-negative!");
+        require(
+            !_equalIdHashes(nodes[startingNodeId].id, "") ||
+            _equalIdHashes(startingNodeId, emptyPointer)
+        );
 
         NodeInfo[] memory nodesPage;
 
-        if (nodesNumber == 0) {
+        if (nodesCount == 0) {
             return nodesPage;
         }
 
@@ -65,18 +69,18 @@ contract ShardingTable {
             startingNodeId,
             profileStorageContract.getAsk(nodes[startingNodeId].identity),
             profileStorageContract.getStake(nodes[startingNodeId].identity),
-            nodes[startingNodeId].idSha256
+            nodeIdsSha256[startingNodeId]
         );
 
         uint16 i = 1;
-        while (i < nodesNumber && !_equalIds(nodes[nodesPage[i-1].id].nextNodeId, emptyPointer)) {
+        while (i < nodesNumber && !_equalIdHashes(nodes[nodesPage[i-1].id].nextNodeId, emptyPointer)) {
             bytes memory nextNodeId = nodes[nodesPage[i-1].id].nextNodeId;
 
             nodesPage[i] = NodeInfo(
                 nextNodeId,
                 profileStorageContract.getAsk(nodes[nextNodeId].identity),
                 profileStorageContract.getStake(nodes[nextNodeId].identity),
-                nodes[nextNodeId].idSha256
+                nodeIdsSha256[nextNodeId]
             );
             i += 1;
         }
@@ -88,7 +92,7 @@ contract ShardingTable {
         view
         returns (NodeInfo[] memory)
     {
-        return getShardingTable(head, nodeCount);
+        return getShardingTable(head, nodesCount);
     }
 
     function pushBack(address identity)
@@ -99,12 +103,12 @@ contract ShardingTable {
         ProfileStorage profileStorageContract = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         bytes memory nodeId = profileStorageContract.getNodeId(identity);
 
-        if (!_equalIds(tail, emptyPointer)) _link(tail, nodeId);
+        if (!_equalIdHashes(tail, emptyPointer)) _link(tail, nodeId);
         _setTail(nodeId);
 
-        if (_equalIds(head, emptyPointer)) _setHead(nodeId);
+        if (_equalIdHashes(head, emptyPointer)) _setHead(nodeId);
 
-        nodeCount += 1;
+        nodesCount += 1;
     }
 
     function pushFront(address identity)
@@ -115,12 +119,12 @@ contract ShardingTable {
         ProfileStorage profileStorageContract = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         bytes memory nodeId = profileStorageContract.getNodeId(identity);
 
-        if (!_equalIds(head, emptyPointer)) _link(nodeId, head);
+        if (!_equalIdHashes(head, emptyPointer)) _link(nodeId, head);
         _setHead(nodeId);
 
-        if (_equalIds(tail, emptyPointer)) _setTail(nodeId);
+        if (_equalIdHashes(tail, emptyPointer)) _setTail(nodeId);
 
-        nodeCount += 1;
+        nodesCount += 1;
     }
 
     function removeNode(address identity)
@@ -131,15 +135,15 @@ contract ShardingTable {
 
         Node memory nodeToRemove = nodes[nodeId];
 
-        if (_equalIds(head, nodeId) && _equalIds(tail, nodeId)) {
+        if (_equalIdHashes(head, nodeId) && _equalIdHashes(tail, nodeId)) {
             _setHead(emptyPointer);
             _setTail(emptyPointer);
         }
-        else if (_equalIds(head, nodeId)) {
+        else if (_equalIdHashes(head, nodeId)) {
             _setHead(nodeToRemove.nextNodeId);
             nodes[head].prevNodeId = emptyPointer;
         }
-        else if (_equalIds(tail, nodeId)) {
+        else if (_equalIdHashes(tail, nodeId)) {
             _setTail(nodeToRemove.prevNodeId);
             nodes[tail].nextNodeId = emptyPointer;
         }
@@ -149,7 +153,7 @@ contract ShardingTable {
 
         delete nodes[nodeId];
 
-        nodeCount -= 1;
+        nodesCount -= 1;
     
         emit NodeRemoved(nodeId);
     }
@@ -166,11 +170,11 @@ contract ShardingTable {
             identity,
             nodeId,
             emptyPointer,
-            emptyPointer,
-            nodeIdSha256
+            emptyPointer
         );
 
         nodes[nodeId] = newNode;
+        nodeIdsSha256[nodeId] = nodeIdSha256;
 
         emit NodeObjCreated(
             nodeId,
@@ -199,11 +203,11 @@ contract ShardingTable {
         nodes[_rightNodeId].prevNodeId = _leftNodeId;
     }
 
-    function _equalIds(bytes memory _firstId, bytes memory _secondId)
+    function _equalIdHashes(bytes memory _firstId, bytes memory _secondId)
         internal
-        pure
+        view
         returns (bool)
     {
-        return keccak256(_firstId) == keccak256(_secondId);
+        return nodeIdsSha256[_firstId] == nodeIdsSha256[_secondId];
     }
 }
