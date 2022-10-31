@@ -42,7 +42,8 @@ contract Profile {
     event TokensTransferred(address sender, address receiver, uint256 amount);
 
     function createProfile(address managementWallet, bytes memory nodeId, uint256 initialAsk, uint256 initialBalance, address identity) public {
-        require(managementWallet != address(0));
+        require(managementWallet != address(0), "Management wallet can't be 0");
+        require(identity != address(0), "Identity can't be 0");
         ERC20 tokenContract = ERC20(hub.getContractAddress("Token"));
         require(tokenContract.allowance(msg.sender, address(this)) >= initialBalance, "Sender allowance must be equal to or higher than initial balance");
         require(tokenContract.balanceOf(msg.sender) >= initialBalance, "Sender balance must be equal to or higher than initial balance!");
