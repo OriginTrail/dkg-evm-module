@@ -45,6 +45,12 @@ contract ShardingTable {
         nodesCount = 0;
     }
 
+    modifier onlyProfile() {
+        require(msg.sender == hub.getContractAddress("Profile"),
+        "Function can only be called by Profile contract!");
+        _;
+    }
+
     function getShardingTable(bytes memory startingNodeId, uint16 nodesNumber)
         public
         view
@@ -97,6 +103,7 @@ contract ShardingTable {
 
     function pushBack(address identity)
         public
+        onlyProfile
     {
         _createNodeObj(identity);
     
@@ -113,6 +120,7 @@ contract ShardingTable {
 
     function pushFront(address identity)
         public
+        onlyProfile
     {
         _createNodeObj(identity);
 
@@ -129,6 +137,7 @@ contract ShardingTable {
 
     function removeNode(address identity)
         public
+        onlyProfile
     {
         ProfileStorage profileStorageContract = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         bytes memory nodeId = profileStorageContract.getNodeId(identity);

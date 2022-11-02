@@ -20,9 +20,19 @@ contract Profile {
         hub = Hub(hubAddress);
     }
 
-    modifier onlyHolding(){
-        require(msg.sender == hub.getContractAddress("Holding"),
-        "Function can only be called by Holding contract!");
+    modifier onlyHolding() {
+        require(
+            msg.sender == hub.getContractAddress("Holding"),
+            "Function can only be called by Holding contract!"
+        );
+        _;
+    }
+
+    modifier onlyHubOwner() {
+        require (
+            msg.sender == hub.owner(),
+            "Function can only be called by hub owner!"
+        );
         _;
     }
 
@@ -59,7 +69,9 @@ contract Profile {
         profileStorage.setAsk(identity, initialAsk);
         profileStorage.setNodeId(identity, nodeId);
 
-        shardingTable.pushBack(identity);
+        if (initialBalance >= minimalStake) {
+            shardingTable.pushBack(identity);
+        }
 
         emit ProfileCreated(identity, initialBalance);
     }
@@ -75,7 +87,14 @@ contract Profile {
 
         tokenContract.transferFrom(msg.sender, address(profileStorage), amount);
 
-        profileStorage.setStake(identity, profileStorage.getStake(identity) + amount);
+        uint256 oldStake = profileStorage.getStake(identity);
+        uint256 newStake = oldStake + amount;
+        profileStorage.setStake(identity, newStake);
+
+        if (oldStake < minimalStake && newStake >= minimalStake) {
+            ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
+            shardingTable.pushBack(identity);
+        }
 
         emit TokensDeposited(identity, amount, profileStorage.getStake(identity));
     }
@@ -108,7 +127,6 @@ contract Profile {
         require(ERC734(identity).keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 1),  "Sender does not have management permission for identity!");
 
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
 
         require(profileStorage.getWithdrawalPending(identity) == true, "Cannot withdraw tokens before starting token withdrawal!");
         require(profileStorage.getWithdrawalTimestamp(identity) < block.timestamp, "Cannot withdraw tokens before withdrawal timestamp!");
@@ -116,14 +134,14 @@ contract Profile {
         // Transfer already reserved tokens to user identity
         profileStorage.transferTokens(msg.sender, profileStorage.getWithdrawalAmount(identity));
 
-        profileStorage.setStake(
-            identity,
-            profileStorage.getStake(identity) - (profileStorage.getWithdrawalAmount(identity))
-        );
+        uint256 oldStake = profileStorage.getStake(identity);
+        uint256 newStake = oldStake - profileStorage.getWithdrawalAmount(identity);
 
+        profileStorage.setStake(identity, newStake);
         profileStorage.setWithdrawalPending(identity, false);
 
-        if (profileStorage.getStake(identity) == 0) {
+        if (oldStake >= minimalStake && newStake < minimalStake) {
+            ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
             shardingTable.removeNode(identity);
         }
 
@@ -161,15 +179,10 @@ contract Profile {
         emit TokensTransferred(sender, receiver, amount);
     }
 
-    function setMinimalStake(uint256 newMinimalStake)
-    public {
-        require (msg.sender == hub.owner(), "Function can only be called by hub owner!");
-        if(minimalStake != newMinimalStake) minimalStake = newMinimalStake;
-    }
-
     function setWithdrawalTime(uint256 newWithdrawalTime)
-    public {
-        require (msg.sender == hub.owner(), "Function can only be called by hub owner!");
+        public
+        onlyHubOwner
+    {
         if(withdrawalTime != newWithdrawalTime) withdrawalTime = newWithdrawalTime;
     }
 }
