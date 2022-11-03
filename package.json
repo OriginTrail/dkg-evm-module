@@ -14,7 +14,8 @@
     "ganache": "ganache -e 1000000000000 -i 5777 -p 7545 -l 10000000 -a 30 -m \"aspect ask story desert profit engage tuition leave fade giraffe exclude brief\"",
     "deploy": "truffle migrate --network ganache --reset",
     "deploy:rinkeby": "truffle migrate --network rinkeby --reset",
-    "deploy:mumbai": "truffle migrate --network mumbai --reset"
+    "deploy:mumbai": "truffle migrate --network mumbai --reset",
+    "deploy:otp": "truffle migrate --network otp --reset"
   },
   "author": "",
   "license": "ISC",

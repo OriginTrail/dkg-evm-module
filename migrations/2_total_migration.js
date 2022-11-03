@@ -45,9 +45,6 @@ module.exports = async (deployer, network, accounts) => {
     switch (network) {
         case 'development':
         case 'ganache':
-        case 'rinkeby':
-        case 'test':
-        case 'mumbai':
             await deployer.deploy(Hub, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     hub = result;
@@ -116,6 +113,66 @@ module.exports = async (deployer, network, accounts) => {
             console.log(`\t Assertion registry address: ${assertionRegistry.address}`);
             console.log(`\t Asset registry address: ${assetRegistry.address}`);
             console.log(`\t Token address: ${erc20Token.address}`);
+            console.log(`\t Profile storage address: ${profileStorage.address}`);
+            console.log(`\t Profile address: ${profile.address}`);
+
+            break;
+        case 'rinkeby':
+        case 'test':
+        case 'mumbai':
+        case 'otp':
+            await deployer.deploy(Hub, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    hub = result;
+                });
+            await hub.setContractAddress('Owner', accounts[0]);
+
+            await deployer.deploy(ShardingTable, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    shardingTable = result;
+                });
+            await hub.setContractAddress('ShardingTable', shardingTable.address);
+
+            await deployer.deploy(AssertionRegistry, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    assertionRegistry = result;
+                });
+            await hub.setContractAddress('AssertionRegistry', assertionRegistry.address);
+
+            await deployer.deploy(UAIRegistry, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    erc721Registry = result;
+                });
+            await hub.setContractAddress('UAIRegistry', erc721Registry.address);
+
+            await deployer.deploy(assetRegistry, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    assetRegistry = result;
+                });
+            await hub.setContractAddress('AssetRegistry', assetRegistry.address);
+
+            await erc721Registry.setupRole(assetRegistry.address);
+
+            await hub.setContractAddress('Token', '0xFfFFFFff00000000000000000000000000000001');
+
+            await deployer.deploy(ProfileStorage, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    profileStorage = result;
+                });
+            await hub.setContractAddress('ProfileStorage', profileStorage.address);
+
+            await deployer.deploy(Profile, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    profile = result;
+                });
+            await hub.setContractAddress('Profile', profile.address);
+
+            console.log('\n\n \t Contract adresses on ganache:');
+            console.log(`\t Hub address: ${hub.address}`);
+            console.log(`\t Sharding table: ${shardingTable.address}`);
+            console.log(`\t Assertion registry address: ${assertionRegistry.address}`);
+            console.log(`\t Asset registry address: ${assetRegistry.address}`);
+            console.log(`\t Token address: 0xFfFFFFff00000000000000000000000000000001`);
             console.log(`\t Profile storage address: ${profileStorage.address}`);
             console.log(`\t Profile address: ${profile.address}`);
 
