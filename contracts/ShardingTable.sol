@@ -51,6 +51,14 @@ contract ShardingTable {
         _;
     }
 
+    modifier onlyHubOwner() {
+        require (
+            msg.sender == hub.owner(),
+            "Function can only be called by hub owner!"
+        );
+        _;
+    }
+
     function getShardingTable(bytes memory startingNodeId, uint16 nodesNumber)
         public
         view
@@ -142,6 +150,35 @@ contract ShardingTable {
         ProfileStorage profileStorageContract = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         bytes memory nodeId = profileStorageContract.getNodeId(identity);
 
+        Node memory nodeToRemove = nodes[nodeId];
+
+        if (_equalIdHashes(head, nodeId) && _equalIdHashes(tail, nodeId)) {
+            _setHead(emptyPointer);
+            _setTail(emptyPointer);
+        }
+        else if (_equalIdHashes(head, nodeId)) {
+            _setHead(nodeToRemove.nextNodeId);
+            nodes[head].prevNodeId = emptyPointer;
+        }
+        else if (_equalIdHashes(tail, nodeId)) {
+            _setTail(nodeToRemove.prevNodeId);
+            nodes[tail].nextNodeId = emptyPointer;
+        }
+        else {
+            _link(nodeToRemove.prevNodeId, nodeToRemove.nextNodeId);
+        }
+
+        delete nodes[nodeId];
+
+        nodesCount -= 1;
+    
+        emit NodeRemoved(nodeId);
+    }
+
+    function removeNodeById(bytes memory nodeId)
+        public
+        onlyHubOwner
+    {
         Node memory nodeToRemove = nodes[nodeId];
 
         if (_equalIdHashes(head, nodeId) && _equalIdHashes(tail, nodeId)) {
