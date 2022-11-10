@@ -83,4 +83,12 @@ contract ContentAsset is AbstractAsset, ERC721 {
         _mint(to, _tokenId);
         return _tokenId++;
     }
+
+    function transfer(address from, address to, uint256 _tokenId) public {
+        _transfer(from, to, _tokenId);
+    }
+
+    function exists(uint256 _tokenId) public view returns (bool) {
+        return _exists(_tokenId);
+    }
 }
