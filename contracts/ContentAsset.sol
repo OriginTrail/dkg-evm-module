@@ -67,6 +67,14 @@ contract ContentAsset is AbstractAsset, ERC721 {
         emit AssetUpdated(tokenId, assertionId);
     }
 
+    function getAssetOwner(uint256 tokenId)
+        public
+        view
+        returns (address owner)
+    {
+        return ownerOf(tokenId);
+    }
+
     function getAssertions(uint256 tokenId) override internal view returns (bytes32 [] memory) {
         return assetRecords[tokenId].assertions;
     }
