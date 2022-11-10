@@ -1,10 +1,11 @@
 var BN = require('bn.js');
 
+var ParametersStorage = artifacts.require('ParametersStorage');
 var Hub = artifacts.require('Hub'); // eslint-disable-line no-undef
 var ShardingTable = artifacts.require('ShardingTable'); // eslint-disable-line no-undef
 var AssertionRegistry = artifacts.require('AssertionRegistry'); // eslint-disable-line no-undef
 var UAIRegistry = artifacts.require('UAIRegistry'); // eslint-disable-line no-undef
-var assetRegistry = artifacts.require('assetRegistry'); // eslint-disable-line no-undef
+var AssetRegistry = artifacts.require('assetRegistry'); // eslint-disable-line no-undef
 var ERC20Token = artifacts.require('ERC20Token'); // eslint-disable-line no-undef
 var ProfileStorage = artifacts.require('ProfileStorage'); // eslint-disable-line no-undef
 var Profile = artifacts.require('Profile'); // eslint-disable-line no-undef
@@ -40,7 +41,7 @@ const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
     "0xBaF76aC0d0ef9a2FFF76884d54C9D3e270290a43"];
 
 module.exports = async (deployer, network, accounts) => {
-    let assertionRegistry, erc721Registry, erc20Token, profileStorage, profile, hub, shardingTable;
+    let assetRegistry, assertionRegistry, erc721Registry, erc20Token, profileStorage, parametersStorage, profile, hub, shardingTable;
 
     switch (network) {
         case 'development':
@@ -53,6 +54,14 @@ module.exports = async (deployer, network, accounts) => {
                     hub = result;
                 });
             await hub.setContractAddress('Owner', accounts[0]);
+
+            /* --------------------------------ParametersStorage------------------------------------- */
+            await deployer.deploy(ParametersStorage, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    parametersStorage = result;
+                });
+            await hub.setContractAddress('ParametersStorage', parametersStorage.address);
+            /* -------------------------------------------------------------------------------------- */
 
             await deployer.deploy(ShardingTable, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
@@ -72,7 +81,7 @@ module.exports = async (deployer, network, accounts) => {
                 });
             await hub.setContractAddress('UAIRegistry', erc721Registry.address);
 
-            await deployer.deploy(assetRegistry, hub.address, {gas: 6000000, from: accounts[0]})
+            await deployer.deploy(AssetRegistry, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     assetRegistry = result;
                 });
@@ -112,11 +121,12 @@ module.exports = async (deployer, network, accounts) => {
 
             console.log('\n\n \t Contract adresses on ganache:');
             console.log(`\t Hub address: ${hub.address}`);
-            console.log(`\t Sharding table: ${shardingTable.address}`);
-            console.log(`\t Assertion registry address: ${assertionRegistry.address}`);
-            console.log(`\t Asset registry address: ${assetRegistry.address}`);
+            console.log(`\t Parameters Storage address: ${parametersStorage.address}`);
+            console.log(`\t Sharding Table: ${shardingTable.address}`);
+            console.log(`\t Assertion Registry address: ${assertionRegistry.address}`);
+            console.log(`\t Asset Registry address: ${assetRegistry.address}`);
             console.log(`\t Token address: ${erc20Token.address}`);
-            console.log(`\t Profile storage address: ${profileStorage.address}`);
+            console.log(`\t Profile Storage address: ${profileStorage.address}`);
             console.log(`\t Profile address: ${profile.address}`);
 
             break;
