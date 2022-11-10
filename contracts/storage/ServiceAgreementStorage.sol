@@ -56,7 +56,7 @@ contract ServiceAgreementStorage {
         address operationalWallet,
         address assetTypeContract,
         uint256 tokenId,
-        bytes32 keyword,
+        bytes keyword,
         uint8 hashingAlgorithm,
         uint16 epochsNum,
         uint96 tokenAmount
@@ -100,7 +100,7 @@ contract ServiceAgreementStorage {
         address operationalWallet,
         address assetTypeContract,
         uint256 tokenId,
-        bytes32 keyword,
+        bytes keyword,
         uint8 hashingAlgorithm,
         uint16 epochsNum,
         uint96 tokenAmount
@@ -179,7 +179,7 @@ contract ServiceAgreementStorage {
     function submitCommit(
         address assetTypeContract,
         uint256 tokenId,
-        bytes32 keyword,
+        bytes keyword,
         uint8 hashingAlgorithm,
         uint16 epoch,
         uint96 prevIdentityId
@@ -227,10 +227,12 @@ contract ServiceAgreementStorage {
         );
     }
 
-    function getChallenge(address assetTypeContract, uint256 tokenId, uint256 blockNumber)
+    function getChallenge(address assetTypeContract, uint256 tokenId, bytes keyword, uint8 hashingAlgorithm, uint256 blockNumber)
         public
         returns (uint256)
     {
+        bytes32 agreementId = _generateAgreementId(assetTypeContract, tokenId, keyword, hashingAlgorithm);
+
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         uint96 identityId = profileStorage.getIdentityId(msg.sender);
 
@@ -242,13 +244,13 @@ contract ServiceAgreementStorage {
 
         // blockchash() function only works for last 256 blocks (25.6 min window in case of 6s block time)
         // TODO: figure out how to achieve randomness
-        return uint256(sha256(abi.encodePacked(blockhash(blockNumber), identityId))) % assertionSize;
+        return uint256(sha256(abi.encodePacked(serviceAgreements[agreementId].proofWindowOffsetPerc, identityId))) % assertionSize;
     }
 
     function sendProof(
         address assetTypeContract,
         uint256 tokenId,
-        bytes32 keyword,
+        bytes keyword,
         uint8 hashingAlgorithm,
         uint16 epoch,
         uint256 blockNumber,
@@ -287,7 +289,7 @@ contract ServiceAgreementStorage {
         AbstractAsset generalAssetInterface = AbstractAsset(assetTypeContract);
         bytes32 merkleRoot = generalAssetInterface.getCommitHash(0);
 
-        uint256 challenge = _calculateChallenge(assetTypeContract, tokenId, blockNumber);
+        uint256 challenge = getChallenge(assetTypeContract, tokenId, keyword, hashingAlgorithm, blockNumber);
 
         require(
             MerkleProof.verify(
@@ -333,6 +335,16 @@ contract ServiceAgreementStorage {
                     "Score of the commit must be higher that the score of the head in order to replace it!"
                 );
             }
+            else if (epoch > 1) {
+                ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+                uint8 minProofWindowOfssetPerc = parametersStorage.minProofWindowOfssetPerc();
+                uint8 maxProofWindowOffsetPerc = parametersStorage.maxProofWindowOffsetPerc();
+
+                serviceAgreements[agreementId].proofWindowOffsetPerc = minProofWindowOfssetPerc + _generatePseudorandomUint8(
+                    msg.sender,
+                    maxProofWindowOfssetPerc - minProofWindowOfssetPerc + 1
+                );
+            }
 
             serviceAgreements[agreementId].epochSubmissionHeads[epoch] = commitId;
             commitSubmissions[commitId] = commit;
@@ -371,7 +383,7 @@ contract ServiceAgreementStorage {
         commitSubmissions[leftCommitId].nextIdentity = rightIdentityId;
     }
 
-    function _generateAgreementId(address assetTypeContract, uint256 tokenId, bytes32 keyword, uint8 hashingAlgorithm)
+    function _generateAgreementId(address assetTypeContract, uint256 tokenId, bytes keyword, uint8 hashingAlgorithm)
         private
         returns (bytes32)
     {
