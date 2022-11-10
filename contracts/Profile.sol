@@ -2,17 +2,17 @@
 
 pragma solidity ^0.8.0;
 
-import {ProfileStorage} from './storage/ProfileStorage.sol';
-import {ShardingTable} from './ShardingTable.sol';
-import {Ownable, Hub} from './Hub.sol';
-import {Identity, ERC734} from './Identity.sol';
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ParametersStorage } from "./storage/ParametersStorage.sol";
+import {ProfileStorage} from "./storage/ProfileStorage.sol";
+import {ShardingTable} from "./ShardingTable.sol";
+import {Ownable, Hub} from "./Hub.sol";
+import {Identity, ERC734} from "./Identity.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 
 contract Profile {
     Hub public hub;
 
-    uint256 public minimalStake = 5*10**22;
     uint256 public withdrawalTime = 5 minutes;
 
     constructor(address hubAddress) {
@@ -69,7 +69,8 @@ contract Profile {
         profileStorage.setAsk(identity, initialAsk);
         profileStorage.setNodeId(identity, nodeId);
 
-        if (initialBalance >= minimalStake) {
+        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+        if (initialBalance >= parametersStorage.minimalStake()) {
             shardingTable.pushBack(identity);
         }
 
@@ -91,6 +92,8 @@ contract Profile {
         uint256 newStake = oldStake + amount;
         profileStorage.setStake(identity, newStake);
 
+        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+        uint96 minimalStake = parametersStorage.minimalStake();
         if (oldStake < minimalStake && newStake >= minimalStake) {
             ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
             shardingTable.pushBack(identity);
@@ -140,6 +143,8 @@ contract Profile {
         profileStorage.setStake(identity, newStake);
         profileStorage.setWithdrawalPending(identity, false);
 
+        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+        uint96 minimalStake = parametersStorage.minimalStake();
         if (oldStake >= minimalStake && newStake < minimalStake) {
             ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
             shardingTable.removeNode(identity);
