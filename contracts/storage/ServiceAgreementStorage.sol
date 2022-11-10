@@ -36,7 +36,7 @@ contract ServiceAgreementStorage {
     mapping(bytes32 => CommitSubmission) commitSubmissions;
 
     // hash(asset type contract + tokenId + key) -> ServiceAgreement
-    mapping(bytes32 => ServiceAgreement) serviceAgreements;
+    mapping(bytes32 => ServiceAgreement) public serviceAgreements;
 
     constructor (address hubAddress) {
         require(hubAddress != address(0));
@@ -124,13 +124,6 @@ contract ServiceAgreementStorage {
 
         serviceAgreements[agreementId].epochsNum += epochsNum;
         serviceAgreements[agreementId].tokenAmount += tokenAmount;
-    }
-
-    function getServiceAgreement(bytes32 agreementId)
-        public
-        returns (ServiceAgreement memory)
-    {
-        return serviceAgreements[agreementId];
     }
 
     function isCommitWindowOpen(bytes32 agreementId, uint16 epoch)
@@ -255,7 +248,7 @@ contract ServiceAgreementStorage {
         uint16 epoch,
         uint256 blockNumber,
         bytes32[] memory proof,
-        bytes32 leaf
+        bytes32 tripleHash
     )
         public
     {
@@ -295,7 +288,7 @@ contract ServiceAgreementStorage {
             MerkleProof.verify(
                 proof,
                 merkleRoot,
-                keccak256(abi.encodePacked(leaf, challenge))
+                keccak256(abi.encodePacked(tripleHash, challenge))
             ),
             "Root hash doesn't match"
         );
