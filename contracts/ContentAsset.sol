@@ -27,20 +27,15 @@ contract ContentAsset is AbstractAsset, ERC721 {
 
     function createAsset(bytes32 assertionId, uint256 size, uint96 tokenAmount, uint16 epochsNum) public returns (uint256 _tokenId) {
         require(assertionId != 0, "assertionId cannot be zero");
-        require(size != 0, "size cannot be zero");
-
-        IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
-        require(tokenContract.allowance(msg.sender, address(this)) >= tokenAmount, "Sender allowance must be equal to or higher than chosen amount");
-        require(tokenContract.balanceOf(msg.sender) >= tokenAmount, "Sender balance must be equal to or higher than chosen amount!");
+        require(size > 0, "size cannot be zero");
 
         uint256 tokenId = mintTokenId(msg.sender);
         require(assetRecords[tokenId].assertions.length == 0, "UAI already exists!");
 
         AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(assertionId, msg.sender, size);
-        tokenContract.transferFrom(msg.sender, address(this), tokenAmount);
         assetRecords[tokenId].assertions.push(assertionId);
 
-        ServiceAgreement(hub.getContractAddress("ServiceAgreement")).createServiceAgreement(tokenId, sha256(abi.encodePacked(address(this), tokenId)), 0, epochsNum, tokenAmount);
+        ServiceAgreement(hub.getContractAddress("ServiceAgreement")).createServiceAgreement(msg.sender, tokenId, sha256(abi.encodePacked(address(this), tokenId)), 0, epochsNum, tokenAmount);
 
         emit AssetCreated(tokenId, assertionId);
 
@@ -49,20 +44,15 @@ contract ContentAsset is AbstractAsset, ERC721 {
 
     function updateAsset(uint256 tokenId, bytes32 assertionId, uint256 size, uint96 tokenAmount, uint16 epochsNum) public {
         require(assertionId != 0, "assertionId cannot be zero");
-        require(size != 0, "size cannot be zero");
+        require(size > 0, "size cannot be zero");
 
         address owner = ownerOf(tokenId);
-        require(owner == msg.sender, "Only owner can update an asset");
-
-        IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
-        require(tokenContract.allowance(msg.sender, address(this)) >= tokenAmount, "Sender allowance must be equal to or higher than chosen amount");
-        require(tokenContract.balanceOf(msg.sender) >= tokenAmount, "Sender balance must be equal to or higher than chosen amount!");  
+        require(owner == msg.sender, "Only owner can update an asset"); 
         
         AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(assertionId, msg.sender, size);
-        tokenContract.transferFrom(msg.sender, address(this), tokenAmount);
         assetRecords[tokenId].assertions.push(assertionId);
 
-        ServiceAgreement(hub.getContractAddress("ServiceAgreement")).updateServiceAgreement(tokenId, sha256(abi.encodePacked(address(this), tokenId)), 0, epochsNum, tokenAmount);
+        ServiceAgreement(hub.getContractAddress("ServiceAgreement")).updateServiceAgreement(msg.sender, tokenId, sha256(abi.encodePacked(address(this), tokenId)), 0, epochsNum, tokenAmount);
 
         emit AssetUpdated(tokenId, assertionId);
     }
