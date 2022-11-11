@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity^0.8.0;
+pragma solidity ^0.8.0;
 
 import { AbstractAsset } from "../AbstractAsset.sol";
 import { AssertionRegistry } from "../AssertionRegistry.sol";
@@ -11,9 +11,8 @@ import { Hub } from "../Hub.sol";
 import { ParametersStorage } from "./ParametersStorage.sol";
 import { Profile } from "../Profile.sol";
 import { ProfileStorage } from "./ProfileStorage.sol";
-import { ScoringFunctionHub } from "../ScoringFunctionHub.sol";
+import { ScoringHub } from "../ScoringHub.sol";
 import { ShardingTable } from "../ShardingTable.sol";
-
 
 contract ServiceAgreementStorage {
     struct CommitSubmission {
@@ -193,8 +192,8 @@ contract ServiceAgreementStorage {
         bytes nodeId = profileStorage.getNodeId(identityId);
         uint32 stake = profileStorage.getStake(identityId);
 
-        ScoringFunctionHub scoringFunctionHub = ScoringFunctionHub(hub.getContractAddress("ScoringFunctionHub"));
-        uint32 score = scoringFunctionHub.calculateScore(
+        ScoringHub scoringHub = ScoringHub(hub.getContractAddress("ScoringHub"));
+        uint32 score = scoringHub.calculateScore(
             serviceAgreements[agreementId].scoringFunctionId,
             hashingAlgorithm,
             nodeId,

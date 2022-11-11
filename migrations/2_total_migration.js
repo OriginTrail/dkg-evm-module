@@ -1,8 +1,10 @@
 var BN = require('bn.js');
 
 var HashingHub = artifacts.require('HashingHub'); // eslint-disable-line no-undef
+var ScoringHub = artifacts.require('ScoringHub'); // eslint-disable-line no-undef
 var Hub = artifacts.require('Hub'); // eslint-disable-line no-undef
 var SHA256 = artifacts.require('SHA256'); // eslint-disable-line no-undef
+var DSF = artifacts.require('DSF'); // eslint-disable-line no-undef
 var ShardingTable = artifacts.require('ShardingTable'); // eslint-disable-line no-undef
 var AssertionRegistry = artifacts.require('AssertionRegistry'); // eslint-disable-line no-undef
 var UAIRegistry = artifacts.require('UAIRegistry'); // eslint-disable-line no-undef
@@ -45,7 +47,8 @@ module.exports = async (deployer, network, accounts) => {
     let (
         assertionRegistry, erc721Registry, erc20Token,
         profileStorage, profile, hashingHub, hub,
-        sha256Contract, shardingTable
+        sha256Contract, shardingTable, scoringHub,
+        dsfContract
     );
 
     switch (network) {
@@ -74,6 +77,22 @@ module.exports = async (deployer, network, accounts) => {
 
             // 0 - sha256
             await hashingHub.setContractAddress(0, sha256Contract.address);
+            /* ---------------------------------------------------------------------------------------- */
+
+            /* ------------------------------------Scoring Hub---------------------------------------- */
+            await deployer.deploy(ScoringHub, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    scoringHub = result;
+                });
+            await hub.setContractAddress('ScoringHub', scoringHub.address);
+
+            await deployer.deploy(DSF, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    dsfContract = result;
+                });
+
+            // 0 - DSF
+            await scoringHub.setContractAddress(0, dsfContract.address);
             /* ---------------------------------------------------------------------------------------- */
 
             await deployer.deploy(ShardingTable, hub.address, {gas: 6000000, from: accounts[0]})
