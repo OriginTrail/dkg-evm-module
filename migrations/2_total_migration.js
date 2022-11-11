@@ -1,7 +1,10 @@
 var BN = require('bn.js');
 
+
 var ParametersStorage = artifacts.require('ParametersStorage');
+var HashingHub = artifacts.require('HashingHub'); // eslint-disable-line no-undef
 var Hub = artifacts.require('Hub'); // eslint-disable-line no-undef
+var SHA256 = artifacts.require('SHA256'); // eslint-disable-line no-undef
 var ShardingTable = artifacts.require('ShardingTable'); // eslint-disable-line no-undef
 var AssertionRegistry = artifacts.require('AssertionRegistry'); // eslint-disable-line no-undef
 var UAIRegistry = artifacts.require('UAIRegistry'); // eslint-disable-line no-undef
@@ -41,7 +44,11 @@ const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
     "0xBaF76aC0d0ef9a2FFF76884d54C9D3e270290a43"];
 
 module.exports = async (deployer, network, accounts) => {
-    let assetRegistry, assertionRegistry, erc721Registry, erc20Token, profileStorage, parametersStorage, profile, hub, shardingTable;
+    let (
+        assertionRegistry, erc721Registry, erc20Token,
+        profileStorage, parametersStorage, profile,
+        hashingHub, hub, sha256Contract, shardingTable
+    );
 
     switch (network) {
         case 'development':
@@ -62,6 +69,22 @@ module.exports = async (deployer, network, accounts) => {
                 });
             await hub.setContractAddress('ParametersStorage', parametersStorage.address);
             /* -------------------------------------------------------------------------------------- */
+
+            /* ------------------------------------Hashing Hub---------------------------------------- */
+            await deployer.deploy(HashingHub, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    hashingHub = result;
+                });
+            await hub.setContractAddress('HashingHub', hashingHub.address);
+
+            await deployer.deploy(SHA256, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    sha256Contract = result;
+                });
+
+            // 0 - sha256
+            await hashingHub.setContractAddress(0, sha256Contract.address);
+            /* ---------------------------------------------------------------------------------------- */
 
             await deployer.deploy(ShardingTable, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
@@ -122,9 +145,11 @@ module.exports = async (deployer, network, accounts) => {
             console.log('\n\n \t Contract adresses on ganache:');
             console.log(`\t Hub address: ${hub.address}`);
             console.log(`\t Parameters Storage address: ${parametersStorage.address}`);
-            console.log(`\t Sharding Table: ${shardingTable.address}`);
-            console.log(`\t Assertion Registry address: ${assertionRegistry.address}`);
-            console.log(`\t Asset Registry address: ${assetRegistry.address}`);
+            console.log(`\t Hashing Hub address: ${hashingHub.address}`);
+            console.log(`\t SHA256 address: ${sha256Contract.address}`);
+            console.log(`\t Sharding table: ${shardingTable.address}`);
+            console.log(`\t Assertion registry address: ${assertionRegistry.address}`);
+            console.log(`\t Asset registry address: ${assetRegistry.address}`);
             console.log(`\t Token address: ${erc20Token.address}`);
             console.log(`\t Profile Storage address: ${profileStorage.address}`);
             console.log(`\t Profile address: ${profile.address}`);

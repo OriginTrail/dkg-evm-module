@@ -2,135 +2,216 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {Hub} from '../Hub.sol';
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC734 } from "../interface/ERC734.sol";
+import { HashingHub } from "../HashingHub.sol";
+import { Hub } from "../Hub.sol";
+
 
 contract ProfileStorage {
-    event AskUpdated(bytes nodeId, uint256 ask);
-    event StakeUpdated(bytes nodeId, uint256 stake);
+    event AskUpdated(bytes nodeId, uint96 ask);
+    event StakeUpdated(bytes nodeId, uint96 stake);
+    event RewardUpdated(bytes nodeId, uint96 reward);
 
     Hub public hub;
-    
-    constructor(address hubAddress) {
-        hub = Hub(hubAddress);
-        activeNodes = 1;
+
+    struct ProfileDefinition{
+        uint96 ask;
+        uint96 stake;
+        uint96 reward;
+        uint96 stakeReserved;
+        uint96 withdrawalAmount;
+        bool withdrawalPending;
+        uint256 withdrawalTimestamp;
+        bytes nodeId;
+        mapping(uint8 => bytes32) nodeAddreses;
     }
 
-    function setHubAddress(address newHubAddress)
-    public onlyContracts {
-        require(newHubAddress != address(0));
-        hub = Hub(newHubAddress);
+    uint96 lastIdentityId;
+
+    // operational/management wallet => identityId
+    mapping(address => uint96) public identityIds;
+    // identityId => identity contract address
+    mapping(uint96 => address) public identityContractAddresses;
+
+    mapping(uint96 => ProfileDefinition) public profiles;
+
+    constructor(address hubAddress) {
+        require(hubAddress != address(0));
+        hub = Hub(hubAddress);
+
+        lastIdentityId = 1;
     }
-    
+
     modifier onlyContracts(){
         require(hub.isContract(msg.sender),
         "Function can only be called by contracts!");
         _;
     }
 
-    uint256 public activeNodes;
-
-    function setActiveNodes(uint256 newActiveNodes) 
-    public onlyContracts {
-        activeNodes = newActiveNodes;
+    /* ----------------GETTERS------------------ */
+    function getAsk(uint96 identityId)
+        public
+        view
+        returns (uint96)
+    {
+        return profiles[identityId].ask;
     }
 
-    struct ProfileDefinition{
-        uint256 ask;
-        uint256 stake;
-        uint256 stakeReserved;
-        uint256 reputation;
-        bool withdrawalPending;
-        uint256 withdrawalTimestamp;
-        uint256 withdrawalAmount;
-        bytes nodeId;
-    }
-    mapping(address => ProfileDefinition) public profile;
-
-    function getAsk(address identity)
-    public view returns(uint256) {
-        return profile[identity].ask;
+    function getStake(uint96 identityId) 
+        public
+        view
+        returns (uint96)
+    {
+        return profiles[identityId].stake;
     }
 
-    function getStake(address identity) 
-    public view returns(uint256) {
-        return profile[identity].stake;
-    }
-    function getStakeReserved(address identity) 
-    public view returns(uint256) {
-        return profile[identity].stakeReserved;
-    }
-    function getReputation(address identity) 
-    public view returns(uint256) {
-        return profile[identity].reputation;
-    }
-    function getWithdrawalPending(address identity) 
-    public view returns(bool) {
-        return profile[identity].withdrawalPending;
-    }
-    function getWithdrawalTimestamp(address identity) 
-    public view returns(uint256) {
-        return profile[identity].withdrawalTimestamp;
-    }
-    function getWithdrawalAmount(address identity) 
-    public view returns(uint256) {
-        return profile[identity].withdrawalAmount;
-    }
-    function getNodeId(address identity) 
-    public view returns(bytes memory) {
-        return profile[identity].nodeId;
+    function getReward(uint96 identityId)
+        public
+        view
+        returns (uint96)
+    {
+        return profiles[identityId].reward;
     }
 
-    function setAsk(address identity, uint256 ask)
-    public onlyContracts {
-        profile[identity].ask = ask;
+    function getStakeReserved(uint96 identityId) 
+        public
+        view
+        returns (uint96)
+    {
+        return profiles[identityId].stakeReserved;
+    }
 
-        emit AskUpdated(this.getNodeId(identity), ask);
+    function getWithdrawalAmount(uint96 identityId) 
+        public
+        view
+        returns (uint96)
+    {
+        return profiles[identityId].withdrawalAmount;
+    }
+
+    function getWithdrawalPending(uint96 identityId) 
+        public
+        view
+        returns (bool)
+    {
+        return profiles[identityId].withdrawalPending;
+    }
+
+    function getWithdrawalTimestamp(uint96 identityId) 
+        public
+        view
+        returns (uint256)
+    {
+        return profiles[identityId].withdrawalTimestamp;
+    }
+
+    function getNodeId(uint96 identityId) 
+        public
+        view
+        returns (bytes memory)
+    {
+        return profiles[identityId].nodeId;
+    }
+
+    function getNodeAddress(uint96 identityId, uint8 hashingAlgorithm)
+        public
+        view
+        returns (bytes32)
+    {
+        return profiles[identityId].nodeAddreses[hashingAlgorithm];
+    }
+
+    /* ----------------SETTERS------------------ */
+    function setAsk(uint96 identityId, uint96 ask)
+        public
+        onlyContracts
+    {
+        require(ask > 0, "Ask cannot be 0.");
+
+        profiles[identityId].ask = ask;
+
+        emit AskUpdated(this.getNodeId(identityId), ask);
     }
     
-    function setStake(address identity, uint256 stake) 
-    public onlyContracts {
-        profile[identity].stake = stake;
+    function setStake(uint96 identityId, uint96 stake)
+        public
+        onlyContracts
+    {
+        profiles[identityId].stake = stake;
 
-        emit StakeUpdated(this.getNodeId(identity), stake);
-    }
-    function setStakeReserved(address identity, uint256 stakeReserved) 
-    public onlyContracts {
-        profile[identity].stakeReserved = stakeReserved;
-    }
-    function setReputation(address identity, uint256 reputation) 
-    public onlyContracts {
-        profile[identity].reputation = reputation;
-    }
-    function setWithdrawalPending(address identity, bool withdrawalPending) 
-    public onlyContracts {
-        profile[identity].withdrawalPending = withdrawalPending;
-    }
-    function setWithdrawalTimestamp(address identity, uint256 withdrawalTimestamp) 
-    public onlyContracts {
-        profile[identity].withdrawalTimestamp = withdrawalTimestamp;
-    }
-    function setWithdrawalAmount(address identity, uint256 withdrawalAmount) 
-    public onlyContracts {
-        profile[identity].withdrawalAmount = withdrawalAmount;
-    }
-    function setNodeId(address identity, bytes memory nodeId)
-    public onlyContracts {
-        profile[identity].nodeId = nodeId;
+        emit StakeUpdated(this.getNodeId(identityId), stake);
     }
 
-    function increaseStakesReserved(
-        address payer,
-        address identity1,
-        address identity2,
-        address identity3,
-        uint256 amount)
-    public onlyContracts {
-        require(identity1!=address(0) && identity2!=address(0) && identity3!=address(0));
-        profile[payer].stakeReserved += (amount * 3);
-        profile[identity1].stakeReserved += amount;
-        profile[identity2].stakeReserved += amount;
-        profile[identity3].stakeReserved += amount;
+    function setReward(uint96 identityId, uint96 reward)
+        public
+        onlyContracts
+    {
+        profiles[identityId].reward = reward;
+
+        emit RewardUpdated(this.getNodeId(identityId), reward);
+    }
+
+    function setStakeReserved(uint96 identityId, uint96 stakeReserved) 
+        public
+        onlyContracts
+    {
+        profiles[identityId].stakeReserved = stakeReserved;
+    }
+
+    function setWithdrawalAmount(uint96 identityId, uint96 withdrawalAmount) 
+        public
+        onlyContracts
+    {
+        profiles[identityId].withdrawalAmount = withdrawalAmount;
+    }
+
+    function setWithdrawalPending(uint96 identityId, bool withdrawalPending) 
+        public
+        onlyContracts
+    {
+        profiles[identityId].withdrawalPending = withdrawalPending;
+    }
+
+    function setWithdrawalTimestamp(uint96 identityId, uint256 withdrawalTimestamp) 
+        public
+        onlyContracts
+    {
+        profiles[identityId].withdrawalTimestamp = withdrawalTimestamp;
+    }
+
+    function setIdentity(address sender, address identityContractAddress)
+        public
+        onlyContracts
+    {
+        identityIds[sender] = lastIdentityId;
+        identityContractAddresses[lastIdentityId] = identityContractAddress;
+        lastIdentityId++;
+    }
+
+    function attachWalletToIdentity(address sender, address newWallet)
+        public
+        onlyContracts
+    {
+        identityIds[newWallet] = identityIds[sender];
+    }
+
+    function setNodeId(uint96 identityId, bytes memory nodeId)
+        public
+        onlyContracts
+    {
+        profiles[identityId].nodeId = nodeId;
+    }
+
+    function setNodeAddress(uint96 identityId, uint8 hashingAlgorithm)
+        public
+        onlyContract
+    {
+        HashingHub hashingHub = HashingHub(hub.getContractAddress("HashingHub"));
+        profiles[identityId].nodeAddreses[hashingAlgorithm] = hashingHub.callHashingFunction(
+            hashingAlgorithm,
+            profiles[identityId].nodeId
+        );
     }
 
     function transferTokens(address wallet, uint256 amount)
