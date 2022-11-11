@@ -4,13 +4,14 @@ pragma solidity^0.8.0;
 
 import { AbstractAsset } from "../AbstractAsset.sol";
 import { AssertionRegistry } from "../AssertionRegistry.sol";
-import { ERC734 } from "../interface/ERC734.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import { HashingHub } from "../HashingHub.sol";
 import { Hub } from "../Hub.sol";
 import { ParametersStorage } from "./ParametersStorage.sol";
+import { Profile } from "../Profile.sol";
 import { ProfileStorage } from "./ProfileStorage.sol";
+import { ScoringFunctionHub } from "../ScoringFunctionHub.sol";
 import { ShardingTable } from "../ShardingTable.sol";
 
 
@@ -24,8 +25,9 @@ contract ServiceAgreementStorage {
     struct ServiceAgreement {
         uint256 startTime;
         uint16 epochsNum;
-        uint136 epochLength;
+        uint128 epochLength;
         uint96 tokenAmount;
+        uint8 scoringFunctionId;
         uint8 proofWindowOffsetPerc;  // Perc == In % of the epoch
         mapping(uint8 => bytes32) epochSubmissionHeads;  // epoch => headCommitId
     }
@@ -59,7 +61,8 @@ contract ServiceAgreementStorage {
         bytes keyword,
         uint8 hashingAlgorithm,
         uint16 epochsNum,
-        uint96 tokenAmount
+        uint96 tokenAmount,
+        uint8 scoringFunctionId
     )
         public
         onlyAssetTypeContracts
@@ -88,7 +91,8 @@ contract ServiceAgreementStorage {
                 operationalWallet,
                 maxProofWindowOfssetPerc - minProofWindowOfssetPerc + 1
             ),
-            tokenAmount: tokenAmount
+            tokenAmount: tokenAmount,
+            scoringFunctionId: scoringFunctionId
         });
 
         bytes32 agreementId = _generateAgreementId(assetTypeContract, tokenId, keyword, hashingAlgorithm);
@@ -180,6 +184,7 @@ contract ServiceAgreementStorage {
         public
     {
         bytes32 agreementId = _generateAgreementId(assetTypeContract, tokenId, keyword, hashingAlgorithm);
+
         require(isCommitWindowOpen(agreementId, epoch), "Commit window is closed!");
 
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
@@ -188,7 +193,14 @@ contract ServiceAgreementStorage {
         bytes nodeId = profileStorage.getNodeId(identityId);
         uint32 stake = profileStorage.getStake(identityId);
 
-        uint32 score = _calculateScore(nodeId, keyword, stake);
+        ScoringFunctionHub scoringFunctionHub = ScoringFunctionHub(hub.getContractAddress("ScoringFunctionHub"));
+        uint32 score = scoringFunctionHub.calculateScore(
+            serviceAgreements[agreementId].scoringFunctionId,
+            hashingAlgorithm,
+            nodeId,
+            keyword,
+            stake
+        );
 
         _insertCommitAfter(
             agreementId,
@@ -248,7 +260,7 @@ contract ServiceAgreementStorage {
         uint16 epoch,
         uint256 blockNumber,
         bytes32[] memory proof,
-        bytes32 tripleHash
+        bytes32 chunkHash
     )
         public
     {
@@ -256,7 +268,6 @@ contract ServiceAgreementStorage {
         require(!isProofWindowOpen(agreementId, epoch), "Proof window is open!");
 
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
         uint96 identityId = profileStorage.getIdentityId(msg.sender);
         bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, identityId));
@@ -265,6 +276,8 @@ contract ServiceAgreementStorage {
 
         bytes32 epochSubmissionsHead = serviceAgreements[agreementId].epochSubmissionHeads[epoch];
         bytes32 nextCommitId = epochSubmissionsHead;
+
+        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
         bool isRewarded = false;
         uint256 notRewardedNodes = parametersStorage.R0();
@@ -288,25 +301,29 @@ contract ServiceAgreementStorage {
             MerkleProof.verify(
                 proof,
                 merkleRoot,
-                keccak256(abi.encodePacked(tripleHash, challenge))
+                keccak256(abi.encodePacked(chunkHash, challenge))
             ),
             "Root hash doesn't match"
         );
 
-        IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
-        ERC734 identityContract = ERC734(profileStorage.getIdentityContractAddress(identityId));
-
-        address managementWallet = identityContract.getKeysByPurpose(1);
+        Profile profile = Profile(hub.getContractAddress("Profile"));
 
         uint16 notFinishedEpochs = serviceAgreements[agreementId].epochsNum - epoch + 1;
         uint96 reward = serviceAgreements[agreementId].tokenAmount / notFinishedEpochs / notRewardedNodes;
 
-        tokenContract.transfer(managementWallet, reward);
+        profile.receiveReward(address(this), identityId, reward);
 
         serviceAgreements[agreementId].tokenAmount -= reward;
 
         // To make sure that node already received reward
         commitSubmissions[commitId].score = 0;
+    }
+
+    function setScoringFunction(bytes32 agreementId, uint8 newScoringFunctionId)
+        public
+        onlyAssetTypeContracts
+    {
+        serviceAgreements[agreementId].scoringFunctionId = newScoringFunctionId;
     }
 
     function _insertCommitAfter(bytes32 agreementId, uint16 epoch, uint96 prevIdentityId, CommitSubmission memory commit)
@@ -324,7 +341,7 @@ contract ServiceAgreementStorage {
                 prevHeadIdentityId = commitHead.identityId;
 
                 require(
-                    commit.score > commitHead,
+                    commit.score > commitHead.score,
                     "Score of the commit must be higher that the score of the head in order to replace it!"
                 );
             }
@@ -382,23 +399,6 @@ contract ServiceAgreementStorage {
     {
         HashingHub hashingHub = HashingHub(hub.getContractAddress("HashingHub"));
         return hashingHub.callHashFunction(hashingAlgorithm, abi.encodePacked(assetTypeContract, tokenId, keyword));
-    }
-
-    function _calculateScore(uint8 hashingAlgorithm, bytes nodeId, bytes keyword, uint32 stake, uint32 a, uint32 b)
-        private
-        returns (uint32)
-    {
-        ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
-        // TODO: Add function to the ShardingTable
-        bytes32 nodeIdHash = shardingTable.getNodeIdHash(nodeId, hashingAlgorithm);
-
-        HashingHub hashingHub = HashingHub(hub.getContractAddress("HashingHub"));
-        bytes32 keywordHash = hashingHub.callHashFunction(hashingAlgorithm, keyword);
-
-        uint32 distance = uint32(nodeIdHash ^ keywordHash);
-
-        // TODO: Change formula
-        return (a * stake) / (b * distance);
     }
 
     function _generatePseudorandomUint8(address operationalWallet, uint8 limit)
