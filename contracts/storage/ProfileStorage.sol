@@ -24,7 +24,7 @@ contract ProfileStorage {
         bool withdrawalPending;
         uint256 withdrawalTimestamp;
         bytes nodeId;
-        mapping(uint8 => bytes32) hashedNodeIds;
+        mapping(uint8 => bytes32) nodeAddreses;
     }
 
     uint96 lastIdentityId;
@@ -114,12 +114,12 @@ contract ProfileStorage {
         return profiles[identityId].nodeId;
     }
 
-    function getHashedNodeId(uint96 identityId, uint8 hashingAlgorithm)
+    function getNodeAddress(uint96 identityId, uint8 hashingAlgorithm)
         public
         view
         returns (bytes32)
     {
-        return profiles[identityId].hashedNodeIds[hashingAlgorithm];
+        return profiles[identityId].nodeAddreses[hashingAlgorithm];
     }
 
     /* ----------------SETTERS------------------ */
@@ -127,6 +127,8 @@ contract ProfileStorage {
         public
         onlyContracts
     {
+        require(ask > 0, "Ask cannot be 0.");
+
         profiles[identityId].ask = ask;
 
         emit AskUpdated(this.getNodeId(identityId), ask);
@@ -201,12 +203,12 @@ contract ProfileStorage {
         profiles[identityId].nodeId = nodeId;
     }
 
-    function setHashedNodeId(uint96 identityId, uint8 hashingAlgorithm)
+    function setNodeAddress(uint96 identityId, uint8 hashingAlgorithm)
         public
         onlyContract
     {
         HashingHub hashingHub = HashingHub(hub.getContractAddress("HashingHub"));
-        profiles[identityId].hashedNodeIds[hashingAlgorithm] = hashingHub.callHashingFunction(
+        profiles[identityId].nodeAddreses[hashingAlgorithm] = hashingHub.callHashingFunction(
             hashingAlgorithm,
             profiles[identityId].nodeId
         );
