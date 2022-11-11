@@ -13,10 +13,10 @@ abstract contract AbstractAsset {
         hub = Hub(hubAddress);
     }
 
-    function getAssertions(uint256 UAI) virtual internal view returns (bytes32 [] memory);
+    function getAssertions(uint256 tokenId) virtual internal view returns (bytes32 [] memory);
 
-    function getCommitHash(uint256 UAI, uint256 offset) external view returns (bytes32 commitHash) {
-        bytes32 [] memory assertions = getAssertions(UAI);
+    function getCommitHash(uint256 tokenId, uint256 offset) external view returns (bytes32 commitHash) {
+        bytes32 [] memory assertions = getAssertions(tokenId);
         require(assertions.length > offset, "Offset is invalid");
 
         return assertions[assertions.length - 1 - offset];
