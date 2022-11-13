@@ -232,7 +232,7 @@ contract ServiceAgreementStorage {
         );
     }
 
-    function getChallenge(address assetTypeContract, uint256 tokenId, bytes keyword, uint8 hashingAlgorithm, uint256 blockNumber)
+    function getChallenge(address assetTypeContract, uint256 tokenId, bytes keyword, uint8 hashingAlgorithm)
         public
         returns (uint256)
     {
@@ -258,7 +258,6 @@ contract ServiceAgreementStorage {
         bytes keyword,
         uint8 hashingAlgorithm,
         uint16 epoch,
-        uint256 blockNumber,
         bytes32[] memory proof,
         bytes32 chunkHash
     )
@@ -295,7 +294,7 @@ contract ServiceAgreementStorage {
         AbstractAsset generalAssetInterface = AbstractAsset(assetTypeContract);
         bytes32 merkleRoot = generalAssetInterface.getCommitHash(0);
 
-        uint256 challenge = getChallenge(assetTypeContract, tokenId, keyword, hashingAlgorithm, blockNumber);
+        uint256 challenge = getChallenge(assetTypeContract, tokenId, keyword, hashingAlgorithm);
 
         require(
             MerkleProof.verify(
