@@ -244,7 +244,7 @@ contract ServiceAgreementStorage {
 
     function getChallenge(address assetTypeContract, uint256 tokenId, bytes keyword, uint8 hashingAlgorithm)
         public
-        returns (uint256)
+        returns (bytes32, uint256)
     {
         bytes32 agreementId = _generateAgreementId(assetTypeContract, tokenId, keyword, hashingAlgorithm);
 
@@ -259,7 +259,10 @@ contract ServiceAgreementStorage {
 
         // blockchash() function only works for last 256 blocks (25.6 min window in case of 6s block time)
         // TODO: figure out how to achieve randomness
-        return uint256(sha256(abi.encodePacked(serviceAgreements[agreementId].proofWindowOffsetPerc, identityId))) % assertionSize;
+        return (
+            assertionId,
+            uint256(sha256(abi.encodePacked(serviceAgreements[agreementId].proofWindowOffsetPerc, identityId))) % assertionSize
+        );
     }
 
     function sendProof(
@@ -301,10 +304,9 @@ contract ServiceAgreementStorage {
 
         require(!isRewarded, "You hasn't been chosen for reward in this epoch!");
 
-        AbstractAsset generalAssetInterface = AbstractAsset(assetTypeContract);
-        bytes32 merkleRoot = generalAssetInterface.getCommitHash(0);
-
-        uint256 challenge = getChallenge(assetTypeContract, tokenId, keyword, hashingAlgorithm);
+        bytes32 merkleRoot;
+        uint256 challenge;
+        (merkleRoot, challenge) = getChallenge(assetTypeContract, tokenId, keyword, hashingAlgorithm);
 
         require(
             MerkleProof.verify(
