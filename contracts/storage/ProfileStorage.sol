@@ -108,6 +108,14 @@ contract ProfileStorage {
         return identityIds[msg.sender];
     }
 
+    function getIdentityContractAddress()
+        public
+        view
+        returns (address)
+    {
+        return identityContractAddresses[identityIds[msg.sender]];
+    }
+
     function getAsk(uint96 identityId)
         public
         view
