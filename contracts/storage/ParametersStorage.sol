@@ -20,6 +20,10 @@ contract ParametersStorage is Ownable {
 
     uint256 public epochLength;
 
+    uint24 public stakeWithdrawalDelay;
+    uint24 public rewardWithdrawalDelay;
+    uint32 public slashingFreezeDuration;
+
     constructor() {
         minimalStake = 50000 ether;
 
@@ -34,6 +38,10 @@ contract ParametersStorage is Ownable {
         replacementWindowDurationPerc = 1;
 
         epochLength = 30 days;
+
+        stakeWithdrawalDelay = 28 days;
+        rewardWithdrawalDelay = 21 days;
+        slashingFreezeDuration = 730 days;
     }
 
     function setMinimalStake(uint96 newMinimalStake)
@@ -104,5 +112,26 @@ contract ParametersStorage is Ownable {
         onlyOwner
     {
         epochLength = newEpochLength;
+    }
+
+    function setStakeWithdrawalDelay(uint24 newStakeWithdrawalDelay)
+        public
+        onlyOwner
+    {
+        stakeWithdrawalDelay = newStakeWithdrawalDelay;
+    }
+
+    function setRewardWithdrawalDelay(uint24 newRewardWithdrawalDelay)
+        public
+        onlyOwner
+    {
+        rewardWithdrawalDelay = newRewardWithdrawalDelay;
+    }
+
+    function setSlashingFreezeDuration(uint32 newSlashingFreezeDuration)
+        public
+        onlyOwner
+    {
+        slashingFreezeDuration = newSlashingFreezeDuration;
     }
 }
