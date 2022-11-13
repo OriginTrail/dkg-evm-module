@@ -182,6 +182,7 @@ contract ServiceAgreementStorage {
         uint96 prevIdentityId
     )
         public
+        returns (uint256)
     {
         bytes32 agreementId = _generateAgreementId(assetTypeContract, tokenId, keyword, hashingAlgorithm);
 
@@ -211,6 +212,15 @@ contract ServiceAgreementStorage {
                 nextIdentity: 0,
                 score: score
             })
+        );
+
+        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+        uint256 epochLength = parametersStorage.epochLength();
+        // Returns start time of the proof phase
+        return (
+            serviceAgreements[agreementId].startTime +
+            epochLength * (epoch - 1) +
+            epochLength * serviceAgreements[agreementId].proofWindowOffsetPerc / 100
         );
     }
 
