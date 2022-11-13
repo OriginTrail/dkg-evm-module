@@ -30,7 +30,7 @@ contract Profile {
         hub = Hub(hubAddress);
     }
 
-    function createProfile(address identityContractAddress, bytes memory nodeId, uint96 initialAsk, uint96 initialStake)
+    function createProfile(address managementWallet, bytes memory nodeId, uint96 initialAsk, uint96 initialStake)
         public
     {
         IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
@@ -42,7 +42,13 @@ contract Profile {
 
         ProfileStorage profileStorage = ProfileStorage(profileStorageAddress);
 
-        identityId = profileStorage.createProfile(msg.sender, identityContractAddress, nodeId, initialAsk, initialStake);
+        (identityId, identityContractAddress) = profileStorage.createProfile(
+            msg.sender,
+            managementWallet,
+            nodeId,
+            initialAsk,
+            initialStake
+        );
        
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
@@ -50,7 +56,7 @@ contract Profile {
             shardingTable.pushBack(identityId);
         }
 
-        emit ProfileCreated(identityId);
+        emit ProfileCreated(identityId, identityContractAddress);
     }
 
     function increaseStake(uint96 amount)

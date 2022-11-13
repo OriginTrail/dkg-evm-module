@@ -6,6 +6,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC734 } from "../interface/ERC734.sol";
 import { HashingHub } from "../HashingHub.sol";
 import { Hub } from "../Hub.sol";
+import { Identity } from "../Identity.sol";
 
 
 contract ProfileStorage {
@@ -54,26 +55,23 @@ contract ProfileStorage {
     }
 
     function createProfile(
-        address sender,
-        address identityContractAddress,
+        address operationalWallet,
+        address managementWallet,
         bytes nodeId,
         uint96 initialAsk,
         uint96 initialStake
     )
         public
         OnlyContracts
-        returns (uint96)
+        returns (uint96, address)
     {
-        ERC734 identity = ERC734(identityContractAddress);
-        
-        require(
-            identity.keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 2),
-            "Sender doesn't have permission for identity"
-        );
-        require(!identityIds[sender], "Profile already exists");
+        require(!identityIds[operationalWallet] && !identityIds[managementWallet], "Profile already exists");
         require(!nodeIdsList[nodeId], "Node ID connected with another profile");
         require(nodeId.length != 0, "Node ID can't be empty");
         require(initialAsk > 0, "Ask can't be 0");
+
+        Identity identity = new Identity(operationalWallet, managementWallet);
+        address identityContractAddress = address(identity);
 
         ProfileDefinition memory profile = ProfileDefinition({
             ask: initialAsk,
@@ -88,15 +86,15 @@ contract ProfileStorage {
 
         profiles[lastIdentityId] = profile;
 
-        identityIds[sender] = lastIdentityId;
+        identityIds[operationalWallet] = lastIdentityId;
         identityContractAddresses[lastIdentityId] = identityContractAddress;
         address managementWallet = identity.getKeysByPurpose(1);
-        this.attachWalletToIdentity(sender, managementWallet);
+        this.attachWalletToIdentity(operationalWallet, managementWallet);
         nodeIdsList[nodeId] = true;
 
         lastIdentityId++;
 
-        return identityIds[sender];
+        return (identityIds[operationalWallet], identityContractAddress);
     }
 
     /* ----------------GETTERS------------------ */
