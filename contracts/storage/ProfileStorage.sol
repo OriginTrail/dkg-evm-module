@@ -100,6 +100,14 @@ contract ProfileStorage {
     }
 
     /* ----------------GETTERS------------------ */
+    function getIdentityId()
+        public
+        view
+        returns (uint96)
+    {
+        return identityIds[msg.sender];
+    }
+
     function getAsk(uint96 identityId)
         public
         view
