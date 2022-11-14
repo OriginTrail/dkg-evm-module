@@ -71,6 +71,10 @@ contract Profile {
         hub = Hub(hubAddress);
     }
 
+    modifier onlyWithAdminKey() {
+		// TODO: Implement admin wallet check
+	}
+
     function createProfile(address managementWallet, bytes memory nodeId, uint96 initialAsk, uint96 initialStake)
         public
     {
@@ -102,6 +106,7 @@ contract Profile {
 
     function increaseStake(uint96 amount)
         public
+        onlyWithAdminKey
     {
         IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
         address profileStorageAddress = hub.getContractAddress("ProfileStorage");
@@ -137,6 +142,7 @@ contract Profile {
 
     function startStakeWithdrawal(uint96 amount)
         public
+        onlyWithAdminKey
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
@@ -173,6 +179,7 @@ contract Profile {
 
     function withdrawFreeStake()
         public
+        onlyWithAdminKey
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
@@ -197,6 +204,7 @@ contract Profile {
 
     function stakeReward()
         public
+        onlyWithAdminKey
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
@@ -230,6 +238,7 @@ contract Profile {
 
     function startRewardWithdrawal()
         public
+        onlyWithAdminKey
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
@@ -257,6 +266,7 @@ contract Profile {
 
     function withdrawFreeReward()
         public
+        onlyWithAdminKey
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
