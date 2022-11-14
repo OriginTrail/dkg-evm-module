@@ -13,15 +13,19 @@ import { ERC734 } from "./interface/ERC734.sol";
 
 
 contract Profile {
-    event ProfileCreated(uint96 identityId);
-    event StakeIncreased(uint96 identityId, uint96 newStake);
-    event StakeWithdrawalInitiated(uint96 identityId, uint96 stakeWithdrawalAmount, uint256 stakeWithdrawalTimestamp);
-    event StakeWithdrawn(uint96 identityId, uint96 withdrawnAmount, uint96 stakeLeft);
-    event RewardStaked(uint96 identityId, uint96 stakedAmount, uint96 newStake);
-    event RewardWithdrawalInitiated(uint96 identityId, uint96 rewardWithdrawalAmount, uint256 rewardWithdrawalTimestamp);
-    event RewardWithdrawn(uint96 identityId, uint96 withdrawnRewardAmount);
-    event StakeFrozen(uint96 identityId, uint96 frozenStakeAmount);
-    event StakeUnfrozen(uint96 identityId, uint96 unfrozenStakeAmount);
+    event ProfileCreated(uint96 identityId, address identityContractAddress);
+    event StakeIncreased(uint96 identityId, address identityContractAddress, uint96 newStake);
+    event StakeWithdrawalInitiated(
+        uint96 identityId, address identityContractAddress, uint96 stakeWithdrawalAmount, uint256 stakeWithdrawalTimestamp
+    );
+    event StakeWithdrawn(uint96 identityId, address identityContractAddress, uint96 withdrawnAmount, uint96 stakeLeft);
+    event RewardStaked(uint96 identityId, address identityContractAddress, uint96 stakedAmount, uint96 newStake);
+    event RewardWithdrawalInitiated(
+        uint96 identityId, address identityContractAddress, uint96 rewardWithdrawalAmount, uint256 rewardWithdrawalTimestamp
+    );
+    event RewardWithdrawn(uint96 identityId, address identityContractAddress, uint96 withdrawnRewardAmount);
+    event StakeFrozen(uint96 identityId, address identityContractAddress, uint96 frozenStakeAmount);
+    event StakeUnfrozen(uint96 identityId, address identityContractAddress, uint96 unfrozenStakeAmount);
 
     Hub public hub;
 
@@ -85,7 +89,7 @@ contract Profile {
             shardingTable.pushBack(identityId);
         }
 
-        emit StakeIncreased(identityId, newStake);
+        emit StakeIncreased(identityId, profileStorage.identityContractAddresses(identityId), newStake);
     }
 
     function startStakeWithdrawal(uint96 amount)
@@ -112,7 +116,12 @@ contract Profile {
         uint256 stakeWithdrawalTimestamp = block.timestamp + parametersStorage.stakeWithdrawalDelay();
         profileStorage.setStakeWithdrawalTimestamp(identityId, stakeWithdrawalTimestamp);
 
-        emit StakeWithdrawalInitiated(identityId, newStakeWithdrawalAmount, stakeWithdrawalTimestamp);
+        emit StakeWithdrawalInitiated(
+            identityId,
+            profileStorage.identityContractAddresses(identityId),
+            newStakeWithdrawalAmount,
+            stakeWithdrawalTimestamp
+        );
     }
 
     function withdrawFreeStake()
@@ -143,7 +152,12 @@ contract Profile {
             shardingTable.removeNode(identityId);
         }
 
-        emit StakeWithdrawn(identityId, stakeWithdrawalAmount, newStake);
+        emit StakeWithdrawn(
+            identityId,
+            profileStorage.identityContractAddresses(identityId),
+            stakeWithdrawalAmount,
+            newStake
+        );
     }
 
     function stakeReward()
@@ -161,6 +175,13 @@ contract Profile {
 
         profileStorage.setReward(identityId, 0);
         profileStorage.setStake(identityId, newStake);
+
+        emit RewardStaked(
+            identityId,
+            profileStorage.identityContractAddresses(identityId),
+            rewardAmount,
+            newStake
+        );
     }
 
     function startRewardWithdrawal()
@@ -184,7 +205,12 @@ contract Profile {
         uint256 rewardWithdrawalTimestamp = block.timestamp + parametersStorage.rewardWithdrawalDelay();
         profileStorage.setRewardWithdrawalTimestamp(identityId, rewardWithdrawalTimestamp);
 
-        emit RewardWithdrawalInitiated(identityId, reward, rewardWithdrawalTimestamp);
+        emit RewardWithdrawalInitiated(
+            identityId,
+            profileStorage.identityContractAddresses(identityId),
+            reward,
+            rewardWithdrawalTimestamp
+        );
     }
 
     function withdrawFreeReward()
@@ -207,7 +233,12 @@ contract Profile {
         profileStorage.setReward(identityId, newReward);
         profileStorage.setRewardWithdrawalAmount(identityId, 0);
 
-        emit RewardWithdrawn(identityId, rewardWithdrawalAmount, newReward);
+        emit RewardWithdrawn(
+            identityId,
+            profileStorage.identityContractAddresses(identityId),
+            rewardWithdrawalAmount,
+            newReward
+        );
     }
 
     // function freezeStake(uint8 percentage)
