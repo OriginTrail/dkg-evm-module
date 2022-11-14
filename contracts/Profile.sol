@@ -12,29 +12,63 @@ import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { ShardingTable } from "./ShardingTable.sol";
 
 contract Profile {
-    event ProfileCreated(uint96 indexed identityId, address indexed identityContractAddress);
-    event StakeIncreased(uint96 indexed identityId, address indexed identityContractAddress, uint96 newStake);
+    event ProfileCreated(
+        uint96 indexed identityId,
+        address indexed identityContractAddress,
+        bytes indexed nodeId,
+    );
+    event StakeIncreased(
+        uint96 indexed identityId,
+        address indexed identityContractAddress,
+        bytes indexed nodeId,
+        uint96 newStake,
+    );
     event StakeWithdrawalInitiated(
         uint96 indexed identityId,
         address indexed identityContractAddress,
+        bytes indexed nodeId,
         uint96 stakeWithdrawalAmount,
-        uint256 stakeWithdrawalTimestamp
+        uint256 stakeWithdrawalTimestamp,
     );
     event StakeWithdrawn(
-        uint96 indexed identityId, address indexed identityContractAddress, uint96 withdrawnAmount, uint96 stakeLeft
+        uint96 indexed identityId,
+        address indexed identityContractAddress,
+        bytes indexed nodeId,
+        uint96 withdrawnAmount,
+        uint96 stakeLeft,
     );
     event RewardStaked(
-        uint96 indexed identityId, address indexed identityContractAddress, uint96 stakedAmount, uint96 newStake
+        uint96 indexed identityId,
+        address indexed identityContractAddress,
+        bytes indexed nodeId,
+        uint96 stakedAmount,
+        uint96 newStake,
     );
     event RewardWithdrawalInitiated(
         uint96 indexed identityId,
         address indexed identityContractAddress,
+        bytes indexed nodeId,
         uint96 rewardWithdrawalAmount,
-        uint256 rewardWithdrawalTimestamp
+        uint256 rewardWithdrawalTimestamp,
     );
-    event RewardWithdrawn(uint96 indexed identityId, address indexed identityContractAddress, uint96 withdrawnRewardAmount);
-    event StakeFrozen(uint96 indexed identityId, address indexed identityContractAddress, uint96 frozenStakeAmount);
-    event StakeUnfrozen(uint96 indexed identityId, address indexed identityContractAddress, uint96 unfrozenStakeAmount);
+    event RewardWithdrawn(
+        uint96 indexed identityId,
+        address indexed identityContractAddress,
+        bytes indexed nodeId,
+        uint96 withdrawnRewardAmount
+    );
+    event StakeFrozen(
+        uint96 indexed identityId,
+        address indexed identityContractAddress,
+        bytes indexed nodeId,
+        uint96 frozenStakeAmount
+    );
+    event StakeUnfrozen(
+        uint96 indexed identityId,
+        address indexed identityContractAddress,
+        bytes indexed nodeId,
+        uint96 unfrozenStakeAmount
+    );
 
     Hub public hub;
 
@@ -69,7 +103,7 @@ contract Profile {
             shardingTable.pushBack(identityId);
         }
 
-        emit ProfileCreated(identityId, identityContractAddress);
+        emit ProfileCreated(identityId, identityContractAddress, nodeId);
     }
 
     function increaseStake(uint96 amount)
@@ -98,7 +132,12 @@ contract Profile {
             shardingTable.pushBack(identityId);
         }
 
-        emit StakeIncreased(identityId, profileStorage.identityContractAddresses(identityId), newStake);
+        emit StakeIncreased(
+            identityId,
+            profileStorage.identityContractAddresses(identityId),
+            profileStorage.getNodeId(identityId),
+            newStake,
+        );
     }
 
     function startStakeWithdrawal(uint96 amount)
@@ -128,6 +167,7 @@ contract Profile {
         emit StakeWithdrawalInitiated(
             identityId,
             profileStorage.identityContractAddresses(identityId),
+            profileStorage.getNodeId(identityId),
             newStakeWithdrawalAmount,
             stakeWithdrawalTimestamp
         );
@@ -164,6 +204,7 @@ contract Profile {
         emit StakeWithdrawn(
             identityId,
             profileStorage.identityContractAddresses(identityId),
+            profileStorage.getNodeId(identityId),
             stakeWithdrawalAmount,
             newStake
         );
@@ -188,6 +229,7 @@ contract Profile {
         emit RewardStaked(
             identityId,
             profileStorage.identityContractAddresses(identityId),
+            profileStorage.getNodeId(identityId),
             rewardAmount,
             newStake
         );
@@ -217,6 +259,7 @@ contract Profile {
         emit RewardWithdrawalInitiated(
             identityId,
             profileStorage.identityContractAddresses(identityId),
+            profileStorage.getNodeId(identityId),
             reward,
             rewardWithdrawalTimestamp
         );
@@ -245,6 +288,7 @@ contract Profile {
         emit RewardWithdrawn(
             identityId,
             profileStorage.identityContractAddresses(identityId),
+            profileStorage.getNodeId(identityId),
             rewardWithdrawalAmount,
             newReward
         );
