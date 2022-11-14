@@ -21,6 +21,7 @@ contract Profile {
         uint96 indexed identityId,
         address indexed identityContractAddress,
         bytes indexed nodeId,
+        uint96 stakedAmount,
         uint96 newStake,
     );
     event StakeWithdrawalInitiated(
@@ -29,20 +30,13 @@ contract Profile {
         bytes indexed nodeId,
         uint96 stakeWithdrawalAmount,
         uint256 stakeWithdrawalTimestamp,
+        uint96 newStake,
     );
     event StakeWithdrawn(
         uint96 indexed identityId,
         address indexed identityContractAddress,
         bytes indexed nodeId,
-        uint96 withdrawnAmount,
-        uint96 stakeLeft,
-    );
-    event RewardStaked(
-        uint96 indexed identityId,
-        address indexed identityContractAddress,
-        bytes indexed nodeId,
-        uint96 stakedAmount,
-        uint96 newStake,
+        uint96 withdrawnStakeAmount,
     );
     event RewardWithdrawalInitiated(
         uint96 indexed identityId,
@@ -55,19 +49,19 @@ contract Profile {
         uint96 indexed identityId,
         address indexed identityContractAddress,
         bytes indexed nodeId,
-        uint96 withdrawnRewardAmount
+        uint96 withdrawnRewardAmount,
     );
     event StakeFrozen(
         uint96 indexed identityId,
         address indexed identityContractAddress,
         bytes indexed nodeId,
-        uint96 frozenStakeAmount
+        uint96 frozenStakeAmount,
     );
     event StakeUnfrozen(
         uint96 indexed identityId,
         address indexed identityContractAddress,
         bytes indexed nodeId,
-        uint96 unfrozenStakeAmount
+        uint96 unfrozenStakeAmount,
     );
 
     Hub public hub;
@@ -136,6 +130,7 @@ contract Profile {
             identityId,
             profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
+            amount,
             newStake,
         );
     }
@@ -147,29 +142,32 @@ contract Profile {
 
         uint96 identityId = profileStorage.identityIds(msg.sender);
 
-        uint96 oldStakeWithdrawalAmount = profileStorage.getStakeWithdrawalAmount(identityId);
-        uint96 availableStake = (
-            profileStorage.getStake(identityId) -
-            oldStakeWithdrawalAmount -
-            profileStorage.getFrozenAmount(identityId)
-        );
+        require(amount <= profileStorage.getStake(identityId), "Amount can't be bigger than available stake");
 
-        require(amount <= availableStake, "Amount can't be bigger than available stake");
-
-        uint96 newStakeWithdrawalAmount = oldStakeWithdrawalAmount + amount;
+        uint96 oldStake = profileStorage.getStake(identityId);
+        uint96 newStake = oldStake - amount;
+        uint96 newStakeWithdrawalAmount = profileStorage.getStakeWithdrawalAmount(identityId) + amount;
 
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
+        profileStorage.setStake(identityId, newStake);
         profileStorage.setStakeWithdrawalAmount(identityId, newStakeWithdrawalAmount);
         uint256 stakeWithdrawalTimestamp = block.timestamp + parametersStorage.stakeWithdrawalDelay();
         profileStorage.setStakeWithdrawalTimestamp(identityId, stakeWithdrawalTimestamp);
+
+        uint96 minimalStake = parametersStorage.minimalStake();
+        if (oldStake >= minimalStake && newStake < minimalStake) {
+            ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
+            shardingTable.removeNode(identityId);
+        }
 
         emit StakeWithdrawalInitiated(
             identityId,
             profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
             newStakeWithdrawalAmount,
-            stakeWithdrawalTimestamp
+            stakeWithdrawalTimestamp,
+            newStake,
         );
     }
 
@@ -187,26 +185,13 @@ contract Profile {
 
         profileStorage.transferTokens(msg.sender, stakeWithdrawalAmount);
 
-        uint96 oldStake = profileStorage.getStake(identityId);
-        uint96 newStake = oldStake - stakeWithdrawalAmount;
-
-        profileStorage.setStake(identityId, newStake);
         profileStorage.setStakeWithdrawalAmount(identityId, 0);
-
-        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
-
-        uint96 minimalStake = parametersStorage.minimalStake();
-        if (oldStake >= minimalStake && newStake < minimalStake) {
-            ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
-            shardingTable.removeNode(identityId);
-        }
 
         emit StakeWithdrawn(
             identityId,
             profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
             stakeWithdrawalAmount,
-            newStake
         );
     }
 
@@ -226,12 +211,20 @@ contract Profile {
         profileStorage.setReward(identityId, 0);
         profileStorage.setStake(identityId, newStake);
 
+        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+
+        uint96 minimalStake = parametersStorage.minimalStake();
+        if (oldStake < minimalStake && newStake >= minimalStake) {
+            ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
+            shardingTable.pushBack(identityId);
+        }
+
         emit RewardStaked(
             identityId,
             profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
             rewardAmount,
-            newStake
+            newStake,
         );
     }
 
@@ -243,16 +236,13 @@ contract Profile {
         uint96 identityId = profileStorage.identityIds(msg.sender);
 
         uint96 reward = profileStorage.getReward(identityId);
-        uint96 availableReward = (
-            reward -
-            profileStorage.getRewardWithdrawalAmount(identityId)
-        );
 
-        require(availableReward > 0, "No reward to withdraw");
+        require(reward > 0, "No reward to withdraw");
 
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
-        profileStorage.setRewardWithdrawalAmount(identityId, reward);
+        profileStorage.setReward(identityId, 0);
+        profileStorage.setRewardWithdrawalAmount(identityId, profileStorage.getRewardWithdrawalAmount(identityId) + reward);
         uint256 rewardWithdrawalTimestamp = block.timestamp + parametersStorage.rewardWithdrawalDelay();
         profileStorage.setRewardWithdrawalTimestamp(identityId, rewardWithdrawalTimestamp);
 
@@ -279,10 +269,6 @@ contract Profile {
 
         profileStorage.transferTokens(msg.sender, rewardWithdrawalAmount);
 
-        uint96 oldReward = profileStorage.getReward(identityId);
-        uint96 newReward = oldReward - rewardWithdrawalAmount;
-
-        profileStorage.setReward(identityId, newReward);
         profileStorage.setRewardWithdrawalAmount(identityId, 0);
 
         emit RewardWithdrawn(
@@ -290,7 +276,6 @@ contract Profile {
             profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
             rewardWithdrawalAmount,
-            newReward
         );
     }
 
