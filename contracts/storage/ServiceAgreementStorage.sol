@@ -11,7 +11,7 @@ import { Hub } from "../Hub.sol";
 import { ParametersStorage } from "./ParametersStorage.sol";
 import { Profile } from "../Profile.sol";
 import { ProfileStorage } from "./ProfileStorage.sol";
-import { ScoringHub } from "../ScoringHub.sol";
+import { ScoringProxy } from "../ScoringProxy.sol";
 import { ShardingTable } from "../ShardingTable.sol";
 
 contract ServiceAgreementStorage {
@@ -192,8 +192,8 @@ contract ServiceAgreementStorage {
         bytes nodeId = profileStorage.getNodeId(identityId);
         uint32 stake = profileStorage.getStake(identityId);
 
-        ScoringHub scoringHub = ScoringHub(hub.getContractAddress("ScoringHub"));
-        uint32 score = scoringHub.calculateScore(
+        ScoringProxy scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
+        uint32 score = scoringProxy.calculateScore(
             serviceAgreements[agreementId].scoringFunctionId,
             hashingAlgorithm,
             nodeId,
