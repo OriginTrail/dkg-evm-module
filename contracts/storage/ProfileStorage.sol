@@ -316,9 +316,9 @@ contract ProfileStorage {
         public
         onlyContracts
     {
-        require(wallet != address(0), "Receiver address can't be empty");
+        require(receiver != address(0), "Receiver address can't be empty");
 
         IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
-        tokenContract.transfer(wallet, amount);
+        tokenContract.transfer(receiver, amount);
     }
 }
