@@ -65,7 +65,7 @@ contract ProfileStorage {
         OnlyContracts
         returns (uint96, address)
     {
-        require(!identityIds[operationalWallet] && !identityIds[managementWallet], "Profile already exists");
+        require(!identityIds[operationalWallet], "Profile already exists");
         require(!nodeIdsList[nodeId], "Node ID connected with another profile");
         require(nodeId.length != 0, "Node ID can't be empty");
         require(initialAsk > 0, "Ask can't be 0");
@@ -88,8 +88,6 @@ contract ProfileStorage {
 
         identityIds[operationalWallet] = lastIdentityId;
         identityContractAddresses[lastIdentityId] = identityContractAddress;
-        address managementWallet = identity.getKeysByPurpose(1);
-        this.attachWalletToIdentity(operationalWallet, managementWallet);
         nodeIdsList[nodeId] = true;
 
         lastIdentityId++;
