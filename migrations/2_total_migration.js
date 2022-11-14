@@ -3,8 +3,10 @@ var BN = require('bn.js');
 
 var ParametersStorage = artifacts.require('ParametersStorage');
 var HashingHub = artifacts.require('HashingHub'); // eslint-disable-line no-undef
+var ScoringProxy = artifacts.require('ScoringProxy'); // eslint-disable-line no-undef
 var Hub = artifacts.require('Hub'); // eslint-disable-line no-undef
 var SHA256 = artifacts.require('SHA256'); // eslint-disable-line no-undef
+var PLDSF = artifacts.require('PLDSF'); // eslint-disable-line no-undef
 var ShardingTable = artifacts.require('ShardingTable'); // eslint-disable-line no-undef
 var AssertionRegistry = artifacts.require('AssertionRegistry'); // eslint-disable-line no-undef
 var UAIRegistry = artifacts.require('UAIRegistry'); // eslint-disable-line no-undef
@@ -47,7 +49,8 @@ module.exports = async (deployer, network, accounts) => {
     let (
         assertionRegistry, erc721Registry, erc20Token,
         profileStorage, parametersStorage, profile,
-        hashingHub, hub, sha256Contract, shardingTable
+        hashingHub, hub, sha256Contract, shardingTable,
+        scoringProxy, pldsfContract
     );
 
     switch (network) {
@@ -84,6 +87,22 @@ module.exports = async (deployer, network, accounts) => {
 
             // 0 - sha256
             await hashingHub.setContractAddress(0, sha256Contract.address);
+            /* ---------------------------------------------------------------------------------------- */
+
+            /* ------------------------------------Scoring Hub---------------------------------------- */
+            await deployer.deploy(ScoringProxy, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    scoringProxy = result;
+                });
+            await hub.setContractAddress('ScoringProxy', scoringProxy.address);
+
+            await deployer.deploy(PLDSF, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    pldsfContract = result;
+                });
+
+            // 0 - PLDSF
+            await scoringProxy.setContractAddress(0, pldsfContract.address);
             /* ---------------------------------------------------------------------------------------- */
 
             await deployer.deploy(ShardingTable, hub.address, {gas: 6000000, from: accounts[0]})
