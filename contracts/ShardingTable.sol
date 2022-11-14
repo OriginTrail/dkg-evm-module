@@ -106,13 +106,10 @@ contract ShardingTable {
         return getShardingTable(head, nodesCount);
     }
 
-    function pushBack(address sender)
+    function pushBack(uint96 identityId)
         public
         onlyProfile
-    {
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        uint96 identityId = profileStorage.getIdentityId(sender);
-        
+    {        
         _createNodeObj(identityId);
     
         bytes memory nodeId = profileStorage.getNodeId(identityId);
@@ -125,13 +122,10 @@ contract ShardingTable {
         nodesCount += 1;
     }
 
-    function pushFront(address sender)
+    function pushFront(uint96 identityId)
         public
         onlyProfile
     {
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        uint96 identityId = profileStorage.getIdentityId(sender);
-
         _createNodeObj(identityId);
 
         bytes memory nodeId = profileStorage.getNodeId(identityId);
@@ -144,12 +138,11 @@ contract ShardingTable {
         nodesCount += 1;
     }
 
-    function removeNode(address sender)
+    function removeNode(uint96 identityId)
         public
         onlyProfile
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        uint96 identityId = profileStorage.getIdentityId(sender);
         bytes memory nodeId = profileStorage.getNodeId(identityId);
 
         Node memory nodeToRemove = nodes[nodeId];

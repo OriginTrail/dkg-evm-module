@@ -9,7 +9,6 @@ import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerklePr
 import { HashingHub } from "../HashingHub.sol";
 import { Hub } from "../Hub.sol";
 import { ParametersStorage } from "./ParametersStorage.sol";
-import { Profile } from "../Profile.sol";
 import { ProfileStorage } from "./ProfileStorage.sol";
 import { ScoringProxy } from "../ScoringProxy.sol";
 import { ShardingTable } from "../ShardingTable.sol";
@@ -316,12 +315,15 @@ contract ServiceAgreementStorage {
             "Root hash doesn't match"
         );
 
-        Profile profile = Profile(hub.getContractAddress("Profile"));
-
         uint16 notFinishedEpochs = serviceAgreements[agreementId].epochsNum - epoch + 1;
         uint96 reward = serviceAgreements[agreementId].tokenAmount / notFinishedEpochs / notRewardedNodes;
 
-        profile.receiveReward(address(this), identityId, reward);
+        IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
+        tokenContract.transfer(address(profileStorage), reward);
+        
+        uint96 oldReward = profileStorage.getReward(identityId);
+        uint96 newReward = oldReward + reward;
+        profileStorage.setReward(identityId, newReward);
 
         serviceAgreements[agreementId].tokenAmount -= reward;
 
