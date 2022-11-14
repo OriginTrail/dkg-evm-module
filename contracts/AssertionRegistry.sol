@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Hub.sol";
 
 contract AssertionRegistry is Ownable {
+	event AssertionCreated(bytes32 indexed assertionId, address issuer, uint256 size);
+
 	Hub public hub;
 
 	struct AssertionRecord{
@@ -15,8 +17,6 @@ contract AssertionRegistry is Ownable {
 	}
 
 	mapping(bytes32 => AssertionRecord) internal assertionRecords;
-
-	event AssertionCreated(bytes32 indexed assertionId, address issuer, uint256 size);
 
 	constructor(address hubAddress) {
 		require(hubAddress != address(0));
@@ -30,7 +30,10 @@ contract AssertionRegistry is Ownable {
 		_;
 	}
 
-	function createAssertionRecord(bytes32 assertionId, address issuer, uint256 size) public onlyContracts {
+	function createAssertionRecord(bytes32 assertionId, address issuer, uint256 size)
+		public
+		onlyContracts
+	{
 		require(assertionId != 0, "assertionId cannot be zero");
 		require(size != 0, "size cannot be zero");
 		require(assertionRecords[assertionId].timestamp == 0, "Assertion already exists");
@@ -43,12 +46,18 @@ contract AssertionRegistry is Ownable {
 	}
 
 	function getIssuer(bytes32 assertionId)
-	public view returns(address issuer){
+		public
+		view
+		returns(address issuer)
+	{
 		return assertionRecords[assertionId].issuer;
 	}
 
 	function getTimestamp(bytes32 assertionId)
-	public view returns(uint256 timestamp){
+		public
+		view
+		returns(uint256 timestamp)
+	{
 		return assertionRecords[assertionId].timestamp;
 	}
 }

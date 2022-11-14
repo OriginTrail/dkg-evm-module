@@ -9,9 +9,9 @@ import { Identity } from "../Identity.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ProfileStorage {
-    event AskUpdated(bytes nodeId, uint96 ask);
-    event StakeUpdated(bytes nodeId, uint96 stake);
-    event RewardUpdated(bytes nodeId, uint96 reward);
+    event AskUpdated(uint96 indexed identityId, address indexed identityContractAddress, bytes indexed nodeId, uint96 ask);
+    event StakeUpdated(uint96 indexed identityId, address indexed identityContractAddress, bytes indexed nodeId, uint96 stake);
+    event RewardUpdated(uint96 indexed identityId, address indexed identityContractAddress, bytes indexed nodeId, uint96 reward);
 
     Hub public hub;
 
@@ -208,7 +208,7 @@ contract ProfileStorage {
 
         profiles[identityId].ask = ask;
 
-        emit AskUpdated(this.getNodeId(identityId), ask);
+        emit AskUpdated(identityId, identityContractAddresses[identityId], this.getNodeId(identityId), ask);
     }
     
     function setStake(uint96 identityId, uint96 stake)
@@ -217,7 +217,7 @@ contract ProfileStorage {
     {
         profiles[identityId].stake = stake;
 
-        emit StakeUpdated(this.getNodeId(identityId), stake);
+        emit StakeUpdated(identityId, identityContractAddresses[identityId], this.getNodeId(identityId), stake);
     }
 
     function setReward(uint96 identityId, uint96 reward)
@@ -226,7 +226,7 @@ contract ProfileStorage {
     {
         profiles[identityId].reward = reward;
 
-        emit RewardUpdated(this.getNodeId(identityId), reward);
+        emit RewardUpdated(identityId, identityContractAddresses[identityId], this.getNodeId(identityId), reward);
     }
 
     function setStakeWithdrawalAmount(uint96 identityId, uint96 stakeWithdrawalAmount) 

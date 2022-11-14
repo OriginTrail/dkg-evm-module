@@ -12,13 +12,10 @@
 //     uint256 tokenId = 0;
 //     constructor(address hubAddress) 
 //         AbstractAsset(hubAddress) 
-//         ERC721("ContentAsset", "DKG") 
+//         ERC721("IndexAsset", "DKG") 
 //         {}
 
 //     uint256 _tokenId = 0;
-
-//     event AssetCreated(uint256 indexed UAI, bytes32 indexed stateCommitHash);
-//     event AssetUpdated(uint256 indexed UAI, bytes32 indexed stateCommitHash);
 
 //     struct AssetRecord {
 //         bytes32[] assertions;

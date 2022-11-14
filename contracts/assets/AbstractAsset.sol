@@ -5,6 +5,9 @@ pragma solidity ^0.8.0;
 import { Hub } from "./Hub.sol";
 
 abstract contract AbstractAsset {
+    event AssetCreated(uint256 indexed UAI, bytes32 indexed stateCommitHash);
+    event AssetUpdated(uint256 indexed UAI, bytes32 indexed stateCommitHash);
+
     Hub public hub;
 
     constructor(address hubAddress) {

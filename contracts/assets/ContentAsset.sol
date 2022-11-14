@@ -16,9 +16,6 @@ contract ContentAsset is AbstractAsset, ERC721 {
         
     uint256 _tokenId = 0;
 
-    event AssetCreated(uint256 indexed UAI, bytes32 indexed stateCommitHash);
-    event AssetUpdated(uint256 indexed UAI, bytes32 indexed stateCommitHash);
-
     struct AssetRecord {
         bytes32[] assertions;
     }

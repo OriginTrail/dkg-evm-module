@@ -14,6 +14,43 @@ import { ScoringProxy } from "../ScoringProxy.sol";
 import { ShardingTable } from "../ShardingTable.sol";
 
 contract ServiceAgreementStorage {
+    event ServiceAgreementCreated(
+        address indexed assetTypeContract,
+        uint256 indexed tokenId,
+        bytes indexed keyword,
+        uint8 indexed hashingAlgorithm,
+        uint256 startTime,
+        uint16 epochsNum,
+        uint128 epochLength,
+        uint96 tokenAmount,
+    );
+    event ServiceAgreementUpdated(
+        address indexed assetTypeContract,
+        uint256 indexed tokenId,
+        bytes indexed keyword,
+        uint8 indexed hashingAlgorithm,
+        uint16 epochsNum,
+        uint96 tokenAmount,
+    );
+    event CommitSubmitted(
+        address indexed assetTypeContract,
+        uint256 indexed tokenId,
+        bytes indexed keyword,
+        uint8 indexed hashingAlgorithm,
+        uint96 indexed identityId,
+        bytes indexed nodeId,
+        uint32 score,
+    );
+    event ProofSubmitted(
+        address indexed assetTypeContract,
+        uint256 indexed tokenId,
+        bytes indexed keyword,
+        uint8 indexed hashingAlgorithm,
+        uint96 indexed identityId,
+        bytes indexed nodeId,
+    );
+
+
     struct CommitSubmission {
         uint96 identityId;
         uint96 nextIdentity;
@@ -96,6 +133,17 @@ contract ServiceAgreementStorage {
         bytes32 agreementId = _generateAgreementId(assetTypeContract, tokenId, keyword, hashingAlgorithm);
 
         serviceAgreements[agreementId] = agreement;
+
+        emit ServiceAgreementCreated(
+            assetTypeContract,
+            tokenId,
+            keyword,
+            hashingAlgorithm,
+            agreement.startTime,
+            agreement.epochsNum,
+            agreement.epochLength,
+            agreement.tokenAmount,
+        );
     }
 
     function updateServiceAgreement(
@@ -126,6 +174,15 @@ contract ServiceAgreementStorage {
 
         serviceAgreements[agreementId].epochsNum += epochsNum;
         serviceAgreements[agreementId].tokenAmount += tokenAmount;
+
+        emit ServiceAgreementUpdated(
+            assetTypeContract,
+            tokenId,
+            keyword,
+            hashingAlgorithm,
+            agreement.epochsNum,
+            agreement.tokenAmount,
+        );
     }
 
     function isCommitWindowOpen(bytes32 agreementId, uint16 epoch)
@@ -210,6 +267,16 @@ contract ServiceAgreementStorage {
                 nextIdentity: 0,
                 score: score
             })
+        );
+
+        emit CommitSubmitted(
+            assetTypeContract,
+            tokenId,
+            keyword,
+            hashingAlgorithm,
+            identityId,
+            nodeId,
+            score,
         );
 
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
@@ -313,6 +380,15 @@ contract ServiceAgreementStorage {
                 keccak256(abi.encodePacked(chunkHash, challenge))
             ),
             "Root hash doesn't match"
+        );
+
+        emit ProofSubmitted(
+            assetTypeContract,
+            tokenId,
+            keyword,
+            hashingAlgorithm,
+            identityId,
+            profileStorage.getNodeId(identityId),
         );
 
         uint16 notFinishedEpochs = serviceAgreements[agreementId].epochsNum - epoch + 1;

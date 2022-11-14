@@ -5,14 +5,14 @@ pragma solidity ^0.8.0;
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Hub is Ownable{
+    event ContractsChanged(string contractName, address newContractAddres);
+    event AssetTypeContractsChanged(string contractName, address newContractAddres);
+
     mapping(bytes32 => address) contractAddress;
     mapping(address => bool) contractList;
 
     mapping(bytes32 => address) assetTypeContractAdresses;
     mapping(address => bool) assetTypeContractsList;
-
-    event ContractsChanged();
-    event AssetTypeContractsChanged();
 
     function setContractAddress(string memory contractName, address newContractAddress)
         public
@@ -30,7 +30,7 @@ contract Hub is Ownable{
             contractList[newContractAddress] = true;
         }
 
-        emit ContractsChanged();
+        emit ContractsChanged(contractName, newContractAddress);
     }
 
     function setAssetTypeContractAddress(string memory assetTypeName, address newContractAddress)
@@ -49,7 +49,7 @@ contract Hub is Ownable{
             assetTypeContractsList[newContractAddress] = true;
         }
 
-        emit AssetTypeContractsChanged();
+        emit AssetTypeContractsChanged(assetTypeName, newContractAddress);
     }
 
     function getContractAddress(string memory contractName)
