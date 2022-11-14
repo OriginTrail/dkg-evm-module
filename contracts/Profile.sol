@@ -13,19 +13,29 @@ import { ERC734 } from "./interface/ERC734.sol";
 
 
 contract Profile {
-    event ProfileCreated(uint96 identityId, address identityContractAddress);
-    event StakeIncreased(uint96 identityId, address identityContractAddress, uint96 newStake);
+    event ProfileCreated(uint96 indexed identityId, address indexed identityContractAddress);
+    event StakeIncreased(uint96 indexed identityId, address indexed identityContractAddress, uint96 newStake);
     event StakeWithdrawalInitiated(
-        uint96 identityId, address identityContractAddress, uint96 stakeWithdrawalAmount, uint256 stakeWithdrawalTimestamp
+        uint96 indexed identityId,
+        address indexed identityContractAddress,
+        uint96 stakeWithdrawalAmount,
+        uint256 stakeWithdrawalTimestamp
     );
-    event StakeWithdrawn(uint96 identityId, address identityContractAddress, uint96 withdrawnAmount, uint96 stakeLeft);
-    event RewardStaked(uint96 identityId, address identityContractAddress, uint96 stakedAmount, uint96 newStake);
+    event StakeWithdrawn(
+        uint96 indexed identityId, address indexed identityContractAddress, uint96 withdrawnAmount, uint96 stakeLeft
+    );
+    event RewardStaked(
+        uint96 indexed identityId, address indexed identityContractAddress, uint96 stakedAmount, uint96 newStake
+    );
     event RewardWithdrawalInitiated(
-        uint96 identityId, address identityContractAddress, uint96 rewardWithdrawalAmount, uint256 rewardWithdrawalTimestamp
+        uint96 indexed identityId,
+        address indexed identityContractAddress,
+        uint96 rewardWithdrawalAmount,
+        uint256 rewardWithdrawalTimestamp
     );
-    event RewardWithdrawn(uint96 identityId, address identityContractAddress, uint96 withdrawnRewardAmount);
-    event StakeFrozen(uint96 identityId, address identityContractAddress, uint96 frozenStakeAmount);
-    event StakeUnfrozen(uint96 identityId, address identityContractAddress, uint96 unfrozenStakeAmount);
+    event RewardWithdrawn(uint96 indexed identityId, address indexed identityContractAddress, uint96 withdrawnRewardAmount);
+    event StakeFrozen(uint96 indexed identityId, address indexed identityContractAddress, uint96 frozenStakeAmount);
+    event StakeUnfrozen(uint96 indexed identityId, address indexed identityContractAddress, uint96 unfrozenStakeAmount);
 
     Hub public hub;
 
