@@ -2,12 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC734 } from "../interface/ERC734.sol";
-import { HashingHub } from "../HashingHub.sol";
+import { HashingProxy } from "../HashingProxy.sol";
 import { Hub } from "../Hub.sol";
 import { Identity } from "../Identity.sol";
-
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ProfileStorage {
     event AskUpdated(bytes nodeId, uint96 ask);
@@ -303,8 +302,8 @@ contract ProfileStorage {
         public
         onlyContract
     {
-        HashingHub hashingHub = HashingHub(hub.getContractAddress("HashingHub"));
-        profiles[identityId].nodeAddresses[hashingAlgorithm] = hashingHub.callHashingFunction(
+        HashingProxy hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+        profiles[identityId].nodeAddresses[hashingAlgorithm] = hashingProxy.callHashingFunction(
             hashingAlgorithm,
             profiles[identityId].nodeId
         );

@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import { IScoringFunction } from "../interface/ScoringFunction.sol";
-import { HashingHub } from "../HashingHub.sol";
+import { HashingProxy } from "../HashingProxy.sol";
 import { Hub } from "../Hub.sol";
+import { IScoringFunction } from "../interface/ScoringFunction.sol";
 
 // Polynomial Long Division Scoring Function
 contract PLDSF is IScoringFunction {
@@ -42,9 +42,9 @@ contract PLDSF is IScoringFunction {
         public
         returns (uint256)
     {
-        HashingHub hashingHub = HashingHub(hub.getContractAddress("HashingHub"));
-        bytes32 nodeIdHash = hashingHub.callHashingFunction(hashingFunctionId, nodeId);
-        bytes32 keywordHash = hashingHub.callHashingFunction(hashingFunctionId, keyword);
+        HashingProxy hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+        bytes32 nodeIdHash = hashingProxy.callHashingFunction(hashingFunctionId, nodeId);
+        bytes32 keywordHash = hashingProxy.callHashingFunction(hashingFunctionId, keyword);
 
         return uint256(nodeIdHash ^ keywordHash);
     }

@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-
 contract Hub is Ownable{
     mapping(bytes32 => address) contractAddress;
     mapping(address => bool) contractList;
@@ -87,4 +86,3 @@ contract Hub is Ownable{
         return assetTypeContractsList[assetTypeContractAddress];
     }
 }
-

@@ -5,8 +5,7 @@ pragma solidity ^0.8.0;
 import { IHashingFunction } from "./interface/HashingFunction.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-
-contract HashingHub is Ownable {
+contract HashingProxy is Ownable {
     // algorithmId => Contract address
     mapping(uint8 => address) functions;
 

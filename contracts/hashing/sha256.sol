@@ -2,7 +2,6 @@
 
 pragma solidity^0.8.0;
 
-
 import { IHashingFunction } from "../interface/HashingFunction.sol";
 
 contract SHA256 is IHashingFunction {

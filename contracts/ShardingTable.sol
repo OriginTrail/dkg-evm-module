@@ -5,7 +5,6 @@ pragma solidity^0.8.0;
 import {Hub} from './Hub.sol';
 import {ProfileStorage} from './storage/ProfileStorage.sol';
 
-
 contract ShardingTable {
     event NodeObjCreated(bytes nodeId, uint96 ask, uint96 stake);
     event NodeRemoved(bytes nodeId);

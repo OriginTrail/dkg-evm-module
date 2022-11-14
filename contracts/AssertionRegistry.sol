@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Hub.sol";
 
-
 contract AssertionRegistry is Ownable {
 	Hub public hub;
 
@@ -17,7 +16,6 @@ contract AssertionRegistry is Ownable {
 
 	mapping(bytes32 => AssertionRecord) internal assertionRecords;
 
-	// events
 	event AssertionCreated(bytes32 indexed assertionId, address issuer, uint256 size);
 
 	constructor(address hubAddress) {

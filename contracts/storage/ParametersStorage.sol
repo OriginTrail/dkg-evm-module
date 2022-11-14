@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-
 contract ParametersStorage is Ownable {
     uint96 public minimalStake;
 

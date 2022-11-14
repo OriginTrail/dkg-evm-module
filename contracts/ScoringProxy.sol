@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import { IScoringFunction } from "./interface/ScoringFunction.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-
 contract ScoringProxy is Ownable {
     // scoringFunctionId => Contract address
     mapping(uint8 => address) functions;

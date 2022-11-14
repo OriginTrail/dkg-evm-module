@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "./AbstractAsset.sol";
-import "./AssertionRegistry.sol";
-import "./ServiceAgreement.sol";
+import { AbstractAsset } from "./AbstractAsset.sol";
+import { AssertionRegistry } from "../AssertionRegistry.sol";
+import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ServiceAgreementStorage } from "../storage/ServiceAgreementStorage.sol";
 
 contract ContentAsset is AbstractAsset, ERC721 {
     constructor(address hubAddress) 

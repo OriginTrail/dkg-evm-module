@@ -2,7 +2,7 @@ var BN = require('bn.js');
 
 
 var ParametersStorage = artifacts.require('ParametersStorage');
-var HashingHub = artifacts.require('HashingHub'); // eslint-disable-line no-undef
+var HashingProxy = artifacts.require('HashingProxy'); // eslint-disable-line no-undef
 var ScoringProxy = artifacts.require('ScoringProxy'); // eslint-disable-line no-undef
 var Hub = artifacts.require('Hub'); // eslint-disable-line no-undef
 var SHA256 = artifacts.require('SHA256'); // eslint-disable-line no-undef
@@ -49,7 +49,7 @@ module.exports = async (deployer, network, accounts) => {
     let (
         assertionRegistry, erc721Registry, erc20Token,
         profileStorage, parametersStorage, profile,
-        hashingHub, hub, sha256Contract, shardingTable,
+        hashingProxy, hub, sha256Contract, shardingTable,
         scoringProxy, pldsfContract
     );
 
@@ -73,12 +73,12 @@ module.exports = async (deployer, network, accounts) => {
             await hub.setContractAddress('ParametersStorage', parametersStorage.address);
             /* -------------------------------------------------------------------------------------- */
 
-            /* ------------------------------------Hashing Hub---------------------------------------- */
-            await deployer.deploy(HashingHub, hub.address, {gas: 6000000, from: accounts[0]})
+            /* ----------------------------------Hashing Proxy--------------------------------------- */
+            await deployer.deploy(HashingProxy, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
-                    hashingHub = result;
+                    hashingProxy = result;
                 });
-            await hub.setContractAddress('HashingHub', hashingHub.address);
+            await hub.setContractAddress('HashingProxy', hashingProxy.address);
 
             await deployer.deploy(SHA256, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
@@ -86,10 +86,10 @@ module.exports = async (deployer, network, accounts) => {
                 });
 
             // 0 - sha256
-            await hashingHub.setContractAddress(0, sha256Contract.address);
+            await hashingProxy.setContractAddress(0, sha256Contract.address);
             /* ---------------------------------------------------------------------------------------- */
 
-            /* ------------------------------------Scoring Hub---------------------------------------- */
+            /* ----------------------------------Scoring Proxy----------------------------------------- */
             await deployer.deploy(ScoringProxy, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     scoringProxy = result;
@@ -164,8 +164,10 @@ module.exports = async (deployer, network, accounts) => {
             console.log('\n\n \t Contract adresses on ganache:');
             console.log(`\t Hub address: ${hub.address}`);
             console.log(`\t Parameters Storage address: ${parametersStorage.address}`);
-            console.log(`\t Hashing Hub address: ${hashingHub.address}`);
+            console.log(`\t Hashing Proxy address: ${hashingProxy.address}`);
             console.log(`\t SHA256 address: ${sha256Contract.address}`);
+            console.log(`\t Scoring Proxy address: ${scoringProxy.address}`);
+            console.log(`\t PLDSF address: ${pldsfContract.address}`);
             console.log(`\t Sharding table: ${shardingTable.address}`);
             console.log(`\t Assertion registry address: ${assertionRegistry.address}`);
             console.log(`\t Asset registry address: ${assetRegistry.address}`);

@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import './utils/ByteArr.sol';
-import './interface/ERC734.sol';
+import { ByteArr } from "./utils/ByteArr.sol";
+import { ERC734 } from "./interface/ERC734.sol";
 
 contract Identity is ERC734 {
     using ByteArr for bytes;
@@ -63,7 +63,6 @@ contract Identity is ERC734 {
 
         keysByPurpose[_purpose].push(_key);
 
-
         emit KeyAdded(_key, _purpose, _type);
         return true;
     }
@@ -74,6 +73,7 @@ contract Identity is ERC734 {
 
         require(keys[_key].key == _key);
 
+        // TODO: for all key purposes
         require(!(keysByPurpose[1].length == 1 && keyHasPurpose(_key, 1)), "Cannot delete only management key!");
 
         emit KeyRemoved(keys[_key].key, keys[_key].purpose, keys[_key].keyType);

@@ -2,15 +2,14 @@
 
 pragma solidity ^0.8.0;
 
+import { ERC734 } from "./interface/ERC734.sol";
+import { Hub } from "./Hub.sol";
+import { Identity } from "./Identity.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ParametersStorage } from "./storage/ParametersStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { ShardingTable } from "./ShardingTable.sol";
-import { Hub } from "./Hub.sol";
-import { Identity } from "./Identity.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { ERC734 } from "./interface/ERC734.sol";
-
 
 contract Profile {
     event ProfileCreated(uint96 indexed identityId, address indexed identityContractAddress);
