@@ -15,14 +15,14 @@ contract Profile {
     event ProfileCreated(
         uint96 indexed identityId,
         address indexed identityContractAddress,
-        bytes indexed nodeId,
+        bytes indexed nodeId
     );
     event StakeIncreased(
         uint96 indexed identityId,
         address indexed identityContractAddress,
         bytes indexed nodeId,
         uint96 stakedAmount,
-        uint96 newStake,
+        uint96 newStake
     );
     event StakeWithdrawalInitiated(
         uint96 indexed identityId,
@@ -30,38 +30,38 @@ contract Profile {
         bytes indexed nodeId,
         uint96 stakeWithdrawalAmount,
         uint256 stakeWithdrawalTimestamp,
-        uint96 newStake,
+        uint96 newStake
     );
     event StakeWithdrawn(
         uint96 indexed identityId,
         address indexed identityContractAddress,
         bytes indexed nodeId,
-        uint96 withdrawnStakeAmount,
+        uint96 withdrawnStakeAmount
     );
     event RewardWithdrawalInitiated(
         uint96 indexed identityId,
         address indexed identityContractAddress,
         bytes indexed nodeId,
         uint96 rewardWithdrawalAmount,
-        uint256 rewardWithdrawalTimestamp,
+        uint256 rewardWithdrawalTimestamp
     );
     event RewardWithdrawn(
         uint96 indexed identityId,
         address indexed identityContractAddress,
         bytes indexed nodeId,
-        uint96 withdrawnRewardAmount,
+        uint96 withdrawnRewardAmount
     );
     event StakeFrozen(
         uint96 indexed identityId,
         address indexed identityContractAddress,
         bytes indexed nodeId,
-        uint96 frozenStakeAmount,
+        uint96 frozenStakeAmount
     );
     event StakeUnfrozen(
         uint96 indexed identityId,
         address indexed identityContractAddress,
         bytes indexed nodeId,
-        uint96 unfrozenStakeAmount,
+        uint96 unfrozenStakeAmount
     );
 
     Hub public hub;
@@ -73,6 +73,8 @@ contract Profile {
 
     modifier onlyWithAdminKey() {
 		// TODO: Implement admin wallet check
+        require(true);
+        _;
 	}
 
     function createProfile(address managementWallet, bytes memory nodeId, uint96 initialAsk, uint96 initialStake)
@@ -87,6 +89,8 @@ contract Profile {
 
         ProfileStorage profileStorage = ProfileStorage(profileStorageAddress);
 
+        uint96 identityId;
+        address identityContractAddress;
         (identityId, identityContractAddress) = profileStorage.createProfile(
             msg.sender,
             managementWallet,
@@ -119,8 +123,8 @@ contract Profile {
 
         uint96 identityId = profileStorage.identityIds(msg.sender);
 
-        uint256 oldStake = profileStorage.getStake(identityId);
-        uint256 newStake = oldStake + amount;
+        uint96 oldStake = profileStorage.getStake(identityId);
+        uint96 newStake = oldStake + amount;
         profileStorage.setStake(identityId, newStake);
 
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
@@ -136,7 +140,7 @@ contract Profile {
             profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
             amount,
-            newStake,
+            newStake
         );
     }
 
@@ -173,7 +177,7 @@ contract Profile {
             profileStorage.getNodeId(identityId),
             newStakeWithdrawalAmount,
             stakeWithdrawalTimestamp,
-            newStake,
+            newStake
         );
     }
 
@@ -198,7 +202,7 @@ contract Profile {
             identityId,
             profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
-            stakeWithdrawalAmount,
+            stakeWithdrawalAmount
         );
     }
 
@@ -227,12 +231,12 @@ contract Profile {
             shardingTable.pushBack(identityId);
         }
 
-        emit RewardStaked(
+        emit StakeIncreased(
             identityId,
             profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
             rewardAmount,
-            newStake,
+            newStake
         );
     }
 
@@ -285,7 +289,7 @@ contract Profile {
             identityId,
             profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
-            rewardWithdrawalAmount,
+            rewardWithdrawalAmount
         );
     }
 

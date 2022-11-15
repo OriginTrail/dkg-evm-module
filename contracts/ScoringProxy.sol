@@ -14,7 +14,7 @@ contract ScoringProxy is Ownable {
         uint8 hashingFunctionId,
         bytes memory nodeId,
         bytes memory keyword,
-        uint96 stake,
+        uint96 stake
     )
         public
         returns (uint32)
@@ -24,9 +24,9 @@ contract ScoringProxy is Ownable {
         require(scoringContractAddress != address(0), "Scoring function doesn't exist!");
 
         IScoringFunction scoringFunction = IScoringFunction(scoringContractAddress);
-        uint256 distance = calculateDistance(hashingFunctionId, nodeId, keyword);
+        uint256 distance = scoringFunction.calculateDistance(hashingFunctionId, nodeId, keyword);
 
-        return calculateScore(distance, stake);
+        return scoringFunction.calculateScore(distance, stake);
     }
 
     function setContractAddress(uint8 scoringFunctionId, address scoringContractAddress)

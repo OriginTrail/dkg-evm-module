@@ -24,15 +24,18 @@ contract AssertionRegistry is Ownable {
 	}
 
 
-	modifier onlyContracts() {
-		require(hub.isContract(msg.sender),
-			"Function can only be called by contracts!");
-		_;
-	}
+	modifier onlyAssetContracts() {
+        require (
+            // TODO: Add function to the hub
+            hub.isAssetContract(msg.sender),
+            "Function can only be called by Asset Type Contracts!"
+        );
+        _;
+    }
 
 	function createAssertionRecord(bytes32 assertionId, address issuer, uint256 size)
 		public
-		onlyContracts
+		onlyAssetContracts
 	{
 		require(assertionId != 0, "assertionId cannot be zero");
 		require(size != 0, "size cannot be zero");
@@ -48,7 +51,7 @@ contract AssertionRegistry is Ownable {
 	function getIssuer(bytes32 assertionId)
 		public
 		view
-		returns(address issuer)
+		returns(address)
 	{
 		return assertionRecords[assertionId].issuer;
 	}
@@ -56,8 +59,16 @@ contract AssertionRegistry is Ownable {
 	function getTimestamp(bytes32 assertionId)
 		public
 		view
-		returns(uint256 timestamp)
+		returns(uint256)
 	{
 		return assertionRecords[assertionId].timestamp;
+	}
+
+	function getSize(bytes32 assertionId)
+		public
+		view
+		returns (uint256)
+	{
+		return assertionRecords[assertionId].size;
 	}
 }

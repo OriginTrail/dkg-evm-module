@@ -6,13 +6,13 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Hub is Ownable{
     event ContractsChanged(string contractName, address newContractAddres);
-    event AssetTypeContractsChanged(string contractName, address newContractAddres);
+    event AssetContractsChanged(string contractName, address newContractAddres);
 
     mapping(bytes32 => address) contractAddress;
     mapping(address => bool) contractList;
 
-    mapping(bytes32 => address) assetTypeContractAdresses;
-    mapping(address => bool) assetTypeContractsList;
+    mapping(bytes32 => address) assetContractAdresses;
+    mapping(address => bool) assetContractsList;
 
     function setContractAddress(string memory contractName, address newContractAddress)
         public
@@ -33,23 +33,23 @@ contract Hub is Ownable{
         emit ContractsChanged(contractName, newContractAddress);
     }
 
-    function setAssetTypeContractAddress(string memory assetTypeName, address newContractAddress)
+    function setAssetContractAddress(string memory assetTypeName, address newContractAddress)
         public
         onlyOwner
     {
         bytes32 index = keccak256(abi.encodePacked(assetTypeName));
 
-        if(assetTypeContractAdresses[index] != address(0)) {
-            address oldContractAddress = assetTypeContractAdresses[index];
-            assetTypeContractsList[oldContractAddress] = false;
+        if(assetContractAdresses[index] != address(0)) {
+            address oldContractAddress = assetContractAdresses[index];
+            assetContractsList[oldContractAddress] = false;
         }
-        assetTypeContractAdresses[index] = newContractAddress;
+        assetContractAdresses[index] = newContractAddress;
 
         if(newContractAddress != address(0)){
-            assetTypeContractsList[newContractAddress] = true;
+            assetContractsList[newContractAddress] = true;
         }
 
-        emit AssetTypeContractsChanged(assetTypeName, newContractAddress);
+        emit AssetContractsChanged(assetTypeName, newContractAddress);
     }
 
     function getContractAddress(string memory contractName)
@@ -61,13 +61,13 @@ contract Hub is Ownable{
         return contractAddress[index];
     }
 
-    function getAssetTypeContractAddress(string memory assetTypeName)
+    function getAssetContractAddress(string memory assetTypeName)
         public
         view
         returns (address)
     {
         bytes32 index = keccak256(abi.encodePacked(assetTypeName));
-        return assetTypeContractAdresses[index];
+        return assetContractAdresses[index];
     }
     
     function isContract(address selectedContractAddress)
@@ -78,11 +78,11 @@ contract Hub is Ownable{
         return contractList[selectedContractAddress];
     }
 
-    function isAssetTypeContract(address assetTypeContractAddress)
+    function isAssetContract(address assetContractAddress)
         public
         view
         returns (bool)
     {
-        return assetTypeContractsList[assetTypeContractAddress];
+        return assetContractsList[assetContractAddress];
     }
 }

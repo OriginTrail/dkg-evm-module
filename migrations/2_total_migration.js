@@ -1,19 +1,19 @@
 var BN = require('bn.js');
 
 
+var AssertionRegistry = artifacts.require('AssertionRegistry');
+var ContentAsset = artifacts.require('ContentAsset');
+var ERC20Token = artifacts.require('ERC20Token');
+var HashingProxy = artifacts.require('HashingProxy');
+var Hub = artifacts.require('Hub');
 var ParametersStorage = artifacts.require('ParametersStorage');
-var HashingProxy = artifacts.require('HashingProxy'); // eslint-disable-line no-undef
-var ScoringProxy = artifacts.require('ScoringProxy'); // eslint-disable-line no-undef
-var Hub = artifacts.require('Hub'); // eslint-disable-line no-undef
-var SHA256 = artifacts.require('SHA256'); // eslint-disable-line no-undef
-var PLDSF = artifacts.require('PLDSF'); // eslint-disable-line no-undef
-var ShardingTable = artifacts.require('ShardingTable'); // eslint-disable-line no-undef
-var AssertionRegistry = artifacts.require('AssertionRegistry'); // eslint-disable-line no-undef
-var UAIRegistry = artifacts.require('UAIRegistry'); // eslint-disable-line no-undef
-var AssetRegistry = artifacts.require('assetRegistry'); // eslint-disable-line no-undef
-var ERC20Token = artifacts.require('ERC20Token'); // eslint-disable-line no-undef
-var ProfileStorage = artifacts.require('ProfileStorage'); // eslint-disable-line no-undef
-var Profile = artifacts.require('Profile'); // eslint-disable-line no-undef
+var PLDSF = artifacts.require('PLDSF');
+var Profile = artifacts.require('Profile');
+var ProfileStorage = artifacts.require('ProfileStorage');
+var ScoringProxy = artifacts.require('ScoringProxy');
+var ServiceAgreementStorage = artifacts.require('ServiceAgreementStorage');
+var SHA256 = artifacts.require('SHA256');
+var ShardingTable = artifacts.require('ShardingTable');
 
 const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
     "0x2f2697b2a7BB4555687EF76f8fb4C3DFB3028E57",
@@ -46,12 +46,9 @@ const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
     "0xBaF76aC0d0ef9a2FFF76884d54C9D3e270290a43"];
 
 module.exports = async (deployer, network, accounts) => {
-    let (
-        assertionRegistry, erc721Registry, erc20Token,
-        profileStorage, parametersStorage, profile,
-        hashingProxy, hub, sha256Contract, shardingTable,
-        scoringProxy, pldsfContract
-    );
+    let assertionRegistry, contentAsset, erc20Token, hashingProxy,
+        hub, parametersStorage, pldsfContract, profile, profileStorage,
+        scoringProxy, serviceAgreementStorage, sha256Contract, shardingTable;
 
     switch (network) {
         case 'development':
@@ -65,8 +62,8 @@ module.exports = async (deployer, network, accounts) => {
                 });
             await hub.setContractAddress('Owner', accounts[0]);
 
-            /* --------------------------------ParametersStorage------------------------------------- */
-            await deployer.deploy(ParametersStorage, hub.address, {gas: 6000000, from: accounts[0]})
+            /* -------------------------------Parameters Storage------------------------------------- */
+            await deployer.deploy(ParametersStorage, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     parametersStorage = result;
                 });
@@ -105,32 +102,39 @@ module.exports = async (deployer, network, accounts) => {
             await scoringProxy.setContractAddress(0, pldsfContract.address);
             /* ---------------------------------------------------------------------------------------- */
 
+            /* ---------------------------------Sharding Table----------------------------------------- */
             await deployer.deploy(ShardingTable, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     shardingTable = result;
                 });
             await hub.setContractAddress('ShardingTable', shardingTable.address);
+            /* ---------------------------------------------------------------------------------------- */
 
+            /* --------------------------------Assertion Registry-------------------------------------- */
             await deployer.deploy(AssertionRegistry, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     assertionRegistry = result;
                 });
             await hub.setContractAddress('AssertionRegistry', assertionRegistry.address);
+            /* ---------------------------------------------------------------------------------------- */
 
-            await deployer.deploy(UAIRegistry, hub.address, {gas: 6000000, from: accounts[0]})
+            /* -----------------------------Service Agreement Storage---------------------------------- */
+            await deployer.deploy(ServiceAgreementStorage, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
-                    erc721Registry = result;
+                    serviceAgreementStorage = result;
                 });
-            await hub.setContractAddress('UAIRegistry', erc721Registry.address);
+            await hub.setContractAddress('ServiceAgreementStorage', serviceAgreementStorage.address);
+            /* ---------------------------------------------------------------------------------------- */
 
-            await deployer.deploy(AssetRegistry, hub.address, {gas: 6000000, from: accounts[0]})
+            /* ---------------------------------------Assets------------------------------------------- */
+            await deployer.deploy(ContentAsset, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
-                    assetRegistry = result;
+                    contentAsset = result;
                 });
-            await hub.setContractAddress('AssetRegistry', assetRegistry.address);
+            await hub.setAssetContractAddress('ContentAsset', contentAsset.address);
+            /* ---------------------------------------------------------------------------------------- */
 
-            await erc721Registry.setupRole(assetRegistry.address);
-
+            /* ---------------------------------------ERC20-------------------------------------------- */
             await deployer.deploy(ERC20Token, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     erc20Token = result;
@@ -148,18 +152,23 @@ module.exports = async (deployer, network, accounts) => {
                 console.log('Account', account, 'is funded with', amountToMint.toString());
                 await erc20Token.mint(account, amountToMint);
             }
+            /* ---------------------------------------------------------------------------------------- */
 
+            /* ------------------------------------Profile Storage------------------------------------- */
             await deployer.deploy(ProfileStorage, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     profileStorage = result;
                 });
             await hub.setContractAddress('ProfileStorage', profileStorage.address);
+            /* ---------------------------------------------------------------------------------------- */
 
+            /* ---------------------------------------Profile------------------------------------------- */
             await deployer.deploy(Profile, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     profile = result;
                 });
             await hub.setContractAddress('Profile', profile.address);
+            /* ---------------------------------------------------------------------------------------- */
 
             console.log('\n\n \t Contract adresses on ganache:');
             console.log(`\t Hub address: ${hub.address}`);
@@ -170,7 +179,8 @@ module.exports = async (deployer, network, accounts) => {
             console.log(`\t PLDSF address: ${pldsfContract.address}`);
             console.log(`\t Sharding table: ${shardingTable.address}`);
             console.log(`\t Assertion registry address: ${assertionRegistry.address}`);
-            console.log(`\t Asset registry address: ${assetRegistry.address}`);
+            console.log(`\t Service Agreement Storage address: ${serviceAgreementStorage.address}`);
+            console.log(`\t Content Asset address: ${contentAsset.address}`);
             console.log(`\t Token address: ${erc20Token.address}`);
             console.log(`\t Profile Storage address: ${profileStorage.address}`);
             console.log(`\t Profile address: ${profile.address}`);
