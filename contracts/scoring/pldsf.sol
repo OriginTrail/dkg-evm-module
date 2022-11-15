@@ -32,6 +32,7 @@ contract PLDSF is IScoringFunction {
 
     function calculateScore(uint256 distance, uint96 stake)
         public
+        view
         returns (uint32)
     {
         // VERIFY: uint256 -> uint32 casting

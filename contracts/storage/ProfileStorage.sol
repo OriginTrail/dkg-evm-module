@@ -46,7 +46,7 @@ contract ProfileStorage {
         lastIdentityId = 1;
     }
 
-    modifier onlyContracts(){
+    modifier onlyContracts() {
         require(hub.isContract(msg.sender),
         "Function can only be called by contracts!");
         _;
@@ -55,15 +55,15 @@ contract ProfileStorage {
     function createProfile(
         address operationalWallet,
         address managementWallet,
-        bytes nodeId,
+        bytes memory nodeId,
         uint96 initialAsk,
         uint96 initialStake
     )
         public
-        OnlyContracts
+        onlyContracts
         returns (uint96, address)
     {
-        require(!identityIds[operationalWallet], "Profile already exists");
+        require(identityIds[operationalWallet] != 0, "Profile already exists");
         require(!nodeIdsList[nodeId], "Node ID connected with another profile");
         require(nodeId.length != 0, "Node ID can't be empty");
         require(initialAsk > 0, "Ask can't be 0");
@@ -71,18 +71,10 @@ contract ProfileStorage {
         Identity identity = new Identity(operationalWallet, managementWallet);
         address identityContractAddress = address(identity);
 
-        ProfileDefinition memory profile = ProfileDefinition({
-            ask: initialAsk,
-            stake: initialStake,
-            reward: 0,
-            withdrawalAmount: 0,
-            withdrawalTimestamp: 0,
-            frozenAmount: 0,
-            freezeTimestamp: 0,
-            nodeId: nodeId
-        });
-
-        profiles[lastIdentityId] = profile;
+        ProfileDefinition storage profile = profiles[lastIdentityId];
+        profile.ask = initialAsk;
+        profile.stake = initialStake;
+        profile.nodeId = nodeId;
 
         identityIds[operationalWallet] = lastIdentityId;
         identityContractAddresses[lastIdentityId] = identityContractAddress;
@@ -190,12 +182,12 @@ contract ProfileStorage {
         return profiles[identityId].nodeId;
     }
 
-    function getNodeAddress(uint96 identityId, uint8 hashingAlgorithm)
+    function getNodeAddress(uint96 identityId, uint8 hashingFunctionId)
         public
         view
         returns (bytes32)
     {
-        return profiles[identityId].nodeAddresses[hashingAlgorithm];
+        return profiles[identityId].nodeAddresses[hashingFunctionId];
     }
 
     /* ----------------SETTERS------------------ */
@@ -297,13 +289,13 @@ contract ProfileStorage {
         nodeIdsList[nodeId] = true;
     }
 
-    function setNodeAddress(uint96 identityId, uint8 hashingAlgorithm)
+    function setNodeAddress(uint96 identityId, uint8 hashingFunctionId)
         public
-        onlyContract
+        onlyContracts
     {
         HashingProxy hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
-        profiles[identityId].nodeAddresses[hashingAlgorithm] = hashingProxy.callHashingFunction(
-            hashingAlgorithm,
+        profiles[identityId].nodeAddresses[hashingFunctionId] = hashingProxy.callHashingFunction(
+            hashingFunctionId,
             profiles[identityId].nodeId
         );
     }

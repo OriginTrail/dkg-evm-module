@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import { Hub } from "./Hub.sol";
+import { Hub } from "../Hub.sol";
 
 abstract contract AbstractAsset {
-    event AssetCreated(uint256 indexed UAI, bytes32 indexed stateCommitHash);
-    event AssetUpdated(uint256 indexed UAI, bytes32 indexed stateCommitHash);
+    event AssetCreated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
+    event AssetUpdated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
 
     Hub public hub;
 
@@ -15,12 +15,14 @@ abstract contract AbstractAsset {
         hub = Hub(hubAddress);
     }
 
-    function getAssertions(uint256 tokenId) virtual internal view returns (bytes32 [] memory);
+    function getAssertions(uint256 tokenId) virtual public view returns (bytes32 [] memory);
 
-    function getCommitHash(uint256 tokenId, uint256 offset) external view returns (bytes32 commitHash) {
+    function getAssertionByIndex(uint256 tokenId, uint256 index) public view returns (bytes32) {
         bytes32 [] memory assertions = getAssertions(tokenId);
-        require(assertions.length > offset, "Offset is invalid");
+        return assertions[index];
+    }
 
-        return assertions[assertions.length - 1 - offset];
+    function getAssertionsLength(uint256 tokenId) public view returns (uint256) {
+        return getAssertions(tokenId).length;
     }
 }

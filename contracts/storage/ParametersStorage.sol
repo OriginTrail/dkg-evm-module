@@ -17,7 +17,7 @@ contract ParametersStorage is Ownable {
     uint8 public proofWindowDurationPerc;
     uint8 public replacementWindowDurationPerc;
 
-    uint256 public epochLength;
+    uint128 public epochLength;
 
     uint24 public stakeWithdrawalDelay;
     uint24 public rewardWithdrawalDelay;
@@ -106,7 +106,7 @@ contract ParametersStorage is Ownable {
         replacementWindowDurationPerc = newReplacementWindowDurationPerc;
     }
 
-    function setEpochLength(uint256 newEpochLength)
+    function setEpochLength(uint128 newEpochLength)
         public
         onlyOwner
     {

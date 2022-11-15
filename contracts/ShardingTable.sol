@@ -121,7 +121,8 @@ contract ShardingTable {
         onlyProfile
     {        
         _createNodeObj(identityId);
-    
+
+        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         bytes memory nodeId = profileStorage.getNodeId(identityId);
 
         if (!_equalIdHashes(tail, emptyPointer)) _link(tail, nodeId);
@@ -138,6 +139,7 @@ contract ShardingTable {
     {
         _createNodeObj(identityId);
 
+        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         bytes memory nodeId = profileStorage.getNodeId(identityId);
 
         if (!_equalIdHashes(head, emptyPointer)) _link(nodeId, head);
@@ -215,7 +217,7 @@ contract ShardingTable {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
         bytes memory nodeId = profileStorage.getNodeId(identityId);
-        bytes32 nodeIdSha256 = profileStorage.getHashedNodeId(identityId, 0);  // 0 - sha256
+        bytes32 nodeIdSha256 = profileStorage.getNodeAddress(identityId, 0);  // 0 - sha256
 
         Node memory newNode = Node(
             identityId,
@@ -232,8 +234,7 @@ contract ShardingTable {
             profileStorage.identityContractAddresses(identityId),
             nodeId,
             profileStorage.getAsk(identityId),
-            profileStorage.getStake(identityId),
-            nodeIdSha256
+            profileStorage.getStake(identityId)
         );
     }
 
