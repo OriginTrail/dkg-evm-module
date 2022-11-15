@@ -349,9 +349,9 @@ contract ServiceAgreementStorage {
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashingFunctionId);
         require(!isProofWindowOpen(agreementId, epoch), "Proof window is open");
 
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-
-        uint96 identityId = profileStorage.getIdentityId();
+        uint96 identityId = IdentityStorage(hub.getContractAddress("IdentityStorage")).identityIds(
+            keccak256(abi.encodePacked(msg.sender))
+        );
 
         require(
             commitSubmissions[keccak256(abi.encodePacked(agreementId, epoch, identityId))].score != 0,
@@ -385,6 +385,8 @@ contract ServiceAgreementStorage {
             ),
             "Root hash doesn't match"
         );
+
+        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
         // emit ProofSubmitted(
         //     assetContract,
