@@ -4,13 +4,13 @@ pragma solidity ^0.8.0;
 
 import { HashingProxy } from "../HashingProxy.sol";
 import { Hub } from "../Hub.sol";
-import { Identity } from "../Identity.sol";
+import { IdentityStorage } from "./IdentityStorage.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ProfileStorage {
-    event AskUpdated(uint96 indexed identityId, address indexed identityContractAddress, bytes indexed nodeId, uint96 ask);
-    event StakeUpdated(uint96 indexed identityId, address indexed identityContractAddress, bytes indexed nodeId, uint96 stake);
-    event RewardUpdated(uint96 indexed identityId, address indexed identityContractAddress, bytes indexed nodeId, uint96 reward);
+    event AskUpdated(uint96 indexed identityId, bytes indexed nodeId, uint96 ask);
+    event StakeUpdated(uint96 indexed identityId, bytes indexed nodeId, uint96 stake);
+    event RewardUpdated(uint96 indexed identityId, bytes indexed nodeId, uint96 reward);
 
     Hub public hub;
 
@@ -28,12 +28,6 @@ contract ProfileStorage {
         mapping(uint8 => bytes32) nodeAddresses;
     }
 
-    uint96 private lastIdentityId;
-
-    // operational/management wallet => identityId
-    mapping(address => uint96) public identityIds;
-    // identityId => identity contract address
-    mapping(uint96 => address) public identityContractAddresses;
     // nodeId => isRegistered?
     mapping(bytes => bool) public nodeIdsList;
     // identityId => Profile
@@ -42,8 +36,6 @@ contract ProfileStorage {
     constructor(address hubAddress) {
         require(hubAddress != address(0));
         hub = Hub(hubAddress);
-
-        lastIdentityId = 1;
     }
 
     modifier onlyContracts() {
@@ -54,54 +46,37 @@ contract ProfileStorage {
 
     function createProfile(
         address operationalWallet,
-        address managementWallet,
+        address adminWallet,
         bytes memory nodeId,
         uint96 initialAsk,
         uint96 initialStake
     )
         public
         onlyContracts
-        returns (uint96, address)
+        returns (uint96)
     {
-        require(identityIds[operationalWallet] != 0, "Profile already exists");
+        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+
+        bytes32 _operational_key = keccak256(abi.encodePacked(operationalWallet));
+
+        require(identityStorage.identityIds(_operational_key) == 0, "Profile already exists");
         require(!nodeIdsList[nodeId], "Node ID connected with another profile");
         require(nodeId.length != 0, "Node ID can't be empty");
         require(initialAsk > 0, "Ask can't be 0");
 
-        Identity identity = new Identity(operationalWallet, managementWallet);
-        address identityContractAddress = address(identity);
+        uint96 identityId = identityStorage.createIdentity(operationalWallet, adminWallet);
 
-        ProfileDefinition storage profile = profiles[lastIdentityId];
+        ProfileDefinition storage profile = profiles[identityId];
         profile.ask = initialAsk;
         profile.stake = initialStake;
         profile.nodeId = nodeId;
 
-        identityIds[operationalWallet] = lastIdentityId;
-        identityContractAddresses[lastIdentityId] = identityContractAddress;
         nodeIdsList[nodeId] = true;
 
-        lastIdentityId++;
-
-        return (identityIds[operationalWallet], identityContractAddress);
+        return identityId;
     }
 
     /* ----------------GETTERS------------------ */
-    function getIdentityId()
-        public
-        view
-        returns (uint96)
-    {
-        return identityIds[msg.sender];
-    }
-
-    function getIdentityContractAddress()
-        public
-        view
-        returns (address)
-    {
-        return identityContractAddresses[identityIds[msg.sender]];
-    }
-
     function getAsk(uint96 identityId)
         public
         view
@@ -199,7 +174,7 @@ contract ProfileStorage {
 
         profiles[identityId].ask = ask;
 
-        emit AskUpdated(identityId, identityContractAddresses[identityId], this.getNodeId(identityId), ask);
+        emit AskUpdated(identityId, this.getNodeId(identityId), ask);
     }
     
     function setStake(uint96 identityId, uint96 stake)
@@ -208,7 +183,7 @@ contract ProfileStorage {
     {
         profiles[identityId].stake = stake;
 
-        emit StakeUpdated(identityId, identityContractAddresses[identityId], this.getNodeId(identityId), stake);
+        emit StakeUpdated(identityId, this.getNodeId(identityId), stake);
     }
 
     function setReward(uint96 identityId, uint96 reward)
@@ -217,7 +192,7 @@ contract ProfileStorage {
     {
         profiles[identityId].reward = reward;
 
-        emit RewardUpdated(identityId, identityContractAddresses[identityId], this.getNodeId(identityId), reward);
+        emit RewardUpdated(identityId, this.getNodeId(identityId), reward);
     }
 
     function setStakeWithdrawalAmount(uint96 identityId, uint96 stakeWithdrawalAmount) 
@@ -260,21 +235,6 @@ contract ProfileStorage {
         onlyContracts
     {
         profiles[identityId].freezeTimestamp = freezeTimestamp;
-    }
-
-    function attachWalletToIdentity(address sender, address newWallet)
-        public
-        onlyContracts
-    {
-        require(newWallet != address(0), "Wallet address can't be empty");
-        identityIds[newWallet] = identityIds[sender];
-    }
-
-    function detachWalletFromIdentity(address wallet)
-        public
-        onlyContracts
-    {
-        delete identityIds[wallet];
     }
 
     function setNodeId(uint96 identityId, bytes memory nodeId)

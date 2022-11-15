@@ -2,11 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import { ERC734 } from "./interface/ERC734.sol";
 import { Hub } from "./Hub.sol";
-import { Identity } from "./Identity.sol";
+import { IdentityStorage } from "./storage/IdentityStorage.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ParametersStorage } from "./storage/ParametersStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { ShardingTable } from "./ShardingTable.sol";
@@ -14,19 +12,16 @@ import { ShardingTable } from "./ShardingTable.sol";
 contract Profile {
     event ProfileCreated(
         uint96 indexed identityId,
-        address indexed identityContractAddress,
         bytes indexed nodeId
     );
     event StakeIncreased(
         uint96 indexed identityId,
-        address indexed identityContractAddress,
         bytes indexed nodeId,
         uint96 stakedAmount,
         uint96 newStake
     );
     event StakeWithdrawalInitiated(
         uint96 indexed identityId,
-        address indexed identityContractAddress,
         bytes indexed nodeId,
         uint96 stakeWithdrawalAmount,
         uint256 stakeWithdrawalTimestamp,
@@ -34,32 +29,27 @@ contract Profile {
     );
     event StakeWithdrawn(
         uint96 indexed identityId,
-        address indexed identityContractAddress,
         bytes indexed nodeId,
         uint96 withdrawnStakeAmount
     );
     event RewardWithdrawalInitiated(
         uint96 indexed identityId,
-        address indexed identityContractAddress,
         bytes indexed nodeId,
         uint96 rewardWithdrawalAmount,
         uint256 rewardWithdrawalTimestamp
     );
     event RewardWithdrawn(
         uint96 indexed identityId,
-        address indexed identityContractAddress,
         bytes indexed nodeId,
         uint96 withdrawnRewardAmount
     );
     event StakeFrozen(
         uint96 indexed identityId,
-        address indexed identityContractAddress,
         bytes indexed nodeId,
         uint96 frozenStakeAmount
     );
     event StakeUnfrozen(
         uint96 indexed identityId,
-        address indexed identityContractAddress,
         bytes indexed nodeId,
         uint96 unfrozenStakeAmount
     );
@@ -71,13 +61,17 @@ contract Profile {
         hub = Hub(hubAddress);
     }
 
-    modifier onlyWithAdminKey() {
-		// TODO: Implement admin wallet check
-        require(true);
+    modifier onlyWithAdminKey(uint96 identityId) {
+        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+
+        require(
+            identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), 1),
+            "Function can be called only by identity admin"
+        );
         _;
 	}
 
-    function createProfile(address managementWallet, bytes memory nodeId, uint96 initialAsk, uint96 initialStake)
+    function createProfile(address adminWallet, bytes memory nodeId, uint96 initialAsk, uint96 initialStake)
         public
     {
         IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
@@ -89,11 +83,9 @@ contract Profile {
 
         ProfileStorage profileStorage = ProfileStorage(profileStorageAddress);
 
-        uint96 identityId;
-        address identityContractAddress;
-        (identityId, identityContractAddress) = profileStorage.createProfile(
+        uint96 identityId = profileStorage.createProfile(
             msg.sender,
-            managementWallet,
+            adminWallet,
             nodeId,
             initialAsk,
             initialStake
@@ -105,12 +97,12 @@ contract Profile {
             shardingTable.pushBack(identityId);
         }
 
-        emit ProfileCreated(identityId, identityContractAddress, nodeId);
+        emit ProfileCreated(identityId, nodeId);
     }
 
-    function increaseStake(uint96 amount)
+    function increaseStake(uint96 identityId, uint96 amount)
         public
-        onlyWithAdminKey
+        onlyWithAdminKey(identityId)
     {
         IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
         address profileStorageAddress = hub.getContractAddress("ProfileStorage");
@@ -120,8 +112,6 @@ contract Profile {
         tokenContract.transferFrom(msg.sender, profileStorageAddress, amount);
 
         ProfileStorage profileStorage = ProfileStorage(profileStorageAddress);
-
-        uint96 identityId = profileStorage.identityIds(msg.sender);
 
         uint96 oldStake = profileStorage.getStake(identityId);
         uint96 newStake = oldStake + amount;
@@ -137,20 +127,17 @@ contract Profile {
 
         emit StakeIncreased(
             identityId,
-            profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
             amount,
             newStake
         );
     }
 
-    function startStakeWithdrawal(uint96 amount)
+    function startStakeWithdrawal(uint96 identityId, uint96 amount)
         public
-        onlyWithAdminKey
+        onlyWithAdminKey(identityId)
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-
-        uint96 identityId = profileStorage.identityIds(msg.sender);
 
         require(amount <= profileStorage.getStake(identityId), "Amount can't be bigger than available stake");
 
@@ -173,7 +160,6 @@ contract Profile {
 
         emit StakeWithdrawalInitiated(
             identityId,
-            profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
             newStakeWithdrawalAmount,
             stakeWithdrawalTimestamp,
@@ -181,13 +167,11 @@ contract Profile {
         );
     }
 
-    function withdrawFreeStake()
+    function withdrawFreeStake(uint96 identityId)
         public
-        onlyWithAdminKey
+        onlyWithAdminKey(identityId)
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-
-        uint96 identityId = profileStorage.identityIds(msg.sender);
 
         uint96 stakeWithdrawalAmount = profileStorage.getStakeWithdrawalAmount(identityId);
 
@@ -200,19 +184,16 @@ contract Profile {
 
         emit StakeWithdrawn(
             identityId,
-            profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
             stakeWithdrawalAmount
         );
     }
 
-    function stakeReward()
+    function stakeReward(uint96 identityId)
         public
-        onlyWithAdminKey
+        onlyWithAdminKey(identityId)
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-
-        uint96 identityId = profileStorage.identityIds(msg.sender);
 
         uint96 rewardAmount = profileStorage.getReward(identityId);
         require(rewardAmount > 0, "You have no reward");
@@ -233,20 +214,17 @@ contract Profile {
 
         emit StakeIncreased(
             identityId,
-            profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
             rewardAmount,
             newStake
         );
     }
 
-    function startRewardWithdrawal()
+    function startRewardWithdrawal(uint96 identityId)
         public
-        onlyWithAdminKey
+        onlyWithAdminKey(identityId)
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-
-        uint96 identityId = profileStorage.identityIds(msg.sender);
 
         uint96 reward = profileStorage.getReward(identityId);
 
@@ -255,26 +233,26 @@ contract Profile {
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
         profileStorage.setReward(identityId, 0);
-        profileStorage.setRewardWithdrawalAmount(identityId, profileStorage.getRewardWithdrawalAmount(identityId) + reward);
+        profileStorage.setRewardWithdrawalAmount(
+            identityId,
+            profileStorage.getRewardWithdrawalAmount(identityId) + reward
+        );
         uint256 rewardWithdrawalTimestamp = block.timestamp + parametersStorage.rewardWithdrawalDelay();
         profileStorage.setRewardWithdrawalTimestamp(identityId, rewardWithdrawalTimestamp);
 
         emit RewardWithdrawalInitiated(
             identityId,
-            profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
             reward,
             rewardWithdrawalTimestamp
         );
     }
 
-    function withdrawFreeReward()
+    function withdrawFreeReward(uint96 identityId)
         public
-        onlyWithAdminKey
+        onlyWithAdminKey(identityId)
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-
-        uint96 identityId = profileStorage.identityIds(msg.sender);
 
         uint96 rewardWithdrawalAmount = profileStorage.getRewardWithdrawalAmount(identityId);
 
@@ -287,7 +265,6 @@ contract Profile {
 
         emit RewardWithdrawn(
             identityId,
-            profileStorage.identityContractAddresses(identityId),
             profileStorage.getNodeId(identityId),
             rewardWithdrawalAmount
         );

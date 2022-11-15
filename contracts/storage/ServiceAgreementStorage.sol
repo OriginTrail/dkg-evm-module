@@ -6,6 +6,7 @@ import { AbstractAsset } from "../assets/AbstractAsset.sol";
 import { AssertionRegistry } from "../AssertionRegistry.sol";
 import { HashingProxy } from "../HashingProxy.sol";
 import { Hub } from "../Hub.sol";
+import { IdentityStorage } from "./IdentityStorage.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import { ParametersStorage } from "./ParametersStorage.sol";
@@ -83,9 +84,8 @@ contract ServiceAgreementStorage {
 
     modifier onlyAssetContracts() {
         require (
-            // TODO: Add function to the hub
             hub.isAssetContract(msg.sender),
-            "Function can only be called by Asset Type Contracts!"
+            "Function can only be called by Asset Type Contracts"
         );
         _;
     }
@@ -243,9 +243,10 @@ contract ServiceAgreementStorage {
 
         require(isCommitWindowOpen(agreementId, epoch), "Commit window is closed!");
 
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+        uint96 identityId = identityStorage.identityIds(keccak256(abi.encodePacked(msg.sender)));
 
-        uint96 identityId = profileStorage.getIdentityId();
+        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
         ScoringProxy scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
         uint32 score = scoringProxy.callScoringFunction(
@@ -267,15 +268,15 @@ contract ServiceAgreementStorage {
             })
         );
 
-        emit CommitSubmitted(
-            assetContract,
-            tokenId,
-            keyword,
-            hashingFunctionId,
-            identityId,
-            profileStorage.getNodeId(identityId),
-            score
-        );
+        // emit CommitSubmitted(
+        //     assetContract,
+        //     tokenId,
+        //     keyword,
+        //     hashingFunctionId,
+        //     identityId,
+        //     profileStorage.getNodeId(identityId),
+        //     score
+        // );
 
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         uint256 epochLength = parametersStorage.epochLength();
@@ -312,8 +313,8 @@ contract ServiceAgreementStorage {
     {
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashingAlgorithm);
 
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        uint96 identityId = profileStorage.getIdentityId();
+        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+        uint96 identityId = identityStorage.identityIds(keccak256(abi.encodePacked(msg.sender)));
 
         AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
         bytes32 assertionId = generalAssetInterface.getAssertionByIndex(
@@ -348,9 +349,9 @@ contract ServiceAgreementStorage {
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashingFunctionId);
         require(!isProofWindowOpen(agreementId, epoch), "Proof window is open");
 
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-
-        uint96 identityId = profileStorage.getIdentityId();
+        uint96 identityId = IdentityStorage(hub.getContractAddress("IdentityStorage")).identityIds(
+            keccak256(abi.encodePacked(msg.sender))
+        );
 
         require(
             commitSubmissions[keccak256(abi.encodePacked(agreementId, epoch, identityId))].score != 0,
@@ -384,6 +385,8 @@ contract ServiceAgreementStorage {
             ),
             "Root hash doesn't match"
         );
+
+        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
         // emit ProofSubmitted(
         //     assetContract,

@@ -6,6 +6,7 @@ var ContentAsset = artifacts.require('ContentAsset');
 var ERC20Token = artifacts.require('ERC20Token');
 var HashingProxy = artifacts.require('HashingProxy');
 var Hub = artifacts.require('Hub');
+var IdentityStorage = artifacts.require('IdentityStorage');
 var ParametersStorage = artifacts.require('ParametersStorage');
 var PLDSF = artifacts.require('PLDSF');
 var Profile = artifacts.require('Profile');
@@ -47,8 +48,9 @@ const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
 
 module.exports = async (deployer, network, accounts) => {
     let assertionRegistry, contentAsset, erc20Token, hashingProxy,
-        hub, parametersStorage, pldsfContract, profile, profileStorage,
-        scoringProxy, serviceAgreementStorage, sha256Contract, shardingTable;
+        hub, identityStorage, parametersStorage, pldsfContract, profile,
+        profileStorage, scoringProxy, serviceAgreementStorage, sha256Contract,
+        shardingTable;
 
     switch (network) {
         case 'development':
@@ -154,6 +156,14 @@ module.exports = async (deployer, network, accounts) => {
             }
             /* ---------------------------------------------------------------------------------------- */
 
+            /* ----------------------------------Identity Storage-------------------------------------- */
+            await deployer.deploy(IdentityStorage, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    identityStorage = result;
+                });
+            await hub.setContractAddress('IdentityStorage', identityStorage.address);
+            /* ---------------------------------------------------------------------------------------- */
+
             /* ------------------------------------Profile Storage------------------------------------- */
             await deployer.deploy(ProfileStorage, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
@@ -182,6 +192,7 @@ module.exports = async (deployer, network, accounts) => {
             console.log(`\t Service Agreement Storage address: ${serviceAgreementStorage.address}`);
             console.log(`\t Content Asset address: ${contentAsset.address}`);
             console.log(`\t Token address: ${erc20Token.address}`);
+            console.log(`\t Identity Storage address: ${profileStorage.address}`);
             console.log(`\t Profile Storage address: ${profileStorage.address}`);
             console.log(`\t Profile address: ${profile.address}`);
 
