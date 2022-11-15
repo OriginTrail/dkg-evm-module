@@ -16,7 +16,6 @@ let assertionCount = 0;
 let contentAsset;
 let erc20Token;
 let serviceAgreementStorage;
-let assertionRegistry;
 
 const testAssetId = '0x1';
 const invalidTestAssetid = '0x0';
