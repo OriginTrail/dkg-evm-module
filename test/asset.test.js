@@ -1,46 +1,37 @@
 const {assert} = require('chai');
 
-var AssertionRegistry = artifacts.require('AssertionRegistry'); // eslint-disable-line no-undef
-var AssetRegistry = artifacts.require('AssetRegistry'); // eslint-disable-line no-undef
-var UAIRegistry = artifacts.require('UAIRegistry'); // eslint-disable-line no-undef
-var ERC20Token = artifacts.require('ERC20Token'); // eslint-disable-line no-undef
+const ContentAsset = artifacts.require('ContentAsset');
+const ERC20Token = artifacts.require('ERC20Token');
+const ServiceAgreementStorage = artifacts.require('ServiceAgreementStorage');
+const AssertionRegistry = artifacts.require('AssertionRegistry');
 
 const {
     formatAssertion,
     calculateRoot
 } = require('assertion-tools');
 
-
-
-// Helper variables
-var privateKeys = [];
+let assertionCount = 0;
 
 // Contracts used in test
-var assertionRegistry;
-var assetRegistry;
-var uaiRegistry;
-var erc20Token;
+let contentAsset;
+let erc20Token;
+let serviceAgreementStorage;
+let assertionRegistry;
 
-// eslint-disable-next-line no-undef
-contract('DKG v6 Asset/Assertion/UAI registries', async (accounts) => {
-    // eslint-disable-next-line no-undef
+const testAssetId = '0x1';
+const invalidTestAssetid = '0x0';
+const invalidTestTokenId = 1000;
+const errorPrefix = 'Returned error: VM Exception while processing transaction: ';
+
+const tokenAmount = 250;
+
+contract('DKG v6 assets/ContentAsset', async (accounts) => {
+
     before(async () => {
-        assertionRegistry = await AssertionRegistry.deployed();
-        assetRegistry = await AssetRegistry.deployed();
-        uaiRegistry = await UAIRegistry.deployed();
+        contentAsset = await ContentAsset.deployed();
         erc20Token = await ERC20Token.deployed();
-
-        privateKeys = [
-            '0x02b39cac1532bef9dba3e36ec32d3de1e9a88f1dda597d3ac6e2130aed9adc4e',
-            '0xb1c53fd90d0172ff60f14f61f7a09555a9b18aa3c371991d77209cfe524e71e6',
-            '0x8ab3477bf3a1e0af66ab468fafd6cf982df99a59fee405d99861e7faf4db1f7b',
-            '0xc80796c049af64d07c76ab4cfb00655895368c60e50499e56cdc3c38d09aa88e',
-            '0x239d785cea7e22f23d1fa0f22a7cb46c04d81498ce4f2de07a9d2a7ceee45004',
-            '0x021336479aa1553e42bfcd3b928dee791db84a227906cb7cec5982d382ecf106',
-            '0x217479bee25ed6d28302caec069c7297d0c3aefdda81cf91ed754c4d660862ae',
-            '0xa050f7b3a0479a55e9ddd074d218fbfea302f061e9f21a117a2ec1f0b986a363',
-            '0x0dbaee2066aacd16d43a9e23649f232913bca244369463320610ffe6ffb0d69d',
-        ];
+        serviceAgreementStorage = await ServiceAgreementStorage.deployed();
+        assertionRegistry = await AssertionRegistry.deployed();
 
         const promises = [];
         const amountToDeposit = 3000;
@@ -54,7 +45,7 @@ contract('DKG v6 Asset/Assertion/UAI registries', async (accounts) => {
             ));
 
             promises.push(erc20Token.approve(
-                assetRegistry.address,
+                serviceAgreementStorage.address,
                 tokenAmount - amountToDeposit,
                 {from: accounts[i]},
             ));
@@ -62,61 +53,240 @@ contract('DKG v6 Asset/Assertion/UAI registries', async (accounts) => {
         await Promise.all(promises);
     });
 
-    // eslint-disable-next-line no-undef
-    it('Create an asset; transfer ownership; update the asset; getters', async () => {
-        var assertion = await formatAssertion({
-            "@context": "https://json-ld.org/contexts/person.jsonld",
-            "@id": "http://dbpedia.org/resource/John_Lennon",
-            "name": "John Lennon",
-            "born": "1940-10-09",
-            "spouse": "http://dbpedia.org/resource/Cynthia_Lennon"
-        });
-        var assertionId = calculateRoot(assertion);
 
-        var receipt = await assetRegistry.createAsset(
-            assertionId, 1024, 1, 5, 250
+    it('Create an asset, send 0 assertionId, expect to fail', async () => {
+        try {
+            await contentAsset.createAsset(
+                invalidTestAssetid, 1024, 5, 250
+            );
+            throw null;
+        } catch (error) {
+            assert(error, 'Expected error but did not get one');
+            assert(error.message.startsWith(errorPrefix + 'revert assertionId cannot be zero'), 'Invalid error message received');
+        }
+    });
+
+    it('Create an asset, send size 0, expect to fail', async () => {
+        try {
+            await contentAsset.createAsset(
+                testAssetId, 0, 5, 250
+            );
+            throw null;
+        } catch (error) {
+            assert(error, 'Expected error but did not get one');
+            assert(error.message.startsWith(errorPrefix + 'revert Size cannot be zero'), 'Invalid error message received');
+        }
+    });
+
+    it('Create an asset, send 0 epoch number, expect to fail', async () => {
+        try {
+            await contentAsset.createAsset(
+                testAssetId, 1024, 0, 250
+            );
+            throw null;
+        } catch (error) {
+            assert(error, 'Expected error but did not get one');
+            assert(error.message.startsWith(errorPrefix + 'revert Epoch number cannot be zero'), 'Invalid error message received');
+        }
+    });
+
+    it('Create an asset, send 0 token amount, expect to fail', async () => {
+        try {
+            await contentAsset.createAsset(
+                testAssetId, 1024, 5, 0
+            );
+            throw null;
+        } catch (error) {
+            assert(error, 'Expected error but did not get one');
+            assert(error.message.startsWith(errorPrefix + 'revert Token amount cannot be zero'), 'Invalid error message received');
+        }
+    });
+
+    it('Create an asset, expect asset created', async () => {
+        const assertionId = await generateUniqueAssertionId();
+
+        const accountBalanceBeforeCreateAsset = await erc20Token.balanceOf(accounts[0]);
+        const contractBalanceBeforeCreateAsset = await erc20Token.balanceOf(serviceAgreementStorage.address);
+        const receipt = await contentAsset.createAsset(
+            assertionId, 1024, 5, tokenAmount
         );
+        const tokenId = receipt.logs[0].args.tokenId.toString();
 
-        var UAI = receipt.logs[0].args.UAI.toString();
-        assert(UAI === '0');
+        const accountBalanceAfterCreateAsset = await erc20Token.balanceOf(accounts[0]);
+        const contractBalanceAfterCreateAsset = await erc20Token.balanceOf(serviceAgreementStorage.address);
 
-        var balanceOf = await erc20Token.balanceOf(assetRegistry.address);
-        assert(balanceOf.toString() === '250');
+        const accountBalanceDifference = accountBalanceBeforeCreateAsset.sub(accountBalanceAfterCreateAsset).toNumber();
+        assert(accountBalanceDifference === tokenAmount, 'Account balance should be lower then before');
 
-        var owner = await uaiRegistry.ownerOf(UAI);
+        const contractBalanceDifference = contractBalanceAfterCreateAsset.sub(contractBalanceBeforeCreateAsset).toNumber();
+        assert(contractBalanceDifference === tokenAmount, 'Contract balance should be greater than before');
+
+        const owner = await contentAsset.ownerOf(tokenId);
         assert(owner === accounts[0]);
 
-        await uaiRegistry.transfer(owner, accounts[1], UAI);
+    });
 
-        var owner = await uaiRegistry.ownerOf(UAI);
-        assert(owner === accounts[1]);
+    it('Update an asset, send unknown token id, expect to fail', async () => {
+        try {
+            await contentAsset.updateAsset(
+                invalidTestTokenId, testAssetId, 1024, 5, 250
+            );
+            throw null;
+        } catch (error) {
+            assert(error, 'Expected error but did not get one');
+            assert(error.message.startsWith(errorPrefix + 'revert ERC721: invalid token ID'), 'Invalid error message received: ' + error.message);
+        }
+    });
 
-        var assertion = await formatAssertion({
-            "@context": "https://json-ld.org/contexts/person.jsonld",
-            "@id": "http://dbpedia.org/resource/John_Lennon",
-            "name": "John Lennon",
-            "born": "1940-10-09",
-            "died": "1980-12-08",
-            "spouse": "http://dbpedia.org/resource/Cynthia_Lennon"
-        });
-        var oldAssertionId = assertionId;
-        var assertionId = calculateRoot(assertion);
+    it('Update an asset, only owner can update an asset, expect to fail', async () => {
 
-        await assetRegistry.updateAsset(
-            UAI, assertionId, 1024, 1, 500, { from: owner }
+        const assertionId = await generateUniqueAssertionId();
+        const receipt = await contentAsset.createAsset(
+            assertionId, 1024, 5, tokenAmount
+        );
+        const tokenId = receipt.logs[0].args.tokenId.toString();
+
+        try {
+            await contentAsset.updateAsset(
+                tokenId, assertionId, 1024, 5, 250, {from: accounts[1]}
+            );
+            throw null;
+        } catch (error) {
+            assert(error, 'Expected error but did not get one');
+            assert(error.message.startsWith(errorPrefix + 'revert Only owner can update an asset'), 'Invalid error message received: ' + error.message);
+        }
+    });
+
+    it('Update an asset, send 0 assertion id, expect to fail', async () => {
+
+        const assertionId = await generateUniqueAssertionId();
+        const receipt = await contentAsset.createAsset(
+            assertionId, 1024, 5, tokenAmount
+        );
+        const tokenId = receipt.logs[0].args.tokenId.toString();
+
+        try {
+            await contentAsset.updateAsset(
+                tokenId, invalidTestAssetid, 1024, 5, 250
+            );
+            throw null;
+        } catch (error) {
+            assert(error, 'Expected error but did not get one');
+            assert(error.message.startsWith(errorPrefix + 'revert assertionId cannot be zero'), 'Invalid error message received: ' + error.message);
+        }
+    });
+
+    it('Update an asset, send 0 size, expect to fail', async () => {
+
+        const assertionId = await generateUniqueAssertionId();
+        const receipt = await contentAsset.createAsset(
+            assertionId, 1024, 5, tokenAmount
+        );
+        const tokenId = receipt.logs[0].args.tokenId.toString();
+
+        try {
+            await contentAsset.updateAsset(
+                tokenId, assertionId, 0, 5, 250
+            );
+            throw null;
+        } catch (error) {
+            assert(error, 'Expected error but did not get one');
+            assert(error.message.startsWith(errorPrefix + 'revert size cannot be zero'), 'Invalid error message received: ' + error.message);
+        }
+    });
+
+    it('Update an asset, send 0 epoch number, expect to fail', async () => {
+
+        const assertionId = await generateUniqueAssertionId();
+        const receipt = await contentAsset.createAsset(
+            assertionId, 1024, 5, tokenAmount
+        );
+        const tokenId = receipt.logs[0].args.tokenId.toString();
+
+        try {
+            await contentAsset.updateAsset(
+                tokenId, assertionId, 1024, 0, 250
+            );
+            throw null;
+        } catch (error) {
+            assert(error, 'Expected error but did not get one');
+            assert(error.message.startsWith(errorPrefix + 'revert Epoch number cannot be zero'), 'Invalid error message received: ' + error.message);
+        }
+    });
+
+    it('Update an asset, send 0 token amount, expect to fail', async () => {
+        const assertionId = await generateUniqueAssertionId();
+        const receipt = await contentAsset.createAsset(
+            assertionId, 1024, 5, tokenAmount
+        );
+        const tokenId = receipt.logs[0].args.tokenId.toString();
+
+        try {
+            await contentAsset.updateAsset(
+                tokenId, assertionId, 1024, 5, 0
+            );
+            throw null;
+        } catch (error) {
+            assert(error, 'Expected error but did not get one');
+            assert(error.message.startsWith(errorPrefix + 'revert Token amount cannot be zero'), 'Invalid error message received: ' + error.message);
+        }
+    });
+
+    it('Update an asset, expect asset updated', async () => {
+        const assertionId = await generateUniqueAssertionId();
+        const assertionSizeBefore = 1024;
+        const epochNumberBefore = 5;
+        const tokenAmountBefore = 250;
+        const receipt = await contentAsset.createAsset(
+            assertionId, assertionSizeBefore, epochNumberBefore, tokenAmountBefore
+        );
+        const tokenId = receipt.logs[0].args.tokenId.toString();
+
+        const updatedAssertionId = await generateUniqueAssertionId();
+        const assertionSizeAfter = 1024;
+        const epochNumberAfter = 5;
+        const tokenAmountAfter = 250;
+        await contentAsset.updateAsset(
+            tokenId, updatedAssertionId, assertionSizeAfter, epochNumberAfter, tokenAmountAfter
         );
 
-        var balanceOf = await erc20Token.balanceOf(assetRegistry.address);
-        assert(balanceOf.toString() === '750');
+        const updatedBcAssertion = await contentAsset.getAssertions(tokenId);
+        assert(updatedBcAssertion.length === 2, 'Expected length of received assertions to be 2');
+        assert(updatedBcAssertion.includes(assertionId, 'Expected assertion id to be part of array'));
+        assert(updatedBcAssertion.includes(updatedAssertionId, 'Expected assertion id to be part of array'));
 
-        var latestStateHash = await assetRegistry.getCommitHash(UAI, 0);
-        assert(latestStateHash === assertionId);
-        var oldStateCommit = await assetRegistry.getCommitHash(UAI, 1);
-        assert(oldStateCommit === oldAssertionId);
-
-        var issuer2 = await assertionRegistry.getIssuer(oldStateCommit);
-        assert(issuer2 === accounts[0]);
-        var issuer1 = await assertionRegistry.getIssuer(latestStateHash);
-        assert(issuer1 === accounts[1]);
     });
+
+    it('Get an non existing asset, expect 0 returned', async () => {
+        const updatedBcAssertion = await contentAsset.getAssertions(invalidTestTokenId);
+        assert(updatedBcAssertion.length === 0, 'Expected empty array');
+    });
+
+    it('Get an existing asset, expect asset returned', async () => {
+
+        const assertionId = await generateUniqueAssertionId();
+
+        const receipt = await contentAsset.createAsset(
+            assertionId, 1024, 5, 250
+        );
+        const tokenId = receipt.logs[0].args.tokenId.toString();
+
+        const bcAssertion = await contentAsset.getAssertions(tokenId);
+
+        assert(bcAssertion.length === 1, 'Invalid assertion array size');
+        assert(bcAssertion.includes(assertionId), 'Epected assertion id in array');
+    });
+
 });
+
+async function generateUniqueAssertionId () {
+    const assertion = await formatAssertion({
+        "@context": "https://json-ld.org/contexts/person.jsonld",
+        "@id": "http://dbpedia.org/resource/John_Lennon",
+        "name": "John Lennon " + assertionCount++,
+        "born": "1940-10-09",
+        "spouse": "http://dbpedia.org/resource/Cynthia_Lennon"
+    });
+
+    return calculateRoot(assertion);
+}
