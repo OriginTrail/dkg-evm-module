@@ -66,6 +66,7 @@ contract ServiceAgreementStorage {
         uint8 scoringFunctionId;
         uint8 proofWindowOffsetPerc;  // Perc == In % of the epoch
         mapping(uint16 => bytes32) epochSubmissionHeads;  // epoch => headCommitId
+        mapping(uint16 => uint32) rewardedNodes;
     }
 
     Hub public hub;
@@ -348,23 +349,23 @@ contract ServiceAgreementStorage {
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashingFunctionId);
         require(!isProofWindowOpen(agreementId, epoch), "Proof window is open");
 
-        uint96 identityId = IdentityStorage(
-            hub.getContractAddress("IdentityStorage")
-        ).identityIds(keccak256(abi.encodePacked(msg.sender)));
-        bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, identityId));
+        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
-        require(commitSubmissions[commitId].score != 0, "You have been already rewarded in this epoch");
+        uint96 identityId = profileStorage.getIdentityId();
+
+        require(
+            commitSubmissions[keccak256(abi.encodePacked(agreementId, epoch, identityId))].score != 0,
+            "You have been already rewarded in this epoch"
+        );
 
         bytes32 nextCommitId = serviceAgreements[agreementId].epochSubmissionHeads[epoch];
 
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
         bool isRewarded = false;
-        uint32 notRewardedNodes = parametersStorage.R0();
         for (uint32 i = 0; i < parametersStorage.R0(); i++) {
             CommitSubmission memory commit = commitSubmissions[nextCommitId];
 
-            if (commit.score == 0) notRewardedNodes--;
             if (identityId == commit.identityId) isRewarded = true;
 
             nextCommitId = keccak256(abi.encodePacked(agreementId, epoch, commit.nextIdentity));
@@ -385,29 +386,26 @@ contract ServiceAgreementStorage {
             "Root hash doesn't match"
         );
 
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        // emit ProofSubmitted(
+        //     assetContract,
+        //     tokenId,
+        //     keyword,
+        //     hashingFunctionId,
+        //     identityId,
+        //     profileStorage.getNodeId(identityId)
+        // );
 
-        emit ProofSubmitted(
-            assetContract,
-            tokenId,
-            keyword,
-            hashingFunctionId,
-            identityId,
-            profileStorage.getNodeId(identityId)
-        );
+        uint96 reward = serviceAgreements[agreementId].tokenAmount / (serviceAgreements[agreementId].epochsNum - epoch + 1) / (parametersStorage.R0() - serviceAgreements[agreementId].rewardedNodes[epoch]);
 
-        uint16 notFinishedEpochs = serviceAgreements[agreementId].epochsNum - epoch + 1;
-        uint96 reward = serviceAgreements[agreementId].tokenAmount / notFinishedEpochs / notRewardedNodes;
-
-        IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
-        tokenContract.transfer(address(profileStorage), reward);
+        IERC20(hub.getContractAddress("Token")).transfer(address(profileStorage), reward);
 
         profileStorage.setReward(identityId, profileStorage.getReward(identityId) + reward);
 
         serviceAgreements[agreementId].tokenAmount -= reward;
+        serviceAgreements[agreementId].rewardedNodes[epoch] += 1;
 
         // To make sure that node already received reward
-        commitSubmissions[commitId].score = 0;
+        commitSubmissions[keccak256(abi.encodePacked(agreementId, epoch, identityId))].score = 0;
     }
 
     function setScoringFunction(bytes32 agreementId, uint8 newScoringFunctionId)

@@ -28,15 +28,19 @@ contract ContentAsset is AbstractAsset, ERC721 {
         public
         returns (uint256)
     {
-        require(assertionId != 0, "assertionId cannot be zero");
-        require(size > 0, "Size cannot be zero");
+        require(assertionId != bytes32(0), "assertionId cannot be empty");
+        require(size > 0, "Size cannot be 0");
+        require(epochsNum > 0, "Epochs number cannot be 0");
+        require(tokenAmount > 0, "Token amount cannot be 0");
 
         uint256 tokenId = _tokenId;
         _mint(msg.sender, tokenId);
         _tokenId++;
 
         AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(
-            assertionId, msg.sender, size
+            assertionId,
+            msg.sender,
+            size
         );
         assetRecords[tokenId].assertions.push(assertionId);
 
@@ -60,8 +64,10 @@ contract ContentAsset is AbstractAsset, ERC721 {
         public
     {
         require(msg.sender == this.ownerOf(tokenId), "Only owner can update an asset");
-        require(assertionId != 0, "assertionId cannot be zero");
-        require(size > 0, "size cannot be zero");
+        require(assertionId != bytes32(0), "assertionId cannot be 0");
+        require(size > 0, "Size cannot be 0");
+        require(epochsNum > 0, "Epochs number cannot be 0");
+        require(tokenAmount > 0, "Token amount cannot be 0");
         
         AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(
             assertionId, msg.sender, size
