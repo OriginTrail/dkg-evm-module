@@ -6,18 +6,8 @@ import {Hub} from './Hub.sol';
 import {ProfileStorage} from './storage/ProfileStorage.sol';
 
 contract ShardingTable {
-    event NodeObjCreated(
-        uint96 indexed identityId,
-        address indexed identityContractAddress,
-        bytes indexed nodeId,
-        uint96 ask,
-        uint96 stake
-    );
-    event NodeRemoved(
-        uint96 indexed identityId,
-        address indexed identityContractAddress,
-        bytes indexed nodeId
-    );
+    event NodeObjCreated(uint96 indexed identityId, bytes indexed nodeId, uint96 ask, uint96 stake);
+    event NodeRemoved(uint96 indexed identityId, bytes indexed nodeId);
     event NodeRemovedByHubOwner(bytes indexed nodeId);
 
     struct Node {
@@ -179,7 +169,7 @@ contract ShardingTable {
 
         nodesCount -= 1;
     
-        emit NodeRemoved(identityId, profileStorage.identityContractAddresses(identityId), nodeId);
+        emit NodeRemoved(identityId, nodeId);
     }
 
     function removeNodeById(bytes memory nodeId)
@@ -229,13 +219,7 @@ contract ShardingTable {
         nodes[nodeId] = newNode;
         nodeIdsSha256[nodeId] = nodeIdSha256;
 
-        emit NodeObjCreated(
-            identityId,
-            profileStorage.identityContractAddresses(identityId),
-            nodeId,
-            profileStorage.getAsk(identityId),
-            profileStorage.getStake(identityId)
-        );
+        emit NodeObjCreated(identityId, nodeId, profileStorage.getAsk(identityId), profileStorage.getStake(identityId));
     }
 
     function _setHead(bytes memory nodeId)
