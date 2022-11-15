@@ -131,7 +131,7 @@ module.exports = async (deployer, network, accounts) => {
                 .then((result) => {
                     contentAsset = result;
                 });
-            await hub.setContractAddress('ContentAsset', contentAsset.address);
+            await hub.setAssetContractAddress('ContentAsset', contentAsset.address);
             /* ---------------------------------------------------------------------------------------- */
 
             /* ---------------------------------------ERC20-------------------------------------------- */
