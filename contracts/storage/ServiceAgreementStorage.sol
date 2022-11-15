@@ -334,81 +334,81 @@ contract ServiceAgreementStorage {
         );
     }
 
-    // function sendProof(
-    //     address assetContract,
-    //     uint256 tokenId,
-    //     bytes memory keyword,
-    //     uint8 hashingFunctionId,
-    //     uint16 epoch,
-    //     bytes32[] memory proof,
-    //     bytes32 chunkHash
-    // )
-    //     public
-    // {
-    //     bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashingFunctionId);
-    //     require(!isProofWindowOpen(agreementId, epoch), "Proof window is open");
+    function sendProof(
+        address assetContract,
+        uint256 tokenId,
+        bytes memory keyword,
+        uint8 hashingFunctionId,
+        uint16 epoch,
+        bytes32[] memory proof,
+        bytes32 chunkHash
+    )
+        public
+    {
+        bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashingFunctionId);
+        require(!isProofWindowOpen(agreementId, epoch), "Proof window is open");
 
-    //     uint96 identityId = IdentityStorage(
-    //         hub.getContractAddress("IdentityStorage")
-    //     ).identityIds(keccak256(abi.encodePacked(msg.sender)));
-    //     bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, identityId));
+        uint96 identityId = IdentityStorage(
+            hub.getContractAddress("IdentityStorage")
+        ).identityIds(keccak256(abi.encodePacked(msg.sender)));
+        bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, identityId));
 
-    //     require(commitSubmissions[commitId].score != 0, "You have been already rewarded in this epoch");
+        require(commitSubmissions[commitId].score != 0, "You have been already rewarded in this epoch");
 
-    //     bytes32 nextCommitId = serviceAgreements[agreementId].epochSubmissionHeads[epoch];
+        bytes32 nextCommitId = serviceAgreements[agreementId].epochSubmissionHeads[epoch];
 
-    //     ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
-    //     bool isRewarded = false;
-    //     uint32 notRewardedNodes = parametersStorage.R0();
-    //     for (uint32 i = 0; i < parametersStorage.R0(); i++) {
-    //         CommitSubmission memory commit = commitSubmissions[nextCommitId];
+        bool isRewarded = false;
+        uint32 notRewardedNodes = parametersStorage.R0();
+        for (uint32 i = 0; i < parametersStorage.R0(); i++) {
+            CommitSubmission memory commit = commitSubmissions[nextCommitId];
 
-    //         if (commit.score == 0) notRewardedNodes--;
-    //         if (identityId == commit.identityId) isRewarded = true;
+            if (commit.score == 0) notRewardedNodes--;
+            if (identityId == commit.identityId) isRewarded = true;
 
-    //         nextCommitId = keccak256(abi.encodePacked(agreementId, epoch, commit.nextIdentity));
-    //     }
+            nextCommitId = keccak256(abi.encodePacked(agreementId, epoch, commit.nextIdentity));
+        }
 
-    //     require(!isRewarded, "You hasn't been chosen for reward in this epoch!");
+        require(!isRewarded, "You hasn't been chosen for reward in this epoch!");
 
-    //     bytes32 merkleRoot;
-    //     uint256 challenge;
-    //     (merkleRoot, challenge) = getChallenge(assetContract, tokenId, keyword, hashingFunctionId);
+        bytes32 merkleRoot;
+        uint256 challenge;
+        (merkleRoot, challenge) = getChallenge(assetContract, tokenId, keyword, hashingFunctionId);
 
-    //     require(
-    //         MerkleProof.verify(
-    //             proof,
-    //             merkleRoot,
-    //             keccak256(abi.encodePacked(chunkHash, challenge))
-    //         ),
-    //         "Root hash doesn't match"
-    //     );
+        require(
+            MerkleProof.verify(
+                proof,
+                merkleRoot,
+                keccak256(abi.encodePacked(chunkHash, challenge))
+            ),
+            "Root hash doesn't match"
+        );
 
-    //     ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
-    //     emit ProofSubmitted(
-    //         assetContract,
-    //         tokenId,
-    //         keyword,
-    //         hashingFunctionId,
-    //         identityId,
-    //         profileStorage.getNodeId(identityId)
-    //     );
+        emit ProofSubmitted(
+            assetContract,
+            tokenId,
+            keyword,
+            hashingFunctionId,
+            identityId,
+            profileStorage.getNodeId(identityId)
+        );
 
-    //     uint16 notFinishedEpochs = serviceAgreements[agreementId].epochsNum - epoch + 1;
-    //     uint96 reward = serviceAgreements[agreementId].tokenAmount / notFinishedEpochs / notRewardedNodes;
+        uint16 notFinishedEpochs = serviceAgreements[agreementId].epochsNum - epoch + 1;
+        uint96 reward = serviceAgreements[agreementId].tokenAmount / notFinishedEpochs / notRewardedNodes;
 
-    //     IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
-    //     tokenContract.transfer(address(profileStorage), reward);
+        IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
+        tokenContract.transfer(address(profileStorage), reward);
 
-    //     profileStorage.setReward(identityId, profileStorage.getReward(identityId) + reward);
+        profileStorage.setReward(identityId, profileStorage.getReward(identityId) + reward);
 
-    //     serviceAgreements[agreementId].tokenAmount -= reward;
+        serviceAgreements[agreementId].tokenAmount -= reward;
 
-    //     // To make sure that node already received reward
-    //     commitSubmissions[commitId].score = 0;
-    // }
+        // To make sure that node already received reward
+        commitSubmissions[commitId].score = 0;
+    }
 
     function setScoringFunction(bytes32 agreementId, uint8 newScoringFunctionId)
         public
