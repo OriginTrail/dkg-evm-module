@@ -62,7 +62,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert assertionId cannot be zero'), 'Invalid error message received');
+            assert(error.message.startsWith(errorPrefix + 'revert assertionId cannot be empty'), 'Invalid error message received');
         }
     });
 
@@ -74,11 +74,11 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert Size cannot be zero'), 'Invalid error message received');
+            assert(error.message.startsWith(errorPrefix + 'revert Size cannot be 0'), 'Invalid error message received');
         }
     });
 
-    it('Create an asset, send 0 epoch number, expect to fail', async () => {
+    it('Create an asset, send 0 epochs number, expect to fail', async () => {
         try {
             await contentAsset.createAsset(
                 testAssetId, 1024, 0, 250
@@ -86,7 +86,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert Epoch number cannot be zero'), 'Invalid error message received');
+            assert(error.message.startsWith(errorPrefix + 'revert Epochs number cannot be 0'), 'Invalid error message received');
         }
     });
 
@@ -98,7 +98,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert Token amount cannot be zero'), 'Invalid error message received');
+            assert(error.message.startsWith(errorPrefix + 'revert Token amount cannot be 0'), 'Invalid error message received');
         }
     });
 
@@ -139,7 +139,6 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
     });
 
     it('Update an asset, only owner can update an asset, expect to fail', async () => {
-
         const assertionId = await generateUniqueAssertionId();
         const receipt = await contentAsset.createAsset(
             assertionId, 1024, 5, tokenAmount
@@ -172,7 +171,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert assertionId cannot be zero'), 'Invalid error message received: ' + error.message);
+            assert(error.message.startsWith(errorPrefix + 'revert assertionId cannot be 0'), 'Invalid error message received: ' + error.message);
         }
     });
 
@@ -191,11 +190,11 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert size cannot be zero'), 'Invalid error message received: ' + error.message);
+            assert(error.message.startsWith(errorPrefix + 'revert Size cannot be 0'), 'Invalid error message received: ' + error.message);
         }
     });
 
-    it('Update an asset, send 0 epoch number, expect to fail', async () => {
+    it('Update an asset, send 0 epochs number, expect to fail', async () => {
 
         const assertionId = await generateUniqueAssertionId();
         const receipt = await contentAsset.createAsset(
@@ -210,7 +209,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert Epoch number cannot be zero'), 'Invalid error message received: ' + error.message);
+            assert(error.message.startsWith(errorPrefix + 'revert Epochs number cannot be 0'), 'Invalid error message received: ' + error.message);
         }
     });
 
@@ -228,7 +227,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert Token amount cannot be zero'), 'Invalid error message received: ' + error.message);
+            assert(error.message.startsWith(errorPrefix + 'revert Token amount cannot be 0'), 'Invalid error message received: ' + error.message);
         }
     });
 

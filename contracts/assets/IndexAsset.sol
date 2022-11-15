@@ -43,11 +43,12 @@ contract IndexAsset is AbstractAsset, ERC721 {
         // uint96 tokenAmount,
         // uint8 scoringFunctionId
 
-        require(assertionId != 0, "assertionId cannot be 0");
+        require(assertionId != bytes32(0), "assertionId cannot be 0");
         require(size > 0 && size <= 300, "Size is out of range [1, 300]");
         require(keywords.length > 0 && keywords.length <= 5, "Number of keywords is out of range [1, 5]");
         require(hashingFunctionIds.length > 0, "Number of hashing functions cannot be 0");
         require(epochsNum > 0, "Epochs number cannot be 0");
+        require(tokenAmount > 0, "Token amount cannot be 0");
 
         uint256 tokenId = _tokenId;
         _mint(msg.sender, tokenId);
@@ -94,11 +95,12 @@ contract IndexAsset is AbstractAsset, ERC721 {
         uint8 scoringFunctionId
     ) public {
         require(msg.sender == this.ownerOf(tokenId), "Only owner can update an asset");
-        require(assertionId != 0, "assertionId cannot be 0");
+        require(assertionId != bytes32(0), "assertionId cannot be 0");
         require(size > 0 && size <= 300, "Size is out of range [1, 300]");
         require(keywords.length > 0 && keywords.length <= 5, "Number of keywords is out of range [1, 5]");
         require(hashingFunctionIds.length > 0, "Number of hashing functions cannot be 0");
         require(epochsNum > 0, "Epochs number cannot be 0");
+        require(tokenAmount > 0, "Token amount cannot be 0");
 
         AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(
             assertionId,
