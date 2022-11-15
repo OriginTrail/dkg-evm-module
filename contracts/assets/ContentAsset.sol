@@ -37,7 +37,9 @@ contract ContentAsset is AbstractAsset, ERC721 {
         _tokenId++;
 
         AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(
-            assertionId, msg.sender, size
+            assertionId,
+            msg.sender,
+            size
         );
         assetRecords[tokenId].assertions.push(assertionId);
 
