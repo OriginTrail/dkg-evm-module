@@ -16,6 +16,7 @@ import { ShardingTable } from "../ShardingTable.sol";
 
 contract ServiceAgreementStorage {
     event ServiceAgreementCreated(
+        bytes32 agreementId,
         address indexed assetContract,
         uint256 indexed tokenId,
         bytes indexed keyword,
@@ -26,6 +27,7 @@ contract ServiceAgreementStorage {
         uint96 tokenAmount
     );
     event ServiceAgreementUpdated(
+        bytes32 agreementId,
         address indexed assetContract,
         uint256 indexed tokenId,
         bytes indexed keyword,
@@ -133,6 +135,7 @@ contract ServiceAgreementStorage {
         agreement.scoringFunctionId = scoringFunctionId;
 
         emit ServiceAgreementCreated(
+            agreementId,
             assetContract,
             tokenId,
             keyword,
@@ -174,6 +177,7 @@ contract ServiceAgreementStorage {
         serviceAgreements[agreementId].tokenAmount += tokenAmount;
 
         emit ServiceAgreementUpdated(
+            agreementId,
             assetContract,
             tokenId,
             keyword,
