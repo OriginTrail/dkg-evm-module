@@ -73,7 +73,7 @@ module.exports = async (deployer, network, accounts) => {
             /* -------------------------------------------------------------------------------------- */
 
             /* ----------------------------------Hashing Proxy--------------------------------------- */
-            await deployer.deploy(HashingProxy, hub.address, {gas: 6000000, from: accounts[0]})
+            await deployer.deploy(HashingProxy, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     hashingProxy = result;
                 });
@@ -89,7 +89,7 @@ module.exports = async (deployer, network, accounts) => {
             /* ---------------------------------------------------------------------------------------- */
 
             /* ----------------------------------Scoring Proxy----------------------------------------- */
-            await deployer.deploy(ScoringProxy, hub.address, {gas: 6000000, from: accounts[0]})
+            await deployer.deploy(ScoringProxy, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     scoringProxy = result;
                 });
