@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 
 import { ByteArr } from "../utils/ByteArr.sol";
 import { Hub } from "../Hub.sol";
-import { IERC734Table } from "../interface/IERC734Table.sol";
+import { IERC734Extended } from "../interface/IERC734Extended.sol";
 
-contract IdentityStorage is IERC734Table {
+contract IdentityStorage is IERC734Extended {
     using ByteArr for bytes;
     using ByteArr for bytes32[];
     using ByteArr for uint256[];
@@ -134,21 +134,18 @@ contract IdentityStorage is IERC734Table {
             "Cannot delete the only operational key"
         );
 
-        uint256 purpose = identity.keys[_key].purpose;
-        uint256 keyType = identity.keys[_key].keyType;
+        emit KeyRemoved(identityId, identity.keys[_key].key, identity.keys[_key].purpose, identity.keys[_key].keyType);
 
         uint256 index;
         bool success;
-        (index, success) = identity.keysByPurpose[purpose].indexOf(_key);
-        identity.keysByPurpose[purpose].removeByIndex(index);
+        (index, success) = identity.keysByPurpose[identity.keys[_key].purpose].indexOf(_key);
+        identity.keysByPurpose[identity.keys[_key].purpose].removeByIndex(index);
 
         delete identity.keys[_key];
 
-        if (purpose == OPERATIONAL_KEY) {
+        if (identity.keys[_key].purpose == OPERATIONAL_KEY) {
             delete identityIds[_key];
         }
-
-        emit KeyRemoved(identityId, identity.keys[_key].key, purpose, keyType);
 
         return true;
     }

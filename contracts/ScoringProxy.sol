@@ -6,8 +6,11 @@ import { IScoringFunction } from "./interface/ScoringFunction.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ScoringProxy is Ownable {
+    event NewScoringFunctionContract(uint8 indexed scoringFunctionId, address newContractAddress);
+    event ScoringFunctionContractUpdated(uint8 indexed scoringFunctionId, address newContractAddress);
+
     // scoringFunctionId => Contract address
-    mapping(uint8 => address) functions;
+    mapping(uint8 => address) public functions;
 
     function callScoringFunction(
         uint8 scoringFunctionId,
@@ -19,11 +22,9 @@ contract ScoringProxy is Ownable {
         public
         returns (uint32)
     {
-        address scoringContractAddress = functions[scoringFunctionId];
+        require(functions[scoringFunctionId] != address(0), "Scoring function doesn't exist!");
 
-        require(scoringContractAddress != address(0), "Scoring function doesn't exist!");
-
-        IScoringFunction scoringFunction = IScoringFunction(scoringContractAddress);
+        IScoringFunction scoringFunction = IScoringFunction(functions[scoringFunctionId]);
         uint256 distance = scoringFunction.calculateDistance(hashingFunctionId, nodeId, keyword);
 
         return scoringFunction.calculateScore(distance, stake);
@@ -33,6 +34,17 @@ contract ScoringProxy is Ownable {
         public
         onlyOwner
     {
+        require(scoringContractAddress != address(0), "Contract address cannot be empty");
+
+        if (functions[scoringFunctionId] != address(0)) {
+            emit ScoringFunctionContractUpdated(
+                scoringFunctionId,
+                scoringContractAddress
+            );
+        } else {
+            emit NewScoringFunctionContract(scoringFunctionId, scoringContractAddress);
+        }
+
         functions[scoringFunctionId] = scoringContractAddress;
     }
 

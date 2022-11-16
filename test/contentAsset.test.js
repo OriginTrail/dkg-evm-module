@@ -56,7 +56,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
     it('Create an asset, send 0 assertionId, expect to fail', async () => {
         try {
             await contentAsset.createAsset(
-                invalidTestAssetid, 1024, 5, 250
+                invalidTestAssetid, 1024, 10, 10, 5, 250
             );
             throw null;
         } catch (error) {
@@ -68,7 +68,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
     it('Create an asset, send size 0, expect to fail', async () => {
         try {
             await contentAsset.createAsset(
-                testAssetId, 0, 5, 250
+                testAssetId, 0, 10, 10, 5, 250
             );
             throw null;
         } catch (error) {
@@ -80,7 +80,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
     it('Create an asset, send 0 epochs number, expect to fail', async () => {
         try {
             await contentAsset.createAsset(
-                testAssetId, 1024, 0, 250
+                testAssetId, 1024, 10, 10, 0, 250
             );
             throw null;
         } catch (error) {
@@ -92,7 +92,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
     it('Create an asset, send 0 token amount, expect to fail', async () => {
         try {
             await contentAsset.createAsset(
-                testAssetId, 1024, 5, 0
+                testAssetId, 1024, 10, 10, 5, 0
             );
             throw null;
         } catch (error) {
@@ -107,7 +107,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
         const accountBalanceBeforeCreateAsset = await erc20Token.balanceOf(accounts[0]);
         const contractBalanceBeforeCreateAsset = await erc20Token.balanceOf(serviceAgreementStorage.address);
         const receipt = await contentAsset.createAsset(
-            assertionId, 1024, 5, tokenAmount
+            assertionId, 1024, 10, 10, 5, tokenAmount
         );
         const tokenId = receipt.logs[0].args.tokenId.toString();
 
@@ -128,7 +128,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
     it('Update an asset, send unknown token id, expect to fail', async () => {
         try {
             await contentAsset.updateAsset(
-                invalidTestTokenId, testAssetId, 1024, 5, 250
+                invalidTestTokenId, testAssetId, 1024, 10, 10, 5, 250
             );
             throw null;
         } catch (error) {
@@ -140,13 +140,13 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
     it('Update an asset, only owner can update an asset, expect to fail', async () => {
         const assertionId = await generateUniqueAssertionId();
         const receipt = await contentAsset.createAsset(
-            assertionId, 1024, 5, tokenAmount
+            assertionId, 1024, 10, 10, 5, tokenAmount
         );
         const tokenId = receipt.logs[0].args.tokenId.toString();
 
         try {
             await contentAsset.updateAsset(
-                tokenId, assertionId, 1024, 5, 250, {from: accounts[1]}
+                tokenId, assertionId, 1024, 10, 10, 5, 250, {from: accounts[1]}
             );
             throw null;
         } catch (error) {
@@ -159,13 +159,13 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
 
         const assertionId = await generateUniqueAssertionId();
         const receipt = await contentAsset.createAsset(
-            assertionId, 1024, 5, tokenAmount
+            assertionId, 1024, 10, 10, 5, tokenAmount
         );
         const tokenId = receipt.logs[0].args.tokenId.toString();
 
         try {
             await contentAsset.updateAsset(
-                tokenId, invalidTestAssetid, 1024, 5, 250
+                tokenId, invalidTestAssetid, 1024, 10, 10, 5, 250
             );
             throw null;
         } catch (error) {
@@ -178,13 +178,13 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
 
         const assertionId = await generateUniqueAssertionId();
         const receipt = await contentAsset.createAsset(
-            assertionId, 1024, 5, tokenAmount
+            assertionId, 1024, 10, 10, 5, tokenAmount
         );
         const tokenId = receipt.logs[0].args.tokenId.toString();
 
         try {
             await contentAsset.updateAsset(
-                tokenId, assertionId, 0, 5, 250
+                tokenId, assertionId, 0, 10, 10, 5, 250
             );
             throw null;
         } catch (error) {
@@ -197,13 +197,13 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
 
         const assertionId = await generateUniqueAssertionId();
         const receipt = await contentAsset.createAsset(
-            assertionId, 1024, 5, tokenAmount
+            assertionId, 1024, 10, 10, 5, tokenAmount
         );
         const tokenId = receipt.logs[0].args.tokenId.toString();
 
         try {
             await contentAsset.updateAsset(
-                tokenId, assertionId, 1024, 0, 250
+                tokenId, assertionId, 1024, 10, 10, 0, 250
             );
             throw null;
         } catch (error) {
@@ -215,13 +215,13 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
     it('Update an asset, send 0 token amount, expect to fail', async () => {
         const assertionId = await generateUniqueAssertionId();
         const receipt = await contentAsset.createAsset(
-            assertionId, 1024, 5, tokenAmount
+            assertionId, 1024, 10, 10, 5, tokenAmount
         );
         const tokenId = receipt.logs[0].args.tokenId.toString();
 
         try {
             await contentAsset.updateAsset(
-                tokenId, assertionId, 1024, 5, 0
+                tokenId, assertionId, 1024, 10, 10, 5, 0
             );
             throw null;
         } catch (error) {
@@ -233,19 +233,34 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
     it('Update an asset, expect asset updated', async () => {
         const assertionId = await generateUniqueAssertionId();
         const assertionSizeBefore = 1024;
+        const assertionTriplesNumberBefore = 10;
+        const assertionChunksNumberBefore = 10;
         const epochNumberBefore = 5;
         const tokenAmountBefore = 250;
         const receipt = await contentAsset.createAsset(
-            assertionId, assertionSizeBefore, epochNumberBefore, tokenAmountBefore
+            assertionId,
+            assertionSizeBefore,
+            assertionTriplesNumberBefore,
+            assertionChunksNumberBefore,
+            epochNumberBefore,
+            tokenAmountBefore
         );
         const tokenId = receipt.logs[0].args.tokenId.toString();
 
         const updatedAssertionId = await generateUniqueAssertionId();
         const assertionSizeAfter = 1024;
+        const assertionTriplesNumberAfter = 10;
+        const assertionChunksNumberAfter = 10;
         const epochNumberAfter = 5;
         const tokenAmountAfter = 250;
         await contentAsset.updateAsset(
-            tokenId, updatedAssertionId, assertionSizeAfter, epochNumberAfter, tokenAmountAfter
+            tokenId,
+            updatedAssertionId,
+            assertionSizeAfter,
+            assertionTriplesNumberAfter,
+            assertionChunksNumberAfter,
+            epochNumberAfter,
+            tokenAmountAfter
         );
 
         const updatedBcAssertion = await contentAsset.getAssertions(tokenId);
@@ -265,7 +280,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
         const assertionId = await generateUniqueAssertionId();
 
         const receipt = await contentAsset.createAsset(
-            assertionId, 1024, 5, 250
+            assertionId, 1024, 10, 10, 5, 250
         );
         const tokenId = receipt.logs[0].args.tokenId.toString();
 

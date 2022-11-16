@@ -6,18 +6,19 @@ import { IHashingFunction } from "./interface/HashingFunction.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract HashingProxy is Ownable {
-    // algorithmId => Contract address
-    mapping(uint8 => address) functions;
+    event NewHashingFunctionContract(uint8 indexed hashingFunctionId, address newContractAddress);
+    event HashingFunctionContractChanged(uint8 indexed hashingFunctionId, address newContractAddress);
+
+    // hashingFunctionId => Contract address
+    mapping(uint8 => address) public functions;
 
     function callHashingFunction(uint8 hashingFunctionId, bytes memory data)
         public
         returns (bytes32)
     {
-        address hashingContractAddress = functions[hashingFunctionId];
+        require(functions[hashingFunctionId] != address(0), "Hashing function doesn't exist!");
 
-        require(hashingContractAddress != address(0), "Hashing function doesn't exist!");
-
-        IHashingFunction hashingFunction = IHashingFunction(hashingContractAddress);
+        IHashingFunction hashingFunction = IHashingFunction(functions[hashingFunctionId]);
         return hashingFunction.hash(data);
     }
 
@@ -26,11 +27,9 @@ contract HashingProxy is Ownable {
         view
         returns (string memory)
     {
-        address hashingContractAddress = functions[hashingFunctionId];
+        require(functions[hashingFunctionId] != address(0), "Hashing function doesn't exist!");
 
-        require(hashingContractAddress != address(0), "Hashing function doesn't exist!");
-
-        IHashingFunction hashingFunction = IHashingFunction(hashingContractAddress);
+        IHashingFunction hashingFunction = IHashingFunction(functions[hashingFunctionId]);
         return hashingFunction.name();
     }
 
@@ -38,6 +37,17 @@ contract HashingProxy is Ownable {
         public
         onlyOwner
     {
+        require(hashingContractAddress != address(0), "Contract address cannot be empty");
+
+        if (functions[hashingFunctionId] != address(0)) {
+            emit HashingFunctionContractChanged(
+                hashingFunctionId,
+                hashingContractAddress
+            );
+        } else {
+            emit NewHashingFunctionContract(hashingFunctionId, hashingContractAddress);
+        }
+
         functions[hashingFunctionId] = hashingContractAddress;
     }
 

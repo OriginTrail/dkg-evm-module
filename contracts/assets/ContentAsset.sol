@@ -24,7 +24,14 @@ contract ContentAsset is AbstractAsset, ERC721 {
         _tokenId = 0;
     }
 
-    function createAsset(bytes32 assertionId, uint256 size, uint16 epochsNum, uint96 tokenAmount)
+    function createAsset(
+        bytes32 assertionId,
+        uint128 size,
+        uint32 triplesNumber,
+        uint96 chunksNumber,
+        uint16 epochsNum,
+        uint96 tokenAmount
+    )
         public
         returns (uint256)
     {
@@ -40,7 +47,9 @@ contract ContentAsset is AbstractAsset, ERC721 {
         AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(
             assertionId,
             msg.sender,
-            size
+            size,
+            triplesNumber,
+            chunksNumber
         );
         assetRecords[tokenId].assertions.push(assertionId);
 
@@ -60,7 +69,15 @@ contract ContentAsset is AbstractAsset, ERC721 {
         return tokenId;
     }
 
-    function updateAsset(uint256 tokenId, bytes32 assertionId, uint256 size, uint16 epochsNum, uint96 tokenAmount)
+    function updateAsset(
+        uint256 tokenId,
+        bytes32 assertionId,
+        uint128 size,
+        uint32 triplesNumber,
+        uint96 chunksNumber,
+        uint16 epochsNum,
+        uint96 tokenAmount
+    )
         public
     {
         require(msg.sender == this.ownerOf(tokenId), "Only owner can update an asset");
@@ -70,7 +87,11 @@ contract ContentAsset is AbstractAsset, ERC721 {
         require(tokenAmount > 0, "Token amount cannot be 0");
         
         AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(
-            assertionId, msg.sender, size
+            assertionId,
+            msg.sender,
+            size,
+            triplesNumber,
+            chunksNumber
         );
         assetRecords[tokenId].assertions.push(assertionId);
 

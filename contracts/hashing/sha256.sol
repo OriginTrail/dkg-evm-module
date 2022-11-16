@@ -7,8 +7,8 @@ import { IHashingFunction } from "../interface/HashingFunction.sol";
 contract SHA256 is IHashingFunction {
     string private _name;
 
-    constructor(string memory name_) {
-        _name = name_;
+    constructor() {
+        _name = "sha256";
     }
 
     function name()

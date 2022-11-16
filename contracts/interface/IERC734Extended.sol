@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-interface IERC734Table {
+interface IERC734Extended {
     event IdentityCreated(uint96 indexed identityId, bytes32 indexed operationalKey, bytes32 indexed adminKey);
     event KeyAdded(uint96 indexed identityId, bytes32 indexed key, uint256 purpose, uint256 keyType);
     event KeyRemoved(uint96 indexed identityId, bytes32 indexed key, uint256 purpose, uint256 keyType);

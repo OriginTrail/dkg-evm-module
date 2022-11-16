@@ -26,7 +26,9 @@ contract IndexAsset is AbstractAsset, ERC721 {
 
     function createAsset(
         bytes32 assertionId,
-        uint256 size,
+        uint128 size,
+        uint32 triplesNumber,
+        uint96 chunksNumber,
         bytes[] memory keywords,
         uint8[] memory hashingFunctionIds,
         uint16 epochsNum,
@@ -57,7 +59,9 @@ contract IndexAsset is AbstractAsset, ERC721 {
         AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(
             assertionId,
             msg.sender,
-            size
+            size,
+            triplesNumber,
+            chunksNumber
         );
         assetRecords[tokenId].assertions.push(assertionId);
 
@@ -87,7 +91,9 @@ contract IndexAsset is AbstractAsset, ERC721 {
     function updateAsset(
         uint256 tokenId,
         bytes32 assertionId,
-        uint256 size,
+        uint128 size,
+        uint32 triplesNumber,
+        uint96 chunksNumber,
         bytes32[] memory keywords,
         uint8[] memory hashingFunctionIds,
         uint16 epochsNum,
@@ -105,7 +111,9 @@ contract IndexAsset is AbstractAsset, ERC721 {
         AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(
             assertionId,
             msg.sender,
-            size
+            size,
+            triplesNumber,
+            chunksNumber
         );
         assetRecords[tokenId].assertions.push(assertionId);
 

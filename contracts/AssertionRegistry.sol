@@ -2,18 +2,23 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Hub.sol";
+import { Hub } from "./Hub.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract AssertionRegistry is Ownable {
-	event AssertionCreated(bytes32 indexed assertionId, address issuer, uint256 size);
+	event AssertionCreated(
+		bytes32 indexed assertionId, address issuer, uint128 size, uint32 triplesNumber, uint96 chunksNumber
+	);
 
 	Hub public hub;
 
+	// TODO: Optimize storage usage
 	struct AssertionRecord{
 		uint256 timestamp;
 		address issuer;
-		uint256 size;
+		uint128 size;
+		uint32 triplesNumber;
+		uint96 chunksNumber;
 	}
 
 	mapping(bytes32 => AssertionRecord) internal assertionRecords;
@@ -23,17 +28,21 @@ contract AssertionRegistry is Ownable {
 		hub = Hub(hubAddress);
 	}
 
-
 	modifier onlyAssetContracts() {
         require (
-            // TODO: Add function to the hub
             hub.isAssetContract(msg.sender),
             "Function can only be called by Asset Type Contracts!"
         );
         _;
     }
 
-	function createAssertionRecord(bytes32 assertionId, address issuer, uint256 size)
+	function createAssertionRecord(
+		bytes32 assertionId,
+		address issuer,
+		uint128 size,
+		uint32 triplesNumber,
+		uint96 chunksNumber
+	)
 		public
 		onlyAssetContracts
 	{
@@ -44,8 +53,10 @@ contract AssertionRegistry is Ownable {
 		assertionRecords[assertionId].timestamp = block.timestamp;
 		assertionRecords[assertionId].issuer = issuer;
 		assertionRecords[assertionId].size = size;
+		assertionRecords[assertionId].triplesNumber = triplesNumber;
+		assertionRecords[assertionId].chunksNumber = chunksNumber;
 
-		emit AssertionCreated(assertionId, issuer, size);
+		emit AssertionCreated(assertionId, issuer, size, triplesNumber, chunksNumber);
 	}
 
 	function getIssuer(bytes32 assertionId)
@@ -67,8 +78,24 @@ contract AssertionRegistry is Ownable {
 	function getSize(bytes32 assertionId)
 		public
 		view
-		returns (uint256)
+		returns (uint128)
 	{
 		return assertionRecords[assertionId].size;
+	}
+
+	function getTriplesNumber(bytes32 assertionId)
+		public
+		view
+		returns (uint32)
+	{
+		return assertionRecords[assertionId].triplesNumber;
+	}
+
+	function getChunksNumber(bytes32 assertionId)
+		public
+		view
+		returns (uint96)
+	{
+		return assertionRecords[assertionId].chunksNumber;
 	}
 }

@@ -77,8 +77,12 @@ contract Profile {
         IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
         address profileStorageAddress = hub.getContractAddress("ProfileStorage");
 
-        require(tokenContract.allowance(msg.sender, address(this)) >= initialStake, "Allowance must be >= initial stake");
+        require(
+            tokenContract.allowance(msg.sender, address(this)) >= initialStake,
+            "Allowance must be >= initial stake"
+        );
         require(tokenContract.balanceOf(msg.sender) >= initialStake, "Balance must be >= initial stake");
+
         tokenContract.transferFrom(msg.sender, profileStorageAddress, initialStake);
 
         ProfileStorage profileStorage = ProfileStorage(profileStorageAddress);
@@ -92,8 +96,8 @@ contract Profile {
         );
        
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
-        ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
         if (initialStake >= parametersStorage.minimalStake()) {
+            ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
             shardingTable.pushBack(identityId);
         }
 
@@ -109,7 +113,6 @@ contract Profile {
 
         require(tokenContract.allowance(msg.sender, address(this)) >= amount, "Allowance must be >= chosen amount");
         require(tokenContract.balanceOf(msg.sender) >= amount, "Balance must be >= chosen amount");
-        tokenContract.transferFrom(msg.sender, profileStorageAddress, amount);
 
         ProfileStorage profileStorage = ProfileStorage(profileStorageAddress);
 
@@ -117,10 +120,11 @@ contract Profile {
         uint96 newStake = oldStake + amount;
         profileStorage.setStake(identityId, newStake);
 
+        tokenContract.transferFrom(msg.sender, profileStorageAddress, amount);
+
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
-        uint96 minimalStake = parametersStorage.minimalStake();
-        if (oldStake < minimalStake && newStake >= minimalStake) {
+        if (oldStake < parametersStorage.minimalStake() && newStake >= parametersStorage.minimalStake()) {
             ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
             shardingTable.pushBack(identityId);
         }
@@ -152,8 +156,7 @@ contract Profile {
         uint256 stakeWithdrawalTimestamp = block.timestamp + parametersStorage.stakeWithdrawalDelay();
         profileStorage.setStakeWithdrawalTimestamp(identityId, stakeWithdrawalTimestamp);
 
-        uint96 minimalStake = parametersStorage.minimalStake();
-        if (oldStake >= minimalStake && newStake < minimalStake) {
+        if (oldStake >= parametersStorage.minimalStake() && newStake < parametersStorage.minimalStake()) {
             ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
             shardingTable.removeNode(identityId);
         }
@@ -176,7 +179,10 @@ contract Profile {
         uint96 stakeWithdrawalAmount = profileStorage.getStakeWithdrawalAmount(identityId);
 
         require(stakeWithdrawalAmount > 0, "Withdrawal hasn't been initiated");
-        require(profileStorage.getStakeWithdrawalTimestamp(identityId) < block.timestamp, "Withdrawal period hasn't ended yet");
+        require(
+            profileStorage.getStakeWithdrawalTimestamp(identityId) < block.timestamp,
+            "Withdrawal period hasn't ended yet"
+        );
 
         profileStorage.transferTokens(msg.sender, stakeWithdrawalAmount);
 
@@ -206,8 +212,7 @@ contract Profile {
 
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
-        uint96 minimalStake = parametersStorage.minimalStake();
-        if (oldStake < minimalStake && newStake >= minimalStake) {
+        if (oldStake < parametersStorage.minimalStake() && newStake >= parametersStorage.minimalStake()) {
             ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
             shardingTable.pushBack(identityId);
         }
@@ -257,11 +262,13 @@ contract Profile {
         uint96 rewardWithdrawalAmount = profileStorage.getRewardWithdrawalAmount(identityId);
 
         require(rewardWithdrawalAmount > 0, "Withdrawal hasn't been initiated");
-        require(profileStorage.getRewardWithdrawalTimestamp(identityId) < block.timestamp, "Withdrawal period hasn't ended yet");
-
-        profileStorage.transferTokens(msg.sender, rewardWithdrawalAmount);
+        require(
+            profileStorage.getRewardWithdrawalTimestamp(identityId) < block.timestamp,
+            "Withdrawal period hasn't ended yet"
+        );
 
         profileStorage.setRewardWithdrawalAmount(identityId, 0);
+        profileStorage.transferTokens(msg.sender, rewardWithdrawalAmount);
 
         emit RewardWithdrawn(
             identityId,

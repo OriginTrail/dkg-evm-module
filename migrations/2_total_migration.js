@@ -79,7 +79,7 @@ module.exports = async (deployer, network, accounts) => {
                 });
             await hub.setContractAddress('HashingProxy', hashingProxy.address);
 
-            await deployer.deploy(SHA256, hub.address, {gas: 6000000, from: accounts[0]})
+            await deployer.deploy(SHA256, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     sha256Contract = result;
                 });
