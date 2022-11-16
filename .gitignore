@@ -1,5 +1,6 @@
 .DS_Store
 /.idea/*
+/.vscode/*
 /node_modules/*
 /build/contracts/AccessControl.json
 /build/contracts/Address.json

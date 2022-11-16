@@ -2,140 +2,271 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {Hub} from '../Hub.sol';
+import { HashingProxy } from "../HashingProxy.sol";
+import { Hub } from "../Hub.sol";
+import { IdentityStorage } from "./IdentityStorage.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ProfileStorage {
-    event AskUpdated(bytes nodeId, uint256 ask);
-    event StakeUpdated(bytes nodeId, uint256 stake);
+    event AskUpdated(uint96 indexed identityId, bytes indexed nodeId, uint96 ask);
+    event StakeUpdated(uint96 indexed identityId, bytes indexed nodeId, uint96 stake);
+    event RewardUpdated(uint96 indexed identityId, bytes indexed nodeId, uint96 reward);
 
     Hub public hub;
-    
-    constructor(address hubAddress) {
-        hub = Hub(hubAddress);
-        activeNodes = 1;
+
+    struct ProfileDefinition{
+        uint96 ask;
+        uint96 stake;
+        uint96 reward;
+        uint96 stakeWithdrawalAmount;
+        uint96 rewardWithdrawalAmount;
+        uint96 frozenAmount;  // TODO: Slashing mechanism
+        uint256 stakeWithdrawalTimestamp;
+        uint256 rewardWithdrawalTimestamp;
+        uint256 freezeTimestamp;  // TODO: Slashing mechanism
+        bytes nodeId;
+        mapping(uint8 => bytes32) nodeAddresses;
     }
 
-    function setHubAddress(address newHubAddress)
-    public onlyContracts {
-        require(newHubAddress != address(0));
-        hub = Hub(newHubAddress);
+    // nodeId => isRegistered?
+    mapping(bytes => bool) public nodeIdsList;
+    // identityId => Profile
+    mapping(uint96 => ProfileDefinition) public profiles;
+
+    constructor(address hubAddress) {
+        require(hubAddress != address(0));
+        hub = Hub(hubAddress);
     }
-    
-    modifier onlyContracts(){
+
+    modifier onlyContracts() {
         require(hub.isContract(msg.sender),
         "Function can only be called by contracts!");
         _;
     }
 
-    uint256 public activeNodes;
+    function createProfile(
+        address operationalWallet,
+        address adminWallet,
+        bytes memory nodeId,
+        uint96 initialAsk,
+        uint96 initialStake
+    )
+        public
+        onlyContracts
+        returns (uint96)
+    {
+        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
 
-    function setActiveNodes(uint256 newActiveNodes) 
-    public onlyContracts {
-        activeNodes = newActiveNodes;
-    }
+        bytes32 _operational_key = keccak256(abi.encodePacked(operationalWallet));
 
-    struct ProfileDefinition{
-        uint256 ask;
-        uint256 stake;
-        uint256 stakeReserved;
-        uint256 reputation;
-        bool withdrawalPending;
-        uint256 withdrawalTimestamp;
-        uint256 withdrawalAmount;
-        bytes nodeId;
-    }
-    mapping(address => ProfileDefinition) public profile;
+        require(identityStorage.identityIds(_operational_key) == 0, "Profile already exists");
+        require(!nodeIdsList[nodeId], "Node ID connected with another profile");
+        require(nodeId.length != 0, "Node ID can't be empty");
+        require(initialAsk > 0, "Ask can't be 0");
 
-    function getAsk(address identity)
-    public view returns(uint256) {
-        return profile[identity].ask;
-    }
+        uint96 identityId = identityStorage.createIdentity(operationalWallet, adminWallet);
 
-    function getStake(address identity) 
-    public view returns(uint256) {
-        return profile[identity].stake;
-    }
-    function getStakeReserved(address identity) 
-    public view returns(uint256) {
-        return profile[identity].stakeReserved;
-    }
-    function getReputation(address identity) 
-    public view returns(uint256) {
-        return profile[identity].reputation;
-    }
-    function getWithdrawalPending(address identity) 
-    public view returns(bool) {
-        return profile[identity].withdrawalPending;
-    }
-    function getWithdrawalTimestamp(address identity) 
-    public view returns(uint256) {
-        return profile[identity].withdrawalTimestamp;
-    }
-    function getWithdrawalAmount(address identity) 
-    public view returns(uint256) {
-        return profile[identity].withdrawalAmount;
-    }
-    function getNodeId(address identity) 
-    public view returns(bytes memory) {
-        return profile[identity].nodeId;
+        ProfileDefinition storage profile = profiles[identityId];
+        profile.ask = initialAsk;
+        profile.stake = initialStake;
+        profile.nodeId = nodeId;
+
+        nodeIdsList[nodeId] = true;
+
+        return identityId;
     }
 
-    function setAsk(address identity, uint256 ask)
-    public onlyContracts {
-        profile[identity].ask = ask;
+    /* ----------------GETTERS------------------ */
+    function getAsk(uint96 identityId)
+        public
+        view
+        returns (uint96)
+    {
+        return profiles[identityId].ask;
+    }
 
-        emit AskUpdated(this.getNodeId(identity), ask);
+    function getStake(uint96 identityId) 
+        public
+        view
+        returns (uint96)
+    {
+        return profiles[identityId].stake;
+    }
+
+    function getReward(uint96 identityId)
+        public
+        view
+        returns (uint96)
+    {
+        return profiles[identityId].reward;
+    }
+
+    function getStakeWithdrawalAmount(uint96 identityId) 
+        public
+        view
+        returns (uint96)
+    {
+        return profiles[identityId].stakeWithdrawalAmount;
+    }
+
+    function getRewardWithdrawalAmount(uint96 identityId)
+        public
+        view
+        returns (uint96)
+    {
+        return profiles[identityId].rewardWithdrawalAmount;
+    }
+
+    function getFrozenAmount(uint96 identityId) 
+        public
+        view
+        returns (uint96)
+    {
+        return profiles[identityId].frozenAmount;
+    }
+
+    function getStakeWithdrawalTimestamp(uint96 identityId) 
+        public
+        view
+        returns (uint256)
+    {
+        return profiles[identityId].stakeWithdrawalTimestamp;
+    }
+
+    function getRewardWithdrawalTimestamp(uint96 identityId)
+        public
+        view
+        returns (uint256)
+    {
+        return profiles[identityId].rewardWithdrawalTimestamp;
+    }
+
+    function getFreezeTimestamp(uint96 identityId)
+        public
+        view
+        returns (uint256)
+    {
+        return profiles[identityId].freezeTimestamp;
+    }
+
+    function getNodeId(uint96 identityId) 
+        public
+        view
+        returns (bytes memory)
+    {
+        return profiles[identityId].nodeId;
+    }
+
+    function getNodeAddress(uint96 identityId, uint8 hashingFunctionId)
+        public
+        view
+        returns (bytes32)
+    {
+        return profiles[identityId].nodeAddresses[hashingFunctionId];
+    }
+
+    /* ----------------SETTERS------------------ */
+    function setAsk(uint96 identityId, uint96 ask)
+        public
+        onlyContracts
+    {
+        require(ask > 0, "Ask cannot be 0.");
+
+        profiles[identityId].ask = ask;
+
+        emit AskUpdated(identityId, this.getNodeId(identityId), ask);
     }
     
-    function setStake(address identity, uint256 stake) 
-    public onlyContracts {
-        profile[identity].stake = stake;
+    function setStake(uint96 identityId, uint96 stake)
+        public
+        onlyContracts
+    {
+        profiles[identityId].stake = stake;
 
-        emit StakeUpdated(this.getNodeId(identity), stake);
-    }
-    function setStakeReserved(address identity, uint256 stakeReserved) 
-    public onlyContracts {
-        profile[identity].stakeReserved = stakeReserved;
-    }
-    function setReputation(address identity, uint256 reputation) 
-    public onlyContracts {
-        profile[identity].reputation = reputation;
-    }
-    function setWithdrawalPending(address identity, bool withdrawalPending) 
-    public onlyContracts {
-        profile[identity].withdrawalPending = withdrawalPending;
-    }
-    function setWithdrawalTimestamp(address identity, uint256 withdrawalTimestamp) 
-    public onlyContracts {
-        profile[identity].withdrawalTimestamp = withdrawalTimestamp;
-    }
-    function setWithdrawalAmount(address identity, uint256 withdrawalAmount) 
-    public onlyContracts {
-        profile[identity].withdrawalAmount = withdrawalAmount;
-    }
-    function setNodeId(address identity, bytes memory nodeId)
-    public onlyContracts {
-        profile[identity].nodeId = nodeId;
+        emit StakeUpdated(identityId, this.getNodeId(identityId), stake);
     }
 
-    function increaseStakesReserved(
-        address payer,
-        address identity1,
-        address identity2,
-        address identity3,
-        uint256 amount)
-    public onlyContracts {
-        require(identity1!=address(0) && identity2!=address(0) && identity3!=address(0));
-        profile[payer].stakeReserved += (amount * 3);
-        profile[identity1].stakeReserved += amount;
-        profile[identity2].stakeReserved += amount;
-        profile[identity3].stakeReserved += amount;
+    function setReward(uint96 identityId, uint96 reward)
+        public
+        onlyContracts
+    {
+        profiles[identityId].reward = reward;
+
+        emit RewardUpdated(identityId, this.getNodeId(identityId), reward);
     }
 
-    function transferTokens(address wallet, uint256 amount)
-    public onlyContracts {
-        ERC20 token = ERC20(hub.getContractAddress("Token"));
-        token.transfer(wallet, amount);
+    function setStakeWithdrawalAmount(uint96 identityId, uint96 stakeWithdrawalAmount) 
+        public
+        onlyContracts
+    {
+        profiles[identityId].stakeWithdrawalAmount = stakeWithdrawalAmount;
+    }
+
+    function setRewardWithdrawalAmount(uint96 identityId, uint96 rewardWithdrawalAmount)
+        public
+        onlyContracts
+    {
+        profiles[identityId].rewardWithdrawalAmount = rewardWithdrawalAmount;
+    }
+
+    function setFrozenAmount(uint96 identityId, uint96 frozenAmount) 
+        public
+        onlyContracts
+    {
+        profiles[identityId].frozenAmount = frozenAmount;
+    }
+
+    function setStakeWithdrawalTimestamp(uint96 identityId, uint256 stakeWithdrawalTimestamp) 
+        public
+        onlyContracts
+    {
+        profiles[identityId].stakeWithdrawalTimestamp = stakeWithdrawalTimestamp;
+    }
+
+    function setRewardWithdrawalTimestamp(uint96 identityId, uint256 rewardWithdrawalTimestamp)
+        public
+        onlyContracts
+    {
+        profiles[identityId].rewardWithdrawalTimestamp = rewardWithdrawalTimestamp;
+    }
+
+    function setFreezeTimestamp(uint96 identityId, uint256 freezeTimestamp)
+        public
+        onlyContracts
+    {
+        profiles[identityId].freezeTimestamp = freezeTimestamp;
+    }
+
+    function setNodeId(uint96 identityId, bytes memory nodeId)
+        public
+        onlyContracts
+    {
+        require(nodeId.length != 0, "Node ID can't be empty");
+
+        profiles[identityId].nodeId = nodeId;
+
+        nodeIdsList[profiles[identityId].nodeId] = false;
+        nodeIdsList[nodeId] = true;
+    }
+
+    function setNodeAddress(uint96 identityId, uint8 hashingFunctionId)
+        public
+        onlyContracts
+    {
+        HashingProxy hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+        profiles[identityId].nodeAddresses[hashingFunctionId] = hashingProxy.callHashingFunction(
+            hashingFunctionId,
+            profiles[identityId].nodeId
+        );
+    }
+
+    function transferTokens(address receiver, uint96 amount)
+        public
+        onlyContracts
+    {
+        require(receiver != address(0), "Receiver address can't be empty");
+
+        IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
+        tokenContract.transfer(receiver, amount);
     }
 }
