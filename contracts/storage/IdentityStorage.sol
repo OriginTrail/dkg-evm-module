@@ -27,7 +27,7 @@ contract IdentityStorage is IERC734Extended {
     // operationalKey => identityId
     mapping(bytes32 => uint96) public identityIds;
     // identityId => Identity
-    mapping(uint96 => Identity) public identities;
+    mapping(uint96 => Identity) identities;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));

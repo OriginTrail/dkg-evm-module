@@ -21,7 +21,7 @@ contract ServiceAgreementStorage {
         bytes indexed keyword,
         uint8 hashingFunctionId,
         uint256 startTime,
-        uint16 epochsNum,
+        uint16 epochsNumber,
         uint128 epochLength,
         uint96 tokenAmount
     );
@@ -30,7 +30,7 @@ contract ServiceAgreementStorage {
         uint256 indexed tokenId,
         bytes indexed keyword,
         uint8 hashingFunctionId,
-        uint16 epochsNum,
+        uint16 epochsNumber,
         uint96 tokenAmount
     );
     event CommitSubmitted(
@@ -60,7 +60,7 @@ contract ServiceAgreementStorage {
 
     struct ServiceAgreement {
         uint256 startTime;
-        uint16 epochsNum;
+        uint16 epochsNumber;
         uint128 epochLength;
         uint96 tokenAmount;
         uint8 scoringFunctionId;
@@ -75,7 +75,7 @@ contract ServiceAgreementStorage {
     mapping(bytes32 => CommitSubmission) commitSubmissions;
 
     // hash(asset type contract + tokenId + key) -> ServiceAgreement
-    mapping(bytes32 => ServiceAgreement) public serviceAgreements;
+    mapping(bytes32 => ServiceAgreement) serviceAgreements;
 
     constructor (address hubAddress) {
         require(hubAddress != address(0));
@@ -90,13 +90,37 @@ contract ServiceAgreementStorage {
         _;
     }
 
+    function getAgreementStartTime(bytes32 agreementId) public view returns (uint256) {
+        return serviceAgreements[agreementId].startTime;
+    }
+
+    function getAgreementEpochsNumber(bytes32 agreementId) public view returns (uint16) {
+        return serviceAgreements[agreementId].epochsNumber;
+    }
+
+    function getAgreementEpochLength(bytes32 agreementId) public view returns (uint128) {
+        return serviceAgreements[agreementId].epochLength;
+    }
+
+    function getAgreementTokenAmount(bytes32 agreementId) public view returns (uint96) {
+        return serviceAgreements[agreementId].tokenAmount;
+    }
+
+    function getAgreementScoringFunctionId(bytes32 agreementId) public view returns (uint8) {
+        return serviceAgreements[agreementId].scoringFunctionId;
+    }
+
+    function getAgreementProofWindowOffsetPerc(bytes32 agreementId) public view returns (uint8) {
+        return serviceAgreements[agreementId].proofWindowOffsetPerc;
+    }
+
     function createServiceAgreement(
         address operationalWallet,
         address assetContract,
         uint256 tokenId,
         bytes memory keyword,
         uint8 hashingFunctionId,
-        uint16 epochsNum,
+        uint16 epochsNumber,
         uint96 tokenAmount,
         uint8 scoringFunctionId
     )
@@ -109,7 +133,7 @@ contract ServiceAgreementStorage {
 
         ServiceAgreement storage agreement = serviceAgreements[agreementId];
         agreement.startTime = block.timestamp;
-        agreement.epochsNum = epochsNum;
+        agreement.epochsNumber = epochsNumber;
         agreement.epochLength = parametersStorage.epochLength();
         agreement.proofWindowOffsetPerc = parametersStorage.minProofWindowOffsetPerc() + _generatePseudorandomUint8(
             operationalWallet,
@@ -136,7 +160,7 @@ contract ServiceAgreementStorage {
             keyword,
             hashingFunctionId,
             agreement.startTime,
-            agreement.epochsNum,
+            agreement.epochsNumber,
             agreement.epochLength,
             agreement.tokenAmount
         );
@@ -149,7 +173,7 @@ contract ServiceAgreementStorage {
         uint256 tokenId,
         bytes memory keyword,
         uint8 hashingFunctionId,
-        uint16 epochsNum,
+        uint16 epochsNumber,
         uint96 tokenAmount
     )
         public
@@ -161,7 +185,7 @@ contract ServiceAgreementStorage {
 
         uint96 actualBalance = serviceAgreements[agreementId].tokenAmount;
 
-        serviceAgreements[agreementId].epochsNum = epochsNum;
+        serviceAgreements[agreementId].epochsNumber = epochsNumber;
         serviceAgreements[agreementId].tokenAmount = tokenAmount;
 
         IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
@@ -181,7 +205,7 @@ contract ServiceAgreementStorage {
             tokenId,
             keyword,
             hashingFunctionId,
-            serviceAgreements[agreementId].epochsNum,
+            serviceAgreements[agreementId].epochsNumber,
             serviceAgreements[agreementId].tokenAmount
         );
     }
@@ -301,9 +325,9 @@ contract ServiceAgreementStorage {
 
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
-        uint256 proofWindowOffset = agreement.epochLength * agreement.epochsNum * agreement.proofWindowOffsetPerc / 100;
+        uint256 proofWindowOffset = agreement.epochLength * agreement.epochsNumber * agreement.proofWindowOffsetPerc / 100;
         uint256 proofWindowDuration = (
-            agreement.epochLength * agreement.epochsNum * parametersStorage.proofWindowDurationPerc() / 100
+            agreement.epochLength * agreement.epochsNumber * parametersStorage.proofWindowDurationPerc() / 100
         );
 
         return (
@@ -400,7 +424,7 @@ contract ServiceAgreementStorage {
 
         uint96 reward = (
             serviceAgreements[agreementId].tokenAmount /
-            (serviceAgreements[agreementId].epochsNum - epoch + 1) /
+            (serviceAgreements[agreementId].epochsNumber - epoch + 1) /
             (parametersStorage.R0() - serviceAgreements[agreementId].rewardedNodes[epoch])
         );
 
