@@ -9,6 +9,9 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ServiceAgreementStorage } from "../storage/ServiceAgreementStorage.sol";
 
 contract ContentAsset is AbstractAsset, ERC721 {
+    event AssetCreated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
+    event AssetUpdated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
+
     struct AssetRecord {
         bytes32[] assertions;
     }
