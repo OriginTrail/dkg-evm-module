@@ -129,18 +129,7 @@ contract ServiceAgreementStorage {
     {
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashingFunctionId);
 
-        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
-
-        ServiceAgreement storage agreement = serviceAgreements[agreementId];
-        agreement.startTime = block.timestamp;
-        agreement.epochsNumber = epochsNumber;
-        agreement.epochLength = parametersStorage.epochLength();
-        agreement.proofWindowOffsetPerc = parametersStorage.minProofWindowOffsetPerc() + _generatePseudorandomUint8(
-            operationalWallet,
-            parametersStorage.maxProofWindowOffsetPerc() - parametersStorage.minProofWindowOffsetPerc() + 1
-        );
-        agreement.tokenAmount = tokenAmount;
-        agreement.scoringFunctionId = scoringFunctionId;
+        _createServiceAgreementObject(operationalWallet, agreementId, epochsNumber, tokenAmount, scoringFunctionId);
 
         IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
         require(
@@ -159,10 +148,10 @@ contract ServiceAgreementStorage {
             tokenId,
             keyword,
             hashingFunctionId,
-            agreement.startTime,
-            agreement.epochsNumber,
-            agreement.epochLength,
-            agreement.tokenAmount
+            serviceAgreements[agreementId].startTime,
+            serviceAgreements[agreementId].epochsNumber,
+            serviceAgreements[agreementId].epochLength,
+            serviceAgreements[agreementId].tokenAmount
         );
     }
 
@@ -444,6 +433,29 @@ contract ServiceAgreementStorage {
         onlyAssetContracts
     {
         serviceAgreements[agreementId].scoringFunctionId = newScoringFunctionId;
+    }        
+
+    function _createServiceAgreementObject(
+        address operationalWallet,
+        bytes32 agreementId,
+        uint16 epochsNumber,
+        uint96 tokenAmount,
+        uint8 scoringFunctionId
+    )
+        private
+    {
+        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+
+        ServiceAgreement storage agreement = serviceAgreements[agreementId];
+        agreement.startTime = block.timestamp;
+        agreement.epochsNumber = epochsNumber;
+        agreement.epochLength = parametersStorage.epochLength();
+        agreement.proofWindowOffsetPerc = parametersStorage.minProofWindowOffsetPerc() + _generatePseudorandomUint8(
+            operationalWallet,
+            parametersStorage.maxProofWindowOffsetPerc() - parametersStorage.minProofWindowOffsetPerc() + 1
+        );
+        agreement.tokenAmount = tokenAmount;
+        agreement.scoringFunctionId = scoringFunctionId;
     }
 
     function _insertCommitAfter(bytes32 agreementId, uint16 epoch, uint96 prevIdentityId, CommitSubmission memory commit)
