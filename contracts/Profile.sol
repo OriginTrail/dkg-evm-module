@@ -62,14 +62,28 @@ contract Profile {
     }
 
     modifier onlyWithAdminKey(uint96 identityId) {
-        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-
         require(
-            identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), 1),
+            IdentityStorage(hub.getContractAddress("IdentityStorage")).keyHasPurpose(
+                identityId,
+                keccak256(abi.encodePacked(msg.sender)),
+                1
+            ),
             "Function can be called only by identity admin"
         );
         _;
 	}
+
+    modifier onlyWithPublicKey(uint96 identityId) {
+        require(
+            IdentityStorage(hub.getContractAddress("IdentityStorage")).keyHasPurpose(
+                identityId,
+                keccak256(abi.encodePacked(msg.sender)),
+                2
+            ),
+            "Function can be called only by identity admin"
+        );
+        _;
+    }
 
     function createProfile(address adminWallet, bytes memory nodeId, uint96 initialAsk, uint96 initialStake)
         public
@@ -102,6 +116,10 @@ contract Profile {
         }
 
         emit ProfileCreated(identityId, nodeId);
+    }
+
+    function addNewNodeIdHash(uint96 identityId, uint8 hashingFunctionId) public onlyWithPublicKey(identityId) {
+        ProfileStorage(hub.getContractAddress("ProfileStorage")).setNodeAddress(identityId, hashingFunctionId);
     }
 
     function increaseStake(uint96 identityId, uint96 amount)
