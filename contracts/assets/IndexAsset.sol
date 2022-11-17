@@ -31,7 +31,7 @@ contract IndexAsset is AbstractAsset, ERC721 {
         uint96 chunksNumber,
         bytes[] memory keywords,
         uint8[] memory hashingFunctionIds,
-        uint16 epochsNum,
+        uint16 epochsNumber,
         uint96 tokenAmount,
         uint8 scoringFunctionId
     ) public returns (uint256) {
@@ -41,7 +41,7 @@ contract IndexAsset is AbstractAsset, ERC721 {
         // uint256 tokenId,
         // bytes memory keyword,
         // uint8 hashingFunctionId,
-        // uint16 epochsNum,
+        // uint16 epochsNumber,
         // uint96 tokenAmount,
         // uint8 scoringFunctionId
 
@@ -49,7 +49,7 @@ contract IndexAsset is AbstractAsset, ERC721 {
         require(size > 0 && size <= 300, "Size is out of range [1, 300]");
         require(keywords.length > 0 && keywords.length <= 5, "Number of keywords is out of range [1, 5]");
         require(hashingFunctionIds.length > 0, "Number of hashing functions cannot be 0");
-        require(epochsNum > 0, "Epochs number cannot be 0");
+        require(epochsNumber > 0, "Epochs number cannot be 0");
         require(tokenAmount > 0, "Token amount cannot be 0");
 
         uint256 tokenId = _tokenId;
@@ -76,7 +76,7 @@ contract IndexAsset is AbstractAsset, ERC721 {
                     tokenId,
                     keywords[i],
                     hashingFunctionIds[k],
-                    epochsNum,
+                    epochsNumber,
                     tokenAmount,
                     scoringFunctionId
                 );
@@ -96,7 +96,7 @@ contract IndexAsset is AbstractAsset, ERC721 {
         uint96 chunksNumber,
         bytes32[] memory keywords,
         uint8[] memory hashingFunctionIds,
-        uint16 epochsNum,
+        uint16 epochsNumber,
         uint96 tokenAmount,
         uint8 scoringFunctionId
     ) public {
@@ -105,7 +105,7 @@ contract IndexAsset is AbstractAsset, ERC721 {
         require(size > 0 && size <= 300, "Size is out of range [1, 300]");
         require(keywords.length > 0 && keywords.length <= 5, "Number of keywords is out of range [1, 5]");
         require(hashingFunctionIds.length > 0, "Number of hashing functions cannot be 0");
-        require(epochsNum > 0, "Epochs number cannot be 0");
+        require(epochsNumber > 0, "Epochs number cannot be 0");
         require(tokenAmount > 0, "Token amount cannot be 0");
 
         AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(
@@ -124,7 +124,7 @@ contract IndexAsset is AbstractAsset, ERC721 {
         //     tokenId,
         //     abi.encodePacked(address(this), tokenId),
         //     0,
-        //     epochsNum,
+        //     epochsNumber,
         //     tokenAmount
         // );
 
