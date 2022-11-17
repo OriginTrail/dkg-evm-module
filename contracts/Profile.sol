@@ -12,35 +12,35 @@ import { ShardingTable } from "./ShardingTable.sol";
 contract Profile {
     event ProfileCreated(
         uint96 indexed identityId,
-        bytes indexed nodeId
+        bytes nodeId
     );
     event StakeIncreased(
         uint96 indexed identityId,
-        bytes indexed nodeId,
+        bytes nodeId,
         uint96 stakedAmount,
         uint96 newStake
     );
     event StakeWithdrawalInitiated(
         uint96 indexed identityId,
-        bytes indexed nodeId,
+        bytes nodeId,
         uint96 stakeWithdrawalAmount,
         uint256 stakeWithdrawalTimestamp,
         uint96 newStake
     );
     event StakeWithdrawn(
         uint96 indexed identityId,
-        bytes indexed nodeId,
+        bytes nodeId,
         uint96 withdrawnStakeAmount
     );
     event RewardWithdrawalInitiated(
         uint96 indexed identityId,
-        bytes indexed nodeId,
+        bytes nodeId,
         uint96 rewardWithdrawalAmount,
         uint256 rewardWithdrawalTimestamp
     );
     event RewardWithdrawn(
         uint96 indexed identityId,
-        bytes indexed nodeId,
+        bytes nodeId,
         uint96 withdrawnRewardAmount
     );
     event StakeFrozen(
@@ -50,7 +50,7 @@ contract Profile {
     );
     event StakeUnfrozen(
         uint96 indexed identityId,
-        bytes indexed nodeId,
+        bytes nodeId,
         uint96 unfrozenStakeAmount
     );
 

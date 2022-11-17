@@ -6,9 +6,9 @@ import {Hub} from './Hub.sol';
 import {ProfileStorage} from './storage/ProfileStorage.sol';
 
 contract ShardingTable {
-    event NodeObjCreated(uint96 indexed identityId, bytes indexed nodeId, uint96 ask, uint96 stake);
-    event NodeRemoved(uint96 indexed identityId, bytes indexed nodeId);
-    event NodeRemovedByHubOwner(bytes indexed nodeId);
+    event NodeObjCreated(uint96 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
+    event NodeRemoved(uint96 indexed identityId, bytes nodeId);
+    event NodeRemovedByHubOwner(bytes nodeId);
 
     struct Node {
         uint96 identityId;
