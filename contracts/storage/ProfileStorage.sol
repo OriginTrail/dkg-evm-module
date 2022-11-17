@@ -8,9 +8,9 @@ import { IdentityStorage } from "./IdentityStorage.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ProfileStorage {
-    event AskUpdated(uint96 indexed identityId, bytes indexed nodeId, uint96 ask);
-    event StakeUpdated(uint96 indexed identityId, bytes indexed nodeId, uint96 stake);
-    event RewardUpdated(uint96 indexed identityId, bytes indexed nodeId, uint96 reward);
+    event AskUpdated(uint96 indexed identityId, bytes nodeId, uint96 ask);
+    event StakeUpdated(uint96 indexed identityId, bytes nodeId, uint96 stake);
+    event RewardUpdated(uint96 indexed identityId, bytes nodeId, uint96 reward);
 
     Hub public hub;
 

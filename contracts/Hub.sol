@@ -5,10 +5,10 @@ pragma solidity ^0.8.0;
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Hub is Ownable{
-    event NewContract(string indexed contractName, address newContractAddress);
-    event ContractChanged(string indexed contractName, address newContractAddress);
-    event NewAssetContract(string indexed contractName, address newContractAddress);
-    event AssetContractChanged(string indexed contractName, address newContractAddress);
+    event NewContract(string contractName, address newContractAddress);
+    event ContractChanged(string contractName, address newContractAddress);
+    event NewAssetContract(string contractName, address newContractAddress);
+    event AssetContractChanged(string contractName, address newContractAddress);
 
     mapping(bytes32 => address) contractAddress;
     mapping(address => bool) contractList;

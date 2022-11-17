@@ -18,7 +18,7 @@ contract ServiceAgreementStorage {
     event ServiceAgreementCreated(
         address indexed assetContract,
         uint256 indexed tokenId,
-        bytes indexed keyword,
+        bytes keyword,
         uint8 hashingFunctionId,
         uint256 startTime,
         uint16 epochsNumber,
@@ -28,27 +28,27 @@ contract ServiceAgreementStorage {
     event ServiceAgreementUpdated(
         address indexed assetContract,
         uint256 indexed tokenId,
-        bytes indexed keyword,
+        bytes keyword,
         uint8 hashingFunctionId,
         uint16 epochsNumber,
         uint96 tokenAmount
     );
     event CommitSubmitted(
-        address assetContract,
-        uint256 tokenId,
-        bytes indexed keyword,
+        address indexed assetContract,
+        uint256 indexed tokenId,
+        bytes keyword,
         uint8 hashingFunctionId,
         uint96 indexed identityId,
-        bytes indexed nodeId,
+        bytes nodeId,
         uint32 score
     );
     event ProofSubmitted(
-        address assetContract,
-        uint256 tokenId,
-        bytes indexed keyword,
+        address indexed assetContract,
+        uint256 indexed tokenId,
+        bytes keyword,
         uint8 hashingFunctionId,
         uint96 indexed identityId,
-        bytes indexed nodeId
+        bytes nodeId
     );
 
 
