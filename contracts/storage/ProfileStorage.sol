@@ -70,6 +70,7 @@ contract ProfileStorage {
         profile.ask = initialAsk;
         profile.stake = initialStake;
         profile.nodeId = nodeId;
+        setNodeAddress(identityId, 0);  // TODO: Add setters for all existing hashing functions
 
         nodeIdsList[nodeId] = true;
 
