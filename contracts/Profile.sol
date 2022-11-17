@@ -80,7 +80,7 @@ contract Profile {
                 keccak256(abi.encodePacked(msg.sender)),
                 2
             ),
-            "Function can be called only by identity admin"
+            "Function can be called only using operational key of the identity"
         );
         _;
     }
