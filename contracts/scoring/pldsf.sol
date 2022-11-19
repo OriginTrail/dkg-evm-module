@@ -35,8 +35,8 @@ contract PLDSF is IScoreFunction {
         view
         returns (uint32)
     {
-        // VERIFY: uint256 -> uint32 casting
-        return uint32((_a * stake^_stakeExponent + _b) / (_c * distance^_distanceExponent + _d));
+        uint256 mappingCoefficient = type(uint256).max / type(uint32).max;
+        return uint32((_a * stake^_stakeExponent + _b) / (_c * distance^_distanceExponent + _d) / mappingCoefficient);
     }
 
     function calculateDistance(uint8 hashFunctionId, bytes memory nodeId, bytes memory keyword)

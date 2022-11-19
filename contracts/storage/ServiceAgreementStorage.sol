@@ -231,7 +231,6 @@ contract ServiceAgreementStorage {
 
         uint96 nextIdentityId = commitSubmissions[epochSubmissionsHead].nextIdentity;
         while(nextIdentityId != 0) {
-            // VERIFY: Is keccak256(agreementId + epoch + identityId) a good key?
             bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, nextIdentityId));
 
             CommitSubmission memory commit = commitSubmissions[commitId];
