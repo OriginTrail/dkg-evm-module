@@ -2,53 +2,53 @@
 
 pragma solidity ^0.8.0;
 
-import { IHashingFunction } from "./interface/HashingFunction.sol";
+import { IHashFunction } from "./interface/IHashFunction.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract HashingProxy is Ownable {
-    event NewHashingFunctionContract(uint8 indexed hashingFunctionId, address newContractAddress);
-    event HashingFunctionContractChanged(uint8 indexed hashingFunctionId, address newContractAddress);
+    event NewHashFunctionContract(uint8 indexed hashFunctionId, address newContractAddress);
+    event HashFunctionContractChanged(uint8 indexed hashFunctionId, address newContractAddress);
 
-    // hashingFunctionId => Contract address
+    // hashFunctionId => Contract address
     mapping(uint8 => address) public functions;
 
-    function callHashingFunction(uint8 hashingFunctionId, bytes memory data)
+    function callHashFunction(uint8 hashFunctionId, bytes memory data)
         public
         returns (bytes32)
     {
-        require(functions[hashingFunctionId] != address(0), "Hashing function doesn't exist!");
+        require(functions[hashFunctionId] != address(0), "Hashing function doesn't exist!");
 
-        IHashingFunction hashingFunction = IHashingFunction(functions[hashingFunctionId]);
-        return hashingFunction.hash(data);
+        IHashFunction hashFunction = IHashFunction(functions[hashFunctionId]);
+        return hashFunction.hash(data);
     }
 
-    function getHashingFunctionName(uint8 hashingFunctionId)
+    function getHashFunctionName(uint8 hashFunctionId)
         public
         view
         returns (string memory)
     {
-        require(functions[hashingFunctionId] != address(0), "Hashing function doesn't exist!");
+        require(functions[hashFunctionId] != address(0), "Hashing function doesn't exist!");
 
-        IHashingFunction hashingFunction = IHashingFunction(functions[hashingFunctionId]);
-        return hashingFunction.name();
+        IHashFunction hashFunction = IHashFunction(functions[hashFunctionId]);
+        return hashFunction.name();
     }
 
-    function setContractAddress(uint8 hashingFunctionId, address hashingContractAddress)
+    function setContractAddress(uint8 hashFunctionId, address hashingContractAddress)
         public
         onlyOwner
     {
         require(hashingContractAddress != address(0), "Contract address cannot be empty");
 
-        if (functions[hashingFunctionId] != address(0)) {
-            emit HashingFunctionContractChanged(
-                hashingFunctionId,
+        if (functions[hashFunctionId] != address(0)) {
+            emit HashFunctionContractChanged(
+                hashFunctionId,
                 hashingContractAddress
             );
         } else {
-            emit NewHashingFunctionContract(hashingFunctionId, hashingContractAddress);
+            emit NewHashFunctionContract(hashFunctionId, hashingContractAddress);
         }
 
-        functions[hashingFunctionId] = hashingContractAddress;
+        functions[hashFunctionId] = hashingContractAddress;
     }
 
 }

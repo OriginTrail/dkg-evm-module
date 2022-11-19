@@ -30,25 +30,25 @@ contract IndexAsset is AbstractAsset, ERC721 {
         uint32 triplesNumber,
         uint96 chunksNumber,
         bytes[] memory keywords,
-        uint8[] memory hashingFunctionIds,
+        uint8[] memory hashFunctionIds,
         uint16 epochsNumber,
         uint96 tokenAmount,
-        uint8 scoringFunctionId
+        uint8 scoreFunctionId
     ) public returns (uint256) {
 
         // address operationalWallet,
         // address assetContract,
         // uint256 tokenId,
         // bytes memory keyword,
-        // uint8 hashingFunctionId,
+        // uint8 hashFunctionId,
         // uint16 epochsNumber,
         // uint96 tokenAmount,
-        // uint8 scoringFunctionId
+        // uint8 scoreFunctionId
 
         require(assertionId != bytes32(0), "assertionId cannot be 0");
         require(size > 0 && size <= 300, "Size is out of range [1, 300]");
         require(keywords.length > 0 && keywords.length <= 5, "Number of keywords is out of range [1, 5]");
-        require(hashingFunctionIds.length > 0, "Number of hashing functions cannot be 0");
+        require(hashFunctionIds.length > 0, "Number of hashing functions cannot be 0");
         require(epochsNumber > 0, "Epochs number cannot be 0");
         require(tokenAmount > 0, "Token amount cannot be 0");
 
@@ -69,16 +69,16 @@ contract IndexAsset is AbstractAsset, ERC721 {
             hub.getContractAddress("ServiceAgreementStorage")
         );
         for (uint8 i = 0; i < keywords.length; i++) {
-            for (uint8 k = 0; k < hashingFunctionIds.length; k++) {
+            for (uint8 k = 0; k < hashFunctionIds.length; k++) {
                 serviceAgreementStorage.createServiceAgreement(
                     msg.sender,
                     address(this),
                     tokenId,
                     keywords[i],
-                    hashingFunctionIds[k],
+                    hashFunctionIds[k],
                     epochsNumber,
                     tokenAmount,
-                    scoringFunctionId
+                    scoreFunctionId
                 );
             }
         }
@@ -95,16 +95,16 @@ contract IndexAsset is AbstractAsset, ERC721 {
         uint32 triplesNumber,
         uint96 chunksNumber,
         bytes32[] memory keywords,
-        uint8[] memory hashingFunctionIds,
+        uint8[] memory hashFunctionIds,
         uint16 epochsNumber,
         uint96 tokenAmount,
-        uint8 scoringFunctionId
+        uint8 scoreFunctionId
     ) public {
-        require(msg.sender == this.ownerOf(tokenId), "Only owner can update an asset");
+        require(msg.sender == ownerOf(tokenId), "Only owner can update an asset");
         require(assertionId != bytes32(0), "assertionId cannot be 0");
         require(size > 0 && size <= 300, "Size is out of range [1, 300]");
         require(keywords.length > 0 && keywords.length <= 5, "Number of keywords is out of range [1, 5]");
-        require(hashingFunctionIds.length > 0, "Number of hashing functions cannot be 0");
+        require(hashFunctionIds.length > 0, "Number of hashing functions cannot be 0");
         require(epochsNumber > 0, "Epochs number cannot be 0");
         require(tokenAmount > 0, "Token amount cannot be 0");
 

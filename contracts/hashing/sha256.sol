@@ -2,9 +2,9 @@
 
 pragma solidity^0.8.0;
 
-import { IHashingFunction } from "../interface/HashingFunction.sol";
+import { IHashFunction } from "../interface/IHashFunction.sol";
 
-contract SHA256 is IHashingFunction {
+contract SHA256 is IHashFunction {
     string private _name;
 
     constructor() {

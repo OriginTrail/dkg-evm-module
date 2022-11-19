@@ -80,7 +80,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
     )
         public
     {
-        require(msg.sender == this.ownerOf(tokenId), "Only owner can update an asset");
+        require(msg.sender == ownerOf(tokenId), "Only owner can update an asset");
         require(assertionId != bytes32(0), "assertionId cannot be 0");
         require(size > 0, "Size cannot be 0");
         require(epochsNumber > 0, "Epochs number cannot be 0");

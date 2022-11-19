@@ -19,7 +19,7 @@ contract ServiceAgreementStorage {
         address indexed assetContract,
         uint256 indexed tokenId,
         bytes keyword,
-        uint8 hashingFunctionId,
+        uint8 hashFunctionId,
         uint256 startTime,
         uint16 epochsNumber,
         uint128 epochLength,
@@ -29,7 +29,7 @@ contract ServiceAgreementStorage {
         address indexed assetContract,
         uint256 indexed tokenId,
         bytes keyword,
-        uint8 hashingFunctionId,
+        uint8 hashFunctionId,
         uint16 epochsNumber,
         uint96 tokenAmount
     );
@@ -37,7 +37,7 @@ contract ServiceAgreementStorage {
         address indexed assetContract,
         uint256 indexed tokenId,
         bytes keyword,
-        uint8 hashingFunctionId,
+        uint8 hashFunctionId,
         uint96 indexed identityId,
         bytes nodeId,
         uint32 score
@@ -46,7 +46,7 @@ contract ServiceAgreementStorage {
         address indexed assetContract,
         uint256 indexed tokenId,
         bytes keyword,
-        uint8 hashingFunctionId,
+        uint8 hashFunctionId,
         uint96 indexed identityId,
         bytes nodeId
     );
@@ -63,7 +63,7 @@ contract ServiceAgreementStorage {
         uint16 epochsNumber;
         uint128 epochLength;
         uint96 tokenAmount;
-        uint8 scoringFunctionId;
+        uint8 scoreFunctionId;
         uint8 proofWindowOffsetPerc;  // Perc == In % of the epoch
         mapping(uint16 => bytes32) epochSubmissionHeads;  // epoch => headCommitId
         mapping(uint16 => uint32) rewardedNodes;
@@ -106,8 +106,8 @@ contract ServiceAgreementStorage {
         return serviceAgreements[agreementId].tokenAmount;
     }
 
-    function getAgreementScoringFunctionId(bytes32 agreementId) public view returns (uint8) {
-        return serviceAgreements[agreementId].scoringFunctionId;
+    function getAgreementScoreFunctionId(bytes32 agreementId) public view returns (uint8) {
+        return serviceAgreements[agreementId].scoreFunctionId;
     }
 
     function getAgreementProofWindowOffsetPerc(bytes32 agreementId) public view returns (uint8) {
@@ -119,17 +119,17 @@ contract ServiceAgreementStorage {
         address assetContract,
         uint256 tokenId,
         bytes memory keyword,
-        uint8 hashingFunctionId,
+        uint8 hashFunctionId,
         uint16 epochsNumber,
         uint96 tokenAmount,
-        uint8 scoringFunctionId
+        uint8 scoreFunctionId
     )
         public
         onlyAssetContracts
     {
-        bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashingFunctionId);
+        bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
-        _createServiceAgreementObject(operationalWallet, agreementId, epochsNumber, tokenAmount, scoringFunctionId);
+        _createServiceAgreementObject(operationalWallet, agreementId, epochsNumber, tokenAmount, scoreFunctionId);
 
         IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
         require(
@@ -147,7 +147,7 @@ contract ServiceAgreementStorage {
             assetContract,
             tokenId,
             keyword,
-            hashingFunctionId,
+            hashFunctionId,
             serviceAgreements[agreementId].startTime,
             serviceAgreements[agreementId].epochsNumber,
             serviceAgreements[agreementId].epochLength,
@@ -161,14 +161,14 @@ contract ServiceAgreementStorage {
         address assetContract,
         uint256 tokenId,
         bytes memory keyword,
-        uint8 hashingFunctionId,
+        uint8 hashFunctionId,
         uint16 epochsNumber,
         uint96 tokenAmount
     )
         public
         onlyAssetContracts
     {
-        bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashingFunctionId);
+        bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
         // require(serviceAgreements[agreementId]);
 
@@ -193,7 +193,7 @@ contract ServiceAgreementStorage {
             assetContract,
             tokenId,
             keyword,
-            hashingFunctionId,
+            hashFunctionId,
             serviceAgreements[agreementId].epochsNumber,
             serviceAgreements[agreementId].tokenAmount
         );
@@ -248,14 +248,14 @@ contract ServiceAgreementStorage {
         address assetContract,
         uint256 tokenId,
         bytes memory keyword,
-        uint8 hashingFunctionId,
+        uint8 hashFunctionId,
         uint16 epoch,
         uint96 prevIdentityId
     )
         public
         returns (uint256)
     {
-        bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashingFunctionId);
+        bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
         require(isCommitWindowOpen(agreementId, epoch), "Commit window is closed!");
 
@@ -265,9 +265,9 @@ contract ServiceAgreementStorage {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
         ScoringProxy scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
-        uint32 score = scoringProxy.callScoringFunction(
-            serviceAgreements[agreementId].scoringFunctionId,
-            hashingFunctionId,
+        uint32 score = scoringProxy.callScoreFunction(
+            serviceAgreements[agreementId].scoreFunctionId,
+            hashFunctionId,
             profileStorage.getNodeId(identityId),
             keyword,
             profileStorage.getStake(identityId)
@@ -288,7 +288,7 @@ contract ServiceAgreementStorage {
         //     assetContract,
         //     tokenId,
         //     keyword,
-        //     hashingFunctionId,
+        //     hashFunctionId,
         //     identityId,
         //     profileStorage.getNodeId(identityId),
         //     score
@@ -356,14 +356,14 @@ contract ServiceAgreementStorage {
         address assetContract,
         uint256 tokenId,
         bytes memory keyword,
-        uint8 hashingFunctionId,
+        uint8 hashFunctionId,
         uint16 epoch,
         bytes32[] memory proof,
         bytes32 chunkHash
     )
         public
     {
-        bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashingFunctionId);
+        bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
         require(!isProofWindowOpen(agreementId, epoch), "Proof window is open");
 
         uint96 identityId = IdentityStorage(hub.getContractAddress("IdentityStorage")).getIdentityId();
@@ -406,7 +406,7 @@ contract ServiceAgreementStorage {
         //     assetContract,
         //     tokenId,
         //     keyword,
-        //     hashingFunctionId,
+        //     hashFunctionId,
         //     identityId,
         //     profileStorage.getNodeId(identityId)
         // );
@@ -428,11 +428,11 @@ contract ServiceAgreementStorage {
         commitSubmissions[keccak256(abi.encodePacked(agreementId, epoch, identityId))].score = 0;
     }
 
-    function setScoringFunction(bytes32 agreementId, uint8 newScoringFunctionId)
+    function setScoringFunction(bytes32 agreementId, uint8 newScoreFunctionId)
         public
         onlyAssetContracts
     {
-        serviceAgreements[agreementId].scoringFunctionId = newScoringFunctionId;
+        serviceAgreements[agreementId].scoreFunctionId = newScoreFunctionId;
     }        
 
     function _createServiceAgreementObject(
@@ -440,7 +440,7 @@ contract ServiceAgreementStorage {
         bytes32 agreementId,
         uint16 epochsNumber,
         uint96 tokenAmount,
-        uint8 scoringFunctionId
+        uint8 scoreFunctionId
     )
         private
     {
@@ -455,7 +455,7 @@ contract ServiceAgreementStorage {
             parametersStorage.maxProofWindowOffsetPerc() - parametersStorage.minProofWindowOffsetPerc() + 1
         );
         agreement.tokenAmount = tokenAmount;
-        agreement.scoringFunctionId = scoringFunctionId;
+        agreement.scoreFunctionId = scoreFunctionId;
     }
 
     function _insertCommitAfter(bytes32 agreementId, uint16 epoch, uint96 prevIdentityId, CommitSubmission memory commit)
@@ -515,12 +515,12 @@ contract ServiceAgreementStorage {
         commitSubmissions[leftCommitId].nextIdentity = rightIdentityId;
     }
 
-    function _generateAgreementId(address assetContract, uint256 tokenId, bytes memory keyword, uint8 hashingFunctionId)
+    function _generateAgreementId(address assetContract, uint256 tokenId, bytes memory keyword, uint8 hashFunctionId)
         private
         returns (bytes32)
     {
         HashingProxy hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
-        return hashingProxy.callHashingFunction(hashingFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
+        return hashingProxy.callHashFunction(hashFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
     }
 
     function _generatePseudorandomUint8(address sender, uint8 limit)

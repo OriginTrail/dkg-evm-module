@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 
 import { HashingProxy } from "../HashingProxy.sol";
 import { Hub } from "../Hub.sol";
-import { IScoringFunction } from "../interface/ScoringFunction.sol";
+import { IScoreFunction } from "../interface/IScoreFunction.sol";
 
 // Polynomial Long Division Scoring Function
-contract PLDSF is IScoringFunction {
+contract PLDSF is IScoreFunction {
     Hub public hub;
 
     uint32 private _a;
@@ -39,13 +39,13 @@ contract PLDSF is IScoringFunction {
         return uint32((_a * stake^_stakeExponent + _b) / (_c * distance^_distanceExponent + _d));
     }
 
-    function calculateDistance(uint8 hashingFunctionId, bytes memory nodeId, bytes memory keyword)
+    function calculateDistance(uint8 hashFunctionId, bytes memory nodeId, bytes memory keyword)
         public
         returns (uint256)
     {
         HashingProxy hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
-        bytes32 nodeIdHash = hashingProxy.callHashingFunction(hashingFunctionId, nodeId);
-        bytes32 keywordHash = hashingProxy.callHashingFunction(hashingFunctionId, keyword);
+        bytes32 nodeIdHash = hashingProxy.callHashFunction(hashFunctionId, nodeId);
+        bytes32 keywordHash = hashingProxy.callHashFunction(hashFunctionId, keyword);
 
         return uint256(nodeIdHash ^ keywordHash);
     }

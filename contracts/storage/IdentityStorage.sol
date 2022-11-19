@@ -83,8 +83,8 @@ contract IdentityStorage is IERC734Extended {
         return identityId;
     }
 
-    function getIdentityId() public view returns (uint96) {
-        return identityIds[keccak256(abi.encodePacked(msg.sender))];
+    function getIdentityId(address operational) public view returns (uint96) {
+        return identityIds[keccak256(abi.encodePacked(operational))];
     }
 
     function getKey(uint96 identityId, bytes32 _key) public view override returns (uint256, uint256, bytes32) {
