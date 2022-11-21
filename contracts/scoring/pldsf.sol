@@ -10,16 +10,23 @@ import { IScoreFunction } from "../interface/IScoreFunction.sol";
 contract PLDSF is IScoreFunction {
     Hub public hub;
 
-    uint32 private _a;
+    uint64 private _a;
     uint32 private _stakeExponent;
     uint32 private _b;
-    uint32 private _c;
+    uint64 private _c;
     uint32 private _distanceExponent;
     uint32 private _d;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
         hub = Hub(hubAddress);
+
+        _a = 1;
+        _stakeExponent = 1;
+        _b = 0;
+        _c = 1;
+        _distanceExponent = 1;
+        _d = 0;
     }
 
     modifier onlyHubOwner() {
@@ -36,7 +43,8 @@ contract PLDSF is IScoreFunction {
         returns (uint32)
     {
         uint256 mappingCoefficient = type(uint256).max / type(uint32).max;
-        return uint32((_a * stake^_stakeExponent + _b) / (_c * distance^_distanceExponent + _d) / mappingCoefficient);
+        // return uint32((_a * stake^_stakeExponent + _b) / (_c * distance^_distanceExponent + _d) / mappingCoefficient);
+        return type(uint32).max - uint32(distance / mappingCoefficient);
     }
 
     function calculateDistance(uint8 hashFunctionId, bytes memory nodeId, bytes memory keyword)

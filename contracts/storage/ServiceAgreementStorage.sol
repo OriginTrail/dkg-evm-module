@@ -259,7 +259,7 @@ contract ServiceAgreementStorage {
         require(isCommitWindowOpen(agreementId, epoch), "Commit window is closed!");
 
         IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-        uint96 identityId = identityStorage.getIdentityId();
+        uint96 identityId = identityStorage.getIdentityId(msg.sender);
 
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
@@ -298,7 +298,7 @@ contract ServiceAgreementStorage {
         // Returns start time of the proof phase
         return (
             serviceAgreements[agreementId].startTime +
-            parametersStorage.epochLength() * (epoch - 1) +
+            parametersStorage.epochLength() * epoch +
             parametersStorage.epochLength() * serviceAgreements[agreementId].proofWindowOffsetPerc / 100
         );
     }
@@ -330,7 +330,7 @@ contract ServiceAgreementStorage {
         returns (bytes32, uint256)
     {
         IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-        uint96 identityId = identityStorage.getIdentityId();
+        uint96 identityId = identityStorage.getIdentityId(msg.sender);
 
         AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
         bytes32 assertionId = generalAssetInterface.getAssertionByIndex(
@@ -365,7 +365,7 @@ contract ServiceAgreementStorage {
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
         require(!isProofWindowOpen(agreementId, epoch), "Proof window is open");
 
-        uint96 identityId = IdentityStorage(hub.getContractAddress("IdentityStorage")).getIdentityId();
+        uint96 identityId = IdentityStorage(hub.getContractAddress("IdentityStorage")).getIdentityId(msg.sender);
 
         require(
             commitSubmissions[keccak256(abi.encodePacked(agreementId, epoch, identityId))].score != 0,
