@@ -252,7 +252,6 @@ contract ServiceAgreementStorage {
         uint96 prevIdentityId
     )
         public
-        returns (uint256)
     {
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
@@ -292,15 +291,6 @@ contract ServiceAgreementStorage {
         //     profileStorage.getNodeId(identityId),
         //     score
         // );
-
-        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
-
-        // Returns start time of the proof phase
-        return (
-            serviceAgreements[agreementId].startTime +
-            parametersStorage.epochLength() * epoch +
-            parametersStorage.epochLength() * serviceAgreements[agreementId].proofWindowOffsetPerc / 100
-        );
     }
 
     function isProofWindowOpen(bytes32 agreementId, uint16 epoch)

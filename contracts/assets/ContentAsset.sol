@@ -33,7 +33,6 @@ contract ContentAsset is AbstractAsset, ERC721 {
         uint96 tokenAmount
     )
         public
-        returns (uint256)
     {
         require(assertionId != bytes32(0), "assertionId cannot be empty");
         require(size > 0, "Size cannot be 0");
@@ -65,8 +64,6 @@ contract ContentAsset is AbstractAsset, ERC721 {
         );
 
         emit AssetCreated(address(this), tokenId, assertionId);
-
-        return tokenId;
     }
 
     function updateAsset(

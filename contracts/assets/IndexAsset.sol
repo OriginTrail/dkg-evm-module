@@ -34,7 +34,8 @@ contract IndexAsset is AbstractAsset, ERC721 {
         uint16 epochsNumber,
         uint96 tokenAmount,
         uint8 scoreFunctionId
-    ) public returns (uint256) {
+    ) public
+    {
 
         // address operationalWallet,
         // address assetContract,
@@ -84,8 +85,6 @@ contract IndexAsset is AbstractAsset, ERC721 {
         }
 
         emit AssetCreated(address(this), tokenId, assertionId);
-
-        return tokenId;
     }
 
     function updateAsset(

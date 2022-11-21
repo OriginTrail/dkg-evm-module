@@ -19,8 +19,6 @@ interface IERC734Extended {
         returns(uint256 purpose, uint256 keyType, bytes32 key);
     function keyHasPurpose(uint96 identityId, bytes32 _key, uint256 _purpose) external view returns (bool exists);
     function getKeysByPurpose(uint96 identityId, uint256 _purpose) external view returns (bytes32[] memory keys);
-    function addKey(uint96 identityId, bytes32 _key, uint256 _purpose, uint256 _keyType)
-        external
-        returns (bool success);
-    function removeKey(uint96 identityId, bytes32 _key) external returns (bool success);
+    function addKey(uint96 identityId, bytes32 _key, uint256 _purpose, uint256 _keyType) external;
+    function removeKey(uint96 identityId, bytes32 _key) external;
 }

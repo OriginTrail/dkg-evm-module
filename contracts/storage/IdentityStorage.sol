@@ -103,7 +103,7 @@ contract IdentityStorage is IERC734Extended {
         return identities[identityId].keysByPurpose[_purpose];
     }
 
-    function addKey(uint96 identityId, bytes32 _key, uint256 _purpose, uint256 _type) public override returns (bool) {
+    function addKey(uint96 identityId, bytes32 _key, uint256 _purpose, uint256 _type) public override {
         require(keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY), "Admin function");
         require(_key != bytes32(0), "Key arg is empty");
         require(identities[identityId].keys[_key].key != _key, "Key is already attached to the identity");
@@ -118,11 +118,9 @@ contract IdentityStorage is IERC734Extended {
         }
 
         emit KeyAdded(identityId, _key, _purpose, _type);
-
-        return true;
     }
 
-    function removeKey(uint96 identityId, bytes32 _key) public override returns (bool) {
+    function removeKey(uint96 identityId, bytes32 _key) public override {
         require(keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY), "Admin function");
         require(_key != bytes32(0), "Key arg is empty");
 
@@ -150,7 +148,5 @@ contract IdentityStorage is IERC734Extended {
         if (identity.keys[_key].purpose == OPERATIONAL_KEY) {
             delete identityIds[_key];
         }
-
-        return true;
     }
 }
