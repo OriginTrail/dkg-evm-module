@@ -282,15 +282,15 @@ contract ServiceAgreementStorage {
             })
         );
 
-        // emit CommitSubmitted(
-        //     assetContract,
-        //     tokenId,
-        //     keyword,
-        //     hashFunctionId,
-        //     identityId,
-        //     profileStorage.getNodeId(identityId),
-        //     score
-        // );
+        emit CommitSubmitted(
+            assetContract,
+            tokenId,
+            keyword,
+            hashFunctionId,
+            identityId,
+            profileStorage.getNodeId(identityId),
+            score
+        );
     }
 
     function isProofWindowOpen(bytes32 agreementId, uint16 epoch)
