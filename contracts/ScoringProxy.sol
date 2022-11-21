@@ -2,19 +2,19 @@
 
 pragma solidity ^0.8.0;
 
-import { IScoringFunction } from "./interface/ScoringFunction.sol";
+import { IScoreFunction } from "./interface/IScoreFunction.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ScoringProxy is Ownable {
-    event NewScoringFunctionContract(uint8 indexed scoringFunctionId, address newContractAddress);
-    event ScoringFunctionContractUpdated(uint8 indexed scoringFunctionId, address newContractAddress);
+    event NewScoringFunctionContract(uint8 indexed scoreFunctionId, address newContractAddress);
+    event ScoringFunctionContractUpdated(uint8 indexed scoreFunctionId, address newContractAddress);
 
-    // scoringFunctionId => Contract address
+    // scoreFunctionId => Contract address
     mapping(uint8 => address) public functions;
 
-    function callScoringFunction(
-        uint8 scoringFunctionId,
-        uint8 hashingFunctionId,
+    function callScoreFunction(
+        uint8 scoreFunctionId,
+        uint8 hashFunctionId,
         bytes memory nodeId,
         bytes memory keyword,
         uint96 stake
@@ -22,30 +22,30 @@ contract ScoringProxy is Ownable {
         public
         returns (uint32)
     {
-        require(functions[scoringFunctionId] != address(0), "Scoring function doesn't exist!");
+        require(functions[scoreFunctionId] != address(0), "Scoring function doesn't exist!");
 
-        IScoringFunction scoringFunction = IScoringFunction(functions[scoringFunctionId]);
-        uint256 distance = scoringFunction.calculateDistance(hashingFunctionId, nodeId, keyword);
+        IScoreFunction scoringFunction = IScoreFunction(functions[scoreFunctionId]);
+        uint256 distance = scoringFunction.calculateDistance(hashFunctionId, nodeId, keyword);
 
         return scoringFunction.calculateScore(distance, stake);
     }
 
-    function setContractAddress(uint8 scoringFunctionId, address scoringContractAddress)
+    function setContractAddress(uint8 scoreFunctionId, address scoringContractAddress)
         public
         onlyOwner
     {
         require(scoringContractAddress != address(0), "Contract address cannot be empty");
 
-        if (functions[scoringFunctionId] != address(0)) {
+        if (functions[scoreFunctionId] != address(0)) {
             emit ScoringFunctionContractUpdated(
-                scoringFunctionId,
+                scoreFunctionId,
                 scoringContractAddress
             );
         } else {
-            emit NewScoringFunctionContract(scoringFunctionId, scoringContractAddress);
+            emit NewScoringFunctionContract(scoreFunctionId, scoringContractAddress);
         }
 
-        functions[scoringFunctionId] = scoringContractAddress;
+        functions[scoreFunctionId] = scoringContractAddress;
     }
 
 }

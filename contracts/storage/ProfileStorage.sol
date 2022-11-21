@@ -158,12 +158,12 @@ contract ProfileStorage {
         return profiles[identityId].nodeId;
     }
 
-    function getNodeAddress(uint96 identityId, uint8 hashingFunctionId)
+    function getNodeAddress(uint96 identityId, uint8 hashFunctionId)
         public
         view
         returns (bytes32)
     {
-        return profiles[identityId].nodeAddresses[hashingFunctionId];
+        return profiles[identityId].nodeAddresses[hashFunctionId];
     }
 
     /* ----------------SETTERS------------------ */
@@ -175,7 +175,7 @@ contract ProfileStorage {
 
         profiles[identityId].ask = ask;
 
-        emit AskUpdated(identityId, this.getNodeId(identityId), ask);
+        emit AskUpdated(identityId, getNodeId(identityId), ask);
     }
     
     function setStake(uint96 identityId, uint96 stake)
@@ -184,7 +184,7 @@ contract ProfileStorage {
     {
         profiles[identityId].stake = stake;
 
-        emit StakeUpdated(identityId, this.getNodeId(identityId), stake);
+        emit StakeUpdated(identityId, getNodeId(identityId), stake);
     }
 
     function setReward(uint96 identityId, uint96 reward)
@@ -193,7 +193,7 @@ contract ProfileStorage {
     {
         profiles[identityId].reward = reward;
 
-        emit RewardUpdated(identityId, this.getNodeId(identityId), reward);
+        emit RewardUpdated(identityId, getNodeId(identityId), reward);
     }
 
     function setStakeWithdrawalAmount(uint96 identityId, uint96 stakeWithdrawalAmount) 
@@ -250,13 +250,13 @@ contract ProfileStorage {
         nodeIdsList[nodeId] = true;
     }
 
-    function setNodeAddress(uint96 identityId, uint8 hashingFunctionId)
+    function setNodeAddress(uint96 identityId, uint8 hashFunctionId)
         public
         onlyContracts
     {
         HashingProxy hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
-        profiles[identityId].nodeAddresses[hashingFunctionId] = hashingProxy.callHashingFunction(
-            hashingFunctionId,
+        profiles[identityId].nodeAddresses[hashFunctionId] = hashingProxy.callHashFunction(
+            hashFunctionId,
             profiles[identityId].nodeId
         );
     }

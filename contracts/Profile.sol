@@ -118,8 +118,8 @@ contract Profile {
         emit ProfileCreated(identityId, nodeId);
     }
 
-    function addNewNodeIdHash(uint96 identityId, uint8 hashingFunctionId) public onlyWithPublicKey(identityId) {
-        ProfileStorage(hub.getContractAddress("ProfileStorage")).setNodeAddress(identityId, hashingFunctionId);
+    function addNewNodeIdHash(uint96 identityId, uint8 hashFunctionId) public onlyWithPublicKey(identityId) {
+        ProfileStorage(hub.getContractAddress("ProfileStorage")).setNodeAddress(identityId, hashFunctionId);
     }
 
     function increaseStake(uint96 identityId, uint96 amount)

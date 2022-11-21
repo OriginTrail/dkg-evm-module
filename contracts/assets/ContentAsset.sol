@@ -33,7 +33,6 @@ contract ContentAsset is AbstractAsset, ERC721 {
         uint96 tokenAmount
     )
         public
-        returns (uint256)
     {
         require(assertionId != bytes32(0), "assertionId cannot be empty");
         require(size > 0, "Size cannot be 0");
@@ -65,8 +64,6 @@ contract ContentAsset is AbstractAsset, ERC721 {
         );
 
         emit AssetCreated(address(this), tokenId, assertionId);
-
-        return tokenId;
     }
 
     function updateAsset(
@@ -80,7 +77,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
     )
         public
     {
-        require(msg.sender == this.ownerOf(tokenId), "Only owner can update an asset");
+        require(msg.sender == ownerOf(tokenId), "Only owner can update an asset");
         require(assertionId != bytes32(0), "assertionId cannot be 0");
         require(size > 0, "Size cannot be 0");
         require(epochsNumber > 0, "Epochs number cannot be 0");
