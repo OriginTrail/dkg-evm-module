@@ -15,6 +15,7 @@ var ScoringProxy = artifacts.require('ScoringProxy');
 var ServiceAgreementStorage = artifacts.require('ServiceAgreementStorage');
 var SHA256 = artifacts.require('SHA256');
 var ShardingTable = artifacts.require('ShardingTable');
+var ShardingTableStorage = artifacts.require('ShardingTableStorage');
 
 const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
     "0x2f2697b2a7BB4555687EF76f8fb4C3DFB3028E57",
@@ -50,7 +51,7 @@ module.exports = async (deployer, network, accounts) => {
     let assertionRegistry, contentAsset, erc20Token, hashingProxy,
         hub, identityStorage, parametersStorage, pldsfContract, profile,
         profileStorage, scoringProxy, serviceAgreementStorage, sha256Contract,
-        shardingTable;
+        shardingTable, shardingTableStorage;
 
     switch (network) {
         case 'development':
@@ -105,6 +106,12 @@ module.exports = async (deployer, network, accounts) => {
             /* ---------------------------------------------------------------------------------------- */
 
             /* ---------------------------------Sharding Table----------------------------------------- */
+            await deployer.deploy(ShardingTableStorage, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    shardingTableStorage = result;
+                });
+            await hub.setContractAddress('ShardingTableStorage', shardingTableStorage.address);
+
             await deployer.deploy(ShardingTable, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     shardingTable = result;
@@ -187,6 +194,7 @@ module.exports = async (deployer, network, accounts) => {
             console.log(`\t SHA256 address: ${sha256Contract.address}`);
             console.log(`\t Scoring Proxy address: ${scoringProxy.address}`);
             console.log(`\t PLDSF address: ${pldsfContract.address}`);
+            console.log(`\t Sharding table storage: ${shardingTableStorage.address}`);
             console.log(`\t Sharding table: ${shardingTable.address}`);
             console.log(`\t Assertion registry address: ${assertionRegistry.address}`);
             console.log(`\t Service Agreement Storage address: ${serviceAgreementStorage.address}`);
