@@ -54,7 +54,7 @@ contract ServiceAgreementStorage {
 
     struct CommitSubmission {
         uint96 identityId;
-        uint96 nextIdentity;
+        uint96 nextIdentityId;
         uint32 score;
     }
 
@@ -88,6 +88,21 @@ contract ServiceAgreementStorage {
             "Function can only be called by Asset Type Contracts"
         );
         _;
+    }
+
+    function getAgreementData(bytes32 agreementId)
+        public
+        view
+        returns (uint256, uint16, uint128, uint96, uint8, uint8)
+    {
+        return (
+            serviceAgreements[agreementId].startTime,
+            serviceAgreements[agreementId].epochsNumber,
+            serviceAgreements[agreementId].epochLength,
+            serviceAgreements[agreementId].tokenAmount,
+            serviceAgreements[agreementId].scoreFunctionId,
+            serviceAgreements[agreementId].proofWindowOffsetPerc
+        );
     }
 
     function getAgreementStartTime(bytes32 agreementId) public view returns (uint256) {
@@ -229,7 +244,7 @@ contract ServiceAgreementStorage {
 
         epochCommits[submissionsIdx] = commitSubmissions[epochSubmissionsHead];
 
-        uint96 nextIdentityId = commitSubmissions[epochSubmissionsHead].nextIdentity;
+        uint96 nextIdentityId = commitSubmissions[epochSubmissionsHead].nextIdentityId;
         while(nextIdentityId != 0) {
             bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, nextIdentityId));
 
@@ -237,7 +252,7 @@ contract ServiceAgreementStorage {
             submissionsIdx++;
             epochCommits[submissionsIdx] = commit;
 
-            nextIdentityId = commit.nextIdentity;
+            nextIdentityId = commit.nextIdentityId;
         }
 
         return epochCommits;
@@ -277,7 +292,7 @@ contract ServiceAgreementStorage {
             prevIdentityId,
             CommitSubmission({
                 identityId: identityId,
-                nextIdentity: 0,
+                nextIdentityId: 0,
                 score: score
             })
         );
@@ -323,10 +338,7 @@ contract ServiceAgreementStorage {
         uint96 identityId = identityStorage.getIdentityId(msg.sender);
 
         AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
-        bytes32 assertionId = generalAssetInterface.getAssertionByIndex(
-            tokenId,
-            AbstractAsset(assetContract).getAssertionsLength(tokenId) - 1
-        );
+        bytes32 assertionId = generalAssetInterface.getLatestAssertion(tokenId);
 
         AssertionRegistry assertionRegistry = AssertionRegistry(hub.getContractAddress("AssertionRegistry"));
         uint256 assertionChunksNumber = assertionRegistry.getChunksNumber(assertionId);
@@ -369,7 +381,7 @@ contract ServiceAgreementStorage {
         uint32 i = 0;
         while ((identityId != commitSubmissions[nextCommitId].identityId) || (i != parametersStorage.R0())) {
             nextCommitId = keccak256(
-                abi.encodePacked(agreementId, epoch, commitSubmissions[nextCommitId].nextIdentity)
+                abi.encodePacked(agreementId, epoch, commitSubmissions[nextCommitId].nextIdentityId)
             );
             i++;
         }
@@ -480,7 +492,7 @@ contract ServiceAgreementStorage {
                 "Score of the commit must be less or equal to the one you want insert after!"
             );
 
-            uint96 nextIdentityId = prevCommit.nextIdentity;
+            uint96 nextIdentityId = prevCommit.nextIdentityId;
             if (nextIdentityId != 0) {
                 bytes32 nextCommitId = keccak256(abi.encodePacked(agreementId, epoch, nextIdentityId));
                 CommitSubmission memory nextCommit = commitSubmissions[nextCommitId];
@@ -501,7 +513,7 @@ contract ServiceAgreementStorage {
         private
     {
         bytes32 leftCommitId = keccak256(abi.encodePacked(agreementId, epoch, leftIdentityId));
-        commitSubmissions[leftCommitId].nextIdentity = rightIdentityId;
+        commitSubmissions[leftCommitId].nextIdentityId = rightIdentityId;
     }
 
     function _generateAgreementId(address assetContract, uint256 tokenId, bytes memory keyword, uint8 hashFunctionId)
