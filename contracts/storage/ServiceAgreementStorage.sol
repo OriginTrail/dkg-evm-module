@@ -329,13 +329,13 @@ contract ServiceAgreementStorage {
         );
     }
 
-    function getChallenge(address assetContract, uint256 tokenId, uint16 epoch)
+    function getChallenge(address sender, address assetContract, uint256 tokenId, uint16 epoch)
         public
         view
         returns (bytes32, uint256)
     {
         IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-        uint96 identityId = identityStorage.getIdentityId(msg.sender);
+        uint96 identityId = identityStorage.getIdentityId(sender);
 
         AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
         bytes32 assertionId = generalAssetInterface.getLatestAssertion(tokenId);
@@ -379,7 +379,7 @@ contract ServiceAgreementStorage {
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
         uint32 i = 0;
-        while ((identityId != commitSubmissions[nextCommitId].identityId) || (i != parametersStorage.R0())) {
+        while ((identityId != commitSubmissions[nextCommitId].identityId) && i < parametersStorage.R0()) {
             nextCommitId = keccak256(
                 abi.encodePacked(agreementId, epoch, commitSubmissions[nextCommitId].nextIdentityId)
             );
@@ -390,7 +390,7 @@ contract ServiceAgreementStorage {
 
         bytes32 merkleRoot;
         uint256 challenge;
-        (merkleRoot, challenge) = getChallenge(assetContract, tokenId, epoch);
+        (merkleRoot, challenge) = getChallenge(msg.sender, assetContract, tokenId, epoch);
 
         require(
             MerkleProof.verify(
