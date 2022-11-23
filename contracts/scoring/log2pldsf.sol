@@ -31,7 +31,7 @@ contract Log2PLDSF is IScoreFunction {
         hub = Hub(hubAddress);
 
         setDistanceMappingCoefficient(1_000);
-        setStakeMappingCoefficient(200_000_000);
+        setStakeMappingCoefficient(200_000);
 
         multiplier = 10000;
         logArgumentConstant = 1;
