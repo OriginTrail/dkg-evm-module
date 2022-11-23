@@ -80,6 +80,27 @@ contract Log2PLDSF is IScoreFunction {
         return uint256(nodeIdHash ^ keywordHash);
     }
 
+    function getParameters()
+        public
+        view
+        returns (uint256, uint96, uint32[8] memory)
+    {
+        return (
+            distanceMappingCoefficient,
+            stakeMappingCoefficient,
+            [
+                multiplier,
+                logArgumentConstant,
+                a,
+                stakeExponent,
+                b,
+                c,
+                distanceExponent,
+                d
+            ]
+        );
+    }
+
     function setDistanceMappingCoefficient(uint256 distanceRangeMax)
         public
         onlyHubOwner
