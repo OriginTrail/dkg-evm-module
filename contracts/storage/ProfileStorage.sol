@@ -31,7 +31,7 @@ contract ProfileStorage {
     // nodeId => isRegistered?
     mapping(bytes => bool) public nodeIdsList;
     // identityId => Profile
-    mapping(uint96 => ProfileDefinition) public profiles;
+    mapping(uint96 => ProfileDefinition) profiles;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -78,6 +78,27 @@ contract ProfileStorage {
     }
 
     /* ----------------GETTERS------------------ */
+    function getProfile(uint96 identityId)
+        public
+        view
+        returns (uint96[6] memory, uint256[3] memory, bytes memory)
+    {
+        ProfileDefinition storage profile = profiles[identityId];
+
+        return (
+            [
+                profile.ask,
+                profile.stake,
+                profile.reward,
+                profile.stakeWithdrawalAmount,
+                profile.rewardWithdrawalAmount,
+                profile.frozenAmount
+            ],
+            [profile.stakeWithdrawalTimestamp, profile.rewardWithdrawalTimestamp, profile.freezeTimestamp],
+            profile.nodeId
+        );
+    }
+
     function getAsk(uint96 identityId)
         public
         view

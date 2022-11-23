@@ -5,7 +5,8 @@ pragma solidity ^0.8.0;
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ParametersStorage is Ownable {
-    uint96 public minimalStake;
+    uint96 public minimumStake;
+    uint96 public maximumStake;
 
     uint48 public R2;
     uint32 public R1;
@@ -24,7 +25,8 @@ contract ParametersStorage is Ownable {
     uint32 public slashingFreezeDuration;
 
     constructor() {
-        minimalStake = 50000 ether;
+        minimumStake = 50_000 ether;
+        maximumStake = 5_000_000 ether;
 
         R2 = 20;
         R1 = 8;
@@ -43,11 +45,11 @@ contract ParametersStorage is Ownable {
         slashingFreezeDuration = 730 days;
     }
 
-    function setMinimalStake(uint96 newMinimalStake)
+    function setMinimumStake(uint96 newMinimumStake)
         public
         onlyOwner
     {
-        minimalStake = newMinimalStake;
+        minimumStake = newMinimumStake;
     }
 
     function setR2(uint48 newR2)

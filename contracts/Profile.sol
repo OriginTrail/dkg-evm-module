@@ -110,7 +110,7 @@ contract Profile {
         );
        
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
-        if (initialStake >= parametersStorage.minimalStake()) {
+        if (initialStake >= parametersStorage.minimumStake()) {
             ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
             shardingTable.pushBack(identityId);
         }
@@ -142,7 +142,7 @@ contract Profile {
 
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
-        if (oldStake < parametersStorage.minimalStake() && newStake >= parametersStorage.minimalStake()) {
+        if (oldStake < parametersStorage.minimumStake() && newStake >= parametersStorage.minimumStake()) {
             ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
             shardingTable.pushBack(identityId);
         }
@@ -174,7 +174,7 @@ contract Profile {
         uint256 stakeWithdrawalTimestamp = block.timestamp + parametersStorage.stakeWithdrawalDelay();
         profileStorage.setStakeWithdrawalTimestamp(identityId, stakeWithdrawalTimestamp);
 
-        if (oldStake >= parametersStorage.minimalStake() && newStake < parametersStorage.minimalStake()) {
+        if (oldStake >= parametersStorage.minimumStake() && newStake < parametersStorage.minimumStake()) {
             ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
             shardingTable.removeNode(identityId);
         }
@@ -230,7 +230,7 @@ contract Profile {
 
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
-        if (oldStake < parametersStorage.minimalStake() && newStake >= parametersStorage.minimalStake()) {
+        if (oldStake < parametersStorage.minimumStake() && newStake >= parametersStorage.minimumStake()) {
             ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
             shardingTable.pushBack(identityId);
         }
