@@ -109,6 +109,7 @@ contract ShardingTableStorage is IShardingTableStructs {
         onlyContracts
     {
         Node memory nodeToRemove = nodes[nodeId];
+        require(nodeToRemove.identityId != 0, "Non-existent node id!");
 
         if (equalIdHashes(head, nodeId) && equalIdHashes(tail, nodeId)) {
             setHead(emptyPointer);
