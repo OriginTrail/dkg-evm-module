@@ -55,7 +55,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
             msg.sender,
             address(this),
             tokenId,
-            abi.encodePacked('did:otp:', address(this), '/', tokenId, '/', assertionId),
+            abi.encodePacked(address(this), tokenId, assertionId),
             0,
             epochsNumber,
             tokenAmount,
@@ -95,7 +95,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
             msg.sender,
             address(this),
             tokenId,
-            abi.encodePacked(address(this), tokenId),
+            abi.encodePacked(address(this), tokenId, assertionId),
             0,
             epochsNumber,
             tokenAmount
