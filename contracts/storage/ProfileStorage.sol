@@ -8,9 +8,9 @@ import { IdentityStorage } from "./IdentityStorage.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ProfileStorage {
-    event AskUpdated(uint96 indexed identityId, bytes nodeId, uint96 ask);
-    event StakeUpdated(uint96 indexed identityId, bytes nodeId, uint96 stake);
-    event RewardUpdated(uint96 indexed identityId, bytes nodeId, uint96 reward);
+    event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
+    event StakeUpdated(uint72 indexed identityId, bytes nodeId, uint96 stake);
+    event RewardUpdated(uint72 indexed identityId, bytes nodeId, uint96 reward);
 
     Hub public hub;
 
@@ -31,7 +31,7 @@ contract ProfileStorage {
     // nodeId => isRegistered?
     mapping(bytes => bool) public nodeIdsList;
     // identityId => Profile
-    mapping(uint96 => ProfileDefinition) public profiles;
+    mapping(uint72 => ProfileDefinition) profiles;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -53,7 +53,7 @@ contract ProfileStorage {
     )
         public
         onlyContracts
-        returns (uint96)
+        returns (uint72)
     {
         IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
 
@@ -64,7 +64,7 @@ contract ProfileStorage {
         require(nodeId.length != 0, "Node ID can't be empty");
         require(initialAsk > 0, "Ask can't be 0");
 
-        uint96 identityId = identityStorage.createIdentity(operationalWallet, adminWallet);
+        uint72 identityId = identityStorage.createIdentity(operationalWallet, adminWallet);
 
         ProfileDefinition storage profile = profiles[identityId];
         profile.ask = initialAsk;
@@ -78,7 +78,28 @@ contract ProfileStorage {
     }
 
     /* ----------------GETTERS------------------ */
-    function getAsk(uint96 identityId)
+    function getProfile(uint72 identityId)
+        public
+        view
+        returns (uint96[6] memory, uint256[3] memory, bytes memory)
+    {
+        ProfileDefinition storage profile = profiles[identityId];
+
+        return (
+            [
+                profile.ask,
+                profile.stake,
+                profile.reward,
+                profile.stakeWithdrawalAmount,
+                profile.rewardWithdrawalAmount,
+                profile.frozenAmount
+            ],
+            [profile.stakeWithdrawalTimestamp, profile.rewardWithdrawalTimestamp, profile.freezeTimestamp],
+            profile.nodeId
+        );
+    }
+
+    function getAsk(uint72 identityId)
         public
         view
         returns (uint96)
@@ -86,7 +107,7 @@ contract ProfileStorage {
         return profiles[identityId].ask;
     }
 
-    function getStake(uint96 identityId) 
+    function getStake(uint72 identityId) 
         public
         view
         returns (uint96)
@@ -94,7 +115,7 @@ contract ProfileStorage {
         return profiles[identityId].stake;
     }
 
-    function getReward(uint96 identityId)
+    function getReward(uint72 identityId)
         public
         view
         returns (uint96)
@@ -102,7 +123,7 @@ contract ProfileStorage {
         return profiles[identityId].reward;
     }
 
-    function getStakeWithdrawalAmount(uint96 identityId) 
+    function getStakeWithdrawalAmount(uint72 identityId) 
         public
         view
         returns (uint96)
@@ -110,7 +131,7 @@ contract ProfileStorage {
         return profiles[identityId].stakeWithdrawalAmount;
     }
 
-    function getRewardWithdrawalAmount(uint96 identityId)
+    function getRewardWithdrawalAmount(uint72 identityId)
         public
         view
         returns (uint96)
@@ -118,7 +139,7 @@ contract ProfileStorage {
         return profiles[identityId].rewardWithdrawalAmount;
     }
 
-    function getFrozenAmount(uint96 identityId) 
+    function getFrozenAmount(uint72 identityId) 
         public
         view
         returns (uint96)
@@ -126,7 +147,7 @@ contract ProfileStorage {
         return profiles[identityId].frozenAmount;
     }
 
-    function getStakeWithdrawalTimestamp(uint96 identityId) 
+    function getStakeWithdrawalTimestamp(uint72 identityId) 
         public
         view
         returns (uint256)
@@ -134,7 +155,7 @@ contract ProfileStorage {
         return profiles[identityId].stakeWithdrawalTimestamp;
     }
 
-    function getRewardWithdrawalTimestamp(uint96 identityId)
+    function getRewardWithdrawalTimestamp(uint72 identityId)
         public
         view
         returns (uint256)
@@ -142,7 +163,7 @@ contract ProfileStorage {
         return profiles[identityId].rewardWithdrawalTimestamp;
     }
 
-    function getFreezeTimestamp(uint96 identityId)
+    function getFreezeTimestamp(uint72 identityId)
         public
         view
         returns (uint256)
@@ -150,7 +171,7 @@ contract ProfileStorage {
         return profiles[identityId].freezeTimestamp;
     }
 
-    function getNodeId(uint96 identityId) 
+    function getNodeId(uint72 identityId) 
         public
         view
         returns (bytes memory)
@@ -158,7 +179,7 @@ contract ProfileStorage {
         return profiles[identityId].nodeId;
     }
 
-    function getNodeAddress(uint96 identityId, uint8 hashFunctionId)
+    function getNodeAddress(uint72 identityId, uint8 hashFunctionId)
         public
         view
         returns (bytes32)
@@ -167,7 +188,7 @@ contract ProfileStorage {
     }
 
     /* ----------------SETTERS------------------ */
-    function setAsk(uint96 identityId, uint96 ask)
+    function setAsk(uint72 identityId, uint96 ask)
         public
         onlyContracts
     {
@@ -178,7 +199,7 @@ contract ProfileStorage {
         emit AskUpdated(identityId, getNodeId(identityId), ask);
     }
     
-    function setStake(uint96 identityId, uint96 stake)
+    function setStake(uint72 identityId, uint96 stake)
         public
         onlyContracts
     {
@@ -187,7 +208,7 @@ contract ProfileStorage {
         emit StakeUpdated(identityId, getNodeId(identityId), stake);
     }
 
-    function setReward(uint96 identityId, uint96 reward)
+    function setReward(uint72 identityId, uint96 reward)
         public
         onlyContracts
     {
@@ -196,49 +217,49 @@ contract ProfileStorage {
         emit RewardUpdated(identityId, getNodeId(identityId), reward);
     }
 
-    function setStakeWithdrawalAmount(uint96 identityId, uint96 stakeWithdrawalAmount) 
+    function setStakeWithdrawalAmount(uint72 identityId, uint96 stakeWithdrawalAmount) 
         public
         onlyContracts
     {
         profiles[identityId].stakeWithdrawalAmount = stakeWithdrawalAmount;
     }
 
-    function setRewardWithdrawalAmount(uint96 identityId, uint96 rewardWithdrawalAmount)
+    function setRewardWithdrawalAmount(uint72 identityId, uint96 rewardWithdrawalAmount)
         public
         onlyContracts
     {
         profiles[identityId].rewardWithdrawalAmount = rewardWithdrawalAmount;
     }
 
-    function setFrozenAmount(uint96 identityId, uint96 frozenAmount) 
+    function setFrozenAmount(uint72 identityId, uint96 frozenAmount) 
         public
         onlyContracts
     {
         profiles[identityId].frozenAmount = frozenAmount;
     }
 
-    function setStakeWithdrawalTimestamp(uint96 identityId, uint256 stakeWithdrawalTimestamp) 
+    function setStakeWithdrawalTimestamp(uint72 identityId, uint256 stakeWithdrawalTimestamp) 
         public
         onlyContracts
     {
         profiles[identityId].stakeWithdrawalTimestamp = stakeWithdrawalTimestamp;
     }
 
-    function setRewardWithdrawalTimestamp(uint96 identityId, uint256 rewardWithdrawalTimestamp)
+    function setRewardWithdrawalTimestamp(uint72 identityId, uint256 rewardWithdrawalTimestamp)
         public
         onlyContracts
     {
         profiles[identityId].rewardWithdrawalTimestamp = rewardWithdrawalTimestamp;
     }
 
-    function setFreezeTimestamp(uint96 identityId, uint256 freezeTimestamp)
+    function setFreezeTimestamp(uint72 identityId, uint256 freezeTimestamp)
         public
         onlyContracts
     {
         profiles[identityId].freezeTimestamp = freezeTimestamp;
     }
 
-    function setNodeId(uint96 identityId, bytes memory nodeId)
+    function setNodeId(uint72 identityId, bytes memory nodeId)
         public
         onlyContracts
     {
@@ -250,7 +271,7 @@ contract ProfileStorage {
         nodeIdsList[nodeId] = true;
     }
 
-    function setNodeAddress(uint96 identityId, uint8 hashFunctionId)
+    function setNodeAddress(uint72 identityId, uint8 hashFunctionId)
         public
         onlyContracts
     {

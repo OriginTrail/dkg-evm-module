@@ -6,12 +6,12 @@ import {Hub} from './Hub.sol';
 import {ProfileStorage} from './storage/ProfileStorage.sol';
 
 contract ShardingTable {
-    event NodeObjCreated(uint96 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
-    event NodeRemoved(uint96 indexed identityId, bytes nodeId);
+    event NodeObjCreated(uint72 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
+    event NodeRemoved(uint72 indexed identityId, bytes nodeId);
     event NodeRemovedByHubOwner(bytes nodeId);
 
     struct Node {
-        uint96 identityId;
+        uint72 identityId;
         bytes id;
         bytes prevNodeId;
         bytes nextNodeId;
@@ -106,7 +106,7 @@ contract ShardingTable {
         return getShardingTable(head, nodesCount);
     }
 
-    function pushBack(uint96 identityId)
+    function pushBack(uint72 identityId)
         public
         onlyProfile
     {        
@@ -123,7 +123,7 @@ contract ShardingTable {
         nodesCount += 1;
     }
 
-    function pushFront(uint96 identityId)
+    function pushFront(uint72 identityId)
         public
         onlyProfile
     {
@@ -140,7 +140,7 @@ contract ShardingTable {
         nodesCount += 1;
     }
 
-    function removeNode(uint96 identityId)
+    function removeNode(uint72 identityId)
         public
         onlyProfile
     {
@@ -201,7 +201,7 @@ contract ShardingTable {
         emit NodeRemovedByHubOwner(nodeId);
     }
 
-    function _createNodeObj(uint96 identityId)
+    function _createNodeObj(uint72 identityId)
         internal
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));

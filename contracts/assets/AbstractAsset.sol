@@ -17,6 +17,11 @@ abstract contract AbstractAsset {
 
     function getAssertions(uint256 tokenId) virtual public view returns (bytes32 [] memory);
 
+    function getLatestAssertion(uint256 tokenId) public view returns (bytes32) {
+        bytes32[] memory assertions = getAssertions(tokenId);
+        return assertions[assertions.length - 1];
+    }
+
     function getAssertionByIndex(uint256 tokenId, uint256 index) public view returns (bytes32) {
         bytes32 [] memory assertions = getAssertions(tokenId);
         return assertions[index];

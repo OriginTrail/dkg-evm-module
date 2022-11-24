@@ -16,18 +16,18 @@ contract IdentityStorage is IERC734Extended {
 
     Hub public hub;
 
-    uint96 private _identityId;
+    uint72 private _identityId;
 
     struct Identity {
-        uint96 identityId;
+        uint72 identityId;
         mapping (bytes32 => Key) keys;
         mapping (uint256 => bytes32[]) keysByPurpose;
     }
 
     // operationalKey => identityId
-    mapping(bytes32 => uint96) public identityIds;
+    mapping(bytes32 => uint72) public identityIds;
     // identityId => Identity
-    mapping(uint96 => Identity) identities;
+    mapping(uint72 => Identity) identities;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -44,14 +44,14 @@ contract IdentityStorage is IERC734Extended {
         _;
     }
 
-    function createIdentity(address operational, address admin) public onlyProfileStorage returns (uint96) {
+    function createIdentity(address operational, address admin) public onlyProfileStorage returns (uint72) {
         require(operational != address(0), "Operational wallet address can't be empty");
         require(admin != address(0), "Admin wallet address can't be empty");
         require(operational != admin, "Same address for ADMIN/OPERATIONAL purposes");
 
         bytes32 _admin_key = keccak256(abi.encodePacked(admin));
 
-        uint96 identityId = _identityId;
+        uint72 identityId = _identityId;
         Identity storage identity = identities[identityId];
         _identityId++;
         
@@ -83,11 +83,11 @@ contract IdentityStorage is IERC734Extended {
         return identityId;
     }
 
-    function getIdentityId(address operational) public view returns (uint96) {
+    function getIdentityId(address operational) public view returns (uint72) {
         return identityIds[keccak256(abi.encodePacked(operational))];
     }
 
-    function getKey(uint96 identityId, bytes32 _key) public view override returns (uint256, uint256, bytes32) {
+    function getKey(uint72 identityId, bytes32 _key) public view override returns (uint256, uint256, bytes32) {
         return (
             identities[identityId].keys[_key].purpose,
             identities[identityId].keys[_key].keyType,
@@ -95,15 +95,15 @@ contract IdentityStorage is IERC734Extended {
         );
     }
 
-    function keyHasPurpose(uint96 identityId, bytes32 _key, uint256 _purpose) public view override returns (bool) {
+    function keyHasPurpose(uint72 identityId, bytes32 _key, uint256 _purpose) public view override returns (bool) {
         return identities[identityId].keys[_key].purpose == _purpose;
     }
 
-    function getKeysByPurpose(uint96 identityId, uint256 _purpose) public view override returns (bytes32[] memory) {
+    function getKeysByPurpose(uint72 identityId, uint256 _purpose) public view override returns (bytes32[] memory) {
         return identities[identityId].keysByPurpose[_purpose];
     }
 
-    function addKey(uint96 identityId, bytes32 _key, uint256 _purpose, uint256 _type) public override {
+    function addKey(uint72 identityId, bytes32 _key, uint256 _purpose, uint256 _type) public override {
         require(keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY), "Admin function");
         require(_key != bytes32(0), "Key arg is empty");
         require(identities[identityId].keys[_key].key != _key, "Key is already attached to the identity");
@@ -120,7 +120,7 @@ contract IdentityStorage is IERC734Extended {
         emit KeyAdded(identityId, _key, _purpose, _type);
     }
 
-    function removeKey(uint96 identityId, bytes32 _key) public override {
+    function removeKey(uint72 identityId, bytes32 _key) public override {
         require(keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY), "Admin function");
         require(_key != bytes32(0), "Key arg is empty");
 
