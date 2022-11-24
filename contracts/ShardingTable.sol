@@ -21,7 +21,8 @@ contract ShardingTable is IShardingTableStructs {
     }
 
     modifier onlyProfile() {
-        require(msg.sender == hub.getContractAddress("Profile"),
+        require(
+            msg.sender == hub.getContractAddress("Profile"),
             "Function can only be called by Profile contract!");
         _;
     }
@@ -46,13 +47,12 @@ contract ShardingTable is IShardingTableStructs {
 
         require(
             !shardingTableStorage.equalIdHashes(startingNode.id, "") ||
-        shardingTableStorage.equalIdHashes(startingNodeId, emptyPointer)
+            shardingTableStorage.equalIdHashes(startingNodeId, emptyPointer)
         );
 
         NodeInfo[] memory nodesPage;
 
-        uint16 nodesCount = shardingTableStorage.getNodesCount();
-        if (nodesCount == 0) {
+        if (shardingTableStorage.nodesCount() == 0) {
             return nodesPage;
         }
 
@@ -91,9 +91,8 @@ contract ShardingTable is IShardingTableStructs {
     {
         address shardingTableStorageAddress = hub.getContractAddress("ShardingTableStorage");
         ShardingTableStorage shardingTableStorage = ShardingTableStorage(shardingTableStorageAddress);
-        bytes memory head = shardingTableStorage.getHead();
-        uint16 nodesCount = shardingTableStorage.getNodesCount();
-        return getShardingTable(head, nodesCount);
+
+        return getShardingTable(shardingTableStorage.head(), shardingTableStorage.nodesCount());
     }
 
     function pushBack(uint96 identityId)

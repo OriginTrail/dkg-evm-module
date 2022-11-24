@@ -14,7 +14,7 @@ contract ShardingTableStorage is IShardingTableStructs {
 
     Hub public hub;
 
-    bytes private emptyPointer;
+    bytes private constant emptyPointer = "";
     bytes public head;
     bytes public tail;
     uint16 public nodesCount;
@@ -26,7 +26,6 @@ contract ShardingTableStorage is IShardingTableStructs {
         require(hubAddress != address(0));
         hub = Hub(hubAddress);
 
-        emptyPointer = "";
         nodeIdsSha256[emptyPointer] = sha256(emptyPointer);
         head = emptyPointer;
         tail = emptyPointer;
@@ -36,14 +35,6 @@ contract ShardingTableStorage is IShardingTableStructs {
     modifier onlyContracts(){
         require(hub.isContract(msg.sender),
             "Function can only be called by contracts!");
-        _;
-    }
-
-    modifier onlyHubOwner() {
-        require (
-            msg.sender == hub.owner(),
-            "Function can only be called by hub owner!"
-        );
         _;
     }
 
@@ -115,7 +106,7 @@ contract ShardingTableStorage is IShardingTableStructs {
 
     function removeNodeById(bytes memory nodeId)
         public
-        onlyHubOwner
+        onlyContracts
     {
         Node memory nodeToRemove = nodes[nodeId];
 
@@ -142,6 +133,53 @@ contract ShardingTableStorage is IShardingTableStructs {
         emit NodeRemovedByHubOwner(nodeId);
     }
 
+    function setHead(bytes memory nodeId)
+        public
+        onlyContracts
+    {
+        head = nodeId;
+    }
+
+    function setTail(bytes memory nodeId)
+        public
+        onlyContracts
+    {
+        tail = nodeId;
+    }
+
+    function getNode(bytes memory nodeId)
+        public
+        view
+        returns (Node memory)
+    {
+        return nodes[nodeId];
+    }
+
+    function getMultipleNodes(bytes memory firstNodeId, uint16 nodesNumber)
+        public
+        view
+        returns (Node[] memory)
+    {
+
+        Node[] memory nodesPage = new Node[](nodesNumber);
+
+        Node memory currentNode = nodes[firstNodeId];
+        for (uint16 i = 0; i < nodesNumber; i++) {
+            nodesPage[i] = currentNode;
+            currentNode = nodes[currentNode.nextNodeId];
+        }
+
+        return nodesPage;
+    }
+
+    function equalIdHashes(bytes memory firstId, bytes memory secondId)
+        public
+        view
+        returns (bool)
+    {
+        return nodeIdsSha256[firstId] == nodeIdsSha256[secondId];
+    }
+
     function _createNodeObj(uint96 identityId)
         internal
     {
@@ -163,90 +201,11 @@ contract ShardingTableStorage is IShardingTableStructs {
         emit NodeObjCreated(identityId, nodeId, profileStorage.getAsk(identityId), profileStorage.getStake(identityId));
     }
 
-    function getNode(bytes memory nodeId)
-        public
-        view
-        returns (Node memory)
-    {
-        return nodes[nodeId];
-    }
-
-    function getNodes(bytes memory firstNodeId, uint16 nodesNumber)
-        public
-        view
-        returns (Node[] memory)
-    {
-
-        Node[] memory nodesPage = new Node[](nodesNumber);
-
-        Node memory currentNode = nodes[firstNodeId];
-        for (uint16 i = 0; i < nodesNumber; i++) {
-            nodesPage[i] = currentNode;
-            currentNode = nodes[currentNode.nextNodeId];
-        }
-
-        return nodesPage;
-    }
-
-    function getNodeIdsSha256(bytes memory nodeId)
-        public
-        view
-        returns (bytes32)
-    {
-        return nodeIdsSha256[nodeId];
-    }
-
-    function getHead()
-        public
-        view
-        returns (bytes memory)
-    {
-        return head;
-    }
-
-    function getTail()
-        public
-        view
-        returns (bytes memory)
-    {
-        return tail;
-    }
-
-    function getNodesCount()
-        public
-        view
-        returns (uint16)
-    {
-        return nodesCount;
-    }
-
-    function setHead(bytes memory nodeId)
-        public
-        onlyContracts
-    {
-        head = nodeId;
-    }
-
-    function setTail(bytes memory nodeId)
-        public
-        onlyContracts
-    {
-        tail = nodeId;
-    }
-
     function _link(bytes memory _leftNodeId, bytes memory _rightNodeId)
         internal
     {
         nodes[_leftNodeId].nextNodeId = _rightNodeId;
         nodes[_rightNodeId].prevNodeId = _leftNodeId;
-    }
-
-    function equalIdHashes(bytes memory firstId, bytes memory secondId)
-        public
-        view
-        returns (bool)
-    {
-        return nodeIdsSha256[firstId] == nodeIdsSha256[secondId];
     }
 
 }
