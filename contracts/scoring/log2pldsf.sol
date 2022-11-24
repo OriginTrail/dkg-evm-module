@@ -54,14 +54,14 @@ contract Log2PLDSF is IScoreFunction {
     function calculateScore(uint256 distance, uint96 stake)
         public
         view
-        returns (uint32)
+        returns (uint40)
     {
         uint256 mappedDistance = distance / distanceMappingCoefficient;
         uint96 mappedStake = stake / stakeMappingCoefficient;
 
         uint64 coefficient = 1 ether;
 
-        return uint32(
+        return uint40(
             multiplier * (
                 logArgumentConstant * coefficient +
                 coefficient * (a * (mappedStake ** stakeExponent) + b) / (c * (mappedDistance ** distanceExponent) + d)

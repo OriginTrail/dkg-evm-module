@@ -20,7 +20,7 @@ contract ScoringProxy is Ownable {
         uint96 stake
     )
         public
-        returns (uint32)
+        returns (uint40)
     {
         require(functions[scoreFunctionId] != address(0), "Scoring function doesn't exist!");
 
