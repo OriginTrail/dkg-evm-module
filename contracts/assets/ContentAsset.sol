@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import { AbstractAsset } from "./AbstractAsset.sol";
 import { AssertionRegistry } from "../AssertionRegistry.sol";
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ServiceAgreementStorage } from "../storage/ServiceAgreementStorage.sol";
 
 contract ContentAsset is AbstractAsset, ERC721 {
@@ -56,7 +55,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
             msg.sender,
             address(this),
             tokenId,
-            abi.encodePacked(address(this), tokenId),
+            abi.encodePacked('did:otp:', address(this), '/', tokenId, '/', assertionId),
             0,
             epochsNumber,
             tokenAmount,
