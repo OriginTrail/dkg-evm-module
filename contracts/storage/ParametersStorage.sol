@@ -33,15 +33,15 @@ contract ParametersStorage is Ownable {
         R0 = 3;
 
         commitWindowDuration = 15 minutes;
-        minProofWindowOffsetPerc = 90;
-        maxProofWindowOffsetPerc = 98;
-        proofWindowDurationPerc = 1;
-        replacementWindowDurationPerc = 1;
+        minProofWindowOffsetPerc = 50;
+        maxProofWindowOffsetPerc = 75;
+        proofWindowDurationPerc = 25;
+        replacementWindowDurationPerc = 0;
 
-        epochLength = 30 days;
+        epochLength = 1 hours;
 
-        stakeWithdrawalDelay = 28 days;
-        rewardWithdrawalDelay = 21 days;
+        stakeWithdrawalDelay = 5 minutes;
+        rewardWithdrawalDelay = 5 minutes;
         slashingFreezeDuration = 730 days;
     }
 
