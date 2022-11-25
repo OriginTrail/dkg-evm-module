@@ -10,12 +10,13 @@ const ProfileStorage = artifacts.require('ProfileStorage');
 
 // Contracts used in test
 let erc20Token, identity, identityStorage, profile, profileStorage;
-let operational, admin, identityId, adminKey, operationalKey, keyType;
+let operational, secondOperational, admin, secondAdmin, identityId, adminKey, operationalKey, keyType;
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const ERROR_PREFIX = 'Returned error: VM Exception while processing transaction: ';
 
 const ADMIN_KEY = 1;
 const OPERATIONAL_KEY = 2;
+const ECDSA = 1;
 
 contract('DKG v6 Identity', async (accounts) => {
 
@@ -140,7 +141,50 @@ contract('DKG v6 Identity', async (accounts) => {
         assert(isOperational, 'Failed to check purpose');
     });
 
+    it('Add an admin key to existing identity; send with operational wallet; expect to fail', async () => {
+        secondAdmin = accounts[3];
+        try {
+            await identity.addKey(
+                identityId,
+                secondAdmin,
+                ADMIN_KEY,
+                ECDSA,
+                {from: accounts[1]}
+            );
+        } catch(error) {
+            assert(error, 'Expected error but did not get one');
+            assert(error.message.startsWith(ERROR_PREFIX + 'revert Admin function'), 'Invalid error message received: ' + error.message);
+        }
+    });
 
+    it('Add an admin key to existing identity; expect key added', async () => {
+        secondAdmin = accounts[3];
+        await identity.addKey(
+            identityId,
+            secondAdmin,
+            ADMIN_KEY,
+            ECDSA,
+            { from: accounts[2] }
+        );
+        const adminKeys = await identity.getKeysByPurpose(identityId, ADMIN_KEY);
+        assert(adminKeys.length == 2, 'Failed to add admin key to identity');
+    });
+
+    it('Add an existing admin key to identity; expect to fail', async () => {
+        secondAdmin = accounts[3];
+        try {
+            await identity.addKey(
+                identityId,
+                secondAdmin,
+                ADMIN_KEY,
+                ECDSA,
+                {from: accounts[2]}
+            );
+        } catch(error) {
+            assert(error, 'Expected error but did not get one');
+            assert(error.message.startsWith(ERROR_PREFIX + 'revert Key is already attached to the identity'), 'Invalid error message received: ' + error.message);
+        }
+    });
 
 });
 
