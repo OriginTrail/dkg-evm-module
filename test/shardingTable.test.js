@@ -9,7 +9,6 @@ const ShardingTableStorage = artifacts.require('ShardingTableStorage');
 const IdentityStorage = artifacts.require('IdentityStorage');
 const ProfileStorage = artifacts.require('ProfileStorage');
 const ParametersStorage = artifacts.require('ParametersStorage');
-const bytes32 = require('bytes32');
 
 // Helper variables
 let peer1 = {

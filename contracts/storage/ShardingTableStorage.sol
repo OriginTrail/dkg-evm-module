@@ -8,7 +8,7 @@ import {IShardingTableStructs} from '../interface/IShardingTableStructs.sol';
 
 contract ShardingTableStorage is IShardingTableStructs {
 
-    bytes public constant emptyPointer = "";
+    bytes public constant _NULL = "";
 
     Hub public hub;
 
@@ -23,9 +23,9 @@ contract ShardingTableStorage is IShardingTableStructs {
         require(hubAddress != address(0));
         hub = Hub(hubAddress);
 
-        nodeIdsSha256[emptyPointer] = sha256(emptyPointer);
-        head = emptyPointer;
-        tail = emptyPointer;
+        nodeIdsSha256[_NULL] = sha256(_NULL);
+        head = _NULL;
+        tail = _NULL;
         nodesCount = 0;
     }
 
