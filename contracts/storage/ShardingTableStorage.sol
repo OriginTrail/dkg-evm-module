@@ -8,19 +8,16 @@ import {IShardingTableStructs} from '../interface/IShardingTableStructs.sol';
 
 contract ShardingTableStorage is IShardingTableStructs {
 
-    event NodeObjCreated(uint96 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
-    event NodeRemoved(uint96 indexed identityId, bytes nodeId);
-    event NodeRemovedByHubOwner(bytes nodeId);
+    bytes public constant emptyPointer = "";
 
     Hub public hub;
 
-    bytes private constant emptyPointer = "";
     bytes public head;
     bytes public tail;
     uint16 public nodesCount;
 
     mapping(bytes => Node) nodes;
-    mapping(bytes => bytes32) nodeIdsSha256;
+    mapping(bytes => bytes32) public nodeIdsSha256;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -33,105 +30,25 @@ contract ShardingTableStorage is IShardingTableStructs {
     }
 
     modifier onlyContracts(){
-        require(hub.isContract(msg.sender),
-            "Function can only be called by contracts!");
+        require(
+            hub.isContract(msg.sender),
+            "Function can only be called by contracts!"
+        );
         _;
     }
 
-    function pushBack(uint96 identityId)
+    function incrementNodesCount()
         public
         onlyContracts
     {
-        _createNodeObj(identityId);
-
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        bytes memory nodeId = profileStorage.getNodeId(identityId);
-
-        if (!equalIdHashes(tail, emptyPointer)) _link(tail, nodeId);
-        setTail(nodeId);
-
-        if (equalIdHashes(head, emptyPointer)) setHead(nodeId);
-
         nodesCount += 1;
     }
 
-    function pushFront(uint96 identityId)
+    function decrementNodesCount()
         public
         onlyContracts
     {
-        _createNodeObj(identityId);
-
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        bytes memory nodeId = profileStorage.getNodeId(identityId);
-
-        if (!equalIdHashes(head, emptyPointer)) _link(nodeId, head);
-        setHead(nodeId);
-
-        if (equalIdHashes(tail, emptyPointer)) setTail(nodeId);
-
-        nodesCount += 1;
-    }
-
-    function removeNode(uint96 identityId)
-        public
-        onlyContracts
-    {
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        bytes memory nodeId = profileStorage.getNodeId(identityId);
-
-        Node memory nodeToRemove = nodes[nodeId];
-
-        if (equalIdHashes(head, nodeId) && equalIdHashes(tail, nodeId)) {
-            setHead(emptyPointer);
-            setTail(emptyPointer);
-        }
-        else if (equalIdHashes(head, nodeId)) {
-            setHead(nodeToRemove.nextNodeId);
-            nodes[head].prevNodeId = emptyPointer;
-        }
-        else if (equalIdHashes(tail, nodeId)) {
-            setTail(nodeToRemove.prevNodeId);
-            nodes[tail].nextNodeId = emptyPointer;
-        }
-        else {
-            _link(nodeToRemove.prevNodeId, nodeToRemove.nextNodeId);
-        }
-
-        delete nodes[nodeId];
-
         nodesCount -= 1;
-
-        emit NodeRemoved(identityId, nodeId);
-    }
-
-    function removeNodeById(bytes memory nodeId)
-        public
-        onlyContracts
-    {
-        Node memory nodeToRemove = nodes[nodeId];
-        require(nodeToRemove.identityId != 0, "Non-existent node id!");
-
-        if (equalIdHashes(head, nodeId) && equalIdHashes(tail, nodeId)) {
-            setHead(emptyPointer);
-            setTail(emptyPointer);
-        }
-        else if (equalIdHashes(head, nodeId)) {
-            setHead(nodeToRemove.nextNodeId);
-            nodes[head].prevNodeId = emptyPointer;
-        }
-        else if (equalIdHashes(tail, nodeId)) {
-            setTail(nodeToRemove.prevNodeId);
-            nodes[tail].nextNodeId = emptyPointer;
-        }
-        else {
-            _link(nodeToRemove.prevNodeId, nodeToRemove.nextNodeId);
-        }
-
-        delete nodes[nodeId];
-
-        nodesCount -= 1;
-
-        emit NodeRemovedByHubOwner(nodeId);
     }
 
     function setHead(bytes memory nodeId)
@@ -156,6 +73,28 @@ contract ShardingTableStorage is IShardingTableStructs {
         return nodes[nodeId];
     }
 
+    function setNode(bytes memory nodeId, Node memory newNode)
+        public
+        onlyContracts
+    {
+        nodes[nodeId] = newNode;
+    }
+
+    function removeNode(bytes memory nodeId)
+        public
+        onlyContracts
+    {
+        delete nodes[nodeId];
+    }
+
+
+    function setNodeId(bytes memory nodeId, bytes32 nodeIdSha256)
+        public
+        onlyContracts
+    {
+        nodeIdsSha256[nodeId] = nodeIdSha256;
+    }
+
     function getMultipleNodes(bytes memory firstNodeId, uint16 nodesNumber)
         public
         view
@@ -173,40 +112,12 @@ contract ShardingTableStorage is IShardingTableStructs {
         return nodesPage;
     }
 
-    function equalIdHashes(bytes memory firstId, bytes memory secondId)
+    function link(bytes memory leftNodeId, bytes memory rightNodeId)
         public
-        view
-        returns (bool)
+        onlyContracts
     {
-        return nodeIdsSha256[firstId] == nodeIdsSha256[secondId];
-    }
-
-    function _createNodeObj(uint96 identityId)
-        internal
-    {
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-
-        bytes memory nodeId = profileStorage.getNodeId(identityId);
-        bytes32 nodeIdSha256 = profileStorage.getNodeAddress(identityId, 0);  // 0 - sha256
-
-        Node memory newNode = Node(
-            identityId,
-            nodeId,
-            emptyPointer,
-            emptyPointer
-        );
-
-        nodes[nodeId] = newNode;
-        nodeIdsSha256[nodeId] = nodeIdSha256;
-
-        emit NodeObjCreated(identityId, nodeId, profileStorage.getAsk(identityId), profileStorage.getStake(identityId));
-    }
-
-    function _link(bytes memory _leftNodeId, bytes memory _rightNodeId)
-        internal
-    {
-        nodes[_leftNodeId].nextNodeId = _rightNodeId;
-        nodes[_rightNodeId].prevNodeId = _leftNodeId;
+        nodes[leftNodeId].nextNodeId = rightNodeId;
+        nodes[rightNodeId].prevNodeId = leftNodeId;
     }
 
 }
