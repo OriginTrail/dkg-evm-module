@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import { HashingProxy } from "../HashingProxy.sol";
 import { Hub } from "../Hub.sol";
-import { IdentityStorage } from "./IdentityStorage.sol";
+import { Identity } from "../Identity.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ProfileStorage {
@@ -55,16 +55,14 @@ contract ProfileStorage {
         onlyContracts
         returns (uint96)
     {
-        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+        Identity identity = Identity(hub.getContractAddress("Identity"));
 
-        bytes32 _operational_key = keccak256(abi.encodePacked(operationalWallet));
-
-        require(identityStorage.identityIds(_operational_key) == 0, "Profile already exists");
+        require(identity.getIdentityId(operationalWallet) == 0, "Profile already exists");
         require(!nodeIdsList[nodeId], "Node ID connected with another profile");
         require(nodeId.length != 0, "Node ID can't be empty");
         require(initialAsk > 0, "Ask can't be 0");
 
-        uint96 identityId = identityStorage.createIdentity(operationalWallet, adminWallet);
+        uint96 identityId = identity.createIdentity(operationalWallet, adminWallet);
 
         ProfileDefinition storage profile = profiles[identityId];
         profile.ask = initialAsk;
@@ -86,7 +84,7 @@ contract ProfileStorage {
         return profiles[identityId].ask;
     }
 
-    function getStake(uint96 identityId) 
+    function getStake(uint96 identityId)
         public
         view
         returns (uint96)
@@ -102,7 +100,7 @@ contract ProfileStorage {
         return profiles[identityId].reward;
     }
 
-    function getStakeWithdrawalAmount(uint96 identityId) 
+    function getStakeWithdrawalAmount(uint96 identityId)
         public
         view
         returns (uint96)
@@ -118,7 +116,7 @@ contract ProfileStorage {
         return profiles[identityId].rewardWithdrawalAmount;
     }
 
-    function getFrozenAmount(uint96 identityId) 
+    function getFrozenAmount(uint96 identityId)
         public
         view
         returns (uint96)
@@ -126,7 +124,7 @@ contract ProfileStorage {
         return profiles[identityId].frozenAmount;
     }
 
-    function getStakeWithdrawalTimestamp(uint96 identityId) 
+    function getStakeWithdrawalTimestamp(uint96 identityId)
         public
         view
         returns (uint256)
@@ -150,7 +148,7 @@ contract ProfileStorage {
         return profiles[identityId].freezeTimestamp;
     }
 
-    function getNodeId(uint96 identityId) 
+    function getNodeId(uint96 identityId)
         public
         view
         returns (bytes memory)
@@ -177,7 +175,7 @@ contract ProfileStorage {
 
         emit AskUpdated(identityId, getNodeId(identityId), ask);
     }
-    
+
     function setStake(uint96 identityId, uint96 stake)
         public
         onlyContracts
@@ -196,7 +194,7 @@ contract ProfileStorage {
         emit RewardUpdated(identityId, getNodeId(identityId), reward);
     }
 
-    function setStakeWithdrawalAmount(uint96 identityId, uint96 stakeWithdrawalAmount) 
+    function setStakeWithdrawalAmount(uint96 identityId, uint96 stakeWithdrawalAmount)
         public
         onlyContracts
     {
@@ -210,14 +208,14 @@ contract ProfileStorage {
         profiles[identityId].rewardWithdrawalAmount = rewardWithdrawalAmount;
     }
 
-    function setFrozenAmount(uint96 identityId, uint96 frozenAmount) 
+    function setFrozenAmount(uint96 identityId, uint96 frozenAmount)
         public
         onlyContracts
     {
         profiles[identityId].frozenAmount = frozenAmount;
     }
 
-    function setStakeWithdrawalTimestamp(uint96 identityId, uint256 stakeWithdrawalTimestamp) 
+    function setStakeWithdrawalTimestamp(uint96 identityId, uint256 stakeWithdrawalTimestamp)
         public
         onlyContracts
     {

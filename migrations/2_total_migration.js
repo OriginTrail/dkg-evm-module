@@ -7,6 +7,7 @@ var ERC20Token = artifacts.require('ERC20Token');
 var HashingProxy = artifacts.require('HashingProxy');
 var Hub = artifacts.require('Hub');
 var IdentityStorage = artifacts.require('IdentityStorage');
+var Identity = artifacts.require('Identity');
 var ParametersStorage = artifacts.require('ParametersStorage');
 var PLDSF = artifacts.require('PLDSF');
 var Profile = artifacts.require('Profile');
@@ -48,7 +49,7 @@ const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
 
 module.exports = async (deployer, network, accounts) => {
     let assertionRegistry, contentAsset, erc20Token, hashingProxy,
-        hub, identityStorage, parametersStorage, pldsfContract, profile,
+        hub, identity, identityStorage, parametersStorage, pldsfContract, profile,
         profileStorage, scoringProxy, serviceAgreementStorage, sha256Contract,
         shardingTable;
 
@@ -162,6 +163,14 @@ module.exports = async (deployer, network, accounts) => {
                     identityStorage = result;
                 });
             await hub.setContractAddress('IdentityStorage', identityStorage.address);
+            /* ---------------------------------------------------------------------------------------- */
+
+            /* ----------------------------------Identity-------------------------------------- */
+            await deployer.deploy(Identity, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    identity = result;
+                });
+            await hub.setContractAddress('Identity', identity.address);
             /* ---------------------------------------------------------------------------------------- */
 
             /* ------------------------------------Profile Storage------------------------------------- */
