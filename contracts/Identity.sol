@@ -150,17 +150,17 @@ contract Identity is IERC734Extended {
         bytes32 key;
         (purpose, keyType, key) = identityStorage.getKey(identityId, _key);
 
+        identityStorage.removeKey(identityId, _key);
+
+        if (purpose == OPERATIONAL_KEY) {
+            identityStorage.removeIdentityId(_key);
+        }
+
         emit KeyRemoved(
             identityId,
             key,
             purpose,
             keyType
         );
-
-        identityStorage.removeKey(identityId, _key);
-
-        if (purpose == OPERATIONAL_KEY) {
-            identityStorage.removeIdentityId(_key);
-        }
     }
 }

@@ -201,7 +201,7 @@ module.exports = async (deployer, network, accounts) => {
             console.log(`\t Service Agreement Storage address: ${serviceAgreementStorage.address}`);
             console.log(`\t Content Asset address: ${contentAsset.address}`);
             console.log(`\t Token address: ${erc20Token.address}`);
-            console.log(`\t Identity Storage address: ${profileStorage.address}`);
+            console.log(`\t Identity Storage address: ${identityStorage.address}`);
             console.log(`\t Identity address: ${identity.address}`);
             console.log(`\t Profile Storage address: ${profileStorage.address}`);
             console.log(`\t Profile address: ${profile.address}`);
