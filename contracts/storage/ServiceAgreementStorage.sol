@@ -225,6 +225,10 @@ contract ServiceAgreementStorage {
 
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
+        if (epoch == 0) {
+            return timeNow < (agreement.startTime + parametersStorage.commitWindowDuration());
+        }
+
         return (
             timeNow > (agreement.startTime + agreement.epochLength * epoch) &&
             timeNow < (agreement.startTime + agreement.epochLength * epoch + parametersStorage.commitWindowDuration())
