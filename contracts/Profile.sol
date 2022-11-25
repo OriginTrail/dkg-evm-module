@@ -11,45 +11,45 @@ import { ShardingTable } from "./ShardingTable.sol";
 
 contract Profile {
     event ProfileCreated(
-        uint96 indexed identityId,
+        uint72 indexed identityId,
         bytes nodeId
     );
     event StakeIncreased(
-        uint96 indexed identityId,
+        uint72 indexed identityId,
         bytes nodeId,
         uint96 stakedAmount,
         uint96 newStake
     );
     event StakeWithdrawalInitiated(
-        uint96 indexed identityId,
+        uint72 indexed identityId,
         bytes nodeId,
         uint96 stakeWithdrawalAmount,
         uint256 stakeWithdrawalTimestamp,
         uint96 newStake
     );
     event StakeWithdrawn(
-        uint96 indexed identityId,
+        uint72 indexed identityId,
         bytes nodeId,
         uint96 withdrawnStakeAmount
     );
     event RewardWithdrawalInitiated(
-        uint96 indexed identityId,
+        uint72 indexed identityId,
         bytes nodeId,
         uint96 rewardWithdrawalAmount,
         uint256 rewardWithdrawalTimestamp
     );
     event RewardWithdrawn(
-        uint96 indexed identityId,
+        uint72 indexed identityId,
         bytes nodeId,
         uint96 withdrawnRewardAmount
     );
     event StakeFrozen(
-        uint96 indexed identityId,
+        uint72 indexed identityId,
         bytes indexed nodeId,
         uint96 frozenStakeAmount
     );
     event StakeUnfrozen(
-        uint96 indexed identityId,
+        uint72 indexed identityId,
         bytes nodeId,
         uint96 unfrozenStakeAmount
     );
@@ -61,7 +61,7 @@ contract Profile {
         hub = Hub(hubAddress);
     }
 
-    modifier onlyWithAdminKey(uint96 identityId) {
+    modifier onlyWithAdminKey(uint72 identityId) {
         require(
             IdentityStorage(hub.getContractAddress("IdentityStorage")).keyHasPurpose(
                 identityId,
@@ -73,7 +73,7 @@ contract Profile {
         _;
 	}
 
-    modifier onlyWithPublicKey(uint96 identityId) {
+    modifier onlyWithPublicKey(uint72 identityId) {
         require(
             IdentityStorage(hub.getContractAddress("IdentityStorage")).keyHasPurpose(
                 identityId,
@@ -101,14 +101,14 @@ contract Profile {
 
         ProfileStorage profileStorage = ProfileStorage(profileStorageAddress);
 
-        uint96 identityId = profileStorage.createProfile(
+        uint72 identityId = profileStorage.createProfile(
             msg.sender,
             adminWallet,
             nodeId,
             initialAsk,
             initialStake
         );
-       
+
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         if (initialStake >= parametersStorage.minimalStake()) {
             ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
@@ -118,11 +118,11 @@ contract Profile {
         emit ProfileCreated(identityId, nodeId);
     }
 
-    function addNewNodeIdHash(uint96 identityId, uint8 hashFunctionId) public onlyWithPublicKey(identityId) {
+    function addNewNodeIdHash(uint72 identityId, uint8 hashFunctionId) public onlyWithPublicKey(identityId) {
         ProfileStorage(hub.getContractAddress("ProfileStorage")).setNodeAddress(identityId, hashFunctionId);
     }
 
-    function increaseStake(uint96 identityId, uint96 amount)
+    function increaseStake(uint72 identityId, uint96 amount)
         public
         onlyWithAdminKey(identityId)
     {
@@ -155,7 +155,7 @@ contract Profile {
         );
     }
 
-    function startStakeWithdrawal(uint96 identityId, uint96 amount)
+    function startStakeWithdrawal(uint72 identityId, uint96 amount)
         public
         onlyWithAdminKey(identityId)
     {
@@ -188,7 +188,7 @@ contract Profile {
         );
     }
 
-    function withdrawFreeStake(uint96 identityId)
+    function withdrawFreeStake(uint72 identityId)
         public
         onlyWithAdminKey(identityId)
     {
@@ -213,7 +213,7 @@ contract Profile {
         );
     }
 
-    function stakeReward(uint96 identityId)
+    function stakeReward(uint72 identityId)
         public
         onlyWithAdminKey(identityId)
     {
@@ -243,7 +243,7 @@ contract Profile {
         );
     }
 
-    function startRewardWithdrawal(uint96 identityId)
+    function startRewardWithdrawal(uint72 identityId)
         public
         onlyWithAdminKey(identityId)
     {
@@ -271,7 +271,7 @@ contract Profile {
         );
     }
 
-    function withdrawFreeReward(uint96 identityId)
+    function withdrawFreeReward(uint72 identityId)
         public
         onlyWithAdminKey(identityId)
     {

@@ -38,7 +38,7 @@ contract ServiceAgreementStorage {
         uint256 indexed tokenId,
         bytes keyword,
         uint8 hashFunctionId,
-        uint96 indexed identityId,
+        uint72 indexed identityId,
         bytes nodeId,
         uint32 score
     );
@@ -47,14 +47,14 @@ contract ServiceAgreementStorage {
         uint256 indexed tokenId,
         bytes keyword,
         uint8 hashFunctionId,
-        uint96 indexed identityId,
+        uint72 indexed identityId,
         bytes nodeId
     );
 
 
     struct CommitSubmission {
-        uint96 identityId;
-        uint96 nextIdentity;
+        uint72 identityId;
+        uint72 nextIdentity;
         uint32 score;
     }
 
@@ -229,7 +229,7 @@ contract ServiceAgreementStorage {
 
         epochCommits[submissionsIdx] = commitSubmissions[epochSubmissionsHead];
 
-        uint96 nextIdentityId = commitSubmissions[epochSubmissionsHead].nextIdentity;
+        uint72 nextIdentityId = commitSubmissions[epochSubmissionsHead].nextIdentity;
         while(nextIdentityId != 0) {
             bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, nextIdentityId));
 
@@ -249,7 +249,7 @@ contract ServiceAgreementStorage {
         bytes memory keyword,
         uint8 hashFunctionId,
         uint16 epoch,
-        uint96 prevIdentityId
+        uint72 prevIdentityId
     )
         public
     {
@@ -258,7 +258,7 @@ contract ServiceAgreementStorage {
         require(isCommitWindowOpen(agreementId, epoch), "Commit window is closed!");
 
         IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-        uint96 identityId = identityStorage.getIdentityId(msg.sender);
+        uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
@@ -320,7 +320,7 @@ contract ServiceAgreementStorage {
         returns (bytes32, uint256)
     {
         IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-        uint96 identityId = identityStorage.getIdentityId(msg.sender);
+        uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
         AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
         bytes32 assertionId = generalAssetInterface.getAssertionByIndex(
@@ -355,7 +355,7 @@ contract ServiceAgreementStorage {
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
         require(!isProofWindowOpen(agreementId, epoch), "Proof window is open");
 
-        uint96 identityId = IdentityStorage(hub.getContractAddress("IdentityStorage")).getIdentityId(msg.sender);
+        uint72 identityId = IdentityStorage(hub.getContractAddress("IdentityStorage")).getIdentityId(msg.sender);
 
         require(
             commitSubmissions[keccak256(abi.encodePacked(agreementId, epoch, identityId))].score != 0,
@@ -422,7 +422,7 @@ contract ServiceAgreementStorage {
         onlyAssetContracts
     {
         serviceAgreements[agreementId].scoreFunctionId = newScoreFunctionId;
-    }        
+    }
 
     function _createServiceAgreementObject(
         address operationalWallet,
@@ -447,7 +447,7 @@ contract ServiceAgreementStorage {
         agreement.scoreFunctionId = scoreFunctionId;
     }
 
-    function _insertCommitAfter(bytes32 agreementId, uint16 epoch, uint96 prevIdentityId, CommitSubmission memory commit)
+    function _insertCommitAfter(bytes32 agreementId, uint16 epoch, uint72 prevIdentityId, CommitSubmission memory commit)
         private
     {
         bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, commit.identityId));
@@ -456,7 +456,7 @@ contract ServiceAgreementStorage {
         if (prevIdentityId == 0) {
             bytes32 epochSubmissionsHead = serviceAgreements[agreementId].epochSubmissionHeads[epoch];
 
-            uint96 prevHeadIdentityId = 0;
+            uint72 prevHeadIdentityId = 0;
             if(epochSubmissionsHead != "") {
                 CommitSubmission memory commitHead = commitSubmissions[epochSubmissionsHead];
                 prevHeadIdentityId = commitHead.identityId;
@@ -480,7 +480,7 @@ contract ServiceAgreementStorage {
                 "Score of the commit must be less or equal to the one you want insert after!"
             );
 
-            uint96 nextIdentityId = prevCommit.nextIdentity;
+            uint72 nextIdentityId = prevCommit.nextIdentity;
             if (nextIdentityId != 0) {
                 bytes32 nextCommitId = keccak256(abi.encodePacked(agreementId, epoch, nextIdentityId));
                 CommitSubmission memory nextCommit = commitSubmissions[nextCommitId];
@@ -497,7 +497,7 @@ contract ServiceAgreementStorage {
         }
     }
 
-    function _link_commits(bytes32 agreementId, uint16 epoch, uint96 leftIdentityId, uint96 rightIdentityId)
+    function _link_commits(bytes32 agreementId, uint16 epoch, uint72 leftIdentityId, uint72 rightIdentityId)
         private
     {
         bytes32 leftCommitId = keccak256(abi.encodePacked(agreementId, epoch, leftIdentityId));

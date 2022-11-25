@@ -11,7 +11,7 @@ interface IShardingTableStructs {
     }
 
     struct Node {
-        uint96 identityId;
+        uint72 identityId;
         bytes id;
         bytes prevNodeId;
         bytes nextNodeId;

@@ -8,8 +8,8 @@ import {IShardingTableStructs} from './interface/IShardingTableStructs.sol';
 import {ShardingTableStorage} from './storage/ShardingTableStorage.sol';
 
 contract ShardingTable is IShardingTableStructs {
-    event NodeObjCreated(uint96 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
-    event NodeRemoved(uint96 indexed identityId, bytes nodeId);
+    event NodeObjCreated(uint72 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
+    event NodeRemoved(uint72 indexed identityId, bytes nodeId);
     event NodeRemovedByHubOwner(bytes nodeId);
 
     bytes public constant emptyPointer = "";
@@ -98,7 +98,7 @@ contract ShardingTable is IShardingTableStructs {
         return getShardingTable(shardingTableStorage.head(), shardingTableStorage.nodesCount());
     }
 
-    function pushBack(uint96 identityId)
+    function pushBack(uint72 identityId)
         public
         onlyContracts
     {
@@ -119,7 +119,7 @@ contract ShardingTable is IShardingTableStructs {
         shardingTableStorage.incrementNodesCount();
     }
 
-    function pushFront(uint96 identityId)
+    function pushFront(uint72 identityId)
         public
         onlyContracts
     {
@@ -141,7 +141,7 @@ contract ShardingTable is IShardingTableStructs {
 
     }
 
-    function removeNode(uint96 identityId)
+    function removeNode(uint72 identityId)
         public
         onlyContracts
     {
@@ -223,7 +223,7 @@ contract ShardingTable is IShardingTableStructs {
         return shardingTableStorage.nodeIdsSha256(firstId) == shardingTableStorage.nodeIdsSha256(secondId);
     }
 
-    function _createNodeObj(uint96 identityId)
+    function _createNodeObj(uint72 identityId)
         internal
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
