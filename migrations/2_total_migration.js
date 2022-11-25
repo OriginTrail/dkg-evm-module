@@ -193,7 +193,6 @@ module.exports = async (deployer, network, accounts) => {
             console.log(`\t Hashing Proxy address: ${hashingProxy.address}`);
             console.log(`\t SHA256 address: ${sha256Contract.address}`);
             console.log(`\t Scoring Proxy address: ${scoringProxy.address}`);
-            console.log(`\t PLDSF address: ${pldsfContract.address}`);
             console.log(`\t Log2PLDSF address: ${log2pldsfContract.address}`);
             console.log(`\t Sharding table storage: ${shardingTableStorage.address}`);
             console.log(`\t Sharding table: ${shardingTable.address}`);

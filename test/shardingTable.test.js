@@ -91,23 +91,23 @@ contract('DKG v6 ShardingTable', async (accounts) => {
         assert(nodes.length == 3, 'Failed to add 3 nodes to sharding table');
     });
 
-    it('Push back; only Profile contract can push back; expect to fail', async () => {
+    it('Push back; only contract can push back; expect to fail', async () => {
         try {
-            await shardingTable.pushBack('0x0000000000000000000000000000000000000000000000000000000000000001');
+            await shardingTable.pushBack('0x0000000000000000000000000000000000000000000000000000000000000001', {from: accounts[1]});
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert Function can only be called by Profile contract!'), 'Invalid error message received');
+            assert(error.message.startsWith(errorPrefix + 'revert Function can only be called by contracts!'), 'Invalid error message received');
         }
     });
 
     it('Push back; send non-existent identityId; expect to fail', async () => {
         try {
-            await shardingTable.pushBack('0x0000000000000000000000000000000000000000000000000000000001000001');
+            await shardingTable.pushBack('0x0000000000000000000000000000000000000000000000000000000001000001', {from: accounts[1]});
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert Function can only be called by Profile contract!'), 'Invalid error message received');
+            assert(error.message.startsWith(errorPrefix + 'revert Function can only be called by contracts!'), 'Invalid error message received');
         }
     });
 
@@ -115,23 +115,23 @@ contract('DKG v6 ShardingTable', async (accounts) => {
 
     });
 
-    it('Push front; only Profile contract can push front; expect to fail', async () => {
+    it('Push front; only contract can push front; expect to fail', async () => {
         try {
-            await shardingTable.pushFront('0x0000000000000000000000000000000000000000000000000000000000000001');
+            await shardingTable.pushFront('0x0000000000000000000000000000000000000000000000000000000000000001', {from: accounts[1]});
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert Function can only be called by Profile contract!'), 'Invalid error message received');
+            assert(error.message.startsWith(errorPrefix + 'revert Function can only be called by contracts!'), 'Invalid error message received');
         }
     });
 
     it('Push front; send non-existent identityId; expect to fail', async () => {
         try {
-            await shardingTable.pushFront('0x0000000000000000000000000000000000000000000000000000000001000001');
+            await shardingTable.pushFront('0x0000000000000000000000000000000000000000000000000000000001000001', {from: accounts[1]});
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert Function can only be called by Profile contract!'), 'Invalid error message received');
+            assert(error.message.startsWith(errorPrefix + 'revert Function can only be called by contracts!'), 'Invalid error message received');
         }
     });
 
@@ -139,23 +139,23 @@ contract('DKG v6 ShardingTable', async (accounts) => {
 
     });
 
-    it('Remove node; only Profile contract can remove node; expect to fail', async () => {
+    it('Remove node; only contract can remove node; expect to fail', async () => {
         try {
-            await shardingTable.pushFront('0x0000000000000000000000000000000000000000000000000000000001000001');
+            await shardingTable.pushFront('0x0000000000000000000000000000000000000000000000000000000001000001', {from: accounts[1]});
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert Function can only be called by Profile contract!'), 'Invalid error message received');
+            assert(error.message.startsWith(errorPrefix + 'revert Function can only be called by contracts!'), 'Invalid error message received');
         }
     });
 
     it('Remove node; send non-existent identityId; expect to fail', async () => {
         try {
-            await shardingTable.pushFront('0x0000000000000000000000000000000000000000000000000000000001000001');
+            await shardingTable.pushFront('0x0000000000000000000000000000000000000000000000000000000001000001', {from: accounts[1]});
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(errorPrefix + 'revert Function can only be called by Profile contract!'), 'Invalid error message received');
+            assert(error.message.startsWith(errorPrefix + 'revert Function can only be called by contracts!'), 'Invalid error message received');
         }
     });
 
