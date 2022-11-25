@@ -30,7 +30,7 @@ contract Identity is IERC734Extended {
     function createIdentity(address operational, address admin)
         public
         onlyContracts
-        returns (uint96)
+        returns (uint72)
     {
         require(operational != address(0), "Operational wallet address can't be empty");
         require(admin != address(0), "Admin wallet address can't be empty");
@@ -40,7 +40,7 @@ contract Identity is IERC734Extended {
 
         bytes32 _admin_key = keccak256(abi.encodePacked(admin));
 
-        uint96 identityId = identityStorage.getNewIdentityId();
+        uint72 identityId = identityStorage.getNewIdentityId();
         identityStorage.addKey(identityId, _admin_key, ADMIN_KEY, ECDSA);
 
         emit KeyAdded(
@@ -72,23 +72,23 @@ contract Identity is IERC734Extended {
         return identityId;
     }
 
-    function getIdentityId(address operational) public view returns (uint96) {
+    function getIdentityId(address operational) public view returns (uint72) {
         return IdentityStorage(hub.getContractAddress("IdentityStorage")).getIdentityId(operational);
     }
 
-    function getKey(uint96 identityId, bytes32 _key) public view override returns (uint256, uint256, bytes32) {
+    function getKey(uint72 identityId, bytes32 _key) public view override returns (uint256, uint256, bytes32) {
         return IdentityStorage(hub.getContractAddress("IdentityStorage")).getKey(identityId, _key);
     }
 
-    function keyHasPurpose(uint96 identityId, bytes32 _key, uint256 _purpose) public view override returns (bool) {
+    function keyHasPurpose(uint72 identityId, bytes32 _key, uint256 _purpose) public view override returns (bool) {
         return IdentityStorage(hub.getContractAddress("IdentityStorage")).keyHasPurpose(identityId, _key, _purpose);
     }
 
-    function getKeysByPurpose(uint96 identityId, uint256 _purpose) public view override returns (bytes32[] memory) {
+    function getKeysByPurpose(uint72 identityId, uint256 _purpose) public view override returns (bytes32[] memory) {
         return IdentityStorage(hub.getContractAddress("IdentityStorage")).getKeysByPurpose(identityId, _purpose);
     }
 
-    function addKey(uint96 identityId, bytes32 _key, uint256 _purpose, uint256 _type) public override {
+    function addKey(uint72 identityId, bytes32 _key, uint256 _purpose, uint256 _type) public override {
         IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
 
         require(identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY), "Admin function");
@@ -103,7 +103,7 @@ contract Identity is IERC734Extended {
         emit KeyAdded(identityId, _key, _purpose, _type);
     }
 
-    function removeKey(uint96 identityId, bytes32 _key)
+    function removeKey(uint72 identityId, bytes32 _key)
     public
     override
     {

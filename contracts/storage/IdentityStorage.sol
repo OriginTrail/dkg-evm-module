@@ -12,18 +12,18 @@ contract IdentityStorage is IERC734Extended {
 
     Hub public hub;
 
-    uint96 private _identityId;
+    uint72 private _identityId;
 
     struct Identity {
-        uint96 identityId;
+        uint72 identityId;
         mapping (bytes32 => Key) keys;
         mapping (uint256 => bytes32[]) keysByPurpose;
     }
 
     // operationalKey => identityId
-    mapping(bytes32 => uint96) public identityIds;
+    mapping(bytes32 => uint72) public identityIds;
     // identityId => Identity
-    mapping(uint96 => Identity) identities;
+    mapping(uint72 => Identity) identities;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -40,14 +40,14 @@ contract IdentityStorage is IERC734Extended {
         _;
     }
 
-    function setIdentityId(bytes32 operationalKey, uint96 identityId)
+    function setIdentityId(bytes32 operationalKey, uint72 identityId)
         public
         onlyContracts
     {
         identityIds[operationalKey] = identityId;
     }
 
-    function addKey(uint96 identityId, bytes32 _key, uint256 _purpose, uint256 _type)
+    function addKey(uint72 identityId, bytes32 _key, uint256 _purpose, uint256 _type)
         public
         override
         onlyContracts
@@ -61,14 +61,14 @@ contract IdentityStorage is IERC734Extended {
     function getNewIdentityId()
         public
         onlyContracts
-        returns (uint96)
+        returns (uint72)
     {
-        uint96 indetityId = _identityId;
+        uint72 indetityId = _identityId;
         _identityId++;
         return indetityId;
     }
 
-    function removeKey(uint96 identityId, bytes32 _key)
+    function removeKey(uint72 identityId, bytes32 _key)
         public
         override
         onlyContracts
@@ -83,7 +83,7 @@ contract IdentityStorage is IERC734Extended {
         delete identityIds[key];
     }
 
-    function removeKeyFromKeysByPurpose(uint96 identityId, bytes32 key)
+    function removeKeyFromKeysByPurpose(uint72 identityId, bytes32 key)
         public
         onlyContracts
     {
@@ -93,8 +93,7 @@ contract IdentityStorage is IERC734Extended {
         identity.keysByPurpose[identity.keys[key].purpose].removeByIndex(index);
     }
 
-
-    function getIdentityKeys(uint96 identityId, bytes32 key)
+    function getIdentityKeys(uint72 identityId, bytes32 key)
         public
         view
         returns (Key memory)
@@ -105,12 +104,12 @@ contract IdentityStorage is IERC734Extended {
     function getIdentityId(address operational)
         public
         view
-        returns (uint96)
+        returns (uint72)
     {
         return identityIds[keccak256(abi.encodePacked(operational))];
     }
 
-    function getKeysByPurpose(uint96 identityId, uint256 _purpose)
+    function getKeysByPurpose(uint72 identityId, uint256 _purpose)
         public
         view
         override
@@ -119,8 +118,7 @@ contract IdentityStorage is IERC734Extended {
         return identities[identityId].keysByPurpose[_purpose];
     }
 
-
-    function getKey(uint96 identityId, bytes32 _key)
+    function getKey(uint72 identityId, bytes32 _key)
         public
         view
         override
@@ -133,7 +131,7 @@ contract IdentityStorage is IERC734Extended {
         );
     }
 
-    function keyHasPurpose(uint96 identityId, bytes32 _key, uint256 _purpose)
+    function keyHasPurpose(uint72 identityId, bytes32 _key, uint256 _purpose)
         public
         view
         override

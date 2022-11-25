@@ -9,7 +9,7 @@ var Hub = artifacts.require('Hub');
 var IdentityStorage = artifacts.require('IdentityStorage');
 var Identity = artifacts.require('Identity');
 var ParametersStorage = artifacts.require('ParametersStorage');
-var PLDSF = artifacts.require('PLDSF');
+var Log2PLDSF = artifacts.require('Log2PLDSF');
 var Profile = artifacts.require('Profile');
 var ProfileStorage = artifacts.require('ProfileStorage');
 var ScoringProxy = artifacts.require('ScoringProxy');
@@ -49,7 +49,7 @@ const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
 
 module.exports = async (deployer, network, accounts) => {
     let assertionRegistry, contentAsset, erc20Token, hashingProxy,
-        hub, identity, identityStorage, parametersStorage, pldsfContract, profile,
+        hub, identity, identityStorage, parametersStorage, log2pldsfContract, profile,
         profileStorage, scoringProxy, serviceAgreementStorage, sha256Contract,
         shardingTable;
 
@@ -96,13 +96,13 @@ module.exports = async (deployer, network, accounts) => {
                 });
             await hub.setContractAddress('ScoringProxy', scoringProxy.address);
 
-            await deployer.deploy(PLDSF, hub.address, {gas: 6000000, from: accounts[0]})
+            await deployer.deploy(Log2PLDSF, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
-                    pldsfContract = result;
+                    log2pldsfContract = result;
                 });
 
-            // 0 - PLDSF
-            await scoringProxy.setContractAddress(0, pldsfContract.address);
+            // 0 - Log2PLDSF
+            await scoringProxy.setContractAddress(0, log2pldsfContract.address);
             /* ---------------------------------------------------------------------------------------- */
 
             /* ---------------------------------Sharding Table----------------------------------------- */
@@ -195,13 +195,14 @@ module.exports = async (deployer, network, accounts) => {
             console.log(`\t Hashing Proxy address: ${hashingProxy.address}`);
             console.log(`\t SHA256 address: ${sha256Contract.address}`);
             console.log(`\t Scoring Proxy address: ${scoringProxy.address}`);
-            console.log(`\t PLDSF address: ${pldsfContract.address}`);
+            console.log(`\t Log2PLDSF address: ${log2pldsfContract.address}`);
             console.log(`\t Sharding table: ${shardingTable.address}`);
             console.log(`\t Assertion registry address: ${assertionRegistry.address}`);
             console.log(`\t Service Agreement Storage address: ${serviceAgreementStorage.address}`);
             console.log(`\t Content Asset address: ${contentAsset.address}`);
             console.log(`\t Token address: ${erc20Token.address}`);
             console.log(`\t Identity Storage address: ${profileStorage.address}`);
+            console.log(`\t Identity address: ${identity.address}`);
             console.log(`\t Profile Storage address: ${profileStorage.address}`);
             console.log(`\t Profile address: ${profile.address}`);
 

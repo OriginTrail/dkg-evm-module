@@ -5,7 +5,8 @@ pragma solidity ^0.8.0;
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ParametersStorage is Ownable {
-    uint96 public minimalStake;
+    uint96 public minimumStake;
+    uint96 public maximumStake;
 
     uint48 public R2;
     uint32 public R1;
@@ -24,30 +25,31 @@ contract ParametersStorage is Ownable {
     uint32 public slashingFreezeDuration;
 
     constructor() {
-        minimalStake = 50000 ether;
+        minimumStake = 50_000 ether;
+        maximumStake = 5_000_000 ether;
 
         R2 = 20;
         R1 = 8;
         R0 = 3;
 
         commitWindowDuration = 15 minutes;
-        minProofWindowOffsetPerc = 90;
-        maxProofWindowOffsetPerc = 98;
-        proofWindowDurationPerc = 1;
-        replacementWindowDurationPerc = 1;
+        minProofWindowOffsetPerc = 50;
+        maxProofWindowOffsetPerc = 75;
+        proofWindowDurationPerc = 25;
+        replacementWindowDurationPerc = 0;
 
-        epochLength = 30 days;
+        epochLength = 1 hours;
 
-        stakeWithdrawalDelay = 28 days;
-        rewardWithdrawalDelay = 21 days;
+        stakeWithdrawalDelay = 5 minutes;
+        rewardWithdrawalDelay = 5 minutes;
         slashingFreezeDuration = 730 days;
     }
 
-    function setMinimalStake(uint96 newMinimalStake)
+    function setMinimumStake(uint96 newMinimumStake)
         public
         onlyOwner
     {
-        minimalStake = newMinimalStake;
+        minimumStake = newMinimumStake;
     }
 
     function setR2(uint48 newR2)
