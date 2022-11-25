@@ -72,23 +72,45 @@ contract Identity is IERC734Extended {
         return identityId;
     }
 
-    function getIdentityId(address operational) public view returns (uint72) {
+    function getIdentityId(address operational)
+        public
+        view
+        returns (uint72)
+    {
         return IdentityStorage(hub.getContractAddress("IdentityStorage")).getIdentityId(operational);
     }
 
-    function getKey(uint72 identityId, bytes32 _key) public view override returns (uint256, uint256, bytes32) {
+    function getKey(uint72 identityId, bytes32 _key)
+        public
+        view
+        override
+        returns (uint256, uint256, bytes32)
+    {
         return IdentityStorage(hub.getContractAddress("IdentityStorage")).getKey(identityId, _key);
     }
 
-    function keyHasPurpose(uint72 identityId, bytes32 _key, uint256 _purpose) public view override returns (bool) {
+    function keyHasPurpose(uint72 identityId, bytes32 _key, uint256 _purpose)
+        public
+        view
+        override
+        returns (bool)
+    {
         return IdentityStorage(hub.getContractAddress("IdentityStorage")).keyHasPurpose(identityId, _key, _purpose);
     }
 
-    function getKeysByPurpose(uint72 identityId, uint256 _purpose) public view override returns (bytes32[] memory) {
+    function getKeysByPurpose(uint72 identityId, uint256 _purpose)
+        public
+        view
+        override
+        returns (bytes32[] memory)
+    {
         return IdentityStorage(hub.getContractAddress("IdentityStorage")).getKeysByPurpose(identityId, _purpose);
     }
 
-    function addKey(uint72 identityId, bytes32 _key, uint256 _purpose, uint256 _type) public override {
+    function addKey(uint72 identityId, bytes32 _key, uint256 _purpose, uint256 _type)
+        public
+        override
+    {
         IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
 
         require(identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY), "Admin function");
@@ -104,8 +126,8 @@ contract Identity is IERC734Extended {
     }
 
     function removeKey(uint72 identityId, bytes32 _key)
-    public
-    override
+        public
+        override
     {
         IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
 
