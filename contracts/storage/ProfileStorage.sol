@@ -31,7 +31,7 @@ contract ProfileStorage {
     // nodeId => isRegistered?
     mapping(bytes => bool) public nodeIdsList;
     // identityId => Profile
-    mapping(uint72 => ProfileDefinition) public profiles;
+    mapping(uint72 => ProfileDefinition) profiles;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -78,6 +78,28 @@ contract ProfileStorage {
     }
 
     /* ----------------GETTERS------------------ */
+
+    function getProfile(uint72 identityId)
+        public
+        view
+        returns (uint96[6] memory, uint256[3] memory, bytes memory)
+    {
+        ProfileDefinition storage profile = profiles[identityId];
+
+        return (
+            [
+                profile.ask,
+                profile.stake,
+                profile.reward,
+                profile.stakeWithdrawalAmount,
+                profile.rewardWithdrawalAmount,
+                profile.frozenAmount
+            ],
+            [profile.stakeWithdrawalTimestamp, profile.rewardWithdrawalTimestamp, profile.freezeTimestamp],
+            profile.nodeId
+        );
+    }
+
     function getAsk(uint72 identityId)
         public
         view
@@ -86,7 +108,8 @@ contract ProfileStorage {
         return profiles[identityId].ask;
     }
 
-    function getStake(uint72 identityId)
+
+    function getStake(uint72 identityId) 
         public
         view
         returns (uint96)
@@ -102,7 +125,7 @@ contract ProfileStorage {
         return profiles[identityId].reward;
     }
 
-    function getStakeWithdrawalAmount(uint72 identityId)
+    function getStakeWithdrawalAmount(uint72 identityId) 
         public
         view
         returns (uint96)
@@ -118,15 +141,15 @@ contract ProfileStorage {
         return profiles[identityId].rewardWithdrawalAmount;
     }
 
-    function getFrozenAmount(uint72 identityId)
+    function getFrozenAmount(uint72 identityId) 
         public
         view
         returns (uint96)
     {
         return profiles[identityId].frozenAmount;
     }
-
-    function getStakeWithdrawalTimestamp(uint72 identityId)
+    
+    function getStakeWithdrawalTimestamp(uint72 identityId) 
         public
         view
         returns (uint256)
@@ -150,7 +173,7 @@ contract ProfileStorage {
         return profiles[identityId].freezeTimestamp;
     }
 
-    function getNodeId(uint72 identityId)
+    function getNodeId(uint72 identityId) 
         public
         view
         returns (bytes memory)
@@ -196,7 +219,7 @@ contract ProfileStorage {
         emit RewardUpdated(identityId, getNodeId(identityId), reward);
     }
 
-    function setStakeWithdrawalAmount(uint72 identityId, uint96 stakeWithdrawalAmount)
+    function setStakeWithdrawalAmount(uint72 identityId, uint96 stakeWithdrawalAmount) 
         public
         onlyContracts
     {
@@ -210,14 +233,14 @@ contract ProfileStorage {
         profiles[identityId].rewardWithdrawalAmount = rewardWithdrawalAmount;
     }
 
-    function setFrozenAmount(uint72 identityId, uint96 frozenAmount)
+    function setFrozenAmount(uint72 identityId, uint96 frozenAmount) 
         public
         onlyContracts
     {
         profiles[identityId].frozenAmount = frozenAmount;
     }
 
-    function setStakeWithdrawalTimestamp(uint72 identityId, uint256 stakeWithdrawalTimestamp)
+    function setStakeWithdrawalTimestamp(uint72 identityId, uint256 stakeWithdrawalTimestamp) 
         public
         onlyContracts
     {
