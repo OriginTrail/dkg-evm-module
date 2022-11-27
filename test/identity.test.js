@@ -1,12 +1,10 @@
 const {assert} = require('chai');
 
-
 const ERC20Token = artifacts.require('ERC20Token');
 const Identity = artifacts.require('Identity');
 const IdentityStorage = artifacts.require('IdentityStorage');
 const Profile = artifacts.require('Profile');
 const ProfileStorage = artifacts.require('ProfileStorage');
-
 
 // Contracts used in test
 let erc20Token, identity, identityStorage, profile, profileStorage;
@@ -44,7 +42,6 @@ contract('DKG v6 Identity', async (accounts) => {
     });
 
     it('Create an identity; only contracts from hub can create identity; expect to fail', async () => {
-
         try {
             await identity.createIdentity(
                 operational, admin, {from: accounts[1]}
@@ -57,7 +54,6 @@ contract('DKG v6 Identity', async (accounts) => {
     });
 
     it('Create an identity without operational wallet; operational wallet cannot be empty; expect to fail', async () => {
-
         try {
             await identity.createIdentity(
                 ZERO_ADDRESS, admin, {from: accounts[0]}
@@ -70,7 +66,6 @@ contract('DKG v6 Identity', async (accounts) => {
     });
 
     it('Create an identity without admin wallet; admin wallet cannot be empty; expect to fail', async () => {
-
         try {
             await identity.createIdentity(
                 operational, ZERO_ADDRESS, {from: accounts[0]}
@@ -83,7 +78,6 @@ contract('DKG v6 Identity', async (accounts) => {
     });
 
     it('Create an identity with same admin and operational wallet; they wallet cannot be same; expect to fail', async () => {
-
         try {
             await identity.createIdentity(
                 accounts[4], accounts[4], {from: accounts[0]}
@@ -127,7 +121,6 @@ contract('DKG v6 Identity', async (accounts) => {
 
     it('Get keys by purpose, un-existent identity id; expect to fail', async () => {
         const keys = await identity.getKeysByPurpose(3, OPERATIONAL_KEY);
-        console.log(keys);
         assert(keys.length === 0, 'Failed to get empty keys array for un-existent identity id');
     });
 
@@ -183,6 +176,20 @@ contract('DKG v6 Identity', async (accounts) => {
         } catch(error) {
             assert(error, 'Expected error but did not get one');
             assert(error.message.startsWith(ERROR_PREFIX + 'revert Key is already attached to the identity'), 'Invalid error message received: ' + error.message);
+        }
+    });
+
+    it('Remove a key from existing identity; send with operational wallet; expect to fail', async () => {
+        secondAdmin = accounts[3];
+        try {
+            await identity.removeKey(
+                identityId,
+                secondAdmin,
+                {from: accounts[1]}
+            );
+        } catch(error) {
+            assert(error, 'Expected error but did not get one');
+            assert(error.message.startsWith(ERROR_PREFIX + 'revert Admin function'), 'Invalid error message received: ' + error.message);
         }
     });
 
