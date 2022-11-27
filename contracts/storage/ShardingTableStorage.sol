@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import {Hub} from '../Hub.sol';
-import {ProfileStorage} from './ProfileStorage.sol';
 import {IShardingTableStructs} from '../interface/IShardingTableStructs.sol';
 
 contract ShardingTableStorage is IShardingTableStructs {

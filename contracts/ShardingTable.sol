@@ -43,19 +43,19 @@ contract ShardingTable is IShardingTableStructs {
     {
         address shardingTableStorageAddress = hub.getContractAddress("ShardingTableStorage");
         ShardingTableStorage shardingTableStorage = ShardingTableStorage(shardingTableStorageAddress);
-
-        Node memory startingNode = shardingTableStorage.getNode(startingNodeId);
-
-        require(
-            !_equalIdHashes(startingNode.id, "") ||
-            _equalIdHashes(startingNodeId, shardingTableStorage._NULL())
-        );
-
         NodeInfo[] memory nodesPage;
 
         if (shardingTableStorage.nodesCount() == 0) {
             return nodesPage;
         }
+
+        Node memory startingNode = shardingTableStorage.getNode(startingNodeId);
+        require(startingNode.identityId != 0, "Non-existent node id!");
+
+        require(
+            !_equalIdHashes(startingNode.id, "") ||
+            _equalIdHashes(startingNodeId, shardingTableStorage._NULL())
+        );
 
         nodesPage = new NodeInfo[](nodesNumber);
 
@@ -100,11 +100,16 @@ contract ShardingTable is IShardingTableStructs {
         public
         onlyContracts
     {
+        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        require(
+            profileStorage.getAsk(identityId) != 0,
+            "Identity does not exist!"
+        );
+
         ShardingTableStorage shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
 
         _createNodeObj(identityId);
 
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         bytes memory nodeId = profileStorage.getNodeId(identityId);
 
         if (!_equalIdHashes(shardingTableStorage.tail(), shardingTableStorage._NULL()))
@@ -122,10 +127,13 @@ contract ShardingTable is IShardingTableStructs {
         onlyContracts
     {
         ShardingTableStorage shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
+        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        require(
+            profileStorage.getAsk(identityId) != 0,
+            "Identity does not exist!"
+        );
 
         _createNodeObj(identityId);
-
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         bytes memory nodeId = profileStorage.getNodeId(identityId);
 
         if (!_equalIdHashes(shardingTableStorage.head(), shardingTableStorage._NULL()))
@@ -144,8 +152,12 @@ contract ShardingTable is IShardingTableStructs {
         onlyContracts
     {
         ShardingTableStorage shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
-
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        require(
+            profileStorage.getAsk(identityId) != 0,
+            "Identity does not exist!"
+        );
+
         bytes memory nodeId = profileStorage.getNodeId(identityId);
 
         Node memory nodeToRemove = shardingTableStorage.getNode(nodeId);
