@@ -1,23 +1,23 @@
-var BN = require('bn.js');
+const BN = require('bn.js');
 
+const AssertionRegistry = artifacts.require('AssertionRegistry');
+const ContentAsset = artifacts.require('ContentAsset');
+const ERC20Token = artifacts.require('ERC20Token');
+const HashingProxy = artifacts.require('HashingProxy');
+const Hub = artifacts.require('Hub');
+const IdentityStorage = artifacts.require('IdentityStorage');
+const ParametersStorage = artifacts.require('ParametersStorage');
+const Log2PLDSF = artifacts.require('Log2PLDSF');
+const Profile = artifacts.require('Profile');
+const ProfileStorage = artifacts.require('ProfileStorage');
+const ScoringProxy = artifacts.require('ScoringProxy');
+const ServiceAgreementStorage = artifacts.require('ServiceAgreementStorage');
+const SHA256 = artifacts.require('SHA256');
+const ShardingTable = artifacts.require('ShardingTable');
+const ShardingTableStorage = artifacts.require('ShardingTableStorage');
 
-var AssertionRegistry = artifacts.require('AssertionRegistry');
-var ContentAsset = artifacts.require('ContentAsset');
-var ERC20Token = artifacts.require('ERC20Token');
-var HashingProxy = artifacts.require('HashingProxy');
-var Hub = artifacts.require('Hub');
-var IdentityStorage = artifacts.require('IdentityStorage');
-var ParametersStorage = artifacts.require('ParametersStorage');
-var Log2PLDSF = artifacts.require('Log2PLDSF');
-var Profile = artifacts.require('Profile');
-var ProfileStorage = artifacts.require('ProfileStorage');
-var ScoringProxy = artifacts.require('ScoringProxy');
-var ServiceAgreementStorage = artifacts.require('ServiceAgreementStorage');
-var SHA256 = artifacts.require('SHA256');
-var ShardingTable = artifacts.require('ShardingTable');
-var ShardingTableStorage = artifacts.require('ShardingTableStorage');
-
-const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
+const testAccounts = [
+    "0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
     "0x2f2697b2a7BB4555687EF76f8fb4C3DFB3028E57",
     "0xBCc7F04c73214D160AA6C892FcA6DB881fb3E0F5",
     "0xE4745cE633c2a809CDE80019D864538ba95201E3",
