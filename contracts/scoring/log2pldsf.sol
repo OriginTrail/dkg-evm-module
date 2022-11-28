@@ -4,13 +4,18 @@ pragma solidity ^0.8.0;
 
 import { HashingProxy } from "../HashingProxy.sol";
 import { Hub } from "../Hub.sol";
+import { Indexable } from "../interface/Indexable.sol";
 import { IScoreFunction } from "../interface/IScoreFunction.sol";
+import { Named } from "../interface/Named.sol";
 import { ParametersStorage } from "../storage/ParametersStorage.sol";
 import { PRBMathUD60x18 } from "@prb/math/contracts/PRBMathUD60x18.sol";
 
 // Logarithmic Polynomial Long Division Score Function
-contract Log2PLDSF is IScoreFunction {
+contract Log2PLDSF is IScoreFunction, Indexable, Named {
     using PRBMathUD60x18 for uint256;
+
+    uint8 private constant _ID = 1;
+    string private constant _NAME = "Log2PLDSF";
 
     Hub public hub;
 
@@ -49,6 +54,14 @@ contract Log2PLDSF is IScoreFunction {
             "Function can only be called by hub owner"
         );
         _;
+    }
+
+    function id() public pure virtual override returns (uint8) {
+        return _ID;
+    }
+
+    function name() public pure virtual override returns (string memory) {
+        return _NAME;
     }
 
     function calculateScore(uint256 distance, uint96 stake)

@@ -6,6 +6,7 @@ import { AbstractAsset } from "./AbstractAsset.sol";
 import { AssertionRegistry } from "../AssertionRegistry.sol";
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { ServiceAgreementStorage } from "../storage/ServiceAgreementStorage.sol";
+import { Named } from "../interface/Named.sol";
 
 contract ContentAsset is AbstractAsset, ERC721 {
     struct AssetRecord {
@@ -21,6 +22,10 @@ contract ContentAsset is AbstractAsset, ERC721 {
         ERC721("ContentAsset", "DKG")
     {
         _tokenId = 0;
+    }
+
+    function name() public view override(ERC721, Named) returns (string memory) {
+        return ERC721.name();
     }
 
     function createAsset(

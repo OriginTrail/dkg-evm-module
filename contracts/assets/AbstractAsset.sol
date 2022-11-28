@@ -3,8 +3,9 @@
 pragma solidity ^0.8.0;
 
 import { Hub } from "../Hub.sol";
+import { Named } from "../interface/Named.sol";
 
-abstract contract AbstractAsset {
+abstract contract AbstractAsset is Named {
     event AssetCreated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
     event AssetUpdated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
 
