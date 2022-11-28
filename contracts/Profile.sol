@@ -99,16 +99,21 @@ contract Profile {
 
         tokenContract.transferFrom(msg.sender, profileStorageAddress, initialStake);
 
+        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         ProfileStorage profileStorage = ProfileStorage(profileStorageAddress);
 
-        uint72 identityId = profileStorage.createProfile(
-            msg.sender,
-            adminWallet,
+        bytes32 _operational_key = keccak256(abi.encodePacked(msg.sender));
+        require(identityStorage.identityIds(_operational_key) == 0, "Profile already exists");
+
+        uint72 identityId = identityStorage.createIdentity(msg.sender, adminWallet);
+
+        profileStorage.createProfile(
+            identityId,
             nodeId,
             initialAsk,
             initialStake
         );
-       
+
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         if (initialStake >= parametersStorage.minimumStake()) {
             ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
@@ -202,7 +207,7 @@ contract Profile {
             "Withdrawal period hasn't ended yet"
         );
 
-        profileStorage.transferTokens(msg.sender, stakeWithdrawalAmount);
+        _transferTokens(msg.sender, stakeWithdrawalAmount);
 
         profileStorage.setStakeWithdrawalAmount(identityId, 0);
 
@@ -286,13 +291,22 @@ contract Profile {
         );
 
         profileStorage.setRewardWithdrawalAmount(identityId, 0);
-        profileStorage.transferTokens(msg.sender, rewardWithdrawalAmount);
+        _transferTokens(msg.sender, rewardWithdrawalAmount);
 
         emit RewardWithdrawn(
             identityId,
             profileStorage.getNodeId(identityId),
             rewardWithdrawalAmount
         );
+    }
+
+    function _transferTokens(address receiver, uint96 amount)
+        internal
+    {
+        require(receiver != address(0), "Receiver address can't be empty");
+
+        IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
+        tokenContract.transfer(receiver, amount);
     }
 
     // function freezeStake(uint8 percentage)

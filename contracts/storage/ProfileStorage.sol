@@ -45,26 +45,17 @@ contract ProfileStorage {
     }
 
     function createProfile(
-        address operationalWallet,
-        address adminWallet,
+        uint72 identityId,
         bytes memory nodeId,
         uint96 initialAsk,
         uint96 initialStake
     )
         public
         onlyContracts
-        returns (uint72)
     {
-        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-
-        bytes32 _operational_key = keccak256(abi.encodePacked(operationalWallet));
-
-        require(identityStorage.identityIds(_operational_key) == 0, "Profile already exists");
         require(!nodeIdsList[nodeId], "Node ID connected with another profile");
         require(nodeId.length != 0, "Node ID can't be empty");
         require(initialAsk > 0, "Ask can't be 0");
-
-        uint72 identityId = identityStorage.createIdentity(operationalWallet, adminWallet);
 
         ProfileDefinition storage profile = profiles[identityId];
         profile.ask = initialAsk;
@@ -73,8 +64,6 @@ contract ProfileStorage {
         setNodeAddress(identityId, 0);  // TODO: Add setters for all existing hashing functions
 
         nodeIdsList[nodeId] = true;
-
-        return identityId;
     }
 
     /* ----------------GETTERS------------------ */
@@ -107,7 +96,7 @@ contract ProfileStorage {
         return profiles[identityId].ask;
     }
 
-    function getStake(uint72 identityId) 
+    function getStake(uint72 identityId)
         public
         view
         returns (uint96)
@@ -123,7 +112,7 @@ contract ProfileStorage {
         return profiles[identityId].reward;
     }
 
-    function getStakeWithdrawalAmount(uint72 identityId) 
+    function getStakeWithdrawalAmount(uint72 identityId)
         public
         view
         returns (uint96)
@@ -139,7 +128,7 @@ contract ProfileStorage {
         return profiles[identityId].rewardWithdrawalAmount;
     }
 
-    function getFrozenAmount(uint72 identityId) 
+    function getFrozenAmount(uint72 identityId)
         public
         view
         returns (uint96)
@@ -147,7 +136,7 @@ contract ProfileStorage {
         return profiles[identityId].frozenAmount;
     }
 
-    function getStakeWithdrawalTimestamp(uint72 identityId) 
+    function getStakeWithdrawalTimestamp(uint72 identityId)
         public
         view
         returns (uint256)
@@ -171,7 +160,7 @@ contract ProfileStorage {
         return profiles[identityId].freezeTimestamp;
     }
 
-    function getNodeId(uint72 identityId) 
+    function getNodeId(uint72 identityId)
         public
         view
         returns (bytes memory)
@@ -198,7 +187,7 @@ contract ProfileStorage {
 
         emit AskUpdated(identityId, getNodeId(identityId), ask);
     }
-    
+
     function setStake(uint72 identityId, uint96 stake)
         public
         onlyContracts
@@ -217,7 +206,7 @@ contract ProfileStorage {
         emit RewardUpdated(identityId, getNodeId(identityId), reward);
     }
 
-    function setStakeWithdrawalAmount(uint72 identityId, uint96 stakeWithdrawalAmount) 
+    function setStakeWithdrawalAmount(uint72 identityId, uint96 stakeWithdrawalAmount)
         public
         onlyContracts
     {
@@ -231,14 +220,14 @@ contract ProfileStorage {
         profiles[identityId].rewardWithdrawalAmount = rewardWithdrawalAmount;
     }
 
-    function setFrozenAmount(uint72 identityId, uint96 frozenAmount) 
+    function setFrozenAmount(uint72 identityId, uint96 frozenAmount)
         public
         onlyContracts
     {
         profiles[identityId].frozenAmount = frozenAmount;
     }
 
-    function setStakeWithdrawalTimestamp(uint72 identityId, uint256 stakeWithdrawalTimestamp) 
+    function setStakeWithdrawalTimestamp(uint72 identityId, uint256 stakeWithdrawalTimestamp)
         public
         onlyContracts
     {
@@ -280,15 +269,5 @@ contract ProfileStorage {
             hashFunctionId,
             profiles[identityId].nodeId
         );
-    }
-
-    function transferTokens(address receiver, uint96 amount)
-        public
-        onlyContracts
-    {
-        require(receiver != address(0), "Receiver address can't be empty");
-
-        IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
-        tokenContract.transfer(receiver, amount);
     }
 }
