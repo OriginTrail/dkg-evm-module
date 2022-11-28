@@ -96,6 +96,8 @@ contract ServiceAgreementStorage {
         view
         returns (uint256, uint16, uint128, uint96, uint8, uint8)
     {
+        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
+
         return (
             serviceAgreements[agreementId].startTime,
             serviceAgreements[agreementId].epochsNumber,
@@ -107,26 +109,32 @@ contract ServiceAgreementStorage {
     }
 
     function getAgreementStartTime(bytes32 agreementId) public view returns (uint256) {
+        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
         return serviceAgreements[agreementId].startTime;
     }
 
     function getAgreementEpochsNumber(bytes32 agreementId) public view returns (uint16) {
+        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
         return serviceAgreements[agreementId].epochsNumber;
     }
 
     function getAgreementEpochLength(bytes32 agreementId) public view returns (uint128) {
+        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
         return serviceAgreements[agreementId].epochLength;
     }
 
     function getAgreementTokenAmount(bytes32 agreementId) public view returns (uint96) {
+        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
         return serviceAgreements[agreementId].tokenAmount;
     }
 
     function getAgreementScoreFunctionId(bytes32 agreementId) public view returns (uint8) {
+        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
         return serviceAgreements[agreementId].scoreFunctionId;
     }
 
     function getAgreementProofWindowOffsetPerc(bytes32 agreementId) public view returns (uint8) {
+        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
         return serviceAgreements[agreementId].proofWindowOffsetPerc;
     }
 
@@ -143,6 +151,20 @@ contract ServiceAgreementStorage {
         public
         onlyAssetContracts
     {
+        require(operationalWallet != address(0), "Operational wallet doesn't exist");
+        require(hub.isAssetContract(assetContract), "Asset Contract not in the hub");
+        require(tokenId >= 0, "Invalid token ID");
+        require(keccak256(keyword) != keccak256(""), "Keyword can't be empty");
+
+        HashingProxy hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+        require(hashingProxy.isHashFunction(hashFunctionId), "Hash function doesn't exist");
+
+        require(epochsNumber > 0, "Epochs number must be >0");
+        require(tokenAmount > 0, "Token amount must be >0");
+
+        ScoringProxy scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
+        require(scoringProxy.isScoreFunction(scoreFunctionId), "Score function doesn't exist");
+
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
         _createServiceAgreementObject(operationalWallet, agreementId, epochsNumber, tokenAmount, scoreFunctionId);
@@ -171,7 +193,7 @@ contract ServiceAgreementStorage {
         );
     }
 
-    // TODO: Split into smaller functions
+    // TODO: Split into smaller functions [update only epochsNumber / update only tokenAmount etc.]
     function updateServiceAgreement(
         address operationalWallet,
         address assetContract,
@@ -186,7 +208,10 @@ contract ServiceAgreementStorage {
     {
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
-        // require(serviceAgreements[agreementId]);
+        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
+        require(operationalWallet != address(0), "Operational wallet doesn't exist");
+        require(epochsNumber > 0, "Epochs number must be >0");
+        require(tokenAmount > 0, "Token amount must be >0");
 
         uint96 actualBalance = serviceAgreements[agreementId].tokenAmount;
 
@@ -220,6 +245,9 @@ contract ServiceAgreementStorage {
         view
         returns (bool)
     {
+        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
+        require(epoch < serviceAgreements[agreementId].epochsNumber, "Service Agreement has been expired");
+
         uint256 timeNow = block.timestamp;
         ServiceAgreement storage agreement = serviceAgreements[agreementId];
 
@@ -240,6 +268,9 @@ contract ServiceAgreementStorage {
         view
         returns (CommitSubmission[] memory)
     {
+        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
+        require(epoch < serviceAgreements[agreementId].epochsNumber, "Service Agreement expired");
+
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         CommitSubmission[] memory epochCommits = new CommitSubmission[](parametersStorage.R2());
 
@@ -317,6 +348,9 @@ contract ServiceAgreementStorage {
         view
         returns (bool)
     {
+        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
+        require(epoch < serviceAgreements[agreementId].epochsNumber, "Service Agreement expired");
+
         uint256 timeNow = block.timestamp;
         ServiceAgreement storage agreement = serviceAgreements[agreementId];
 
@@ -369,6 +403,7 @@ contract ServiceAgreementStorage {
         public
     {
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+
         require(!isProofWindowOpen(agreementId, epoch), "Proof window is open");
 
         uint72 identityId = IdentityStorage(hub.getContractAddress("IdentityStorage")).getIdentityId(msg.sender);
@@ -437,6 +472,7 @@ contract ServiceAgreementStorage {
         public
         onlyAssetContracts
     {
+        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
         serviceAgreements[agreementId].scoreFunctionId = newScoreFunctionId;
     }        
 
