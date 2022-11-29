@@ -4,49 +4,27 @@ pragma solidity^0.8.0;
 
 import {Hub} from './Hub.sol';
 import {ProfileStorage} from './storage/ProfileStorage.sol';
+import {IShardingTableStructs} from './interface/IShardingTableStructs.sol';
+import {ShardingTableStorage} from './storage/ShardingTableStorage.sol';
 
-contract ShardingTable {
+contract ShardingTable is IShardingTableStructs {
     event NodeObjCreated(uint72 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
     event NodeRemoved(uint72 indexed identityId, bytes nodeId);
     event NodeRemovedByHubOwner(bytes nodeId);
 
-    struct Node {
-        uint72 identityId;
-        bytes id;
-        bytes prevNodeId;
-        bytes nextNodeId;
-    }
-
-    struct NodeInfo {
-        bytes id;
-        uint96 ask;
-        uint96 stake;
-    }
-
     Hub public hub;
-
-    bytes private emptyPointer;
-    bytes public head;
-    bytes public tail;
-    uint16 public nodesCount;
-
-    mapping(bytes => Node) nodes;
-    mapping(bytes => bytes32) nodeIdsSha256;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
         hub = Hub(hubAddress);
 
-        emptyPointer = "";
-        nodeIdsSha256[emptyPointer] = sha256(emptyPointer);
-        head = emptyPointer;
-        tail = emptyPointer;
-        nodesCount = 0;
     }
 
-    modifier onlyProfile() {
-        require(msg.sender == hub.getContractAddress("Profile"),
-        "Function can only be called by Profile contract!");
+    modifier onlyContracts(){
+        require(
+            hub.isContract(msg.sender),
+            "Function can only be called by contracts!"
+        );
         _;
     }
 
@@ -63,16 +41,21 @@ contract ShardingTable {
         view
         returns (NodeInfo[] memory)
     {
-        require(
-            !_equalIdHashes(nodes[startingNodeId].id, "") ||
-            _equalIdHashes(startingNodeId, emptyPointer)
-        );
-
+        address shardingTableStorageAddress = hub.getContractAddress("ShardingTableStorage");
+        ShardingTableStorage shardingTableStorage = ShardingTableStorage(shardingTableStorageAddress);
         NodeInfo[] memory nodesPage;
 
-        if (nodesCount == 0) {
+        if (shardingTableStorage.nodesCount() == 0) {
             return nodesPage;
         }
+
+        Node memory startingNode = shardingTableStorage.getNode(startingNodeId);
+        require(startingNode.identityId != 0, "Non-existent node id!");
+
+        require(
+            !_equalIdHashes(startingNode.id, "") ||
+            _equalIdHashes(startingNodeId, shardingTableStorage._NULL())
+        );
 
         nodesPage = new NodeInfo[](nodesNumber);
 
@@ -80,18 +63,22 @@ contract ShardingTable {
 
         nodesPage[0] = NodeInfo(
             startingNodeId,
-            profileStorage.getAsk(nodes[startingNodeId].identityId),
-            profileStorage.getStake(nodes[startingNodeId].identityId)
+            profileStorage.getAsk(startingNode.identityId),
+            profileStorage.getStake(startingNode.identityId)
         );
 
         uint16 i = 1;
-        while (i < nodesNumber && !_equalIdHashes(nodes[nodesPage[i-1].id].nextNodeId, emptyPointer)) {
-            bytes memory nextNodeId = nodes[nodesPage[i-1].id].nextNodeId;
+        Node memory prevNode = shardingTableStorage.getNode(nodesPage[i-1].id);
+        Node memory nextNode;
+        bytes memory nextNodeId;
+        while (i < nodesNumber && !_equalIdHashes(prevNode.nextNodeId, shardingTableStorage._NULL())) {
+            nextNodeId = shardingTableStorage.getNode(nodesPage[i-1].id).nextNodeId;
+            nextNode = shardingTableStorage.getNode(nextNodeId);
 
             nodesPage[i] = NodeInfo(
                 nextNodeId,
-                profileStorage.getAsk(nodes[nextNodeId].identityId),
-                profileStorage.getStake(nodes[nextNodeId].identityId)
+                profileStorage.getAsk(nextNode.identityId),
+                profileStorage.getStake(nextNode.identityId)
             );
             i += 1;
         }
@@ -103,72 +90,101 @@ contract ShardingTable {
         view
         returns (NodeInfo[] memory)
     {
-        return getShardingTable(head, nodesCount);
+        address shardingTableStorageAddress = hub.getContractAddress("ShardingTableStorage");
+        ShardingTableStorage shardingTableStorage = ShardingTableStorage(shardingTableStorageAddress);
+
+        return getShardingTable(shardingTableStorage.head(), shardingTableStorage.nodesCount());
     }
 
     function pushBack(uint72 identityId)
         public
-        onlyProfile
-    {        
+        onlyContracts
+    {
+        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        require(
+            profileStorage.getAsk(identityId) != 0,
+            "Identity does not exist!"
+        );
+
+        ShardingTableStorage shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
+
         _createNodeObj(identityId);
 
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         bytes memory nodeId = profileStorage.getNodeId(identityId);
 
-        if (!_equalIdHashes(tail, emptyPointer)) _link(tail, nodeId);
-        _setTail(nodeId);
+        if (!_equalIdHashes(shardingTableStorage.tail(), shardingTableStorage._NULL()))
+            shardingTableStorage.link(shardingTableStorage.tail(), nodeId);
+        shardingTableStorage.setTail(nodeId);
 
-        if (_equalIdHashes(head, emptyPointer)) _setHead(nodeId);
+        if (_equalIdHashes(shardingTableStorage.head(), shardingTableStorage._NULL()))
+            shardingTableStorage.setHead(nodeId);
 
-        nodesCount += 1;
+        shardingTableStorage.incrementNodesCount();
     }
 
     function pushFront(uint72 identityId)
         public
-        onlyProfile
+        onlyContracts
     {
-        _createNodeObj(identityId);
-
+        ShardingTableStorage shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        require(
+            profileStorage.getAsk(identityId) != 0,
+            "Identity does not exist!"
+        );
+
+        _createNodeObj(identityId);
         bytes memory nodeId = profileStorage.getNodeId(identityId);
 
-        if (!_equalIdHashes(head, emptyPointer)) _link(nodeId, head);
-        _setHead(nodeId);
+        if (!_equalIdHashes(shardingTableStorage.head(), shardingTableStorage._NULL()))
+            shardingTableStorage.link(nodeId, shardingTableStorage.head());
+        shardingTableStorage.setHead(nodeId);
 
-        if (_equalIdHashes(tail, emptyPointer)) _setTail(nodeId);
+        if (_equalIdHashes(shardingTableStorage.tail(), shardingTableStorage._NULL()))
+            shardingTableStorage.setTail(nodeId);
 
-        nodesCount += 1;
+        shardingTableStorage.incrementNodesCount();
+
     }
 
     function removeNode(uint72 identityId)
         public
-        onlyProfile
+        onlyContracts
     {
+        ShardingTableStorage shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        require(
+            profileStorage.getAsk(identityId) != 0,
+            "Identity does not exist!"
+        );
+
         bytes memory nodeId = profileStorage.getNodeId(identityId);
 
-        Node memory nodeToRemove = nodes[nodeId];
+        Node memory nodeToRemove = shardingTableStorage.getNode(nodeId);
 
+        bytes memory head = shardingTableStorage.head();
+        bytes memory tail = shardingTableStorage.tail();
         if (_equalIdHashes(head, nodeId) && _equalIdHashes(tail, nodeId)) {
-            _setHead(emptyPointer);
-            _setTail(emptyPointer);
-        }
-        else if (_equalIdHashes(head, nodeId)) {
-            _setHead(nodeToRemove.nextNodeId);
-            nodes[head].prevNodeId = emptyPointer;
-        }
-        else if (_equalIdHashes(tail, nodeId)) {
-            _setTail(nodeToRemove.prevNodeId);
-            nodes[tail].nextNodeId = emptyPointer;
-        }
-        else {
-            _link(nodeToRemove.prevNodeId, nodeToRemove.nextNodeId);
+            shardingTableStorage.setHead(shardingTableStorage._NULL());
+            shardingTableStorage.setTail(shardingTableStorage._NULL());
+        } else if (_equalIdHashes(head, nodeId)) {
+            shardingTableStorage.setHead(nodeToRemove.nextNodeId);
+            Node memory headNode = shardingTableStorage.getNode(head);
+            headNode.prevNodeId = shardingTableStorage._NULL();
+            shardingTableStorage.setNode(headNode.id, headNode);
+        } else if (_equalIdHashes(tail, nodeId)) {
+            shardingTableStorage.setTail(nodeToRemove.prevNodeId);
+            Node memory tailNode = shardingTableStorage.getNode(tail);
+            tailNode.nextNodeId = shardingTableStorage._NULL();
+            shardingTableStorage.setNode(tailNode.id, tailNode);
+        } else {
+            shardingTableStorage.link(nodeToRemove.prevNodeId, nodeToRemove.nextNodeId);
         }
 
-        delete nodes[nodeId];
+        shardingTableStorage.removeNode(nodeId);
 
-        nodesCount -= 1;
-    
+        shardingTableStorage.decrementNodesCount();
+
         emit NodeRemoved(identityId, nodeId);
     }
 
@@ -176,35 +192,52 @@ contract ShardingTable {
         public
         onlyHubOwner
     {
-        Node memory nodeToRemove = nodes[nodeId];
+        ShardingTableStorage shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
 
+        Node memory nodeToRemove = shardingTableStorage.getNode(nodeId);
+        require(nodeToRemove.identityId != 0, "Non-existent node id!");
+
+        bytes memory head = shardingTableStorage.head();
+        bytes memory tail = shardingTableStorage.tail();
         if (_equalIdHashes(head, nodeId) && _equalIdHashes(tail, nodeId)) {
-            _setHead(emptyPointer);
-            _setTail(emptyPointer);
-        }
-        else if (_equalIdHashes(head, nodeId)) {
-            _setHead(nodeToRemove.nextNodeId);
-            nodes[head].prevNodeId = emptyPointer;
-        }
-        else if (_equalIdHashes(tail, nodeId)) {
-            _setTail(nodeToRemove.prevNodeId);
-            nodes[tail].nextNodeId = emptyPointer;
-        }
-        else {
-            _link(nodeToRemove.prevNodeId, nodeToRemove.nextNodeId);
+            shardingTableStorage.setHead(shardingTableStorage._NULL());
+            shardingTableStorage.setTail(shardingTableStorage._NULL());
+        } else if (_equalIdHashes(head, nodeId)) {
+            shardingTableStorage.setHead(nodeToRemove.nextNodeId);
+            Node memory headNode = shardingTableStorage.getNode(head);
+            headNode.prevNodeId = shardingTableStorage._NULL();
+            shardingTableStorage.setNode(headNode.id, headNode);
+        } else if (_equalIdHashes(tail, nodeId)) {
+            shardingTableStorage.setTail(nodeToRemove.prevNodeId);
+            Node memory tailNode = shardingTableStorage.getNode(tail);
+            tailNode.nextNodeId = shardingTableStorage._NULL();
+            shardingTableStorage.setNode(tailNode.id, tailNode);
+        } else {
+            shardingTableStorage.link(nodeToRemove.prevNodeId, nodeToRemove.nextNodeId);
         }
 
-        delete nodes[nodeId];
+        shardingTableStorage.removeNode(nodeId);
 
-        nodesCount -= 1;
-    
+        shardingTableStorage.decrementNodesCount();
+
         emit NodeRemovedByHubOwner(nodeId);
+    }
+
+    function _equalIdHashes(bytes memory firstId, bytes memory secondId)
+        private
+        view
+        returns (bool)
+    {
+        ShardingTableStorage shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
+
+        return shardingTableStorage.nodeIdsSha256(firstId) == shardingTableStorage.nodeIdsSha256(secondId);
     }
 
     function _createNodeObj(uint72 identityId)
         internal
     {
         ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        ShardingTableStorage shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
 
         bytes memory nodeId = profileStorage.getNodeId(identityId);
         bytes32 nodeIdSha256 = profileStorage.getNodeAddress(identityId, 0);  // 0 - sha256
@@ -212,40 +245,13 @@ contract ShardingTable {
         Node memory newNode = Node(
             identityId,
             nodeId,
-            emptyPointer,
-            emptyPointer
+            shardingTableStorage._NULL(),
+            shardingTableStorage._NULL()
         );
 
-        nodes[nodeId] = newNode;
-        nodeIdsSha256[nodeId] = nodeIdSha256;
+        shardingTableStorage.setNode(nodeId, newNode);
+        shardingTableStorage.setNodeId(nodeId, nodeIdSha256);
 
         emit NodeObjCreated(identityId, nodeId, profileStorage.getAsk(identityId), profileStorage.getStake(identityId));
-    }
-
-    function _setHead(bytes memory nodeId)
-        internal
-    {
-        head = nodeId;
-    }
-
-    function _setTail(bytes memory nodeId)
-        internal
-    {
-        tail = nodeId;
-    }
-
-    function _link(bytes memory _leftNodeId, bytes memory _rightNodeId)
-        internal
-    {
-        nodes[_leftNodeId].nextNodeId = _rightNodeId;
-        nodes[_rightNodeId].prevNodeId = _leftNodeId;
-    }
-
-    function _equalIdHashes(bytes memory _firstId, bytes memory _secondId)
-        internal
-        view
-        returns (bool)
-    {
-        return nodeIdsSha256[_firstId] == nodeIdsSha256[_secondId];
     }
 }

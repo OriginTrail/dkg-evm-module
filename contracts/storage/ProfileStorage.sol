@@ -78,6 +78,7 @@ contract ProfileStorage {
     }
 
     /* ----------------GETTERS------------------ */
+
     function getProfile(uint72 identityId)
         public
         view
@@ -106,6 +107,7 @@ contract ProfileStorage {
     {
         return profiles[identityId].ask;
     }
+
 
     function getStake(uint72 identityId) 
         public
@@ -146,7 +148,7 @@ contract ProfileStorage {
     {
         return profiles[identityId].frozenAmount;
     }
-
+    
     function getStakeWithdrawalTimestamp(uint72 identityId) 
         public
         view
@@ -198,7 +200,7 @@ contract ProfileStorage {
 
         emit AskUpdated(identityId, getNodeId(identityId), ask);
     }
-    
+
     function setStake(uint72 identityId, uint96 stake)
         public
         onlyContracts

@@ -474,7 +474,7 @@ contract ServiceAgreementStorage {
     {
         require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
         serviceAgreements[agreementId].scoreFunctionId = newScoreFunctionId;
-    }        
+    }
 
     function _createServiceAgreementObject(
         address operationalWallet,

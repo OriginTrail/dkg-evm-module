@@ -54,7 +54,7 @@ contract IdentityStorage is IERC734Extended {
         uint72 identityId = _identityId;
         Identity storage identity = identities[identityId];
         _identityId++;
-        
+
         identity.keys[_admin_key].purpose = ADMIN_KEY;
         identity.keys[_admin_key].keyType = 1;  // ECDSA
         identity.keys[_admin_key].key = _admin_key;
