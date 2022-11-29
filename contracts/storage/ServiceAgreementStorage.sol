@@ -313,7 +313,7 @@ contract ServiceAgreementStorage {
     function getCommitSubmissionsScore(bytes32 commitId)
         public
         view
-        returns (uint72)
+        returns (uint40)
     {
         require(commitSubmissions[commitId].identityId != 0, "Commit submissions doesn't exist");
         return commitSubmissions[commitId].score;

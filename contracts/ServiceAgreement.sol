@@ -154,8 +154,8 @@ contract ServiceAgreement {
 
         uint96 actualBalance = serviceAgreementStorage.getAgreementTokenAmount(agreementId);
 
-        serviceAgreementStorage.setAgreementEpochsNumber(agreementId);
-        serviceAgreementStorage.setAgreementTokenAmount(agreementId);
+        serviceAgreementStorage.setAgreementEpochsNumber(agreementId, epochsNumber);
+        serviceAgreementStorage.setAgreementTokenAmount(agreementId, tokenAmount);
 
         IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
         require(
@@ -186,7 +186,7 @@ contract ServiceAgreement {
     {
         ServiceAgreementStorage serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
         require(serviceAgreementStorage.getAgreementStartTime(agreementId) > 0, "Service Agreement doesn't exist");
-        require(epoch < serviceAgreementStorage.getAgreementEpochsNumber(agreementId) > 0, "Service Agreement has been expired");
+        require(epoch < serviceAgreementStorage.getAgreementEpochsNumber(agreementId), "Service Agreement has been expired");
 
         uint256 timeNow = block.timestamp;
 
@@ -199,10 +199,10 @@ contract ServiceAgreement {
         return (
             timeNow > (
                 serviceAgreementStorage.getAgreementStartTime(agreementId)
-                + serviceAgreementStorage.getAgreementEpochlength(agreementId) * epoch
+                + serviceAgreementStorage.getAgreementEpochLength(agreementId) * epoch
             ) && timeNow < (
                 serviceAgreementStorage.getAgreementStartTime(agreementId)
-                + serviceAgreementStorage.getAgreementEpochlength(agreementId) * epoch
+                + serviceAgreementStorage.getAgreementEpochLength(agreementId) * epoch
                 + parametersStorage.commitWindowDuration()
             )
         );
@@ -225,14 +225,26 @@ contract ServiceAgreement {
 
         uint8 submissionsIdx = 0;
 
-        epochCommits[submissionsIdx] = serviceAgreementStorage.getCommitSubmissions(epochSubmissionsHead);
+        (uint72 tmpIdentityId,uint72 tmpPrevIdentityId,uint72 tmpNextIdentityId,uint40 tmpScore) = serviceAgreementStorage.getCommitSubmission(epochSubmissionsHead);
+        epochCommits[submissionsIdx] = CommitSubmissions({
+            identityId: tmpIdentityId,
+            prevIdentityId: tmpPrevIdentityId,
+            nextIdentityId: tmpNextIdentityId,
+            score: tmpScore
+        });
 
         uint72 nextIdentityId = serviceAgreementStorage.getCommitSubmissionsNextIdentityId(epochSubmissionsHead);
         while(nextIdentityId != 0) {
             bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, nextIdentityId));
 
             submissionsIdx++;
-            epochCommits[submissionsIdx] = serviceAgreementStorage.getCommitSubmissions(commitId);
+            (tmpIdentityId, tmpPrevIdentityId, tmpNextIdentityId, tmpScore) = serviceAgreementStorage.getCommitSubmission(commitId);
+            epochCommits[submissionsIdx] = CommitSubmissions({
+                identityId: tmpIdentityId,
+                prevIdentityId: tmpPrevIdentityId,
+                nextIdentityId: tmpNextIdentityId,
+                score: tmpScore
+            });
 
             nextIdentityId = serviceAgreementStorage.getCommitSubmissionsNextIdentityId(commitId);
         }
@@ -308,12 +320,12 @@ contract ServiceAgreement {
 
         uint256 proofWindowOffset = epochLength * epochsNumber * proofWindowOffsetPerc / 100;
         uint256 proofWindowDuration = (
-        epochLength * epochsNumber * parametersStorage.proofWindowDurationPerc() / 100
+            epochLength * epochsNumber * parametersStorage.proofWindowDurationPerc() / 100
         );
 
         return (
-        timeNow > (startTime + epochLength * epoch + proofWindowOffset) &&
-        timeNow < (startTime + epochLength * epoch + proofWindowOffset + proofWindowDuration)
+            timeNow > (startTime + epochLength * epoch + proofWindowOffset) &&
+            timeNow < (startTime + epochLength * epoch + proofWindowOffset + proofWindowDuration)
         );
     }
 
@@ -415,7 +427,7 @@ contract ServiceAgreement {
 
 
         serviceAgreementStorage.setAgreementTokenAmount(agreementId, serviceAgreementStorage.getAgreementTokenAmount(agreementId) - reward);
-        serviceAgreementStorage.setAgreementRewardedNodes(agreementId, epoch, serviceAgreementStorage.getAgreementRewardedNodes(agreementId, epoch) + reward);
+        serviceAgreementStorage.setAgreementRewardedNodes(agreementId, epoch, serviceAgreementStorage.getAgreementRewardedNodes(agreementId, epoch) + 1);
 
         // To make sure that node already received reward
         serviceAgreementStorage.setCommitSubmissionsScore(keccak256(abi.encodePacked(agreementId, epoch, identityId)), 0);
@@ -488,9 +500,9 @@ contract ServiceAgreement {
 
         serviceAgreementStorage.createCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
 
-        uint72 refCommitIdentityId = serviceAgreementStorage.getCommitIdentityId(refCommitId);
-        uint72 refCommitPrevIdentityId = serviceAgreementStorage.getCommitPrevIdentityId(refCommitId);
-        uint40 refCommitScore = serviceAgreementStorage.getCommitPrevIdentityId(refCommitId);
+        uint72 refCommitIdentityId = serviceAgreementStorage.getCommitSubmissionsIdentityId(refCommitId);
+        uint72 refCommitPrevIdentityId = serviceAgreementStorage.getCommitSubmissionsPrevIdentityId(refCommitId);
+        uint40 refCommitScore = serviceAgreementStorage.getCommitSubmissionsScore(refCommitId);
 
         // Replacing head
         if (i == 0) {
