@@ -108,7 +108,7 @@ contract Profile {
             initialAsk,
             initialStake
         );
-       
+
         ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         if (initialStake >= parametersStorage.minimumStake()) {
             ShardingTable shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));

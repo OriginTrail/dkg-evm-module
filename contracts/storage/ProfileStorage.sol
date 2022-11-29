@@ -76,6 +76,7 @@ contract ProfileStorage {
     }
 
     /* ----------------GETTERS------------------ */
+
     function getProfile(uint72 identityId)
         public
         view

@@ -51,7 +51,7 @@ module.exports = async (deployer, network, accounts) => {
     let assertionRegistry, contentAsset, erc20Token, hashingProxy,
         hub, identity, identityStorage, parametersStorage, log2pldsfContract, profile,
         profileStorage, scoringProxy, serviceAgreementStorage, sha256Contract,
-        shardingTable;
+        shardingTable, shardingTableStorage;
 
     switch (network) {
         case 'development':
@@ -106,6 +106,12 @@ module.exports = async (deployer, network, accounts) => {
             /* ---------------------------------------------------------------------------------------- */
 
             /* ---------------------------------Sharding Table----------------------------------------- */
+            await deployer.deploy(ShardingTableStorage, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    shardingTableStorage = result;
+                });
+            await hub.setContractAddress('ShardingTableStorage', shardingTableStorage.address);
+
             await deployer.deploy(ShardingTable, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     shardingTable = result;
@@ -196,6 +202,7 @@ module.exports = async (deployer, network, accounts) => {
             console.log(`\t SHA256 address: ${sha256Contract.address}`);
             console.log(`\t Scoring Proxy address: ${scoringProxy.address}`);
             console.log(`\t Log2PLDSF address: ${log2pldsfContract.address}`);
+            console.log(`\t Sharding table storage: ${shardingTableStorage.address}`);
             console.log(`\t Sharding table: ${shardingTable.address}`);
             console.log(`\t Assertion registry address: ${assertionRegistry.address}`);
             console.log(`\t Service Agreement Storage address: ${serviceAgreementStorage.address}`);
