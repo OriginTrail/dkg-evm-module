@@ -34,7 +34,6 @@ contract Identity is IERC734Extended {
     {
         require(operational != address(0), "Operational wallet address can't be empty");
         require(admin != address(0), "Admin wallet address can't be empty");
-        require(operational != admin, "Same address for ADMIN/OPERATIONAL purposes");
 
         IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
 
