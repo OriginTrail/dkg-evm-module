@@ -14,7 +14,7 @@ contract AssertionStorage {
 	Hub public hub;
 
 	// assertionId => Assertion
-	mapping(bytes32 => AssertionStructs.Assertion) assertionRecords;
+	mapping(bytes32 => AssertionStructs.Assertion) assertions;
 
 	constructor(address hubAddress) {
 		require(hubAddress != address(0));
@@ -37,7 +37,7 @@ contract AssertionStorage {
 		external
 		onlyContracts
 	{
-        assertionRecords[assertionId] = AssertionStructs.Assertion({
+        assertions[assertionId] = AssertionStructs.Assertion({
             timestamp: block.timestamp,
             issuer: issuer,
             size: size,
@@ -48,8 +48,32 @@ contract AssertionStorage {
 		emit AssertionCreated(assertionId, issuer, size, triplesNumber, chunksNumber);
 	}
 
-    function assertionExists(bytes32 assertionId) external onlyContracts returns (bool) {
-        return assertionRecords[assertionId].timestamp != 0;
+    function getAssertion(bytes32 assertionId) external view returns (AssertionStructs.Assertion memory) {
+        return assertions[assertionId];
+    }
+
+    function getAssertionTimestamp(bytes32 assertionId) external view returns (uint256) {
+        return assertions[assertionId].timestamp;
+    }
+
+    function getAssertionIssuer(bytes32 assertionId) external view returns (address) {
+        return assertions[assertionId].issuer;
+    }
+
+    function getAssertionSize(bytes32 assertionId) external view returns (uint128) {
+        return assertions[assertionId].size;
+    }
+
+    function getAssertionTriplesNumber(bytes32 assertionId) external view returns (uint32) {
+        return assertions[assertionId].triplesNumber;
+    }
+
+    function getAssertionChunksNumber(bytes32 assertionId) external view returns (uint96) {
+        return assertions[assertionId].chunksNumber;
+    }
+
+    function assertionExists(bytes32 assertionId) external view returns (bool) {
+        return assertions[assertionId].timestamp != 0;
     }
 
 	function _checkHub() internal view virtual {

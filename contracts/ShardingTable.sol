@@ -6,6 +6,7 @@ import { Hub } from "./Hub.sol";
 import { IdentityStorage } from "./storage/IdentityStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { ShardingTableStorage } from "./storage/ShardingTableStorage.sol";
+import { StakingStorage } from "./storage/StakingStorage.sol";
 import { ShardingTableStructs } from "./structs/ShardingTableStructs.sol";
 import { NULL } from "./constants/ShardingTableConstants.sol";
 
@@ -14,13 +15,15 @@ contract ShardingTable {
     Hub public hub;
     ProfileStorage public profileStorage;
     ShardingTableStorage public shardingTableStorage;
+    StakingStorage public stakingStorage;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
 
         hub = Hub(hubAddress);
-        shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
+        stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
     }
 
     modifier onlyContracts() {
@@ -28,7 +31,7 @@ contract ShardingTable {
         _;
     }
 
-    function getShardingTable(uint72 startingIdentityId, uint16 nodesNumber)
+    function getShardingTable(uint72 startingIdentityId, uint72 nodesNumber)
         public
         view
         returns (ShardingTableStructs.NodeInfo[] memory)
@@ -47,23 +50,23 @@ contract ShardingTable {
         nodesPage = new ShardingTableStructs.NodeInfo[](nodesNumber);
 
         ProfileStorage ps = profileStorage;
+        StakingStorage ss = stakingStorage;
 
         nodesPage[0] = ShardingTableStructs.NodeInfo({
             id: ps.getNodeId(startingIdentityId),
             ask: ps.getAsk(startingNode.identityId),
-            stake: ps.getStake(startingNode.identityId)
+            stake: ss.totalStakes(startingNode.identityId)
         });
 
-        ShardingTableStructs.Node memory nextNode;
-        uint72 nextIdentityId;
+        uint72 nextIdentityId = startingIdentityId;
         uint72 i = 1;
         while ((i < nodesNumber) && (nextIdentityId != NULL)) {
-            nextIdentityId = sts.getNode(nodesPage[i-1].id).nextIdentityId;
+            nextIdentityId = sts.getNode(nextIdentityId).nextIdentityId;
 
             nodesPage[i] = ShardingTableStructs.NodeInfo({
                 id: ps.getNodeId(nextIdentityId),
                 ask: ps.getAsk(nextIdentityId),
-                stake: ps.getStake(nextIdentityId)
+                stake: ss.totalStakes(nextIdentityId)
             });
 
             unchecked { i += 1; }

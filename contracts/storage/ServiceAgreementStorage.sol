@@ -48,7 +48,7 @@ contract ServiceAgreementStorage {
     }
 
     function getAgreementData(bytes32 agreementId)
-        public
+        external
         view
         returns (uint256, uint16, uint128, uint96, uint8[2] memory)
     {
@@ -64,24 +64,48 @@ contract ServiceAgreementStorage {
         );
     }
 
+    function getAgreementStartTime(bytes32 agreementId) external view returns (uint256) {
+        return serviceAgreements[agreementId].startTime;
+    }
+
     function setAgreementStartTime(bytes32 agreementId, uint256 startTime) external onlyContracts {
         serviceAgreements[agreementId].startTime = startTime;
+    }
+
+    function getAgreementEpochsNumber(bytes32 agreementId) external view returns (uint16) {
+        return serviceAgreements[agreementId].epochsNumber;
     }
 
     function setAgreementEpochsNumber(bytes32 agreementId, uint16 epochsNumber) external onlyContracts {
         serviceAgreements[agreementId].epochsNumber = epochsNumber;
     }
 
+    function getAgreementEpochLength(bytes32 agreementId) external view returns (uint128) {
+        return serviceAgreements[agreementId].epochLength;
+    }
+
     function setAgreementEpochLength(bytes32 agreementId, uint128 epochLength) external onlyContracts {
         serviceAgreements[agreementId].epochLength = epochLength;
+    }
+
+    function getAgreementTokenAmount(bytes32 agreementId) external view returns (uint96) {
+        return serviceAgreements[agreementId].tokenAmount;
     }
 
     function setAgreementTokenAmount(bytes32 agreementId, uint96 tokenAmount) external onlyContracts {
         serviceAgreements[agreementId].tokenAmount = tokenAmount;
     }
 
+    function getAgreementScoreFunctionId(bytes32 agreementId) external view returns (uint8) {
+        return serviceAgreements[agreementId].scoreFunctionId;
+    }
+
     function setAgreementScoreFunctionId(bytes32 agreementId, uint8 newScoreFunctionId) external onlyContracts {
         serviceAgreements[agreementId].scoreFunctionId = newScoreFunctionId;
+    }
+
+    function getAgreementProofWindowOffsetPerc(bytes32 agreementId) external view returns (uint8) {
+        return serviceAgreements[agreementId].proofWindowOffsetPerc;
     }
 
     function setAgreementProofWindowOffsetPerc(bytes32 agreementId, uint8 proofWindowOffsetPerc)
@@ -89,6 +113,28 @@ contract ServiceAgreementStorage {
         onlyContracts
     {
         serviceAgreements[agreementId].proofWindowOffsetPerc = proofWindowOffsetPerc;
+    }
+
+    function getAgreementEpochSubmissionHead(bytes32 agreementId, uint16 epoch) external view returns (bytes32) {
+        return serviceAgreements[agreementId].epochSubmissionHeads[epoch];
+    }
+
+    function setAgreementEpochSubmissionHead(bytes32 agreementId, uint16 epoch, bytes32 headCommitId)
+        external
+        onlyContracts
+    {
+        serviceAgreements[agreementId].epochSubmissionHeads[epoch] = headCommitId;
+    }
+
+    function getAgreementRewardedNodes(bytes32 agreementId, uint16 epoch) external view returns (uint32) {
+        return serviceAgreements[agreementId].rewardedNodes[epoch];
+    }
+
+    function setAgreementRewardedNodes(bytes32 agreementId, uint16 epoch, uint32 rewardedNodes)
+        external
+        onlyContracts
+    {
+        serviceAgreements[agreementId].rewardedNodes[epoch] = rewardedNodes;
     }
 
     function createCommitSubmissionObject(
@@ -109,45 +155,44 @@ contract ServiceAgreementStorage {
         });
     }
 
-    function getCommitSubmission(bytes32 commitId) external view returns (uint72[3] memory, uint40) {
-        return (
-            [
-                commitSubmissions[commitId].identityId,
-                commitSubmissions[commitId].prevIdentityId,
-                commitSubmissions[commitId].nextIdentityId
-            ],
-            commitSubmissions[commitId].score
-        );
+    function getCommitSubmission(bytes32 commitId)
+        external
+        view
+        returns (ServiceAgreementStructs.CommitSubmission memory)
+    {
+        return commitSubmissions[commitId];
     }
 
-    function setCommitSubmissionsIdentityId(bytes32 commitId, uint72 identityId) external onlyContracts {
+    function getCommitSubmissionsIdentityId(bytes32 commitId) external view returns (uint72) {
+        return commitSubmissions[commitId].identityId;
+    }
+
+    function setCommitSubmissionIdentityId(bytes32 commitId, uint72 identityId) external onlyContracts {
         commitSubmissions[commitId].identityId = identityId;
     }
 
-    function setCommitSubmissionsPrevIdentityId(bytes32 commitId, uint72 prevIdentityId) external onlyContracts {
+    function getCommitSubmissionPrevIdentityId(bytes32 commitId) external view returns (uint72) {
+        return commitSubmissions[commitId].prevIdentityId;
+    }
+
+    function setCommitSubmissionPrevIdentityId(bytes32 commitId, uint72 prevIdentityId) external onlyContracts {
         commitSubmissions[commitId].prevIdentityId = prevIdentityId;
     }
 
-    function setCommitSubmissionsNextIdentityId(bytes32 commitId, uint72 nextIdentityId) external onlyContracts {
+    function getCommitSubmissionNextIdentityId(bytes32 commitId) external view returns (uint72) {
+        return commitSubmissions[commitId].nextIdentityId;
+    }
+
+    function setCommitSubmissionNextIdentityId(bytes32 commitId, uint72 nextIdentityId) external onlyContracts {
         commitSubmissions[commitId].nextIdentityId = nextIdentityId;
     }
 
-    function setCommitSubmissionsScore(bytes32 commitId, uint40 score) external onlyContracts {
+    function getCommitSubmissionScore(bytes32 commitId) external view returns (uint40) {
+        return commitSubmissions[commitId].score;
+    }
+
+    function setCommitSubmissionScore(bytes32 commitId, uint40 score) external onlyContracts {
         commitSubmissions[commitId].score = score;
-    }
-
-    function setAgreementEpochSubmissionHead(bytes32 agreementId, uint16 epoch, bytes32 headCommitId)
-        external
-        onlyContracts
-    {
-        serviceAgreements[agreementId].epochSubmissionHeads[epoch] = headCommitId;
-    }
-
-    function setAgreementRewardedNodes(bytes32 agreementId, uint16 epoch, uint32 rewardedNodes)
-        external
-        onlyContracts
-    {
-        serviceAgreements[agreementId].rewardedNodes[epoch] = rewardedNodes;
     }
 
     function _checkHub() internal view virtual {

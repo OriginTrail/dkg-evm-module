@@ -12,8 +12,10 @@ import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerklePr
 import { ParametersStorage } from "./storage/ParametersStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { ScoringProxy } from "./ScoringProxy.sol";
-import { ShardingTable } from "./ShardingTable.sol";
+import { StakingStorage } from "./storage/StakingStorage.sol";
 import { ServiceAgreementStorage } from "./storage/ServiceAgreementStorage.sol";
+import { ServiceAgreementStructs } from "./structs/ServiceAgreementStructs.sol";
+import { Named } from "./interface/Named.sol";
 
 contract ServiceAgreement {
     event ServiceAgreementCreated(
@@ -52,30 +54,34 @@ contract ServiceAgreement {
         bytes nodeId
     );
 
-
-    struct CommitSubmissions {
-        uint72 identityId;
-        uint72 prevIdentityId;
-        uint72 nextIdentityId;
-        uint40 score;
-    }
-
     Hub public hub;
+    AssertionStorage public assertionStorage;
     ProfileStorage public profileStorage;
-    Identity
+    IdentityStorage public identityStorage;
+    ServiceAgreementStorage public serviceAgreementStorage;
+    ParametersStorage public parametersStorage;
+    HashingProxy public hashingProxy;
+    ScoringProxy public scoringProxy;
+    StakingStorage public stakingStorage;
+    IERC20 public tokenContract;
 
     constructor (address hubAddress) {
         require(hubAddress != address(0));
 
         hub = Hub(hubAddress);
-
+        assertionStorage = AssertionStorage(hub.getContractAddress("AssertionStorage"));
+        profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+        serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
+        parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+        scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
+        stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
+        tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
     modifier onlyAssetContracts() {
-        require (
-            hub.isAssetContract(msg.sender),
-            "Function can only be called by Asset Type Contracts"
-        );
+        _checkAssetContract();
         _;
     }
 
@@ -83,55 +89,65 @@ contract ServiceAgreement {
         address operationalWallet,
         address assetContract,
         uint256 tokenId,
-        bytes memory keyword,
+        bytes calldata keyword,
         uint8 hashFunctionId,
         uint16 epochsNumber,
         uint96 tokenAmount,
         uint8 scoreFunctionId
     )
-        public
+        external
         onlyAssetContracts
     {
         require(operationalWallet != address(0), "Operational wallet doesn't exist");
-        require(hub.isAssetContract(assetContract), "Asset Contract not in the hub");
+        require(hub.isAssetContract(Named(assetContract).name()), "Asset Contract not in the hub");
         require(tokenId >= 0, "Invalid token ID");
         require(keccak256(keyword) != keccak256(""), "Keyword can't be empty");
-
-        HashingProxy hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         require(hashingProxy.isHashFunction(hashFunctionId), "Hash function doesn't exist");
-
         require(epochsNumber > 0, "Epochs number must be >0");
         require(tokenAmount > 0, "Token amount must be >0");
-
-        ScoringProxy scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
         require(scoringProxy.isScoreFunction(scoreFunctionId), "Score function doesn't exist");
 
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
-        _createServiceAgreementObject(operationalWallet, agreementId, epochsNumber, tokenAmount, scoreFunctionId);
+        ParametersStorage params = parametersStorage;
 
-        IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
+        uint256 startTime = block.timestamp;
+
+        serviceAgreementStorage.createServiceAgreementObject(
+            agreementId,
+            startTime,
+            epochsNumber,
+            params.epochLength(),
+            tokenAmount,
+            scoreFunctionId,
+            params.minProofWindowOffsetPerc() + _generatePseudorandomUint8(
+                operationalWallet,
+                params.maxProofWindowOffsetPerc() - params.minProofWindowOffsetPerc() + 1
+            )
+        );
+
+        IERC20 tknc = tokenContract;
         require(
-            tokenContract.allowance(operationalWallet, address(this)) >= tokenAmount,
+            tknc.allowance(operationalWallet, address(this)) >= tokenAmount,
             "Sender allowance must be equal to or higher than chosen amount!"
         );
         require(
-            tokenContract.balanceOf(operationalWallet) >= tokenAmount,
+            tknc.balanceOf(operationalWallet) >= tokenAmount,
             "Sender balance must be equal to or higher than chosen amount!"
         );
 
-        tokenContract.transferFrom(operationalWallet, address(this), tokenAmount);
+        // TODO: Move to ServiceAgreementStorage
+        tknc.transferFrom(operationalWallet, address(this), tokenAmount);
 
-        ServiceAgreementStorage serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
         emit ServiceAgreementCreated(
             assetContract,
             tokenId,
             keyword,
             hashFunctionId,
-            serviceAgreementStorage.getAgreementStartTime(agreementId),
-            serviceAgreementStorage.getAgreementEpochsNumber(agreementId),
-            serviceAgreementStorage.getAgreementEpochLength(agreementId),
-            serviceAgreementStorage.getAgreementTokenAmount(agreementId)
+            startTime,
+            epochsNumber,
+            params.epochLength(),
+            tokenAmount
         );
     }
 
@@ -145,10 +161,9 @@ contract ServiceAgreement {
         uint16 epochsNumber,
         uint96 tokenAmount
     )
-        public
+        external
         onlyAssetContracts
     {
-        ServiceAgreementStorage serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
         require(serviceAgreementStorage.getAgreementStartTime(agreementId) > 0, "Service Agreement doesn't exist");
@@ -161,7 +176,6 @@ contract ServiceAgreement {
         serviceAgreementStorage.setAgreementEpochsNumber(agreementId, epochsNumber);
         serviceAgreementStorage.setAgreementTokenAmount(agreementId, tokenAmount);
 
-        IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
         require(
             tokenContract.allowance(operationalWallet, address(this)) >= (actualBalance - tokenAmount),
             "Sender allowance must be equal to or higher than chosen amount!"
@@ -188,13 +202,10 @@ contract ServiceAgreement {
         view
         returns (bool)
     {
-        ServiceAgreementStorage serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
         require(serviceAgreementStorage.getAgreementStartTime(agreementId) > 0, "Service Agreement doesn't exist");
         require(epoch < serviceAgreementStorage.getAgreementEpochsNumber(agreementId), "Service Agreement has been expired");
 
         uint256 timeNow = block.timestamp;
-
-        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
         if (epoch == 0) {
             return timeNow < (serviceAgreementStorage.getAgreementStartTime(agreementId) + parametersStorage.commitWindowDuration());
@@ -212,45 +223,29 @@ contract ServiceAgreement {
         );
     }
 
-    // todo: where do we use this, and should we return in form of struct or no?
-    function getCommitSubmissions(bytes32 agreementId, uint16 epoch)
-        public
+    function getTopCommitSubmissions(bytes32 agreementId, uint16 epoch)
+        external
         view
-        returns (CommitSubmissions[] memory)
+        returns (ServiceAgreementStructs.CommitSubmission[] memory)
     {
-        ServiceAgreementStorage serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
         require(serviceAgreementStorage.getAgreementStartTime(agreementId) > 0, "Service Agreement doesn't exist");
         require(epoch < serviceAgreementStorage.getAgreementEpochsNumber(agreementId), "Service Agreement expired");
 
-        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
-        CommitSubmissions[] memory epochCommits = new CommitSubmissions[](parametersStorage.R2());
+        ServiceAgreementStructs.CommitSubmission[] memory epochCommits = new ServiceAgreementStructs.CommitSubmission[](parametersStorage.R0());
 
         bytes32 epochSubmissionsHead = serviceAgreementStorage.getAgreementEpochSubmissionHead(agreementId, epoch);
 
-        uint8 submissionsIdx = 0;
+        epochCommits[0] = serviceAgreementStorage.getCommitSubmission(epochSubmissionsHead);
 
-        (uint72 tmpIdentityId,uint72 tmpPrevIdentityId,uint72 tmpNextIdentityId,uint40 tmpScore) = serviceAgreementStorage.getCommitSubmission(epochSubmissionsHead);
-        epochCommits[submissionsIdx] = CommitSubmissions({
-            identityId: tmpIdentityId,
-            prevIdentityId: tmpPrevIdentityId,
-            nextIdentityId: tmpNextIdentityId,
-            score: tmpScore
-        });
-
-        uint72 nextIdentityId = serviceAgreementStorage.getCommitSubmissionsNextIdentityId(epochSubmissionsHead);
+        uint8 submissionsIdx = 1;
+        uint72 nextIdentityId = epochCommits[0].nextIdentityId;
         while(nextIdentityId != 0) {
             bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, nextIdentityId));
+            epochCommits[submissionsIdx] = serviceAgreementStorage.getCommitSubmission(commitId);
 
-            submissionsIdx++;
-            (tmpIdentityId, tmpPrevIdentityId, tmpNextIdentityId, tmpScore) = serviceAgreementStorage.getCommitSubmission(commitId);
-            epochCommits[submissionsIdx] = CommitSubmissions({
-                identityId: tmpIdentityId,
-                prevIdentityId: tmpPrevIdentityId,
-                nextIdentityId: tmpNextIdentityId,
-                score: tmpScore
-            });
+            nextIdentityId = epochCommits[submissionsIdx].nextIdentityId;
 
-            nextIdentityId = serviceAgreementStorage.getCommitSubmissionsNextIdentityId(commitId);
+            unchecked { submissionsIdx++; }
         }
 
         return epochCommits;
@@ -259,29 +254,24 @@ contract ServiceAgreement {
     function submitCommit(
         address assetContract,
         uint256 tokenId,
-        bytes memory keyword,
+        bytes calldata keyword,
         uint8 hashFunctionId,
         uint16 epoch
     )
-        public
+        external
     {
-        ServiceAgreementStorage serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
         require(isCommitWindowOpen(agreementId, epoch), "Commit window is closed!");
 
-        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-
-        ScoringProxy scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
         uint40 score = scoringProxy.callScoreFunction(
             serviceAgreementStorage.getAgreementScoreFunctionId(agreementId),
             hashFunctionId,
             profileStorage.getNodeId(identityId),
             keyword,
-            profileStorage.getStake(identityId)
+            stakingStorage.totalStakes(identityId)
         );
 
         _insertCommit(
@@ -309,7 +299,6 @@ contract ServiceAgreement {
         view
         returns (bool)
     {
-        ServiceAgreementStorage serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
         uint256 startTime = serviceAgreementStorage.getAgreementStartTime(agreementId);
 
         require(startTime > 0, "Service Agreement doesn't exist");
@@ -319,8 +308,6 @@ contract ServiceAgreement {
         uint128 epochLength = serviceAgreementStorage.getAgreementEpochLength(agreementId);
         uint16 epochsNumber = serviceAgreementStorage.getAgreementEpochsNumber(agreementId);
         uint8 proofWindowOffsetPerc = serviceAgreementStorage.getAgreementProofWindowOffsetPerc(agreementId);
-
-        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
         uint256 proofWindowOffset = epochLength * epochsNumber * proofWindowOffsetPerc / 100;
         uint256 proofWindowDuration = (
@@ -338,22 +325,20 @@ contract ServiceAgreement {
         view
         returns (bytes32, uint256)
     {
-        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         uint72 identityId = identityStorage.getIdentityId(sender);
 
         AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
-        bytes32 assertionId = generalAssetInterface.getLatestAssertion(tokenId);
+        bytes32 assertionId = generalAssetInterface.getLatestAssertionId(tokenId);
 
-        AssertionRegistry assertionRegistry = AssertionRegistry(hub.getContractAddress("AssertionRegistry"));
-        uint256 assertionChunksNumber = assertionRegistry.getChunksNumber(assertionId);
+        uint256 assertionChunksNumber = assertionStorage.getAssertionChunksNumber(assertionId);
 
         // blockchash() function only works for last 256 blocks (25.6 min window in case of 6s block time)
         // TODO: figure out how to achieve randomness
         return (
-        assertionId,
-        uint256(
-            sha256(abi.encodePacked(epoch, identityId))
-        ) % assertionChunksNumber
+            assertionId,
+            uint256(
+                sha256(abi.encodePacked(epoch, identityId))
+            ) % assertionChunksNumber
         );
     }
 
@@ -366,10 +351,8 @@ contract ServiceAgreement {
         bytes32[] memory proof,
         bytes32 chunkHash
     )
-        public
+        external
     {
-        ServiceAgreementStorage serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
-
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
         require(!isProofWindowOpen(agreementId, epoch), "Proof window is open");
@@ -377,20 +360,18 @@ contract ServiceAgreement {
         uint72 identityId = IdentityStorage(hub.getContractAddress("IdentityStorage")).getIdentityId(msg.sender);
 
         require(
-            serviceAgreementStorage.getCommitSubmissionsScore(keccak256(abi.encodePacked(agreementId, epoch, identityId))) != 0,
+            serviceAgreementStorage.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, epoch, identityId))) != 0,
             "You've been already rewarded in this epoch"
         );
 
         bytes32 nextCommitId = serviceAgreementStorage.getAgreementEpochSubmissionHead(agreementId, epoch);
 
-        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
-
         uint8 i = 0;
         while ((identityId != serviceAgreementStorage.getCommitSubmissionsIdentityId(nextCommitId)) && i < parametersStorage.R0()) {
             nextCommitId = keccak256(
-                abi.encodePacked(agreementId, epoch, serviceAgreementStorage.getCommitSubmissionsNextIdentityId(nextCommitId))
+                abi.encodePacked(agreementId, epoch, serviceAgreementStorage.getCommitSubmissionNextIdentityId(nextCommitId))
             );
-            i++;
+            unchecked { i++; }
         }
 
         require(i < parametersStorage.R0(), "Your node hasn't been awarded for this asset in this epoch");
@@ -408,27 +389,24 @@ contract ServiceAgreement {
             "Root hash doesn't match"
         );
 
-        ProfileStorage profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-
-        // emit ProofSubmitted(
-        //     assetContract,
-        //     tokenId,
-        //     keyword,
-        //     hashFunctionId,
-        //     identityId,
-        //     profileStorage.getNodeId(identityId)
-        // );
+        emit ProofSubmitted(
+            assetContract,
+            tokenId,
+            keyword,
+            hashFunctionId,
+            identityId,
+            profileStorage.getNodeId(identityId)
+        );
 
         uint96 reward = (
-        serviceAgreementStorage.getAgreementTokenAmount(agreementId) /
-        (serviceAgreementStorage.getAgreementEpochsNumber(agreementId) - epoch + 1) /
-        (parametersStorage.R0() - serviceAgreementStorage.getAgreementRewardedNodes(agreementId, epoch))
+            serviceAgreementStorage.getAgreementTokenAmount(agreementId) /
+            (serviceAgreementStorage.getAgreementEpochsNumber(agreementId) - epoch + 1) /
+            (parametersStorage.R0() - serviceAgreementStorage.getAgreementRewardedNodes(agreementId, epoch))
         );
 
         IERC20(hub.getContractAddress("Token")).transfer(address(profileStorage), reward);
 
         profileStorage.setReward(identityId, profileStorage.getReward(identityId) + reward);
-
 
         serviceAgreementStorage.setAgreementTokenAmount(agreementId, serviceAgreementStorage.getAgreementTokenAmount(agreementId) - reward);
         serviceAgreementStorage.setAgreementRewardedNodes(agreementId, epoch, serviceAgreementStorage.getAgreementRewardedNodes(agreementId, epoch) + 1);
@@ -437,38 +415,8 @@ contract ServiceAgreement {
         serviceAgreementStorage.setCommitSubmissionsScore(keccak256(abi.encodePacked(agreementId, epoch, identityId)), 0);
     }
 
-    function setScoringFunction(bytes32 agreementId, uint8 newScoreFunctionId)
-        public
-        onlyAssetContracts
-    {
-        ServiceAgreementStorage serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
+    function setScoringFunction(bytes32 agreementId, uint8 newScoreFunctionId) external onlyAssetContracts {
         serviceAgreementStorage.setAgreementScoreFunctionId(agreementId, newScoreFunctionId);
-    }
-
-    function _createServiceAgreementObject(
-        address operationalWallet,
-        bytes32 agreementId,
-        uint16 epochsNumber,
-        uint96 tokenAmount,
-        uint8 scoreFunctionId
-    )
-        private
-    {
-        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
-        ServiceAgreementStorage serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
-
-        serviceAgreementStorage.createServiceAgreementObject(
-            agreementId,
-            block.timestamp,
-            epochsNumber,
-            parametersStorage.epochLength(),
-            tokenAmount,
-            scoreFunctionId,
-            parametersStorage.minProofWindowOffsetPerc() + _generatePseudorandomUint8(
-            operationalWallet,
-            parametersStorage.maxProofWindowOffsetPerc() - parametersStorage.minProofWindowOffsetPerc() + 1
-        )
-        );
     }
 
     function _insertCommit(
@@ -481,12 +429,8 @@ contract ServiceAgreement {
     )
         private
     {
-        ServiceAgreementStorage serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
-
         bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, identityId));
         bytes32 refCommitId = serviceAgreementStorage.getAgreementEpochSubmissionHead(agreementId, epoch);
-
-        ParametersStorage parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
 
         uint8 i = 0;
         while (
@@ -497,7 +441,7 @@ contract ServiceAgreement {
             refCommitId = keccak256(
                 abi.encodePacked(agreementId, epoch, serviceAgreementStorage.getCommitSubmissionsNextIdentityId(refCommitId))
             );
-            i++;
+            unchecked { i++; }
         }
 
         require(i < parametersStorage.R0(), "Node rank should be < R0");
@@ -536,11 +480,7 @@ contract ServiceAgreement {
         }
     }
 
-    function _link_commits(bytes32 agreementId, uint16 epoch, uint72 leftIdentityId, uint72 rightIdentityId)
-        private
-    {
-        ServiceAgreementStorage serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
-
+    function _link_commits(bytes32 agreementId, uint16 epoch, uint72 leftIdentityId, uint72 rightIdentityId) private {
         bytes32 leftCommitId = keccak256(abi.encodePacked(agreementId, epoch, leftIdentityId));
         serviceAgreementStorage.setCommitSubmissionsNextIdentityId(leftCommitId, rightIdentityId);
 
@@ -552,15 +492,15 @@ contract ServiceAgreement {
         private
         returns (bytes32)
     {
-        HashingProxy hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         return hashingProxy.callHashFunction(hashFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
     }
 
-    function _generatePseudorandomUint8(address sender, uint8 limit)
-        private
-        view
-        returns (uint8)
-    {
+    function _generatePseudorandomUint8(address sender, uint8 limit) private view returns (uint8) {
         return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, sender, block.number))) % limit);
     }
+
+    function _checkAssetContract() internal view virtual {
+        require (hub.isAssetContract(msg.sender), "Fn can only be called by assets");
+    }
+
 }
