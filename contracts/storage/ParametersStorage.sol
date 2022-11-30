@@ -49,7 +49,7 @@ contract ParametersStorage is Ownable {
         delegationEnabled = false;
     }
 
-    function setMinimumStake(uint256 newMinimumStake)
+    function setMinimumStake(uint96 newMinimumStake)
         public
         onlyOwner
     {
