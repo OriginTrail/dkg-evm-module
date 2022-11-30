@@ -47,7 +47,12 @@ contract Staking {
         address sharesContractAddress = profileStorage.getSharesContractAddress(identityId);
         Shares sharesContract = Shares(sharesContractAddress);
 
-        uint256 sharesMinted = uint256(tracAdded) * sharesContract.totalSupply() / uint256(stakingStorage.totalStakes(identityId));
+        uint256 sharesMinted;
+        if(sharesContract.totalSupply() == 0) {
+            sharesMinted = uint256(tracAdded);
+        } else {
+            sharesMinted = uint256(tracAdded) * sharesContract.totalSupply() / uint256(stakingStorage.totalStakes(identityId));
+        }
         sharesContract.mint(msg.sender, sharesMinted);
 
         // TODO: wait for input where to transfer

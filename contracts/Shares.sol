@@ -17,13 +17,11 @@ contract Shares is ERC20, ERC20Burnable {
         _;
     }
 
-    constructor(uint256 initialSupply, address hubAddress, string memory name, string memory symbol)
+    constructor(address hubAddress, string memory name, string memory symbol)
         ERC20(name, symbol)
     {
         require(hubAddress != address(0));
         hub = Hub(hubAddress);
-
-        _mint(msg.sender, initialSupply);
     }
 
     function mint(address to, uint256 amount)
