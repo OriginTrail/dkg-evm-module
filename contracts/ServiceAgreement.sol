@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import { AbstractAsset } from "./assets/AbstractAsset.sol";
-import { AssertionRegistry } from "./AssertionRegistry.sol";
+import { AssertionStorage } from "./storage/AssertionStorage.sol";
 import { HashingProxy } from "./HashingProxy.sol";
 import { Hub } from "./Hub.sol";
 import { IdentityStorage } from "./storage/IdentityStorage.sol";
@@ -61,10 +61,14 @@ contract ServiceAgreement {
     }
 
     Hub public hub;
+    ProfileStorage public profileStorage;
+    Identity
 
     constructor (address hubAddress) {
         require(hubAddress != address(0));
+
         hub = Hub(hubAddress);
+
     }
 
     modifier onlyAssetContracts() {
@@ -557,7 +561,6 @@ contract ServiceAgreement {
         view
         returns (uint8)
     {
-        // TODO: Test type conversion
         return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, sender, block.number))) % limit);
     }
 }

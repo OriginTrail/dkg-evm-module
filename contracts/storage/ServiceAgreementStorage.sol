@@ -3,43 +3,26 @@
 pragma solidity ^0.8.0;
 
 import { Hub } from "../Hub.sol";
+import { ServiceAgreementStructs } from "../structs/ServiceAgreementStructs.sol";
 
 contract ServiceAgreementStorage {
-
-    struct CommitSubmission {
-        uint72 identityId;
-        uint72 prevIdentityId;
-        uint72 nextIdentityId;
-        uint40 score;
-    }
-
-    struct ServiceAgreement {
-        uint256 startTime;
-        uint16 epochsNumber;
-        uint128 epochLength;
-        uint96 tokenAmount;
-        uint8 scoreFunctionId;
-        uint8 proofWindowOffsetPerc;  // Perc == In % of the epoch
-        mapping(uint16 => bytes32) epochSubmissionHeads;  // epoch => headCommitId
-        mapping(uint16 => uint32) rewardedNodes;
-    }
 
     Hub public hub;
 
     // CommitId [keccak256(agreementId + epoch + identityId)] => CommitSubmission
-    mapping(bytes32 => CommitSubmission) commitSubmissions;
+    mapping(bytes32 => ServiceAgreementStructs.CommitSubmission) commitSubmissions;
 
     // hash(asset type contract + tokenId + key) -> ServiceAgreement
-    mapping(bytes32 => ServiceAgreement) serviceAgreements;
+    mapping(bytes32 => ServiceAgreementStructs.ServiceAgreement) serviceAgreements;
 
     constructor (address hubAddress) {
         require(hubAddress != address(0));
+
         hub = Hub(hubAddress);
     }
 
     modifier onlyContracts() {
-        require(hub.isContract(msg.sender),
-            "Function can only be called by contracts!");
+        _checkHub();
         _;
     }
 
@@ -52,10 +35,10 @@ contract ServiceAgreementStorage {
         uint8 scoreFunctionId,
         uint8 proofWindowOffsetPerc
     )
-        public
+        external
         onlyContracts
     {
-        ServiceAgreement storage agreement = serviceAgreements[agreementId];
+        ServiceAgreementStructs.ServiceAgreement storage agreement = serviceAgreements[agreementId];
         agreement.startTime = startTime;
         agreement.epochsNumber = epochsNumber;
         agreement.epochLength = epochLength;
@@ -64,52 +47,47 @@ contract ServiceAgreementStorage {
         agreement.proofWindowOffsetPerc = proofWindowOffsetPerc;
     }
 
-    function setAgreementStartTime(bytes32 agreementId, uint256 startTime)
+    function getAgreementData(bytes32 agreementId)
         public
-        onlyContracts
+        view
+        returns (uint256, uint16, uint128, uint96, uint8[2] memory)
     {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
+        return (
+            serviceAgreements[agreementId].startTime,
+            serviceAgreements[agreementId].epochsNumber,
+            serviceAgreements[agreementId].epochLength,
+            serviceAgreements[agreementId].tokenAmount,
+            [
+                serviceAgreements[agreementId].scoreFunctionId,
+                serviceAgreements[agreementId].proofWindowOffsetPerc
+            ]
+        );
+    }
+
+    function setAgreementStartTime(bytes32 agreementId, uint256 startTime) external onlyContracts {
         serviceAgreements[agreementId].startTime = startTime;
     }
 
-    function setAgreementEpochsNumber(bytes32 agreementId, uint16 epochsNumber)
-        public
-        onlyContracts
-    {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
+    function setAgreementEpochsNumber(bytes32 agreementId, uint16 epochsNumber) external onlyContracts {
         serviceAgreements[agreementId].epochsNumber = epochsNumber;
     }
 
-    function setAgreementEpochLength(bytes32 agreementId, uint128 epochLength)
-        public
-        onlyContracts
-    {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
+    function setAgreementEpochLength(bytes32 agreementId, uint128 epochLength) external onlyContracts {
         serviceAgreements[agreementId].epochLength = epochLength;
     }
 
-    function setAgreementTokenAmount(bytes32 agreementId, uint96 tokenAmount)
-        public
-        onlyContracts
-    {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
+    function setAgreementTokenAmount(bytes32 agreementId, uint96 tokenAmount) external onlyContracts {
         serviceAgreements[agreementId].tokenAmount = tokenAmount;
     }
 
-    function setAgreementScoreFunctionId(bytes32 agreementId, uint8 newScoreFunctionId)
-        public
-        onlyContracts
-    {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
+    function setAgreementScoreFunctionId(bytes32 agreementId, uint8 newScoreFunctionId) external onlyContracts {
         serviceAgreements[agreementId].scoreFunctionId = newScoreFunctionId;
     }
 
-
     function setAgreementProofWindowOffsetPerc(bytes32 agreementId, uint8 proofWindowOffsetPerc)
-        public
+        external
         onlyContracts
     {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
         serviceAgreements[agreementId].proofWindowOffsetPerc = proofWindowOffsetPerc;
     }
 
@@ -120,203 +98,60 @@ contract ServiceAgreementStorage {
         uint72 nextIdentityId,
         uint40 score
     )
-        public
+        external
         onlyContracts
     {
-        CommitSubmission storage commit = commitSubmissions[commitId];
-        commit.identityId = identityId;
-        commit.prevIdentityId = prevIdentityId;
-        commit.nextIdentityId = nextIdentityId;
-        commit.score = score;
+        commitSubmissions[commitId] = ServiceAgreementStructs.CommitSubmission({
+            identityId: identityId,
+            prevIdentityId: prevIdentityId,
+            nextIdentityId: nextIdentityId,
+            score: score
+        });
     }
 
-    function setCommitSubmissionsIdentityId(bytes32 commitId, uint72 identityId)
-        public
-        onlyContracts
-    {
-        require(commitSubmissions[commitId].identityId != 0, "Commit submissions doesn't exist");
+    function getCommitSubmission(bytes32 commitId) external view returns (uint72[3] memory, uint40) {
+        return (
+            [
+                commitSubmissions[commitId].identityId,
+                commitSubmissions[commitId].prevIdentityId,
+                commitSubmissions[commitId].nextIdentityId
+            ],
+            commitSubmissions[commitId].score
+        );
+    }
+
+    function setCommitSubmissionsIdentityId(bytes32 commitId, uint72 identityId) external onlyContracts {
         commitSubmissions[commitId].identityId = identityId;
     }
 
-    function setCommitSubmissionsPrevIdentityId(bytes32 commitId, uint72 prevIdentityId)
-        public
-        onlyContracts
-    {
-        require(commitSubmissions[commitId].identityId != 0, "Commit submissions doesn't exist");
+    function setCommitSubmissionsPrevIdentityId(bytes32 commitId, uint72 prevIdentityId) external onlyContracts {
         commitSubmissions[commitId].prevIdentityId = prevIdentityId;
     }
 
-    function setCommitSubmissionsNextIdentityId(bytes32 commitId, uint72 nextIdentityId)
-        public
-        onlyContracts
-    {
-        require(commitSubmissions[commitId].identityId != 0, "Commit submissions doesn't exist");
+    function setCommitSubmissionsNextIdentityId(bytes32 commitId, uint72 nextIdentityId) external onlyContracts {
         commitSubmissions[commitId].nextIdentityId = nextIdentityId;
     }
 
-    function setCommitSubmissionsScore(bytes32 commitId, uint40 score)
-        public
-        onlyContracts
-    {
-        require(commitSubmissions[commitId].identityId != 0, "Commit submissions doesn't exist");
+    function setCommitSubmissionsScore(bytes32 commitId, uint40 score) external onlyContracts {
         commitSubmissions[commitId].score = score;
     }
 
     function setAgreementEpochSubmissionHead(bytes32 agreementId, uint16 epoch, bytes32 headCommitId)
-        public
+        external
         onlyContracts
     {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
         serviceAgreements[agreementId].epochSubmissionHeads[epoch] = headCommitId;
     }
 
     function setAgreementRewardedNodes(bytes32 agreementId, uint16 epoch, uint32 rewardedNodes)
-        public
+        external
         onlyContracts
     {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
         serviceAgreements[agreementId].rewardedNodes[epoch] = rewardedNodes;
     }
 
-    function getAgreementData(bytes32 agreementId)
-        public
-        view
-        returns (uint256, uint16, uint128, uint96, uint8, uint8)
-    {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
-
-        return (
-        serviceAgreements[agreementId].startTime,
-        serviceAgreements[agreementId].epochsNumber,
-        serviceAgreements[agreementId].epochLength,
-        serviceAgreements[agreementId].tokenAmount,
-        serviceAgreements[agreementId].scoreFunctionId,
-        serviceAgreements[agreementId].proofWindowOffsetPerc
-        );
-    }
-
-    function getAgreementStartTime(bytes32 agreementId)
-        public
-        view
-        returns (uint256)
-    {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
-        return serviceAgreements[agreementId].startTime;
-    }
-
-    function getAgreementEpochsNumber(bytes32 agreementId)
-        public
-        view
-        returns (uint16)
-    {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
-        return serviceAgreements[agreementId].epochsNumber;
-    }
-
-    function getAgreementEpochLength(bytes32 agreementId)
-        public
-        view
-        returns (uint128)
-    {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
-        return serviceAgreements[agreementId].epochLength;
-    }
-
-    function getAgreementTokenAmount(bytes32 agreementId)
-        public
-        view
-        returns (uint96)
-    {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
-        return serviceAgreements[agreementId].tokenAmount;
-    }
-
-    function getAgreementScoreFunctionId(bytes32 agreementId)
-        public
-        view
-        returns (uint8)
-    {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
-        return serviceAgreements[agreementId].scoreFunctionId;
-    }
-
-    function getAgreementProofWindowOffsetPerc(bytes32 agreementId)
-        public
-        view
-        returns (uint8)
-    {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
-        return serviceAgreements[agreementId].proofWindowOffsetPerc;
-    }
-
-    function getAgreementEpochSubmissionHead(bytes32 agreementId, uint16 epoch)
-        public
-        view
-        returns (bytes32)
-    {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
-        return serviceAgreements[agreementId].epochSubmissionHeads[epoch];
-    }
-
-    function getAgreementRewardedNodes(bytes32 agreementId, uint16 epoch)
-        public
-        view
-        returns (uint32)
-    {
-        require(serviceAgreements[agreementId].startTime > 0, "Service Agreement doesn't exist");
-        return serviceAgreements[agreementId].rewardedNodes[epoch];
-    }
-
-    function getCommitSubmission(
-        bytes32 commitId
-    )
-        public
-        view
-        returns (uint72, uint72, uint72, uint40)
-    {
-        require(commitSubmissions[commitId].identityId != 0, "Commit submissions doesn't exist");
-        return (
-        commitSubmissions[commitId].identityId,
-        commitSubmissions[commitId].prevIdentityId,
-        commitSubmissions[commitId].nextIdentityId,
-        commitSubmissions[commitId].score
-        );
-    }
-
-    function getCommitSubmissionsIdentityId(bytes32 commitId)
-        public
-        view
-        returns (uint72)
-    {
-        require(commitSubmissions[commitId].identityId != 0, "Commit submissions doesn't exist");
-        return commitSubmissions[commitId].identityId;
-    }
-
-    function getCommitSubmissionsPrevIdentityId(bytes32 commitId)
-        public
-        view
-        returns (uint72)
-    {
-        require(commitSubmissions[commitId].identityId != 0, "Commit submissions doesn't exist");
-        return commitSubmissions[commitId].prevIdentityId;
-    }
-
-    function getCommitSubmissionsNextIdentityId(bytes32 commitId)
-        public
-        view
-        returns (uint72)
-    {
-        require(commitSubmissions[commitId].identityId != 0, "Commit submissions doesn't exist");
-        return commitSubmissions[commitId].nextIdentityId;
-    }
-
-    function getCommitSubmissionsScore(bytes32 commitId)
-        public
-        view
-        returns (uint40)
-    {
-        require(commitSubmissions[commitId].identityId != 0, "Commit submissions doesn't exist");
-        return commitSubmissions[commitId].score;
+    function _checkHub() internal view virtual {
+        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
 }

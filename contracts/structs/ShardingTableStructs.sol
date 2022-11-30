@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-interface IShardingTableStructs {
+library ShardingTableStructs {
 
     struct NodeInfo {
         bytes id;
@@ -12,9 +12,8 @@ interface IShardingTableStructs {
 
     struct Node {
         uint72 identityId;
-        bytes id;
-        bytes prevNodeId;
-        bytes nextNodeId;
+        uint72 prevIdentityId;
+        uint72 nextIdentityId;
     }
 
 }
