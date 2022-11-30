@@ -66,6 +66,27 @@ module.exports = {
       gasPrice: 100000000000,
       skipDryRun: true,
       provider: () => new HDWalletProvider([private_key], rpc_endpoint),
+    },
+    otp_devnet: {
+      network_id: 80001,
+      gas: 10000000, // Gas limit used for deploys
+      gasPrice: 100000000000,
+      skipDryRun: true,
+      provider: () => new HDWalletProvider([private_key], process.env.OTP_DEVNET_RPC),
+    },
+    otp_testnet: {
+      network_id: 80001,
+      gas: 10000000, // Gas limit used for deploys
+      gasPrice: 100000000000,
+      skipDryRun: true,
+      provider: () => new HDWalletProvider([private_key], process.env.OTP_TESTNET_RPC),
+    },
+    otp_mainnet: {
+      network_id: 80001,
+      gas: 10000000, // Gas limit used for deploys
+      gasPrice: 100000000000,
+      skipDryRun: true,
+      provider: () => new HDWalletProvider([private_key], process.env.OTP_MAINNET_RPC),
     }
 
 
