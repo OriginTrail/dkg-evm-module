@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import { Named } from "../interface/Named.sol";
 
 library UnorderedNamedContractDynamicSetLib {
+
     struct Contract {
         string name;
         address addr;
@@ -15,7 +16,7 @@ library UnorderedNamedContractDynamicSetLib {
         Contract[] contractList;
     }
 
-    function append(Set storage self, string memory name, address addr) internal {
+    function append(Set storage self, string calldata name, address addr) internal {
         require(
             keccak256(abi.encodePacked(name)) != keccak256(abi.encodePacked("")),
             "(ContractSet) Name cannot be empty"
@@ -26,13 +27,13 @@ library UnorderedNamedContractDynamicSetLib {
         self.contractList.push(Contract(name, addr));
     }
 
-    function update(Set storage self, string memory name, address addr) internal {
+    function update(Set storage self, string calldata name, address addr) internal {
         require(addr != address(0), "(ContractSet) Address cannot be 0x0");
         require(!exists(self, name), "(ContractSet) Contract with given name doesn't exists");
         self.contractList[self.indexPointers[name]].addr = addr;
     }
 
-    function remove(Set storage self, string memory name) internal {
+    function remove(Set storage self, string calldata name) internal {
         require(!exists(self, name), "(ContractSet) Contract with given name doesn't exists");
         uint256 contractToRemoveIndex = self.indexPointers[name];
         Contract memory contractToMove = self.contractList[size(self) - 1];
@@ -45,7 +46,7 @@ library UnorderedNamedContractDynamicSetLib {
         self.contractList.pop();
     }
 
-    function get(Set storage self, string memory name) internal view returns (Contract memory) {
+    function get(Set storage self, string calldata name) internal view returns (Contract memory) {
         require(!exists(self, name), "(ContractSet) Contract with given name doesn't exists");
         return self.contractList[self.indexPointers[name]];
     }
@@ -54,7 +55,7 @@ library UnorderedNamedContractDynamicSetLib {
         return self.contractList;
     }
 
-    function getIndex(Set storage self, string memory name) internal view returns (uint256) {
+    function getIndex(Set storage self, string calldata name) internal view returns (uint256) {
         return self.indexPointers[name];
     }
 
@@ -62,7 +63,7 @@ library UnorderedNamedContractDynamicSetLib {
         return self.contractList[index];
     }
 
-    function exists(Set storage self, string memory name) internal view returns (bool) {
+    function exists(Set storage self, string calldata name) internal view returns (bool) {
         if (size(self) == 0) return false;
         return keccak256(
             abi.encodePacked(self.contractList[self.indexPointers[name]].name)
@@ -72,4 +73,5 @@ library UnorderedNamedContractDynamicSetLib {
     function size(Set storage self) internal view returns (uint256) {
         return self.contractList.length;
     }
+
 } 

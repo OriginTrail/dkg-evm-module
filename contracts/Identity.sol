@@ -3,64 +3,48 @@
 pragma solidity ^0.8.0;
 
 import { Hub } from "./Hub.sol";
-import { IERC734Extended } from "./interface/IERC734Extended.sol";
 import { IdentityStorage } from "./storage/IdentityStorage.sol";
+import { ADMIN_KEY, OPERATIONAL_KEY, ECDSA, RSA } from "./constants/IdentityConstants.sol";
 
-contract Identity is IERC734Extended {
+contract Identity {
 
-    uint256 constant ADMIN_KEY = 1;
-    uint256 constant OPERATIONAL_KEY = 2;
-    uint256 constant ECDSA = 1;
+    event IdentityCreated(uint72 indexed identityId, bytes32 indexed operationalKey, bytes32 indexed adminKey);
+    event IdentityDeleted(uint72 indexed identityId);
 
     Hub public hub;
+    IdentityStorage public identityStorage;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
+
         hub = Hub(hubAddress);
+        identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
     }
 
-    modifier onlyContracts(){
-        require(
-            hub.isContract(msg.sender),
-            "Function can only be called by contracts!"
-        );
+    modifier onlyContracts() {
+        _checkHub();
         _;
     }
 
-    function createIdentity(address operational, address admin)
-        public
-        onlyContracts
-        returns (uint72)
-    {
-        require(operational != address(0), "Operational wallet address can't be empty");
-        require(admin != address(0), "Admin wallet address can't be empty");
+    modifier onlyAdmin(uint72 identityId) {
+        _checkAdmin(identityId);
+        _;
+    }
 
-        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+    function createIdentity(address operational, address admin) external onlyContracts returns (uint72) {
+        require(operational != address(0), "Operational address can't be 0x0");
+        require(admin != address(0), "Admin address can't be 0x0");
+
+        IdentityStorage ids = identityStorage;
+        uint72 identityId = ids.generateIdentityId();
 
         bytes32 _admin_key = keccak256(abi.encodePacked(admin));
-
-        uint72 identityId = identityStorage.getNewIdentityId();
-        identityStorage.addKey(identityId, _admin_key, ADMIN_KEY, ECDSA);
-
-        emit KeyAdded(
-            identityId,
-            _admin_key,
-            ADMIN_KEY,
-            ECDSA
-        );
+        ids.addKey(identityId, _admin_key, ADMIN_KEY, ECDSA);
 
         bytes32 _operational_key = keccak256(abi.encodePacked(operational));
+        ids.addKey(identityId, _operational_key, OPERATIONAL_KEY, ECDSA);
 
-        identityStorage.setIdentityId(_operational_key, identityId);
-
-        identityStorage.addKey(identityId, _operational_key, OPERATIONAL_KEY, ECDSA);
-
-        emit KeyAdded(
-            identityId,
-            _operational_key,
-            OPERATIONAL_KEY,
-            ECDSA
-        );
+        ids.setOperationalKeyIdentityId(_operational_key, identityId);
 
         emit IdentityCreated(
             identityId,
@@ -71,95 +55,75 @@ contract Identity is IERC734Extended {
         return identityId;
     }
 
-    function getIdentityId(address operational)
-        public
-        view
-        returns (uint72)
-    {
-        return IdentityStorage(hub.getContractAddress("IdentityStorage")).getIdentityId(operational);
+    function deleteIdentity(uint72 identityId) external onlyContracts {
+        IdentityStorage ids = identityStorage;
+
+        require(ids.identityExists(identityId), "Identity doesn't exist");
+        ids.deleteIdentity(identityId);
+
+        emit IdentityDeleted(identityId);
     }
 
-    function getKey(uint72 identityId, bytes32 _key)
-        public
-        view
-        override
-        returns (uint256, uint256, bytes32)
+    function addKey(uint72 identityId, bytes32 key, uint256 keyPurpose, uint256 keyType)
+        external
+        onlyAdmin(identityId)
     {
-        return IdentityStorage(hub.getContractAddress("IdentityStorage")).getKey(identityId, _key);
-    }
+        require(key != bytes32(0), "Key arg is empty");
 
-    function keyHasPurpose(uint72 identityId, bytes32 _key, uint256 _purpose)
-        public
-        view
-        override
-        returns (bool)
-    {
-        return IdentityStorage(hub.getContractAddress("IdentityStorage")).keyHasPurpose(identityId, _key, _purpose);
-    }
-
-    function getKeysByPurpose(uint72 identityId, uint256 _purpose)
-        public
-        view
-        override
-        returns (bytes32[] memory)
-    {
-        return IdentityStorage(hub.getContractAddress("IdentityStorage")).getKeysByPurpose(identityId, _purpose);
-    }
-
-    function addKey(uint72 identityId, bytes32 _key, uint256 _purpose, uint256 _type)
-        public
-        override
-    {
-        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-
-        require(identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY), "Admin function");
-        require(_key != bytes32(0), "Key arg is empty");
+        IdentityStorage ids = identityStorage;
 
         bytes32 attachedKey;
-        ( , , attachedKey) = identityStorage.getKey(identityId, _key);
-        require(attachedKey != _key, "Key is already attached to the identity");
+        ( , , attachedKey) = ids.getKey(identityId, key);
+        require(attachedKey != key, "Key is already attached");
 
-        identityStorage.addKey(identityId, _key, _purpose, _type);
+        ids.addKey(identityId, key, keyPurpose, keyType);
 
-        emit KeyAdded(identityId, _key, _purpose, _type);
+        if (keyPurpose == OPERATIONAL_KEY) {
+            ids.setOperationalKeyIdentityId(key, identityId);
+        }
     }
 
-    function removeKey(uint72 identityId, bytes32 _key)
-        public
-        override
-    {
-        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+    function removeKey(uint72 identityId, bytes32 key) external onlyAdmin(identityId) {
+        require(key != bytes32(0), "Key arg is empty");
 
-        require(identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY), "Admin function");
-        require(_key != bytes32(0), "Key arg is empty");
+        IdentityStorage ids = identityStorage;
 
-        require(identityStorage.getIdentityKeys(identityId, _key).key == _key, "Key isn't attached to the identity");
+        uint256 purpose;
+        bytes32 attachedKey;
+        (purpose, , attachedKey) = ids.getKey(identityId, key);
+        require(attachedKey == key, "Key isn't attached");
 
         require(
-            !(identityStorage.getKeysByPurpose(identityId, ADMIN_KEY).length == 1 && identityStorage.keyHasPurpose(identityId, _key, ADMIN_KEY)),
+            !(
+                ids.getKeysByPurpose(identityId, ADMIN_KEY).length == 1 &&
+                ids.keyHasPurpose(identityId, key, ADMIN_KEY)
+            ),
             "Cannot delete the only admin key"
         );
         require(
-            !(identityStorage.getKeysByPurpose(identityId, OPERATIONAL_KEY).length == 1 && identityStorage.keyHasPurpose(identityId, _key, OPERATIONAL_KEY)),
-            "Cannot delete the only operational key"
+            !(
+                ids.getKeysByPurpose(identityId, OPERATIONAL_KEY).length == 1 &&
+                ids.keyHasPurpose(identityId, key, OPERATIONAL_KEY)
+            ),
+            "Cannot delete the only oper. key"
         );
 
-        uint256 keyType;
-        uint256 purpose;
-        bytes32 key;
-        (purpose, keyType, key) = identityStorage.getKey(identityId, _key);
-
-        identityStorage.removeKey(identityId, _key);
+        ids.removeKey(identityId, key);
 
         if (purpose == OPERATIONAL_KEY) {
-            identityStorage.removeIdentityId(_key);
+            ids.removeOperationalKeyIdentityId(key);
         }
+    }
 
-        emit KeyRemoved(
-            identityId,
-            key,
-            purpose,
-            keyType
+    function _checkHub() internal view virtual {
+        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
+    }
+
+    function _checkAdmin(uint72 identityId) internal view virtual {
+        require(
+            identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY),
+            "Admin function"
         );
     }
+
 }
