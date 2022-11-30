@@ -38,57 +38,56 @@ contract Staking {
         _;
     }
 
-    function addStake(uint72 identityId, uint256 tracAdded)
+    function addStake(uint72 identityId, uint96 tracAdded)
         public
     {
         require(tracAdded + stakingStorage.totalStakes(identityId) < parametersStorage.maximumStake(), "Exceeded the maximum stake!");
-        require(parametersStorage.delegationEnabled() || identityStorage.getIdentityId(msg.sender) != 0, "Identity does not exist!");
+        require(parametersStorage.delegationEnabled() || identityStorage.getIdentityId(msg.sender) != 0, "Identity does not exist or user delegation disabled!");
 
         address sharesContractAddress = profileStorage.getSharesContractAddress(identityId);
         Shares sharesContract = Shares(sharesContractAddress);
 
-        uint256 sharesMinted = (tracAdded * sharesContract.totalSupply()) / stakingStorage.totalStakes(identityId);
+        uint256 sharesMinted = uint256(tracAdded) * sharesContract.totalSupply() / uint256(stakingStorage.totalStakes(identityId));
         sharesContract.mint(msg.sender, sharesMinted);
 
-        // TODO: wait for input where to trasnfer
+        // TODO: wait for input where to transfer
         // tokenContract.transfer(TBD, tracAdded);
 
         stakingStorage.setTotalStake(identityId, stakingStorage.totalStakes(identityId) + tracAdded);
     }
 
-    function withdrawStake(uint72 identityId, uint256 sharesBurned)
+    function withdrawStake(uint72 identityId, uint96 sharesBurned)
         public
     {
         address sharesContractAddress = profileStorage.getSharesContractAddress(identityId);
         Shares sharesContract = Shares(sharesContractAddress);
 
-        require(sharesBurned < sharesContract.totalSupply(), "Not enough shares available!");
+        require(sharesBurned < uint96(sharesContract.totalSupply()), "Not enough shares available!");
         require(identityStorage.getIdentityId(msg.sender) != 0, "Identity does not exist!");
 
-        uint256 tracWithdrawn = sharesBurned * stakingStorage.totalStakes(identityId) / sharesContract.totalSupply();
+        uint256 tracWithdrawn = uint256(sharesBurned) * uint256(stakingStorage.totalStakes(identityId)) / sharesContract.totalSupply();
         sharesContract.burnFrom(msg.sender, sharesBurned);
 
         // TODO: when slashing starts, introduce delay
 
         tokenContract.transfer(msg.sender, tracWithdrawn);
 
-        stakingStorage.setTotalStake(identityId, stakingStorage.totalStakes(identityId) - tracWithdrawn);
+        stakingStorage.setTotalStake(identityId, stakingStorage.totalStakes(identityId) - uint96(tracWithdrawn));
     }
 
-    function addReward(uint72 identityId, uint256 tracAmount)
+    function addReward(uint72 identityId, uint96 tracAmount)
         public
         onlyContracts
     {
 
-        uint256 operatorFee = stakingStorage.operatorFees(identityId) * tracAmount / 100;
-        uint256 reward = tracAmount - operatorFee;
-
-        stakingStorage.setTotalStake(identityId, stakingStorage.totalStakes(identityId) + reward);
+        uint96 operatorFee = stakingStorage.operatorFees(identityId) * tracAmount / 100;
+        uint96 reward = tracAmount - operatorFee;
 
         // TODO: wait for input where to trasnfer
         // tokenContract.transfer(TBD, reward);
-
         tokenContract.transfer(address(profileStorage), operatorFee);
+
+        stakingStorage.setTotalStake(identityId, stakingStorage.totalStakes(identityId) + reward);
         profileStorage.setReward(identityId, profileStorage.getReward(identityId) + reward);
     }
 

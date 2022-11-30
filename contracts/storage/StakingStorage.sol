@@ -9,10 +9,10 @@ contract StakingStorage {
     Hub public hub;
 
     // identityId => totalStake
-    mapping(uint72 => uint256) public totalStakes;
+    mapping(uint72 => uint96) public totalStakes;
 
     // identityId => operatorFee
-    mapping(uint72 => uint256) public operatorFees;
+    mapping(uint72 => uint96) public operatorFees;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -27,7 +27,7 @@ contract StakingStorage {
         _;
     }
 
-    function createStaking(uint72 identityId, uint256 totalStake, uint256 operatorFee)
+    function createStaking(uint72 identityId, uint96 totalStake, uint96 operatorFee)
         public
         onlyContracts
     {
@@ -35,7 +35,7 @@ contract StakingStorage {
         operatorFees[identityId] = operatorFee;
     }
 
-    function setTotalStake(uint72 identityId, uint256 newTotalStake)
+    function setTotalStake(uint72 identityId, uint96 newTotalStake)
         public
         onlyContracts
     {
@@ -43,7 +43,7 @@ contract StakingStorage {
         totalStakes[identityId] = newTotalStake;
     }
 
-    function setOperatorFee(uint72 identityId, uint256 operatorFee)
+    function setOperatorFee(uint72 identityId, uint96 operatorFee)
         public
         onlyContracts
     {
