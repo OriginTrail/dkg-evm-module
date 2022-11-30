@@ -71,4 +71,5 @@ async function sendTrac(evmAddress) {
         console.log(
             `New balance of ${evmWallet} is ${balance} OTP, ${tokenBalance} TRAC`
         );
+    }
 }
