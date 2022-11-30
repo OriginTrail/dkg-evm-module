@@ -42,7 +42,7 @@ contract Staking {
         public
     {
         require(tracAdded + stakingStorage.totalStakes(identityId) < parametersStorage.maximumStake(), "Exceeded the maximum stake!");
-        require(identityStorage.getIdentityId(msg.sender) != 0, "Identity does not exist!");
+        require(parametersStorage.delegationEnabled() || identityStorage.getIdentityId(msg.sender) != 0, "Identity does not exist!");
 
         address sharesContractAddress = profileStorage.getSharesContractAddress(identityId);
         Shares sharesContract = Shares(sharesContractAddress);

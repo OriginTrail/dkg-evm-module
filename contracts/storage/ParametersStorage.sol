@@ -24,6 +24,8 @@ contract ParametersStorage is Ownable {
     uint24 public rewardWithdrawalDelay;
     uint32 public slashingFreezeDuration;
 
+    bool public delegationEnabled;
+
     constructor() {
         minimumStake = 50_000 ether;
         maximumStake = 5_000_000 ether;
@@ -43,9 +45,11 @@ contract ParametersStorage is Ownable {
         stakeWithdrawalDelay = 5 minutes;
         rewardWithdrawalDelay = 5 minutes;
         slashingFreezeDuration = 730 days;
+
+        delegationEnabled = false;
     }
 
-    function setMinimumStake(uint96 newMinimumStake)
+    function setMinimumStake(uint256 newMinimumStake)
         public
         onlyOwner
     {
@@ -134,5 +138,12 @@ contract ParametersStorage is Ownable {
         onlyOwner
     {
         slashingFreezeDuration = newSlashingFreezeDuration;
+    }
+
+    function setDelegationEnabled(bool enabled)
+        public
+        onlyOwner
+    {
+        delegationEnabled = enabled;
     }
 }
