@@ -41,7 +41,7 @@ contract Profile {
         _;
     }
 
-    function createProfile(address adminWallet, bytes memory nodeId, uint96 initialAsk, uint96 initalStake) external {
+    function createProfile(address adminWallet, bytes memory nodeId, uint96 initialAsk, uint96 initialStake) external {
         IdentityStorage ids = identityStorage;
         ProfileStorage ps = profileStorage;
 
