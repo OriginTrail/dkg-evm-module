@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 
 import { Hub } from "../Hub.sol";
-import { ByteArr } from "../utils/ByteArr.sol";
 import { IERC734Extended } from "../interface/IERC734Extended.sol";
+import { ByteArr } from "../utils/ByteArr.sol";
 
 contract IdentityStorage is IERC734Extended {
 

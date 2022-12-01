@@ -69,4 +69,8 @@ contract Hub is Ownable{
     function isAssetContract(string calldata assetContractName) external view returns (bool) {
         return assetContractSet.exists(assetContractName);
     }
+
+    function isAssetContract(address assetContractAddress) external view returns (bool) {
+        return assetContractSet.exists(assetContractAddress);
+    }
 }

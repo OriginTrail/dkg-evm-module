@@ -9,10 +9,10 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ProfileStorage {
 
-    event ProfileCreated(uint72 indexed identityId, bytes nodeId, uint96 ask);
+    event ProfileCreated(uint72 indexed identityId, uint96 ask);
     event ProfileDeleted(uint72 indexed identityId);
-    event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
-    event SharesContractAddressUpdated(uint72 indexed identityId, bytes nodeId, address sharesContractAddress);
+    event AskUpdated(uint72 indexed identityId, uint96 ask);
+    event SharesContractUpdated(uint72 indexed identityId, address sharesContractAddress);
 
     Hub public hub;
     HashingProxy public hashingProxy;
@@ -53,12 +53,12 @@ contract ProfileStorage {
 
         nodeIdsList[nodeId] = true;
 
-        emit ProfileCreated(identityId, nodeId, ask);
+        emit ProfileCreated(identityId, ask);
     }
 
     function getProfile(uint72 identityId) external view returns (uint96, bytes memory, address) {
         ProfileDefinition storage profile = profiles[identityId];
-        return (profile.ask, profile.nodeId, profiles.sharesContractAddress);
+        return (profile.ask, profile.nodeId, profile.sharesContractAddress);
     }
 
     function deleteProfile(uint72 identityId) external {
@@ -90,7 +90,7 @@ contract ProfileStorage {
     function setAsk(uint72 identityId, uint96 ask) external onlyContracts {
         profiles[identityId].ask = ask;
 
-        emit AskUpdated(identityId, profiles[identityId].nodeId, ask);
+        emit AskUpdated(identityId, ask);
     }
 
     function getSharesContractAddress(uint72 identityId) external view returns (address) {
@@ -100,7 +100,7 @@ contract ProfileStorage {
     function setSharesContractAddress(uint72 identityId, address sharesContractAddress) external onlyContracts {
         profiles[identityId].sharesContractAddress = sharesContractAddress;
 
-        emit SharesContractAddressUpdated(identityId, profiles[identityId].nodeId, sharesContractAddress);
+        emit SharesContractUpdated(identityId, sharesContractAddress);
     }
 
     function getNodeAddress(uint72 identityId, uint8 hashFunctionId) external view returns (bytes32) {
@@ -120,7 +120,7 @@ contract ProfileStorage {
 
         UnorderedIndexableContractDynamicSetLib.Contract[] memory hashFunctions = hp.getAllHashFunctions();
         uint256 hashFunctionsNumber = hashFunctions.length;
-        for (uint8 i = 0; i < hashFunctionsNumber; ) {
+        for (uint8 i; i < hashFunctionsNumber; ) {
             profile.nodeAddresses[hashFunctions[i].id] = hp.callHashFunction(hashFunctions[i].id, profile.nodeId);
             unchecked { i++; }
         }

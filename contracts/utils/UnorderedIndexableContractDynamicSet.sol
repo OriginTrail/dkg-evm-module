@@ -17,7 +17,7 @@ library UnorderedIndexableContractDynamicSetLib {
     }
 
     function append(Set storage self, uint8 id, address addr) internal {
-        require(id > 0, "(ContractSet) ID must be >0");
+        require(id != 0, "(ContractSet) ID canot be 0");
         require(addr != address(0), "(ContractSet) Address cannot be 0x0");
         require(exists(self, id), "(ContractSet) Contract with given ID already exists");
         self.indexPointers[id] = size(self);

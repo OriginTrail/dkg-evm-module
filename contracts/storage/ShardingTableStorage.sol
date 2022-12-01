@@ -27,7 +27,6 @@ contract ShardingTableStorage {
 
         head = NULL;
         tail = NULL;
-        nodesCount = 0;
     }
 
     modifier onlyContracts() {
@@ -65,14 +64,14 @@ contract ShardingTableStorage {
         return nodes[identityId];
     }
 
-    function inShardingTable(uint72 identityId) external view returns(bool) {
-        return nodes[identityId].identityId != 0;
-    }
-
     function removeNode(uint72 identityId) external onlyContracts {
         delete nodes[identityId];
 
         emit NodeRemoved(identityId);
+    }
+
+    function nodeExists(uint72 identityId) external view returns (bool) {
+        return nodes[identityId].identityId != 0;
     }
 
     function setPrevIdentityId(uint72 identityId, uint72 newPrevIdentityId) external onlyContracts {
@@ -91,7 +90,7 @@ contract ShardingTableStorage {
         ShardingTableStructs.Node[] memory nodesPage = new ShardingTableStructs.Node[](nodesNumber);
 
         ShardingTableStructs.Node memory currentNode = nodes[firstIdentityId];
-        for (uint256 i = 0; i < nodesNumber; ) {
+        for (uint256 i; i < nodesNumber; ) {
             nodesPage[i] = currentNode;
             currentNode = nodes[currentNode.nextIdentityId];
             unchecked { i++; }

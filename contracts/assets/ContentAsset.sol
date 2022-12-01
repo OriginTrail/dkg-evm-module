@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 
 import { AbstractAsset } from "./AbstractAsset.sol";
 import { Assertion } from "../Assertion.sol";
-import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { ServiceAgreement } from "../ServiceAgreement.sol";
 import { Named } from "../interface/Named.sol";
+import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract ContentAsset is AbstractAsset, ERC721 {
 
@@ -27,16 +27,14 @@ contract ContentAsset is AbstractAsset, ERC721 {
     {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));
         serviceAgreement = ServiceAgreement(hub.getContractAddress("ServiceAgreement"));
-
-        _tokenId = 0;
     }
 
-    modifier onlyAssetOwner() {
-        _checkAssetOwner();
+    modifier onlyAssetOwner(uint256 tokenId) {
+        _checkAssetOwner(tokenId);
         _;
     }
 
-    function name() external view override(ERC721, Named) returns (string memory) {
+    function name() public view override(ERC721, Named) returns (string memory) {
         return ERC721.name();
     }
 
@@ -86,9 +84,9 @@ contract ContentAsset is AbstractAsset, ERC721 {
         uint96 tokenAmount
     )
         external
-        onlyAssetOwner
+        onlyAssetOwner(tokenId)
     {   
-        assertionContract.createAssertionRecord(
+        assertionContract.createAssertion(
             assertionId,
             msg.sender,
             size,
@@ -101,7 +99,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
             msg.sender,
             address(this),
             tokenId,
-            abi.encodePacked(address(this), tokenId, this.getAssertionByIndex(tokenId, 0)),
+            abi.encodePacked(address(this), tokenId, this.getAssertionIdByIndex(tokenId, 0)),
             0,
             epochsNumber,
             tokenAmount
@@ -110,11 +108,11 @@ contract ContentAsset is AbstractAsset, ERC721 {
         emit AssetUpdated(address(this), tokenId, assertionId);
     }
 
-    function getAssertionIds(uint256 tokenId) external view override returns (bytes32[] memory) {
+    function getAssertionIds(uint256 tokenId) public view override returns (bytes32[] memory) {
         return assets[tokenId].assertionIds;
     }
 
-    function _checkAssetOwner() internal view virtual {
+    function _checkAssetOwner(uint256 tokenId) internal view virtual {
         require(msg.sender == ownerOf(tokenId), "Only asset owner can use this fn");
     }
 

@@ -18,19 +18,19 @@ abstract contract AbstractAsset is Named {
         hub = Hub(hubAddress);
     }
 
-    function getAssertionIds(uint256 tokenId) virtual public view returns (bytes32 [] memory);
+    function getAssertionIds(uint256 tokenId) public virtual view returns (bytes32 [] memory);
 
-    function getLatestAssertionId(uint256 tokenId) public view returns (bytes32) {
+    function getLatestAssertionId(uint256 tokenId) external view returns (bytes32) {
         bytes32[] memory assertions = getAssertionIds(tokenId);
         return assertions[assertions.length - 1];
     }
 
-    function getAssertionIdByIndex(uint256 tokenId, uint256 index) public view returns (bytes32) {
+    function getAssertionIdByIndex(uint256 tokenId, uint256 index) external view returns (bytes32) {
         bytes32 [] memory assertions = getAssertionIds(tokenId);
         return assertions[index];
     }
 
-    function getAssertionIdsLength(uint256 tokenId) public view returns (uint256) {
+    function getAssertionIdsLength(uint256 tokenId) external view returns (uint256) {
         return getAssertionIds(tokenId).length;
     }
 

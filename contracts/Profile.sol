@@ -10,6 +10,7 @@ import { Staking } from "./Staking.sol";
 import { IdentityStorage } from "./storage/IdentityStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { ADMIN_KEY, OPERATIONAL_KEY } from "./constants/IdentityConstants.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract Profile {
 
@@ -48,11 +49,15 @@ contract Profile {
         require(ids.getIdentityId(msg.sender) == 0, "Identity already exists");
         require(nodeId.length != 0, "Node ID can't be empty");
         require(!ps.nodeIdRegistered(nodeId), "Node ID already registered");
-        require(initialAsk > 0, "Ask can't be 0");
+        require(initialAsk != 0, "Ask cannot be 0");
 
         uint72 identityId = identityContract.createIdentity(msg.sender, adminWallet);
 
-        Shares sharesContract = new Shares(address(hub), string.concat("Share token ",identityId), string.concat("DKGSTAKE_",identityId));
+        Shares sharesContract = new Shares(
+            address(hub),
+            string.concat("Share token ", Strings.toString(identityId)),
+            string.concat("DKGSTAKE_", Strings.toString(identityId))
+        );
         ps.createProfile(identityId, nodeId, initialAsk, address(sharesContract));
 
         stakingContract.addStake(identityId, initialStake);

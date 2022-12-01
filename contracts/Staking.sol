@@ -27,6 +27,7 @@ contract Staking {
     );
     event RewardAdded(
         uint72 indexed identityId,
+        address indexed staker,
         uint96 rewardAmount
     );
 
@@ -92,7 +93,7 @@ contract Staking {
 
         ss.setTotalStake(identityId, ss.totalStakes(identityId) + tracAdded);
 
-        if (!sts.inShardingTable(identityId) && ss.totalStakes(identityId) >= parametersStorage.minimumStake()) {
+        if (!sts.nodeExists(identityId) && ss.totalStakes(identityId) >= parametersStorage.minimumStake()) {
             st.pushBack(identityId);
         }
 
@@ -121,38 +122,39 @@ contract Staking {
 
         ss.setTotalStake(identityId, ss.totalStakes(identityId) - uint96(tracWithdrawn));
 
-        if (sts.inShardingTable(identityId) && ss.totalStakes(identityId) < parametersStorage.minimumStake()) {
+        if (sts.nodeExists(identityId) && ss.totalStakes(identityId) < parametersStorage.minimumStake()) {
             st.removeNode(identityId);
         }
 
         emit StakeWithdrawn(identityId, msg.sender, uint96(tracWithdrawn));
     }
 
-    function addReward(uint72 identityId, address operationalWallet, uint96 tracAmount) external onlyContracts {
-        require(tracAmount != 0, "Reward > 0");
+    function addReward(uint72 identityId, address operational, uint96 tracAmount) external onlyContracts {
+        require(tracAmount != 0, "No reward available");
 
         uint96 operatorFee = stakingStorage.operatorFees(identityId) * tracAmount / 100;
         uint96 reward = tracAmount - operatorFee;
         ServiceAgreementStorage sas = serviceAgreementStorage;
         StakingStorage ss = stakingStorage;
-        ShardingTable st = shardingTable;
-        ShardingTableStorage sts = shardingTableStorage;
 
         if(reward > 0) {
             sas.transferReward(address(ss), reward);
         }
 
         if(operatorFee > 0) {
-            sas.transferReward(operationalWallet, operatorFee);
+            sas.transferReward(operational, operatorFee);
         }
 
         ss.setTotalStake(identityId, ss.totalStakes(identityId) + reward);
 
-        if (!sts.inShardingTable(identityId) && ss.totalStakes(identityId) >= parametersStorage.minimumStake()) {
-            st.pushBack(identityId);
+        if (
+            !shardingTableStorage.nodeExists(identityId) &&
+            ss.totalStakes(identityId) >= parametersStorage.minimumStake()
+        ) {
+            shardingTable.pushBack(identityId);
         }
 
-        emit RewardAdded(identityId, tracAmount);
+        emit RewardAdded(identityId, operational, tracAmount);
     }
 
     function slash(uint72 identityId) external onlyContracts {

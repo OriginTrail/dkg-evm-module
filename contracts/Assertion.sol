@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import { AssertionStorage } from "./storage/AssertionStorage.sol";
 import { Hub } from "./Hub.sol";
+import { AssertionStorage } from "./storage/AssertionStorage.sol";
 import { AssertionStructs } from "./structs/AssertionStructs.sol";
 
 contract Assertion {
@@ -37,9 +37,9 @@ contract Assertion {
 
 		require(assertionId != bytes32(0), "Assertion ID cannot be empty");
 		require(!ans.assertionExists(assertionId), "Assertion already exists");
-		require(size > 0, "Size should be >0");
-		require(triplesNumber > 0, "Triples number should be >0");
-		require(chunksNumber > 0, "Chunks number should be >0");
+		require(size != 0, "Size cannot be 0");
+		require(triplesNumber != 0, "Triples number cannot be 0");
+		require(chunksNumber != 0, "Chunks number cannot be 0");
 
 		ans.createAssertion(assertionId, issuer, size, triplesNumber, chunksNumber);
 	}

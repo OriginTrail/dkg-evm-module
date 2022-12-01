@@ -70,6 +70,14 @@ library UnorderedNamedContractDynamicSetLib {
         ) == keccak256(abi.encodePacked(name));
     }
 
+    function exists(Set storage self, address addr) internal view returns (bool) {
+        if (size(self) == 0) return false;
+        string memory name = Named(addr).name();
+        return keccak256(
+            abi.encodePacked(self.contractList[self.indexPointers[name]].name)
+        ) == keccak256(abi.encodePacked(name)); 
+    }
+
     function size(Set storage self) internal view returns (uint256) {
         return self.contractList.length;
     }

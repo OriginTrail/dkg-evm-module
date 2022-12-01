@@ -4,10 +4,12 @@ pragma solidity ^0.8.0;
 
 import { Hub } from "../Hub.sol";
 import { ServiceAgreementStructs } from "../structs/ServiceAgreementStructs.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ServiceAgreementStorage {
 
     Hub public hub;
+    IERC20 public tokenContract;
 
     // CommitId [keccak256(agreementId + epoch + identityId)] => CommitSubmission
     mapping(bytes32 => ServiceAgreementStructs.CommitSubmission) commitSubmissions;
@@ -19,6 +21,7 @@ contract ServiceAgreementStorage {
         require(hubAddress != address(0));
 
         hub = Hub(hubAddress);
+        tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
     modifier onlyContracts() {
@@ -26,9 +29,13 @@ contract ServiceAgreementStorage {
         _;
     }
 
+    modifier onlyServiceAgreementContract() {
+        _checkServiceAgreement();
+        _;
+    }
+
     function createServiceAgreementObject(
         bytes32 agreementId,
-        uint256 startTime,
         uint16 epochsNumber,
         uint128 epochLength,
         uint96 tokenAmount,
@@ -39,7 +46,7 @@ contract ServiceAgreementStorage {
         onlyContracts
     {
         ServiceAgreementStructs.ServiceAgreement storage agreement = serviceAgreements[agreementId];
-        agreement.startTime = startTime;
+        agreement.startTime = block.timestamp;
         agreement.epochsNumber = epochsNumber;
         agreement.epochLength = epochLength;
         agreement.tokenAmount = tokenAmount;
@@ -137,6 +144,10 @@ contract ServiceAgreementStorage {
         serviceAgreements[agreementId].rewardedNodes[epoch] = rewardedNodes;
     }
 
+    function serviceAgreementExists(bytes32 agreementId) external view returns (bool) {
+        return serviceAgreements[agreementId].startTime != 0;
+    }
+
     function createCommitSubmissionObject(
         bytes32 commitId,
         uint72 identityId,
@@ -195,8 +206,16 @@ contract ServiceAgreementStorage {
         commitSubmissions[commitId].score = score;
     }
 
+    function transferReward(address receiver, uint96 rewardAmount) external onlyServiceAgreementContract {
+        tokenContract.transfer(receiver, rewardAmount);
+    }
+
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
+    }
+
+    function _checkServiceAgreement() internal view virtual {
+        require(msg.sender == hub.getContractAddress("ServiceAgreement"), "Fn can only be called by SA");
     }
 
 }
