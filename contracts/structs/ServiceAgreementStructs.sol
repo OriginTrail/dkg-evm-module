@@ -11,6 +11,17 @@ library ServiceAgreementStructs {
         uint40 score;
     }
 
+    struct ServiceAgreementInputArgs {
+        address operationalWallet;
+        address assetContract;
+        uint256 tokenId;
+        bytes keyword;
+        uint8 hashFunctionId;
+        uint16 epochsNumber;
+        uint96 tokenAmount;
+        uint8 scoreFunctionId;
+    }
+
     struct ServiceAgreement {
         uint256 startTime;
         uint16 epochsNumber;
@@ -22,7 +33,25 @@ library ServiceAgreementStructs {
         // epoch => headCommitId
         mapping(uint16 => bytes32) epochSubmissionHeads;
         // epoch => number of nodes received rewards
-        mapping(uint16 => uint32) rewardedNodes;
+        mapping(uint16 => uint32) rewardedNodesNumber;
+    }
+
+    struct CommitInputArgs {
+        address assetContract;
+        uint256 tokenId;
+        bytes keyword;
+        uint8 hashFunctionId;
+        uint16 epoch;
+    }
+
+    struct ProofInputArgs {
+        address assetContract;
+        uint256 tokenId;
+        bytes keyword;
+        uint8 hashFunctionId;
+        uint16 epoch;
+        bytes32[] proof;
+        bytes32 chunkHash;
     }
 
 }

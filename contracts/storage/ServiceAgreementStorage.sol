@@ -133,15 +133,23 @@ contract ServiceAgreementStorage {
         serviceAgreements[agreementId].epochSubmissionHeads[epoch] = headCommitId;
     }
 
-    function getAgreementRewardedNodes(bytes32 agreementId, uint16 epoch) external view returns (uint32) {
-        return serviceAgreements[agreementId].rewardedNodes[epoch];
+    function incrementAgreementRewardedNodesNumber(bytes32 agreementId, uint16 epoch) external onlyContracts {
+        serviceAgreements[agreementId].rewardedNodesNumber[epoch]++;
     }
 
-    function setAgreementRewardedNodes(bytes32 agreementId, uint16 epoch, uint32 rewardedNodes)
+    function decrementAgreementRewardedNodesNumber(bytes32 agreementId, uint16 epoch) external onlyContracts {
+        serviceAgreements[agreementId].rewardedNodesNumber[epoch]--;
+    }
+
+    function getAgreementRewardedNodesNumber(bytes32 agreementId, uint16 epoch) external view returns (uint32) {
+        return serviceAgreements[agreementId].rewardedNodesNumber[epoch];
+    }
+
+    function setAgreementRewardedNodesNumber(bytes32 agreementId, uint16 epoch, uint32 rewardedNodesNumber)
         external
         onlyContracts
     {
-        serviceAgreements[agreementId].rewardedNodes[epoch] = rewardedNodes;
+        serviceAgreements[agreementId].rewardedNodesNumber[epoch] = rewardedNodesNumber;
     }
 
     function serviceAgreementExists(bytes32 agreementId) external view returns (bool) {

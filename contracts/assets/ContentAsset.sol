@@ -7,8 +7,19 @@ import { Assertion } from "../Assertion.sol";
 import { ServiceAgreement } from "../ServiceAgreement.sol";
 import { Named } from "../interface/Named.sol";
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { ServiceAgreementStructs } from "../structs/ServiceAgreementStructs.sol";
 
 contract ContentAsset is AbstractAsset, ERC721 {
+
+    struct AssetInputArgs {
+        bytes32 assertionId;
+        uint128 size;
+        uint32 triplesNumber;
+        uint96 chunksNumber;
+        uint16 epochsNumber;
+        uint96 tokenAmount;
+        uint8 scoreFunctionId;
+    }
 
     struct Asset {
         bytes32[] assertionIds;
@@ -38,74 +49,59 @@ contract ContentAsset is AbstractAsset, ERC721 {
         return ERC721.name();
     }
 
-    function createAsset(
-        bytes32 assertionId,
-        uint128 size,
-        uint32 triplesNumber,
-        uint96 chunksNumber,
-        uint16 epochsNumber,
-        uint96 tokenAmount
-    )
-        external
-    {
+    function createAsset(AssetInputArgs memory args) external {
         uint256 tokenId = _tokenId++;
         _mint(msg.sender, tokenId);
 
         assertionContract.createAssertion(
-            assertionId,
+            args.assertionId,
             msg.sender,
-            size,
-            triplesNumber,
-            chunksNumber
+            args.size,
+            args.triplesNumber,
+            args.chunksNumber
         );
-        assets[tokenId].assertionIds.push(assertionId);
+        assets[tokenId].assertionIds.push(args.assertionId);
 
         serviceAgreement.createServiceAgreement(
-            msg.sender,
-            address(this),
-            tokenId,
-            abi.encodePacked(address(this), tokenId, assertionId),
-            0,
-            epochsNumber,
-            tokenAmount,
-            0
+            ServiceAgreementStructs.ServiceAgreementInputArgs(
+                msg.sender,
+                address(this),
+                tokenId,
+                abi.encodePacked(address(this), tokenId, args.assertionId),
+                1,  // hashFunctionId | 1 = sha256
+                args.epochsNumber,
+                args.tokenAmount,
+                args.scoreFunctionId
+            )
         );
 
-        emit AssetCreated(address(this), tokenId, assertionId);
+        emit AssetCreated(address(this), tokenId, args.assertionId);
     }
 
-    function updateAsset(
-        uint256 tokenId,
-        bytes32 assertionId,
-        uint128 size,
-        uint32 triplesNumber,
-        uint96 chunksNumber,
-        uint16 epochsNumber,
-        uint96 tokenAmount
-    )
-        external
-        onlyAssetOwner(tokenId)
-    {   
+    function updateAsset(uint256 tokenId, AssetInputArgs memory args) external onlyAssetOwner(tokenId) {
         assertionContract.createAssertion(
-            assertionId,
+            args.assertionId,
             msg.sender,
-            size,
-            triplesNumber,
-            chunksNumber
+            args.size,
+            args.triplesNumber,
+            args.chunksNumber
         );
-        assets[tokenId].assertionIds.push(assertionId);
+        assets[tokenId].assertionIds.push(args.assertionId);
 
         serviceAgreement.updateServiceAgreement(
-            msg.sender,
-            address(this),
-            tokenId,
-            abi.encodePacked(address(this), tokenId, this.getAssertionIdByIndex(tokenId, 0)),
-            0,
-            epochsNumber,
-            tokenAmount
+            ServiceAgreementStructs.ServiceAgreementInputArgs(
+                msg.sender,
+                address(this),
+                tokenId,
+                abi.encodePacked(address(this), tokenId, this.getAssertionIdByIndex(tokenId, 0)),
+                1,  // hashFunctionId | 1 = sha256
+                args.epochsNumber,
+                args.tokenAmount,
+                args.scoreFunctionId
+            )
         );
 
-        emit AssetUpdated(address(this), tokenId, assertionId);
+        emit AssetUpdated(address(this), tokenId, args.assertionId);
     }
 
     function getAssertionIds(uint256 tokenId) public view override returns (bytes32[] memory) {

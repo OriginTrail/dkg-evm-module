@@ -85,110 +85,95 @@ contract ServiceAgreement {
         _;
     }
 
-    function createServiceAgreement(
-        address operationalWallet,
-        address assetContract,
-        uint256 tokenId,
-        bytes calldata keyword,
-        uint8 hashFunctionId,
-        uint16 epochsNumber,
-        uint96 tokenAmount,
-        uint8 scoreFunctionId
-    )
+    function createServiceAgreement(ServiceAgreementStructs.ServiceAgreementInputArgs memory args)
         external
         onlyAssetContracts
     {
-        require(operationalWallet != address(0), "Operational wallet doesn't exist");
-        require(hub.isAssetContract(assetContract), "Asset Contract not in the hub");
-        require(keccak256(keyword) != keccak256(""), "Keyword can't be empty");
-        require(epochsNumber != 0, "Epochs number cannot be 0");
-        require(tokenAmount != 0, "Token amount cannot be 0");
-        require(scoringProxy.isScoreFunction(scoreFunctionId), "Score function doesn't exist");
+        require(args.operationalWallet != address(0), "Operational wallet doesn't exist");
+        require(hub.isAssetContract(args.assetContract), "Asset Contract not in the hub");
+        require(keccak256(args.keyword) != keccak256(""), "Keyword can't be empty");
+        require(args.epochsNumber != 0, "Epochs number cannot be 0");
+        require(args.tokenAmount != 0, "Token amount cannot be 0");
+        require(scoringProxy.isScoreFunction(args.scoreFunctionId), "Score function doesn't exist");
 
-        bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+        bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
         ServiceAgreementStorage sas = serviceAgreementStorage;
         ParametersStorage params = parametersStorage;
 
         sas.createServiceAgreementObject(
             agreementId,
-            epochsNumber,
+            args.epochsNumber,
             params.epochLength(),
-            tokenAmount,
-            scoreFunctionId,
+            args.tokenAmount,
+            args.scoreFunctionId,
             params.minProofWindowOffsetPerc() + _generatePseudorandomUint8(
-                operationalWallet,
+                args.operationalWallet,
                 params.maxProofWindowOffsetPerc() - params.minProofWindowOffsetPerc() + 1
             )
         );
 
         IERC20 tknc = tokenContract;
         require(
-            tknc.allowance(operationalWallet, address(sas)) >= tokenAmount,
+            tknc.allowance(args.operationalWallet, address(sas)) >= args.tokenAmount,
             "Sender allowance must >= amount"
         );
-        require(tknc.balanceOf(operationalWallet) >= tokenAmount, "Sender balance must be >= amount");
+        require(tknc.balanceOf(args.operationalWallet) >= args.tokenAmount, "Sender balance must be >= amount");
 
-        tknc.transferFrom(operationalWallet, address(sas), tokenAmount);
+        tknc.transferFrom(args.operationalWallet, address(sas), args.tokenAmount);
 
         emit ServiceAgreementCreated(
-            assetContract,
-            tokenId,
-            keyword,
-            hashFunctionId,
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId,
             block.timestamp,
-            epochsNumber,
+            args.epochsNumber,
             params.epochLength(),
-            tokenAmount
+            args.tokenAmount
         );
     }
 
-    // TODO: Split into smaller functions [update only epochsNumber / update only tokenAmount etc.]
-    function updateServiceAgreement(
-        address operationalWallet,
-        address assetContract,
-        uint256 tokenId,
-        bytes calldata keyword,
-        uint8 hashFunctionId,
-        uint16 epochsNumber,
-        uint96 tokenAmount
-    )
+    // TODO: Split into smaller functions [update only epochsNumber / tokenAmount / scoreFunctionId etc.]
+    function updateServiceAgreement(ServiceAgreementStructs.ServiceAgreementInputArgs memory args)
         external
         onlyAssetContracts
     {
-        bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+        bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
         ServiceAgreementStorage sas = serviceAgreementStorage;
 
-        require(operationalWallet != address(0), "Operational wallet cannot be 0x0");
+        require(args.operationalWallet != address(0), "Operational wallet cannot be 0x0");
         require(sas.serviceAgreementExists(agreementId), "Service Agreement doesn't exist");
-        require(epochsNumber != 0, "Epochs number cannot be 0");
-        require(tokenAmount != 0, "Token amount cannot be 0");
+        require(args.epochsNumber != 0, "Epochs number cannot be 0");
+        require(args.tokenAmount != 0, "Token amount cannot be 0");
+        require(scoringProxy.isScoreFunction(args.scoreFunctionId), "Score function doesn't exist");
 
         uint96 actualRewardAmount = sas.getAgreementTokenAmount(agreementId);
 
-        sas.setAgreementEpochsNumber(agreementId, epochsNumber);
-        sas.setAgreementTokenAmount(agreementId, tokenAmount);
+        sas.setAgreementEpochsNumber(agreementId, args.epochsNumber);
+        sas.setAgreementTokenAmount(agreementId, args.tokenAmount);
+        sas.setAgreementScoreFunctionId(agreementId, args.scoreFunctionId);
 
         IERC20 tknc = tokenContract;
 
         require(
-            tknc.allowance(operationalWallet, address(sas)) >= (tokenAmount - actualRewardAmount),
+            tknc.allowance(args.operationalWallet, address(sas)) >= (args.tokenAmount - actualRewardAmount),
             "Sender allowance must be >= amount"
         );
         require(
-            tknc.balanceOf(operationalWallet) >= (tokenAmount - actualRewardAmount),
+            tknc.balanceOf(args.operationalWallet) >= (args.tokenAmount - actualRewardAmount),
             "Sender balance must be >= amount"
         );
 
-        tknc.transferFrom(operationalWallet, address(sas), tokenAmount - actualRewardAmount);
+        tknc.transferFrom(args.operationalWallet, address(sas), args.tokenAmount - actualRewardAmount);
 
         emit ServiceAgreementUpdated(
-            assetContract,
-            tokenId,
-            keyword,
-            hashFunctionId,
-            epochsNumber,
-            tokenAmount
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId,
+            args.epochsNumber,
+            args.tokenAmount
         );
     }
 
@@ -254,32 +239,24 @@ contract ServiceAgreement {
         return epochCommits;
     }
 
-    function submitCommit(
-        address assetContract,
-        uint256 tokenId,
-        bytes calldata keyword,
-        uint8 hashFunctionId,
-        uint16 epoch
-    )
-        external
-    {
-        bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+    function submitCommit(ServiceAgreementStructs.CommitInputArgs memory args) external {
+        bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
-        require(isCommitWindowOpen(agreementId, epoch), "Commit window is closed!");
+        require(isCommitWindowOpen(agreementId, args.epoch), "Commit window is closed!");
 
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
         uint40 score = scoringProxy.callScoreFunction(
             serviceAgreementStorage.getAgreementScoreFunctionId(agreementId),
-            hashFunctionId,
+            args.hashFunctionId,
             profileStorage.getNodeId(identityId),
-            keyword,
+            args.keyword,
             stakingStorage.totalStakes(identityId)
         );
 
         _insertCommit(
             agreementId,
-            epoch,
+            args.epoch,
             identityId,
             0,
             0,
@@ -287,10 +264,10 @@ contract ServiceAgreement {
         );
 
         emit CommitSubmitted(
-            assetContract,
-            tokenId,
-            keyword,
-            hashFunctionId,
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId,
             identityId,
             score
         );
@@ -345,36 +322,26 @@ contract ServiceAgreement {
         );
     }
 
-    function sendProof(
-        address assetContract,
-        uint256 tokenId,
-        bytes calldata keyword,
-        uint8 hashFunctionId,
-        uint16 epoch,
-        bytes32[] calldata proof,
-        bytes32 chunkHash
-    )
-        external
-    {
-        bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+    function sendProof(ServiceAgreementStructs.ProofInputArgs memory args) external {
+        bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
-        require(!isProofWindowOpen(agreementId, epoch), "Proof window is open");
+        require(!isProofWindowOpen(agreementId, args.epoch), "Proof window is open");
 
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
         ServiceAgreementStorage sas = serviceAgreementStorage;
 
         require(
-            sas.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, epoch, identityId))) != 0,
+            sas.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) != 0,
             "You've been already rewarded"
         );
 
-        bytes32 nextCommitId = sas.getAgreementEpochSubmissionHead(agreementId, epoch);
+        bytes32 nextCommitId = sas.getAgreementEpochSubmissionHead(agreementId, args.epoch);
         uint32 r0 = parametersStorage.R0();
         uint8 i;
         while ((identityId != sas.getCommitSubmissionsIdentityId(nextCommitId)) && i < r0) {
             nextCommitId = keccak256(
-                abi.encodePacked(agreementId, epoch, sas.getCommitSubmissionNextIdentityId(nextCommitId))
+                abi.encodePacked(agreementId, args.epoch, sas.getCommitSubmissionNextIdentityId(nextCommitId))
             );
             unchecked { i++; }
         }
@@ -383,45 +350,33 @@ contract ServiceAgreement {
 
         bytes32 merkleRoot;
         uint256 challenge;
-        (merkleRoot, challenge) = getChallenge(msg.sender, assetContract, tokenId, epoch);
+        (merkleRoot, challenge) = getChallenge(msg.sender, args.assetContract, args.tokenId, args.epoch);
 
         require(
-            MerkleProof.verify(
-                proof,
-                merkleRoot,
-                keccak256(abi.encodePacked(chunkHash, challenge))
-            ),
+            MerkleProof.verify(args.proof, merkleRoot, keccak256(abi.encodePacked(args.chunkHash, challenge))),
             "Root hash doesn't match"
         );
 
         emit ProofSubmitted(
-            assetContract,
-            tokenId,
-            keyword,
-            hashFunctionId,
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId,
             identityId
         );
 
         uint96 reward = (
             sas.getAgreementTokenAmount(agreementId) /
-            (sas.getAgreementEpochsNumber(agreementId) - epoch + 1) /
-            (r0 - sas.getAgreementRewardedNodes(agreementId, epoch))
+            (sas.getAgreementEpochsNumber(agreementId) - args.epoch + 1) /
+            (r0 - sas.getAgreementRewardedNodesNumber(agreementId, args.epoch))
         );
 
         stakingContract.addReward(identityId, msg.sender, reward);
-
         sas.setAgreementTokenAmount(agreementId, sas.getAgreementTokenAmount(agreementId) - reward);
-        sas.setAgreementRewardedNodes(agreementId, epoch, sas.getAgreementRewardedNodes(agreementId, epoch) + 1);
+        sas.incrementAgreementRewardedNodesNumber(agreementId, args.epoch);
 
         // To make sure that node already received reward
-        sas.setCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, epoch, identityId)), 0);
-    }
-
-    function setScoringFunction(bytes32 agreementId, uint8 newScoreFunctionId) external onlyAssetContracts {
-        ServiceAgreementStorage sas = serviceAgreementStorage;
-        require(sas.serviceAgreementExists(agreementId), "Service Agreement doesn't exist");
-        require(scoringProxy.isScoreFunction(newScoreFunctionId), "Score function doesn't exist");
-        sas.setAgreementScoreFunctionId(agreementId, newScoreFunctionId);
+        sas.setCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId)), 0);
     }
 
     function _insertCommit(
@@ -504,7 +459,7 @@ contract ServiceAgreement {
         );
     }
 
-    function _generateAgreementId(address assetContract, uint256 tokenId, bytes calldata keyword, uint8 hashFunctionId)
+    function _generateAgreementId(address assetContract, uint256 tokenId, bytes memory keyword, uint8 hashFunctionId)
         private
         returns (bytes32)
     {
