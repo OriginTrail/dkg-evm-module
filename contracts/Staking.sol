@@ -5,9 +5,10 @@ pragma solidity ^0.8.0;
 import { Hub } from "./Hub.sol";
 import { Shares } from "./Shares.sol";
 import { ShardingTable } from "./ShardingTable.sol";
-import { ShardingTableStorage } from "./ShardingTableStorage.sol";
+import { ShardingTableStorage } from "./storage/ShardingTableStorage.sol";
 import { IdentityStorage } from "./storage/IdentityStorage.sol";
 import { ParametersStorage } from "./storage/ParametersStorage.sol";
+import { ServiceAgreementStorage } from "./storage/ServiceAgreementStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { StakingStorage } from "./storage/StakingStorage.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -16,10 +17,12 @@ contract Staking {
 
     event StakeIncreased(
         uint72 indexed identityId,
+        address indexed staker,
         uint96 newStakeAmount
     );
     event StakeWithdrawn(
         uint72 indexed identityId,
+        address indexed staker,
         uint96 withdrawnStakeAmount
     );
     event RewardAdded(
@@ -35,6 +38,7 @@ contract Staking {
     IERC20 public tokenContract;
     ShardingTable public shardingTable;
     ShardingTableStorage public shardingTableStorage;
+    ServiceAgreementStorage public serviceAgreementStorage;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -47,6 +51,7 @@ contract Staking {
         tokenContract = IERC20(hub.getContractAddress("Token"));
         shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
+        serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
     }
 
     modifier onlyContracts(){
@@ -64,8 +69,7 @@ contract Staking {
             tokenContract.allowance(msg.sender, address(this)) >= tracAdded,
             "Account does not have sufficient allowance"
         );
-        require(tokenContract.balanceOf(msg.sender) >= tracAdded, "Account does not have sufficient balance");
-        require(tracAdded + ss.totalStakes(identityId) < ps.maximumStake(), "Exceeded the maximum stake!");
+        require(tracAdded + ss.totalStakes(identityId) <= ps.maximumStake(), "Exceeded the maximum stake!");
         require(
             ps.delegationEnabled() || identityStorage.identityExists(identityId),
             "No identity/delegation disabled"
@@ -84,16 +88,15 @@ contract Staking {
         }
         sharesContract.mint(msg.sender, sharesMinted);
 
-        // TODO: wait for input where to transfer
-        // tokenContract.transfer(TBD, tracAdded);
+        tokenContract.transfer(address(ss), tracAdded);
 
         ss.setTotalStake(identityId, ss.totalStakes(identityId) + tracAdded);
 
-        if (sts.inShardingTable(identityId) && ss.totalStakes(identityId) >= parametersStorage.minimumStake()) {
+        if (!sts.inShardingTable(identityId) && ss.totalStakes(identityId) >= parametersStorage.minimumStake()) {
             st.pushBack(identityId);
         }
 
-        emit StakeIncreased(identityId, tracAdded);
+        emit StakeIncreased(identityId, msg.sender, tracAdded);
     }
 
     function withdrawStake(uint72 identityId, uint96 sharesBurned) external {
@@ -122,19 +125,32 @@ contract Staking {
             st.removeNode(identityId);
         }
 
-        emit StakeWithdrawn(identityId, uint96(tracWithdrawn));
+        emit StakeWithdrawn(identityId, msg.sender, uint96(tracWithdrawn));
     }
 
-    function addReward(uint72 identityId, uint96 tracAmount) external onlyContracts {
+    function addReward(uint72 identityId, address operationalWallet, uint96 tracAmount) external onlyContracts {
+        require(tracAmount != 0, "Reward > 0");
+
         uint96 operatorFee = stakingStorage.operatorFees(identityId) * tracAmount / 100;
         uint96 reward = tracAmount - operatorFee;
+        ServiceAgreementStorage sas = serviceAgreementStorage;
+        StakingStorage ss = stakingStorage;
+        ShardingTable st = shardingTable;
+        ShardingTableStorage sts = shardingTableStorage;
 
-        // TODO: wait for input where to trasnfer
-        // tokenContract.transfer(TBD, reward);
-        tokenContract.transfer(address(profileStorage), operatorFee);
+        if(reward > 0) {
+            sas.transferReward(address(ss), reward);
+        }
 
-        stakingStorage.setTotalStake(identityId, stakingStorage.totalStakes(identityId) + reward);
-        profileStorage.setReward(identityId, profileStorage.getReward(identityId) + reward);
+        if(operatorFee > 0) {
+            sas.transferReward(operationalWallet, operatorFee);
+        }
+
+        ss.setTotalStake(identityId, ss.totalStakes(identityId) + reward);
+
+        if (!sts.inShardingTable(identityId) && ss.totalStakes(identityId) >= parametersStorage.minimumStake()) {
+            st.pushBack(identityId);
+        }
 
         emit RewardAdded(identityId, tracAmount);
     }
