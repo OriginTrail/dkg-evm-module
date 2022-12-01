@@ -5,6 +5,8 @@ pragma solidity ^0.8.0;
 import { Hub } from "./Hub.sol";
 import { HashingProxy } from "./HashingProxy.sol";
 import { Identity } from "./Identity.sol";
+import { Shares } from "./Shares.sol";
+import { Staking } from "./Staking.sol";
 import { IdentityStorage } from "./storage/IdentityStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { ADMIN_KEY, OPERATIONAL_KEY } from "./constants/IdentityConstants.sol";
@@ -13,6 +15,7 @@ contract Profile {
 
     Hub public hub;
     HashingProxy public hashingProxy;
+    Staking public stakingContract;
     Identity public identityContract;
     IdentityStorage public identityStorage;
     ProfileStorage public profileStorage;
@@ -22,6 +25,7 @@ contract Profile {
 
         hub = Hub(hubAddress);
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+        stakingContract = Staking(hub.getContractAddress("Staking"));
         identityContract = Identity(hub.getContractAddress("Identity"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
@@ -37,7 +41,7 @@ contract Profile {
         _;
     }
 
-    function createProfile(address adminWallet, bytes memory nodeId, uint96 initialAsk) external {
+    function createProfile(address adminWallet, bytes memory nodeId, uint96 initialAsk, uint96 initialStake) external {
         IdentityStorage ids = identityStorage;
         ProfileStorage ps = profileStorage;
 
@@ -48,7 +52,10 @@ contract Profile {
 
         uint72 identityId = identityContract.createIdentity(msg.sender, adminWallet);
 
-        ps.createProfile(identityId, nodeId, initialAsk);
+        Shares sharesContract = new Shares(address(hub), string.concat("Share token ",identityId), string.concat("DKGSTAKE_",identityId));
+        ps.createProfile(identityId, nodeId, initialAsk, address(sharesContract));
+
+        stakingContract.addStake(identityId, initialStake);
     }
 
     function deleteProfile(uint72 identityId) external onlyAdmin(identityId) {

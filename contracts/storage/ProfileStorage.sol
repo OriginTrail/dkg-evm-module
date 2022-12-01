@@ -12,6 +12,7 @@ contract ProfileStorage {
     event ProfileCreated(uint72 indexed identityId, bytes nodeId, uint96 ask);
     event ProfileDeleted(uint72 indexed identityId);
     event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
+    event SharesContractAddressUpdated(uint72 indexed identityId, bytes nodeId, address sharesContractAddress);
 
     Hub public hub;
     HashingProxy public hashingProxy;
@@ -20,6 +21,7 @@ contract ProfileStorage {
     struct ProfileDefinition{
         bytes nodeId;
         uint96 ask;
+        address sharesContractAddress;
         mapping(uint8 => bytes32) nodeAddresses;
     }
 
@@ -41,11 +43,12 @@ contract ProfileStorage {
         _;
     }
 
-    function createProfile(uint72 identityId, bytes calldata nodeId, uint96 ask) external {
+    function createProfile(uint72 identityId, bytes calldata nodeId, uint96 ask, address sharesContractAddress) external {
         ProfileDefinition storage profile = profiles[identityId];
         profile.nodeId = nodeId;
         profile.ask = ask;
-        
+        profile.sharesContractAddress = sharesContractAddress;
+
         setAvailableNodeAddresses(identityId);
 
         nodeIdsList[nodeId] = true;
@@ -53,9 +56,9 @@ contract ProfileStorage {
         emit ProfileCreated(identityId, nodeId, ask);
     }
 
-    function getProfile(uint72 identityId) external view returns (uint96, bytes memory) {
+    function getProfile(uint72 identityId) external view returns (uint96, bytes memory, address) {
         ProfileDefinition storage profile = profiles[identityId];
-        return (profile.ask, profile.nodeId);
+        return (profile.ask, profile.nodeId, profiles.sharesContractAddress);
     }
 
     function deleteProfile(uint72 identityId) external {
@@ -88,6 +91,16 @@ contract ProfileStorage {
         profiles[identityId].ask = ask;
 
         emit AskUpdated(identityId, profiles[identityId].nodeId, ask);
+    }
+
+    function getSharesContractAddress(uint72 identityId) external view returns (address) {
+        return profiles[identityId].sharesContractAddress;
+    }
+
+    function setSharesContractAddress(uint72 identityId, address sharesContractAddress) external onlyContracts {
+        profiles[identityId].sharesContractAddress = sharesContractAddress;
+
+        emit SharesContractAddressUpdated(identityId, profiles[identityId].nodeId, sharesContractAddress);
     }
 
     function getNodeAddress(uint72 identityId, uint8 hashFunctionId) external view returns (bytes32) {

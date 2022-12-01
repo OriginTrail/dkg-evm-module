@@ -65,6 +65,10 @@ contract ShardingTableStorage {
         return nodes[identityId];
     }
 
+    function inShardingTable(uint72 identityId) external view returns(bool) {
+        return nodes[identityId].identityId != 0;
+    }
+
     function removeNode(uint72 identityId) external onlyContracts {
         delete nodes[identityId];
 

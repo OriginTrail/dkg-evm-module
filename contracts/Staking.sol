@@ -4,13 +4,31 @@ pragma solidity ^0.8.0;
 
 import { Hub } from "./Hub.sol";
 import { Shares } from "./Shares.sol";
+import { ShardingTable } from "./ShardingTable.sol";
+import { ShardingTableStorage } from "./storage/ShardingTableStorage.sol";
 import { IdentityStorage } from "./storage/IdentityStorage.sol";
 import { ParametersStorage } from "./storage/ParametersStorage.sol";
+import { ServiceAgreementStorage } from "./storage/ServiceAgreementStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { StakingStorage } from "./storage/StakingStorage.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Staking {
+
+    event StakeIncreased(
+        uint72 indexed identityId,
+        address indexed staker,
+        uint96 newStakeAmount
+    );
+    event StakeWithdrawn(
+        uint72 indexed identityId,
+        address indexed staker,
+        uint96 withdrawnStakeAmount
+    );
+    event RewardAdded(
+        uint72 indexed identityId,
+        uint96 rewardAmount
+    );
 
     Hub public hub;
     IdentityStorage public identityStorage;
@@ -18,6 +36,9 @@ contract Staking {
     ProfileStorage public profileStorage;
     StakingStorage public stakingStorage;
     IERC20 public tokenContract;
+    ShardingTable public shardingTable;
+    ShardingTableStorage public shardingTableStorage;
+    ServiceAgreementStorage public serviceAgreementStorage;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -28,6 +49,9 @@ contract Staking {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
+        shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
+        shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
+        serviceAgreementStorage = ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage"));
     }
 
     modifier onlyContracts(){
@@ -38,8 +62,14 @@ contract Staking {
     function addStake(uint72 identityId, uint96 tracAdded) external {
         StakingStorage ss = stakingStorage;
         ParametersStorage ps = parametersStorage;
+        ShardingTable st = shardingTable;
+        ShardingTableStorage sts = shardingTableStorage;
 
-        require(tracAdded + ss.totalStakes(identityId) < ps.maximumStake(), "Exceeded the maximum stake!");
+        require(
+            tokenContract.allowance(msg.sender, address(this)) >= tracAdded,
+            "Account does not have sufficient allowance"
+        );
+        require(tracAdded + ss.totalStakes(identityId) <= ps.maximumStake(), "Exceeded the maximum stake!");
         require(
             ps.delegationEnabled() || identityStorage.identityExists(identityId),
             "No identity/delegation disabled"
@@ -58,10 +88,15 @@ contract Staking {
         }
         sharesContract.mint(msg.sender, sharesMinted);
 
-        // TODO: wait for input where to transfer
-        // tokenContract.transfer(TBD, tracAdded);
+        tokenContract.transfer(address(ss), tracAdded);
 
         ss.setTotalStake(identityId, ss.totalStakes(identityId) + tracAdded);
+
+        if (!sts.inShardingTable(identityId) && ss.totalStakes(identityId) >= parametersStorage.minimumStake()) {
+            st.pushBack(identityId);
+        }
+
+        emit StakeIncreased(identityId, msg.sender, tracAdded);
     }
 
     function withdrawStake(uint72 identityId, uint96 sharesBurned) external {
@@ -72,6 +107,8 @@ contract Staking {
         require(identityStorage.identityExists(identityId), "Identity doesn't exist");
 
         StakingStorage ss = stakingStorage;
+        ShardingTable st = shardingTable;
+        ShardingTableStorage sts = shardingTableStorage;
 
         uint256 tracWithdrawn = (
             uint256(sharesBurned) * uint256(ss.totalStakes(identityId)) / sharesContract.totalSupply()
@@ -83,18 +120,39 @@ contract Staking {
         tokenContract.transfer(msg.sender, tracWithdrawn);
 
         ss.setTotalStake(identityId, ss.totalStakes(identityId) - uint96(tracWithdrawn));
+
+        if (sts.inShardingTable(identityId) && ss.totalStakes(identityId) < parametersStorage.minimumStake()) {
+            st.removeNode(identityId);
+        }
+
+        emit StakeWithdrawn(identityId, msg.sender, uint96(tracWithdrawn));
     }
 
-    function addReward(uint72 identityId, uint96 tracAmount) external onlyContracts {
+    function addReward(uint72 identityId, address operationalWallet, uint96 tracAmount) external onlyContracts {
+        require(tracAmount != 0, "Reward > 0");
+
         uint96 operatorFee = stakingStorage.operatorFees(identityId) * tracAmount / 100;
         uint96 reward = tracAmount - operatorFee;
+        ServiceAgreementStorage sas = serviceAgreementStorage;
+        StakingStorage ss = stakingStorage;
+        ShardingTable st = shardingTable;
+        ShardingTableStorage sts = shardingTableStorage;
 
-        // TODO: wait for input where to trasnfer
-        // tokenContract.transfer(TBD, reward);
-        tokenContract.transfer(address(profileStorage), operatorFee);
+        if(reward > 0) {
+            sas.transferReward(address(ss), reward);
+        }
 
-        stakingStorage.setTotalStake(identityId, stakingStorage.totalStakes(identityId) + reward);
-        profileStorage.setReward(identityId, profileStorage.getReward(identityId) + reward);
+        if(operatorFee > 0) {
+            sas.transferReward(operationalWallet, operatorFee);
+        }
+
+        ss.setTotalStake(identityId, ss.totalStakes(identityId) + reward);
+
+        if (!sts.inShardingTable(identityId) && ss.totalStakes(identityId) >= parametersStorage.minimumStake()) {
+            st.pushBack(identityId);
+        }
+
+        emit RewardAdded(identityId, tracAmount);
     }
 
     function slash(uint72 identityId) external onlyContracts {
