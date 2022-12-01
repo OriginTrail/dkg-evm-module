@@ -51,12 +51,11 @@ contract Profile {
         require(initialAsk > 0, "Ask can't be 0");
 
         uint72 identityId = identityContract.createIdentity(msg.sender, adminWallet);
-        // TODO: check minimum stake
+
         Shares sharesContract = new Shares(address(hub), string.concat("Share token ",identityId), string.concat("DKGSTAKE_",identityId));
         ps.createProfile(identityId, nodeId, initialAsk, address(sharesContract));
 
         stakingContract.addStake(identityId, initialStake);
-        // TODO: set operator fee
     }
 
     function deleteProfile(uint72 identityId) external onlyAdmin(identityId) {
