@@ -14,6 +14,19 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Staking {
 
+    event StakeIncreased(
+        uint72 indexed identityId,
+        uint96 newStakeAmount
+    );
+    event StakeWithdrawn(
+        uint72 indexed identityId,
+        uint96 withdrawnStakeAmount
+    );
+    event RewardAdded(
+        uint72 indexed identityId,
+        uint96 rewardAmount
+    );
+
     Hub public hub;
     IdentityStorage public identityStorage;
     ParametersStorage public parametersStorage;
@@ -79,6 +92,8 @@ contract Staking {
         if (sts.inShardingTable(identityId) && ss.totalStakes(identityId) >= parametersStorage.minimumStake()) {
             st.pushBack(identityId);
         }
+
+        emit StakeIncreased(identityId, tracAdded);
     }
 
     function withdrawStake(uint72 identityId, uint96 sharesBurned) external {
@@ -107,7 +122,7 @@ contract Staking {
             st.removeNode(identityId);
         }
 
-
+        emit StakeWithdrawn(identityId, uint96(tracWithdrawn));
     }
 
     function addReward(uint72 identityId, uint96 tracAmount) external onlyContracts {
@@ -120,6 +135,8 @@ contract Staking {
 
         stakingStorage.setTotalStake(identityId, stakingStorage.totalStakes(identityId) + reward);
         profileStorage.setReward(identityId, profileStorage.getReward(identityId) + reward);
+
+        emit RewardAdded(identityId, tracAmount);
     }
 
     function slash(uint72 identityId) external onlyContracts {
