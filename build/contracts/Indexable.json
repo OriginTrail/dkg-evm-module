@@ -29,15 +29,15 @@
     "absolutePath": "project:/contracts/interface/Indexable.sol",
     "exportedSymbols": {
       "Indexable": [
-        11072
+        11098
       ]
     },
-    "id": 11073,
+    "id": 11099,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 11066,
+        "id": 11092,
         "literals": [
           "solidity",
           "^",
@@ -54,9 +54,9 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 11072,
+        "id": 11098,
         "linearizedBaseContracts": [
-          11072
+          11098
         ],
         "name": "Indexable",
         "nameLocation": "68:9:38",
@@ -64,7 +64,7 @@
         "nodes": [
           {
             "functionSelector": "af640d0f",
-            "id": 11071,
+            "id": 11097,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
@@ -72,23 +72,23 @@
             "nameLocation": "94:2:38",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11067,
+              "id": 11093,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "96:2:38"
             },
             "returnParameters": {
-              "id": 11070,
+              "id": 11096,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11069,
+                  "id": 11095,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11071,
+                  "scope": 11097,
                   "src": "122:5:38",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -97,7 +97,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 11068,
+                    "id": 11094,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "122:5:38",
@@ -111,14 +111,14 @@
               ],
               "src": "121:7:38"
             },
-            "scope": 11072,
+            "scope": 11098,
             "src": "85:44:38",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 11073,
+        "scope": 11099,
         "src": "58:74:38",
         "usedErrors": []
       }
@@ -131,7 +131,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T10:25:44.669Z",
+  "updatedAt": "2022-12-02T11:59:36.518Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

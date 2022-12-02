@@ -65,44 +65,12 @@ contract Staking {
         _;
     }
 
-    function addStake(uint72 identityId, uint96 tracAdded) external {
-        StakingStorage ss = stakingStorage;
-        ParametersStorage ps = parametersStorage;
-        ShardingTable stc = shardingTableContract;
-        ShardingTableStorage sts = shardingTableStorage;
-        IERC20 tknc = tokenContract;
+    function addStake(address sender, uint72 identityId, uint96 stakeAmount) external onlyContracts {
+        _addStake(sender, identityId, stakeAmount);
+    }
 
-        require(
-            tknc.allowance(msg.sender, address(this)) >= tracAdded,
-            "Account does not have sufficient allowance"
-        );
-        require(tracAdded + ss.totalStakes(identityId) <= ps.maximumStake(), "Exceeded the maximum stake!");
-        require(
-            ps.delegationEnabled() || identityStorage.identityExists(identityId),
-            "No identity/delegation disabled"
-        );
-
-        Shares sharesContract = Shares(profileStorage.getSharesContractAddress(identityId));
-
-        uint256 sharesMinted;
-        if(sharesContract.totalSupply() == 0) {
-            sharesMinted = tracAdded;
-        } else {
-            sharesMinted = (
-                tracAdded * sharesContract.totalSupply() / ss.totalStakes(identityId)
-            );
-        }
-        sharesContract.mint(msg.sender, sharesMinted);
-
-        tknc.transfer(address(ss), tracAdded);
-
-        ss.setTotalStake(identityId, ss.totalStakes(identityId) + tracAdded);
-
-        if (!sts.nodeExists(identityId) && ss.totalStakes(identityId) >= parametersStorage.minimumStake()) {
-            stc.pushBack(identityId);
-        }
-
-        emit StakeIncreased(identityId, msg.sender, tracAdded);
+    function addStake(uint72 identityId, uint96 stakeAmount) external {
+        _addStake(msg.sender, identityId, stakeAmount);
     }
 
     function withdrawStake(uint72 identityId, uint96 sharesToBurn) external {
@@ -168,6 +136,47 @@ contract Staking {
     function setOperatorFee(uint72 identityId, uint8 operatorFee) external onlyAdmin(identityId) {
         require(operatorFee <= 100, "Operator fee out of [0, 100]");
         stakingStorage.setOperatorFee(identityId, operatorFee);
+    }
+
+    function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal {
+        StakingStorage ss = stakingStorage;
+        ParametersStorage ps = parametersStorage;
+        IERC20 tknc = tokenContract;
+
+        require(
+            tknc.allowance(sender, address(this)) >= stakeAmount,
+            "Account does not have sufficient allowance"
+        );
+        require(stakeAmount + ss.totalStakes(identityId) <= ps.maximumStake(), "Exceeded the maximum stake!");
+        require(
+            ps.delegationEnabled() || identityStorage.identityExists(identityId),
+            "No identity/delegation disabled"
+        );
+
+        Shares sharesContract = Shares(profileStorage.getSharesContractAddress(identityId));
+
+        uint256 sharesMinted;
+        if(sharesContract.totalSupply() == 0) {
+            sharesMinted = stakeAmount;
+        } else {
+            sharesMinted = (
+                stakeAmount * sharesContract.totalSupply() / ss.totalStakes(identityId)
+            );
+        }
+        sharesContract.mint(sender, sharesMinted);
+
+        tknc.transfer(address(ss), stakeAmount);
+
+        ss.setTotalStake(identityId, ss.totalStakes(identityId) + stakeAmount);
+
+        if (
+            !shardingTableStorage.nodeExists(identityId) &&
+            ss.totalStakes(identityId) >= parametersStorage.minimumStake()
+        ) {
+            shardingTableContract.pushBack(identityId);
+        }
+
+        emit StakeIncreased(identityId, sender, stakeAmount);
     }
 
     function _checkHub() internal view virtual {

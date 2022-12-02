@@ -1564,7 +1564,7 @@
                 }
               ]
             },
-            "name": "abi_encode_tuple_t_contract$_AssertionStorage_$11725__to_t_address__fromStack_reversed",
+            "name": "abi_encode_tuple_t_contract$_AssertionStorage_$11751__to_t_address__fromStack_reversed",
             "nodeType": "YulFunctionDefinition",
             "parameters": [
               {
@@ -3830,7 +3830,7 @@
           }
         ]
       },
-      "contents": "{\n    { }\n    function abi_encode_tuple_t_contract$_Hub_$6503__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function validator_revert_address(value)\n    {\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_bytes32t_addresst_uint128t_uint32t_uint96(headStart, dataEnd) -> value0, value1, value2, value3, value4\n    {\n        if slt(sub(dataEnd, headStart), 160) { revert(0, 0) }\n        value0 := calldataload(headStart)\n        let value := calldataload(add(headStart, 32))\n        validator_revert_address(value)\n        value1 := value\n        let value_1 := calldataload(add(headStart, 64))\n        if iszero(eq(value_1, and(value_1, 0xffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n        value2 := value_1\n        let value_2 := calldataload(add(headStart, 96))\n        if iszero(eq(value_2, and(value_2, 0xffffffff))) { revert(0, 0) }\n        value3 := value_2\n        let value_3 := calldataload(add(headStart, 128))\n        if iszero(eq(value_3, and(value_3, 0xffffffffffffffffffffffff))) { revert(0, 0) }\n        value4 := value_3\n    }\n    function abi_encode_tuple_t_contract$_AssertionStorage_$11725__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_stringliteral_89df3aa9dc91c9e6b7335c5e2141e0bfb20f31d66286767058f28a65b2c60566__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 28)\n        mstore(add(headStart, 64), \"Assertion ID cannot be empty\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_ee728aa177f670eaf731cf29f05fa56955210a574160125e151fffe96ad2452a__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 28)\n        mstore(add(headStart, 64), \"Issuer address cannot be 0x0\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_decode_tuple_t_bool_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        if iszero(eq(value, iszero(iszero(value)))) { revert(0, 0) }\n        value0 := value\n    }\n    function abi_decode_tuple_t_address_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        validator_revert_address(value)\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_284a64410f240e2d7a43cb03ed4a0bfa8cde125b8a3fe1c73a581caeabc5857b__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 24)\n        mstore(add(headStart, 64), \"Assertion already exists\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_107600d144cabcb55363ca43a3b12daecb886417ca17ba42db593ade3cb01141__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 16)\n        mstore(add(headStart, 64), \"Size cannot be 0\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_2523cdef5b64564e3701017cfed95f30bed03db94f30c140600b192db4daec80__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 26)\n        mstore(add(headStart, 64), \"Triples number cannot be 0\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_bb6442e9740298e44a5a8e78f5cd9f748085a34f577b064d5f3954e116ec9def__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 25)\n        mstore(add(headStart, 64), \"Chunks number cannot be 0\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_bytes32_t_address_t_uint128_t_uint32_t_uint96__to_t_bytes32_t_address_t_uint128_t_uint32_t_uint96__fromStack_reversed(headStart, value4, value3, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 160)\n        mstore(headStart, value0)\n        mstore(add(headStart, 32), and(value1, 0xffffffffffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 64), and(value2, 0xffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 96), and(value3, 0xffffffff))\n        mstore(add(headStart, 128), and(value4, 0xffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_address__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_stringliteral_393bdd944caef85d9bceb90a3f35ffce9cfa2daa344fb77fe802d6537c229e07__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 31)\n        mstore(add(headStart, 64), \"Fn can only be called by assets\")\n        tail := add(headStart, 96)\n    }\n}",
+      "contents": "{\n    { }\n    function abi_encode_tuple_t_contract$_Hub_$6503__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function validator_revert_address(value)\n    {\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_bytes32t_addresst_uint128t_uint32t_uint96(headStart, dataEnd) -> value0, value1, value2, value3, value4\n    {\n        if slt(sub(dataEnd, headStart), 160) { revert(0, 0) }\n        value0 := calldataload(headStart)\n        let value := calldataload(add(headStart, 32))\n        validator_revert_address(value)\n        value1 := value\n        let value_1 := calldataload(add(headStart, 64))\n        if iszero(eq(value_1, and(value_1, 0xffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n        value2 := value_1\n        let value_2 := calldataload(add(headStart, 96))\n        if iszero(eq(value_2, and(value_2, 0xffffffff))) { revert(0, 0) }\n        value3 := value_2\n        let value_3 := calldataload(add(headStart, 128))\n        if iszero(eq(value_3, and(value_3, 0xffffffffffffffffffffffff))) { revert(0, 0) }\n        value4 := value_3\n    }\n    function abi_encode_tuple_t_contract$_AssertionStorage_$11751__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_stringliteral_89df3aa9dc91c9e6b7335c5e2141e0bfb20f31d66286767058f28a65b2c60566__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 28)\n        mstore(add(headStart, 64), \"Assertion ID cannot be empty\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_ee728aa177f670eaf731cf29f05fa56955210a574160125e151fffe96ad2452a__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 28)\n        mstore(add(headStart, 64), \"Issuer address cannot be 0x0\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_decode_tuple_t_bool_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        if iszero(eq(value, iszero(iszero(value)))) { revert(0, 0) }\n        value0 := value\n    }\n    function abi_decode_tuple_t_address_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        validator_revert_address(value)\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_284a64410f240e2d7a43cb03ed4a0bfa8cde125b8a3fe1c73a581caeabc5857b__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 24)\n        mstore(add(headStart, 64), \"Assertion already exists\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_107600d144cabcb55363ca43a3b12daecb886417ca17ba42db593ade3cb01141__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 16)\n        mstore(add(headStart, 64), \"Size cannot be 0\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_2523cdef5b64564e3701017cfed95f30bed03db94f30c140600b192db4daec80__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 26)\n        mstore(add(headStart, 64), \"Triples number cannot be 0\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_bb6442e9740298e44a5a8e78f5cd9f748085a34f577b064d5f3954e116ec9def__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 25)\n        mstore(add(headStart, 64), \"Chunks number cannot be 0\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_bytes32_t_address_t_uint128_t_uint32_t_uint96__to_t_bytes32_t_address_t_uint128_t_uint32_t_uint96__fromStack_reversed(headStart, value4, value3, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 160)\n        mstore(headStart, value0)\n        mstore(add(headStart, 32), and(value1, 0xffffffffffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 64), and(value2, 0xffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 96), and(value3, 0xffffffff))\n        mstore(add(headStart, 128), and(value4, 0xffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_address__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_stringliteral_393bdd944caef85d9bceb90a3f35ffce9cfa2daa344fb77fe802d6537c229e07__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 31)\n        mstore(add(headStart, 64), \"Fn can only be called by assets\")\n        tail := add(headStart, 96)\n    }\n}",
       "id": 54,
       "language": "Yul",
       "name": "#utility.yul"
@@ -3847,10 +3847,10 @@
         6005
       ],
       "AssertionStorage": [
-        11725
+        11751
       ],
       "AssertionStructs": [
-        14033
+        14059
       ],
       "Hub": [
         6503
@@ -3903,7 +3903,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 6006,
-        "sourceUnit": 11726,
+        "sourceUnit": 11752,
         "src": "91:66:19",
         "symbolAliases": [
           {
@@ -3912,7 +3912,7 @@
               "name": "AssertionStorage",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 11725,
+              "referencedDeclaration": 11751,
               "src": "100:16:19",
               "typeDescriptions": {}
             },
@@ -3928,7 +3928,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 6006,
-        "sourceUnit": 14034,
+        "sourceUnit": 14060,
         "src": "158:66:19",
         "symbolAliases": [
           {
@@ -3937,7 +3937,7 @@
               "name": "AssertionStructs",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 14033,
+              "referencedDeclaration": 14059,
               "src": "167:16:19",
               "typeDescriptions": {}
             },
@@ -4009,7 +4009,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_AssertionStorage_$11725",
+              "typeIdentifier": "t_contract$_AssertionStorage_$11751",
               "typeString": "contract AssertionStorage"
             },
             "typeName": {
@@ -4019,13 +4019,13 @@
                 "id": 5863,
                 "name": "AssertionStorage",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 11725,
+                "referencedDeclaration": 11751,
                 "src": "266:16:19"
               },
-              "referencedDeclaration": 11725,
+              "referencedDeclaration": 11751,
               "src": "266:16:19",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_AssertionStorage_$11725",
+                "typeIdentifier": "t_contract$_AssertionStorage_$11751",
                 "typeString": "contract AssertionStorage"
               }
             },
@@ -4265,7 +4265,7 @@
                       "referencedDeclaration": 5865,
                       "src": "409:16:19",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_AssertionStorage_$11725",
+                        "typeIdentifier": "t_contract$_AssertionStorage_$11751",
                         "typeString": "contract AssertionStorage"
                       }
                     },
@@ -4352,10 +4352,10 @@
                         "name": "AssertionStorage",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 11725,
+                        "referencedDeclaration": 11751,
                         "src": "428:16:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_AssertionStorage_$11725_$",
+                          "typeIdentifier": "t_type$_t_contract$_AssertionStorage_$11751_$",
                           "typeString": "type(contract AssertionStorage)"
                         }
                       },
@@ -4370,13 +4370,13 @@
                       "src": "428:60:19",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_AssertionStorage_$11725",
+                        "typeIdentifier": "t_contract$_AssertionStorage_$11751",
                         "typeString": "contract AssertionStorage"
                       }
                     },
                     "src": "409:79:19",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_AssertionStorage_$11725",
+                      "typeIdentifier": "t_contract$_AssertionStorage_$11751",
                       "typeString": "contract AssertionStorage"
                     }
                   },
@@ -4525,7 +4525,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_AssertionStorage_$11725",
+                        "typeIdentifier": "t_contract$_AssertionStorage_$11751",
                         "typeString": "contract AssertionStorage"
                       },
                       "typeName": {
@@ -4535,13 +4535,13 @@
                           "id": 5917,
                           "name": "AssertionStorage",
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 11725,
+                          "referencedDeclaration": 11751,
                           "src": "746:16:19"
                         },
-                        "referencedDeclaration": 11725,
+                        "referencedDeclaration": 11751,
                         "src": "746:16:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_AssertionStorage_$11725",
+                          "typeIdentifier": "t_contract$_AssertionStorage_$11751",
                           "typeString": "contract AssertionStorage"
                         }
                       },
@@ -4557,7 +4557,7 @@
                     "referencedDeclaration": 5865,
                     "src": "769:16:19",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_AssertionStorage_$11725",
+                      "typeIdentifier": "t_contract$_AssertionStorage_$11751",
                       "typeString": "contract AssertionStorage"
                     }
                   },
@@ -4925,7 +4925,7 @@
                                 "referencedDeclaration": 5919,
                                 "src": "938:3:19",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_contract$_AssertionStorage_$11725",
+                                  "typeIdentifier": "t_contract$_AssertionStorage_$11751",
                                   "typeString": "contract AssertionStorage"
                                 }
                               },
@@ -4936,7 +4936,7 @@
                               "lValueRequested": false,
                               "memberName": "assertionExists",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 11711,
+                              "referencedDeclaration": 11737,
                               "src": "938:19:19",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_function_external_view$_t_bytes32_$returns$_t_bool_$",
@@ -5021,7 +5021,7 @@
                                     "referencedDeclaration": 5919,
                                     "src": "985:3:19",
                                     "typeDescriptions": {
-                                      "typeIdentifier": "t_contract$_AssertionStorage_$11725",
+                                      "typeIdentifier": "t_contract$_AssertionStorage_$11751",
                                       "typeString": "contract AssertionStorage"
                                     }
                                   },
@@ -5032,7 +5032,7 @@
                                   "lValueRequested": false,
                                   "memberName": "getAssertionIssuer",
                                   "nodeType": "MemberAccess",
-                                  "referencedDeclaration": 11657,
+                                  "referencedDeclaration": 11683,
                                   "src": "985:22:19",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_function_external_view$_t_bytes32_$returns$_t_address_$",
@@ -5566,7 +5566,7 @@
                         "referencedDeclaration": 5919,
                         "src": "1223:3:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_AssertionStorage_$11725",
+                          "typeIdentifier": "t_contract$_AssertionStorage_$11751",
                           "typeString": "contract AssertionStorage"
                         }
                       },
@@ -5577,7 +5577,7 @@
                       "lValueRequested": false,
                       "memberName": "createAssertion",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 11618,
+                      "referencedDeclaration": 11644,
                       "src": "1223:19:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_bytes32_$_t_address_$_t_uint128_$_t_uint32_$_t_uint96_$returns$__$",
@@ -5970,7 +5970,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T10:25:44.549Z",
+  "updatedAt": "2022-12-02T11:59:36.389Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

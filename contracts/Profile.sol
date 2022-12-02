@@ -76,7 +76,7 @@ contract Profile {
         _setAvailableNodeAddresses(identityId);
 
         Staking sc = stakingContract;
-        sc.addStake(identityId, initialStake);
+        sc.addStake(msg.sender, identityId, initialStake);
         sc.setOperatorFee(identityId, operatorFee);
     }
 
@@ -118,7 +118,7 @@ contract Profile {
         require(accumulatedOperatorFee != 0, "You have no operator fees");
 
         ps.setAccumulatedOperatorFee(identityId, 0);
-        stakingContract.addStake(identityId, accumulatedOperatorFee);
+        stakingContract.addStake(msg.sender, identityId, accumulatedOperatorFee);
     }
 
     function withdrawAccumulatedOperatorFee(uint72 identityId) external onlyAdmin(identityId) {

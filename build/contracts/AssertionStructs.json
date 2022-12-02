@@ -15,15 +15,15 @@
     "absolutePath": "project:/contracts/structs/AssertionStructs.sol",
     "exportedSymbols": {
       "AssertionStructs": [
-        14033
+        14059
       ]
     },
-    "id": 14034,
+    "id": 14060,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 14021,
+        "id": 14047,
         "literals": [
           "solidity",
           "^",
@@ -40,9 +40,9 @@
         "contractDependencies": [],
         "contractKind": "library",
         "fullyImplemented": true,
-        "id": 14033,
+        "id": 14059,
         "linearizedBaseContracts": [
-          14033
+          14059
         ],
         "name": "AssertionStructs",
         "nameLocation": "66:16:48",
@@ -50,16 +50,16 @@
         "nodes": [
           {
             "canonicalName": "AssertionStructs.Assertion",
-            "id": 14032,
+            "id": 14058,
             "members": [
               {
                 "constant": false,
-                "id": 14023,
+                "id": 14049,
                 "mutability": "mutable",
                 "name": "timestamp",
                 "nameLocation": "118:9:48",
                 "nodeType": "VariableDeclaration",
-                "scope": 14032,
+                "scope": 14058,
                 "src": "110:17:48",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -68,7 +68,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 14022,
+                  "id": 14048,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "110:7:48",
@@ -81,12 +81,12 @@
               },
               {
                 "constant": false,
-                "id": 14025,
+                "id": 14051,
                 "mutability": "mutable",
                 "name": "issuer",
                 "nameLocation": "139:6:48",
                 "nodeType": "VariableDeclaration",
-                "scope": 14032,
+                "scope": 14058,
                 "src": "131:14:48",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -95,7 +95,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 14024,
+                  "id": 14050,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "131:7:48",
@@ -109,12 +109,12 @@
               },
               {
                 "constant": false,
-                "id": 14027,
+                "id": 14053,
                 "mutability": "mutable",
                 "name": "size",
                 "nameLocation": "157:4:48",
                 "nodeType": "VariableDeclaration",
-                "scope": 14032,
+                "scope": 14058,
                 "src": "149:12:48",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -123,7 +123,7 @@
                   "typeString": "uint128"
                 },
                 "typeName": {
-                  "id": 14026,
+                  "id": 14052,
                   "name": "uint128",
                   "nodeType": "ElementaryTypeName",
                   "src": "149:7:48",
@@ -136,12 +136,12 @@
               },
               {
                 "constant": false,
-                "id": 14029,
+                "id": 14055,
                 "mutability": "mutable",
                 "name": "triplesNumber",
                 "nameLocation": "172:13:48",
                 "nodeType": "VariableDeclaration",
-                "scope": 14032,
+                "scope": 14058,
                 "src": "165:20:48",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -150,7 +150,7 @@
                   "typeString": "uint32"
                 },
                 "typeName": {
-                  "id": 14028,
+                  "id": 14054,
                   "name": "uint32",
                   "nodeType": "ElementaryTypeName",
                   "src": "165:6:48",
@@ -163,12 +163,12 @@
               },
               {
                 "constant": false,
-                "id": 14031,
+                "id": 14057,
                 "mutability": "mutable",
                 "name": "chunksNumber",
                 "nameLocation": "196:12:48",
                 "nodeType": "VariableDeclaration",
-                "scope": 14032,
+                "scope": 14058,
                 "src": "189:19:48",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -177,7 +177,7 @@
                   "typeString": "uint96"
                 },
                 "typeName": {
-                  "id": 14030,
+                  "id": 14056,
                   "name": "uint96",
                   "nodeType": "ElementaryTypeName",
                   "src": "189:6:48",
@@ -192,12 +192,12 @@
             "name": "Assertion",
             "nameLocation": "97:9:48",
             "nodeType": "StructDefinition",
-            "scope": 14033,
+            "scope": 14059,
             "src": "90:122:48",
             "visibility": "public"
           }
         ],
-        "scope": 14034,
+        "scope": 14060,
         "src": "58:161:48",
         "usedErrors": []
       }
@@ -210,7 +210,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T10:25:44.712Z",
+  "updatedAt": "2022-12-02T11:59:36.564Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
