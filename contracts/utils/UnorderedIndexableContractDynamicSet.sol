@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import { Indexable } from "../interface/Indexable.sol";
 
 library UnorderedIndexableContractDynamicSetLib {
+
     struct Contract {
         uint8 id;
         address addr;
@@ -16,21 +17,21 @@ library UnorderedIndexableContractDynamicSetLib {
     }
 
     function append(Set storage self, uint8 id, address addr) internal {
-        require(id > 0, "(ContractSet) ID must be >0");
-        require(addr != address(0), "(ContractSet) Address cannot be 0x0");
-        require(exists(self, id), "(ContractSet) Contract with given ID already exists");
+        require(id != 0, "(IndexableContractSet) ID canot be 0");
+        require(addr != address(0), "(IndexableContractSet) Address cannot be 0x0");
+        require(!exists(self, id), "(IndexableContractSet) Contract with given ID already exists");
         self.indexPointers[id] = size(self);
         self.contractList.push(Contract(id, addr));
     }
 
     function update(Set storage self, uint8 id, address addr) internal {
-        require(addr != address(0), "(ContractSet) Address cannot be 0x0");
-        require(!exists(self, id), "(ContractSet) Contract with given ID doesn't exists");
+        require(addr != address(0), "(IndexableContractSet) Address cannot be 0x0");
+        require(exists(self, id), "(IndexableContractSet) Contract with given ID doesn't exists");
         self.contractList[self.indexPointers[id]].addr = addr;
     }
 
     function remove(Set storage self, uint8 id) internal {
-        require(!exists(self, id), "(ContractSet) Contract with given ID doesn't exists");
+        require(exists(self, id), "(IndexableContractSet) Contract with given ID doesn't exists");
         uint256 contractToRemoveIndex = self.indexPointers[id];
         Contract memory contractToMove = self.contractList[size(self) - 1];
         uint8 contractToMoveId = Indexable(contractToMove.addr).id();
@@ -43,7 +44,7 @@ library UnorderedIndexableContractDynamicSetLib {
     }
 
     function get(Set storage self, uint8 id) internal view returns (Contract memory) {
-        require(!exists(self, id), "(ContractSet) Contract with given ID doesn't exists");
+        require(exists(self, id), "(IndexableContractSet) Contract with given ID doesn't exists");
         return self.contractList[self.indexPointers[id]];
     }
 
@@ -67,4 +68,5 @@ library UnorderedIndexableContractDynamicSetLib {
     function size(Set storage self) internal view returns (uint256) {
         return self.contractList.length;
     }
+
 } 

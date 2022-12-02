@@ -2,121 +2,113 @@
 
 pragma solidity ^0.8.0;
 
-import {Hub} from '../Hub.sol';
-import {IShardingTableStructs} from '../interface/IShardingTableStructs.sol';
+import { Hub } from "../Hub.sol";
+import { ShardingTableStructs } from "../structs/ShardingTableStructs.sol";
+import { NULL } from "../constants/ShardingTableConstants.sol";
 
-contract ShardingTableStorage is IShardingTableStructs {
+contract ShardingTableStorage {
 
-    bytes public constant _NULL = "";
+    event NodeAdded(uint72 indexed identityId);
+    event NodeRemoved(uint72 indexed identityId);
 
     Hub public hub;
 
-    bytes public head;
-    bytes public tail;
-    uint16 public nodesCount;
+    uint72 public head;
+    uint72 public tail;
+    uint72 public nodesCount;
 
-    mapping(bytes => Node) nodes;
-    mapping(bytes => bytes32) public nodeIdsSha256;
+    // identityId => Node
+    mapping(uint72 => ShardingTableStructs.Node) nodes;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
+
         hub = Hub(hubAddress);
 
-        nodeIdsSha256[_NULL] = sha256(_NULL);
-        head = _NULL;
-        tail = _NULL;
-        nodesCount = 0;
+        head = NULL;
+        tail = NULL;
     }
 
-    modifier onlyContracts(){
-        require(
-            hub.isContract(msg.sender),
-            "Function can only be called by contracts!"
-        );
+    modifier onlyContracts() {
+        _checkHub();
         _;
     }
 
-    function incrementNodesCount()
-        public
-        onlyContracts
-    {
-        nodesCount += 1;
+    function incrementNodesCount() external onlyContracts {
+        nodesCount++;
     }
 
-    function decrementNodesCount()
-        public
-        onlyContracts
-    {
-        nodesCount -= 1;
+    function decrementNodesCount() external onlyContracts {
+        nodesCount--;
     }
 
-    function setHead(bytes memory nodeId)
-        public
-        onlyContracts
-    {
-        head = nodeId;
+    function setHead(uint72 identityId) external onlyContracts {
+        head = identityId;
     }
 
-    function setTail(bytes memory nodeId)
-        public
-        onlyContracts
-    {
-        tail = nodeId;
+    function setTail(uint72 identityId) external onlyContracts {
+        tail = identityId;
     }
 
-    function getNode(bytes memory nodeId)
-        public
+    function createNode(uint72 identityId, uint72 prevIdentityId, uint72 nextIdentityId) external onlyContracts {
+        nodes[identityId] = ShardingTableStructs.Node({
+            identityId: identityId,
+            prevIdentityId: prevIdentityId,
+            nextIdentityId: nextIdentityId
+        });
+
+        emit NodeAdded(identityId);
+    }
+
+    function getNode(uint72 identityId) external view returns (ShardingTableStructs.Node memory) {
+        return nodes[identityId];
+    }
+
+    function removeNode(uint72 identityId) external onlyContracts {
+        delete nodes[identityId];
+
+        emit NodeRemoved(identityId);
+    }
+
+    function nodeExists(uint72 identityId) external view returns (bool) {
+        return nodes[identityId].identityId != 0;
+    }
+
+    function setPrevIdentityId(uint72 identityId, uint72 newPrevIdentityId) external onlyContracts {
+        nodes[identityId].prevIdentityId = newPrevIdentityId;
+    }
+
+    function setNextIdentityId(uint72 identityId, uint72 newNextIdentityId) external onlyContracts {
+        nodes[identityId].nextIdentityId = newNextIdentityId;
+    }
+
+    function getMultipleNodes(uint72 firstIdentityId, uint16 nodesNumber)
+        external
         view
-        returns (Node memory)
+        returns (ShardingTableStructs.Node[] memory)
     {
-        return nodes[nodeId];
-    }
+        ShardingTableStructs.Node[] memory nodesPage = new ShardingTableStructs.Node[](nodesNumber);
 
-    function setNode(bytes memory nodeId, Node memory newNode)
-        public
-        onlyContracts
-    {
-        nodes[nodeId] = newNode;
-    }
-
-    function removeNode(bytes memory nodeId)
-        public
-        onlyContracts
-    {
-        delete nodes[nodeId];
-    }
-
-
-    function setNodeId(bytes memory nodeId, bytes32 nodeIdSha256)
-        public
-        onlyContracts
-    {
-        nodeIdsSha256[nodeId] = nodeIdSha256;
-    }
-
-    function getMultipleNodes(bytes memory firstNodeId, uint16 nodesNumber)
-        public
-        view
-        returns (Node[] memory)
-    {
-
-        Node[] memory nodesPage = new Node[](nodesNumber);
-
-        Node memory currentNode = nodes[firstNodeId];
-        for (uint16 i = 0; i < nodesNumber; i++) {
+        ShardingTableStructs.Node memory currentNode = nodes[firstIdentityId];
+        for (uint256 i; i < nodesNumber; ) {
             nodesPage[i] = currentNode;
-            currentNode = nodes[currentNode.nextNodeId];
+            currentNode = nodes[currentNode.nextIdentityId];
+            unchecked { i++; }
         }
 
         return nodesPage;
     }
 
-    function link(bytes memory leftNodeId, bytes memory rightNodeId)
-        public
-        onlyContracts
-    {
-        nodes[leftNodeId].nextNodeId = rightNodeId;
-        nodes[rightNodeId].prevNodeId = leftNodeId;
+    function link(uint72 leftNodeIdentityId, uint72 rightNodeIdentityId) external onlyContracts {
+        nodes[leftNodeIdentityId].nextIdentityId = rightNodeIdentityId;
+        nodes[rightNodeIdentityId].prevIdentityId = leftNodeIdentityId;
+    }
+
+    function _checkHub() internal view virtual {
+        require(
+            hub.isContract(msg.sender),
+            "Fn can only be called by hub"
+        );
     }
 
 }
