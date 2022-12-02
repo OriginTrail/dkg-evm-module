@@ -374,8 +374,7 @@ contract ServiceAgreementV1 {
             (r0 - sas.getAgreementRewardedNodesNumber(agreementId, args.epoch))
         );
 
-        // TODO: Change msg.sender to admin wallet (?)
-        stakingContract.addReward(identityId, msg.sender, reward);
+        stakingContract.addReward(identityId, reward);
         sas.setAgreementTokenAmount(agreementId, sas.getAgreementTokenAmount(agreementId) - reward);
         sas.incrementAgreementRewardedNodesNumber(agreementId, args.epoch);
 
