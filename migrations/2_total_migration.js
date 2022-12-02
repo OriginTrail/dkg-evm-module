@@ -354,6 +354,7 @@ module.exports = async (deployer, network, accounts) => {
                 console.log(error);
             } finally {
                 // save deployed contracts report
+                deployedContracts.deployedTimestamp = Date.now;
                 console.log(JSON.stringify(deployedContracts, null, 4));
                 const filePath = `../reports/${network}_contracts.json`;
                 fs.writeFileSync(filePath, JSON.stringify(deployedContracts, null, 4));

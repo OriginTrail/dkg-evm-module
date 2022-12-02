@@ -25,11 +25,6 @@
       "evmAddress": "0x129160041790CB7F273C8adc2FAB4a43040a7CeC",
       "substrateAddress": ""
     },
-    "TokenContract": {
-      "deployed": true,
-      "evmAddress": "0xffffffff00000000000000000000000000000001",
-      "substrateAddress": ""
-    },
     "log2pldsfContract": {
       "evmAddress": "0x65dd8dEB4ba7A9B7311866Ef257274cA1D6F9E4E",
       "deployed": true
@@ -81,6 +76,11 @@
     "StakingStorage": {
       "evmAddress": "0x7Bb34Adb0664eEBE250b9E3522cD16ad50535A7F",
       "deployed": true
+    },
+    "TokenContract": {
+      "deployed": true,
+      "evmAddress": "0xffffffff00000000000000000000000000000001",
+      "substrateAddress": ""
     }
   },
   "deployedTimestamp": 0
