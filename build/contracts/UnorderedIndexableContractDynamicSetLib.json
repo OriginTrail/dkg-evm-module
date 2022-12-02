@@ -10,12 +10,12 @@
   "sourceMap": "115:2533:52:-:0;;;;;;;;;;;;;;;-1:-1:-1;;;115:2533:52;;;;;;;;;;;;;;;;;",
   "deployedSourceMap": "115:2533:52:-:0;;;;;;;;",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\nimport { Indexable } from \"../interface/Indexable.sol\";\n\nlibrary UnorderedIndexableContractDynamicSetLib {\n\n    struct Contract {\n        uint8 id;\n        address addr;\n    }\n\n    struct Set {\n        mapping(uint8 => uint256) indexPointers;\n        Contract[] contractList;\n    }\n\n    function append(Set storage self, uint8 id, address addr) internal {\n        require(id != 0, \"(IndexableContractSet) ID canot be 0\");\n        require(addr != address(0), \"(IndexableContractSet) Address cannot be 0x0\");\n        require(!exists(self, id), \"(IndexableContractSet) Contract with given ID already exists\");\n        self.indexPointers[id] = size(self);\n        self.contractList.push(Contract(id, addr));\n    }\n\n    function update(Set storage self, uint8 id, address addr) internal {\n        require(addr != address(0), \"(IndexableContractSet) Address cannot be 0x0\");\n        require(exists(self, id), \"(IndexableContractSet) Contract with given ID doesn't exists\");\n        self.contractList[self.indexPointers[id]].addr = addr;\n    }\n\n    function remove(Set storage self, uint8 id) internal {\n        require(exists(self, id), \"(IndexableContractSet) Contract with given ID doesn't exists\");\n        uint256 contractToRemoveIndex = self.indexPointers[id];\n        Contract memory contractToMove = self.contractList[size(self) - 1];\n        uint8 contractToMoveId = Indexable(contractToMove.addr).id();\n\n        self.indexPointers[contractToMoveId] = contractToRemoveIndex;\n        self.contractList[contractToRemoveIndex] = contractToMove;\n\n        delete self.indexPointers[id];\n        self.contractList.pop();\n    }\n\n    function get(Set storage self, uint8 id) internal view returns (Contract memory) {\n        require(exists(self, id), \"(IndexableContractSet) Contract with given ID doesn't exists\");\n        return self.contractList[self.indexPointers[id]];\n    }\n\n    function getAll(Set storage self) internal view returns (Contract[] memory) {\n        return self.contractList;\n    }\n\n    function getIndex(Set storage self, uint8 id) internal view returns (uint256) {\n        return self.indexPointers[id];\n    }\n\n    function getByIndex(Set storage self, uint256 index) internal view returns (Contract memory) {\n        return self.contractList[index];\n    }\n\n    function exists(Set storage self, uint8 id) internal view returns (bool) {\n        if (size(self) == 0) return false;\n        return self.contractList[self.indexPointers[id]].id == id;\n    }\n\n    function size(Set storage self) internal view returns (uint256) {\n        return self.contractList.length;\n    }\n\n} \n",
-  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/utils/UnorderedIndexableContractDynamicSet.sol",
+  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/utils/UnorderedIndexableContractDynamicSet.sol",
   "ast": {
     "absolutePath": "project:/contracts/utils/UnorderedIndexableContractDynamicSet.sol",
     "exportedSymbols": {
       "Indexable": [
-        11147
+        11167
       ],
       "UnorderedIndexableContractDynamicSetLib": [
         14586
@@ -43,7 +43,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 14587,
-        "sourceUnit": 11148,
+        "sourceUnit": 11168,
         "src": "58:55:52",
         "symbolAliases": [
           {
@@ -52,7 +52,7 @@
               "name": "Indexable",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 11147,
+              "referencedDeclaration": 11167,
               "src": "67:9:52",
               "typeDescriptions": {}
             },
@@ -2038,10 +2038,10 @@
                           "name": "Indexable",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 11147,
+                          "referencedDeclaration": 11167,
                           "src": "1427:9:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_type$_t_contract$_Indexable_$11147_$",
+                            "typeIdentifier": "t_type$_t_contract$_Indexable_$11167_$",
                             "typeString": "type(contract Indexable)"
                           }
                         },
@@ -2056,7 +2056,7 @@
                         "src": "1427:30:52",
                         "tryCall": false,
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Indexable_$11147",
+                          "typeIdentifier": "t_contract$_Indexable_$11167",
                           "typeString": "contract Indexable"
                         }
                       },
@@ -2067,7 +2067,7 @@
                       "lValueRequested": false,
                       "memberName": "id",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 11146,
+                      "referencedDeclaration": 11166,
                       "src": "1427:33:52",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$__$returns$_t_uint8_$",
@@ -3885,7 +3885,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T15:01:56.663Z",
+  "updatedAt": "2022-12-02T16:52:10.476Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

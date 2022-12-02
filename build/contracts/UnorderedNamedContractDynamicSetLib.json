@@ -10,12 +10,12 @@
   "sourceMap": "107:3141:53:-:0;;;;;;;;;;;;;;;-1:-1:-1;;;107:3141:53;;;;;;;;;;;;;;;;;",
   "deployedSourceMap": "107:3141:53:-:0;;;;;;;;",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\nimport { Named } from \"../interface/Named.sol\";\n\nlibrary UnorderedNamedContractDynamicSetLib {\n\n    struct Contract {\n        string name;\n        address addr;\n    }\n\n    struct Set {\n        mapping(string => uint256) indexPointers;\n        Contract[] contractList;\n    }\n\n    function append(Set storage self, string calldata name, address addr) internal {\n        require(\n            keccak256(abi.encodePacked(name)) != keccak256(abi.encodePacked(\"\")),\n            \"(NamedContractSet) Name cannot be empty\"\n        );\n        require(addr != address(0), \"(NamedContractSet) Address cannot be 0x0\");\n        require(!exists(self, name), \"(NamedContractSet) Contract with given name already exists\");\n        self.indexPointers[name] = size(self);\n        self.contractList.push(Contract(name, addr));\n    }\n\n    function update(Set storage self, string calldata name, address addr) internal {\n        require(addr != address(0), \"(NamedContractSet) Address cannot be 0x0\");\n        require(exists(self, name), \"(NamedContractSet) Contract with given name doesn't exists\");\n        self.contractList[self.indexPointers[name]].addr = addr;\n    }\n\n    function remove(Set storage self, string calldata name) internal {\n        require(exists(self, name), \"(NamedContractSet) Contract with given name doesn't exists\");\n        uint256 contractToRemoveIndex = self.indexPointers[name];\n        Contract memory contractToMove = self.contractList[size(self) - 1];\n        string memory contractToMoveName = Named(contractToMove.addr).name();\n\n        self.indexPointers[contractToMoveName] = contractToRemoveIndex;\n        self.contractList[contractToRemoveIndex] = contractToMove;\n\n        delete self.indexPointers[name];\n        self.contractList.pop();\n    }\n\n    function get(Set storage self, string calldata name) internal view returns (Contract memory) {\n        require(exists(self, name), \"(NamedContractSet) Contract with given name doesn't exists\");\n        return self.contractList[self.indexPointers[name]];\n    }\n\n    function getAll(Set storage self) internal view returns (Contract[] memory) {\n        return self.contractList;\n    }\n\n    function getIndex(Set storage self, string calldata name) internal view returns (uint256) {\n        return self.indexPointers[name];\n    }\n\n    function getByIndex(Set storage self, uint256 index) internal view returns (Contract memory) {\n        return self.contractList[index];\n    }\n\n    function exists(Set storage self, string calldata name) internal view returns (bool) {\n        if (size(self) == 0) return false;\n        return keccak256(\n            abi.encodePacked(self.contractList[self.indexPointers[name]].name)\n        ) == keccak256(abi.encodePacked(name));\n    }\n\n    function exists(Set storage self, address addr) internal view returns (bool) {\n        if (size(self) == 0) return false;\n        string memory name = Named(addr).name();\n        return keccak256(\n            abi.encodePacked(self.contractList[self.indexPointers[name]].name)\n        ) == keccak256(abi.encodePacked(name)); \n    }\n\n    function size(Set storage self) internal view returns (uint256) {\n        return self.contractList.length;\n    }\n\n} \n",
-  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/utils/UnorderedNamedContractDynamicSet.sol",
+  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/utils/UnorderedNamedContractDynamicSet.sol",
   "ast": {
     "absolutePath": "project:/contracts/utils/UnorderedNamedContractDynamicSet.sol",
     "exportedSymbols": {
       "Named": [
-        11155
+        11175
       ],
       "UnorderedNamedContractDynamicSetLib": [
         14964
@@ -43,7 +43,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 14965,
-        "sourceUnit": 11156,
+        "sourceUnit": 11176,
         "src": "58:47:53",
         "symbolAliases": [
           {
@@ -52,7 +52,7 @@
               "name": "Named",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 11155,
+              "referencedDeclaration": 11175,
               "src": "67:5:53",
               "typeDescriptions": {}
             },
@@ -2219,10 +2219,10 @@
                           "name": "Named",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 11155,
+                          "referencedDeclaration": 11175,
                           "src": "1563:5:53",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_type$_t_contract$_Named_$11155_$",
+                            "typeIdentifier": "t_type$_t_contract$_Named_$11175_$",
                             "typeString": "type(contract Named)"
                           }
                         },
@@ -2237,7 +2237,7 @@
                         "src": "1563:26:53",
                         "tryCall": false,
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Named_$11155",
+                          "typeIdentifier": "t_contract$_Named_$11175",
                           "typeString": "contract Named"
                         }
                       },
@@ -2248,7 +2248,7 @@
                       "lValueRequested": false,
                       "memberName": "name",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 11154,
+                      "referencedDeclaration": 11174,
                       "src": "1563:31:53",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$__$returns$_t_string_memory_ptr_$",
@@ -4263,10 +4263,10 @@
                           "name": "Named",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 11155,
+                          "referencedDeclaration": 11175,
                           "src": "2948:5:53",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_type$_t_contract$_Named_$11155_$",
+                            "typeIdentifier": "t_type$_t_contract$_Named_$11175_$",
                             "typeString": "type(contract Named)"
                           }
                         },
@@ -4281,7 +4281,7 @@
                         "src": "2948:11:53",
                         "tryCall": false,
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Named_$11155",
+                          "typeIdentifier": "t_contract$_Named_$11175",
                           "typeString": "contract Named"
                         }
                       },
@@ -4292,7 +4292,7 @@
                       "lValueRequested": false,
                       "memberName": "name",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 11154,
+                      "referencedDeclaration": 11174,
                       "src": "2948:16:53",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$__$returns$_t_string_memory_ptr_$",
@@ -4907,7 +4907,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T15:01:56.665Z",
+  "updatedAt": "2022-12-02T16:52:10.478Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

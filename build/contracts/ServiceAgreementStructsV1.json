@@ -10,7 +10,7 @@
   "sourceMap": "58:1261:49:-:0;;;;;;;;;;;;;;;-1:-1:-1;;;58:1261:49;;;;;;;;;;;;;;;;;",
   "deployedSourceMap": "58:1261:49:-:0;;;;;;;;",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\nlibrary ServiceAgreementStructsV1 {\n\n    struct CommitSubmission {\n        uint72 identityId;\n        uint72 prevIdentityId;\n        uint72 nextIdentityId;\n        uint40 score;\n    }\n\n    struct ServiceAgreementInputArgs {\n        address assetCreator;\n        address assetContract;\n        uint256 tokenId;\n        bytes keyword;\n        uint8 hashFunctionId;\n        uint16 epochsNumber;\n        uint96 tokenAmount;\n        uint8 scoreFunctionId;\n    }\n\n    struct ServiceAgreement {\n        uint256 startTime;\n        uint16 epochsNumber;\n        uint128 epochLength;\n        uint96 tokenAmount;\n        uint8 scoreFunctionId;\n        uint8 proofWindowOffsetPerc;\n\n        // epoch => headCommitId\n        mapping(uint16 => bytes32) epochSubmissionHeads;\n        // epoch => number of nodes received rewards\n        mapping(uint16 => uint32) rewardedNodesNumber;\n    }\n\n    struct CommitInputArgs {\n        address assetContract;\n        uint256 tokenId;\n        bytes keyword;\n        uint8 hashFunctionId;\n        uint16 epoch;\n    }\n\n    struct ProofInputArgs {\n        address assetContract;\n        uint256 tokenId;\n        bytes keyword;\n        uint8 hashFunctionId;\n        uint16 epoch;\n        bytes32[] proof;\n        bytes32 chunkHash;\n    }\n\n}\n",
-  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/structs/ServiceAgreementStructsV1.sol",
+  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/structs/ServiceAgreementStructsV1.sol",
   "ast": {
     "absolutePath": "project:/contracts/structs/ServiceAgreementStructsV1.sol",
     "exportedSymbols": {
@@ -1037,7 +1037,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T15:01:56.661Z",
+  "updatedAt": "2022-12-02T16:52:10.475Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

@@ -1213,7 +1213,7 @@
                 }
               ]
             },
-            "name": "abi_encode_tuple_t_contract$_HashingProxy_$6255__to_t_address__fromStack_reversed",
+            "name": "abi_encode_tuple_t_contract$_HashingProxy_$6275__to_t_address__fromStack_reversed",
             "nodeType": "YulFunctionDefinition",
             "parameters": [
               {
@@ -2156,7 +2156,7 @@
                 }
               ]
             },
-            "name": "abi_encode_tuple_t_contract$_Hub_$6503__to_t_address__fromStack_reversed",
+            "name": "abi_encode_tuple_t_contract$_Hub_$6523__to_t_address__fromStack_reversed",
             "nodeType": "YulFunctionDefinition",
             "parameters": [
               {
@@ -9366,7 +9366,7 @@
           }
         ]
       },
-      "contents": "{\n    { }\n    function abi_encode_tuple_t_contract$_HashingProxy_$6255__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_decode_uint72(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_bytes_calldata(offset, end) -> arrayPos, length\n    {\n        if iszero(slt(add(offset, 0x1f), end)) { revert(0, 0) }\n        length := calldataload(offset)\n        if gt(length, 0xffffffffffffffff) { revert(0, 0) }\n        arrayPos := add(offset, 0x20)\n        if gt(add(add(offset, length), 0x20), end) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_uint72t_bytes_calldata_ptr(headStart, dataEnd) -> value0, value1, value2\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        let offset := calldataload(add(headStart, 32))\n        if gt(offset, 0xffffffffffffffff) { revert(0, 0) }\n        let value1_1, value2_1 := abi_decode_bytes_calldata(add(headStart, offset), dataEnd)\n        value1 := value1_1\n        value2 := value2_1\n    }\n    function abi_encode_tuple_t_contract$_Hub_$6503__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_uint72(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n    }\n    function abi_encode_tuple_t_uint96__to_t_uint96__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffff))\n    }\n    function abi_encode_bytes(value, pos) -> end\n    {\n        let length := mload(value)\n        mstore(pos, length)\n        let i := 0\n        for { } lt(i, length) { i := add(i, 0x20) }\n        {\n            let _1 := 0x20\n            mstore(add(add(pos, i), _1), mload(add(add(value, i), _1)))\n        }\n        if gt(i, length)\n        {\n            mstore(add(add(pos, length), 0x20), 0)\n        }\n        end := add(add(pos, and(add(length, 31), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0)), 0x20)\n    }\n    function abi_encode_tuple_t_bytes_memory_ptr__to_t_bytes_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        mstore(headStart, 32)\n        tail := abi_encode_bytes(value0, add(headStart, 32))\n    }\n    function abi_encode_tuple_t_contract$_IERC20_$1169__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_uint72t_uint8(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        let value := calldataload(add(headStart, 32))\n        if iszero(eq(value, and(value, 0xff))) { revert(0, 0) }\n        value1 := value\n    }\n    function abi_decode_tuple_t_bytes_calldata_ptr(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let offset := calldataload(headStart)\n        if gt(offset, 0xffffffffffffffff) { revert(0, 0) }\n        let value0_1, value1_1 := abi_decode_bytes_calldata(add(headStart, offset), dataEnd)\n        value0 := value0_1\n        value1 := value1_1\n    }\n    function abi_encode_tuple_t_bool__to_t_bool__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, iszero(iszero(value0)))\n    }\n    function panic_error_0x41()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x41)\n        revert(0, 0x24)\n    }\n    function abi_decode_tuple_t_bytes_memory_ptr(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let offset := calldataload(headStart)\n        let _1 := 0xffffffffffffffff\n        if gt(offset, _1) { revert(0, 0) }\n        let _2 := add(headStart, offset)\n        if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(0, 0) }\n        let _3 := calldataload(_2)\n        if gt(_3, _1) { panic_error_0x41() }\n        let _4 := 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0\n        let memPtr := mload(64)\n        let newFreePtr := add(memPtr, and(add(and(add(_3, 0x1f), _4), 63), _4))\n        if or(gt(newFreePtr, _1), lt(newFreePtr, memPtr)) { panic_error_0x41() }\n        mstore(64, newFreePtr)\n        mstore(memPtr, _3)\n        if gt(add(add(_2, _3), 32), dataEnd) { revert(0, 0) }\n        calldatacopy(add(memPtr, 32), add(_2, 32), _3)\n        mstore(add(add(memPtr, _3), 32), 0)\n        value0 := memPtr\n    }\n    function abi_decode_address(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_uint96(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_addresst_uint96(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_address(headStart)\n        value1 := abi_decode_uint96(add(headStart, 32))\n    }\n    function abi_decode_tuple_t_uint72t_address(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        value1 := abi_decode_address(add(headStart, 32))\n    }\n    function abi_encode_tuple_t_address__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_decode_tuple_t_uint72t_uint96(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        value1 := abi_decode_uint96(add(headStart, 32))\n    }\n    function abi_encode_tuple_t_bytes_memory_ptr_t_array$_t_uint96_$2_memory_ptr_t_address__to_t_bytes_memory_ptr_t_array$_t_uint96_$2_memory_ptr_t_address__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        mstore(headStart, 128)\n        tail := abi_encode_bytes(value0, add(headStart, 128))\n        let _1 := 32\n        let pos := add(headStart, _1)\n        pos := pos\n        let srcPtr := value1\n        let i := 0\n        for { } lt(i, 0x02) { i := add(i, 1) }\n        {\n            mstore(pos, and(mload(srcPtr), 0xffffffffffffffffffffffff))\n            pos := add(pos, _1)\n            srcPtr := add(srcPtr, _1)\n        }\n        mstore(add(headStart, 96), and(value2, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_uint72t_bytes_calldata_ptrt_uint96t_address(headStart, dataEnd) -> value0, value1, value2, value3, value4\n    {\n        if slt(sub(dataEnd, headStart), 128) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        let offset := calldataload(add(headStart, 32))\n        if gt(offset, 0xffffffffffffffff) { revert(0, 0) }\n        let value1_1, value2_1 := abi_decode_bytes_calldata(add(headStart, offset), dataEnd)\n        value1 := value1_1\n        value2 := value2_1\n        value3 := abi_decode_uint96(add(headStart, 64))\n        value4 := abi_decode_address(add(headStart, 96))\n    }\n    function extract_byte_array_length(data) -> length\n    {\n        length := shr(1, data)\n        let outOfPlaceEncoding := and(data, 1)\n        if iszero(outOfPlaceEncoding) { length := and(length, 0x7f) }\n        if eq(outOfPlaceEncoding, lt(length, 32))\n        {\n            mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n            mstore(4, 0x22)\n            revert(0, 0x24)\n        }\n    }\n    function abi_encode_tuple_packed_t_bytes_storage__to_t_bytes_memory_ptr__nonPadded_inplace_fromStack_reversed(pos, value0) -> end\n    {\n        let ret := 0\n        let slotValue := sload(value0)\n        let length := extract_byte_array_length(slotValue)\n        let _1 := 1\n        switch and(slotValue, _1)\n        case 0 {\n            mstore(pos, and(slotValue, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00))\n            ret := add(pos, length)\n        }\n        case 1 {\n            mstore(0, value0)\n            let _2 := 0x20\n            let dataPos := keccak256(0, _2)\n            let i := 0\n            for { } lt(i, length) { i := add(i, _2) }\n            {\n                mstore(add(pos, i), sload(dataPos))\n                dataPos := add(dataPos, _1)\n            }\n            ret := add(pos, length)\n        }\n        end := ret\n    }\n    function abi_encode_tuple_packed_t_bytes_calldata_ptr__to_t_bytes_memory_ptr__nonPadded_inplace_fromStack_reversed(pos, value1, value0) -> end\n    {\n        calldatacopy(pos, value0, value1)\n        let _1 := add(pos, value1)\n        mstore(_1, 0)\n        end := _1\n    }\n    function abi_encode_tuple_t_uint8_t_bytes_storage__to_t_uint8_t_bytes_memory_ptr__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        mstore(headStart, and(value0, 0xff))\n        let _1 := 32\n        mstore(add(headStart, _1), 64)\n        let ret := 0\n        let slotValue := sload(value1)\n        let length := extract_byte_array_length(slotValue)\n        mstore(add(headStart, 64), length)\n        let _2 := 96\n        let _3 := 1\n        switch and(slotValue, _3)\n        case 0 {\n            mstore(add(headStart, _2), and(slotValue, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00))\n            ret := add(headStart, 128)\n        }\n        case 1 {\n            mstore(0, value1)\n            let dataPos := keccak256(0, _1)\n            let i := 0\n            for { } lt(i, length) { i := add(i, _1) }\n            {\n                mstore(add(add(headStart, i), _2), sload(dataPos))\n                dataPos := add(dataPos, _3)\n            }\n            ret := add(add(headStart, i), _2)\n        }\n        tail := ret\n    }\n    function abi_decode_tuple_t_bytes32_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := mload(headStart)\n    }\n    function abi_encode_tuple_t_address_t_uint96__to_t_address_t_uint256__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 32), and(value1, 0xffffffffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_bool_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        if iszero(eq(value, iszero(iszero(value)))) { revert(0, 0) }\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_594f7f5fe86fab061b9e22bc77ca1b3025e507b69aaafbe7baccf4293ace5c45__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 32)\n        mstore(add(headStart, 64), \"Fn can only be called by the hub\")\n        tail := add(headStart, 96)\n    }\n}",
+      "contents": "{\n    { }\n    function abi_encode_tuple_t_contract$_HashingProxy_$6275__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_decode_uint72(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_bytes_calldata(offset, end) -> arrayPos, length\n    {\n        if iszero(slt(add(offset, 0x1f), end)) { revert(0, 0) }\n        length := calldataload(offset)\n        if gt(length, 0xffffffffffffffff) { revert(0, 0) }\n        arrayPos := add(offset, 0x20)\n        if gt(add(add(offset, length), 0x20), end) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_uint72t_bytes_calldata_ptr(headStart, dataEnd) -> value0, value1, value2\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        let offset := calldataload(add(headStart, 32))\n        if gt(offset, 0xffffffffffffffff) { revert(0, 0) }\n        let value1_1, value2_1 := abi_decode_bytes_calldata(add(headStart, offset), dataEnd)\n        value1 := value1_1\n        value2 := value2_1\n    }\n    function abi_encode_tuple_t_contract$_Hub_$6523__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_uint72(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n    }\n    function abi_encode_tuple_t_uint96__to_t_uint96__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffff))\n    }\n    function abi_encode_bytes(value, pos) -> end\n    {\n        let length := mload(value)\n        mstore(pos, length)\n        let i := 0\n        for { } lt(i, length) { i := add(i, 0x20) }\n        {\n            let _1 := 0x20\n            mstore(add(add(pos, i), _1), mload(add(add(value, i), _1)))\n        }\n        if gt(i, length)\n        {\n            mstore(add(add(pos, length), 0x20), 0)\n        }\n        end := add(add(pos, and(add(length, 31), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0)), 0x20)\n    }\n    function abi_encode_tuple_t_bytes_memory_ptr__to_t_bytes_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        mstore(headStart, 32)\n        tail := abi_encode_bytes(value0, add(headStart, 32))\n    }\n    function abi_encode_tuple_t_contract$_IERC20_$1169__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_uint72t_uint8(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        let value := calldataload(add(headStart, 32))\n        if iszero(eq(value, and(value, 0xff))) { revert(0, 0) }\n        value1 := value\n    }\n    function abi_decode_tuple_t_bytes_calldata_ptr(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let offset := calldataload(headStart)\n        if gt(offset, 0xffffffffffffffff) { revert(0, 0) }\n        let value0_1, value1_1 := abi_decode_bytes_calldata(add(headStart, offset), dataEnd)\n        value0 := value0_1\n        value1 := value1_1\n    }\n    function abi_encode_tuple_t_bool__to_t_bool__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, iszero(iszero(value0)))\n    }\n    function panic_error_0x41()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x41)\n        revert(0, 0x24)\n    }\n    function abi_decode_tuple_t_bytes_memory_ptr(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let offset := calldataload(headStart)\n        let _1 := 0xffffffffffffffff\n        if gt(offset, _1) { revert(0, 0) }\n        let _2 := add(headStart, offset)\n        if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(0, 0) }\n        let _3 := calldataload(_2)\n        if gt(_3, _1) { panic_error_0x41() }\n        let _4 := 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0\n        let memPtr := mload(64)\n        let newFreePtr := add(memPtr, and(add(and(add(_3, 0x1f), _4), 63), _4))\n        if or(gt(newFreePtr, _1), lt(newFreePtr, memPtr)) { panic_error_0x41() }\n        mstore(64, newFreePtr)\n        mstore(memPtr, _3)\n        if gt(add(add(_2, _3), 32), dataEnd) { revert(0, 0) }\n        calldatacopy(add(memPtr, 32), add(_2, 32), _3)\n        mstore(add(add(memPtr, _3), 32), 0)\n        value0 := memPtr\n    }\n    function abi_decode_address(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_uint96(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_addresst_uint96(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_address(headStart)\n        value1 := abi_decode_uint96(add(headStart, 32))\n    }\n    function abi_decode_tuple_t_uint72t_address(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        value1 := abi_decode_address(add(headStart, 32))\n    }\n    function abi_encode_tuple_t_address__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_decode_tuple_t_uint72t_uint96(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        value1 := abi_decode_uint96(add(headStart, 32))\n    }\n    function abi_encode_tuple_t_bytes_memory_ptr_t_array$_t_uint96_$2_memory_ptr_t_address__to_t_bytes_memory_ptr_t_array$_t_uint96_$2_memory_ptr_t_address__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        mstore(headStart, 128)\n        tail := abi_encode_bytes(value0, add(headStart, 128))\n        let _1 := 32\n        let pos := add(headStart, _1)\n        pos := pos\n        let srcPtr := value1\n        let i := 0\n        for { } lt(i, 0x02) { i := add(i, 1) }\n        {\n            mstore(pos, and(mload(srcPtr), 0xffffffffffffffffffffffff))\n            pos := add(pos, _1)\n            srcPtr := add(srcPtr, _1)\n        }\n        mstore(add(headStart, 96), and(value2, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_uint72t_bytes_calldata_ptrt_uint96t_address(headStart, dataEnd) -> value0, value1, value2, value3, value4\n    {\n        if slt(sub(dataEnd, headStart), 128) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        let offset := calldataload(add(headStart, 32))\n        if gt(offset, 0xffffffffffffffff) { revert(0, 0) }\n        let value1_1, value2_1 := abi_decode_bytes_calldata(add(headStart, offset), dataEnd)\n        value1 := value1_1\n        value2 := value2_1\n        value3 := abi_decode_uint96(add(headStart, 64))\n        value4 := abi_decode_address(add(headStart, 96))\n    }\n    function extract_byte_array_length(data) -> length\n    {\n        length := shr(1, data)\n        let outOfPlaceEncoding := and(data, 1)\n        if iszero(outOfPlaceEncoding) { length := and(length, 0x7f) }\n        if eq(outOfPlaceEncoding, lt(length, 32))\n        {\n            mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n            mstore(4, 0x22)\n            revert(0, 0x24)\n        }\n    }\n    function abi_encode_tuple_packed_t_bytes_storage__to_t_bytes_memory_ptr__nonPadded_inplace_fromStack_reversed(pos, value0) -> end\n    {\n        let ret := 0\n        let slotValue := sload(value0)\n        let length := extract_byte_array_length(slotValue)\n        let _1 := 1\n        switch and(slotValue, _1)\n        case 0 {\n            mstore(pos, and(slotValue, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00))\n            ret := add(pos, length)\n        }\n        case 1 {\n            mstore(0, value0)\n            let _2 := 0x20\n            let dataPos := keccak256(0, _2)\n            let i := 0\n            for { } lt(i, length) { i := add(i, _2) }\n            {\n                mstore(add(pos, i), sload(dataPos))\n                dataPos := add(dataPos, _1)\n            }\n            ret := add(pos, length)\n        }\n        end := ret\n    }\n    function abi_encode_tuple_packed_t_bytes_calldata_ptr__to_t_bytes_memory_ptr__nonPadded_inplace_fromStack_reversed(pos, value1, value0) -> end\n    {\n        calldatacopy(pos, value0, value1)\n        let _1 := add(pos, value1)\n        mstore(_1, 0)\n        end := _1\n    }\n    function abi_encode_tuple_t_uint8_t_bytes_storage__to_t_uint8_t_bytes_memory_ptr__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        mstore(headStart, and(value0, 0xff))\n        let _1 := 32\n        mstore(add(headStart, _1), 64)\n        let ret := 0\n        let slotValue := sload(value1)\n        let length := extract_byte_array_length(slotValue)\n        mstore(add(headStart, 64), length)\n        let _2 := 96\n        let _3 := 1\n        switch and(slotValue, _3)\n        case 0 {\n            mstore(add(headStart, _2), and(slotValue, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00))\n            ret := add(headStart, 128)\n        }\n        case 1 {\n            mstore(0, value1)\n            let dataPos := keccak256(0, _1)\n            let i := 0\n            for { } lt(i, length) { i := add(i, _1) }\n            {\n                mstore(add(add(headStart, i), _2), sload(dataPos))\n                dataPos := add(dataPos, _3)\n            }\n            ret := add(add(headStart, i), _2)\n        }\n        tail := ret\n    }\n    function abi_decode_tuple_t_bytes32_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := mload(headStart)\n    }\n    function abi_encode_tuple_t_address_t_uint96__to_t_address_t_uint256__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 32), and(value1, 0xffffffffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_bool_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        if iszero(eq(value, iszero(iszero(value)))) { revert(0, 0) }\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_594f7f5fe86fab061b9e22bc77ca1b3025e507b69aaafbe7baccf4293ace5c45__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 32)\n        mstore(add(headStart, 64), \"Fn can only be called by the hub\")\n        tail := add(headStart, 96)\n    }\n}",
       "id": 54,
       "language": "Yul",
       "name": "#utility.yul"
@@ -9375,15 +9375,15 @@
   "sourceMap": "218:4498:44:-:0;;;977:256;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;-1:-1:-1;;;;;1027:24:44;;1019:33;;;;;;1063:3;:21;;-1:-1:-1;;;;;;1063:21:44;-1:-1:-1;;;;;1063:21:44;;;;;;;;1122:38;;-1:-1:-1;;;1122:38:44;;511:2:54;1122:38:44;;;493:21:54;550:2;530:18;;;523:30;-1:-1:-1;;;569:18:54;;;562:42;1122:22:44;;621:18:54;;1122:38:44;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;1094:12;:67;;-1:-1:-1;;;;;;1094:67:44;-1:-1:-1;;;;;1094:67:44;;;;;;-1:-1:-1;1194:3:44;:31;;-1:-1:-1;;;1194:31:44;;852:2:54;1194:31:44;;;834:21:54;891:1;871:18;;;864:29;-1:-1:-1;;;909:18:54;;;902:35;1194:3:44;;;:22;;954:18:54;;1194:31:44;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;1171:13;:55;;-1:-1:-1;;;;;;1171:55:44;-1:-1:-1;;;;;1171:55:44;;;;;;;;;;-1:-1:-1;218:4498:44;;14:290:54;84:6;137:2;125:9;116:7;112:23;108:32;105:52;;;153:1;150;143:12;105:52;179:16;;-1:-1:-1;;;;;224:31:54;;214:42;;204:70;;270:1;267;260:12;204:70;293:5;14:290;-1:-1:-1;;;14:290:54:o;650:328::-;218:4498:44;;;;;;",
   "deployedSourceMap": "218:4498:44:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;540:32;;;;;;;;;;;;211:42:54;199:55;;;181:74;;169:2;154:18;540:32:44;;;;;;;;2378:272;;;;;;:::i;:::-;;:::i;:::-;;520:14;;;;;;;;;2031:209;;;;;;:::i;:::-;;:::i;2656:114::-;;;;;;:::i;:::-;2739:20;;2714:6;2739:20;;;:8;:20;;;;;:24;;;;;;2656:114;;;;1888:26:54;1876:39;;;1858:58;;1846:2;1831:18;2656:114:44;1714:208:54;2246:126:44;;;;;;:::i;:::-;;:::i;:::-;;;;;;;:::i;578:27::-;;;;;;;;;3897:266;;;;;;:::i;:::-;;:::i;4313:121::-;;;;;;:::i;:::-;;:::i;:::-;;;3855:14:54;;3848:22;3830:41;;3818:2;3803:18;4313:121:44;3690:187:54;849:41:44;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;4440:137;;;;;;:::i;:::-;;:::i;3452:262::-;;;;;;:::i;:::-;;:::i;3295:151::-;;;;;;:::i;:::-;3397:20;;3371:7;3397:20;;;:8;:20;;;;;:42;;;;;;3295:151;3720:171;;;;;;:::i;:::-;3834:20;;;3808:7;3834:20;;;:8;:20;;;;;;;;:50;;;;;:34;;:50;;;;;;3720:171;;;;;;;;6344:25:54;;;6332:2;6317:18;3720:171:44;6198:177:54;4169:138:44;;;;;;:::i;:::-;;:::i;2942:152::-;;;;;;:::i;:::-;3044:20;;3019:6;3044:20;;;:8;:20;;;;;:43;;;;;;;;;2942:152;3100:189;;;;;;:::i;:::-;;:::i;2776:160::-;;;;;;:::i;:::-;;:::i;1738:287::-;;;;;;:::i;:::-;;:::i;:::-;;;;;;;;;:::i;1309:423::-;;;;;;:::i;:::-;;:::i;2378:272::-;1274:11;:9;:11::i;:::-;2508:20:::1;::::0;::::1;2472:33;2508:20:::0;;;:8:::1;:20;::::0;;;;;2539:27;;2508:20;;2472:33;2539:11:::1;::::0;:27:::1;::::0;2508:20;;2539:27:::1;:::i;:::-;::::0;;;::::1;::::0;;;;;::::1;::::0;;;:35;;;::::1;;::::0;;;::::1;::::0;;;::::1;::::0;;2584:23:::1;:7:::0;2601:6;;2584:23:::1;:::i;:::-;;2639:4;2617:11;2629:6;;2617:19;;;;;;;:::i;:::-;::::0;;;::::1;::::0;;;;;::::1;::::0;;;:26;;;::::1;;::::0;;;::::1;::::0;;;::::1;::::0;;-1:-1:-1;;;;2378:272:44:o;2031:209::-;1274:11;:9;:11::i;:::-;2118:20:::1;::::0;::::1;2149:5;2118:20:::0;;;:8:::1;:20;::::0;;;;;2106:40;;:11:::1;::::0;:40:::1;::::0;::::1;:::i;:::-;::::0;;;::::1;::::0;;::::1;::::0;;;;;;;;:48;;;::::1;::::0;::::1;;::::0;;;::::1;::::0;;;2171:20:::1;::::0;::::1;-1:-1:-1::0;2171:20:44;;;:8:::1;:20:::0;;;;;;;2164:27:::1;2171:20:::0;-1:-1:-1;2164:27:44::1;:::i;:::-;-1:-1:-1::0;2164:27:44::1;::::0;::::1;::::0;;;;;;::::1;;::::0;;;::::1;::::0;;2207:26:::1;::::0;::::1;::::0;::::1;::::0;::::1;::::0;2164:27:::1;::::0;2207:26:::1;2031:209:::0;:::o;2246:126::-;2338:20;;;;;;;:8;:20;;;;;2331:34;;2307:12;;2338:20;2331:34;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;2246:126;;;:::o;3897:266::-;1274:11;:9;:11::i;:::-;4048:12:::1;::::0;4119:20:::1;::::0;::::1;4048:12;4119:20:::0;;;:8:::1;:20;::::0;;;;;;;;4048:108;;;;;:12:::1;::::0;;::::1;::::0;:29:::1;::::0;:108:::1;::::0;4091:14;;4048:108:::1;;:::i;:::-;;;;;;;;;;;;;;;;;;;::::0;::::1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;3995:20;::::0;;::::1;;::::0;;;:8:::1;:20;::::0;;;;;;;:50:::1;::::0;;::::1;::::0;;:34:::1;::::0;;::::1;:50:::0;;;:161;3897:266::o;4313:121::-;4385:4;4408:11;4420:6;;4408:19;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;-1:-1:-1;4313:121:44;;;;:::o;4440:137::-;1274:11;:9;:11::i;:::-;4530:13:::1;::::0;:40:::1;::::0;;;;:13:::1;11063:55:54::0;;;4530:40:44::1;::::0;::::1;11045:74:54::0;11167:26;11155:39;;11135:18;;;11128:67;4530:13:44;;::::1;::::0;:22:::1;::::0;11018:18:54;;4530:40:44::1;;;;;;;;;;;;;;;;;;::::0;::::1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;4440:137:::0;;:::o;3452:262::-;1274:11;:9;:11::i;:::-;3569:20:::1;::::0;::::1;;::::0;;;:8:::1;:20;::::0;;;;;;;;:42:::1;;:66:::0;;;::::1;;::::0;::::1;::::0;;::::1;::::0;;;3651:56;;181:74:54;;;3651:56:44::1;::::0;154:18:54;3651:56:44::1;;;;;;;;3452:262:::0;;:::o;4169:138::-;4248:4;1274:11;:9;:11::i;:::-;-1:-1:-1;4271:20:44::1;::::0;::::1;;::::0;;;:8:::1;:20;::::0;;;;:24:::1;;::::0;::::1;;:29:::0;::::1;1295:1;4169:138:::0;;;:::o;3100:189::-;1274:11;:9;:11::i;:::-;3216:20:::1;::::0;;::::1;;::::0;;;:8:::1;:20;::::0;;;;:43:::1;;:66:::0;;::::1;::::0;;::::1;::::0;::::1;::::0;;;::::1;::::0;;;::::1;::::0;;3100:189::o;2776:160::-;1274:11;:9;:11::i;:::-;2856:20:::1;::::0;::::1;;::::0;;;:8:::1;:20;::::0;;;;;;;;:24:::1;;:30:::0;;;::::1;;::::0;::::1;::::0;;::::1;::::0;;;2902:27;;1858:58:54;;;2902:27:44::1;::::0;1831:18:54;2902:27:44::1;1714:208:54::0;1738:287:44;1800:12;1814:16;;:::i;:::-;1887:20;;;1832:7;1887:20;;;:8;:20;;;;;;;;1917:101;;;;;;;;1942:11;;;;;;;;1917:101;;1955:30;;;;;1917:101;;;;;;;1988:29;;;;1917:101;;1887:20;;1917:101;1988:29;;;1887:20;;1917:101;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1738:287;;;;;:::o;1309:423::-;1274:11;:9;:11::i;:::-;1498:20:::1;::::0;::::1;1462:33;1498:20:::0;;;:8:::1;:20;::::0;;;;1528:23:::1;1498:20:::0;1545:6;;1528:23:::1;:::i;:::-;-1:-1:-1::0;1561:11:44::1;::::0;;::::1;:17:::0;;;::::1;;::::0;::::1;;::::0;;1588:29:::1;::::0;::::1;:53:::0;;;::::1;;::::0;::::1;;::::0;;1652:19:::1;::::0;:11:::1;::::0;:19:::1;::::0;1664:6;;;;1652:19:::1;:::i;:::-;::::0;;;::::1;::::0;::::1;::::0;;;;;;;;:26;;;::::1;::::0;::::1;;::::0;;;::::1;::::0;;;1888::54;1876:39;;1858:58;;1694:31:44::1;::::0;::::1;::::0;::::1;::::0;1831:18:54;1694:31:44::1;;;;;;;1452:280;1309:423:::0;;;;;:::o;4583:131::-;4644:3;;:26;;;;;4659:10;4644:26;;;181:74:54;4644:3:44;;;;;:14;;154:18:54;;4644:26:44;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;4636:71;;;;;;;11690:2:54;4636:71:44;;;11672:21:54;;;11709:18;;;11702:30;11768:34;11748:18;;;11741:62;11820:18;;4636:71:44;;;;;;;;4583:131::o;-1:-1:-1:-;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;:::o;:::-;;;;;;;:::i;:::-;;;;;;;;;;;:::o;:::-;;;;;;;;;;;;;;;;;;;;:::i;:::-;;:::o;:::-;;;;;;;;;;;;;;;;;;;;;;;;:::o;:::-;;;;;;;;;;;;;;;266:173:54;333:20;;393;382:32;;372:43;;362:71;;429:1;426;419:12;444:347;495:8;505:6;559:3;552:4;544:6;540:17;536:27;526:55;;577:1;574;567:12;526:55;-1:-1:-1;600:20:54;;643:18;632:30;;629:50;;;675:1;672;665:12;629:50;712:4;704:6;700:17;688:29;;764:3;757:4;748:6;740;736:19;732:30;729:39;726:59;;;781:1;778;771:12;726:59;444:347;;;;;:::o;796:481::-;874:6;882;890;943:2;931:9;922:7;918:23;914:32;911:52;;;959:1;956;949:12;911:52;982:28;1000:9;982:28;:::i;:::-;972:38;;1061:2;1050:9;1046:18;1033:32;1088:18;1080:6;1077:30;1074:50;;;1120:1;1117;1110:12;1074:50;1159:58;1209:7;1200:6;1189:9;1185:22;1159:58;:::i;:::-;796:481;;1236:8;;-1:-1:-1;1133:84:54;;-1:-1:-1;;;;796:481:54:o;1525:184::-;1583:6;1636:2;1624:9;1615:7;1611:23;1607:32;1604:52;;;1652:1;1649;1642:12;1604:52;1675:28;1693:9;1675:28;:::i;:::-;1665:38;1525:184;-1:-1:-1;;;1525:184:54:o;1927:530::-;1968:3;2006:5;2000:12;2033:6;2028:3;2021:19;2058:1;2068:162;2082:6;2079:1;2076:13;2068:162;;;2144:4;2200:13;;;2196:22;;2190:29;2172:11;;;2168:20;;2161:59;2097:12;2068:162;;;2248:6;2245:1;2242:13;2239:87;;;2314:1;2307:4;2298:6;2293:3;2289:16;2285:27;2278:38;2239:87;-1:-1:-1;2371:2:54;2359:15;2376:66;2355:88;2346:98;;;;2446:4;2342:109;;1927:530;-1:-1:-1;;1927:530:54:o;2462:217::-;2609:2;2598:9;2591:21;2572:4;2629:44;2669:2;2658:9;2654:18;2646:6;2629:44;:::i;2930:341::-;2995:6;3003;3056:2;3044:9;3035:7;3031:23;3027:32;3024:52;;;3072:1;3069;3062:12;3024:52;3095:28;3113:9;3095:28;:::i;:::-;3085:38;;3173:2;3162:9;3158:18;3145:32;3217:4;3210:5;3206:16;3199:5;3196:27;3186:55;;3237:1;3234;3227:12;3186:55;3260:5;3250:15;;;2930:341;;;;;:::o;3276:409::-;3346:6;3354;3407:2;3395:9;3386:7;3382:23;3378:32;3375:52;;;3423:1;3420;3413:12;3375:52;3463:9;3450:23;3496:18;3488:6;3485:30;3482:50;;;3528:1;3525;3518:12;3482:50;3567:58;3617:7;3608:6;3597:9;3593:22;3567:58;:::i;:::-;3644:8;;3541:84;;-1:-1:-1;3276:409:54;-1:-1:-1;;;;3276:409:54:o;3882:184::-;3934:77;3931:1;3924:88;4031:4;4028:1;4021:15;4055:4;4052:1;4045:15;4071:980;4139:6;4192:2;4180:9;4171:7;4167:23;4163:32;4160:52;;;4208:1;4205;4198:12;4160:52;4248:9;4235:23;4277:18;4318:2;4310:6;4307:14;4304:34;;;4334:1;4331;4324:12;4304:34;4372:6;4361:9;4357:22;4347:32;;4417:7;4410:4;4406:2;4402:13;4398:27;4388:55;;4439:1;4436;4429:12;4388:55;4475:2;4462:16;4497:2;4493;4490:10;4487:36;;;4503:18;;:::i;:::-;4637:2;4631:9;4699:4;4691:13;;4542:66;4687:22;;;4711:2;4683:31;4679:40;4667:53;;;4735:18;;;4755:22;;;4732:46;4729:72;;;4781:18;;:::i;:::-;4821:10;4817:2;4810:22;4856:2;4848:6;4841:18;4896:7;4891:2;4886;4882;4878:11;4874:20;4871:33;4868:53;;;4917:1;4914;4907:12;4868:53;4973:2;4968;4964;4960:11;4955:2;4947:6;4943:15;4930:46;5018:1;4996:15;;;5013:2;4992:24;4985:35;;;;-1:-1:-1;5000:6:54;4071:980;-1:-1:-1;;;;;4071:980:54:o;5056:196::-;5124:20;;5184:42;5173:54;;5163:65;;5153:93;;5242:1;5239;5232:12;5257:179;5324:20;;5384:26;5373:38;;5363:49;;5353:77;;5426:1;5423;5416:12;5441:258;5508:6;5516;5569:2;5557:9;5548:7;5544:23;5540:32;5537:52;;;5585:1;5582;5575:12;5537:52;5608:29;5627:9;5608:29;:::i;:::-;5598:39;;5656:37;5689:2;5678:9;5674:18;5656:37;:::i;:::-;5646:47;;5441:258;;;;;:::o;5704:::-;5771:6;5779;5832:2;5820:9;5811:7;5807:23;5803:32;5800:52;;;5848:1;5845;5838:12;5800:52;5871:28;5889:9;5871:28;:::i;:::-;5861:38;;5918;5952:2;5941:9;5937:18;5918:38;:::i;6380:256::-;6446:6;6454;6507:2;6495:9;6486:7;6482:23;6478:32;6475:52;;;6523:1;6520;6513:12;6475:52;6546:28;6564:9;6546:28;:::i;6641:746::-;6888:3;6877:9;6870:22;6851:4;6909:45;6949:3;6938:9;6934:19;6926:6;6909:45;:::i;:::-;6901:53;;6973:2;7010;6999:9;6995:18;7055:6;7079:1;7089:200;7103:4;7100:1;7097:11;7089:200;;;7166:13;;7181:26;7162:46;7150:59;;7229:12;;;;7264:15;;;;7123:1;7116:9;7089:200;;;7093:3;;;;7337:42;7329:6;7325:55;7320:2;7309:9;7305:18;7298:83;6641:746;;;;;;:::o;7392:628::-;7487:6;7495;7503;7511;7519;7572:3;7560:9;7551:7;7547:23;7543:33;7540:53;;;7589:1;7586;7579:12;7540:53;7612:28;7630:9;7612:28;:::i;:::-;7602:38;;7691:2;7680:9;7676:18;7663:32;7718:18;7710:6;7707:30;7704:50;;;7750:1;7747;7740:12;7704:50;7789:58;7839:7;7830:6;7819:9;7815:22;7789:58;:::i;:::-;7866:8;;-1:-1:-1;7763:84:54;-1:-1:-1;7920:37:54;;-1:-1:-1;7953:2:54;7938:18;;7920:37;:::i;:::-;7910:47;;7976:38;8010:2;7999:9;7995:18;7976:38;:::i;:::-;7966:48;;7392:628;;;;;;;;:::o;8025:437::-;8104:1;8100:12;;;;8147;;;8168:61;;8222:4;8214:6;8210:17;8200:27;;8168:61;8275:2;8267:6;8264:14;8244:18;8241:38;8238:218;;8312:77;8309:1;8302:88;8413:4;8410:1;8403:15;8441:4;8438:1;8431:15;8238:218;;8025:437;;;:::o;8467:869::-;8593:3;8622:1;8655:6;8649:13;8685:36;8711:9;8685:36;:::i;:::-;8740:1;8757:18;;;8784:162;;;;8960:1;8955:356;;;;8750:561;;8784:162;8832:66;8821:9;8817:82;8812:3;8805:95;8929:6;8924:3;8920:16;8913:23;;8784:162;;8955:356;8986:6;8983:1;8976:17;9016:4;9061:2;9058:1;9048:16;9086:1;9100:165;9114:6;9111:1;9108:13;9100:165;;;9192:14;;9179:11;;;9172:35;9235:16;;;;9129:10;;9100:165;;;9104:3;;;9294:6;9289:3;9285:16;9278:23;;8750:561;-1:-1:-1;9327:3:54;;8467:869;-1:-1:-1;;;;;;8467:869:54:o;9341:271::-;9524:6;9516;9511:3;9498:33;9480:3;9550:16;;9575:13;;;9550:16;9341:271;-1:-1:-1;9341:271:54:o;9617:1061::-;9797:4;9789:6;9785:17;9774:9;9767:36;9748:4;9822:2;9860;9855;9844:9;9840:18;9833:30;9883:1;9916:6;9910:13;9946:36;9972:9;9946:36;:::i;:::-;10018:6;10013:2;10002:9;9998:18;9991:34;10044:2;10065:1;10097:2;10086:9;10082:18;10114:1;10109:180;;;;10303:1;10298:354;;;;10075:577;;10109:180;10172:66;10161:9;10157:82;10152:2;10141:9;10137:18;10130:110;10275:3;10264:9;10260:19;10253:26;;10109:180;;10298:354;10329:6;10326:1;10319:17;10377:2;10374:1;10364:16;10402:1;10416:180;10430:6;10427:1;10424:13;10416:180;;;10523:14;;10499:17;;;10495:26;;10488:50;10566:16;;;;10445:10;;10416:180;;;10620:17;;10616:26;;;-1:-1:-1;;10075:577:54;-1:-1:-1;10669:3:54;;9617:1061;-1:-1:-1;;;;;;;;;9617:1061:54:o;10683:184::-;10753:6;10806:2;10794:9;10785:7;10781:23;10777:32;10774:52;;;10822:1;10819;10812:12;10774:52;-1:-1:-1;10845:16:54;;10683:184;-1:-1:-1;10683:184:54:o;11206:277::-;11273:6;11326:2;11314:9;11305:7;11301:23;11297:32;11294:52;;;11342:1;11339;11332:12;11294:52;11374:9;11368:16;11427:5;11420:13;11413:21;11406:5;11403:32;11393:60;;11449:1;11446;11439:12",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\nimport { HashingProxy } from \"../HashingProxy.sol\";\nimport { Hub } from \"../Hub.sol\";\nimport { IERC20 } from \"@openzeppelin/contracts/token/ERC20/IERC20.sol\";\n\ncontract ProfileStorage {\n\n    event ProfileCreated(uint72 indexed identityId, uint96 ask);\n    event ProfileDeleted(uint72 indexed identityId);\n    event AskUpdated(uint72 indexed identityId, uint96 ask);\n    event SharesContractUpdated(uint72 indexed identityId, address sharesContractAddress);\n\n    Hub public hub;\n    HashingProxy public hashingProxy;\n    IERC20 public tokenContract;\n\n    struct ProfileDefinition{\n        bytes nodeId;\n        uint96 ask;\n        uint96 accumulatedOperatorFee;\n        address sharesContractAddress;\n        mapping(uint8 => bytes32) nodeAddresses;\n    }\n\n    // nodeId => isRegistered?\n    mapping(bytes => bool) public nodeIdsList;\n    // identityId => Profile\n    mapping(uint72 => ProfileDefinition) profiles;\n\n    constructor(address hubAddress) {\n        require(hubAddress != address(0));\n\n        hub = Hub(hubAddress);\n        hashingProxy = HashingProxy(hub.getContractAddress(\"HashingProxy\"));\n        tokenContract = IERC20(hub.getContractAddress(\"Token\"));\n    }\n\n    modifier onlyContracts() {\n        _checkHub();\n        _;\n    }\n\n    function createProfile(uint72 identityId, bytes calldata nodeId, uint96 ask, address sharesContractAddress)\n        external onlyContracts\n    {\n        ProfileDefinition storage profile = profiles[identityId];\n        profile.nodeId = nodeId;\n        profile.ask = ask;\n        profile.sharesContractAddress = sharesContractAddress;\n\n        nodeIdsList[nodeId] = true;\n\n        emit ProfileCreated(identityId, ask);\n    }\n\n    function getProfile(uint72 identityId) external view returns (bytes memory, uint96[2] memory, address) {\n        ProfileDefinition storage profile = profiles[identityId];\n        return (profile.nodeId, [profile.ask, profile.accumulatedOperatorFee], profile.sharesContractAddress);\n    }\n\n    function deleteProfile(uint72 identityId) external onlyContracts {\n        nodeIdsList[profiles[identityId].nodeId] = false;\n        delete profiles[identityId];\n\n        emit ProfileDeleted(identityId);\n    }\n\n    function getNodeId(uint72 identityId) external view returns (bytes memory) {\n        return profiles[identityId].nodeId;\n    }\n\n    function setNodeId(uint72 identityId, bytes calldata nodeId) external onlyContracts {\n        ProfileDefinition storage profile = profiles[identityId];\n\n        nodeIdsList[profile.nodeId] = false;\n        profile.nodeId = nodeId;\n        nodeIdsList[nodeId] = true;\n    }\n\n    function getAsk(uint72 identityId) external view returns (uint96) {\n        return profiles[identityId].ask;\n    }\n\n    function setAsk(uint72 identityId, uint96 ask) external onlyContracts {\n        profiles[identityId].ask = ask;\n\n        emit AskUpdated(identityId, ask);\n    }\n\n    function getAccumulatedOperatorFee(uint72 identityId) external view returns (uint96) {\n        return profiles[identityId].accumulatedOperatorFee;\n    }\n\n    function setAccumulatedOperatorFee(uint72 identityId, uint96 newOperatorFeeAmount) external onlyContracts {\n        profiles[identityId].accumulatedOperatorFee = newOperatorFeeAmount;\n    }\n\n    function getSharesContractAddress(uint72 identityId) external view returns (address) {\n        return profiles[identityId].sharesContractAddress;\n    }\n\n    function setSharesContractAddress(uint72 identityId, address sharesContractAddress) external onlyContracts {\n        profiles[identityId].sharesContractAddress = sharesContractAddress;\n\n        emit SharesContractUpdated(identityId, sharesContractAddress);\n    }\n\n    function getNodeAddress(uint72 identityId, uint8 hashFunctionId) external view returns (bytes32) {\n        return profiles[identityId].nodeAddresses[hashFunctionId];\n    }\n\n    function setNodeAddress(uint72 identityId, uint8 hashFunctionId) external onlyContracts {\n        profiles[identityId].nodeAddresses[hashFunctionId] = hashingProxy.callHashFunction(\n            hashFunctionId,\n            profiles[identityId].nodeId\n        );\n    }\n\n    function profileExists(uint72 identityId) external view onlyContracts returns (bool) {\n        return profiles[identityId].ask != 0;\n    }\n\n    function nodeIdRegistered(bytes calldata nodeId) external view returns (bool) {\n        return nodeIdsList[nodeId];\n    }\n\n    function transferTokens(address receiver, uint96 amount) external onlyContracts {\n        tokenContract.transfer(receiver, amount);\n    }\n\n    function _checkHub() internal view virtual {\n        require(hub.isContract(msg.sender), \"Fn can only be called by the hub\");\n    }\n}\n",
-  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/storage/ProfileStorage.sol",
+  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/storage/ProfileStorage.sol",
   "ast": {
     "absolutePath": "project:/contracts/storage/ProfileStorage.sol",
     "exportedSymbols": {
       "HashingProxy": [
-        6255
+        6275
       ],
       "Hub": [
-        6503
+        6523
       ],
       "IERC20": [
         1169
@@ -9414,7 +9414,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 12895,
-        "sourceUnit": 6256,
+        "sourceUnit": 6276,
         "src": "58:51:44",
         "symbolAliases": [
           {
@@ -9423,7 +9423,7 @@
               "name": "HashingProxy",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 6255,
+              "referencedDeclaration": 6275,
               "src": "67:12:44",
               "typeDescriptions": {}
             },
@@ -9439,7 +9439,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 12895,
-        "sourceUnit": 6504,
+        "sourceUnit": 6524,
         "src": "110:33:44",
         "symbolAliases": [
           {
@@ -9448,7 +9448,7 @@
               "name": "Hub",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 6503,
+              "referencedDeclaration": 6523,
               "src": "119:3:44",
               "typeDescriptions": {}
             },
@@ -9771,7 +9771,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_Hub_$6503",
+              "typeIdentifier": "t_contract$_Hub_$6523",
               "typeString": "contract Hub"
             },
             "typeName": {
@@ -9781,13 +9781,13 @@
                 "id": 12458,
                 "name": "Hub",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 6503,
+                "referencedDeclaration": 6523,
                 "src": "520:3:44"
               },
-              "referencedDeclaration": 6503,
+              "referencedDeclaration": 6523,
               "src": "520:3:44",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Hub_$6503",
+                "typeIdentifier": "t_contract$_Hub_$6523",
                 "typeString": "contract Hub"
               }
             },
@@ -9806,7 +9806,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_HashingProxy_$6255",
+              "typeIdentifier": "t_contract$_HashingProxy_$6275",
               "typeString": "contract HashingProxy"
             },
             "typeName": {
@@ -9816,13 +9816,13 @@
                 "id": 12461,
                 "name": "HashingProxy",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 6255,
+                "referencedDeclaration": 6275,
                 "src": "540:12:44"
               },
-              "referencedDeclaration": 6255,
+              "referencedDeclaration": 6275,
               "src": "540:12:44",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_HashingProxy_$6255",
+                "typeIdentifier": "t_contract$_HashingProxy_$6275",
                 "typeString": "contract HashingProxy"
               }
             },
@@ -10285,7 +10285,7 @@
                       "referencedDeclaration": 12460,
                       "src": "1063:3:44",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_Hub_$6503",
+                        "typeIdentifier": "t_contract$_Hub_$6523",
                         "typeString": "contract Hub"
                       }
                     },
@@ -10317,10 +10317,10 @@
                         "name": "Hub",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 6503,
+                        "referencedDeclaration": 6523,
                         "src": "1069:3:44",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_Hub_$6503_$",
+                          "typeIdentifier": "t_type$_t_contract$_Hub_$6523_$",
                           "typeString": "type(contract Hub)"
                         }
                       },
@@ -10335,13 +10335,13 @@
                       "src": "1069:15:44",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_Hub_$6503",
+                        "typeIdentifier": "t_contract$_Hub_$6523",
                         "typeString": "contract Hub"
                       }
                     },
                     "src": "1063:21:44",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_Hub_$6503",
+                      "typeIdentifier": "t_contract$_Hub_$6523",
                       "typeString": "contract Hub"
                     }
                   },
@@ -10364,7 +10364,7 @@
                       "referencedDeclaration": 12463,
                       "src": "1094:12:44",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_HashingProxy_$6255",
+                        "typeIdentifier": "t_contract$_HashingProxy_$6275",
                         "typeString": "contract HashingProxy"
                       }
                     },
@@ -10406,7 +10406,7 @@
                               "referencedDeclaration": 12460,
                               "src": "1122:3:44",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_Hub_$6503",
+                                "typeIdentifier": "t_contract$_Hub_$6523",
                                 "typeString": "contract Hub"
                               }
                             },
@@ -10417,7 +10417,7 @@
                             "lValueRequested": false,
                             "memberName": "getContractAddress",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 6438,
+                            "referencedDeclaration": 6458,
                             "src": "1122:22:44",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_external_view$_t_string_memory_ptr_$returns$_t_address_$",
@@ -10451,10 +10451,10 @@
                         "name": "HashingProxy",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 6255,
+                        "referencedDeclaration": 6275,
                         "src": "1109:12:44",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_HashingProxy_$6255_$",
+                          "typeIdentifier": "t_type$_t_contract$_HashingProxy_$6275_$",
                           "typeString": "type(contract HashingProxy)"
                         }
                       },
@@ -10469,13 +10469,13 @@
                       "src": "1109:52:44",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_HashingProxy_$6255",
+                        "typeIdentifier": "t_contract$_HashingProxy_$6275",
                         "typeString": "contract HashingProxy"
                       }
                     },
                     "src": "1094:67:44",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_HashingProxy_$6255",
+                      "typeIdentifier": "t_contract$_HashingProxy_$6275",
                       "typeString": "contract HashingProxy"
                     }
                   },
@@ -10540,7 +10540,7 @@
                               "referencedDeclaration": 12460,
                               "src": "1194:3:44",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_Hub_$6503",
+                                "typeIdentifier": "t_contract$_Hub_$6523",
                                 "typeString": "contract Hub"
                               }
                             },
@@ -10551,7 +10551,7 @@
                             "lValueRequested": false,
                             "memberName": "getContractAddress",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 6438,
+                            "referencedDeclaration": 6458,
                             "src": "1194:22:44",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_external_view$_t_string_memory_ptr_$returns$_t_address_$",
@@ -14053,7 +14053,7 @@
                           "referencedDeclaration": 12463,
                           "src": "4048:12:44",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_contract$_HashingProxy_$6255",
+                            "typeIdentifier": "t_contract$_HashingProxy_$6275",
                             "typeString": "contract HashingProxy"
                           }
                         },
@@ -14064,7 +14064,7 @@
                         "lValueRequested": false,
                         "memberName": "callHashFunction",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 6197,
+                        "referencedDeclaration": 6217,
                         "src": "4048:29:44",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_external_nonpayable$_t_uint8_$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
@@ -14763,7 +14763,7 @@
                             "referencedDeclaration": 12460,
                             "src": "4644:3:44",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_Hub_$6503",
+                              "typeIdentifier": "t_contract$_Hub_$6523",
                               "typeString": "contract Hub"
                             }
                           },
@@ -14774,7 +14774,7 @@
                           "lValueRequested": false,
                           "memberName": "isContract",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 6476,
+                          "referencedDeclaration": 6496,
                           "src": "4644:14:44",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_external_view$_t_address_$returns$_t_bool_$",
@@ -14898,7 +14898,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T15:01:56.640Z",
+  "updatedAt": "2022-12-02T16:52:10.461Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

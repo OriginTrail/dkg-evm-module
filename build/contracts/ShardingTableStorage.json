@@ -1633,7 +1633,7 @@
                 }
               ]
             },
-            "name": "abi_encode_tuple_t_contract$_Hub_$6503__to_t_address__fromStack_reversed",
+            "name": "abi_encode_tuple_t_contract$_Hub_$6523__to_t_address__fromStack_reversed",
             "nodeType": "YulFunctionDefinition",
             "parameters": [
               {
@@ -3895,7 +3895,7 @@
           }
         ]
       },
-      "contents": "{\n    { }\n    function abi_encode_tuple_t_uint72__to_t_uint72__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n    }\n    function abi_decode_uint72(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_uint72(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n    }\n    function abi_encode_struct_Node(value, pos)\n    {\n        let _1 := 0xffffffffffffffffff\n        mstore(pos, and(mload(value), _1))\n        mstore(add(pos, 0x20), and(mload(add(value, 0x20)), _1))\n        mstore(add(pos, 0x40), and(mload(add(value, 0x40)), _1))\n    }\n    function abi_encode_tuple_t_struct$_Node_$14155_memory_ptr__to_t_struct$_Node_$14155_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 96)\n        abi_encode_struct_Node(value0, headStart)\n    }\n    function abi_decode_tuple_t_uint72t_uint72(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        value1 := abi_decode_uint72(add(headStart, 32))\n    }\n    function abi_encode_tuple_t_contract$_Hub_$6503__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_bool__to_t_bool__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, iszero(iszero(value0)))\n    }\n    function abi_decode_tuple_t_uint72t_uint16(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        let value := calldataload(add(headStart, 32))\n        if iszero(eq(value, and(value, 0xffff))) { revert(0, 0) }\n        value1 := value\n    }\n    function abi_encode_tuple_t_array$_t_struct$_Node_$14155_memory_ptr_$dyn_memory_ptr__to_t_array$_t_struct$_Node_$14155_memory_ptr_$dyn_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        let _1 := 32\n        let tail_1 := add(headStart, _1)\n        mstore(headStart, _1)\n        let pos := tail_1\n        let length := mload(value0)\n        mstore(tail_1, length)\n        pos := add(headStart, 64)\n        let srcPtr := add(value0, _1)\n        let i := 0\n        for { } lt(i, length) { i := add(i, 1) }\n        {\n            abi_encode_struct_Node(mload(srcPtr), pos)\n            pos := add(pos, 0x60)\n            srcPtr := add(srcPtr, _1)\n        }\n        tail := pos\n    }\n    function abi_decode_tuple_t_uint72t_uint72t_uint72(headStart, dataEnd) -> value0, value1, value2\n    {\n        if slt(sub(dataEnd, headStart), 96) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        value1 := abi_decode_uint72(add(headStart, 32))\n        value2 := abi_decode_uint72(add(headStart, 64))\n    }\n    function panic_error_0x11()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x11)\n        revert(0, 0x24)\n    }\n    function increment_t_uint72(value) -> ret\n    {\n        let _1 := 0xffffffffffffffffff\n        let value_1 := and(value, _1)\n        if eq(value_1, _1) { panic_error_0x11() }\n        ret := add(value_1, 1)\n    }\n    function panic_error_0x41()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x41)\n        revert(0, 0x24)\n    }\n    function panic_error_0x32()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x32)\n        revert(0, 0x24)\n    }\n    function decrement_t_uint72(value) -> ret\n    {\n        let value_1 := and(value, 0xffffffffffffffffff)\n        if iszero(value_1) { panic_error_0x11() }\n        ret := add(value_1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)\n    }\n    function abi_encode_tuple_t_address__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_bool_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        if iszero(eq(value, iszero(iszero(value)))) { revert(0, 0) }\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_e68459928fb080bf68fa48e22f7b5bc4b1a8b53f50c81827f74fbfb809ef4600__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 28)\n        mstore(add(headStart, 64), \"Fn can only be called by hub\")\n        tail := add(headStart, 96)\n    }\n}",
+      "contents": "{\n    { }\n    function abi_encode_tuple_t_uint72__to_t_uint72__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n    }\n    function abi_decode_uint72(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_uint72(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n    }\n    function abi_encode_struct_Node(value, pos)\n    {\n        let _1 := 0xffffffffffffffffff\n        mstore(pos, and(mload(value), _1))\n        mstore(add(pos, 0x20), and(mload(add(value, 0x20)), _1))\n        mstore(add(pos, 0x40), and(mload(add(value, 0x40)), _1))\n    }\n    function abi_encode_tuple_t_struct$_Node_$14155_memory_ptr__to_t_struct$_Node_$14155_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 96)\n        abi_encode_struct_Node(value0, headStart)\n    }\n    function abi_decode_tuple_t_uint72t_uint72(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        value1 := abi_decode_uint72(add(headStart, 32))\n    }\n    function abi_encode_tuple_t_contract$_Hub_$6523__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_bool__to_t_bool__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, iszero(iszero(value0)))\n    }\n    function abi_decode_tuple_t_uint72t_uint16(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        let value := calldataload(add(headStart, 32))\n        if iszero(eq(value, and(value, 0xffff))) { revert(0, 0) }\n        value1 := value\n    }\n    function abi_encode_tuple_t_array$_t_struct$_Node_$14155_memory_ptr_$dyn_memory_ptr__to_t_array$_t_struct$_Node_$14155_memory_ptr_$dyn_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        let _1 := 32\n        let tail_1 := add(headStart, _1)\n        mstore(headStart, _1)\n        let pos := tail_1\n        let length := mload(value0)\n        mstore(tail_1, length)\n        pos := add(headStart, 64)\n        let srcPtr := add(value0, _1)\n        let i := 0\n        for { } lt(i, length) { i := add(i, 1) }\n        {\n            abi_encode_struct_Node(mload(srcPtr), pos)\n            pos := add(pos, 0x60)\n            srcPtr := add(srcPtr, _1)\n        }\n        tail := pos\n    }\n    function abi_decode_tuple_t_uint72t_uint72t_uint72(headStart, dataEnd) -> value0, value1, value2\n    {\n        if slt(sub(dataEnd, headStart), 96) { revert(0, 0) }\n        value0 := abi_decode_uint72(headStart)\n        value1 := abi_decode_uint72(add(headStart, 32))\n        value2 := abi_decode_uint72(add(headStart, 64))\n    }\n    function panic_error_0x11()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x11)\n        revert(0, 0x24)\n    }\n    function increment_t_uint72(value) -> ret\n    {\n        let _1 := 0xffffffffffffffffff\n        let value_1 := and(value, _1)\n        if eq(value_1, _1) { panic_error_0x11() }\n        ret := add(value_1, 1)\n    }\n    function panic_error_0x41()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x41)\n        revert(0, 0x24)\n    }\n    function panic_error_0x32()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x32)\n        revert(0, 0x24)\n    }\n    function decrement_t_uint72(value) -> ret\n    {\n        let value_1 := and(value, 0xffffffffffffffffff)\n        if iszero(value_1) { panic_error_0x11() }\n        ret := add(value_1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)\n    }\n    function abi_encode_tuple_t_address__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_bool_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        if iszero(eq(value, iszero(iszero(value)))) { revert(0, 0) }\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_e68459928fb080bf68fa48e22f7b5bc4b1a8b53f50c81827f74fbfb809ef4600__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 28)\n        mstore(add(headStart, 64), \"Fn can only be called by hub\")\n        tail := add(headStart, 96)\n    }\n}",
       "id": 54,
       "language": "Yul",
       "name": "#utility.yul"
@@ -3904,15 +3904,15 @@
   "sourceMap": "233:2839:46:-:0;;;453:157;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;-1:-1:-1;;;;;503:24:46;;495:33;;;;;;539:3;:21;;-1:-1:-1;;;;;;571:11:46;-1:-1:-1;;;;;539:21:46;;;571:11;;;;;;539:21;592:11;;-1:-1:-1;;;;;;592:11:46;;;233:2839;;14:290:54;84:6;137:2;125:9;116:7;112:23;108:32;105:52;;;153:1;150;143:12;105:52;179:16;;-1:-1:-1;;;;;224:31:54;;214:42;;204:70;;270:1;267;260:12;204:70;293:5;14:290;-1:-1:-1;;;14:290:54:o;:::-;233:2839:46;;;;;;",
   "deployedSourceMap": "233:2839:46:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;315:18;;;;;;;;;;;;188:20:54;176:33;;;158:52;;146:2;131:18;315::46;;;;;;;;1374:134;;;;;;:::i;:::-;-1:-1:-1;;;;;;;;;;;;;;;;;;;;;;;;;;1484:17:46;;;;;;:5;:17;;;;;1477:24;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1374:134;;;;;;;;:::i;2659:243::-;;;;;;:::i;:::-;;:::i;:::-;;270:14;;;;;;;;;;;;1553:42:54;1541:55;;;1523:74;;1511:2;1496:18;270:14:46;1365:238:54;963:93:46;;;;;;:::i;:::-;;:::i;686:83::-;;;:::i;1623:125::-;;;;;;:::i;:::-;1708:17;;;;1685:4;1708:17;;;:5;:17;;;;;:28;;:33;;;1623:125;;;;1773:14:54;;1766:22;1748:41;;1736:2;1721:18;1623:125:46;1608:187:54;1754:164:46;;;;;;:::i;:::-;;:::i;2094:559::-;;;;;;:::i;:::-;;:::i;:::-;;;;;;;:::i;291:18::-;;;;;;;;;;;;1514:103;;;;;;:::i;:::-;;:::i;1924:164::-;;;;;;:::i;:::-;;:::i;775:83::-;;;:::i;864:93::-;;;;;;:::i;:::-;;:::i;339:24::-;;;;;;;;;;;;1062:306;;;;;;:::i;:::-;;:::i;2659:243::-;651:11;:9;:11::i;:::-;2761:25:::1;::::0;;::::1;;::::0;;;:5:::1;:25;::::0;;;;;:62;;;::::1;::::0;;;;::::1;::::0;;::::1;::::0;;;::::1;::::0;;;2833:26;;;;;;:62;;;::::1;::::0;;;::::1;::::0;;;::::1;::::0;;2659:243::o;963:93::-;651:11;:9;:11::i;:::-;1032:4:::1;:17:::0;;;::::1;;::::0;;;::::1;::::0;;;::::1;::::0;;963:93::o;686:83::-;651:11;:9;:11::i;:::-;750:10:::1;:12:::0;;;;::::1;;;::::0;:10:::1;:12;::::0;::::1;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;686:83::o:0;1754:164::-;651:11;:9;:11::i;:::-;1859:17:::1;::::0;;::::1;;::::0;;;:5:::1;:17;::::0;;;;:52;;;;;::::1;::::0;::::1;::::0;;;::::1;::::0;;;::::1;::::0;;1754:164::o;2094:559::-;2211:34;2261:44;2340:11;2308:44;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;;;;;;;;;;;;;;;;;;;2308:44:46;;;;;;;;;;;;;;-1:-1:-1;2410:22:46;;;;2363:44;2410:22;;;:5;:22;;;;;;;;2363:69;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;2261:91;;-1:-1:-1;2363:69:46;2442:178;2462:11;2458:15;;:1;:15;2442:178;;;2506:11;2491:9;2501:1;2491:12;;;;;;;;:::i;:::-;;;;;;;;;;;:26;;;;2551;;;;;2545:33;;;;;;;;:5;:33;;;;;2531:47;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;2604:3;2442:178;;;-1:-1:-1;2637:9:46;;-1:-1:-1;;2094:559:46;;;;;:::o;1514:103::-;651:11;:9;:11::i;:::-;1593:17:::1;;;::::0;;;:5:::1;:17;::::0;;;;1586:24;;;;;;1514:103::o;1924:164::-;651:11;:9;:11::i;:::-;2029:17:::1;::::0;;::::1;;::::0;;;:5:::1;:17;::::0;;;;:52;;;;;::::1;::::0;::::1;::::0;;;::::1;::::0;;;::::1;::::0;;1924:164::o;775:83::-;651:11;:9;:11::i;:::-;839:10:::1;:12:::0;;;;::::1;;;::::0;:10:::1;:12;::::0;::::1;:::i;864:93::-:0;651:11;:9;:11::i;:::-;933:4:::1;:17:::0;;::::1;::::0;;::::1;::::0;::::1;::::0;;;::::1;::::0;;;::::1;::::0;;864:93::o;1062:306::-;651:11;:9;:11::i;:::-;1200:161:::1;::::0;;::::1;::::0;::::1;::::0;;::::1;::::0;;::::1;::::0;;;;;::::1;;::::0;;::::1;::::0;;;;;::::1;::::0;;;;;;-1:-1:-1;1180:17:46;;;:5:::1;:17:::0;;;;;;;:181;;;;;;;;;::::1;::::0;::::1;::::0;;;::::1;::::0;::::1;::::0;;;;;;;::::1;::::0;::::1;;::::0;;;::::1;::::0;;1062:306::o;2908:161::-;2982:3;;:26;;;;;2997:10;2982:26;;;1523:74:54;2982:3:46;;;;;:14;;1496:18:54;;2982:26:46;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;2961:101;;;;;;;4941:2:54;2961:101:46;;;4923:21:54;4980:2;4960:18;;;4953:30;5019;4999:18;;;4992:58;5067:18;;2961:101:46;;;;;;;;2908:161::o;221:173:54:-;288:20;;348;337:32;;327:43;;317:71;;384:1;381;374:12;317:71;221:173;;;:::o;399:184::-;457:6;510:2;498:9;489:7;485:23;481:32;478:52;;;526:1;523;516:12;478:52;549:28;567:9;549:28;:::i;:::-;539:38;399:184;-1:-1:-1;;;399:184:54:o;860:239::-;1040:2;1025:18;;1052:41;1029:9;1075:6;701:12;;656:20;697:21;;;685:34;;772:4;761:16;;;755:23;751:32;;735:14;;;728:56;837:4;826:16;;;820:23;816:32;800:14;;793:56;588:267;1104:256;1170:6;1178;1231:2;1219:9;1210:7;1206:23;1202:32;1199:52;;;1247:1;1244;1237:12;1199:52;1270:28;1288:9;1270:28;:::i;:::-;1260:38;;1317:37;1350:2;1339:9;1335:18;1317:37;:::i;:::-;1307:47;;1104:256;;;;;:::o;1800:344::-;1866:6;1874;1927:2;1915:9;1906:7;1902:23;1898:32;1895:52;;;1943:1;1940;1933:12;1895:52;1966:28;1984:9;1966:28;:::i;:::-;1956:38;;2044:2;2033:9;2029:18;2016:32;2088:6;2081:5;2077:18;2070:5;2067:29;2057:57;;2110:1;2107;2100:12;2057:57;2133:5;2123:15;;;1800:344;;;;;:::o;2149:696::-;2366:2;2418:21;;;2488:13;;2391:18;;;2510:22;;;2337:4;;2366:2;2589:15;;;;2563:2;2548:18;;;2337:4;2632:187;2646:6;2643:1;2640:13;2632:187;;;2695:42;2733:3;2724:6;2718:13;701:12;;656:20;697:21;;;685:34;;772:4;761:16;;;755:23;751:32;;735:14;;;728:56;837:4;826:16;;;820:23;816:32;800:14;;793:56;588:267;2695:42;2794:15;;;;2766:4;2757:14;;;;;2668:1;2661:9;2632:187;;;-1:-1:-1;2836:3:54;;2149:696;-1:-1:-1;;;;;;2149:696:54:o;2850:328::-;2924:6;2932;2940;2993:2;2981:9;2972:7;2968:23;2964:32;2961:52;;;3009:1;3006;2999:12;2961:52;3032:28;3050:9;3032:28;:::i;:::-;3022:38;;3079:37;3112:2;3101:9;3097:18;3079:37;:::i;:::-;3069:47;;3135:37;3168:2;3157:9;3153:18;3135:37;:::i;:::-;3125:47;;2850:328;;;;;:::o;3183:184::-;3235:77;3232:1;3225:88;3332:4;3329:1;3322:15;3356:4;3353:1;3346:15;3372:211;3410:3;3438:20;3493:2;3486:5;3482:14;3520:2;3511:7;3508:15;3505:41;;3526:18;;:::i;:::-;3575:1;3562:15;;3372:211;-1:-1:-1;;;3372:211:54:o;3588:184::-;3640:77;3637:1;3630:88;3737:4;3734:1;3727:15;3761:4;3758:1;3751:15;3777:184;3829:77;3826:1;3819:88;3926:4;3923:1;3916:15;3950:4;3947:1;3940:15;3966:255;4004:3;4048:20;4041:5;4037:32;4088:7;4078:41;;4099:18;;:::i;:::-;4148:66;4135:80;;3966:255;-1:-1:-1;;3966:255:54:o;4457:277::-;4524:6;4577:2;4565:9;4556:7;4552:23;4548:32;4545:52;;;4593:1;4590;4583:12;4545:52;4625:9;4619:16;4678:5;4671:13;4664:21;4657:5;4654:32;4644:60;;4700:1;4697;4690:12",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\nimport { Hub } from \"../Hub.sol\";\nimport { ShardingTableStructs } from \"../structs/ShardingTableStructs.sol\";\nimport { NULL } from \"../constants/ShardingTableConstants.sol\";\n\ncontract ShardingTableStorage {\n\n    Hub public hub;\n\n    uint72 public head;\n    uint72 public tail;\n    uint72 public nodesCount;\n\n    // identityId => Node\n    mapping(uint72 => ShardingTableStructs.Node) nodes;\n\n    constructor(address hubAddress) {\n        require(hubAddress != address(0));\n\n        hub = Hub(hubAddress);\n\n        head = NULL;\n        tail = NULL;\n    }\n\n    modifier onlyContracts() {\n        _checkHub();\n        _;\n    }\n\n    function incrementNodesCount() external onlyContracts {\n        nodesCount++;\n    }\n\n    function decrementNodesCount() external onlyContracts {\n        nodesCount--;\n    }\n\n    function setHead(uint72 identityId) external onlyContracts {\n        head = identityId;\n    }\n\n    function setTail(uint72 identityId) external onlyContracts {\n        tail = identityId;\n    }\n\n    function createNode(uint72 identityId, uint72 prevIdentityId, uint72 nextIdentityId) external onlyContracts {\n        nodes[identityId] = ShardingTableStructs.Node({\n            identityId: identityId,\n            prevIdentityId: prevIdentityId,\n            nextIdentityId: nextIdentityId\n        });\n    }\n\n    function getNode(uint72 identityId) external view returns (ShardingTableStructs.Node memory) {\n        return nodes[identityId];\n    }\n\n    function removeNode(uint72 identityId) external onlyContracts {\n        delete nodes[identityId];\n    }\n\n    function nodeExists(uint72 identityId) external view returns (bool) {\n        return nodes[identityId].identityId != 0;\n    }\n\n    function setPrevIdentityId(uint72 identityId, uint72 newPrevIdentityId) external onlyContracts {\n        nodes[identityId].prevIdentityId = newPrevIdentityId;\n    }\n\n    function setNextIdentityId(uint72 identityId, uint72 newNextIdentityId) external onlyContracts {\n        nodes[identityId].nextIdentityId = newNextIdentityId;\n    }\n\n    function getMultipleNodes(uint72 firstIdentityId, uint16 nodesNumber)\n        external\n        view\n        returns (ShardingTableStructs.Node[] memory)\n    {\n        ShardingTableStructs.Node[] memory nodesPage = new ShardingTableStructs.Node[](nodesNumber);\n\n        ShardingTableStructs.Node memory currentNode = nodes[firstIdentityId];\n        for (uint256 i; i < nodesNumber; ) {\n            nodesPage[i] = currentNode;\n            currentNode = nodes[currentNode.nextIdentityId];\n            unchecked { i++; }\n        }\n\n        return nodesPage;\n    }\n\n    function link(uint72 leftNodeIdentityId, uint72 rightNodeIdentityId) external onlyContracts {\n        nodes[leftNodeIdentityId].nextIdentityId = rightNodeIdentityId;\n        nodes[rightNodeIdentityId].prevIdentityId = leftNodeIdentityId;\n    }\n\n    function _checkHub() internal view virtual {\n        require(\n            hub.isContract(msg.sender),\n            \"Fn can only be called by hub\"\n        );\n    }\n\n}\n",
-  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/storage/ShardingTableStorage.sol",
+  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/storage/ShardingTableStorage.sol",
   "ast": {
     "absolutePath": "project:/contracts/storage/ShardingTableStorage.sol",
     "exportedSymbols": {
       "Hub": [
-        6503
+        6523
       ],
       "NULL": [
-        10973
+        10993
       ],
       "ShardingTableStorage": [
         13882
@@ -3943,7 +3943,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 13883,
-        "sourceUnit": 6504,
+        "sourceUnit": 6524,
         "src": "58:33:46",
         "symbolAliases": [
           {
@@ -3952,7 +3952,7 @@
               "name": "Hub",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 6503,
+              "referencedDeclaration": 6523,
               "src": "67:3:46",
               "typeDescriptions": {}
             },
@@ -3993,7 +3993,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 13883,
-        "sourceUnit": 10974,
+        "sourceUnit": 10994,
         "src": "168:63:46",
         "symbolAliases": [
           {
@@ -4002,7 +4002,7 @@
               "name": "NULL",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 10973,
+              "referencedDeclaration": 10993,
               "src": "177:4:46",
               "typeDescriptions": {}
             },
@@ -4039,7 +4039,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_Hub_$6503",
+              "typeIdentifier": "t_contract$_Hub_$6523",
               "typeString": "contract Hub"
             },
             "typeName": {
@@ -4049,13 +4049,13 @@
                 "id": 13594,
                 "name": "Hub",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 6503,
+                "referencedDeclaration": 6523,
                 "src": "270:3:46"
               },
-              "referencedDeclaration": 6503,
+              "referencedDeclaration": 6523,
               "src": "270:3:46",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Hub_$6503",
+                "typeIdentifier": "t_contract$_Hub_$6523",
                 "typeString": "contract Hub"
               }
             },
@@ -4353,7 +4353,7 @@
                       "referencedDeclaration": 13596,
                       "src": "539:3:46",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_Hub_$6503",
+                        "typeIdentifier": "t_contract$_Hub_$6523",
                         "typeString": "contract Hub"
                       }
                     },
@@ -4385,10 +4385,10 @@
                         "name": "Hub",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 6503,
+                        "referencedDeclaration": 6523,
                         "src": "545:3:46",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_Hub_$6503_$",
+                          "typeIdentifier": "t_type$_t_contract$_Hub_$6523_$",
                           "typeString": "type(contract Hub)"
                         }
                       },
@@ -4403,13 +4403,13 @@
                       "src": "545:15:46",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_Hub_$6503",
+                        "typeIdentifier": "t_contract$_Hub_$6523",
                         "typeString": "contract Hub"
                       }
                     },
                     "src": "539:21:46",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_Hub_$6503",
+                      "typeIdentifier": "t_contract$_Hub_$6523",
                       "typeString": "contract Hub"
                     }
                   },
@@ -4443,7 +4443,7 @@
                       "name": "NULL",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 10973,
+                      "referencedDeclaration": 10993,
                       "src": "578:4:46",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint72",
@@ -4486,7 +4486,7 @@
                       "name": "NULL",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 10973,
+                      "referencedDeclaration": 10993,
                       "src": "599:4:46",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint72",
@@ -7094,7 +7094,7 @@
                             "referencedDeclaration": 13596,
                             "src": "2982:3:46",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_Hub_$6503",
+                              "typeIdentifier": "t_contract$_Hub_$6523",
                               "typeString": "contract Hub"
                             }
                           },
@@ -7105,7 +7105,7 @@
                           "lValueRequested": false,
                           "memberName": "isContract",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 6476,
+                          "referencedDeclaration": 6496,
                           "src": "2982:14:46",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_external_view$_t_address_$returns$_t_bool_$",
@@ -7229,7 +7229,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T15:01:56.652Z",
+  "updatedAt": "2022-12-02T16:52:10.471Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
