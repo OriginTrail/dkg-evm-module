@@ -29,8 +29,8 @@ contract ServiceAgreementStorageV1 {
         _;
     }
 
-    modifier onlyServiceAgreementContract() {
-        _checkServiceAgreement();
+    modifier onlyStakingContract() {
+        _checkStakingContract();
         _;
     }
 
@@ -214,7 +214,7 @@ contract ServiceAgreementStorageV1 {
         commitSubmissions[commitId].score = score;
     }
 
-    function transferReward(address receiver, uint96 rewardAmount) external onlyServiceAgreementContract {
+    function transferReward(address receiver, uint96 rewardAmount) external onlyStakingContract {
         tokenContract.transfer(receiver, rewardAmount);
     }
 
@@ -222,8 +222,8 @@ contract ServiceAgreementStorageV1 {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
-    function _checkServiceAgreement() internal view virtual {
-        require(msg.sender == hub.getContractAddress("ServiceAgreement"), "Fn can only be called by SA");
+    function _checkStakingContract() internal view virtual {
+        require(msg.sender == hub.getContractAddress("Staking"), "Fn can only be called by staking");
     }
 
 }
