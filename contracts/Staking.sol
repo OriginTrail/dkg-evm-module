@@ -159,7 +159,7 @@ contract Staking {
         }
         sharesContract.mint(sender, sharesMinted);
 
-        tknc.transfer(address(ss), stakeAmount);
+        tknc.transferFrom(sender, address(ss), stakeAmount);
 
         ss.setTotalStake(identityId, ss.totalStakes(identityId) + stakeAmount);
 
