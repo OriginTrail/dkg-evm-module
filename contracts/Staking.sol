@@ -76,7 +76,7 @@ contract Staking {
     function withdrawStake(uint72 identityId, uint96 sharesToBurn) external {
         Shares sharesContract = Shares(profileStorage.getSharesContractAddress(identityId));
 
-        require(identityStorage.identityExists(identityId), "Identity doesn't exist");
+        require(profileStorage.profileExists(identityId), "Profile doesn't exist");
 
         StakingStorage ss = stakingStorage;
         ShardingTable stc = shardingTableContract;
@@ -143,15 +143,9 @@ contract Staking {
         ParametersStorage ps = parametersStorage;
         IERC20 tknc = tokenContract;
 
-        require(
-            tknc.allowance(sender, address(this)) >= stakeAmount,
-            "Account does not have sufficient allowance"
-        );
-        require(stakeAmount + ss.totalStakes(identityId) <= ps.maximumStake(), "Exceeded the maximum stake!");
-        require(
-            ps.delegationEnabled() || identityStorage.identityExists(identityId),
-            "No identity/delegation disabled"
-        );
+        require(tknc.allowance(sender, address(this)) >= stakeAmount, "Allowance < stakeAmount");
+        require(stakeAmount + ss.totalStakes(identityId) <= ps.maximumStake(), "Exceeded the maximum stake");
+        require(profileStorage.profileExists(identityId), "Profile doesn't exist");
 
         Shares sharesContract = Shares(profileStorage.getSharesContractAddress(identityId));
 
