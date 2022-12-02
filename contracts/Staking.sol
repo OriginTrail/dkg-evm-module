@@ -60,8 +60,8 @@ contract Staking {
         _;
     }
 
-    modifier onlyAdmin(uint72 identityId) {
-        _checkAdmin(identityId);
+    modifier onlyProfileOrAdmin(uint72 identityId) {
+        _checkProfileOrAdmin(identityId);
         _;
     }
 
@@ -133,7 +133,7 @@ contract Staking {
         // TBD
     }
 
-    function setOperatorFee(uint72 identityId, uint8 operatorFee) external onlyAdmin(identityId) {
+    function setOperatorFee(uint72 identityId, uint8 operatorFee) external onlyProfileOrAdmin(identityId) {
         require(operatorFee <= 100, "Operator fee out of [0, 100]");
         stakingStorage.setOperatorFee(identityId, operatorFee);
     }
@@ -177,8 +177,9 @@ contract Staking {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
-    function _checkAdmin(uint72 identityId) internal view virtual {
+    function _checkProfileOrAdmin(uint72 identityId) internal view virtual {
         require(
+            (msg.sender == hub.getContractAddress("Profile")) ||
             identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY),
             "Admin function"
         );
