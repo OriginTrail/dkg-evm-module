@@ -20,7 +20,7 @@ contract ProfileStorage {
     struct ProfileDefinition{
         bytes nodeId;
         uint96 ask;
-        uint96 reward;
+        uint96 accumulatedOperatorFee;
         address sharesContractAddress;
         mapping(uint8 => bytes32) nodeAddresses;
     }
@@ -58,7 +58,7 @@ contract ProfileStorage {
 
     function getProfile(uint72 identityId) external view returns (bytes memory, uint96[2] memory, address) {
         ProfileDefinition storage profile = profiles[identityId];
-        return (profile.nodeId, [profile.ask, profile.reward], profile.sharesContractAddress);
+        return (profile.nodeId, [profile.ask, profile.accumulatedOperatorFee], profile.sharesContractAddress);
     }
 
     function deleteProfile(uint72 identityId) external onlyContracts {
@@ -90,12 +90,12 @@ contract ProfileStorage {
         emit AskUpdated(identityId, ask);
     }
 
-    function getReward(uint72 identityId) external view returns (uint96) {
-        return profiles[identityId].reward;
+    function getAccumulatedOperatorFee(uint72 identityId) external view returns (uint96) {
+        return profiles[identityId].accumulatedOperatorFee;
     }
 
-    function setReward(uint72 identityId, uint96 rewardAmount) external onlyContracts {
-        profiles[identityId].reward = rewardAmount;
+    function setAccumulatedOperatorFee(uint72 identityId, uint96 newOperatorFeeAmount) external onlyContracts {
+        profiles[identityId].accumulatedOperatorFee = newOperatorFeeAmount;
     }
 
     function getSharesContractAddress(uint72 identityId) external view returns (address) {
