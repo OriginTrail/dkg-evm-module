@@ -1,0 +1,3899 @@
+{
+  "contractName": "UnorderedIndexableContractDynamicSetLib",
+  "abi": [],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.14+commit.80d49f37\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/utils/UnorderedIndexableContractDynamicSet.sol\":\"UnorderedIndexableContractDynamicSetLib\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":1000000},\"remappings\":[]},\"sources\":{\"project:/contracts/interface/Indexable.sol\":{\"keccak256\":\"0x3fa0910a083e366cedf5275f1e1f999931092d140b474a6b1d96c271faff8bfd\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://28c17bbd5b4a1e36bf225a136048917b5f38ddffb4147f9a54f46dccf1429e0b\",\"dweb:/ipfs/QmUDwG8HiQJjEexR2ffo4ruEU3Rubim8U3EGS5XZVEcV1V\"]},\"project:/contracts/utils/UnorderedIndexableContractDynamicSet.sol\":{\"keccak256\":\"0xca02d07158f33a51795830e41b36f00628ce30d124ce4c579f3013ca14a6a870\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://06e93310e4f611ac708aa52e74b233fa38308c80e28f587d3b89bd8eee826f67\",\"dweb:/ipfs/QmQJXAJfUNLbRUzDSVisP6heYYZpnnj6xRfw7YH7SMwMgw\"]}},\"version\":1}",
+  "bytecode": "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220c18f5f87d0cd79b89150863761f4dc80fe1a9a1ab2d24b5e92af1822622ff2b464736f6c634300080e0033",
+  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220c18f5f87d0cd79b89150863761f4dc80fe1a9a1ab2d24b5e92af1822622ff2b464736f6c634300080e0033",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "115:2533:52:-:0;;;;;;;;;;;;;;;-1:-1:-1;;;115:2533:52;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "115:2533:52:-:0;;;;;;;;",
+  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\nimport { Indexable } from \"../interface/Indexable.sol\";\n\nlibrary UnorderedIndexableContractDynamicSetLib {\n\n    struct Contract {\n        uint8 id;\n        address addr;\n    }\n\n    struct Set {\n        mapping(uint8 => uint256) indexPointers;\n        Contract[] contractList;\n    }\n\n    function append(Set storage self, uint8 id, address addr) internal {\n        require(id != 0, \"(IndexableContractSet) ID canot be 0\");\n        require(addr != address(0), \"(IndexableContractSet) Address cannot be 0x0\");\n        require(!exists(self, id), \"(IndexableContractSet) Contract with given ID already exists\");\n        self.indexPointers[id] = size(self);\n        self.contractList.push(Contract(id, addr));\n    }\n\n    function update(Set storage self, uint8 id, address addr) internal {\n        require(addr != address(0), \"(IndexableContractSet) Address cannot be 0x0\");\n        require(exists(self, id), \"(IndexableContractSet) Contract with given ID doesn't exists\");\n        self.contractList[self.indexPointers[id]].addr = addr;\n    }\n\n    function remove(Set storage self, uint8 id) internal {\n        require(exists(self, id), \"(IndexableContractSet) Contract with given ID doesn't exists\");\n        uint256 contractToRemoveIndex = self.indexPointers[id];\n        Contract memory contractToMove = self.contractList[size(self) - 1];\n        uint8 contractToMoveId = Indexable(contractToMove.addr).id();\n\n        self.indexPointers[contractToMoveId] = contractToRemoveIndex;\n        self.contractList[contractToRemoveIndex] = contractToMove;\n\n        delete self.indexPointers[id];\n        self.contractList.pop();\n    }\n\n    function get(Set storage self, uint8 id) internal view returns (Contract memory) {\n        require(exists(self, id), \"(IndexableContractSet) Contract with given ID doesn't exists\");\n        return self.contractList[self.indexPointers[id]];\n    }\n\n    function getAll(Set storage self) internal view returns (Contract[] memory) {\n        return self.contractList;\n    }\n\n    function getIndex(Set storage self, uint8 id) internal view returns (uint256) {\n        return self.indexPointers[id];\n    }\n\n    function getByIndex(Set storage self, uint256 index) internal view returns (Contract memory) {\n        return self.contractList[index];\n    }\n\n    function exists(Set storage self, uint8 id) internal view returns (bool) {\n        if (size(self) == 0) return false;\n        return self.contractList[self.indexPointers[id]].id == id;\n    }\n\n    function size(Set storage self) internal view returns (uint256) {\n        return self.contractList.length;\n    }\n\n} \n",
+  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/utils/UnorderedIndexableContractDynamicSet.sol",
+  "ast": {
+    "absolutePath": "project:/contracts/utils/UnorderedIndexableContractDynamicSet.sol",
+    "exportedSymbols": {
+      "Indexable": [
+        11072
+      ],
+      "UnorderedIndexableContractDynamicSetLib": [
+        14557
+      ]
+    },
+    "id": 14558,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 14249,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "33:23:52"
+      },
+      {
+        "absolutePath": "project:/contracts/interface/Indexable.sol",
+        "file": "../interface/Indexable.sol",
+        "id": 14251,
+        "nameLocation": "-1:-1:-1",
+        "nodeType": "ImportDirective",
+        "scope": 14558,
+        "sourceUnit": 11073,
+        "src": "58:55:52",
+        "symbolAliases": [
+          {
+            "foreign": {
+              "id": 14250,
+              "name": "Indexable",
+              "nodeType": "Identifier",
+              "overloadedDeclarations": [],
+              "referencedDeclaration": 11072,
+              "src": "67:9:52",
+              "typeDescriptions": {}
+            },
+            "nameLocation": "-1:-1:-1"
+          }
+        ],
+        "unitAlias": ""
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "UnorderedIndexableContractDynamicSetLib",
+        "contractDependencies": [],
+        "contractKind": "library",
+        "fullyImplemented": true,
+        "id": 14557,
+        "linearizedBaseContracts": [
+          14557
+        ],
+        "name": "UnorderedIndexableContractDynamicSetLib",
+        "nameLocation": "123:39:52",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "canonicalName": "UnorderedIndexableContractDynamicSetLib.Contract",
+            "id": 14256,
+            "members": [
+              {
+                "constant": false,
+                "id": 14253,
+                "mutability": "mutable",
+                "name": "id",
+                "nameLocation": "202:2:52",
+                "nodeType": "VariableDeclaration",
+                "scope": 14256,
+                "src": "196:8:52",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint8",
+                  "typeString": "uint8"
+                },
+                "typeName": {
+                  "id": 14252,
+                  "name": "uint8",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "196:5:52",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 14255,
+                "mutability": "mutable",
+                "name": "addr",
+                "nameLocation": "222:4:52",
+                "nodeType": "VariableDeclaration",
+                "scope": 14256,
+                "src": "214:12:52",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_address",
+                  "typeString": "address"
+                },
+                "typeName": {
+                  "id": 14254,
+                  "name": "address",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "214:7:52",
+                  "stateMutability": "nonpayable",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "Contract",
+            "nameLocation": "177:8:52",
+            "nodeType": "StructDefinition",
+            "scope": 14557,
+            "src": "170:63:52",
+            "visibility": "public"
+          },
+          {
+            "canonicalName": "UnorderedIndexableContractDynamicSetLib.Set",
+            "id": 14265,
+            "members": [
+              {
+                "constant": false,
+                "id": 14260,
+                "mutability": "mutable",
+                "name": "indexPointers",
+                "nameLocation": "286:13:52",
+                "nodeType": "VariableDeclaration",
+                "scope": 14265,
+                "src": "260:39:52",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
+                  "typeString": "mapping(uint8 => uint256)"
+                },
+                "typeName": {
+                  "id": 14259,
+                  "keyType": {
+                    "id": 14257,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "268:5:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "nodeType": "Mapping",
+                  "src": "260:25:52",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
+                    "typeString": "mapping(uint8 => uint256)"
+                  },
+                  "valueType": {
+                    "id": 14258,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "277:7:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 14264,
+                "mutability": "mutable",
+                "name": "contractList",
+                "nameLocation": "320:12:52",
+                "nodeType": "VariableDeclaration",
+                "scope": 14265,
+                "src": "309:23:52",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage_ptr",
+                  "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
+                },
+                "typeName": {
+                  "baseType": {
+                    "id": 14262,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 14261,
+                      "name": "Contract",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 14256,
+                      "src": "309:8:52"
+                    },
+                    "referencedDeclaration": 14256,
+                    "src": "309:8:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Contract_$14256_storage_ptr",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
+                    }
+                  },
+                  "id": 14263,
+                  "nodeType": "ArrayTypeName",
+                  "src": "309:10:52",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage_ptr",
+                    "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "Set",
+            "nameLocation": "246:3:52",
+            "nodeType": "StructDefinition",
+            "scope": 14557,
+            "src": "239:100:52",
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 14322,
+              "nodeType": "Block",
+              "src": "412:355:52",
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "commonType": {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        },
+                        "id": 14278,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "leftExpression": {
+                          "id": 14276,
+                          "name": "id",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14270,
+                          "src": "430:2:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_uint8",
+                            "typeString": "uint8"
+                          }
+                        },
+                        "nodeType": "BinaryOperation",
+                        "operator": "!=",
+                        "rightExpression": {
+                          "hexValue": "30",
+                          "id": 14277,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": true,
+                          "kind": "number",
+                          "lValueRequested": false,
+                          "nodeType": "Literal",
+                          "src": "436:1:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_rational_0_by_1",
+                            "typeString": "int_const 0"
+                          },
+                          "value": "0"
+                        },
+                        "src": "430:7:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "hexValue": "28496e64657861626c65436f6e7472616374536574292049442063616e6f742062652030",
+                        "id": 14279,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "string",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "439:38:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_stringliteral_c82ef4e88013799d51691fd4ff1837a286e4a8c4ea7443d849b1d606c83de7eb",
+                          "typeString": "literal_string \"(IndexableContractSet) ID canot be 0\""
+                        },
+                        "value": "(IndexableContractSet) ID canot be 0"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_stringliteral_c82ef4e88013799d51691fd4ff1837a286e4a8c4ea7443d849b1d606c83de7eb",
+                          "typeString": "literal_string \"(IndexableContractSet) ID canot be 0\""
+                        }
+                      ],
+                      "id": 14275,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        4294967278,
+                        4294967278
+                      ],
+                      "referencedDeclaration": 4294967278,
+                      "src": "422:7:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
+                        "typeString": "function (bool,string memory) pure"
+                      }
+                    },
+                    "id": 14280,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "422:56:52",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 14281,
+                  "nodeType": "ExpressionStatement",
+                  "src": "422:56:52"
+                },
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "commonType": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        "id": 14288,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "leftExpression": {
+                          "id": 14283,
+                          "name": "addr",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14272,
+                          "src": "496:4:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "nodeType": "BinaryOperation",
+                        "operator": "!=",
+                        "rightExpression": {
+                          "arguments": [
+                            {
+                              "hexValue": "30",
+                              "id": 14286,
+                              "isConstant": false,
+                              "isLValue": false,
+                              "isPure": true,
+                              "kind": "number",
+                              "lValueRequested": false,
+                              "nodeType": "Literal",
+                              "src": "512:1:52",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_rational_0_by_1",
+                                "typeString": "int_const 0"
+                              },
+                              "value": "0"
+                            }
+                          ],
+                          "expression": {
+                            "argumentTypes": [
+                              {
+                                "typeIdentifier": "t_rational_0_by_1",
+                                "typeString": "int_const 0"
+                              }
+                            ],
+                            "id": 14285,
+                            "isConstant": false,
+                            "isLValue": false,
+                            "isPure": true,
+                            "lValueRequested": false,
+                            "nodeType": "ElementaryTypeNameExpression",
+                            "src": "504:7:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_type$_t_address_$",
+                              "typeString": "type(address)"
+                            },
+                            "typeName": {
+                              "id": 14284,
+                              "name": "address",
+                              "nodeType": "ElementaryTypeName",
+                              "src": "504:7:52",
+                              "typeDescriptions": {}
+                            }
+                          },
+                          "id": 14287,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": true,
+                          "kind": "typeConversion",
+                          "lValueRequested": false,
+                          "names": [],
+                          "nodeType": "FunctionCall",
+                          "src": "504:10:52",
+                          "tryCall": false,
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "src": "496:18:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "hexValue": "28496e64657861626c65436f6e74726163745365742920416464726573732063616e6e6f7420626520307830",
+                        "id": 14289,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "string",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "516:46:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_stringliteral_804898134c9f2a561a428b365b8e4d1226af8807efcf5fe04feeefee02a32743",
+                          "typeString": "literal_string \"(IndexableContractSet) Address cannot be 0x0\""
+                        },
+                        "value": "(IndexableContractSet) Address cannot be 0x0"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_stringliteral_804898134c9f2a561a428b365b8e4d1226af8807efcf5fe04feeefee02a32743",
+                          "typeString": "literal_string \"(IndexableContractSet) Address cannot be 0x0\""
+                        }
+                      ],
+                      "id": 14282,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        4294967278,
+                        4294967278
+                      ],
+                      "referencedDeclaration": 4294967278,
+                      "src": "488:7:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
+                        "typeString": "function (bool,string memory) pure"
+                      }
+                    },
+                    "id": 14290,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "488:75:52",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 14291,
+                  "nodeType": "ExpressionStatement",
+                  "src": "488:75:52"
+                },
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 14297,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "nodeType": "UnaryOperation",
+                        "operator": "!",
+                        "prefix": true,
+                        "src": "581:17:52",
+                        "subExpression": {
+                          "arguments": [
+                            {
+                              "id": 14294,
+                              "name": "self",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": 14268,
+                              "src": "589:4:52",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                                "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                              }
+                            },
+                            {
+                              "id": 14295,
+                              "name": "id",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": 14270,
+                              "src": "595:2:52",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_uint8",
+                                "typeString": "uint8"
+                              }
+                            }
+                          ],
+                          "expression": {
+                            "argumentTypes": [
+                              {
+                                "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                                "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                              },
+                              {
+                                "typeIdentifier": "t_uint8",
+                                "typeString": "uint8"
+                              }
+                            ],
+                            "id": 14293,
+                            "name": "exists",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14543,
+                            "src": "582:6:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14265_storage_ptr_$_t_uint8_$returns$_t_bool_$",
+                              "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (bool)"
+                            }
+                          },
+                          "id": 14296,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "kind": "functionCall",
+                          "lValueRequested": false,
+                          "names": [],
+                          "nodeType": "FunctionCall",
+                          "src": "582:16:52",
+                          "tryCall": false,
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_bool",
+                            "typeString": "bool"
+                          }
+                        },
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "hexValue": "28496e64657861626c65436f6e74726163745365742920436f6e7472616374207769746820676976656e20494420616c726561647920657869737473",
+                        "id": 14298,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "string",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "600:62:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_stringliteral_199a63a7834638639d4b6c4b9d8f3eead3010c2a2e04916f1126b26915a7e770",
+                          "typeString": "literal_string \"(IndexableContractSet) Contract with given ID already exists\""
+                        },
+                        "value": "(IndexableContractSet) Contract with given ID already exists"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_stringliteral_199a63a7834638639d4b6c4b9d8f3eead3010c2a2e04916f1126b26915a7e770",
+                          "typeString": "literal_string \"(IndexableContractSet) Contract with given ID already exists\""
+                        }
+                      ],
+                      "id": 14292,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        4294967278,
+                        4294967278
+                      ],
+                      "referencedDeclaration": 4294967278,
+                      "src": "573:7:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
+                        "typeString": "function (bool,string memory) pure"
+                      }
+                    },
+                    "id": 14299,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "573:90:52",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 14300,
+                  "nodeType": "ExpressionStatement",
+                  "src": "573:90:52"
+                },
+                {
+                  "expression": {
+                    "id": 14309,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "baseExpression": {
+                        "expression": {
+                          "id": 14301,
+                          "name": "self",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14268,
+                          "src": "673:4:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                            "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                          }
+                        },
+                        "id": 14304,
+                        "isConstant": false,
+                        "isLValue": true,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberName": "indexPointers",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 14260,
+                        "src": "673:18:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
+                          "typeString": "mapping(uint8 => uint256)"
+                        }
+                      },
+                      "id": 14305,
+                      "indexExpression": {
+                        "id": 14303,
+                        "name": "id",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14270,
+                        "src": "692:2:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      },
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "nodeType": "IndexAccess",
+                      "src": "673:22:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "arguments": [
+                        {
+                          "id": 14307,
+                          "name": "self",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14268,
+                          "src": "703:4:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                            "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                          }
+                        }
+                      ],
+                      "expression": {
+                        "argumentTypes": [
+                          {
+                            "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                            "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                          }
+                        ],
+                        "id": 14306,
+                        "name": "size",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14556,
+                        "src": "698:4:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14265_storage_ptr_$returns$_t_uint256_$",
+                          "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer) view returns (uint256)"
+                        }
+                      },
+                      "id": 14308,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "kind": "functionCall",
+                      "lValueRequested": false,
+                      "names": [],
+                      "nodeType": "FunctionCall",
+                      "src": "698:10:52",
+                      "tryCall": false,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "src": "673:35:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "id": 14310,
+                  "nodeType": "ExpressionStatement",
+                  "src": "673:35:52"
+                },
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "arguments": [
+                          {
+                            "id": 14317,
+                            "name": "id",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14270,
+                            "src": "750:2:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_uint8",
+                              "typeString": "uint8"
+                            }
+                          },
+                          {
+                            "id": 14318,
+                            "name": "addr",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14272,
+                            "src": "754:4:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_address",
+                              "typeString": "address"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_uint8",
+                              "typeString": "uint8"
+                            },
+                            {
+                              "typeIdentifier": "t_address",
+                              "typeString": "address"
+                            }
+                          ],
+                          "id": 14316,
+                          "name": "Contract",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14256,
+                          "src": "741:8:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_type$_t_struct$_Contract_$14256_storage_ptr_$",
+                            "typeString": "type(struct UnorderedIndexableContractDynamicSetLib.Contract storage pointer)"
+                          }
+                        },
+                        "id": 14319,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "structConstructorCall",
+                        "lValueRequested": false,
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "741:18:52",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_Contract_$14256_memory_ptr",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_struct$_Contract_$14256_memory_ptr",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
+                        }
+                      ],
+                      "expression": {
+                        "expression": {
+                          "id": 14311,
+                          "name": "self",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14268,
+                          "src": "718:4:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                            "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                          }
+                        },
+                        "id": 14314,
+                        "isConstant": false,
+                        "isLValue": true,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberName": "contractList",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 14264,
+                        "src": "718:17:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
+                        }
+                      },
+                      "id": 14315,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "push",
+                      "nodeType": "MemberAccess",
+                      "src": "718:22:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_arraypush_nonpayable$_t_array$_t_struct$_Contract_$14256_storage_$dyn_storage_ptr_$_t_struct$_Contract_$14256_storage_$returns$__$bound_to$_t_array$_t_struct$_Contract_$14256_storage_$dyn_storage_ptr_$",
+                        "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage pointer,struct UnorderedIndexableContractDynamicSetLib.Contract storage ref)"
+                      }
+                    },
+                    "id": 14320,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "718:42:52",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 14321,
+                  "nodeType": "ExpressionStatement",
+                  "src": "718:42:52"
+                }
+              ]
+            },
+            "id": 14323,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "append",
+            "nameLocation": "354:6:52",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 14273,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14268,
+                  "mutability": "mutable",
+                  "name": "self",
+                  "nameLocation": "373:4:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14323,
+                  "src": "361:16:52",
+                  "stateVariable": false,
+                  "storageLocation": "storage",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                    "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                  },
+                  "typeName": {
+                    "id": 14267,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 14266,
+                      "name": "Set",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 14265,
+                      "src": "361:3:52"
+                    },
+                    "referencedDeclaration": 14265,
+                    "src": "361:3:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 14270,
+                  "mutability": "mutable",
+                  "name": "id",
+                  "nameLocation": "385:2:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14323,
+                  "src": "379:8:52",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 14269,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "379:5:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 14272,
+                  "mutability": "mutable",
+                  "name": "addr",
+                  "nameLocation": "397:4:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14323,
+                  "src": "389:12:52",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 14271,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "389:7:52",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "360:42:52"
+            },
+            "returnParameters": {
+              "id": 14274,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "412:0:52"
+            },
+            "scope": 14557,
+            "src": "345:422:52",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "internal"
+          },
+          {
+            "body": {
+              "id": 14363,
+              "nodeType": "Block",
+              "src": "840:254:52",
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "commonType": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        "id": 14339,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "leftExpression": {
+                          "id": 14334,
+                          "name": "addr",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14330,
+                          "src": "858:4:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "nodeType": "BinaryOperation",
+                        "operator": "!=",
+                        "rightExpression": {
+                          "arguments": [
+                            {
+                              "hexValue": "30",
+                              "id": 14337,
+                              "isConstant": false,
+                              "isLValue": false,
+                              "isPure": true,
+                              "kind": "number",
+                              "lValueRequested": false,
+                              "nodeType": "Literal",
+                              "src": "874:1:52",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_rational_0_by_1",
+                                "typeString": "int_const 0"
+                              },
+                              "value": "0"
+                            }
+                          ],
+                          "expression": {
+                            "argumentTypes": [
+                              {
+                                "typeIdentifier": "t_rational_0_by_1",
+                                "typeString": "int_const 0"
+                              }
+                            ],
+                            "id": 14336,
+                            "isConstant": false,
+                            "isLValue": false,
+                            "isPure": true,
+                            "lValueRequested": false,
+                            "nodeType": "ElementaryTypeNameExpression",
+                            "src": "866:7:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_type$_t_address_$",
+                              "typeString": "type(address)"
+                            },
+                            "typeName": {
+                              "id": 14335,
+                              "name": "address",
+                              "nodeType": "ElementaryTypeName",
+                              "src": "866:7:52",
+                              "typeDescriptions": {}
+                            }
+                          },
+                          "id": 14338,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": true,
+                          "kind": "typeConversion",
+                          "lValueRequested": false,
+                          "names": [],
+                          "nodeType": "FunctionCall",
+                          "src": "866:10:52",
+                          "tryCall": false,
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        "src": "858:18:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "hexValue": "28496e64657861626c65436f6e74726163745365742920416464726573732063616e6e6f7420626520307830",
+                        "id": 14340,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "string",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "878:46:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_stringliteral_804898134c9f2a561a428b365b8e4d1226af8807efcf5fe04feeefee02a32743",
+                          "typeString": "literal_string \"(IndexableContractSet) Address cannot be 0x0\""
+                        },
+                        "value": "(IndexableContractSet) Address cannot be 0x0"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_stringliteral_804898134c9f2a561a428b365b8e4d1226af8807efcf5fe04feeefee02a32743",
+                          "typeString": "literal_string \"(IndexableContractSet) Address cannot be 0x0\""
+                        }
+                      ],
+                      "id": 14333,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        4294967278,
+                        4294967278
+                      ],
+                      "referencedDeclaration": 4294967278,
+                      "src": "850:7:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
+                        "typeString": "function (bool,string memory) pure"
+                      }
+                    },
+                    "id": 14341,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "850:75:52",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 14342,
+                  "nodeType": "ExpressionStatement",
+                  "src": "850:75:52"
+                },
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "arguments": [
+                          {
+                            "id": 14345,
+                            "name": "self",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14326,
+                            "src": "950:4:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                              "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                            }
+                          },
+                          {
+                            "id": 14346,
+                            "name": "id",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14328,
+                            "src": "956:2:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_uint8",
+                              "typeString": "uint8"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                              "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                            },
+                            {
+                              "typeIdentifier": "t_uint8",
+                              "typeString": "uint8"
+                            }
+                          ],
+                          "id": 14344,
+                          "name": "exists",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14543,
+                          "src": "943:6:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14265_storage_ptr_$_t_uint8_$returns$_t_bool_$",
+                            "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (bool)"
+                          }
+                        },
+                        "id": 14347,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "functionCall",
+                        "lValueRequested": false,
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "943:16:52",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "hexValue": "28496e64657861626c65436f6e74726163745365742920436f6e7472616374207769746820676976656e20494420646f65736e277420657869737473",
+                        "id": 14348,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "string",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "961:62:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_stringliteral_eeb9898641e91c5410391972a431de9b524cc3a0d6b0cbe0051e8d414d53093e",
+                          "typeString": "literal_string \"(IndexableContractSet) Contract with given ID doesn't exists\""
+                        },
+                        "value": "(IndexableContractSet) Contract with given ID doesn't exists"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_stringliteral_eeb9898641e91c5410391972a431de9b524cc3a0d6b0cbe0051e8d414d53093e",
+                          "typeString": "literal_string \"(IndexableContractSet) Contract with given ID doesn't exists\""
+                        }
+                      ],
+                      "id": 14343,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        4294967278,
+                        4294967278
+                      ],
+                      "referencedDeclaration": 4294967278,
+                      "src": "935:7:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
+                        "typeString": "function (bool,string memory) pure"
+                      }
+                    },
+                    "id": 14349,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "935:89:52",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 14350,
+                  "nodeType": "ExpressionStatement",
+                  "src": "935:89:52"
+                },
+                {
+                  "expression": {
+                    "id": 14361,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "expression": {
+                        "baseExpression": {
+                          "expression": {
+                            "id": 14351,
+                            "name": "self",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14326,
+                            "src": "1034:4:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                              "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                            }
+                          },
+                          "id": 14357,
+                          "isConstant": false,
+                          "isLValue": true,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "memberName": "contractList",
+                          "nodeType": "MemberAccess",
+                          "referencedDeclaration": 14264,
+                          "src": "1034:17:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage",
+                            "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
+                          }
+                        },
+                        "id": 14358,
+                        "indexExpression": {
+                          "baseExpression": {
+                            "expression": {
+                              "id": 14353,
+                              "name": "self",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": 14326,
+                              "src": "1052:4:52",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                                "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                              }
+                            },
+                            "id": 14354,
+                            "isConstant": false,
+                            "isLValue": true,
+                            "isPure": false,
+                            "lValueRequested": false,
+                            "memberName": "indexPointers",
+                            "nodeType": "MemberAccess",
+                            "referencedDeclaration": 14260,
+                            "src": "1052:18:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
+                              "typeString": "mapping(uint8 => uint256)"
+                            }
+                          },
+                          "id": 14356,
+                          "indexExpression": {
+                            "id": 14355,
+                            "name": "id",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14328,
+                            "src": "1071:2:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_uint8",
+                              "typeString": "uint8"
+                            }
+                          },
+                          "isConstant": false,
+                          "isLValue": true,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "nodeType": "IndexAccess",
+                          "src": "1052:22:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_uint256",
+                            "typeString": "uint256"
+                          }
+                        },
+                        "isConstant": false,
+                        "isLValue": true,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "nodeType": "IndexAccess",
+                        "src": "1034:41:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_Contract_$14256_storage",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
+                        }
+                      },
+                      "id": 14359,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "memberName": "addr",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 14255,
+                      "src": "1034:46:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 14360,
+                      "name": "addr",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 14330,
+                      "src": "1083:4:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "src": "1034:53:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "id": 14362,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1034:53:52"
+                }
+              ]
+            },
+            "id": 14364,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "update",
+            "nameLocation": "782:6:52",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 14331,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14326,
+                  "mutability": "mutable",
+                  "name": "self",
+                  "nameLocation": "801:4:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14364,
+                  "src": "789:16:52",
+                  "stateVariable": false,
+                  "storageLocation": "storage",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                    "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                  },
+                  "typeName": {
+                    "id": 14325,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 14324,
+                      "name": "Set",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 14265,
+                      "src": "789:3:52"
+                    },
+                    "referencedDeclaration": 14265,
+                    "src": "789:3:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 14328,
+                  "mutability": "mutable",
+                  "name": "id",
+                  "nameLocation": "813:2:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14364,
+                  "src": "807:8:52",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 14327,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "807:5:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 14330,
+                  "mutability": "mutable",
+                  "name": "addr",
+                  "nameLocation": "825:4:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14364,
+                  "src": "817:12:52",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 14329,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "817:7:52",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "788:42:52"
+            },
+            "returnParameters": {
+              "id": 14332,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "840:0:52"
+            },
+            "scope": 14557,
+            "src": "773:321:52",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "internal"
+          },
+          {
+            "body": {
+              "id": 14437,
+              "nodeType": "Block",
+              "src": "1153:527:52",
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "arguments": [
+                          {
+                            "id": 14374,
+                            "name": "self",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14367,
+                            "src": "1178:4:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                              "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                            }
+                          },
+                          {
+                            "id": 14375,
+                            "name": "id",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14369,
+                            "src": "1184:2:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_uint8",
+                              "typeString": "uint8"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                              "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                            },
+                            {
+                              "typeIdentifier": "t_uint8",
+                              "typeString": "uint8"
+                            }
+                          ],
+                          "id": 14373,
+                          "name": "exists",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14543,
+                          "src": "1171:6:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14265_storage_ptr_$_t_uint8_$returns$_t_bool_$",
+                            "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (bool)"
+                          }
+                        },
+                        "id": 14376,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "functionCall",
+                        "lValueRequested": false,
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "1171:16:52",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "hexValue": "28496e64657861626c65436f6e74726163745365742920436f6e7472616374207769746820676976656e20494420646f65736e277420657869737473",
+                        "id": 14377,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "string",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "1189:62:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_stringliteral_eeb9898641e91c5410391972a431de9b524cc3a0d6b0cbe0051e8d414d53093e",
+                          "typeString": "literal_string \"(IndexableContractSet) Contract with given ID doesn't exists\""
+                        },
+                        "value": "(IndexableContractSet) Contract with given ID doesn't exists"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_stringliteral_eeb9898641e91c5410391972a431de9b524cc3a0d6b0cbe0051e8d414d53093e",
+                          "typeString": "literal_string \"(IndexableContractSet) Contract with given ID doesn't exists\""
+                        }
+                      ],
+                      "id": 14372,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        4294967278,
+                        4294967278
+                      ],
+                      "referencedDeclaration": 4294967278,
+                      "src": "1163:7:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
+                        "typeString": "function (bool,string memory) pure"
+                      }
+                    },
+                    "id": 14378,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "1163:89:52",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 14379,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1163:89:52"
+                },
+                {
+                  "assignments": [
+                    14381
+                  ],
+                  "declarations": [
+                    {
+                      "constant": false,
+                      "id": 14381,
+                      "mutability": "mutable",
+                      "name": "contractToRemoveIndex",
+                      "nameLocation": "1270:21:52",
+                      "nodeType": "VariableDeclaration",
+                      "scope": 14437,
+                      "src": "1262:29:52",
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      },
+                      "typeName": {
+                        "id": 14380,
+                        "name": "uint256",
+                        "nodeType": "ElementaryTypeName",
+                        "src": "1262:7:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      },
+                      "visibility": "internal"
+                    }
+                  ],
+                  "id": 14386,
+                  "initialValue": {
+                    "baseExpression": {
+                      "expression": {
+                        "id": 14382,
+                        "name": "self",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14367,
+                        "src": "1294:4:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                        }
+                      },
+                      "id": 14383,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "indexPointers",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 14260,
+                      "src": "1294:18:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
+                        "typeString": "mapping(uint8 => uint256)"
+                      }
+                    },
+                    "id": 14385,
+                    "indexExpression": {
+                      "id": 14384,
+                      "name": "id",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 14369,
+                      "src": "1313:2:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint8",
+                        "typeString": "uint8"
+                      }
+                    },
+                    "isConstant": false,
+                    "isLValue": true,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "nodeType": "IndexAccess",
+                    "src": "1294:22:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "nodeType": "VariableDeclarationStatement",
+                  "src": "1262:54:52"
+                },
+                {
+                  "assignments": [
+                    14389
+                  ],
+                  "declarations": [
+                    {
+                      "constant": false,
+                      "id": 14389,
+                      "mutability": "mutable",
+                      "name": "contractToMove",
+                      "nameLocation": "1342:14:52",
+                      "nodeType": "VariableDeclaration",
+                      "scope": 14437,
+                      "src": "1326:30:52",
+                      "stateVariable": false,
+                      "storageLocation": "memory",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_struct$_Contract_$14256_memory_ptr",
+                        "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
+                      },
+                      "typeName": {
+                        "id": 14388,
+                        "nodeType": "UserDefinedTypeName",
+                        "pathNode": {
+                          "id": 14387,
+                          "name": "Contract",
+                          "nodeType": "IdentifierPath",
+                          "referencedDeclaration": 14256,
+                          "src": "1326:8:52"
+                        },
+                        "referencedDeclaration": 14256,
+                        "src": "1326:8:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_Contract_$14256_storage_ptr",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
+                        }
+                      },
+                      "visibility": "internal"
+                    }
+                  ],
+                  "id": 14398,
+                  "initialValue": {
+                    "baseExpression": {
+                      "expression": {
+                        "id": 14390,
+                        "name": "self",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14367,
+                        "src": "1359:4:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                        }
+                      },
+                      "id": 14391,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "contractList",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 14264,
+                      "src": "1359:17:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage",
+                        "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
+                      }
+                    },
+                    "id": 14397,
+                    "indexExpression": {
+                      "commonType": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      },
+                      "id": 14396,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "leftExpression": {
+                        "arguments": [
+                          {
+                            "id": 14393,
+                            "name": "self",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14367,
+                            "src": "1382:4:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                              "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                              "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                            }
+                          ],
+                          "id": 14392,
+                          "name": "size",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14556,
+                          "src": "1377:4:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14265_storage_ptr_$returns$_t_uint256_$",
+                            "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer) view returns (uint256)"
+                          }
+                        },
+                        "id": 14394,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "functionCall",
+                        "lValueRequested": false,
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "1377:10:52",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      },
+                      "nodeType": "BinaryOperation",
+                      "operator": "-",
+                      "rightExpression": {
+                        "hexValue": "31",
+                        "id": 14395,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "number",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "1390:1:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_rational_1_by_1",
+                          "typeString": "int_const 1"
+                        },
+                        "value": "1"
+                      },
+                      "src": "1377:14:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "isConstant": false,
+                    "isLValue": true,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "nodeType": "IndexAccess",
+                    "src": "1359:33:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Contract_$14256_storage",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
+                    }
+                  },
+                  "nodeType": "VariableDeclarationStatement",
+                  "src": "1326:66:52"
+                },
+                {
+                  "assignments": [
+                    14400
+                  ],
+                  "declarations": [
+                    {
+                      "constant": false,
+                      "id": 14400,
+                      "mutability": "mutable",
+                      "name": "contractToMoveId",
+                      "nameLocation": "1408:16:52",
+                      "nodeType": "VariableDeclaration",
+                      "scope": 14437,
+                      "src": "1402:22:52",
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint8",
+                        "typeString": "uint8"
+                      },
+                      "typeName": {
+                        "id": 14399,
+                        "name": "uint8",
+                        "nodeType": "ElementaryTypeName",
+                        "src": "1402:5:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      },
+                      "visibility": "internal"
+                    }
+                  ],
+                  "id": 14407,
+                  "initialValue": {
+                    "arguments": [],
+                    "expression": {
+                      "argumentTypes": [],
+                      "expression": {
+                        "arguments": [
+                          {
+                            "expression": {
+                              "id": 14402,
+                              "name": "contractToMove",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": 14389,
+                              "src": "1437:14:52",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_struct$_Contract_$14256_memory_ptr",
+                                "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
+                              }
+                            },
+                            "id": 14403,
+                            "isConstant": false,
+                            "isLValue": true,
+                            "isPure": false,
+                            "lValueRequested": false,
+                            "memberName": "addr",
+                            "nodeType": "MemberAccess",
+                            "referencedDeclaration": 14255,
+                            "src": "1437:19:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_address",
+                              "typeString": "address"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_address",
+                              "typeString": "address"
+                            }
+                          ],
+                          "id": 14401,
+                          "name": "Indexable",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 11072,
+                          "src": "1427:9:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_type$_t_contract$_Indexable_$11072_$",
+                            "typeString": "type(contract Indexable)"
+                          }
+                        },
+                        "id": 14404,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "typeConversion",
+                        "lValueRequested": false,
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "1427:30:52",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_contract$_Indexable_$11072",
+                          "typeString": "contract Indexable"
+                        }
+                      },
+                      "id": 14405,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "id",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 11071,
+                      "src": "1427:33:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_external_view$__$returns$_t_uint8_$",
+                        "typeString": "function () view external returns (uint8)"
+                      }
+                    },
+                    "id": 14406,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "1427:35:52",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "nodeType": "VariableDeclarationStatement",
+                  "src": "1402:60:52"
+                },
+                {
+                  "expression": {
+                    "id": 14414,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "baseExpression": {
+                        "expression": {
+                          "id": 14408,
+                          "name": "self",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14367,
+                          "src": "1473:4:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                            "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                          }
+                        },
+                        "id": 14411,
+                        "isConstant": false,
+                        "isLValue": true,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberName": "indexPointers",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 14260,
+                        "src": "1473:18:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
+                          "typeString": "mapping(uint8 => uint256)"
+                        }
+                      },
+                      "id": 14412,
+                      "indexExpression": {
+                        "id": 14410,
+                        "name": "contractToMoveId",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14400,
+                        "src": "1492:16:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      },
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "nodeType": "IndexAccess",
+                      "src": "1473:36:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 14413,
+                      "name": "contractToRemoveIndex",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 14381,
+                      "src": "1512:21:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "src": "1473:60:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "id": 14415,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1473:60:52"
+                },
+                {
+                  "expression": {
+                    "id": 14422,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "baseExpression": {
+                        "expression": {
+                          "id": 14416,
+                          "name": "self",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14367,
+                          "src": "1543:4:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                            "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                          }
+                        },
+                        "id": 14419,
+                        "isConstant": false,
+                        "isLValue": true,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberName": "contractList",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 14264,
+                        "src": "1543:17:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
+                        }
+                      },
+                      "id": 14420,
+                      "indexExpression": {
+                        "id": 14418,
+                        "name": "contractToRemoveIndex",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14381,
+                        "src": "1561:21:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      },
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "nodeType": "IndexAccess",
+                      "src": "1543:40:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_struct$_Contract_$14256_storage",
+                        "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 14421,
+                      "name": "contractToMove",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 14389,
+                      "src": "1586:14:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_struct$_Contract_$14256_memory_ptr",
+                        "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
+                      }
+                    },
+                    "src": "1543:57:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Contract_$14256_storage",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
+                    }
+                  },
+                  "id": 14423,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1543:57:52"
+                },
+                {
+                  "expression": {
+                    "id": 14428,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "nodeType": "UnaryOperation",
+                    "operator": "delete",
+                    "prefix": true,
+                    "src": "1611:29:52",
+                    "subExpression": {
+                      "baseExpression": {
+                        "expression": {
+                          "id": 14424,
+                          "name": "self",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14367,
+                          "src": "1618:4:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                            "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                          }
+                        },
+                        "id": 14425,
+                        "isConstant": false,
+                        "isLValue": true,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberName": "indexPointers",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 14260,
+                        "src": "1618:18:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
+                          "typeString": "mapping(uint8 => uint256)"
+                        }
+                      },
+                      "id": 14427,
+                      "indexExpression": {
+                        "id": 14426,
+                        "name": "id",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14369,
+                        "src": "1637:2:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      },
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "nodeType": "IndexAccess",
+                      "src": "1618:22:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 14429,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1611:29:52"
+                },
+                {
+                  "expression": {
+                    "arguments": [],
+                    "expression": {
+                      "argumentTypes": [],
+                      "expression": {
+                        "expression": {
+                          "id": 14430,
+                          "name": "self",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14367,
+                          "src": "1650:4:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                            "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                          }
+                        },
+                        "id": 14433,
+                        "isConstant": false,
+                        "isLValue": true,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberName": "contractList",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 14264,
+                        "src": "1650:17:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
+                        }
+                      },
+                      "id": 14434,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "pop",
+                      "nodeType": "MemberAccess",
+                      "src": "1650:21:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_arraypop_nonpayable$_t_array$_t_struct$_Contract_$14256_storage_$dyn_storage_ptr_$returns$__$bound_to$_t_array$_t_struct$_Contract_$14256_storage_$dyn_storage_ptr_$",
+                        "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage pointer)"
+                      }
+                    },
+                    "id": 14435,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "1650:23:52",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 14436,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1650:23:52"
+                }
+              ]
+            },
+            "id": 14438,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "remove",
+            "nameLocation": "1109:6:52",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 14370,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14367,
+                  "mutability": "mutable",
+                  "name": "self",
+                  "nameLocation": "1128:4:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14438,
+                  "src": "1116:16:52",
+                  "stateVariable": false,
+                  "storageLocation": "storage",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                    "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                  },
+                  "typeName": {
+                    "id": 14366,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 14365,
+                      "name": "Set",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 14265,
+                      "src": "1116:3:52"
+                    },
+                    "referencedDeclaration": 14265,
+                    "src": "1116:3:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 14369,
+                  "mutability": "mutable",
+                  "name": "id",
+                  "nameLocation": "1140:2:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14438,
+                  "src": "1134:8:52",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 14368,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1134:5:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1115:28:52"
+            },
+            "returnParameters": {
+              "id": 14371,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1153:0:52"
+            },
+            "scope": 14557,
+            "src": "1100:580:52",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "internal"
+          },
+          {
+            "body": {
+              "id": 14465,
+              "nodeType": "Block",
+              "src": "1767:164:52",
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "arguments": [
+                          {
+                            "id": 14451,
+                            "name": "self",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14441,
+                            "src": "1792:4:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                              "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                            }
+                          },
+                          {
+                            "id": 14452,
+                            "name": "id",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14443,
+                            "src": "1798:2:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_uint8",
+                              "typeString": "uint8"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                              "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                            },
+                            {
+                              "typeIdentifier": "t_uint8",
+                              "typeString": "uint8"
+                            }
+                          ],
+                          "id": 14450,
+                          "name": "exists",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14543,
+                          "src": "1785:6:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14265_storage_ptr_$_t_uint8_$returns$_t_bool_$",
+                            "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (bool)"
+                          }
+                        },
+                        "id": 14453,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "functionCall",
+                        "lValueRequested": false,
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "1785:16:52",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "hexValue": "28496e64657861626c65436f6e74726163745365742920436f6e7472616374207769746820676976656e20494420646f65736e277420657869737473",
+                        "id": 14454,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "string",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "1803:62:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_stringliteral_eeb9898641e91c5410391972a431de9b524cc3a0d6b0cbe0051e8d414d53093e",
+                          "typeString": "literal_string \"(IndexableContractSet) Contract with given ID doesn't exists\""
+                        },
+                        "value": "(IndexableContractSet) Contract with given ID doesn't exists"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_stringliteral_eeb9898641e91c5410391972a431de9b524cc3a0d6b0cbe0051e8d414d53093e",
+                          "typeString": "literal_string \"(IndexableContractSet) Contract with given ID doesn't exists\""
+                        }
+                      ],
+                      "id": 14449,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        4294967278,
+                        4294967278
+                      ],
+                      "referencedDeclaration": 4294967278,
+                      "src": "1777:7:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
+                        "typeString": "function (bool,string memory) pure"
+                      }
+                    },
+                    "id": 14455,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "1777:89:52",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 14456,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1777:89:52"
+                },
+                {
+                  "expression": {
+                    "baseExpression": {
+                      "expression": {
+                        "id": 14457,
+                        "name": "self",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14441,
+                        "src": "1883:4:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                        }
+                      },
+                      "id": 14458,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "contractList",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 14264,
+                      "src": "1883:17:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage",
+                        "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
+                      }
+                    },
+                    "id": 14463,
+                    "indexExpression": {
+                      "baseExpression": {
+                        "expression": {
+                          "id": 14459,
+                          "name": "self",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14441,
+                          "src": "1901:4:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                            "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                          }
+                        },
+                        "id": 14460,
+                        "isConstant": false,
+                        "isLValue": true,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberName": "indexPointers",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 14260,
+                        "src": "1901:18:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
+                          "typeString": "mapping(uint8 => uint256)"
+                        }
+                      },
+                      "id": 14462,
+                      "indexExpression": {
+                        "id": 14461,
+                        "name": "id",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14443,
+                        "src": "1920:2:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      },
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "nodeType": "IndexAccess",
+                      "src": "1901:22:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "isConstant": false,
+                    "isLValue": true,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "nodeType": "IndexAccess",
+                    "src": "1883:41:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Contract_$14256_storage",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
+                    }
+                  },
+                  "functionReturnParameters": 14448,
+                  "id": 14464,
+                  "nodeType": "Return",
+                  "src": "1876:48:52"
+                }
+              ]
+            },
+            "id": 14466,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "get",
+            "nameLocation": "1695:3:52",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 14444,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14441,
+                  "mutability": "mutable",
+                  "name": "self",
+                  "nameLocation": "1711:4:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14466,
+                  "src": "1699:16:52",
+                  "stateVariable": false,
+                  "storageLocation": "storage",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                    "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                  },
+                  "typeName": {
+                    "id": 14440,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 14439,
+                      "name": "Set",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 14265,
+                      "src": "1699:3:52"
+                    },
+                    "referencedDeclaration": 14265,
+                    "src": "1699:3:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 14443,
+                  "mutability": "mutable",
+                  "name": "id",
+                  "nameLocation": "1723:2:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14466,
+                  "src": "1717:8:52",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 14442,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1717:5:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1698:28:52"
+            },
+            "returnParameters": {
+              "id": 14448,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14447,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14466,
+                  "src": "1750:15:52",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Contract_$14256_memory_ptr",
+                    "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
+                  },
+                  "typeName": {
+                    "id": 14446,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 14445,
+                      "name": "Contract",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 14256,
+                      "src": "1750:8:52"
+                    },
+                    "referencedDeclaration": 14256,
+                    "src": "1750:8:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Contract_$14256_storage_ptr",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1749:17:52"
+            },
+            "scope": 14557,
+            "src": "1686:245:52",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "internal"
+          },
+          {
+            "body": {
+              "id": 14479,
+              "nodeType": "Block",
+              "src": "2013:41:52",
+              "statements": [
+                {
+                  "expression": {
+                    "expression": {
+                      "id": 14476,
+                      "name": "self",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 14469,
+                      "src": "2030:4:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                        "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                      }
+                    },
+                    "id": 14477,
+                    "isConstant": false,
+                    "isLValue": true,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "memberName": "contractList",
+                    "nodeType": "MemberAccess",
+                    "referencedDeclaration": 14264,
+                    "src": "2030:17:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
+                    }
+                  },
+                  "functionReturnParameters": 14475,
+                  "id": 14478,
+                  "nodeType": "Return",
+                  "src": "2023:24:52"
+                }
+              ]
+            },
+            "id": 14480,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getAll",
+            "nameLocation": "1946:6:52",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 14470,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14469,
+                  "mutability": "mutable",
+                  "name": "self",
+                  "nameLocation": "1965:4:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14480,
+                  "src": "1953:16:52",
+                  "stateVariable": false,
+                  "storageLocation": "storage",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                    "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                  },
+                  "typeName": {
+                    "id": 14468,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 14467,
+                      "name": "Set",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 14265,
+                      "src": "1953:3:52"
+                    },
+                    "referencedDeclaration": 14265,
+                    "src": "1953:3:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1952:18:52"
+            },
+            "returnParameters": {
+              "id": 14475,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14474,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14480,
+                  "src": "1994:17:52",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_struct$_Contract_$14256_memory_ptr_$dyn_memory_ptr",
+                    "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 14472,
+                      "nodeType": "UserDefinedTypeName",
+                      "pathNode": {
+                        "id": 14471,
+                        "name": "Contract",
+                        "nodeType": "IdentifierPath",
+                        "referencedDeclaration": 14256,
+                        "src": "1994:8:52"
+                      },
+                      "referencedDeclaration": 14256,
+                      "src": "1994:8:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_struct$_Contract_$14256_storage_ptr",
+                        "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
+                      }
+                    },
+                    "id": 14473,
+                    "nodeType": "ArrayTypeName",
+                    "src": "1994:10:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage_ptr",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1993:19:52"
+            },
+            "scope": 14557,
+            "src": "1937:117:52",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "internal"
+          },
+          {
+            "body": {
+              "id": 14495,
+              "nodeType": "Block",
+              "src": "2138:46:52",
+              "statements": [
+                {
+                  "expression": {
+                    "baseExpression": {
+                      "expression": {
+                        "id": 14490,
+                        "name": "self",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14483,
+                        "src": "2155:4:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                        }
+                      },
+                      "id": 14491,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "indexPointers",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 14260,
+                      "src": "2155:18:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
+                        "typeString": "mapping(uint8 => uint256)"
+                      }
+                    },
+                    "id": 14493,
+                    "indexExpression": {
+                      "id": 14492,
+                      "name": "id",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 14485,
+                      "src": "2174:2:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint8",
+                        "typeString": "uint8"
+                      }
+                    },
+                    "isConstant": false,
+                    "isLValue": true,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "nodeType": "IndexAccess",
+                    "src": "2155:22:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "functionReturnParameters": 14489,
+                  "id": 14494,
+                  "nodeType": "Return",
+                  "src": "2148:29:52"
+                }
+              ]
+            },
+            "id": 14496,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getIndex",
+            "nameLocation": "2069:8:52",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 14486,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14483,
+                  "mutability": "mutable",
+                  "name": "self",
+                  "nameLocation": "2090:4:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14496,
+                  "src": "2078:16:52",
+                  "stateVariable": false,
+                  "storageLocation": "storage",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                    "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                  },
+                  "typeName": {
+                    "id": 14482,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 14481,
+                      "name": "Set",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 14265,
+                      "src": "2078:3:52"
+                    },
+                    "referencedDeclaration": 14265,
+                    "src": "2078:3:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 14485,
+                  "mutability": "mutable",
+                  "name": "id",
+                  "nameLocation": "2102:2:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14496,
+                  "src": "2096:8:52",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 14484,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2096:5:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2077:28:52"
+            },
+            "returnParameters": {
+              "id": 14489,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14488,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14496,
+                  "src": "2129:7:52",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 14487,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2129:7:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2128:9:52"
+            },
+            "scope": 14557,
+            "src": "2060:124:52",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "internal"
+          },
+          {
+            "body": {
+              "id": 14512,
+              "nodeType": "Block",
+              "src": "2283:48:52",
+              "statements": [
+                {
+                  "expression": {
+                    "baseExpression": {
+                      "expression": {
+                        "id": 14507,
+                        "name": "self",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14499,
+                        "src": "2300:4:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                        }
+                      },
+                      "id": 14508,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "contractList",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 14264,
+                      "src": "2300:17:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage",
+                        "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
+                      }
+                    },
+                    "id": 14510,
+                    "indexExpression": {
+                      "id": 14509,
+                      "name": "index",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 14501,
+                      "src": "2318:5:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "isConstant": false,
+                    "isLValue": true,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "nodeType": "IndexAccess",
+                    "src": "2300:24:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Contract_$14256_storage",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
+                    }
+                  },
+                  "functionReturnParameters": 14506,
+                  "id": 14511,
+                  "nodeType": "Return",
+                  "src": "2293:31:52"
+                }
+              ]
+            },
+            "id": 14513,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getByIndex",
+            "nameLocation": "2199:10:52",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 14502,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14499,
+                  "mutability": "mutable",
+                  "name": "self",
+                  "nameLocation": "2222:4:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14513,
+                  "src": "2210:16:52",
+                  "stateVariable": false,
+                  "storageLocation": "storage",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                    "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                  },
+                  "typeName": {
+                    "id": 14498,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 14497,
+                      "name": "Set",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 14265,
+                      "src": "2210:3:52"
+                    },
+                    "referencedDeclaration": 14265,
+                    "src": "2210:3:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 14501,
+                  "mutability": "mutable",
+                  "name": "index",
+                  "nameLocation": "2236:5:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14513,
+                  "src": "2228:13:52",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 14500,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2228:7:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2209:33:52"
+            },
+            "returnParameters": {
+              "id": 14506,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14505,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14513,
+                  "src": "2266:15:52",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Contract_$14256_memory_ptr",
+                    "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
+                  },
+                  "typeName": {
+                    "id": 14504,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 14503,
+                      "name": "Contract",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 14256,
+                      "src": "2266:8:52"
+                    },
+                    "referencedDeclaration": 14256,
+                    "src": "2266:8:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Contract_$14256_storage_ptr",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2265:17:52"
+            },
+            "scope": 14557,
+            "src": "2190:141:52",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "internal"
+          },
+          {
+            "body": {
+              "id": 14542,
+              "nodeType": "Block",
+              "src": "2410:117:52",
+              "statements": [
+                {
+                  "condition": {
+                    "commonType": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    },
+                    "id": 14527,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftExpression": {
+                      "arguments": [
+                        {
+                          "id": 14524,
+                          "name": "self",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 14516,
+                          "src": "2429:4:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                            "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                          }
+                        }
+                      ],
+                      "expression": {
+                        "argumentTypes": [
+                          {
+                            "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                            "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                          }
+                        ],
+                        "id": 14523,
+                        "name": "size",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14556,
+                        "src": "2424:4:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14265_storage_ptr_$returns$_t_uint256_$",
+                          "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer) view returns (uint256)"
+                        }
+                      },
+                      "id": 14525,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "kind": "functionCall",
+                      "lValueRequested": false,
+                      "names": [],
+                      "nodeType": "FunctionCall",
+                      "src": "2424:10:52",
+                      "tryCall": false,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "nodeType": "BinaryOperation",
+                    "operator": "==",
+                    "rightExpression": {
+                      "hexValue": "30",
+                      "id": 14526,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": true,
+                      "kind": "number",
+                      "lValueRequested": false,
+                      "nodeType": "Literal",
+                      "src": "2438:1:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_rational_0_by_1",
+                        "typeString": "int_const 0"
+                      },
+                      "value": "0"
+                    },
+                    "src": "2424:15:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 14530,
+                  "nodeType": "IfStatement",
+                  "src": "2420:33:52",
+                  "trueBody": {
+                    "expression": {
+                      "hexValue": "66616c7365",
+                      "id": 14528,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": true,
+                      "kind": "bool",
+                      "lValueRequested": false,
+                      "nodeType": "Literal",
+                      "src": "2448:5:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      },
+                      "value": "false"
+                    },
+                    "functionReturnParameters": 14522,
+                    "id": 14529,
+                    "nodeType": "Return",
+                    "src": "2441:12:52"
+                  }
+                },
+                {
+                  "expression": {
+                    "commonType": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    },
+                    "id": 14540,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftExpression": {
+                      "expression": {
+                        "baseExpression": {
+                          "expression": {
+                            "id": 14531,
+                            "name": "self",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14516,
+                            "src": "2470:4:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                              "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                            }
+                          },
+                          "id": 14532,
+                          "isConstant": false,
+                          "isLValue": true,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "memberName": "contractList",
+                          "nodeType": "MemberAccess",
+                          "referencedDeclaration": 14264,
+                          "src": "2470:17:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage",
+                            "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
+                          }
+                        },
+                        "id": 14537,
+                        "indexExpression": {
+                          "baseExpression": {
+                            "expression": {
+                              "id": 14533,
+                              "name": "self",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": 14516,
+                              "src": "2488:4:52",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                                "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                              }
+                            },
+                            "id": 14534,
+                            "isConstant": false,
+                            "isLValue": true,
+                            "isPure": false,
+                            "lValueRequested": false,
+                            "memberName": "indexPointers",
+                            "nodeType": "MemberAccess",
+                            "referencedDeclaration": 14260,
+                            "src": "2488:18:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
+                              "typeString": "mapping(uint8 => uint256)"
+                            }
+                          },
+                          "id": 14536,
+                          "indexExpression": {
+                            "id": 14535,
+                            "name": "id",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 14518,
+                            "src": "2507:2:52",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_uint8",
+                              "typeString": "uint8"
+                            }
+                          },
+                          "isConstant": false,
+                          "isLValue": true,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "nodeType": "IndexAccess",
+                          "src": "2488:22:52",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_uint256",
+                            "typeString": "uint256"
+                          }
+                        },
+                        "isConstant": false,
+                        "isLValue": true,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "nodeType": "IndexAccess",
+                        "src": "2470:41:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_Contract_$14256_storage",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
+                        }
+                      },
+                      "id": 14538,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "id",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 14253,
+                      "src": "2470:44:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint8",
+                        "typeString": "uint8"
+                      }
+                    },
+                    "nodeType": "BinaryOperation",
+                    "operator": "==",
+                    "rightExpression": {
+                      "id": 14539,
+                      "name": "id",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 14518,
+                      "src": "2518:2:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint8",
+                        "typeString": "uint8"
+                      }
+                    },
+                    "src": "2470:50:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "functionReturnParameters": 14522,
+                  "id": 14541,
+                  "nodeType": "Return",
+                  "src": "2463:57:52"
+                }
+              ]
+            },
+            "id": 14543,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "exists",
+            "nameLocation": "2346:6:52",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 14519,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14516,
+                  "mutability": "mutable",
+                  "name": "self",
+                  "nameLocation": "2365:4:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14543,
+                  "src": "2353:16:52",
+                  "stateVariable": false,
+                  "storageLocation": "storage",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                    "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                  },
+                  "typeName": {
+                    "id": 14515,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 14514,
+                      "name": "Set",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 14265,
+                      "src": "2353:3:52"
+                    },
+                    "referencedDeclaration": 14265,
+                    "src": "2353:3:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 14518,
+                  "mutability": "mutable",
+                  "name": "id",
+                  "nameLocation": "2377:2:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14543,
+                  "src": "2371:8:52",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 14517,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2371:5:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2352:28:52"
+            },
+            "returnParameters": {
+              "id": 14522,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14521,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14543,
+                  "src": "2404:4:52",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 14520,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2404:4:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2403:6:52"
+            },
+            "scope": 14557,
+            "src": "2337:190:52",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "internal"
+          },
+          {
+            "body": {
+              "id": 14555,
+              "nodeType": "Block",
+              "src": "2597:48:52",
+              "statements": [
+                {
+                  "expression": {
+                    "expression": {
+                      "expression": {
+                        "id": 14551,
+                        "name": "self",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14546,
+                        "src": "2614:4:52",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                          "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
+                        }
+                      },
+                      "id": 14552,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberName": "contractList",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 14264,
+                      "src": "2614:17:52",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage",
+                        "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
+                      }
+                    },
+                    "id": 14553,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "memberName": "length",
+                    "nodeType": "MemberAccess",
+                    "src": "2614:24:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "functionReturnParameters": 14550,
+                  "id": 14554,
+                  "nodeType": "Return",
+                  "src": "2607:31:52"
+                }
+              ]
+            },
+            "id": 14556,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "size",
+            "nameLocation": "2542:4:52",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 14547,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14546,
+                  "mutability": "mutable",
+                  "name": "self",
+                  "nameLocation": "2559:4:52",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14556,
+                  "src": "2547:16:52",
+                  "stateVariable": false,
+                  "storageLocation": "storage",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                    "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                  },
+                  "typeName": {
+                    "id": 14545,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 14544,
+                      "name": "Set",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 14265,
+                      "src": "2547:3:52"
+                    },
+                    "referencedDeclaration": 14265,
+                    "src": "2547:3:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                      "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2546:18:52"
+            },
+            "returnParameters": {
+              "id": 14550,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 14549,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 14556,
+                  "src": "2588:7:52",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 14548,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2588:7:52",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2587:9:52"
+            },
+            "scope": 14557,
+            "src": "2533:112:52",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "internal"
+          }
+        ],
+        "scope": 14558,
+        "src": "115:2533:52",
+        "usedErrors": []
+      }
+    ],
+    "src": "33:2617:52"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.14+commit.80d49f37.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.10",
+  "updatedAt": "2022-12-02T10:25:44.714Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}
