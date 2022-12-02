@@ -3,49 +3,62 @@
 pragma solidity ^0.8.0;
 
 import { IScoreFunction } from "./interface/IScoreFunction.sol";
+import { Named } from "./interface/Named.sol";
+import { UnorderedIndexableContractDynamicSetLib } from "./utils/UnorderedIndexableContractDynamicSet.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ScoringProxy is Ownable {
+
+    using UnorderedIndexableContractDynamicSetLib for UnorderedIndexableContractDynamicSetLib.Set;
+
     event NewScoringFunctionContract(uint8 indexed scoreFunctionId, address newContractAddress);
     event ScoringFunctionContractUpdated(uint8 indexed scoreFunctionId, address newContractAddress);
 
-    // scoreFunctionId => Contract address
-    mapping(uint8 => address) public functions;
+    UnorderedIndexableContractDynamicSetLib.Set scoreFunctionSet;
 
+    function setContractAddress(uint8 scoreFunctionId, address scoringContractAddress) external onlyOwner {
+        if (scoreFunctionSet.exists(scoreFunctionId)) {
+            emit ScoringFunctionContractUpdated(scoreFunctionId, scoringContractAddress);
+            scoreFunctionSet.update(scoreFunctionId, scoringContractAddress);
+        } else {
+            emit NewScoringFunctionContract(scoreFunctionId, scoringContractAddress);
+            scoreFunctionSet.append(scoreFunctionId, scoringContractAddress);
+        }
+    }
+
+    function removeContract(uint8 scoreFunctionId) external onlyOwner {
+        scoreFunctionSet.remove(scoreFunctionId);
+    }
+    
     function callScoreFunction(
         uint8 scoreFunctionId,
         uint8 hashFunctionId,
-        bytes memory nodeId,
-        bytes memory keyword,
+        bytes calldata nodeId,
+        bytes calldata keyword,
         uint96 stake
     )
-        public
+        external
         returns (uint40)
     {
-        require(functions[scoreFunctionId] != address(0), "Scoring function doesn't exist!");
-
-        IScoreFunction scoringFunction = IScoreFunction(functions[scoreFunctionId]);
+        IScoreFunction scoringFunction = IScoreFunction(scoreFunctionSet.get(scoreFunctionId).addr);
         uint256 distance = scoringFunction.calculateDistance(hashFunctionId, nodeId, keyword);
-
         return scoringFunction.calculateScore(distance, stake);
     }
 
-    function setContractAddress(uint8 scoreFunctionId, address scoringContractAddress)
-        public
-        onlyOwner
-    {
-        require(scoringContractAddress != address(0), "Contract address cannot be empty");
+    function getScoreFunctionName(uint8 scoreFunctionId) external view returns (string memory) {
+        return Named(scoreFunctionSet.get(scoreFunctionId).addr).name();
+    }
 
-        if (functions[scoreFunctionId] != address(0)) {
-            emit ScoringFunctionContractUpdated(
-                scoreFunctionId,
-                scoringContractAddress
-            );
-        } else {
-            emit NewScoringFunctionContract(scoreFunctionId, scoringContractAddress);
-        }
+    function getScoreFunctionContractAddress(uint8 scoreFunctionId) external view returns (address) {
+        return scoreFunctionSet.get(scoreFunctionId).addr;
+    }
 
-        functions[scoreFunctionId] = scoringContractAddress;
+    function getAllScoreFunctions() external view returns (UnorderedIndexableContractDynamicSetLib.Contract[] memory) {
+        return scoreFunctionSet.getAll();
+    }
+
+    function isScoreFunction(uint8 scoreFunctionId) external view returns (bool) {
+        return scoreFunctionSet.exists(scoreFunctionId);
     }
 
 }

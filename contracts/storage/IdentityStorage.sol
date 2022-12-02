@@ -2,17 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import { ByteArr } from "../utils/ByteArr.sol";
 import { Hub } from "../Hub.sol";
 import { IERC734Extended } from "../interface/IERC734Extended.sol";
+import { ByteArr } from "../utils/ByteArr.sol";
 
 contract IdentityStorage is IERC734Extended {
-    using ByteArr for bytes;
-    using ByteArr for bytes32[];
-    using ByteArr for uint256[];
 
-    uint256 constant ADMIN_KEY = 1;
-    uint256 constant OPERATIONAL_KEY = 2;
+    using ByteArr for bytes32[];
 
     Hub public hub;
 
@@ -31,63 +27,47 @@ contract IdentityStorage is IERC734Extended {
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
+
         hub = Hub(hubAddress);
 
         _identityId = 1;
     }
 
-    modifier onlyProfileStorage() {
-        require(
-            msg.sender == hub.getContractAddress("ProfileStorage"),
-            "Function can only be called by ProfileStorage contract"
-        );
+    modifier onlyContracts() {
+        _checkHub();
         _;
     }
 
-    function createIdentity(address operational, address admin) public onlyProfileStorage returns (uint72) {
-        require(operational != address(0), "Operational wallet address can't be empty");
-        require(admin != address(0), "Admin wallet address can't be empty");
-        require(operational != admin, "Same address for ADMIN/OPERATIONAL purposes");
+    function deleteIdentity(uint72 identityId) external onlyContracts {
+        delete identities[identityId];
+    }
 
-        bytes32 _admin_key = keccak256(abi.encodePacked(admin));
+    function addKey(uint72 identityId, bytes32 _key, uint256 _purpose, uint256 _type) external override onlyContracts {
+        identities[identityId].keys[_key].purpose = _purpose;
+        identities[identityId].keys[_key].keyType = _type;
+        identities[identityId].keys[_key].key = _key;
+        identities[identityId].keysByPurpose[_purpose].push(_key);
 
-        uint72 identityId = _identityId;
+        emit KeyAdded(identityId, _key, _purpose, _type);
+    }
+
+    function removeKey(uint72 identityId, bytes32 _key) external override onlyContracts {
         Identity storage identity = identities[identityId];
-        _identityId++;
-        
-        identity.keys[_admin_key].purpose = ADMIN_KEY;
-        identity.keys[_admin_key].keyType = 1;  // ECDSA
-        identity.keys[_admin_key].key = _admin_key;
-        identity.keysByPurpose[ADMIN_KEY].push(_admin_key);
 
-        emit KeyAdded(identityId, _admin_key, identity.keys[_admin_key].purpose, identity.keys[_admin_key].keyType);
+        uint256 index;
+        (index, ) = identity.keysByPurpose[identity.keys[_key].purpose].indexOf(_key);
+        identity.keysByPurpose[identity.keys[_key].purpose].removeByIndex(index);
 
-        bytes32 _operational_key = keccak256(abi.encodePacked(operational));
+        delete identity.keys[_key];
 
-        identityIds[_operational_key] = identityId;
-
-        identity.keys[_operational_key].purpose = OPERATIONAL_KEY;
-        identity.keys[_operational_key].keyType = 1;  // ECDSA
-        identity.keys[_operational_key].key = _operational_key;
-        identity.keysByPurpose[OPERATIONAL_KEY].push(_operational_key);
-
-        emit KeyAdded(
-            identityId,
-            _operational_key,
-            identity.keys[_operational_key].purpose,
-            identity.keys[_operational_key].keyType
-        );
-
-        emit IdentityCreated(identityId, _operational_key, _admin_key);
-
-        return identityId;
+        emit KeyRemoved(identityId, identity.keys[_key].key, identity.keys[_key].purpose, identity.keys[_key].keyType);
     }
 
-    function getIdentityId(address operational) public view returns (uint72) {
-        return identityIds[keccak256(abi.encodePacked(operational))];
+    function keyHasPurpose(uint72 identityId, bytes32 _key, uint256 _purpose) external view override returns (bool) {
+        return identities[identityId].keys[_key].purpose == _purpose;
     }
 
-    function getKey(uint72 identityId, bytes32 _key) public view override returns (uint256, uint256, bytes32) {
+    function getKey(uint72 identityId, bytes32 _key) external view override returns (uint256, uint256, bytes32) {
         return (
             identities[identityId].keys[_key].purpose,
             identities[identityId].keys[_key].keyType,
@@ -95,58 +75,32 @@ contract IdentityStorage is IERC734Extended {
         );
     }
 
-    function keyHasPurpose(uint72 identityId, bytes32 _key, uint256 _purpose) public view override returns (bool) {
-        return identities[identityId].keys[_key].purpose == _purpose;
-    }
-
-    function getKeysByPurpose(uint72 identityId, uint256 _purpose) public view override returns (bytes32[] memory) {
+    function getKeysByPurpose(uint72 identityId, uint256 _purpose) external view override returns (bytes32[] memory) {
         return identities[identityId].keysByPurpose[_purpose];
     }
 
-    function addKey(uint72 identityId, bytes32 _key, uint256 _purpose, uint256 _type) public override {
-        require(keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY), "Admin function");
-        require(_key != bytes32(0), "Key arg is empty");
-        require(identities[identityId].keys[_key].key != _key, "Key is already attached to the identity");
-
-        identities[identityId].keys[_key].purpose = _purpose;
-        identities[identityId].keys[_key].keyType = _type;
-        identities[identityId].keys[_key].key = _key;
-        identities[identityId].keysByPurpose[_purpose].push(_key);
-
-        if (_purpose == OPERATIONAL_KEY) {
-            identityIds[_key] = identityId;
-        }
-
-        emit KeyAdded(identityId, _key, _purpose, _type);
+    function getIdentityId(address operational) external view returns (uint72) {
+        return identityIds[keccak256(abi.encodePacked(operational))];
     }
 
-    function removeKey(uint72 identityId, bytes32 _key) public override {
-        require(keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY), "Admin function");
-        require(_key != bytes32(0), "Key arg is empty");
-
-        Identity storage identity = identities[identityId];
-        require(identity.keys[_key].key == _key, "Key isn't attached to the identity");
-
-        require(
-            !(identity.keysByPurpose[ADMIN_KEY].length == 1 && keyHasPurpose(identityId, _key, ADMIN_KEY)),
-            "Cannot delete the only admin key"
-        );
-        require(
-            !(identity.keysByPurpose[OPERATIONAL_KEY].length == 1 && keyHasPurpose(identityId, _key, OPERATIONAL_KEY)),
-            "Cannot delete the only operational key"
-        );
-
-        emit KeyRemoved(identityId, identity.keys[_key].key, identity.keys[_key].purpose, identity.keys[_key].keyType);
-
-        uint256 index;
-        bool success;
-        (index, success) = identity.keysByPurpose[identity.keys[_key].purpose].indexOf(_key);
-        identity.keysByPurpose[identity.keys[_key].purpose].removeByIndex(index);
-
-        delete identity.keys[_key];
-
-        if (identity.keys[_key].purpose == OPERATIONAL_KEY) {
-            delete identityIds[_key];
-        }
+    function setOperationalKeyIdentityId(bytes32 operationalKey, uint72 identityId) external onlyContracts {
+        identityIds[operationalKey] = identityId;
     }
+
+    function removeOperationalKeyIdentityId(bytes32 operationalKey) external onlyContracts {
+        delete identityIds[operationalKey];
+    }
+
+    function identityExists(uint72 identityId) external view returns (bool) {
+        return identities[identityId].identityId == identityId;
+    }
+
+    function generateIdentityId() external onlyContracts returns (uint72) {
+        return _identityId++;
+    }
+
+    function _checkHub() internal view virtual {
+        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
+    }
+
 }

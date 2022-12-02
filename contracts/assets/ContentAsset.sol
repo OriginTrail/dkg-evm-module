@@ -3,113 +3,113 @@
 pragma solidity ^0.8.0;
 
 import { AbstractAsset } from "./AbstractAsset.sol";
-import { AssertionRegistry } from "../AssertionRegistry.sol";
+import { Assertion } from "../Assertion.sol";
+import { ServiceAgreementV1 } from "../ServiceAgreementV1.sol";
+import { Named } from "../interface/Named.sol";
+import { ServiceAgreementStructsV1 } from "../structs/ServiceAgreementStructsV1.sol";
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import { ServiceAgreementStorage } from "../storage/ServiceAgreementStorage.sol";
 
 contract ContentAsset is AbstractAsset, ERC721 {
-    struct AssetRecord {
-        bytes32[] assertions;
+
+    struct AssetInputArgs {
+        bytes32 assertionId;
+        uint128 size;
+        uint32 triplesNumber;
+        uint96 chunksNumber;
+        uint16 epochsNumber;
+        uint96 tokenAmount;
+        uint8 scoreFunctionId;
+    }
+
+    struct Asset {
+        bytes32[] assertionIds;
     }
 
     uint256 private _tokenId;
 
-    mapping (uint256 => AssetRecord) assetRecords;
+    Assertion public assertionContract;
+    ServiceAgreementV1 public serviceAgreement;
+
+    mapping (uint256 => Asset) assets;
 
     constructor(address hubAddress)
         AbstractAsset(hubAddress)
         ERC721("ContentAsset", "DKG")
     {
-        _tokenId = 0;
+        assertionContract = Assertion(hub.getContractAddress("Assertion"));
+        serviceAgreement = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
     }
 
-    function createAsset(
-        bytes32 assertionId,
-        uint128 size,
-        uint32 triplesNumber,
-        uint96 chunksNumber,
-        uint16 epochsNumber,
-        uint96 tokenAmount
-    )
-        public
-    {
-        require(assertionId != bytes32(0), "assertionId cannot be empty");
-        require(size > 0, "Size cannot be 0");
-        require(epochsNumber > 0, "Epochs number cannot be 0");
-        require(tokenAmount > 0, "Token amount cannot be 0");
+    modifier onlyAssetOwner(uint256 tokenId) {
+        _checkAssetOwner(tokenId);
+        _;
+    }
 
-        uint256 tokenId = _tokenId;
+    function name() public view override(ERC721, Named) returns (string memory) {
+        return ERC721.name();
+    }
+
+    function createAsset(AssetInputArgs calldata args) external {
+        uint256 tokenId = _tokenId++;
         _mint(msg.sender, tokenId);
-        _tokenId++;
 
-        AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(
-            assertionId,
+        assertionContract.createAssertion(
+            args.assertionId,
             msg.sender,
-            size,
-            triplesNumber,
-            chunksNumber
+            args.size,
+            args.triplesNumber,
+            args.chunksNumber
         );
-        assetRecords[tokenId].assertions.push(assertionId);
+        assets[tokenId].assertionIds.push(args.assertionId);
 
-        ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage")).createServiceAgreement(
-            msg.sender,
-            address(this),
-            tokenId,
-            abi.encodePacked(address(this), tokenId, assertionId),
-            0,
-            epochsNumber,
-            tokenAmount,
-            0
+        serviceAgreement.createServiceAgreement(
+            ServiceAgreementStructsV1.ServiceAgreementInputArgs({
+                assetCreator: msg.sender,
+                assetContract: address(this),
+                tokenId: tokenId,
+                keyword: abi.encodePacked(address(this), tokenId, args.assertionId),
+                hashFunctionId: 1,  // hashFunctionId | 1 = sha256
+                epochsNumber: args.epochsNumber,
+                tokenAmount: args.tokenAmount,
+                scoreFunctionId: args.scoreFunctionId
+            })
         );
 
-        emit AssetCreated(address(this), tokenId, assertionId);
+        emit AssetCreated(address(this), tokenId, args.assertionId);
     }
 
-    function updateAsset(
-        uint256 tokenId,
-        bytes32 assertionId,
-        uint128 size,
-        uint32 triplesNumber,
-        uint96 chunksNumber,
-        uint16 epochsNumber,
-        uint96 tokenAmount
-    )
-        public
-    {
-        require(msg.sender == ownerOf(tokenId), "Only owner can update an asset");
-        require(assertionId != bytes32(0), "assertionId cannot be 0");
-        require(size > 0, "Size cannot be 0");
-        require(epochsNumber > 0, "Epochs number cannot be 0");
-        require(tokenAmount > 0, "Token amount cannot be 0");
-        
-        AssertionRegistry(hub.getContractAddress("AssertionRegistry")).createAssertionRecord(
-            assertionId,
+    function updateAsset(uint256 tokenId, AssetInputArgs calldata args) external onlyAssetOwner(tokenId) {
+        assertionContract.createAssertion(
+            args.assertionId,
             msg.sender,
-            size,
-            triplesNumber,
-            chunksNumber
+            args.size,
+            args.triplesNumber,
+            args.chunksNumber
         );
-        assetRecords[tokenId].assertions.push(assertionId);
+        assets[tokenId].assertionIds.push(args.assertionId);
 
-        ServiceAgreementStorage(hub.getContractAddress("ServiceAgreementStorage")).updateServiceAgreement(
-            msg.sender,
-            address(this),
-            tokenId,
-            abi.encodePacked(address(this), tokenId, this.getAssertionByIndex(tokenId, 0)),
-            0,
-            epochsNumber,
-            tokenAmount
+        serviceAgreement.updateServiceAgreement(
+            ServiceAgreementStructsV1.ServiceAgreementInputArgs({
+                assetCreator: msg.sender,
+                assetContract: address(this),
+                tokenId: tokenId,
+                keyword: abi.encodePacked(address(this), tokenId, this.getAssertionIdByIndex(tokenId, 0)),
+                hashFunctionId: 1,  // hashFunctionId | 1 = sha256
+                epochsNumber: args.epochsNumber,
+                tokenAmount: args.tokenAmount,
+                scoreFunctionId: args.scoreFunctionId
+            })
         );
 
-        emit AssetUpdated(address(this), tokenId, assertionId);
+        emit AssetUpdated(address(this), tokenId, args.assertionId);
     }
 
-    function getAssertions(uint256 tokenId)
-        override
-        public
-        view
-        returns (bytes32 [] memory)
-    {
-        return assetRecords[tokenId].assertions;
+    function getAssertionIds(uint256 tokenId) public view override returns (bytes32[] memory) {
+        return assets[tokenId].assertionIds;
     }
+
+    function _checkAssetOwner(uint256 tokenId) internal view virtual {
+        require(msg.sender == ownerOf(tokenId), "Only asset owner can use this fn");
+    }
+
 }

@@ -3,8 +3,9 @@
 pragma solidity ^0.8.0;
 
 library ByteArr {
+
     function indexOf(bytes32[] storage self, bytes32 item) view internal returns (uint index, bool isThere) {
-        for (uint i = 0; i < self.length; i++) {
+        for (uint i; i < self.length; i++) {
             if (self[i] == item) {
                 return (i,true);
             }
@@ -23,9 +24,10 @@ library ByteArr {
 
     function getFuncHash(bytes storage _data) view internal returns (bytes4) {
         bytes4 output;
-        for (uint i = 0; i < 4; i++) {
+        for (uint i; i < 4; i++) {
             output |= bytes4(_data[i] & 0xFF) >> (i * 8);
         }
         return output;
     }
+
 }

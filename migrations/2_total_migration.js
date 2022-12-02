@@ -1,20 +1,25 @@
 var BN = require('bn.js');
 
-
-var AssertionRegistry = artifacts.require('AssertionRegistry');
+var Hub = artifacts.require('Hub');
+var ParametersStorage = artifacts.require('ParametersStorage');
+var HashingProxy = artifacts.require('HashingProxy');
+var SHA256 = artifacts.require('SHA256');
+var ScoringProxy = artifacts.require('ScoringProxy');
+var Log2PLDSF = artifacts.require('Log2PLDSF');
+var ShardingTableStorage = artifacts.require('ShardingTableStorage');
+var ShardingTableContract = artifacts.require('ShardingTable');
+var AssertionStorage = artifacts.require('AssertionStorage');
+var AssertionContract = artifacts.require('Assertion');
+var ServiceAgreementStorageV1 = artifacts.require('ServiceAgreementStorageV1');
+var ServiceAgreementContractV1 = artifacts.require('ServiceAgreementV1');
 var ContentAsset = artifacts.require('ContentAsset');
 var ERC20Token = artifacts.require('ERC20Token');
-var HashingProxy = artifacts.require('HashingProxy');
-var Hub = artifacts.require('Hub');
 var IdentityStorage = artifacts.require('IdentityStorage');
-var ParametersStorage = artifacts.require('ParametersStorage');
-var Log2PLDSF = artifacts.require('Log2PLDSF');
-var Profile = artifacts.require('Profile');
+var IdentityContract = artifacts.require('Identity');
 var ProfileStorage = artifacts.require('ProfileStorage');
-var ScoringProxy = artifacts.require('ScoringProxy');
-var ServiceAgreementStorage = artifacts.require('ServiceAgreementStorage');
-var SHA256 = artifacts.require('SHA256');
-var ShardingTable = artifacts.require('ShardingTable');
+var ProfileContract = artifacts.require('Profile');
+var StakingStorage = artifacts.require('StakingStorage');
+var StakingContract = artifacts.require('Staking');
 
 const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
     "0x2f2697b2a7BB4555687EF76f8fb4C3DFB3028E57",
@@ -47,10 +52,11 @@ const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
     "0xBaF76aC0d0ef9a2FFF76884d54C9D3e270290a43"];
 
 module.exports = async (deployer, network, accounts) => {
-    let assertionRegistry, contentAsset, erc20Token, hashingProxy,
-        hub, identityStorage, parametersStorage, log2pldsfContract, profile,
-        profileStorage, scoringProxy, serviceAgreementStorage, sha256Contract,
-        shardingTable;
+    let hub, parametersStorage, hashingProxy, sha256Contract, scoringProxy,
+        log2pldsfContract, shardingTableStorage, shardingTableContract,
+        serviceAgreementStorageV1, serviceAgreementContractV1, contentAsset,
+        erc20Token, identityStorage, identityContract, profileStorage,
+        profileContract, stakingStorage, stakingContract;
 
     switch (network) {
         case 'development':
@@ -84,8 +90,8 @@ module.exports = async (deployer, network, accounts) => {
                     sha256Contract = result;
                 });
 
-            // 0 - sha256
-            await hashingProxy.setContractAddress(0, sha256Contract.address);
+            // 1 - sha256
+            await hashingProxy.setContractAddress(1, sha256Contract.address);
             /* ---------------------------------------------------------------------------------------- */
 
             /* ----------------------------------Scoring Proxy----------------------------------------- */
@@ -100,32 +106,50 @@ module.exports = async (deployer, network, accounts) => {
                     log2pldsfContract = result;
                 });
 
-            // 0 - Log2PLDSF
-            await scoringProxy.setContractAddress(0, log2pldsfContract.address);
+            // 1 - Log2PLDSF
+            await scoringProxy.setContractAddress(1, log2pldsfContract.address);
             /* ---------------------------------------------------------------------------------------- */
 
             /* ---------------------------------Sharding Table----------------------------------------- */
-            await deployer.deploy(ShardingTable, hub.address, {gas: 6000000, from: accounts[0]})
+            await deployer.deploy(ShardingTableStorage, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
-                    shardingTable = result;
+                    shardingTableStorage = result;
                 });
-            await hub.setContractAddress('ShardingTable', shardingTable.address);
+            await hub.setContractAddress('ShardingTableStorage', shardingTableStorage.address);
+
+            await deployer.deploy(ShardingTableContract, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    shardingTableContract = result;
+                });
+            await hub.setContractAddress('ShardingTable', shardingTableContract.address);
             /* ---------------------------------------------------------------------------------------- */
 
-            /* --------------------------------Assertion Registry-------------------------------------- */
-            await deployer.deploy(AssertionRegistry, hub.address, {gas: 6000000, from: accounts[0]})
+            /* ------------------------------------Assertion------------------------------------------- */
+            await deployer.deploy(AssertionStorage, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
-                    assertionRegistry = result;
+                    assertionStorage = result;
                 });
-            await hub.setContractAddress('AssertionRegistry', assertionRegistry.address);
+            await hub.setContractAddress('AssertionStorage', assertionStorage.address);
+
+            await deployer.deploy(AssertionContract, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    assertionContract = result;
+                });
+            await hub.setContractAddress('Assertion', assertionContract.address);
             /* ---------------------------------------------------------------------------------------- */
 
             /* -----------------------------Service Agreement Storage---------------------------------- */
-            await deployer.deploy(ServiceAgreementStorage, hub.address, {gas: 6000000, from: accounts[0]})
+            await deployer.deploy(ServiceAgreementStorageV1, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
-                    serviceAgreementStorage = result;
+                    serviceAgreementStorageV1 = result;
                 });
-            await hub.setContractAddress('ServiceAgreementStorage', serviceAgreementStorage.address);
+            await hub.setContractAddress('ServiceAgreementStorageV1', serviceAgreementStorageV1.address);
+
+            await deployer.deploy(ServiceAgreementContractV1, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    serviceAgreementContractV1 = result;
+                });
+            await hub.setContractAddress('ServiceAgreementV1', serviceAgreementContractV1.address);
             /* ---------------------------------------------------------------------------------------- */
 
             /* ---------------------------------------Assets------------------------------------------- */
@@ -156,28 +180,46 @@ module.exports = async (deployer, network, accounts) => {
             }
             /* ---------------------------------------------------------------------------------------- */
 
-            /* ----------------------------------Identity Storage-------------------------------------- */
+            /* --------------------------------------Identity------------------------------------------ */
             await deployer.deploy(IdentityStorage, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     identityStorage = result;
                 });
             await hub.setContractAddress('IdentityStorage', identityStorage.address);
+
+            await deployer.deploy(IdentityContract, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    identityContract = result;
+                });
+            await hub.setContractAddress('Identity', identityContract.address);
             /* ---------------------------------------------------------------------------------------- */
 
-            /* ------------------------------------Profile Storage------------------------------------- */
+            /* ----------------------------------------Profile----------------------------------------- */
             await deployer.deploy(ProfileStorage, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
                     profileStorage = result;
                 });
             await hub.setContractAddress('ProfileStorage', profileStorage.address);
+
+            await deployer.deploy(ProfileContract, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    profileContract = result;
+                });
+            await hub.setContractAddress('Profile', profileContract.address);
             /* ---------------------------------------------------------------------------------------- */
 
-            /* ---------------------------------------Profile------------------------------------------- */
-            await deployer.deploy(Profile, hub.address, {gas: 6000000, from: accounts[0]})
+            /* -----------------------------------------Staking---------------------------------------- */
+            await deployer.deploy(StakingStorage, hub.address, {gas: 6000000, from: accounts[0]})
                 .then((result) => {
-                    profile = result;
+                    stakingStorage = result;
                 });
-            await hub.setContractAddress('Profile', profile.address);
+            await hub.setContractAddress('StakingStorage', stakingStorage.address);
+
+            await deployer.deploy(StakingContract, hub.address, {gas: 6000000, from: accounts[0]})
+                .then((result) => {
+                    stakingContract = result;
+                });
+            await hub.setContractAddress('Staking', stakingContract.address);
             /* ---------------------------------------------------------------------------------------- */
 
             console.log('\n\n \t Contract adresses on ganache:');
@@ -187,14 +229,20 @@ module.exports = async (deployer, network, accounts) => {
             console.log(`\t SHA256 address: ${sha256Contract.address}`);
             console.log(`\t Scoring Proxy address: ${scoringProxy.address}`);
             console.log(`\t Log2PLDSF address: ${log2pldsfContract.address}`);
-            console.log(`\t Sharding table: ${shardingTable.address}`);
-            console.log(`\t Assertion registry address: ${assertionRegistry.address}`);
-            console.log(`\t Service Agreement Storage address: ${serviceAgreementStorage.address}`);
+            console.log(`\t Sharding Table storage: ${shardingTableStorage.address}`);
+            console.log(`\t Sharding Table: ${shardingTableContract.address}`);
+            console.log(`\t Assertion Storage address: ${assertionStorage.address}`);
+            console.log(`\t Assertion address: ${assertionContract.address}`);
+            console.log(`\t Service Agreement Storage (V1) address: ${serviceAgreementStorageV1.address}`);
+            console.log(`\t Service Agreement (V1) address: ${serviceAgreementContractV1.address}`);
             console.log(`\t Content Asset address: ${contentAsset.address}`);
             console.log(`\t Token address: ${erc20Token.address}`);
-            console.log(`\t Identity Storage address: ${profileStorage.address}`);
+            console.log(`\t Identity Storage address: ${identityStorage.address}`);
+            console.log(`\t Identity address: ${identityContract.address}`);
             console.log(`\t Profile Storage address: ${profileStorage.address}`);
-            console.log(`\t Profile address: ${profile.address}`);
+            console.log(`\t Profile address: ${profileContract.address}`);
+            console.log(`\t Staking Storage address: ${stakingStorage.address}`);
+            console.log(`\t Staking address: ${stakingContract.address}`);
 
             break;
         default:
