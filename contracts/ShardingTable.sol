@@ -12,6 +12,9 @@ import { NULL } from "./constants/ShardingTableConstants.sol";
 
 contract ShardingTable {
 
+    event NodeAdded(uint72 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
+    event NodeRemoved(uint72 indexed identityId, bytes nodeId);
+
     Hub public hub;
     ProfileStorage public profileStorage;
     ShardingTableStorage public shardingTableStorage;
@@ -96,6 +99,13 @@ contract ShardingTable {
             sts.setHead(identityId);
 
         sts.incrementNodesCount();
+
+        emit NodeAdded(
+            identityId,
+            ps.getNodeId(identityId),
+            ps.getAsk(identityId),
+            stakingStorage.totalStakes(identityId)
+        );
     }
 
     function pushFront(uint72 identityId) external onlyContracts {
@@ -115,6 +125,13 @@ contract ShardingTable {
             sts.setTail(identityId);
 
         sts.incrementNodesCount();
+
+        emit NodeAdded(
+            identityId,
+            ps.getNodeId(identityId),
+            ps.getAsk(identityId),
+            stakingStorage.totalStakes(identityId)
+        );
     }
 
     function removeNode(uint72 identityId) external onlyContracts {
@@ -143,6 +160,8 @@ contract ShardingTable {
 
         sts.removeNode(identityId);
         sts.decrementNodesCount();
+
+        emit NodeRemoved(identityId, ps.getNodeId(identityId));
     }
 
     function _checkHub() internal view virtual {
