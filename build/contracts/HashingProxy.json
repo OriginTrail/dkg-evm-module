@@ -2642,7 +2642,7 @@
                 }
               ]
             },
-            "name": "abi_encode_tuple_t_array$_t_struct$_Contract_$14256_memory_ptr_$dyn_memory_ptr__to_t_array$_t_struct$_Contract_$14256_memory_ptr_$dyn_memory_ptr__fromStack_reversed",
+            "name": "abi_encode_tuple_t_array$_t_struct$_Contract_$14285_memory_ptr_$dyn_memory_ptr__to_t_array$_t_struct$_Contract_$14285_memory_ptr_$dyn_memory_ptr__fromStack_reversed",
             "nodeType": "YulFunctionDefinition",
             "parameters": [
               {
@@ -6443,7 +6443,7 @@
           }
         ]
       },
-      "contents": "{\n    { }\n    function validator_revert_uint8(value)\n    {\n        if iszero(eq(value, and(value, 0xff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_uint8(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint8(value)\n        value0 := value\n    }\n    function abi_encode_tuple_t_bool__to_t_bool__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, iszero(iszero(value0)))\n    }\n    function abi_decode_tuple_t_uint8t_bytes_calldata_ptr(headStart, dataEnd) -> value0, value1, value2\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint8(value)\n        value0 := value\n        let offset := calldataload(add(headStart, 32))\n        let _1 := 0xffffffffffffffff\n        if gt(offset, _1) { revert(0, 0) }\n        let _2 := add(headStart, offset)\n        if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(0, 0) }\n        let length := calldataload(_2)\n        if gt(length, _1) { revert(0, 0) }\n        if gt(add(add(_2, length), 32), dataEnd) { revert(0, 0) }\n        value1 := add(_2, 32)\n        value2 := length\n    }\n    function abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function copy_memory_to_memory(src, dst, length)\n    {\n        let i := 0\n        for { } lt(i, length) { i := add(i, 32) }\n        {\n            mstore(add(dst, i), mload(add(src, i)))\n        }\n        if gt(i, length) { mstore(add(dst, length), 0) }\n    }\n    function abi_encode_tuple_t_string_memory_ptr__to_t_string_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        mstore(headStart, 32)\n        let length := mload(value0)\n        mstore(add(headStart, 32), length)\n        copy_memory_to_memory(add(value0, 32), add(headStart, 64), length)\n        tail := add(add(headStart, and(add(length, 31), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0)), 64)\n    }\n    function abi_encode_tuple_t_address__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_array$_t_struct$_Contract_$14256_memory_ptr_$dyn_memory_ptr__to_t_array$_t_struct$_Contract_$14256_memory_ptr_$dyn_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        let _1 := 32\n        let tail_1 := add(headStart, _1)\n        mstore(headStart, _1)\n        let pos := tail_1\n        let length := mload(value0)\n        mstore(tail_1, length)\n        let _2 := 64\n        pos := add(headStart, _2)\n        let srcPtr := add(value0, _1)\n        let i := 0\n        for { } lt(i, length) { i := add(i, 1) }\n        {\n            let _3 := mload(srcPtr)\n            mstore(pos, and(mload(_3), 0xff))\n            mstore(add(pos, _1), and(mload(add(_3, _1)), 0xffffffffffffffffffffffffffffffffffffffff))\n            pos := add(pos, _2)\n            srcPtr := add(srcPtr, _1)\n        }\n        tail := pos\n    }\n    function abi_decode_address(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_uint8t_address(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint8(value)\n        value0 := value\n        value1 := abi_decode_address(add(headStart, 32))\n    }\n    function abi_decode_tuple_t_address(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := abi_decode_address(headStart)\n    }\n    function abi_encode_tuple_t_bytes_calldata_ptr__to_t_bytes_memory_ptr__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), value1)\n        calldatacopy(add(headStart, 64), value0, value1)\n        mstore(add(add(headStart, value1), 64), 0)\n        tail := add(add(headStart, and(add(value1, 31), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0)), 64)\n    }\n    function abi_decode_tuple_t_bytes32_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := mload(headStart)\n    }\n    function panic_error_0x41()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x41)\n        revert(0, 0x24)\n    }\n    function abi_decode_tuple_t_string_memory_ptr_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let offset := mload(headStart)\n        let _1 := 0xffffffffffffffff\n        if gt(offset, _1) { revert(0, 0) }\n        let _2 := add(headStart, offset)\n        if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(0, 0) }\n        let _3 := mload(_2)\n        if gt(_3, _1) { panic_error_0x41() }\n        let _4 := 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0\n        let memPtr := mload(64)\n        let newFreePtr := add(memPtr, and(add(and(add(_3, 0x1f), _4), 63), _4))\n        if or(gt(newFreePtr, _1), lt(newFreePtr, memPtr)) { panic_error_0x41() }\n        mstore(64, newFreePtr)\n        mstore(memPtr, _3)\n        if gt(add(add(_2, _3), 32), dataEnd) { revert(0, 0) }\n        copy_memory_to_memory(add(_2, 32), add(memPtr, 32), _3)\n        value0 := memPtr\n    }\n    function abi_encode_tuple_t_stringliteral_245f15ff17f551913a7a18385165551503906a406f905ac1c2437281a7cd0cfe__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 38)\n        mstore(add(headStart, 64), \"Ownable: new owner is the zero a\")\n        mstore(add(headStart, 96), \"ddress\")\n        tail := add(headStart, 128)\n    }\n    function panic_error_0x32()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x32)\n        revert(0, 0x24)\n    }\n    function abi_encode_tuple_t_stringliteral_eeb9898641e91c5410391972a431de9b524cc3a0d6b0cbe0051e8d414d53093e__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 60)\n        mstore(add(headStart, 64), \"(IndexableContractSet) Contract \")\n        mstore(add(headStart, 96), \"with given ID doesn't exists\")\n        tail := add(headStart, 128)\n    }\n    function abi_encode_tuple_t_stringliteral_9924ebdf1add33d25d4ef888e16131f0a5687b0580a36c21b5c301a6c462effe__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 32)\n        mstore(add(headStart, 64), \"Ownable: caller is not the owner\")\n        tail := add(headStart, 96)\n    }\n    function checked_sub_t_uint256(x, y) -> diff\n    {\n        if lt(x, y)\n        {\n            mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n            mstore(4, 0x11)\n            revert(0, 0x24)\n        }\n        diff := sub(x, y)\n    }\n    function abi_decode_tuple_t_uint8_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        validator_revert_uint8(value)\n        value0 := value\n    }\n    function panic_error_0x31()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x31)\n        revert(0, 0x24)\n    }\n    function abi_encode_tuple_t_stringliteral_804898134c9f2a561a428b365b8e4d1226af8807efcf5fe04feeefee02a32743__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 44)\n        mstore(add(headStart, 64), \"(IndexableContractSet) Address c\")\n        mstore(add(headStart, 96), \"annot be 0x0\")\n        tail := add(headStart, 128)\n    }\n    function abi_encode_tuple_t_stringliteral_c82ef4e88013799d51691fd4ff1837a286e4a8c4ea7443d849b1d606c83de7eb__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 36)\n        mstore(add(headStart, 64), \"(IndexableContractSet) ID canot \")\n        mstore(add(headStart, 96), \"be 0\")\n        tail := add(headStart, 128)\n    }\n    function abi_encode_tuple_t_stringliteral_199a63a7834638639d4b6c4b9d8f3eead3010c2a2e04916f1126b26915a7e770__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 60)\n        mstore(add(headStart, 64), \"(IndexableContractSet) Contract \")\n        mstore(add(headStart, 96), \"with given ID already exists\")\n        tail := add(headStart, 128)\n    }\n}",
+      "contents": "{\n    { }\n    function validator_revert_uint8(value)\n    {\n        if iszero(eq(value, and(value, 0xff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_uint8(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint8(value)\n        value0 := value\n    }\n    function abi_encode_tuple_t_bool__to_t_bool__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, iszero(iszero(value0)))\n    }\n    function abi_decode_tuple_t_uint8t_bytes_calldata_ptr(headStart, dataEnd) -> value0, value1, value2\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint8(value)\n        value0 := value\n        let offset := calldataload(add(headStart, 32))\n        let _1 := 0xffffffffffffffff\n        if gt(offset, _1) { revert(0, 0) }\n        let _2 := add(headStart, offset)\n        if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(0, 0) }\n        let length := calldataload(_2)\n        if gt(length, _1) { revert(0, 0) }\n        if gt(add(add(_2, length), 32), dataEnd) { revert(0, 0) }\n        value1 := add(_2, 32)\n        value2 := length\n    }\n    function abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function copy_memory_to_memory(src, dst, length)\n    {\n        let i := 0\n        for { } lt(i, length) { i := add(i, 32) }\n        {\n            mstore(add(dst, i), mload(add(src, i)))\n        }\n        if gt(i, length) { mstore(add(dst, length), 0) }\n    }\n    function abi_encode_tuple_t_string_memory_ptr__to_t_string_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        mstore(headStart, 32)\n        let length := mload(value0)\n        mstore(add(headStart, 32), length)\n        copy_memory_to_memory(add(value0, 32), add(headStart, 64), length)\n        tail := add(add(headStart, and(add(length, 31), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0)), 64)\n    }\n    function abi_encode_tuple_t_address__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_array$_t_struct$_Contract_$14285_memory_ptr_$dyn_memory_ptr__to_t_array$_t_struct$_Contract_$14285_memory_ptr_$dyn_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        let _1 := 32\n        let tail_1 := add(headStart, _1)\n        mstore(headStart, _1)\n        let pos := tail_1\n        let length := mload(value0)\n        mstore(tail_1, length)\n        let _2 := 64\n        pos := add(headStart, _2)\n        let srcPtr := add(value0, _1)\n        let i := 0\n        for { } lt(i, length) { i := add(i, 1) }\n        {\n            let _3 := mload(srcPtr)\n            mstore(pos, and(mload(_3), 0xff))\n            mstore(add(pos, _1), and(mload(add(_3, _1)), 0xffffffffffffffffffffffffffffffffffffffff))\n            pos := add(pos, _2)\n            srcPtr := add(srcPtr, _1)\n        }\n        tail := pos\n    }\n    function abi_decode_address(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_uint8t_address(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint8(value)\n        value0 := value\n        value1 := abi_decode_address(add(headStart, 32))\n    }\n    function abi_decode_tuple_t_address(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := abi_decode_address(headStart)\n    }\n    function abi_encode_tuple_t_bytes_calldata_ptr__to_t_bytes_memory_ptr__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), value1)\n        calldatacopy(add(headStart, 64), value0, value1)\n        mstore(add(add(headStart, value1), 64), 0)\n        tail := add(add(headStart, and(add(value1, 31), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0)), 64)\n    }\n    function abi_decode_tuple_t_bytes32_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := mload(headStart)\n    }\n    function panic_error_0x41()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x41)\n        revert(0, 0x24)\n    }\n    function abi_decode_tuple_t_string_memory_ptr_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let offset := mload(headStart)\n        let _1 := 0xffffffffffffffff\n        if gt(offset, _1) { revert(0, 0) }\n        let _2 := add(headStart, offset)\n        if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(0, 0) }\n        let _3 := mload(_2)\n        if gt(_3, _1) { panic_error_0x41() }\n        let _4 := 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0\n        let memPtr := mload(64)\n        let newFreePtr := add(memPtr, and(add(and(add(_3, 0x1f), _4), 63), _4))\n        if or(gt(newFreePtr, _1), lt(newFreePtr, memPtr)) { panic_error_0x41() }\n        mstore(64, newFreePtr)\n        mstore(memPtr, _3)\n        if gt(add(add(_2, _3), 32), dataEnd) { revert(0, 0) }\n        copy_memory_to_memory(add(_2, 32), add(memPtr, 32), _3)\n        value0 := memPtr\n    }\n    function abi_encode_tuple_t_stringliteral_245f15ff17f551913a7a18385165551503906a406f905ac1c2437281a7cd0cfe__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 38)\n        mstore(add(headStart, 64), \"Ownable: new owner is the zero a\")\n        mstore(add(headStart, 96), \"ddress\")\n        tail := add(headStart, 128)\n    }\n    function panic_error_0x32()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x32)\n        revert(0, 0x24)\n    }\n    function abi_encode_tuple_t_stringliteral_eeb9898641e91c5410391972a431de9b524cc3a0d6b0cbe0051e8d414d53093e__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 60)\n        mstore(add(headStart, 64), \"(IndexableContractSet) Contract \")\n        mstore(add(headStart, 96), \"with given ID doesn't exists\")\n        tail := add(headStart, 128)\n    }\n    function abi_encode_tuple_t_stringliteral_9924ebdf1add33d25d4ef888e16131f0a5687b0580a36c21b5c301a6c462effe__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 32)\n        mstore(add(headStart, 64), \"Ownable: caller is not the owner\")\n        tail := add(headStart, 96)\n    }\n    function checked_sub_t_uint256(x, y) -> diff\n    {\n        if lt(x, y)\n        {\n            mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n            mstore(4, 0x11)\n            revert(0, 0x24)\n        }\n        diff := sub(x, y)\n    }\n    function abi_decode_tuple_t_uint8_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        validator_revert_uint8(value)\n        value0 := value\n    }\n    function panic_error_0x31()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x31)\n        revert(0, 0x24)\n    }\n    function abi_encode_tuple_t_stringliteral_804898134c9f2a561a428b365b8e4d1226af8807efcf5fe04feeefee02a32743__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 44)\n        mstore(add(headStart, 64), \"(IndexableContractSet) Address c\")\n        mstore(add(headStart, 96), \"annot be 0x0\")\n        tail := add(headStart, 128)\n    }\n    function abi_encode_tuple_t_stringliteral_c82ef4e88013799d51691fd4ff1837a286e4a8c4ea7443d849b1d606c83de7eb__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 36)\n        mstore(add(headStart, 64), \"(IndexableContractSet) ID canot \")\n        mstore(add(headStart, 96), \"be 0\")\n        tail := add(headStart, 128)\n    }\n    function abi_encode_tuple_t_stringliteral_199a63a7834638639d4b6c4b9d8f3eead3010c2a2e04916f1126b26915a7e770__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 60)\n        mstore(add(headStart, 64), \"(IndexableContractSet) Contract \")\n        mstore(add(headStart, 96), \"with given ID already exists\")\n        tail := add(headStart, 128)\n    }\n}",
       "id": 54,
       "language": "Yul",
       "name": "#utility.yul"
@@ -6457,27 +6457,27 @@
     "absolutePath": "project:/contracts/HashingProxy.sol",
     "exportedSymbols": {
       "HashingProxy": [
-        6255
+        6275
       ],
       "IHashFunction": [
-        11041
+        11136
       ],
       "Named": [
-        11080
+        11175
       ],
       "Ownable": [
         505
       ],
       "UnorderedIndexableContractDynamicSetLib": [
-        14557
+        14586
       ]
     },
-    "id": 6256,
+    "id": 6276,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 6092,
+        "id": 6112,
         "literals": [
           "solidity",
           "^",
@@ -6490,20 +6490,20 @@
       {
         "absolutePath": "project:/contracts/interface/IHashFunction.sol",
         "file": "./interface/IHashFunction.sol",
-        "id": 6094,
+        "id": 6114,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 6256,
-        "sourceUnit": 11042,
+        "scope": 6276,
+        "sourceUnit": 11137,
         "src": "58:62:21",
         "symbolAliases": [
           {
             "foreign": {
-              "id": 6093,
+              "id": 6113,
               "name": "IHashFunction",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 11041,
+              "referencedDeclaration": 11136,
               "src": "67:13:21",
               "typeDescriptions": {}
             },
@@ -6515,20 +6515,20 @@
       {
         "absolutePath": "project:/contracts/interface/Named.sol",
         "file": "./interface/Named.sol",
-        "id": 6096,
+        "id": 6116,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 6256,
-        "sourceUnit": 11081,
+        "scope": 6276,
+        "sourceUnit": 11176,
         "src": "121:46:21",
         "symbolAliases": [
           {
             "foreign": {
-              "id": 6095,
+              "id": 6115,
               "name": "Named",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 11080,
+              "referencedDeclaration": 11175,
               "src": "130:5:21",
               "typeDescriptions": {}
             },
@@ -6540,20 +6540,20 @@
       {
         "absolutePath": "project:/contracts/utils/UnorderedIndexableContractDynamicSet.sol",
         "file": "./utils/UnorderedIndexableContractDynamicSet.sol",
-        "id": 6098,
+        "id": 6118,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 6256,
-        "sourceUnit": 14558,
+        "scope": 6276,
+        "sourceUnit": 14587,
         "src": "168:107:21",
         "symbolAliases": [
           {
             "foreign": {
-              "id": 6097,
+              "id": 6117,
               "name": "UnorderedIndexableContractDynamicSetLib",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 14557,
+              "referencedDeclaration": 14586,
               "src": "177:39:21",
               "typeDescriptions": {}
             },
@@ -6565,16 +6565,16 @@
       {
         "absolutePath": "@openzeppelin/contracts/access/Ownable.sol",
         "file": "@openzeppelin/contracts/access/Ownable.sol",
-        "id": 6100,
+        "id": 6120,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 6256,
+        "scope": 6276,
         "sourceUnit": 506,
         "src": "276:69:21",
         "symbolAliases": [
           {
             "foreign": {
-              "id": 6099,
+              "id": 6119,
               "name": "Ownable",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
@@ -6592,13 +6592,13 @@
         "baseContracts": [
           {
             "baseName": {
-              "id": 6101,
+              "id": 6121,
               "name": "Ownable",
               "nodeType": "IdentifierPath",
               "referencedDeclaration": 505,
               "src": "372:7:21"
             },
-            "id": 6102,
+            "id": 6122,
             "nodeType": "InheritanceSpecifier",
             "src": "372:7:21"
           }
@@ -6607,9 +6607,9 @@
         "contractDependencies": [],
         "contractKind": "contract",
         "fullyImplemented": true,
-        "id": 6255,
+        "id": 6275,
         "linearizedBaseContracts": [
-          6255,
+          6275,
           505,
           2583
         ],
@@ -6619,30 +6619,30 @@
         "nodes": [
           {
             "global": false,
-            "id": 6106,
+            "id": 6126,
             "libraryName": {
-              "id": 6103,
+              "id": 6123,
               "name": "UnorderedIndexableContractDynamicSetLib",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 14557,
+              "referencedDeclaration": 14586,
               "src": "393:39:21"
             },
             "nodeType": "UsingForDirective",
             "src": "387:94:21",
             "typeName": {
-              "id": 6105,
+              "id": 6125,
               "nodeType": "UserDefinedTypeName",
               "pathNode": {
-                "id": 6104,
+                "id": 6124,
                 "name": "UnorderedIndexableContractDynamicSetLib.Set",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 14265,
+                "referencedDeclaration": 14294,
                 "src": "437:43:21"
               },
-              "referencedDeclaration": 14265,
+              "referencedDeclaration": 14294,
               "src": "437:43:21",
               "typeDescriptions": {
-                "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
               }
             }
@@ -6650,23 +6650,23 @@
           {
             "anonymous": false,
             "eventSelector": "9f9bb0dfe32a0f6d822a9eebfa9002f04cc064f036f9dabd0b95d694bffb5289",
-            "id": 6112,
+            "id": 6132,
             "name": "NewHashFunctionContract",
             "nameLocation": "493:23:21",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 6111,
+              "id": 6131,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6108,
+                  "id": 6128,
                   "indexed": true,
                   "mutability": "mutable",
                   "name": "hashFunctionId",
                   "nameLocation": "531:14:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6112,
+                  "scope": 6132,
                   "src": "517:28:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -6675,7 +6675,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 6107,
+                    "id": 6127,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "517:5:21",
@@ -6688,13 +6688,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 6110,
+                  "id": 6130,
                   "indexed": false,
                   "mutability": "mutable",
                   "name": "newContractAddress",
                   "nameLocation": "555:18:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6112,
+                  "scope": 6132,
                   "src": "547:26:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -6703,7 +6703,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6109,
+                    "id": 6129,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "547:7:21",
@@ -6723,23 +6723,23 @@
           {
             "anonymous": false,
             "eventSelector": "87344d3e74d17609f4e724277f74dda482a7dec50d0dc2e62d7c93101dd968bc",
-            "id": 6118,
+            "id": 6138,
             "name": "HashFunctionContractChanged",
             "nameLocation": "586:27:21",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 6117,
+              "id": 6137,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6114,
+                  "id": 6134,
                   "indexed": true,
                   "mutability": "mutable",
                   "name": "hashFunctionId",
                   "nameLocation": "628:14:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6118,
+                  "scope": 6138,
                   "src": "614:28:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -6748,7 +6748,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 6113,
+                    "id": 6133,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "614:5:21",
@@ -6761,13 +6761,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 6116,
+                  "id": 6136,
                   "indexed": false,
                   "mutability": "mutable",
                   "name": "newContractAddress",
                   "nameLocation": "652:18:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6118,
+                  "scope": 6138,
                   "src": "644:26:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -6776,7 +6776,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6115,
+                    "id": 6135,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "644:7:21",
@@ -6795,33 +6795,33 @@
           },
           {
             "constant": false,
-            "id": 6121,
+            "id": 6141,
             "mutability": "mutable",
             "name": "hashFunctionSet",
             "nameLocation": "722:15:21",
             "nodeType": "VariableDeclaration",
-            "scope": 6255,
+            "scope": 6275,
             "src": "678:59:21",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_struct$_Set_$14265_storage",
+              "typeIdentifier": "t_struct$_Set_$14294_storage",
               "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
             },
             "typeName": {
-              "id": 6120,
+              "id": 6140,
               "nodeType": "UserDefinedTypeName",
               "pathNode": {
-                "id": 6119,
+                "id": 6139,
                 "name": "UnorderedIndexableContractDynamicSetLib.Set",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 14265,
+                "referencedDeclaration": 14294,
                 "src": "678:43:21"
               },
-              "referencedDeclaration": 14265,
+              "referencedDeclaration": 14294,
               "src": "678:43:21",
               "typeDescriptions": {
-                "typeIdentifier": "t_struct$_Set_$14265_storage_ptr",
+                "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
               }
             },
@@ -6829,7 +6829,7 @@
           },
           {
             "body": {
-              "id": 6161,
+              "id": 6181,
               "nodeType": "Block",
               "src": "845:408:21",
               "statements": [
@@ -6837,11 +6837,11 @@
                   "condition": {
                     "arguments": [
                       {
-                        "id": 6132,
+                        "id": 6152,
                         "name": "hashFunctionId",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 6123,
+                        "referencedDeclaration": 6143,
                         "src": "882:14:21",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint8",
@@ -6857,32 +6857,32 @@
                         }
                       ],
                       "expression": {
-                        "id": 6130,
+                        "id": 6150,
                         "name": "hashFunctionSet",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 6121,
+                        "referencedDeclaration": 6141,
                         "src": "859:15:21",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$14265_storage",
+                          "typeIdentifier": "t_struct$_Set_$14294_storage",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                         }
                       },
-                      "id": 6131,
+                      "id": 6151,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "exists",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 14543,
+                      "referencedDeclaration": 14572,
                       "src": "859:22:21",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14265_storage_ptr_$_t_uint8_$returns$_t_bool_$bound_to$_t_struct$_Set_$14265_storage_ptr_$",
+                        "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14294_storage_ptr_$_t_uint8_$returns$_t_bool_$bound_to$_t_struct$_Set_$14294_storage_ptr_$",
                         "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (bool)"
                       }
                     },
-                    "id": 6133,
+                    "id": 6153,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -6898,7 +6898,7 @@
                     }
                   },
                   "falseBody": {
-                    "id": 6159,
+                    "id": 6179,
                     "nodeType": "Block",
                     "src": "1078:169:21",
                     "statements": [
@@ -6906,11 +6906,11 @@
                         "expression": {
                           "arguments": [
                             {
-                              "id": 6150,
+                              "id": 6170,
                               "name": "hashFunctionId",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 6123,
+                              "referencedDeclaration": 6143,
                               "src": "1115:14:21",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint8",
@@ -6918,11 +6918,11 @@
                               }
                             },
                             {
-                              "id": 6151,
+                              "id": 6171,
                               "name": "hashingContractAddress",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 6125,
+                              "referencedDeclaration": 6145,
                               "src": "1131:22:21",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_address",
@@ -6942,32 +6942,32 @@
                               }
                             ],
                             "expression": {
-                              "id": 6147,
+                              "id": 6167,
                               "name": "hashFunctionSet",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 6121,
+                              "referencedDeclaration": 6141,
                               "src": "1092:15:21",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Set_$14265_storage",
+                                "typeIdentifier": "t_struct$_Set_$14294_storage",
                                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                               }
                             },
-                            "id": 6149,
+                            "id": 6169,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
                             "lValueRequested": false,
                             "memberName": "append",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 14323,
+                            "referencedDeclaration": 14352,
                             "src": "1092:22:21",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_function_internal_nonpayable$_t_struct$_Set_$14265_storage_ptr_$_t_uint8_$_t_address_$returns$__$bound_to$_t_struct$_Set_$14265_storage_ptr_$",
+                              "typeIdentifier": "t_function_internal_nonpayable$_t_struct$_Set_$14294_storage_ptr_$_t_uint8_$_t_address_$returns$__$bound_to$_t_struct$_Set_$14294_storage_ptr_$",
                               "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8,address)"
                             }
                           },
-                          "id": 6152,
+                          "id": 6172,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -6982,7 +6982,7 @@
                             "typeString": "tuple()"
                           }
                         },
-                        "id": 6153,
+                        "id": 6173,
                         "nodeType": "ExpressionStatement",
                         "src": "1092:62:21"
                       },
@@ -6990,11 +6990,11 @@
                         "eventCall": {
                           "arguments": [
                             {
-                              "id": 6155,
+                              "id": 6175,
                               "name": "hashFunctionId",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 6123,
+                              "referencedDeclaration": 6143,
                               "src": "1197:14:21",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint8",
@@ -7002,11 +7002,11 @@
                               }
                             },
                             {
-                              "id": 6156,
+                              "id": 6176,
                               "name": "hashingContractAddress",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 6125,
+                              "referencedDeclaration": 6145,
                               "src": "1213:22:21",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_address",
@@ -7025,18 +7025,18 @@
                                 "typeString": "address"
                               }
                             ],
-                            "id": 6154,
+                            "id": 6174,
                             "name": "NewHashFunctionContract",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 6112,
+                            "referencedDeclaration": 6132,
                             "src": "1173:23:21",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_event_nonpayable$_t_uint8_$_t_address_$returns$__$",
                               "typeString": "function (uint8,address)"
                             }
                           },
-                          "id": 6157,
+                          "id": 6177,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -7051,17 +7051,17 @@
                             "typeString": "tuple()"
                           }
                         },
-                        "id": 6158,
+                        "id": 6178,
                         "nodeType": "EmitStatement",
                         "src": "1168:68:21"
                       }
                     ]
                   },
-                  "id": 6160,
+                  "id": 6180,
                   "nodeType": "IfStatement",
                   "src": "855:392:21",
                   "trueBody": {
-                    "id": 6146,
+                    "id": 6166,
                     "nodeType": "Block",
                     "src": "899:173:21",
                     "statements": [
@@ -7069,11 +7069,11 @@
                         "expression": {
                           "arguments": [
                             {
-                              "id": 6137,
+                              "id": 6157,
                               "name": "hashFunctionId",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 6123,
+                              "referencedDeclaration": 6143,
                               "src": "936:14:21",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint8",
@@ -7081,11 +7081,11 @@
                               }
                             },
                             {
-                              "id": 6138,
+                              "id": 6158,
                               "name": "hashingContractAddress",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 6125,
+                              "referencedDeclaration": 6145,
                               "src": "952:22:21",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_address",
@@ -7105,32 +7105,32 @@
                               }
                             ],
                             "expression": {
-                              "id": 6134,
+                              "id": 6154,
                               "name": "hashFunctionSet",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 6121,
+                              "referencedDeclaration": 6141,
                               "src": "913:15:21",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Set_$14265_storage",
+                                "typeIdentifier": "t_struct$_Set_$14294_storage",
                                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                               }
                             },
-                            "id": 6136,
+                            "id": 6156,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
                             "lValueRequested": false,
                             "memberName": "update",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 14364,
+                            "referencedDeclaration": 14393,
                             "src": "913:22:21",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_function_internal_nonpayable$_t_struct$_Set_$14265_storage_ptr_$_t_uint8_$_t_address_$returns$__$bound_to$_t_struct$_Set_$14265_storage_ptr_$",
+                              "typeIdentifier": "t_function_internal_nonpayable$_t_struct$_Set_$14294_storage_ptr_$_t_uint8_$_t_address_$returns$__$bound_to$_t_struct$_Set_$14294_storage_ptr_$",
                               "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8,address)"
                             }
                           },
-                          "id": 6139,
+                          "id": 6159,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -7145,7 +7145,7 @@
                             "typeString": "tuple()"
                           }
                         },
-                        "id": 6140,
+                        "id": 6160,
                         "nodeType": "ExpressionStatement",
                         "src": "913:62:21"
                       },
@@ -7153,11 +7153,11 @@
                         "eventCall": {
                           "arguments": [
                             {
-                              "id": 6142,
+                              "id": 6162,
                               "name": "hashFunctionId",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 6123,
+                              "referencedDeclaration": 6143,
                               "src": "1022:14:21",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint8",
@@ -7165,11 +7165,11 @@
                               }
                             },
                             {
-                              "id": 6143,
+                              "id": 6163,
                               "name": "hashingContractAddress",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 6125,
+                              "referencedDeclaration": 6145,
                               "src": "1038:22:21",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_address",
@@ -7188,18 +7188,18 @@
                                 "typeString": "address"
                               }
                             ],
-                            "id": 6141,
+                            "id": 6161,
                             "name": "HashFunctionContractChanged",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 6118,
+                            "referencedDeclaration": 6138,
                             "src": "994:27:21",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_event_nonpayable$_t_uint8_$_t_address_$returns$__$",
                               "typeString": "function (uint8,address)"
                             }
                           },
-                          "id": 6144,
+                          "id": 6164,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -7214,7 +7214,7 @@
                             "typeString": "tuple()"
                           }
                         },
-                        "id": 6145,
+                        "id": 6165,
                         "nodeType": "EmitStatement",
                         "src": "989:72:21"
                       }
@@ -7224,15 +7224,15 @@
               ]
             },
             "functionSelector": "c413e5be",
-            "id": 6162,
+            "id": 6182,
             "implemented": true,
             "kind": "function",
             "modifiers": [
               {
-                "id": 6128,
+                "id": 6148,
                 "kind": "modifierInvocation",
                 "modifierName": {
-                  "id": 6127,
+                  "id": 6147,
                   "name": "onlyOwner",
                   "nodeType": "IdentifierPath",
                   "referencedDeclaration": 424,
@@ -7246,17 +7246,17 @@
             "nameLocation": "753:18:21",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6126,
+              "id": 6146,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6123,
+                  "id": 6143,
                   "mutability": "mutable",
                   "name": "hashFunctionId",
                   "nameLocation": "778:14:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6162,
+                  "scope": 6182,
                   "src": "772:20:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -7265,7 +7265,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 6122,
+                    "id": 6142,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "772:5:21",
@@ -7278,12 +7278,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 6125,
+                  "id": 6145,
                   "mutability": "mutable",
                   "name": "hashingContractAddress",
                   "nameLocation": "802:22:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6162,
+                  "scope": 6182,
                   "src": "794:30:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -7292,7 +7292,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6124,
+                    "id": 6144,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "794:7:21",
@@ -7308,12 +7308,12 @@
               "src": "771:54:21"
             },
             "returnParameters": {
-              "id": 6129,
+              "id": 6149,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "845:0:21"
             },
-            "scope": 6255,
+            "scope": 6275,
             "src": "744:509:21",
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -7321,7 +7321,7 @@
           },
           {
             "body": {
-              "id": 6175,
+              "id": 6195,
               "nodeType": "Block",
               "src": "1324:55:21",
               "statements": [
@@ -7329,11 +7329,11 @@
                   "expression": {
                     "arguments": [
                       {
-                        "id": 6172,
+                        "id": 6192,
                         "name": "hashFunctionId",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 6164,
+                        "referencedDeclaration": 6184,
                         "src": "1357:14:21",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint8",
@@ -7349,32 +7349,32 @@
                         }
                       ],
                       "expression": {
-                        "id": 6169,
+                        "id": 6189,
                         "name": "hashFunctionSet",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 6121,
+                        "referencedDeclaration": 6141,
                         "src": "1334:15:21",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$14265_storage",
+                          "typeIdentifier": "t_struct$_Set_$14294_storage",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                         }
                       },
-                      "id": 6171,
+                      "id": 6191,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "remove",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 14438,
+                      "referencedDeclaration": 14467,
                       "src": "1334:22:21",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_internal_nonpayable$_t_struct$_Set_$14265_storage_ptr_$_t_uint8_$returns$__$bound_to$_t_struct$_Set_$14265_storage_ptr_$",
+                        "typeIdentifier": "t_function_internal_nonpayable$_t_struct$_Set_$14294_storage_ptr_$_t_uint8_$returns$__$bound_to$_t_struct$_Set_$14294_storage_ptr_$",
                         "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8)"
                       }
                     },
-                    "id": 6173,
+                    "id": 6193,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -7389,22 +7389,22 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 6174,
+                  "id": 6194,
                   "nodeType": "ExpressionStatement",
                   "src": "1334:38:21"
                 }
               ]
             },
             "functionSelector": "8b6602d8",
-            "id": 6176,
+            "id": 6196,
             "implemented": true,
             "kind": "function",
             "modifiers": [
               {
-                "id": 6167,
+                "id": 6187,
                 "kind": "modifierInvocation",
                 "modifierName": {
-                  "id": 6166,
+                  "id": 6186,
                   "name": "onlyOwner",
                   "nodeType": "IdentifierPath",
                   "referencedDeclaration": 424,
@@ -7418,17 +7418,17 @@
             "nameLocation": "1268:14:21",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6165,
+              "id": 6185,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6164,
+                  "id": 6184,
                   "mutability": "mutable",
                   "name": "hashFunctionId",
                   "nameLocation": "1289:14:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6176,
+                  "scope": 6196,
                   "src": "1283:20:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -7437,7 +7437,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 6163,
+                    "id": 6183,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "1283:5:21",
@@ -7452,12 +7452,12 @@
               "src": "1282:22:21"
             },
             "returnParameters": {
-              "id": 6168,
+              "id": 6188,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1324:0:21"
             },
-            "scope": 6255,
+            "scope": 6275,
             "src": "1259:120:21",
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -7465,7 +7465,7 @@
           },
           {
             "body": {
-              "id": 6196,
+              "id": 6216,
               "nodeType": "Block",
               "src": "1481:90:21",
               "statements": [
@@ -7473,11 +7473,11 @@
                   "expression": {
                     "arguments": [
                       {
-                        "id": 6193,
+                        "id": 6213,
                         "name": "data",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 6180,
+                        "referencedDeclaration": 6200,
                         "src": "1559:4:21",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bytes_calldata_ptr",
@@ -7498,11 +7498,11 @@
                             "expression": {
                               "arguments": [
                                 {
-                                  "id": 6188,
+                                  "id": 6208,
                                   "name": "hashFunctionId",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 6178,
+                                  "referencedDeclaration": 6198,
                                   "src": "1532:14:21",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_uint8",
@@ -7518,32 +7518,32 @@
                                   }
                                 ],
                                 "expression": {
-                                  "id": 6186,
+                                  "id": 6206,
                                   "name": "hashFunctionSet",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 6121,
+                                  "referencedDeclaration": 6141,
                                   "src": "1512:15:21",
                                   "typeDescriptions": {
-                                    "typeIdentifier": "t_struct$_Set_$14265_storage",
+                                    "typeIdentifier": "t_struct$_Set_$14294_storage",
                                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                                   }
                                 },
-                                "id": 6187,
+                                "id": 6207,
                                 "isConstant": false,
                                 "isLValue": true,
                                 "isPure": false,
                                 "lValueRequested": false,
                                 "memberName": "get",
                                 "nodeType": "MemberAccess",
-                                "referencedDeclaration": 14466,
+                                "referencedDeclaration": 14495,
                                 "src": "1512:19:21",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14265_storage_ptr_$_t_uint8_$returns$_t_struct$_Contract_$14256_memory_ptr_$bound_to$_t_struct$_Set_$14265_storage_ptr_$",
+                                  "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14294_storage_ptr_$_t_uint8_$returns$_t_struct$_Contract_$14285_memory_ptr_$bound_to$_t_struct$_Set_$14294_storage_ptr_$",
                                   "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (struct UnorderedIndexableContractDynamicSetLib.Contract memory)"
                                 }
                               },
-                              "id": 6189,
+                              "id": 6209,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": false,
@@ -7554,18 +7554,18 @@
                               "src": "1512:35:21",
                               "tryCall": false,
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Contract_$14256_memory_ptr",
+                                "typeIdentifier": "t_struct$_Contract_$14285_memory_ptr",
                                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
                               }
                             },
-                            "id": 6190,
+                            "id": 6210,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
                             "lValueRequested": false,
                             "memberName": "addr",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 14255,
+                            "referencedDeclaration": 14284,
                             "src": "1512:40:21",
                             "typeDescriptions": {
                               "typeIdentifier": "t_address",
@@ -7580,18 +7580,18 @@
                               "typeString": "address"
                             }
                           ],
-                          "id": 6185,
+                          "id": 6205,
                           "name": "IHashFunction",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 11041,
+                          "referencedDeclaration": 11136,
                           "src": "1498:13:21",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_type$_t_contract$_IHashFunction_$11041_$",
+                            "typeIdentifier": "t_type$_t_contract$_IHashFunction_$11136_$",
                             "typeString": "type(contract IHashFunction)"
                           }
                         },
-                        "id": 6191,
+                        "id": 6211,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -7602,25 +7602,25 @@
                         "src": "1498:55:21",
                         "tryCall": false,
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IHashFunction_$11041",
+                          "typeIdentifier": "t_contract$_IHashFunction_$11136",
                           "typeString": "contract IHashFunction"
                         }
                       },
-                      "id": 6192,
+                      "id": 6212,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "hash",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 11040,
+                      "referencedDeclaration": 11135,
                       "src": "1498:60:21",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
                         "typeString": "function (bytes memory) external returns (bytes32)"
                       }
                     },
-                    "id": 6194,
+                    "id": 6214,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -7635,15 +7635,15 @@
                       "typeString": "bytes32"
                     }
                   },
-                  "functionReturnParameters": 6184,
-                  "id": 6195,
+                  "functionReturnParameters": 6204,
+                  "id": 6215,
                   "nodeType": "Return",
                   "src": "1491:73:21"
                 }
               ]
             },
             "functionSelector": "45ed59e5",
-            "id": 6197,
+            "id": 6217,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -7651,17 +7651,17 @@
             "nameLocation": "1394:16:21",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6181,
+              "id": 6201,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6178,
+                  "id": 6198,
                   "mutability": "mutable",
                   "name": "hashFunctionId",
                   "nameLocation": "1417:14:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6197,
+                  "scope": 6217,
                   "src": "1411:20:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -7670,7 +7670,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 6177,
+                    "id": 6197,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "1411:5:21",
@@ -7683,12 +7683,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 6180,
+                  "id": 6200,
                   "mutability": "mutable",
                   "name": "data",
                   "nameLocation": "1448:4:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6197,
+                  "scope": 6217,
                   "src": "1433:19:21",
                   "stateVariable": false,
                   "storageLocation": "calldata",
@@ -7697,7 +7697,7 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 6179,
+                    "id": 6199,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
                     "src": "1433:5:21",
@@ -7712,17 +7712,17 @@
               "src": "1410:43:21"
             },
             "returnParameters": {
-              "id": 6184,
+              "id": 6204,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6183,
+                  "id": 6203,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6197,
+                  "scope": 6217,
                   "src": "1472:7:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -7731,7 +7731,7 @@
                     "typeString": "bytes32"
                   },
                   "typeName": {
-                    "id": 6182,
+                    "id": 6202,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
                     "src": "1472:7:21",
@@ -7745,7 +7745,7 @@
               ],
               "src": "1471:9:21"
             },
-            "scope": 6255,
+            "scope": 6275,
             "src": "1385:186:21",
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -7753,7 +7753,7 @@
           },
           {
             "body": {
-              "id": 6214,
+              "id": 6234,
               "nodeType": "Block",
               "src": "1666:78:21",
               "statements": [
@@ -7768,11 +7768,11 @@
                             "expression": {
                               "arguments": [
                                 {
-                                  "id": 6207,
+                                  "id": 6227,
                                   "name": "hashFunctionId",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 6199,
+                                  "referencedDeclaration": 6219,
                                   "src": "1709:14:21",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_uint8",
@@ -7788,32 +7788,32 @@
                                   }
                                 ],
                                 "expression": {
-                                  "id": 6205,
+                                  "id": 6225,
                                   "name": "hashFunctionSet",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 6121,
+                                  "referencedDeclaration": 6141,
                                   "src": "1689:15:21",
                                   "typeDescriptions": {
-                                    "typeIdentifier": "t_struct$_Set_$14265_storage",
+                                    "typeIdentifier": "t_struct$_Set_$14294_storage",
                                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                                   }
                                 },
-                                "id": 6206,
+                                "id": 6226,
                                 "isConstant": false,
                                 "isLValue": true,
                                 "isPure": false,
                                 "lValueRequested": false,
                                 "memberName": "get",
                                 "nodeType": "MemberAccess",
-                                "referencedDeclaration": 14466,
+                                "referencedDeclaration": 14495,
                                 "src": "1689:19:21",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14265_storage_ptr_$_t_uint8_$returns$_t_struct$_Contract_$14256_memory_ptr_$bound_to$_t_struct$_Set_$14265_storage_ptr_$",
+                                  "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14294_storage_ptr_$_t_uint8_$returns$_t_struct$_Contract_$14285_memory_ptr_$bound_to$_t_struct$_Set_$14294_storage_ptr_$",
                                   "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (struct UnorderedIndexableContractDynamicSetLib.Contract memory)"
                                 }
                               },
-                              "id": 6208,
+                              "id": 6228,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": false,
@@ -7824,18 +7824,18 @@
                               "src": "1689:35:21",
                               "tryCall": false,
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Contract_$14256_memory_ptr",
+                                "typeIdentifier": "t_struct$_Contract_$14285_memory_ptr",
                                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
                               }
                             },
-                            "id": 6209,
+                            "id": 6229,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
                             "lValueRequested": false,
                             "memberName": "addr",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 14255,
+                            "referencedDeclaration": 14284,
                             "src": "1689:40:21",
                             "typeDescriptions": {
                               "typeIdentifier": "t_address",
@@ -7850,18 +7850,18 @@
                               "typeString": "address"
                             }
                           ],
-                          "id": 6204,
+                          "id": 6224,
                           "name": "Named",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 11080,
+                          "referencedDeclaration": 11175,
                           "src": "1683:5:21",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_type$_t_contract$_Named_$11080_$",
+                            "typeIdentifier": "t_type$_t_contract$_Named_$11175_$",
                             "typeString": "type(contract Named)"
                           }
                         },
-                        "id": 6210,
+                        "id": 6230,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -7872,25 +7872,25 @@
                         "src": "1683:47:21",
                         "tryCall": false,
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Named_$11080",
+                          "typeIdentifier": "t_contract$_Named_$11175",
                           "typeString": "contract Named"
                         }
                       },
-                      "id": 6211,
+                      "id": 6231,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "name",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 11079,
+                      "referencedDeclaration": 11174,
                       "src": "1683:52:21",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$__$returns$_t_string_memory_ptr_$",
                         "typeString": "function () view external returns (string memory)"
                       }
                     },
-                    "id": 6212,
+                    "id": 6232,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -7905,15 +7905,15 @@
                       "typeString": "string memory"
                     }
                   },
-                  "functionReturnParameters": 6203,
-                  "id": 6213,
+                  "functionReturnParameters": 6223,
+                  "id": 6233,
                   "nodeType": "Return",
                   "src": "1676:61:21"
                 }
               ]
             },
             "functionSelector": "802f2368",
-            "id": 6215,
+            "id": 6235,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -7921,17 +7921,17 @@
             "nameLocation": "1586:19:21",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6200,
+              "id": 6220,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6199,
+                  "id": 6219,
                   "mutability": "mutable",
                   "name": "hashFunctionId",
                   "nameLocation": "1612:14:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6215,
+                  "scope": 6235,
                   "src": "1606:20:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -7940,7 +7940,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 6198,
+                    "id": 6218,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "1606:5:21",
@@ -7955,17 +7955,17 @@
               "src": "1605:22:21"
             },
             "returnParameters": {
-              "id": 6203,
+              "id": 6223,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6202,
+                  "id": 6222,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6215,
+                  "scope": 6235,
                   "src": "1651:13:21",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -7974,7 +7974,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 6201,
+                    "id": 6221,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "1651:6:21",
@@ -7988,7 +7988,7 @@
               ],
               "src": "1650:15:21"
             },
-            "scope": 6255,
+            "scope": 6275,
             "src": "1577:167:21",
             "stateMutability": "view",
             "virtual": false,
@@ -7996,7 +7996,7 @@
           },
           {
             "body": {
-              "id": 6228,
+              "id": 6248,
               "nodeType": "Block",
               "src": "1844:64:21",
               "statements": [
@@ -8005,11 +8005,11 @@
                     "expression": {
                       "arguments": [
                         {
-                          "id": 6224,
+                          "id": 6244,
                           "name": "hashFunctionId",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 6217,
+                          "referencedDeclaration": 6237,
                           "src": "1881:14:21",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint8",
@@ -8025,32 +8025,32 @@
                           }
                         ],
                         "expression": {
-                          "id": 6222,
+                          "id": 6242,
                           "name": "hashFunctionSet",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 6121,
+                          "referencedDeclaration": 6141,
                           "src": "1861:15:21",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Set_$14265_storage",
+                            "typeIdentifier": "t_struct$_Set_$14294_storage",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                           }
                         },
-                        "id": 6223,
+                        "id": 6243,
                         "isConstant": false,
                         "isLValue": true,
                         "isPure": false,
                         "lValueRequested": false,
                         "memberName": "get",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 14466,
+                        "referencedDeclaration": 14495,
                         "src": "1861:19:21",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14265_storage_ptr_$_t_uint8_$returns$_t_struct$_Contract_$14256_memory_ptr_$bound_to$_t_struct$_Set_$14265_storage_ptr_$",
+                          "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14294_storage_ptr_$_t_uint8_$returns$_t_struct$_Contract_$14285_memory_ptr_$bound_to$_t_struct$_Set_$14294_storage_ptr_$",
                           "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (struct UnorderedIndexableContractDynamicSetLib.Contract memory)"
                         }
                       },
-                      "id": 6225,
+                      "id": 6245,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -8061,33 +8061,33 @@
                       "src": "1861:35:21",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_Contract_$14256_memory_ptr",
+                        "typeIdentifier": "t_struct$_Contract_$14285_memory_ptr",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
                       }
                     },
-                    "id": 6226,
+                    "id": 6246,
                     "isConstant": false,
                     "isLValue": true,
                     "isPure": false,
                     "lValueRequested": false,
                     "memberName": "addr",
                     "nodeType": "MemberAccess",
-                    "referencedDeclaration": 14255,
+                    "referencedDeclaration": 14284,
                     "src": "1861:40:21",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
                     }
                   },
-                  "functionReturnParameters": 6221,
-                  "id": 6227,
+                  "functionReturnParameters": 6241,
+                  "id": 6247,
                   "nodeType": "Return",
                   "src": "1854:47:21"
                 }
               ]
             },
             "functionSelector": "f75a30a9",
-            "id": 6229,
+            "id": 6249,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -8095,17 +8095,17 @@
             "nameLocation": "1759:30:21",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6218,
+              "id": 6238,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6217,
+                  "id": 6237,
                   "mutability": "mutable",
                   "name": "hashFunctionId",
                   "nameLocation": "1796:14:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6229,
+                  "scope": 6249,
                   "src": "1790:20:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -8114,7 +8114,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 6216,
+                    "id": 6236,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "1790:5:21",
@@ -8129,17 +8129,17 @@
               "src": "1789:22:21"
             },
             "returnParameters": {
-              "id": 6221,
+              "id": 6241,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6220,
+                  "id": 6240,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6229,
+                  "scope": 6249,
                   "src": "1835:7:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -8148,7 +8148,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6219,
+                    "id": 6239,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "1835:7:21",
@@ -8163,7 +8163,7 @@
               ],
               "src": "1834:9:21"
             },
-            "scope": 6255,
+            "scope": 6275,
             "src": "1750:158:21",
             "stateMutability": "view",
             "virtual": false,
@@ -8171,7 +8171,7 @@
           },
           {
             "body": {
-              "id": 6240,
+              "id": 6260,
               "nodeType": "Block",
               "src": "2027:48:21",
               "statements": [
@@ -8181,32 +8181,32 @@
                     "expression": {
                       "argumentTypes": [],
                       "expression": {
-                        "id": 6236,
+                        "id": 6256,
                         "name": "hashFunctionSet",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 6121,
+                        "referencedDeclaration": 6141,
                         "src": "2044:15:21",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$14265_storage",
+                          "typeIdentifier": "t_struct$_Set_$14294_storage",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                         }
                       },
-                      "id": 6237,
+                      "id": 6257,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "getAll",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 14480,
+                      "referencedDeclaration": 14509,
                       "src": "2044:22:21",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14265_storage_ptr_$returns$_t_array$_t_struct$_Contract_$14256_memory_ptr_$dyn_memory_ptr_$bound_to$_t_struct$_Set_$14265_storage_ptr_$",
+                        "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14294_storage_ptr_$returns$_t_array$_t_struct$_Contract_$14285_memory_ptr_$dyn_memory_ptr_$bound_to$_t_struct$_Set_$14294_storage_ptr_$",
                         "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer) view returns (struct UnorderedIndexableContractDynamicSetLib.Contract memory[] memory)"
                       }
                     },
-                    "id": 6238,
+                    "id": 6258,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -8217,19 +8217,19 @@
                     "src": "2044:24:21",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_struct$_Contract_$14256_memory_ptr_$dyn_memory_ptr",
+                      "typeIdentifier": "t_array$_t_struct$_Contract_$14285_memory_ptr_$dyn_memory_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory[] memory"
                     }
                   },
-                  "functionReturnParameters": 6235,
-                  "id": 6239,
+                  "functionReturnParameters": 6255,
+                  "id": 6259,
                   "nodeType": "Return",
                   "src": "2037:31:21"
                 }
               ]
             },
             "functionSelector": "b58abd46",
-            "id": 6241,
+            "id": 6261,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -8237,53 +8237,53 @@
             "nameLocation": "1923:19:21",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6230,
+              "id": 6250,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1942:2:21"
             },
             "returnParameters": {
-              "id": 6235,
+              "id": 6255,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6234,
+                  "id": 6254,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6241,
+                  "scope": 6261,
                   "src": "1968:57:21",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_Contract_$14256_memory_ptr_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_Contract_$14285_memory_ptr_$dyn_memory_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 6232,
+                      "id": 6252,
                       "nodeType": "UserDefinedTypeName",
                       "pathNode": {
-                        "id": 6231,
+                        "id": 6251,
                         "name": "UnorderedIndexableContractDynamicSetLib.Contract",
                         "nodeType": "IdentifierPath",
-                        "referencedDeclaration": 14256,
+                        "referencedDeclaration": 14285,
                         "src": "1968:48:21"
                       },
-                      "referencedDeclaration": 14256,
+                      "referencedDeclaration": 14285,
                       "src": "1968:48:21",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_Contract_$14256_storage_ptr",
+                        "typeIdentifier": "t_struct$_Contract_$14285_storage_ptr",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
                       }
                     },
-                    "id": 6233,
+                    "id": 6253,
                     "nodeType": "ArrayTypeName",
                     "src": "1968:50:21",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_struct$_Contract_$14256_storage_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
                     }
                   },
@@ -8292,7 +8292,7 @@
               ],
               "src": "1967:59:21"
             },
-            "scope": 6255,
+            "scope": 6275,
             "src": "1914:161:21",
             "stateMutability": "view",
             "virtual": false,
@@ -8300,7 +8300,7 @@
           },
           {
             "body": {
-              "id": 6253,
+              "id": 6273,
               "nodeType": "Block",
               "src": "2156:62:21",
               "statements": [
@@ -8308,11 +8308,11 @@
                   "expression": {
                     "arguments": [
                       {
-                        "id": 6250,
+                        "id": 6270,
                         "name": "hashFunctionId",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 6243,
+                        "referencedDeclaration": 6263,
                         "src": "2196:14:21",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint8",
@@ -8328,32 +8328,32 @@
                         }
                       ],
                       "expression": {
-                        "id": 6248,
+                        "id": 6268,
                         "name": "hashFunctionSet",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 6121,
+                        "referencedDeclaration": 6141,
                         "src": "2173:15:21",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$14265_storage",
+                          "typeIdentifier": "t_struct$_Set_$14294_storage",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                         }
                       },
-                      "id": 6249,
+                      "id": 6269,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "exists",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 14543,
+                      "referencedDeclaration": 14572,
                       "src": "2173:22:21",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14265_storage_ptr_$_t_uint8_$returns$_t_bool_$bound_to$_t_struct$_Set_$14265_storage_ptr_$",
+                        "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14294_storage_ptr_$_t_uint8_$returns$_t_bool_$bound_to$_t_struct$_Set_$14294_storage_ptr_$",
                         "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (bool)"
                       }
                     },
-                    "id": 6251,
+                    "id": 6271,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -8368,15 +8368,15 @@
                       "typeString": "bool"
                     }
                   },
-                  "functionReturnParameters": 6247,
-                  "id": 6252,
+                  "functionReturnParameters": 6267,
+                  "id": 6272,
                   "nodeType": "Return",
                   "src": "2166:45:21"
                 }
               ]
             },
             "functionSelector": "44a7c8d3",
-            "id": 6254,
+            "id": 6274,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -8384,17 +8384,17 @@
             "nameLocation": "2090:14:21",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6244,
+              "id": 6264,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6243,
+                  "id": 6263,
                   "mutability": "mutable",
                   "name": "hashFunctionId",
                   "nameLocation": "2111:14:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6254,
+                  "scope": 6274,
                   "src": "2105:20:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -8403,7 +8403,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 6242,
+                    "id": 6262,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "2105:5:21",
@@ -8418,17 +8418,17 @@
               "src": "2104:22:21"
             },
             "returnParameters": {
-              "id": 6247,
+              "id": 6267,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6246,
+                  "id": 6266,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6254,
+                  "scope": 6274,
                   "src": "2150:4:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -8437,7 +8437,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 6245,
+                    "id": 6265,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "2150:4:21",
@@ -8451,14 +8451,14 @@
               ],
               "src": "2149:6:21"
             },
-            "scope": 6255,
+            "scope": 6275,
             "src": "2081:137:21",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 6256,
+        "scope": 6276,
         "src": "347:1874:21",
         "usedErrors": []
       }
@@ -8471,7 +8471,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T10:25:44.562Z",
+  "updatedAt": "2022-12-02T16:52:10.369Z",
   "devdoc": {
     "kind": "dev",
     "methods": {

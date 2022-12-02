@@ -116,7 +116,7 @@ contract ServiceAgreementV1 {
 
         IERC20 tknc = tokenContract;
         require(
-            tknc.allowance(args.assetCreator, address(sas)) >= args.tokenAmount,
+            tknc.allowance(args.assetCreator, address(this)) >= args.tokenAmount,
             "Sender allowance must >= amount"
         );
         require(tknc.balanceOf(args.assetCreator) >= args.tokenAmount, "Sender balance must be >= amount");
@@ -158,7 +158,7 @@ contract ServiceAgreementV1 {
         IERC20 tknc = tokenContract;
 
         require(
-            tknc.allowance(args.assetCreator, address(sas)) >= (args.tokenAmount - actualRewardAmount),
+            tknc.allowance(args.assetCreator, address(this)) >= (args.tokenAmount - actualRewardAmount),
             "Sender allowance must be >= amount"
         );
         require(

@@ -60,55 +60,23 @@ contract Staking {
         _;
     }
 
-    modifier onlyAdmin(uint72 identityId) {
-        _checkAdmin(identityId);
+    modifier onlyProfileOrAdmin(uint72 identityId) {
+        _checkProfileOrAdmin(identityId);
         _;
     }
 
-    function addStake(uint72 identityId, uint96 tracAdded) external {
-        StakingStorage ss = stakingStorage;
-        ParametersStorage ps = parametersStorage;
-        ShardingTable stc = shardingTableContract;
-        ShardingTableStorage sts = shardingTableStorage;
-        IERC20 tknc = tokenContract;
+    function addStake(address sender, uint72 identityId, uint96 stakeAmount) external onlyContracts {
+        _addStake(sender, identityId, stakeAmount);
+    }
 
-        require(
-            tknc.allowance(msg.sender, address(this)) >= tracAdded,
-            "Account does not have sufficient allowance"
-        );
-        require(tracAdded + ss.totalStakes(identityId) <= ps.maximumStake(), "Exceeded the maximum stake!");
-        require(
-            ps.delegationEnabled() || identityStorage.identityExists(identityId),
-            "No identity/delegation disabled"
-        );
-
-        Shares sharesContract = Shares(profileStorage.getSharesContractAddress(identityId));
-
-        uint256 sharesMinted;
-        if(sharesContract.totalSupply() == 0) {
-            sharesMinted = tracAdded;
-        } else {
-            sharesMinted = (
-                tracAdded * sharesContract.totalSupply() / ss.totalStakes(identityId)
-            );
-        }
-        sharesContract.mint(msg.sender, sharesMinted);
-
-        tknc.transfer(address(ss), tracAdded);
-
-        ss.setTotalStake(identityId, ss.totalStakes(identityId) + tracAdded);
-
-        if (!sts.nodeExists(identityId) && ss.totalStakes(identityId) >= parametersStorage.minimumStake()) {
-            stc.pushBack(identityId);
-        }
-
-        emit StakeIncreased(identityId, msg.sender, tracAdded);
+    function addStake(uint72 identityId, uint96 stakeAmount) external {
+        _addStake(msg.sender, identityId, stakeAmount);
     }
 
     function withdrawStake(uint72 identityId, uint96 sharesToBurn) external {
         Shares sharesContract = Shares(profileStorage.getSharesContractAddress(identityId));
 
-        require(identityStorage.identityExists(identityId), "Identity doesn't exist");
+        require(profileStorage.profileExists(identityId), "Profile doesn't exist");
 
         StakingStorage ss = stakingStorage;
         ShardingTable stc = shardingTableContract;
@@ -165,17 +133,53 @@ contract Staking {
         // TBD
     }
 
-    function setOperatorFee(uint72 identityId, uint8 operatorFee) external onlyAdmin(identityId) {
+    function setOperatorFee(uint72 identityId, uint8 operatorFee) external onlyProfileOrAdmin(identityId) {
         require(operatorFee <= 100, "Operator fee out of [0, 100]");
         stakingStorage.setOperatorFee(identityId, operatorFee);
+    }
+
+    function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal {
+        StakingStorage ss = stakingStorage;
+        ParametersStorage ps = parametersStorage;
+        IERC20 tknc = tokenContract;
+
+        require(tknc.allowance(sender, address(this)) >= stakeAmount, "Allowance < stakeAmount");
+        require(stakeAmount + ss.totalStakes(identityId) <= ps.maximumStake(), "Exceeded the maximum stake");
+        require(profileStorage.profileExists(identityId), "Profile doesn't exist");
+
+        Shares sharesContract = Shares(profileStorage.getSharesContractAddress(identityId));
+
+        uint256 sharesMinted;
+        if(sharesContract.totalSupply() == 0) {
+            sharesMinted = stakeAmount;
+        } else {
+            sharesMinted = (
+                stakeAmount * sharesContract.totalSupply() / ss.totalStakes(identityId)
+            );
+        }
+        sharesContract.mint(sender, sharesMinted);
+
+        tknc.transferFrom(sender, address(ss), stakeAmount);
+
+        ss.setTotalStake(identityId, ss.totalStakes(identityId) + stakeAmount);
+
+        if (
+            !shardingTableStorage.nodeExists(identityId) &&
+            ss.totalStakes(identityId) >= parametersStorage.minimumStake()
+        ) {
+            shardingTableContract.pushBack(identityId);
+        }
+
+        emit StakeIncreased(identityId, sender, stakeAmount);
     }
 
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
-    function _checkAdmin(uint72 identityId) internal view virtual {
+    function _checkProfileOrAdmin(uint72 identityId) internal view virtual {
         require(
+            (msg.sender == hub.getContractAddress("Profile")) ||
             identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY),
             "Admin function"
         );

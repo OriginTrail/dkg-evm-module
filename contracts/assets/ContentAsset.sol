@@ -37,7 +37,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
         ERC721("ContentAsset", "DKG")
     {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));
-        serviceAgreement = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
+        serviceAgreement = ServiceAgreementV1(hub.getContractAddress("ServiceAgreement"));
     }
 
     modifier onlyAssetOwner(uint256 tokenId) {
