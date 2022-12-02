@@ -10,23 +10,23 @@
   "sourceMap": "115:2533:52:-:0;;;;;;;;;;;;;;;-1:-1:-1;;;115:2533:52;;;;;;;;;;;;;;;;;",
   "deployedSourceMap": "115:2533:52:-:0;;;;;;;;",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\nimport { Indexable } from \"../interface/Indexable.sol\";\n\nlibrary UnorderedIndexableContractDynamicSetLib {\n\n    struct Contract {\n        uint8 id;\n        address addr;\n    }\n\n    struct Set {\n        mapping(uint8 => uint256) indexPointers;\n        Contract[] contractList;\n    }\n\n    function append(Set storage self, uint8 id, address addr) internal {\n        require(id != 0, \"(IndexableContractSet) ID canot be 0\");\n        require(addr != address(0), \"(IndexableContractSet) Address cannot be 0x0\");\n        require(!exists(self, id), \"(IndexableContractSet) Contract with given ID already exists\");\n        self.indexPointers[id] = size(self);\n        self.contractList.push(Contract(id, addr));\n    }\n\n    function update(Set storage self, uint8 id, address addr) internal {\n        require(addr != address(0), \"(IndexableContractSet) Address cannot be 0x0\");\n        require(exists(self, id), \"(IndexableContractSet) Contract with given ID doesn't exists\");\n        self.contractList[self.indexPointers[id]].addr = addr;\n    }\n\n    function remove(Set storage self, uint8 id) internal {\n        require(exists(self, id), \"(IndexableContractSet) Contract with given ID doesn't exists\");\n        uint256 contractToRemoveIndex = self.indexPointers[id];\n        Contract memory contractToMove = self.contractList[size(self) - 1];\n        uint8 contractToMoveId = Indexable(contractToMove.addr).id();\n\n        self.indexPointers[contractToMoveId] = contractToRemoveIndex;\n        self.contractList[contractToRemoveIndex] = contractToMove;\n\n        delete self.indexPointers[id];\n        self.contractList.pop();\n    }\n\n    function get(Set storage self, uint8 id) internal view returns (Contract memory) {\n        require(exists(self, id), \"(IndexableContractSet) Contract with given ID doesn't exists\");\n        return self.contractList[self.indexPointers[id]];\n    }\n\n    function getAll(Set storage self) internal view returns (Contract[] memory) {\n        return self.contractList;\n    }\n\n    function getIndex(Set storage self, uint8 id) internal view returns (uint256) {\n        return self.indexPointers[id];\n    }\n\n    function getByIndex(Set storage self, uint256 index) internal view returns (Contract memory) {\n        return self.contractList[index];\n    }\n\n    function exists(Set storage self, uint8 id) internal view returns (bool) {\n        if (size(self) == 0) return false;\n        return self.contractList[self.indexPointers[id]].id == id;\n    }\n\n    function size(Set storage self) internal view returns (uint256) {\n        return self.contractList.length;\n    }\n\n} \n",
-  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/utils/UnorderedIndexableContractDynamicSet.sol",
+  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/utils/UnorderedIndexableContractDynamicSet.sol",
   "ast": {
     "absolutePath": "project:/contracts/utils/UnorderedIndexableContractDynamicSet.sol",
     "exportedSymbols": {
       "Indexable": [
-        11098
+        11147
       ],
       "UnorderedIndexableContractDynamicSetLib": [
-        14583
+        14586
       ]
     },
-    "id": 14584,
+    "id": 14587,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 14275,
+        "id": 14278,
         "literals": [
           "solidity",
           "^",
@@ -39,20 +39,20 @@
       {
         "absolutePath": "project:/contracts/interface/Indexable.sol",
         "file": "../interface/Indexable.sol",
-        "id": 14277,
+        "id": 14280,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 14584,
-        "sourceUnit": 11099,
+        "scope": 14587,
+        "sourceUnit": 11148,
         "src": "58:55:52",
         "symbolAliases": [
           {
             "foreign": {
-              "id": 14276,
+              "id": 14279,
               "name": "Indexable",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 11098,
+              "referencedDeclaration": 11147,
               "src": "67:9:52",
               "typeDescriptions": {}
             },
@@ -68,9 +68,9 @@
         "contractDependencies": [],
         "contractKind": "library",
         "fullyImplemented": true,
-        "id": 14583,
+        "id": 14586,
         "linearizedBaseContracts": [
-          14583
+          14586
         ],
         "name": "UnorderedIndexableContractDynamicSetLib",
         "nameLocation": "123:39:52",
@@ -78,16 +78,16 @@
         "nodes": [
           {
             "canonicalName": "UnorderedIndexableContractDynamicSetLib.Contract",
-            "id": 14282,
+            "id": 14285,
             "members": [
               {
                 "constant": false,
-                "id": 14279,
+                "id": 14282,
                 "mutability": "mutable",
                 "name": "id",
                 "nameLocation": "202:2:52",
                 "nodeType": "VariableDeclaration",
-                "scope": 14282,
+                "scope": 14285,
                 "src": "196:8:52",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -96,7 +96,7 @@
                   "typeString": "uint8"
                 },
                 "typeName": {
-                  "id": 14278,
+                  "id": 14281,
                   "name": "uint8",
                   "nodeType": "ElementaryTypeName",
                   "src": "196:5:52",
@@ -109,12 +109,12 @@
               },
               {
                 "constant": false,
-                "id": 14281,
+                "id": 14284,
                 "mutability": "mutable",
                 "name": "addr",
                 "nameLocation": "222:4:52",
                 "nodeType": "VariableDeclaration",
-                "scope": 14282,
+                "scope": 14285,
                 "src": "214:12:52",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -123,7 +123,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 14280,
+                  "id": 14283,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "214:7:52",
@@ -139,22 +139,22 @@
             "name": "Contract",
             "nameLocation": "177:8:52",
             "nodeType": "StructDefinition",
-            "scope": 14583,
+            "scope": 14586,
             "src": "170:63:52",
             "visibility": "public"
           },
           {
             "canonicalName": "UnorderedIndexableContractDynamicSetLib.Set",
-            "id": 14291,
+            "id": 14294,
             "members": [
               {
                 "constant": false,
-                "id": 14286,
+                "id": 14289,
                 "mutability": "mutable",
                 "name": "indexPointers",
                 "nameLocation": "286:13:52",
                 "nodeType": "VariableDeclaration",
-                "scope": 14291,
+                "scope": 14294,
                 "src": "260:39:52",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -163,9 +163,9 @@
                   "typeString": "mapping(uint8 => uint256)"
                 },
                 "typeName": {
-                  "id": 14285,
+                  "id": 14288,
                   "keyType": {
-                    "id": 14283,
+                    "id": 14286,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "268:5:52",
@@ -181,7 +181,7 @@
                     "typeString": "mapping(uint8 => uint256)"
                   },
                   "valueType": {
-                    "id": 14284,
+                    "id": 14287,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "277:7:52",
@@ -195,42 +195,42 @@
               },
               {
                 "constant": false,
-                "id": 14290,
+                "id": 14293,
                 "mutability": "mutable",
                 "name": "contractList",
                 "nameLocation": "320:12:52",
                 "nodeType": "VariableDeclaration",
-                "scope": 14291,
+                "scope": 14294,
                 "src": "309:23:52",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_Contract_$14282_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage_ptr",
                   "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 14288,
+                    "id": 14291,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 14287,
+                      "id": 14290,
                       "name": "Contract",
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 14282,
+                      "referencedDeclaration": 14285,
                       "src": "309:8:52"
                     },
-                    "referencedDeclaration": 14282,
+                    "referencedDeclaration": 14285,
                     "src": "309:8:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Contract_$14282_storage_ptr",
+                      "typeIdentifier": "t_struct$_Contract_$14285_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
                     }
                   },
-                  "id": 14289,
+                  "id": 14292,
                   "nodeType": "ArrayTypeName",
                   "src": "309:10:52",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_Contract_$14282_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
                   }
                 },
@@ -240,13 +240,13 @@
             "name": "Set",
             "nameLocation": "246:3:52",
             "nodeType": "StructDefinition",
-            "scope": 14583,
+            "scope": 14586,
             "src": "239:100:52",
             "visibility": "public"
           },
           {
             "body": {
-              "id": 14348,
+              "id": 14351,
               "nodeType": "Block",
               "src": "412:355:52",
               "statements": [
@@ -258,17 +258,17 @@
                           "typeIdentifier": "t_uint8",
                           "typeString": "uint8"
                         },
-                        "id": 14304,
+                        "id": 14307,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
                         "lValueRequested": false,
                         "leftExpression": {
-                          "id": 14302,
+                          "id": 14305,
                           "name": "id",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14296,
+                          "referencedDeclaration": 14299,
                           "src": "430:2:52",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint8",
@@ -279,7 +279,7 @@
                         "operator": "!=",
                         "rightExpression": {
                           "hexValue": "30",
-                          "id": 14303,
+                          "id": 14306,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
@@ -301,7 +301,7 @@
                       },
                       {
                         "hexValue": "28496e64657861626c65436f6e7472616374536574292049442063616e6f742062652030",
-                        "id": 14305,
+                        "id": 14308,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -327,7 +327,7 @@
                           "typeString": "literal_string \"(IndexableContractSet) ID canot be 0\""
                         }
                       ],
-                      "id": 14301,
+                      "id": 14304,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -341,7 +341,7 @@
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 14306,
+                    "id": 14309,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -356,7 +356,7 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 14307,
+                  "id": 14310,
                   "nodeType": "ExpressionStatement",
                   "src": "422:56:52"
                 },
@@ -368,17 +368,17 @@
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         },
-                        "id": 14314,
+                        "id": 14317,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
                         "lValueRequested": false,
                         "leftExpression": {
-                          "id": 14309,
+                          "id": 14312,
                           "name": "addr",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14298,
+                          "referencedDeclaration": 14301,
                           "src": "496:4:52",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
@@ -391,7 +391,7 @@
                           "arguments": [
                             {
                               "hexValue": "30",
-                              "id": 14312,
+                              "id": 14315,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": true,
@@ -413,7 +413,7 @@
                                 "typeString": "int_const 0"
                               }
                             ],
-                            "id": 14311,
+                            "id": 14314,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
@@ -425,14 +425,14 @@
                               "typeString": "type(address)"
                             },
                             "typeName": {
-                              "id": 14310,
+                              "id": 14313,
                               "name": "address",
                               "nodeType": "ElementaryTypeName",
                               "src": "504:7:52",
                               "typeDescriptions": {}
                             }
                           },
-                          "id": 14313,
+                          "id": 14316,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
@@ -455,7 +455,7 @@
                       },
                       {
                         "hexValue": "28496e64657861626c65436f6e74726163745365742920416464726573732063616e6e6f7420626520307830",
-                        "id": 14315,
+                        "id": 14318,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -481,7 +481,7 @@
                           "typeString": "literal_string \"(IndexableContractSet) Address cannot be 0x0\""
                         }
                       ],
-                      "id": 14308,
+                      "id": 14311,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -495,7 +495,7 @@
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 14316,
+                    "id": 14319,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -510,7 +510,7 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 14317,
+                  "id": 14320,
                   "nodeType": "ExpressionStatement",
                   "src": "488:75:52"
                 },
@@ -518,7 +518,7 @@
                   "expression": {
                     "arguments": [
                       {
-                        "id": 14323,
+                        "id": 14326,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -530,23 +530,23 @@
                         "subExpression": {
                           "arguments": [
                             {
-                              "id": 14320,
+                              "id": 14323,
                               "name": "self",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 14294,
+                              "referencedDeclaration": 14297,
                               "src": "589:4:52",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                                "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                               }
                             },
                             {
-                              "id": 14321,
+                              "id": 14324,
                               "name": "id",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 14296,
+                              "referencedDeclaration": 14299,
                               "src": "595:2:52",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint8",
@@ -557,7 +557,7 @@
                           "expression": {
                             "argumentTypes": [
                               {
-                                "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                                "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                               },
                               {
@@ -565,18 +565,18 @@
                                 "typeString": "uint8"
                               }
                             ],
-                            "id": 14319,
+                            "id": 14322,
                             "name": "exists",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14569,
+                            "referencedDeclaration": 14572,
                             "src": "582:6:52",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14291_storage_ptr_$_t_uint8_$returns$_t_bool_$",
+                              "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14294_storage_ptr_$_t_uint8_$returns$_t_bool_$",
                               "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (bool)"
                             }
                           },
-                          "id": 14322,
+                          "id": 14325,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -598,7 +598,7 @@
                       },
                       {
                         "hexValue": "28496e64657861626c65436f6e74726163745365742920436f6e7472616374207769746820676976656e20494420616c726561647920657869737473",
-                        "id": 14324,
+                        "id": 14327,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -624,7 +624,7 @@
                           "typeString": "literal_string \"(IndexableContractSet) Contract with given ID already exists\""
                         }
                       ],
-                      "id": 14318,
+                      "id": 14321,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -638,7 +638,7 @@
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 14325,
+                    "id": 14328,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -653,13 +653,13 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 14326,
+                  "id": 14329,
                   "nodeType": "ExpressionStatement",
                   "src": "573:90:52"
                 },
                 {
                   "expression": {
-                    "id": 14335,
+                    "id": 14338,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -667,38 +667,38 @@
                     "leftHandSide": {
                       "baseExpression": {
                         "expression": {
-                          "id": 14327,
+                          "id": 14330,
                           "name": "self",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14294,
+                          "referencedDeclaration": 14297,
                           "src": "673:4:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                            "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                           }
                         },
-                        "id": 14330,
+                        "id": 14333,
                         "isConstant": false,
                         "isLValue": true,
                         "isPure": false,
                         "lValueRequested": false,
                         "memberName": "indexPointers",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 14286,
+                        "referencedDeclaration": 14289,
                         "src": "673:18:52",
                         "typeDescriptions": {
                           "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
                           "typeString": "mapping(uint8 => uint256)"
                         }
                       },
-                      "id": 14331,
+                      "id": 14334,
                       "indexExpression": {
-                        "id": 14329,
+                        "id": 14332,
                         "name": "id",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14296,
+                        "referencedDeclaration": 14299,
                         "src": "692:2:52",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint8",
@@ -721,14 +721,14 @@
                     "rightHandSide": {
                       "arguments": [
                         {
-                          "id": 14333,
+                          "id": 14336,
                           "name": "self",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14294,
+                          "referencedDeclaration": 14297,
                           "src": "703:4:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                            "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                           }
                         }
@@ -736,22 +736,22 @@
                       "expression": {
                         "argumentTypes": [
                           {
-                            "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                            "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                           }
                         ],
-                        "id": 14332,
+                        "id": 14335,
                         "name": "size",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14582,
+                        "referencedDeclaration": 14585,
                         "src": "698:4:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14291_storage_ptr_$returns$_t_uint256_$",
+                          "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14294_storage_ptr_$returns$_t_uint256_$",
                           "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer) view returns (uint256)"
                         }
                       },
-                      "id": 14334,
+                      "id": 14337,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -772,7 +772,7 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 14336,
+                  "id": 14339,
                   "nodeType": "ExpressionStatement",
                   "src": "673:35:52"
                 },
@@ -782,11 +782,11 @@
                       {
                         "arguments": [
                           {
-                            "id": 14343,
+                            "id": 14346,
                             "name": "id",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14296,
+                            "referencedDeclaration": 14299,
                             "src": "750:2:52",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint8",
@@ -794,11 +794,11 @@
                             }
                           },
                           {
-                            "id": 14344,
+                            "id": 14347,
                             "name": "addr",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14298,
+                            "referencedDeclaration": 14301,
                             "src": "754:4:52",
                             "typeDescriptions": {
                               "typeIdentifier": "t_address",
@@ -817,18 +817,18 @@
                               "typeString": "address"
                             }
                           ],
-                          "id": 14342,
+                          "id": 14345,
                           "name": "Contract",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14282,
+                          "referencedDeclaration": 14285,
                           "src": "741:8:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_type$_t_struct$_Contract_$14282_storage_ptr_$",
+                            "typeIdentifier": "t_type$_t_struct$_Contract_$14285_storage_ptr_$",
                             "typeString": "type(struct UnorderedIndexableContractDynamicSetLib.Contract storage pointer)"
                           }
                         },
-                        "id": 14345,
+                        "id": 14348,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -839,7 +839,7 @@
                         "src": "741:18:52",
                         "tryCall": false,
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Contract_$14282_memory_ptr",
+                          "typeIdentifier": "t_struct$_Contract_$14285_memory_ptr",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
                         }
                       }
@@ -847,38 +847,38 @@
                     "expression": {
                       "argumentTypes": [
                         {
-                          "typeIdentifier": "t_struct$_Contract_$14282_memory_ptr",
+                          "typeIdentifier": "t_struct$_Contract_$14285_memory_ptr",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
                         }
                       ],
                       "expression": {
                         "expression": {
-                          "id": 14337,
+                          "id": 14340,
                           "name": "self",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14294,
+                          "referencedDeclaration": 14297,
                           "src": "718:4:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                            "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                           }
                         },
-                        "id": 14340,
+                        "id": 14343,
                         "isConstant": false,
                         "isLValue": true,
                         "isPure": false,
                         "lValueRequested": false,
                         "memberName": "contractList",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 14290,
+                        "referencedDeclaration": 14293,
                         "src": "718:17:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_array$_t_struct$_Contract_$14282_storage_$dyn_storage",
+                          "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
                         }
                       },
-                      "id": 14341,
+                      "id": 14344,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -887,11 +887,11 @@
                       "nodeType": "MemberAccess",
                       "src": "718:22:52",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_arraypush_nonpayable$_t_array$_t_struct$_Contract_$14282_storage_$dyn_storage_ptr_$_t_struct$_Contract_$14282_storage_$returns$__$bound_to$_t_array$_t_struct$_Contract_$14282_storage_$dyn_storage_ptr_$",
+                        "typeIdentifier": "t_function_arraypush_nonpayable$_t_array$_t_struct$_Contract_$14285_storage_$dyn_storage_ptr_$_t_struct$_Contract_$14285_storage_$returns$__$bound_to$_t_array$_t_struct$_Contract_$14285_storage_$dyn_storage_ptr_$",
                         "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage pointer,struct UnorderedIndexableContractDynamicSetLib.Contract storage ref)"
                       }
                     },
-                    "id": 14346,
+                    "id": 14349,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -906,13 +906,13 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 14347,
+                  "id": 14350,
                   "nodeType": "ExpressionStatement",
                   "src": "718:42:52"
                 }
               ]
             },
-            "id": 14349,
+            "id": 14352,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -920,38 +920,38 @@
             "nameLocation": "354:6:52",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 14299,
+              "id": 14302,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14294,
+                  "id": 14297,
                   "mutability": "mutable",
                   "name": "self",
                   "nameLocation": "373:4:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14349,
+                  "scope": 14352,
                   "src": "361:16:52",
                   "stateVariable": false,
                   "storageLocation": "storage",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                    "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                   },
                   "typeName": {
-                    "id": 14293,
+                    "id": 14296,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 14292,
+                      "id": 14295,
                       "name": "Set",
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 14291,
+                      "referencedDeclaration": 14294,
                       "src": "361:3:52"
                     },
-                    "referencedDeclaration": 14291,
+                    "referencedDeclaration": 14294,
                     "src": "361:3:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                      "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                     }
                   },
@@ -959,12 +959,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 14296,
+                  "id": 14299,
                   "mutability": "mutable",
                   "name": "id",
                   "nameLocation": "385:2:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14349,
+                  "scope": 14352,
                   "src": "379:8:52",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -973,7 +973,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 14295,
+                    "id": 14298,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "379:5:52",
@@ -986,12 +986,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 14298,
+                  "id": 14301,
                   "mutability": "mutable",
                   "name": "addr",
                   "nameLocation": "397:4:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14349,
+                  "scope": 14352,
                   "src": "389:12:52",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1000,7 +1000,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 14297,
+                    "id": 14300,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "389:7:52",
@@ -1016,12 +1016,12 @@
               "src": "360:42:52"
             },
             "returnParameters": {
-              "id": 14300,
+              "id": 14303,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "412:0:52"
             },
-            "scope": 14583,
+            "scope": 14586,
             "src": "345:422:52",
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -1029,7 +1029,7 @@
           },
           {
             "body": {
-              "id": 14389,
+              "id": 14392,
               "nodeType": "Block",
               "src": "840:254:52",
               "statements": [
@@ -1041,17 +1041,17 @@
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         },
-                        "id": 14365,
+                        "id": 14368,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
                         "lValueRequested": false,
                         "leftExpression": {
-                          "id": 14360,
+                          "id": 14363,
                           "name": "addr",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14356,
+                          "referencedDeclaration": 14359,
                           "src": "858:4:52",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
@@ -1064,7 +1064,7 @@
                           "arguments": [
                             {
                               "hexValue": "30",
-                              "id": 14363,
+                              "id": 14366,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": true,
@@ -1086,7 +1086,7 @@
                                 "typeString": "int_const 0"
                               }
                             ],
-                            "id": 14362,
+                            "id": 14365,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
@@ -1098,14 +1098,14 @@
                               "typeString": "type(address)"
                             },
                             "typeName": {
-                              "id": 14361,
+                              "id": 14364,
                               "name": "address",
                               "nodeType": "ElementaryTypeName",
                               "src": "866:7:52",
                               "typeDescriptions": {}
                             }
                           },
-                          "id": 14364,
+                          "id": 14367,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
@@ -1128,7 +1128,7 @@
                       },
                       {
                         "hexValue": "28496e64657861626c65436f6e74726163745365742920416464726573732063616e6e6f7420626520307830",
-                        "id": 14366,
+                        "id": 14369,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -1154,7 +1154,7 @@
                           "typeString": "literal_string \"(IndexableContractSet) Address cannot be 0x0\""
                         }
                       ],
-                      "id": 14359,
+                      "id": 14362,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -1168,7 +1168,7 @@
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 14367,
+                    "id": 14370,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1183,7 +1183,7 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 14368,
+                  "id": 14371,
                   "nodeType": "ExpressionStatement",
                   "src": "850:75:52"
                 },
@@ -1193,23 +1193,23 @@
                       {
                         "arguments": [
                           {
-                            "id": 14371,
+                            "id": 14374,
                             "name": "self",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14352,
+                            "referencedDeclaration": 14355,
                             "src": "950:4:52",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                              "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                               "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                             }
                           },
                           {
-                            "id": 14372,
+                            "id": 14375,
                             "name": "id",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14354,
+                            "referencedDeclaration": 14357,
                             "src": "956:2:52",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint8",
@@ -1220,7 +1220,7 @@
                         "expression": {
                           "argumentTypes": [
                             {
-                              "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                              "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                               "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                             },
                             {
@@ -1228,18 +1228,18 @@
                               "typeString": "uint8"
                             }
                           ],
-                          "id": 14370,
+                          "id": 14373,
                           "name": "exists",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14569,
+                          "referencedDeclaration": 14572,
                           "src": "943:6:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14291_storage_ptr_$_t_uint8_$returns$_t_bool_$",
+                            "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14294_storage_ptr_$_t_uint8_$returns$_t_bool_$",
                             "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (bool)"
                           }
                         },
-                        "id": 14373,
+                        "id": 14376,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -1256,7 +1256,7 @@
                       },
                       {
                         "hexValue": "28496e64657861626c65436f6e74726163745365742920436f6e7472616374207769746820676976656e20494420646f65736e277420657869737473",
-                        "id": 14374,
+                        "id": 14377,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -1282,7 +1282,7 @@
                           "typeString": "literal_string \"(IndexableContractSet) Contract with given ID doesn't exists\""
                         }
                       ],
-                      "id": 14369,
+                      "id": 14372,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -1296,7 +1296,7 @@
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 14375,
+                    "id": 14378,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1311,13 +1311,13 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 14376,
+                  "id": 14379,
                   "nodeType": "ExpressionStatement",
                   "src": "935:89:52"
                 },
                 {
                   "expression": {
-                    "id": 14387,
+                    "id": 14390,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1326,67 +1326,67 @@
                       "expression": {
                         "baseExpression": {
                           "expression": {
-                            "id": 14377,
+                            "id": 14380,
                             "name": "self",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14352,
+                            "referencedDeclaration": 14355,
                             "src": "1034:4:52",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                              "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                               "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                             }
                           },
-                          "id": 14383,
+                          "id": 14386,
                           "isConstant": false,
                           "isLValue": true,
                           "isPure": false,
                           "lValueRequested": false,
                           "memberName": "contractList",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 14290,
+                          "referencedDeclaration": 14293,
                           "src": "1034:17:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_array$_t_struct$_Contract_$14282_storage_$dyn_storage",
+                            "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
                           }
                         },
-                        "id": 14384,
+                        "id": 14387,
                         "indexExpression": {
                           "baseExpression": {
                             "expression": {
-                              "id": 14379,
+                              "id": 14382,
                               "name": "self",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 14352,
+                              "referencedDeclaration": 14355,
                               "src": "1052:4:52",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                                "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                               }
                             },
-                            "id": 14380,
+                            "id": 14383,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
                             "lValueRequested": false,
                             "memberName": "indexPointers",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 14286,
+                            "referencedDeclaration": 14289,
                             "src": "1052:18:52",
                             "typeDescriptions": {
                               "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
                               "typeString": "mapping(uint8 => uint256)"
                             }
                           },
-                          "id": 14382,
+                          "id": 14385,
                           "indexExpression": {
-                            "id": 14381,
+                            "id": 14384,
                             "name": "id",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14354,
+                            "referencedDeclaration": 14357,
                             "src": "1071:2:52",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint8",
@@ -1411,18 +1411,18 @@
                         "nodeType": "IndexAccess",
                         "src": "1034:41:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Contract_$14282_storage",
+                          "typeIdentifier": "t_struct$_Contract_$14285_storage",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
                         }
                       },
-                      "id": 14385,
+                      "id": 14388,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
                       "lValueRequested": true,
                       "memberName": "addr",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 14281,
+                      "referencedDeclaration": 14284,
                       "src": "1034:46:52",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
@@ -1432,11 +1432,11 @@
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 14386,
+                      "id": 14389,
                       "name": "addr",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 14356,
+                      "referencedDeclaration": 14359,
                       "src": "1083:4:52",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
@@ -1449,13 +1449,13 @@
                       "typeString": "address"
                     }
                   },
-                  "id": 14388,
+                  "id": 14391,
                   "nodeType": "ExpressionStatement",
                   "src": "1034:53:52"
                 }
               ]
             },
-            "id": 14390,
+            "id": 14393,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -1463,38 +1463,38 @@
             "nameLocation": "782:6:52",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 14357,
+              "id": 14360,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14352,
+                  "id": 14355,
                   "mutability": "mutable",
                   "name": "self",
                   "nameLocation": "801:4:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14390,
+                  "scope": 14393,
                   "src": "789:16:52",
                   "stateVariable": false,
                   "storageLocation": "storage",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                    "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                   },
                   "typeName": {
-                    "id": 14351,
+                    "id": 14354,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 14350,
+                      "id": 14353,
                       "name": "Set",
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 14291,
+                      "referencedDeclaration": 14294,
                       "src": "789:3:52"
                     },
-                    "referencedDeclaration": 14291,
+                    "referencedDeclaration": 14294,
                     "src": "789:3:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                      "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                     }
                   },
@@ -1502,12 +1502,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 14354,
+                  "id": 14357,
                   "mutability": "mutable",
                   "name": "id",
                   "nameLocation": "813:2:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14390,
+                  "scope": 14393,
                   "src": "807:8:52",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1516,7 +1516,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 14353,
+                    "id": 14356,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "807:5:52",
@@ -1529,12 +1529,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 14356,
+                  "id": 14359,
                   "mutability": "mutable",
                   "name": "addr",
                   "nameLocation": "825:4:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14390,
+                  "scope": 14393,
                   "src": "817:12:52",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1543,7 +1543,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 14355,
+                    "id": 14358,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "817:7:52",
@@ -1559,12 +1559,12 @@
               "src": "788:42:52"
             },
             "returnParameters": {
-              "id": 14358,
+              "id": 14361,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "840:0:52"
             },
-            "scope": 14583,
+            "scope": 14586,
             "src": "773:321:52",
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -1572,7 +1572,7 @@
           },
           {
             "body": {
-              "id": 14463,
+              "id": 14466,
               "nodeType": "Block",
               "src": "1153:527:52",
               "statements": [
@@ -1582,23 +1582,23 @@
                       {
                         "arguments": [
                           {
-                            "id": 14400,
+                            "id": 14403,
                             "name": "self",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14393,
+                            "referencedDeclaration": 14396,
                             "src": "1178:4:52",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                              "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                               "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                             }
                           },
                           {
-                            "id": 14401,
+                            "id": 14404,
                             "name": "id",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14395,
+                            "referencedDeclaration": 14398,
                             "src": "1184:2:52",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint8",
@@ -1609,7 +1609,7 @@
                         "expression": {
                           "argumentTypes": [
                             {
-                              "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                              "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                               "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                             },
                             {
@@ -1617,18 +1617,18 @@
                               "typeString": "uint8"
                             }
                           ],
-                          "id": 14399,
+                          "id": 14402,
                           "name": "exists",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14569,
+                          "referencedDeclaration": 14572,
                           "src": "1171:6:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14291_storage_ptr_$_t_uint8_$returns$_t_bool_$",
+                            "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14294_storage_ptr_$_t_uint8_$returns$_t_bool_$",
                             "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (bool)"
                           }
                         },
-                        "id": 14402,
+                        "id": 14405,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -1645,7 +1645,7 @@
                       },
                       {
                         "hexValue": "28496e64657861626c65436f6e74726163745365742920436f6e7472616374207769746820676976656e20494420646f65736e277420657869737473",
-                        "id": 14403,
+                        "id": 14406,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -1671,7 +1671,7 @@
                           "typeString": "literal_string \"(IndexableContractSet) Contract with given ID doesn't exists\""
                         }
                       ],
-                      "id": 14398,
+                      "id": 14401,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -1685,7 +1685,7 @@
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 14404,
+                    "id": 14407,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1700,23 +1700,23 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 14405,
+                  "id": 14408,
                   "nodeType": "ExpressionStatement",
                   "src": "1163:89:52"
                 },
                 {
                   "assignments": [
-                    14407
+                    14410
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 14407,
+                      "id": 14410,
                       "mutability": "mutable",
                       "name": "contractToRemoveIndex",
                       "nameLocation": "1270:21:52",
                       "nodeType": "VariableDeclaration",
-                      "scope": 14463,
+                      "scope": 14466,
                       "src": "1262:29:52",
                       "stateVariable": false,
                       "storageLocation": "default",
@@ -1725,7 +1725,7 @@
                         "typeString": "uint256"
                       },
                       "typeName": {
-                        "id": 14406,
+                        "id": 14409,
                         "name": "uint256",
                         "nodeType": "ElementaryTypeName",
                         "src": "1262:7:52",
@@ -1737,42 +1737,42 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 14412,
+                  "id": 14415,
                   "initialValue": {
                     "baseExpression": {
                       "expression": {
-                        "id": 14408,
+                        "id": 14411,
                         "name": "self",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14393,
+                        "referencedDeclaration": 14396,
                         "src": "1294:4:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                          "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                         }
                       },
-                      "id": 14409,
+                      "id": 14412,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "indexPointers",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 14286,
+                      "referencedDeclaration": 14289,
                       "src": "1294:18:52",
                       "typeDescriptions": {
                         "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
                         "typeString": "mapping(uint8 => uint256)"
                       }
                     },
-                    "id": 14411,
+                    "id": 14414,
                     "indexExpression": {
-                      "id": 14410,
+                      "id": 14413,
                       "name": "id",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 14395,
+                      "referencedDeclaration": 14398,
                       "src": "1313:2:52",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint8",
@@ -1795,80 +1795,80 @@
                 },
                 {
                   "assignments": [
-                    14415
+                    14418
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 14415,
+                      "id": 14418,
                       "mutability": "mutable",
                       "name": "contractToMove",
                       "nameLocation": "1342:14:52",
                       "nodeType": "VariableDeclaration",
-                      "scope": 14463,
+                      "scope": 14466,
                       "src": "1326:30:52",
                       "stateVariable": false,
                       "storageLocation": "memory",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_Contract_$14282_memory_ptr",
+                        "typeIdentifier": "t_struct$_Contract_$14285_memory_ptr",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
                       },
                       "typeName": {
-                        "id": 14414,
+                        "id": 14417,
                         "nodeType": "UserDefinedTypeName",
                         "pathNode": {
-                          "id": 14413,
+                          "id": 14416,
                           "name": "Contract",
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 14282,
+                          "referencedDeclaration": 14285,
                           "src": "1326:8:52"
                         },
-                        "referencedDeclaration": 14282,
+                        "referencedDeclaration": 14285,
                         "src": "1326:8:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Contract_$14282_storage_ptr",
+                          "typeIdentifier": "t_struct$_Contract_$14285_storage_ptr",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
                         }
                       },
                       "visibility": "internal"
                     }
                   ],
-                  "id": 14424,
+                  "id": 14427,
                   "initialValue": {
                     "baseExpression": {
                       "expression": {
-                        "id": 14416,
+                        "id": 14419,
                         "name": "self",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14393,
+                        "referencedDeclaration": 14396,
                         "src": "1359:4:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                          "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                         }
                       },
-                      "id": 14417,
+                      "id": 14420,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "contractList",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 14290,
+                      "referencedDeclaration": 14293,
                       "src": "1359:17:52",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_array$_t_struct$_Contract_$14282_storage_$dyn_storage",
+                        "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
                       }
                     },
-                    "id": 14423,
+                    "id": 14426,
                     "indexExpression": {
                       "commonType": {
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
                       },
-                      "id": 14422,
+                      "id": 14425,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -1876,14 +1876,14 @@
                       "leftExpression": {
                         "arguments": [
                           {
-                            "id": 14419,
+                            "id": 14422,
                             "name": "self",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14393,
+                            "referencedDeclaration": 14396,
                             "src": "1382:4:52",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                              "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                               "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                             }
                           }
@@ -1891,22 +1891,22 @@
                         "expression": {
                           "argumentTypes": [
                             {
-                              "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                              "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                               "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                             }
                           ],
-                          "id": 14418,
+                          "id": 14421,
                           "name": "size",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14582,
+                          "referencedDeclaration": 14585,
                           "src": "1377:4:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14291_storage_ptr_$returns$_t_uint256_$",
+                            "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14294_storage_ptr_$returns$_t_uint256_$",
                             "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer) view returns (uint256)"
                           }
                         },
-                        "id": 14420,
+                        "id": 14423,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -1925,7 +1925,7 @@
                       "operator": "-",
                       "rightExpression": {
                         "hexValue": "31",
-                        "id": 14421,
+                        "id": 14424,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -1952,7 +1952,7 @@
                     "nodeType": "IndexAccess",
                     "src": "1359:33:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Contract_$14282_storage",
+                      "typeIdentifier": "t_struct$_Contract_$14285_storage",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
                     }
                   },
@@ -1961,17 +1961,17 @@
                 },
                 {
                   "assignments": [
-                    14426
+                    14429
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 14426,
+                      "id": 14429,
                       "mutability": "mutable",
                       "name": "contractToMoveId",
                       "nameLocation": "1408:16:52",
                       "nodeType": "VariableDeclaration",
-                      "scope": 14463,
+                      "scope": 14466,
                       "src": "1402:22:52",
                       "stateVariable": false,
                       "storageLocation": "default",
@@ -1980,7 +1980,7 @@
                         "typeString": "uint8"
                       },
                       "typeName": {
-                        "id": 14425,
+                        "id": 14428,
                         "name": "uint8",
                         "nodeType": "ElementaryTypeName",
                         "src": "1402:5:52",
@@ -1992,7 +1992,7 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 14433,
+                  "id": 14436,
                   "initialValue": {
                     "arguments": [],
                     "expression": {
@@ -2001,25 +2001,25 @@
                         "arguments": [
                           {
                             "expression": {
-                              "id": 14428,
+                              "id": 14431,
                               "name": "contractToMove",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 14415,
+                              "referencedDeclaration": 14418,
                               "src": "1437:14:52",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Contract_$14282_memory_ptr",
+                                "typeIdentifier": "t_struct$_Contract_$14285_memory_ptr",
                                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
                               }
                             },
-                            "id": 14429,
+                            "id": 14432,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
                             "lValueRequested": false,
                             "memberName": "addr",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 14281,
+                            "referencedDeclaration": 14284,
                             "src": "1437:19:52",
                             "typeDescriptions": {
                               "typeIdentifier": "t_address",
@@ -2034,18 +2034,18 @@
                               "typeString": "address"
                             }
                           ],
-                          "id": 14427,
+                          "id": 14430,
                           "name": "Indexable",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 11098,
+                          "referencedDeclaration": 11147,
                           "src": "1427:9:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_type$_t_contract$_Indexable_$11098_$",
+                            "typeIdentifier": "t_type$_t_contract$_Indexable_$11147_$",
                             "typeString": "type(contract Indexable)"
                           }
                         },
-                        "id": 14430,
+                        "id": 14433,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -2056,25 +2056,25 @@
                         "src": "1427:30:52",
                         "tryCall": false,
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Indexable_$11098",
+                          "typeIdentifier": "t_contract$_Indexable_$11147",
                           "typeString": "contract Indexable"
                         }
                       },
-                      "id": 14431,
+                      "id": 14434,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "id",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 11097,
+                      "referencedDeclaration": 11146,
                       "src": "1427:33:52",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$__$returns$_t_uint8_$",
                         "typeString": "function () view external returns (uint8)"
                       }
                     },
-                    "id": 14432,
+                    "id": 14435,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2094,7 +2094,7 @@
                 },
                 {
                   "expression": {
-                    "id": 14440,
+                    "id": 14443,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2102,38 +2102,38 @@
                     "leftHandSide": {
                       "baseExpression": {
                         "expression": {
-                          "id": 14434,
+                          "id": 14437,
                           "name": "self",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14393,
+                          "referencedDeclaration": 14396,
                           "src": "1473:4:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                            "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                           }
                         },
-                        "id": 14437,
+                        "id": 14440,
                         "isConstant": false,
                         "isLValue": true,
                         "isPure": false,
                         "lValueRequested": false,
                         "memberName": "indexPointers",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 14286,
+                        "referencedDeclaration": 14289,
                         "src": "1473:18:52",
                         "typeDescriptions": {
                           "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
                           "typeString": "mapping(uint8 => uint256)"
                         }
                       },
-                      "id": 14438,
+                      "id": 14441,
                       "indexExpression": {
-                        "id": 14436,
+                        "id": 14439,
                         "name": "contractToMoveId",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14426,
+                        "referencedDeclaration": 14429,
                         "src": "1492:16:52",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint8",
@@ -2154,11 +2154,11 @@
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 14439,
+                      "id": 14442,
                       "name": "contractToRemoveIndex",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 14407,
+                      "referencedDeclaration": 14410,
                       "src": "1512:21:52",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -2171,13 +2171,13 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 14441,
+                  "id": 14444,
                   "nodeType": "ExpressionStatement",
                   "src": "1473:60:52"
                 },
                 {
                   "expression": {
-                    "id": 14448,
+                    "id": 14451,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2185,38 +2185,38 @@
                     "leftHandSide": {
                       "baseExpression": {
                         "expression": {
-                          "id": 14442,
+                          "id": 14445,
                           "name": "self",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14393,
+                          "referencedDeclaration": 14396,
                           "src": "1543:4:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                            "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                           }
                         },
-                        "id": 14445,
+                        "id": 14448,
                         "isConstant": false,
                         "isLValue": true,
                         "isPure": false,
                         "lValueRequested": false,
                         "memberName": "contractList",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 14290,
+                        "referencedDeclaration": 14293,
                         "src": "1543:17:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_array$_t_struct$_Contract_$14282_storage_$dyn_storage",
+                          "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
                         }
                       },
-                      "id": 14446,
+                      "id": 14449,
                       "indexExpression": {
-                        "id": 14444,
+                        "id": 14447,
                         "name": "contractToRemoveIndex",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14407,
+                        "referencedDeclaration": 14410,
                         "src": "1561:21:52",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -2230,37 +2230,37 @@
                       "nodeType": "IndexAccess",
                       "src": "1543:40:52",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_Contract_$14282_storage",
+                        "typeIdentifier": "t_struct$_Contract_$14285_storage",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
                       }
                     },
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 14447,
+                      "id": 14450,
                       "name": "contractToMove",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 14415,
+                      "referencedDeclaration": 14418,
                       "src": "1586:14:52",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_Contract_$14282_memory_ptr",
+                        "typeIdentifier": "t_struct$_Contract_$14285_memory_ptr",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
                       }
                     },
                     "src": "1543:57:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Contract_$14282_storage",
+                      "typeIdentifier": "t_struct$_Contract_$14285_storage",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
                     }
                   },
-                  "id": 14449,
+                  "id": 14452,
                   "nodeType": "ExpressionStatement",
                   "src": "1543:57:52"
                 },
                 {
                   "expression": {
-                    "id": 14454,
+                    "id": 14457,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2272,38 +2272,38 @@
                     "subExpression": {
                       "baseExpression": {
                         "expression": {
-                          "id": 14450,
+                          "id": 14453,
                           "name": "self",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14393,
+                          "referencedDeclaration": 14396,
                           "src": "1618:4:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                            "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                           }
                         },
-                        "id": 14451,
+                        "id": 14454,
                         "isConstant": false,
                         "isLValue": true,
                         "isPure": false,
                         "lValueRequested": false,
                         "memberName": "indexPointers",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 14286,
+                        "referencedDeclaration": 14289,
                         "src": "1618:18:52",
                         "typeDescriptions": {
                           "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
                           "typeString": "mapping(uint8 => uint256)"
                         }
                       },
-                      "id": 14453,
+                      "id": 14456,
                       "indexExpression": {
-                        "id": 14452,
+                        "id": 14455,
                         "name": "id",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14395,
+                        "referencedDeclaration": 14398,
                         "src": "1637:2:52",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint8",
@@ -2326,7 +2326,7 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 14455,
+                  "id": 14458,
                   "nodeType": "ExpressionStatement",
                   "src": "1611:29:52"
                 },
@@ -2337,32 +2337,32 @@
                       "argumentTypes": [],
                       "expression": {
                         "expression": {
-                          "id": 14456,
+                          "id": 14459,
                           "name": "self",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14393,
+                          "referencedDeclaration": 14396,
                           "src": "1650:4:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                            "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                           }
                         },
-                        "id": 14459,
+                        "id": 14462,
                         "isConstant": false,
                         "isLValue": true,
                         "isPure": false,
                         "lValueRequested": false,
                         "memberName": "contractList",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 14290,
+                        "referencedDeclaration": 14293,
                         "src": "1650:17:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_array$_t_struct$_Contract_$14282_storage_$dyn_storage",
+                          "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
                         }
                       },
-                      "id": 14460,
+                      "id": 14463,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -2371,11 +2371,11 @@
                       "nodeType": "MemberAccess",
                       "src": "1650:21:52",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_arraypop_nonpayable$_t_array$_t_struct$_Contract_$14282_storage_$dyn_storage_ptr_$returns$__$bound_to$_t_array$_t_struct$_Contract_$14282_storage_$dyn_storage_ptr_$",
+                        "typeIdentifier": "t_function_arraypop_nonpayable$_t_array$_t_struct$_Contract_$14285_storage_$dyn_storage_ptr_$returns$__$bound_to$_t_array$_t_struct$_Contract_$14285_storage_$dyn_storage_ptr_$",
                         "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage pointer)"
                       }
                     },
-                    "id": 14461,
+                    "id": 14464,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2390,13 +2390,13 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 14462,
+                  "id": 14465,
                   "nodeType": "ExpressionStatement",
                   "src": "1650:23:52"
                 }
               ]
             },
-            "id": 14464,
+            "id": 14467,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -2404,38 +2404,38 @@
             "nameLocation": "1109:6:52",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 14396,
+              "id": 14399,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14393,
+                  "id": 14396,
                   "mutability": "mutable",
                   "name": "self",
                   "nameLocation": "1128:4:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14464,
+                  "scope": 14467,
                   "src": "1116:16:52",
                   "stateVariable": false,
                   "storageLocation": "storage",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                    "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                   },
                   "typeName": {
-                    "id": 14392,
+                    "id": 14395,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 14391,
+                      "id": 14394,
                       "name": "Set",
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 14291,
+                      "referencedDeclaration": 14294,
                       "src": "1116:3:52"
                     },
-                    "referencedDeclaration": 14291,
+                    "referencedDeclaration": 14294,
                     "src": "1116:3:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                      "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                     }
                   },
@@ -2443,12 +2443,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 14395,
+                  "id": 14398,
                   "mutability": "mutable",
                   "name": "id",
                   "nameLocation": "1140:2:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14464,
+                  "scope": 14467,
                   "src": "1134:8:52",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2457,7 +2457,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 14394,
+                    "id": 14397,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "1134:5:52",
@@ -2472,12 +2472,12 @@
               "src": "1115:28:52"
             },
             "returnParameters": {
-              "id": 14397,
+              "id": 14400,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1153:0:52"
             },
-            "scope": 14583,
+            "scope": 14586,
             "src": "1100:580:52",
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -2485,7 +2485,7 @@
           },
           {
             "body": {
-              "id": 14491,
+              "id": 14494,
               "nodeType": "Block",
               "src": "1767:164:52",
               "statements": [
@@ -2495,23 +2495,23 @@
                       {
                         "arguments": [
                           {
-                            "id": 14477,
+                            "id": 14480,
                             "name": "self",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14467,
+                            "referencedDeclaration": 14470,
                             "src": "1792:4:52",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                              "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                               "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                             }
                           },
                           {
-                            "id": 14478,
+                            "id": 14481,
                             "name": "id",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14469,
+                            "referencedDeclaration": 14472,
                             "src": "1798:2:52",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint8",
@@ -2522,7 +2522,7 @@
                         "expression": {
                           "argumentTypes": [
                             {
-                              "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                              "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                               "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                             },
                             {
@@ -2530,18 +2530,18 @@
                               "typeString": "uint8"
                             }
                           ],
-                          "id": 14476,
+                          "id": 14479,
                           "name": "exists",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14569,
+                          "referencedDeclaration": 14572,
                           "src": "1785:6:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14291_storage_ptr_$_t_uint8_$returns$_t_bool_$",
+                            "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14294_storage_ptr_$_t_uint8_$returns$_t_bool_$",
                             "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (bool)"
                           }
                         },
-                        "id": 14479,
+                        "id": 14482,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -2558,7 +2558,7 @@
                       },
                       {
                         "hexValue": "28496e64657861626c65436f6e74726163745365742920436f6e7472616374207769746820676976656e20494420646f65736e277420657869737473",
-                        "id": 14480,
+                        "id": 14483,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -2584,7 +2584,7 @@
                           "typeString": "literal_string \"(IndexableContractSet) Contract with given ID doesn't exists\""
                         }
                       ],
-                      "id": 14475,
+                      "id": 14478,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -2598,7 +2598,7 @@
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 14481,
+                    "id": 14484,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2613,7 +2613,7 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 14482,
+                  "id": 14485,
                   "nodeType": "ExpressionStatement",
                   "src": "1777:89:52"
                 },
@@ -2621,67 +2621,67 @@
                   "expression": {
                     "baseExpression": {
                       "expression": {
-                        "id": 14483,
+                        "id": 14486,
                         "name": "self",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14467,
+                        "referencedDeclaration": 14470,
                         "src": "1883:4:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                          "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                         }
                       },
-                      "id": 14484,
+                      "id": 14487,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "contractList",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 14290,
+                      "referencedDeclaration": 14293,
                       "src": "1883:17:52",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_array$_t_struct$_Contract_$14282_storage_$dyn_storage",
+                        "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
                       }
                     },
-                    "id": 14489,
+                    "id": 14492,
                     "indexExpression": {
                       "baseExpression": {
                         "expression": {
-                          "id": 14485,
+                          "id": 14488,
                           "name": "self",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14467,
+                          "referencedDeclaration": 14470,
                           "src": "1901:4:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                            "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                           }
                         },
-                        "id": 14486,
+                        "id": 14489,
                         "isConstant": false,
                         "isLValue": true,
                         "isPure": false,
                         "lValueRequested": false,
                         "memberName": "indexPointers",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 14286,
+                        "referencedDeclaration": 14289,
                         "src": "1901:18:52",
                         "typeDescriptions": {
                           "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
                           "typeString": "mapping(uint8 => uint256)"
                         }
                       },
-                      "id": 14488,
+                      "id": 14491,
                       "indexExpression": {
-                        "id": 14487,
+                        "id": 14490,
                         "name": "id",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14469,
+                        "referencedDeclaration": 14472,
                         "src": "1920:2:52",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint8",
@@ -2706,18 +2706,18 @@
                     "nodeType": "IndexAccess",
                     "src": "1883:41:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Contract_$14282_storage",
+                      "typeIdentifier": "t_struct$_Contract_$14285_storage",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
                     }
                   },
-                  "functionReturnParameters": 14474,
-                  "id": 14490,
+                  "functionReturnParameters": 14477,
+                  "id": 14493,
                   "nodeType": "Return",
                   "src": "1876:48:52"
                 }
               ]
             },
-            "id": 14492,
+            "id": 14495,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -2725,38 +2725,38 @@
             "nameLocation": "1695:3:52",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 14470,
+              "id": 14473,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14467,
+                  "id": 14470,
                   "mutability": "mutable",
                   "name": "self",
                   "nameLocation": "1711:4:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14492,
+                  "scope": 14495,
                   "src": "1699:16:52",
                   "stateVariable": false,
                   "storageLocation": "storage",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                    "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                   },
                   "typeName": {
-                    "id": 14466,
+                    "id": 14469,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 14465,
+                      "id": 14468,
                       "name": "Set",
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 14291,
+                      "referencedDeclaration": 14294,
                       "src": "1699:3:52"
                     },
-                    "referencedDeclaration": 14291,
+                    "referencedDeclaration": 14294,
                     "src": "1699:3:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                      "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                     }
                   },
@@ -2764,12 +2764,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 14469,
+                  "id": 14472,
                   "mutability": "mutable",
                   "name": "id",
                   "nameLocation": "1723:2:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14492,
+                  "scope": 14495,
                   "src": "1717:8:52",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2778,7 +2778,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 14468,
+                    "id": 14471,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "1717:5:52",
@@ -2793,38 +2793,38 @@
               "src": "1698:28:52"
             },
             "returnParameters": {
-              "id": 14474,
+              "id": 14477,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14473,
+                  "id": 14476,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14492,
+                  "scope": 14495,
                   "src": "1750:15:52",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Contract_$14282_memory_ptr",
+                    "typeIdentifier": "t_struct$_Contract_$14285_memory_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
                   },
                   "typeName": {
-                    "id": 14472,
+                    "id": 14475,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 14471,
+                      "id": 14474,
                       "name": "Contract",
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 14282,
+                      "referencedDeclaration": 14285,
                       "src": "1750:8:52"
                     },
-                    "referencedDeclaration": 14282,
+                    "referencedDeclaration": 14285,
                     "src": "1750:8:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Contract_$14282_storage_ptr",
+                      "typeIdentifier": "t_struct$_Contract_$14285_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
                     }
                   },
@@ -2833,7 +2833,7 @@
               ],
               "src": "1749:17:52"
             },
-            "scope": 14583,
+            "scope": 14586,
             "src": "1686:245:52",
             "stateMutability": "view",
             "virtual": false,
@@ -2841,46 +2841,46 @@
           },
           {
             "body": {
-              "id": 14505,
+              "id": 14508,
               "nodeType": "Block",
               "src": "2013:41:52",
               "statements": [
                 {
                   "expression": {
                     "expression": {
-                      "id": 14502,
+                      "id": 14505,
                       "name": "self",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 14495,
+                      "referencedDeclaration": 14498,
                       "src": "2030:4:52",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                        "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                       }
                     },
-                    "id": 14503,
+                    "id": 14506,
                     "isConstant": false,
                     "isLValue": true,
                     "isPure": false,
                     "lValueRequested": false,
                     "memberName": "contractList",
                     "nodeType": "MemberAccess",
-                    "referencedDeclaration": 14290,
+                    "referencedDeclaration": 14293,
                     "src": "2030:17:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_struct$_Contract_$14282_storage_$dyn_storage",
+                      "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
                     }
                   },
-                  "functionReturnParameters": 14501,
-                  "id": 14504,
+                  "functionReturnParameters": 14504,
+                  "id": 14507,
                   "nodeType": "Return",
                   "src": "2023:24:52"
                 }
               ]
             },
-            "id": 14506,
+            "id": 14509,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -2888,38 +2888,38 @@
             "nameLocation": "1946:6:52",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 14496,
+              "id": 14499,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14495,
+                  "id": 14498,
                   "mutability": "mutable",
                   "name": "self",
                   "nameLocation": "1965:4:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14506,
+                  "scope": 14509,
                   "src": "1953:16:52",
                   "stateVariable": false,
                   "storageLocation": "storage",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                    "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                   },
                   "typeName": {
-                    "id": 14494,
+                    "id": 14497,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 14493,
+                      "id": 14496,
                       "name": "Set",
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 14291,
+                      "referencedDeclaration": 14294,
                       "src": "1953:3:52"
                     },
-                    "referencedDeclaration": 14291,
+                    "referencedDeclaration": 14294,
                     "src": "1953:3:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                      "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                     }
                   },
@@ -2929,47 +2929,47 @@
               "src": "1952:18:52"
             },
             "returnParameters": {
-              "id": 14501,
+              "id": 14504,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14500,
+                  "id": 14503,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14506,
+                  "scope": 14509,
                   "src": "1994:17:52",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_Contract_$14282_memory_ptr_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_Contract_$14285_memory_ptr_$dyn_memory_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 14498,
+                      "id": 14501,
                       "nodeType": "UserDefinedTypeName",
                       "pathNode": {
-                        "id": 14497,
+                        "id": 14500,
                         "name": "Contract",
                         "nodeType": "IdentifierPath",
-                        "referencedDeclaration": 14282,
+                        "referencedDeclaration": 14285,
                         "src": "1994:8:52"
                       },
-                      "referencedDeclaration": 14282,
+                      "referencedDeclaration": 14285,
                       "src": "1994:8:52",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_Contract_$14282_storage_ptr",
+                        "typeIdentifier": "t_struct$_Contract_$14285_storage_ptr",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
                       }
                     },
-                    "id": 14499,
+                    "id": 14502,
                     "nodeType": "ArrayTypeName",
                     "src": "1994:10:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_struct$_Contract_$14282_storage_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
                     }
                   },
@@ -2978,7 +2978,7 @@
               ],
               "src": "1993:19:52"
             },
-            "scope": 14583,
+            "scope": 14586,
             "src": "1937:117:52",
             "stateMutability": "view",
             "virtual": false,
@@ -2986,7 +2986,7 @@
           },
           {
             "body": {
-              "id": 14521,
+              "id": 14524,
               "nodeType": "Block",
               "src": "2138:46:52",
               "statements": [
@@ -2994,38 +2994,38 @@
                   "expression": {
                     "baseExpression": {
                       "expression": {
-                        "id": 14516,
+                        "id": 14519,
                         "name": "self",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14509,
+                        "referencedDeclaration": 14512,
                         "src": "2155:4:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                          "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                         }
                       },
-                      "id": 14517,
+                      "id": 14520,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "indexPointers",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 14286,
+                      "referencedDeclaration": 14289,
                       "src": "2155:18:52",
                       "typeDescriptions": {
                         "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
                         "typeString": "mapping(uint8 => uint256)"
                       }
                     },
-                    "id": 14519,
+                    "id": 14522,
                     "indexExpression": {
-                      "id": 14518,
+                      "id": 14521,
                       "name": "id",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 14511,
+                      "referencedDeclaration": 14514,
                       "src": "2174:2:52",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint8",
@@ -3043,14 +3043,14 @@
                       "typeString": "uint256"
                     }
                   },
-                  "functionReturnParameters": 14515,
-                  "id": 14520,
+                  "functionReturnParameters": 14518,
+                  "id": 14523,
                   "nodeType": "Return",
                   "src": "2148:29:52"
                 }
               ]
             },
-            "id": 14522,
+            "id": 14525,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -3058,38 +3058,38 @@
             "nameLocation": "2069:8:52",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 14512,
+              "id": 14515,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14509,
+                  "id": 14512,
                   "mutability": "mutable",
                   "name": "self",
                   "nameLocation": "2090:4:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14522,
+                  "scope": 14525,
                   "src": "2078:16:52",
                   "stateVariable": false,
                   "storageLocation": "storage",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                    "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                   },
                   "typeName": {
-                    "id": 14508,
+                    "id": 14511,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 14507,
+                      "id": 14510,
                       "name": "Set",
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 14291,
+                      "referencedDeclaration": 14294,
                       "src": "2078:3:52"
                     },
-                    "referencedDeclaration": 14291,
+                    "referencedDeclaration": 14294,
                     "src": "2078:3:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                      "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                     }
                   },
@@ -3097,12 +3097,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 14511,
+                  "id": 14514,
                   "mutability": "mutable",
                   "name": "id",
                   "nameLocation": "2102:2:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14522,
+                  "scope": 14525,
                   "src": "2096:8:52",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -3111,7 +3111,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 14510,
+                    "id": 14513,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "2096:5:52",
@@ -3126,17 +3126,17 @@
               "src": "2077:28:52"
             },
             "returnParameters": {
-              "id": 14515,
+              "id": 14518,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14514,
+                  "id": 14517,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14522,
+                  "scope": 14525,
                   "src": "2129:7:52",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -3145,7 +3145,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 14513,
+                    "id": 14516,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "2129:7:52",
@@ -3159,7 +3159,7 @@
               ],
               "src": "2128:9:52"
             },
-            "scope": 14583,
+            "scope": 14586,
             "src": "2060:124:52",
             "stateMutability": "view",
             "virtual": false,
@@ -3167,7 +3167,7 @@
           },
           {
             "body": {
-              "id": 14538,
+              "id": 14541,
               "nodeType": "Block",
               "src": "2283:48:52",
               "statements": [
@@ -3175,38 +3175,38 @@
                   "expression": {
                     "baseExpression": {
                       "expression": {
-                        "id": 14533,
+                        "id": 14536,
                         "name": "self",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14525,
+                        "referencedDeclaration": 14528,
                         "src": "2300:4:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                          "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                         }
                       },
-                      "id": 14534,
+                      "id": 14537,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "contractList",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 14290,
+                      "referencedDeclaration": 14293,
                       "src": "2300:17:52",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_array$_t_struct$_Contract_$14282_storage_$dyn_storage",
+                        "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
                       }
                     },
-                    "id": 14536,
+                    "id": 14539,
                     "indexExpression": {
-                      "id": 14535,
+                      "id": 14538,
                       "name": "index",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 14527,
+                      "referencedDeclaration": 14530,
                       "src": "2318:5:52",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -3220,18 +3220,18 @@
                     "nodeType": "IndexAccess",
                     "src": "2300:24:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Contract_$14282_storage",
+                      "typeIdentifier": "t_struct$_Contract_$14285_storage",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
                     }
                   },
-                  "functionReturnParameters": 14532,
-                  "id": 14537,
+                  "functionReturnParameters": 14535,
+                  "id": 14540,
                   "nodeType": "Return",
                   "src": "2293:31:52"
                 }
               ]
             },
-            "id": 14539,
+            "id": 14542,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -3239,38 +3239,38 @@
             "nameLocation": "2199:10:52",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 14528,
+              "id": 14531,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14525,
+                  "id": 14528,
                   "mutability": "mutable",
                   "name": "self",
                   "nameLocation": "2222:4:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14539,
+                  "scope": 14542,
                   "src": "2210:16:52",
                   "stateVariable": false,
                   "storageLocation": "storage",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                    "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                   },
                   "typeName": {
-                    "id": 14524,
+                    "id": 14527,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 14523,
+                      "id": 14526,
                       "name": "Set",
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 14291,
+                      "referencedDeclaration": 14294,
                       "src": "2210:3:52"
                     },
-                    "referencedDeclaration": 14291,
+                    "referencedDeclaration": 14294,
                     "src": "2210:3:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                      "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                     }
                   },
@@ -3278,12 +3278,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 14527,
+                  "id": 14530,
                   "mutability": "mutable",
                   "name": "index",
                   "nameLocation": "2236:5:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14539,
+                  "scope": 14542,
                   "src": "2228:13:52",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -3292,7 +3292,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 14526,
+                    "id": 14529,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "2228:7:52",
@@ -3307,38 +3307,38 @@
               "src": "2209:33:52"
             },
             "returnParameters": {
-              "id": 14532,
+              "id": 14535,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14531,
+                  "id": 14534,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14539,
+                  "scope": 14542,
                   "src": "2266:15:52",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Contract_$14282_memory_ptr",
+                    "typeIdentifier": "t_struct$_Contract_$14285_memory_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
                   },
                   "typeName": {
-                    "id": 14530,
+                    "id": 14533,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 14529,
+                      "id": 14532,
                       "name": "Contract",
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 14282,
+                      "referencedDeclaration": 14285,
                       "src": "2266:8:52"
                     },
-                    "referencedDeclaration": 14282,
+                    "referencedDeclaration": 14285,
                     "src": "2266:8:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Contract_$14282_storage_ptr",
+                      "typeIdentifier": "t_struct$_Contract_$14285_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
                     }
                   },
@@ -3347,7 +3347,7 @@
               ],
               "src": "2265:17:52"
             },
-            "scope": 14583,
+            "scope": 14586,
             "src": "2190:141:52",
             "stateMutability": "view",
             "virtual": false,
@@ -3355,7 +3355,7 @@
           },
           {
             "body": {
-              "id": 14568,
+              "id": 14571,
               "nodeType": "Block",
               "src": "2410:117:52",
               "statements": [
@@ -3365,7 +3365,7 @@
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     },
-                    "id": 14553,
+                    "id": 14556,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -3373,14 +3373,14 @@
                     "leftExpression": {
                       "arguments": [
                         {
-                          "id": 14550,
+                          "id": 14553,
                           "name": "self",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 14542,
+                          "referencedDeclaration": 14545,
                           "src": "2429:4:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                            "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                           }
                         }
@@ -3388,22 +3388,22 @@
                       "expression": {
                         "argumentTypes": [
                           {
-                            "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                            "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                           }
                         ],
-                        "id": 14549,
+                        "id": 14552,
                         "name": "size",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14582,
+                        "referencedDeclaration": 14585,
                         "src": "2424:4:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14291_storage_ptr_$returns$_t_uint256_$",
+                          "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$14294_storage_ptr_$returns$_t_uint256_$",
                           "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer) view returns (uint256)"
                         }
                       },
-                      "id": 14551,
+                      "id": 14554,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -3422,7 +3422,7 @@
                     "operator": "==",
                     "rightExpression": {
                       "hexValue": "30",
-                      "id": 14552,
+                      "id": 14555,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -3442,13 +3442,13 @@
                       "typeString": "bool"
                     }
                   },
-                  "id": 14556,
+                  "id": 14559,
                   "nodeType": "IfStatement",
                   "src": "2420:33:52",
                   "trueBody": {
                     "expression": {
                       "hexValue": "66616c7365",
-                      "id": 14554,
+                      "id": 14557,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -3462,8 +3462,8 @@
                       },
                       "value": "false"
                     },
-                    "functionReturnParameters": 14548,
-                    "id": 14555,
+                    "functionReturnParameters": 14551,
+                    "id": 14558,
                     "nodeType": "Return",
                     "src": "2441:12:52"
                   }
@@ -3474,7 +3474,7 @@
                       "typeIdentifier": "t_uint8",
                       "typeString": "uint8"
                     },
-                    "id": 14566,
+                    "id": 14569,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -3483,67 +3483,67 @@
                       "expression": {
                         "baseExpression": {
                           "expression": {
-                            "id": 14557,
+                            "id": 14560,
                             "name": "self",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14542,
+                            "referencedDeclaration": 14545,
                             "src": "2470:4:52",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                              "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                               "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                             }
                           },
-                          "id": 14558,
+                          "id": 14561,
                           "isConstant": false,
                           "isLValue": true,
                           "isPure": false,
                           "lValueRequested": false,
                           "memberName": "contractList",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 14290,
+                          "referencedDeclaration": 14293,
                           "src": "2470:17:52",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_array$_t_struct$_Contract_$14282_storage_$dyn_storage",
+                            "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
                           }
                         },
-                        "id": 14563,
+                        "id": 14566,
                         "indexExpression": {
                           "baseExpression": {
                             "expression": {
-                              "id": 14559,
+                              "id": 14562,
                               "name": "self",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 14542,
+                              "referencedDeclaration": 14545,
                               "src": "2488:4:52",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                                "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                               }
                             },
-                            "id": 14560,
+                            "id": 14563,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
                             "lValueRequested": false,
                             "memberName": "indexPointers",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 14286,
+                            "referencedDeclaration": 14289,
                             "src": "2488:18:52",
                             "typeDescriptions": {
                               "typeIdentifier": "t_mapping$_t_uint8_$_t_uint256_$",
                               "typeString": "mapping(uint8 => uint256)"
                             }
                           },
-                          "id": 14562,
+                          "id": 14565,
                           "indexExpression": {
-                            "id": 14561,
+                            "id": 14564,
                             "name": "id",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 14544,
+                            "referencedDeclaration": 14547,
                             "src": "2507:2:52",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint8",
@@ -3568,18 +3568,18 @@
                         "nodeType": "IndexAccess",
                         "src": "2470:41:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Contract_$14282_storage",
+                          "typeIdentifier": "t_struct$_Contract_$14285_storage",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref"
                         }
                       },
-                      "id": 14564,
+                      "id": 14567,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "id",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 14279,
+                      "referencedDeclaration": 14282,
                       "src": "2470:44:52",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint8",
@@ -3589,11 +3589,11 @@
                     "nodeType": "BinaryOperation",
                     "operator": "==",
                     "rightExpression": {
-                      "id": 14565,
+                      "id": 14568,
                       "name": "id",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 14544,
+                      "referencedDeclaration": 14547,
                       "src": "2518:2:52",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint8",
@@ -3606,14 +3606,14 @@
                       "typeString": "bool"
                     }
                   },
-                  "functionReturnParameters": 14548,
-                  "id": 14567,
+                  "functionReturnParameters": 14551,
+                  "id": 14570,
                   "nodeType": "Return",
                   "src": "2463:57:52"
                 }
               ]
             },
-            "id": 14569,
+            "id": 14572,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -3621,38 +3621,38 @@
             "nameLocation": "2346:6:52",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 14545,
+              "id": 14548,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14542,
+                  "id": 14545,
                   "mutability": "mutable",
                   "name": "self",
                   "nameLocation": "2365:4:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14569,
+                  "scope": 14572,
                   "src": "2353:16:52",
                   "stateVariable": false,
                   "storageLocation": "storage",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                    "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                   },
                   "typeName": {
-                    "id": 14541,
+                    "id": 14544,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 14540,
+                      "id": 14543,
                       "name": "Set",
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 14291,
+                      "referencedDeclaration": 14294,
                       "src": "2353:3:52"
                     },
-                    "referencedDeclaration": 14291,
+                    "referencedDeclaration": 14294,
                     "src": "2353:3:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                      "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                     }
                   },
@@ -3660,12 +3660,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 14544,
+                  "id": 14547,
                   "mutability": "mutable",
                   "name": "id",
                   "nameLocation": "2377:2:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14569,
+                  "scope": 14572,
                   "src": "2371:8:52",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -3674,7 +3674,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 14543,
+                    "id": 14546,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "2371:5:52",
@@ -3689,17 +3689,17 @@
               "src": "2352:28:52"
             },
             "returnParameters": {
-              "id": 14548,
+              "id": 14551,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14547,
+                  "id": 14550,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14569,
+                  "scope": 14572,
                   "src": "2404:4:52",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -3708,7 +3708,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 14546,
+                    "id": 14549,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "2404:4:52",
@@ -3722,7 +3722,7 @@
               ],
               "src": "2403:6:52"
             },
-            "scope": 14583,
+            "scope": 14586,
             "src": "2337:190:52",
             "stateMutability": "view",
             "virtual": false,
@@ -3730,7 +3730,7 @@
           },
           {
             "body": {
-              "id": 14581,
+              "id": 14584,
               "nodeType": "Block",
               "src": "2597:48:52",
               "statements": [
@@ -3738,32 +3738,32 @@
                   "expression": {
                     "expression": {
                       "expression": {
-                        "id": 14577,
+                        "id": 14580,
                         "name": "self",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14572,
+                        "referencedDeclaration": 14575,
                         "src": "2614:4:52",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                          "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage pointer"
                         }
                       },
-                      "id": 14578,
+                      "id": 14581,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "contractList",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 14290,
+                      "referencedDeclaration": 14293,
                       "src": "2614:17:52",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_array$_t_struct$_Contract_$14282_storage_$dyn_storage",
+                        "typeIdentifier": "t_array$_t_struct$_Contract_$14285_storage_$dyn_storage",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract storage ref[] storage ref"
                       }
                     },
-                    "id": 14579,
+                    "id": 14582,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -3776,14 +3776,14 @@
                       "typeString": "uint256"
                     }
                   },
-                  "functionReturnParameters": 14576,
-                  "id": 14580,
+                  "functionReturnParameters": 14579,
+                  "id": 14583,
                   "nodeType": "Return",
                   "src": "2607:31:52"
                 }
               ]
             },
-            "id": 14582,
+            "id": 14585,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -3791,38 +3791,38 @@
             "nameLocation": "2542:4:52",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 14573,
+              "id": 14576,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14572,
+                  "id": 14575,
                   "mutability": "mutable",
                   "name": "self",
                   "nameLocation": "2559:4:52",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14582,
+                  "scope": 14585,
                   "src": "2547:16:52",
                   "stateVariable": false,
                   "storageLocation": "storage",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                    "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                   },
                   "typeName": {
-                    "id": 14571,
+                    "id": 14574,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 14570,
+                      "id": 14573,
                       "name": "Set",
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 14291,
+                      "referencedDeclaration": 14294,
                       "src": "2547:3:52"
                     },
-                    "referencedDeclaration": 14291,
+                    "referencedDeclaration": 14294,
                     "src": "2547:3:52",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Set_$14291_storage_ptr",
+                      "typeIdentifier": "t_struct$_Set_$14294_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
                     }
                   },
@@ -3832,17 +3832,17 @@
               "src": "2546:18:52"
             },
             "returnParameters": {
-              "id": 14576,
+              "id": 14579,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 14575,
+                  "id": 14578,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 14582,
+                  "scope": 14585,
                   "src": "2588:7:52",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -3851,7 +3851,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 14574,
+                    "id": 14577,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "2588:7:52",
@@ -3865,14 +3865,14 @@
               ],
               "src": "2587:9:52"
             },
-            "scope": 14583,
+            "scope": 14586,
             "src": "2533:112:52",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "internal"
           }
         ],
-        "scope": 14584,
+        "scope": 14587,
         "src": "115:2533:52",
         "usedErrors": []
       }
@@ -3885,7 +3885,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T11:59:36.567Z",
+  "updatedAt": "2022-12-02T15:01:56.663Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

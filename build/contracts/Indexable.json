@@ -24,20 +24,20 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\ninterface Indexable {\n\n    function id() external view returns (uint8);\n\n}\n",
-  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/interface/Indexable.sol",
+  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/interface/Indexable.sol",
   "ast": {
     "absolutePath": "project:/contracts/interface/Indexable.sol",
     "exportedSymbols": {
       "Indexable": [
-        11098
+        11147
       ]
     },
-    "id": 11099,
+    "id": 11148,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 11092,
+        "id": 11141,
         "literals": [
           "solidity",
           "^",
@@ -54,9 +54,9 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 11098,
+        "id": 11147,
         "linearizedBaseContracts": [
-          11098
+          11147
         ],
         "name": "Indexable",
         "nameLocation": "68:9:38",
@@ -64,7 +64,7 @@
         "nodes": [
           {
             "functionSelector": "af640d0f",
-            "id": 11097,
+            "id": 11146,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
@@ -72,23 +72,23 @@
             "nameLocation": "94:2:38",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11093,
+              "id": 11142,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "96:2:38"
             },
             "returnParameters": {
-              "id": 11096,
+              "id": 11145,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11095,
+                  "id": 11144,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11097,
+                  "scope": 11146,
                   "src": "122:5:38",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -97,7 +97,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 11094,
+                    "id": 11143,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "122:5:38",
@@ -111,14 +111,14 @@
               ],
               "src": "121:7:38"
             },
-            "scope": 11098,
+            "scope": 11147,
             "src": "85:44:38",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 11099,
+        "scope": 11148,
         "src": "58:74:38",
         "usedErrors": []
       }
@@ -131,7 +131,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T11:59:36.518Z",
+  "updatedAt": "2022-12-02T15:01:56.620Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
