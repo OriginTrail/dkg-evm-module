@@ -2,12 +2,13 @@
 
 pragma solidity ^0.8.0;
 
+import { Hub } from "./Hub.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { Hub } from "./Hub.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ERC20Token is ERC20, AccessControl, Ownable {
+
     Hub public hub;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -26,4 +27,5 @@ contract ERC20Token is ERC20, AccessControl, Ownable {
 
         _mint(to, amount);
     }
+
 }

@@ -4,27 +4,24 @@ pragma solidity ^0.8.0;
 
 import { HashingProxy } from "../HashingProxy.sol";
 import { Hub } from "../Hub.sol";
-import { IdentityStorage } from "./IdentityStorage.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ProfileStorage {
-    event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
-    event StakeUpdated(uint72 indexed identityId, bytes nodeId, uint96 stake);
-    event RewardUpdated(uint72 indexed identityId, bytes nodeId, uint96 reward);
+
+    event ProfileCreated(uint72 indexed identityId, uint96 ask);
+    event ProfileDeleted(uint72 indexed identityId);
+    event AskUpdated(uint72 indexed identityId, uint96 ask);
+    event SharesContractUpdated(uint72 indexed identityId, address sharesContractAddress);
 
     Hub public hub;
+    HashingProxy public hashingProxy;
+    IERC20 public tokenContract;
 
     struct ProfileDefinition{
-        uint96 ask;
-        uint96 stake;
-        uint96 reward;
-        uint96 stakeWithdrawalAmount;
-        uint96 rewardWithdrawalAmount;
-        uint96 frozenAmount;  // TODO: Slashing mechanism
-        uint256 stakeWithdrawalTimestamp;
-        uint256 rewardWithdrawalTimestamp;
-        uint256 freezeTimestamp;  // TODO: Slashing mechanism
         bytes nodeId;
+        uint96 ask;
+        uint96 accumulatedOperatorFee;
+        address sharesContractAddress;
         mapping(uint8 => bytes32) nodeAddresses;
     }
 
@@ -35,260 +32,106 @@ contract ProfileStorage {
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
+
         hub = Hub(hubAddress);
+        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+        tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
     modifier onlyContracts() {
-        require(hub.isContract(msg.sender),
-        "Function can only be called by contracts!");
+        _checkHub();
         _;
     }
 
-    function createProfile(
-        address operationalWallet,
-        address adminWallet,
-        bytes memory nodeId,
-        uint96 initialAsk,
-        uint96 initialStake
-    )
-        public
-        onlyContracts
-        returns (uint72)
+    function createProfile(uint72 identityId, bytes calldata nodeId, uint96 ask, address sharesContractAddress)
+        external onlyContracts
     {
-        IdentityStorage identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-
-        bytes32 _operational_key = keccak256(abi.encodePacked(operationalWallet));
-
-        require(identityStorage.identityIds(_operational_key) == 0, "Profile already exists");
-        require(!nodeIdsList[nodeId], "Node ID connected with another profile");
-        require(nodeId.length != 0, "Node ID can't be empty");
-        require(initialAsk > 0, "Ask can't be 0");
-
-        uint72 identityId = identityStorage.createIdentity(operationalWallet, adminWallet);
-
         ProfileDefinition storage profile = profiles[identityId];
-        profile.ask = initialAsk;
-        profile.stake = initialStake;
         profile.nodeId = nodeId;
-        setNodeAddress(identityId, 0);  // TODO: Add setters for all existing hashing functions
+        profile.ask = ask;
+        profile.sharesContractAddress = sharesContractAddress;
 
         nodeIdsList[nodeId] = true;
 
-        return identityId;
+        emit ProfileCreated(identityId, ask);
     }
 
-    /* ----------------GETTERS------------------ */
-    function getProfile(uint72 identityId)
-        public
-        view
-        returns (uint96[6] memory, uint256[3] memory, bytes memory)
-    {
+    function getProfile(uint72 identityId) external view returns (bytes memory, uint96[2] memory, address) {
         ProfileDefinition storage profile = profiles[identityId];
-
-        return (
-            [
-                profile.ask,
-                profile.stake,
-                profile.reward,
-                profile.stakeWithdrawalAmount,
-                profile.rewardWithdrawalAmount,
-                profile.frozenAmount
-            ],
-            [profile.stakeWithdrawalTimestamp, profile.rewardWithdrawalTimestamp, profile.freezeTimestamp],
-            profile.nodeId
-        );
+        return (profile.nodeId, [profile.ask, profile.accumulatedOperatorFee], profile.sharesContractAddress);
     }
 
-    function getAsk(uint72 identityId)
-        public
-        view
-        returns (uint96)
-    {
-        return profiles[identityId].ask;
+    function deleteProfile(uint72 identityId) external onlyContracts {
+        nodeIdsList[profiles[identityId].nodeId] = false;
+        delete profiles[identityId];
+
+        emit ProfileDeleted(identityId);
     }
 
-    function getStake(uint72 identityId) 
-        public
-        view
-        returns (uint96)
-    {
-        return profiles[identityId].stake;
-    }
-
-    function getReward(uint72 identityId)
-        public
-        view
-        returns (uint96)
-    {
-        return profiles[identityId].reward;
-    }
-
-    function getStakeWithdrawalAmount(uint72 identityId) 
-        public
-        view
-        returns (uint96)
-    {
-        return profiles[identityId].stakeWithdrawalAmount;
-    }
-
-    function getRewardWithdrawalAmount(uint72 identityId)
-        public
-        view
-        returns (uint96)
-    {
-        return profiles[identityId].rewardWithdrawalAmount;
-    }
-
-    function getFrozenAmount(uint72 identityId) 
-        public
-        view
-        returns (uint96)
-    {
-        return profiles[identityId].frozenAmount;
-    }
-
-    function getStakeWithdrawalTimestamp(uint72 identityId) 
-        public
-        view
-        returns (uint256)
-    {
-        return profiles[identityId].stakeWithdrawalTimestamp;
-    }
-
-    function getRewardWithdrawalTimestamp(uint72 identityId)
-        public
-        view
-        returns (uint256)
-    {
-        return profiles[identityId].rewardWithdrawalTimestamp;
-    }
-
-    function getFreezeTimestamp(uint72 identityId)
-        public
-        view
-        returns (uint256)
-    {
-        return profiles[identityId].freezeTimestamp;
-    }
-
-    function getNodeId(uint72 identityId) 
-        public
-        view
-        returns (bytes memory)
-    {
+    function getNodeId(uint72 identityId) external view returns (bytes memory) {
         return profiles[identityId].nodeId;
     }
 
-    function getNodeAddress(uint72 identityId, uint8 hashFunctionId)
-        public
-        view
-        returns (bytes32)
-    {
-        return profiles[identityId].nodeAddresses[hashFunctionId];
-    }
+    function setNodeId(uint72 identityId, bytes calldata nodeId) external onlyContracts {
+        ProfileDefinition storage profile = profiles[identityId];
 
-    /* ----------------SETTERS------------------ */
-    function setAsk(uint72 identityId, uint96 ask)
-        public
-        onlyContracts
-    {
-        require(ask > 0, "Ask cannot be 0.");
-
-        profiles[identityId].ask = ask;
-
-        emit AskUpdated(identityId, getNodeId(identityId), ask);
-    }
-    
-    function setStake(uint72 identityId, uint96 stake)
-        public
-        onlyContracts
-    {
-        profiles[identityId].stake = stake;
-
-        emit StakeUpdated(identityId, getNodeId(identityId), stake);
-    }
-
-    function setReward(uint72 identityId, uint96 reward)
-        public
-        onlyContracts
-    {
-        profiles[identityId].reward = reward;
-
-        emit RewardUpdated(identityId, getNodeId(identityId), reward);
-    }
-
-    function setStakeWithdrawalAmount(uint72 identityId, uint96 stakeWithdrawalAmount) 
-        public
-        onlyContracts
-    {
-        profiles[identityId].stakeWithdrawalAmount = stakeWithdrawalAmount;
-    }
-
-    function setRewardWithdrawalAmount(uint72 identityId, uint96 rewardWithdrawalAmount)
-        public
-        onlyContracts
-    {
-        profiles[identityId].rewardWithdrawalAmount = rewardWithdrawalAmount;
-    }
-
-    function setFrozenAmount(uint72 identityId, uint96 frozenAmount) 
-        public
-        onlyContracts
-    {
-        profiles[identityId].frozenAmount = frozenAmount;
-    }
-
-    function setStakeWithdrawalTimestamp(uint72 identityId, uint256 stakeWithdrawalTimestamp) 
-        public
-        onlyContracts
-    {
-        profiles[identityId].stakeWithdrawalTimestamp = stakeWithdrawalTimestamp;
-    }
-
-    function setRewardWithdrawalTimestamp(uint72 identityId, uint256 rewardWithdrawalTimestamp)
-        public
-        onlyContracts
-    {
-        profiles[identityId].rewardWithdrawalTimestamp = rewardWithdrawalTimestamp;
-    }
-
-    function setFreezeTimestamp(uint72 identityId, uint256 freezeTimestamp)
-        public
-        onlyContracts
-    {
-        profiles[identityId].freezeTimestamp = freezeTimestamp;
-    }
-
-    function setNodeId(uint72 identityId, bytes memory nodeId)
-        public
-        onlyContracts
-    {
-        require(nodeId.length != 0, "Node ID can't be empty");
-
-        profiles[identityId].nodeId = nodeId;
-
-        nodeIdsList[profiles[identityId].nodeId] = false;
+        nodeIdsList[profile.nodeId] = false;
+        profile.nodeId = nodeId;
         nodeIdsList[nodeId] = true;
     }
 
-    function setNodeAddress(uint72 identityId, uint8 hashFunctionId)
-        public
-        onlyContracts
-    {
-        HashingProxy hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+    function getAsk(uint72 identityId) external view returns (uint96) {
+        return profiles[identityId].ask;
+    }
+
+    function setAsk(uint72 identityId, uint96 ask) external onlyContracts {
+        profiles[identityId].ask = ask;
+
+        emit AskUpdated(identityId, ask);
+    }
+
+    function getAccumulatedOperatorFee(uint72 identityId) external view returns (uint96) {
+        return profiles[identityId].accumulatedOperatorFee;
+    }
+
+    function setAccumulatedOperatorFee(uint72 identityId, uint96 newOperatorFeeAmount) external onlyContracts {
+        profiles[identityId].accumulatedOperatorFee = newOperatorFeeAmount;
+    }
+
+    function getSharesContractAddress(uint72 identityId) external view returns (address) {
+        return profiles[identityId].sharesContractAddress;
+    }
+
+    function setSharesContractAddress(uint72 identityId, address sharesContractAddress) external onlyContracts {
+        profiles[identityId].sharesContractAddress = sharesContractAddress;
+
+        emit SharesContractUpdated(identityId, sharesContractAddress);
+    }
+
+    function getNodeAddress(uint72 identityId, uint8 hashFunctionId) external view returns (bytes32) {
+        return profiles[identityId].nodeAddresses[hashFunctionId];
+    }
+
+    function setNodeAddress(uint72 identityId, uint8 hashFunctionId) external onlyContracts {
         profiles[identityId].nodeAddresses[hashFunctionId] = hashingProxy.callHashFunction(
             hashFunctionId,
             profiles[identityId].nodeId
         );
     }
 
-    function transferTokens(address receiver, uint96 amount)
-        public
-        onlyContracts
-    {
-        require(receiver != address(0), "Receiver address can't be empty");
+    function profileExists(uint72 identityId) external view onlyContracts returns (bool) {
+        return profiles[identityId].ask != 0;
+    }
 
-        IERC20 tokenContract = IERC20(hub.getContractAddress("Token"));
+    function nodeIdRegistered(bytes calldata nodeId) external view returns (bool) {
+        return nodeIdsList[nodeId];
+    }
+
+    function transferTokens(address receiver, uint96 amount) external onlyContracts {
         tokenContract.transfer(receiver, amount);
+    }
+
+    function _checkHub() internal view virtual {
+        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

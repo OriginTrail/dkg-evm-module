@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ParametersStorage is Ownable {
+
     uint96 public minimumStake;
     uint96 public maximumStake;
 
@@ -23,6 +24,8 @@ contract ParametersStorage is Ownable {
     uint24 public stakeWithdrawalDelay;
     uint24 public rewardWithdrawalDelay;
     uint32 public slashingFreezeDuration;
+
+    bool public delegationEnabled;
 
     constructor() {
         minimumStake = 50_000 ether;
@@ -43,96 +46,64 @@ contract ParametersStorage is Ownable {
         stakeWithdrawalDelay = 5 minutes;
         rewardWithdrawalDelay = 5 minutes;
         slashingFreezeDuration = 730 days;
+
+        delegationEnabled = false;
     }
 
-    function setMinimumStake(uint96 newMinimumStake)
-        public
-        onlyOwner
-    {
+    function setMinimumStake(uint96 newMinimumStake) external onlyOwner {
         minimumStake = newMinimumStake;
     }
 
-    function setR2(uint48 newR2)
-        public
-        onlyOwner
-    {
+    function setR2(uint48 newR2) external onlyOwner {
         R2 = newR2;
     }
 
-    function setR1(uint32 newR1)
-        public
-        onlyOwner
-    {
+    function setR1(uint32 newR1) external onlyOwner {
         R1 = newR1;
     }
 
-    function setR0(uint32 newR0)
-        public
-        onlyOwner
-    {
+    function setR0(uint32 newR0) external onlyOwner {
         R0 = newR0;
     }
 
-    function setCommitWindowDuration(uint16 newCommitWindowDuration)
-        public
-        onlyOwner
-    {
+    function setCommitWindowDuration(uint16 newCommitWindowDuration) external onlyOwner {
         commitWindowDuration = newCommitWindowDuration;
     }
 
-    function setMinProofWindowOffsetPerc(uint8 newMinProofWindowOffsetPerc)
-        public
-        onlyOwner
-    {
+    function setMinProofWindowOffsetPerc(uint8 newMinProofWindowOffsetPerc) external onlyOwner {
         minProofWindowOffsetPerc = newMinProofWindowOffsetPerc;
     }
 
-    function setMaxProofWindowOffsetPerc(uint8 newMaxProofWindowOffsetPerc)
-        public
-        onlyOwner
-    {
+    function setMaxProofWindowOffsetPerc(uint8 newMaxProofWindowOffsetPerc) external onlyOwner {
         maxProofWindowOffsetPerc = newMaxProofWindowOffsetPerc;
     }
 
-    function setProofWindowDurationPerc(uint8 newProofWindowDurationPerc)
-        public
-        onlyOwner
-    {
+    function setProofWindowDurationPerc(uint8 newProofWindowDurationPerc) external onlyOwner {
         proofWindowDurationPerc = newProofWindowDurationPerc;
     }
 
-    function setReplacementWindowDurationPerc(uint8 newReplacementWindowDurationPerc)
-        public
-        onlyOwner
-    {
+    function setReplacementWindowDurationPerc(uint8 newReplacementWindowDurationPerc) external onlyOwner {
         replacementWindowDurationPerc = newReplacementWindowDurationPerc;
     }
 
-    function setEpochLength(uint128 newEpochLength)
-        public
-        onlyOwner
-    {
+    function setEpochLength(uint128 newEpochLength) external onlyOwner {
         epochLength = newEpochLength;
     }
 
-    function setStakeWithdrawalDelay(uint24 newStakeWithdrawalDelay)
-        public
-        onlyOwner
-    {
+    function setStakeWithdrawalDelay(uint24 newStakeWithdrawalDelay) external onlyOwner {
         stakeWithdrawalDelay = newStakeWithdrawalDelay;
     }
 
-    function setRewardWithdrawalDelay(uint24 newRewardWithdrawalDelay)
-        public
-        onlyOwner
-    {
+    function setRewardWithdrawalDelay(uint24 newRewardWithdrawalDelay) external onlyOwner {
         rewardWithdrawalDelay = newRewardWithdrawalDelay;
     }
 
-    function setSlashingFreezeDuration(uint32 newSlashingFreezeDuration)
-        public
-        onlyOwner
-    {
+    function setSlashingFreezeDuration(uint32 newSlashingFreezeDuration) external onlyOwner {
         slashingFreezeDuration = newSlashingFreezeDuration;
     }
+
+    function setDelegationEnabled(bool enabled) external onlyOwner {
+        delegationEnabled = enabled;
+    }
+
 }
