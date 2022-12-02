@@ -9,7 +9,7 @@ const CONTRACTS_REQUIRED_MAPPING = [
 ]
 
 const environment = process.argv.slice(2)[1];
-console.log(`Using environemnt: ${environment}`);
+console.log(`Using environment: ${environment}`);
 
 const INITIAL_TOKEN_AMOUNT = 2 * 1e12;
 let api;
@@ -47,6 +47,7 @@ async function validateOTPTransfer(address) {
 function createSubstrateAddress(evmAddress) {
     let address = evmAddress.startsWith('0x')? evmAddress.slice(2): evmAddress;
     const substrateAddress = execSync(`./evm-contract-into-substrate-address ${address}`).toString();
+    console.log(`Substrate address is ${substrateAddress} for evm address: ${evmAddress}`);
     return substrateAddress;
 }
 
