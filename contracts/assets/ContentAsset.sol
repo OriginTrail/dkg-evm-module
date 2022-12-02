@@ -11,6 +11,9 @@ import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract ContentAsset is AbstractAsset, ERC721 {
 
+    event AssetCreated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
+    event AssetUpdated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
+
     struct AssetInputArgs {
         bytes32 assertionId;
         uint128 size;

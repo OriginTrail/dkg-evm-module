@@ -7,9 +7,6 @@ import { Named } from "../interface/Named.sol";
 
 abstract contract AbstractAsset is Named {
 
-    event AssetCreated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
-    event AssetUpdated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
-
     Hub public hub;
 
     constructor(address hubAddress) {
