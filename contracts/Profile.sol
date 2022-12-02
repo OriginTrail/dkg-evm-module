@@ -5,10 +5,15 @@ pragma solidity ^0.8.0;
 import { HashingProxy } from "./HashingProxy.sol";
 import { Hub } from "./Hub.sol";
 import { Identity } from "./Identity.sol";
+import { ShardingTable } from "./ShardingTable.sol";
 import { Shares } from "./Shares.sol";
 import { Staking } from "./Staking.sol";
 import { IdentityStorage } from "./storage/IdentityStorage.sol";
+import { ParametersStorage } from "./storage/ParametersStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
+import { ShardingTableStorage } from "./storage/ShardingTableStorage.sol";
+import { StakingStorage } from "./storage/StakingStorage.sol";
+import { UnorderedIndexableContractDynamicSetLib } from "./utils/UnorderedIndexableContractDynamicSet.sol";
 import { ADMIN_KEY, OPERATIONAL_KEY } from "./constants/IdentityConstants.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -17,9 +22,13 @@ contract Profile {
     Hub public hub;
     HashingProxy public hashingProxy;
     Identity public identityContract;
+    ShardingTable public shardingTable;
     Staking public stakingContract;
     IdentityStorage public identityStorage;
+    ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
+    ShardingTableStorage public shardingTableStorage;
+    StakingStorage public stakingStorage;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -27,9 +36,13 @@ contract Profile {
         hub = Hub(hubAddress);
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         identityContract = Identity(hub.getContractAddress("Identity"));
+        shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
         stakingContract = Staking(hub.getContractAddress("Staking"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+        parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
+        stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
     }
 
     modifier onlyAdmin(uint72 identityId) {
@@ -67,7 +80,9 @@ contract Profile {
             string.concat("Share token ", identityIdString),
             string.concat("DKGSTAKE_", identityIdString)
         );
+
         ps.createProfile(identityId, nodeId, initialAsk, address(sharesContract));
+        _setAvailableNodeAddresses(identityId);
 
         Staking sc = stakingContract;
         sc.addStake(identityId, initialStake);
@@ -91,6 +106,46 @@ contract Profile {
 
     //     profileStorage.setNodeAddress(identityId, hashFunctionId);
     // }
+
+    // TODO: Define where it can be called, change internal modifier
+    function _setAvailableNodeAddresses(uint72 identityId) internal {
+        ProfileStorage ps = profileStorage;
+        HashingProxy hp = hashingProxy;
+
+        UnorderedIndexableContractDynamicSetLib.Contract[] memory hashFunctions = hp.getAllHashFunctions();
+        uint256 hashFunctionsNumber = hashFunctions.length;
+        for (uint8 i; i < hashFunctionsNumber; ) {
+            ps.setNodeAddress(identityId, hashFunctions[i].id);
+            unchecked { i++; }
+        }
+    }
+
+    function stakeReward(uint72 identityId) external onlyAdmin(identityId) {
+        ProfileStorage ps = profileStorage;
+
+        uint96 rewardAmount = ps.getReward(identityId);
+        require(rewardAmount != 0, "You have no reward");
+
+        uint96 oldStake = stakingStorage.totalStakes(identityId);
+        uint96 newStake = oldStake + rewardAmount;
+
+        ps.setReward(identityId, 0);
+        stakingContract.addStake(identityId, rewardAmount);
+
+        if (!shardingTableStorage.nodeExists(identityId) && newStake >= parametersStorage.minimumStake()) {
+            shardingTable.pushBack(identityId);
+        }
+    }
+
+    function withdrawReward(uint72 identityId) external onlyAdmin(identityId) {
+        ProfileStorage ps = profileStorage;
+
+        uint96 rewardAmount = ps.getReward(identityId);
+        require(rewardAmount != 0, "You have no reward");
+
+        ps.setReward(identityId, 0);
+        ps.transferTokens(msg.sender, rewardAmount);
+    }
 
     function _checkAdmin(uint72 identityId) internal view virtual {
         require(
