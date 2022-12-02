@@ -5,7 +5,8 @@ const {execSync} = require('child_process')
 
 const CONTRACTS_REQUIRED_MAPPING = [
     'ServiceAgreementStorageV1',
-    'StakingStorage'
+    'StakingStorage',
+    'ProfileStorage'
 ]
 
 const environment = process.argv.slice(2)[1];
@@ -52,7 +53,6 @@ function createSubstrateAddress(evmAddress) {
 }
 
 async function sendTokensToSubstrateAddress(address) {
-
     const transfer = api.tx.balances.transfer(address, INITIAL_TOKEN_AMOUNT);
 
     const keyring = new Keyring({ type: "sr25519" });
