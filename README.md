@@ -23,8 +23,13 @@ PRIVATE_KEY = 02b39cac1532bef9dba3e36ec32d3de1e9a88f1dda597d3ac6e2130aed9adc4e
 
 **Note:** Private key is publicly available! Don't use the provided private key in production! Only for testing purposes!
 
-### Deploy contracts on a ganache node
+### Deploy contracts on a devnet node
 
+Update environment
+```
+OTP_DEVNET_RPC = https://lofar-tm-rpc.origin-trail.network/
+PRIVATE_KEY = 02b39cac1532bef9dba3e36ec32d3de1e9a88f1dda597d3ac6e2130aed9adc4e
+```
 ``` 
-npm run deploy
+npm run deploy:devnet
 ```
