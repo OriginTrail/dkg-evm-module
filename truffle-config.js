@@ -68,7 +68,7 @@ module.exports = {
       provider: () => new HDWalletProvider([private_key], rpc_endpoint),
     },
     otp_devnet: {
-      network_id: 80001,
+      network_id: 2160,
       gas: 10000000, // Gas limit used for deploys
       gasPrice: 100000000000,
       skipDryRun: true,

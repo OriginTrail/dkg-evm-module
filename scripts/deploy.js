@@ -1,21 +1,23 @@
-require('dotenv').config({ path: `${__dirname}/.env` });
-const { ApiPromise, WsProvider } = require('@polkadot/api');
+require('dotenv').config({ path: `${__dirname}/../.env` });
+const { ApiPromise, HttpProvider } = require('@polkadot/api');
 const { Keyring } = require("@polkadot/keyring");
 const {execSync} = require('child_process')
 
 const CONTRACTS_REQUIRED_MAPPING = [
-    ''
+    'ServiceAgreementStorageV1',
+    'StakingStorage'
 ]
 
-const environment = 'devnet';
-const INITIAL_TOKEN_AMOUNT = 2 * 1e12;
+const environment = process.argv.slice(2)[1];
+console.log(`Using environemnt: ${environment}`);
 
-const api = await initializeParachainRPC();
+const INITIAL_TOKEN_AMOUNT = 2 * 1e12;
+let api;
 
 async function deploy() {
 // # npm run truffle_deploy:otp_devnet
     console.log(`Executing npm deploy command`);
-    execSync("npm run test",{stdio: 'inherit'});
+    execSync(`npm run truffle_deploy:${environment}`,{stdio: 'inherit'});
     console.log(`Contracts deployed`);
     const deployedContracts = require(`./../reports/${environment}_constracts.json`);
     await validateDeployedContracts(deployedContracts);
@@ -60,10 +62,11 @@ async function sendTokensToSubstrateAddress(address) {
 }
 
 async function initializeParachainRPC() {
-    const endpoint = process.env[`OTP_${environment.toUpperCase()}_RPC`];
-    const wsProvider = new WsProvider(endpoint);
+    const endpoint = process.env[`${environment.toUpperCase()}_RPC`];
+    console.log(`Using parachain rpc endpoint ${endpoint}`);
+    const provider = new HttpProvider(endpoint);
 
-    const api = await ApiPromise.create({ provider: wsProvider });
+    api = await ApiPromise.create({ provider });
 
     const [chain, nodeName, nodeVersion] = await Promise.all([
         api.rpc.system.chain(),
@@ -72,9 +75,10 @@ async function initializeParachainRPC() {
     ]);
 
     console.log(`You are connected to chain ${chain} using ${nodeName} v${nodeVersion}`);
-    return api;
 }
 
-deploy()
-    .then(r => console.log(`Deploying script completed with result: ${r}`))
-    .catch(error => console.log(`Deploying script completed with error: ${error}`));
+initializeParachainRPC().then(r=>{
+    deploy()
+        .then(r => console.log(`Deploying script completed with result: ${r}`))
+        .catch(error => console.log(`Deploying script completed with error: ${error}`));
+})

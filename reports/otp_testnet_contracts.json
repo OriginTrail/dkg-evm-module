@@ -1,0 +1,15 @@
+{
+  "contracts": {
+    "hub" : {
+      "deployed": true,
+      "evmAddress": "0x877C6e4ed21E0E76a693118ed84DFe70CF6d952d",
+      "substrateAddress": ""
+    },
+    "TokenContract" : {
+      "deployed": true,
+      "evmAddress": "0xffffffff00000000000000000000000000000001",
+      "substrateAddress": ""
+    }
+  },
+  "deployedTimestamp": 0
+}

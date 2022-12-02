@@ -1,0 +1,87 @@
+{
+  "contracts": {
+    "hub": {
+      "deployed": true,
+      "evmAddress": "0x877C6e4ed21E0E76a693118ed84DFe70CF6d952d",
+      "substrateAddress": ""
+    },
+    "ParametersStorage": {
+      "deployed": true,
+      "evmAddress": "0xb0866DfF95A4bD1b166C4D5DF264a3D6AE69aBEA",
+      "substrateAddress": ""
+    },
+    "HashingProxy": {
+      "deployed": true,
+      "evmAddress": "0x50a9A7fb40ac979ea59E5AdACd1338447298A4B6",
+      "substrateAddress": ""
+    },
+    "sha256Contract": {
+      "deployed": true,
+      "evmAddress": "0x90ded36ec1610dEFdb4885C5E3d5f10cA2C3aA0D",
+      "substrateAddress": ""
+    },
+    "ScoringProxy": {
+      "deployed": true,
+      "evmAddress": "0x129160041790CB7F273C8adc2FAB4a43040a7CeC",
+      "substrateAddress": ""
+    },
+    "TokenContract": {
+      "deployed": true,
+      "evmAddress": "0xffffffff00000000000000000000000000000001",
+      "substrateAddress": ""
+    },
+    "log2pldsfContract": {
+      "evmAddress": "0x65dd8dEB4ba7A9B7311866Ef257274cA1D6F9E4E",
+      "deployed": true
+    },
+    "ShardingTableStorage": {
+      "evmAddress": "0x1fEdD22CbA9573D5Fc57f7ac78157BFdaF809b1f",
+      "deployed": true
+    },
+    "ShardingTable": {
+      "evmAddress": "0x07fB92f5282eb0dD32C041B9AbA7827014e2dA75",
+      "deployed": true
+    },
+    "AssertionStorage": {
+      "evmAddress": "0xdc04D85c5c609d95428F5C7918F9b49427B68024",
+      "deployed": true
+    },
+    "Assertion": {
+      "evmAddress": "0x51399e436C69eD9F59b3b936EA9e9eF393BB3d49",
+      "deployed": true
+    },
+    "ServiceAgreementStorageV1": {
+      "evmAddress": "0x8462Db4F409Af98C5357000Fb6B775e50198BE62",
+      "deployed": true
+    },
+    "ServiceAgreementV1": {
+      "evmAddress": "0x2413b41977736eB8994bEA8C8848cfB30C3b1878",
+      "deployed": true
+    },
+    "ContentAsset": {
+      "evmAddress": "0x61adB07CE722FaE2418945Cd225719EB5858627e",
+      "deployed": true
+    },
+    "IdentityStorage": {
+      "evmAddress": "0xe2431bcDB4987Be6DEa18977A8DFCAAF4B2D12c0",
+      "deployed": true
+    },
+    "Identity": {
+      "evmAddress": "0x71ca51d5E124ba05FB0a982C9441705EB1Cb137f",
+      "deployed": true
+    },
+    "ProfileStorage": {
+      "evmAddress": "0x249806836FdA7b3242C8530Aec5623b78dD93220",
+      "deployed": true
+    },
+    "Profile": {
+      "evmAddress": "0xf10e6757124a171E81EB40D0FC5029521077c60D",
+      "deployed": true
+    },
+    "StakingStorage": {
+      "evmAddress": "0x7Bb34Adb0664eEBE250b9E3522cD16ad50535A7F",
+      "deployed": true
+    }
+  },
+  "deployedTimestamp": 0
+}

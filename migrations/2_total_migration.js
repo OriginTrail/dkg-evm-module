@@ -1,5 +1,5 @@
 var BN = require('bn.js');
-
+const fs = require('fs');
 var Hub = artifacts.require('Hub');
 var ParametersStorage = artifacts.require('ParametersStorage');
 var HashingProxy = artifacts.require('HashingProxy');
@@ -58,191 +58,306 @@ module.exports = async (deployer, network, accounts) => {
         erc20Token, identityStorage, identityContract, profileStorage,
         profileContract, stakingStorage, stakingContract;
 
+    const deployContract = (Contract, account, passHubInConstructor, retryCount = 0) => {
+        return new Promise(async (accept, reject) => {
+            try {
+                if (passHubInConstructor) {
+                    await deployer.deploy(Contract, hub.address, {gas: 6000000, from: account}).then((result) => {
+                        accept(result);
+                    });
+                } else {
+                    await deployer.deploy(Contract, {gas: 6000000, from: account}).then((result) => {
+                        accept(result);
+                    });
+                }
+
+            } catch (error) {
+                console.log(`Error while deploying contract. Error: ${error}`);
+                if (retryCount < 3) {
+                    return deployContract(Contract, account, passHubInConstructor, retryCount + 1);
+                } else {
+                    reject(error);
+                }
+            }
+        });
+
+    };
+
+    const initializeContract = async (deployedContracts, contractName, ContractObject, deployerAddress, passHubInConstructor = false, setContractInHub = true, setAssetInHub = false) => {
+        let contractInstance;
+        if (!deployedContracts.contracts[contractName]?.deployed) {
+            console.log(`Deploying ${contractName} contract`);
+            contractInstance = await deployContract(ContractObject, deployerAddress, passHubInConstructor)
+            if (setContractInHub) {
+                await hub.setContractAddress(contractName, contractInstance.address);
+            }
+            if (setAssetInHub) {
+                await hub.setAssetContractAddress(contractName, contractInstance.address);
+            }
+            deployedContracts.contracts[contractName] = {
+                evmAddress: contractInstance.address,
+                deployed: true
+            }
+        } else {
+            console.log(`${contractName} contract already deployed at address: ${deployedContracts.contracts[contractName].evmAddress}`, );
+            contractInstance = await ContractObject.at(deployedContracts.contracts[contractName].evmAddress);
+        }
+        return contractInstance;
+    }
+
     switch (network) {
         case 'development':
         case 'ganache':
         case 'rinkeby':
         case 'test':
+        case 'otp_devnet':
+        case 'testnet':
+        case 'mainnet':
         case 'mumbai':
-            await deployer.deploy(Hub, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    hub = result;
-                });
-            await hub.setContractAddress('Owner', accounts[0]);
+            const deployerAddress = accounts[0];
+            console.log(`Using deployer address: ${deployerAddress}`);
+            const deployedContracts = require(`./../reports/${network}_contracts.json`);
+            try {
+                // hub contract
+                if (!deployedContracts.contracts.hub?.deployed) {
+                    console.log('Deploying hub contract');
+                    hub = await deployContract(Hub, deployerAddress)
+                    await hub.setContractAddress('Owner', deployerAddress);
+                    deployedContracts.contracts.hub = {
+                        evmAddress: hub.address,
+                        deployed: true
+                    }
+                } else {
+                    console.log('Hub contract already deployed at address: ', deployedContracts.contracts.hub.evmAddress);
+                    hub = await Hub.at(deployedContracts.contracts.hub.evmAddress);
+                }
+                /* -------------------------------Parameters Storage------------------------------------- */
+                parametersStorage = await initializeContract(
+                    deployedContracts,
+                    'ParametersStorage',
+                    ParametersStorage,
+                    deployerAddress
+                );
 
-            /* -------------------------------Parameters Storage------------------------------------- */
-            await deployer.deploy(ParametersStorage, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    parametersStorage = result;
-                });
-            await hub.setContractAddress('ParametersStorage', parametersStorage.address);
-            /* -------------------------------------------------------------------------------------- */
+                /* -------------------------------------------------------------------------------------- */
 
-            /* ----------------------------------Hashing Proxy--------------------------------------- */
-            await deployer.deploy(HashingProxy, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    hashingProxy = result;
-                });
-            await hub.setContractAddress('HashingProxy', hashingProxy.address);
+                /* ----------------------------------Hashing Proxy--------------------------------------- */
+                hashingProxy = await initializeContract(
+                    deployedContracts,
+                    'HashingProxy',
+                    HashingProxy,
+                    deployerAddress
+                );
 
-            await deployer.deploy(SHA256, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    sha256Contract = result;
-                });
+                sha256Contract = await initializeContract(
+                    deployedContracts,
+                    'sha256Contract',
+                    SHA256,
+                    deployerAddress,
+                    false,
+                    false
+                );
+                await hashingProxy.setContractAddress(1, sha256Contract.address);
 
-            // 1 - sha256
-            await hashingProxy.setContractAddress(1, sha256Contract.address);
-            /* ---------------------------------------------------------------------------------------- */
+                /* ---------------------------------------------------------------------------------------- */
 
-            /* ----------------------------------Scoring Proxy----------------------------------------- */
-            await deployer.deploy(ScoringProxy, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    scoringProxy = result;
-                });
-            await hub.setContractAddress('ScoringProxy', scoringProxy.address);
+                /* ----------------------------------Scoring Proxy----------------------------------------- */
+                scoringProxy = await initializeContract(
+                    deployedContracts,
+                    'ScoringProxy',
+                    ScoringProxy,
+                    deployerAddress
+                );
 
-            await deployer.deploy(Log2PLDSF, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    log2pldsfContract = result;
-                });
+                log2pldsfContract = await initializeContract(
+                    deployedContracts,
+                    'log2pldsfContract',
+                    Log2PLDSF,
+                    deployerAddress,
+                    true,
+                    false
+                );
+                await scoringProxy.setContractAddress(1, log2pldsfContract.address);
 
-            // 1 - Log2PLDSF
-            await scoringProxy.setContractAddress(1, log2pldsfContract.address);
-            /* ---------------------------------------------------------------------------------------- */
+                /* ---------------------------------------------------------------------------------------- */
 
-            /* ---------------------------------Sharding Table----------------------------------------- */
-            await deployer.deploy(ShardingTableStorage, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    shardingTableStorage = result;
-                });
-            await hub.setContractAddress('ShardingTableStorage', shardingTableStorage.address);
+                /* ---------------------------------Sharding Table----------------------------------------- */
+                shardingTableStorage = await initializeContract(
+                    deployedContracts,
+                    'ShardingTableStorage',
+                    ShardingTableStorage,
+                    deployerAddress,
+                    true
+                );
 
-            await deployer.deploy(ShardingTableContract, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    shardingTableContract = result;
-                });
-            await hub.setContractAddress('ShardingTable', shardingTableContract.address);
-            /* ---------------------------------------------------------------------------------------- */
+                shardingTableContract = await initializeContract(
+                    deployedContracts,
+                    'ShardingTable',
+                    ShardingTableContract,
+                    deployerAddress,
+                    true
+                );
 
-            /* ------------------------------------Assertion------------------------------------------- */
-            await deployer.deploy(AssertionStorage, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    assertionStorage = result;
-                });
-            await hub.setContractAddress('AssertionStorage', assertionStorage.address);
+                /* ---------------------------------------------------------------------------------------- */
 
-            await deployer.deploy(AssertionContract, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    assertionContract = result;
-                });
-            await hub.setContractAddress('Assertion', assertionContract.address);
-            /* ---------------------------------------------------------------------------------------- */
+                /* ------------------------------------Assertion------------------------------------------- */
+                assertionStorage = await initializeContract(
+                    deployedContracts,
+                    'AssertionStorage',
+                    AssertionStorage,
+                    deployerAddress,
+                    true
+                );
 
-            /* -----------------------------Service Agreement Storage---------------------------------- */
-            await deployer.deploy(ServiceAgreementStorageV1, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    serviceAgreementStorageV1 = result;
-                });
-            await hub.setContractAddress('ServiceAgreementStorageV1', serviceAgreementStorageV1.address);
+                assertionContract = await initializeContract(
+                    deployedContracts,
+                    'Assertion',
+                    AssertionContract,
+                    deployerAddress,
+                    true
+                );
+                /* ---------------------------------------------------------------------------------------- */
 
-            await deployer.deploy(ServiceAgreementContractV1, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    serviceAgreementContractV1 = result;
-                });
-            await hub.setContractAddress('ServiceAgreementV1', serviceAgreementContractV1.address);
-            /* ---------------------------------------------------------------------------------------- */
+                /* -----------------------------Service Agreement Storage---------------------------------- */
+                serviceAgreementStorageV1 = await initializeContract(
+                    deployedContracts,
+                    'ServiceAgreementStorageV1',
+                    ServiceAgreementStorageV1,
+                    deployerAddress,
+                    true
+                );
 
-            /* ---------------------------------------Assets------------------------------------------- */
-            await deployer.deploy(ContentAsset, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    contentAsset = result;
-                });
-            await hub.setAssetContractAddress('ContentAsset', contentAsset.address);
-            /* ---------------------------------------------------------------------------------------- */
+                serviceAgreementContractV1 = await initializeContract(
+                    deployedContracts,
+                    'ServiceAgreementV1',
+                    ServiceAgreementContractV1,
+                    deployerAddress,
+                    true
+                );
+                /* ---------------------------------------------------------------------------------------- */
 
-            /* ---------------------------------------ERC20-------------------------------------------- */
-            await deployer.deploy(ERC20Token, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    erc20Token = result;
-                });
-            await hub.setContractAddress('Token', erc20Token.address);
+                /* ---------------------------------------Assets------------------------------------------- */
+                contentAsset = await initializeContract(
+                    deployedContracts,
+                    'ContentAsset',
+                    ContentAsset,
+                    deployerAddress,
+                    true,
+                    false,
+                    true
+                );
+                /* ---------------------------------------------------------------------------------------- */
 
-            await erc20Token.setupRole(accounts[0]);
+                /* ---------------------------------------ERC20-------------------------------------------- */
+                if (deployedContracts.contracts.TokenContract?.evmAddress) {
+                    await hub.setContractAddress('Token', deployedContracts.contracts.TokenContract?.evmAddress);
+                } else {
+                    erc20Token = await initializeContract(
+                        deployedContracts,
+                        'Token',
+                        ERC20Token,
+                        deployerAddress
+                    );
+                    await erc20Token.setupRole(deployerAddress);
+                    const amountToMint = (new BN(5)).mul((new BN(10)).pow(new BN(30)));
 
-            const amountToMint = (new BN(5)).mul((new BN(10)).pow(new BN(30)));
+                    if (network !== 'mumbai') {
+                        accounts = accounts.concat(testAccounts);
+                    }
+                    for (let account of accounts) {
+                        console.log('Account', account, 'is funded with', amountToMint.toString());
+                        await erc20Token.mint(account, amountToMint);
+                    }
+                }
 
-            if (network !== 'mumbai') {
-                accounts = accounts.concat(testAccounts);
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* --------------------------------------Identity------------------------------------------ */
+                identityStorage = await initializeContract(
+                    deployedContracts,
+                    'IdentityStorage',
+                    IdentityStorage,
+                    deployerAddress,
+                    true
+                );
+
+                identityContract = await initializeContract(
+                    deployedContracts,
+                    'Identity',
+                    IdentityContract,
+                    deployerAddress,
+                    true
+                );
+
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* ----------------------------------------Profile----------------------------------------- */
+                profileStorage = await initializeContract(
+                    deployedContracts,
+                    'ProfileStorage',
+                    ProfileStorage,
+                    deployerAddress,
+                    true
+                );
+
+                profileContract = await initializeContract(
+                    deployedContracts,
+                    'Profile',
+                    ProfileContract,
+                    deployerAddress,
+                    true
+                );
+
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* -----------------------------------------Staking---------------------------------------- */
+                stakingStorage = await initializeContract(
+                    deployedContracts,
+                    'StakingStorage',
+                    StakingStorage,
+                    deployerAddress,
+                    true
+                );
+
+                stakingContract = await initializeContract(
+                    deployedContracts,
+                    'Staking',
+                    StakingContract,
+                    deployerAddress,
+                    true
+                );
+                /* ---------------------------------------------------------------------------------------- */
+
+                console.log('\n\n \t Contract adresses on ganache:');
+                console.log(`\t Hub address: ${hub.address}`);
+                console.log(`\t Parameters Storage address: ${parametersStorage.address}`);
+                console.log(`\t Hashing Proxy address: ${hashingProxy.address}`);
+                console.log(`\t SHA256 address: ${sha256Contract.address}`);
+                console.log(`\t Scoring Proxy address: ${scoringProxy.address}`);
+                console.log(`\t Log2PLDSF address: ${log2pldsfContract.address}`);
+                console.log(`\t Sharding Table storage: ${shardingTableStorage.address}`);
+                console.log(`\t Sharding Table: ${shardingTableContract.address}`);
+                console.log(`\t Assertion Storage address: ${assertionStorage.address}`);
+                console.log(`\t Assertion address: ${assertionContract.address}`);
+                console.log(`\t Service Agreement Storage (V1) address: ${serviceAgreementStorageV1.address}`);
+                console.log(`\t Service Agreement (V1) address: ${serviceAgreementContractV1.address}`);
+                console.log(`\t Content Asset address: ${contentAsset.address}`);
+                console.log(`\t Token address: ${erc20Token.address}`);
+                console.log(`\t Identity Storage address: ${identityStorage.address}`);
+                console.log(`\t Identity address: ${identityContract.address}`);
+                console.log(`\t Profile Storage address: ${profileStorage.address}`);
+                console.log(`\t Profile address: ${profileContract.address}`);
+                console.log(`\t Staking Storage address: ${stakingStorage.address}`);
+                console.log(`\t Staking address: ${stakingContract.address}`);
+
+            } catch (error) {
+                console.log(error);
+            } finally {
+                // save deployed contracts report
+                console.log(JSON.stringify(deployedContracts, null, 4));
+                const filePath = `../reports/${network}_contracts.json`;
+                fs.writeFileSync(filePath, JSON.stringify(deployedContracts, null, 4));
             }
-            for (let account of accounts) {
-                console.log('Account', account, 'is funded with', amountToMint.toString());
-                await erc20Token.mint(account, amountToMint);
-            }
-            /* ---------------------------------------------------------------------------------------- */
-
-            /* --------------------------------------Identity------------------------------------------ */
-            await deployer.deploy(IdentityStorage, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    identityStorage = result;
-                });
-            await hub.setContractAddress('IdentityStorage', identityStorage.address);
-
-            await deployer.deploy(IdentityContract, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    identityContract = result;
-                });
-            await hub.setContractAddress('Identity', identityContract.address);
-            /* ---------------------------------------------------------------------------------------- */
-
-            /* ----------------------------------------Profile----------------------------------------- */
-            await deployer.deploy(ProfileStorage, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    profileStorage = result;
-                });
-            await hub.setContractAddress('ProfileStorage', profileStorage.address);
-
-            await deployer.deploy(ProfileContract, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    profileContract = result;
-                });
-            await hub.setContractAddress('Profile', profileContract.address);
-            /* ---------------------------------------------------------------------------------------- */
-
-            /* -----------------------------------------Staking---------------------------------------- */
-            await deployer.deploy(StakingStorage, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    stakingStorage = result;
-                });
-            await hub.setContractAddress('StakingStorage', stakingStorage.address);
-
-            await deployer.deploy(StakingContract, hub.address, {gas: 6000000, from: accounts[0]})
-                .then((result) => {
-                    stakingContract = result;
-                });
-            await hub.setContractAddress('Staking', stakingContract.address);
-            /* ---------------------------------------------------------------------------------------- */
-
-            console.log('\n\n \t Contract adresses on ganache:');
-            console.log(`\t Hub address: ${hub.address}`);
-            console.log(`\t Parameters Storage address: ${parametersStorage.address}`);
-            console.log(`\t Hashing Proxy address: ${hashingProxy.address}`);
-            console.log(`\t SHA256 address: ${sha256Contract.address}`);
-            console.log(`\t Scoring Proxy address: ${scoringProxy.address}`);
-            console.log(`\t Log2PLDSF address: ${log2pldsfContract.address}`);
-            console.log(`\t Sharding Table storage: ${shardingTableStorage.address}`);
-            console.log(`\t Sharding Table: ${shardingTableContract.address}`);
-            console.log(`\t Assertion Storage address: ${assertionStorage.address}`);
-            console.log(`\t Assertion address: ${assertionContract.address}`);
-            console.log(`\t Service Agreement Storage (V1) address: ${serviceAgreementStorageV1.address}`);
-            console.log(`\t Service Agreement (V1) address: ${serviceAgreementContractV1.address}`);
-            console.log(`\t Content Asset address: ${contentAsset.address}`);
-            console.log(`\t Token address: ${erc20Token.address}`);
-            console.log(`\t Identity Storage address: ${identityStorage.address}`);
-            console.log(`\t Identity address: ${identityContract.address}`);
-            console.log(`\t Profile Storage address: ${profileStorage.address}`);
-            console.log(`\t Profile address: ${profileContract.address}`);
-            console.log(`\t Staking Storage address: ${stakingStorage.address}`);
-            console.log(`\t Staking address: ${stakingContract.address}`);
 
             break;
         default:
