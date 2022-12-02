@@ -117,10 +117,7 @@ contract Profile {
         uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
         require(accumulatedOperatorFee != 0, "You have no operator fees");
 
-        uint96 oldStake = stakingStorage.totalStakes(identityId);
-        uint96 newStake = oldStake + accumulatedOperatorFee;
-
-        ps.setReward(identityId, 0);
+        ps.setAccumulatedOperatorFee(identityId, 0);
         stakingContract.addStake(identityId, accumulatedOperatorFee);
     }
 

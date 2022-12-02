@@ -105,52 +105,50 @@ contract Staking {
         emit StakeIncreased(identityId, msg.sender, tracAdded);
     }
 
-    function withdrawStake(uint72 identityId, uint96 sharesBurned) external {
+    function withdrawStake(uint72 identityId, uint96 sharesToBurn) external {
         Shares sharesContract = Shares(profileStorage.getSharesContractAddress(identityId));
 
-        // TODO: validate check below
-        require(sharesBurned < sharesContract.totalSupply(), "Not enough shares available");
         require(identityStorage.identityExists(identityId), "Identity doesn't exist");
 
         StakingStorage ss = stakingStorage;
         ShardingTable stc = shardingTableContract;
         ShardingTableStorage sts = shardingTableStorage;
 
-        // TODO: check if conversion to uint256 needed
-        uint256 tracWithdrawn = (
-            sharesBurned * ss.totalStakes(identityId) / sharesContract.totalSupply()
+        // TODO: potential optimization of types
+        uint256 tokensWithdrawalAmount = (
+            uint256(ss.totalStakes(identityId)) * sharesToBurn / sharesContract.totalSupply()
         );
-        sharesContract.burnFrom(msg.sender, sharesBurned);
+        sharesContract.burnFrom(msg.sender, sharesToBurn);
 
         // TODO: when slashing starts, introduce delay
 
-        tokenContract.transfer(msg.sender, tracWithdrawn);
+        tokenContract.transfer(msg.sender, tokensWithdrawalAmount);
 
-        ss.setTotalStake(identityId, ss.totalStakes(identityId) - uint96(tracWithdrawn));
+        ss.setTotalStake(identityId, ss.totalStakes(identityId) - uint96(tokensWithdrawalAmount));
 
         if (sts.nodeExists(identityId) && ss.totalStakes(identityId) < parametersStorage.minimumStake()) {
             stc.removeNode(identityId);
         }
 
-        emit StakeWithdrawn(identityId, msg.sender, uint96(tracWithdrawn));
+        emit StakeWithdrawn(identityId, msg.sender, uint96(tokensWithdrawalAmount));
     }
 
-    function addReward(uint72 identityId, uint96 tracAmount) external onlyContracts {
+    function addReward(uint72 identityId, uint96 rewardAmount) external onlyContracts {
         ServiceAgreementStorageV1 sas = serviceAgreementStorage;
         StakingStorage ss = stakingStorage;
 
-        uint96 operatorFee = tracAmount * ss.operatorFees(identityId) / 100;
-        uint96 reward = tracAmount - operatorFee;
+        uint96 operatorFee = rewardAmount * ss.operatorFees(identityId) / 100;
+        uint96 delegatorsReward = rewardAmount - operatorFee;
 
         if(operatorFee != 0) {
             ProfileStorage ps = profileStorage;
-            ps.setReward(identityId, ps.getReward(identityId) + operatorFee);
+            ps.setAccumulatedOperatorFee(identityId, ps.getAccumulatedOperatorFee(identityId) + operatorFee);
             sas.transferReward(address(ps), operatorFee);
         }
 
-        if(reward != 0) {
-            ss.setTotalStake(identityId, ss.totalStakes(identityId) + reward);
-            sas.transferReward(address(ss), reward);
+        if(delegatorsReward != 0) {
+            ss.setTotalStake(identityId, ss.totalStakes(identityId) + delegatorsReward);
+            sas.transferReward(address(ss), delegatorsReward);
 
             if (
                 !shardingTableStorage.nodeExists(identityId) &&
@@ -160,7 +158,7 @@ contract Staking {
             }
         }
 
-        emit RewardAdded(identityId, tracAmount);
+        emit RewardAdded(identityId, rewardAmount);
     }
 
     function slash(uint72 identityId) external onlyContracts {
