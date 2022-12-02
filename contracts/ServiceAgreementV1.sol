@@ -141,6 +141,7 @@ contract ServiceAgreementV1 {
         onlyAssetContracts
     {
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
+
         ServiceAgreementStorageV1 sas = serviceAgreementStorage;
 
         require(args.assetCreator != address(0), "Asset creator cannot be 0x0");
@@ -178,11 +179,7 @@ contract ServiceAgreementV1 {
         );
     }
 
-    function isCommitWindowOpen(bytes32 agreementId, uint16 epoch)
-        public
-        view
-        returns (bool)
-    {
+    function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
         ServiceAgreementStorageV1 sas = serviceAgreementStorage;
         uint256 startTime = sas.getAgreementStartTime(agreementId);
 
@@ -191,20 +188,15 @@ contract ServiceAgreementV1 {
 
         ParametersStorage params = parametersStorage;
         uint256 timeNow = block.timestamp;
+        uint128 epochLength = sas.getAgreementEpochLength(agreementId);
 
         if (epoch == 0) {
             return timeNow < (startTime + params.commitWindowDuration());
         }
 
         return (
-            timeNow > (
-                startTime
-                + sas.getAgreementEpochLength(agreementId) * epoch
-            ) && timeNow < (
-                startTime
-                + sas.getAgreementEpochLength(agreementId) * epoch
-                + params.commitWindowDuration()
-            )
+            timeNow > (startTime + epochLength * epoch) &&
+            timeNow < (startTime + epochLength * epoch + params.commitWindowDuration())
         );
     }
 
@@ -274,11 +266,7 @@ contract ServiceAgreementV1 {
         );
     }
 
-    function isProofWindowOpen(bytes32 agreementId, uint16 epoch)
-        public
-        view
-        returns (bool)
-    {
+    function isProofWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
         ServiceAgreementStorageV1 sas = serviceAgreementStorage;
         uint256 startTime = sas.getAgreementStartTime(agreementId);
 
@@ -287,13 +275,10 @@ contract ServiceAgreementV1 {
 
         uint256 timeNow = block.timestamp;
         uint128 epochLength = sas.getAgreementEpochLength(agreementId);
-        uint16 epochsNumber = sas.getAgreementEpochsNumber(agreementId);
         uint8 proofWindowOffsetPerc = sas.getAgreementProofWindowOffsetPerc(agreementId);
 
-        uint256 proofWindowOffset = epochLength * epochsNumber * proofWindowOffsetPerc / 100;
-        uint256 proofWindowDuration = (
-            epochLength * epochsNumber * parametersStorage.proofWindowDurationPerc() / 100
-        );
+        uint256 proofWindowOffset = epochLength * proofWindowOffsetPerc / 100;
+        uint256 proofWindowDuration = epochLength * parametersStorage.proofWindowDurationPerc() / 100;
 
         return (
             timeNow > (startTime + epochLength * epoch + proofWindowOffset) &&
@@ -326,7 +311,7 @@ contract ServiceAgreementV1 {
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
-        require(!isProofWindowOpen(agreementId, args.epoch), "Proof window is open");
+        require(isProofWindowOpen(agreementId, args.epoch), "Proof window is closed");
 
         IdentityStorage ids = identityStorage;
 

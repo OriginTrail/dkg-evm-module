@@ -25,7 +25,7 @@ abstract contract AbstractAsset is Named {
         return assertions[assertions.length - 1];
     }
 
-    function getAssertionIdByIndex(uint256 tokenId, uint256 index) external view returns (bytes32) {
+    function getAssertionIdByIndex(uint256 tokenId, uint256 index) public view returns (bytes32) {
         bytes32 [] memory assertions = getAssertionIds(tokenId);
         return assertions[index];
     }

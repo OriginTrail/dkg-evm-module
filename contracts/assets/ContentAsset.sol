@@ -93,7 +93,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
                 assetCreator: msg.sender,
                 assetContract: address(this),
                 tokenId: tokenId,
-                keyword: abi.encodePacked(address(this), tokenId, this.getAssertionIdByIndex(tokenId, 0)),
+                keyword: abi.encodePacked(address(this), tokenId, getAssertionIdByIndex(tokenId, 0)),
                 hashFunctionId: 1,  // hashFunctionId | 1 = sha256
                 epochsNumber: args.epochsNumber,
                 tokenAmount: args.tokenAmount,
