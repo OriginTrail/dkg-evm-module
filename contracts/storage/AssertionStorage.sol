@@ -7,10 +7,6 @@ import { AssertionStructs } from "../structs/AssertionStructs.sol";
 
 contract AssertionStorage {
 
-	event AssertionCreated(
-		bytes32 indexed assertionId, address issuer, uint128 size, uint32 triplesNumber, uint96 chunksNumber
-	);
-
 	Hub public hub;
 
 	// assertionId => Assertion
@@ -44,8 +40,6 @@ contract AssertionStorage {
             triplesNumber: triplesNumber,
             chunksNumber: chunksNumber
         });
-
-		emit AssertionCreated(assertionId, issuer, size, triplesNumber, chunksNumber);
 	}
 
     function getAssertion(bytes32 assertionId) external view returns (AssertionStructs.Assertion memory) {
