@@ -81,7 +81,7 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
         );
     }
 
-    function calculateDistance(uint8 hashFunctionId, bytes memory nodeId, bytes memory keyword)
+    function calculateDistance(uint8 hashFunctionId, bytes calldata nodeId, bytes calldata keyword)
         external
         returns (uint256)
     {

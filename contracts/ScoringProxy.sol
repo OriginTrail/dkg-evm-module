@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 
 import { IScoreFunction } from "./interface/IScoreFunction.sol";
 import { Named } from "./interface/Named.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { UnorderedIndexableContractDynamicSetLib } from "./utils/UnorderedIndexableContractDynamicSet.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ScoringProxy is Ownable {
 

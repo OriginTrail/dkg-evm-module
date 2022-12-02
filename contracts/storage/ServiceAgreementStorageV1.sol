@@ -3,19 +3,19 @@
 pragma solidity ^0.8.0;
 
 import { Hub } from "../Hub.sol";
-import { ServiceAgreementStructs } from "../structs/ServiceAgreementStructs.sol";
+import { ServiceAgreementStructsV1 } from "../structs/ServiceAgreementStructsV1.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract ServiceAgreementStorage {
+contract ServiceAgreementStorageV1 {
 
     Hub public hub;
     IERC20 public tokenContract;
 
     // CommitId [keccak256(agreementId + epoch + identityId)] => CommitSubmission
-    mapping(bytes32 => ServiceAgreementStructs.CommitSubmission) commitSubmissions;
+    mapping(bytes32 => ServiceAgreementStructsV1.CommitSubmission) commitSubmissions;
 
     // hash(asset type contract + tokenId + key) -> ServiceAgreement
-    mapping(bytes32 => ServiceAgreementStructs.ServiceAgreement) serviceAgreements;
+    mapping(bytes32 => ServiceAgreementStructsV1.ServiceAgreement) serviceAgreements;
 
     constructor (address hubAddress) {
         require(hubAddress != address(0));
@@ -45,7 +45,7 @@ contract ServiceAgreementStorage {
         external
         onlyContracts
     {
-        ServiceAgreementStructs.ServiceAgreement storage agreement = serviceAgreements[agreementId];
+        ServiceAgreementStructsV1.ServiceAgreement storage agreement = serviceAgreements[agreementId];
         agreement.startTime = block.timestamp;
         agreement.epochsNumber = epochsNumber;
         agreement.epochLength = epochLength;
@@ -166,7 +166,7 @@ contract ServiceAgreementStorage {
         external
         onlyContracts
     {
-        commitSubmissions[commitId] = ServiceAgreementStructs.CommitSubmission({
+        commitSubmissions[commitId] = ServiceAgreementStructsV1.CommitSubmission({
             identityId: identityId,
             prevIdentityId: prevIdentityId,
             nextIdentityId: nextIdentityId,
@@ -177,7 +177,7 @@ contract ServiceAgreementStorage {
     function getCommitSubmission(bytes32 commitId)
         external
         view
-        returns (ServiceAgreementStructs.CommitSubmission memory)
+        returns (ServiceAgreementStructsV1.CommitSubmission memory)
     {
         return commitSubmissions[commitId];
     }

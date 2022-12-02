@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 library ByteArr {
+
     function indexOf(bytes32[] storage self, bytes32 item) view internal returns (uint index, bool isThere) {
         for (uint i; i < self.length; i++) {
             if (self[i] == item) {
@@ -28,4 +29,5 @@ library ByteArr {
         }
         return output;
     }
+
 }

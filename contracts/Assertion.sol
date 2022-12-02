@@ -36,7 +36,11 @@ contract Assertion {
 		AssertionStorage ans = assertionStorage;
 
 		require(assertionId != bytes32(0), "Assertion ID cannot be empty");
-		require(!ans.assertionExists(assertionId), "Assertion already exists");
+		require(issuer != address(0), "Issuer address cannot be 0x0");
+		require(
+			!ans.assertionExists(assertionId) && (issuer != ans.getAssertionIssuer(assertionId)),
+			"Assertion already exists"
+		);
 		require(size != 0, "Size cannot be 0");
 		require(triplesNumber != 0, "Triples number cannot be 0");
 		require(chunksNumber != 0, "Chunks number cannot be 0");

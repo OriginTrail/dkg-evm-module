@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 
 import { AbstractAsset } from "./AbstractAsset.sol";
 import { Assertion } from "../Assertion.sol";
-import { ServiceAgreement } from "../ServiceAgreement.sol";
+import { ServiceAgreementV1 } from "../ServiceAgreementV1.sol";
 import { Named } from "../interface/Named.sol";
+import { ServiceAgreementStructsV1 } from "../structs/ServiceAgreementStructsV1.sol";
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import { ServiceAgreementStructs } from "../structs/ServiceAgreementStructs.sol";
 
 contract ContentAsset is AbstractAsset, ERC721 {
 
@@ -28,7 +28,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
     uint256 private _tokenId;
 
     Assertion public assertionContract;
-    ServiceAgreement public serviceAgreement;
+    ServiceAgreementV1 public serviceAgreement;
 
     mapping (uint256 => Asset) assets;
 
@@ -37,7 +37,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
         ERC721("ContentAsset", "DKG")
     {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));
-        serviceAgreement = ServiceAgreement(hub.getContractAddress("ServiceAgreement"));
+        serviceAgreement = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
     }
 
     modifier onlyAssetOwner(uint256 tokenId) {
@@ -49,7 +49,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
         return ERC721.name();
     }
 
-    function createAsset(AssetInputArgs memory args) external {
+    function createAsset(AssetInputArgs calldata args) external {
         uint256 tokenId = _tokenId++;
         _mint(msg.sender, tokenId);
 
@@ -63,22 +63,22 @@ contract ContentAsset is AbstractAsset, ERC721 {
         assets[tokenId].assertionIds.push(args.assertionId);
 
         serviceAgreement.createServiceAgreement(
-            ServiceAgreementStructs.ServiceAgreementInputArgs(
-                msg.sender,
-                address(this),
-                tokenId,
-                abi.encodePacked(address(this), tokenId, args.assertionId),
-                1,  // hashFunctionId | 1 = sha256
-                args.epochsNumber,
-                args.tokenAmount,
-                args.scoreFunctionId
-            )
+            ServiceAgreementStructsV1.ServiceAgreementInputArgs({
+                assetCreator: msg.sender,
+                assetContract: address(this),
+                tokenId: tokenId,
+                keyword: abi.encodePacked(address(this), tokenId, args.assertionId),
+                hashFunctionId: 1,  // hashFunctionId | 1 = sha256
+                epochsNumber: args.epochsNumber,
+                tokenAmount: args.tokenAmount,
+                scoreFunctionId: args.scoreFunctionId
+            })
         );
 
         emit AssetCreated(address(this), tokenId, args.assertionId);
     }
 
-    function updateAsset(uint256 tokenId, AssetInputArgs memory args) external onlyAssetOwner(tokenId) {
+    function updateAsset(uint256 tokenId, AssetInputArgs calldata args) external onlyAssetOwner(tokenId) {
         assertionContract.createAssertion(
             args.assertionId,
             msg.sender,
@@ -89,16 +89,16 @@ contract ContentAsset is AbstractAsset, ERC721 {
         assets[tokenId].assertionIds.push(args.assertionId);
 
         serviceAgreement.updateServiceAgreement(
-            ServiceAgreementStructs.ServiceAgreementInputArgs(
-                msg.sender,
-                address(this),
-                tokenId,
-                abi.encodePacked(address(this), tokenId, this.getAssertionIdByIndex(tokenId, 0)),
-                1,  // hashFunctionId | 1 = sha256
-                args.epochsNumber,
-                args.tokenAmount,
-                args.scoreFunctionId
-            )
+            ServiceAgreementStructsV1.ServiceAgreementInputArgs({
+                assetCreator: msg.sender,
+                assetContract: address(this),
+                tokenId: tokenId,
+                keyword: abi.encodePacked(address(this), tokenId, this.getAssertionIdByIndex(tokenId, 0)),
+                hashFunctionId: 1,  // hashFunctionId | 1 = sha256
+                epochsNumber: args.epochsNumber,
+                tokenAmount: args.tokenAmount,
+                scoreFunctionId: args.scoreFunctionId
+            })
         );
 
         emit AssetUpdated(address(this), tokenId, args.assertionId);

@@ -2,10 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { UnorderedNamedContractDynamicSetLib } from "./utils/UnorderedNamedContractDynamicSet.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Hub is Ownable{
+
     using UnorderedNamedContractDynamicSetLib for UnorderedNamedContractDynamicSetLib.Set;
 
     event NewContract(string contractName, address newContractAddress);
@@ -73,4 +74,5 @@ contract Hub is Ownable{
     function isAssetContract(address assetContractAddress) external view returns (bool) {
         return assetContractSet.exists(assetContractAddress);
     }
+
 }

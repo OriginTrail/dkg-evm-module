@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-library ServiceAgreementStructs {
+library ServiceAgreementStructsV1 {
 
     struct CommitSubmission {
         uint72 identityId;
@@ -12,7 +12,7 @@ library ServiceAgreementStructs {
     }
 
     struct ServiceAgreementInputArgs {
-        address operationalWallet;
+        address assetCreator;
         address assetContract;
         uint256 tokenId;
         bytes keyword;

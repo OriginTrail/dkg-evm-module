@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import { Hub } from "./Hub.sol";
 import { HashingProxy } from "./HashingProxy.sol";
+import { Hub } from "./Hub.sol";
 import { Identity } from "./Identity.sol";
 import { Shares } from "./Shares.sol";
 import { Staking } from "./Staking.sol";
@@ -16,8 +16,8 @@ contract Profile {
 
     Hub public hub;
     HashingProxy public hashingProxy;
-    Staking public stakingContract;
     Identity public identityContract;
+    Staking public stakingContract;
     IdentityStorage public identityStorage;
     ProfileStorage public profileStorage;
 
@@ -26,8 +26,8 @@ contract Profile {
 
         hub = Hub(hubAddress);
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
-        stakingContract = Staking(hub.getContractAddress("Staking"));
         identityContract = Identity(hub.getContractAddress("Identity"));
+        stakingContract = Staking(hub.getContractAddress("Staking"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
     }
@@ -42,62 +42,66 @@ contract Profile {
         _;
     }
 
-    function createProfile(address adminWallet, bytes memory nodeId, uint96 initialAsk, uint96 initialStake) external {
+    function createProfile(
+        address adminWallet,
+        bytes calldata nodeId,
+        uint96 initialAsk,
+        uint96 initialStake,
+        uint8 operatorFee
+    )
+        external
+    {
         IdentityStorage ids = identityStorage;
         ProfileStorage ps = profileStorage;
 
         require(ids.getIdentityId(msg.sender) == 0, "Identity already exists");
         require(nodeId.length != 0, "Node ID can't be empty");
-        require(!ps.nodeIdRegistered(nodeId), "Node ID already registered");
+        require(!ps.nodeIdRegistered(nodeId), "Node ID is already registered");
         require(initialAsk != 0, "Ask cannot be 0");
 
         uint72 identityId = identityContract.createIdentity(msg.sender, adminWallet);
 
+        string memory identityIdString = Strings.toString(identityId);
         Shares sharesContract = new Shares(
             address(hub),
-            string.concat("Share token ", Strings.toString(identityId)),
-            string.concat("DKGSTAKE_", Strings.toString(identityId))
+            string.concat("Share token ", identityIdString),
+            string.concat("DKGSTAKE_", identityIdString)
         );
         ps.createProfile(identityId, nodeId, initialAsk, address(sharesContract));
 
-        stakingContract.addStake(identityId, initialStake);
+        Staking sc = stakingContract;
+        sc.addStake(identityId, initialStake);
+        sc.setOperatorFee(identityId, operatorFee);
     }
 
-    function deleteProfile(uint72 identityId) external onlyAdmin(identityId) {
-        profileStorage.deleteProfile(identityId);
-        identityContract.deleteIdentity(identityId);
-    }
+    // function deleteProfile(uint72 identityId) external onlyAdmin(identityId) {
+    //     // TODO: add checks
+    //     profileStorage.deleteProfile(identityId);
+    //     identityContract.deleteIdentity(identityId);
+    // }
 
-    function changeNodeId(uint72 identityId, bytes calldata nodeId) external onlyOperational(identityId) {
-        require(nodeId.length != 0, "Node ID can't be empty");
+    // function changeNodeId(uint72 identityId, bytes calldata nodeId) external onlyOperational(identityId) {
+    //     require(nodeId.length != 0, "Node ID can't be empty");
 
-        profileStorage.setNodeId(identityId, nodeId);
-    }
+    //     profileStorage.setNodeId(identityId, nodeId);
+    // }
 
-    function addNewNodeIdHash(uint72 identityId, uint8 hashFunctionId) external onlyOperational(identityId) {
-        require(hashingProxy.isHashFunction(hashFunctionId), "Hash function doesn't exist");
+    // function addNewNodeIdHash(uint72 identityId, uint8 hashFunctionId) external onlyOperational(identityId) {
+    //     require(hashingProxy.isHashFunction(hashFunctionId), "Hash function doesn't exist");
 
-        profileStorage.setNodeAddress(identityId, hashFunctionId);
-    }
+    //     profileStorage.setNodeAddress(identityId, hashFunctionId);
+    // }
 
     function _checkAdmin(uint72 identityId) internal view virtual {
         require(
-            identityStorage.keyHasPurpose(
-                identityId,
-                keccak256(abi.encodePacked(msg.sender)),
-                ADMIN_KEY
-            ),
+            identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY),
             "Admin function"
         );
     }
 
     function _checkOperational(uint72 identityId) internal view virtual {
         require(
-            identityStorage.keyHasPurpose(
-                identityId,
-                keccak256(abi.encodePacked(msg.sender)),
-                OPERATIONAL_KEY
-            ),
+            identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), OPERATIONAL_KEY),
             "Fn can be called only by oper."
         );
     }
