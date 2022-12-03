@@ -56,7 +56,8 @@ contract ShardingTable {
         StakingStorage ss = stakingStorage;
 
         nodesPage[0] = ShardingTableStructs.NodeInfo({
-            id: ps.getNodeId(startingIdentityId),
+            nodeId: ps.getNodeId(startingIdentityId),
+            identityId: startingIdentityId,
             ask: ps.getAsk(startingNode.identityId),
             stake: ss.totalStakes(startingNode.identityId)
         });
@@ -67,7 +68,8 @@ contract ShardingTable {
             nextIdentityId = sts.getNode(nextIdentityId).nextIdentityId;
 
             nodesPage[i] = ShardingTableStructs.NodeInfo({
-                id: ps.getNodeId(nextIdentityId),
+                nodeId: ps.getNodeId(nextIdentityId),
+                identityId: nextIdentityId,
                 ask: ps.getAsk(nextIdentityId),
                 stake: ss.totalStakes(nextIdentityId)
             });
