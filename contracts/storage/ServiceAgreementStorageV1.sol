@@ -214,6 +214,10 @@ contract ServiceAgreementStorageV1 {
         commitSubmissions[commitId].score = score;
     }
 
+    function commitSubmissionExists(bytes32 commitId) external view returns (bool) {
+        return commitSubmissions[commitId].identityId != 0;
+    }
+
     function transferReward(address receiver, uint96 rewardAmount) external onlyStakingContract {
         tokenContract.transfer(receiver, rewardAmount);
     }

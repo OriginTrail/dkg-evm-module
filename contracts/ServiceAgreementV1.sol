@@ -383,7 +383,7 @@ contract ServiceAgreementV1 {
 
         bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, identityId));
 
-        require(sasV1.getCommitSubmissionsIdentityId(commitId) == 0, "Node has already commited");
+        require(!sasV1.commitSubmissionExists(commitId), "Node has already commited");
 
         bytes32 refCommitId = sasV1.getAgreementEpochSubmissionHead(agreementId, epoch);
 
