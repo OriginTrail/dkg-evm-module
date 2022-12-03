@@ -7,23 +7,23 @@
   "immutableReferences": {},
   "generatedSources": [],
   "deployedGeneratedSources": [],
-  "sourceMap": "58:236:50:-:0;;;;;;;;;;;;;;;-1:-1:-1;;;58:236:50;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "58:236:50:-:0;;;;;;;;",
+  "sourceMap": "58:236:53:-:0;;;;;;;;;;;;;;;-1:-1:-1;;;58:236:53;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "58:236:53:-:0;;;;;;;;",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\nlibrary ShardingTableStructs {\n\n    struct NodeInfo {\n        bytes id;\n        uint96 ask;\n        uint96 stake;\n    }\n\n    struct Node {\n        uint72 identityId;\n        uint72 prevIdentityId;\n        uint72 nextIdentityId;\n    }\n\n}\n",
-  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/structs/ShardingTableStructs.sol",
+  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/structs/ShardingTableStructs.sol",
   "ast": {
     "absolutePath": "project:/contracts/structs/ShardingTableStructs.sol",
     "exportedSymbols": {
       "ShardingTableStructs": [
-        14156
+        14212
       ]
     },
-    "id": 14157,
+    "id": 14213,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 14141,
+        "id": 14197,
         "literals": [
           "solidity",
           "^",
@@ -31,7 +31,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:23:50"
+        "src": "33:23:53"
       },
       {
         "abstract": false,
@@ -40,27 +40,27 @@
         "contractDependencies": [],
         "contractKind": "library",
         "fullyImplemented": true,
-        "id": 14156,
+        "id": 14212,
         "linearizedBaseContracts": [
-          14156
+          14212
         ],
         "name": "ShardingTableStructs",
-        "nameLocation": "66:20:50",
+        "nameLocation": "66:20:53",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "canonicalName": "ShardingTableStructs.NodeInfo",
-            "id": 14148,
+            "id": 14204,
             "members": [
               {
                 "constant": false,
-                "id": 14143,
+                "id": 14199,
                 "mutability": "mutable",
                 "name": "id",
-                "nameLocation": "126:2:50",
+                "nameLocation": "126:2:53",
                 "nodeType": "VariableDeclaration",
-                "scope": 14148,
-                "src": "120:8:50",
+                "scope": 14204,
+                "src": "120:8:53",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -68,10 +68,10 @@
                   "typeString": "bytes"
                 },
                 "typeName": {
-                  "id": 14142,
+                  "id": 14198,
                   "name": "bytes",
                   "nodeType": "ElementaryTypeName",
-                  "src": "120:5:50",
+                  "src": "120:5:53",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bytes_storage_ptr",
                     "typeString": "bytes"
@@ -81,13 +81,13 @@
               },
               {
                 "constant": false,
-                "id": 14145,
+                "id": 14201,
                 "mutability": "mutable",
                 "name": "ask",
-                "nameLocation": "145:3:50",
+                "nameLocation": "145:3:53",
                 "nodeType": "VariableDeclaration",
-                "scope": 14148,
-                "src": "138:10:50",
+                "scope": 14204,
+                "src": "138:10:53",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -95,10 +95,10 @@
                   "typeString": "uint96"
                 },
                 "typeName": {
-                  "id": 14144,
+                  "id": 14200,
                   "name": "uint96",
                   "nodeType": "ElementaryTypeName",
-                  "src": "138:6:50",
+                  "src": "138:6:53",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint96",
                     "typeString": "uint96"
@@ -108,13 +108,13 @@
               },
               {
                 "constant": false,
-                "id": 14147,
+                "id": 14203,
                 "mutability": "mutable",
                 "name": "stake",
-                "nameLocation": "165:5:50",
+                "nameLocation": "165:5:53",
                 "nodeType": "VariableDeclaration",
-                "scope": 14148,
-                "src": "158:12:50",
+                "scope": 14204,
+                "src": "158:12:53",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -122,10 +122,10 @@
                   "typeString": "uint96"
                 },
                 "typeName": {
-                  "id": 14146,
+                  "id": 14202,
                   "name": "uint96",
                   "nodeType": "ElementaryTypeName",
-                  "src": "158:6:50",
+                  "src": "158:6:53",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint96",
                     "typeString": "uint96"
@@ -135,25 +135,25 @@
               }
             ],
             "name": "NodeInfo",
-            "nameLocation": "101:8:50",
+            "nameLocation": "101:8:53",
             "nodeType": "StructDefinition",
-            "scope": 14156,
-            "src": "94:83:50",
+            "scope": 14212,
+            "src": "94:83:53",
             "visibility": "public"
           },
           {
             "canonicalName": "ShardingTableStructs.Node",
-            "id": 14155,
+            "id": 14211,
             "members": [
               {
                 "constant": false,
-                "id": 14150,
+                "id": 14206,
                 "mutability": "mutable",
                 "name": "identityId",
-                "nameLocation": "212:10:50",
+                "nameLocation": "212:10:53",
                 "nodeType": "VariableDeclaration",
-                "scope": 14155,
-                "src": "205:17:50",
+                "scope": 14211,
+                "src": "205:17:53",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -161,10 +161,10 @@
                   "typeString": "uint72"
                 },
                 "typeName": {
-                  "id": 14149,
+                  "id": 14205,
                   "name": "uint72",
                   "nodeType": "ElementaryTypeName",
-                  "src": "205:6:50",
+                  "src": "205:6:53",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint72",
                     "typeString": "uint72"
@@ -174,13 +174,13 @@
               },
               {
                 "constant": false,
-                "id": 14152,
+                "id": 14208,
                 "mutability": "mutable",
                 "name": "prevIdentityId",
-                "nameLocation": "239:14:50",
+                "nameLocation": "239:14:53",
                 "nodeType": "VariableDeclaration",
-                "scope": 14155,
-                "src": "232:21:50",
+                "scope": 14211,
+                "src": "232:21:53",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -188,10 +188,10 @@
                   "typeString": "uint72"
                 },
                 "typeName": {
-                  "id": 14151,
+                  "id": 14207,
                   "name": "uint72",
                   "nodeType": "ElementaryTypeName",
-                  "src": "232:6:50",
+                  "src": "232:6:53",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint72",
                     "typeString": "uint72"
@@ -201,13 +201,13 @@
               },
               {
                 "constant": false,
-                "id": 14154,
+                "id": 14210,
                 "mutability": "mutable",
                 "name": "nextIdentityId",
-                "nameLocation": "270:14:50",
+                "nameLocation": "270:14:53",
                 "nodeType": "VariableDeclaration",
-                "scope": 14155,
-                "src": "263:21:50",
+                "scope": 14211,
+                "src": "263:21:53",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -215,10 +215,10 @@
                   "typeString": "uint72"
                 },
                 "typeName": {
-                  "id": 14153,
+                  "id": 14209,
                   "name": "uint72",
                   "nodeType": "ElementaryTypeName",
-                  "src": "263:6:50",
+                  "src": "263:6:53",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint72",
                     "typeString": "uint72"
@@ -228,19 +228,19 @@
               }
             ],
             "name": "Node",
-            "nameLocation": "190:4:50",
+            "nameLocation": "190:4:53",
             "nodeType": "StructDefinition",
-            "scope": 14156,
-            "src": "183:108:50",
+            "scope": 14212,
+            "src": "183:108:53",
             "visibility": "public"
           }
         ],
-        "scope": 14157,
-        "src": "58:236:50",
+        "scope": 14213,
+        "src": "58:236:53",
         "usedErrors": []
       }
     ],
-    "src": "33:262:50"
+    "src": "33:262:53"
   },
   "compiler": {
     "name": "solc",
@@ -248,7 +248,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T16:52:10.475Z",
+  "updatedAt": "2022-12-03T12:20:15.627Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
