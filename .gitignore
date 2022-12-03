@@ -10,8 +10,7 @@ npm-debug.log
 coverage/*
 metadata/*
 coverage.json
-/build/contracts/AccessControl.json
-/build/contracts/Address.json
+build/contracts/AccessControl.json
 build/contracts/Address.json
 build/contracts/ByteArr.json
 build/contracts/Context.json
