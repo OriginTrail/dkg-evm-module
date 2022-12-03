@@ -118,7 +118,7 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\nimport { Hub } from \"../Hub.sol\";\nimport { Named } from \"../interface/Named.sol\";\n\nabstract contract AbstractAsset is Named {\n\n    Hub public hub;\n\n    constructor(address hubAddress) {\n        require(hubAddress != address(0));\n\n        hub = Hub(hubAddress);\n    }\n\n    function getAssertionIds(uint256 tokenId) public virtual view returns (bytes32 [] memory);\n\n    function getLatestAssertionId(uint256 tokenId) external view returns (bytes32) {\n        bytes32[] memory assertions = getAssertionIds(tokenId);\n        return assertions[assertions.length - 1];\n    }\n\n    function getAssertionIdByIndex(uint256 tokenId, uint256 index) public view returns (bytes32) {\n        bytes32 [] memory assertions = getAssertionIds(tokenId);\n        return assertions[index];\n    }\n\n    function getAssertionIdsLength(uint256 tokenId) external view returns (uint256) {\n        return getAssertionIds(tokenId).length;\n    }\n\n}\n",
-  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/assets/AbstractAsset.sol",
+  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/assets/AbstractAsset.sol",
   "ast": {
     "absolutePath": "project:/contracts/assets/AbstractAsset.sol",
     "exportedSymbols": {
@@ -1329,7 +1329,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-03T12:20:15.583Z",
+  "updatedAt": "2022-12-03T15:00:22.464Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

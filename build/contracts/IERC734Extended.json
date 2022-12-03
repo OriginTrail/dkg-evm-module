@@ -206,7 +206,7 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\ninterface IERC734Extended {\n\n    event KeyAdded(uint72 indexed identityId, bytes32 indexed key, uint256 purpose, uint256 keyType);\n    event KeyRemoved(uint72 indexed identityId, bytes32 indexed key, uint256 purpose, uint256 keyType);\n\n    struct Key {\n        uint256 purpose; //e.g., ADMIN_KEY = 1, OPERATIONAL_KEY = 2, etc.\n        uint256 keyType; // e.g. 1 = ECDSA, 2 = RSA, etc.\n        bytes32 key;\n    }\n\n    function addKey(uint72 identityId, bytes32 _key, uint256 _purpose, uint256 _keyType) external;\n    function removeKey(uint72 identityId, bytes32 _key) external;\n    function keyHasPurpose(uint72 identityId, bytes32 _key, uint256 _purpose) external view returns (bool exists);\n    function getKey(uint72 identityId, bytes32 _key)\n        external\n        view\n        returns(uint256 purpose, uint256 keyType, bytes32 key);\n    function getKeysByPurpose(uint72 identityId, uint256 _purpose) external view returns (bytes32[] memory keys);\n\n}\n",
-  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/interface/IERC734Extended.sol",
+  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/interface/IERC734Extended.sol",
   "ast": {
     "absolutePath": "project:/contracts/interface/IERC734Extended.sol",
     "exportedSymbols": {
@@ -1245,7 +1245,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-03T12:20:15.592Z",
+  "updatedAt": "2022-12-03T15:00:22.477Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
