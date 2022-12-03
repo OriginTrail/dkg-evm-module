@@ -24,20 +24,20 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\ninterface Indexable {\n\n    function id() external view returns (uint8);\n\n}\n",
-  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/interface/Indexable.sol",
+  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/interface/Indexable.sol",
   "ast": {
     "absolutePath": "project:/contracts/interface/Indexable.sol",
     "exportedSymbols": {
       "Indexable": [
-        11167
+        11223
       ]
     },
-    "id": 11168,
+    "id": 11224,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 11161,
+        "id": 11217,
         "literals": [
           "solidity",
           "^",
@@ -45,7 +45,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:23:38"
+        "src": "33:23:41"
       },
       {
         "abstract": false,
@@ -54,42 +54,42 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 11167,
+        "id": 11223,
         "linearizedBaseContracts": [
-          11167
+          11223
         ],
         "name": "Indexable",
-        "nameLocation": "68:9:38",
+        "nameLocation": "68:9:41",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "functionSelector": "af640d0f",
-            "id": 11166,
+            "id": 11222,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "id",
-            "nameLocation": "94:2:38",
+            "nameLocation": "94:2:41",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11162,
+              "id": 11218,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "96:2:38"
+              "src": "96:2:41"
             },
             "returnParameters": {
-              "id": 11165,
+              "id": 11221,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11164,
+                  "id": 11220,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11166,
-                  "src": "122:5:38",
+                  "scope": 11222,
+                  "src": "122:5:41",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -97,10 +97,10 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 11163,
+                    "id": 11219,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
-                    "src": "122:5:38",
+                    "src": "122:5:41",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint8",
                       "typeString": "uint8"
@@ -109,21 +109,21 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "121:7:38"
+              "src": "121:7:41"
             },
-            "scope": 11167,
-            "src": "85:44:38",
+            "scope": 11223,
+            "src": "85:44:41",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 11168,
-        "src": "58:74:38",
+        "scope": 11224,
+        "src": "58:74:41",
         "usedErrors": []
       }
     ],
-    "src": "33:100:38"
+    "src": "33:100:41"
   },
   "compiler": {
     "name": "solc",
@@ -131,7 +131,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T16:52:10.447Z",
+  "updatedAt": "2022-12-03T12:20:15.594Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

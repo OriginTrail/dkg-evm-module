@@ -7,23 +7,23 @@
   "immutableReferences": {},
   "generatedSources": [],
   "deployedGeneratedSources": [],
-  "sourceMap": "58:161:48:-:0;;;;;;;;;;;;;;;-1:-1:-1;;;58:161:48;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "58:161:48:-:0;;;;;;;;",
+  "sourceMap": "58:161:51:-:0;;;;;;;;;;;;;;;-1:-1:-1;;;58:161:51;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "58:161:51:-:0;;;;;;;;",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\nlibrary AssertionStructs {\n\n    struct Assertion{\n\t\tuint256 timestamp;\n\t\taddress issuer;\n\t\tuint128 size;\n\t\tuint32 triplesNumber;\n\t\tuint96 chunksNumber;\n\t}    \n\n}\n",
-  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/structs/AssertionStructs.sol",
+  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/structs/AssertionStructs.sol",
   "ast": {
     "absolutePath": "project:/contracts/structs/AssertionStructs.sol",
     "exportedSymbols": {
       "AssertionStructs": [
-        14062
+        14118
       ]
     },
-    "id": 14063,
+    "id": 14119,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 14050,
+        "id": 14106,
         "literals": [
           "solidity",
           "^",
@@ -31,7 +31,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:23:48"
+        "src": "33:23:51"
       },
       {
         "abstract": false,
@@ -40,27 +40,27 @@
         "contractDependencies": [],
         "contractKind": "library",
         "fullyImplemented": true,
-        "id": 14062,
+        "id": 14118,
         "linearizedBaseContracts": [
-          14062
+          14118
         ],
         "name": "AssertionStructs",
-        "nameLocation": "66:16:48",
+        "nameLocation": "66:16:51",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "canonicalName": "AssertionStructs.Assertion",
-            "id": 14061,
+            "id": 14117,
             "members": [
               {
                 "constant": false,
-                "id": 14052,
+                "id": 14108,
                 "mutability": "mutable",
                 "name": "timestamp",
-                "nameLocation": "118:9:48",
+                "nameLocation": "118:9:51",
                 "nodeType": "VariableDeclaration",
-                "scope": 14061,
-                "src": "110:17:48",
+                "scope": 14117,
+                "src": "110:17:51",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -68,10 +68,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 14051,
+                  "id": 14107,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "110:7:48",
+                  "src": "110:7:51",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -81,13 +81,13 @@
               },
               {
                 "constant": false,
-                "id": 14054,
+                "id": 14110,
                 "mutability": "mutable",
                 "name": "issuer",
-                "nameLocation": "139:6:48",
+                "nameLocation": "139:6:51",
                 "nodeType": "VariableDeclaration",
-                "scope": 14061,
-                "src": "131:14:48",
+                "scope": 14117,
+                "src": "131:14:51",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -95,10 +95,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 14053,
+                  "id": 14109,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "131:7:48",
+                  "src": "131:7:51",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -109,13 +109,13 @@
               },
               {
                 "constant": false,
-                "id": 14056,
+                "id": 14112,
                 "mutability": "mutable",
                 "name": "size",
-                "nameLocation": "157:4:48",
+                "nameLocation": "157:4:51",
                 "nodeType": "VariableDeclaration",
-                "scope": 14061,
-                "src": "149:12:48",
+                "scope": 14117,
+                "src": "149:12:51",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -123,10 +123,10 @@
                   "typeString": "uint128"
                 },
                 "typeName": {
-                  "id": 14055,
+                  "id": 14111,
                   "name": "uint128",
                   "nodeType": "ElementaryTypeName",
-                  "src": "149:7:48",
+                  "src": "149:7:51",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint128",
                     "typeString": "uint128"
@@ -136,13 +136,13 @@
               },
               {
                 "constant": false,
-                "id": 14058,
+                "id": 14114,
                 "mutability": "mutable",
                 "name": "triplesNumber",
-                "nameLocation": "172:13:48",
+                "nameLocation": "172:13:51",
                 "nodeType": "VariableDeclaration",
-                "scope": 14061,
-                "src": "165:20:48",
+                "scope": 14117,
+                "src": "165:20:51",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -150,10 +150,10 @@
                   "typeString": "uint32"
                 },
                 "typeName": {
-                  "id": 14057,
+                  "id": 14113,
                   "name": "uint32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "165:6:48",
+                  "src": "165:6:51",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint32",
                     "typeString": "uint32"
@@ -163,13 +163,13 @@
               },
               {
                 "constant": false,
-                "id": 14060,
+                "id": 14116,
                 "mutability": "mutable",
                 "name": "chunksNumber",
-                "nameLocation": "196:12:48",
+                "nameLocation": "196:12:51",
                 "nodeType": "VariableDeclaration",
-                "scope": 14061,
-                "src": "189:19:48",
+                "scope": 14117,
+                "src": "189:19:51",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -177,10 +177,10 @@
                   "typeString": "uint96"
                 },
                 "typeName": {
-                  "id": 14059,
+                  "id": 14115,
                   "name": "uint96",
                   "nodeType": "ElementaryTypeName",
-                  "src": "189:6:48",
+                  "src": "189:6:51",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint96",
                     "typeString": "uint96"
@@ -190,19 +190,19 @@
               }
             ],
             "name": "Assertion",
-            "nameLocation": "97:9:48",
+            "nameLocation": "97:9:51",
             "nodeType": "StructDefinition",
-            "scope": 14062,
-            "src": "90:122:48",
+            "scope": 14118,
+            "src": "90:122:51",
             "visibility": "public"
           }
         ],
-        "scope": 14063,
-        "src": "58:161:48",
+        "scope": 14119,
+        "src": "58:161:51",
         "usedErrors": []
       }
     ],
-    "src": "33:187:48"
+    "src": "33:187:51"
   },
   "compiler": {
     "name": "solc",
@@ -210,7 +210,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-02T16:52:10.474Z",
+  "updatedAt": "2022-12-03T12:20:15.625Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
