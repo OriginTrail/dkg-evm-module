@@ -419,6 +419,7 @@ contract ServiceAgreementV1 {
             _link_commits(agreementId, epoch, refCommit.identityId, identityId);
         } else if ((i == 0) && (score > refCommit.score)) {
             // There is a head with lower score, replace the head
+            sasV1.setAgreementEpochSubmissionHead(agreementId, epoch, commitId);
             _link_commits(agreementId, epoch, identityId, refCommit.identityId);
         }  else if (score > refCommit.score) {
             // [H] - head
