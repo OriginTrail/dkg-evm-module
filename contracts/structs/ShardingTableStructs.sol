@@ -5,7 +5,8 @@ pragma solidity ^0.8.0;
 library ShardingTableStructs {
 
     struct NodeInfo {
-        bytes id;
+        bytes nodeId;
+        uint72 identityId;
         uint96 ask;
         uint96 stake;
     }
