@@ -36,6 +36,7 @@ contract Identity {
         require(admin != address(0), "Admin address can't be 0x0");
 
         IdentityStorage ids = identityStorage;
+
         uint72 identityId = ids.generateIdentityId();
 
         bytes32 _admin_key = keccak256(abi.encodePacked(admin));
@@ -56,10 +57,7 @@ contract Identity {
     }
 
     function deleteIdentity(uint72 identityId) external onlyContracts {
-        IdentityStorage ids = identityStorage;
-
-        require(ids.identityExists(identityId), "Identity doesn't exist");
-        ids.deleteIdentity(identityId);
+        identityStorage.deleteIdentity(identityId);
 
         emit IdentityDeleted(identityId);
     }

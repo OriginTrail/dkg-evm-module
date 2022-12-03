@@ -9,6 +9,8 @@ import { Shares } from "./Shares.sol";
 import { Staking } from "./Staking.sol";
 import { IdentityStorage } from "./storage/IdentityStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
+import { StakingStorage } from "./storage/StakingStorage.sol";
+import { UnorderedIndexableContractDynamicSetLib } from "./utils/UnorderedIndexableContractDynamicSet.sol";
 import { ADMIN_KEY, OPERATIONAL_KEY } from "./constants/IdentityConstants.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -20,6 +22,7 @@ contract Profile {
     Staking public stakingContract;
     IdentityStorage public identityStorage;
     ProfileStorage public profileStorage;
+    StakingStorage public stakingStorage;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -30,6 +33,7 @@ contract Profile {
         stakingContract = Staking(hub.getContractAddress("Staking"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
     }
 
     modifier onlyAdmin(uint72 identityId) {
@@ -67,10 +71,12 @@ contract Profile {
             string.concat("Share token ", identityIdString),
             string.concat("DKGSTAKE_", identityIdString)
         );
+
         ps.createProfile(identityId, nodeId, initialAsk, address(sharesContract));
+        _setAvailableNodeAddresses(identityId);
 
         Staking sc = stakingContract;
-        sc.addStake(identityId, initialStake);
+        sc.addStake(msg.sender, identityId, initialStake);
         sc.setOperatorFee(identityId, operatorFee);
     }
 
@@ -91,6 +97,39 @@ contract Profile {
 
     //     profileStorage.setNodeAddress(identityId, hashFunctionId);
     // }
+
+    // TODO: Define where it can be called, change internal modifier
+    function _setAvailableNodeAddresses(uint72 identityId) internal {
+        ProfileStorage ps = profileStorage;
+        HashingProxy hp = hashingProxy;
+
+        UnorderedIndexableContractDynamicSetLib.Contract[] memory hashFunctions = hp.getAllHashFunctions();
+        uint256 hashFunctionsNumber = hashFunctions.length;
+        for (uint8 i; i < hashFunctionsNumber; ) {
+            ps.setNodeAddress(identityId, hashFunctions[i].id);
+            unchecked { i++; }
+        }
+    }
+
+    function stakeAccumulatedOperatorFee(uint72 identityId) external onlyAdmin(identityId) {
+        ProfileStorage ps = profileStorage;
+
+        uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
+        require(accumulatedOperatorFee != 0, "You have no operator fees");
+
+        ps.setAccumulatedOperatorFee(identityId, 0);
+        stakingContract.addStake(msg.sender, identityId, accumulatedOperatorFee);
+    }
+
+    function withdrawAccumulatedOperatorFee(uint72 identityId) external onlyAdmin(identityId) {
+        ProfileStorage ps = profileStorage;
+
+        uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
+        require(accumulatedOperatorFee != 0, "You have no operator fees");
+
+        ps.setAccumulatedOperatorFee(identityId, 0);
+        ps.transferTokens(msg.sender, accumulatedOperatorFee);
+    }
 
     function _checkAdmin(uint72 identityId) internal view virtual {
         require(

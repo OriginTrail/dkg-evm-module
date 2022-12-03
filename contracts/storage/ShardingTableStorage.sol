@@ -8,9 +8,6 @@ import { NULL } from "../constants/ShardingTableConstants.sol";
 
 contract ShardingTableStorage {
 
-    event NodeAdded(uint72 indexed identityId);
-    event NodeRemoved(uint72 indexed identityId);
-
     Hub public hub;
 
     uint72 public head;
@@ -56,8 +53,6 @@ contract ShardingTableStorage {
             prevIdentityId: prevIdentityId,
             nextIdentityId: nextIdentityId
         });
-
-        emit NodeAdded(identityId);
     }
 
     function getNode(uint72 identityId) external view returns (ShardingTableStructs.Node memory) {
@@ -66,8 +61,6 @@ contract ShardingTableStorage {
 
     function removeNode(uint72 identityId) external onlyContracts {
         delete nodes[identityId];
-
-        emit NodeRemoved(identityId);
     }
 
     function nodeExists(uint72 identityId) external view returns (bool) {

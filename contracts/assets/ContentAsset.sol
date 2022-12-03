@@ -11,6 +11,9 @@ import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract ContentAsset is AbstractAsset, ERC721 {
 
+    event AssetCreated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
+    event AssetUpdated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
+
     struct AssetInputArgs {
         bytes32 assertionId;
         uint128 size;
@@ -37,7 +40,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
         ERC721("ContentAsset", "DKG")
     {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));
-        serviceAgreement = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
+        serviceAgreement = ServiceAgreementV1(hub.getContractAddress("ServiceAgreement"));
     }
 
     modifier onlyAssetOwner(uint256 tokenId) {
@@ -93,7 +96,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
                 assetCreator: msg.sender,
                 assetContract: address(this),
                 tokenId: tokenId,
-                keyword: abi.encodePacked(address(this), tokenId, this.getAssertionIdByIndex(tokenId, 0)),
+                keyword: abi.encodePacked(address(this), tokenId, getAssertionIdByIndex(tokenId, 0)),
                 hashFunctionId: 1,  // hashFunctionId | 1 = sha256
                 epochsNumber: args.epochsNumber,
                 tokenAmount: args.tokenAmount,

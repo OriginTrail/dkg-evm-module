@@ -7,9 +7,6 @@ import { Named } from "../interface/Named.sol";
 
 abstract contract AbstractAsset is Named {
 
-    event AssetCreated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
-    event AssetUpdated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
-
     Hub public hub;
 
     constructor(address hubAddress) {
@@ -25,7 +22,7 @@ abstract contract AbstractAsset is Named {
         return assertions[assertions.length - 1];
     }
 
-    function getAssertionIdByIndex(uint256 tokenId, uint256 index) external view returns (bytes32) {
+    function getAssertionIdByIndex(uint256 tokenId, uint256 index) public view returns (bytes32) {
         bytes32 [] memory assertions = getAssertionIds(tokenId);
         return assertions[index];
     }

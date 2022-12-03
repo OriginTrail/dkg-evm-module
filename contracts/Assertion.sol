@@ -8,6 +8,10 @@ import { AssertionStructs } from "./structs/AssertionStructs.sol";
 
 contract Assertion {
 
+	event AssertionCreated(
+		bytes32 indexed assertionId, address issuer, uint128 size, uint32 triplesNumber, uint96 chunksNumber
+	);
+
 	Hub public hub;
 	AssertionStorage public assertionStorage;
 
@@ -46,6 +50,8 @@ contract Assertion {
 		require(chunksNumber != 0, "Chunks number cannot be 0");
 
 		ans.createAssertion(assertionId, issuer, size, triplesNumber, chunksNumber);
+
+		emit AssertionCreated(assertionId, issuer, size, triplesNumber, chunksNumber);
 	}
 
 	function _checkAssetContract() internal view virtual {

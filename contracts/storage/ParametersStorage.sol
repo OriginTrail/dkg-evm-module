@@ -46,8 +46,6 @@ contract ParametersStorage is Ownable {
         stakeWithdrawalDelay = 5 minutes;
         rewardWithdrawalDelay = 5 minutes;
         slashingFreezeDuration = 730 days;
-
-        delegationEnabled = false;
     }
 
     function setMinimumStake(uint96 newMinimumStake) external onlyOwner {
@@ -100,10 +98,6 @@ contract ParametersStorage is Ownable {
 
     function setSlashingFreezeDuration(uint32 newSlashingFreezeDuration) external onlyOwner {
         slashingFreezeDuration = newSlashingFreezeDuration;
-    }
-
-    function setDelegationEnabled(bool enabled) external onlyOwner {
-        delegationEnabled = enabled;
     }
 
 }

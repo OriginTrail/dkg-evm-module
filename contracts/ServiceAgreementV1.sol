@@ -116,7 +116,7 @@ contract ServiceAgreementV1 {
 
         IERC20 tknc = tokenContract;
         require(
-            tknc.allowance(args.assetCreator, address(sas)) >= args.tokenAmount,
+            tknc.allowance(args.assetCreator, address(this)) >= args.tokenAmount,
             "Sender allowance must >= amount"
         );
         require(tknc.balanceOf(args.assetCreator) >= args.tokenAmount, "Sender balance must be >= amount");
@@ -141,6 +141,7 @@ contract ServiceAgreementV1 {
         onlyAssetContracts
     {
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
+
         ServiceAgreementStorageV1 sas = serviceAgreementStorage;
 
         require(args.assetCreator != address(0), "Asset creator cannot be 0x0");
@@ -158,7 +159,7 @@ contract ServiceAgreementV1 {
         IERC20 tknc = tokenContract;
 
         require(
-            tknc.allowance(args.assetCreator, address(sas)) >= (args.tokenAmount - actualRewardAmount),
+            tknc.allowance(args.assetCreator, address(this)) >= (args.tokenAmount - actualRewardAmount),
             "Sender allowance must be >= amount"
         );
         require(
@@ -178,11 +179,7 @@ contract ServiceAgreementV1 {
         );
     }
 
-    function isCommitWindowOpen(bytes32 agreementId, uint16 epoch)
-        public
-        view
-        returns (bool)
-    {
+    function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
         ServiceAgreementStorageV1 sas = serviceAgreementStorage;
         uint256 startTime = sas.getAgreementStartTime(agreementId);
 
@@ -191,20 +188,15 @@ contract ServiceAgreementV1 {
 
         ParametersStorage params = parametersStorage;
         uint256 timeNow = block.timestamp;
+        uint128 epochLength = sas.getAgreementEpochLength(agreementId);
 
         if (epoch == 0) {
             return timeNow < (startTime + params.commitWindowDuration());
         }
 
         return (
-            timeNow > (
-                startTime
-                + sas.getAgreementEpochLength(agreementId) * epoch
-            ) && timeNow < (
-                startTime
-                + sas.getAgreementEpochLength(agreementId) * epoch
-                + params.commitWindowDuration()
-            )
+            timeNow > (startTime + epochLength * epoch) &&
+            timeNow < (startTime + epochLength * epoch + params.commitWindowDuration())
         );
     }
 
@@ -218,8 +210,10 @@ contract ServiceAgreementV1 {
         require(sas.serviceAgreementExists(agreementId), "Service Agreement doesn't exist");
         require(epoch < sas.getAgreementEpochsNumber(agreementId), "Service Agreement expired");
 
+        uint32 r0 = parametersStorage.R0();
+
         ServiceAgreementStructsV1.CommitSubmission[] memory epochCommits =
-            new ServiceAgreementStructsV1.CommitSubmission[](parametersStorage.R0());
+            new ServiceAgreementStructsV1.CommitSubmission[](r0);
 
         bytes32 epochSubmissionsHead = sas.getAgreementEpochSubmissionHead(agreementId, epoch);
 
@@ -228,7 +222,7 @@ contract ServiceAgreementV1 {
         bytes32 commitId;
         uint72 nextIdentityId = epochCommits[0].nextIdentityId;
         uint8 submissionsIdx = 1;
-        while(nextIdentityId != 0) {
+        while((submissionsIdx < r0) && (nextIdentityId != 0)) {
             commitId = keccak256(abi.encodePacked(agreementId, epoch, nextIdentityId));
             epochCommits[submissionsIdx] = sas.getCommitSubmission(commitId);
 
@@ -243,7 +237,7 @@ contract ServiceAgreementV1 {
     function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
-        require(isCommitWindowOpen(agreementId, args.epoch), "Commit window is closed!");
+        require(isCommitWindowOpen(agreementId, args.epoch), "Commit window is closed");
 
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -274,11 +268,7 @@ contract ServiceAgreementV1 {
         );
     }
 
-    function isProofWindowOpen(bytes32 agreementId, uint16 epoch)
-        public
-        view
-        returns (bool)
-    {
+    function isProofWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
         ServiceAgreementStorageV1 sas = serviceAgreementStorage;
         uint256 startTime = sas.getAgreementStartTime(agreementId);
 
@@ -287,13 +277,10 @@ contract ServiceAgreementV1 {
 
         uint256 timeNow = block.timestamp;
         uint128 epochLength = sas.getAgreementEpochLength(agreementId);
-        uint16 epochsNumber = sas.getAgreementEpochsNumber(agreementId);
         uint8 proofWindowOffsetPerc = sas.getAgreementProofWindowOffsetPerc(agreementId);
 
-        uint256 proofWindowOffset = epochLength * epochsNumber * proofWindowOffsetPerc / 100;
-        uint256 proofWindowDuration = (
-            epochLength * epochsNumber * parametersStorage.proofWindowDurationPerc() / 100
-        );
+        uint256 proofWindowOffset = epochLength * proofWindowOffsetPerc / 100;
+        uint256 proofWindowDuration = epochLength * parametersStorage.proofWindowDurationPerc() / 100;
 
         return (
             timeNow > (startTime + epochLength * epoch + proofWindowOffset) &&
@@ -326,7 +313,7 @@ contract ServiceAgreementV1 {
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
-        require(!isProofWindowOpen(agreementId, args.epoch), "Proof window is open");
+        require(isProofWindowOpen(agreementId, args.epoch), "Proof window is closed");
 
         IdentityStorage ids = identityStorage;
 
@@ -374,8 +361,7 @@ contract ServiceAgreementV1 {
             (r0 - sas.getAgreementRewardedNodesNumber(agreementId, args.epoch))
         );
 
-        // TODO: Change msg.sender to admin wallet (?)
-        stakingContract.addReward(identityId, msg.sender, reward);
+        stakingContract.addReward(identityId, reward);
         sas.setAgreementTokenAmount(agreementId, sas.getAgreementTokenAmount(agreementId) - reward);
         sas.incrementAgreementRewardedNodesNumber(agreementId, args.epoch);
 
@@ -398,6 +384,8 @@ contract ServiceAgreementV1 {
         bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, identityId));
         bytes32 refCommitId = sas.getAgreementEpochSubmissionHead(agreementId, epoch);
 
+        require(commitId != refCommitId, "Node has already committed");
+
         ParametersStorage params = parametersStorage;
 
         uint72 refCommitNextIdentityId = sas.getCommitSubmissionNextIdentityId(refCommitId);
@@ -411,6 +399,9 @@ contract ServiceAgreementV1 {
             refCommitId = keccak256(
                 abi.encodePacked(agreementId, epoch, refCommitNextIdentityId)
             );
+
+            require(commitId != refCommitId, "Node has already committed");
+
             refCommitNextIdentityId = sas.getCommitSubmissionNextIdentityId(refCommitId);
             unchecked { i++; }
         }
@@ -421,18 +412,16 @@ contract ServiceAgreementV1 {
 
         ServiceAgreementStructsV1.CommitSubmission memory refCommit = sas.getCommitSubmission(refCommitId);
 
-        // Replacing head
-        if (i == 0) {
+        if ((i == 0) && (refCommit.identityId == 0)) {
+            //  No head -> Setting new head
             sas.setAgreementEpochSubmissionHead(agreementId, epoch, commitId);
-
-            // [] - empty pointer
-            // [OH] - old head
-            // [NH] - new head
-            // [C] - commit
-            // (NL) - new link
-            // [] <-> [NH] <-(NL)-> [OH] <-> [C] ... [C] <-> []
+        } else if ((i == 0) && (score <= refCommit.score)) {
+            // There is a head with higher or equal score, add new commit on the right
+            _link_commits(agreementId, epoch, refCommit.identityId, identityId);
+        } else if ((i == 0) && (score > refCommit.score)) {
+            // There is a head with lower score, replace the head
             _link_commits(agreementId, epoch, identityId, refCommit.identityId);
-        } else if (score > refCommit.score) {
+        }  else if (score > refCommit.score) {
             // [H] - head
             // [RC] - reference commit
             // [RC-] - commit before reference commit
