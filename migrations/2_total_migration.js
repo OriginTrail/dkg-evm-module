@@ -51,6 +51,8 @@ const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
     "0xf68B2609F1E240e501D78c78276D7314ba298025",
     "0xBaF76aC0d0ef9a2FFF76884d54C9D3e270290a43"];
 
+
+
 module.exports = async (deployer, network, accounts) => {
     let hub, parametersStorage, hashingProxy, sha256Contract, scoringProxy,
         log2pldsfContract, shardingTableStorage, shardingTableContract,
@@ -58,6 +60,9 @@ module.exports = async (deployer, network, accounts) => {
         erc20Token, identityStorage, identityContract, profileStorage,
         profileContract, stakingStorage, stakingContract;
 
+    const filePath = `reports/${network}_contracts.json`;
+    
+        
     const deployContract = (Contract, account, passHubInConstructor, retryCount = 0) => {
         return new Promise(async (accept, reject) => {
             try {
@@ -104,18 +109,24 @@ module.exports = async (deployer, network, accounts) => {
         }
         return contractInstance;
     }
-
+    const deployerAddress = accounts[0];
+    console.log('==========================');
+    console.log(`Using deployer address: ${deployerAddress}`);
+    console.log(`DEPLOYING TO: ${network} `);
+    console.log('==========================');
+    
     switch (network) {
         case 'development':
         case 'ganache':
         case 'rinkeby':
         case 'test':
+            initFile={};
+            initFile.contracts={};
+            fs.writeFileSync(filePath, JSON.stringify(initFile, null, 4));
         case 'otp_devnet':
         case 'testnet':
         case 'mainnet':
         case 'mumbai':
-            const deployerAddress = accounts[0];
-            console.log(`Using deployer address: ${deployerAddress}`);
             const deployedContracts = require(`./../reports/${network}_contracts.json`);
             try {
                 // hub contract
@@ -139,7 +150,8 @@ module.exports = async (deployer, network, accounts) => {
                         deployedContracts,
                         'Token',
                         ERC20Token,
-                        deployerAddress
+                        deployerAddress,
+                        true
                     );
                     await erc20Token.setupRole(deployerAddress);
                     const amountToMint = (new BN(5)).mul((new BN(10)).pow(new BN(30)));
@@ -365,7 +377,6 @@ module.exports = async (deployer, network, accounts) => {
                 // save deployed contracts report
                 deployedContracts.deployedTimestamp = Date.now;
                 console.log(JSON.stringify(deployedContracts, null, 4));
-                const filePath = `../reports/${network}_contracts.json`;
                 fs.writeFileSync(filePath, JSON.stringify(deployedContracts, null, 4));
             }
 
