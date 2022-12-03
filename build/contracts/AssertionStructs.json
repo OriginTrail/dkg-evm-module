@@ -10,7 +10,7 @@
   "sourceMap": "58:161:51:-:0;;;;;;;;;;;;;;;-1:-1:-1;;;58:161:51;;;;;;;;;;;;;;;;;",
   "deployedSourceMap": "58:161:51:-:0;;;;;;;;",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\nlibrary AssertionStructs {\n\n    struct Assertion{\n\t\tuint256 timestamp;\n\t\taddress issuer;\n\t\tuint128 size;\n\t\tuint32 triplesNumber;\n\t\tuint96 chunksNumber;\n\t}    \n\n}\n",
-  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/structs/AssertionStructs.sol",
+  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/structs/AssertionStructs.sol",
   "ast": {
     "absolutePath": "project:/contracts/structs/AssertionStructs.sol",
     "exportedSymbols": {
@@ -210,7 +210,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-03T12:20:15.625Z",
+  "updatedAt": "2022-12-03T15:00:22.525Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

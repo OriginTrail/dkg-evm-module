@@ -30,7 +30,7 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\ninterface IHashFunction {\n\n    function hash(bytes calldata data) external returns (bytes32);\n\n}\n",
-  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/interface/IHashFunction.sol",
+  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/interface/IHashFunction.sol",
   "ast": {
     "absolutePath": "project:/contracts/interface/IHashFunction.sol",
     "exportedSymbols": {
@@ -165,7 +165,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-03T12:20:15.593Z",
+  "updatedAt": "2022-12-03T15:00:22.477Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

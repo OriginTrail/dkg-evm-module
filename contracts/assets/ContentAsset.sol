@@ -31,7 +31,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
     uint256 private _tokenId;
 
     Assertion public assertionContract;
-    ServiceAgreementV1 public serviceAgreement;
+    ServiceAgreementV1 public serviceAgreementV1;
 
     mapping (uint256 => Asset) assets;
 
@@ -40,7 +40,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
         ERC721("ContentAsset", "DKG")
     {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));
-        serviceAgreement = ServiceAgreementV1(hub.getContractAddress("ServiceAgreement"));
+        serviceAgreementV1 = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
     }
 
     modifier onlyAssetOwner(uint256 tokenId) {
@@ -65,7 +65,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
         );
         assets[tokenId].assertionIds.push(args.assertionId);
 
-        serviceAgreement.createServiceAgreement(
+        serviceAgreementV1.createServiceAgreement(
             ServiceAgreementStructsV1.ServiceAgreementInputArgs({
                 assetCreator: msg.sender,
                 assetContract: address(this),
@@ -91,7 +91,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
         );
         assets[tokenId].assertionIds.push(args.assertionId);
 
-        serviceAgreement.updateServiceAgreement(
+        serviceAgreementV1.updateServiceAgreement(
             ServiceAgreementStructsV1.ServiceAgreementInputArgs({
                 assetCreator: msg.sender,
                 assetContract: address(this),

@@ -24,7 +24,7 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\ninterface Named {\n\n    function name() external view returns (string memory);\n\n}\n",
-  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/interface/Named.sol",
+  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/interface/Named.sol",
   "ast": {
     "absolutePath": "project:/contracts/interface/Named.sol",
     "exportedSymbols": {
@@ -131,7 +131,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-03T12:20:15.595Z",
+  "updatedAt": "2022-12-03T15:00:22.479Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

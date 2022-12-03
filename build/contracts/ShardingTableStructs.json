@@ -10,7 +10,7 @@
   "sourceMap": "58:236:53:-:0;;;;;;;;;;;;;;;-1:-1:-1;;;58:236:53;;;;;;;;;;;;;;;;;",
   "deployedSourceMap": "58:236:53:-:0;;;;;;;;",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\nlibrary ShardingTableStructs {\n\n    struct NodeInfo {\n        bytes id;\n        uint96 ask;\n        uint96 stake;\n    }\n\n    struct Node {\n        uint72 identityId;\n        uint72 prevIdentityId;\n        uint72 nextIdentityId;\n    }\n\n}\n",
-  "sourcePath": "/Users/max/IdeaProjects/dkg-evm-module/contracts/structs/ShardingTableStructs.sol",
+  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/structs/ShardingTableStructs.sol",
   "ast": {
     "absolutePath": "project:/contracts/structs/ShardingTableStructs.sol",
     "exportedSymbols": {
@@ -248,7 +248,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-03T12:20:15.627Z",
+  "updatedAt": "2022-12-03T15:00:22.526Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

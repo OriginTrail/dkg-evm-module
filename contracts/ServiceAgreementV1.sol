@@ -19,7 +19,7 @@ import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerklePr
 
 contract ServiceAgreementV1 {
 
-    event ServiceAgreementCreated(
+    event ServiceAgreementV1Created(
         address indexed assetContract,
         uint256 indexed tokenId,
         bytes keyword,
@@ -29,7 +29,7 @@ contract ServiceAgreementV1 {
         uint128 epochLength,
         uint96 tokenAmount
     );
-    event ServiceAgreementUpdated(
+    event ServiceAgreementV1Updated(
         address indexed assetContract,
         uint256 indexed tokenId,
         bytes keyword,
@@ -61,7 +61,7 @@ contract ServiceAgreementV1 {
     IdentityStorage public identityStorage;
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
-    ServiceAgreementStorageV1 public serviceAgreementStorage;
+    ServiceAgreementStorageV1 public serviceAgreementStorageV1;
     StakingStorage public stakingStorage;
     IERC20 public tokenContract;
 
@@ -76,7 +76,7 @@ contract ServiceAgreementV1 {
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        serviceAgreementStorage = ServiceAgreementStorageV1(hub.getContractAddress("ServiceAgreementStorage"));
+        serviceAgreementStorageV1 = ServiceAgreementStorageV1(hub.getContractAddress("ServiceAgreementStorageV1"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }
@@ -99,10 +99,10 @@ contract ServiceAgreementV1 {
 
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
-        ServiceAgreementStorageV1 sas = serviceAgreementStorage;
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
         ParametersStorage params = parametersStorage;
 
-        sas.createServiceAgreementObject(
+        sasV1.createServiceAgreementObject(
             agreementId,
             args.epochsNumber,
             params.epochLength(),
@@ -121,9 +121,9 @@ contract ServiceAgreementV1 {
         );
         require(tknc.balanceOf(args.assetCreator) >= args.tokenAmount, "Sender balance must be >= amount");
 
-        tknc.transferFrom(args.assetCreator, address(sas), args.tokenAmount);
+        tknc.transferFrom(args.assetCreator, address(sasV1), args.tokenAmount);
 
-        emit ServiceAgreementCreated(
+        emit ServiceAgreementV1Created(
             args.assetContract,
             args.tokenId,
             args.keyword,
@@ -142,19 +142,19 @@ contract ServiceAgreementV1 {
     {
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
-        ServiceAgreementStorageV1 sas = serviceAgreementStorage;
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
         require(args.assetCreator != address(0), "Asset creator cannot be 0x0");
-        require(sas.serviceAgreementExists(agreementId), "Service Agreement doesn't exist");
+        require(sasV1.serviceAgreementExists(agreementId), "Service Agreement doesn't exist");
         require(args.epochsNumber != 0, "Epochs number cannot be 0");
         require(args.tokenAmount != 0, "Token amount cannot be 0");
         require(scoringProxy.isScoreFunction(args.scoreFunctionId), "Score function doesn't exist");
 
-        uint96 actualRewardAmount = sas.getAgreementTokenAmount(agreementId);
+        uint96 actualRewardAmount = sasV1.getAgreementTokenAmount(agreementId);
 
-        sas.setAgreementEpochsNumber(agreementId, args.epochsNumber);
-        sas.setAgreementTokenAmount(agreementId, args.tokenAmount);
-        sas.setAgreementScoreFunctionId(agreementId, args.scoreFunctionId);
+        sasV1.setAgreementEpochsNumber(agreementId, args.epochsNumber);
+        sasV1.setAgreementTokenAmount(agreementId, args.tokenAmount);
+        sasV1.setAgreementScoreFunctionId(agreementId, args.scoreFunctionId);
 
         IERC20 tknc = tokenContract;
 
@@ -167,9 +167,9 @@ contract ServiceAgreementV1 {
             "Sender balance must be >= amount"
         );
 
-        tknc.transferFrom(args.assetCreator, address(sas), args.tokenAmount - actualRewardAmount);
+        tknc.transferFrom(args.assetCreator, address(sasV1), args.tokenAmount - actualRewardAmount);
 
-        emit ServiceAgreementUpdated(
+        emit ServiceAgreementV1Updated(
             args.assetContract,
             args.tokenId,
             args.keyword,
@@ -180,15 +180,15 @@ contract ServiceAgreementV1 {
     }
 
     function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
-        ServiceAgreementStorageV1 sas = serviceAgreementStorage;
-        uint256 startTime = sas.getAgreementStartTime(agreementId);
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        uint256 startTime = sasV1.getAgreementStartTime(agreementId);
 
         require(startTime != 0, "Service Agreement doesn't exist");
-        require(epoch < sas.getAgreementEpochsNumber(agreementId), "Service Agreement has been expired");
+        require(epoch < sasV1.getAgreementEpochsNumber(agreementId), "Service Agreement has been expired");
 
         ParametersStorage params = parametersStorage;
         uint256 timeNow = block.timestamp;
-        uint128 epochLength = sas.getAgreementEpochLength(agreementId);
+        uint128 epochLength = sasV1.getAgreementEpochLength(agreementId);
 
         if (epoch == 0) {
             return timeNow < (startTime + params.commitWindowDuration());
@@ -205,26 +205,26 @@ contract ServiceAgreementV1 {
         view
         returns (ServiceAgreementStructsV1.CommitSubmission[] memory)
     {
-        ServiceAgreementStorageV1 sas = serviceAgreementStorage;
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
-        require(sas.serviceAgreementExists(agreementId), "Service Agreement doesn't exist");
-        require(epoch < sas.getAgreementEpochsNumber(agreementId), "Service Agreement expired");
+        require(sasV1.serviceAgreementExists(agreementId), "Service Agreement doesn't exist");
+        require(epoch < sasV1.getAgreementEpochsNumber(agreementId), "Service Agreement expired");
 
         uint32 r0 = parametersStorage.R0();
 
         ServiceAgreementStructsV1.CommitSubmission[] memory epochCommits =
             new ServiceAgreementStructsV1.CommitSubmission[](r0);
 
-        bytes32 epochSubmissionsHead = sas.getAgreementEpochSubmissionHead(agreementId, epoch);
+        bytes32 epochSubmissionsHead = sasV1.getAgreementEpochSubmissionHead(agreementId, epoch);
 
-        epochCommits[0] = sas.getCommitSubmission(epochSubmissionsHead);
+        epochCommits[0] = sasV1.getCommitSubmission(epochSubmissionsHead);
 
         bytes32 commitId;
         uint72 nextIdentityId = epochCommits[0].nextIdentityId;
         uint8 submissionsIdx = 1;
         while((submissionsIdx < r0) && (nextIdentityId != 0)) {
             commitId = keccak256(abi.encodePacked(agreementId, epoch, nextIdentityId));
-            epochCommits[submissionsIdx] = sas.getCommitSubmission(commitId);
+            epochCommits[submissionsIdx] = sasV1.getCommitSubmission(commitId);
 
             nextIdentityId = epochCommits[submissionsIdx].nextIdentityId;
 
@@ -242,7 +242,7 @@ contract ServiceAgreementV1 {
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
         uint40 score = scoringProxy.callScoreFunction(
-            serviceAgreementStorage.getAgreementScoreFunctionId(agreementId),
+            serviceAgreementStorageV1.getAgreementScoreFunctionId(agreementId),
             args.hashFunctionId,
             profileStorage.getNodeId(identityId),
             args.keyword,
@@ -269,15 +269,15 @@ contract ServiceAgreementV1 {
     }
 
     function isProofWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
-        ServiceAgreementStorageV1 sas = serviceAgreementStorage;
-        uint256 startTime = sas.getAgreementStartTime(agreementId);
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        uint256 startTime = sasV1.getAgreementStartTime(agreementId);
 
         require(startTime != 0, "Service Agreement doesn't exist");
-        require(epoch < sas.getAgreementEpochsNumber(agreementId), "Service Agreement expired");
+        require(epoch < sasV1.getAgreementEpochsNumber(agreementId), "Service Agreement expired");
 
         uint256 timeNow = block.timestamp;
-        uint128 epochLength = sas.getAgreementEpochLength(agreementId);
-        uint8 proofWindowOffsetPerc = sas.getAgreementProofWindowOffsetPerc(agreementId);
+        uint128 epochLength = sasV1.getAgreementEpochLength(agreementId);
+        uint8 proofWindowOffsetPerc = sasV1.getAgreementProofWindowOffsetPerc(agreementId);
 
         uint256 proofWindowOffset = epochLength * proofWindowOffsetPerc / 100;
         uint256 proofWindowDuration = epochLength * parametersStorage.proofWindowDurationPerc() / 100;
@@ -319,19 +319,19 @@ contract ServiceAgreementV1 {
 
         uint72 identityId = ids.getIdentityId(msg.sender);
 
-        ServiceAgreementStorageV1 sas = serviceAgreementStorage;
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
         require(
-            sas.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) != 0,
+            sasV1.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) != 0,
             "You've been already rewarded"
         );
 
-        bytes32 nextCommitId = sas.getAgreementEpochSubmissionHead(agreementId, args.epoch);
+        bytes32 nextCommitId = sasV1.getAgreementEpochSubmissionHead(agreementId, args.epoch);
         uint32 r0 = parametersStorage.R0();
         uint8 i;
-        while ((identityId != sas.getCommitSubmissionsIdentityId(nextCommitId)) && i < r0) {
+        while ((identityId != sasV1.getCommitSubmissionsIdentityId(nextCommitId)) && i < r0) {
             nextCommitId = keccak256(
-                abi.encodePacked(agreementId, args.epoch, sas.getCommitSubmissionNextIdentityId(nextCommitId))
+                abi.encodePacked(agreementId, args.epoch, sasV1.getCommitSubmissionNextIdentityId(nextCommitId))
             );
             unchecked { i++; }
         }
@@ -356,17 +356,17 @@ contract ServiceAgreementV1 {
         );
 
         uint96 reward = (
-            sas.getAgreementTokenAmount(agreementId) /
-            (sas.getAgreementEpochsNumber(agreementId) - args.epoch + 1) /
-            (r0 - sas.getAgreementRewardedNodesNumber(agreementId, args.epoch))
+            sasV1.getAgreementTokenAmount(agreementId) /
+            (sasV1.getAgreementEpochsNumber(agreementId) - args.epoch + 1) /
+            (r0 - sasV1.getAgreementRewardedNodesNumber(agreementId, args.epoch))
         );
 
         stakingContract.addReward(identityId, reward);
-        sas.setAgreementTokenAmount(agreementId, sas.getAgreementTokenAmount(agreementId) - reward);
-        sas.incrementAgreementRewardedNodesNumber(agreementId, args.epoch);
+        sasV1.setAgreementTokenAmount(agreementId, sasV1.getAgreementTokenAmount(agreementId) - reward);
+        sasV1.incrementAgreementRewardedNodesNumber(agreementId, args.epoch);
 
         // To make sure that node already received reward
-        sas.setCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId)), 0);
+        sasV1.setCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId)), 0);
     }
 
     function _insertCommit(
@@ -379,20 +379,20 @@ contract ServiceAgreementV1 {
     )
         private
     {
-        ServiceAgreementStorageV1 sas = serviceAgreementStorage;
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
         bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, identityId));
-        bytes32 refCommitId = sas.getAgreementEpochSubmissionHead(agreementId, epoch);
+        bytes32 refCommitId = sasV1.getAgreementEpochSubmissionHead(agreementId, epoch);
 
         require(commitId != refCommitId, "Node has already committed");
 
         ParametersStorage params = parametersStorage;
 
-        uint72 refCommitNextIdentityId = sas.getCommitSubmissionNextIdentityId(refCommitId);
+        uint72 refCommitNextIdentityId = sasV1.getCommitSubmissionNextIdentityId(refCommitId);
         uint32 r0 = params.R0();
         uint8 i;
         while (
-            (score <  sas.getCommitSubmissionScore(refCommitId)) &&
+            (score <  sasV1.getCommitSubmissionScore(refCommitId)) &&
             (refCommitNextIdentityId != 0) &&
             (i < r0)
         ) {
@@ -402,19 +402,19 @@ contract ServiceAgreementV1 {
 
             require(commitId != refCommitId, "Node has already committed");
 
-            refCommitNextIdentityId = sas.getCommitSubmissionNextIdentityId(refCommitId);
+            refCommitNextIdentityId = sasV1.getCommitSubmissionNextIdentityId(refCommitId);
             unchecked { i++; }
         }
 
         require(i < r0, "Node rank should be < R0");
 
-        sas.createCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
+        sasV1.createCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
 
-        ServiceAgreementStructsV1.CommitSubmission memory refCommit = sas.getCommitSubmission(refCommitId);
+        ServiceAgreementStructsV1.CommitSubmission memory refCommit = sasV1.getCommitSubmission(refCommitId);
 
         if ((i == 0) && (refCommit.identityId == 0)) {
             //  No head -> Setting new head
-            sas.setAgreementEpochSubmissionHead(agreementId, epoch, commitId);
+            sasV1.setAgreementEpochSubmissionHead(agreementId, epoch, commitId);
         } else if ((i == 0) && (score <= refCommit.score)) {
             // There is a head with higher or equal score, add new commit on the right
             _link_commits(agreementId, epoch, refCommit.identityId, identityId);
@@ -439,14 +439,14 @@ contract ServiceAgreementV1 {
     }
 
     function _link_commits(bytes32 agreementId, uint16 epoch, uint72 leftIdentityId, uint72 rightIdentityId) private {
-        ServiceAgreementStorageV1 sas = serviceAgreementStorage;
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
-        sas.setCommitSubmissionNextIdentityId(
+        sasV1.setCommitSubmissionNextIdentityId(
             keccak256(abi.encodePacked(agreementId, epoch, leftIdentityId)),  // leftCommitId
             rightIdentityId
         );
 
-        sas.setCommitSubmissionPrevIdentityId(
+        sasV1.setCommitSubmissionPrevIdentityId(
             keccak256(abi.encodePacked(agreementId, epoch, rightIdentityId)),  // rightCommitId
             leftIdentityId
         );
