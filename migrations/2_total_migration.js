@@ -131,123 +131,6 @@ module.exports = async (deployer, network, accounts) => {
                     console.log('Hub contract already deployed at address: ', deployedContracts.contracts.hub.evmAddress);
                     hub = await Hub.at(deployedContracts.contracts.hub.evmAddress);
                 }
-                /* -------------------------------Parameters Storage------------------------------------- */
-                parametersStorage = await initializeContract(
-                    deployedContracts,
-                    'ParametersStorage',
-                    ParametersStorage,
-                    deployerAddress
-                );
-
-                /* -------------------------------------------------------------------------------------- */
-
-                /* ----------------------------------Hashing Proxy--------------------------------------- */
-                hashingProxy = await initializeContract(
-                    deployedContracts,
-                    'HashingProxy',
-                    HashingProxy,
-                    deployerAddress
-                );
-
-                sha256Contract = await initializeContract(
-                    deployedContracts,
-                    'sha256Contract',
-                    SHA256,
-                    deployerAddress,
-                    false,
-                    false
-                );
-                await hashingProxy.setContractAddress(1, sha256Contract.address);
-
-                /* ---------------------------------------------------------------------------------------- */
-
-                /* ----------------------------------Scoring Proxy----------------------------------------- */
-                scoringProxy = await initializeContract(
-                    deployedContracts,
-                    'ScoringProxy',
-                    ScoringProxy,
-                    deployerAddress
-                );
-
-                log2pldsfContract = await initializeContract(
-                    deployedContracts,
-                    'log2pldsfContract',
-                    Log2PLDSF,
-                    deployerAddress,
-                    true,
-                    false
-                );
-                await scoringProxy.setContractAddress(1, log2pldsfContract.address);
-
-                /* ---------------------------------------------------------------------------------------- */
-
-                /* ---------------------------------Sharding Table----------------------------------------- */
-                shardingTableStorage = await initializeContract(
-                    deployedContracts,
-                    'ShardingTableStorage',
-                    ShardingTableStorage,
-                    deployerAddress,
-                    true
-                );
-
-                shardingTableContract = await initializeContract(
-                    deployedContracts,
-                    'ShardingTable',
-                    ShardingTableContract,
-                    deployerAddress,
-                    true
-                );
-
-                /* ---------------------------------------------------------------------------------------- */
-
-                /* ------------------------------------Assertion------------------------------------------- */
-                assertionStorage = await initializeContract(
-                    deployedContracts,
-                    'AssertionStorage',
-                    AssertionStorage,
-                    deployerAddress,
-                    true
-                );
-
-                assertionContract = await initializeContract(
-                    deployedContracts,
-                    'Assertion',
-                    AssertionContract,
-                    deployerAddress,
-                    true
-                );
-                /* ---------------------------------------------------------------------------------------- */
-
-                /* -----------------------------Service Agreement Storage---------------------------------- */
-                serviceAgreementStorageV1 = await initializeContract(
-                    deployedContracts,
-                    'ServiceAgreementStorageV1',
-                    ServiceAgreementStorageV1,
-                    deployerAddress,
-                    true
-                );
-
-                serviceAgreementContractV1 = await initializeContract(
-                    deployedContracts,
-                    'ServiceAgreementV1',
-                    ServiceAgreementContractV1,
-                    deployerAddress,
-                    true
-                );
-                /* ---------------------------------------------------------------------------------------- */
-
-                /* ---------------------------------------Assets------------------------------------------- */
-                contentAsset = await initializeContract(
-                    deployedContracts,
-                    'ContentAsset',
-                    ContentAsset,
-                    deployerAddress,
-                    true,
-                    false,
-                    true
-                );
-                /* ---------------------------------------------------------------------------------------- */
-
                 /* ---------------------------------------ERC20-------------------------------------------- */
                 if (deployedContracts.contracts.TokenContract?.evmAddress) {
                     await hub.setContractAddress('Token', deployedContracts.contracts.TokenContract?.evmAddress);
@@ -269,10 +152,69 @@ module.exports = async (deployer, network, accounts) => {
                         await erc20Token.mint(account, amountToMint);
                     }
                 }
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* ----------------------------------Parameters Storage------------------------------------ */
+                parametersStorage = await initializeContract(
+                    deployedContracts,
+                    'ParametersStorage',
+                    ParametersStorage,
+                    deployerAddress
+                );
 
                 /* ---------------------------------------------------------------------------------------- */
 
-                /* --------------------------------------Identity------------------------------------------ */
+                /* ------------------------------------Hashing Proxy--------------------------------------- */
+                hashingProxy = await initializeContract(
+                    deployedContracts,
+                    'HashingProxy',
+                    HashingProxy,
+                    deployerAddress
+                );
+
+                sha256Contract = await initializeContract(
+                    deployedContracts,
+                    'sha256Contract',
+                    SHA256,
+                    deployerAddress,
+                    false,
+                    false
+                );
+                await hashingProxy.setContractAddress(1, sha256Contract.address);
+
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* -----------------------------------Scoring Proxy---------------------------------------- */
+                scoringProxy = await initializeContract(
+                    deployedContracts,
+                    'ScoringProxy',
+                    ScoringProxy,
+                    deployerAddress
+                );
+
+                log2pldsfContract = await initializeContract(
+                    deployedContracts,
+                    'log2pldsfContract',
+                    Log2PLDSF,
+                    deployerAddress,
+                    true,
+                    false
+                );
+                await scoringProxy.setContractAddress(1, log2pldsfContract.address);
+
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* ----------------------------------Assertion Storage------------------------------------- */
+                assertionStorage = await initializeContract(
+                    deployedContracts,
+                    'AssertionStorage',
+                    AssertionStorage,
+                    deployerAddress,
+                    true
+                );
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* -----------------------------------Identity Storage------------------------------------- */
                 identityStorage = await initializeContract(
                     deployedContracts,
                     'IdentityStorage',
@@ -280,7 +222,59 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     true
                 );
+                /* ---------------------------------------------------------------------------------------- */
 
+                /* --------------------------------Sharding Table Storage---------------------------------- */
+                shardingTableStorage = await initializeContract(
+                    deployedContracts,
+                    'ShardingTableStorage',
+                    ShardingTableStorage,
+                    deployerAddress,
+                    true
+                );
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* ------------------------------------Staking Storage------------------------------------- */
+                stakingStorage = await initializeContract(
+                    deployedContracts,
+                    'StakingStorage',
+                    StakingStorage,
+                    deployerAddress,
+                    true
+                );
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* ------------------------------------Profile Storage------------------------------------- */
+                profileStorage = await initializeContract(
+                    deployedContracts,
+                    'ProfileStorage',
+                    ProfileStorage,
+                    deployerAddress,
+                    true
+                );
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* --------------------------------Service Agreement Storage------------------------------- */
+                serviceAgreementStorageV1 = await initializeContract(
+                    deployedContracts,
+                    'ServiceAgreementStorageV1',
+                    ServiceAgreementStorageV1,
+                    deployerAddress,
+                    true
+                );
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* -------------------------------------Assertion------------------------------------------ */
+                assertionContract = await initializeContract(
+                    deployedContracts,
+                    'Assertion',
+                    AssertionContract,
+                    deployerAddress,
+                    true
+                );
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* --------------------------------------Identity------------------------------------------ */
                 identityContract = await initializeContract(
                     deployedContracts,
                     'Identity',
@@ -291,15 +285,27 @@ module.exports = async (deployer, network, accounts) => {
 
                 /* ---------------------------------------------------------------------------------------- */
 
-                /* ----------------------------------------Profile----------------------------------------- */
-                profileStorage = await initializeContract(
+                /* ------------------------------------Sharding Table-------------------------------------- */
+                shardingTableContract = await initializeContract(
                     deployedContracts,
-                    'ProfileStorage',
-                    ProfileStorage,
+                    'ShardingTable',
+                    ShardingTableContract,
                     deployerAddress,
                     true
                 );
+                /* ---------------------------------------------------------------------------------------- */
 
+                /* ----------------------------------------Staking----------------------------------------- */
+                stakingContract = await initializeContract(
+                    deployedContracts,
+                    'Staking',
+                    StakingContract,
+                    deployerAddress,
+                    true
+                );
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* ----------------------------------------Profile----------------------------------------- */
                 profileContract = await initializeContract(
                     deployedContracts,
                     'Profile',
@@ -307,23 +313,26 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     true
                 );
-
                 /* ---------------------------------------------------------------------------------------- */
 
-                /* -----------------------------------------Staking---------------------------------------- */
-                stakingStorage = await initializeContract(
+                /* ------------------------------------Service Agreement----------------------------------- */
+                serviceAgreementContractV1 = await initializeContract(
                     deployedContracts,
-                    'StakingStorage',
-                    StakingStorage,
+                    'ServiceAgreementV1',
+                    ServiceAgreementContractV1,
                     deployerAddress,
                     true
                 );
+                /* ---------------------------------------------------------------------------------------- */
 
-                stakingContract = await initializeContract(
+                /* ----------------------------------------Assets------------------------------------------ */
+                contentAsset = await initializeContract(
                     deployedContracts,
-                    'Staking',
-                    StakingContract,
+                    'ContentAsset',
+                    ContentAsset,
                     deployerAddress,
+                    true,
+                    false,
                     true
                 );
                 /* ---------------------------------------------------------------------------------------- */
