@@ -2126,7 +2126,7 @@
                 }
               ]
             },
-            "name": "abi_encode_tuple_t_contract$_IdentityStorage_$8746__to_t_address__fromStack_reversed",
+            "name": "abi_encode_tuple_t_contract$_IdentityStorage_$8754__to_t_address__fromStack_reversed",
             "nodeType": "YulFunctionDefinition",
             "parameters": [
               {
@@ -6840,7 +6840,7 @@
           }
         ]
       },
-      "contents": "{\n    { }\n    function abi_encode_tuple_t_contract$_Hub_$3541__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function validator_revert_uint72(value)\n    {\n        if iszero(eq(value, and(value, 0xffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_uint72t_bytes32(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint72(value)\n        value0 := value\n        value1 := calldataload(add(headStart, 32))\n    }\n    function abi_decode_tuple_t_uint72t_bytes32t_uint256t_uint256(headStart, dataEnd) -> value0, value1, value2, value3\n    {\n        if slt(sub(dataEnd, headStart), 128) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint72(value)\n        value0 := value\n        value1 := calldataload(add(headStart, 32))\n        value2 := calldataload(add(headStart, 64))\n        value3 := calldataload(add(headStart, 96))\n    }\n    function abi_decode_address(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_addresst_address(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_address(headStart)\n        value1 := abi_decode_address(add(headStart, 32))\n    }\n    function abi_encode_tuple_t_uint72__to_t_uint72__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_uint72(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint72(value)\n        value0 := value\n    }\n    function abi_encode_tuple_t_contract$_IdentityStorage_$8746__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_stringliteral_d7498fc6627b6d0ec1c3e9513f8849f3d66d4bf3a0e2944ddfabc596f36af5a9__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 16)\n        mstore(add(headStart, 64), \"Key arg is empty\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_uint72_t_bytes32__to_t_uint72_t_bytes32__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), value1)\n    }\n    function abi_decode_tuple_t_uint256t_uint256t_bytes32_fromMemory(headStart, dataEnd) -> value0, value1, value2\n    {\n        if slt(sub(dataEnd, headStart), 96) { revert(0, 0) }\n        value0 := mload(headStart)\n        value1 := mload(add(headStart, 32))\n        value2 := mload(add(headStart, 64))\n    }\n    function abi_encode_tuple_t_stringliteral_db25d365a18670da9169b9217c1a03bc415357ca657266e3fea197f2a34525a6__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 18)\n        mstore(add(headStart, 64), \"Key isn't attached\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_uint72_t_uint256__to_t_uint72_t_uint256__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), value1)\n    }\n    function panic_error_0x41()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x41)\n        revert(0, 0x24)\n    }\n    function abi_decode_tuple_t_array$_t_bytes32_$dyn_memory_ptr_fromMemory(headStart, dataEnd) -> value0\n    {\n        let _1 := 32\n        if slt(sub(dataEnd, headStart), _1) { revert(0, 0) }\n        let offset := mload(headStart)\n        let _2 := 0xffffffffffffffff\n        if gt(offset, _2) { revert(0, 0) }\n        let _3 := add(headStart, offset)\n        if iszero(slt(add(_3, 0x1f), dataEnd)) { revert(0, 0) }\n        let _4 := mload(_3)\n        if gt(_4, _2) { panic_error_0x41() }\n        let _5 := shl(5, _4)\n        let memPtr := mload(64)\n        let newFreePtr := add(memPtr, and(add(_5, 63), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0))\n        if or(gt(newFreePtr, _2), lt(newFreePtr, memPtr)) { panic_error_0x41() }\n        mstore(64, newFreePtr)\n        let dst := memPtr\n        mstore(memPtr, _4)\n        dst := add(memPtr, _1)\n        let srcEnd := add(add(_3, _5), _1)\n        if gt(srcEnd, dataEnd) { revert(0, 0) }\n        let src := add(_3, _1)\n        for { } lt(src, srcEnd) { src := add(src, _1) }\n        {\n            mstore(dst, mload(src))\n            dst := add(dst, _1)\n        }\n        value0 := memPtr\n    }\n    function abi_encode_tuple_t_uint72_t_bytes32_t_uint256__to_t_uint72_t_bytes32_t_uint256__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 96)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), value1)\n        mstore(add(headStart, 64), value2)\n    }\n    function abi_decode_tuple_t_bool_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        if iszero(eq(value, iszero(iszero(value)))) { revert(0, 0) }\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_89fadd184b545975c96b07b646c493f404a1fb0ab5cb79f7ac7dc5e094db4d0a__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 32)\n        mstore(add(headStart, 64), \"Cannot delete the only admin key\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_63387e947efe0f4984fc7db97aef12f4cc03e47b9909265fb80096e08ce10409__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 32)\n        mstore(add(headStart, 64), \"Cannot delete the only oper. key\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_encode_tuple_t_stringliteral_b108327bb4514b5e2641a1bec0c8bba4c4e72b9089b503fee04ef67d932bf3d4__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 23)\n        mstore(add(headStart, 64), \"Key is already attached\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_uint72_t_bytes32_t_uint256_t_uint256__to_t_uint72_t_bytes32_t_uint256_t_uint256__fromStack_reversed(headStart, value3, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 128)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), value1)\n        mstore(add(headStart, 64), value2)\n        mstore(add(headStart, 96), value3)\n    }\n    function abi_encode_tuple_t_bytes32_t_uint72__to_t_bytes32_t_uint72__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, value0)\n        mstore(add(headStart, 32), and(value1, 0xffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_stringliteral_b4adca4a1d551199a2842b7a9b9df92511ab1958a29c42c8583cddaeff933ee6__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 32)\n        mstore(add(headStart, 64), \"Operational address can't be 0x0\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_0814842e2fe5c931823d78d49ff51cb7a07ee2c8ab3e99bf96d014b25cff2819__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 26)\n        mstore(add(headStart, 64), \"Admin address can't be 0x0\")\n        tail := add(headStart, 96)\n    }\n    function abi_decode_tuple_t_uint72_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        validator_revert_uint72(value)\n        value0 := value\n    }\n    function abi_encode_tuple_packed_t_address__to_t_address__nonPadded_inplace_fromStack_reversed(pos, value0) -> end\n    {\n        mstore(pos, and(shl(96, value0), 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000))\n        end := add(pos, 20)\n    }\n    function abi_encode_tuple_t_stringliteral_e651ce4a8839375d1cf5f6d58c67ddfe4069084462875c6b7281baf4c421dd76__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 14)\n        mstore(add(headStart, 64), \"Admin function\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_address__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_stringliteral_594f7f5fe86fab061b9e22bc77ca1b3025e507b69aaafbe7baccf4293ace5c45__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 32)\n        mstore(add(headStart, 64), \"Fn can only be called by the hub\")\n        tail := add(headStart, 96)\n    }\n}",
+      "contents": "{\n    { }\n    function abi_encode_tuple_t_contract$_Hub_$3541__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function validator_revert_uint72(value)\n    {\n        if iszero(eq(value, and(value, 0xffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_uint72t_bytes32(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint72(value)\n        value0 := value\n        value1 := calldataload(add(headStart, 32))\n    }\n    function abi_decode_tuple_t_uint72t_bytes32t_uint256t_uint256(headStart, dataEnd) -> value0, value1, value2, value3\n    {\n        if slt(sub(dataEnd, headStart), 128) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint72(value)\n        value0 := value\n        value1 := calldataload(add(headStart, 32))\n        value2 := calldataload(add(headStart, 64))\n        value3 := calldataload(add(headStart, 96))\n    }\n    function abi_decode_address(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_addresst_address(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_address(headStart)\n        value1 := abi_decode_address(add(headStart, 32))\n    }\n    function abi_encode_tuple_t_uint72__to_t_uint72__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_uint72(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint72(value)\n        value0 := value\n    }\n    function abi_encode_tuple_t_contract$_IdentityStorage_$8754__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_stringliteral_d7498fc6627b6d0ec1c3e9513f8849f3d66d4bf3a0e2944ddfabc596f36af5a9__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 16)\n        mstore(add(headStart, 64), \"Key arg is empty\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_uint72_t_bytes32__to_t_uint72_t_bytes32__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), value1)\n    }\n    function abi_decode_tuple_t_uint256t_uint256t_bytes32_fromMemory(headStart, dataEnd) -> value0, value1, value2\n    {\n        if slt(sub(dataEnd, headStart), 96) { revert(0, 0) }\n        value0 := mload(headStart)\n        value1 := mload(add(headStart, 32))\n        value2 := mload(add(headStart, 64))\n    }\n    function abi_encode_tuple_t_stringliteral_db25d365a18670da9169b9217c1a03bc415357ca657266e3fea197f2a34525a6__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 18)\n        mstore(add(headStart, 64), \"Key isn't attached\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_uint72_t_uint256__to_t_uint72_t_uint256__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), value1)\n    }\n    function panic_error_0x41()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x41)\n        revert(0, 0x24)\n    }\n    function abi_decode_tuple_t_array$_t_bytes32_$dyn_memory_ptr_fromMemory(headStart, dataEnd) -> value0\n    {\n        let _1 := 32\n        if slt(sub(dataEnd, headStart), _1) { revert(0, 0) }\n        let offset := mload(headStart)\n        let _2 := 0xffffffffffffffff\n        if gt(offset, _2) { revert(0, 0) }\n        let _3 := add(headStart, offset)\n        if iszero(slt(add(_3, 0x1f), dataEnd)) { revert(0, 0) }\n        let _4 := mload(_3)\n        if gt(_4, _2) { panic_error_0x41() }\n        let _5 := shl(5, _4)\n        let memPtr := mload(64)\n        let newFreePtr := add(memPtr, and(add(_5, 63), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0))\n        if or(gt(newFreePtr, _2), lt(newFreePtr, memPtr)) { panic_error_0x41() }\n        mstore(64, newFreePtr)\n        let dst := memPtr\n        mstore(memPtr, _4)\n        dst := add(memPtr, _1)\n        let srcEnd := add(add(_3, _5), _1)\n        if gt(srcEnd, dataEnd) { revert(0, 0) }\n        let src := add(_3, _1)\n        for { } lt(src, srcEnd) { src := add(src, _1) }\n        {\n            mstore(dst, mload(src))\n            dst := add(dst, _1)\n        }\n        value0 := memPtr\n    }\n    function abi_encode_tuple_t_uint72_t_bytes32_t_uint256__to_t_uint72_t_bytes32_t_uint256__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 96)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), value1)\n        mstore(add(headStart, 64), value2)\n    }\n    function abi_decode_tuple_t_bool_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        if iszero(eq(value, iszero(iszero(value)))) { revert(0, 0) }\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_89fadd184b545975c96b07b646c493f404a1fb0ab5cb79f7ac7dc5e094db4d0a__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 32)\n        mstore(add(headStart, 64), \"Cannot delete the only admin key\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_63387e947efe0f4984fc7db97aef12f4cc03e47b9909265fb80096e08ce10409__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 32)\n        mstore(add(headStart, 64), \"Cannot delete the only oper. key\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_encode_tuple_t_stringliteral_b108327bb4514b5e2641a1bec0c8bba4c4e72b9089b503fee04ef67d932bf3d4__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 23)\n        mstore(add(headStart, 64), \"Key is already attached\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_uint72_t_bytes32_t_uint256_t_uint256__to_t_uint72_t_bytes32_t_uint256_t_uint256__fromStack_reversed(headStart, value3, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 128)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), value1)\n        mstore(add(headStart, 64), value2)\n        mstore(add(headStart, 96), value3)\n    }\n    function abi_encode_tuple_t_bytes32_t_uint72__to_t_bytes32_t_uint72__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, value0)\n        mstore(add(headStart, 32), and(value1, 0xffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_stringliteral_b4adca4a1d551199a2842b7a9b9df92511ab1958a29c42c8583cddaeff933ee6__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 32)\n        mstore(add(headStart, 64), \"Operational address can't be 0x0\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_0814842e2fe5c931823d78d49ff51cb7a07ee2c8ab3e99bf96d014b25cff2819__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 26)\n        mstore(add(headStart, 64), \"Admin address can't be 0x0\")\n        tail := add(headStart, 96)\n    }\n    function abi_decode_tuple_t_uint72_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        validator_revert_uint72(value)\n        value0 := value\n    }\n    function abi_encode_tuple_packed_t_address__to_t_address__nonPadded_inplace_fromStack_reversed(pos, value0) -> end\n    {\n        mstore(pos, and(shl(96, value0), 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000))\n        end := add(pos, 20)\n    }\n    function abi_encode_tuple_t_stringliteral_e651ce4a8839375d1cf5f6d58c67ddfe4069084462875c6b7281baf4c421dd76__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 14)\n        mstore(add(headStart, 64), \"Admin function\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_address__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_stringliteral_594f7f5fe86fab061b9e22bc77ca1b3025e507b69aaafbe7baccf4293ace5c45__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 32)\n        mstore(add(headStart, 64), \"Fn can only be called by the hub\")\n        tail := add(headStart, 96)\n    }\n}",
       "id": 50,
       "language": "Yul",
       "name": "#utility.yul"
@@ -6854,10 +6854,10 @@
     "absolutePath": "project:/contracts/Identity.sol",
     "exportedSymbols": {
       "ADMIN_KEY": [
-        8048
+        8056
       ],
       "ECDSA": [
-        8054
+        8062
       ],
       "Hub": [
         3541
@@ -6866,13 +6866,13 @@
         3944
       ],
       "IdentityStorage": [
-        8746
+        8754
       ],
       "OPERATIONAL_KEY": [
-        8051
+        8059
       ],
       "RSA": [
-        8057
+        8065
       ]
     },
     "id": 3945,
@@ -6922,7 +6922,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 3945,
-        "sourceUnit": 8747,
+        "sourceUnit": 8755,
         "src": "91:64:18",
         "symbolAliases": [
           {
@@ -6931,7 +6931,7 @@
               "name": "IdentityStorage",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 8746,
+              "referencedDeclaration": 8754,
               "src": "100:15:18",
               "typeDescriptions": {}
             },
@@ -6947,7 +6947,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 3945,
-        "sourceUnit": 8058,
+        "sourceUnit": 8066,
         "src": "156:91:18",
         "symbolAliases": [
           {
@@ -6956,7 +6956,7 @@
               "name": "ADMIN_KEY",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 8048,
+              "referencedDeclaration": 8056,
               "src": "165:9:18",
               "typeDescriptions": {}
             },
@@ -6968,7 +6968,7 @@
               "name": "OPERATIONAL_KEY",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 8051,
+              "referencedDeclaration": 8059,
               "src": "176:15:18",
               "typeDescriptions": {}
             },
@@ -6980,7 +6980,7 @@
               "name": "ECDSA",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 8054,
+              "referencedDeclaration": 8062,
               "src": "193:5:18",
               "typeDescriptions": {}
             },
@@ -6992,7 +6992,7 @@
               "name": "RSA",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 8057,
+              "referencedDeclaration": 8065,
               "src": "200:3:18",
               "typeDescriptions": {}
             },
@@ -7208,7 +7208,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+              "typeIdentifier": "t_contract$_IdentityStorage_$8754",
               "typeString": "contract IdentityStorage"
             },
             "typeName": {
@@ -7218,13 +7218,13 @@
                 "id": 3568,
                 "name": "IdentityStorage",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 8746,
+                "referencedDeclaration": 8754,
                 "src": "461:15:18"
               },
-              "referencedDeclaration": 8746,
+              "referencedDeclaration": 8754,
               "src": "461:15:18",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                 "typeString": "contract IdentityStorage"
               }
             },
@@ -7464,7 +7464,7 @@
                       "referencedDeclaration": 3570,
                       "src": "623:15:18",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                        "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                         "typeString": "contract IdentityStorage"
                       }
                     },
@@ -7551,10 +7551,10 @@
                         "name": "IdentityStorage",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8746,
+                        "referencedDeclaration": 8754,
                         "src": "641:15:18",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_IdentityStorage_$8746_$",
+                          "typeIdentifier": "t_type$_t_contract$_IdentityStorage_$8754_$",
                           "typeString": "type(contract IdentityStorage)"
                         }
                       },
@@ -7569,13 +7569,13 @@
                       "src": "641:58:18",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                        "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                         "typeString": "contract IdentityStorage"
                       }
                     },
                     "src": "623:76:18",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                      "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                       "typeString": "contract IdentityStorage"
                     }
                   },
@@ -8140,7 +8140,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                        "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                         "typeString": "contract IdentityStorage"
                       },
                       "typeName": {
@@ -8150,13 +8150,13 @@
                           "id": 3648,
                           "name": "IdentityStorage",
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 8746,
+                          "referencedDeclaration": 8754,
                           "src": "1136:15:18"
                         },
-                        "referencedDeclaration": 8746,
+                        "referencedDeclaration": 8754,
                         "src": "1136:15:18",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                          "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                           "typeString": "contract IdentityStorage"
                         }
                       },
@@ -8172,7 +8172,7 @@
                     "referencedDeclaration": 3570,
                     "src": "1158:15:18",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                      "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                       "typeString": "contract IdentityStorage"
                     }
                   },
@@ -8225,7 +8225,7 @@
                         "referencedDeclaration": 3650,
                         "src": "1204:3:18",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                          "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                           "typeString": "contract IdentityStorage"
                         }
                       },
@@ -8236,7 +8236,7 @@
                       "lValueRequested": false,
                       "memberName": "generateIdentityId",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8732,
+                      "referencedDeclaration": 8740,
                       "src": "1204:22:18",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$__$returns$_t_uint72_$",
@@ -8428,7 +8428,7 @@
                         "name": "ADMIN_KEY",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8048,
+                        "referencedDeclaration": 8056,
                         "src": "1339:9:18",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -8440,7 +8440,7 @@
                         "name": "ECDSA",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8054,
+                        "referencedDeclaration": 8062,
                         "src": "1350:5:18",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -8475,7 +8475,7 @@
                         "referencedDeclaration": 3650,
                         "src": "1304:3:18",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                          "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                           "typeString": "contract IdentityStorage"
                         }
                       },
@@ -8486,7 +8486,7 @@
                       "lValueRequested": false,
                       "memberName": "addKey",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8521,
+                      "referencedDeclaration": 8529,
                       "src": "1304:10:18",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_uint72_$_t_bytes32_$_t_uint256_$_t_uint256_$returns$__$",
@@ -8679,7 +8679,7 @@
                         "name": "OPERATIONAL_KEY",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8051,
+                        "referencedDeclaration": 8059,
                         "src": "1485:15:18",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -8691,7 +8691,7 @@
                         "name": "ECDSA",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8054,
+                        "referencedDeclaration": 8062,
                         "src": "1502:5:18",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -8726,7 +8726,7 @@
                         "referencedDeclaration": 3650,
                         "src": "1444:3:18",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                          "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                           "typeString": "contract IdentityStorage"
                         }
                       },
@@ -8737,7 +8737,7 @@
                       "lValueRequested": false,
                       "memberName": "addKey",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8521,
+                      "referencedDeclaration": 8529,
                       "src": "1444:10:18",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_uint72_$_t_bytes32_$_t_uint256_$_t_uint256_$returns$__$",
@@ -8810,7 +8810,7 @@
                         "referencedDeclaration": 3650,
                         "src": "1519:3:18",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                          "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                           "typeString": "contract IdentityStorage"
                         }
                       },
@@ -8821,7 +8821,7 @@
                       "lValueRequested": false,
                       "memberName": "setOperationalKeyIdentityId",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8708,
+                      "referencedDeclaration": 8716,
                       "src": "1519:31:18",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_bytes32_$_t_uint72_$returns$__$",
@@ -9114,7 +9114,7 @@
                         "referencedDeclaration": 3570,
                         "src": "1816:15:18",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                          "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                           "typeString": "contract IdentityStorage"
                         }
                       },
@@ -9125,7 +9125,7 @@
                       "lValueRequested": false,
                       "memberName": "deleteIdentity",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8456,
+                      "referencedDeclaration": 8464,
                       "src": "1816:30:18",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_uint72_$returns$__$",
@@ -9451,7 +9451,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                        "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                         "typeString": "contract IdentityStorage"
                       },
                       "typeName": {
@@ -9461,13 +9461,13 @@
                           "id": 3753,
                           "name": "IdentityStorage",
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 8746,
+                          "referencedDeclaration": 8754,
                           "src": "2117:15:18"
                         },
-                        "referencedDeclaration": 8746,
+                        "referencedDeclaration": 8754,
                         "src": "2117:15:18",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                          "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                           "typeString": "contract IdentityStorage"
                         }
                       },
@@ -9483,7 +9483,7 @@
                     "referencedDeclaration": 3570,
                     "src": "2139:15:18",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                      "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                       "typeString": "contract IdentityStorage"
                     }
                   },
@@ -9612,7 +9612,7 @@
                           "referencedDeclaration": 3755,
                           "src": "2215:3:18",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                            "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                             "typeString": "contract IdentityStorage"
                           }
                         },
@@ -9623,7 +9623,7 @@
                         "lValueRequested": false,
                         "memberName": "getKey",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 8656,
+                        "referencedDeclaration": 8664,
                         "src": "2215:10:18",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_external_view$_t_uint72_$_t_bytes32_$returns$_t_uint256_$_t_uint256_$_t_bytes32_$",
@@ -9840,7 +9840,7 @@
                         "referencedDeclaration": 3755,
                         "src": "2317:3:18",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                          "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                           "typeString": "contract IdentityStorage"
                         }
                       },
@@ -9851,7 +9851,7 @@
                       "lValueRequested": false,
                       "memberName": "addKey",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8521,
+                      "referencedDeclaration": 8529,
                       "src": "2317:10:18",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_uint72_$_t_bytes32_$_t_uint256_$_t_uint256_$returns$__$",
@@ -9907,7 +9907,7 @@
                       "name": "OPERATIONAL_KEY",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8051,
+                      "referencedDeclaration": 8059,
                       "src": "2394:15:18",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -9975,7 +9975,7 @@
                               "referencedDeclaration": 3755,
                               "src": "2425:3:18",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                                "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                                 "typeString": "contract IdentityStorage"
                               }
                             },
@@ -9986,7 +9986,7 @@
                             "lValueRequested": false,
                             "memberName": "setOperationalKeyIdentityId",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 8708,
+                            "referencedDeclaration": 8716,
                             "src": "2425:31:18",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_external_nonpayable$_t_bytes32_$_t_uint72_$returns$__$",
@@ -10357,7 +10357,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                        "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                         "typeString": "contract IdentityStorage"
                       },
                       "typeName": {
@@ -10367,13 +10367,13 @@
                           "id": 3819,
                           "name": "IdentityStorage",
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 8746,
+                          "referencedDeclaration": 8754,
                           "src": "2645:15:18"
                         },
-                        "referencedDeclaration": 8746,
+                        "referencedDeclaration": 8754,
                         "src": "2645:15:18",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                          "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                           "typeString": "contract IdentityStorage"
                         }
                       },
@@ -10389,7 +10389,7 @@
                     "referencedDeclaration": 3570,
                     "src": "2667:15:18",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                      "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                       "typeString": "contract IdentityStorage"
                     }
                   },
@@ -10566,7 +10566,7 @@
                           "referencedDeclaration": 3821,
                           "src": "2774:3:18",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                            "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                             "typeString": "contract IdentityStorage"
                           }
                         },
@@ -10577,7 +10577,7 @@
                         "lValueRequested": false,
                         "memberName": "getKey",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 8656,
+                        "referencedDeclaration": 8664,
                         "src": "2774:10:18",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_external_view$_t_uint72_$_t_bytes32_$returns$_t_uint256_$_t_uint256_$_t_bytes32_$",
@@ -10770,7 +10770,7 @@
                                         "name": "ADMIN_KEY",
                                         "nodeType": "Identifier",
                                         "overloadedDeclarations": [],
-                                        "referencedDeclaration": 8048,
+                                        "referencedDeclaration": 8056,
                                         "src": "2944:9:18",
                                         "typeDescriptions": {
                                           "typeIdentifier": "t_uint256",
@@ -10797,7 +10797,7 @@
                                         "referencedDeclaration": 3821,
                                         "src": "2911:3:18",
                                         "typeDescriptions": {
-                                          "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                                          "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                                           "typeString": "contract IdentityStorage"
                                         }
                                       },
@@ -10808,7 +10808,7 @@
                                       "lValueRequested": false,
                                       "memberName": "getKeysByPurpose",
                                       "nodeType": "MemberAccess",
-                                      "referencedDeclaration": 8675,
+                                      "referencedDeclaration": 8683,
                                       "src": "2911:20:18",
                                       "typeDescriptions": {
                                         "typeIdentifier": "t_function_external_view$_t_uint72_$_t_uint256_$returns$_t_array$_t_bytes32_$dyn_memory_ptr_$",
@@ -10900,7 +10900,7 @@
                                     "name": "ADMIN_KEY",
                                     "nodeType": "Identifier",
                                     "overloadedDeclarations": [],
-                                    "referencedDeclaration": 8048,
+                                    "referencedDeclaration": 8056,
                                     "src": "3021:9:18",
                                     "typeDescriptions": {
                                       "typeIdentifier": "t_uint256",
@@ -10931,7 +10931,7 @@
                                     "referencedDeclaration": 3821,
                                     "src": "2986:3:18",
                                     "typeDescriptions": {
-                                      "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                                      "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                                       "typeString": "contract IdentityStorage"
                                     }
                                   },
@@ -10942,7 +10942,7 @@
                                   "lValueRequested": false,
                                   "memberName": "keyHasPurpose",
                                   "nodeType": "MemberAccess",
-                                  "referencedDeclaration": 8618,
+                                  "referencedDeclaration": 8626,
                                   "src": "2986:17:18",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_function_external_view$_t_uint72_$_t_bytes32_$_t_uint256_$returns$_t_bool_$",
@@ -11105,7 +11105,7 @@
                                         "name": "OPERATIONAL_KEY",
                                         "nodeType": "Identifier",
                                         "overloadedDeclarations": [],
-                                        "referencedDeclaration": 8051,
+                                        "referencedDeclaration": 8059,
                                         "src": "3186:15:18",
                                         "typeDescriptions": {
                                           "typeIdentifier": "t_uint256",
@@ -11132,7 +11132,7 @@
                                         "referencedDeclaration": 3821,
                                         "src": "3153:3:18",
                                         "typeDescriptions": {
-                                          "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                                          "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                                           "typeString": "contract IdentityStorage"
                                         }
                                       },
@@ -11143,7 +11143,7 @@
                                       "lValueRequested": false,
                                       "memberName": "getKeysByPurpose",
                                       "nodeType": "MemberAccess",
-                                      "referencedDeclaration": 8675,
+                                      "referencedDeclaration": 8683,
                                       "src": "3153:20:18",
                                       "typeDescriptions": {
                                         "typeIdentifier": "t_function_external_view$_t_uint72_$_t_uint256_$returns$_t_array$_t_bytes32_$dyn_memory_ptr_$",
@@ -11235,7 +11235,7 @@
                                     "name": "OPERATIONAL_KEY",
                                     "nodeType": "Identifier",
                                     "overloadedDeclarations": [],
-                                    "referencedDeclaration": 8051,
+                                    "referencedDeclaration": 8059,
                                     "src": "3269:15:18",
                                     "typeDescriptions": {
                                       "typeIdentifier": "t_uint256",
@@ -11266,7 +11266,7 @@
                                     "referencedDeclaration": 3821,
                                     "src": "3234:3:18",
                                     "typeDescriptions": {
-                                      "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                                      "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                                       "typeString": "contract IdentityStorage"
                                     }
                                   },
@@ -11277,7 +11277,7 @@
                                   "lValueRequested": false,
                                   "memberName": "keyHasPurpose",
                                   "nodeType": "MemberAccess",
-                                  "referencedDeclaration": 8618,
+                                  "referencedDeclaration": 8626,
                                   "src": "3234:17:18",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_function_external_view$_t_uint72_$_t_bytes32_$_t_uint256_$returns$_t_bool_$",
@@ -11432,7 +11432,7 @@
                         "referencedDeclaration": 3821,
                         "src": "3368:3:18",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                          "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                           "typeString": "contract IdentityStorage"
                         }
                       },
@@ -11443,7 +11443,7 @@
                       "lValueRequested": false,
                       "memberName": "removeKey",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 8595,
+                      "referencedDeclaration": 8603,
                       "src": "3368:13:18",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_uint72_$_t_bytes32_$returns$__$",
@@ -11499,7 +11499,7 @@
                       "name": "OPERATIONAL_KEY",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8051,
+                      "referencedDeclaration": 8059,
                       "src": "3424:15:18",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -11551,7 +11551,7 @@
                               "referencedDeclaration": 3821,
                               "src": "3455:3:18",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                                "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                                 "typeString": "contract IdentityStorage"
                               }
                             },
@@ -11562,7 +11562,7 @@
                             "lValueRequested": false,
                             "memberName": "removeOperationalKeyIdentityId",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 8721,
+                            "referencedDeclaration": 8729,
                             "src": "3455:34:18",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_external_nonpayable$_t_bytes32_$returns$__$",
@@ -12016,7 +12016,7 @@
                             "name": "ADMIN_KEY",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 8048,
+                            "referencedDeclaration": 8056,
                             "src": "3830:9:18",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -12047,7 +12047,7 @@
                             "referencedDeclaration": 3570,
                             "src": "3747:15:18",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                              "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                               "typeString": "contract IdentityStorage"
                             }
                           },
@@ -12058,7 +12058,7 @@
                           "lValueRequested": false,
                           "memberName": "keyHasPurpose",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 8618,
+                          "referencedDeclaration": 8626,
                           "src": "3747:29:18",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_external_view$_t_uint72_$_t_bytes32_$_t_uint256_$returns$_t_bool_$",
@@ -12210,7 +12210,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-03T16:02:16.532Z",
+  "updatedAt": "2022-12-03T16:55:57.778Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

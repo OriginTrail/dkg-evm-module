@@ -3576,7 +3576,7 @@
                 }
               ]
             },
-            "name": "abi_encode_tuple_t_contract$_StakingStorage_$10635__to_t_address__fromStack_reversed",
+            "name": "abi_encode_tuple_t_contract$_StakingStorage_$10643__to_t_address__fromStack_reversed",
             "nodeType": "YulFunctionDefinition",
             "parameters": [
               {
@@ -3686,7 +3686,7 @@
                 }
               ]
             },
-            "name": "abi_encode_tuple_t_contract$_Staking_$7620__to_t_address__fromStack_reversed",
+            "name": "abi_encode_tuple_t_contract$_Staking_$7628__to_t_address__fromStack_reversed",
             "nodeType": "YulFunctionDefinition",
             "parameters": [
               {
@@ -3796,7 +3796,7 @@
                 }
               ]
             },
-            "name": "abi_encode_tuple_t_contract$_IdentityStorage_$8746__to_t_address__fromStack_reversed",
+            "name": "abi_encode_tuple_t_contract$_IdentityStorage_$8754__to_t_address__fromStack_reversed",
             "nodeType": "YulFunctionDefinition",
             "parameters": [
               {
@@ -3906,7 +3906,7 @@
                 }
               ]
             },
-            "name": "abi_encode_tuple_t_contract$_ProfileStorage_$9466__to_t_address__fromStack_reversed",
+            "name": "abi_encode_tuple_t_contract$_ProfileStorage_$9474__to_t_address__fromStack_reversed",
             "nodeType": "YulFunctionDefinition",
             "parameters": [
               {
@@ -11523,7 +11523,7 @@
                 }
               ]
             },
-            "name": "abi_decode_tuple_t_array$_t_struct$_Contract_$10872_memory_ptr_$dyn_memory_ptr_fromMemory",
+            "name": "abi_decode_tuple_t_array$_t_struct$_Contract_$10880_memory_ptr_$dyn_memory_ptr_fromMemory",
             "nodeType": "YulFunctionDefinition",
             "parameters": [
               {
@@ -11551,7 +11551,7 @@
           }
         ]
       },
-      "contents": "{\n    { }\n    function validator_revert_uint72(value)\n    {\n        if iszero(eq(value, and(value, 0xffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_uint72(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint72(value)\n        value0 := value\n    }\n    function abi_encode_tuple_t_contract$_HashingProxy_$3293__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_contract$_Hub_$3541__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_contract$_Identity_$3944__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function validator_revert_address(value)\n    {\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function validator_revert_uint96(value)\n    {\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_uint96(offset) -> value\n    {\n        value := calldataload(offset)\n        validator_revert_uint96(value)\n    }\n    function validator_revert_uint8(value)\n    {\n        if iszero(eq(value, and(value, 0xff))) { revert(0, 0) }\n    }\n    function abi_decode_uint8(offset) -> value\n    {\n        value := calldataload(offset)\n        validator_revert_uint8(value)\n    }\n    function abi_decode_tuple_t_addresst_bytes_calldata_ptrt_uint96t_uint96t_uint8(headStart, dataEnd) -> value0, value1, value2, value3, value4, value5\n    {\n        if slt(sub(dataEnd, headStart), 160) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_address(value)\n        value0 := value\n        let offset := calldataload(add(headStart, 32))\n        let _1 := 0xffffffffffffffff\n        if gt(offset, _1) { revert(0, 0) }\n        let _2 := add(headStart, offset)\n        if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(0, 0) }\n        let length := calldataload(_2)\n        if gt(length, _1) { revert(0, 0) }\n        if gt(add(add(_2, length), 32), dataEnd) { revert(0, 0) }\n        value1 := add(_2, 32)\n        value2 := length\n        let value_1 := calldataload(add(headStart, 64))\n        validator_revert_uint96(value_1)\n        value3 := value_1\n        value4 := abi_decode_uint96(add(headStart, 96))\n        value5 := abi_decode_uint8(add(headStart, 128))\n    }\n    function abi_encode_tuple_t_contract$_StakingStorage_$10635__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_contract$_Staking_$7620__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_contract$_IdentityStorage_$8746__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_contract$_ProfileStorage_$9466__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_uint72__to_t_uint72__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_uint96_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        validator_revert_uint96(value)\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_e504d86ab1ae3379f0e7102601225b9130a167301177b0ae6a430bcacb114b08__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 25)\n        mstore(add(headStart, 64), \"You have no operator fees\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_uint72_t_rational_0_by_1__to_t_uint72_t_uint96__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), and(value1, 0xffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_address_t_uint72_t_uint96__to_t_address_t_uint72_t_uint96__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 96)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 32), and(value1, 0xffffffffffffffffff))\n        mstore(add(headStart, 64), and(value2, 0xffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_address_t_uint96__to_t_address_t_uint96__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 32), and(value1, 0xffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_address__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_uint72_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        validator_revert_uint72(value)\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_ebef2ba00e961c7d236e6feb48bd5c0195aa2feda37e2416515f592c4c9e2d78__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 23)\n        mstore(add(headStart, 64), \"Identity already exists\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_e3110278ba0129dfdb6c8a27f7263d4199d83027ec254ecfa4721afe5226b878__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 22)\n        mstore(add(headStart, 64), \"Node ID can't be empty\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_bytes_calldata(start, length, pos) -> end\n    {\n        mstore(pos, length)\n        calldatacopy(add(pos, 0x20), start, length)\n        mstore(add(add(pos, length), 0x20), 0)\n        end := add(add(pos, and(add(length, 31), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0)), 0x20)\n    }\n    function abi_encode_tuple_t_bytes_calldata_ptr__to_t_bytes_memory_ptr__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        mstore(headStart, 32)\n        tail := abi_encode_bytes_calldata(value0, value1, add(headStart, 32))\n    }\n    function abi_decode_tuple_t_bool_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        if iszero(eq(value, iszero(iszero(value)))) { revert(0, 0) }\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_ceabd97b36db3378acb675ac8480f2e8e81823bf72e46a1c1bbd3f1f0b8c6be9__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 29)\n        mstore(add(headStart, 64), \"Node ID is already registered\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_7c22a9a28bfe7e2dcdeeaa3f7c7e4b504363cb60d65850dab3c6d16eb9db3ff8__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 15)\n        mstore(add(headStart, 64), \"Ask cannot be 0\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_address_t_address__to_t_address_t_address__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        let _1 := 0xffffffffffffffffffffffffffffffffffffffff\n        mstore(headStart, and(value0, _1))\n        mstore(add(headStart, 32), and(value1, _1))\n    }\n    function copy_memory_to_memory(src, dst, length)\n    {\n        let i := 0\n        for { } lt(i, length) { i := add(i, 32) }\n        {\n            mstore(add(dst, i), mload(add(src, i)))\n        }\n        if gt(i, length) { mstore(add(dst, length), 0) }\n    }\n    function abi_encode_tuple_packed_t_stringliteral_c08d26a41b2e91d45dc6b42464c11449192784b54520b8a6cabb39cf1d5d38a0_t_string_memory_ptr__to_t_bytes12_t_string_memory_ptr__nonPadded_inplace_fromStack_reversed(pos, value0) -> end\n    {\n        mstore(pos, \"Share token \")\n        let length := mload(value0)\n        copy_memory_to_memory(add(value0, 0x20), add(pos, 12), length)\n        end := add(add(pos, length), 12)\n    }\n    function abi_encode_tuple_packed_t_stringliteral_537aa459e6083a6ba15b8728da2fc83fa9de7ecf2bbb7bb8db9b39449cb35eb7_t_string_memory_ptr__to_t_bytes9_t_string_memory_ptr__nonPadded_inplace_fromStack_reversed(pos, value0) -> end\n    {\n        mstore(pos, \"DKGSTAKE_\")\n        let length := mload(value0)\n        copy_memory_to_memory(add(value0, 0x20), add(pos, 9), length)\n        end := add(add(pos, length), 9)\n    }\n    function abi_encode_string(value, pos) -> end\n    {\n        let length := mload(value)\n        mstore(pos, length)\n        copy_memory_to_memory(add(value, 0x20), add(pos, 0x20), length)\n        end := add(add(pos, and(add(length, 31), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0)), 0x20)\n    }\n    function abi_encode_tuple_t_address_t_string_memory_ptr_t_string_memory_ptr__to_t_address_t_string_memory_ptr_t_string_memory_ptr__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 32), 96)\n        let tail_1 := abi_encode_string(value1, add(headStart, 96))\n        mstore(add(headStart, 64), sub(tail_1, headStart))\n        tail := abi_encode_string(value2, tail_1)\n    }\n    function abi_encode_tuple_t_uint72_t_bytes_calldata_ptr_t_uint96_t_address__to_t_uint72_t_bytes_memory_ptr_t_uint96_t_address__fromStack_reversed(headStart, value4, value3, value2, value1, value0) -> tail\n    {\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), 128)\n        tail := abi_encode_bytes_calldata(value1, value2, add(headStart, 128))\n        mstore(add(headStart, 64), and(value3, 0xffffffffffffffffffffffff))\n        mstore(add(headStart, 96), and(value4, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_uint72_t_uint8__to_t_uint72_t_uint8__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), and(value1, 0xff))\n    }\n    function abi_encode_tuple_packed_t_address__to_t_address__nonPadded_inplace_fromStack_reversed(pos, value0) -> end\n    {\n        mstore(pos, and(shl(96, value0), 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000))\n        end := add(pos, 20)\n    }\n    function abi_encode_tuple_t_uint72_t_bytes32_t_uint256__to_t_uint72_t_bytes32_t_uint256__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 96)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), value1)\n        mstore(add(headStart, 64), value2)\n    }\n    function abi_encode_tuple_t_stringliteral_e651ce4a8839375d1cf5f6d58c67ddfe4069084462875c6b7281baf4c421dd76__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 14)\n        mstore(add(headStart, 64), \"Admin function\")\n        tail := add(headStart, 96)\n    }\n    function panic_error_0x11()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x11)\n        revert(0, 0x24)\n    }\n    function increment_t_uint256(value) -> ret\n    {\n        if eq(value, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) { panic_error_0x11() }\n        ret := add(value, 1)\n    }\n    function panic_error_0x12()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x12)\n        revert(0, 0x24)\n    }\n    function checked_div_t_uint256(x, y) -> r\n    {\n        if iszero(y) { panic_error_0x12() }\n        r := div(x, y)\n    }\n    function panic_error_0x41()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x41)\n        revert(0, 0x24)\n    }\n    function checked_sub_t_uint256(x, y) -> diff\n    {\n        if lt(x, y) { panic_error_0x11() }\n        diff := sub(x, y)\n    }\n    function mod_t_uint256(x, y) -> r\n    {\n        if iszero(y) { panic_error_0x12() }\n        r := mod(x, y)\n    }\n    function checked_add_t_uint256(x, y) -> sum\n    {\n        if gt(x, not(y)) { panic_error_0x11() }\n        sum := add(x, y)\n    }\n    function panic_error_0x32()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x32)\n        revert(0, 0x24)\n    }\n    function allocate_memory_1824() -> memPtr\n    {\n        memPtr := mload(0x40)\n        let newFreePtr := add(memPtr, 0x40)\n        if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }\n        mstore(0x40, newFreePtr)\n    }\n    function allocate_memory(size) -> memPtr\n    {\n        memPtr := mload(64)\n        let newFreePtr := add(memPtr, and(add(size, 31), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0))\n        if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }\n        mstore(64, newFreePtr)\n    }\n    function abi_decode_tuple_t_array$_t_struct$_Contract_$10872_memory_ptr_$dyn_memory_ptr_fromMemory(headStart, dataEnd) -> value0\n    {\n        let _1 := 32\n        if slt(sub(dataEnd, headStart), _1) { revert(0, 0) }\n        let offset := mload(headStart)\n        let _2 := 0xffffffffffffffff\n        if gt(offset, _2) { revert(0, 0) }\n        let _3 := add(headStart, offset)\n        if iszero(slt(add(_3, 0x1f), dataEnd)) { revert(0, 0) }\n        let _4 := mload(_3)\n        if gt(_4, _2) { panic_error_0x41() }\n        let dst := allocate_memory(add(shl(5, _4), _1))\n        let dst_1 := dst\n        mstore(dst, _4)\n        dst := add(dst, _1)\n        let srcEnd := add(add(_3, shl(6, _4)), _1)\n        if gt(srcEnd, dataEnd) { revert(0, 0) }\n        let src := add(_3, _1)\n        for { } lt(src, srcEnd) { src := add(src, 0x40) }\n        {\n            if slt(sub(dataEnd, src), 0x40)\n            {\n                let _5 := 0\n                revert(_5, _5)\n            }\n            let value := allocate_memory_1824()\n            let value_1 := mload(src)\n            validator_revert_uint8(value_1)\n            mstore(value, value_1)\n            let value_2 := mload(add(src, _1))\n            validator_revert_address(value_2)\n            mstore(add(value, _1), value_2)\n            mstore(dst, value)\n            dst := add(dst, _1)\n        }\n        value0 := dst_1\n    }\n}",
+      "contents": "{\n    { }\n    function validator_revert_uint72(value)\n    {\n        if iszero(eq(value, and(value, 0xffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_uint72(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_uint72(value)\n        value0 := value\n    }\n    function abi_encode_tuple_t_contract$_HashingProxy_$3293__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_contract$_Hub_$3541__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_contract$_Identity_$3944__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function validator_revert_address(value)\n    {\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function validator_revert_uint96(value)\n    {\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_uint96(offset) -> value\n    {\n        value := calldataload(offset)\n        validator_revert_uint96(value)\n    }\n    function validator_revert_uint8(value)\n    {\n        if iszero(eq(value, and(value, 0xff))) { revert(0, 0) }\n    }\n    function abi_decode_uint8(offset) -> value\n    {\n        value := calldataload(offset)\n        validator_revert_uint8(value)\n    }\n    function abi_decode_tuple_t_addresst_bytes_calldata_ptrt_uint96t_uint96t_uint8(headStart, dataEnd) -> value0, value1, value2, value3, value4, value5\n    {\n        if slt(sub(dataEnd, headStart), 160) { revert(0, 0) }\n        let value := calldataload(headStart)\n        validator_revert_address(value)\n        value0 := value\n        let offset := calldataload(add(headStart, 32))\n        let _1 := 0xffffffffffffffff\n        if gt(offset, _1) { revert(0, 0) }\n        let _2 := add(headStart, offset)\n        if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(0, 0) }\n        let length := calldataload(_2)\n        if gt(length, _1) { revert(0, 0) }\n        if gt(add(add(_2, length), 32), dataEnd) { revert(0, 0) }\n        value1 := add(_2, 32)\n        value2 := length\n        let value_1 := calldataload(add(headStart, 64))\n        validator_revert_uint96(value_1)\n        value3 := value_1\n        value4 := abi_decode_uint96(add(headStart, 96))\n        value5 := abi_decode_uint8(add(headStart, 128))\n    }\n    function abi_encode_tuple_t_contract$_StakingStorage_$10643__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_contract$_Staking_$7628__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_contract$_IdentityStorage_$8754__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_contract$_ProfileStorage_$9474__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_uint72__to_t_uint72__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_uint96_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        validator_revert_uint96(value)\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_e504d86ab1ae3379f0e7102601225b9130a167301177b0ae6a430bcacb114b08__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 25)\n        mstore(add(headStart, 64), \"You have no operator fees\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_uint72_t_rational_0_by_1__to_t_uint72_t_uint96__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), and(value1, 0xffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_address_t_uint72_t_uint96__to_t_address_t_uint72_t_uint96__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 96)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 32), and(value1, 0xffffffffffffffffff))\n        mstore(add(headStart, 64), and(value2, 0xffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_address_t_uint96__to_t_address_t_uint96__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 32), and(value1, 0xffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_address__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_decode_tuple_t_uint72_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        validator_revert_uint72(value)\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_ebef2ba00e961c7d236e6feb48bd5c0195aa2feda37e2416515f592c4c9e2d78__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 23)\n        mstore(add(headStart, 64), \"Identity already exists\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_e3110278ba0129dfdb6c8a27f7263d4199d83027ec254ecfa4721afe5226b878__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 22)\n        mstore(add(headStart, 64), \"Node ID can't be empty\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_bytes_calldata(start, length, pos) -> end\n    {\n        mstore(pos, length)\n        calldatacopy(add(pos, 0x20), start, length)\n        mstore(add(add(pos, length), 0x20), 0)\n        end := add(add(pos, and(add(length, 31), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0)), 0x20)\n    }\n    function abi_encode_tuple_t_bytes_calldata_ptr__to_t_bytes_memory_ptr__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        mstore(headStart, 32)\n        tail := abi_encode_bytes_calldata(value0, value1, add(headStart, 32))\n    }\n    function abi_decode_tuple_t_bool_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        if iszero(eq(value, iszero(iszero(value)))) { revert(0, 0) }\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_ceabd97b36db3378acb675ac8480f2e8e81823bf72e46a1c1bbd3f1f0b8c6be9__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 29)\n        mstore(add(headStart, 64), \"Node ID is already registered\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_7c22a9a28bfe7e2dcdeeaa3f7c7e4b504363cb60d65850dab3c6d16eb9db3ff8__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 15)\n        mstore(add(headStart, 64), \"Ask cannot be 0\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_address_t_address__to_t_address_t_address__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        let _1 := 0xffffffffffffffffffffffffffffffffffffffff\n        mstore(headStart, and(value0, _1))\n        mstore(add(headStart, 32), and(value1, _1))\n    }\n    function copy_memory_to_memory(src, dst, length)\n    {\n        let i := 0\n        for { } lt(i, length) { i := add(i, 32) }\n        {\n            mstore(add(dst, i), mload(add(src, i)))\n        }\n        if gt(i, length) { mstore(add(dst, length), 0) }\n    }\n    function abi_encode_tuple_packed_t_stringliteral_c08d26a41b2e91d45dc6b42464c11449192784b54520b8a6cabb39cf1d5d38a0_t_string_memory_ptr__to_t_bytes12_t_string_memory_ptr__nonPadded_inplace_fromStack_reversed(pos, value0) -> end\n    {\n        mstore(pos, \"Share token \")\n        let length := mload(value0)\n        copy_memory_to_memory(add(value0, 0x20), add(pos, 12), length)\n        end := add(add(pos, length), 12)\n    }\n    function abi_encode_tuple_packed_t_stringliteral_537aa459e6083a6ba15b8728da2fc83fa9de7ecf2bbb7bb8db9b39449cb35eb7_t_string_memory_ptr__to_t_bytes9_t_string_memory_ptr__nonPadded_inplace_fromStack_reversed(pos, value0) -> end\n    {\n        mstore(pos, \"DKGSTAKE_\")\n        let length := mload(value0)\n        copy_memory_to_memory(add(value0, 0x20), add(pos, 9), length)\n        end := add(add(pos, length), 9)\n    }\n    function abi_encode_string(value, pos) -> end\n    {\n        let length := mload(value)\n        mstore(pos, length)\n        copy_memory_to_memory(add(value, 0x20), add(pos, 0x20), length)\n        end := add(add(pos, and(add(length, 31), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0)), 0x20)\n    }\n    function abi_encode_tuple_t_address_t_string_memory_ptr_t_string_memory_ptr__to_t_address_t_string_memory_ptr_t_string_memory_ptr__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 32), 96)\n        let tail_1 := abi_encode_string(value1, add(headStart, 96))\n        mstore(add(headStart, 64), sub(tail_1, headStart))\n        tail := abi_encode_string(value2, tail_1)\n    }\n    function abi_encode_tuple_t_uint72_t_bytes_calldata_ptr_t_uint96_t_address__to_t_uint72_t_bytes_memory_ptr_t_uint96_t_address__fromStack_reversed(headStart, value4, value3, value2, value1, value0) -> tail\n    {\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), 128)\n        tail := abi_encode_bytes_calldata(value1, value2, add(headStart, 128))\n        mstore(add(headStart, 64), and(value3, 0xffffffffffffffffffffffff))\n        mstore(add(headStart, 96), and(value4, 0xffffffffffffffffffffffffffffffffffffffff))\n    }\n    function abi_encode_tuple_t_uint72_t_uint8__to_t_uint72_t_uint8__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), and(value1, 0xff))\n    }\n    function abi_encode_tuple_packed_t_address__to_t_address__nonPadded_inplace_fromStack_reversed(pos, value0) -> end\n    {\n        mstore(pos, and(shl(96, value0), 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000))\n        end := add(pos, 20)\n    }\n    function abi_encode_tuple_t_uint72_t_bytes32_t_uint256__to_t_uint72_t_bytes32_t_uint256__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 96)\n        mstore(headStart, and(value0, 0xffffffffffffffffff))\n        mstore(add(headStart, 32), value1)\n        mstore(add(headStart, 64), value2)\n    }\n    function abi_encode_tuple_t_stringliteral_e651ce4a8839375d1cf5f6d58c67ddfe4069084462875c6b7281baf4c421dd76__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 14)\n        mstore(add(headStart, 64), \"Admin function\")\n        tail := add(headStart, 96)\n    }\n    function panic_error_0x11()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x11)\n        revert(0, 0x24)\n    }\n    function increment_t_uint256(value) -> ret\n    {\n        if eq(value, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) { panic_error_0x11() }\n        ret := add(value, 1)\n    }\n    function panic_error_0x12()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x12)\n        revert(0, 0x24)\n    }\n    function checked_div_t_uint256(x, y) -> r\n    {\n        if iszero(y) { panic_error_0x12() }\n        r := div(x, y)\n    }\n    function panic_error_0x41()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x41)\n        revert(0, 0x24)\n    }\n    function checked_sub_t_uint256(x, y) -> diff\n    {\n        if lt(x, y) { panic_error_0x11() }\n        diff := sub(x, y)\n    }\n    function mod_t_uint256(x, y) -> r\n    {\n        if iszero(y) { panic_error_0x12() }\n        r := mod(x, y)\n    }\n    function checked_add_t_uint256(x, y) -> sum\n    {\n        if gt(x, not(y)) { panic_error_0x11() }\n        sum := add(x, y)\n    }\n    function panic_error_0x32()\n    {\n        mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)\n        mstore(4, 0x32)\n        revert(0, 0x24)\n    }\n    function allocate_memory_1824() -> memPtr\n    {\n        memPtr := mload(0x40)\n        let newFreePtr := add(memPtr, 0x40)\n        if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }\n        mstore(0x40, newFreePtr)\n    }\n    function allocate_memory(size) -> memPtr\n    {\n        memPtr := mload(64)\n        let newFreePtr := add(memPtr, and(add(size, 31), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0))\n        if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }\n        mstore(64, newFreePtr)\n    }\n    function abi_decode_tuple_t_array$_t_struct$_Contract_$10880_memory_ptr_$dyn_memory_ptr_fromMemory(headStart, dataEnd) -> value0\n    {\n        let _1 := 32\n        if slt(sub(dataEnd, headStart), _1) { revert(0, 0) }\n        let offset := mload(headStart)\n        let _2 := 0xffffffffffffffff\n        if gt(offset, _2) { revert(0, 0) }\n        let _3 := add(headStart, offset)\n        if iszero(slt(add(_3, 0x1f), dataEnd)) { revert(0, 0) }\n        let _4 := mload(_3)\n        if gt(_4, _2) { panic_error_0x41() }\n        let dst := allocate_memory(add(shl(5, _4), _1))\n        let dst_1 := dst\n        mstore(dst, _4)\n        dst := add(dst, _1)\n        let srcEnd := add(add(_3, shl(6, _4)), _1)\n        if gt(srcEnd, dataEnd) { revert(0, 0) }\n        let src := add(_3, _1)\n        for { } lt(src, srcEnd) { src := add(src, 0x40) }\n        {\n            if slt(sub(dataEnd, src), 0x40)\n            {\n                let _5 := 0\n                revert(_5, _5)\n            }\n            let value := allocate_memory_1824()\n            let value_1 := mload(src)\n            validator_revert_uint8(value_1)\n            mstore(value, value_1)\n            let value_2 := mload(add(src, _1))\n            validator_revert_address(value_2)\n            mstore(add(value, _1), value_2)\n            mstore(dst, value)\n            dst := add(dst, _1)\n        }\n        value0 := dst_1\n    }\n}",
       "id": 50,
       "language": "Yul",
       "name": "#utility.yul"
@@ -11565,7 +11565,7 @@
     "absolutePath": "project:/contracts/Profile.sol",
     "exportedSymbols": {
       "ADMIN_KEY": [
-        8048
+        8056
       ],
       "HashingProxy": [
         3293
@@ -11577,31 +11577,31 @@
         3944
       ],
       "IdentityStorage": [
-        8746
+        8754
       ],
       "OPERATIONAL_KEY": [
-        8051
+        8059
       ],
       "Profile": [
         4406
       ],
       "ProfileStorage": [
-        9466
+        9474
       ],
       "Shares": [
-        6925
+        6933
       ],
       "Staking": [
-        7620
+        7628
       ],
       "StakingStorage": [
-        10635
+        10643
       ],
       "Strings": [
         2416
       ],
       "UnorderedIndexableContractDynamicSetLib": [
-        11173
+        11181
       ]
     },
     "id": 4407,
@@ -11701,7 +11701,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 4407,
-        "sourceUnit": 6926,
+        "sourceUnit": 6934,
         "src": "185:38:19",
         "symbolAliases": [
           {
@@ -11710,7 +11710,7 @@
               "name": "Shares",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 6925,
+              "referencedDeclaration": 6933,
               "src": "194:6:19",
               "typeDescriptions": {}
             },
@@ -11726,7 +11726,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 4407,
-        "sourceUnit": 7621,
+        "sourceUnit": 7629,
         "src": "224:40:19",
         "symbolAliases": [
           {
@@ -11735,7 +11735,7 @@
               "name": "Staking",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 7620,
+              "referencedDeclaration": 7628,
               "src": "233:7:19",
               "typeDescriptions": {}
             },
@@ -11751,7 +11751,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 4407,
-        "sourceUnit": 8747,
+        "sourceUnit": 8755,
         "src": "265:64:19",
         "symbolAliases": [
           {
@@ -11760,7 +11760,7 @@
               "name": "IdentityStorage",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 8746,
+              "referencedDeclaration": 8754,
               "src": "274:15:19",
               "typeDescriptions": {}
             },
@@ -11776,7 +11776,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 4407,
-        "sourceUnit": 9467,
+        "sourceUnit": 9475,
         "src": "330:62:19",
         "symbolAliases": [
           {
@@ -11785,7 +11785,7 @@
               "name": "ProfileStorage",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 9466,
+              "referencedDeclaration": 9474,
               "src": "339:14:19",
               "typeDescriptions": {}
             },
@@ -11801,7 +11801,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 4407,
-        "sourceUnit": 10636,
+        "sourceUnit": 10644,
         "src": "393:62:19",
         "symbolAliases": [
           {
@@ -11810,7 +11810,7 @@
               "name": "StakingStorage",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 10635,
+              "referencedDeclaration": 10643,
               "src": "402:14:19",
               "typeDescriptions": {}
             },
@@ -11826,7 +11826,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 4407,
-        "sourceUnit": 11174,
+        "sourceUnit": 11182,
         "src": "456:107:19",
         "symbolAliases": [
           {
@@ -11835,7 +11835,7 @@
               "name": "UnorderedIndexableContractDynamicSetLib",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 11173,
+              "referencedDeclaration": 11181,
               "src": "465:39:19",
               "typeDescriptions": {}
             },
@@ -11851,7 +11851,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 4407,
-        "sourceUnit": 8058,
+        "sourceUnit": 8066,
         "src": "564:79:19",
         "symbolAliases": [
           {
@@ -11860,7 +11860,7 @@
               "name": "ADMIN_KEY",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 8048,
+              "referencedDeclaration": 8056,
               "src": "573:9:19",
               "typeDescriptions": {}
             },
@@ -11872,7 +11872,7 @@
               "name": "OPERATIONAL_KEY",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 8051,
+              "referencedDeclaration": 8059,
               "src": "584:15:19",
               "typeDescriptions": {}
             },
@@ -11911,7 +11911,7 @@
         "baseContracts": [],
         "canonicalName": "Profile",
         "contractDependencies": [
-          6925
+          6933
         ],
         "contractKind": "contract",
         "fullyImplemented": true,
@@ -12041,7 +12041,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_Staking_$7620",
+              "typeIdentifier": "t_contract$_Staking_$7628",
               "typeString": "contract Staking"
             },
             "typeName": {
@@ -12051,13 +12051,13 @@
                 "id": 3979,
                 "name": "Staking",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 7620,
+                "referencedDeclaration": 7628,
                 "src": "834:7:19"
               },
-              "referencedDeclaration": 7620,
+              "referencedDeclaration": 7628,
               "src": "834:7:19",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Staking_$7620",
+                "typeIdentifier": "t_contract$_Staking_$7628",
                 "typeString": "contract Staking"
               }
             },
@@ -12076,7 +12076,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+              "typeIdentifier": "t_contract$_IdentityStorage_$8754",
               "typeString": "contract IdentityStorage"
             },
             "typeName": {
@@ -12086,13 +12086,13 @@
                 "id": 3982,
                 "name": "IdentityStorage",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 8746,
+                "referencedDeclaration": 8754,
                 "src": "870:15:19"
               },
-              "referencedDeclaration": 8746,
+              "referencedDeclaration": 8754,
               "src": "870:15:19",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                 "typeString": "contract IdentityStorage"
               }
             },
@@ -12111,7 +12111,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+              "typeIdentifier": "t_contract$_ProfileStorage_$9474",
               "typeString": "contract ProfileStorage"
             },
             "typeName": {
@@ -12121,13 +12121,13 @@
                 "id": 3985,
                 "name": "ProfileStorage",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 9466,
+                "referencedDeclaration": 9474,
                 "src": "914:14:19"
               },
-              "referencedDeclaration": 9466,
+              "referencedDeclaration": 9474,
               "src": "914:14:19",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                 "typeString": "contract ProfileStorage"
               }
             },
@@ -12146,7 +12146,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_StakingStorage_$10635",
+              "typeIdentifier": "t_contract$_StakingStorage_$10643",
               "typeString": "contract StakingStorage"
             },
             "typeName": {
@@ -12156,13 +12156,13 @@
                 "id": 3988,
                 "name": "StakingStorage",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 10635,
+                "referencedDeclaration": 10643,
                 "src": "956:14:19"
               },
-              "referencedDeclaration": 10635,
+              "referencedDeclaration": 10643,
               "src": "956:14:19",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_StakingStorage_$10635",
+                "typeIdentifier": "t_contract$_StakingStorage_$10643",
                 "typeString": "contract StakingStorage"
               }
             },
@@ -12670,7 +12670,7 @@
                       "referencedDeclaration": 3981,
                       "src": "1266:15:19",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_Staking_$7620",
+                        "typeIdentifier": "t_contract$_Staking_$7628",
                         "typeString": "contract Staking"
                       }
                     },
@@ -12757,10 +12757,10 @@
                         "name": "Staking",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 7620,
+                        "referencedDeclaration": 7628,
                         "src": "1284:7:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_Staking_$7620_$",
+                          "typeIdentifier": "t_type$_t_contract$_Staking_$7628_$",
                           "typeString": "type(contract Staking)"
                         }
                       },
@@ -12775,13 +12775,13 @@
                       "src": "1284:42:19",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_Staking_$7620",
+                        "typeIdentifier": "t_contract$_Staking_$7628",
                         "typeString": "contract Staking"
                       }
                     },
                     "src": "1266:60:19",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_Staking_$7620",
+                      "typeIdentifier": "t_contract$_Staking_$7628",
                       "typeString": "contract Staking"
                     }
                   },
@@ -12804,7 +12804,7 @@
                       "referencedDeclaration": 3984,
                       "src": "1336:15:19",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                        "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                         "typeString": "contract IdentityStorage"
                       }
                     },
@@ -12891,10 +12891,10 @@
                         "name": "IdentityStorage",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 8746,
+                        "referencedDeclaration": 8754,
                         "src": "1354:15:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_IdentityStorage_$8746_$",
+                          "typeIdentifier": "t_type$_t_contract$_IdentityStorage_$8754_$",
                           "typeString": "type(contract IdentityStorage)"
                         }
                       },
@@ -12909,13 +12909,13 @@
                       "src": "1354:58:19",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                        "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                         "typeString": "contract IdentityStorage"
                       }
                     },
                     "src": "1336:76:19",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                      "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                       "typeString": "contract IdentityStorage"
                     }
                   },
@@ -12938,7 +12938,7 @@
                       "referencedDeclaration": 3987,
                       "src": "1422:14:19",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                        "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                         "typeString": "contract ProfileStorage"
                       }
                     },
@@ -13025,10 +13025,10 @@
                         "name": "ProfileStorage",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9466,
+                        "referencedDeclaration": 9474,
                         "src": "1439:14:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_ProfileStorage_$9466_$",
+                          "typeIdentifier": "t_type$_t_contract$_ProfileStorage_$9474_$",
                           "typeString": "type(contract ProfileStorage)"
                         }
                       },
@@ -13043,13 +13043,13 @@
                       "src": "1439:56:19",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                        "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                         "typeString": "contract ProfileStorage"
                       }
                     },
                     "src": "1422:73:19",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                      "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                       "typeString": "contract ProfileStorage"
                     }
                   },
@@ -13072,7 +13072,7 @@
                       "referencedDeclaration": 3990,
                       "src": "1505:14:19",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_StakingStorage_$10635",
+                        "typeIdentifier": "t_contract$_StakingStorage_$10643",
                         "typeString": "contract StakingStorage"
                       }
                     },
@@ -13159,10 +13159,10 @@
                         "name": "StakingStorage",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 10635,
+                        "referencedDeclaration": 10643,
                         "src": "1522:14:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_StakingStorage_$10635_$",
+                          "typeIdentifier": "t_type$_t_contract$_StakingStorage_$10643_$",
                           "typeString": "type(contract StakingStorage)"
                         }
                       },
@@ -13177,13 +13177,13 @@
                       "src": "1522:56:19",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_StakingStorage_$10635",
+                        "typeIdentifier": "t_contract$_StakingStorage_$10643",
                         "typeString": "contract StakingStorage"
                       }
                     },
                     "src": "1505:73:19",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_StakingStorage_$10635",
+                      "typeIdentifier": "t_contract$_StakingStorage_$10643",
                       "typeString": "contract StakingStorage"
                     }
                   },
@@ -13486,7 +13486,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                        "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                         "typeString": "contract IdentityStorage"
                       },
                       "typeName": {
@@ -13496,13 +13496,13 @@
                           "id": 4098,
                           "name": "IdentityStorage",
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 8746,
+                          "referencedDeclaration": 8754,
                           "src": "1996:15:19"
                         },
-                        "referencedDeclaration": 8746,
+                        "referencedDeclaration": 8754,
                         "src": "1996:15:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                          "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                           "typeString": "contract IdentityStorage"
                         }
                       },
@@ -13518,7 +13518,7 @@
                     "referencedDeclaration": 3984,
                     "src": "2018:15:19",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                      "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                       "typeString": "contract IdentityStorage"
                     }
                   },
@@ -13542,7 +13542,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                        "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                         "typeString": "contract ProfileStorage"
                       },
                       "typeName": {
@@ -13552,13 +13552,13 @@
                           "id": 4103,
                           "name": "ProfileStorage",
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 9466,
+                          "referencedDeclaration": 9474,
                           "src": "2043:14:19"
                         },
-                        "referencedDeclaration": 9466,
+                        "referencedDeclaration": 9474,
                         "src": "2043:14:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                          "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                           "typeString": "contract ProfileStorage"
                         }
                       },
@@ -13574,7 +13574,7 @@
                     "referencedDeclaration": 3987,
                     "src": "2063:14:19",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                      "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                       "typeString": "contract ProfileStorage"
                     }
                   },
@@ -13638,7 +13638,7 @@
                               "referencedDeclaration": 4100,
                               "src": "2096:3:19",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                                "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                                 "typeString": "contract IdentityStorage"
                               }
                             },
@@ -13649,7 +13649,7 @@
                             "lValueRequested": false,
                             "memberName": "getIdentityId",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 8692,
+                            "referencedDeclaration": 8700,
                             "src": "2096:17:19",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_external_view$_t_address_$returns$_t_uint72_$",
@@ -13923,7 +13923,7 @@
                               "referencedDeclaration": 4105,
                               "src": "2240:2:19",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                                "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                                 "typeString": "contract ProfileStorage"
                               }
                             },
@@ -13934,7 +13934,7 @@
                             "lValueRequested": false,
                             "memberName": "nodeIdRegistered",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 9435,
+                            "referencedDeclaration": 9443,
                             "src": "2240:19:19",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_external_view$_t_bytes_memory_ptr_$returns$_t_bool_$",
@@ -14379,7 +14379,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_Shares_$6925",
+                        "typeIdentifier": "t_contract$_Shares_$6933",
                         "typeString": "contract Shares"
                       },
                       "typeName": {
@@ -14389,13 +14389,13 @@
                           "id": 4159,
                           "name": "Shares",
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 6925,
+                          "referencedDeclaration": 6933,
                           "src": "2523:6:19"
                         },
-                        "referencedDeclaration": 6925,
+                        "referencedDeclaration": 6933,
                         "src": "2523:6:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Shares_$6925",
+                          "typeIdentifier": "t_contract$_Shares_$6933",
                           "typeString": "contract Shares"
                         }
                       },
@@ -14665,7 +14665,7 @@
                       "nodeType": "NewExpression",
                       "src": "2547:10:19",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_creation_nonpayable$_t_address_$_t_string_memory_ptr_$_t_string_memory_ptr_$returns$_t_contract$_Shares_$6925_$",
+                        "typeIdentifier": "t_function_creation_nonpayable$_t_address_$_t_string_memory_ptr_$_t_string_memory_ptr_$returns$_t_contract$_Shares_$6933_$",
                         "typeString": "function (address,string memory,string memory) returns (contract Shares)"
                       },
                       "typeName": {
@@ -14675,13 +14675,13 @@
                           "id": 4162,
                           "name": "Shares",
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 6925,
+                          "referencedDeclaration": 6933,
                           "src": "2551:6:19"
                         },
-                        "referencedDeclaration": 6925,
+                        "referencedDeclaration": 6933,
                         "src": "2551:6:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Shares_$6925",
+                          "typeIdentifier": "t_contract$_Shares_$6933",
                           "typeString": "contract Shares"
                         }
                       }
@@ -14697,7 +14697,7 @@
                     "src": "2547:165:19",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_Shares_$6925",
+                      "typeIdentifier": "t_contract$_Shares_$6933",
                       "typeString": "contract Shares"
                     }
                   },
@@ -14753,7 +14753,7 @@
                             "referencedDeclaration": 4161,
                             "src": "2780:14:19",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_Shares_$6925",
+                              "typeIdentifier": "t_contract$_Shares_$6933",
                               "typeString": "contract Shares"
                             }
                           }
@@ -14761,7 +14761,7 @@
                         "expression": {
                           "argumentTypes": [
                             {
-                              "typeIdentifier": "t_contract$_Shares_$6925",
+                              "typeIdentifier": "t_contract$_Shares_$6933",
                               "typeString": "contract Shares"
                             }
                           ],
@@ -14827,7 +14827,7 @@
                         "referencedDeclaration": 4105,
                         "src": "2723:2:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                          "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                           "typeString": "contract ProfileStorage"
                         }
                       },
@@ -14838,7 +14838,7 @@
                       "lValueRequested": false,
                       "memberName": "createProfile",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 9156,
+                      "referencedDeclaration": 9164,
                       "src": "2723:16:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_uint72_$_t_bytes_memory_ptr_$_t_uint96_$_t_address_$returns$__$",
@@ -14934,7 +14934,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_Staking_$7620",
+                        "typeIdentifier": "t_contract$_Staking_$7628",
                         "typeString": "contract Staking"
                       },
                       "typeName": {
@@ -14944,13 +14944,13 @@
                           "id": 4199,
                           "name": "Staking",
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 7620,
+                          "referencedDeclaration": 7628,
                           "src": "2855:7:19"
                         },
-                        "referencedDeclaration": 7620,
+                        "referencedDeclaration": 7628,
                         "src": "2855:7:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Staking_$7620",
+                          "typeIdentifier": "t_contract$_Staking_$7628",
                           "typeString": "contract Staking"
                         }
                       },
@@ -14966,7 +14966,7 @@
                     "referencedDeclaration": 3981,
                     "src": "2868:15:19",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_Staking_$7620",
+                      "typeIdentifier": "t_contract$_Staking_$7628",
                       "typeString": "contract Staking"
                     }
                   },
@@ -15050,7 +15050,7 @@
                         "referencedDeclaration": 4201,
                         "src": "2893:2:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Staking_$7620",
+                          "typeIdentifier": "t_contract$_Staking_$7628",
                           "typeString": "contract Staking"
                         }
                       },
@@ -15061,7 +15061,7 @@
                       "lValueRequested": false,
                       "memberName": "addStake",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 7126,
+                      "referencedDeclaration": 7134,
                       "src": "2893:11:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint72_$_t_uint96_$returns$__$",
@@ -15134,7 +15134,7 @@
                         "referencedDeclaration": 4201,
                         "src": "2952:2:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Staking_$7620",
+                          "typeIdentifier": "t_contract$_Staking_$7628",
                           "typeString": "contract Staking"
                         }
                       },
@@ -15145,7 +15145,7 @@
                       "lValueRequested": false,
                       "memberName": "setOperatorFee",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 7417,
+                      "referencedDeclaration": 7425,
                       "src": "2952:17:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_uint72_$_t_uint8_$returns$__$",
@@ -15359,7 +15359,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                        "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                         "typeString": "contract ProfileStorage"
                       },
                       "typeName": {
@@ -15369,13 +15369,13 @@
                           "id": 4226,
                           "name": "ProfileStorage",
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 9466,
+                          "referencedDeclaration": 9474,
                           "src": "3916:14:19"
                         },
-                        "referencedDeclaration": 9466,
+                        "referencedDeclaration": 9474,
                         "src": "3916:14:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                          "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                           "typeString": "contract ProfileStorage"
                         }
                       },
@@ -15391,7 +15391,7 @@
                     "referencedDeclaration": 3987,
                     "src": "3936:14:19",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                      "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                       "typeString": "contract ProfileStorage"
                     }
                   },
@@ -15471,7 +15471,7 @@
                       "stateVariable": false,
                       "storageLocation": "memory",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_array$_t_struct$_Contract_$10872_memory_ptr_$dyn_memory_ptr",
+                        "typeIdentifier": "t_array$_t_struct$_Contract_$10880_memory_ptr_$dyn_memory_ptr",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
                       },
                       "typeName": {
@@ -15482,13 +15482,13 @@
                             "id": 4238,
                             "name": "UnorderedIndexableContractDynamicSetLib.Contract",
                             "nodeType": "IdentifierPath",
-                            "referencedDeclaration": 10872,
+                            "referencedDeclaration": 10880,
                             "src": "4001:48:19"
                           },
-                          "referencedDeclaration": 10872,
+                          "referencedDeclaration": 10880,
                           "src": "4001:48:19",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Contract_$10872_storage_ptr",
+                            "typeIdentifier": "t_struct$_Contract_$10880_storage_ptr",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
                           }
                         },
@@ -15496,7 +15496,7 @@
                         "nodeType": "ArrayTypeName",
                         "src": "4001:50:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_array$_t_struct$_Contract_$10872_storage_$dyn_storage_ptr",
+                          "typeIdentifier": "t_array$_t_struct$_Contract_$10880_storage_$dyn_storage_ptr",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
                         }
                       },
@@ -15530,7 +15530,7 @@
                       "referencedDeclaration": 3279,
                       "src": "4075:22:19",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_external_view$__$returns$_t_array$_t_struct$_Contract_$10872_memory_ptr_$dyn_memory_ptr_$",
+                        "typeIdentifier": "t_function_external_view$__$returns$_t_array$_t_struct$_Contract_$10880_memory_ptr_$dyn_memory_ptr_$",
                         "typeString": "function () view external returns (struct UnorderedIndexableContractDynamicSetLib.Contract memory[] memory)"
                       }
                     },
@@ -15545,7 +15545,7 @@
                     "src": "4075:24:19",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_struct$_Contract_$10872_memory_ptr_$dyn_memory_ptr",
+                      "typeIdentifier": "t_array$_t_struct$_Contract_$10880_memory_ptr_$dyn_memory_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory[] memory"
                     }
                   },
@@ -15595,7 +15595,7 @@
                       "referencedDeclaration": 4241,
                       "src": "4139:13:19",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_array$_t_struct$_Contract_$10872_memory_ptr_$dyn_memory_ptr",
+                        "typeIdentifier": "t_array$_t_struct$_Contract_$10880_memory_ptr_$dyn_memory_ptr",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory[] memory"
                       }
                     },
@@ -15646,7 +15646,7 @@
                                   "referencedDeclaration": 4241,
                                   "src": "4254:13:19",
                                   "typeDescriptions": {
-                                    "typeIdentifier": "t_array$_t_struct$_Contract_$10872_memory_ptr_$dyn_memory_ptr",
+                                    "typeIdentifier": "t_array$_t_struct$_Contract_$10880_memory_ptr_$dyn_memory_ptr",
                                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory[] memory"
                                   }
                                 },
@@ -15670,7 +15670,7 @@
                                 "nodeType": "IndexAccess",
                                 "src": "4254:16:19",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_struct$_Contract_$10872_memory_ptr",
+                                  "typeIdentifier": "t_struct$_Contract_$10880_memory_ptr",
                                   "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
                                 }
                               },
@@ -15681,7 +15681,7 @@
                               "lValueRequested": false,
                               "memberName": "id",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 10869,
+                              "referencedDeclaration": 10877,
                               "src": "4254:19:19",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint8",
@@ -15708,7 +15708,7 @@
                               "referencedDeclaration": 4228,
                               "src": "4224:2:19",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                                "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                                 "typeString": "contract ProfileStorage"
                               }
                             },
@@ -15719,7 +15719,7 @@
                             "lValueRequested": false,
                             "memberName": "setNodeAddress",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 9406,
+                            "referencedDeclaration": 9414,
                             "src": "4224:17:19",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_external_nonpayable$_t_uint72_$_t_uint8_$returns$__$",
@@ -15947,7 +15947,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                        "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                         "typeString": "contract ProfileStorage"
                       },
                       "typeName": {
@@ -15957,13 +15957,13 @@
                           "id": 4282,
                           "name": "ProfileStorage",
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 9466,
+                          "referencedDeclaration": 9474,
                           "src": "4425:14:19"
                         },
-                        "referencedDeclaration": 9466,
+                        "referencedDeclaration": 9474,
                         "src": "4425:14:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                          "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                           "typeString": "contract ProfileStorage"
                         }
                       },
@@ -15979,7 +15979,7 @@
                     "referencedDeclaration": 3987,
                     "src": "4445:14:19",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                      "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                       "typeString": "contract ProfileStorage"
                     }
                   },
@@ -16050,7 +16050,7 @@
                         "referencedDeclaration": 4284,
                         "src": "4502:2:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                          "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                           "typeString": "contract ProfileStorage"
                         }
                       },
@@ -16061,7 +16061,7 @@
                       "lValueRequested": false,
                       "memberName": "getAccumulatedOperatorFee",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 9311,
+                      "referencedDeclaration": 9319,
                       "src": "4502:28:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$_t_uint72_$returns$_t_uint96_$",
@@ -16247,7 +16247,7 @@
                         "referencedDeclaration": 4284,
                         "src": "4628:2:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                          "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                           "typeString": "contract ProfileStorage"
                         }
                       },
@@ -16258,7 +16258,7 @@
                       "lValueRequested": false,
                       "memberName": "setAccumulatedOperatorFee",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 9328,
+                      "referencedDeclaration": 9336,
                       "src": "4628:28:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_uint72_$_t_uint96_$returns$__$",
@@ -16361,7 +16361,7 @@
                         "referencedDeclaration": 3981,
                         "src": "4681:15:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Staking_$7620",
+                          "typeIdentifier": "t_contract$_Staking_$7628",
                           "typeString": "contract Staking"
                         }
                       },
@@ -16372,7 +16372,7 @@
                       "lValueRequested": false,
                       "memberName": "addStake",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 7126,
+                      "referencedDeclaration": 7134,
                       "src": "4681:24:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint72_$_t_uint96_$returns$__$",
@@ -16505,7 +16505,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                        "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                         "typeString": "contract ProfileStorage"
                       },
                       "typeName": {
@@ -16515,13 +16515,13 @@
                           "id": 4326,
                           "name": "ProfileStorage",
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 9466,
+                          "referencedDeclaration": 9474,
                           "src": "4866:14:19"
                         },
-                        "referencedDeclaration": 9466,
+                        "referencedDeclaration": 9474,
                         "src": "4866:14:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                          "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                           "typeString": "contract ProfileStorage"
                         }
                       },
@@ -16537,7 +16537,7 @@
                     "referencedDeclaration": 3987,
                     "src": "4886:14:19",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                      "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                       "typeString": "contract ProfileStorage"
                     }
                   },
@@ -16608,7 +16608,7 @@
                         "referencedDeclaration": 4328,
                         "src": "4943:2:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                          "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                           "typeString": "contract ProfileStorage"
                         }
                       },
@@ -16619,7 +16619,7 @@
                       "lValueRequested": false,
                       "memberName": "getAccumulatedOperatorFee",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 9311,
+                      "referencedDeclaration": 9319,
                       "src": "4943:28:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$_t_uint72_$returns$_t_uint96_$",
@@ -16805,7 +16805,7 @@
                         "referencedDeclaration": 4328,
                         "src": "5069:2:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                          "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                           "typeString": "contract ProfileStorage"
                         }
                       },
@@ -16816,7 +16816,7 @@
                       "lValueRequested": false,
                       "memberName": "setAccumulatedOperatorFee",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 9328,
+                      "referencedDeclaration": 9336,
                       "src": "5069:28:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_uint72_$_t_uint96_$returns$__$",
@@ -16903,7 +16903,7 @@
                         "referencedDeclaration": 4328,
                         "src": "5122:2:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ProfileStorage_$9466",
+                          "typeIdentifier": "t_contract$_ProfileStorage_$9474",
                           "typeString": "contract ProfileStorage"
                         }
                       },
@@ -16914,7 +16914,7 @@
                       "lValueRequested": false,
                       "memberName": "transferTokens",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 9452,
+                      "referencedDeclaration": 9460,
                       "src": "5122:17:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint96_$returns$__$",
@@ -17164,7 +17164,7 @@
                             "name": "ADMIN_KEY",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 8048,
+                            "referencedDeclaration": 8056,
                             "src": "5364:9:19",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -17195,7 +17195,7 @@
                             "referencedDeclaration": 3984,
                             "src": "5281:15:19",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                              "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                               "typeString": "contract IdentityStorage"
                             }
                           },
@@ -17206,7 +17206,7 @@
                           "lValueRequested": false,
                           "memberName": "keyHasPurpose",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 8618,
+                          "referencedDeclaration": 8626,
                           "src": "5281:29:19",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_external_view$_t_uint72_$_t_bytes32_$_t_uint256_$returns$_t_bool_$",
@@ -17484,7 +17484,7 @@
                             "name": "OPERATIONAL_KEY",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 8051,
+                            "referencedDeclaration": 8059,
                             "src": "5609:15:19",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -17515,7 +17515,7 @@
                             "referencedDeclaration": 3984,
                             "src": "5526:15:19",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_IdentityStorage_$8746",
+                              "typeIdentifier": "t_contract$_IdentityStorage_$8754",
                               "typeString": "contract IdentityStorage"
                             }
                           },
@@ -17526,7 +17526,7 @@
                           "lValueRequested": false,
                           "memberName": "keyHasPurpose",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 8618,
+                          "referencedDeclaration": 8626,
                           "src": "5526:29:19",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_external_view$_t_uint72_$_t_bytes32_$_t_uint256_$returns$_t_bool_$",
@@ -17678,7 +17678,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-03T16:02:16.541Z",
+  "updatedAt": "2022-12-03T16:55:57.787Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
