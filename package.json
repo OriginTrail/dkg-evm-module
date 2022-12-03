@@ -14,7 +14,12 @@
     "ganache": "ganache -e 1000000000000 -i 5777 -p 7545 -l 10000000 -a 30 -m \"aspect ask story desert profit engage tuition leave fade giraffe exclude brief\"",
     "deploy": "truffle migrate --network ganache --reset",
     "deploy:rinkeby": "truffle migrate --network rinkeby --reset",
-    "deploy:mumbai": "truffle migrate --network mumbai --reset"
+    "deploy:mumbai": "truffle migrate --network mumbai --reset",
+    "truffle_deploy:otp_devnet": "truffle migrate --network otp_devnet --reset",
+    "truffle_deploy:otp_testnet": "truffle migrate --network otp_testnet --reset",
+    "truffle_deploy:otp_mainnet": "truffle migrate --network otp_mainnet --reset",
+    "deploy:devnet": "node scripts/deploy.js --environment otp_devnet",
+    "deploy:testnet": "node scripts/deploy.js --environment otp_testnet"
   },
   "author": "",
   "license": "ISC",
@@ -32,6 +37,9 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.7.3",
-    "@prb/math": "^2.5.0"
+    "@polkadot/api": "^9.9.4",
+    "@polkadot/keyring": "^10.1.14",
+    "@prb/math": "^2.5.0",
+    "web3": "^1.8.1"
   }
 }

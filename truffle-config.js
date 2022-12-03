@@ -45,12 +45,11 @@ module.exports = {
     // options below to some value.
     //
     ganache: {
-      host: 'localhost',
+      host: "localhost",
       port: 7545,
       gas: 6000000,
-      network_id: '5777',
+      network_id: "5777",
       provider: () => new HDWalletProvider([private_key], rpc_endpoint),
-
     },
     rinkeby: {
       network_id: 4,
@@ -58,7 +57,6 @@ module.exports = {
       gasPrice: 200000000000,
       skipDryRun: true,
       provider: () => new HDWalletProvider([private_key], rpc_endpoint),
-
     },
     mumbai: {
       network_id: 80001,
@@ -66,8 +64,31 @@ module.exports = {
       gasPrice: 100000000000,
       skipDryRun: true,
       provider: () => new HDWalletProvider([private_key], rpc_endpoint),
-    }
-
+    },
+    otp_devnet: {
+      network_id: 2160,
+      gas: 10000000, // Gas limit used for deploys
+      gasPrice: 10000000,
+      skipDryRun: true,
+      provider: () =>
+        new HDWalletProvider([private_key], process.env.OTP_DEVNET_RPC),
+    },
+    otp_testnet: {
+      network_id: 80001,
+      gas: 10000000, // Gas limit used for deploys
+      gasPrice: 10000000,
+      skipDryRun: true,
+      provider: () =>
+        new HDWalletProvider([private_key], process.env.OTP_TESTNET_RPC),
+    },
+    otp_mainnet: {
+      network_id: 80001,
+      gas: 10000000, // Gas limit used for deploys
+      gasPrice: 10000000,
+      skipDryRun: true,
+      provider: () =>
+        new HDWalletProvider([private_key], process.env.OTP_MAINNET_RPC),
+    },
 
     // development: {
     //  host: "127.0.0.1",     // Localhost (default: none)
@@ -109,16 +130,17 @@ module.exports = {
   // Configure your compilers
   compilers: {
     solc: {
-      version: "0.8.14",    // Fetch exact version from solc-bin (default: truffle's version)
+      version: "0.8.14", // Fetch exact version from solc-bin (default: truffle's version)
       // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
-      settings: {          // See the solidity docs for advice about optimization and evmVersion
+      settings: {
+        // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
           enabled: true,
-          runs: 1_000_000
+          runs: 1_000_000,
         },
-      //  evmVersion: "byzantium"
-      }
-    }
+        //  evmVersion: "byzantium"
+      },
+    },
   },
 
   // Truffle DB is currently disabled by default; to enable it, change enabled:
@@ -132,13 +154,13 @@ module.exports = {
   // $ truffle migrate --reset --compile-all
   //
   // db: {
-    // enabled: false,
-    // host: "127.0.0.1",
-    // adapter: {
-    //   name: "sqlite",
-    //   settings: {
-    //     directory: ".db"
-    //   }
-    // }
+  // enabled: false,
+  // host: "127.0.0.1",
+  // adapter: {
+  //   name: "sqlite",
+  //   settings: {
+  //     directory: ".db"
+  //   }
+  // }
   // }
 };
