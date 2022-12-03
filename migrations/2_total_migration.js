@@ -146,13 +146,6 @@ module.exports = async (deployer, network, accounts) => {
                 if (deployedContracts.contracts.TokenContract?.evmAddress) {
                     await hub.setContractAddress('Token', deployedContracts.contracts.TokenContract?.evmAddress);
                 } else {
-
-                    // erc20Token = await deployContract(ERC20Token, deployerAddress, true);
-                    // await hub.setContractAddress('Token', erc20Token.address);
-                    // deployedContracts.contracts.TokenContract = {
-                    //     evmAddress: hub.address,
-                    //     deployed: true
-                    // }
                     erc20Token = await initializeContract(
                         deployedContracts,
                         'Token',
