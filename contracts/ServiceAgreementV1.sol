@@ -382,9 +382,10 @@ contract ServiceAgreementV1 {
         ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
         bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, identityId));
-        bytes32 refCommitId = sasV1.getAgreementEpochSubmissionHead(agreementId, epoch);
 
-        require(commitId != refCommitId, "Node has already committed");
+        require(!sasV1.commitSubmissionExists(commitId), "Node has already commited");
+
+        bytes32 refCommitId = sasV1.getAgreementEpochSubmissionHead(agreementId, epoch);
 
         ParametersStorage params = parametersStorage;
 
@@ -399,8 +400,6 @@ contract ServiceAgreementV1 {
             refCommitId = keccak256(
                 abi.encodePacked(agreementId, epoch, refCommitNextIdentityId)
             );
-
-            require(commitId != refCommitId, "Node has already committed");
 
             refCommitNextIdentityId = sasV1.getCommitSubmissionNextIdentityId(refCommitId);
             unchecked { i++; }
