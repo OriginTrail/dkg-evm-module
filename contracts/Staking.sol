@@ -37,7 +37,7 @@ contract Staking {
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     StakingStorage public stakingStorage;
-    ServiceAgreementStorageV1 public serviceAgreementStorage;
+    ServiceAgreementStorageV1 public serviceAgreementStorageV1;
     ShardingTableStorage public shardingTableStorage;
     IERC20 public tokenContract;
 
@@ -50,7 +50,7 @@ contract Staking {
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
-        serviceAgreementStorage = ServiceAgreementStorageV1(hub.getContractAddress("ServiceAgreementStorage"));
+        serviceAgreementStorageV1 = ServiceAgreementStorageV1(hub.getContractAddress("ServiceAgreementStorageV1"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }
@@ -102,7 +102,7 @@ contract Staking {
     }
 
     function addReward(uint72 identityId, uint96 rewardAmount) external onlyContracts {
-        ServiceAgreementStorageV1 sas = serviceAgreementStorage;
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
         StakingStorage ss = stakingStorage;
 
         uint96 operatorFee = rewardAmount * ss.operatorFees(identityId) / 100;
@@ -111,12 +111,12 @@ contract Staking {
         if(operatorFee != 0) {
             ProfileStorage ps = profileStorage;
             ps.setAccumulatedOperatorFee(identityId, ps.getAccumulatedOperatorFee(identityId) + operatorFee);
-            sas.transferReward(address(ps), operatorFee);
+            sasV1.transferReward(address(ps), operatorFee);
         }
 
         if(delegatorsReward != 0) {
             ss.setTotalStake(identityId, ss.totalStakes(identityId) + delegatorsReward);
-            sas.transferReward(address(ss), delegatorsReward);
+            sasV1.transferReward(address(ss), delegatorsReward);
 
             if (
                 !shardingTableStorage.nodeExists(identityId) &&
