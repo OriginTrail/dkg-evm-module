@@ -21,14 +21,13 @@ class Deployer{
 
     async start() {
         try {
-            deployedContracts = require(`./../reports/${environment}_contracts.json`);
             try {
                 await this.deploy();
             } catch (error) {
                 console.log(`Error while deploying contracts, will retry again`);
                 await this.deploy();
             }
-
+            deployedContracts = require(`./../reports/${environment}_contracts.json`);
             console.log('Contracts deployed');
             await this.mapNewContracts();
         } finally {
