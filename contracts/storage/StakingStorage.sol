@@ -55,15 +55,30 @@ contract StakingStorage {
         operatorFees[identityId] = operatorFee;
     }
 
-    function setWithdrawalRequest(uint72 identityId, address staker, uint96 amount, uint256 timestamp) external onlyContracts {
+    function createWithdrawalRequest(uint72 identityId, address staker, uint96 amount, uint256 timestamp)
+        external
+        onlyContracts
+    {
         withdrawalRequests[identityId][staker] = WithdrawalRequest({
-        amount: amount,
-        timestamp: timestamp
+            amount: amount,
+            timestamp: timestamp
         });
     }
 
-    function withdrawalRequestExists(uint72 identityId, address staker) external view onlyContracts returns (bool) {
-        return withdrawalRequests[identityId][staker].timestamp != 0;
+    function deleteWithdrawalRequest(uint72 identityId, address staker) external onlyContracts {
+        delete withdrawalRequests[identityId][staker];
+    }
+
+    function getWithdrawalRequestAmount(uint72 identityId, address staker) external view returns (uint96) {
+        return withdrawalRequests[identityId][staker].amount;
+    }
+
+    function getWithdrawalRequestTimestamp(uint72 identityId, address staker) external view returns (uint256) {
+        return withdrawalRequests[identityId][staker].timestamp;
+    }
+
+    function withdrawalRequestExists(uint72 identityId, address staker) external view returns (bool) {
+        return withdrawalRequests[identityId][staker].amount != 0;
     }
 
     function transferStake(address receiver, uint96 stakeAmount) external onlyStakingContract {
