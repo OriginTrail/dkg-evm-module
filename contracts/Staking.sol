@@ -18,16 +18,17 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Staking is Named, Versioned {
 
-    event StakeIncreased(uint72 indexed identityId, address indexed staker, uint96 newStakeAmount);
+    event StakeIncreased(uint72 indexed identityId, bytes nodeId, address indexed staker, uint96 newStakeAmount);
     event StakeWithdrawalStarted(
         uint72 indexed identityId,
+        bytes nodeId,
         address indexed staker,
         uint96 stakeAmount,
         uint256 withdrawalPeriodEnd
     );
-    event StakeWithdrawn(uint72 indexed identityId, address indexed staker, uint96 withdrawnStakeAmount);
-    event RewardAdded(uint72 indexed identityId, uint96 rewardAmount);
-    event OperatorFeeUpdated(uint72 indexed identityId, uint8 operatorFee);
+    event StakeWithdrawn(uint72 indexed identityId, bytes nodeId, address indexed staker, uint96 withdrawnStakeAmount);
+    event RewardAdded(uint72 indexed identityId, bytes nodeId, uint96 rewardAmount);
+    event OperatorFeeUpdated(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string constant private _NAME = "Staking";
     string constant private _VERSION = "1.0.0";
@@ -125,11 +126,19 @@ contract Staking is Named, Versioned {
             shardingTableContract.removeNode(identityId);
         }
 
-        emit StakeWithdrawalStarted(identityId, msg.sender, newStakeWithdrawalAmount, withdrawalPeriodEnd);
+        emit StakeWithdrawalStarted(
+            identityId,
+            ps.getNodeId(identityId),
+            msg.sender,
+            newStakeWithdrawalAmount,
+            withdrawalPeriodEnd
+        );
     }
 
     function withdrawStake(uint72 identityId) external {
-        require(profileStorage.profileExists(identityId), "Profile doesn't exist");
+        ProfileStorage ps = profileStorage;
+
+        require(ps.profileExists(identityId), "Profile doesn't exist");
 
         StakingStorage ss = stakingStorage;
 
@@ -142,7 +151,7 @@ contract Staking is Named, Versioned {
         ss.deleteWithdrawalRequest(identityId, msg.sender);
         ss.transferStake(msg.sender, stakeWithdrawalAmount);
 
-        emit StakeWithdrawn(identityId, msg.sender, stakeWithdrawalAmount);
+        emit StakeWithdrawn(identityId, ps.getNodeId(identityId), msg.sender, stakeWithdrawalAmount);
     }
 
     function addReward(uint72 identityId, uint96 rewardAmount) external onlyContracts {
@@ -152,8 +161,9 @@ contract Staking is Named, Versioned {
         uint96 operatorFee = rewardAmount * ss.operatorFees(identityId) / 100;
         uint96 delegatorsReward = rewardAmount - operatorFee;
 
+        ProfileStorage ps = profileStorage;
+
         if(operatorFee != 0) {
-            ProfileStorage ps = profileStorage;
             ps.setAccumulatedOperatorFee(identityId, ps.getAccumulatedOperatorFee(identityId) + operatorFee);
             sasV1.transferReward(address(ps), operatorFee);
         }
@@ -170,7 +180,7 @@ contract Staking is Named, Versioned {
             }
         }
 
-        emit RewardAdded(identityId, rewardAmount);
+        emit RewardAdded(identityId, ps.getNodeId(identityId), rewardAmount);
     }
 
     function slash(uint72 identityId) external onlyContracts {
@@ -181,19 +191,20 @@ contract Staking is Named, Versioned {
         require(operatorFee <= 100, "Operator fee out of [0, 100]");
         stakingStorage.setOperatorFee(identityId, operatorFee);
 
-        emit OperatorFeeUpdated(identityId, operatorFee);
+        emit OperatorFeeUpdated(identityId, profileStorage.getNodeId(identityId), operatorFee);
     }
 
     function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal {
         StakingStorage ss = stakingStorage;
-        ParametersStorage ps = parametersStorage;
+        ProfileStorage ps = profileStorage;
+        ParametersStorage params = parametersStorage;
         IERC20 tknc = tokenContract;
 
         require(tknc.allowance(sender, address(this)) >= stakeAmount, "Allowance < stakeAmount");
-        require(stakeAmount + ss.totalStakes(identityId) <= ps.maximumStake(), "Exceeded the maximum stake");
-        require(profileStorage.profileExists(identityId), "Profile doesn't exist");
+        require(stakeAmount + ss.totalStakes(identityId) <= params.maximumStake(), "Exceeded the maximum stake");
+        require(ps.profileExists(identityId), "Profile doesn't exist");
 
-        Shares sharesContract = Shares(profileStorage.getSharesContractAddress(identityId));
+        Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
 
         uint256 sharesMinted;
         if(sharesContract.totalSupply() == 0) {
@@ -216,7 +227,7 @@ contract Staking is Named, Versioned {
             shardingTableContract.pushBack(identityId);
         }
 
-        emit StakeIncreased(identityId, sender, stakeAmount);
+        emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, stakeAmount);
     }
 
     function _checkHubOwner() internal view virtual {

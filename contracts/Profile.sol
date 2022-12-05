@@ -19,9 +19,9 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract Profile is Named, Versioned {
 
-    event ProfileCreated(uint72 indexed identityId);
+    event ProfileCreated(uint72 indexed identityId, bytes nodeId);
     event ProfileDeleted(uint72 indexed identityId);
-    event AskUpdated(uint72 indexed identityId, uint96 ask);
+    event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
 
     string constant private _NAME = "Profile";
     string constant private _VERSION = "1.0.0";
@@ -104,14 +104,15 @@ contract Profile is Named, Versioned {
         ps.createProfile(identityId, nodeId, address(sharesContract));
         _setAvailableNodeAddresses(identityId);
 
-        emit ProfileCreated(identityId);
+        emit ProfileCreated(identityId, nodeId);
     }
 
     function setAsk(uint72 identityId, uint96 ask) external onlyIdentityOwner(identityId) {
         require(ask != 0, "Ask cannot be 0");
-        profileStorage.setAsk(identityId, ask);
+        ProfileStorage ps = profileStorage;
+        ps.setAsk(identityId, ask);
 
-        emit AskUpdated(identityId, ask);
+        emit AskUpdated(identityId, ps.getNodeId(identityId), ask);
     }
 
     // function deleteProfile(uint72 identityId) external onlyAdmin(identityId) {
