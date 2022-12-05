@@ -203,7 +203,10 @@ contract Staking is Named, Versioned {
 
         require(ps.profileExists(identityId), "Profile doesn't exist");
         require(tknc.allowance(sender, address(this)) >= stakeAmount, "Allowance < stakeAmount");
-        require(stakeAmount + ss.totalStakes(identityId) <= params.maximumStake(), "Exceeded the maximum stake");
+        require(
+            (stakeAmount + ss.totalStakes(identityId)) <= params.maximumStake(),
+            "Exceeded the maximum stake"
+        );
 
         Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
 
@@ -217,13 +220,12 @@ contract Staking is Named, Versioned {
         }
         sharesContract.mint(sender, sharesMinted);
 
-        tknc.transferFrom(sender, address(ss), stakeAmount);
-
         ss.setTotalStake(identityId, ss.totalStakes(identityId) + stakeAmount);
+        tknc.transferFrom(sender, address(ss), stakeAmount);
 
         if (
             !shardingTableStorage.nodeExists(identityId) &&
-            ss.totalStakes(identityId) >= parametersStorage.minimumStake()
+            ss.totalStakes(identityId) >= params.minimumStake()
         ) {
             shardingTableContract.pushBack(identityId);
         }
