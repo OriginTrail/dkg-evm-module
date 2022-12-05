@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
+import { Named } from "./interface/Named.sol";
+import { Versioned } from "./interface/Versioned.sol";
 import { UnorderedNamedContractDynamicSetLib } from "./utils/UnorderedNamedContractDynamicSet.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Hub is Ownable{
+contract Hub is Named, Versioned, Ownable {
 
     using UnorderedNamedContractDynamicSetLib for UnorderedNamedContractDynamicSetLib.Set;
 
@@ -14,27 +16,28 @@ contract Hub is Ownable{
     event NewAssetContract(string contractName, address newContractAddress);
     event AssetContractChanged(string contractName, address newContractAddress);
 
-    mapping(bytes32 => address) contractAddress;
-    mapping(address => bool) contractList;
+    string constant private _NAME = "Hub";
+    string constant private _VERSION = "1.0.0";
 
+    UnorderedNamedContractDynamicSetLib.Set contractSet;
     UnorderedNamedContractDynamicSetLib.Set assetContractSet;
 
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
+    }
+
     function setContractAddress(string calldata contractName, address newContractAddress) external onlyOwner {
-        require(newContractAddress != address(0), "Contract address cannot be empty");
-
-        bytes32 index = keccak256(abi.encodePacked(contractName));
-
-        if(contractAddress[index] != address(0)) {
-            address oldContractAddress = contractAddress[index];
-            contractList[oldContractAddress] = false;
-
+        if(contractSet.exists(contractName)) {
             emit ContractChanged(contractName, newContractAddress);
+            contractSet.update(contractName, newContractAddress);
         } else {
             emit NewContract(contractName, newContractAddress);
+            contractSet.append(contractName, newContractAddress);
         }
-
-        contractAddress[index] = newContractAddress;
-        contractList[newContractAddress] = true;
     }
 
     function setAssetContractAddress(string calldata assetContractName, address assetContractAddress)
@@ -51,20 +54,27 @@ contract Hub is Ownable{
     }
 
     function getContractAddress(string calldata contractName) external view returns (address) {
-        bytes32 index = keccak256(abi.encodePacked(contractName));
-        return contractAddress[index];
+        return contractSet.get(contractName).addr;
     }
 
     function getAssetContractAddress(string calldata assetContractName) external view returns (address) {
         return assetContractSet.get(assetContractName).addr;
     }
 
+    function getAllContracts() external view returns (UnorderedNamedContractDynamicSetLib.Contract[] memory) {
+        return contractSet.getAll();
+    }
+
     function getAllAssetContracts() external view returns (UnorderedNamedContractDynamicSetLib.Contract[] memory) {
         return assetContractSet.getAll();
     }
+
+    function isContract(string calldata contractName) external view returns (bool) {
+        return contractSet.exists(contractName);
+    }
     
     function isContract(address selectedContractAddress) external view returns (bool) {
-        return contractList[selectedContractAddress];
+        return contractSet.exists(selectedContractAddress);
     }
 
     function isAssetContract(string calldata assetContractName) external view returns (bool) {

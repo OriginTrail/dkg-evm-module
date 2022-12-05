@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import { Hub } from "../Hub.sol";
+import { Named } from "../interface/Named.sol";
+import { Versioned } from "../interface/Versioned.sol";
 import { AssertionStructs } from "../structs/AssertionStructs.sol";
 
-contract AssertionStorage {
+contract AssertionStorage is Named, Versioned {
+
+    string constant private _NAME = "AssertionStorage";
+    string constant private _VERSION = "1.0.0";
 
 	Hub public hub;
 
@@ -21,6 +26,14 @@ contract AssertionStorage {
 	modifier onlyContracts() {
         _checkHub();
         _;
+    }
+
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
     }
 
 	function createAssertion(

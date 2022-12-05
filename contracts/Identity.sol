@@ -1,15 +1,20 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import { Hub } from "./Hub.sol";
 import { IdentityStorage } from "./storage/IdentityStorage.sol";
+import { Named } from "./interface/Named.sol";
+import { Versioned } from "./interface/Versioned.sol";
 import { ADMIN_KEY, OPERATIONAL_KEY, ECDSA, RSA } from "./constants/IdentityConstants.sol";
 
-contract Identity {
+contract Identity is Named, Versioned {
 
     event IdentityCreated(uint72 indexed identityId, bytes32 indexed operationalKey, bytes32 indexed adminKey);
     event IdentityDeleted(uint72 indexed identityId);
+
+    string constant private _NAME = "Identity";
+    string constant private _VERSION = "1.0.0";
 
     Hub public hub;
     IdentityStorage public identityStorage;
@@ -18,8 +23,13 @@ contract Identity {
         require(hubAddress != address(0));
 
         hub = Hub(hubAddress);
-        identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+        initialize();
     }
+
+    modifier onlyOwner() {
+		_checkOwner();
+		_;
+	}
 
     modifier onlyContracts() {
         _checkHub();
@@ -29,6 +39,18 @@ contract Identity {
     modifier onlyAdmin(uint72 identityId) {
         _checkAdmin(identityId);
         _;
+    }
+
+    function initialize() public onlyOwner {
+		identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+	}
+
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
     }
 
     function createIdentity(address operational, address admin) external onlyContracts returns (uint72) {
@@ -112,6 +134,10 @@ contract Identity {
             ids.removeOperationalKeyIdentityId(key);
         }
     }
+
+    function _checkOwner() internal view virtual {
+		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+	}
 
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");

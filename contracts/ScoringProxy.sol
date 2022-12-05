@@ -1,20 +1,32 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import { IScoreFunction } from "./interface/IScoreFunction.sol";
 import { Named } from "./interface/Named.sol";
+import { Versioned } from "./interface/Versioned.sol";
 import { UnorderedIndexableContractDynamicSetLib } from "./utils/UnorderedIndexableContractDynamicSet.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ScoringProxy is Ownable {
+contract ScoringProxy is Named, Versioned, Ownable {
 
     using UnorderedIndexableContractDynamicSetLib for UnorderedIndexableContractDynamicSetLib.Set;
 
     event NewScoringFunctionContract(uint8 indexed scoreFunctionId, address newContractAddress);
     event ScoringFunctionContractUpdated(uint8 indexed scoreFunctionId, address newContractAddress);
 
+    string constant private _NAME = "ScoringProxy";
+    string constant private _VERSION = "1.0.0";
+
     UnorderedIndexableContractDynamicSetLib.Set scoreFunctionSet;
+
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
+    }
 
     function setContractAddress(uint8 scoreFunctionId, address scoringContractAddress) external onlyOwner {
         if (scoreFunctionSet.exists(scoreFunctionId)) {

@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import { Hub } from "../Hub.sol";
 import { IERC734Extended } from "../interface/IERC734Extended.sol";
+import { Named } from "../interface/Named.sol";
+import { Versioned } from "../interface/Versioned.sol";
 import { ByteArr } from "../utils/ByteArr.sol";
 
-contract IdentityStorage is IERC734Extended {
+contract IdentityStorage is IERC734Extended, Named, Versioned {
 
     using ByteArr for bytes32[];
+
+    string constant private _NAME = "IdentityStorage";
+    string constant private _VERSION = "1.0.0";
 
     Hub public hub;
 
@@ -35,6 +40,14 @@ contract IdentityStorage is IERC734Extended {
     modifier onlyContracts() {
         _checkHub();
         _;
+    }
+
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
     }
 
     function deleteIdentity(uint72 identityId) external onlyContracts {

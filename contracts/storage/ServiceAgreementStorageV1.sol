@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import { Hub } from "../Hub.sol";
+import { Named } from "../interface/Named.sol";
+import { Versioned } from "../interface/Versioned.sol";
 import { ServiceAgreementStructsV1 } from "../structs/ServiceAgreementStructsV1.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract ServiceAgreementStorageV1 {
+contract ServiceAgreementStorageV1 is Named, Versioned {
+
+    string constant private _NAME = "ServiceAgreementStorageV1";
+    string constant private _VERSION = "1.0.0";
 
     Hub public hub;
     IERC20 public tokenContract;
@@ -32,6 +37,14 @@ contract ServiceAgreementStorageV1 {
     modifier onlyStakingContract() {
         _checkStakingContract();
         _;
+    }
+
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
     }
 
     function createServiceAgreementObject(
