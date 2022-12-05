@@ -97,8 +97,8 @@ class Deployer{
         const account = keyring.createFromUri(process.env.ACCOUNT_URI_WITH_OTP);
 
         await transfer.signAndSend(account, {nonce: -1});
-        console.log('Waiting for 15 sec until transfer is completed');
-        await this.sleep(15000);
+        console.log('Waiting for 40 sec until transfer is completed');
+        await this.sleep(40000);
     }
 
     async initializeParachainRPC() {
