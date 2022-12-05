@@ -61,9 +61,9 @@ module.exports = async (deployer, network, accounts) => {
         profileContract, stakingStorage, stakingContract;
 
     const filePath = `reports/${network}_contracts.json`;
-    
-        
-    const deployContract = (Contract, account, passHubInConstructor, retryCount = 0) => {
+
+
+    const deployContract = async (Contract, account, passHubInConstructor, retryCount = 0) => {
         return new Promise(async (accept, reject) => {
             try {
                 if (passHubInConstructor) {
@@ -78,21 +78,30 @@ module.exports = async (deployer, network, accounts) => {
 
             } catch (error) {
                 console.log(`Error while deploying contract. Error: ${error}`);
-                if (retryCount < 3) {
-                    return deployContract(Contract, account, passHubInConstructor, retryCount + 1);
-                } else {
-                    reject(error);
-                }
+                // if (retryCount < 3) {
+                //     return deployContract(Contract, account, passHubInConstructor, retryCount + 1);
+                // } else {
+                //     await Promise.reject(error);
+                // }
+                reject(error);
             }
         });
 
     };
 
+    const saveReport = (deployedContracts) => {
+        // save deployed contracts report
+        deployedContracts.deployedTimestamp = Date.now();
+        // console.log(JSON.stringify(deployedContracts, null, 4));
+        fs.writeFileSync(filePath, JSON.stringify(deployedContracts, null, 4));
+    }
+
     const initializeContract = async (deployedContracts, contractName, ContractObject, deployerAddress, passHubInConstructor = false, setContractInHub = true, setAssetInHub = false) => {
         let contractInstance;
         if (!deployedContracts.contracts[contractName]?.deployed) {
             console.log(`Deploying ${contractName} contract`);
-            contractInstance = await deployContract(ContractObject, deployerAddress, passHubInConstructor)
+            contractInstance = await deployContract(ContractObject, deployerAddress, passHubInConstructor);
+
             if (setContractInHub) {
                 await hub.setContractAddress(contractName, contractInstance.address);
             }
@@ -114,7 +123,7 @@ module.exports = async (deployer, network, accounts) => {
     console.log(`Using deployer address: ${deployerAddress}`);
     console.log(`DEPLOYING TO: ${network} `);
     console.log('==========================');
-    
+
     switch (network) {
         case 'development':
         case 'ganache':
@@ -124,8 +133,8 @@ module.exports = async (deployer, network, accounts) => {
             initFile.contracts={};
             fs.writeFileSync(filePath, JSON.stringify(initFile, null, 4));
         case 'otp_devnet':
-        case 'testnet':
-        case 'mainnet':
+        case 'otp_testnet':
+        case 'otp_mainnet':
         case 'mumbai':
             const deployedContracts = require(`./../reports/${network}_contracts.json`);
             try {
@@ -164,6 +173,7 @@ module.exports = async (deployer, network, accounts) => {
                         await erc20Token.mint(account, amountToMint);
                     }
                 }
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ----------------------------------Parameters Storage------------------------------------ */
@@ -173,7 +183,7 @@ module.exports = async (deployer, network, accounts) => {
                     ParametersStorage,
                     deployerAddress
                 );
-
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ------------------------------------Hashing Proxy--------------------------------------- */
@@ -182,8 +192,8 @@ module.exports = async (deployer, network, accounts) => {
                     'HashingProxy',
                     HashingProxy,
                     deployerAddress
-                );
-
+                )
+                saveReport(deployedContracts);
                 sha256Contract = await initializeContract(
                     deployedContracts,
                     'sha256Contract',
@@ -191,9 +201,9 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     false,
                     false
-                );
+                )
                 await hashingProxy.setContractAddress(1, sha256Contract.address);
-
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* -----------------------------------Scoring Proxy---------------------------------------- */
@@ -202,8 +212,8 @@ module.exports = async (deployer, network, accounts) => {
                     'ScoringProxy',
                     ScoringProxy,
                     deployerAddress
-                );
-
+                )
+                saveReport(deployedContracts);
                 log2pldsfContract = await initializeContract(
                     deployedContracts,
                     'log2pldsfContract',
@@ -211,9 +221,9 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     true,
                     false
-                );
+                )
                 await scoringProxy.setContractAddress(1, log2pldsfContract.address);
-
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ----------------------------------Assertion Storage------------------------------------- */
@@ -223,7 +233,8 @@ module.exports = async (deployer, network, accounts) => {
                     AssertionStorage,
                     deployerAddress,
                     true
-                );
+                )
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* -----------------------------------Identity Storage------------------------------------- */
@@ -233,7 +244,8 @@ module.exports = async (deployer, network, accounts) => {
                     IdentityStorage,
                     deployerAddress,
                     true
-                );
+                )
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* --------------------------------Sharding Table Storage---------------------------------- */
@@ -243,7 +255,8 @@ module.exports = async (deployer, network, accounts) => {
                     ShardingTableStorage,
                     deployerAddress,
                     true
-                );
+                )
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ------------------------------------Staking Storage------------------------------------- */
@@ -253,7 +266,8 @@ module.exports = async (deployer, network, accounts) => {
                     StakingStorage,
                     deployerAddress,
                     true
-                );
+                )
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ------------------------------------Profile Storage------------------------------------- */
@@ -263,7 +277,8 @@ module.exports = async (deployer, network, accounts) => {
                     ProfileStorage,
                     deployerAddress,
                     true
-                );
+                )
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* --------------------------------Service Agreement Storage------------------------------- */
@@ -274,6 +289,7 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     true
                 );
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* -------------------------------------Assertion------------------------------------------ */
@@ -284,6 +300,7 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     true
                 );
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* --------------------------------------Identity------------------------------------------ */
@@ -294,7 +311,7 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     true
                 );
-
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ------------------------------------Sharding Table-------------------------------------- */
@@ -305,6 +322,7 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     true
                 );
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ----------------------------------------Staking----------------------------------------- */
@@ -315,6 +333,7 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     true
                 );
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ----------------------------------------Profile----------------------------------------- */
@@ -325,6 +344,7 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     true
                 );
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ------------------------------------Service Agreement----------------------------------- */
@@ -335,6 +355,7 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     true
                 );
+                saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ----------------------------------------Assets------------------------------------------ */
@@ -347,6 +368,8 @@ module.exports = async (deployer, network, accounts) => {
                     false,
                     true
                 );
+                saveReport(deployedContracts);
+                // call initialize after deployment
                 /* ---------------------------------------------------------------------------------------- */
 
                 console.log('\n\n \t Contract adresses on ganache:');
@@ -363,7 +386,7 @@ module.exports = async (deployer, network, accounts) => {
                 console.log(`\t Service Agreement Storage (V1) address: ${serviceAgreementStorageV1.address}`);
                 console.log(`\t Service Agreement (V1) address: ${serviceAgreementContractV1.address}`);
                 console.log(`\t Content Asset address: ${contentAsset.address}`);
-                console.log(`\t Token address: ${erc20Token.address}`);
+                console.log(`\t Token address: ${deployedContracts.contracts.TokenContract?.evmAddress}`);
                 console.log(`\t Identity Storage address: ${identityStorage.address}`);
                 console.log(`\t Identity address: ${identityContract.address}`);
                 console.log(`\t Profile Storage address: ${profileStorage.address}`);
@@ -374,10 +397,7 @@ module.exports = async (deployer, network, accounts) => {
             } catch (error) {
                 console.log(error);
             } finally {
-                // save deployed contracts report
-                deployedContracts.deployedTimestamp = Date.now;
-                console.log(JSON.stringify(deployedContracts, null, 4));
-                fs.writeFileSync(filePath, JSON.stringify(deployedContracts, null, 4));
+                saveReport(deployedContracts);
             }
 
             break;
