@@ -15,7 +15,7 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.8.14+commit.80d49f37\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"id\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interface/Indexable.sol\":\"Indexable\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":1000000},\"remappings\":[]},\"sources\":{\"project:/contracts/interface/Indexable.sol\":{\"keccak256\":\"0x3fa0910a083e366cedf5275f1e1f999931092d140b474a6b1d96c271faff8bfd\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://28c17bbd5b4a1e36bf225a136048917b5f38ddffb4147f9a54f46dccf1429e0b\",\"dweb:/ipfs/QmUDwG8HiQJjEexR2ffo4ruEU3Rubim8U3EGS5XZVEcV1V\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"id\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interface/Indexable.sol\":\"Indexable\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/interface/Indexable.sol\":{\"keccak256\":\"0x4aaff3804b4ee2bee62188ce4e7c2629314e35989f9e3c21b1ffe481c692f38f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://4c6955a25f24c252b1e1634e048a98fe216d867d94811a999555be91b8de7e72\",\"dweb:/ipfs/QmYE6CumB19fek88w76KoVFsrf2u3HqXCsBiis8EsS1Cw6\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "immutableReferences": {},
@@ -23,26 +23,26 @@
   "deployedGeneratedSources": [],
   "sourceMap": "",
   "deployedSourceMap": "",
-  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\ninterface Indexable {\n\n    function id() external view returns (uint8);\n\n}\n",
+  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.4;\n\ninterface Indexable {\n\n    function id() external view returns (uint8);\n\n}\n",
   "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/interface/Indexable.sol",
   "ast": {
     "absolutePath": "project:/contracts/interface/Indexable.sol",
     "exportedSymbols": {
       "Indexable": [
-        11223
+        11953
       ]
     },
-    "id": 11224,
+    "id": 11954,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 11217,
+        "id": 11947,
         "literals": [
           "solidity",
           "^",
           "0.8",
-          ".0"
+          ".4"
         ],
         "nodeType": "PragmaDirective",
         "src": "33:23:41"
@@ -54,9 +54,9 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 11223,
+        "id": 11953,
         "linearizedBaseContracts": [
-          11223
+          11953
         ],
         "name": "Indexable",
         "nameLocation": "68:9:41",
@@ -64,7 +64,7 @@
         "nodes": [
           {
             "functionSelector": "af640d0f",
-            "id": 11222,
+            "id": 11952,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
@@ -72,23 +72,23 @@
             "nameLocation": "94:2:41",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11218,
+              "id": 11948,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "96:2:41"
             },
             "returnParameters": {
-              "id": 11221,
+              "id": 11951,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11220,
+                  "id": 11950,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11222,
+                  "scope": 11952,
                   "src": "122:5:41",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -97,7 +97,7 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 11219,
+                    "id": 11949,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
                     "src": "122:5:41",
@@ -111,14 +111,14 @@
               ],
               "src": "121:7:41"
             },
-            "scope": 11223,
+            "scope": 11953,
             "src": "85:44:41",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 11224,
+        "scope": 11954,
         "src": "58:74:41",
         "usedErrors": []
       }
@@ -127,11 +127,11 @@
   },
   "compiler": {
     "name": "solc",
-    "version": "0.8.14+commit.80d49f37.Emscripten.clang"
+    "version": "0.8.16+commit.07a7930e.Emscripten.clang"
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-03T15:00:22.478Z",
+  "updatedAt": "2022-12-05T17:33:43.030Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
