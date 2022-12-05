@@ -74,7 +74,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
                 assetCreator: msg.sender,
                 assetContract: address(this),
                 tokenId: tokenId,
-                keyword: abi.encodePacked(address(this), tokenId, args.assertionId),
+                keyword: abi.encodePacked(address(this), args.assertionId),
                 hashFunctionId: 1,  // hashFunctionId | 1 = sha256
                 epochsNumber: args.epochsNumber,
                 tokenAmount: args.tokenAmount,
@@ -83,35 +83,6 @@ contract ContentAsset is AbstractAsset, ERC721 {
         );
 
         emit AssetCreated(address(this), tokenId, args.assertionId);
-    }
-
-    function updateAsset(uint256 tokenId, AssetInputArgs calldata args) external onlyAssetOwner(tokenId) {
-        bytes32 assetAssertionId = keccak256(abi.encodePacked(tokenId, args.assertionId));
-        require(!assertionExists(assetAssertionId), "Assertion exists for given asset");
-
-        assertionContract.createAssertion(
-            args.assertionId,
-            args.size,
-            args.triplesNumber,
-            args.chunksNumber
-        );
-        assets[tokenId].assertionIds.push(args.assertionId);
-        issuers[assetAssertionId] = msg.sender;
-
-        serviceAgreementV1.updateServiceAgreement(
-            ServiceAgreementStructsV1.ServiceAgreementInputArgs({
-                assetCreator: msg.sender,
-                assetContract: address(this),
-                tokenId: tokenId,
-                keyword: abi.encodePacked(address(this), tokenId, getAssertionIdByIndex(tokenId, 0)),
-                hashFunctionId: 1,  // hashFunctionId | 1 = sha256
-                epochsNumber: args.epochsNumber,
-                tokenAmount: args.tokenAmount,
-                scoreFunctionId: args.scoreFunctionId
-            })
-        );
-
-        emit AssetUpdated(address(this), tokenId, args.assertionId);
     }
 
     function getAssertionIds(uint256 tokenId) public view override returns (bytes32[] memory) {
