@@ -20,6 +20,7 @@ var ProfileStorage = artifacts.require('ProfileStorage');
 var ProfileContract = artifacts.require('Profile');
 var StakingStorage = artifacts.require('StakingStorage');
 var StakingContract = artifacts.require('Staking');
+var WithdrawalStorage = artifacts.require('WithdrawalStorage');
 
 const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
     "0x2f2697b2a7BB4555687EF76f8fb4C3DFB3028E57",
@@ -58,7 +59,7 @@ module.exports = async (deployer, network, accounts) => {
         log2pldsfContract, shardingTableStorage, shardingTableContract,
         serviceAgreementStorageV1, serviceAgreementContractV1, contentAsset,
         erc20Token, identityStorage, identityContract, profileStorage,
-        profileContract, stakingStorage, stakingContract;
+        profileContract, stakingStorage, stakingContract, withdrawalStorage;
 
     const filePath = `reports/${network}_contracts.json`;
 
@@ -182,6 +183,17 @@ module.exports = async (deployer, network, accounts) => {
                     'ParametersStorage',
                     ParametersStorage,
                     deployerAddress
+                );
+                saveReport(deployedContracts);
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* -----------------------------------Whitelist Storage------------------------------------ */
+                whitelistStorage = await initializeContract(
+                    deployedContracts,
+                    'WhitelistStorage',
+                    WhitelistStorage,
+                    deployerAddress,
+                    true,
                 );
                 saveReport(deployedContracts);
                 /* ---------------------------------------------------------------------------------------- */
@@ -375,6 +387,7 @@ module.exports = async (deployer, network, accounts) => {
                 console.log('\n\n \t Contract adresses on ganache:');
                 console.log(`\t Hub address: ${hub.address}`);
                 console.log(`\t Parameters Storage address: ${parametersStorage.address}`);
+                console.log(`\t Whitelist Storage address: ${whitelistStorage.address}`);
                 console.log(`\t Hashing Proxy address: ${hashingProxy.address}`);
                 console.log(`\t SHA256 address: ${sha256Contract.address}`);
                 console.log(`\t Scoring Proxy address: ${scoringProxy.address}`);
