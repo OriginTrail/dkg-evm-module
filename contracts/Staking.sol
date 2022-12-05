@@ -146,7 +146,8 @@ contract Staking is Named, Versioned {
         uint256 withdrawalTimestamp;
         (stakeWithdrawalAmount, withdrawalTimestamp) = ss.withdrawalRequests(identityId, msg.sender);
 
-        require(withdrawalTimestamp < block.timestamp, "Withdrawal period hasn't ended yet");
+        require(stakeWithdrawalAmount != 0, "Withdrawal hasn't been initiated");
+        require(withdrawalTimestamp < block.timestamp, "Withdrawal period hasn't ended");
 
         ss.deleteWithdrawalRequest(identityId, msg.sender);
         ss.transferStake(msg.sender, stakeWithdrawalAmount);
@@ -200,9 +201,9 @@ contract Staking is Named, Versioned {
         ParametersStorage params = parametersStorage;
         IERC20 tknc = tokenContract;
 
+        require(ps.profileExists(identityId), "Profile doesn't exist");
         require(tknc.allowance(sender, address(this)) >= stakeAmount, "Allowance < stakeAmount");
         require(stakeAmount + ss.totalStakes(identityId) <= params.maximumStake(), "Exceeded the maximum stake");
-        require(ps.profileExists(identityId), "Profile doesn't exist");
 
         Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
 
