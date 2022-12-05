@@ -38,7 +38,6 @@ contract AssertionStorage is Named, Versioned {
 
 	function createAssertion(
 		bytes32 assertionId,
-		address issuer,
 		uint128 size,
 		uint32 triplesNumber,
 		uint96 chunksNumber
@@ -48,7 +47,6 @@ contract AssertionStorage is Named, Versioned {
 	{
         assertions[assertionId] = AssertionStructs.Assertion({
             timestamp: block.timestamp,
-            issuer: issuer,
             size: size,
             triplesNumber: triplesNumber,
             chunksNumber: chunksNumber
@@ -61,10 +59,6 @@ contract AssertionStorage is Named, Versioned {
 
     function getAssertionTimestamp(bytes32 assertionId) external view returns (uint256) {
         return assertions[assertionId].timestamp;
-    }
-
-    function getAssertionIssuer(bytes32 assertionId) external view returns (address) {
-        return assertions[assertionId].issuer;
     }
 
     function getAssertionSize(bytes32 assertionId) external view returns (uint128) {
