@@ -19,7 +19,7 @@ contract ServiceAgreementStorageV1 is Named, Versioned {
     // CommitId [keccak256(agreementId + epoch + identityId)] => CommitSubmission
     mapping(bytes32 => ServiceAgreementStructsV1.CommitSubmission) commitSubmissions;
 
-    // hash(asset type contract + tokenId + key) -> ServiceAgreement
+    // AgreementId [hash(asset type contract + tokenId + key)] => ServiceAgreement
     mapping(bytes32 => ServiceAgreementStructsV1.ServiceAgreement) serviceAgreements;
 
     constructor (address hubAddress) {

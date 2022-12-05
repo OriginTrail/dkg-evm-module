@@ -10,9 +10,7 @@ import { AssertionStructs } from "./structs/AssertionStructs.sol";
 
 contract Assertion is Named, Versioned {
 
-	event AssertionCreated(
-		bytes32 indexed assertionId, address issuer, uint128 size, uint32 triplesNumber, uint96 chunksNumber
-	);
+	event AssertionCreated(bytes32 indexed assertionId, uint128 size, uint32 triplesNumber, uint96 chunksNumber);
 
 	string constant private _NAME = "Assertion";
     string constant private _VERSION = "1.0.0";
@@ -51,7 +49,6 @@ contract Assertion is Named, Versioned {
 
 	function createAssertion(
 		bytes32 assertionId,
-		address issuer,
 		uint128 size,
 		uint32 triplesNumber,
 		uint96 chunksNumber
@@ -62,18 +59,13 @@ contract Assertion is Named, Versioned {
 		AssertionStorage ans = assertionStorage;
 
 		require(assertionId != bytes32(0), "Assertion ID cannot be empty");
-		require(issuer != address(0), "Issuer address cannot be 0x0");
-		require(
-			!ans.assertionExists(assertionId) && (issuer != ans.getAssertionIssuer(assertionId)),
-			"Assertion already exists"
-		);
 		require(size != 0, "Size cannot be 0");
 		require(triplesNumber != 0, "Triples number cannot be 0");
 		require(chunksNumber != 0, "Chunks number cannot be 0");
 
-		ans.createAssertion(assertionId, issuer, size, triplesNumber, chunksNumber);
+		ans.createAssertion(assertionId, size, triplesNumber, chunksNumber);
 
-		emit AssertionCreated(assertionId, issuer, size, triplesNumber, chunksNumber);
+		emit AssertionCreated(assertionId, size, triplesNumber, chunksNumber);
 	}
 
 	function _checkHubOwner() internal view virtual {
