@@ -8,9 +8,9 @@ import { Identity } from "./Identity.sol";
 import { Shares } from "./Shares.sol";
 import { Staking } from "./Staking.sol";
 import { IdentityStorage } from "./storage/IdentityStorage.sol";
+import { ParametersStorage } from "./storage/ParametersStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { StakingStorage } from "./storage/StakingStorage.sol";
-import { ParametersStorage } from "./storage/ParametersStorage.sol";
 import { UnorderedIndexableContractDynamicSetLib } from "./utils/UnorderedIndexableContractDynamicSet.sol";
 import { ADMIN_KEY, OPERATIONAL_KEY } from "./constants/IdentityConstants.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
@@ -22,9 +22,9 @@ contract Profile {
     Identity public identityContract;
     Staking public stakingContract;
     IdentityStorage public identityStorage;
+    ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     StakingStorage public stakingStorage;
-    ParametersStorage public parametersStorage;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -34,9 +34,9 @@ contract Profile {
         identityContract = Identity(hub.getContractAddress("Identity"));
         stakingContract = Staking(hub.getContractAddress("Staking"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+        parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
-        parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
     }
 
     modifier onlyAdmin(uint72 identityId) {
@@ -126,28 +126,36 @@ contract Profile {
 
     function startAccumulatedOperatorFeeWithdrawal(uint72 identityId) external onlyAdmin(identityId) {
         ProfileStorage ps = profileStorage;
-        ParametersStorage params = parametersStorage;
 
         uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
+
         require(accumulatedOperatorFee != 0, "You have no operator fees");
 
-        require(ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId) != 0, "Withdrawal requests already exist");
-
-        ps.setAccumulatedOperatorFeeWithdrawalAmount(identityId, accumulatedOperatorFee);
-        ps.setOperatorFeeWithdrawalTimestamp(identityId, block.timestamp + params.stakeWithdrawalDelay());
         ps.setAccumulatedOperatorFee(identityId, 0);
+        ps.setAccumulatedOperatorFeeWithdrawalAmount(
+            identityId,
+            ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId) + accumulatedOperatorFee
+        );
+        ps.setAccumulatedOperatorFeeWithdrawalTimestamp(
+            identityId,
+            block.timestamp + parametersStorage.stakeWithdrawalDelay()
+        );
     }
 
     function withdrawAccumulatedOperatorFee(uint72 identityId) external onlyAdmin(identityId) {
         ProfileStorage ps = profileStorage;
 
         uint96 withdrawalAmount = ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId);
-        require(withdrawalAmount != 0, "You have not requested withdrawal");
-        require(ps.getOperatorFeeWithdrawalTimestamp(identityId) < block.timestamp, "Withdrawal period hasn't ended yet");
 
-        ps.transferTokens(msg.sender, withdrawalAmount);
+        require(withdrawalAmount != 0, "Withdrawal hasn't been requested");
+        require(
+            ps.getAccumulatedOperatorFeeWithdrawalTimestamp(identityId) < block.timestamp,
+            "Withdrawal period hasn't ended"
+        );
+
         ps.setAccumulatedOperatorFeeWithdrawalAmount(identityId, 0);
-        ps.setOperatorFeeWithdrawalTimestamp(identityId, 0);
+        ps.setAccumulatedOperatorFeeWithdrawalTimestamp(identityId, 0);
+        ps.transferTokens(msg.sender, withdrawalAmount);
     }
 
     function _checkAdmin(uint72 identityId) internal view virtual {

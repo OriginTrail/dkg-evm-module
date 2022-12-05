@@ -80,51 +80,58 @@ contract Staking {
     }
 
     function startStakeWithdrawal(uint72 identityId, uint96 sharesToBurn) external {
+        require(sharesToBurn != 0, "Withdrawal amount cannot be 0");
+
         ProfileStorage ps = profileStorage;
         StakingStorage ss = stakingStorage;
 
         require(ps.profileExists(identityId), "Profile doesn't exist");
-        require(!ss.withdrawalRequestExists(identityId, msg.sender), "Withdrawal request already exist");
 
         Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
-        ParametersStorage params = parametersStorage;
-        ShardingTable stc = shardingTableContract;
-        ShardingTableStorage sts = shardingTableStorage;
 
-        uint96 tokensWithdrawalAmount = (
-            uint96(uint256(ss.totalStakes(identityId)) * sharesToBurn / sharesContract.totalSupply())
+        require(sharesToBurn <= sharesContract.balanceOf(msg.sender), "sharesToBurn must be <= balance");
+
+        uint96 oldStake = ss.totalStakes(identityId);
+        uint96 stakeWithdrawalAmount = (
+            uint96(uint256(oldStake) * sharesToBurn / sharesContract.totalSupply())
         );
+        uint96 newStake = oldStake - stakeWithdrawalAmount;
+        uint96 newStakeWithdrawalAmount = ss.getWithdrawalRequestAmount(identityId, msg.sender) + stakeWithdrawalAmount;
+
+        ParametersStorage params = parametersStorage;
 
         uint256 withdrawalPeriodEnd = block.timestamp + params.stakeWithdrawalDelay();
-        ss.setWithdrawalRequest(identityId, msg.sender, tokensWithdrawalAmount, withdrawalPeriodEnd);
-        ss.setTotalStake(identityId, ss.totalStakes(identityId) - tokensWithdrawalAmount);
+        ss.createWithdrawalRequest(
+            identityId,
+            msg.sender,
+            newStakeWithdrawalAmount,
+            withdrawalPeriodEnd
+        );
+        ss.setTotalStake(identityId, newStake);
         sharesContract.burnFrom(msg.sender, sharesToBurn);
 
-
-        if (sts.nodeExists(identityId) && ss.totalStakes(identityId) < parametersStorage.minimumStake()) {
-            stc.removeNode(identityId);
+        if (shardingTableStorage.nodeExists(identityId) && (newStake < params.minimumStake())) {
+            shardingTableContract.removeNode(identityId);
         }
 
-        emit StakeWithdrawalStarted(identityId, msg.sender, tokensWithdrawalAmount, withdrawalPeriodEnd);
+        emit StakeWithdrawalStarted(identityId, msg.sender, newStakeWithdrawalAmount, withdrawalPeriodEnd);
     }
 
     function withdrawStake(uint72 identityId) external {
-        ProfileStorage ps = profileStorage;
-        require(ps.profileExists(identityId), "Profile doesn't exist");
+        require(profileStorage.profileExists(identityId), "Profile doesn't exist");
 
         StakingStorage ss = stakingStorage;
 
-        uint96 tokensWithdrawalAmount;
+        uint96 stakeWithdrawalAmount;
         uint256 withdrawalTimestamp;
-        (tokensWithdrawalAmount, withdrawalTimestamp) = ss.withdrawalRequests(identityId, msg.sender);
+        (stakeWithdrawalAmount, withdrawalTimestamp) = ss.withdrawalRequests(identityId, msg.sender);
 
         require(withdrawalTimestamp < block.timestamp, "Withdrawal period hasn't ended yet");
 
-        ss.transferStake(msg.sender, tokensWithdrawalAmount);
+        ss.deleteWithdrawalRequest(identityId, msg.sender);
+        ss.transferStake(msg.sender, stakeWithdrawalAmount);
 
-        ss.setWithdrawalRequest(identityId, msg.sender, 0, 0);
-
-        emit StakeWithdrawn(identityId, msg.sender, tokensWithdrawalAmount);
+        emit StakeWithdrawn(identityId, msg.sender, stakeWithdrawalAmount);
     }
 
     function addReward(uint72 identityId, uint96 rewardAmount) external onlyContracts {
