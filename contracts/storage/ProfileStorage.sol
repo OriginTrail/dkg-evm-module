@@ -22,6 +22,8 @@ contract ProfileStorage {
         uint96 ask;
         uint96 accumulatedOperatorFee;
         address sharesContractAddress;
+        uint96 operatorFeeWithdrawalAmount;
+        uint256 operatorFeeWithdrawalTimestamp;
         mapping(uint8 => bytes32) nodeAddresses;
     }
 
@@ -44,7 +46,7 @@ contract ProfileStorage {
     }
 
     function createProfile(uint72 identityId, bytes calldata nodeId, uint96 ask, address sharesContractAddress)
-        external onlyContracts
+    external onlyContracts
     {
         ProfileDefinition storage profile = profiles[identityId];
         profile.nodeId = nodeId;
@@ -96,6 +98,22 @@ contract ProfileStorage {
 
     function setAccumulatedOperatorFee(uint72 identityId, uint96 newOperatorFeeAmount) external onlyContracts {
         profiles[identityId].accumulatedOperatorFee = newOperatorFeeAmount;
+    }
+
+    function getOperatorFeeWithdrawalAmount(uint72 identityId) external view returns (uint96) {
+        return profiles[identityId].operatorFeeWithdrawalAmount;
+    }
+
+    function setOperatorFeeWithdrawalAmount(uint72 identityId, uint96 operatorFeeWithdrawalAmount) external onlyContracts {
+        profiles[identityId].operatorFeeWithdrawalAmount = operatorFeeWithdrawalAmount;
+    }
+
+    function getOperatorFeeWithdrawalTimestamp(uint72 identityId) external view returns (uint256) {
+        return profiles[identityId].operatorFeeWithdrawalTimestamp;
+    }
+
+    function setOperatorFeeWithdrawalTimestamp(uint72 identityId, uint256 operatorFeeWithdrawalTimestamp) external onlyContracts {
+        profiles[identityId].operatorFeeWithdrawalTimestamp = operatorFeeWithdrawalTimestamp;
     }
 
     function getSharesContractAddress(uint72 identityId) external view returns (address) {
