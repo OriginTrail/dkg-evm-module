@@ -82,32 +82,6 @@ contract ContentAsset is AbstractAsset, ERC721 {
     }
  
 
-    function updateAssetState(uint256 tokenId, bytes32 assertionId) external onlyAssetOwner(tokenId) {
-        assertionContract.createAssertion(
-            args.assertionId,
-            msg.sender,
-            args.size,
-            args.triplesNumber,
-            args.chunksNumber
-        );
-        assets[tokenId].assertionIds.push(args.assertionId);
-
-        serviceAgreementV1.updateServiceAgreement(
-            ServiceAgreementStructsV1.ServiceAgreementInputArgs({
-                assetCreator: msg.sender,
-                assetContract: address(this),
-                tokenId: tokenId,
-                keyword: abi.encodePacked(address(this), getAssertionIdByIndex(tokenId, 0)),
-                hashFunctionId: 1,  // hashFunctionId | 1 = sha256
-                epochsNumber: args.epochsNumber,
-                tokenAmount: args.tokenAmount,
-                scoreFunctionId: args.scoreFunctionId
-            })
-        );
-
-        emit AssetUpdated(address(this), tokenId, args.assertionId);
-    }
-
     function getAssertionIds(uint256 tokenId) public view override returns (bytes32[] memory) {
         return assets[tokenId].assertionIds;
     }
