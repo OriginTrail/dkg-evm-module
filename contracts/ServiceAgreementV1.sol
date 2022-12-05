@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import { HashingProxy } from "./HashingProxy.sol";
 import { Hub } from "./Hub.sol";
@@ -13,11 +13,13 @@ import { ParametersStorage } from "./storage/ParametersStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { ServiceAgreementStorageV1 } from "./storage/ServiceAgreementStorageV1.sol";
 import { StakingStorage } from "./storage/StakingStorage.sol";
+import { Named } from "./interface/Named.sol";
+import { Versioned } from "./interface/Versioned.sol";
 import { ServiceAgreementStructsV1 } from "./structs/ServiceAgreementStructsV1.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-contract ServiceAgreementV1 {
+contract ServiceAgreementV1 is Named, Versioned {
 
     event ServiceAgreementV1Created(
         address indexed assetContract,
@@ -53,6 +55,9 @@ contract ServiceAgreementV1 {
         uint72 indexed identityId
     );
 
+    string constant private _NAME = "ServiceAgreementV1";
+    string constant private _VERSION = "1.0.0";
+
     Hub public hub;
     HashingProxy public hashingProxy;
     ScoringProxy public scoringProxy;
@@ -69,7 +74,20 @@ contract ServiceAgreementV1 {
         require(hubAddress != address(0));
 
         hub = Hub(hubAddress);
-        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+    }
+
+    modifier onlyHubOwner() {
+		_checkHubOwner();
+		_;
+	}
+
+    modifier onlyAssetContracts() {
+        _checkAssetContract();
+        _;
+    }
+
+    function initialize() public onlyHubOwner {
+		hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
         stakingContract = Staking(hub.getContractAddress("Staking"));
         assertionStorage = AssertionStorage(hub.getContractAddress("AssertionStorage"));
@@ -79,11 +97,14 @@ contract ServiceAgreementV1 {
         serviceAgreementStorageV1 = ServiceAgreementStorageV1(hub.getContractAddress("ServiceAgreementStorageV1"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
+	}
+
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
     }
 
-    modifier onlyAssetContracts() {
-        _checkAssetContract();
-        _;
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
     }
 
     function createServiceAgreement(ServiceAgreementStructsV1.ServiceAgreementInputArgs calldata args)
@@ -329,7 +350,7 @@ contract ServiceAgreementV1 {
         bytes32 nextCommitId = sasV1.getAgreementEpochSubmissionHead(agreementId, args.epoch);
         uint32 r0 = parametersStorage.R0();
         uint8 i;
-        while ((identityId != sasV1.getCommitSubmissionsIdentityId(nextCommitId)) && i < r0) {
+        while ((identityId != sasV1.getCommitSubmissionsIdentityId(nextCommitId)) && (i < r0)) {
             nextCommitId = keccak256(
                 abi.encodePacked(agreementId, args.epoch, sasV1.getCommitSubmissionNextIdentityId(nextCommitId))
             );
@@ -462,6 +483,10 @@ contract ServiceAgreementV1 {
     function _generatePseudorandomUint8(address sender, uint8 limit) private view returns (uint8) {
         return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, sender, block.number))) % limit);
     }
+
+    function _checkHubOwner() internal view virtual {
+		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+	}
 
     function _checkAssetContract() internal view virtual {
         require (hub.isAssetContract(msg.sender), "Fn can only be called by assets");

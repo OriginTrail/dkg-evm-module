@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import { Hub } from "./Hub.sol";
 import { ShardingTable } from "./ShardingTable.sol";
@@ -11,31 +11,26 @@ import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { ServiceAgreementStorageV1 } from "./storage/ServiceAgreementStorageV1.sol";
 import { ShardingTableStorage } from "./storage/ShardingTableStorage.sol";
 import { StakingStorage } from "./storage/StakingStorage.sol";
+import { Named } from "./interface/Named.sol";
+import { Versioned } from "./interface/Versioned.sol";
 import { ADMIN_KEY } from "./constants/IdentityConstants.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Staking {
+contract Staking is Named, Versioned {
 
-    event StakeIncreased(
-        uint72 indexed identityId,
-        address indexed staker,
-        uint96 newStakeAmount
-    );
+    event StakeIncreased(uint72 indexed identityId, address indexed staker, uint96 newStakeAmount);
     event StakeWithdrawalStarted(
         uint72 indexed identityId,
         address indexed staker,
         uint96 stakeAmount,
         uint256 withdrawalPeriodEnd
     );
-    event StakeWithdrawn(
-        uint72 indexed identityId,
-        address indexed staker,
-        uint96 withdrawnStakeAmount
-    );
-    event RewardAdded(
-        uint72 indexed identityId,
-        uint96 rewardAmount
-    );
+    event StakeWithdrawn(uint72 indexed identityId, address indexed staker, uint96 withdrawnStakeAmount);
+    event RewardAdded(uint72 indexed identityId, uint96 rewardAmount);
+    event OperatorFeeUpdated(uint72 indexed identityId, uint8 operatorFee);
+
+    string constant private _NAME = "Staking";
+    string constant private _VERSION = "1.0.0";
 
     Hub public hub;
     ShardingTable public shardingTableContract;
@@ -51,7 +46,25 @@ contract Staking {
         require(hubAddress != address(0));
 
         hub = Hub(hubAddress);
-        shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
+    }
+
+    modifier onlyHubOwner() {
+		_checkHubOwner();
+		_;
+	}
+
+    modifier onlyContracts() {
+        _checkHub();
+        _;
+    }
+
+    modifier onlyAdmin(uint72 identityId) {
+        _checkAdmin(identityId);
+        _;
+    }
+
+    function initialize() public onlyHubOwner {
+		shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
@@ -59,23 +72,21 @@ contract Staking {
         serviceAgreementStorageV1 = ServiceAgreementStorageV1(hub.getContractAddress("ServiceAgreementStorageV1"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
+	}
+
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
     }
 
-    modifier onlyContracts() {
-        _checkHub();
-        _;
-    }
-
-    modifier onlyProfileOrAdmin(uint72 identityId) {
-        _checkProfileOrAdmin(identityId);
-        _;
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
     }
 
     function addStake(address sender, uint72 identityId, uint96 stakeAmount) external onlyContracts {
         _addStake(sender, identityId, stakeAmount);
     }
 
-    function addStake(uint72 identityId, uint96 stakeAmount) external {
+    function addStake(uint72 identityId, uint96 stakeAmount) external onlyAdmin(identityId) {
         _addStake(msg.sender, identityId, stakeAmount);
     }
 
@@ -166,9 +177,11 @@ contract Staking {
         // TBD
     }
 
-    function setOperatorFee(uint72 identityId, uint8 operatorFee) external onlyProfileOrAdmin(identityId) {
+    function setOperatorFee(uint72 identityId, uint8 operatorFee) external onlyAdmin(identityId) {
         require(operatorFee <= 100, "Operator fee out of [0, 100]");
         stakingStorage.setOperatorFee(identityId, operatorFee);
+
+        emit OperatorFeeUpdated(identityId, operatorFee);
     }
 
     function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal {
@@ -206,13 +219,16 @@ contract Staking {
         emit StakeIncreased(identityId, sender, stakeAmount);
     }
 
+    function _checkHubOwner() internal view virtual {
+		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+	}
+
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
-    function _checkProfileOrAdmin(uint72 identityId) internal view virtual {
+    function _checkAdmin(uint72 identityId) internal view virtual {
         require(
-            (msg.sender == hub.getContractAddress("Profile")) ||
             identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY),
             "Admin function"
         );

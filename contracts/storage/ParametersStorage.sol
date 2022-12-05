@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -24,8 +24,6 @@ contract ParametersStorage is Ownable {
     uint24 public stakeWithdrawalDelay;
     uint24 public rewardWithdrawalDelay;
     uint32 public slashingFreezeDuration;
-
-    bool public delegationEnabled;
 
     constructor() {
         minimumStake = 50_000 ether;

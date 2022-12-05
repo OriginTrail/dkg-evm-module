@@ -1,20 +1,32 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import { IHashFunction } from "./interface/IHashFunction.sol";
 import { Named } from "./interface/Named.sol";
+import { Versioned } from "./interface/Versioned.sol";
 import { UnorderedIndexableContractDynamicSetLib } from "./utils/UnorderedIndexableContractDynamicSet.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract HashingProxy is Ownable {
+contract HashingProxy is Named, Versioned, Ownable {
 
     using UnorderedIndexableContractDynamicSetLib for UnorderedIndexableContractDynamicSetLib.Set;
 
     event NewHashFunctionContract(uint8 indexed hashFunctionId, address newContractAddress);
     event HashFunctionContractChanged(uint8 indexed hashFunctionId, address newContractAddress);
 
+    string constant private _NAME = "HashingProxy";
+    string constant private _VERSION = "1.0.0";
+
     UnorderedIndexableContractDynamicSetLib.Set hashFunctionSet;
+
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
+    }
 
     function setContractAddress(uint8 hashFunctionId, address hashingContractAddress) external onlyOwner {
         if (hashFunctionSet.exists(hashFunctionId)) {

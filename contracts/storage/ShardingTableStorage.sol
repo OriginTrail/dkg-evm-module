@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import { Hub } from "../Hub.sol";
+import { Named } from "../interface/Named.sol";
+import { Versioned } from "../interface/Versioned.sol";
 import { ShardingTableStructs } from "../structs/ShardingTableStructs.sol";
 import { NULL } from "../constants/ShardingTableConstants.sol";
 
-contract ShardingTableStorage {
+contract ShardingTableStorage is Named, Versioned {
+
+    string constant private _NAME = "ShardingTableStorage";
+    string constant private _VERSION = "1.0.0";
 
     Hub public hub;
 
@@ -29,6 +34,14 @@ contract ShardingTableStorage {
     modifier onlyContracts() {
         _checkHub();
         _;
+    }
+
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
     }
 
     function incrementNodesCount() external onlyContracts {

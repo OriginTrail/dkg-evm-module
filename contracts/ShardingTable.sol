@@ -7,13 +7,18 @@ import { IdentityStorage } from "./storage/IdentityStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { ShardingTableStorage } from "./storage/ShardingTableStorage.sol";
 import { StakingStorage } from "./storage/StakingStorage.sol";
+import { Named } from "./interface/Named.sol";
+import { Versioned } from "./interface/Versioned.sol";
 import { ShardingTableStructs } from "./structs/ShardingTableStructs.sol";
 import { NULL } from "./constants/ShardingTableConstants.sol";
 
-contract ShardingTable {
+contract ShardingTable is Named, Versioned {
 
     event NodeAdded(uint72 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
     event NodeRemoved(uint72 indexed identityId, bytes nodeId);
+
+    string constant private _NAME = "ShardingTable";
+    string constant private _VERSION = "1.0.0";
 
     Hub public hub;
     ProfileStorage public profileStorage;
@@ -24,14 +29,30 @@ contract ShardingTable {
         require(hubAddress != address(0));
 
         hub = Hub(hubAddress);
-        profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
-        stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
     }
+
+    modifier onlyHubOwner() {
+		_checkHubOwner();
+		_;
+	}
 
     modifier onlyContracts() {
         _checkHub();
         _;
+    }
+
+    function initialize() public onlyHubOwner {
+		profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
+        stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
+	}
+
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
     }
 
     function getShardingTable(uint72 startingIdentityId, uint72 nodesNumber)
@@ -165,6 +186,10 @@ contract ShardingTable {
 
         emit NodeRemoved(identityId, ps.getNodeId(identityId));
     }
+
+    function _checkHubOwner() internal view virtual {
+		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+	}
 
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
