@@ -1,11 +1,21 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import { Hub } from "../Hub.sol";
+import { Named } from "../interface/Named.sol";
+import { Versioned } from "../interface/Versioned.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract StakingStorage {
+contract StakingStorage is Named, Versioned {
+
+    string constant private _NAME = "StakingStorage";
+    string constant private _VERSION = "1.0.0";
+
+    struct WithdrawalRequest {
+        uint96 amount;
+        uint256 timestamp;
+    }
 
     Hub public hub;
     IERC20 public tokenContract;
@@ -15,6 +25,10 @@ contract StakingStorage {
 
     // identityId => operatorFee
     mapping(uint72 => uint96) public operatorFees;
+
+    // identityId => withdrawalRequest
+    mapping(uint72 => mapping(address => WithdrawalRequest)) public withdrawalRequests;
+
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -33,9 +47,12 @@ contract StakingStorage {
         _;
     }
 
-    function initializeStaking(uint72 identityId, uint96 totalStake, uint96 operatorFee) external onlyContracts {
-        totalStakes[identityId] = totalStake;
-        operatorFees[identityId] = operatorFee;
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
     }
 
     function setTotalStake(uint72 identityId, uint96 newTotalStake) external onlyContracts {
@@ -44,6 +61,32 @@ contract StakingStorage {
 
     function setOperatorFee(uint72 identityId, uint96 operatorFee) external onlyContracts {
         operatorFees[identityId] = operatorFee;
+    }
+
+    function createWithdrawalRequest(uint72 identityId, address staker, uint96 amount, uint256 timestamp)
+        external
+        onlyContracts
+    {
+        withdrawalRequests[identityId][staker] = WithdrawalRequest({
+            amount: amount,
+            timestamp: timestamp
+        });
+    }
+
+    function deleteWithdrawalRequest(uint72 identityId, address staker) external onlyContracts {
+        delete withdrawalRequests[identityId][staker];
+    }
+
+    function getWithdrawalRequestAmount(uint72 identityId, address staker) external view returns (uint96) {
+        return withdrawalRequests[identityId][staker].amount;
+    }
+
+    function getWithdrawalRequestTimestamp(uint72 identityId, address staker) external view returns (uint256) {
+        return withdrawalRequests[identityId][staker].timestamp;
+    }
+
+    function withdrawalRequestExists(uint72 identityId, address staker) external view returns (bool) {
+        return withdrawalRequests[identityId][staker].amount != 0;
     }
 
     function transferStake(address receiver, uint96 stakeAmount) external onlyStakingContract {

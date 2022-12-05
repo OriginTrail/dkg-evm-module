@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import { AbstractAsset } from "./AbstractAsset.sol";
 import { Assertion } from "../Assertion.sol";
@@ -33,7 +33,11 @@ contract ContentAsset is AbstractAsset, ERC721 {
     Assertion public assertionContract;
     ServiceAgreementV1 public serviceAgreementV1;
 
+    // tokenId => Asset
     mapping (uint256 => Asset) assets;
+
+    // keccak256(tokenId + assertionId) => issuer
+    mapping(bytes32 => address) public issuers;
 
     constructor(address hubAddress)
         AbstractAsset(hubAddress)
@@ -58,12 +62,12 @@ contract ContentAsset is AbstractAsset, ERC721 {
 
         assertionContract.createAssertion(
             args.assertionId,
-            msg.sender,
             args.size,
             args.triplesNumber,
             args.chunksNumber
         );
         assets[tokenId].assertionIds.push(args.assertionId);
+        issuers[keccak256(abi.encodePacked(tokenId, args.assertionId))] = msg.sender;
 
         serviceAgreementV1.createServiceAgreement(
             ServiceAgreementStructsV1.ServiceAgreementInputArgs({
@@ -80,10 +84,17 @@ contract ContentAsset is AbstractAsset, ERC721 {
 
         emit AssetCreated(address(this), tokenId, args.assertionId);
     }
- 
 
     function getAssertionIds(uint256 tokenId) public view override returns (bytes32[] memory) {
         return assets[tokenId].assertionIds;
+    }
+
+    function getAssertionIssuer(uint256 tokenId, bytes32 assertionId) external view returns (address) {
+        return issuers[keccak256(abi.encodePacked(tokenId, assertionId))];
+    }
+
+    function assertionExists(bytes32 assetAssertionId) public view returns (bool) {
+        return issuers[assetAssertionId] != address(0);
     }
 
     function _checkAssetOwner(uint256 tokenId) internal view virtual {

@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import { HashingProxy } from "../HashingProxy.sol";
 import { Hub } from "../Hub.sol";
+import { Named } from "../interface/Named.sol";
+import { Versioned } from "../interface/Versioned.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract ProfileStorage {
+contract ProfileStorage is Named, Versioned {
 
-    event ProfileCreated(uint72 indexed identityId, uint96 ask);
-    event ProfileDeleted(uint72 indexed identityId);
-    event AskUpdated(uint72 indexed identityId, uint96 ask);
-    event SharesContractUpdated(uint72 indexed identityId, address sharesContractAddress);
+    string constant private _NAME = "ProfileStorage";
+    string constant private _VERSION = "1.0.0";
 
     Hub public hub;
     HashingProxy public hashingProxy;
@@ -21,6 +21,8 @@ contract ProfileStorage {
         bytes nodeId;
         uint96 ask;
         uint96 accumulatedOperatorFee;
+        uint96 accumulatedOperatorFeeWithdrawalAmount;
+        uint256 operatorFeeWithdrawalTimestamp;
         address sharesContractAddress;
         mapping(uint8 => bytes32) nodeAddresses;
     }
@@ -43,17 +45,23 @@ contract ProfileStorage {
         _;
     }
 
-    function createProfile(uint72 identityId, bytes calldata nodeId, uint96 ask, address sharesContractAddress)
-        external onlyContracts
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
+    }
+
+    function createProfile(uint72 identityId, bytes calldata nodeId, address sharesContractAddress)
+        external
+        onlyContracts
     {
         ProfileDefinition storage profile = profiles[identityId];
         profile.nodeId = nodeId;
-        profile.ask = ask;
         profile.sharesContractAddress = sharesContractAddress;
 
         nodeIdsList[nodeId] = true;
-
-        emit ProfileCreated(identityId, ask);
     }
 
     function getProfile(uint72 identityId) external view returns (bytes memory, uint96[2] memory, address) {
@@ -64,8 +72,6 @@ contract ProfileStorage {
     function deleteProfile(uint72 identityId) external onlyContracts {
         nodeIdsList[profiles[identityId].nodeId] = false;
         delete profiles[identityId];
-
-        emit ProfileDeleted(identityId);
     }
 
     function getNodeId(uint72 identityId) external view returns (bytes memory) {
@@ -86,8 +92,6 @@ contract ProfileStorage {
 
     function setAsk(uint72 identityId, uint96 ask) external onlyContracts {
         profiles[identityId].ask = ask;
-
-        emit AskUpdated(identityId, ask);
     }
 
     function getAccumulatedOperatorFee(uint72 identityId) external view returns (uint96) {
@@ -98,14 +102,28 @@ contract ProfileStorage {
         profiles[identityId].accumulatedOperatorFee = newOperatorFeeAmount;
     }
 
+    function getAccumulatedOperatorFeeWithdrawalAmount(uint72 identityId) external view returns (uint96) {
+        return profiles[identityId].accumulatedOperatorFeeWithdrawalAmount;
+    }
+
+    function setAccumulatedOperatorFeeWithdrawalAmount(uint72 identityId, uint96 accumulatedOperatorFeeWithdrawalAmount) external onlyContracts {
+        profiles[identityId].accumulatedOperatorFeeWithdrawalAmount = accumulatedOperatorFeeWithdrawalAmount;
+    }
+
+    function getAccumulatedOperatorFeeWithdrawalTimestamp(uint72 identityId) external view returns (uint256) {
+        return profiles[identityId].operatorFeeWithdrawalTimestamp;
+    }
+
+    function setAccumulatedOperatorFeeWithdrawalTimestamp(uint72 identityId, uint256 operatorFeeWithdrawalTimestamp) external onlyContracts {
+        profiles[identityId].operatorFeeWithdrawalTimestamp = operatorFeeWithdrawalTimestamp;
+    }
+
     function getSharesContractAddress(uint72 identityId) external view returns (address) {
         return profiles[identityId].sharesContractAddress;
     }
 
     function setSharesContractAddress(uint72 identityId, address sharesContractAddress) external onlyContracts {
         profiles[identityId].sharesContractAddress = sharesContractAddress;
-
-        emit SharesContractUpdated(identityId, sharesContractAddress);
     }
 
     function getNodeAddress(uint72 identityId, uint8 hashFunctionId) external view returns (bytes32) {
