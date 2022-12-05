@@ -23,7 +23,7 @@ contract WhitelistStorage is Named, Versioned, Ownable {
 
         hub = Hub(hubAddress);
 
-        whitelistingEnabled = true;
+        whitelistingEnabled = false;
     }
 
     function name() external pure virtual override returns (string memory) {
