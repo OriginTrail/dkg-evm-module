@@ -9,7 +9,6 @@ import { Shares } from "./Shares.sol";
 import { Staking } from "./Staking.sol";
 import { IdentityStorage } from "./storage/IdentityStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
-import { StakingStorage } from "./storage/StakingStorage.sol";
 import { WhitelistStorage } from "./storage/WhitelistStorage.sol";
 import { Named } from "./interface/Named.sol";
 import { Versioned } from "./interface/Versioned.sol";
@@ -32,7 +31,6 @@ contract Profile is Named, Versioned {
     Staking public stakingContract;
     IdentityStorage public identityStorage;
     ProfileStorage public profileStorage;
-    StakingStorage public stakingStorage;
     WhitelistStorage public whitelistStorage;
 
     constructor(address hubAddress) {
@@ -42,8 +40,8 @@ contract Profile is Named, Versioned {
         initialize();
     }
 
-    modifier onlyOwner() {
-		_checkOwner();
+    modifier onlyHubOwner() {
+		_checkHubOwner();
 		_;
 	}
 
@@ -67,13 +65,12 @@ contract Profile is Named, Versioned {
         _;
     }
 
-    function initialize() public onlyOwner {
+    function initialize() public onlyHubOwner {
 		hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         identityContract = Identity(hub.getContractAddress("Identity"));
         stakingContract = Staking(hub.getContractAddress("Staking"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         whitelistStorage = WhitelistStorage(hub.getContractAddress("WhitelistStorage"));
 	}
 
@@ -85,23 +82,13 @@ contract Profile is Named, Versioned {
         return _VERSION;
     }
 
-    function createProfile(
-        address adminWallet,
-        bytes calldata nodeId,
-        uint96 initialAsk,
-        uint96 initialStake,
-        uint8 operatorFee
-    )
-        external
-        onlyWhitelisted
-    {
+    function createProfile(address adminWallet, bytes calldata nodeId) external onlyWhitelisted {
         IdentityStorage ids = identityStorage;
         ProfileStorage ps = profileStorage;
 
         require(ids.getIdentityId(msg.sender) == 0, "Identity already exists");
         require(nodeId.length != 0, "Node ID can't be empty");
         require(!ps.nodeIdRegistered(nodeId), "Node ID is already registered");
-        require(initialAsk != 0, "Ask cannot be 0");
 
         uint72 identityId = identityContract.createIdentity(msg.sender, adminWallet);
 
@@ -112,12 +99,8 @@ contract Profile is Named, Versioned {
             string.concat("DKGSTAKE_", identityIdString)
         );
 
-        ps.createProfile(identityId, nodeId, initialAsk, address(sharesContract));
+        ps.createProfile(identityId, nodeId, address(sharesContract));
         _setAvailableNodeAddresses(identityId);
-
-        Staking sc = stakingContract;
-        sc.addStake(msg.sender, identityId, initialStake);
-        sc.setOperatorFee(identityId, operatorFee);
 
         emit ProfileCreated(identityId);
     }
@@ -182,7 +165,7 @@ contract Profile is Named, Versioned {
         ps.transferTokens(msg.sender, accumulatedOperatorFee);
     }
 
-    function _checkOwner() internal view virtual {
+    function _checkHubOwner() internal view virtual {
 		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
 	}
 

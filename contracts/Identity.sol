@@ -26,8 +26,8 @@ contract Identity is Named, Versioned {
         initialize();
     }
 
-    modifier onlyOwner() {
-		_checkOwner();
+    modifier onlyHubOwner() {
+		_checkHubOwner();
 		_;
 	}
 
@@ -41,7 +41,7 @@ contract Identity is Named, Versioned {
         _;
     }
 
-    function initialize() public onlyOwner {
+    function initialize() public onlyHubOwner {
 		identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
 	}
 
@@ -135,7 +135,7 @@ contract Identity is Named, Versioned {
         }
     }
 
-    function _checkOwner() internal view virtual {
+    function _checkHubOwner() internal view virtual {
 		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
 	}
 

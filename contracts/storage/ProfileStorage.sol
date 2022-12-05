@@ -51,12 +51,11 @@ contract ProfileStorage is Named, Versioned {
         return _VERSION;
     }
 
-    function createProfile(uint72 identityId, bytes calldata nodeId, uint96 ask, address sharesContractAddress)
+    function createProfile(uint72 identityId, bytes calldata nodeId, address sharesContractAddress)
         external onlyContracts
     {
         ProfileDefinition storage profile = profiles[identityId];
         profile.nodeId = nodeId;
-        profile.ask = ask;
         profile.sharesContractAddress = sharesContractAddress;
 
         nodeIdsList[nodeId] = true;

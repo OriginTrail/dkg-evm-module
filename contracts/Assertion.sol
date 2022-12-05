@@ -27,8 +27,8 @@ contract Assertion is Named, Versioned {
 		initialize();
 	}
 
-	modifier onlyOwner() {
-		_checkOwner();
+	modifier onlyHubOwner() {
+		_checkHubOwner();
 		_;
 	}
 
@@ -37,7 +37,7 @@ contract Assertion is Named, Versioned {
         _;
     }
 
-	function initialize() public onlyOwner {
+	function initialize() public onlyHubOwner {
 		assertionStorage = AssertionStorage(hub.getContractAddress("AssertionStorage"));
 	}
 
@@ -76,7 +76,7 @@ contract Assertion is Named, Versioned {
 		emit AssertionCreated(assertionId, issuer, size, triplesNumber, chunksNumber);
 	}
 
-	function _checkOwner() internal view virtual {
+	function _checkHubOwner() internal view virtual {
 		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
 	}
 

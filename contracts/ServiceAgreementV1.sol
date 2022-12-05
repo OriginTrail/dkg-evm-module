@@ -76,8 +76,8 @@ contract ServiceAgreementV1 is Named, Versioned {
         hub = Hub(hubAddress);
     }
 
-    modifier onlyOwner() {
-		_checkOwner();
+    modifier onlyHubOwner() {
+		_checkHubOwner();
 		_;
 	}
 
@@ -86,7 +86,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         _;
     }
 
-    function initialize() public onlyOwner {
+    function initialize() public onlyHubOwner {
 		hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
         stakingContract = Staking(hub.getContractAddress("Staking"));
@@ -484,7 +484,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, sender, block.number))) % limit);
     }
 
-    function _checkOwner() internal view virtual {
+    function _checkHubOwner() internal view virtual {
 		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
 	}
 

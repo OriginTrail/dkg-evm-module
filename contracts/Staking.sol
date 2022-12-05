@@ -42,8 +42,8 @@ contract Staking is Named, Versioned {
         hub = Hub(hubAddress);
     }
 
-    modifier onlyOwner() {
-		_checkOwner();
+    modifier onlyHubOwner() {
+		_checkHubOwner();
 		_;
 	}
 
@@ -52,12 +52,12 @@ contract Staking is Named, Versioned {
         _;
     }
 
-    modifier onlyProfileOrAdmin(uint72 identityId) {
-        _checkProfileOrAdmin(identityId);
+    modifier onlyAdmin(uint72 identityId) {
+        _checkAdmin(identityId);
         _;
     }
 
-    function initialize() public onlyOwner {
+    function initialize() public onlyHubOwner {
 		shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
@@ -80,11 +80,11 @@ contract Staking is Named, Versioned {
         _addStake(sender, identityId, stakeAmount);
     }
 
-    function addStake(uint72 identityId, uint96 stakeAmount) external {
+    function addStake(uint72 identityId, uint96 stakeAmount) external onlyAdmin(identityId) {
         _addStake(msg.sender, identityId, stakeAmount);
     }
 
-    function withdrawStake(uint72 identityId, uint96 sharesToBurn) external {
+    function withdrawStake(uint72 identityId, uint96 sharesToBurn) external onlyAdmin(identityId) {
         Shares sharesContract = Shares(profileStorage.getSharesContractAddress(identityId));
 
         require(profileStorage.profileExists(identityId), "Profile doesn't exist");
@@ -144,7 +144,7 @@ contract Staking is Named, Versioned {
         // TBD
     }
 
-    function setOperatorFee(uint72 identityId, uint8 operatorFee) external onlyProfileOrAdmin(identityId) {
+    function setOperatorFee(uint72 identityId, uint8 operatorFee) external onlyAdmin(identityId) {
         require(operatorFee <= 100, "Operator fee out of [0, 100]");
         stakingStorage.setOperatorFee(identityId, operatorFee);
 
@@ -186,7 +186,7 @@ contract Staking is Named, Versioned {
         emit StakeIncreased(identityId, sender, stakeAmount);
     }
 
-    function _checkOwner() internal view virtual {
+    function _checkHubOwner() internal view virtual {
 		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
 	}
 
@@ -194,9 +194,8 @@ contract Staking is Named, Versioned {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
-    function _checkProfileOrAdmin(uint72 identityId) internal view virtual {
+    function _checkAdmin(uint72 identityId) internal view virtual {
         require(
-            (msg.sender == hub.getContractAddress("Profile")) ||
             identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY),
             "Admin function"
         );

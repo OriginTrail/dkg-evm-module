@@ -31,8 +31,8 @@ contract ShardingTable is Named, Versioned {
         hub = Hub(hubAddress);
     }
 
-    modifier onlyOwner() {
-		_checkOwner();
+    modifier onlyHubOwner() {
+		_checkHubOwner();
 		_;
 	}
 
@@ -41,7 +41,7 @@ contract ShardingTable is Named, Versioned {
         _;
     }
 
-    function initialize() public onlyOwner {
+    function initialize() public onlyHubOwner {
 		profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
@@ -187,7 +187,7 @@ contract ShardingTable is Named, Versioned {
         emit NodeRemoved(identityId, ps.getNodeId(identityId));
     }
 
-    function _checkOwner() internal view virtual {
+    function _checkHubOwner() internal view virtual {
 		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
 	}
 
