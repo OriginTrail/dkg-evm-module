@@ -80,35 +80,9 @@ contract ContentAsset is AbstractAsset, ERC721 {
 
         emit AssetCreated(address(this), tokenId, args.assertionId);
     }
+ 
 
-    // PSEUDO CODE HERE
-    function cancelAsset(uint256 tokenId) external onlyAssetOwner(tokenId){
-        // if asset creation timeout has passed, send tokens back to publisher and cleanup
-        
-        require(serviceAgreementV1.startTime + sas.assetCreationTimeout < block.timestamp);
-        require(number of commits < R0);
-        
-        token.transferFrom(sa,msg.sender);
-
-        delete serviceAgreementV1;
-        delete assertion_record?
-    }
-
-    // MORE PSEUDO CODE
-
-    function updateAssetLifetime(uint256 tokenId, uint256 tokenAmount, additionalEpochsNumber) external onlyAssetOwner(tokenId) {
-        // requires an asset owner to add more tokens in proportion to existing service agreement price per epoch
-        // 
-    }
-
-    function recreateAsset(uint256 tokenId, uint256 additionalTokenAmount) external onlyAssetOwner(tokenId) {
-        // requires an asset owner to add more tokens to recreate an asset that was failed during publishing
-        // 
-        require(number of commits < R0);
-    }       
-
-    // MORE PSEUDO CODE
-    function updateAssetState(uint256 tokenId, bytes32 assertionId ) external onlyAssetOwner(tokenId) {
+    function updateAssetState(uint256 tokenId, bytes32 assertionId) external onlyAssetOwner(tokenId) {
         assertionContract.createAssertion(
             args.assertionId,
             msg.sender,
