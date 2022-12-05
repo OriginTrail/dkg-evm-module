@@ -24,7 +24,8 @@ contract Staking {
     event StakeWithdrawalStarted(
         uint72 indexed identityId,
         address indexed staker,
-        uint96 stakeAmount
+        uint96 stakeAmount,
+        uint256 withdrawalPeriodEnd
     );
     event StakeWithdrawn(
         uint72 indexed identityId,
@@ -83,7 +84,7 @@ contract Staking {
         StakingStorage ss = stakingStorage;
 
         require(ps.profileExists(identityId), "Profile doesn't exist");
-        require(ss.withdrawalRequestExists(identityId, msg.sender), "Withdrawal requests already exist");
+        require(!ss.withdrawalRequestExists(identityId, msg.sender), "Withdrawal request already exist");
 
         Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
         ParametersStorage params = parametersStorage;
@@ -91,10 +92,11 @@ contract Staking {
         ShardingTableStorage sts = shardingTableStorage;
 
         uint96 tokensWithdrawalAmount = (
-        ss.totalStakes(identityId) * sharesToBurn / uint96(sharesContract.totalSupply())
+            uint96(uint256(ss.totalStakes(identityId)) * sharesToBurn / sharesContract.totalSupply())
         );
 
-        ss.setWithdrawalRequest(identityId, msg.sender, tokensWithdrawalAmount, block.timestamp + params.stakeWithdrawalDelay());
+        uint256 withdrawalPeriodEnd = block.timestamp + params.stakeWithdrawalDelay();
+        ss.setWithdrawalRequest(identityId, msg.sender, tokensWithdrawalAmount, withdrawalPeriodEnd);
         ss.setTotalStake(identityId, ss.totalStakes(identityId) - tokensWithdrawalAmount);
         sharesContract.burnFrom(msg.sender, sharesToBurn);
 
@@ -103,7 +105,7 @@ contract Staking {
             stc.removeNode(identityId);
         }
 
-        emit StakeWithdrawalStarted(identityId, msg.sender, tokensWithdrawalAmount);
+        emit StakeWithdrawalStarted(identityId, msg.sender, tokensWithdrawalAmount, withdrawalPeriodEnd);
     }
 
     function withdrawStake(uint72 identityId) external {
@@ -118,7 +120,7 @@ contract Staking {
 
         require(withdrawalTimestamp < block.timestamp, "Withdrawal period hasn't ended yet");
 
-        tokenContract.transfer(msg.sender, tokensWithdrawalAmount);
+        ss.transferStake(msg.sender, tokensWithdrawalAmount);
 
         ss.setWithdrawalRequest(identityId, msg.sender, 0, 0);
 

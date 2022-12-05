@@ -131,9 +131,9 @@ contract Profile {
         uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
         require(accumulatedOperatorFee != 0, "You have no operator fees");
 
-        require(ps.getOperatorFeeWithdrawalAmount(identityId) != 0, "Withdrawal requests already exist");
+        require(ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId) != 0, "Withdrawal requests already exist");
 
-        ps.setOperatorFeeWithdrawalAmount(identityId, accumulatedOperatorFee);
+        ps.setAccumulatedOperatorFeeWithdrawalAmount(identityId, accumulatedOperatorFee);
         ps.setOperatorFeeWithdrawalTimestamp(identityId, block.timestamp + params.stakeWithdrawalDelay());
         ps.setAccumulatedOperatorFee(identityId, 0);
     }
@@ -141,12 +141,12 @@ contract Profile {
     function withdrawAccumulatedOperatorFee(uint72 identityId) external onlyAdmin(identityId) {
         ProfileStorage ps = profileStorage;
 
-        uint96 withdrawalAmount = ps.getOperatorFeeWithdrawalAmount(identityId);
+        uint96 withdrawalAmount = ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId);
         require(withdrawalAmount != 0, "You have not requested withdrawal");
         require(ps.getOperatorFeeWithdrawalTimestamp(identityId) < block.timestamp, "Withdrawal period hasn't ended yet");
 
         ps.transferTokens(msg.sender, withdrawalAmount);
-        ps.setOperatorFeeWithdrawalAmount(identityId, 0);
+        ps.setAccumulatedOperatorFeeWithdrawalAmount(identityId, 0);
         ps.setOperatorFeeWithdrawalTimestamp(identityId, 0);
     }
 

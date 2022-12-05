@@ -22,7 +22,7 @@ contract ProfileStorage {
         uint96 ask;
         uint96 accumulatedOperatorFee;
         address sharesContractAddress;
-        uint96 operatorFeeWithdrawalAmount;
+        uint96 accumulatedOperatorFeeWithdrawalAmount;
         uint256 operatorFeeWithdrawalTimestamp;
         mapping(uint8 => bytes32) nodeAddresses;
     }
@@ -100,12 +100,12 @@ contract ProfileStorage {
         profiles[identityId].accumulatedOperatorFee = newOperatorFeeAmount;
     }
 
-    function getOperatorFeeWithdrawalAmount(uint72 identityId) external view returns (uint96) {
-        return profiles[identityId].operatorFeeWithdrawalAmount;
+    function getAccumulatedOperatorFeeWithdrawalAmount(uint72 identityId) external view returns (uint96) {
+        return profiles[identityId].accumulatedOperatorFeeWithdrawalAmount;
     }
 
-    function setOperatorFeeWithdrawalAmount(uint72 identityId, uint96 operatorFeeWithdrawalAmount) external onlyContracts {
-        profiles[identityId].operatorFeeWithdrawalAmount = operatorFeeWithdrawalAmount;
+    function setAccumulatedOperatorFeeWithdrawalAmount(uint72 identityId, uint96 accumulatedOperatorFeeWithdrawalAmount) external onlyContracts {
+        profiles[identityId].accumulatedOperatorFeeWithdrawalAmount = accumulatedOperatorFeeWithdrawalAmount;
     }
 
     function getOperatorFeeWithdrawalTimestamp(uint72 identityId) external view returns (uint256) {
