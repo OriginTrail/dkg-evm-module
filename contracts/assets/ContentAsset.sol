@@ -70,7 +70,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
                 assetCreator: msg.sender,
                 assetContract: address(this),
                 tokenId: tokenId,
-                keyword: abi.encodePacked(address(this), tokenId, args.assertionId),
+                keyword: abi.encodePacked(address(this), args.assertionId),
                 hashFunctionId: 1,  // hashFunctionId | 1 = sha256
                 epochsNumber: args.epochsNumber,
                 tokenAmount: args.tokenAmount,
@@ -81,7 +81,34 @@ contract ContentAsset is AbstractAsset, ERC721 {
         emit AssetCreated(address(this), tokenId, args.assertionId);
     }
 
-    function updateAsset(uint256 tokenId, AssetInputArgs calldata args) external onlyAssetOwner(tokenId) {
+    // PSEUDO CODE HERE
+    function cancelAsset(uint256 tokenId) external onlyAssetOwner(tokenId){
+        // if asset creation timeout has passed, send tokens back to publisher and cleanup
+        
+        require(serviceAgreementV1.startTime + sas.assetCreationTimeout < block.timestamp);
+        require(number of commits < R0);
+        
+        token.transferFrom(sa,msg.sender);
+
+        delete serviceAgreementV1;
+        delete assertion_record?
+    }
+
+    // MORE PSEUDO CODE
+
+    function updateAssetLifetime(uint256 tokenId, uint256 tokenAmount, additionalEpochsNumber) external onlyAssetOwner(tokenId) {
+        // requires an asset owner to add more tokens in proportion to existing service agreement price per epoch
+        // 
+    }
+
+    function recreateAsset(uint256 tokenId, uint256 additionalTokenAmount) external onlyAssetOwner(tokenId) {
+        // requires an asset owner to add more tokens to recreate an asset that was failed during publishing
+        // 
+        require(number of commits < R0);
+    }       
+
+    // MORE PSEUDO CODE
+    function updateAssetState(uint256 tokenId, bytes32 assertionId ) external onlyAssetOwner(tokenId) {
         assertionContract.createAssertion(
             args.assertionId,
             msg.sender,
@@ -96,7 +123,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
                 assetCreator: msg.sender,
                 assetContract: address(this),
                 tokenId: tokenId,
-                keyword: abi.encodePacked(address(this), tokenId, getAssertionIdByIndex(tokenId, 0)),
+                keyword: abi.encodePacked(address(this), getAssertionIdByIndex(tokenId, 0)),
                 hashFunctionId: 1,  // hashFunctionId | 1 = sha256
                 epochsNumber: args.epochsNumber,
                 tokenAmount: args.tokenAmount,
