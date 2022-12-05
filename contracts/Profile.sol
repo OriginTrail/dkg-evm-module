@@ -8,6 +8,7 @@ import { Identity } from "./Identity.sol";
 import { Shares } from "./Shares.sol";
 import { Staking } from "./Staking.sol";
 import { IdentityStorage } from "./storage/IdentityStorage.sol";
+import { ParametersStorage } from "./storage/ParametersStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { WhitelistStorage } from "./storage/WhitelistStorage.sol";
 import { Named } from "./interface/Named.sol";
@@ -30,6 +31,7 @@ contract Profile is Named, Versioned {
     Identity public identityContract;
     Staking public stakingContract;
     IdentityStorage public identityStorage;
+    ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     WhitelistStorage public whitelistStorage;
 
@@ -155,14 +157,38 @@ contract Profile is Named, Versioned {
         stakingContract.addStake(msg.sender, identityId, accumulatedOperatorFee);
     }
 
-    function withdrawAccumulatedOperatorFee(uint72 identityId) external onlyAdmin(identityId) {
+    function startAccumulatedOperatorFeeWithdrawal(uint72 identityId) external onlyAdmin(identityId) {
         ProfileStorage ps = profileStorage;
 
         uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
+
         require(accumulatedOperatorFee != 0, "You have no operator fees");
 
         ps.setAccumulatedOperatorFee(identityId, 0);
-        ps.transferTokens(msg.sender, accumulatedOperatorFee);
+        ps.setAccumulatedOperatorFeeWithdrawalAmount(
+            identityId,
+            ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId) + accumulatedOperatorFee
+        );
+        ps.setAccumulatedOperatorFeeWithdrawalTimestamp(
+            identityId,
+            block.timestamp + parametersStorage.stakeWithdrawalDelay()
+        );
+    }
+
+    function withdrawAccumulatedOperatorFee(uint72 identityId) external onlyAdmin(identityId) {
+        ProfileStorage ps = profileStorage;
+
+        uint96 withdrawalAmount = ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId);
+
+        require(withdrawalAmount != 0, "Withdrawal hasn't been requested");
+        require(
+            ps.getAccumulatedOperatorFeeWithdrawalTimestamp(identityId) < block.timestamp,
+            "Withdrawal period hasn't ended"
+        );
+
+        ps.setAccumulatedOperatorFeeWithdrawalAmount(identityId, 0);
+        ps.setAccumulatedOperatorFeeWithdrawalTimestamp(identityId, 0);
+        ps.transferTokens(msg.sender, withdrawalAmount);
     }
 
     function _checkHubOwner() internal view virtual {

@@ -19,6 +19,12 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract Staking is Named, Versioned {
 
     event StakeIncreased(uint72 indexed identityId, address indexed staker, uint96 newStakeAmount);
+    event StakeWithdrawalStarted(
+        uint72 indexed identityId,
+        address indexed staker,
+        uint96 stakeAmount,
+        uint256 withdrawalPeriodEnd
+    );
     event StakeWithdrawn(uint72 indexed identityId, address indexed staker, uint96 withdrawnStakeAmount);
     event RewardAdded(uint72 indexed identityId, uint96 rewardAmount);
     event OperatorFeeUpdated(uint72 indexed identityId, uint8 operatorFee);
@@ -84,32 +90,59 @@ contract Staking is Named, Versioned {
         _addStake(msg.sender, identityId, stakeAmount);
     }
 
-    function withdrawStake(uint72 identityId, uint96 sharesToBurn) external onlyAdmin(identityId) {
-        Shares sharesContract = Shares(profileStorage.getSharesContractAddress(identityId));
+    function startStakeWithdrawal(uint72 identityId, uint96 sharesToBurn) external {
+        require(sharesToBurn != 0, "Withdrawal amount cannot be 0");
 
+        ProfileStorage ps = profileStorage;
+        StakingStorage ss = stakingStorage;
+
+        require(ps.profileExists(identityId), "Profile doesn't exist");
+
+        Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
+
+        require(sharesToBurn <= sharesContract.balanceOf(msg.sender), "sharesToBurn must be <= balance");
+
+        uint96 oldStake = ss.totalStakes(identityId);
+        uint96 stakeWithdrawalAmount = (
+            uint96(uint256(oldStake) * sharesToBurn / sharesContract.totalSupply())
+        );
+        uint96 newStake = oldStake - stakeWithdrawalAmount;
+        uint96 newStakeWithdrawalAmount = ss.getWithdrawalRequestAmount(identityId, msg.sender) + stakeWithdrawalAmount;
+
+        ParametersStorage params = parametersStorage;
+
+        uint256 withdrawalPeriodEnd = block.timestamp + params.stakeWithdrawalDelay();
+        ss.createWithdrawalRequest(
+            identityId,
+            msg.sender,
+            newStakeWithdrawalAmount,
+            withdrawalPeriodEnd
+        );
+        ss.setTotalStake(identityId, newStake);
+        sharesContract.burnFrom(msg.sender, sharesToBurn);
+
+        if (shardingTableStorage.nodeExists(identityId) && (newStake < params.minimumStake())) {
+            shardingTableContract.removeNode(identityId);
+        }
+
+        emit StakeWithdrawalStarted(identityId, msg.sender, newStakeWithdrawalAmount, withdrawalPeriodEnd);
+    }
+
+    function withdrawStake(uint72 identityId) external {
         require(profileStorage.profileExists(identityId), "Profile doesn't exist");
 
         StakingStorage ss = stakingStorage;
-        ShardingTable stc = shardingTableContract;
-        ShardingTableStorage sts = shardingTableStorage;
 
-        // TODO: potential optimization of types
-        uint256 tokensWithdrawalAmount = (
-            uint256(ss.totalStakes(identityId)) * sharesToBurn / sharesContract.totalSupply()
-        );
-        sharesContract.burnFrom(msg.sender, sharesToBurn);
+        uint96 stakeWithdrawalAmount;
+        uint256 withdrawalTimestamp;
+        (stakeWithdrawalAmount, withdrawalTimestamp) = ss.withdrawalRequests(identityId, msg.sender);
 
-        // TODO: when slashing starts, introduce delay
+        require(withdrawalTimestamp < block.timestamp, "Withdrawal period hasn't ended yet");
 
-        tokenContract.transfer(msg.sender, tokensWithdrawalAmount);
+        ss.deleteWithdrawalRequest(identityId, msg.sender);
+        ss.transferStake(msg.sender, stakeWithdrawalAmount);
 
-        ss.setTotalStake(identityId, ss.totalStakes(identityId) - uint96(tokensWithdrawalAmount));
-
-        if (sts.nodeExists(identityId) && ss.totalStakes(identityId) < parametersStorage.minimumStake()) {
-            stc.removeNode(identityId);
-        }
-
-        emit StakeWithdrawn(identityId, msg.sender, uint96(tokensWithdrawalAmount));
+        emit StakeWithdrawn(identityId, msg.sender, stakeWithdrawalAmount);
     }
 
     function addReward(uint72 identityId, uint96 rewardAmount) external onlyContracts {
