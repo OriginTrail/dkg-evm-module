@@ -82,17 +82,17 @@ contract('DKG v6 Staking', async (accounts) => {
         profileStorage = await ProfileStorage.deployed();
         parametersStorage = await ParametersStorage.deployed();
 
-        const promises = [];
-        const tokenAmount = 1000000;
-
-        for (let i = 0; i < accounts.length; i += 1) {
-            promises.push(erc20Token.mint(
-                accounts[i],
-                tokenAmount,
-                {from: accounts[0]},
-            ));
-        }
-        await Promise.all(promises);
+        // const promises = [];
+        // const tokenAmount = 1000000;
+        //
+        // for (let i = 0; i < accounts.length; i += 1) {
+        // //     promises.push(erc20Token.mint(
+        // //         accounts[i],
+        // //         tokenAmount,
+        // //         {from: accounts[0]},
+        // //     ));
+        // // }
+        // await Promise.all(promises);
     });
 
     it('non-Contract should not be able to setTotalStake; expect to fail', async () => {
@@ -163,17 +163,16 @@ contract('DKG v6 Staking', async (accounts) => {
         await erc20Token.setupRole(owner, {from: owner});
         await erc20Token.mint(stakingStorage.address, amountForTransfer);
         const balanceBeforeTransfer = await erc20Token.balanceOf(receiver);
-        console.log(balanceBeforeTransfer.toString());
         await hub.setContractAddress('Staking', owner);
         await stakingStorage.transferStake(receiver, amountForTransfer, {from: owner});
         const balanceAfterTransfer = await erc20Token.balanceOf(receiver);
-        console.log(balanceAfterTransfer.toString());
         // assert(balanceAfterTransfer.toString() == (Number(balanceBeforeTransfer) + 100).toString(), 'Tokens are not transffered');
 
     });
 
     it('Create profile, identity and add stake; expect that stake is created and correctly set', async () => {
         await hub.setContractAddress('Owner', accounts[0]);
+        await hub.setContractAddress('Staking', staking.address);
         const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
         await profile.createProfile(accounts[0], ethers.utils.formatBytes32String(peers[0].id), {from: accounts[1]});
         const identityId = await identityStorage.getIdentityId(accounts[1]);
