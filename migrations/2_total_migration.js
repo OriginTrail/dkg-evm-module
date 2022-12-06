@@ -63,7 +63,6 @@ module.exports = async (deployer, network, accounts) => {
 
     const filePath = `reports/${network}_contracts.json`;
 
-
     const deployContract = async (Contract, account, passHubInConstructor, retryCount = 0) => {
         return new Promise(async (accept, reject) => {
             try {
@@ -86,9 +85,11 @@ module.exports = async (deployer, network, accounts) => {
     };
 
     const saveReport = (deployedContracts) => {
-        // save deployed contracts report
-        deployedContracts.deployedTimestamp = Date.now();
-        fs.writeFileSync(filePath, JSON.stringify(deployedContracts, null, 4));
+        if (network !== 'test') {
+            // save deployed contracts report
+            deployedContracts.deployedTimestamp = Date.now();
+            fs.writeFileSync(filePath, JSON.stringify(deployedContracts, null, 4));
+        }
     }
 
     const initializeContract = async (deployedContracts, contractName, ContractObject, deployerAddress, passHubInConstructor = false, setContractInHub = true, setAssetInHub = false) => {
@@ -125,14 +126,19 @@ module.exports = async (deployer, network, accounts) => {
         case 'ganache':
         case 'rinkeby':
         case 'test':
-            initFile = {};
-            initFile.contracts = {};
-            fs.writeFileSync(filePath, JSON.stringify(initFile, null, 4));
+            // initFile = {};
+            // initFile.contracts = {};
+            // fs.writeFileSync(filePath, JSON.stringify(initFile, null, 4));
         case 'otp_devnet':
         case 'otp_testnet':
         case 'otp_mainnet':
         case 'mumbai':
-            const deployedContracts = require(`./../reports/${network}_contracts.json`);
+            let deployedContracts = {
+                contracts: {}
+            }
+            if (fs.existsSync(`./../reports/${network}_contracts.json`)) {
+                deployedContracts = require(`./../reports/${network}_contracts.json`);
+            }
             try {
                 // hub contract
                 if (!deployedContracts.contracts.hub?.deployed) {
@@ -166,7 +172,6 @@ module.exports = async (deployer, network, accounts) => {
                         accounts = accounts.concat(testAccounts);
                     }
                     for (let account of accounts) {
-                        console.log('Account', account, 'is funded with', amountToMint.toString());
                         await erc20Token.mint(account, amountToMint);
                     }
                 }
