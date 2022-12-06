@@ -41,6 +41,11 @@ contract StakingStorage is Named, Versioned {
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
+    modifier onlyHubOwner() {
+        _checkHubOwner();
+        _;
+    }
+
     modifier onlyContracts() {
         _checkHub();
         _;
@@ -99,6 +104,10 @@ contract StakingStorage is Named, Versioned {
 
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
+    }
+
+    function _checkHubOwner() internal view virtual {
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
     function _checkStaking() internal view virtual {
