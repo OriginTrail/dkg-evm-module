@@ -125,8 +125,8 @@ module.exports = async (deployer, network, accounts) => {
         case 'ganache':
         case 'rinkeby':
         case 'test':
-            initFile={};
-            initFile.contracts={};
+            initFile = {};
+            initFile.contracts = {};
             fs.writeFileSync(filePath, JSON.stringify(initFile, null, 4));
         case 'otp_devnet':
         case 'otp_testnet':
@@ -197,7 +197,7 @@ module.exports = async (deployer, network, accounts) => {
                     'HashingProxy',
                     HashingProxy,
                     deployerAddress
-                )
+                );
                 sha256Contract = await initializeContract(
                     deployedContracts,
                     'sha256Contract',
@@ -205,7 +205,7 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     false,
                     false
-                )
+                );
                 await hashingProxy.setContractAddress(1, sha256Contract.address);
                 /* ---------------------------------------------------------------------------------------- */
 
@@ -215,7 +215,7 @@ module.exports = async (deployer, network, accounts) => {
                     'ScoringProxy',
                     ScoringProxy,
                     deployerAddress
-                )
+                );
 
                 log2pldsfContract = await initializeContract(
                     deployedContracts,
@@ -224,7 +224,7 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     true,
                     false
-                )
+                );
                 await scoringProxy.setContractAddress(1, log2pldsfContract.address);
                 /* ---------------------------------------------------------------------------------------- */
 
@@ -235,7 +235,7 @@ module.exports = async (deployer, network, accounts) => {
                     AssertionStorage,
                     deployerAddress,
                     true
-                )
+                );
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* -----------------------------------Identity Storage------------------------------------- */
@@ -245,7 +245,7 @@ module.exports = async (deployer, network, accounts) => {
                     IdentityStorage,
                     deployerAddress,
                     true
-                )
+                );
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* --------------------------------Sharding Table Storage---------------------------------- */
@@ -255,7 +255,7 @@ module.exports = async (deployer, network, accounts) => {
                     ShardingTableStorage,
                     deployerAddress,
                     true
-                )
+                );
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ------------------------------------Staking Storage------------------------------------- */
@@ -265,7 +265,7 @@ module.exports = async (deployer, network, accounts) => {
                     StakingStorage,
                     deployerAddress,
                     true
-                )
+                );
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ------------------------------------Profile Storage------------------------------------- */
@@ -275,7 +275,7 @@ module.exports = async (deployer, network, accounts) => {
                     ProfileStorage,
                     deployerAddress,
                     true
-                )
+                );
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* --------------------------------Service Agreement Storage------------------------------- */
