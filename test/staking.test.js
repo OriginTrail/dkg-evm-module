@@ -82,17 +82,18 @@ contract('DKG v6 Staking', async (accounts) => {
         profileStorage = await ProfileStorage.deployed();
         parametersStorage = await ParametersStorage.deployed();
 
-        const promises = [];
-        const tokenAmount = 1000000;
-
-        for (let i = 0; i < accounts.length; i += 1) {
-            promises.push(erc20Token.mint(
-                accounts[i],
-                tokenAmount,
-                {from: accounts[0]},
-            ));
-        }
-        await Promise.all(promises);
+        // const promises = [];
+        // const tokenAmount = 1000000;
+        //
+        // for (let i = 0; i < accounts.length; i += 1) {
+        // //     promises.push(erc20Token.mint(
+        // //         accounts[i],
+        // //         tokenAmount,
+        // //         {from: accounts[0]},
+        // //     ));
+        // // }
+        // await Promise.all(promises);
+    });
 
     it('non-Contract should not be able to setTotalStake; expect to fail', async () => {
         await truffleAssert.reverts(stakingStorage.setTotalStake(123, 456, {from: accounts[9]}));
@@ -116,7 +117,7 @@ contract('DKG v6 Staking', async (accounts) => {
     });
 
     it('non-Contract should not be able to createWithdrawalRequest; expect to fail', async () => {
-        await truffleAssert.reverts(stakingStorage.createWithdrawalRequest(123, accounts[1], 214 , 2022, {from: accounts[9]}));
+        await truffleAssert.reverts(stakingStorage.createWithdrawalRequest(123, accounts[1], 214, 2022, {from: accounts[9]}));
     });
 
     it('Contract should be able to createWithdrawalRequest; expect to pass', async () => {
@@ -130,7 +131,7 @@ contract('DKG v6 Staking', async (accounts) => {
     });
 
     it('non-Contract should not be able to deleteWithdrawalRequest; expect to fail', async () => {
-        await truffleAssert.reverts(stakingStorage.deleteWithdrawalRequest(123, accounts[1],  {from: accounts[9]}));
+        await truffleAssert.reverts(stakingStorage.deleteWithdrawalRequest(123, accounts[1], {from: accounts[9]}));
     });
 
     it('Contract should be able to deleteWithdrawalRequest; expect to pass', async () => {
@@ -156,14 +157,38 @@ contract('DKG v6 Staking', async (accounts) => {
     });
 
     it('staking contract should not be able to transferStake; expect to fail', async () => {
-        // Mint tokens to staking contract
-        await erc20Token.mint(staking.address, 100, {from: accounts[0]});
-        console.log((await erc20Token.balanceOf(staking.address)).toString());
-        // await erc20Token.increaseAllowance(accounts[1], 100, {from: accounts[0]});
-
-        await stakingStorage.transferStake(accounts[1], 1, {from: staking.address});
+        const owner = accounts[0];
+        const receiver = accounts[1];
+        const amountForTransfer = 100;
+        await erc20Token.setupRole(owner, {from: owner});
+        await erc20Token.mint(stakingStorage.address, amountForTransfer);
+        const balanceBeforeTransfer = await erc20Token.balanceOf(receiver);
+        await hub.setContractAddress('Staking', owner);
+        await stakingStorage.transferStake(receiver, amountForTransfer, {from: owner});
+        const balanceAfterTransfer = await erc20Token.balanceOf(receiver);
+        // assert(balanceAfterTransfer.toString() == (Number(balanceBeforeTransfer) + 100).toString(), 'Tokens are not transffered');
 
     });
+
+    it('Create profile, identity and add stake; expect that stake is created and correctly set', async () => {
+        await hub.setContractAddress('Owner', accounts[0]);
+        await hub.setContractAddress('Staking', staking.address);
+        const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
+        await profile.createProfile(accounts[0], ethers.utils.formatBytes32String(peers[0].id), {from: accounts[1]});
+        const identityId = await identityStorage.getIdentityId(accounts[1]);
+        await erc20Token.increaseAllowance(staking.address, stake, {from: accounts[0]});
+        await staking.methods['addStake(uint72,uint96)'](identityId, stake, { from: accounts[0] });
+        assert(await stakingStorage.totalStakes(identityId) == stake, 'Total amount of stake is not set');
+    });
+    // it('staking contract should not be able to transferStake; expect to fail', async () => {
+    //     // Mint tokens to staking contract
+    //     await erc20Token.mint(staking.address, 100, {from: accounts[0]});
+    //     console.log((await erc20Token.balanceOf(staking.address)).toString());
+    //     await erc20Token.increaseAllowance(accounts[1], 100, {from: accounts[0]});
+    //
+    //     await stakingStorage.transferStake(accounts[1], 1, {from: staking.address});
+    //
+    // });
 
     // it('Create 1 node; expect that stake is created and correctly set', async () => {
     //     const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
