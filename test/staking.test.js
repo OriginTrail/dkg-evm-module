@@ -94,9 +94,6 @@ contract('DKG v6 Staking', async (accounts) => {
         }
         await Promise.all(promises);
 
-        await hub.setContractAddress('TestAccount', accounts[0],{from: accounts[0]});
-    });
-
     it('non-Contract should not be able to setTotalStake; expect to fail', async () => {
         await truffleAssert.reverts(stakingStorage.setTotalStake(123, 456, {from: accounts[9]}));
     });

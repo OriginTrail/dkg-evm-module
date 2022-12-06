@@ -1,213 +1,172 @@
-const Hub = artifacts.require("Hub");
-const { expect } = require("chai");
+const { expect } = require('chai');
 
-contract("Hub", () => {
-    let hub;
-    let owner;
-    let nonOwner;
+const {
+    constants,    // Common constants, like the zero address and largest integers
+    expectEvent,  // Assertions for emitted events
+    expectRevert, // Assertions for transactions that should fail
+  } = require('@openzeppelin/test-helpers');
+
+const Hub = artifacts.require('Hub');
+const ERC20Token = artifacts.require('ERC20Token');
+
+// Contracts used in test
+let hub;
+let erc20Token;
+
+contract('DKG v6 Hub', async (accounts) => {
 
     before(async () => {
-        hub = await Hub.new();
-        owner = await hub.owner();
-        nonOwner = (await web3.eth.getAccounts())[1];
-    });
+        hub = await Hub.deployed();
+        erc20Token = await ERC20Token.deployed();
 
-    it("should set the contract name and version", async () => {
-        const name = await hub.name();
-        expect(name).to.equal("Hub");
+        const promises = [];
+        const amountToDeposit = 3000;
+        const tokenAmount = 1000000;
 
-        const version = await hub.version();
-        expect(version).to.equal("1.0.0");
-    });
-
-    it("should only allow the owner to set contract addresses", async () => {
-        // Try to set a contract address from a non-owner account
-
-        try {
-            await hub.setContractAddress("Test", nonOwner, {from: nonOwner});
-            expect.fail("Non-owner was able to set contract address");
-        } catch (err) {
-            expect(err.message).to.include("Ownable: caller is not the owner");
+        for (let i = 0; i < accounts.length; i += 1) {
+            promises.push(erc20Token.mint(
+                accounts[i],
+                tokenAmount,
+                {from: accounts[0]},
+            ));
         }
-
-        // Set a contract address from the owner account
-        const tx = await hub.setContractAddress("Test", nonOwner, {from: owner});
-        expect(tx.logs[0].args.contractName).to.equal("Test");
-        expect(tx.logs[0].args.newContractAddress).to.equal(nonOwner);
+        await Promise.all(promises);
     });
 
-    it("should allow setting and updating contract addresses", async () => {
-        // Set a contract address
-        const tx1 = await hub.setContractAddress("Test", owner, {from: owner});
-        expect(tx1.logs[0].args.contractName).to.equal("Test");
-        expect(tx1.logs[0].args.newContractAddress).to.equal(owner);
 
-        // Update the contract address
-        const tx2 = await hub.setContractAddress("Test", nonOwner, {from: owner});
-        expect(tx2.logs[0].args.contractName).to.equal("Test");
-        expect(tx2.logs[0].args.newContractAddress).to.equal(nonOwner);
+    it('the contract is named "Hub"', async () => {
+        // Expect that the contract's name is "Hub"
+        expect(await hub.name()).to.equal('Hub');
+    });
+    
+    it('the contract is version "1.0.0"', async () => {
+        // Expect that the contract's version is "1.0.0"
+        expect(await hub.version()).to.equal('1.0.0');
     });
 
-    it("should allow getting contract addresses by name", async () => {
-        // Set a contract address
-        await hub.setContractAddress("Test", nonOwner, {from: owner});
+    it('sets correct contract address and name; emits NewContract event', async () => {
+        const receipt = await hub.setContractAddress('TestContract1', accounts[1], { from: accounts[0] });
 
-        // Get the contract address by name
-        const address1 = await hub.getContractAddress("Test");
-        expect(address1).to.equal(nonOwner);
+        expect(await hub.getContractAddress('TestContract1')).to.equal(accounts[1]);
+
+        expectEvent(receipt, 'NewContract', {
+            contractName: 'TestContract1',
+            newContractAddress: accounts[1],
+        });
     });
 
-    it("should allow getting all contract addresses", async () => {
-        // Set multiple contract addresses
-        await hub.setContractAddress("Test1", owner, {from: owner});
-        await hub.setContractAddress("Test2", nonOwner, {from: owner});
+    it('set contract address and name (non-owner wallet); expect revert: only hub owner can set contracts', async () => {
+        await expectRevert(
+            hub.setContractAddress('TestContract1', accounts[1], { from: accounts[1] }),
+            "Ownable: caller is not the owner",
+        );
+    });
 
-        // Get all contract addresses
+    it('set contract with empty name; expect revert: name cannot be empty', async () => {
+        await expectRevert(
+            hub.setContractAddress('', accounts[1], { from: accounts[0] }),
+            "NamedContractSet: Name cannot be empty",
+        );
+    });
+
+    it('set contract with empty address; expect revert: address cannot be 0x0', async () => {
+        await expectRevert(
+            hub.setContractAddress('TestContract1', constants.ZERO_ADDRESS, { from: accounts[0] }),
+            "NamedContractSet: Address cannot be 0x0",
+        );
+    });
+
+    it('updates contract address; emits ContractChanged event', async () => {
+        const receipt = await hub.setContractAddress('TestContract1', accounts[2], { from: accounts[0] });
+
+        expect(await hub.getContractAddress('TestContract1')).to.equal(accounts[2]);
+
+        expectEvent(receipt, 'ContractChanged', {
+            contractName: 'TestContract1',
+            newContractAddress: accounts[2],
+        });
+    });
+
+    it('sets contract address; name should be in the Hub', async () => {
+        await hub.setContractAddress('TestContract2', accounts[1], { from: accounts[0] });
+
+        expect(await hub.isContract('TestContract2')).to.be.true;
+    });
+
+    it('sets contract address; address should be in the Hub', async () => {
+        await hub.setContractAddress('TestContract3', accounts[3], { from: accounts[0] });
+
+        expect(await hub.methods['isContract(address)'](accounts[3])).to.be.true;
+    });
+
+    it('get all contracts; all addresses and names should be in the Hub', async () => {
         const contracts = await hub.getAllContracts();
-        expect(contracts[contracts.length - 2].name).to.equal("Test1");
-        expect(contracts[contracts.length - 2].addr).to.equal(owner);
-        expect(contracts[contracts.length - 1].name).to.equal("Test2");
-        expect(contracts[contracts.length - 1].addr).to.equal(nonOwner);
+
+        contracts.forEach(async (contract) => {
+            expect(await hub.getContractAddress(contract.name)).to.equal(contract.addr);
+        });
     });
 
-    it("should allow checking if a contract exists by name and address", async () => {
-        // Set a contract address
-        await hub.setContractAddress("Test", owner, {from: owner});
+    it('sets correct asset contract address and name; emits NewAssetContract event', async () => {
+        const receipt = await hub.setAssetContractAddress('TestAssetContract1', accounts[1], { from: accounts[0] });
 
-        // Check if the contract exists by name
-        const exists1 = await hub.methods['isContract(string)']("Test");
-        expect(exists1).to.be.true;
+        expect(await hub.getAssetContractAddress('TestAssetContract1')).to.equal(accounts[1]);
 
-        // Check if the contract exists by address
-        const exists2 = await hub.methods['isContract(address)'](owner);
-        expect(exists2).to.be.true;
-
-        // Check if a non-existent contract exists
-        const exists3 = await hub.methods['isContract(string)']("NonExistent");
-        expect(exists3).to.be.false;
+        expectEvent(receipt, 'NewAssetContract', {
+            contractName: 'TestAssetContract1',
+            newContractAddress: accounts[1],
+        });
     });
 
-    it("should allow setting and updating asset contract addresses", async () => {
-        // Set an asset contract address
-        const tx1 = await hub.setAssetContractAddress("Test", owner, {from: owner});
-        expect(tx1.logs[0].args.assetContractName).to.equal("Test");
-        expect(tx1.logs[0].args.assetContractAddress).to.equal(owner);
-
-        // Update the asset contract address
-        const tx2 = await hub.setAssetContractAddress("Test", nonOwner, {from: owner});
-        expect(tx2.logs[0].args.assetContractName).to.equal("Test");
-        expect(tx2.logs[0].args.assetContractAddress).to.equal(nonOwner);
+    it('set asset contract address and name (non-owner wallet); expect revert: only hub owner can set contracts', async () => {
+        await expectRevert(
+            hub.setAssetContractAddress('TestAssetContract1', accounts[1], { from: accounts[1] }),
+            "Ownable: caller is not the owner",
+        );
     });
 
-    it("should allow getting asset contract addresses by name and address", async () => {
-        // Set an asset contract address
-        await hub.setAssetContractAddress("Test", nonOwner, {from: owner});
-
-        // Get the asset contract address by name
-        const address1 = await hub.getAssetContractAddress("Test");
-        expect(address1).to.equal(nonOwner);
-
-        // Get the asset contract address by address
-        const address2 = await hub.getAssetContractAddress(nonOwner);
-        expect(address2).to.equal(nonOwner);
+    it('set asset contract with empty name; expect revert: name cannot be empty', async () => {
+        await expectRevert(
+            hub.setAssetContractAddress('', accounts[1], { from: accounts[0] }),
+            "NamedContractSet: Name cannot be empty",
+        );
     });
 
-    it("should allow getting all asset contract addresses", async () => {
-        // Set multiple asset contract addresses
-        await hub.setAssetContractAddress("Test1", owner, {from: owner});
-        await hub.setAssetContractAddress("Test2", nonOwner, {from: owner});
+    it('set asset contract with empty address; expect revert: address cannot be 0x0', async () => {
+        await expectRevert(
+            hub.setAssetContractAddress('TestAssetContract1', constants.ZERO_ADDRESS, { from: accounts[0] }),
+            "NamedContractSet: Address cannot be 0x0",
+        );
+    });
 
-        // Get all asset contract addresses
+    it('updates asset contract address; emits AssetContractChanged event', async () => {
+        const receipt = await hub.setAssetContractAddress('TestAssetContract1', accounts[2], { from: accounts[0] });
+
+        expect(await hub.getAssetContractAddress('TestAssetContract1')).to.equal(accounts[2]);
+
+        expectEvent(receipt, 'AssetContractChanged', {
+            contractName: 'TestAssetContract1',
+            newContractAddress: accounts[2],
+        });
+    });
+
+    it('sets asset contract address; name should be in the Hub', async () => {
+        await hub.setAssetContractAddress('TestAssetContract2', accounts[1], { from: accounts[0] });
+
+        expect(await hub.isAssetContract('TestAssetContract2')).to.be.true;
+    });
+
+    it('sets asset contract address; address should be in the Hub', async () => {
+        await hub.setAssetContractAddress('TestAssetContract3', accounts[3], { from: accounts[0] });
+
+        expect(await hub.methods['isAssetContract(address)'](accounts[3])).to.be.true;
+    });
+
+    it('get all asset contracts; all addresses and names should be in the Hub', async () => {
         const contracts = await hub.getAllAssetContracts();
-        expect(contracts[0].name).to.equal("Test1");
-        expect(contracts[0].addr).to.equal(owner);
-        expect(contracts[1].name).to.equal("Test2");
-        expect(contracts[1].addr).to.equal(nonOwner);
-    });
 
-    it("should allow checking if an asset contract exists by name and address", async () => {
-        // Set an asset contract address
-        await hub.setAssetContractAddress("Test", owner, {from: owner});
-
-        // Check if the asset contract exists by name
-        const exists1 = await hub.isAssetContract("Test");
-        expect(exists1).to.be.true;
-
-        // Check if the asset contract exists by address
-        const exists2 = await hub.isAssetContract(owner);
-        expect(exists2).to.be.true;
-
-        // Check if a non-existent asset contract exists
-        const exists3 = await hub.isAssetContract("NonExistent");
-        expect(exists3).to.be.false;
-    });
-    it("should allow checking if a contract exists by name and address", async () => {
-        // Set a contract address
-        await hub.setContractAddress("Test", owner, {from: owner});
-
-        // Check if the contract exists by name
-        const exists1 = await hub.isContract("Test");
-        expect(exists1).to.be.true;
-
-        // Check if the contract exists by address
-        const exists2 = await hub.isContract(owner);
-        expect(exists2).to.be.true;
-
-        // Check if a non-existent contract exists
-        const exists3 = await hub.isContract("NonExistent");
-        expect(exists3).to.be.false;
-    });
-
-    it("should allow setting and updating asset contract addresses", async () => {
-        // Set an asset contract address
-        const tx1 = await hub.setAssetContractAddress("Test", owner, {from: owner});
-        expect(tx1.logs[0].args.assetContractName).to.equal("Test");
-        expect(tx1.logs[0].args.assetContractAddress).to.equal(owner);
-
-        // Update the asset contract address
-        const tx2 = await hub.setAssetContractAddress("Test", nonOwner, {from: owner});
-        expect(tx2.logs[0].args.assetContractName).to.equal("Test");
-        expect(tx2.logs[0].args.assetContractAddress).to.equal(nonOwner);
-    });
-
-    it("should allow getting asset contract addresses by name and address", async () => {
-        // Set an asset contract address
-        await hub.setAssetContractAddress("Test", nonOwner, {from: owner});
-
-        // Get the asset contract address by name
-        const address1 = await hub.getAssetContractAddress("Test");
-        expect(address1).to.equal(nonOwner);
-
-        // Get the asset contract address by address
-        const address2 = await hub.getAssetContractAddress(nonOwner);
-        expect(address2).to.equal(nonOwner);
-    });
-
-    it("should allow getting all asset contract addresses", async () => {
-// Set multiple asset contract addresses
-        await hub.setAssetContractAddress("Test1", owner, {from: owner});
-        await hub.setAssetContractAddress("Test2", nonOwner, {from: owner});
-// Get all asset contract addresses
-        const contracts = await hub.getAllAssetContracts();
-        expect(contracts[0].name).to.equal("Test1");
-        expect(contracts[0].addr).to.equal(owner);
-        expect(contracts[1].name).to.equal("Test2");
-        expect(contracts[1].addr).to.equal(nonOwner);
-    });
-
-    it("should allow checking if an asset contract exists by name and address", async () => {
-// Set an asset contract address
-        await hub.setAssetContractAddress("Test", owner, {from: owner});
-        // Check if the asset contract exists by name
-        const exists1 = await hub.isAssetContract("Test");
-        expect(exists1).to.be.true;
-
-// Check if the asset contract exists by address
-        const exists2 = await hub.isAssetContract(owner);
-        expect(exists2).to.be.true;
-
-// Check if a non-existent asset contract exists
-        const exists3 = await hub.isAssetContract("NonExistent");
-        expect(exists3).to.be.false;
+        contracts.forEach(async (contract) => {
+            expect(await hub.getAssetContractAddress(contract.name)).to.equal(contract.addr);
+        });
     });
 });
