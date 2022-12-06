@@ -2,6 +2,8 @@ const {assert} = require('chai');
 const BN = require('bn.js');
 const { ethers } = require('ethers');
 
+const truffleAssert = require('truffle-assertions');
+
 const ERC20Token = artifacts.require('ERC20Token');
 const Hub = artifacts.require('Hub');
 const Profile = artifacts.require('Profile');
@@ -91,64 +93,79 @@ contract('DKG v6 Staking', async (accounts) => {
             ));
         }
         await Promise.all(promises);
+
+        await hub.setContractAddress('TestAccount', accounts[0],{from: accounts[0]});
     });
 
-    it('Create 1 node; expect that stake is created and correctly set', async () => {
-        const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
-        
-        await profile.createProfile(accounts[0], ethers.utils.formatBytes32String(peers[0].id), {from: accounts[1]});
+    // setTotalStake
 
-        const identityId = await identityStorage.getIdentityId(accounts[1]);
 
-        await erc20Token.increaseAllowance(staking.address, stake, {from: accounts[0]});
-        await staking.addStake2(identityId, stake, { from: accounts[0] });
+    it('non-Contract should be able to setTotalStake; expect to pass', async () => {
+        await truffleAssert.reverts(stakingStorage.setTotalStake(123, 456, {from: accounts[9]}));
+    });
+    it('Contract should be able to setTotalStake; expect to pass', async () => {
 
-        assert(await stakingStorage.totalStakes(identityId) == stake, 'Total amount of stake is not set');
+        const fetchedIdentityId = await stakingStorage.setTotalStake(123, 456, {from: accounts[0]});
+        let stake = await stakingStorage.totalStakes(123);
+        assert(456 == stake.toString(), 'Wrong value');
     });
 
-    it('User stakes to node, delegation is disabled; expect to fail', async () => {
-        const stake2 = (new BN(peers[1].stake).mul(ETH_DECIMALS)).toString();
-        const nodeIdentityId = await identityStorage.getIdentityId(accounts[1]);
-
-        try {
-            await staking.addStake2(nodeIdentityId, stake2, {from: accounts[2]});
-            throw null;
-        } catch (error) {
-            assert(error, 'Expected error but did not get one');
-            assert(error.message.startsWith(ERROR_PREFIX + 'revert Identity does not exist or user delegation disabled!'), 'Invalid error message received');
-        }
-    });
-
-    it('User stakes to node; expect that total stake is increased', async () => {
-        const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
-        const stake2 = (new BN(peers[1].stake).mul(ETH_DECIMALS)).toString();
-
-        const nodeIdentityId = await identityStorage.getIdentityId(accounts[1]);
-
-        await staking.addStake2(nodeIdentityId, stake2 ,{from: accounts[2]});
-
-        assert(stakingStorage.totalStakes(nodeIdentityId) == new BN(stake).add(new BN(stake2)).toString(), 'Total amount of stake is not increased');
-    });
-
-    it('User withdraws stake; expect that total stake is decreased', async () => {
-        const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
-        const stake2 = (new BN(peers[1].stake).mul(ETH_DECIMALS)).toString();
-
-        const nodeIdentityId = await identityStorage.getIdentityId(accounts[1]);
-
-        await staking.withdrawStake(nodeIdentityId, stake2 ,{from: accounts[2]});
-
-        assert(stakingStorage.totalStakes(nodeIdentityId) == stake, 'Total amount of stake is not decreased');
-    });
-
-    it('Add reward; expect that total stake is increased', async () => {
-        const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
-        const reward = (new BN(REWARD).mul(ETH_DECIMALS)).toString();
-
-        const nodeIdentityId = await identityStorage.getIdentityId(accounts[1]);
-
-        await staking.addReward(nodeIdentityId, reward ,{from: accounts[0]});
-
-        assert(stakingStorage.totalStakes(nodeIdentityId) == new BN(stake).add(new BN(reward)).toString(), 'Total amount of stake is not increased after adding reward');
-    });
+    // it('Create 1 node; expect that stake is created and correctly set', async () => {
+    //     const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
+    //
+    //     await profile.createProfile(accounts[0], ethers.utils.formatBytes32String(peers[0].id), {from: accounts[1]});
+    //
+    //     const identityId = await identityStorage.getIdentityId(accounts[1]);
+    //
+    //     await erc20Token.increaseAllowance(staking.address, stake, {from: accounts[0]});
+    //     await staking.addStake2(identityId, stake, { from: accounts[0] });
+    //
+    //     assert(await stakingStorage.totalStakes(identityId) == stake, 'Total amount of stake is not set');
+    // });
+    //
+    // it('User stakes to node, delegation is disabled; expect to fail', async () => {
+    //     const stake2 = (new BN(peers[1].stake).mul(ETH_DECIMALS)).toString();
+    //     const nodeIdentityId = await identityStorage.getIdentityId(accounts[1]);
+    //
+    //     try {
+    //         await staking.addStake2(nodeIdentityId, stake2, {from: accounts[2]});
+    //         throw null;
+    //     } catch (error) {
+    //         assert(error, 'Expected error but did not get one');
+    //         assert(error.message.startsWith(ERROR_PREFIX + 'revert Identity does not exist or user delegation disabled!'), 'Invalid error message received');
+    //     }
+    // });
+    //
+    // it('User stakes to node; expect that total stake is increased', async () => {
+    //     const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
+    //     const stake2 = (new BN(peers[1].stake).mul(ETH_DECIMALS)).toString();
+    //
+    //     const nodeIdentityId = await identityStorage.getIdentityId(accounts[1]);
+    //
+    //     await staking.addStake2(nodeIdentityId, stake2 ,{from: accounts[2]});
+    //
+    //     assert(stakingStorage.totalStakes(nodeIdentityId) == new BN(stake).add(new BN(stake2)).toString(), 'Total amount of stake is not increased');
+    // });
+    //
+    // it('User withdraws stake; expect that total stake is decreased', async () => {
+    //     const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
+    //     const stake2 = (new BN(peers[1].stake).mul(ETH_DECIMALS)).toString();
+    //
+    //     const nodeIdentityId = await identityStorage.getIdentityId(accounts[1]);
+    //
+    //     await staking.withdrawStake(nodeIdentityId, stake2 ,{from: accounts[2]});
+    //
+    //     assert(stakingStorage.totalStakes(nodeIdentityId) == stake, 'Total amount of stake is not decreased');
+    // });
+    //
+    // it('Add reward; expect that total stake is increased', async () => {
+    //     const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
+    //     const reward = (new BN(REWARD).mul(ETH_DECIMALS)).toString();
+    //
+    //     const nodeIdentityId = await identityStorage.getIdentityId(accounts[1]);
+    //
+    //     await staking.addReward(nodeIdentityId, reward ,{from: accounts[0]});
+    //
+    //     assert(stakingStorage.totalStakes(nodeIdentityId) == new BN(stake).add(new BN(reward)).toString(), 'Total amount of stake is not increased after adding reward');
+    // });
 });
