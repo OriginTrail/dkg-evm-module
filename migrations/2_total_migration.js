@@ -20,7 +20,7 @@ var ProfileStorage = artifacts.require('ProfileStorage');
 var ProfileContract = artifacts.require('Profile');
 var StakingStorage = artifacts.require('StakingStorage');
 var StakingContract = artifacts.require('Staking');
-var WithdrawalStorage = artifacts.require('WithdrawalStorage');
+var WhitelistStorage = artifacts.require("WhitelistStorage");
 
 const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
     "0x2f2697b2a7BB4555687EF76f8fb4C3DFB3028E57",
