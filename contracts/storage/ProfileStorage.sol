@@ -137,7 +137,7 @@ contract ProfileStorage is Named, Versioned {
         );
     }
 
-    function profileExists(uint72 identityId) external view onlyContracts returns (bool) {
+    function profileExists(uint72 identityId) external view returns (bool) {
         return keccak256(profiles[identityId].nodeId) != keccak256(bytes(""));
     }
 
