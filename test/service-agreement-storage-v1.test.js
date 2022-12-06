@@ -1,10 +1,13 @@
 const ServiceAgrementStorageV1 = artifacts.require("ServiceAgreementStorageV1");
+const ERC20Token = artifacts.require('ERC20Token');
 const Hub = artifacts.require("Hub");
 const { expect } = require("chai");
+const BN = require('bn.js');
 
 contract("ServiceAgreementStorageV1", accounts => {
     let serviceAgreementStorage;
     let hub;
+    let token;
     const owner = accounts[0];
 
     const agreementId = '0x5181b8cb24ae9feb3a1c987c1abe95b6ba62ef4807b6d589f64455c9dba7f1fc';
@@ -15,9 +18,16 @@ contract("ServiceAgreementStorageV1", accounts => {
     const scoreFunctionId = 0;
     const proofWindowOffsetPerc = 10;
 
+    const commitId = '0x1181b8cb24ae9feb3a1c987c1abe95b6ba62ef4807b6d589f64455c9dba7f1fc';
+    const identityId = 2;
+    const prevIdentityId = 1;
+    const nextIdentityId = 3;
+    const score = 5;
+
     beforeEach(async () => {
         // Deploy a new instance of ProfileStorage before each test
         hub = await Hub.deployed();
+        token = await ERC20Token.deployed();
         serviceAgreementStorage = await ServiceAgrementStorageV1.new(hub.address);
     });
 
@@ -143,5 +153,58 @@ contract("ServiceAgreementStorageV1", accounts => {
         expect(result).to.be.true;
         result = await serviceAgreementStorage.serviceAgreementExists(newAgreementId);
         expect(result).to.be.false;
+    });
+
+    it("should allow creating commit submission object", async () => {
+        await hub.setContractAddress('Owner', owner, {from: owner});
+
+        await serviceAgreementStorage.createCommitSubmissionObject(
+            commitId,
+            identityId,
+            prevIdentityId,
+            nextIdentityId,
+            score
+        );
+
+        const result = await serviceAgreementStorage.getCommitSubmission(commitId);
+
+        expect(result[0]).to.equal(`${identityId}`);
+        expect(result[1]).to.equal(`${prevIdentityId}`);
+        expect(result[2]).to.equal(`${nextIdentityId}`);
+        expect(result[3]).to.equal(`${score}`);
+    });
+
+    it("should allow updating service agreement data using get and set", async () => {
+        await hub.setContractAddress('Owner', owner, {from: owner});
+
+        await serviceAgreementStorage.createCommitSubmissionObject(
+            commitId,
+            identityId,
+            prevIdentityId,
+            nextIdentityId,
+            score
+        );
+
+        const newIdentityId = '';
+        const newPrevIdentityId = '';
+        const newNextIdentityId = '';
+        const newScoreIdentityId = '';
+    });
+
+    it("should allow transfering reward", async () => {
+
+        const receiver = accounts[1];
+        const amountForTransfer = 100;
+
+        await token.setupRole(owner, {from: owner});
+        await token.mint(serviceAgreementStorage.address, amountForTransfer);
+        const balanceBeforeTransfer = await token.balanceOf(receiver);
+
+        await hub.setContractAddress('Staking', owner);
+        await serviceAgreementStorage.transferReward(receiver, amountForTransfer, {from: owner});
+        const balanceAfterTransfer = await token.balanceOf(receiver);
+
+        expect(balanceBeforeTransfer.toString()).to.equal(balanceAfterTransfer.sub(new BN(amountForTransfer)).toString());
+
     });
 })

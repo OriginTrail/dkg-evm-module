@@ -29,6 +29,7 @@ contract ShardingTable is Named, Versioned {
         require(hubAddress != address(0));
 
         hub = Hub(hubAddress);
+        initialize();
     }
 
     modifier onlyHubOwner() {
