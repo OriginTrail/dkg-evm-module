@@ -95,12 +95,15 @@ contract('DKG v6 Staking', async (accounts) => {
 
     it('Create 1 node; expect that stake is created and correctly set', async () => {
         const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
-        await erc20Token.increaseAllowance(profile.address, stake1, {from: accounts[1]});
-        await profile.createProfile(accounts[0], ethers.utils.formatBytes32String(peers[0].id), peers[0].ask, stake1, {from: accounts[1]});
+        
+        await profile.createProfile(accounts[0], ethers.utils.formatBytes32String(peers[0].id), {from: accounts[1]});
 
         const identityId = await identityStorage.getIdentityId(accounts[1]);
 
-        assert(stakingStorage.totalStakes(identityId) == stake, 'Total amount of stake is not set');
+        await erc20Token.increaseAllowance(staking.address, stake, {from: accounts[0]});
+        await staking.addStake2(identityId, stake, { from: accounts[0] });
+
+        assert(await stakingStorage.totalStakes(identityId) == stake, 'Total amount of stake is not set');
     });
 
     it('User stakes to node, delegation is disabled; expect to fail', async () => {
@@ -108,7 +111,7 @@ contract('DKG v6 Staking', async (accounts) => {
         const nodeIdentityId = await identityStorage.getIdentityId(accounts[1]);
 
         try {
-            await staking.addStake(nodeIdentityId, stake2, {from: accounts[2]});
+            await staking.addStake2(nodeIdentityId, stake2, {from: accounts[2]});
             throw null;
         } catch (error) {
             assert(error, 'Expected error but did not get one');
@@ -120,11 +123,9 @@ contract('DKG v6 Staking', async (accounts) => {
         const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
         const stake2 = (new BN(peers[1].stake).mul(ETH_DECIMALS)).toString();
 
-        await parametersStorage.setDelegationEnabled(true);
-
         const nodeIdentityId = await identityStorage.getIdentityId(accounts[1]);
 
-        await staking.addStake(nodeIdentityId, stake2 ,{from: accounts[2]});
+        await staking.addStake2(nodeIdentityId, stake2 ,{from: accounts[2]});
 
         assert(stakingStorage.totalStakes(nodeIdentityId) == new BN(stake).add(new BN(stake2)).toString(), 'Total amount of stake is not increased');
     });
@@ -132,8 +133,6 @@ contract('DKG v6 Staking', async (accounts) => {
     it('User withdraws stake; expect that total stake is decreased', async () => {
         const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
         const stake2 = (new BN(peers[1].stake).mul(ETH_DECIMALS)).toString();
-
-        await parametersStorage.setDelegationEnabled(true);
 
         const nodeIdentityId = await identityStorage.getIdentityId(accounts[1]);
 
