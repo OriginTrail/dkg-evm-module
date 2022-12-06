@@ -101,7 +101,7 @@ contract('DKG v6 Staking', async (accounts) => {
         const identityId = await identityStorage.getIdentityId(accounts[1]);
 
         await erc20Token.increaseAllowance(staking.address, stake, {from: accounts[0]});
-        await staking.addStake2(identityId, stake, { from: accounts[0] });
+        await staking.addStake(accounts[0], identityId, stake, { from: accounts[0] });
 
         assert(await stakingStorage.totalStakes(identityId) == stake, 'Total amount of stake is not set');
     });
