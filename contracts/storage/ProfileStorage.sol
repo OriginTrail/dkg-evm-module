@@ -36,6 +36,10 @@ contract ProfileStorage is Named, Versioned {
         require(hubAddress != address(0));
 
         hub = Hub(hubAddress);
+        initialize();
+    }
+
+    function initialize() public onlyHubOwner {
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }

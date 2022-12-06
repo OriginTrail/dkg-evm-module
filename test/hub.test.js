@@ -169,5 +169,4 @@ contract('DKG v6 Hub', async (accounts) => {
             expect(await hub.getAssetContractAddress(contract.name)).to.equal(contract.addr);
         });
     });
-
 });

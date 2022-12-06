@@ -26,6 +26,10 @@ contract ServiceAgreementStorageV1 is Named, Versioned {
         require(hubAddress != address(0));
 
         hub = Hub(hubAddress);
+        initialize();
+    }
+
+    function initialize() public onlyHubOwner {
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
