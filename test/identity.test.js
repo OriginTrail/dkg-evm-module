@@ -8,10 +8,18 @@ const Profile = artifacts.require('Profile');
 const ProfileStorage = artifacts.require('ProfileStorage');
 
 // Contracts used in test
-let erc20Token, identity, identityStorage, profile, profileStorage;
-let operational, secondOperational, admin, secondAdmin, identityId, adminKey, operationalKey, keyType;
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-const ERROR_PREFIX = 'Returned error: VM Exception while processing transaction: ';
+let erc20Token, identity, identityStorage, profile, profileStorage, hub;
+let operational,
+  secondOperational,
+  admin,
+  secondAdmin,
+  identityId,
+  adminKey,
+  operationalKey,
+  keyType;
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+const ERROR_PREFIX =
+  "Returned error: VM Exception while processing transaction: ";
 
 const ADMIN_KEY = 1;
 const OPERATIONAL_KEY = 2;
@@ -176,6 +184,4 @@ contract('DKG v6 Identity', async (accounts) => {
     //         assert(error.message.startsWith(ERROR_PREFIX + 'revert Admin function'), 'Invalid error message received: ' + error.message);
     //     }
     // });
-
 });
-
