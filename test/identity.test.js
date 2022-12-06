@@ -68,25 +68,33 @@ contract('DKG v6 Identity', async (accounts) => {
         truffleAssert.eventEmitted(result, 'IdentityCreated');
     });
 
+    it('Get identity id; expect identity created', async () => {
+        const fetchedIdentityId = await identityStorage.getIdentityId(operational);
+
+        assert(1 == fetchedIdentityId.toString(), 'Failed to get identity');
+    });
+
+    it('Get non-existent identity id; expect to receive 0', async () => {
+        const invalidIdentityId = await identityStorage.getIdentityId(accounts[3]);
+        assert(invalidIdentityId.toString() == '0', 'Failed to get identity');
+    });
+
+    it('Get keys by purpose, un-existent identity id; expect to fail', async () => {
+        const keys = await identityStorage.getKeysByPurpose(356, OPERATIONAL_KEY);
+        assert(keys.length === 0, 'Failed to get empty keys array for un-existent identity id');
+    });
+
     // it('Create an identity; expect identity created', async () => {
     //     const txReceipt = await identity.createIdentity(operational, admin, {from: accounts[0] });
     //     identityId = txReceipt.logs[0].args.identityId.toString();
     //     adminKey = txReceipt.logs[0].args.key;
     //     operationalKey = txReceipt.logs[1].args.key;
     //     keyType = txReceipt.logs[0].args.keyType;
-    //     assert(identityId == '1', 'Failed to create identity');
+    //     console.log(identityId);
+    //     assert(identityId == '2', 'Failed to create identity');
     // });
-    //
-    it('Get identity id; expect identity created', async () => {
-        const fetchedIdentityId = await identityStorage.getIdentityId(operational);
 
-        assert(1 == fetchedIdentityId.toString(), 'Failed to get identity');
-    });
-    //
-    it('Get non-existent identity id; expect to receive 0', async () => {
-        const invalidIdentityId = await identityStorage.getIdentityId(accounts[3]);
-        assert(invalidIdentityId.toString() == '0', 'Failed to get identity');
-    });
+
     //
     // it('Get keys by purpose (admin)', async () => {
     //     const keys = await identity.getKeysByPurpose(identityId, ADMIN_KEY);
@@ -98,13 +106,10 @@ contract('DKG v6 Identity', async (accounts) => {
     //     assert(keys[0] == operationalKey, 'Failed to get identity');
     // });
     //
-    // it('Get keys by purpose, un-existent identity id; expect to fail', async () => {
-    //     const keys = await identity.getKeysByPurpose(3, OPERATIONAL_KEY);
-    //     assert(keys.length === 0, 'Failed to get empty keys array for un-existent identity id');
-    // });
+
     //
     // it('Check key has purpose for admin key', async () => {
-    //     const isAdmin = await identity.keyHasPurpose(identityId, adminKey, ADMIN_KEY);
+    //     const isAdmin = await identity.keyHasPurpose(1, adminKey, ADMIN_KEY);
     //     assert(isAdmin, 'Failed to check purpose');
     // });
     //
