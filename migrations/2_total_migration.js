@@ -20,7 +20,7 @@ var ProfileStorage = artifacts.require('ProfileStorage');
 var ProfileContract = artifacts.require('Profile');
 var StakingStorage = artifacts.require('StakingStorage');
 var StakingContract = artifacts.require('Staking');
-var WhitelistStorage = artifacts.require("WhitelistStorage");
+var WhitelistStorage = artifacts.require('WhitelistStorage');
 
 const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
     "0x2f2697b2a7BB4555687EF76f8fb4C3DFB3028E57",
@@ -62,9 +62,9 @@ module.exports = async (deployer, network, accounts) => {
         profileContract, stakingStorage, stakingContract, withdrawalStorage;
 
     const filePath = `reports/${network}_contracts.json`;
-    
-        
-    const deployContract = (Contract, account, passHubInConstructor, retryCount = 0) => {
+
+
+    const deployContract = async (Contract, account, passHubInConstructor, retryCount = 0) => {
         return new Promise(async (accept, reject) => {
             try {
                 if (passHubInConstructor) {
@@ -79,21 +79,24 @@ module.exports = async (deployer, network, accounts) => {
 
             } catch (error) {
                 console.log(`Error while deploying contract. Error: ${error}`);
-                if (retryCount < 3) {
-                    return deployContract(Contract, account, passHubInConstructor, retryCount + 1);
-                } else {
-                    reject(error);
-                }
+                reject(error);
             }
         });
 
     };
 
+    const saveReport = (deployedContracts) => {
+        // save deployed contracts report
+        deployedContracts.deployedTimestamp = Date.now();
+        fs.writeFileSync(filePath, JSON.stringify(deployedContracts, null, 4));
+    }
+
     const initializeContract = async (deployedContracts, contractName, ContractObject, deployerAddress, passHubInConstructor = false, setContractInHub = true, setAssetInHub = false) => {
         let contractInstance;
         if (!deployedContracts.contracts[contractName]?.deployed) {
             console.log(`Deploying ${contractName} contract`);
-            contractInstance = await deployContract(ContractObject, deployerAddress, passHubInConstructor)
+            contractInstance = await deployContract(ContractObject, deployerAddress, passHubInConstructor);
+
             if (setContractInHub) {
                 await hub.setContractAddress(contractName, contractInstance.address);
             }
@@ -104,6 +107,7 @@ module.exports = async (deployer, network, accounts) => {
                 evmAddress: contractInstance.address,
                 deployed: true
             }
+            saveReport(deployedContracts);
         } else {
             console.log(`${contractName} contract already deployed at address: ${deployedContracts.contracts[contractName].evmAddress}`, );
             contractInstance = await ContractObject.at(deployedContracts.contracts[contractName].evmAddress);
@@ -115,18 +119,18 @@ module.exports = async (deployer, network, accounts) => {
     console.log(`Using deployer address: ${deployerAddress}`);
     console.log(`DEPLOYING TO: ${network} `);
     console.log('==========================');
-    
+
     switch (network) {
         case 'development':
         case 'ganache':
         case 'rinkeby':
         case 'test':
-            initFile={};
-            initFile.contracts={};
+            initFile = {};
+            initFile.contracts = {};
             fs.writeFileSync(filePath, JSON.stringify(initFile, null, 4));
         case 'otp_devnet':
-        case 'testnet':
-        case 'mainnet':
+        case 'otp_testnet':
+        case 'otp_mainnet':
         case 'mumbai':
             const deployedContracts = require(`./../reports/${network}_contracts.json`);
             try {
@@ -139,6 +143,7 @@ module.exports = async (deployer, network, accounts) => {
                         evmAddress: hub.address,
                         deployed: true
                     }
+                    saveReport(deployedContracts);
                 } else {
                     console.log('Hub contract already deployed at address: ', deployedContracts.contracts.hub.evmAddress);
                     hub = await Hub.at(deployedContracts.contracts.hub.evmAddress);
@@ -193,7 +198,6 @@ module.exports = async (deployer, network, accounts) => {
                     HashingProxy,
                     deployerAddress
                 );
-
                 sha256Contract = await initializeContract(
                     deployedContracts,
                     'sha256Contract',
@@ -203,7 +207,6 @@ module.exports = async (deployer, network, accounts) => {
                     false
                 );
                 await hashingProxy.setContractAddress(1, sha256Contract.address);
-
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* -----------------------------------Scoring Proxy---------------------------------------- */
@@ -223,7 +226,6 @@ module.exports = async (deployer, network, accounts) => {
                     false
                 );
                 await scoringProxy.setContractAddress(1, log2pldsfContract.address);
-
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ----------------------------------Assertion Storage------------------------------------- */
@@ -304,7 +306,6 @@ module.exports = async (deployer, network, accounts) => {
                     deployerAddress,
                     true
                 );
-
                 /* ---------------------------------------------------------------------------------------- */
 
                 /* ------------------------------------Sharding Table-------------------------------------- */
@@ -357,40 +358,10 @@ module.exports = async (deployer, network, accounts) => {
                     false,
                     true
                 );
-                /* ---------------------------------------------------------------------------------------- */
-
-                console.log('\n\n \t Contract adresses on ganache:');
-                console.log(`\t Hub address: ${hub.address}`);
-                console.log(`\t Parameters Storage address: ${parametersStorage.address}`);
-                console.log(`\t Whitelist Storage address: ${whitelistStorage.address}`);
-                console.log(`\t Hashing Proxy address: ${hashingProxy.address}`);
-                console.log(`\t SHA256 address: ${sha256Contract.address}`);
-                console.log(`\t Scoring Proxy address: ${scoringProxy.address}`);
-                console.log(`\t Log2PLDSF address: ${log2pldsfContract.address}`);
-                console.log(`\t Sharding Table storage: ${shardingTableStorage.address}`);
-                console.log(`\t Sharding Table: ${shardingTableContract.address}`);
-                console.log(`\t Assertion Storage address: ${assertionStorage.address}`);
-                console.log(`\t Assertion address: ${assertionContract.address}`);
-                console.log(`\t Service Agreement Storage (V1) address: ${serviceAgreementStorageV1.address}`);
-                console.log(`\t Service Agreement (V1) address: ${serviceAgreementContractV1.address}`);
-                console.log(`\t Content Asset address: ${contentAsset.address}`);
-                console.log(`\t Token address: ${erc20Token.address}`);
-                console.log(`\t Identity Storage address: ${identityStorage.address}`);
-                console.log(`\t Identity address: ${identityContract.address}`);
-                console.log(`\t Profile Storage address: ${profileStorage.address}`);
-                console.log(`\t Profile address: ${profileContract.address}`);
-                console.log(`\t Staking Storage address: ${stakingStorage.address}`);
-                console.log(`\t Staking address: ${stakingContract.address}`);
-
+                console.log('Contracts deployed, report can be found in file: ', filePath);
             } catch (error) {
                 console.log(error);
-            } finally {
-                // save deployed contracts report
-                deployedContracts.deployedTimestamp = Date.now;
-                console.log(JSON.stringify(deployedContracts, null, 4));
-                fs.writeFileSync(filePath, JSON.stringify(deployedContracts, null, 4));
             }
-
             break;
         default:
             console.warn('Please use one of the following network identifiers: ganache');
