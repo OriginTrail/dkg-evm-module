@@ -97,17 +97,75 @@ contract('DKG v6 Staking', async (accounts) => {
         await hub.setContractAddress('TestAccount', accounts[0],{from: accounts[0]});
     });
 
-    // setTotalStake
-
-
-    it('non-Contract should be able to setTotalStake; expect to pass', async () => {
+    it('non-Contract should not be able to setTotalStake; expect to fail', async () => {
         await truffleAssert.reverts(stakingStorage.setTotalStake(123, 456, {from: accounts[9]}));
     });
+
     it('Contract should be able to setTotalStake; expect to pass', async () => {
 
-        const fetchedIdentityId = await stakingStorage.setTotalStake(123, 456, {from: accounts[0]});
+        await stakingStorage.setTotalStake(123, 456, {from: accounts[0]});
         let stake = await stakingStorage.totalStakes(123);
         assert(456 == stake.toString(), 'Wrong value');
+    });
+
+    it('non-Contract should not be able to setOperatorFee; expect to fail', async () => {
+        await truffleAssert.reverts(stakingStorage.setOperatorFee(123, 456, {from: accounts[9]}));
+    });
+
+    it('Contract should be able to setOperatorFee; expect to pass', async () => {
+        await stakingStorage.setOperatorFee(123, 456, {from: accounts[0]});
+        let opFee = await stakingStorage.operatorFees(123);
+        assert(456 == opFee.toString(), 'Wrong value');
+    });
+
+    it('non-Contract should not be able to createWithdrawalRequest; expect to fail', async () => {
+        await truffleAssert.reverts(stakingStorage.createWithdrawalRequest(123, accounts[1], 214 , 2022, {from: accounts[9]}));
+    });
+
+    it('Contract should be able to createWithdrawalRequest; expect to pass', async () => {
+        await stakingStorage.createWithdrawalRequest(123, accounts[1], 214, 2022, {from: accounts[0]})
+        let itExists = await stakingStorage.withdrawalRequestExists(123, accounts[1]);
+        assert(itExists, 'Withdrawal request does not exist');
+        let amount = await stakingStorage.getWithdrawalRequestAmount(123, accounts[1]);
+        assert(214 == amount.toString(), 'Wrong value for amount');
+        let timestamp = await stakingStorage.getWithdrawalRequestTimestamp(123, accounts[1]);
+        assert(2022 == timestamp.toString(), 'Wrong value for timestamp');
+    });
+
+    it('non-Contract should not be able to deleteWithdrawalRequest; expect to fail', async () => {
+        await truffleAssert.reverts(stakingStorage.deleteWithdrawalRequest(123, accounts[1],  {from: accounts[9]}));
+    });
+
+    it('Contract should be able to deleteWithdrawalRequest; expect to pass', async () => {
+        await stakingStorage.deleteWithdrawalRequest(123, accounts[1]);
+        itExists = await stakingStorage.withdrawalRequestExists(123, accounts[1]);
+        assert(!itExists, 'Withdrawal request was not deleted');
+        amount = await stakingStorage.getWithdrawalRequestAmount(123, accounts[1]);
+        assert(0 == amount.toString(), 'Wrong value for amount, expected 0 after delete');
+        timestamp = await stakingStorage.getWithdrawalRequestTimestamp(123, accounts[1]);
+        assert(0 == timestamp.toString(), 'Wrong value for timestamp, expected 0 after delete');
+    });
+
+    it('Contract should be able to fetch constants; expect to pass', async () => {
+        let name = await stakingStorage.name();
+        assert('StakingStorage' == name.toString(), 'Name mismatch');
+
+        let version = await stakingStorage.version();
+        assert('1.0.0' == version.toString(), 'Version mismatch');
+    });
+
+    it('non staking contract should not be able to transferStake; expect to fail', async () => {
+        await truffleAssert.reverts(stakingStorage.transferStake(accounts[1], 55, {from: accounts[0]}));
+    });
+
+    it('staking contract should not be able to transferStake; expect to fail', async () => {
+        // Mint tokens to staking contract
+        await erc20Token.mint(staking.address, 100, {from: accounts[0]});
+        console.log((await erc20Token.balanceOf(staking.address)).toString());
+        // await erc20Token.increaseAllowance(accounts[1], 100, {from: accounts[0]});
+
+        await stakingStorage.transferStake(accounts[1], 1, {from: staking.address});
+
     });
 
     // it('Create 1 node; expect that stake is created and correctly set', async () => {
