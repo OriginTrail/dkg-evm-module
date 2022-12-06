@@ -2,8 +2,6 @@
 
 pragma solidity ^0.8.4;
 
-import { Named } from "../interface/Named.sol";
-
 library UnorderedNamedContractDynamicSetLib {
 
     struct Contract {
@@ -12,7 +10,8 @@ library UnorderedNamedContractDynamicSetLib {
     }
 
     struct Set {
-        mapping(string => uint256) indexPointers;
+        mapping(string => uint256) stringIndexPointers;
+        mapping(address => uint256) addressIndexPointers;
         Contract[] contractList;
     }
 
@@ -23,32 +22,63 @@ library UnorderedNamedContractDynamicSetLib {
         );
         require(addr != address(0), "(NamedContractSet) Address cannot be 0x0");
         require(!exists(self, name), "(NamedContractSet) Contract with given name already exists");
-        self.indexPointers[name] = size(self);
+        self.stringIndexPointers[name] = size(self);
+        self.addressIndexPointers[addr] = size(self);
         self.contractList.push(Contract(name, addr));
     }
 
     function update(Set storage self, string calldata name, address addr) internal {
         require(addr != address(0), "(NamedContractSet) Address cannot be 0x0");
         require(exists(self, name), "(NamedContractSet) Contract with given name doesn't exists");
-        self.contractList[self.indexPointers[name]].addr = addr;
+        delete self.addressIndexPointers[self.contractList[self.stringIndexPointers[name]].addr];
+        self.addressIndexPointers[addr] = self.stringIndexPointers[name];
+        self.contractList[self.stringIndexPointers[name]].addr = addr;
     }
 
     function remove(Set storage self, string calldata name) internal {
-        require(exists(self, name), "(NamedContractSet) Contract with given name doesn't exists");
-        uint256 contractToRemoveIndex = self.indexPointers[name];
-        Contract memory contractToMove = self.contractList[size(self) - 1];
-        string memory contractToMoveName = Named(contractToMove.addr).name();
+        require(exists(self, name), "(NamedContractSet) Contract with given name doesn't exist");
+        uint256 contractToRemoveIndex = self.stringIndexPointers[name];
 
-        self.indexPointers[contractToMoveName] = contractToRemoveIndex;
+        delete self.addressIndexPointers[self.contractList[contractToRemoveIndex].addr];
+
+        Contract memory contractToMove = self.contractList[size(self) - 1];
+
+        self.stringIndexPointers[contractToMove.name] = contractToRemoveIndex;
+        self.addressIndexPointers[contractToMove.addr] = contractToRemoveIndex;
         self.contractList[contractToRemoveIndex] = contractToMove;
 
-        delete self.indexPointers[name];
+        delete self.stringIndexPointers[name];
+        self.contractList.pop();
+    }
+
+    function remove(Set storage self, address addr) internal {
+        require(exists(self, addr), "(NamedContractSet) Contract with given address doesn't exist");
+        uint256 contractToRemoveIndex = self.addressIndexPointers[addr];
+
+        delete self.stringIndexPointers[self.contractList[contractToRemoveIndex].name];
+
+        Contract memory contractToMove = self.contractList[size(self) - 1];
+
+        self.stringIndexPointers[contractToMove.name] = contractToRemoveIndex;
+        self.addressIndexPointers[contractToMove.addr] = contractToRemoveIndex;
+        self.contractList[contractToRemoveIndex] = contractToMove;
+
+        delete self.addressIndexPointers[addr];
         self.contractList.pop();
     }
 
     function get(Set storage self, string calldata name) internal view returns (Contract memory) {
-        require(exists(self, name), "(NamedContractSet) Contract with given name doesn't exists");
-        return self.contractList[self.indexPointers[name]];
+        require(exists(self, name), "(NamedContractSet) Contract with given name doesn't exist");
+        return self.contractList[self.stringIndexPointers[name]];
+    }
+
+    function get(Set storage self, address addr) internal view returns (Contract memory) {
+        require(exists(self, addr), "(NamedContractSet) Contract with given address doesn't exist");
+        return self.contractList[self.addressIndexPointers[addr]];
+    }
+
+    function get(Set storage self, uint256 index) internal view returns (Contract memory) {
+        return self.contractList[index];
     }
 
     function getAll(Set storage self) internal view returns (Contract[] memory) {
@@ -56,26 +86,23 @@ library UnorderedNamedContractDynamicSetLib {
     }
 
     function getIndex(Set storage self, string calldata name) internal view returns (uint256) {
-        return self.indexPointers[name];
+        return self.stringIndexPointers[name];
     }
 
-    function getByIndex(Set storage self, uint256 index) internal view returns (Contract memory) {
-        return self.contractList[index];
+    function getIndex(Set storage self, address addr) internal view returns (uint256) {
+        return self.addressIndexPointers[addr];
     }
 
     function exists(Set storage self, string calldata name) internal view returns (bool) {
         if (size(self) == 0) return false;
         return keccak256(
-            abi.encodePacked(self.contractList[self.indexPointers[name]].name)
+            abi.encodePacked(self.contractList[self.stringIndexPointers[name]].name)
         ) == keccak256(abi.encodePacked(name));
     }
 
     function exists(Set storage self, address addr) internal view returns (bool) {
         if (size(self) == 0) return false;
-        string memory name = Named(addr).name();
-        return keccak256(
-            abi.encodePacked(self.contractList[self.indexPointers[name]].name)
-        ) == keccak256(abi.encodePacked(name)); 
+        return addr == self.contractList[self.addressIndexPointers[addr]].addr; 
     }
 
     function size(Set storage self) internal view returns (uint256) {

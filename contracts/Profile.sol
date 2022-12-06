@@ -151,6 +151,8 @@ contract Profile is Named, Versioned {
     function stakeAccumulatedOperatorFee(uint72 identityId) external onlyAdmin(identityId) {
         ProfileStorage ps = profileStorage;
 
+        require(ps.profileExists(identityId), "Profile doesn't exist");
+
         uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
         require(accumulatedOperatorFee != 0, "You have no operator fees");
 
@@ -160,6 +162,8 @@ contract Profile is Named, Versioned {
 
     function startAccumulatedOperatorFeeWithdrawal(uint72 identityId) external onlyAdmin(identityId) {
         ProfileStorage ps = profileStorage;
+
+        require(ps.profileExists(identityId), "Profile doesn't exist");
 
         uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
 
@@ -179,9 +183,11 @@ contract Profile is Named, Versioned {
     function withdrawAccumulatedOperatorFee(uint72 identityId) external onlyAdmin(identityId) {
         ProfileStorage ps = profileStorage;
 
+        require(ps.profileExists(identityId), "Profile doesn't exist");
+
         uint96 withdrawalAmount = ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId);
 
-        require(withdrawalAmount != 0, "Withdrawal hasn't been requested");
+        require(withdrawalAmount != 0, "Withdrawal hasn't been initiated");
         require(
             ps.getAccumulatedOperatorFeeWithdrawalTimestamp(identityId) < block.timestamp,
             "Withdrawal period hasn't ended"
