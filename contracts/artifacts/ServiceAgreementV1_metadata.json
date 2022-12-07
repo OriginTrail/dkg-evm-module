@@ -1,0 +1,1024 @@
+{
+	"compiler": {
+		"version": "0.8.7+commit.e28d00a7"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "hubAddress",
+						"type": "address"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "assetContract",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes",
+						"name": "keyword",
+						"type": "bytes"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint8",
+						"name": "hashFunctionId",
+						"type": "uint8"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint72",
+						"name": "identityId",
+						"type": "uint72"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint40",
+						"name": "score",
+						"type": "uint40"
+					}
+				],
+				"name": "CommitSubmitted",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "assetContract",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes",
+						"name": "keyword",
+						"type": "bytes"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint8",
+						"name": "hashFunctionId",
+						"type": "uint8"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint72",
+						"name": "identityId",
+						"type": "uint72"
+					}
+				],
+				"name": "ProofSubmitted",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "assetContract",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes",
+						"name": "keyword",
+						"type": "bytes"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint8",
+						"name": "hashFunctionId",
+						"type": "uint8"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "startTime",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint16",
+						"name": "epochsNumber",
+						"type": "uint16"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint128",
+						"name": "epochLength",
+						"type": "uint128"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint96",
+						"name": "tokenAmount",
+						"type": "uint96"
+					}
+				],
+				"name": "ServiceAgreementV1Created",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "assetContract",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes",
+						"name": "keyword",
+						"type": "bytes"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint8",
+						"name": "hashFunctionId",
+						"type": "uint8"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint16",
+						"name": "epochsNumber",
+						"type": "uint16"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint96",
+						"name": "tokenAmount",
+						"type": "uint96"
+					}
+				],
+				"name": "ServiceAgreementV1Updated",
+				"type": "event"
+			},
+			{
+				"inputs": [],
+				"name": "assertionStorage",
+				"outputs": [
+					{
+						"internalType": "contract AssertionStorage",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "assetCreator",
+								"type": "address"
+							},
+							{
+								"internalType": "address",
+								"name": "assetContract",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "tokenId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bytes",
+								"name": "keyword",
+								"type": "bytes"
+							},
+							{
+								"internalType": "uint8",
+								"name": "hashFunctionId",
+								"type": "uint8"
+							},
+							{
+								"internalType": "uint16",
+								"name": "epochsNumber",
+								"type": "uint16"
+							},
+							{
+								"internalType": "uint96",
+								"name": "tokenAmount",
+								"type": "uint96"
+							},
+							{
+								"internalType": "uint8",
+								"name": "scoreFunctionId",
+								"type": "uint8"
+							}
+						],
+						"internalType": "struct ServiceAgreementStructsV1.ServiceAgreementInputArgs",
+						"name": "args",
+						"type": "tuple"
+					}
+				],
+				"name": "createServiceAgreement",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "sender",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "assetContract",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint16",
+						"name": "epoch",
+						"type": "uint16"
+					}
+				],
+				"name": "getChallenge",
+				"outputs": [
+					{
+						"internalType": "bytes32",
+						"name": "",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "agreementId",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "uint16",
+						"name": "epoch",
+						"type": "uint16"
+					}
+				],
+				"name": "getTopCommitSubmissions",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint72",
+								"name": "identityId",
+								"type": "uint72"
+							},
+							{
+								"internalType": "uint72",
+								"name": "prevIdentityId",
+								"type": "uint72"
+							},
+							{
+								"internalType": "uint72",
+								"name": "nextIdentityId",
+								"type": "uint72"
+							},
+							{
+								"internalType": "uint40",
+								"name": "score",
+								"type": "uint40"
+							}
+						],
+						"internalType": "struct ServiceAgreementStructsV1.CommitSubmission[]",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "hashingProxy",
+				"outputs": [
+					{
+						"internalType": "contract HashingProxy",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "hub",
+				"outputs": [
+					{
+						"internalType": "contract Hub",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "identityStorage",
+				"outputs": [
+					{
+						"internalType": "contract IdentityStorage",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "initialize",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "agreementId",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "uint16",
+						"name": "epoch",
+						"type": "uint16"
+					}
+				],
+				"name": "isCommitWindowOpen",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "agreementId",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "uint16",
+						"name": "epoch",
+						"type": "uint16"
+					}
+				],
+				"name": "isProofWindowOpen",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "name",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "parametersStorage",
+				"outputs": [
+					{
+						"internalType": "contract ParametersStorage",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "profileStorage",
+				"outputs": [
+					{
+						"internalType": "contract ProfileStorage",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "scoringProxy",
+				"outputs": [
+					{
+						"internalType": "contract ScoringProxy",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "assetContract",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "tokenId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bytes",
+								"name": "keyword",
+								"type": "bytes"
+							},
+							{
+								"internalType": "uint8",
+								"name": "hashFunctionId",
+								"type": "uint8"
+							},
+							{
+								"internalType": "uint16",
+								"name": "epoch",
+								"type": "uint16"
+							},
+							{
+								"internalType": "bytes32[]",
+								"name": "proof",
+								"type": "bytes32[]"
+							},
+							{
+								"internalType": "bytes32",
+								"name": "chunkHash",
+								"type": "bytes32"
+							}
+						],
+						"internalType": "struct ServiceAgreementStructsV1.ProofInputArgs",
+						"name": "args",
+						"type": "tuple"
+					}
+				],
+				"name": "sendProof",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "serviceAgreementStorageV1",
+				"outputs": [
+					{
+						"internalType": "contract ServiceAgreementStorageV1",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "stakingContract",
+				"outputs": [
+					{
+						"internalType": "contract Staking",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "stakingStorage",
+				"outputs": [
+					{
+						"internalType": "contract StakingStorage",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "assetContract",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "tokenId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bytes",
+								"name": "keyword",
+								"type": "bytes"
+							},
+							{
+								"internalType": "uint8",
+								"name": "hashFunctionId",
+								"type": "uint8"
+							},
+							{
+								"internalType": "uint16",
+								"name": "epoch",
+								"type": "uint16"
+							}
+						],
+						"internalType": "struct ServiceAgreementStructsV1.CommitInputArgs",
+						"name": "args",
+						"type": "tuple"
+					}
+				],
+				"name": "submitCommit",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "tokenContract",
+				"outputs": [
+					{
+						"internalType": "contract IERC20",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "assetCreator",
+								"type": "address"
+							},
+							{
+								"internalType": "address",
+								"name": "assetContract",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "tokenId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bytes",
+								"name": "keyword",
+								"type": "bytes"
+							},
+							{
+								"internalType": "uint8",
+								"name": "hashFunctionId",
+								"type": "uint8"
+							},
+							{
+								"internalType": "uint16",
+								"name": "epochsNumber",
+								"type": "uint16"
+							},
+							{
+								"internalType": "uint96",
+								"name": "tokenAmount",
+								"type": "uint96"
+							},
+							{
+								"internalType": "uint8",
+								"name": "scoreFunctionId",
+								"type": "uint8"
+							}
+						],
+						"internalType": "struct ServiceAgreementStructsV1.ServiceAgreementInputArgs",
+						"name": "args",
+						"type": "tuple"
+					}
+				],
+				"name": "updateServiceAgreement",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "version",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"ServiceAgreementV1.sol": "ServiceAgreementV1"
+		},
+		"evmVersion": "london",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"@openzeppelin/contracts/access/Ownable.sol": {
+			"keccak256": "0xa94b34880e3c1b0b931662cb1c09e5dfa6662f31cba80e07c5ee71cd135c9673",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://40fb1b5102468f783961d0af743f91b9980cf66b50d1d12009f6bb1869cea4d2",
+				"dweb:/ipfs/QmYqEbJML4jB1GHbzD4cUZDtJg5wVwNm3vDJq1GbyDus8y"
+			]
+		},
+		"@openzeppelin/contracts/token/ERC20/ERC20.sol": {
+			"keccak256": "0x4ffc0547c02ad22925310c585c0f166f8759e2648a09e9b489100c42f15dd98d",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://15f52f51413a9de1ff191e2f6367c62178e1df7806d7880fe857a98b0b66253d",
+				"dweb:/ipfs/QmaQG1fwfgUt5E9nu2cccFiV47B2V78MM1tCy1qB7n4MsH"
+			]
+		},
+		"@openzeppelin/contracts/token/ERC20/IERC20.sol": {
+			"keccak256": "0x9750c6b834f7b43000631af5cc30001c5f547b3ceb3635488f140f60e897ea6b",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://5a7d5b1ef5d8d5889ad2ed89d8619c09383b80b72ab226e0fe7bde1636481e34",
+				"dweb:/ipfs/QmebXWgtEfumQGBdVeM6c71McLixYXQP5Bk6kKXuoY4Bmr"
+			]
+		},
+		"@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol": {
+			"keccak256": "0x0d19410453cda55960a818e02bd7c18952a5c8fe7a3036e81f0d599f34487a7b",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://4c0f62d3d5bef22b5ca00cc3903e7de6152cb68d2d22401a463f373cda54c00f",
+				"dweb:/ipfs/QmSfzjZux7LC7NW2f7rjCXTHeFMUCWERqDkhpCTBy7kxTe"
+			]
+		},
+		"@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol": {
+			"keccak256": "0x8de418a5503946cabe331f35fe242d3201a73f67f77aaeb7110acb1f30423aca",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://5a376d3dda2cb70536c0a45c208b29b34ac560c4cb4f513a42079f96ba47d2dd",
+				"dweb:/ipfs/QmZQg6gn1sUpM8wHzwNvSnihumUCAhxD119MpXeKp8B9s8"
+			]
+		},
+		"@openzeppelin/contracts/utils/Context.sol": {
+			"keccak256": "0xe2e337e6dde9ef6b680e07338c493ebea1b5fd09b43424112868e9cc1706bca7",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://6df0ddf21ce9f58271bdfaa85cde98b200ef242a05a3f85c2bc10a8294800a92",
+				"dweb:/ipfs/QmRK2Y5Yc6BK7tGKkgsgn3aJEQGi5aakeSPZvS65PV8Xp3"
+			]
+		},
+		"@openzeppelin/contracts/utils/cryptography/MerkleProof.sol": {
+			"keccak256": "0xd466e8b07f4c6220eac16da5127f3ff142e65f0c15c03c7d38f257b02c8585e1",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://e6b3cab69f655e40117bbdd8e68d7423f26d1b24248fb189c295f08de8940616",
+				"dweb:/ipfs/QmWoyRthsBDMa7gJpH5UCjpa8uNUQfyaGbSgY3uvhBH9F3"
+			]
+		},
+		"HashingProxy.sol": {
+			"keccak256": "0xfc9c7ca84073fa6256f7f232e0839be43e5203c307b5016a90c4ecf1b5224860",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://90918c009043b0f308211b783fee219045c86c97a050493d11668ceb100325ac",
+				"dweb:/ipfs/QmTinVgQbseApTqVbsQL4dBa6djnzggpADLBwPFirERihC"
+			]
+		},
+		"Hub.sol": {
+			"keccak256": "0x7df273aeb34803428ba8e939a85b6c0d862b3932a6173bbdb0ff68417e33d747",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://83201ebfda6c1512c7965d964ce130e396dda005bad46a9c02169563d98dd13e",
+				"dweb:/ipfs/QmUVcN7if1YGmwKgie16JTsY9MvpcNR4k4gDAEY6fHVcPs"
+			]
+		},
+		"ScoringProxy.sol": {
+			"keccak256": "0x13bc1c83cf851cc8b10a1a84016b024b4c0f117061fdf69fc0c983f09b4adf35",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://228839b8d74d65a5b2858bd82f7496e7fa7933e58c15e27414216920a55addfc",
+				"dweb:/ipfs/QmWV97eSkFHh7EikhAKncpM15g85VW3i5yQmPxhyu1qj2x"
+			]
+		},
+		"ServiceAgreementV1.sol": {
+			"keccak256": "0xd5b22738fc8340546f56d2d5dcd0771067a056e3a6db957c60ed7aad86ffd525",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://bc87724422a0ffcc77443acf4dfb9fe30ad2b243404dbc65866cd9a62c30e374",
+				"dweb:/ipfs/QmVCRzwekPVGwSVpCbxTrLMSHRjVbU5tDwRf3H4fpXRL7T"
+			]
+		},
+		"ShardingTable.sol": {
+			"keccak256": "0xda1bec068433e45a9d34137d7e1579afe6780eb89d57928334d1ff2e8b593f73",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://c4237ed46a359d0c018e44a69d629adc4c0be632c5b9f4827dfe9ce57012e855",
+				"dweb:/ipfs/QmSRRYcu2zmjH7jTukMhz3fkWRz6RB8JCzZczS8FKWX3NC"
+			]
+		},
+		"Shares.sol": {
+			"keccak256": "0x2d1cce9e5839cae85cd4f9d49d9d36333a78e224860153240e7e2b6061e0da63",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://d06e21744bcc1e92ff4f2526014e7a29a142084e9f59efa0b3c042a5df72be94",
+				"dweb:/ipfs/QmQ64b4eosaTdxbWoCSb8BHmSPLUeHpAYP9dvzhKQ6kFrf"
+			]
+		},
+		"Staking.sol": {
+			"keccak256": "0x5d2563708d8146f460ba9d7ff021f92c0137b113eb899980485e77ddce76ed97",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://b591ccc7f85711625e2b1f80a28387fd4b071ca0d621d917591dec34fa42dc3d",
+				"dweb:/ipfs/QmX7BijzgCBBtWcEFKnoe1Byty936SR1ZR1mrx7TQm5R9h"
+			]
+		},
+		"assets/AbstractAsset.sol": {
+			"keccak256": "0x5c3a06c78379ba4c72991773bf888eea86820d4c042dea6d4bdef0e03c20d65d",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://0931780f18037e158eeac366c1ae27005b11efdc67d6d42ebd179f23fb3dd80a",
+				"dweb:/ipfs/QmVpzoAja2B5rU1KvunwPZv1NXR6inMx9ZqLh7qWuQZxQH"
+			]
+		},
+		"constants/IdentityConstants.sol": {
+			"keccak256": "0xb5daf6ff4cac5054048b2fd430510b21756389cdee97183b661eead2090550e4",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://69c3ab73ad6ae39785229932d972b6ad2ade5566215d4d8b0c99310f9a93e2ad",
+				"dweb:/ipfs/QmVTRfcY58KPmwbWw56kLr1eiWwiuVRqJRB72mGpYp7h31"
+			]
+		},
+		"constants/ShardingTableConstants.sol": {
+			"keccak256": "0xadad6bffd9b875b013a51d0e86c7bddee80a1592fda90365d177a7972312d854",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://7e6c661e91e1bcccbae6bd8469bbad414fe31cbcc85cbb0935571a1115705fd7",
+				"dweb:/ipfs/QmPp27GofeWSFtVBsS6pd35t7oUenVTQcQvcc18x2r2hoR"
+			]
+		},
+		"interface/IERC734Extended.sol": {
+			"keccak256": "0xbdcd62a8efa6d0bf66488650c32dca789463f535b8d0795d27bd99fedce86a0a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://389b0a68729a10572ec596420bec70697ac92c69b194687df0bb606f5f18d5d3",
+				"dweb:/ipfs/QmS1p9BtnLxUpiziWXiXJdnVtPbQoL32baqd9CeZcEGo33"
+			]
+		},
+		"interface/IHashFunction.sol": {
+			"keccak256": "0x1724822bd3f4b7243cf0b8270b281b34bc2b9415165d933674ce4bc42e9df955",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://1c9b4311fd984357415525df8d532e2d030e02b1174ffb860b413471609867d5",
+				"dweb:/ipfs/Qmet3E1R2f7eHEgH7ZZPu8fZTWHAyEgCVeCTqTd6MnwAgP"
+			]
+		},
+		"interface/IScoreFunction.sol": {
+			"keccak256": "0x67cd5703afd70dac9d4a52586574d400fd0e0600c94e606cfe86147c8e92e152",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://74627980ec458d690af59ed29be0ecf4a347c5f57f6b13df33f39ba7054ed0ff",
+				"dweb:/ipfs/QmRSYusNpWaHFbaffYceRFyZY7usqawkBqfptzXqfhzggh"
+			]
+		},
+		"interface/Indexable.sol": {
+			"keccak256": "0x4aaff3804b4ee2bee62188ce4e7c2629314e35989f9e3c21b1ffe481c692f38f",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://4c6955a25f24c252b1e1634e048a98fe216d867d94811a999555be91b8de7e72",
+				"dweb:/ipfs/QmYE6CumB19fek88w76KoVFsrf2u3HqXCsBiis8EsS1Cw6"
+			]
+		},
+		"interface/Named.sol": {
+			"keccak256": "0x461aea8fd16a345f810137f7c6033a573b30604dd34ca4d46d454a0181246709",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://cb1e77560b7b9d24efc828d1512d5d1589d1b50827f5e8d3ad6940edcd342ddc",
+				"dweb:/ipfs/QmSLUQWTnUD9b31MvRUZCKsXWFmAyWGah7cLqiYAbH4fBp"
+			]
+		},
+		"interface/Versioned.sol": {
+			"keccak256": "0xe2a0d8322337115b8d49df322bfb37639e10ecbabfc8c6d55114cb23bb8ab74b",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://eb44b136007fbd402575558f9f2721d54c37274f2fca4908e13a818a6160d27f",
+				"dweb:/ipfs/QmYpW2QssuHVU3sXtUQPi5tENW6qnUKnb5wUB9Z7qftERg"
+			]
+		},
+		"storage/AssertionStorage.sol": {
+			"keccak256": "0x2f811c5728b9ea80ccd1eef2c1e97f48deb29892981f367a51abe439f19b0d62",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://c720f9da09679c5cbe19b060667c653261d126a7303062c67f3bb544852a4444",
+				"dweb:/ipfs/QmVNwMbCrZskmkDqHwQ8577j91QSJ4ooZkshuk9PDhutCh"
+			]
+		},
+		"storage/IdentityStorage.sol": {
+			"keccak256": "0x0a4fb3661629d0c474b5ad588ecf542803ec5d4ef53e8eaa4a387a82d8673e3f",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://41645617355455f7b519894cf8b1a095e10d46896b67491a2a391ca1bc5b7aaf",
+				"dweb:/ipfs/QmSmqf5JLR4KYYiXqktZTaZwLqMrSKKRZZ6rKRAt9mMVQg"
+			]
+		},
+		"storage/ParametersStorage.sol": {
+			"keccak256": "0x0741b5ba1bcaf5fac877249475b9fa2b63b3a276e89e35a24a65367af753b055",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://380f3bd1b35d683e5b36036ab998eb66b69a8d591c612dc76d06f118f51ae19e",
+				"dweb:/ipfs/Qmb9P7ypvsscfSHnPz4WKCP8KnC9dGvDjXAJn955jBnJmQ"
+			]
+		},
+		"storage/ProfileStorage.sol": {
+			"keccak256": "0x1db064a45c1c008a30141d4e4708c002d55f2fd7ab7e25b756cccb89018cd19e",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://66c02e083d56d62e79b5a3d835182f99a013b4938d332a63acc8a6c576d8bedf",
+				"dweb:/ipfs/QmWrWUcveSYz3HFAAWibwPUh1SPcdSxH1oAAzGqTEPZS56"
+			]
+		},
+		"storage/ServiceAgreementStorageV1.sol": {
+			"keccak256": "0xf3f830e62a041f57c522b7fad97fd2130f67ada8071ad8898b1e81f76f257ab2",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://80babef8b4f3c8b2b34fc8cbdb45c8556bf3b0cb878778863efcdebf8b383e8d",
+				"dweb:/ipfs/QmRB3Fi3s1PdfaCiNFMjovbzEw1LtHuEwiCCMGB8v8qarD"
+			]
+		},
+		"storage/ShardingTableStorage.sol": {
+			"keccak256": "0x98301a1c3c00be812a239b20bc9392c1df87f84842e8ab2d30f0a5d8461c25a4",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://e190e689872cdbfee325c05f3f28426cbc008042d75d30d6a87841ce00f293b1",
+				"dweb:/ipfs/QmXUuEra2Tt98DnZsha9nkhwR7nUbyb43H3MFP5bMkErGz"
+			]
+		},
+		"storage/StakingStorage.sol": {
+			"keccak256": "0x7818b8e3ecab4d986bee901fef4c0118215824d40b677593c67a3e0781f86d96",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://8cd32b1ba6b43b5ee0ea0d7c2e512cc72352760ff350c5c3aac3a821a1e0d67d",
+				"dweb:/ipfs/QmQ6P395WcztsXgpycfQJAUhDv3BQksnKEjs3YP2k1jCyz"
+			]
+		},
+		"structs/AssertionStructs.sol": {
+			"keccak256": "0x3aa9d7ef7ef465a99ba04293509f545b2cac72ab869767909002393f19b58906",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://14320251fa2bc779d50696b8b1cb04806d8feec0e719f4dd9c4a622845322788",
+				"dweb:/ipfs/QmNx2bMhdYRvJnzxDc1XRb5o2PXJtE8JYHfLY74bXrjwbN"
+			]
+		},
+		"structs/ServiceAgreementStructsV1.sol": {
+			"keccak256": "0xd7964799e46ba06db4a10ff8732c05a4fc545c2078b692434f6c5f5d979a9e0f",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://ddd3c13fafae4ab086afaaa24d17109f71bf8aa66a90b98e36e7458f1d585339",
+				"dweb:/ipfs/QmSu1EFqhzVn23eLnnyzLGX3oZjg513YuTfLVh7RePJEmg"
+			]
+		},
+		"structs/ShardingTableStructs.sol": {
+			"keccak256": "0x8e4723cb1458ab36f9dc6222b13483110e6cd1db97dad23e83450b1a09536caf",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://fc7e9390c8db4794a8e78796177849f27ad929190b2492b367a0fac560124f49",
+				"dweb:/ipfs/QmWUdtjQsvnsstySxAgGUXdFnVqQpbjj4G4n4TvNEHrzRo"
+			]
+		},
+		"utils/ByteArr.sol": {
+			"keccak256": "0xd6b826926a6265fdaa8d4e94b6e155f52dc4f8aeac0f240bc9ce2282ab536f7e",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://f4cd7f7f843ac1084d2decb80a514fd52c8d4adc3b00391f3b7beb8883ac8720",
+				"dweb:/ipfs/QmaypgnLsiVfVw3SCC5STvQHpGfCpJJTM7D3Z6gouiicqf"
+			]
+		},
+		"utils/UnorderedIndexableContractDynamicSet.sol": {
+			"keccak256": "0x6f14428fee7be01faf8b18a7798df3643c92154629f023fdc9792bd7860e96d2",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://13dc6d73fae431d749b0e2cb6b07ad1f2a04204a2b205843f34d851bf91967ab",
+				"dweb:/ipfs/QmcH1f8uDJE3WespJagSDj5ePZmpzdUMXHUwbdw8peTLpX"
+			]
+		},
+		"utils/UnorderedNamedContractDynamicSet.sol": {
+			"keccak256": "0xece9ad7df98303a4e64703606c2b1a1939eae8d00d6ccbe1d5290a9a18937ab2",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://4409924dfc48fd21eabb7c80a351a0353acd2093778a2a388f740707d6a8b006",
+				"dweb:/ipfs/QmXjhcD4CQH1fGNn83CT81i6c5gHPuPxjpNyyJ5xGGPSbV"
+			]
+		}
+	},
+	"version": 1
+}

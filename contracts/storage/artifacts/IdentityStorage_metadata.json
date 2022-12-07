@@ -1,0 +1,450 @@
+{
+	"compiler": {
+		"version": "0.8.7+commit.e28d00a7"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "hubAddress",
+						"type": "address"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint72",
+						"name": "identityId",
+						"type": "uint72"
+					},
+					{
+						"indexed": true,
+						"internalType": "bytes32",
+						"name": "key",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "purpose",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "keyType",
+						"type": "uint256"
+					}
+				],
+				"name": "KeyAdded",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint72",
+						"name": "identityId",
+						"type": "uint72"
+					},
+					{
+						"indexed": true,
+						"internalType": "bytes32",
+						"name": "key",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "purpose",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "keyType",
+						"type": "uint256"
+					}
+				],
+				"name": "KeyRemoved",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint72",
+						"name": "identityId",
+						"type": "uint72"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "_key",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_purpose",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_type",
+						"type": "uint256"
+					}
+				],
+				"name": "addKey",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint72",
+						"name": "identityId",
+						"type": "uint72"
+					}
+				],
+				"name": "deleteIdentity",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "generateIdentityId",
+				"outputs": [
+					{
+						"internalType": "uint72",
+						"name": "",
+						"type": "uint72"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "operational",
+						"type": "address"
+					}
+				],
+				"name": "getIdentityId",
+				"outputs": [
+					{
+						"internalType": "uint72",
+						"name": "",
+						"type": "uint72"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint72",
+						"name": "identityId",
+						"type": "uint72"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "_key",
+						"type": "bytes32"
+					}
+				],
+				"name": "getKey",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "",
+						"type": "bytes32"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint72",
+						"name": "identityId",
+						"type": "uint72"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_purpose",
+						"type": "uint256"
+					}
+				],
+				"name": "getKeysByPurpose",
+				"outputs": [
+					{
+						"internalType": "bytes32[]",
+						"name": "",
+						"type": "bytes32[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "hub",
+				"outputs": [
+					{
+						"internalType": "contract Hub",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "",
+						"type": "bytes32"
+					}
+				],
+				"name": "identityIds",
+				"outputs": [
+					{
+						"internalType": "uint72",
+						"name": "",
+						"type": "uint72"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint72",
+						"name": "identityId",
+						"type": "uint72"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "_key",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_purpose",
+						"type": "uint256"
+					}
+				],
+				"name": "keyHasPurpose",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "name",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint72",
+						"name": "identityId",
+						"type": "uint72"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "_key",
+						"type": "bytes32"
+					}
+				],
+				"name": "removeKey",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "operationalKey",
+						"type": "bytes32"
+					}
+				],
+				"name": "removeOperationalKeyIdentityId",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "operationalKey",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "uint72",
+						"name": "identityId",
+						"type": "uint72"
+					}
+				],
+				"name": "setOperationalKeyIdentityId",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "version",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"storage/IdentityStorage.sol": "IdentityStorage"
+		},
+		"evmVersion": "london",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"@openzeppelin/contracts/access/Ownable.sol": {
+			"keccak256": "0xa94b34880e3c1b0b931662cb1c09e5dfa6662f31cba80e07c5ee71cd135c9673",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://40fb1b5102468f783961d0af743f91b9980cf66b50d1d12009f6bb1869cea4d2",
+				"dweb:/ipfs/QmYqEbJML4jB1GHbzD4cUZDtJg5wVwNm3vDJq1GbyDus8y"
+			]
+		},
+		"@openzeppelin/contracts/utils/Context.sol": {
+			"keccak256": "0xe2e337e6dde9ef6b680e07338c493ebea1b5fd09b43424112868e9cc1706bca7",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://6df0ddf21ce9f58271bdfaa85cde98b200ef242a05a3f85c2bc10a8294800a92",
+				"dweb:/ipfs/QmRK2Y5Yc6BK7tGKkgsgn3aJEQGi5aakeSPZvS65PV8Xp3"
+			]
+		},
+		"Hub.sol": {
+			"keccak256": "0x7df273aeb34803428ba8e939a85b6c0d862b3932a6173bbdb0ff68417e33d747",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://83201ebfda6c1512c7965d964ce130e396dda005bad46a9c02169563d98dd13e",
+				"dweb:/ipfs/QmUVcN7if1YGmwKgie16JTsY9MvpcNR4k4gDAEY6fHVcPs"
+			]
+		},
+		"interface/IERC734Extended.sol": {
+			"keccak256": "0xbdcd62a8efa6d0bf66488650c32dca789463f535b8d0795d27bd99fedce86a0a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://389b0a68729a10572ec596420bec70697ac92c69b194687df0bb606f5f18d5d3",
+				"dweb:/ipfs/QmS1p9BtnLxUpiziWXiXJdnVtPbQoL32baqd9CeZcEGo33"
+			]
+		},
+		"interface/Named.sol": {
+			"keccak256": "0x461aea8fd16a345f810137f7c6033a573b30604dd34ca4d46d454a0181246709",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://cb1e77560b7b9d24efc828d1512d5d1589d1b50827f5e8d3ad6940edcd342ddc",
+				"dweb:/ipfs/QmSLUQWTnUD9b31MvRUZCKsXWFmAyWGah7cLqiYAbH4fBp"
+			]
+		},
+		"interface/Versioned.sol": {
+			"keccak256": "0xe2a0d8322337115b8d49df322bfb37639e10ecbabfc8c6d55114cb23bb8ab74b",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://eb44b136007fbd402575558f9f2721d54c37274f2fca4908e13a818a6160d27f",
+				"dweb:/ipfs/QmYpW2QssuHVU3sXtUQPi5tENW6qnUKnb5wUB9Z7qftERg"
+			]
+		},
+		"storage/IdentityStorage.sol": {
+			"keccak256": "0x0a4fb3661629d0c474b5ad588ecf542803ec5d4ef53e8eaa4a387a82d8673e3f",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://41645617355455f7b519894cf8b1a095e10d46896b67491a2a391ca1bc5b7aaf",
+				"dweb:/ipfs/QmSmqf5JLR4KYYiXqktZTaZwLqMrSKKRZZ6rKRAt9mMVQg"
+			]
+		},
+		"utils/ByteArr.sol": {
+			"keccak256": "0xd6b826926a6265fdaa8d4e94b6e155f52dc4f8aeac0f240bc9ce2282ab536f7e",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://f4cd7f7f843ac1084d2decb80a514fd52c8d4adc3b00391f3b7beb8883ac8720",
+				"dweb:/ipfs/QmaypgnLsiVfVw3SCC5STvQHpGfCpJJTM7D3Z6gouiicqf"
+			]
+		},
+		"utils/UnorderedNamedContractDynamicSet.sol": {
+			"keccak256": "0xece9ad7df98303a4e64703606c2b1a1939eae8d00d6ccbe1d5290a9a18937ab2",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://4409924dfc48fd21eabb7c80a351a0353acd2093778a2a388f740707d6a8b006",
+				"dweb:/ipfs/QmXjhcD4CQH1fGNn83CT81i6c5gHPuPxjpNyyJ5xGGPSbV"
+			]
+		}
+	},
+	"version": 1
+}
