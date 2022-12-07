@@ -1,17 +1,15 @@
 const { expect } = require('chai');
 const truffleAssert = require('truffle-assertions');
-const Hub = artifacts.require('Hub');
 const ParametersStorage = artifacts.require('ParametersStorage');
 
 contract('ParametersStorage', async (accounts) => {
-    let parameterStorage, hub;
+    let parameterStorage;
     let minimumStake, r2, r1, r0, setCommitWindowDuration, minProofWindowOffsetPerc, maxProofWindowOffsetPerc;
     let proofWindowDurationPerc, replacementWindowDurationPerc, epochLength, stakeWithdrawalDelay, rewardWithdrawalDelay, slashingFreezeDuration;
     const owner = accounts[0];
     const nonOwner = accounts[1];
 
     before(async () => {
-        hub = await Hub.deployed();
         parameterStorage = await ParametersStorage.deployed();
         minimumStake = await parameterStorage.minimumStake();
         r2 = await parameterStorage.R2();
