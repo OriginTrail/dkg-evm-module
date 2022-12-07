@@ -30,20 +30,20 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.4;\n\ninterface IHashFunction {\n\n    function hash(bytes calldata data) external returns (bytes32);\n\n}\n",
-  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/interface/IHashFunction.sol",
+  "sourcePath": "/Users/djordjekovacevic/Desktop/projects/dkg-evm-module/contracts/interface/IHashFunction.sol",
   "ast": {
     "absolutePath": "project:/contracts/interface/IHashFunction.sol",
     "exportedSymbols": {
       "IHashFunction": [
-        11922
+        11963
       ]
     },
-    "id": 11923,
+    "id": 11964,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 11914,
+        "id": 11955,
         "literals": [
           "solidity",
           "^",
@@ -60,9 +60,9 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 11922,
+        "id": 11963,
         "linearizedBaseContracts": [
-          11922
+          11963
         ],
         "name": "IHashFunction",
         "nameLocation": "68:13:39",
@@ -70,7 +70,7 @@
         "nodes": [
           {
             "functionSelector": "aa1e84de",
-            "id": 11921,
+            "id": 11962,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
@@ -78,17 +78,17 @@
             "nameLocation": "98:4:39",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11917,
+              "id": 11958,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11916,
+                  "id": 11957,
                   "mutability": "mutable",
                   "name": "data",
                   "nameLocation": "118:4:39",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11921,
+                  "scope": 11962,
                   "src": "103:19:39",
                   "stateVariable": false,
                   "storageLocation": "calldata",
@@ -97,7 +97,7 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 11915,
+                    "id": 11956,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
                     "src": "103:5:39",
@@ -112,17 +112,17 @@
               "src": "102:21:39"
             },
             "returnParameters": {
-              "id": 11920,
+              "id": 11961,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11919,
+                  "id": 11960,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11921,
+                  "scope": 11962,
                   "src": "142:7:39",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -131,7 +131,7 @@
                     "typeString": "bytes32"
                   },
                   "typeName": {
-                    "id": 11918,
+                    "id": 11959,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
                     "src": "142:7:39",
@@ -145,14 +145,14 @@
               ],
               "src": "141:9:39"
             },
-            "scope": 11922,
+            "scope": 11963,
             "src": "89:62:39",
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 11923,
+        "scope": 11964,
         "src": "58:96:39",
         "usedErrors": []
       }
@@ -164,8 +164,8 @@
     "version": "0.8.16+commit.07a7930e.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-05T18:13:09.962Z",
+  "schemaVersion": "3.4.9",
+  "updatedAt": "2022-12-06T15:47:00.864Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
