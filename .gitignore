@@ -1,8 +1,12 @@
 .DS_Store
 .rpc
 .secret
+.deps
 .env
+.vscode
+artifacts
 npm-debug.log
+remix-compiler.config.js
 /reports/test_contracts.json
 /.idea/*
 /.vscode/*
