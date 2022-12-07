@@ -50,6 +50,7 @@ contract ScoringProxy is Named, Versioned, Ownable {
         uint96 stake
     )
         external
+        view
         returns (uint40)
     {
         IScoreFunction scoringFunction = IScoreFunction(scoreFunctionSet.get(scoreFunctionId).addr);
