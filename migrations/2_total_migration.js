@@ -136,7 +136,7 @@ module.exports = async (deployer, network, accounts) => {
             let deployedContracts = {
                 contracts: {}
             }
-            if (fs.existsSync(`./../reports/${network}_contracts.json`)) {
+            if (fs.existsSync(`./reports/${network}_contracts.json`)) {
                 deployedContracts = require(`./../reports/${network}_contracts.json`);
             }
             try {

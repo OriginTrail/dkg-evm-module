@@ -24,20 +24,20 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.4;\n\ninterface Versioned {\n\n    function version() external view returns (string memory);\n\n}\n",
-  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/interface/Versioned.sol",
+  "sourcePath": "/Users/djordjekovacevic/Desktop/projects/dkg-evm-module/contracts/interface/Versioned.sol",
   "ast": {
     "absolutePath": "project:/contracts/interface/Versioned.sol",
     "exportedSymbols": {
       "Versioned": [
-        11969
+        12010
       ]
     },
-    "id": 11970,
+    "id": 12011,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 11963,
+        "id": 12004,
         "literals": [
           "solidity",
           "^",
@@ -54,9 +54,9 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 11969,
+        "id": 12010,
         "linearizedBaseContracts": [
-          11969
+          12010
         ],
         "name": "Versioned",
         "nameLocation": "68:9:43",
@@ -64,7 +64,7 @@
         "nodes": [
           {
             "functionSelector": "54fd4d50",
-            "id": 11968,
+            "id": 12009,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
@@ -72,23 +72,23 @@
             "nameLocation": "94:7:43",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11964,
+              "id": 12005,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "101:2:43"
             },
             "returnParameters": {
-              "id": 11967,
+              "id": 12008,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11966,
+                  "id": 12007,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11968,
+                  "scope": 12009,
                   "src": "127:13:43",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -97,7 +97,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 11965,
+                    "id": 12006,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "127:6:43",
@@ -111,14 +111,14 @@
               ],
               "src": "126:15:43"
             },
-            "scope": 11969,
+            "scope": 12010,
             "src": "85:57:43",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 11970,
+        "scope": 12011,
         "src": "58:87:43",
         "usedErrors": []
       }
@@ -130,8 +130,8 @@
     "version": "0.8.16+commit.07a7930e.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-05T18:13:09.964Z",
+  "schemaVersion": "3.4.9",
+  "updatedAt": "2022-12-06T15:47:00.866Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
