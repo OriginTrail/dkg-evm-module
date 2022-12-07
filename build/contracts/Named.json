@@ -24,20 +24,20 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.4;\n\ninterface Named {\n\n    function name() external view returns (string memory);\n\n}\n",
-  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/interface/Named.sol",
+  "sourcePath": "/Users/djordjekovacevic/Desktop/projects/dkg-evm-module/contracts/interface/Named.sol",
   "ast": {
     "absolutePath": "project:/contracts/interface/Named.sol",
     "exportedSymbols": {
       "Named": [
-        11961
+        12002
       ]
     },
-    "id": 11962,
+    "id": 12003,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 11955,
+        "id": 11996,
         "literals": [
           "solidity",
           "^",
@@ -54,9 +54,9 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 11961,
+        "id": 12002,
         "linearizedBaseContracts": [
-          11961
+          12002
         ],
         "name": "Named",
         "nameLocation": "68:5:42",
@@ -64,7 +64,7 @@
         "nodes": [
           {
             "functionSelector": "06fdde03",
-            "id": 11960,
+            "id": 12001,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
@@ -72,23 +72,23 @@
             "nameLocation": "90:4:42",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11956,
+              "id": 11997,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "94:2:42"
             },
             "returnParameters": {
-              "id": 11959,
+              "id": 12000,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11958,
+                  "id": 11999,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11960,
+                  "scope": 12001,
                   "src": "120:13:42",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -97,7 +97,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 11957,
+                    "id": 11998,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "120:6:42",
@@ -111,14 +111,14 @@
               ],
               "src": "119:15:42"
             },
-            "scope": 11961,
+            "scope": 12002,
             "src": "81:54:42",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 11962,
+        "scope": 12003,
         "src": "58:80:42",
         "usedErrors": []
       }
@@ -130,8 +130,8 @@
     "version": "0.8.16+commit.07a7930e.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-05T18:13:09.963Z",
+  "schemaVersion": "3.4.9",
+  "updatedAt": "2022-12-06T15:47:00.866Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
