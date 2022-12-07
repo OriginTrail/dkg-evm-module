@@ -20,7 +20,7 @@ contract('ParametersStorage', async (accounts) => {
 
         expect(minimumStake.toString()).be.eql(minStakeInContract);
 
-        // set a new value for min stake
+        // set a new value for min stake and validate is correct
         const resultMinStake = await parameterStorage.setMinimumStake(newMinSakeValue, { from: owner });
         await truffleAssert.passes(resultMinStake, 'Successfully passed');
         minimumStake = await parameterStorage.minimumStake();
@@ -40,7 +40,7 @@ contract('ParametersStorage', async (accounts) => {
 
         expect(r2.toString()).be.eql(r2valueInContract);
 
-        // set a new value for R2
+        // set a new value for R2 and validate is correct
         const resultR2 = await parameterStorage.setR2(newR2value, { from: owner });
         await truffleAssert.passes(resultR2, 'Successfully passed');
         r2 = await parameterStorage.R2();
@@ -60,7 +60,7 @@ contract('ParametersStorage', async (accounts) => {
 
         expect(r1.toString()).be.eql(r1valueInContract);
 
-        // set a new value for R1
+        // set a new value for R1 and validate is correct
         const resultR1 = await parameterStorage.setR1(newR1value, { from: owner });
         await truffleAssert.passes(resultR1, 'Successfully passed');
         r1 = await parameterStorage.R1();
@@ -80,7 +80,7 @@ contract('ParametersStorage', async (accounts) => {
 
         expect(r0.toString()).be.eql(r0valueInContract);
 
-        // set a new value for R0
+        // set a new value for R0 and validate is correct
         const resultR0 = await parameterStorage.setR0(newR0value, { from: owner });
         await truffleAssert.passes(resultR0, 'Successfully passed');
         r0 = await parameterStorage.R0();
