@@ -38,8 +38,7 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
         require(hubAddress != address(0));
 
         hub = Hub(hubAddress);
-        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
-        parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+        initialize();
 
         distanceMappingCoefficient = type(uint256).max / 1_000;
         stakeMappingCoefficient = parametersStorage.maximumStake() / 200_000;
@@ -52,6 +51,11 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
         c = 1;
         distanceExponent = 2;
         d = 1;
+    }
+
+    function initialize() public onlyHubOwner {
+        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+        parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
     }
 
     modifier onlyHubOwner() {

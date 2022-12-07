@@ -43,8 +43,17 @@ contract ContentAsset is AbstractAsset, ERC721 {
         AbstractAsset(hubAddress)
         ERC721("ContentAsset", "DKG")
     {
+        initialize();
+    }
+
+    function initialize() public onlyHubOwner {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));
         serviceAgreementV1 = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
+    }
+
+    modifier onlyHubOwner() {
+        _checkHubOwner();
+        _;
     }
 
     modifier onlyAssetOwner(uint256 tokenId) {
@@ -101,4 +110,7 @@ contract ContentAsset is AbstractAsset, ERC721 {
         require(msg.sender == ownerOf(tokenId), "Only asset owner can use this fn");
     }
 
+    function _checkHubOwner() internal view virtual {
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+    }
 }
