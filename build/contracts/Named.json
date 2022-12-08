@@ -24,20 +24,20 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.4;\n\ninterface Named {\n\n    function name() external view returns (string memory);\n\n}\n",
-  "sourcePath": "/Users/djordjekovacevic/Desktop/projects/dkg-evm-module/contracts/interface/Named.sol",
+  "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/interface/Named.sol",
   "ast": {
     "absolutePath": "project:/contracts/interface/Named.sol",
     "exportedSymbols": {
       "Named": [
-        12002
+        12192
       ]
     },
-    "id": 12003,
+    "id": 12193,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 11996,
+        "id": 12186,
         "literals": [
           "solidity",
           "^",
@@ -45,7 +45,7 @@
           ".4"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:23:42"
+        "src": "33:23:39"
       },
       {
         "abstract": false,
@@ -54,42 +54,42 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 12002,
+        "id": 12192,
         "linearizedBaseContracts": [
-          12002
+          12192
         ],
         "name": "Named",
-        "nameLocation": "68:5:42",
+        "nameLocation": "68:5:39",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "functionSelector": "06fdde03",
-            "id": 12001,
+            "id": 12191,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "name",
-            "nameLocation": "90:4:42",
+            "nameLocation": "90:4:39",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11997,
+              "id": 12187,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "94:2:42"
+              "src": "94:2:39"
             },
             "returnParameters": {
-              "id": 12000,
+              "id": 12190,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11999,
+                  "id": 12189,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 12001,
-                  "src": "120:13:42",
+                  "scope": 12191,
+                  "src": "120:13:39",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -97,10 +97,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 11998,
+                    "id": 12188,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "120:6:42",
+                    "src": "120:6:39",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -109,29 +109,29 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "119:15:42"
+              "src": "119:15:39"
             },
-            "scope": 12002,
-            "src": "81:54:42",
+            "scope": 12192,
+            "src": "81:54:39",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 12003,
-        "src": "58:80:42",
+        "scope": 12193,
+        "src": "58:80:39",
         "usedErrors": []
       }
     ],
-    "src": "33:106:42"
+    "src": "33:106:39"
   },
   "compiler": {
     "name": "solc",
     "version": "0.8.16+commit.07a7930e.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.4.9",
-  "updatedAt": "2022-12-06T15:47:00.866Z",
+  "schemaVersion": "3.4.10",
+  "updatedAt": "2022-12-08T14:40:18.080Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

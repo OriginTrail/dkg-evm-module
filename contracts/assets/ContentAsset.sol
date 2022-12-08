@@ -67,7 +67,7 @@ contract ContentAsset is Named, Versioned {
             args.triplesNumber,
             args.chunksNumber
         );
-        cas.setAssetionIssuer(tokenId, args.assertionId, msg.sender);
+        cas.setAssertionIssuer(tokenId, args.assertionId, msg.sender);
         cas.pushAssertionId(tokenId, args.assertionId);
 
         serviceAgreementV1.createServiceAgreement(
