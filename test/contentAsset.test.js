@@ -1,30 +1,30 @@
-const {assert} = require('chai');
+// const {assert} = require('chai');
 
-const ContentAsset = artifacts.require('ContentAsset');
-const ERC20Token = artifacts.require('ERC20Token');
-const ServiceAgreementStorage = artifacts.require('ServiceAgreementStorage');
-const AssertionRegistry = artifacts.require('AssertionRegistry');
+// const ContentAsset = artifacts.require('ContentAsset');
+// const ERC20Token = artifacts.require('ERC20Token');
+// const ServiceAgreementStorage = artifacts.require('ServiceAgreementStorage');
+// const AssertionRegistry = artifacts.require('AssertionRegistry');
 
-const {
-    formatAssertion,
-    calculateRoot
-} = require('assertion-tools');
+// const {
+//     formatAssertion,
+//     calculateRoot
+// } = require('assertion-tools');
 
-let assertionCount = 0;
+// let assertionCount = 0;
 
-// Contracts used in test
-let contentAsset;
-let erc20Token;
-let serviceAgreementStorage;
+// // Contracts used in test
+// let contentAsset;
+// let erc20Token;
+// let serviceAgreementStorage;
 
-const testAssetId = '0x1';
-const invalidTestAssetid = '0x0';
-const invalidTestTokenId = 1000;
-const errorPrefix = 'Returned error: VM Exception while processing transaction: ';
+// const testAssetId = '0x1';
+// const invalidTestAssetid = '0x0';
+// const invalidTestTokenId = 1000;
+// const errorPrefix = 'Returned error: VM Exception while processing transaction: ';
 
-const tokenAmount = 250;
+// const tokenAmount = 250;
 
-contract('DKG v6 assets/ContentAsset', async (accounts) => {
+// contract('DKG v6 assets/ContentAsset', async (accounts) => {
 
     // before(async () => {
     //     contentAsset = await ContentAsset.deployed();
@@ -290,7 +290,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
     //     assert(bcAssertion.includes(assertionId), 'Epected assertion id in array');
     // });
 
-});
+// });
 
 // async function generateUniqueAssertionId () {
 //     const assertion = await formatAssertion({

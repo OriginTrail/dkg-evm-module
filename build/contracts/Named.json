@@ -29,15 +29,15 @@
     "absolutePath": "project:/contracts/interface/Named.sol",
     "exportedSymbols": {
       "Named": [
-        12192
+        12254
       ]
     },
-    "id": 12193,
+    "id": 12255,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 12186,
+        "id": 12248,
         "literals": [
           "solidity",
           "^",
@@ -45,7 +45,7 @@
           ".4"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:23:39"
+        "src": "33:23:40"
       },
       {
         "abstract": false,
@@ -54,42 +54,42 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 12192,
+        "id": 12254,
         "linearizedBaseContracts": [
-          12192
+          12254
         ],
         "name": "Named",
-        "nameLocation": "68:5:39",
+        "nameLocation": "68:5:40",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "functionSelector": "06fdde03",
-            "id": 12191,
+            "id": 12253,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "name",
-            "nameLocation": "90:4:39",
+            "nameLocation": "90:4:40",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 12187,
+              "id": 12249,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "94:2:39"
+              "src": "94:2:40"
             },
             "returnParameters": {
-              "id": 12190,
+              "id": 12252,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 12189,
+                  "id": 12251,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 12191,
-                  "src": "120:13:39",
+                  "scope": 12253,
+                  "src": "120:13:40",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -97,10 +97,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 12188,
+                    "id": 12250,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "120:6:39",
+                    "src": "120:6:40",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -109,21 +109,21 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "119:15:39"
+              "src": "119:15:40"
             },
-            "scope": 12192,
-            "src": "81:54:39",
+            "scope": 12254,
+            "src": "81:54:40",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 12193,
-        "src": "58:80:39",
+        "scope": 12255,
+        "src": "58:80:40",
         "usedErrors": []
       }
     ],
-    "src": "33:106:39"
+    "src": "33:106:40"
   },
   "compiler": {
     "name": "solc",
@@ -131,7 +131,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-08T14:40:18.080Z",
+  "updatedAt": "2022-12-08T16:40:13.603Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
