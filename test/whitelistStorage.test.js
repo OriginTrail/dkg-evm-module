@@ -1,10 +1,9 @@
 const WhitelistStorage = artifacts.require('WhitelistStorage');
-const Hub = artifacts.require("Hub");
 const truffleAssert = require('truffle-assertions');
 const { expect } = require("chai");
 
 contract('WhitelistStorage', async (accounts) => {
-    let whitelistStorage, hub;
+    let whitelistStorage;
     let owner = accounts[0];
     let nonOwner = accounts[1];
 
@@ -12,7 +11,6 @@ contract('WhitelistStorage', async (accounts) => {
     const notWhitelisted = '0x74699a895Ec4959adB0850F3B06Cb8E38fDEF4f7'
 
     before('Deploy a new instances', async () => {
-        hub = await Hub.deployed();
         whitelistStorage = await WhitelistStorage.deployed();
     });
 
