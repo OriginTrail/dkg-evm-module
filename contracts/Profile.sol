@@ -15,7 +15,6 @@ import { Named } from "./interface/Named.sol";
 import { Versioned } from "./interface/Versioned.sol";
 import { UnorderedIndexableContractDynamicSetLib } from "./utils/UnorderedIndexableContractDynamicSet.sol";
 import { ADMIN_KEY, OPERATIONAL_KEY } from "./constants/IdentityConstants.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract Profile is Named, Versioned {
 
@@ -85,22 +84,35 @@ contract Profile is Named, Versioned {
         return _VERSION;
     }
 
-    function createProfile(address adminWallet, bytes calldata nodeId) external onlyWhitelisted {
+    function createProfile(
+        address adminWallet,
+        bytes calldata nodeId,
+        string calldata sharesTokenName,
+        string calldata sharesTokenSymbol
+    )
+        external
+        onlyWhitelisted
+    {
         IdentityStorage ids = identityStorage;
         ProfileStorage ps = profileStorage;
 
         require(ids.getIdentityId(msg.sender) == 0, "Identity already exists");
         require(nodeId.length != 0, "Node ID can't be empty");
-        require(!ps.nodeIdRegistered(nodeId), "Node ID is already registered");
+        require(!ps.nodeIdsList(nodeId), "Node ID is already registered");
+        require(
+            keccak256(abi.encodePacked(sharesTokenName)) != keccak256(abi.encodePacked("")),
+            "Token name cannot be empty"
+        );
+        require(
+            keccak256(abi.encodePacked(sharesTokenSymbol)) != keccak256(abi.encodePacked("")),
+            "Token symbol cannot be empty"
+        );
+        require(!ps.sharesNames(sharesTokenName), "Token name is already taken");
+        require(!ps.sharesSymbols(sharesTokenSymbol), "Token symbol is already taken");
 
         uint72 identityId = identityContract.createIdentity(msg.sender, adminWallet);
 
-        string memory identityIdString = Strings.toString(identityId);
-        Shares sharesContract = new Shares(
-            address(hub),
-            string.concat("Share token ", identityIdString),
-            string.concat("DKGSTAKE_", identityIdString)
-        );
+        Shares sharesContract = new Shares(address(hub), sharesTokenName, sharesTokenSymbol);
 
         ps.createProfile(identityId, nodeId, address(sharesContract));
         _setAvailableNodeAddresses(identityId);
