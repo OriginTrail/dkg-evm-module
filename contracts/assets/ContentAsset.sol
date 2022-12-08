@@ -73,9 +73,9 @@ contract ContentAsset is Named, Versioned {
         serviceAgreementV1.createServiceAgreement(
             ServiceAgreementStructsV1.ServiceAgreementInputArgs({
                 assetCreator: msg.sender,
-                assetContract: address(this),
+                assetContract: address(contentAssetStorage),
                 tokenId: tokenId,
-                keyword: abi.encodePacked(address(this), args.assertionId),
+                keyword: abi.encodePacked(address(contentAssetStorage), args.assertionId),
                 hashFunctionId: 1,  // hashFunctionId | 1 = sha256
                 epochsNumber: args.epochsNumber,
                 tokenAmount: args.tokenAmount,
@@ -83,7 +83,7 @@ contract ContentAsset is Named, Versioned {
             })
         );
 
-        emit AssetCreated(address(this), tokenId, args.assertionId);
+        emit AssetCreated(address(contentAssetStorage), tokenId, args.assertionId);
     }
 
     function _checkHubOwner() internal view virtual {

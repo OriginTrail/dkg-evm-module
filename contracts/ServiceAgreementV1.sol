@@ -12,6 +12,7 @@ import { IdentityStorage } from "./storage/IdentityStorage.sol";
 import { ParametersStorage } from "./storage/ParametersStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { ServiceAgreementStorageV1 } from "./storage/ServiceAgreementStorageV1.sol";
+import { ShardingTableStorage } from "./storage/ShardingTableStorage.sol";
 import { StakingStorage } from "./storage/StakingStorage.sol";
 import { Named } from "./interface/Named.sol";
 import { Versioned } from "./interface/Versioned.sol";
@@ -70,6 +71,7 @@ contract ServiceAgreementV1 is Named, Versioned {
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     ServiceAgreementStorageV1 public serviceAgreementStorageV1;
+    ShardingTableStorage public shardingTableStorage;
     StakingStorage public stakingStorage;
     IERC20 public tokenContract;
 
@@ -99,6 +101,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         serviceAgreementStorageV1 = ServiceAgreementStorageV1(hub.getContractAddress("ServiceAgreementStorageV1"));
+        shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
 	}
@@ -265,6 +268,8 @@ contract ServiceAgreementV1 is Named, Versioned {
         require(isCommitWindowOpen(agreementId, args.epoch), "Commit window is closed");
 
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
+
+        require(shardingTableStorage.nodeExists(identityId), "Node isn't in the Sharding Table");
 
         uint40 score = scoringProxy.callScoreFunction(
             serviceAgreementStorageV1.getAgreementScoreFunctionId(agreementId),
