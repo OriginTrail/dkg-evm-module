@@ -1,4 +1,4 @@
-var BN = require('bn.js');
+var ethers = require('ethers');
 const fs = require('fs');
 var Hub = artifacts.require('Hub');
 var ParametersStorage = artifacts.require('ParametersStorage');
@@ -167,7 +167,7 @@ module.exports = async (deployer, network, accounts) => {
                         true
                     );
                     await erc20Token.setupRole(deployerAddress);
-                    const amountToMint = (new BN(5)).mul((new BN(10)).pow(new BN(30)));
+                    const amountToMint = ethers.utils.parseEther(`${5 * (10 ** 12)}`);
 
                     if (network !== 'mumbai') {
                         accounts = accounts.concat(testAccounts);

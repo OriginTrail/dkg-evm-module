@@ -55,7 +55,7 @@ contract HashingProxy is Named, Versioned {
         hashFunctionSet.remove(hashFunctionId);
     }
 
-    function callHashFunction(uint8 hashFunctionId, bytes calldata data) external returns (bytes32) {
+    function callHashFunction(uint8 hashFunctionId, bytes calldata data) external view returns (bytes32) {
         return IHashFunction(hashFunctionSet.get(hashFunctionId).addr).hash(data);
     }
 

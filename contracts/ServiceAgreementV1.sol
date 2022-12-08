@@ -494,6 +494,7 @@ contract ServiceAgreementV1 is Named, Versioned {
 
     function _generateAgreementId(address assetContract, uint256 tokenId, bytes calldata keyword, uint8 hashFunctionId)
         private
+        view
         returns (bytes32)
     {
         return hashingProxy.callHashFunction(hashFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
