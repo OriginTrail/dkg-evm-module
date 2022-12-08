@@ -375,10 +375,10 @@ module.exports = async (deployer, network, accounts) => {
                     'ContentAsset',
                     ContentAsset,
                     deployerAddress,
-                    true,
-                    false,
                     true
                 );
+                /* ---------------------------------------------------------------------------------------- */
+
                 console.log('Contracts deployed, report can be found in file: ', filePath);
             } catch (error) {
                 console.log(error);
