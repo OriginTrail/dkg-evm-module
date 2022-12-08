@@ -98,6 +98,14 @@ contract Profile is Named, Versioned {
         require(ids.getIdentityId(msg.sender) == 0, "Identity already exists");
         require(nodeId.length != 0, "Node ID can't be empty");
         require(!ps.nodeIdsList(nodeId), "Node ID is already registered");
+        require(
+            keccak256(abi.encodePacked(sharesTokenName)) != keccak256(abi.encodePacked("")),
+            "Token name cannot be empty"
+        );
+        require(
+            keccak256(abi.encodePacked(sharesTokenSymbol)) != keccak256(abi.encodePacked("")),
+            "Token symbol cannot be empty"
+        );
         require(!ps.sharesNames(sharesTokenName), "Token name is already taken");
         require(!ps.sharesSymbols(sharesTokenSymbol), "Token symbol is already taken");
 
