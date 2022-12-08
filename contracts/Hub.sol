@@ -13,14 +13,14 @@ contract Hub is Named, Versioned, Ownable {
 
     event NewContract(string contractName, address newContractAddress);
     event ContractChanged(string contractName, address newContractAddress);
-    event NewAssetContract(string contractName, address newContractAddress);
-    event AssetContractChanged(string contractName, address newContractAddress);
+    event NewAssetStorage(string contractName, address newContractAddress);
+    event AssetStorageChanged(string contractName, address newContractAddress);
 
     string constant private _NAME = "Hub";
     string constant private _VERSION = "1.0.0";
 
     UnorderedNamedContractDynamicSetLib.Set contractSet;
-    UnorderedNamedContractDynamicSetLib.Set assetContractSet;
+    UnorderedNamedContractDynamicSetLib.Set assetStorageSet;
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -40,16 +40,16 @@ contract Hub is Named, Versioned, Ownable {
         }
     }
 
-    function setAssetContractAddress(string calldata assetContractName, address assetContractAddress)
+    function setAssetStorageAddress(string calldata assetStorageName, address assetStorageAddress)
         external
         onlyOwner
     {
-        if(assetContractSet.exists(assetContractName)) {
-            emit AssetContractChanged(assetContractName, assetContractAddress);
-            assetContractSet.update(assetContractName, assetContractAddress);
+        if(assetStorageSet.exists(assetStorageName)) {
+            emit AssetStorageChanged(assetStorageName, assetStorageAddress);
+            assetStorageSet.update(assetStorageName, assetStorageAddress);
         } else {
-            emit NewAssetContract(assetContractName, assetContractAddress);
-            assetContractSet.append(assetContractName, assetContractAddress);
+            emit NewAssetStorage(assetStorageName, assetStorageAddress);
+            assetStorageSet.append(assetStorageName, assetStorageAddress);
         }
     }
 
@@ -57,16 +57,16 @@ contract Hub is Named, Versioned, Ownable {
         return contractSet.get(contractName).addr;
     }
 
-    function getAssetContractAddress(string calldata assetContractName) external view returns (address) {
-        return assetContractSet.get(assetContractName).addr;
+    function getAssetStorageAddress(string calldata assetStorageName) external view returns (address) {
+        return assetStorageSet.get(assetStorageName).addr;
     }
 
     function getAllContracts() external view returns (UnorderedNamedContractDynamicSetLib.Contract[] memory) {
         return contractSet.getAll();
     }
 
-    function getAllAssetContracts() external view returns (UnorderedNamedContractDynamicSetLib.Contract[] memory) {
-        return assetContractSet.getAll();
+    function getAllAssetStorages() external view returns (UnorderedNamedContractDynamicSetLib.Contract[] memory) {
+        return assetStorageSet.getAll();
     }
 
     function isContract(string calldata contractName) external view returns (bool) {
@@ -77,12 +77,12 @@ contract Hub is Named, Versioned, Ownable {
         return contractSet.exists(selectedContractAddress);
     }
 
-    function isAssetContract(string calldata assetContractName) external view returns (bool) {
-        return assetContractSet.exists(assetContractName);
+    function isAssetStorage(string calldata assetStorageName) external view returns (bool) {
+        return assetStorageSet.exists(assetStorageName);
     }
 
-    function isAssetContract(address assetContractAddress) external view returns (bool) {
-        return assetContractSet.exists(assetContractAddress);
+    function isAssetStorage(address assetStorageAddress) external view returns (bool) {
+        return assetStorageSet.exists(assetStorageAddress);
     }
 
 }

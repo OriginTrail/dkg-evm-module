@@ -111,10 +111,7 @@ contract ShardingTableStorage is Named, Versioned {
     }
 
     function _checkHub() internal view virtual {
-        require(
-            hub.isContract(msg.sender),
-            "Fn can only be called by hub"
-        );
+        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
 }

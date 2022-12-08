@@ -2,9 +2,11 @@
 
 pragma solidity ^0.8.4;
 
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Hub } from "../Hub.sol";
 
-contract ParametersStorage is Ownable {
+contract ParametersStorage {
+
+    Hub public hub;
 
     uint96 public minimumStake;
     uint96 public maximumStake;
@@ -25,7 +27,11 @@ contract ParametersStorage is Ownable {
     uint24 public rewardWithdrawalDelay;
     uint32 public slashingFreezeDuration;
 
-    constructor() {
+    constructor(address hubAddress) {
+        require(hubAddress != address(0));
+
+        hub = Hub(hubAddress);
+
         minimumStake = 50_000 ether;
         maximumStake = 5_000_000 ether;
 
@@ -46,56 +52,65 @@ contract ParametersStorage is Ownable {
         slashingFreezeDuration = 730 days;
     }
 
-    function setMinimumStake(uint96 newMinimumStake) external onlyOwner {
+    modifier onlyHubOwner() {
+        _checkHubOwner();
+        _;
+    }
+
+    function setMinimumStake(uint96 newMinimumStake) external onlyHubOwner {
         minimumStake = newMinimumStake;
     }
 
-    function setR2(uint48 newR2) external onlyOwner {
+    function setR2(uint48 newR2) external onlyHubOwner {
         R2 = newR2;
     }
 
-    function setR1(uint32 newR1) external onlyOwner {
+    function setR1(uint32 newR1) external onlyHubOwner {
         R1 = newR1;
     }
 
-    function setR0(uint32 newR0) external onlyOwner {
+    function setR0(uint32 newR0) external onlyHubOwner {
         R0 = newR0;
     }
 
-    function setCommitWindowDuration(uint16 newCommitWindowDuration) external onlyOwner {
+    function setCommitWindowDuration(uint16 newCommitWindowDuration) external onlyHubOwner {
         commitWindowDuration = newCommitWindowDuration;
     }
 
-    function setMinProofWindowOffsetPerc(uint8 newMinProofWindowOffsetPerc) external onlyOwner {
+    function setMinProofWindowOffsetPerc(uint8 newMinProofWindowOffsetPerc) external onlyHubOwner {
         minProofWindowOffsetPerc = newMinProofWindowOffsetPerc;
     }
 
-    function setMaxProofWindowOffsetPerc(uint8 newMaxProofWindowOffsetPerc) external onlyOwner {
+    function setMaxProofWindowOffsetPerc(uint8 newMaxProofWindowOffsetPerc) external onlyHubOwner {
         maxProofWindowOffsetPerc = newMaxProofWindowOffsetPerc;
     }
 
-    function setProofWindowDurationPerc(uint8 newProofWindowDurationPerc) external onlyOwner {
+    function setProofWindowDurationPerc(uint8 newProofWindowDurationPerc) external onlyHubOwner {
         proofWindowDurationPerc = newProofWindowDurationPerc;
     }
 
-    function setReplacementWindowDurationPerc(uint8 newReplacementWindowDurationPerc) external onlyOwner {
+    function setReplacementWindowDurationPerc(uint8 newReplacementWindowDurationPerc) external onlyHubOwner {
         replacementWindowDurationPerc = newReplacementWindowDurationPerc;
     }
 
-    function setEpochLength(uint128 newEpochLength) external onlyOwner {
+    function setEpochLength(uint128 newEpochLength) external onlyHubOwner {
         epochLength = newEpochLength;
     }
 
-    function setStakeWithdrawalDelay(uint24 newStakeWithdrawalDelay) external onlyOwner {
+    function setStakeWithdrawalDelay(uint24 newStakeWithdrawalDelay) external onlyHubOwner {
         stakeWithdrawalDelay = newStakeWithdrawalDelay;
     }
 
-    function setRewardWithdrawalDelay(uint24 newRewardWithdrawalDelay) external onlyOwner {
+    function setRewardWithdrawalDelay(uint24 newRewardWithdrawalDelay) external onlyHubOwner {
         rewardWithdrawalDelay = newRewardWithdrawalDelay;
     }
 
-    function setSlashingFreezeDuration(uint32 newSlashingFreezeDuration) external onlyOwner {
+    function setSlashingFreezeDuration(uint32 newSlashingFreezeDuration) external onlyHubOwner {
         slashingFreezeDuration = newSlashingFreezeDuration;
+    }
+
+    function _checkHubOwner() internal view virtual {
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
 }

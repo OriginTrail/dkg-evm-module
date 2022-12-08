@@ -38,8 +38,7 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
         require(hubAddress != address(0));
 
         hub = Hub(hubAddress);
-        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
-        parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+        initialize();
 
         distanceMappingCoefficient = type(uint256).max / 1_000;
         stakeMappingCoefficient = parametersStorage.maximumStake() / 200_000;
@@ -55,8 +54,13 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
     }
 
     modifier onlyHubOwner() {
-        _checkOwner();
+        _checkHubOwner();
         _;
+    }
+
+    function initialize() public onlyHubOwner {
+        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+        parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
     }
 
     function id() external pure virtual override returns (uint8) {
@@ -149,8 +153,8 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
         d = d_;
     }
 
-    function _checkOwner() internal view virtual {
-        require (msg.sender == hub.owner(), "Fn can only be called by owner");
+    function _checkHubOwner() internal view virtual {
+        require (msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
 }

@@ -5,9 +5,8 @@ pragma solidity ^0.8.4;
 import { Hub } from "../Hub.sol";
 import { Named } from "../interface/Named.sol";
 import { Versioned } from "../interface/Versioned.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract WhitelistStorage is Named, Versioned, Ownable {
+contract WhitelistStorage is Named, Versioned {
 
     string constant private _NAME = "WhitelistStorage";
     string constant private _VERSION = "1.0.0";
@@ -26,6 +25,11 @@ contract WhitelistStorage is Named, Versioned, Ownable {
         whitelistingEnabled = false;
     }
 
+    modifier onlyHubOwner() {
+        _checkHubOwner();
+        _;
+    }
+
     function name() external pure virtual override returns (string memory) {
         return _NAME;
     }
@@ -34,20 +38,24 @@ contract WhitelistStorage is Named, Versioned, Ownable {
         return _VERSION;
     }
 
-    function whitelistAddress(address addr) external onlyOwner {
+    function whitelistAddress(address addr) external onlyHubOwner {
         whitelisted[addr] = true;
     }
 
-    function blacklistAddress(address addr) external onlyOwner {
+    function blacklistAddress(address addr) external onlyHubOwner {
         whitelisted[addr] = false;
     }
 
-    function enableWhitelist() external onlyOwner {
+    function enableWhitelist() external onlyHubOwner {
         whitelistingEnabled = true;
     }
 
-    function disableWhitelist() external onlyOwner {
+    function disableWhitelist() external onlyHubOwner {
         whitelistingEnabled = false;
+    }
+
+    function _checkHubOwner() internal view virtual {
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
 }

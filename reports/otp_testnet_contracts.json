@@ -81,13 +81,13 @@
             "deployed": true
         },
         "ServiceAgreementV1": {
-            "evmAddress": "0x0b55b45ec52698C9177E83d10f8195760b3f1446",
+            "evmAddress": "0x5498C590CC1540E92bF6901aD2Fa522b4Af1489d",
             "deployed": true
         },
-        "ContentAsset": {
-            "evmAddress": "0x46434a7fD76Ee0d99F23a03E5e0b0c37129A86Ac",
+        "ContentAsset1": {
+            "evmAddress": "0xBFC2a772f31531fC406eA5aF211ad326E46d37Bb",
             "deployed": true
         }
     },
-    "deployedTimestamp": 1670347272873
+    "deployedTimestamp": 1670435785427
 }

@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.4;
 
+import { Hub } from "./Hub.sol";
 import { IHashFunction } from "./interface/IHashFunction.sol";
 import { Named } from "./interface/Named.sol";
 import { Versioned } from "./interface/Versioned.sol";
 import { UnorderedIndexableContractDynamicSetLib } from "./utils/UnorderedIndexableContractDynamicSet.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract HashingProxy is Named, Versioned, Ownable {
+contract HashingProxy is Named, Versioned {
 
     using UnorderedIndexableContractDynamicSetLib for UnorderedIndexableContractDynamicSetLib.Set;
 
@@ -18,7 +18,20 @@ contract HashingProxy is Named, Versioned, Ownable {
     string constant private _NAME = "HashingProxy";
     string constant private _VERSION = "1.0.0";
 
+    Hub public hub;
+
     UnorderedIndexableContractDynamicSetLib.Set hashFunctionSet;
+
+    constructor(address hubAddress) {
+        require(hubAddress != address(0));
+
+        hub = Hub(hubAddress);
+    }
+
+    modifier onlyHubOwner() {
+        _checkHubOwner();
+        _;
+    }
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -28,7 +41,7 @@ contract HashingProxy is Named, Versioned, Ownable {
         return _VERSION;
     }
 
-    function setContractAddress(uint8 hashFunctionId, address hashingContractAddress) external onlyOwner {
+    function setContractAddress(uint8 hashFunctionId, address hashingContractAddress) external onlyHubOwner {
         if (hashFunctionSet.exists(hashFunctionId)) {
             hashFunctionSet.update(hashFunctionId, hashingContractAddress);
             emit HashFunctionContractChanged(hashFunctionId, hashingContractAddress);
@@ -38,7 +51,7 @@ contract HashingProxy is Named, Versioned, Ownable {
         }
     }
 
-    function removeContract(uint8 hashFunctionId) external onlyOwner {
+    function removeContract(uint8 hashFunctionId) external onlyHubOwner {
         hashFunctionSet.remove(hashFunctionId);
     }
 
@@ -60,6 +73,10 @@ contract HashingProxy is Named, Versioned, Ownable {
 
     function isHashFunction(uint8 hashFunctionId) external view returns (bool) {
         return hashFunctionSet.exists(hashFunctionId);
+    }
+
+    function _checkHubOwner() internal view virtual {
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
 }

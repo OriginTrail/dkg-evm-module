@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.4;
 
+import { Hub } from "./Hub.sol";
 import { IScoreFunction } from "./interface/IScoreFunction.sol";
 import { Named } from "./interface/Named.sol";
 import { Versioned } from "./interface/Versioned.sol";
 import { UnorderedIndexableContractDynamicSetLib } from "./utils/UnorderedIndexableContractDynamicSet.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ScoringProxy is Named, Versioned, Ownable {
+contract ScoringProxy is Named, Versioned {
 
     using UnorderedIndexableContractDynamicSetLib for UnorderedIndexableContractDynamicSetLib.Set;
 
@@ -18,7 +18,20 @@ contract ScoringProxy is Named, Versioned, Ownable {
     string constant private _NAME = "ScoringProxy";
     string constant private _VERSION = "1.0.0";
 
+    Hub public hub;
+
     UnorderedIndexableContractDynamicSetLib.Set scoreFunctionSet;
+
+    constructor(address hubAddress) {
+        require(hubAddress != address(0));
+
+        hub = Hub(hubAddress);
+    }
+
+    modifier onlyHubOwner() {
+        _checkHubOwner();
+        _;
+    }
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -28,7 +41,7 @@ contract ScoringProxy is Named, Versioned, Ownable {
         return _VERSION;
     }
 
-    function setContractAddress(uint8 scoreFunctionId, address scoringContractAddress) external onlyOwner {
+    function setContractAddress(uint8 scoreFunctionId, address scoringContractAddress) external onlyHubOwner {
         if (scoreFunctionSet.exists(scoreFunctionId)) {
             emit ScoringFunctionContractUpdated(scoreFunctionId, scoringContractAddress);
             scoreFunctionSet.update(scoreFunctionId, scoringContractAddress);
@@ -38,7 +51,7 @@ contract ScoringProxy is Named, Versioned, Ownable {
         }
     }
 
-    function removeContract(uint8 scoreFunctionId) external onlyOwner {
+    function removeContract(uint8 scoreFunctionId) external onlyHubOwner {
         scoreFunctionSet.remove(scoreFunctionId);
     }
     
@@ -71,6 +84,10 @@ contract ScoringProxy is Named, Versioned, Ownable {
 
     function isScoreFunction(uint8 scoreFunctionId) external view returns (bool) {
         return scoreFunctionSet.exists(scoreFunctionId);
+    }
+
+    function _checkHubOwner() internal view virtual {
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
 }
