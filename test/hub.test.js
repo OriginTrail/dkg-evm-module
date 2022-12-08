@@ -33,7 +33,6 @@ contract('DKG v6 Hub', async (accounts) => {
         await Promise.all(promises);
     });
 
-
     it('the contract is named "Hub"', async () => {
         // Expect that the contract's name is "Hub"
         expect(await hub.name()).to.equal('Hub');
@@ -169,4 +168,5 @@ contract('DKG v6 Hub', async (accounts) => {
             expect(await hub.getAssetContractAddress(contract.name)).to.equal(contract.addr);
         });
     });
+
 });
