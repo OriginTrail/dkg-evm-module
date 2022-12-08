@@ -35,8 +35,7 @@ contract('AssertionStorage', async (accounts) => {
         await truffleAssert.passes(assertionStorage.createAssertion(assertionId, size, triplesNumber, chunksNumber, { from: nonOwner }));
     })
 
-    it('Get the assertion data with owner, expect to pass', async () => {
-        await hub.setContractAddress('Owner', owner, { from: owner });
+    it('Get the assertion data for valid assertion id, expect to pass', async () => {
         const getAssertionResult = await assertionStorage.getAssertion(assertionId);
 
         await truffleAssert.passes(getAssertionResult);
