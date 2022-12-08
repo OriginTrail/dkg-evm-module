@@ -3,7 +3,6 @@
 pragma solidity^0.8.0;
 
 import { Hub } from "./Hub.sol";
-import { IdentityStorage } from "./storage/IdentityStorage.sol";
 import { ProfileStorage } from "./storage/ProfileStorage.sol";
 import { ShardingTableStorage } from "./storage/ShardingTableStorage.sol";
 import { StakingStorage } from "./storage/StakingStorage.sol";
