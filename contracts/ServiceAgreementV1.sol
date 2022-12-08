@@ -59,7 +59,7 @@ contract ServiceAgreementV1 is Named, Versioned {
     string constant private _NAME = "ServiceAgreementV1";
     string constant private _VERSION = "1.0.0";
 
-    bool[4] private _reqs = [true, true, true, true];
+    bool[4] public _reqs = [true, true, true, true];
 
     Hub public hub;
     HashingProxy public hashingProxy;

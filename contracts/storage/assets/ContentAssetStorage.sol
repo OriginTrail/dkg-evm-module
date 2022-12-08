@@ -4,9 +4,11 @@ pragma solidity ^0.8.4;
 
 import { AbstractAsset } from "../../assets/AbstractAsset.sol";
 import { Hub } from "../../Hub.sol";
+import { Named } from "../../interface/Named.sol";
 import { ContentAssetStructs } from "../../structs/assets/ContentAssetStructs.sol";
+import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-contract ContentAssetStorage is AbstractAsset {
+contract ContentAssetStorage is AbstractAsset, ERC721 {
 
     string constant private _NAME = "ContentAssetStorage";
     string constant private _VERSION = "1.0.0";
@@ -19,19 +21,23 @@ contract ContentAssetStorage is AbstractAsset {
     // keccak256(tokenId + assertionId + assertionIdx) => issuer
     mapping(bytes32 => address) public issuers;
 
-    constructor(address hubAddress) AbstractAsset(hubAddress) {}
+    constructor(address hubAddress) AbstractAsset(hubAddress) ERC721("ContentAssetStorage", "DKG") {}
 
     modifier onlyContracts() {
         _checkHub();
         _;
     }
 
-    function name() external pure override returns (string memory) {
-        return _NAME;
+    function name() public view override(Named, ERC721) returns (string memory) {
+        return ERC721.name();
     }
 
     function version() external pure override returns (string memory) {
         return _VERSION;
+    }
+
+    function mint(address to, uint256 tokenId) external onlyContracts {
+        _mint(to, tokenId);
     }
 
     function generateTokenId() external onlyContracts returns (uint256) {

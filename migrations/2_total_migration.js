@@ -303,6 +303,8 @@ module.exports = async (deployer, network, accounts) => {
                     'ContentAssetStorage',
                     ContentAssetStorage,
                     deployerAddress,
+                    true,
+                    false,
                     true
                 );
                 /* ---------------------------------------------------------------------------------------- */
@@ -370,7 +372,7 @@ module.exports = async (deployer, network, accounts) => {
                 /* ----------------------------------------Assets------------------------------------------ */
                 contentAsset = await initializeContract(
                     deployedContracts,
-                    'ContentAsset1',
+                    'ContentAsset',
                     ContentAsset,
                     deployerAddress,
                     true,
