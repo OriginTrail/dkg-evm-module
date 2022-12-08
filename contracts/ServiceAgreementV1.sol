@@ -85,8 +85,8 @@ contract ServiceAgreementV1 is Named, Versioned {
 		_;
 	}
 
-    modifier onlyAssetContracts() {
-        _checkAssetContract();
+    modifier onlyContracts() {
+        _checkHub();
         _;
     }
 
@@ -113,10 +113,10 @@ contract ServiceAgreementV1 is Named, Versioned {
 
     function createServiceAgreement(ServiceAgreementStructsV1.ServiceAgreementInputArgs calldata args)
         external
-        onlyAssetContracts
+        onlyContracts
     {
         require(args.assetCreator != address(0), "Asset creator cannot be 0x0");
-        require(hub.isAssetContract(args.assetContract), "Asset Contract not in the hub");
+        require(hub.isAssetStorage(args.assetContract), "Asset Storage not in the hub");
         require(keccak256(args.keyword) != keccak256(""), "Keyword can't be empty");
         require(args.epochsNumber != 0, "Epochs number cannot be 0");
         require(args.tokenAmount != 0, "Token amount cannot be 0");
@@ -163,7 +163,7 @@ contract ServiceAgreementV1 is Named, Versioned {
     // TODO: Split into smaller functions [update only epochsNumber / tokenAmount / scoreFunctionId etc.]
     function updateServiceAgreement(ServiceAgreementStructsV1.ServiceAgreementInputArgs calldata args)
         external
-        onlyAssetContracts
+        onlyContracts
     {
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
@@ -507,8 +507,8 @@ contract ServiceAgreementV1 is Named, Versioned {
 		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
 	}
 
-    function _checkAssetContract() internal view virtual {
-        require (hub.isAssetContract(msg.sender), "Fn can only be called by assets");
+    function _checkHub() internal view virtual {
+        require (hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
 }

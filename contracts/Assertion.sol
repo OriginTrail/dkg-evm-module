@@ -30,8 +30,8 @@ contract Assertion is Named, Versioned {
 		_;
 	}
 
-	modifier onlyAssetContracts() {
-        _checkAssetContract();
+	modifier onlyContracts() {
+        _checkHub();
         _;
     }
 
@@ -54,7 +54,7 @@ contract Assertion is Named, Versioned {
 		uint96 chunksNumber
 	)
 		external
-		onlyAssetContracts
+		onlyContracts
 	{
 		AssertionStorage ans = assertionStorage;
 
@@ -72,8 +72,8 @@ contract Assertion is Named, Versioned {
 		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
 	}
 
-	function _checkAssetContract() internal view virtual {
-		require (hub.isAssetContract(msg.sender), "Fn can only be called by assets");
+	function _checkHub() internal view virtual {
+		require (hub.isContract(msg.sender), "Fn can only be called by the hub");
 	}
 
 }
