@@ -18,7 +18,7 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
     // tokenId => Asset
     mapping (uint256 => ContentAssetStructs.Asset) assets;
 
-    // keccak256(tokenId + assertionId + assertionIdx) => issuer
+    // keccak256(tokenId + assertionId + assertionIdIndex) => issuer
     mapping(bytes32 => address) public issuers;
 
     constructor(address hubAddress) AbstractAsset(hubAddress) ERC721("ContentAssetStorage", "DKG") {}
