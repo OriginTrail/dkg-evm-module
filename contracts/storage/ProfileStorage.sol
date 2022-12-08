@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 
 import { HashingProxy } from "../HashingProxy.sol";
 import { Hub } from "../Hub.sol";
+import { Shares } from "../Shares.sol";
 import { Named } from "../interface/Named.sol";
 import { Versioned } from "../interface/Versioned.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -31,6 +32,11 @@ contract ProfileStorage is Named, Versioned {
     mapping(bytes => bool) public nodeIdsList;
     // identityId => Profile
     mapping(uint72 => ProfileDefinition) profiles;
+
+    // shares token name => isTaken?
+    mapping(string => bool) public sharesNames;
+    // shares token ID => isTaken?
+    mapping(string => bool) public sharesSymbols;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0));
@@ -71,6 +77,10 @@ contract ProfileStorage is Named, Versioned {
         profile.sharesContractAddress = sharesContractAddress;
 
         nodeIdsList[nodeId] = true;
+
+        Shares sharesContract = Shares(sharesContractAddress);
+        sharesNames[sharesContract.name()] = true;
+        sharesSymbols[sharesContract.symbol()] = true;
     }
 
     function getProfile(uint72 identityId) external view returns (bytes memory, uint96[2] memory, address) {
@@ -148,10 +158,6 @@ contract ProfileStorage is Named, Versioned {
 
     function profileExists(uint72 identityId) external view returns (bool) {
         return keccak256(profiles[identityId].nodeId) != keccak256(bytes(""));
-    }
-
-    function nodeIdRegistered(bytes calldata nodeId) external view returns (bool) {
-        return nodeIdsList[nodeId];
     }
 
     function transferTokens(address receiver, uint96 amount) external onlyContracts {
