@@ -54,13 +54,12 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint8 hashFunctionId,
         uint72 indexed identityId
     );
-    event Logger(
-        bool value,
-        string message
-    );
+    event Logger(bool value, string message);
 
     string constant private _NAME = "ServiceAgreementV1";
     string constant private _VERSION = "1.0.0";
+
+    bool[4] public _reqs = [true, true, true, true];
 
     Hub public hub;
     HashingProxy public hashingProxy;
@@ -74,11 +73,6 @@ contract ServiceAgreementV1 is Named, Versioned {
     StakingStorage public stakingStorage;
     IERC20 public tokenContract;
 
-    bool req1 = true;
-    bool req2 = true;
-    bool req3 = true;
-    bool req4 = true;
-
     constructor (address hubAddress) {
         require(hubAddress != address(0));
 
@@ -91,8 +85,8 @@ contract ServiceAgreementV1 is Named, Versioned {
 		_;
 	}
 
-    modifier onlyAssetContracts() {
-        _checkAssetContract();
+    modifier onlyContracts() {
+        _checkHub();
         _;
     }
 
@@ -119,10 +113,10 @@ contract ServiceAgreementV1 is Named, Versioned {
 
     function createServiceAgreement(ServiceAgreementStructsV1.ServiceAgreementInputArgs calldata args)
         external
-        onlyAssetContracts
+        onlyContracts
     {
         require(args.assetCreator != address(0), "Asset creator cannot be 0x0");
-        require(hub.isAssetContract(args.assetContract), "Asset Contract not in the hub");
+        require(hub.isAssetStorage(args.assetContract), "Asset Storage not in the hub");
         require(keccak256(args.keyword) != keccak256(""), "Keyword can't be empty");
         require(args.epochsNumber != 0, "Epochs number cannot be 0");
         require(args.tokenAmount != 0, "Token amount cannot be 0");
@@ -169,7 +163,7 @@ contract ServiceAgreementV1 is Named, Versioned {
     // TODO: Split into smaller functions [update only epochsNumber / tokenAmount / scoreFunctionId etc.]
     function updateServiceAgreement(ServiceAgreementStructsV1.ServiceAgreementInputArgs calldata args)
         external
-        onlyAssetContracts
+        onlyContracts
     {
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
@@ -344,7 +338,7 @@ contract ServiceAgreementV1 is Named, Versioned {
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
-        require(req1 || isProofWindowOpen(agreementId, args.epoch), "Proof window is closed");
+        require(_reqs[0] || isProofWindowOpen(agreementId, args.epoch), "Proof window is closed");
         emit Logger(isProofWindowOpen(agreementId, args.epoch), "req1" );
 
 
@@ -354,11 +348,14 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
-        require(req2 ||
+        require(_reqs[1] ||
             sasV1.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) != 0,
             "You've been already rewarded"
         );
-        emit Logger(sasV1.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) != 0, "req2" );
+        emit Logger(
+            sasV1.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) != 0,
+            "req2"
+        );
 
         bytes32 nextCommitId = sasV1.getAgreementEpochSubmissionHead(agreementId, args.epoch);
         uint32 r0 = parametersStorage.R0();
@@ -370,18 +367,21 @@ contract ServiceAgreementV1 is Named, Versioned {
             unchecked { i++; }
         }
 
-        require(req3 || i < r0, "Your node hasn't been awarded for this asset in this epoch");
+        require(_reqs[2] || i < r0, "Your node hasn't been awarded for this asset in this epoch");
         emit Logger(i < r0, "req3" );
 
         bytes32 merkleRoot;
         uint256 challenge;
         (merkleRoot, challenge) = getChallenge(msg.sender, args.assetContract, args.tokenId, args.epoch);
 
-        require(req4 ||
+        require(_reqs[3] ||
             MerkleProof.verify(args.proof, merkleRoot, keccak256(abi.encodePacked(args.chunkHash, challenge))),
             "Root hash doesn't match"
         );
-        emit Logger(MerkleProof.verify(args.proof, merkleRoot, keccak256(abi.encodePacked(args.chunkHash, challenge))), "req4" );
+        emit Logger(
+            MerkleProof.verify(args.proof, merkleRoot, keccak256(abi.encodePacked(args.chunkHash, challenge))),
+            "req4"
+        );
 
         emit ProofSubmitted(
             args.assetContract,
@@ -403,6 +403,10 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         // To make sure that node already received reward
         sasV1.setCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId)), 0);
+    }
+
+    function setReq(uint8 idx, bool req) external onlyHubOwner {
+        _reqs[idx] = req;
     }
 
     function _insertCommit(
@@ -503,21 +507,8 @@ contract ServiceAgreementV1 is Named, Versioned {
 		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
 	}
 
-    function _checkAssetContract() internal view virtual {
-        require (hub.isAssetContract(msg.sender), "Fn can only be called by assets");
-    }
-
-    function setReq1(bool req) external {
-        req1 = req;
-    }
-    function setReq2(bool req) external  {
-        req2 = req;
-    }
-    function setReq3(bool req) external  {
-        req3 = req;
-    }
-    function setReq4(bool req) external  {
-        req4 = req;
+    function _checkHub() internal view virtual {
+        require (hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
 }

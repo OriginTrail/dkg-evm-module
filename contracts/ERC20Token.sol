@@ -5,9 +5,8 @@ pragma solidity ^0.8.4;
 import { Hub } from "./Hub.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ERC20Token is ERC20, AccessControl, Ownable {
+contract ERC20Token is ERC20, AccessControl {
 
     Hub public hub;
 
@@ -15,10 +14,16 @@ contract ERC20Token is ERC20, AccessControl, Ownable {
 
     constructor(address hubAddress) ERC20("TEST TOKEN", "TEST"){
         require(hubAddress != address(0));
+
         hub = Hub(hubAddress);
     }
 
-    function setupRole(address minter) public onlyOwner {
+    modifier onlyHubOwner() {
+        _checkHubOwner();
+        _;
+    }
+
+    function setupRole(address minter) public onlyHubOwner {
         _setupRole(MINTER_ROLE, minter);
     }
 
@@ -26,6 +31,10 @@ contract ERC20Token is ERC20, AccessControl, Ownable {
         require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
 
         _mint(to, amount);
+    }
+
+    function _checkHubOwner() internal view virtual {
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
 }

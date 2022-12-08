@@ -105,7 +105,7 @@ contract IdentityStorage is IERC734Extended, Named, Versioned {
     }
 
     function generateIdentityId() external onlyContracts returns (uint72) {
-        return _identityId++;
+        unchecked { return _identityId++; }
     }
 
     function _checkHub() internal view virtual {

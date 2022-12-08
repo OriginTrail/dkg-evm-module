@@ -53,14 +53,14 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
         d = 1;
     }
 
+    modifier onlyHubOwner() {
+        _checkHubOwner();
+        _;
+    }
+
     function initialize() public onlyHubOwner {
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
-    }
-
-    modifier onlyHubOwner() {
-        _checkOwner();
-        _;
     }
 
     function id() external pure virtual override returns (uint8) {
@@ -153,8 +153,8 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
         d = d_;
     }
 
-    function _checkOwner() internal view virtual {
-        require (msg.sender == hub.owner(), "Fn can only be called by owner");
+    function _checkHubOwner() internal view virtual {
+        require (msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
 }

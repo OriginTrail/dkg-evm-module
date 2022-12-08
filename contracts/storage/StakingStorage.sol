@@ -37,10 +37,6 @@ contract StakingStorage is Named, Versioned {
         initialize();
     }
 
-    function initialize() public onlyHubOwner {
-        tokenContract = IERC20(hub.getContractAddress("Token"));
-    }
-
     modifier onlyHubOwner() {
         _checkHubOwner();
         _;
@@ -51,9 +47,8 @@ contract StakingStorage is Named, Versioned {
         _;
     }
 
-    modifier onlyStakingContract() {
-        _checkStaking();
-        _;
+    function initialize() public onlyHubOwner {
+        tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -98,20 +93,16 @@ contract StakingStorage is Named, Versioned {
         return withdrawalRequests[identityId][staker].amount != 0;
     }
 
-    function transferStake(address receiver, uint96 stakeAmount) external onlyStakingContract {
+    function transferStake(address receiver, uint96 stakeAmount) external onlyContracts {
         tokenContract.transfer(receiver, stakeAmount);
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
     function _checkHubOwner() internal view virtual {
         require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
-    function _checkStaking() internal view virtual {
-        require(msg.sender == hub.getContractAddress("Staking"), "Fn can only be called by Staking");
+    function _checkHub() internal view virtual {
+        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
 }

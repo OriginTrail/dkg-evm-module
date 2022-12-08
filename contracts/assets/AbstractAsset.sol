@@ -4,8 +4,9 @@ pragma solidity ^0.8.4;
 
 import { Hub } from "../Hub.sol";
 import { Named } from "../interface/Named.sol";
+import { Versioned } from "../interface/Versioned.sol";
 
-abstract contract AbstractAsset is Named {
+abstract contract AbstractAsset is Named, Versioned {
 
     Hub public hub;
 

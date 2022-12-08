@@ -2,52 +2,38 @@
 
 pragma solidity ^0.8.4;
 
-import { AbstractAsset } from "./AbstractAsset.sol";
 import { Assertion } from "../Assertion.sol";
+import { Hub } from "../Hub.sol";
 import { ServiceAgreementV1 } from "../ServiceAgreementV1.sol";
 import { Named } from "../interface/Named.sol";
+import { Versioned } from "../interface/Versioned.sol";
+import { ContentAssetStorage } from "../storage/assets/ContentAssetStorage.sol";
+import { ContentAssetStructs } from "../structs/assets/ContentAssetStructs.sol";
 import { ServiceAgreementStructsV1 } from "../structs/ServiceAgreementStructsV1.sol";
-import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-contract ContentAsset is AbstractAsset, ERC721 {
+contract ContentAsset is Named, Versioned {
 
     event AssetCreated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
     event AssetUpdated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
 
-    struct AssetInputArgs {
-        bytes32 assertionId;
-        uint128 size;
-        uint32 triplesNumber;
-        uint96 chunksNumber;
-        uint16 epochsNumber;
-        uint96 tokenAmount;
-        uint8 scoreFunctionId;
-    }
+    string constant private _NAME = "ContentAsset";
+    string constant private _VERSION = "1.0.0";
 
-    struct Asset {
-        bytes32[] assertionIds;
-    }
-
-    uint256 private _tokenId;
-
+    Hub public hub;
     Assertion public assertionContract;
+    ContentAssetStorage public contentAssetStorage;
     ServiceAgreementV1 public serviceAgreementV1;
 
-    // tokenId => Asset
-    mapping (uint256 => Asset) assets;
+    constructor(address hubAddress) {
+        require(hubAddress != address(0));
 
-    // keccak256(tokenId + assertionId) => issuer
-    mapping(bytes32 => address) public issuers;
-
-    constructor(address hubAddress)
-        AbstractAsset(hubAddress)
-        ERC721("ContentAsset", "DKG")
-    {
+		hub = Hub(hubAddress);
         initialize();
     }
 
     function initialize() public onlyHubOwner {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));
+        contentAssetStorage = ContentAssetStorage(hub.getAssetStorageAddress("ContentAssetStorage"));
         serviceAgreementV1 = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
     }
 
@@ -61,13 +47,19 @@ contract ContentAsset is AbstractAsset, ERC721 {
         _;
     }
 
-    function name() public view override(ERC721, Named) returns (string memory) {
-        return ERC721.name();
+    function name() external pure override returns (string memory) {
+        return _NAME;
     }
 
-    function createAsset(AssetInputArgs calldata args) external {
-        uint256 tokenId = _tokenId++;
-        _mint(msg.sender, tokenId);
+    function version() external pure override returns (string memory) {
+        return _VERSION;
+    }
+
+    function createAsset(ContentAssetStructs.AssetInputArgs calldata args) external {
+        ContentAssetStorage cas = contentAssetStorage;
+
+        uint256 tokenId = cas.generateTokenId();
+        cas.mint(msg.sender, tokenId);
 
         assertionContract.createAssertion(
             args.assertionId,
@@ -75,8 +67,8 @@ contract ContentAsset is AbstractAsset, ERC721 {
             args.triplesNumber,
             args.chunksNumber
         );
-        assets[tokenId].assertionIds.push(args.assertionId);
-        issuers[keccak256(abi.encodePacked(tokenId, args.assertionId))] = msg.sender;
+        cas.setAssetionIssuer(tokenId, args.assertionId, msg.sender);
+        cas.pushAssertionId(tokenId, args.assertionId);
 
         serviceAgreementV1.createServiceAgreement(
             ServiceAgreementStructsV1.ServiceAgreementInputArgs({
@@ -94,23 +86,12 @@ contract ContentAsset is AbstractAsset, ERC721 {
         emit AssetCreated(address(this), tokenId, args.assertionId);
     }
 
-    function getAssertionIds(uint256 tokenId) public view override returns (bytes32[] memory) {
-        return assets[tokenId].assertionIds;
-    }
-
-    function getAssertionIssuer(uint256 tokenId, bytes32 assertionId) external view returns (address) {
-        return issuers[keccak256(abi.encodePacked(tokenId, assertionId))];
-    }
-
-    function assertionExists(bytes32 assetAssertionId) public view returns (bool) {
-        return issuers[assetAssertionId] != address(0);
-    }
-
-    function _checkAssetOwner(uint256 tokenId) internal view virtual {
-        require(msg.sender == ownerOf(tokenId), "Only asset owner can use this fn");
-    }
-
     function _checkHubOwner() internal view virtual {
         require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
+
+    function _checkAssetOwner(uint256 tokenId) internal view virtual {
+        require(msg.sender == contentAssetStorage.ownerOf(tokenId), "Only asset owner can use this fn");
+    }
+
 }
