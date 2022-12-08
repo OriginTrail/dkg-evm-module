@@ -103,7 +103,7 @@ module.exports = async (deployer, network, accounts) => {
                 await hub.setContractAddress(contractName, contractInstance.address);
             }
             if (setAssetInHub) {
-                await hub.setAssetContractAddress(contractName, contractInstance.address);
+                await hub.setAssetStorageAddress(contractName, contractInstance.address);
             }
             deployedContracts.contracts[contractName] = {
                 evmAddress: contractInstance.address,

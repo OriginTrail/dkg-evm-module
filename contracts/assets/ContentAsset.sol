@@ -33,7 +33,7 @@ contract ContentAsset is Named, Versioned {
 
     function initialize() public onlyHubOwner {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));
-        contentAssetStorage = ContentAssetStorage(hub.getContractAddress("ContentAssetStorage"));
+        contentAssetStorage = ContentAssetStorage(hub.getAssetStorageAddress("ContentAssetStorage"));
         serviceAgreementV1 = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
     }
 
