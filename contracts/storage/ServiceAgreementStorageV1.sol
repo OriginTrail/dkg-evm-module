@@ -199,7 +199,7 @@ contract ServiceAgreementStorageV1 is Named, Versioned {
         return commitSubmissions[commitId];
     }
 
-    function getCommitSubmissionsIdentityId(bytes32 commitId) external view returns (uint72) {
+    function getCommitSubmissionIdentityId(bytes32 commitId) external view returns (uint72) {
         return commitSubmissions[commitId].identityId;
     }
 

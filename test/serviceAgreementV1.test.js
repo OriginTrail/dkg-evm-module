@@ -10,14 +10,14 @@ const { default: Web3 } = require('web3');
 
 const Hub = artifacts.require('Hub');
 const ParametersStorage = artifacts.require('ParametersStorage');
-const ContentAsset = artifacts.require('ContentAsset');
+const ContentAssetStorage = artifacts.require('ContentAssetStorage');
 const ServiceAgreementV1 = artifacts.require('ServiceAgreementV1');
 const ERC20Token = artifacts.require('ERC20Token');
 
 // Contracts used in test
 let hub;
 let parametersStorage;
-let contentAsset;
+let contentAssetStorage;
 let serviceAgreementV1;
 let erc20Token;
 
@@ -38,16 +38,16 @@ contract('DKG v6 Service Agreement V1 contract', async (accounts) => {
     before(async () => {
         hub = await Hub.deployed();
         parametersStorage = await ParametersStorage.deployed();
-        contentAsset = await ContentAsset.deployed();
+        contentAssetStorage = await ContentAssetStorage.deployed();
         serviceAgreementV1 = await ServiceAgreementV1.deployed();
         erc20Token = await ERC20Token.deployed();
 
         fakeAssetContract = accounts[0];
-        await hub.setAssetContractAddress('FakeAsset', fakeAssetContract);
+        await hub.setContractAddress('FakeAsset', fakeAssetContract);
 
         serviceAgreementInputArgs = {
             assetCreator: accounts[0],
-            assetContract: contentAsset.address,
+            assetContract: contentAssetStorage.address,
             tokenId: '1',
             keyword: ethers.utils.hexlify(ethers.utils.toUtf8Bytes('12345')),
             hashFunctionId: '1',

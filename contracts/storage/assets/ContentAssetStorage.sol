@@ -56,7 +56,7 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
         return assets[tokenId].assertionIds;
     }
 
-    function setAssetionIssuer(uint256 tokenId, bytes32 assertionId, address issuer)
+    function setAssertionIssuer(uint256 tokenId, bytes32 assertionId, address issuer)
         external
         onlyContracts
     {

@@ -360,7 +360,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         bytes32 nextCommitId = sasV1.getAgreementEpochSubmissionHead(agreementId, args.epoch);
         uint32 r0 = parametersStorage.R0();
         uint8 i;
-        while ((identityId != sasV1.getCommitSubmissionsIdentityId(nextCommitId)) && (i < r0)) {
+        while ((identityId != sasV1.getCommitSubmissionIdentityId(nextCommitId)) && (i < r0)) {
             nextCommitId = keccak256(
                 abi.encodePacked(agreementId, args.epoch, sasV1.getCommitSubmissionNextIdentityId(nextCommitId))
             );
