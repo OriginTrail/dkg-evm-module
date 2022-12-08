@@ -24,6 +24,7 @@ build/contracts/Address.json
 build/contracts/ByteArr.json
 build/contracts/Context.json
 build/contracts/ERC20.json
+build/contracts/ERC20Burnable.json
 build/contracts/ERC165.json
 build/contracts/ERC721.json
 build/contracts/ERC734.json
@@ -57,3 +58,4 @@ build/contracts/MerkleProof.json
 build/contracts/Migrations.json
 build/contracts/Ownable.json
 build/contracts/Strings.json
+build/contracts/PRBMath*.json
