@@ -1,0 +1,76 @@
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.4;
+
+import { AbstractAsset } from "../../assets/AbstractAsset.sol";
+import { Hub } from "../../Hub.sol";
+import { ContentAssetStructs } from "../../structs/assets/ContentAssetStructs.sol";
+
+contract ContentAssetStorage is AbstractAsset {
+
+    string constant private _NAME = "ContentAssetStorage";
+    string constant private _VERSION = "1.0.0";
+
+    uint256 private _tokenId;
+
+    // tokenId => Asset
+    mapping (uint256 => ContentAssetStructs.Asset) assets;
+
+    // keccak256(tokenId + assertionId + assertionIdx) => issuer
+    mapping(bytes32 => address) public issuers;
+
+    constructor(address hubAddress) AbstractAsset(hubAddress) {}
+
+    modifier onlyContracts() {
+        _checkHub();
+        _;
+    }
+
+    function name() external pure override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure override returns (string memory) {
+        return _VERSION;
+    }
+
+    function generateTokenId() external onlyContracts returns (uint256) {
+        unchecked { return _tokenId++; }
+    }
+
+    function getAsset(uint256 tokenId) external view returns (ContentAssetStructs.Asset memory) {
+        return assets[tokenId];
+    }
+
+    function pushAssertionId(uint256 tokenId, bytes32 assertionId) external onlyContracts {
+        assets[tokenId].assertionIds.push(assertionId);
+    }
+
+    function getAssertionIds(uint256 tokenId) public view override returns (bytes32[] memory) {
+        return assets[tokenId].assertionIds;
+    }
+
+    function setAssetionIssuer(uint256 tokenId, bytes32 assertionId, address issuer)
+        external
+        onlyContracts
+    {
+        issuers[keccak256(abi.encodePacked(tokenId, assertionId, this.getAssertionIdsLength(tokenId)))] = issuer;
+    }
+
+    function getAssertionIssuer(uint256 tokenId, bytes32 assertionId, uint256 assertionIndex)
+        external
+        view
+        returns (address)
+    {
+        return issuers[keccak256(abi.encodePacked(tokenId, assertionId, assertionIndex))];
+    }
+
+    function assertionExists(bytes32 assetAssertionId) external view returns (bool) {
+        return issuers[assetAssertionId] != address(0);
+    }
+
+    function _checkHub() internal view virtual {
+        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
+    }
+
+}

@@ -43,11 +43,6 @@ contract ServiceAgreementStorageV1 is Named, Versioned {
         _;
     }
 
-    modifier onlyStakingContract() {
-        _checkStakingContract();
-        _;
-    }
-
     function name() external pure virtual override returns (string memory) {
         return _NAME;
     }
@@ -240,20 +235,16 @@ contract ServiceAgreementStorageV1 is Named, Versioned {
         return commitSubmissions[commitId].identityId != 0;
     }
 
-    function transferReward(address receiver, uint96 rewardAmount) external onlyStakingContract {
+    function transferReward(address receiver, uint96 rewardAmount) external onlyContracts {
         tokenContract.transfer(receiver, rewardAmount);
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
     function _checkHubOwner() internal view virtual {
         require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
-    function _checkStakingContract() internal view virtual {
-        require(msg.sender == hub.getContractAddress("Staking"), "Fn can only be called by staking");
+    function _checkHub() internal view virtual {
+        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
 }

@@ -39,11 +39,6 @@ contract ProfileStorage is Named, Versioned {
         initialize();
     }
 
-    function initialize() public onlyHubOwner {
-        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
-        tokenContract = IERC20(hub.getContractAddress("Token"));
-    }
-
     modifier onlyHubOwner() {
         _checkHubOwner();
         _;
@@ -52,6 +47,11 @@ contract ProfileStorage is Named, Versioned {
     modifier onlyContracts() {
         _checkHub();
         _;
+    }
+
+    function initialize() public onlyHubOwner {
+        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+        tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -158,11 +158,11 @@ contract ProfileStorage is Named, Versioned {
         tokenContract.transfer(receiver, amount);
     }
 
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
-    }
-
     function _checkHubOwner() internal view virtual {
         require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+    }
+
+    function _checkHub() internal view virtual {
+        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

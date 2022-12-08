@@ -12,6 +12,7 @@ var AssertionStorage = artifacts.require('AssertionStorage');
 var AssertionContract = artifacts.require('Assertion');
 var ServiceAgreementStorageV1 = artifacts.require('ServiceAgreementStorageV1');
 var ServiceAgreementContractV1 = artifacts.require('ServiceAgreementV1');
+var ContentAssetStorage = artifacts.require('ContentAssetStorage');
 var ContentAsset = artifacts.require('ContentAsset');
 var ERC20Token = artifacts.require('ERC20Token');
 var IdentityStorage = artifacts.require('IdentityStorage');
@@ -57,8 +58,8 @@ const testAccounts = ["0xd6879C0A03aDD8cFc43825A42a3F3CF44DB7D2b9",
 module.exports = async (deployer, network, accounts) => {
     let hub, parametersStorage, hashingProxy, sha256Contract, scoringProxy,
         log2pldsfContract, shardingTableStorage, shardingTableContract,
-        serviceAgreementStorageV1, serviceAgreementContractV1, contentAsset,
-        erc20Token, identityStorage, identityContract, profileStorage,
+        serviceAgreementStorageV1, serviceAgreementContractV1, contentAssetStorage,
+        contentAsset, erc20Token, identityStorage, identityContract, profileStorage,
         profileContract, stakingStorage, stakingContract, withdrawalStorage;
 
     const filePath = `reports/${network}_contracts.json`;
@@ -182,7 +183,8 @@ module.exports = async (deployer, network, accounts) => {
                     deployedContracts,
                     'ParametersStorage',
                     ParametersStorage,
-                    deployerAddress
+                    deployerAddress,
+                    true
                 );
                 /* ---------------------------------------------------------------------------------------- */
 
@@ -201,7 +203,8 @@ module.exports = async (deployer, network, accounts) => {
                     deployedContracts,
                     'HashingProxy',
                     HashingProxy,
-                    deployerAddress
+                    deployerAddress,
+                    true
                 );
                 sha256Contract = await initializeContract(
                     deployedContracts,
@@ -219,7 +222,8 @@ module.exports = async (deployer, network, accounts) => {
                     deployedContracts,
                     'ScoringProxy',
                     ScoringProxy,
-                    deployerAddress
+                    deployerAddress,
+                    true
                 );
 
                 log2pldsfContract = await initializeContract(
@@ -288,6 +292,16 @@ module.exports = async (deployer, network, accounts) => {
                     deployedContracts,
                     'ServiceAgreementStorageV1',
                     ServiceAgreementStorageV1,
+                    deployerAddress,
+                    true
+                );
+                /* ---------------------------------------------------------------------------------------- */
+
+                /* ----------------------------------Content Asset Storage--------------------------------- */
+                contentAssetStorage = await initializeContract(
+                    deployedContracts,
+                    'ContentAssetStorage',
+                    ContentAssetStorage,
                     deployerAddress,
                     true
                 );
