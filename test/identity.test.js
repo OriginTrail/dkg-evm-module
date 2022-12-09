@@ -1,3 +1,4 @@
+const { ethers } = require('ethers');
 const {assert} = require('chai');
 const truffleAssert = require('truffle-assertions');
 const Hub = artifacts.require('Hub');
@@ -90,6 +91,30 @@ contract('DKG v6 Identity', async (accounts) => {
     it('Get keys by purpose, un-existent identity id; expect to fail', async () => {
         const keys = await identityStorage.getKeysByPurpose(356, OPERATIONAL_KEY);
         assert(keys.length === 0, 'Failed to get empty keys array for un-existent identity id');
+    });
+
+    it('Create an identity, add another admin key, then remove old; expect to work', async () => {
+        let opKey = ethers.utils.keccak256(ethers.utils.solidityPack(["address"], [accounts[3]])),
+            adminKey = ethers.utils.keccak256(ethers.utils.solidityPack(["address"], [accounts[4]])),
+            newAdminKey = ethers.utils.keccak256(ethers.utils.solidityPack(["address"], [accounts[5]]));
+
+        let result = await identity.createIdentity(accounts[3], accounts[4], {from: accounts[0]});
+        truffleAssert.eventEmitted(result, 'IdentityCreated');
+
+        const identityId = await identityStorage.getIdentityId(accounts[3]);
+
+        assert.equal(await identityStorage.keyHasPurpose(identityId, adminKey, ADMIN_KEY), true);
+        assert.equal(await identityStorage.keyHasPurpose(identityId, opKey, OPERATIONAL_KEY), true);
+
+        let resultAddKey = await identity.addKey(identityId, newAdminKey, ADMIN_KEY, ECDSA, {from: accounts[4]});
+
+        // truffleAssert.eventEmitted(resultAddKey, 'KeyAdded');
+        assert.equal(await identityStorage.keyHasPurpose(identityId, newAdminKey, ADMIN_KEY), ADMIN_KEY);
+
+        let resultRemoveKey = await identity.removeKey(identityId, adminKey, {from: accounts[5]});
+        // truffleAssert.eventEmitted(resultRemoveKey, 'KeyRemoved');
+
+        assert.equal(await identityStorage.keyHasPurpose(identityId, adminKey, ADMIN_KEY), false);
     });
 
     // it('Create an identity; expect identity created', async () => {
