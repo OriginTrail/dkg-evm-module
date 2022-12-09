@@ -2,12 +2,11 @@
 
 pragma solidity ^0.8.4;
 
-import { Hub } from "../Hub.sol";
+import { Guardian } from "../Guardian.sol";
 import { Named } from "../interface/Named.sol";
 import { Versioned } from "../interface/Versioned.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract StakingStorage is Named, Versioned {
+contract StakingStorage is Named, Versioned, Guardian {
 
     string constant private _NAME = "StakingStorage";
     string constant private _VERSION = "1.0.0";
@@ -16,9 +15,6 @@ contract StakingStorage is Named, Versioned {
         uint96 amount;
         uint256 timestamp;
     }
-
-    Hub public hub;
-    IERC20 public tokenContract;
 
     // identityId => totalStake
     mapping(uint72 => uint96) public totalStakes;
@@ -29,26 +25,11 @@ contract StakingStorage is Named, Versioned {
     // identityId => withdrawalRequest
     mapping(uint72 => mapping(address => WithdrawalRequest)) public withdrawalRequests;
 
-
-    constructor(address hubAddress) {
-        require(hubAddress != address(0));
-
-        hub = Hub(hubAddress);
-        initialize();
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
+    constructor(address hubAddress) Guardian(hubAddress) {}
 
     modifier onlyContracts() {
         _checkHub();
         _;
-    }
-
-    function initialize() public onlyHubOwner {
-        tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -95,10 +76,6 @@ contract StakingStorage is Named, Versioned {
 
     function transferStake(address receiver, uint96 stakeAmount) external onlyContracts {
         tokenContract.transfer(receiver, stakeAmount);
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
     function _checkHub() internal view virtual {

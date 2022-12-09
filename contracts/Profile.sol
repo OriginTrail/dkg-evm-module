@@ -143,9 +143,14 @@ contract Profile is Named, Versioned {
     // }
 
     // function addNewNodeIdHash(uint72 identityId, uint8 hashFunctionId) external onlyOperational(identityId) {
-    //     require(hashingProxy.isHashFunction(hashFunctionId), "Hash function doesn't exist");
+    //     HashingProxy hp = hashingProxy;
+    //     require(hp.isHashFunction(hashFunctionId), "Hash function doesn't exist");
 
-    //     profileStorage.setNodeAddress(identityId, hashFunctionId);
+    //     profileStorage.setNodeAddress(
+    //         identityId,
+    //         hashFunctionId,
+    //         hp.callHashFunction(hashFunctionId, profileStorage.getNodeId(identityId))
+    //     );
     // }
 
     // TODO: Define where it can be called, change internal modifier
@@ -153,10 +158,19 @@ contract Profile is Named, Versioned {
         ProfileStorage ps = profileStorage;
         HashingProxy hp = hashingProxy;
 
+        bytes memory nodeId = ps.getNodeId(identityId);
+        bytes32 nodeAddress;
+
         UnorderedIndexableContractDynamicSetLib.Contract[] memory hashFunctions = hp.getAllHashFunctions();
         uint256 hashFunctionsNumber = hashFunctions.length;
+        uint8 hashFunctionId;
         for (uint8 i; i < hashFunctionsNumber; ) {
-            ps.setNodeAddress(identityId, hashFunctions[i].id);
+            hashFunctionId = hashFunctions[i].id;
+            nodeAddress = hp.callHashFunction(
+                hashFunctionId,
+                nodeId
+            );
+            ps.setNodeAddress(identityId, hashFunctionId, nodeAddress);
             unchecked { i++; }
         }
     }

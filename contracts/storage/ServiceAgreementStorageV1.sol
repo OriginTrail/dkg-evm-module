@@ -2,19 +2,15 @@
 
 pragma solidity ^0.8.4;
 
-import { Hub } from "../Hub.sol";
+import { Guardian } from "../Guardian.sol";
 import { Named } from "../interface/Named.sol";
 import { Versioned } from "../interface/Versioned.sol";
 import { ServiceAgreementStructsV1 } from "../structs/ServiceAgreementStructsV1.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract ServiceAgreementStorageV1 is Named, Versioned {
+contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
 
     string constant private _NAME = "ServiceAgreementStorageV1";
     string constant private _VERSION = "1.0.0";
-
-    Hub public hub;
-    IERC20 public tokenContract;
 
     // CommitId [keccak256(agreementId + epoch + identityId)] => CommitSubmission
     mapping(bytes32 => ServiceAgreementStructsV1.CommitSubmission) commitSubmissions;
@@ -22,21 +18,7 @@ contract ServiceAgreementStorageV1 is Named, Versioned {
     // AgreementId [hash(asset type contract + tokenId + key)] => ServiceAgreement
     mapping(bytes32 => ServiceAgreementStructsV1.ServiceAgreement) serviceAgreements;
 
-    constructor (address hubAddress) {
-        require(hubAddress != address(0));
-
-        hub = Hub(hubAddress);
-        initialize();
-    }
-
-    function initialize() public onlyHubOwner {
-        tokenContract = IERC20(hub.getContractAddress("Token"));
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
+    constructor (address hubAddress) Guardian(hubAddress) {}
 
     modifier onlyContracts() {
         _checkHub();
@@ -237,10 +219,6 @@ contract ServiceAgreementStorageV1 is Named, Versioned {
 
     function transferReward(address receiver, uint96 rewardAmount) external onlyContracts {
         tokenContract.transfer(receiver, rewardAmount);
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
     function _checkHub() internal view virtual {
