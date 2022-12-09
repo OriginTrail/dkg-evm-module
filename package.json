@@ -19,7 +19,9 @@
     "truffle_deploy:otp_testnet": "truffle migrate --network otp_testnet --reset",
     "truffle_deploy:otp_mainnet": "truffle migrate --network otp_mainnet --reset",
     "deploy:devnet": "node scripts/deploy.js --environment otp_devnet",
-    "deploy:testnet": "node scripts/deploy.js --environment otp_testnet"
+    "deploy:testnet": "node scripts/deploy.js --environment otp_testnet",
+    "deploy:mainnet": "node scripts/deploy.js --environment otp_mainnet",
+    "start:whitelist:mainnet": "node scripts/whitelist.js --environment otp_mainnet"
   },
   "author": "",
   "license": "ISC",
