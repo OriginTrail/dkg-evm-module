@@ -2,21 +2,15 @@
 
 pragma solidity ^0.8.4;
 
-import { HashingProxy } from "../HashingProxy.sol";
-import { Hub } from "../Hub.sol";
+import { Guardian } from "../Guardian.sol";
 import { Shares } from "../Shares.sol";
 import { Named } from "../interface/Named.sol";
 import { Versioned } from "../interface/Versioned.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract ProfileStorage is Named, Versioned {
+contract ProfileStorage is Named, Versioned, Guardian {
 
     string constant private _NAME = "ProfileStorage";
     string constant private _VERSION = "1.0.0";
-
-    Hub public hub;
-    HashingProxy public hashingProxy;
-    IERC20 public tokenContract;
 
     struct ProfileDefinition{
         bytes nodeId;
@@ -38,26 +32,11 @@ contract ProfileStorage is Named, Versioned {
     // shares token ID => isTaken?
     mapping(string => bool) public sharesSymbols;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0));
-
-        hub = Hub(hubAddress);
-        initialize();
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
+    constructor(address hubAddress) Guardian(hubAddress) {}
 
     modifier onlyContracts() {
         _checkHub();
         _;
-    }
-
-    function initialize() public onlyHubOwner {
-        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
-        tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -149,11 +128,8 @@ contract ProfileStorage is Named, Versioned {
         return profiles[identityId].nodeAddresses[hashFunctionId];
     }
 
-    function setNodeAddress(uint72 identityId, uint8 hashFunctionId) external onlyContracts {
-        profiles[identityId].nodeAddresses[hashFunctionId] = hashingProxy.callHashFunction(
-            hashFunctionId,
-            profiles[identityId].nodeId
-        );
+    function setNodeAddress(uint72 identityId, uint8 hashFunctionId, bytes32 nodeAddress) external onlyContracts {
+        profiles[identityId].nodeAddresses[hashFunctionId] = nodeAddress;
     }
 
     function profileExists(uint72 identityId) external view returns (bool) {
@@ -162,10 +138,6 @@ contract ProfileStorage is Named, Versioned {
 
     function transferTokens(address receiver, uint96 amount) external onlyContracts {
         tokenContract.transfer(receiver, amount);
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
     function _checkHub() internal view virtual {
