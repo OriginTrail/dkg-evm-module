@@ -1,67 +1,130 @@
-const Profile = artifacts.require("Profile");
-const Hub = artifacts.require("Hub");
-const Identity = artifacts.require("Identity");
-const ERC20Token = artifacts.require('ERC20Token');
-const Staking = artifacts.require("Staking");
-const IdentityStorage = artifacts.require("IdentityStorage");
-const ProfileStorage = artifacts.require("ProfileStorage");
-const WhitelistStorage = artifacts.require("WhitelistStorage");
-const HashingProxy = artifacts.require("HashingProxy");
 const { expect } = require("chai");
+const {
+    constants,    // Common constants, like the zero address and largest integers
+    expectEvent,  // Assertions for emitted events
+    expectRevert, // Assertions for transactions that should fail
+} = require('@openzeppelin/test-helpers');
+const { ethers } = require("ethers");
 
-contract("Profile", () => {
-//     let hub;
-//     let profile;
-//     let token;
-//     let profileStorage;
-//     let owner;
-//     let nonOwner;
-//     let identityStorage;
-//
-//     const nodeIdString = "QmWyf2dtqJnhuCpzEDTNmNFYc5tjxTrXhGcUUmGHdg2gtj";
-//     const nodeId = web3.utils.asciiToHex(nodeIdString);
-//
-//     beforeEach(async () => {
-//         // Deploy the contracts
-//         token = await ERC20Token.deployed();
-//         hub = await Hub.new();
-//         owner = await hub.owner();
-//         nonOwner = (await web3.eth.getAccounts())[1];
-//         identityStorage = await IdentityStorage.new(hub.address);
-//         // Initialize the contracts
-//         await hub.setContractAddress("Identity", Identity.address, {from: owner});
-//         await hub.setContractAddress("Staking", Staking.address, {from: owner});
-//         await hub.setContractAddress("IdentityStorage", identityStorage.address, {from: owner});
-//         await hub.setContractAddress("HashingProxy", HashingProxy.address, {from: owner});
-//         await hub.setContractAddress("Token", token.address, {from: owner});
-//
-//         profileStorage = await ProfileStorage.new(hub.address);
-//         await hub.setContractAddress("ProfileStorage", ProfileStorage.address, {from: owner});
-//         await hub.setContractAddress("WhitelistStorage", WhitelistStorage.address, {from: owner});
-//
-//         profile = await Profile.new(hub.address);
-//         await hub.setContractAddress("Profile", profile.address, {from: owner});
-//         // await profile.initialize({from: owner});
-//     });
-//
-//     it("should allow creating a profile", async () => {
-// // Create a profile
-//         const tx1 = await profile.createProfile(owner, nodeId, {from: owner});
-//         expect(tx1.logs[0].args.identityId.toNumber()).to.equal(1);
-//         expect(web3.utils.hexToUtf8(tx1.logs[0].args.nodeId)).to.equal(nodeIdString);
-//         // todo validate profile is created
-//     });
-//
-//     it("should allow updating the ask price", async () => {
-// // Create a profile
-//
-//         const identityId = (await profile.createProfile(owner, nodeId, {from: owner})).logs[0].args.identityId;
-//         // Update the ask price
-//         const tx = await profile.setAsk(identityId, 1000, {from: owner});
-//         expect(tx.logs[0].args.identityId).to.equal(identityId);
-//         expect(tx.logs[0].args.nodeId).to.equal(nodeId);
-//         expect(tx.logs[0].args.ask).to.equal(1000);
-//     });
+const Hub = artifacts.require("Hub");
+const ERC20Token = artifacts.require('ERC20Token');
+const IdentityStorage = artifacts.require('IdentityStorage');
+const Identity = artifacts.require('Identity');
+const Profile = artifacts.require("Profile");
+const WhitelistStorage = artifacts.require("WhitelistStorage");
+
+let hub;
+let erc20Token;
+let profile;
+let whitelistStorage;
+
+let account0Key;
+let nodeIdString;
+let nodeId;
+
+contract("Profile", (accounts) => {
+
+    before(async () => {
+        hub = await Hub.deployed();
+        erc20Token = await ERC20Token.deployed();
+        profile = await Profile.deployed();
+        whitelistStorage = await WhitelistStorage.deployed();
+
+        account0Key = ethers.utils.keccak256(ethers.utils.solidityPack(["address"], [accounts[0]]));
+        account1Key = ethers.utils.keccak256(ethers.utils.solidityPack(["address"], [accounts[1]]));
+        nodeIdString = "QmWyf2dtqJnhuCpzEDTNmNFYc5tjxTrXhGcUUmGHdg2gtj";
+        nodeId = web3.utils.asciiToHex(nodeIdString);
+        nodeId1String = "QmWyf2dtqJnhuCpzEDTNmNFYc5tjxTrXhGcUUmGHdg2gtg";
+        nodeId1 = web3.utils.asciiToHex(nodeId1String);
+
+        const promises = [];
+        const tokenAmount = 1000000;
+
+        for (let i = 0; i < accounts.length; i += 1) {
+            promises.push(erc20Token.mint(
+                accounts[i],
+                tokenAmount,
+                {from: accounts[0]},
+            ));
+        }
+        await Promise.all(promises);
+    });
+
+    it("should allow creating a profile", async () => {
+        const receipt = await profile.createProfile(accounts[0], nodeId, "Token", "TKN", {from: accounts[0]});
+
+        await expectEvent.inLogs(receipt.logs, 'ProfileCreated', {
+            identityId: '1',
+            nodeId: nodeId,
+        });
+
+        await expectEvent.inTransaction(receipt.tx, Identity, 'IdentityCreated', {
+            identityId: '1',
+            operationalKey: account0Key,
+            adminKey: account0Key,
+        });
+
+        await expectEvent.inTransaction(receipt.tx, IdentityStorage, 'KeyAdded', {
+            identityId: '1',
+            key: account0Key,
+            purpose: '1',
+            keyType: '1',
+        });
+
+        await expectEvent.inTransaction(receipt.tx, IdentityStorage, 'KeyAdded', {
+            identityId: '1',
+            key: account0Key,
+            purpose: '2',
+            keyType: '1'
+        });
+    });
+
+    it("should not allow creating profile (whitelist enabled) for node not in the whitelist", async () => {
+        await whitelistStorage.enableWhitelist();
+
+        await expectRevert(
+            profile.createProfile(accounts[0], nodeId, "Token", "TKN", {from: accounts[0]}),
+            "Address isn't whitelisted",
+        );
+    });
+
+    it("should allow creating profile (whitelist enabled) for node in the whitelist", async () => {
+        await whitelistStorage.enableWhitelist();
+
+        await whitelistStorage.whitelistAddress(accounts[1]);
+
+        const receipt = await profile.createProfile(accounts[1], nodeId1, "Token1", "TKN1", {from: accounts[1]});
+
+        await expectEvent.inLogs(receipt.logs, 'ProfileCreated', {
+            identityId: '2',
+            nodeId: nodeId1,
+        });
+
+        await expectEvent.inTransaction(receipt.tx, Identity, 'IdentityCreated', {
+            identityId: '2',
+            operationalKey: account1Key,
+            adminKey: account1Key,
+        });
+
+        await expectEvent.inTransaction(receipt.tx, IdentityStorage, 'KeyAdded', {
+            identityId: '2',
+            key: account1Key,
+            purpose: '1',
+            keyType: '1',
+        });
+
+        await expectEvent.inTransaction(receipt.tx, IdentityStorage, 'KeyAdded', {
+            identityId: '2',
+            key: account1Key,
+            purpose: '2',
+            keyType: '1'
+        });
+
+        await expectRevert(
+            profile.createProfile(accounts[2], nodeId, "Token2", "TKN2", {from: accounts[2]}),
+            "Address isn't whitelisted",
+        );
+    });
 //
 //     it("should allow getting the profile", async () => {
 // // Create a profile
@@ -184,8 +247,3 @@ contract("Profile", () => {
 //     });
 
 });
-
-
-
-
-
