@@ -15,7 +15,7 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"getOwners\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interface/ICustodian.sol\":\"ICustodian\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/interface/ICustodian.sol\":{\"keccak256\":\"0x4932357469d025775094deea309798b8ed4d1a6da04230eec4367e10bf81f382\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://07bfd205f6dd25224063cd224351034c6ef9affbf8e0cd7f5ec6269571e74523\",\"dweb:/ipfs/QmPsaTZxFXpzhQJiZfYP94XjZjMbVkWNLS4FNehbo2A6GF\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"getOwners\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interface/ICustodian.sol\":\"ICustodian\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[],\"viaIR\":true},\"sources\":{\"project:/contracts/interface/ICustodian.sol\":{\"keccak256\":\"0x4932357469d025775094deea309798b8ed4d1a6da04230eec4367e10bf81f382\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://07bfd205f6dd25224063cd224351034c6ef9affbf8e0cd7f5ec6269571e74523\",\"dweb:/ipfs/QmPsaTZxFXpzhQJiZfYP94XjZjMbVkWNLS4FNehbo2A6GF\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "immutableReferences": {},
@@ -29,15 +29,15 @@
     "absolutePath": "project:/contracts/interface/ICustodian.sol",
     "exportedSymbols": {
       "ICustodian": [
-        9405
+        12785
       ]
     },
-    "id": 9406,
+    "id": 12786,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 9398,
+        "id": 12778,
         "literals": [
           "solidity",
           "^",
@@ -45,7 +45,7 @@
           ".4"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:23:30"
+        "src": "33:23:37"
       },
       {
         "abstract": false,
@@ -54,42 +54,42 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 9405,
+        "id": 12785,
         "linearizedBaseContracts": [
-          9405
+          12785
         ],
         "name": "ICustodian",
-        "nameLocation": "68:10:30",
+        "nameLocation": "68:10:37",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "functionSelector": "a0e67e2b",
-            "id": 9404,
+            "id": 12784,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getOwners",
-            "nameLocation": "95:9:30",
+            "nameLocation": "95:9:37",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 9399,
+              "id": 12779,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "104:2:30"
+              "src": "104:2:37"
             },
             "returnParameters": {
-              "id": 9403,
+              "id": 12783,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 9402,
+                  "id": 12782,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9404,
-                  "src": "130:16:30",
+                  "scope": 12784,
+                  "src": "130:16:37",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -98,19 +98,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 9400,
+                      "id": 12780,
                       "name": "address",
                       "nodeType": "ElementaryTypeName",
-                      "src": "130:7:30",
+                      "src": "130:7:37",
                       "stateMutability": "nonpayable",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
                       }
                     },
-                    "id": 9401,
+                    "id": 12781,
                     "nodeType": "ArrayTypeName",
-                    "src": "130:9:30",
+                    "src": "130:9:37",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
                       "typeString": "address[]"
@@ -119,21 +119,21 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "129:18:30"
+              "src": "129:18:37"
             },
-            "scope": 9405,
-            "src": "86:62:30",
+            "scope": 12785,
+            "src": "86:62:37",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 9406,
-        "src": "58:93:30",
+        "scope": 12786,
+        "src": "58:93:37",
         "usedErrors": []
       }
     ],
-    "src": "33:119:30"
+    "src": "33:119:37"
   },
   "compiler": {
     "name": "solc",
@@ -141,7 +141,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-09T11:22:31.887Z",
+  "updatedAt": "2022-12-12T09:47:52.147Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

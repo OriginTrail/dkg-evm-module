@@ -3,10 +3,9 @@ const {
     constants,    // Common constants, like the zero address and largest integers
     expectEvent,  // Assertions for emitted events
     expectRevert, // Assertions for transactions that should fail
-  } = require('@openzeppelin/test-helpers');
+} = require('@openzeppelin/test-helpers');
 const { ethers } = require('ethers');
 const timeMachine = require('ganache-time-traveler');
-const { default: Web3 } = require('web3');
 
 const Hub = artifacts.require('Hub');
 const ParametersStorage = artifacts.require('ParametersStorage');

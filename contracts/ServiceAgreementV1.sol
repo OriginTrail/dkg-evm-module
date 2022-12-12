@@ -17,6 +17,8 @@ import { StakingStorage } from "./storage/StakingStorage.sol";
 import { Named } from "./interface/Named.sol";
 import { Versioned } from "./interface/Versioned.sol";
 import { ServiceAgreementStructsV1 } from "./structs/ServiceAgreementStructsV1.sol";
+import { GeneralErrors } from "./errors/GeneralErrors.sol";
+import { ServiceAgreementErrorsV1 } from "./errors/ServiceAgreementErrorsV1.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
@@ -55,12 +57,9 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint8 hashFunctionId,
         uint72 indexed identityId
     );
-    event Logger(bool value, string message);
 
     string constant private _NAME = "ServiceAgreementV1";
     string constant private _VERSION = "1.0.0";
-
-    bool[4] public _reqs = [true, true, true, true];
 
     Hub public hub;
     HashingProxy public hashingProxy;
@@ -118,12 +117,18 @@ contract ServiceAgreementV1 is Named, Versioned {
         external
         onlyContracts
     {
-        require(args.assetCreator != address(0), "Asset creator cannot be 0x0");
-        require(hub.isAssetStorage(args.assetContract), "Asset Storage not in the hub");
-        require(keccak256(args.keyword) != keccak256(""), "Keyword can't be empty");
-        require(args.epochsNumber != 0, "Epochs number cannot be 0");
-        require(args.tokenAmount != 0, "Token amount cannot be 0");
-        require(scoringProxy.isScoreFunction(args.scoreFunctionId), "Score function doesn't exist");
+        if (args.assetCreator == address(0x0))
+            revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
+        if (!hub.isAssetStorage(args.assetContract))
+            revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(args.assetContract);
+        if (keccak256(args.keyword) == keccak256(""))
+            revert ServiceAgreementErrorsV1.EmptyKeyword();
+        if (args.epochsNumber == 0)
+            revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
+        if (args.tokenAmount == 0)
+            revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+        if (!scoringProxy.isScoreFunction(args.scoreFunctionId))
+            revert ServiceAgreementErrorsV1.ScoreFunctionDoesntExist(args.scoreFunctionId);
 
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
@@ -143,11 +148,10 @@ contract ServiceAgreementV1 is Named, Versioned {
         );
 
         IERC20 tknc = tokenContract;
-        require(
-            tknc.allowance(args.assetCreator, address(this)) >= args.tokenAmount,
-            "Sender allowance must >= amount"
-        );
-        require(tknc.balanceOf(args.assetCreator) >= args.tokenAmount, "Sender balance must be >= amount");
+        if (tknc.allowance(args.assetCreator, address(this)) < args.tokenAmount)
+            revert ServiceAgreementErrorsV1.TooLowAllowance(tknc.allowance(args.assetCreator, address(this)));
+        if (tknc.balanceOf(args.assetCreator) < args.tokenAmount)
+            revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(args.assetCreator));
 
         tknc.transferFrom(args.assetCreator, address(sasV1), args.tokenAmount);
 
@@ -172,11 +176,16 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
-        require(args.assetCreator != address(0), "Asset creator cannot be 0x0");
-        require(sasV1.serviceAgreementExists(agreementId), "Service Agreement doesn't exist");
-        require(args.epochsNumber != 0, "Epochs number cannot be 0");
-        require(args.tokenAmount != 0, "Token amount cannot be 0");
-        require(scoringProxy.isScoreFunction(args.scoreFunctionId), "Score function doesn't exist");
+        if (args.assetCreator == address(0x0))
+            revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
+        if (!sasV1.serviceAgreementExists(agreementId))
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+        if (args.epochsNumber == 0)
+            revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
+        if (args.tokenAmount == 0)
+            revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+        if (!scoringProxy.isScoreFunction(args.scoreFunctionId))
+            revert ServiceAgreementErrorsV1.ScoreFunctionDoesntExist(args.scoreFunctionId);
 
         uint96 actualRewardAmount = sasV1.getAgreementTokenAmount(agreementId);
 
@@ -186,14 +195,10 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         IERC20 tknc = tokenContract;
 
-        require(
-            tknc.allowance(args.assetCreator, address(this)) >= (args.tokenAmount - actualRewardAmount),
-            "Sender allowance must be >= amount"
-        );
-        require(
-            tknc.balanceOf(args.assetCreator) >= (args.tokenAmount - actualRewardAmount),
-            "Sender balance must be >= amount"
-        );
+        if (tknc.allowance(args.assetCreator, address(this)) < (args.tokenAmount - actualRewardAmount))
+            revert ServiceAgreementErrorsV1.TooLowAllowance(tknc.allowance(args.assetCreator, address(this)));
+        if (tknc.balanceOf(args.assetCreator) < (args.tokenAmount - actualRewardAmount))
+            revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(args.assetCreator));
 
         tknc.transferFrom(args.assetCreator, address(sasV1), args.tokenAmount - actualRewardAmount);
 
@@ -211,12 +216,20 @@ contract ServiceAgreementV1 is Named, Versioned {
         ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
         uint256 startTime = sasV1.getAgreementStartTime(agreementId);
 
-        require(startTime != 0, "Service Agreement doesn't exist");
-        require(epoch < sasV1.getAgreementEpochsNumber(agreementId), "Service Agreement has been expired");
-
         ParametersStorage params = parametersStorage;
-        uint256 timeNow = block.timestamp;
         uint128 epochLength = sasV1.getAgreementEpochLength(agreementId);
+
+        if (startTime == 0)
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+        if (epoch >= sasV1.getAgreementEpochsNumber(agreementId))
+            revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
+                agreementId,
+                startTime,
+                sasV1.getAgreementEpochsNumber(agreementId),
+                epochLength
+            );
+
+        uint256 timeNow = block.timestamp;
 
         if (epoch == 0) {
             return timeNow < (startTime + params.commitWindowDuration());
@@ -235,8 +248,15 @@ contract ServiceAgreementV1 is Named, Versioned {
     {
         ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
-        require(sasV1.serviceAgreementExists(agreementId), "Service Agreement doesn't exist");
-        require(epoch < sasV1.getAgreementEpochsNumber(agreementId), "Service Agreement expired");
+        if (!sasV1.serviceAgreementExists(agreementId))
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+        if (epoch >= sasV1.getAgreementEpochsNumber(agreementId))
+            revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
+                agreementId,
+                sasV1.getAgreementStartTime(agreementId),
+                sasV1.getAgreementEpochsNumber(agreementId),
+                parametersStorage.epochLength()
+            );
 
         uint32 r0 = parametersStorage.R0();
 
@@ -265,11 +285,34 @@ contract ServiceAgreementV1 is Named, Versioned {
     function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
-        require(isCommitWindowOpen(agreementId, args.epoch), "Commit window is closed");
+        if (!isCommitWindowOpen(agreementId, args.epoch)) {
+            ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+            uint256 actualCommitWindowStart = (
+                sasV1.getAgreementStartTime(agreementId) +
+                args.epoch * sasV1.getAgreementEpochLength(agreementId)
+            );
+
+            revert ServiceAgreementErrorsV1.CommitWindowClosed(
+                agreementId,
+                args.epoch,
+                actualCommitWindowStart,
+                actualCommitWindowStart + parametersStorage.commitWindowDuration(),
+                block.timestamp
+            );
+        }
 
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
-        require(shardingTableStorage.nodeExists(identityId), "Node isn't in the Sharding Table");
+        if (!shardingTableStorage.nodeExists(identityId)) {
+            ProfileStorage ps = profileStorage;
+
+            revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
+                identityId,
+                ps.getNodeId(identityId),
+                ps.getAsk(identityId),
+                stakingStorage.totalStakes(identityId)
+            );
+        }
 
         uint40 score = scoringProxy.callScoreFunction(
             serviceAgreementStorageV1.getAgreementScoreFunctionId(agreementId),
@@ -302,8 +345,15 @@ contract ServiceAgreementV1 is Named, Versioned {
         ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
         uint256 startTime = sasV1.getAgreementStartTime(agreementId);
 
-        require(startTime != 0, "Service Agreement doesn't exist");
-        require(epoch < sasV1.getAgreementEpochsNumber(agreementId), "Service Agreement expired");
+        if (startTime == 0)
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+        if (epoch >= sasV1.getAgreementEpochsNumber(agreementId))
+            revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
+                agreementId,
+                sasV1.getAgreementStartTime(agreementId),
+                sasV1.getAgreementEpochsNumber(agreementId),
+                parametersStorage.epochLength()
+            );
 
         uint256 timeNow = block.timestamp;
         uint128 epochLength = sasV1.getAgreementEpochLength(agreementId);
@@ -343,24 +393,35 @@ contract ServiceAgreementV1 is Named, Versioned {
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
-        require(_reqs[0] || isProofWindowOpen(agreementId, args.epoch), "Proof window is closed");
-        emit Logger(isProofWindowOpen(agreementId, args.epoch), "req1" );
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+
+        if (!isProofWindowOpen(agreementId, args.epoch)) {
+            uint256 actualCommitWindowStart = (
+                sasV1.getAgreementStartTime(agreementId) +
+                args.epoch * sasV1.getAgreementEpochLength(agreementId)
+            );
+
+            revert ServiceAgreementErrorsV1.ProofWindowClosed(
+                agreementId,
+                args.epoch,
+                actualCommitWindowStart,
+                actualCommitWindowStart + parametersStorage.commitWindowDuration(),
+                block.timestamp
+            );
+        }
 
 
         IdentityStorage ids = identityStorage;
 
         uint72 identityId = ids.getIdentityId(msg.sender);
 
-        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
-
-        require(_reqs[1] ||
-            sasV1.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) != 0,
-            "You've been already rewarded"
-        );
-        emit Logger(
-            sasV1.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) != 0,
-            "req2"
-        );
+        if (sasV1.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) == 0)
+            revert ServiceAgreementErrorsV1.NodeAlreadyRewarded(
+                agreementId,
+                args.epoch,
+                identityId,
+                profileStorage.getNodeId(identityId)
+            );
 
         bytes32 nextCommitId = sasV1.getAgreementEpochSubmissionHead(agreementId, args.epoch);
         uint32 r0 = parametersStorage.R0();
@@ -372,21 +433,30 @@ contract ServiceAgreementV1 is Named, Versioned {
             unchecked { i++; }
         }
 
-        require(_reqs[2] || i < r0, "Your node hasn't been awarded for this asset in this epoch");
-        emit Logger(i < r0, "req3" );
+        if (i >= r0)
+            revert ServiceAgreementErrorsV1.NodeNotAwarded(
+                agreementId,
+                args.epoch,
+                identityId,
+                profileStorage.getNodeId(identityId),
+                i
+            );
 
         bytes32 merkleRoot;
         uint256 challenge;
         (merkleRoot, challenge) = getChallenge(msg.sender, args.assetContract, args.tokenId, args.epoch);
 
-        require(_reqs[3] ||
-            MerkleProof.verify(args.proof, merkleRoot, keccak256(abi.encodePacked(args.chunkHash, challenge))),
-            "Root hash doesn't match"
-        );
-        emit Logger(
-            MerkleProof.verify(args.proof, merkleRoot, keccak256(abi.encodePacked(args.chunkHash, challenge))),
-            "req4"
-        );
+        if (!MerkleProof.verify(args.proof, merkleRoot, keccak256(abi.encodePacked(args.chunkHash, challenge))))
+            revert ServiceAgreementErrorsV1.WrongMerkleProof(
+                agreementId,
+                args.epoch,
+                identityId,
+                profileStorage.getNodeId(identityId),
+                args.proof,
+                merkleRoot,
+                args.chunkHash,
+                challenge
+            );
 
         emit ProofSubmitted(
             args.assetContract,
@@ -410,10 +480,6 @@ contract ServiceAgreementV1 is Named, Versioned {
         sasV1.setCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId)), 0);
     }
 
-    function setReq(uint8 idx, bool req) external onlyHubOwner {
-        _reqs[idx] = req;
-    }
-
     function _insertCommit(
         bytes32 agreementId,
         uint16 epoch,
@@ -428,7 +494,13 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, identityId));
 
-        require(!sasV1.commitSubmissionExists(commitId), "Node has already commited");
+        if (sasV1.commitSubmissionExists(commitId))
+            revert ServiceAgreementErrorsV1.NodeAlreadySubmittedCommit(
+                agreementId,
+                epoch,
+                identityId,
+                profileStorage.getNodeId(identityId)
+            );
 
         bytes32 refCommitId = sasV1.getAgreementEpochSubmissionHead(agreementId, epoch);
 
@@ -450,7 +522,14 @@ contract ServiceAgreementV1 is Named, Versioned {
             unchecked { i++; }
         }
 
-        require(i < r0, "Node rank should be < R0");
+        if (i >= r0)
+            revert ServiceAgreementErrorsV1.NodeNotAwarded(
+                agreementId,
+                epoch,
+                identityId,
+                profileStorage.getNodeId(identityId),
+                i
+            );
 
         sasV1.createCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
 
@@ -510,11 +589,13 @@ contract ServiceAgreementV1 is Named, Versioned {
     }
 
     function _checkHubOwner() internal view virtual {
-		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+        if (msg.sender != hub.owner())
+            revert GeneralErrors.OnlyHubOwnerFunction(msg.sender);
 	}
 
     function _checkHub() internal view virtual {
-        require (hub.isContract(msg.sender), "Fn can only be called by the hub");
+        if (!hub.isContract(msg.sender))
+            revert GeneralErrors.OnlyHubContractsFunction(msg.sender);
     }
 
 }

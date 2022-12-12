@@ -56,53 +56,16 @@ contract ShardingTable is Named, Versioned {
     }
 
     function getShardingTable(uint72 startingIdentityId, uint72 nodesNumber)
-        public
+        external
         view
         returns (ShardingTableStructs.NodeInfo[] memory)
     {
-        ShardingTableStructs.NodeInfo[] memory nodesPage;
-        ShardingTableStorage sts = shardingTableStorage;
-
-        if ((sts.nodesCount() == 0) || (nodesNumber == 0)) {
-            return nodesPage;
-        }
-
-        ShardingTableStructs.Node memory startingNode = sts.getNode(startingIdentityId);
-
-        require((startingIdentityId == NULL) || (startingNode.identityId != NULL));
-
-        nodesPage = new ShardingTableStructs.NodeInfo[](nodesNumber);
-
-        ProfileStorage ps = profileStorage;
-        StakingStorage ss = stakingStorage;
-
-        nodesPage[0] = ShardingTableStructs.NodeInfo({
-            nodeId: ps.getNodeId(startingIdentityId),
-            identityId: startingIdentityId,
-            ask: ps.getAsk(startingNode.identityId),
-            stake: ss.totalStakes(startingNode.identityId)
-        });
-
-        uint72 nextIdentityId = startingIdentityId;
-        uint72 i = 1;
-        while ((i < nodesNumber) && (nextIdentityId != NULL)) {
-            nextIdentityId = sts.getNode(nextIdentityId).nextIdentityId;
-
-            nodesPage[i] = ShardingTableStructs.NodeInfo({
-                nodeId: ps.getNodeId(nextIdentityId),
-                identityId: nextIdentityId,
-                ask: ps.getAsk(nextIdentityId),
-                stake: ss.totalStakes(nextIdentityId)
-            });
-
-            unchecked { i += 1; }
-        }
-        return nodesPage;
+        return _getShardingTable(startingIdentityId, nodesNumber);
     }
 
     function getShardingTable() external view returns (ShardingTableStructs.NodeInfo[] memory) {
         ShardingTableStorage sts = shardingTableStorage;
-        return getShardingTable(sts.head(), sts.nodesCount());
+        return _getShardingTable(sts.head(), sts.nodesCount());
     }
 
     function pushBack(uint72 identityId) external onlyContracts {
@@ -185,6 +148,52 @@ contract ShardingTable is Named, Versioned {
         sts.decrementNodesCount();
 
         emit NodeRemoved(identityId, ps.getNodeId(identityId));
+    }
+
+    function _getShardingTable(uint72 startingIdentityId, uint72 nodesNumber)
+        internal
+        view
+        returns (ShardingTableStructs.NodeInfo[] memory)
+    {
+        ShardingTableStructs.NodeInfo[] memory nodesPage;
+        ShardingTableStorage sts = shardingTableStorage;
+
+        if ((sts.nodesCount() == 0) || (nodesNumber == 0)) {
+            return nodesPage;
+        }
+
+        ShardingTableStructs.Node memory startingNode = sts.getNode(startingIdentityId);
+
+        require((startingIdentityId == NULL) || (startingNode.identityId != NULL));
+
+        nodesPage = new ShardingTableStructs.NodeInfo[](nodesNumber);
+
+        ProfileStorage ps = profileStorage;
+        StakingStorage ss = stakingStorage;
+
+        nodesPage[0] = ShardingTableStructs.NodeInfo({
+            nodeId: ps.getNodeId(startingIdentityId),
+            identityId: startingIdentityId,
+            ask: ps.getAsk(startingNode.identityId),
+            stake: ss.totalStakes(startingNode.identityId)
+        });
+
+        uint72 nextIdentityId = startingIdentityId;
+        uint72 i = 1;
+        while ((i < nodesNumber) && (nextIdentityId != NULL)) {
+            nextIdentityId = sts.getNode(nextIdentityId).nextIdentityId;
+
+            nodesPage[i] = ShardingTableStructs.NodeInfo({
+                nodeId: ps.getNodeId(nextIdentityId),
+                identityId: nextIdentityId,
+                ask: ps.getAsk(nextIdentityId),
+                stake: ss.totalStakes(nextIdentityId)
+            });
+
+            unchecked { i += 1; }
+        }
+
+        return nodesPage;
     }
 
     function _checkHubOwner() internal view virtual {

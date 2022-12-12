@@ -15,6 +15,7 @@ coverage/*
 metadata/*
 coverage.json
 build/contracts/*Structs*.json
+build/contracts/*Errors*.json
 build/contracts/IERC734Extended.json
 build/contracts/Shares.json
 build/contracts/UnorderedIndexableContractDynamicSetLib.json

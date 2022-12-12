@@ -56,34 +56,66 @@ contract ContentAsset is Named, Versioned {
     }
 
     function createAsset(ContentAssetStructs.AssetInputArgs calldata args) external {
+        _createAsset(
+            args.assertionId,
+            args.size,
+            args.triplesNumber,
+            args.chunksNumber,
+            args.epochsNumber,
+            args.tokenAmount,
+            args.scoreFunctionId
+        );
+    }
+
+    function createAsset(
+        bytes32 assertionId,
+        uint128 size,
+        uint32 triplesNumber,
+        uint96 chunksNumber,
+        uint16 epochsNumber,
+        uint96 tokenAmount,
+        uint8 scoreFunctionId
+    ) external {
+        _createAsset(assertionId, size, triplesNumber, chunksNumber, epochsNumber, tokenAmount, scoreFunctionId);
+    }
+
+    function _createAsset(
+        bytes32 assertionId,
+        uint128 size,
+        uint32 triplesNumber,
+        uint96 chunksNumber,
+        uint16 epochsNumber,
+        uint96 tokenAmount,
+        uint8 scoreFunctionId
+    ) internal {
         ContentAssetStorage cas = contentAssetStorage;
 
         uint256 tokenId = cas.generateTokenId();
         cas.mint(msg.sender, tokenId);
 
         assertionContract.createAssertion(
-            args.assertionId,
-            args.size,
-            args.triplesNumber,
-            args.chunksNumber
+            assertionId,
+            size,
+            triplesNumber,
+            chunksNumber
         );
-        cas.setAssertionIssuer(tokenId, args.assertionId, msg.sender);
-        cas.pushAssertionId(tokenId, args.assertionId);
+        cas.setAssertionIssuer(tokenId, assertionId, msg.sender);
+        cas.pushAssertionId(tokenId, assertionId);
 
         serviceAgreementV1.createServiceAgreement(
             ServiceAgreementStructsV1.ServiceAgreementInputArgs({
                 assetCreator: msg.sender,
                 assetContract: address(contentAssetStorage),
                 tokenId: tokenId,
-                keyword: abi.encodePacked(address(contentAssetStorage), args.assertionId),
+                keyword: abi.encodePacked(address(contentAssetStorage), assertionId),
                 hashFunctionId: 1,  // hashFunctionId | 1 = sha256
-                epochsNumber: args.epochsNumber,
-                tokenAmount: args.tokenAmount,
-                scoreFunctionId: args.scoreFunctionId
+                epochsNumber: epochsNumber,
+                tokenAmount: tokenAmount,
+                scoreFunctionId: scoreFunctionId
             })
         );
 
-        emit AssetCreated(address(contentAssetStorage), tokenId, args.assertionId);
+        emit AssetCreated(address(contentAssetStorage), tokenId, assertionId);
     }
 
     function _checkHubOwner() internal view virtual {
