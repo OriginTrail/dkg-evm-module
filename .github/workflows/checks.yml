@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up environment
-        uses: ./.github/actions/setup
+        uses: ../.github/actions/setup
       - name: Run Javascript and Solidity linters
         run: npm run lint
     
@@ -22,6 +22,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up environment
-        uses: ./.github/actions/setup
+        uses: ../.github/actions/setup
       - name: Run tests 
         run: npm run test
