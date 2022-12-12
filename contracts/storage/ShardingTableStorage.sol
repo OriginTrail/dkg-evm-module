@@ -2,16 +2,15 @@
 
 pragma solidity ^0.8.4;
 
-import { Hub } from "../Hub.sol";
-import { Named } from "../interface/Named.sol";
-import { Versioned } from "../interface/Versioned.sol";
-import { ShardingTableStructs } from "../structs/ShardingTableStructs.sol";
-import { NULL } from "../constants/ShardingTableConstants.sol";
+import {Hub} from "../Hub.sol";
+import {Named} from "../interface/Named.sol";
+import {Versioned} from "../interface/Versioned.sol";
+import {ShardingTableStructs} from "../structs/ShardingTableStructs.sol";
+import {NULL} from "../constants/ShardingTableConstants.sol";
 
 contract ShardingTableStorage is Named, Versioned {
-
-    string constant private _NAME = "ShardingTableStorage";
-    string constant private _VERSION = "1.0.0";
+    string private constant _NAME = "ShardingTableStorage";
+    string private constant _VERSION = "1.0.0";
 
     Hub public hub;
 
@@ -20,10 +19,10 @@ contract ShardingTableStorage is Named, Versioned {
     uint72 public nodesCount;
 
     // identityId => Node
-    mapping(uint72 => ShardingTableStructs.Node) nodes;
+    mapping(uint72 => ShardingTableStructs.Node) internal nodes;
 
     constructor(address hubAddress) {
-        require(hubAddress != address(0));
+        require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
         hub = Hub(hubAddress);
 
@@ -88,18 +87,19 @@ contract ShardingTableStorage is Named, Versioned {
         nodes[identityId].nextIdentityId = newNextIdentityId;
     }
 
-    function getMultipleNodes(uint72 firstIdentityId, uint16 nodesNumber)
-        external
-        view
-        returns (ShardingTableStructs.Node[] memory)
-    {
+    function getMultipleNodes(
+        uint72 firstIdentityId,
+        uint16 nodesNumber
+    ) external view returns (ShardingTableStructs.Node[] memory) {
         ShardingTableStructs.Node[] memory nodesPage = new ShardingTableStructs.Node[](nodesNumber);
 
         ShardingTableStructs.Node memory currentNode = nodes[firstIdentityId];
         for (uint256 i; i < nodesNumber; ) {
             nodesPage[i] = currentNode;
             currentNode = nodes[currentNode.nextIdentityId];
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
 
         return nodesPage;
@@ -113,5 +113,4 @@ contract ShardingTableStorage is Named, Versioned {
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
-
 }

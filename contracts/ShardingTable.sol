@@ -1,23 +1,22 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity^0.8.0;
+pragma solidity ^0.8.4;
 
-import { Hub } from "./Hub.sol";
-import { ProfileStorage } from "./storage/ProfileStorage.sol";
-import { ShardingTableStorage } from "./storage/ShardingTableStorage.sol";
-import { StakingStorage } from "./storage/StakingStorage.sol";
-import { Named } from "./interface/Named.sol";
-import { Versioned } from "./interface/Versioned.sol";
-import { ShardingTableStructs } from "./structs/ShardingTableStructs.sol";
-import { NULL } from "./constants/ShardingTableConstants.sol";
+import {Hub} from "./Hub.sol";
+import {ProfileStorage} from "./storage/ProfileStorage.sol";
+import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
+import {StakingStorage} from "./storage/StakingStorage.sol";
+import {Named} from "./interface/Named.sol";
+import {Versioned} from "./interface/Versioned.sol";
+import {ShardingTableStructs} from "./structs/ShardingTableStructs.sol";
+import {NULL} from "./constants/ShardingTableConstants.sol";
 
 contract ShardingTable is Named, Versioned {
-
     event NodeAdded(uint72 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
     event NodeRemoved(uint72 indexed identityId, bytes nodeId);
 
-    string constant private _NAME = "ShardingTable";
-    string constant private _VERSION = "1.0.0";
+    string private constant _NAME = "ShardingTable";
+    string private constant _VERSION = "1.0.0";
 
     Hub public hub;
     ProfileStorage public profileStorage;
@@ -25,16 +24,16 @@ contract ShardingTable is Named, Versioned {
     StakingStorage public stakingStorage;
 
     constructor(address hubAddress) {
-        require(hubAddress != address(0));
+        require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
         hub = Hub(hubAddress);
         initialize();
     }
 
     modifier onlyHubOwner() {
-		_checkHubOwner();
-		_;
-	}
+        _checkHubOwner();
+        _;
+    }
 
     modifier onlyContracts() {
         _checkHub();
@@ -42,10 +41,10 @@ contract ShardingTable is Named, Versioned {
     }
 
     function initialize() public onlyHubOwner {
-		profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
-	}
+    }
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -55,11 +54,10 @@ contract ShardingTable is Named, Versioned {
         return _VERSION;
     }
 
-    function getShardingTable(uint72 startingIdentityId, uint72 nodesNumber)
-        external
-        view
-        returns (ShardingTableStructs.NodeInfo[] memory)
-    {
+    function getShardingTable(
+        uint72 startingIdentityId,
+        uint72 nodesNumber
+    ) external view returns (ShardingTableStructs.NodeInfo[] memory) {
         return _getShardingTable(startingIdentityId, nodesNumber);
     }
 
@@ -76,13 +74,11 @@ contract ShardingTable is Named, Versioned {
 
         sts.createNode(identityId, NULL, NULL);
 
-        if (sts.tail() != NULL)
-            sts.link(sts.tail(), identityId);
+        if (sts.tail() != NULL) sts.link(sts.tail(), identityId);
 
         sts.setTail(identityId);
 
-        if (sts.head() == NULL)
-            sts.setHead(identityId);
+        if (sts.head() == NULL) sts.setHead(identityId);
 
         sts.incrementNodesCount();
 
@@ -102,13 +98,11 @@ contract ShardingTable is Named, Versioned {
 
         sts.createNode(identityId, NULL, NULL);
 
-        if (sts.head() != NULL)
-            sts.link(identityId, sts.head());
+        if (sts.head() != NULL) sts.link(identityId, sts.head());
 
         shardingTableStorage.setHead(identityId);
 
-        if (sts.tail() == NULL)
-            sts.setTail(identityId);
+        if (sts.tail() == NULL) sts.setTail(identityId);
 
         sts.incrementNodesCount();
 
@@ -150,11 +144,10 @@ contract ShardingTable is Named, Versioned {
         emit NodeRemoved(identityId, ps.getNodeId(identityId));
     }
 
-    function _getShardingTable(uint72 startingIdentityId, uint72 nodesNumber)
-        internal
-        view
-        returns (ShardingTableStructs.NodeInfo[] memory)
-    {
+    function _getShardingTable(
+        uint72 startingIdentityId,
+        uint72 nodesNumber
+    ) internal view returns (ShardingTableStructs.NodeInfo[] memory) {
         ShardingTableStructs.NodeInfo[] memory nodesPage;
         ShardingTableStorage sts = shardingTableStorage;
 
@@ -164,7 +157,7 @@ contract ShardingTable is Named, Versioned {
 
         ShardingTableStructs.Node memory startingNode = sts.getNode(startingIdentityId);
 
-        require((startingIdentityId == NULL) || (startingNode.identityId != NULL));
+        require((startingIdentityId == NULL) || (startingNode.identityId != NULL), "Wrong starting Identity ID");
 
         nodesPage = new ShardingTableStructs.NodeInfo[](nodesNumber);
 
@@ -190,18 +183,19 @@ contract ShardingTable is Named, Versioned {
                 stake: ss.totalStakes(nextIdentityId)
             });
 
-            unchecked { i += 1; }
+            unchecked {
+                i += 1;
+            }
         }
 
         return nodesPage;
     }
 
     function _checkHubOwner() internal view virtual {
-		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
-	}
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+    }
 
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
-
 }

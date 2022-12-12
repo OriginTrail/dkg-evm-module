@@ -15,7 +15,7 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"getOwners\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interface/ICustodian.sol\":\"ICustodian\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[],\"viaIR\":true},\"sources\":{\"project:/contracts/interface/ICustodian.sol\":{\"keccak256\":\"0x4932357469d025775094deea309798b8ed4d1a6da04230eec4367e10bf81f382\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://07bfd205f6dd25224063cd224351034c6ef9affbf8e0cd7f5ec6269571e74523\",\"dweb:/ipfs/QmPsaTZxFXpzhQJiZfYP94XjZjMbVkWNLS4FNehbo2A6GF\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"getOwners\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interface/ICustodian.sol\":\"ICustodian\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[],\"viaIR\":true},\"sources\":{\"project:/contracts/interface/ICustodian.sol\":{\"keccak256\":\"0xf5514266f3c4fce1c32ec7ca649d815962948ba883e06c75234ad8476b1d1be0\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b47ef778dea8d14b811f349ace1f4dd36167eb55d58c8e265eee8a4f7cabba2d\",\"dweb:/ipfs/QmNTioZnT5sxxxCidxi3KibPT887TnUKW5D6UkdamJTt9Y\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "immutableReferences": {},
@@ -23,21 +23,21 @@
   "deployedGeneratedSources": [],
   "sourceMap": "",
   "deployedSourceMap": "",
-  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.4;\n\ninterface ICustodian {\n\n    function getOwners() external view returns (address[] memory);\n\n}\n",
+  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.4;\n\ninterface ICustodian {\n    function getOwners() external view returns (address[] memory);\n}\n",
   "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/interface/ICustodian.sol",
   "ast": {
     "absolutePath": "project:/contracts/interface/ICustodian.sol",
     "exportedSymbols": {
       "ICustodian": [
-        12785
+        12888
       ]
     },
-    "id": 12786,
+    "id": 12889,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 12778,
+        "id": 12881,
         "literals": [
           "solidity",
           "^",
@@ -45,7 +45,7 @@
           ".4"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:23:37"
+        "src": "33:23:39"
       },
       {
         "abstract": false,
@@ -54,42 +54,42 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 12785,
+        "id": 12888,
         "linearizedBaseContracts": [
-          12785
+          12888
         ],
         "name": "ICustodian",
-        "nameLocation": "68:10:37",
+        "nameLocation": "68:10:39",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "functionSelector": "a0e67e2b",
-            "id": 12784,
+            "id": 12887,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getOwners",
-            "nameLocation": "95:9:37",
+            "nameLocation": "94:9:39",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 12779,
+              "id": 12882,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "104:2:37"
+              "src": "103:2:39"
             },
             "returnParameters": {
-              "id": 12783,
+              "id": 12886,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 12782,
+                  "id": 12885,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 12784,
-                  "src": "130:16:37",
+                  "scope": 12887,
+                  "src": "129:16:39",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -98,19 +98,19 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 12780,
+                      "id": 12883,
                       "name": "address",
                       "nodeType": "ElementaryTypeName",
-                      "src": "130:7:37",
+                      "src": "129:7:39",
                       "stateMutability": "nonpayable",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
                       }
                     },
-                    "id": 12781,
+                    "id": 12884,
                     "nodeType": "ArrayTypeName",
-                    "src": "130:9:37",
+                    "src": "129:9:39",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
                       "typeString": "address[]"
@@ -119,21 +119,21 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "129:18:37"
+              "src": "128:18:39"
             },
-            "scope": 12785,
-            "src": "86:62:37",
+            "scope": 12888,
+            "src": "85:62:39",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 12786,
-        "src": "58:93:37",
+        "scope": 12889,
+        "src": "58:91:39",
         "usedErrors": []
       }
     ],
-    "src": "33:119:37"
+    "src": "33:117:39"
   },
   "compiler": {
     "name": "solc",
@@ -141,7 +141,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-12T09:47:52.147Z",
+  "updatedAt": "2022-12-12T12:30:10.729Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

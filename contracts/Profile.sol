@@ -2,28 +2,27 @@
 
 pragma solidity ^0.8.4;
 
-import { HashingProxy } from "./HashingProxy.sol";
-import { Hub } from "./Hub.sol";
-import { Identity } from "./Identity.sol";
-import { Shares } from "./Shares.sol";
-import { Staking } from "./Staking.sol";
-import { IdentityStorage } from "./storage/IdentityStorage.sol";
-import { ParametersStorage } from "./storage/ParametersStorage.sol";
-import { ProfileStorage } from "./storage/ProfileStorage.sol";
-import { WhitelistStorage } from "./storage/WhitelistStorage.sol";
-import { Named } from "./interface/Named.sol";
-import { Versioned } from "./interface/Versioned.sol";
-import { UnorderedIndexableContractDynamicSetLib } from "./utils/UnorderedIndexableContractDynamicSet.sol";
-import { ADMIN_KEY, OPERATIONAL_KEY } from "./constants/IdentityConstants.sol";
+import {HashingProxy} from "./HashingProxy.sol";
+import {Hub} from "./Hub.sol";
+import {Identity} from "./Identity.sol";
+import {Shares} from "./Shares.sol";
+import {Staking} from "./Staking.sol";
+import {IdentityStorage} from "./storage/IdentityStorage.sol";
+import {ParametersStorage} from "./storage/ParametersStorage.sol";
+import {ProfileStorage} from "./storage/ProfileStorage.sol";
+import {WhitelistStorage} from "./storage/WhitelistStorage.sol";
+import {Named} from "./interface/Named.sol";
+import {Versioned} from "./interface/Versioned.sol";
+import {UnorderedIndexableContractDynamicSetLib} from "./utils/UnorderedIndexableContractDynamicSet.sol";
+import {ADMIN_KEY, OPERATIONAL_KEY} from "./constants/IdentityConstants.sol";
 
 contract Profile is Named, Versioned {
-
     event ProfileCreated(uint72 indexed identityId, bytes nodeId);
     event ProfileDeleted(uint72 indexed identityId);
     event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
 
-    string constant private _NAME = "Profile";
-    string constant private _VERSION = "1.0.0";
+    string private constant _NAME = "Profile";
+    string private constant _VERSION = "1.0.0";
 
     Hub public hub;
     HashingProxy public hashingProxy;
@@ -35,16 +34,16 @@ contract Profile is Named, Versioned {
     WhitelistStorage public whitelistStorage;
 
     constructor(address hubAddress) {
-        require(hubAddress != address(0));
+        require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
         hub = Hub(hubAddress);
         initialize();
     }
 
     modifier onlyHubOwner() {
-		_checkHubOwner();
-		_;
-	}
+        _checkHubOwner();
+        _;
+    }
 
     modifier onlyIdentityOwner(uint72 identityId) {
         _checkIdentityOwner(identityId);
@@ -67,14 +66,14 @@ contract Profile is Named, Versioned {
     }
 
     function initialize() public onlyHubOwner {
-		hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         identityContract = Identity(hub.getContractAddress("Identity"));
         stakingContract = Staking(hub.getContractAddress("Staking"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         whitelistStorage = WhitelistStorage(hub.getContractAddress("WhitelistStorage"));
-	}
+    }
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -89,10 +88,7 @@ contract Profile is Named, Versioned {
         bytes calldata nodeId,
         string calldata sharesTokenName,
         string calldata sharesTokenSymbol
-    )
-        external
-        onlyWhitelisted
-    {
+    ) external onlyWhitelisted {
         IdentityStorage ids = identityStorage;
         ProfileStorage ps = profileStorage;
 
@@ -166,12 +162,11 @@ contract Profile is Named, Versioned {
         uint8 hashFunctionId;
         for (uint8 i; i < hashFunctionsNumber; ) {
             hashFunctionId = hashFunctions[i].id;
-            nodeAddress = hp.callHashFunction(
-                hashFunctionId,
-                nodeId
-            );
+            nodeAddress = hp.callHashFunction(hashFunctionId, nodeId);
             ps.setNodeAddress(identityId, hashFunctionId, nodeAddress);
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -226,13 +221,13 @@ contract Profile is Named, Versioned {
     }
 
     function _checkHubOwner() internal view virtual {
-		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
-	}
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+    }
 
     function _checkIdentityOwner(uint72 identityId) internal view virtual {
         require(
             identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY) ||
-            identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), OPERATIONAL_KEY),
+                identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), OPERATIONAL_KEY),
             "Fn can be used only by id owner"
         );
     }
@@ -257,5 +252,4 @@ contract Profile is Named, Versioned {
             require(ws.whitelisted(msg.sender), "Address isn't whitelisted");
         }
     }
-
 }

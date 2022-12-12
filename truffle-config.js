@@ -45,10 +45,10 @@ module.exports = {
     // options below to some value.
     //
     ganache: {
-      host: "localhost",
+      host: 'localhost',
       port: 7545,
       gas: 6000000,
-      network_id: "5777",
+      network_id: '5777',
       provider: () => new HDWalletProvider([private_key], rpc_endpoint),
     },
     rinkeby: {
@@ -124,13 +124,16 @@ module.exports = {
 
   // Set default mocha options here, use special reporters etc.
   mocha: {
-    // timeout: 100000
+    reporter: 'eth-gas-reporter',
+    reporterOptions: {
+      excludeContracts: ['Migrations']
+    }
   },
 
   // Configure your compilers
   compilers: {
     solc: {
-      version: "0.8.16", // Fetch exact version from solc-bin (default: truffle's version)
+      version: '0.8.16', // Fetch exact version from solc-bin (default: truffle's version)
       // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
       settings: {
         viaIR: true,
@@ -143,6 +146,9 @@ module.exports = {
       },
     },
   },
+
+  // Plugins
+  plugins: ['solidity-coverage'],
 
   // Truffle DB is currently disabled by default; to enable it, change enabled:
   // false to enabled: true. The default storage location can also be

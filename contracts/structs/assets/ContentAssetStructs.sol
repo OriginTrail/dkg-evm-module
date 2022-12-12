@@ -3,7 +3,6 @@
 pragma solidity ^0.8.4;
 
 library ContentAssetStructs {
-
     struct AssetInputArgs {
         bytes32 assertionId;
         uint128 size;
@@ -17,5 +16,4 @@ library ContentAssetStructs {
     struct Asset {
         bytes32[] assertionIds;
     }
-
 }

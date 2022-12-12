@@ -3,7 +3,6 @@
 pragma solidity ^0.8.4;
 
 library ServiceAgreementErrorsV1 {
-
     error EmptyAssetCreatorAddress();
     error AssetStorgeNotInTheHub(address contractAddress);
     error EmptyKeyword();
@@ -47,5 +46,4 @@ library ServiceAgreementErrorsV1 {
         uint256 challenge
     );
     error NodeAlreadySubmittedCommit(bytes32 agreementId, uint16 epoch, uint72 identityId, bytes nodeId);
-
 }

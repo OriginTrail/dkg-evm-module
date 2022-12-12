@@ -2,34 +2,33 @@
 
 pragma solidity ^0.8.4;
 
-import { Hub } from "./Hub.sol";
-import { IdentityStorage } from "./storage/IdentityStorage.sol";
-import { Named } from "./interface/Named.sol";
-import { Versioned } from "./interface/Versioned.sol";
-import { ADMIN_KEY, OPERATIONAL_KEY, ECDSA, RSA } from "./constants/IdentityConstants.sol";
+import {Hub} from "./Hub.sol";
+import {IdentityStorage} from "./storage/IdentityStorage.sol";
+import {Named} from "./interface/Named.sol";
+import {Versioned} from "./interface/Versioned.sol";
+import {ADMIN_KEY, OPERATIONAL_KEY, ECDSA, RSA} from "./constants/IdentityConstants.sol";
 
 contract Identity is Named, Versioned {
-
     event IdentityCreated(uint72 indexed identityId, bytes32 indexed operationalKey, bytes32 indexed adminKey);
     event IdentityDeleted(uint72 indexed identityId);
 
-    string constant private _NAME = "Identity";
-    string constant private _VERSION = "1.0.0";
+    string private constant _NAME = "Identity";
+    string private constant _VERSION = "1.0.0";
 
     Hub public hub;
     IdentityStorage public identityStorage;
 
     constructor(address hubAddress) {
-        require(hubAddress != address(0));
+        require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
         hub = Hub(hubAddress);
         initialize();
     }
 
     modifier onlyHubOwner() {
-		_checkHubOwner();
-		_;
-	}
+        _checkHubOwner();
+        _;
+    }
 
     modifier onlyContracts() {
         _checkHub();
@@ -42,8 +41,8 @@ contract Identity is Named, Versioned {
     }
 
     function initialize() public onlyHubOwner {
-		identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-	}
+        identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+    }
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -61,19 +60,15 @@ contract Identity is Named, Versioned {
 
         uint72 identityId = ids.generateIdentityId();
 
-        bytes32 _admin_key = keccak256(abi.encodePacked(admin));
-        ids.addKey(identityId, _admin_key, ADMIN_KEY, ECDSA);
+        bytes32 adminKey = keccak256(abi.encodePacked(admin));
+        ids.addKey(identityId, adminKey, ADMIN_KEY, ECDSA);
 
-        bytes32 _operational_key = keccak256(abi.encodePacked(operational));
-        ids.addKey(identityId, _operational_key, OPERATIONAL_KEY, ECDSA);
+        bytes32 operationalKey = keccak256(abi.encodePacked(operational));
+        ids.addKey(identityId, operationalKey, OPERATIONAL_KEY, ECDSA);
 
-        ids.setOperationalKeyIdentityId(_operational_key, identityId);
+        ids.setOperationalKeyIdentityId(operationalKey, identityId);
 
-        emit IdentityCreated(
-            identityId,
-            _operational_key,
-            _admin_key
-        );
+        emit IdentityCreated(identityId, operationalKey, adminKey);
 
         return identityId;
     }
@@ -84,16 +79,18 @@ contract Identity is Named, Versioned {
         emit IdentityDeleted(identityId);
     }
 
-    function addKey(uint72 identityId, bytes32 key, uint256 keyPurpose, uint256 keyType)
-        external
-        onlyAdmin(identityId)
-    {
+    function addKey(
+        uint72 identityId,
+        bytes32 key,
+        uint256 keyPurpose,
+        uint256 keyType
+    ) external onlyAdmin(identityId) {
         require(key != bytes32(0), "Key arg is empty");
 
         IdentityStorage ids = identityStorage;
 
         bytes32 attachedKey;
-        ( , , attachedKey) = ids.getKey(identityId, key);
+        (, , attachedKey) = ids.getKey(identityId, key);
         require(attachedKey != key, "Key is already attached");
 
         ids.addKey(identityId, key, keyPurpose, keyType);
@@ -114,17 +111,12 @@ contract Identity is Named, Versioned {
         require(attachedKey == key, "Key isn't attached");
 
         require(
-            !(
-                ids.getKeysByPurpose(identityId, ADMIN_KEY).length == 1 &&
-                ids.keyHasPurpose(identityId, key, ADMIN_KEY)
-            ),
+            !(ids.getKeysByPurpose(identityId, ADMIN_KEY).length == 1 && ids.keyHasPurpose(identityId, key, ADMIN_KEY)),
             "Cannot delete the only admin key"
         );
         require(
-            !(
-                ids.getKeysByPurpose(identityId, OPERATIONAL_KEY).length == 1 &&
-                ids.keyHasPurpose(identityId, key, OPERATIONAL_KEY)
-            ),
+            !(ids.getKeysByPurpose(identityId, OPERATIONAL_KEY).length == 1 &&
+                ids.keyHasPurpose(identityId, key, OPERATIONAL_KEY)),
             "Cannot delete the only oper. key"
         );
 
@@ -136,8 +128,8 @@ contract Identity is Named, Versioned {
     }
 
     function _checkHubOwner() internal view virtual {
-		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
-	}
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+    }
 
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
@@ -149,5 +141,4 @@ contract Identity is Named, Versioned {
             "Admin function"
         );
     }
-
 }
