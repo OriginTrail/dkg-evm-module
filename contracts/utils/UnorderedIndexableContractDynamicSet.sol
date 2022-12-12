@@ -2,10 +2,9 @@
 
 pragma solidity ^0.8.4;
 
-import { Indexable } from "../interface/Indexable.sol";
+import {Indexable} from "../interface/Indexable.sol";
 
 library UnorderedIndexableContractDynamicSetLib {
-
     struct Contract {
         uint8 id;
         address addr;
@@ -68,5 +67,4 @@ library UnorderedIndexableContractDynamicSetLib {
     function size(Set storage self) internal view returns (uint256) {
         return self.contractList.length;
     }
-
-} 
+}

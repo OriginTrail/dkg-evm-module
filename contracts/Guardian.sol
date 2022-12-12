@@ -2,12 +2,11 @@
 
 pragma solidity ^0.8.4;
 
-import { Hub } from "./Hub.sol";
-import { ICustodian } from "./interface/ICustodian.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Hub} from "./Hub.sol";
+import {ICustodian} from "./interface/ICustodian.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Guardian {
-
     event TokenTransferred(address indexed custodian, uint256 amount);
     event MisplacedOTPWithdrawn(address indexed custodian, uint256 amount);
     event MisplacedTokensWithdrawn(address indexed custodian, address tokenContract, uint256 amount);
@@ -16,7 +15,7 @@ contract Guardian {
     IERC20 public tokenContract;
 
     constructor(address hubAddress) {
-        require(hubAddress != address(0));
+        require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
         hub = Hub(hubAddress);
         initialize();
@@ -28,13 +27,15 @@ contract Guardian {
     }
 
     function initialize() public onlyHubOwner {
-        tokenContract = IERC20(hub.getContractAddress("Token")); 
+        tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
     function transferTokens(address payable custodian) external onlyHubOwner {
         require(custodian != address(0x0), "Custodian cannot be a zero address");
         uint contractSize;
-        assembly { contractSize := extcodesize(custodian) }
+        assembly {
+            contractSize := extcodesize(custodian)
+        }
         require(contractSize > 0, "Cannot transfer tokens to custodian that is not a contract!");
 
         ICustodian custodianContract = ICustodian(custodian);
@@ -76,5 +77,4 @@ contract Guardian {
     function _checkHubOwner() internal view virtual {
         require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
-
 }

@@ -2,23 +2,23 @@
 
 pragma solidity ^0.8.4;
 
-import { Guardian } from "../Guardian.sol";
-import { Named } from "../interface/Named.sol";
-import { Versioned } from "../interface/Versioned.sol";
-import { ServiceAgreementStructsV1 } from "../structs/ServiceAgreementStructsV1.sol";
+import {Guardian} from "../Guardian.sol";
+import {Named} from "../interface/Named.sol";
+import {Versioned} from "../interface/Versioned.sol";
+import {ServiceAgreementStructsV1} from "../structs/ServiceAgreementStructsV1.sol";
 
 contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
-
-    string constant private _NAME = "ServiceAgreementStorageV1";
-    string constant private _VERSION = "1.0.0";
+    string private constant _NAME = "ServiceAgreementStorageV1";
+    string private constant _VERSION = "1.0.0";
 
     // CommitId [keccak256(agreementId + epoch + identityId)] => CommitSubmission
-    mapping(bytes32 => ServiceAgreementStructsV1.CommitSubmission) commitSubmissions;
+    mapping(bytes32 => ServiceAgreementStructsV1.CommitSubmission) internal commitSubmissions;
 
     // AgreementId [hash(asset type contract + tokenId + key)] => ServiceAgreement
-    mapping(bytes32 => ServiceAgreementStructsV1.ServiceAgreement) serviceAgreements;
+    mapping(bytes32 => ServiceAgreementStructsV1.ServiceAgreement) internal serviceAgreements;
 
-    constructor (address hubAddress) Guardian(hubAddress) {}
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) Guardian(hubAddress) {}
 
     modifier onlyContracts() {
         _checkHub();
@@ -40,10 +40,7 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
         uint96 tokenAmount,
         uint8 scoreFunctionId,
         uint8 proofWindowOffsetPerc
-    )
-        external
-        onlyContracts
-    {
+    ) external onlyContracts {
         ServiceAgreementStructsV1.ServiceAgreement storage agreement = serviceAgreements[agreementId];
         agreement.startTime = block.timestamp;
         agreement.epochsNumber = epochsNumber;
@@ -53,20 +50,15 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
         agreement.proofWindowOffsetPerc = proofWindowOffsetPerc;
     }
 
-    function getAgreementData(bytes32 agreementId)
-        external
-        view
-        returns (uint256, uint16, uint128, uint96, uint8[2] memory)
-    {
+    function getAgreementData(
+        bytes32 agreementId
+    ) external view returns (uint256, uint16, uint128, uint96, uint8[2] memory) {
         return (
             serviceAgreements[agreementId].startTime,
             serviceAgreements[agreementId].epochsNumber,
             serviceAgreements[agreementId].epochLength,
             serviceAgreements[agreementId].tokenAmount,
-            [
-                serviceAgreements[agreementId].scoreFunctionId,
-                serviceAgreements[agreementId].proofWindowOffsetPerc
-            ]
+            [serviceAgreements[agreementId].scoreFunctionId, serviceAgreements[agreementId].proofWindowOffsetPerc]
         );
     }
 
@@ -114,10 +106,10 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
         return serviceAgreements[agreementId].proofWindowOffsetPerc;
     }
 
-    function setAgreementProofWindowOffsetPerc(bytes32 agreementId, uint8 proofWindowOffsetPerc)
-        external
-        onlyContracts
-    {
+    function setAgreementProofWindowOffsetPerc(
+        bytes32 agreementId,
+        uint8 proofWindowOffsetPerc
+    ) external onlyContracts {
         serviceAgreements[agreementId].proofWindowOffsetPerc = proofWindowOffsetPerc;
     }
 
@@ -125,10 +117,11 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
         return serviceAgreements[agreementId].epochSubmissionHeads[epoch];
     }
 
-    function setAgreementEpochSubmissionHead(bytes32 agreementId, uint16 epoch, bytes32 headCommitId)
-        external
-        onlyContracts
-    {
+    function setAgreementEpochSubmissionHead(
+        bytes32 agreementId,
+        uint16 epoch,
+        bytes32 headCommitId
+    ) external onlyContracts {
         serviceAgreements[agreementId].epochSubmissionHeads[epoch] = headCommitId;
     }
 
@@ -144,10 +137,11 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
         return serviceAgreements[agreementId].rewardedNodesNumber[epoch];
     }
 
-    function setAgreementRewardedNodesNumber(bytes32 agreementId, uint16 epoch, uint32 rewardedNodesNumber)
-        external
-        onlyContracts
-    {
+    function setAgreementRewardedNodesNumber(
+        bytes32 agreementId,
+        uint16 epoch,
+        uint32 rewardedNodesNumber
+    ) external onlyContracts {
         serviceAgreements[agreementId].rewardedNodesNumber[epoch] = rewardedNodesNumber;
     }
 
@@ -161,10 +155,7 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
         uint72 prevIdentityId,
         uint72 nextIdentityId,
         uint40 score
-    )
-        external
-        onlyContracts
-    {
+    ) external onlyContracts {
         commitSubmissions[commitId] = ServiceAgreementStructsV1.CommitSubmission({
             identityId: identityId,
             prevIdentityId: prevIdentityId,
@@ -173,11 +164,9 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
         });
     }
 
-    function getCommitSubmission(bytes32 commitId)
-        external
-        view
-        returns (ServiceAgreementStructsV1.CommitSubmission memory)
-    {
+    function getCommitSubmission(
+        bytes32 commitId
+    ) external view returns (ServiceAgreementStructsV1.CommitSubmission memory) {
         return commitSubmissions[commitId];
     }
 
@@ -224,5 +213,4 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
-
 }

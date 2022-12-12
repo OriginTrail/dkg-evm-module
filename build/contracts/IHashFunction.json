@@ -21,7 +21,7 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"hash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interface/IHashFunction.sol\":\"IHashFunction\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/interface/IHashFunction.sol\":{\"keccak256\":\"0x4aceb9efd19121bb3e3072f0cc9e082c06d06dce28bc2c91b42cc7d4b2a344cb\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://7d8c219b55fb133442d246c4d152e978b010f8eb32b2ba3bf71cc2a6fd4e17f9\",\"dweb:/ipfs/QmTPuL8vjhFJCSR6V2YNVH23GP3DMGjnWqboPbJ7LEaqBZ\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"hash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interface/IHashFunction.sol\":\"IHashFunction\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[],\"viaIR\":true},\"sources\":{\"project:/contracts/interface/IHashFunction.sol\":{\"keccak256\":\"0x2d7ea6145959969e2086ac1ab92b086df85eca5196145ac6a82926eec46f9c16\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://56e3f1fa7827c8ee8793904f5109074b88e1e53e6e4c76ae3e3df64b2312f3ff\",\"dweb:/ipfs/QmbeBb3eeqVx4YCsQykBqxxnsHQDWHieUA7qNq5S5PtUtL\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "immutableReferences": {},
@@ -29,21 +29,21 @@
   "deployedGeneratedSources": [],
   "sourceMap": "",
   "deployedSourceMap": "",
-  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.4;\n\ninterface IHashFunction {\n\n    function hash(bytes calldata data) external pure returns (bytes32);\n\n}\n",
+  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.4;\n\ninterface IHashFunction {\n    function hash(bytes calldata data) external pure returns (bytes32);\n}\n",
   "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/interface/IHashFunction.sol",
   "ast": {
     "absolutePath": "project:/contracts/interface/IHashFunction.sol",
     "exportedSymbols": {
       "IHashFunction": [
-        12215
+        12980
       ]
     },
-    "id": 12216,
+    "id": 12981,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 12207,
+        "id": 12972,
         "literals": [
           "solidity",
           "^",
@@ -51,7 +51,7 @@
           ".4"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:23:37"
+        "src": "33:23:41"
       },
       {
         "abstract": false,
@@ -60,36 +60,36 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 12215,
+        "id": 12980,
         "linearizedBaseContracts": [
-          12215
+          12980
         ],
         "name": "IHashFunction",
-        "nameLocation": "68:13:37",
+        "nameLocation": "68:13:41",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "functionSelector": "aa1e84de",
-            "id": 12214,
+            "id": 12979,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "hash",
-            "nameLocation": "98:4:37",
+            "nameLocation": "97:4:41",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 12210,
+              "id": 12975,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 12209,
+                  "id": 12974,
                   "mutability": "mutable",
                   "name": "data",
-                  "nameLocation": "118:4:37",
+                  "nameLocation": "117:4:41",
                   "nodeType": "VariableDeclaration",
-                  "scope": 12214,
-                  "src": "103:19:37",
+                  "scope": 12979,
+                  "src": "102:19:41",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -97,10 +97,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 12208,
+                    "id": 12973,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "103:5:37",
+                    "src": "102:5:41",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -109,21 +109,21 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "102:21:37"
+              "src": "101:21:41"
             },
             "returnParameters": {
-              "id": 12213,
+              "id": 12978,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 12212,
+                  "id": 12977,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 12214,
-                  "src": "147:7:37",
+                  "scope": 12979,
+                  "src": "146:7:41",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -131,10 +131,10 @@
                     "typeString": "bytes32"
                   },
                   "typeName": {
-                    "id": 12211,
+                    "id": 12976,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "147:7:37",
+                    "src": "146:7:41",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -143,21 +143,21 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "146:9:37"
+              "src": "145:9:41"
             },
-            "scope": 12215,
-            "src": "89:67:37",
+            "scope": 12980,
+            "src": "88:67:41",
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 12216,
-        "src": "58:101:37",
+        "scope": 12981,
+        "src": "58:99:41",
         "usedErrors": []
       }
     ],
-    "src": "33:127:37"
+    "src": "33:125:41"
   },
   "compiler": {
     "name": "solc",
@@ -165,7 +165,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-08T16:40:13.603Z",
+  "updatedAt": "2022-12-12T12:30:10.731Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

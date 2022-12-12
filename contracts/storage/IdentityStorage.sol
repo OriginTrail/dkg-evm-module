@@ -2,35 +2,34 @@
 
 pragma solidity ^0.8.4;
 
-import { Hub } from "../Hub.sol";
-import { IERC734Extended } from "../interface/IERC734Extended.sol";
-import { Named } from "../interface/Named.sol";
-import { Versioned } from "../interface/Versioned.sol";
-import { ByteArr } from "../utils/ByteArr.sol";
+import {Hub} from "../Hub.sol";
+import {IERC734Extended} from "../interface/IERC734Extended.sol";
+import {Named} from "../interface/Named.sol";
+import {Versioned} from "../interface/Versioned.sol";
+import {ByteArr} from "../utils/ByteArr.sol";
 
 contract IdentityStorage is IERC734Extended, Named, Versioned {
-
     using ByteArr for bytes32[];
 
-    string constant private _NAME = "IdentityStorage";
-    string constant private _VERSION = "1.0.0";
+    string private constant _NAME = "IdentityStorage";
+    string private constant _VERSION = "1.0.0";
 
     Hub public hub;
 
     uint72 private _identityId;
 
     struct Identity {
-        mapping (bytes32 => Key) keys;
-        mapping (uint256 => bytes32[]) keysByPurpose;
+        mapping(bytes32 => Key) keys;
+        mapping(uint256 => bytes32[]) keysByPurpose;
     }
 
     // operationalKey => identityId
     mapping(bytes32 => uint72) public identityIds;
     // identityId => Identity
-    mapping(uint72 => Identity) identities;
+    mapping(uint72 => Identity) internal identities;
 
     constructor(address hubAddress) {
-        require(hubAddress != address(0));
+        require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
         hub = Hub(hubAddress);
 
@@ -105,11 +104,12 @@ contract IdentityStorage is IERC734Extended, Named, Versioned {
     }
 
     function generateIdentityId() external onlyContracts returns (uint72) {
-        unchecked { return _identityId++; }
+        unchecked {
+            return _identityId++;
+        }
     }
 
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
-
 }

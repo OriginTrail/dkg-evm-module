@@ -2,17 +2,16 @@
 
 pragma solidity ^0.8.4;
 
-import { HashingProxy } from "../HashingProxy.sol";
-import { Hub } from "../Hub.sol";
-import { ParametersStorage } from "../storage/ParametersStorage.sol";
-import { Indexable } from "../interface/Indexable.sol";
-import { IScoreFunction } from "../interface/IScoreFunction.sol";
-import { Named } from "../interface/Named.sol";
-import { PRBMathUD60x18 } from "@prb/math/contracts/PRBMathUD60x18.sol";
+import {HashingProxy} from "../HashingProxy.sol";
+import {Hub} from "../Hub.sol";
+import {ParametersStorage} from "../storage/ParametersStorage.sol";
+import {Indexable} from "../interface/Indexable.sol";
+import {IScoreFunction} from "../interface/IScoreFunction.sol";
+import {Named} from "../interface/Named.sol";
+import {PRBMathUD60x18} from "@prb/math/contracts/PRBMathUD60x18.sol";
 
 // Logarithmic Polynomial Long Division Score Function
 contract Log2PLDSF is IScoreFunction, Indexable, Named {
-
     using PRBMathUD60x18 for uint256;
 
     uint8 private constant _ID = 1;
@@ -35,7 +34,7 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
     uint32 public d;
 
     constructor(address hubAddress) {
-        require(hubAddress != address(0));
+        require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
         hub = Hub(hubAddress);
         initialize();
@@ -77,19 +76,21 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
 
         uint64 coefficient = 1 ether;
 
-        return uint40(
-            multiplier * (
-                logArgumentConstant * coefficient +
-                coefficient * (a * (mappedStake ** stakeExponent) + b) / (c * (mappedDistance ** distanceExponent) + d)
-            ).log2() / coefficient
-        );
+        return
+            uint40(
+                (multiplier *
+                    (logArgumentConstant *
+                        coefficient +
+                        (coefficient * (a * (mappedStake ** stakeExponent) + b)) /
+                        (c * (mappedDistance ** distanceExponent) + d)).log2()) / coefficient
+            );
     }
 
-    function calculateDistance(uint8 hashFunctionId, bytes calldata nodeId, bytes calldata keyword)
-        external
-        view
-        returns (uint256)
-    {
+    function calculateDistance(
+        uint8 hashFunctionId,
+        bytes calldata nodeId,
+        bytes calldata keyword
+    ) external view returns (uint256) {
         HashingProxy hp = hashingProxy;
         bytes32 nodeIdHash = hp.callHashFunction(hashFunctionId, nodeId);
         bytes32 keywordHash = hp.callHashFunction(hashFunctionId, keyword);
@@ -101,16 +102,7 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
         return (
             distanceMappingCoefficient,
             stakeMappingCoefficient,
-            [
-                multiplier,
-                logArgumentConstant,
-                a,
-                stakeExponent,
-                b,
-                c,
-                distanceExponent,
-                d
-            ]
+            [multiplier, logArgumentConstant, a, stakeExponent, b, c, distanceExponent, d]
         );
     }
 
@@ -155,7 +147,6 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
     }
 
     function _checkHubOwner() internal view virtual {
-        require (msg.sender == hub.owner(), "Fn can only be used by hub owner");
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
-
 }
