@@ -21,7 +21,7 @@
     "lint:js": "eslint .",
     "lint:js:fix": "eslint . --fix",
     "lint:sol": "solhint '{contracts,test}/**/*.sol' && prettier -c '{contracts,test}/**/*.sol'",
-    "lint:sol:fix": "prettier --write '{contracts,test}/**/*.sol'",
+    "lint:sol:fix": "prettier --write '{contracts,test}/**/*.sol' --loglevel 'warn' && solhint '{contracts,test}/**/*.sol'",
     "prepare": "husky install",
     "start:whitelist:mainnet": "node scripts/whitelist.js --environment otp_mainnet",
     "test:no-compilation": "truffle test --compile-none",
