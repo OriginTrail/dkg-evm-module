@@ -8,9 +8,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
       - name: Set up environment
-        uses: ../.github/actions/setup
+        uses: ./.github/actions/setup
       - name: Run linter & fix
         run: npm run lint:fix
       - name: Run tests
@@ -20,9 +21,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
       - name: Set up environment
-        uses: ../.github/actions/setup
+        uses: ./.github/actions/setup
       - name: Publish npm package
         run: npm publish
         env:

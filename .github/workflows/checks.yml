@@ -7,21 +7,27 @@ on:
     branches:
       - main
 
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
       - name: Set up environment
-        uses: ../.github/actions/setup
+        uses: ./.github/actions/setup
       - name: Run Javascript and Solidity linters
         run: npm run lint
     
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
       - name: Set up environment
-        uses: ../.github/actions/setup
+        uses: ./.github/actions/setup
       - name: Run tests 
         run: npm run test
