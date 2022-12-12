@@ -174,7 +174,7 @@ contract('DKG v6 Staking', async (accounts) => {
         await hub.setContractAddress('Owner', accounts[0]);
         await hub.setContractAddress('Staking', staking.address);
         const stake = (new BN(peers[0].stake).mul(ETH_DECIMALS)).toString();
-        await profile.createProfile(accounts[0], ethers.utils.formatBytes32String(peers[0].id), {from: accounts[1]});
+        await profile.createProfile(accounts[0], ethers.utils.formatBytes32String(peers[0].id), "Token", "TKN", {from: accounts[1]});
         const identityId = await identityStorage.getIdentityId(accounts[1]);
         await erc20Token.increaseAllowance(staking.address, stake, {from: accounts[0]});
         await staking.methods['addStake(uint72,uint96)'](identityId, stake, { from: accounts[0] });

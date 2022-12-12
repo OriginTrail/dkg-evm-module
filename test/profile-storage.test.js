@@ -1,5 +1,6 @@
 const ProfileStorage = artifacts.require("ProfileStorage");
 const Hub = artifacts.require("Hub");
+const Shares = artifacts.require("Shares");
 const { expect } = require("chai");
 
 contract("ProfileStorage", accounts => {
@@ -21,29 +22,29 @@ contract("ProfileStorage", accounts => {
     it("should allow creating and getting a profile", async () => {
         // Create a profile
         const identityId = 1;
-        const sharesContractAddress = accounts[1];
+        const shares = await Shares.new(hub.address, "Token1", "TKN1");
 
         await hub.setContractAddress('Owner', owner, {from: owner});
 
-        await profileStorage.createProfile(identityId, nodeId, sharesContractAddress, {from: owner});
+        await profileStorage.createProfile(identityId, nodeId, shares.address, {from: owner});
 
         // Get the profile
         const result = await profileStorage.getProfile(identityId);
         expect(result[0]).to.equal(nodeId);
         expect(result[1][0].toNumber()).to.deep.equal(0);
         expect(result[1][1].toNumber()).to.deep.equal(0);
-        expect(result[2]).to.equal(sharesContractAddress);
+        expect(result[2]).to.equal(shares.address);
 
     });
 
     it("should allow deleting a profile", async () => {
         // Create a profile
         const identityId = 1;
-        const sharesContractAddress = accounts[0];
+        const shares = await Shares.new(hub.address, "Token2", "TKN2");
 
         await hub.setContractAddress('Owner', owner, {from: owner});
 
-        await profileStorage.createProfile(identityId, nodeId, sharesContractAddress);
+        await profileStorage.createProfile(identityId, nodeId, shares.address);
 
         // Delete the profile
         await profileStorage.deleteProfile(identityId);
@@ -59,11 +60,11 @@ contract("ProfileStorage", accounts => {
     it("should allow setting and getting the profile node ID", async () => {
         // Create a profile
         const identityId = 1;
-        const sharesContractAddress = accounts[0];
+        const shares = await Shares.new(hub.address, "Token3", "TKN3");
 
         await hub.setContractAddress('Owner', owner, {from: owner});
 
-        await profileStorage.createProfile(identityId, nodeId, sharesContractAddress);
+        await profileStorage.createProfile(identityId, nodeId, shares.address);
 
         // Set the profile node ID
         await profileStorage.setNodeId(identityId, newNodeId);
@@ -76,10 +77,10 @@ contract("ProfileStorage", accounts => {
     it("should allow setting and getting the profile ask, operator fee, accumulatedOperatorFeeWithdrawalAmount, operatorFeeWithdrawalTimestamp", async () => {
         // Create a profile
         const identityId = 1;
-        const sharesContractAddress = accounts[0];
+        const shares = await Shares.new(hub.address, "Token4", "TKN4");
         await hub.setContractAddress('Owner', owner, {from: owner});
 
-        await profileStorage.createProfile(identityId, nodeId, sharesContractAddress);
+        await profileStorage.createProfile(identityId, nodeId, shares.address);
 
 // Set the profile accumulated operator fee
         const newOperatorFeeAmount = 123;
@@ -116,10 +117,10 @@ contract("ProfileStorage", accounts => {
     if("should allow checking if profile exists and node registered", async () => {
         // Create a profile
         const identityId = 1;
-        const sharesContractAddress = accounts[0];
+        const shares = await Shares.new(hub.address, "Token5", "TKN5");
         await hub.setContractAddress('Owner', owner, {from: owner});
 
-        await profileStorage.createProfile(identityId, nodeId, sharesContractAddress);
+        await profileStorage.createProfile(identityId, nodeId, shares.address);
 
         const result = profileStorage.profileExists(identityId);
         expect(result).to.be.true;

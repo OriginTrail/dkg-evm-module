@@ -142,7 +142,7 @@ module.exports = async (deployer, network, accounts) => {
             }
             try {
                 // hub contract
-                if (!deployedContracts.contracts.hub?.deployed) {
+               if (!deployedContracts.contracts.hub?.deployed) {
                     console.log('Deploying hub contract');
                     hub = await deployContract(Hub, deployerAddress)
                     await hub.setContractAddress('Owner', deployerAddress);
