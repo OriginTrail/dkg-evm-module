@@ -2,28 +2,27 @@
 
 pragma solidity ^0.8.4;
 
-import { Hub } from "../Hub.sol";
-import { Named } from "../interface/Named.sol";
-import { Versioned } from "../interface/Versioned.sol";
-import { AssertionStructs } from "../structs/AssertionStructs.sol";
+import {Hub} from "../Hub.sol";
+import {Named} from "../interface/Named.sol";
+import {Versioned} from "../interface/Versioned.sol";
+import {AssertionStructs} from "../structs/AssertionStructs.sol";
 
 contract AssertionStorage is Named, Versioned {
+    string private constant _NAME = "AssertionStorage";
+    string private constant _VERSION = "1.0.0";
 
-    string constant private _NAME = "AssertionStorage";
-    string constant private _VERSION = "1.0.0";
+    Hub public hub;
 
-	Hub public hub;
+    // assertionId => Assertion
+    mapping(bytes32 => AssertionStructs.Assertion) internal assertions;
 
-	// assertionId => Assertion
-	mapping(bytes32 => AssertionStructs.Assertion) assertions;
+    constructor(address hubAddress) {
+        require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
-	constructor(address hubAddress) {
-		require(hubAddress != address(0));
+        hub = Hub(hubAddress);
+    }
 
-		hub = Hub(hubAddress);
-	}
-
-	modifier onlyContracts() {
+    modifier onlyContracts() {
         _checkHub();
         _;
     }
@@ -36,22 +35,19 @@ contract AssertionStorage is Named, Versioned {
         return _VERSION;
     }
 
-	function createAssertion(
-		bytes32 assertionId,
-		uint128 size,
-		uint32 triplesNumber,
-		uint96 chunksNumber
-	)
-		external
-		onlyContracts
-	{
+    function createAssertion(
+        bytes32 assertionId,
+        uint128 size,
+        uint32 triplesNumber,
+        uint96 chunksNumber
+    ) external onlyContracts {
         assertions[assertionId] = AssertionStructs.Assertion({
             timestamp: block.timestamp,
             size: size,
             triplesNumber: triplesNumber,
             chunksNumber: chunksNumber
         });
-	}
+    }
 
     function getAssertion(bytes32 assertionId) external view returns (AssertionStructs.Assertion memory) {
         return assertions[assertionId];
@@ -77,8 +73,7 @@ contract AssertionStorage is Named, Versioned {
         return assertions[assertionId].timestamp != 0;
     }
 
-	function _checkHub() internal view virtual {
+    function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
-
 }

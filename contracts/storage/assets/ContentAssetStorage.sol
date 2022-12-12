@@ -2,25 +2,25 @@
 
 pragma solidity ^0.8.4;
 
-import { AbstractAsset } from "../../assets/AbstractAsset.sol";
-import { Hub } from "../../Hub.sol";
-import { Named } from "../../interface/Named.sol";
-import { ContentAssetStructs } from "../../structs/assets/ContentAssetStructs.sol";
-import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {AbstractAsset} from "../../assets/AbstractAsset.sol";
+import {Hub} from "../../Hub.sol";
+import {Named} from "../../interface/Named.sol";
+import {ContentAssetStructs} from "../../structs/assets/ContentAssetStructs.sol";
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract ContentAssetStorage is AbstractAsset, ERC721 {
-
-    string constant private _NAME = "ContentAssetStorage";
-    string constant private _VERSION = "1.0.0";
+    string private constant _NAME = "ContentAssetStorage";
+    string private constant _VERSION = "1.0.0";
 
     uint256 private _tokenId;
 
     // tokenId => Asset
-    mapping (uint256 => ContentAssetStructs.Asset) assets;
+    mapping(uint256 => ContentAssetStructs.Asset) internal assets;
 
     // keccak256(tokenId + assertionId + assertionIdIndex) => issuer
     mapping(bytes32 => address) public issuers;
 
+    // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) AbstractAsset(hubAddress) ERC721("ContentAssetStorage", "DKG") {}
 
     modifier onlyContracts() {
@@ -41,7 +41,9 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
     }
 
     function generateTokenId() external onlyContracts returns (uint256) {
-        unchecked { return _tokenId++; }
+        unchecked {
+            return _tokenId++;
+        }
     }
 
     function getAsset(uint256 tokenId) external view returns (ContentAssetStructs.Asset memory) {
@@ -56,18 +58,15 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
         return assets[tokenId].assertionIds;
     }
 
-    function setAssertionIssuer(uint256 tokenId, bytes32 assertionId, address issuer)
-        external
-        onlyContracts
-    {
+    function setAssertionIssuer(uint256 tokenId, bytes32 assertionId, address issuer) external onlyContracts {
         issuers[keccak256(abi.encodePacked(tokenId, assertionId, this.getAssertionIdsLength(tokenId)))] = issuer;
     }
 
-    function getAssertionIssuer(uint256 tokenId, bytes32 assertionId, uint256 assertionIndex)
-        external
-        view
-        returns (address)
-    {
+    function getAssertionIssuer(
+        uint256 tokenId,
+        bytes32 assertionId,
+        uint256 assertionIndex
+    ) external view returns (address) {
         return issuers[keccak256(abi.encodePacked(tokenId, assertionId, assertionIndex))];
     }
 
@@ -78,5 +77,4 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
-
 }

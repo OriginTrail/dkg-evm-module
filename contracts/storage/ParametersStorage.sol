@@ -2,18 +2,17 @@
 
 pragma solidity ^0.8.4;
 
-import { Hub } from "../Hub.sol";
+import {Hub} from "../Hub.sol";
 
 contract ParametersStorage {
-
     Hub public hub;
 
     uint96 public minimumStake;
     uint96 public maximumStake;
 
-    uint48 public R2;
-    uint32 public R1;
-    uint32 public R0;
+    uint48 public r2;
+    uint32 public r1;
+    uint32 public r0;
 
     uint16 public commitWindowDuration;
     uint8 public minProofWindowOffsetPerc;
@@ -28,16 +27,16 @@ contract ParametersStorage {
     uint32 public slashingFreezeDuration;
 
     constructor(address hubAddress) {
-        require(hubAddress != address(0));
+        require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
         hub = Hub(hubAddress);
 
         minimumStake = 50_000 ether;
         maximumStake = 5_000_000 ether;
 
-        R2 = 20;
-        R1 = 8;
-        R0 = 3;
+        r2 = 20;
+        r1 = 8;
+        r0 = 3;
 
         commitWindowDuration = 15 minutes;
         minProofWindowOffsetPerc = 50;
@@ -62,15 +61,15 @@ contract ParametersStorage {
     }
 
     function setR2(uint48 newR2) external onlyHubOwner {
-        R2 = newR2;
+        r2 = newR2;
     }
 
     function setR1(uint32 newR1) external onlyHubOwner {
-        R1 = newR1;
+        r1 = newR1;
     }
 
     function setR0(uint32 newR0) external onlyHubOwner {
-        R0 = newR0;
+        r0 = newR0;
     }
 
     function setCommitWindowDuration(uint16 newCommitWindowDuration) external onlyHubOwner {
@@ -112,5 +111,4 @@ contract ParametersStorage {
     function _checkHubOwner() internal view virtual {
         require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
-
 }

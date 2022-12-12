@@ -2,28 +2,27 @@
 
 pragma solidity ^0.8.4;
 
-import { Hub } from "./Hub.sol";
-import { IScoreFunction } from "./interface/IScoreFunction.sol";
-import { Named } from "./interface/Named.sol";
-import { Versioned } from "./interface/Versioned.sol";
-import { UnorderedIndexableContractDynamicSetLib } from "./utils/UnorderedIndexableContractDynamicSet.sol";
+import {Hub} from "./Hub.sol";
+import {IScoreFunction} from "./interface/IScoreFunction.sol";
+import {Named} from "./interface/Named.sol";
+import {Versioned} from "./interface/Versioned.sol";
+import {UnorderedIndexableContractDynamicSetLib} from "./utils/UnorderedIndexableContractDynamicSet.sol";
 
 contract ScoringProxy is Named, Versioned {
-
     using UnorderedIndexableContractDynamicSetLib for UnorderedIndexableContractDynamicSetLib.Set;
 
     event NewScoringFunctionContract(uint8 indexed scoreFunctionId, address newContractAddress);
     event ScoringFunctionContractUpdated(uint8 indexed scoreFunctionId, address newContractAddress);
 
-    string constant private _NAME = "ScoringProxy";
-    string constant private _VERSION = "1.0.0";
+    string private constant _NAME = "ScoringProxy";
+    string private constant _VERSION = "1.0.0";
 
     Hub public hub;
 
-    UnorderedIndexableContractDynamicSetLib.Set scoreFunctionSet;
+    UnorderedIndexableContractDynamicSetLib.Set internal scoreFunctionSet;
 
     constructor(address hubAddress) {
-        require(hubAddress != address(0));
+        require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
         hub = Hub(hubAddress);
     }
@@ -54,18 +53,14 @@ contract ScoringProxy is Named, Versioned {
     function removeContract(uint8 scoreFunctionId) external onlyHubOwner {
         scoreFunctionSet.remove(scoreFunctionId);
     }
-    
+
     function callScoreFunction(
         uint8 scoreFunctionId,
         uint8 hashFunctionId,
         bytes calldata nodeId,
         bytes calldata keyword,
         uint96 stake
-    )
-        external
-        view
-        returns (uint40)
-    {
+    ) external view returns (uint40) {
         IScoreFunction scoringFunction = IScoreFunction(scoreFunctionSet.get(scoreFunctionId).addr);
         uint256 distance = scoringFunction.calculateDistance(hashFunctionId, nodeId, keyword);
         return scoringFunction.calculateScore(distance, stake);
@@ -90,5 +85,4 @@ contract ScoringProxy is Named, Versioned {
     function _checkHubOwner() internal view virtual {
         require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
-
 }

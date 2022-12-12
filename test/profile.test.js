@@ -1,15 +1,15 @@
-const Profile = artifacts.require("Profile");
-const Hub = artifacts.require("Hub");
-const Identity = artifacts.require("Identity");
-const ERC20Token = artifacts.require('ERC20Token');
-const Staking = artifacts.require("Staking");
-const IdentityStorage = artifacts.require("IdentityStorage");
-const ProfileStorage = artifacts.require("ProfileStorage");
-const WhitelistStorage = artifacts.require("WhitelistStorage");
-const HashingProxy = artifacts.require("HashingProxy");
-const { expect } = require("chai");
+// const Profile = artifacts.require('Profile');
+// const Hub = artifacts.require('Hub');
+// const Identity = artifacts.require('Identity');
+// const ERC20Token = artifacts.require('ERC20Token');
+// const Staking = artifacts.require('Staking');
+// const IdentityStorage = artifacts.require('IdentityStorage');
+// const ProfileStorage = artifacts.require('ProfileStorage');
+// const WhitelistStorage = artifacts.require('WhitelistStorage');
+// const HashingProxy = artifacts.require('HashingProxy');
+// const { expect } = require('chai');
 
-contract("Profile", () => {
+contract('Profile', () => {
 //     let hub;
 //     let profile;
 //     let token;
@@ -184,8 +184,3 @@ contract("Profile", () => {
 //     });
 
 });
-
-
-
-
-

@@ -2,17 +2,16 @@
 
 pragma solidity ^0.8.4;
 
-import { Guardian } from "../Guardian.sol";
-import { Shares } from "../Shares.sol";
-import { Named } from "../interface/Named.sol";
-import { Versioned } from "../interface/Versioned.sol";
+import {Guardian} from "../Guardian.sol";
+import {Shares} from "../Shares.sol";
+import {Named} from "../interface/Named.sol";
+import {Versioned} from "../interface/Versioned.sol";
 
 contract ProfileStorage is Named, Versioned, Guardian {
+    string private constant _NAME = "ProfileStorage";
+    string private constant _VERSION = "1.0.0";
 
-    string constant private _NAME = "ProfileStorage";
-    string constant private _VERSION = "1.0.0";
-
-    struct ProfileDefinition{
+    struct ProfileDefinition {
         bytes nodeId;
         uint96 ask;
         uint96 accumulatedOperatorFee;
@@ -25,13 +24,14 @@ contract ProfileStorage is Named, Versioned, Guardian {
     // nodeId => isRegistered?
     mapping(bytes => bool) public nodeIdsList;
     // identityId => Profile
-    mapping(uint72 => ProfileDefinition) profiles;
+    mapping(uint72 => ProfileDefinition) internal profiles;
 
     // shares token name => isTaken?
     mapping(string => bool) public sharesNames;
     // shares token ID => isTaken?
     mapping(string => bool) public sharesSymbols;
 
+    // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) Guardian(hubAddress) {}
 
     modifier onlyContracts() {
@@ -47,10 +47,11 @@ contract ProfileStorage is Named, Versioned, Guardian {
         return _VERSION;
     }
 
-    function createProfile(uint72 identityId, bytes calldata nodeId, address sharesContractAddress)
-        external
-        onlyContracts
-    {
+    function createProfile(
+        uint72 identityId,
+        bytes calldata nodeId,
+        address sharesContractAddress
+    ) external onlyContracts {
         ProfileDefinition storage profile = profiles[identityId];
         profile.nodeId = nodeId;
         profile.sharesContractAddress = sharesContractAddress;
@@ -104,7 +105,10 @@ contract ProfileStorage is Named, Versioned, Guardian {
         return profiles[identityId].accumulatedOperatorFeeWithdrawalAmount;
     }
 
-    function setAccumulatedOperatorFeeWithdrawalAmount(uint72 identityId, uint96 accumulatedOperatorFeeWithdrawalAmount) external onlyContracts {
+    function setAccumulatedOperatorFeeWithdrawalAmount(
+        uint72 identityId,
+        uint96 accumulatedOperatorFeeWithdrawalAmount
+    ) external onlyContracts {
         profiles[identityId].accumulatedOperatorFeeWithdrawalAmount = accumulatedOperatorFeeWithdrawalAmount;
     }
 
@@ -112,7 +116,10 @@ contract ProfileStorage is Named, Versioned, Guardian {
         return profiles[identityId].operatorFeeWithdrawalTimestamp;
     }
 
-    function setAccumulatedOperatorFeeWithdrawalTimestamp(uint72 identityId, uint256 operatorFeeWithdrawalTimestamp) external onlyContracts {
+    function setAccumulatedOperatorFeeWithdrawalTimestamp(
+        uint72 identityId,
+        uint256 operatorFeeWithdrawalTimestamp
+    ) external onlyContracts {
         profiles[identityId].operatorFeeWithdrawalTimestamp = operatorFeeWithdrawalTimestamp;
     }
 

@@ -3,7 +3,6 @@
 pragma solidity ^0.8.4;
 
 library UnorderedNamedContractDynamicSetLib {
-
     struct Contract {
         string name;
         address addr;
@@ -95,18 +94,17 @@ library UnorderedNamedContractDynamicSetLib {
 
     function exists(Set storage self, string calldata name) internal view returns (bool) {
         if (size(self) == 0) return false;
-        return keccak256(
-            abi.encodePacked(self.contractList[self.stringIndexPointers[name]].name)
-        ) == keccak256(abi.encodePacked(name));
+        return
+            keccak256(abi.encodePacked(self.contractList[self.stringIndexPointers[name]].name)) ==
+            keccak256(abi.encodePacked(name));
     }
 
     function exists(Set storage self, address addr) internal view returns (bool) {
         if (size(self) == 0) return false;
-        return addr == self.contractList[self.addressIndexPointers[addr]].addr; 
+        return addr == self.contractList[self.addressIndexPointers[addr]].addr;
     }
 
     function size(Set storage self) internal view returns (uint256) {
         return self.contractList.length;
     }
-
-} 
+}

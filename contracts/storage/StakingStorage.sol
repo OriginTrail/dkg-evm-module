@@ -2,14 +2,13 @@
 
 pragma solidity ^0.8.4;
 
-import { Guardian } from "../Guardian.sol";
-import { Named } from "../interface/Named.sol";
-import { Versioned } from "../interface/Versioned.sol";
+import {Guardian} from "../Guardian.sol";
+import {Named} from "../interface/Named.sol";
+import {Versioned} from "../interface/Versioned.sol";
 
 contract StakingStorage is Named, Versioned, Guardian {
-
-    string constant private _NAME = "StakingStorage";
-    string constant private _VERSION = "1.0.0";
+    string private constant _NAME = "StakingStorage";
+    string private constant _VERSION = "1.0.0";
 
     struct WithdrawalRequest {
         uint96 amount;
@@ -25,6 +24,7 @@ contract StakingStorage is Named, Versioned, Guardian {
     // identityId => withdrawalRequest
     mapping(uint72 => mapping(address => WithdrawalRequest)) public withdrawalRequests;
 
+    // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) Guardian(hubAddress) {}
 
     modifier onlyContracts() {
@@ -48,14 +48,13 @@ contract StakingStorage is Named, Versioned, Guardian {
         operatorFees[identityId] = operatorFee;
     }
 
-    function createWithdrawalRequest(uint72 identityId, address staker, uint96 amount, uint256 timestamp)
-        external
-        onlyContracts
-    {
-        withdrawalRequests[identityId][staker] = WithdrawalRequest({
-            amount: amount,
-            timestamp: timestamp
-        });
+    function createWithdrawalRequest(
+        uint72 identityId,
+        address staker,
+        uint96 amount,
+        uint256 timestamp
+    ) external onlyContracts {
+        withdrawalRequests[identityId][staker] = WithdrawalRequest({amount: amount, timestamp: timestamp});
     }
 
     function deleteWithdrawalRequest(uint72 identityId, address staker) external onlyContracts {
@@ -81,5 +80,4 @@ contract StakingStorage is Named, Versioned, Guardian {
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
-
 }
