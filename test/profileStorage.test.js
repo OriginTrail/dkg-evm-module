@@ -10,8 +10,11 @@ contract('ProfileStorage', accounts => {
   const nodeIdString = 'QmWyf2dtqJnhuCpzEDTNmNFYc5tjxTrXhGcUUmGHdg2gtj';
   const nodeId = web3.utils.asciiToHex(nodeIdString);
 
-  const newIdString = 'QmWyf2dtqJnhuCpzEDTNmNFYc5tjxTrXhGcUUmGHdg2gtj';
-  const newNodeId = web3.utils.asciiToHex(newIdString);
+  const newNodeIdString = 'QmWyf2dtqJnhuCpzEDTNmNFYc5tjxTrXhGcUUmGHdg2gtj';
+  const newNodeId = web3.utils.asciiToHex(newNodeIdString);
+
+  const wrongNodeIdString = 'QmWyf2dtqJnhuCpzEDTNmNFYc5tjxTrXhGcUUmGHdg2gt0';
+  const wrongNodeId = web3.utils.asciiToHex(wrongNodeIdString);
 
   beforeEach(async () => {
     // Deploy a new instance of ProfileStorage before each test
@@ -135,7 +138,7 @@ contract('ProfileStorage', accounts => {
 
     expect(registeredResult).to.equal(true);
 
-    const wrongRegisteredResult = await profileStorage.nodeIdsList(newNodeId);
+    const wrongRegisteredResult = await profileStorage.nodeIdsList(wrongNodeId);
 
     expect(wrongRegisteredResult).to.equal(false);
   });
