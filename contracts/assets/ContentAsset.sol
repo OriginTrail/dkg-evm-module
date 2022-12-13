@@ -46,6 +46,11 @@ contract ContentAsset is Named, Versioned {
         _;
     }
 
+    modifier onlyMutable(uint256 tokenId) {
+        _checkMutability(tokenId);
+        _;
+    }
+
     function name() external pure override returns (string memory) {
         return _NAME;
     }
@@ -62,7 +67,8 @@ contract ContentAsset is Named, Versioned {
             args.chunksNumber,
             args.epochsNumber,
             args.tokenAmount,
-            args.scoreFunctionId
+            args.scoreFunctionId,
+            args.immutable_
         );
     }
 
@@ -73,9 +79,19 @@ contract ContentAsset is Named, Versioned {
         uint96 chunksNumber,
         uint16 epochsNumber,
         uint96 tokenAmount,
-        uint8 scoreFunctionId
+        uint8 scoreFunctionId,
+        bool immutable_
     ) external {
-        _createAsset(assertionId, size, triplesNumber, chunksNumber, epochsNumber, tokenAmount, scoreFunctionId);
+        _createAsset(
+            assertionId,
+            size,
+            triplesNumber,
+            chunksNumber,
+            epochsNumber,
+            tokenAmount,
+            scoreFunctionId,
+            immutable_
+        );
     }
 
     function burnAsset(uint256 tokenId) external onlyAssetOwner(tokenId) {
@@ -102,7 +118,7 @@ contract ContentAsset is Named, Versioned {
         uint32 triplesNumber,
         uint96 chunksNumber,
         uint96 tokenAmount
-    ) external onlyAssetOwner(tokenId) {
+    ) external onlyAssetOwner(tokenId) onlyMutable(tokenId) {
         ContentAssetStorage cas = contentAssetStorage;
 
         assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
@@ -161,7 +177,8 @@ contract ContentAsset is Named, Versioned {
         uint96 chunksNumber,
         uint16 epochsNumber,
         uint96 tokenAmount,
-        uint8 scoreFunctionId
+        uint8 scoreFunctionId,
+        bool immutable_
     ) internal {
         ContentAssetStorage cas = contentAssetStorage;
 
@@ -170,6 +187,7 @@ contract ContentAsset is Named, Versioned {
 
         assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
         cas.setAssertionIssuer(tokenId, assertionId, msg.sender);
+        cas.setMutability(tokenId, immutable_);
         cas.pushAssertionId(tokenId, assertionId);
 
         serviceAgreementV1.createServiceAgreement(
@@ -194,5 +212,9 @@ contract ContentAsset is Named, Versioned {
 
     function _checkAssetOwner(uint256 tokenId) internal view virtual {
         require(msg.sender == contentAssetStorage.ownerOf(tokenId), "Only asset owner can use this fn");
+    }
+
+    function _checkMutability(uint256 tokenId) internal view virtual {
+        require(contentAssetStorage.isMutable(tokenId), "Asset is immutable");
     }
 }

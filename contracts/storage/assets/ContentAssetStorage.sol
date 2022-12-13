@@ -68,6 +68,14 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
         return assets[tokenId];
     }
 
+    function setMutability(uint256 tokenId, bool immutable_) external onlyContracts {
+        assets[tokenId].immutable_ = immutable_;
+    }
+
+    function isMutable(uint256 tokenId) external view returns (bool) {
+        return !assets[tokenId].immutable_;
+    }
+
     function pushAssertionId(uint256 tokenId, bytes32 assertionId) external onlyContracts {
         assets[tokenId].assertionIds.push(assertionId);
     }
