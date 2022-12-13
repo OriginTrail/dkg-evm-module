@@ -191,8 +191,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint96 tokenAmount
     ) external onlyContracts {
         if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-        if (!hub.isAssetStorage(assetContract))
-            revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
+        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
         if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
         if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
 
@@ -229,8 +228,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint8 hashFunctionId
     ) external onlyContracts {
         if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-        if (!hub.isAssetStorage(assetContract))
-            revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
+        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
         if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
 
         bytes32 agreementId = _generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
@@ -254,8 +252,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint96 tokenAmount
     ) external onlyContracts {
         if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-        if (!hub.isAssetStorage(assetContract))
-            revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
+        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
         if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
         if (epochsNumber == 0) revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
         if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
@@ -278,8 +275,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint96 tokenAmount
     ) external onlyContracts {
         if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-        if (!hub.isAssetStorage(assetContract))
-            revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
+        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
         if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
         if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
 
@@ -602,10 +598,12 @@ contract ServiceAgreementV1 is Named, Versioned {
         }
     }
 
-    function _linkCommits(bytes32 agreementId, uint16 epoch, uint72 leftIdentityId, uint72 rightIdentityId)
-        internal
-        virtual
-    {
+    function _linkCommits(
+        bytes32 agreementId,
+        uint16 epoch,
+        uint72 leftIdentityId,
+        uint72 rightIdentityId
+    ) internal virtual {
         ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
         sasV1.setCommitSubmissionNextIdentityId(
