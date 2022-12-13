@@ -150,7 +150,7 @@ contract Profile is Named, Versioned {
     // }
 
     // TODO: Define where it can be called, change internal modifier
-    function _setAvailableNodeAddresses(uint72 identityId) internal {
+    function _setAvailableNodeAddresses(uint72 identityId) internal virtual {
         ProfileStorage ps = profileStorage;
         HashingProxy hp = hashingProxy;
 

@@ -190,7 +190,7 @@ contract Staking is Named, Versioned {
         emit OperatorFeeUpdated(identityId, profileStorage.getNodeId(identityId), operatorFee);
     }
 
-    function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal {
+    function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal virtual {
         StakingStorage ss = stakingStorage;
         ProfileStorage ps = profileStorage;
         ParametersStorage params = parametersStorage;

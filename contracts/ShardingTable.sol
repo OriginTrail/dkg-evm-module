@@ -147,7 +147,7 @@ contract ShardingTable is Named, Versioned {
     function _getShardingTable(
         uint72 startingIdentityId,
         uint72 nodesNumber
-    ) internal view returns (ShardingTableStructs.NodeInfo[] memory) {
+    ) internal view virtual returns (ShardingTableStructs.NodeInfo[] memory) {
         ShardingTableStructs.NodeInfo[] memory nodesPage;
         ShardingTableStorage sts = shardingTableStorage;
 

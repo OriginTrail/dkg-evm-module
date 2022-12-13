@@ -55,7 +55,7 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
         uint256 assertionIdsLength = assertionIds.length;
 
         for (uint256 i = 0; i < assertionIdsLength; ) {
-            delete issuers[generateAssetAssertionId(tokenId, assertionIds[i], i)];
+            delete issuers[_generateAssetAssertionId(tokenId, assertionIds[i], i)];
             unchecked {
                 i++;
             }
@@ -85,11 +85,11 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
     }
 
     function setAssertionIssuer(uint256 tokenId, bytes32 assertionId, address issuer) external onlyContracts {
-        issuers[generateAssetAssertionId(tokenId, assertionId, this.getAssertionIdsLength(tokenId))] = issuer;
+        issuers[_generateAssetAssertionId(tokenId, assertionId, this.getAssertionIdsLength(tokenId))] = issuer;
     }
 
     function deleteAssertionIssuer(uint256 tokenId, bytes32 assertionId, uint256 index) external onlyContracts {
-        delete issuers[generateAssetAssertionId(tokenId, assertionId, index)];
+        delete issuers[_generateAssetAssertionId(tokenId, assertionId, index)];
     }
 
     function getAssertionIssuer(
@@ -104,11 +104,11 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
         return issuers[assetAssertionId] != address(0);
     }
 
-    function generateAssetAssertionId(
+    function _generateAssetAssertionId(
         uint256 tokenId,
         bytes32 assertionId,
         uint256 index
-    ) public pure returns (bytes32) {
+    ) internal pure virtual returns (bytes32) {
         return keccak256(abi.encodePacked(tokenId, assertionId, index));
     }
 
