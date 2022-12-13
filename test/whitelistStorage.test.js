@@ -2,7 +2,7 @@ const WhitelistStorage = artifacts.require('WhitelistStorage');
 const truffleAssert = require('truffle-assertions');
 const { expect } = require('chai');
 
-contract('WhitelistStorage', async (accounts) => {
+contract('WhitelistStorage', async accounts => {
   let whitelistStorage;
   const owner = accounts[0];
   const nonOwner = accounts[1];
@@ -19,8 +19,11 @@ contract('WhitelistStorage', async (accounts) => {
 
     expect(isWhitelisted).to.equal(false);
   });
+
   it('Whitelist address with owner, expect to pass', async () => {
-    await truffleAssert.passes(whitelistStorage.whitelistAddress(address, { from: owner }));
+    await truffleAssert.passes(
+      whitelistStorage.whitelistAddress(address, { from: owner }),
+    );
   });
 
   it('Validate that the address is whitelisted, expect to be true', async () => {
@@ -30,21 +33,27 @@ contract('WhitelistStorage', async (accounts) => {
   });
 
   it('Whitelist new address with non owner, expect to fail and not whitelisted', async () => {
-    await truffleAssert.reverts(whitelistStorage.whitelistAddress(notWhitelisted, { from: nonOwner }));
+    await truffleAssert.reverts(
+      whitelistStorage.whitelistAddress(notWhitelisted, { from: nonOwner }),
+    );
     const isWhitelisted = await whitelistStorage.whitelisted(notWhitelisted);
 
     expect(isWhitelisted).to.equal(false);
   });
 
   it('Block address with owner, expect to pass', async () => {
-    await truffleAssert.passes(whitelistStorage.blacklistAddress(address, { from: owner }));
-    const isBlacklisted = await whitelistStorage.whitelisted(address);
+    await truffleAssert.passes(
+      whitelistStorage.blacklistAddress(address, { from: owner }),
+    );
+    const isWhitelisted = await whitelistStorage.whitelisted(address);
 
-    expect(isBlacklisted).to.equal(false);
+    expect(isWhitelisted).to.equal(false);
   });
 
   it('Block address with non owner, expect to fail', async () => {
-    await truffleAssert.reverts(whitelistStorage.blacklistAddress(address, { from: nonOwner }));
+    await truffleAssert.reverts(
+      whitelistStorage.blacklistAddress(address, { from: nonOwner }),
+    );
   });
 
   it('Disable whitelist, expect to be false', async () => {
