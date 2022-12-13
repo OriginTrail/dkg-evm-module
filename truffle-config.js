@@ -136,19 +136,93 @@ module.exports = {
       version: '0.8.16', // Fetch exact version from solc-bin (default: truffle's version)
       // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
       settings: {
-        viaIR: true,
         // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
           enabled: true,
-          runs: 1000,
+          runs: 200,
+          // Switch optimizer components on or off in detail.
+          // The "enabled" switch above provides two defaults which can be
+          // tweaked here. If "details" is given, "enabled" can be omitted.
+          details: {
+            // The peephole optimizer is always on if no details are given,
+            // use details to switch it off.
+            peephole: true,
+            // The inliner is always on if no details are given,
+            // use details to switch it off.
+            inliner: true,
+            // The unused jumpdest remover is always on if no details are given,
+            // use details to switch it off.
+            jumpdestRemover: true,
+            // Sometimes re-orders literals in commutative operations.
+            orderLiterals: true,
+            // Removes duplicate code blocks
+            deduplicate: true,
+            // Common subexpression elimination, this is the most complicated step but
+            // can also provide the largest gain.
+            cse: true,
+            // Optimize representation of literal numbers and strings in code.
+            constantOptimizer: true,
+            // The new Yul optimizer. Mostly operates on the code of ABI coder v2
+            // and inline assembly.
+            // It is activated together with the global optimizer setting
+            // and can be deactivated here.
+            // Before Solidity 0.6.0 it had to be activated through this switch.
+            yul: true,
+            // Tuning options for the Yul optimizer.
+            yulDetails: {
+              // Improve allocation of stack slots for variables, can free up stack slots early.
+              // Activated by default if the Yul optimizer is activated.
+              stackAllocation: true,
+              // Select optimization steps to be applied. It is also possible to modify both the
+              // optimization sequence and the clean-up sequence. Instructions for each sequence
+              // are separated with the ":" delimiter and the values are provided in the form of
+              // optimization-sequence:clean-up-sequence. For more information see
+              // "The Optimizer > Selecting Optimizations".
+              // This field is optional, and if not provided, the default sequences for both
+              // optimization and clean-up are used. If only one of the options is provivded
+              // the other will not be run.
+              // If only the delimiter ":" is provided then neither the optimization nor the clean-up
+              // sequence will be run.
+              // If set to an empty value, only the default clean-up sequence is used and
+              // no optimization steps are applied.
+              // optimizerSteps: "dhfoDgvulfnTUtnIf..."
+            }
+          },
         },
         //  evmVersion: "byzantium"
+        // Optional: Change compilation pipeline to go through the Yul intermediate representation.
+        // This is false by default.
+        viaIR: true,
+        // Optional: Debugging settings
+        // debug: {
+          // How to treat revert (and require) reason strings. Settings are
+          // "default", "strip", "debug" and "verboseDebug".
+          // "default" does not inject compiler-generated revert strings and keeps user-supplied ones.
+          // "strip" removes all revert strings (if possible, i.e. if literals are used) keeping side-effects
+          // "debug" injects strings for compiler-generated internal reverts, implemented for ABI encoders V1 and V2 for now.
+          // "verboseDebug" even appends further information to user-supplied revert strings (not yet implemented)
+          // revertStrings: "debug",
+          // Optional: How much extra debug information to include in comments in the produced EVM
+          // assembly and Yul code. Available components are:
+          // - `location`: Annotations of the form `@src <index>:<start>:<end>` indicating the
+          //    location of the corresponding element in the original Solidity file, where:
+          //     - `<index>` is the file index matching the `@use-src` annotation,
+          //     - `<start>` is the index of the first byte at that location,
+          //     - `<end>` is the index of the first byte after that location.
+          // - `snippet`: A single-line code snippet from the location indicated by `@src`.
+          //     The snippet is quoted and follows the corresponding `@src` annotation.
+          // - `*`: Wildcard value that can be used to request everything.
+          // debugInfo: ["location", "snippet"]
+        // },
       },
     },
   },
 
   // Plugins
-  plugins: ['solidity-coverage'],
+  plugins: [
+    // 'solidity-coverage',
+    'truffle-contract-size'
+  ],
 
   // Truffle DB is currently disabled by default; to enable it, change enabled:
   // false to enabled: true. The default storage location can also be

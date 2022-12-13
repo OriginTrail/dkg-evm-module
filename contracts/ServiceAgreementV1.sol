@@ -66,6 +66,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint256 indexed tokenId,
         bytes keyword,
         uint8 hashFunctionId,
+        uint16 epoch,
         uint72 indexed identityId,
         uint40 score
     );
@@ -74,6 +75,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint256 indexed tokenId,
         bytes keyword,
         uint8 hashFunctionId,
+        uint16 epoch,
         uint72 indexed identityId
     );
 
@@ -355,47 +357,18 @@ contract ServiceAgreementV1 is Named, Versioned {
     }
 
     function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
-        bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
+        _submitCommit(args);
+    }
 
-        if (!isCommitWindowOpen(agreementId, args.epoch)) {
-            ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
-            uint256 actualCommitWindowStart = (sasV1.getAgreementStartTime(agreementId) +
-                args.epoch *
-                sasV1.getAgreementEpochLength(agreementId));
+    function bulkSubmitCommit(ServiceAgreementStructsV1.CommitInputArgs[] calldata argsArray) external {
+        uint256 commitsNumber = argsArray.length;
 
-            revert ServiceAgreementErrorsV1.CommitWindowClosed(
-                agreementId,
-                args.epoch,
-                actualCommitWindowStart,
-                actualCommitWindowStart + parametersStorage.commitWindowDuration(),
-                block.timestamp
-            );
+        for (uint256 i; i < commitsNumber; ) {
+            _submitCommit(argsArray[i]);
+            unchecked {
+                i++;
+            }
         }
-
-        uint72 identityId = identityStorage.getIdentityId(msg.sender);
-
-        if (!shardingTableStorage.nodeExists(identityId)) {
-            ProfileStorage ps = profileStorage;
-
-            revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
-                identityId,
-                ps.getNodeId(identityId),
-                ps.getAsk(identityId),
-                stakingStorage.totalStakes(identityId)
-            );
-        }
-
-        uint40 score = scoringProxy.callScoreFunction(
-            serviceAgreementStorageV1.getAgreementScoreFunctionId(agreementId),
-            args.hashFunctionId,
-            profileStorage.getNodeId(identityId),
-            args.keyword,
-            stakingStorage.totalStakes(identityId)
-        );
-
-        _insertCommit(agreementId, args.epoch, identityId, 0, 0, score);
-
-        emit CommitSubmitted(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId, identityId, score);
     }
 
     function isProofWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
@@ -441,6 +414,136 @@ contract ServiceAgreementV1 is Named, Versioned {
     }
 
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
+        _sendProof(args);
+    }
+
+    function bulkSendProof(ServiceAgreementStructsV1.ProofInputArgs[] calldata argsArray) external {
+        uint256 proofsNumber = argsArray.length;
+
+        for (uint256 i; i < proofsNumber; ) {
+            _sendProof(argsArray[i]);
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    function sendProofWithAutoCommit(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
+        bytes32 agreementId;
+        uint72 identityId;
+        (agreementId, identityId) = _sendProof(args);
+
+        uint40 score = scoringProxy.callScoreFunction(
+            serviceAgreementStorageV1.getAgreementScoreFunctionId(agreementId),
+            args.hashFunctionId,
+            profileStorage.getNodeId(identityId),
+            args.keyword,
+            stakingStorage.totalStakes(identityId)
+        );
+
+        _insertCommit(agreementId, (args.epoch + 1), identityId, 0, 0, score);
+
+        emit CommitSubmitted(
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId,
+            (args.epoch + 1),
+            identityId,
+            score
+        );
+    }
+
+    // function bulkSendProofWithAutoCommit(ServiceAgreementStructsV1.ProofInputArgs[] calldata argsArray) external {
+    //     uint256 proofsNumber = argsArray.length;
+
+    //     bytes32 agreementId;
+    //     uint72 identityId;
+    //     uint40 score;
+    //     for (uint256 i; i < proofsNumber; ) {
+    //         (agreementId, identityId) = _sendProof(argsArray[i]);
+
+    //         score = scoringProxy.callScoreFunction(
+    //             serviceAgreementStorageV1.getAgreementScoreFunctionId(agreementId),
+    //             argsArray[i].hashFunctionId,
+    //             profileStorage.getNodeId(identityId),
+    //             argsArray[i].keyword,
+    //             stakingStorage.totalStakes(identityId)
+    //         );
+
+    //         _insertCommit(agreementId, (argsArray[i].epoch + 1), identityId, 0, 0, score);
+
+    //         emit CommitSubmitted(
+    //             argsArray[i].assetContract,
+    //             argsArray[i].tokenId,
+    //             argsArray[i].keyword,
+    //             argsArray[i].hashFunctionId,
+    //             (argsArray[i].epoch + 1),
+    //             identityId,
+    //             score
+    //         );
+
+    //         unchecked {
+    //             i++;
+    //         }
+    //     }
+    // }
+
+    function _submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) internal virtual {
+        bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
+
+        if (!isCommitWindowOpen(agreementId, args.epoch)) {
+            ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+            uint256 actualCommitWindowStart = (sasV1.getAgreementStartTime(agreementId) +
+                args.epoch *
+                sasV1.getAgreementEpochLength(agreementId));
+
+            revert ServiceAgreementErrorsV1.CommitWindowClosed(
+                agreementId,
+                args.epoch,
+                actualCommitWindowStart,
+                actualCommitWindowStart + parametersStorage.commitWindowDuration(),
+                block.timestamp
+            );
+        }
+
+        uint72 identityId = identityStorage.getIdentityId(msg.sender);
+
+        if (!shardingTableStorage.nodeExists(identityId)) {
+            ProfileStorage ps = profileStorage;
+
+            revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
+                identityId,
+                ps.getNodeId(identityId),
+                ps.getAsk(identityId),
+                stakingStorage.totalStakes(identityId)
+            );
+        }
+
+        uint40 score = scoringProxy.callScoreFunction(
+            serviceAgreementStorageV1.getAgreementScoreFunctionId(agreementId),
+            args.hashFunctionId,
+            profileStorage.getNodeId(identityId),
+            args.keyword,
+            stakingStorage.totalStakes(identityId)
+        );
+
+        _insertCommit(agreementId, args.epoch, identityId, 0, 0, score);
+
+        emit CommitSubmitted(
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId,
+            args.epoch,
+            identityId,
+            score
+        );
+    }
+
+    function _sendProof(
+        ServiceAgreementStructsV1.ProofInputArgs calldata args
+    ) internal virtual returns (bytes32, uint72) {
         bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
         ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
@@ -508,7 +611,14 @@ contract ServiceAgreementV1 is Named, Versioned {
                 challenge
             );
 
-        emit ProofSubmitted(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId, identityId);
+        emit ProofSubmitted(
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId,
+            args.epoch,
+            identityId
+        );
 
         uint96 reward = (sasV1.getAgreementTokenAmount(agreementId) /
             (sasV1.getAgreementEpochsNumber(agreementId) - args.epoch + 1) /
@@ -520,6 +630,8 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         // To make sure that node already received reward
         sasV1.setCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId)), 0);
+
+        return (agreementId, identityId);
     }
 
     function _insertCommit(
