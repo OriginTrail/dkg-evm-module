@@ -305,13 +305,14 @@ contract ServiceAgreementV1 is Named, Versioned {
             );
 
         uint256 timeNow = block.timestamp;
+        uint256 commitWindowDuration = (params.commitWindowDurationPerc() * epochLength) / 100;
 
         if (epoch == 0) {
-            return timeNow < (startTime + params.commitWindowDuration());
+            return timeNow < (startTime + commitWindowDuration);
         }
 
         return (timeNow > (startTime + epochLength * epoch) &&
-            timeNow < (startTime + epochLength * epoch + params.commitWindowDuration()));
+            timeNow < (startTime + epochLength * epoch + commitWindowDuration));
     }
 
     function getTopCommitSubmissions(
@@ -494,15 +495,16 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         if (!isCommitWindowOpen(agreementId, args.epoch)) {
             ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
-            uint256 actualCommitWindowStart = (sasV1.getAgreementStartTime(agreementId) +
-                args.epoch *
-                sasV1.getAgreementEpochLength(agreementId));
+
+            uint128 epochLength = sasV1.getAgreementEpochLength(agreementId);
+
+            uint256 actualCommitWindowStart = (sasV1.getAgreementStartTime(agreementId) + args.epoch * epochLength);
 
             revert ServiceAgreementErrorsV1.CommitWindowClosed(
                 agreementId,
                 args.epoch,
                 actualCommitWindowStart,
-                actualCommitWindowStart + parametersStorage.commitWindowDuration(),
+                actualCommitWindowStart + (parametersStorage.commitWindowDurationPerc() * epochLength) / 100,
                 block.timestamp
             );
         }
@@ -549,15 +551,15 @@ contract ServiceAgreementV1 is Named, Versioned {
         ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
         if (!isProofWindowOpen(agreementId, args.epoch)) {
-            uint256 actualCommitWindowStart = (sasV1.getAgreementStartTime(agreementId) +
-                args.epoch *
-                sasV1.getAgreementEpochLength(agreementId));
+            uint128 epochLength = sasV1.getAgreementEpochLength(agreementId);
+
+            uint256 actualCommitWindowStart = (sasV1.getAgreementStartTime(agreementId) + args.epoch * epochLength);
 
             revert ServiceAgreementErrorsV1.ProofWindowClosed(
                 agreementId,
                 args.epoch,
                 actualCommitWindowStart,
-                actualCommitWindowStart + parametersStorage.commitWindowDuration(),
+                actualCommitWindowStart + (parametersStorage.commitWindowDurationPerc() * epochLength) / 100,
                 block.timestamp
             );
         }
