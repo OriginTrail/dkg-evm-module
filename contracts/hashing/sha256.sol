@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity^0.8.0;
+pragma solidity ^0.8.4;
 
-import { IHashFunction } from "../interface/IHashFunction.sol";
-import { Indexable } from "../interface/Indexable.sol";
-import { Named } from "../interface/Named.sol";
+import {IHashFunction} from "../interface/IHashFunction.sol";
+import {Indexable} from "../interface/Indexable.sol";
+import {Named} from "../interface/Named.sol";
 
 contract SHA256 is IHashFunction, Indexable, Named {
-
     uint8 private constant _ID = 1;
     string private constant _NAME = "sha256";
 
@@ -22,5 +21,4 @@ contract SHA256 is IHashFunction, Indexable, Named {
     function hash(bytes calldata data) external pure returns (bytes32) {
         return sha256(data);
     }
-
 }

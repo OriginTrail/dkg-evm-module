@@ -15,7 +15,7 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"id\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interface/Indexable.sol\":\"Indexable\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/interface/Indexable.sol\":{\"keccak256\":\"0x4aaff3804b4ee2bee62188ce4e7c2629314e35989f9e3c21b1ffe481c692f38f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://4c6955a25f24c252b1e1634e048a98fe216d867d94811a999555be91b8de7e72\",\"dweb:/ipfs/QmYE6CumB19fek88w76KoVFsrf2u3HqXCsBiis8EsS1Cw6\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"id\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interface/Indexable.sol\":\"Indexable\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[],\"viaIR\":true},\"sources\":{\"project:/contracts/interface/Indexable.sol\":{\"keccak256\":\"0xbe714ecaa68c8d2dfd0059ec297ad6b646723f3881fd4e686eee016ecc98d6ff\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://fba4432f20cf78d908998dda707242fbcf3f90973d0905a1133960cac583161b\",\"dweb:/ipfs/QmfYiMrfAT3qUezHhqm4gpbddNHma3rFjgctUnoNghxb3G\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "immutableReferences": {},
@@ -23,21 +23,21 @@
   "deployedGeneratedSources": [],
   "sourceMap": "",
   "deployedSourceMap": "",
-  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.4;\n\ninterface Indexable {\n\n    function id() external view returns (uint8);\n\n}\n",
+  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.4;\n\ninterface Indexable {\n    function id() external view returns (uint8);\n}\n",
   "sourcePath": "/Users/waving/Desktop/OriginTrail/dkg-evm-module/contracts/interface/Indexable.sol",
   "ast": {
     "absolutePath": "project:/contracts/interface/Indexable.sol",
     "exportedSymbols": {
       "Indexable": [
-        12246
+        13011
       ]
     },
-    "id": 12247,
+    "id": 13012,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 12240,
+        "id": 13005,
         "literals": [
           "solidity",
           "^",
@@ -45,7 +45,7 @@
           ".4"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:23:39"
+        "src": "33:23:43"
       },
       {
         "abstract": false,
@@ -54,42 +54,42 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 12246,
+        "id": 13011,
         "linearizedBaseContracts": [
-          12246
+          13011
         ],
         "name": "Indexable",
-        "nameLocation": "68:9:39",
+        "nameLocation": "68:9:43",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "functionSelector": "af640d0f",
-            "id": 12245,
+            "id": 13010,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "id",
-            "nameLocation": "94:2:39",
+            "nameLocation": "93:2:43",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 12241,
+              "id": 13006,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "96:2:39"
+              "src": "95:2:43"
             },
             "returnParameters": {
-              "id": 12244,
+              "id": 13009,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 12243,
+                  "id": 13008,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 12245,
-                  "src": "122:5:39",
+                  "scope": 13010,
+                  "src": "121:5:43",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -97,10 +97,10 @@
                     "typeString": "uint8"
                   },
                   "typeName": {
-                    "id": 12242,
+                    "id": 13007,
                     "name": "uint8",
                     "nodeType": "ElementaryTypeName",
-                    "src": "122:5:39",
+                    "src": "121:5:43",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint8",
                       "typeString": "uint8"
@@ -109,21 +109,21 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "121:7:39"
+              "src": "120:7:43"
             },
-            "scope": 12246,
-            "src": "85:44:39",
+            "scope": 13011,
+            "src": "84:44:43",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 12247,
-        "src": "58:74:39",
+        "scope": 13012,
+        "src": "58:72:43",
         "usedErrors": []
       }
     ],
-    "src": "33:100:39"
+    "src": "33:98:43"
   },
   "compiler": {
     "name": "solc",
@@ -131,7 +131,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-08T16:40:13.603Z",
+  "updatedAt": "2022-12-12T12:30:10.733Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

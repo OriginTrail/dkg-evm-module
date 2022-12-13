@@ -2,22 +2,21 @@
 
 pragma solidity ^0.8.4;
 
-import { Hub } from "./Hub.sol";
-import { ShardingTable } from "./ShardingTable.sol";
-import { Shares } from "./Shares.sol";
-import { IdentityStorage } from "./storage/IdentityStorage.sol";
-import { ParametersStorage } from "./storage/ParametersStorage.sol";
-import { ProfileStorage } from "./storage/ProfileStorage.sol";
-import { ServiceAgreementStorageV1 } from "./storage/ServiceAgreementStorageV1.sol";
-import { ShardingTableStorage } from "./storage/ShardingTableStorage.sol";
-import { StakingStorage } from "./storage/StakingStorage.sol";
-import { Named } from "./interface/Named.sol";
-import { Versioned } from "./interface/Versioned.sol";
-import { ADMIN_KEY } from "./constants/IdentityConstants.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Hub} from "./Hub.sol";
+import {ShardingTable} from "./ShardingTable.sol";
+import {Shares} from "./Shares.sol";
+import {IdentityStorage} from "./storage/IdentityStorage.sol";
+import {ParametersStorage} from "./storage/ParametersStorage.sol";
+import {ProfileStorage} from "./storage/ProfileStorage.sol";
+import {ServiceAgreementStorageV1} from "./storage/ServiceAgreementStorageV1.sol";
+import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
+import {StakingStorage} from "./storage/StakingStorage.sol";
+import {Named} from "./interface/Named.sol";
+import {Versioned} from "./interface/Versioned.sol";
+import {ADMIN_KEY} from "./constants/IdentityConstants.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Staking is Named, Versioned {
-
     event StakeIncreased(uint72 indexed identityId, bytes nodeId, address indexed staker, uint96 newStakeAmount);
     event StakeWithdrawalStarted(
         uint72 indexed identityId,
@@ -30,8 +29,8 @@ contract Staking is Named, Versioned {
     event RewardAdded(uint72 indexed identityId, bytes nodeId, uint96 rewardAmount);
     event OperatorFeeUpdated(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
-    string constant private _NAME = "Staking";
-    string constant private _VERSION = "1.0.0";
+    string private constant _NAME = "Staking";
+    string private constant _VERSION = "1.0.0";
 
     Hub public hub;
     ShardingTable public shardingTableContract;
@@ -44,7 +43,7 @@ contract Staking is Named, Versioned {
     IERC20 public tokenContract;
 
     constructor(address hubAddress) {
-        require(hubAddress != address(0));
+        require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
         hub = Hub(hubAddress);
 
@@ -52,9 +51,9 @@ contract Staking is Named, Versioned {
     }
 
     modifier onlyHubOwner() {
-		_checkHubOwner();
-		_;
-	}
+        _checkHubOwner();
+        _;
+    }
 
     modifier onlyContracts() {
         _checkHub();
@@ -67,7 +66,7 @@ contract Staking is Named, Versioned {
     }
 
     function initialize() public onlyHubOwner {
-		shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
+        shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
@@ -75,7 +74,7 @@ contract Staking is Named, Versioned {
         serviceAgreementStorageV1 = ServiceAgreementStorageV1(hub.getContractAddress("ServiceAgreementStorageV1"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
-	}
+    }
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -106,21 +105,14 @@ contract Staking is Named, Versioned {
         require(sharesToBurn <= sharesContract.balanceOf(msg.sender), "sharesToBurn must be <= balance");
 
         uint96 oldStake = ss.totalStakes(identityId);
-        uint96 stakeWithdrawalAmount = (
-            uint96(uint256(oldStake) * sharesToBurn / sharesContract.totalSupply())
-        );
+        uint96 stakeWithdrawalAmount = (uint96((uint256(oldStake) * sharesToBurn) / sharesContract.totalSupply()));
         uint96 newStake = oldStake - stakeWithdrawalAmount;
         uint96 newStakeWithdrawalAmount = ss.getWithdrawalRequestAmount(identityId, msg.sender) + stakeWithdrawalAmount;
 
         ParametersStorage params = parametersStorage;
 
         uint256 withdrawalPeriodEnd = block.timestamp + params.stakeWithdrawalDelay();
-        ss.createWithdrawalRequest(
-            identityId,
-            msg.sender,
-            newStakeWithdrawalAmount,
-            withdrawalPeriodEnd
-        );
+        ss.createWithdrawalRequest(identityId, msg.sender, newStakeWithdrawalAmount, withdrawalPeriodEnd);
         ss.setTotalStake(identityId, newStake);
         sharesContract.burnFrom(msg.sender, sharesToBurn);
 
@@ -161,17 +153,17 @@ contract Staking is Named, Versioned {
         ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
         StakingStorage ss = stakingStorage;
 
-        uint96 operatorFee = rewardAmount * ss.operatorFees(identityId) / 100;
+        uint96 operatorFee = (rewardAmount * ss.operatorFees(identityId)) / 100;
         uint96 delegatorsReward = rewardAmount - operatorFee;
 
         ProfileStorage ps = profileStorage;
 
-        if(operatorFee != 0) {
+        if (operatorFee != 0) {
             ps.setAccumulatedOperatorFee(identityId, ps.getAccumulatedOperatorFee(identityId) + operatorFee);
             sasV1.transferReward(address(ps), operatorFee);
         }
 
-        if(delegatorsReward != 0) {
+        if (delegatorsReward != 0) {
             ss.setTotalStake(identityId, ss.totalStakes(identityId) + delegatorsReward);
             sasV1.transferReward(address(ss), delegatorsReward);
 
@@ -186,6 +178,7 @@ contract Staking is Named, Versioned {
         emit RewardAdded(identityId, ps.getNodeId(identityId), rewardAmount);
     }
 
+    // solhint-disable-next-line no-empty-blocks
     function slash(uint72 identityId) external onlyContracts {
         // TBD
     }
@@ -205,30 +198,22 @@ contract Staking is Named, Versioned {
 
         require(ps.profileExists(identityId), "Profile doesn't exist");
         require(tknc.allowance(sender, address(this)) >= stakeAmount, "Allowance < stakeAmount");
-        require(
-            (stakeAmount + ss.totalStakes(identityId)) <= params.maximumStake(),
-            "Exceeded the maximum stake"
-        );
+        require((stakeAmount + ss.totalStakes(identityId)) <= params.maximumStake(), "Exceeded the maximum stake");
 
         Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
 
         uint256 sharesMinted;
-        if(sharesContract.totalSupply() == 0) {
+        if (sharesContract.totalSupply() == 0) {
             sharesMinted = stakeAmount;
         } else {
-            sharesMinted = (
-                stakeAmount * sharesContract.totalSupply() / ss.totalStakes(identityId)
-            );
+            sharesMinted = ((stakeAmount * sharesContract.totalSupply()) / ss.totalStakes(identityId));
         }
         sharesContract.mint(sender, sharesMinted);
 
         ss.setTotalStake(identityId, ss.totalStakes(identityId) + stakeAmount);
         tknc.transferFrom(sender, address(ss), stakeAmount);
 
-        if (
-            !shardingTableStorage.nodeExists(identityId) &&
-            ss.totalStakes(identityId) >= params.minimumStake()
-        ) {
+        if (!shardingTableStorage.nodeExists(identityId) && ss.totalStakes(identityId) >= params.minimumStake()) {
             shardingTableContract.pushBack(identityId);
         }
 
@@ -236,8 +221,8 @@ contract Staking is Named, Versioned {
     }
 
     function _checkHubOwner() internal view virtual {
-		require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
-	}
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+    }
 
     function _checkHub() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
@@ -249,5 +234,4 @@ contract Staking is Named, Versioned {
             "Admin function"
         );
     }
-
 }

@@ -2,28 +2,27 @@
 
 pragma solidity ^0.8.4;
 
-import { Hub } from "./Hub.sol";
-import { IHashFunction } from "./interface/IHashFunction.sol";
-import { Named } from "./interface/Named.sol";
-import { Versioned } from "./interface/Versioned.sol";
-import { UnorderedIndexableContractDynamicSetLib } from "./utils/UnorderedIndexableContractDynamicSet.sol";
+import {Hub} from "./Hub.sol";
+import {IHashFunction} from "./interface/IHashFunction.sol";
+import {Named} from "./interface/Named.sol";
+import {Versioned} from "./interface/Versioned.sol";
+import {UnorderedIndexableContractDynamicSetLib} from "./utils/UnorderedIndexableContractDynamicSet.sol";
 
 contract HashingProxy is Named, Versioned {
-
     using UnorderedIndexableContractDynamicSetLib for UnorderedIndexableContractDynamicSetLib.Set;
 
     event NewHashFunctionContract(uint8 indexed hashFunctionId, address newContractAddress);
     event HashFunctionContractChanged(uint8 indexed hashFunctionId, address newContractAddress);
 
-    string constant private _NAME = "HashingProxy";
-    string constant private _VERSION = "1.0.0";
+    string private constant _NAME = "HashingProxy";
+    string private constant _VERSION = "1.0.0";
 
     Hub public hub;
 
-    UnorderedIndexableContractDynamicSetLib.Set hashFunctionSet;
+    UnorderedIndexableContractDynamicSetLib.Set internal hashFunctionSet;
 
     constructor(address hubAddress) {
-        require(hubAddress != address(0));
+        require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
         hub = Hub(hubAddress);
     }
@@ -78,5 +77,4 @@ contract HashingProxy is Named, Versioned {
     function _checkHubOwner() internal view virtual {
         require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
-
 }

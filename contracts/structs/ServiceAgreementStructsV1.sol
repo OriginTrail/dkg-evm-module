@@ -3,7 +3,6 @@
 pragma solidity ^0.8.4;
 
 library ServiceAgreementStructsV1 {
-
     struct CommitSubmission {
         uint72 identityId;
         uint72 prevIdentityId;
@@ -29,7 +28,6 @@ library ServiceAgreementStructsV1 {
         uint96 tokenAmount;
         uint8 scoreFunctionId;
         uint8 proofWindowOffsetPerc;
-
         // epoch => headCommitId
         mapping(uint16 => bytes32) epochSubmissionHeads;
         // epoch => number of nodes received rewards
@@ -53,5 +51,4 @@ library ServiceAgreementStructsV1 {
         bytes32[] proof;
         bytes32 chunkHash;
     }
-
 }
