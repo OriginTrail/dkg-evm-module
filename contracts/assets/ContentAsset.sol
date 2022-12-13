@@ -78,6 +78,82 @@ contract ContentAsset is Named, Versioned {
         _createAsset(assertionId, size, triplesNumber, chunksNumber, epochsNumber, tokenAmount, scoreFunctionId);
     }
 
+    function burnAsset(uint256 tokenId) external onlyAssetOwner(tokenId) {
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+        ContentAssetStorage cas = contentAssetStorage;
+        address contentAssetStorageAddress = address(cas);
+
+        bytes32 agreementId = sasV1.generateAgreementId(
+            contentAssetStorageAddress,
+            tokenId,
+            abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0)),
+            1
+        );
+
+        cas.deleteAsset(tokenId);
+        cas.burn(tokenId);
+        sasV1.terminateAgreement(msg.sender, agreementId);
+    }
+
+    function updateAssetState(
+        uint256 tokenId,
+        bytes32 assertionId,
+        uint128 size,
+        uint32 triplesNumber,
+        uint96 chunksNumber,
+        uint96 tokenAmount
+    ) external onlyAssetOwner(tokenId) {
+        ContentAssetStorage cas = contentAssetStorage;
+
+        assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
+        cas.setAssertionIssuer(tokenId, assertionId, msg.sender);
+        cas.pushAssertionId(tokenId, assertionId);
+
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+        address contentAssetStorageAddress = address(contentAssetStorage);
+
+        bytes32 agreementId = sasV1.generateAgreementId(
+            contentAssetStorageAddress,
+            tokenId,
+            abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
+            1
+        );
+
+        sasV1.addTokens(msg.sender, agreementId, tokenAmount);
+    }
+
+    function updateAssetStoringPeriod(
+        uint256 tokenId,
+        uint16 epochsNumber,
+        uint96 tokenAmount
+    ) external onlyAssetOwner(tokenId) {
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+        address contentAssetStorageAddress = address(contentAssetStorage);
+
+        bytes32 agreementId = sasV1.generateAgreementId(
+            contentAssetStorageAddress,
+            tokenId,
+            abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
+            1
+        );
+
+        sasV1.extendStoringPeriod(msg.sender, agreementId, epochsNumber, tokenAmount);
+    }
+
+    function updateAssetTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+        address contentAssetStorageAddress = address(contentAssetStorage);
+
+        bytes32 agreementId = sasV1.generateAgreementId(
+            contentAssetStorageAddress,
+            tokenId,
+            abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
+            1
+        );
+
+        sasV1.addTokens(msg.sender, agreementId, tokenAmount);
+    }
+
     function _createAsset(
         bytes32 assertionId,
         uint128 size,

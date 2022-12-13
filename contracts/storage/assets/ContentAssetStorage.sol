@@ -40,10 +40,25 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
         _mint(to, tokenId);
     }
 
+    function burn(uint256 tokenId) external onlyContracts {
+        _burn(tokenId);
+    }
+
     function generateTokenId() external onlyContracts returns (uint256) {
         unchecked {
             return _tokenId++;
         }
+    }
+
+    function deleteAsset(uint256 tokenId) external onlyContracts {
+        bytes32[] memory assertionIds = assets[tokenId].assertionIds;
+        uint256 assertionIdsLength = assertionIds.length;
+
+        for (uint256 i = 0; i < assertionIdsLength; ) {
+            delete issuers[generateAssetAssertionId(tokenId, assertionIds[i], i)];
+        }
+
+        delete assets[tokenId];
     }
 
     function getAsset(uint256 tokenId) external view returns (ContentAssetStructs.Asset memory) {
@@ -59,7 +74,11 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
     }
 
     function setAssertionIssuer(uint256 tokenId, bytes32 assertionId, address issuer) external onlyContracts {
-        issuers[keccak256(abi.encodePacked(tokenId, assertionId, this.getAssertionIdsLength(tokenId)))] = issuer;
+        issuers[generateAssetAssertionId(tokenId, assertionId, this.getAssertionIdsLength(tokenId))] = issuer;
+    }
+
+    function deleteAssertionIssuer(uint256 tokenId, bytes32 assertionId, uint256 index) external onlyContracts {
+        delete issuers[generateAssetAssertionId(tokenId, assertionId, index)];
     }
 
     function getAssertionIssuer(
@@ -72,6 +91,14 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
 
     function assertionExists(bytes32 assetAssertionId) external view returns (bool) {
         return issuers[assetAssertionId] != address(0);
+    }
+
+    function generateAssetAssertionId(
+        uint256 tokenId,
+        bytes32 assertionId,
+        uint256 index
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(tokenId, assertionId, index));
     }
 
     function _checkHub() internal view virtual {

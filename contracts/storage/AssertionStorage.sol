@@ -49,6 +49,10 @@ contract AssertionStorage is Named, Versioned {
         });
     }
 
+    function deleteAssertion(bytes32 assertionId) external onlyContracts {
+        delete assertions[assertionId];
+    }
+
     function getAssertion(bytes32 assertionId) external view returns (AssertionStructs.Assertion memory) {
         return assertions[assertionId];
     }

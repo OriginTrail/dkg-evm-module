@@ -192,7 +192,7 @@ contract('ServiceAgreementStorageV1', accounts => {
     const balanceBeforeTransfer = await token.balanceOf(receiver);
 
     await hub.setContractAddress('Staking', owner);
-    await serviceAgreementStorage.transferReward(receiver, amountForTransfer, { from: owner });
+    await serviceAgreementStorage.transferAgreementTokens(receiver, amountForTransfer, { from: owner });
     const balanceAfterTransfer = await token.balanceOf(receiver);
 
     expect(balanceBeforeTransfer.toString()).to.equal(balanceAfterTransfer.sub(new BN(amountForTransfer)).toString());

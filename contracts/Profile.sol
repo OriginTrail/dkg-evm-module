@@ -217,7 +217,7 @@ contract Profile is Named, Versioned {
 
         ps.setAccumulatedOperatorFeeWithdrawalAmount(identityId, 0);
         ps.setAccumulatedOperatorFeeWithdrawalTimestamp(identityId, 0);
-        ps.transferTokens(msg.sender, withdrawalAmount);
+        ps.transferAccumulatedOperatorFee(msg.sender, withdrawalAmount);
     }
 
     function _checkHubOwner() internal view virtual {

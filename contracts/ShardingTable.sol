@@ -72,7 +72,7 @@ contract ShardingTable is Named, Versioned {
 
         ShardingTableStorage sts = shardingTableStorage;
 
-        sts.createNode(identityId, NULL, NULL);
+        sts.createNodeObject(identityId, NULL, NULL);
 
         if (sts.tail() != NULL) sts.link(sts.tail(), identityId);
 
@@ -96,7 +96,7 @@ contract ShardingTable is Named, Versioned {
 
         ShardingTableStorage sts = shardingTableStorage;
 
-        sts.createNode(identityId, NULL, NULL);
+        sts.createNodeObject(identityId, NULL, NULL);
 
         if (sts.head() != NULL) sts.link(identityId, sts.head());
 
@@ -138,7 +138,7 @@ contract ShardingTable is Named, Versioned {
             sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
         }
 
-        sts.removeNode(identityId);
+        sts.deleteNodeObject(identityId);
         sts.decrementNodesCount();
 
         emit NodeRemoved(identityId, ps.getNodeId(identityId));

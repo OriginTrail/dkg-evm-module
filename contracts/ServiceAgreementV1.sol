@@ -124,7 +124,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         if (!scoringProxy.isScoreFunction(args.scoreFunctionId))
             revert ServiceAgreementErrorsV1.ScoreFunctionDoesntExist(args.scoreFunctionId);
 
-        bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
+        bytes32 agreementId = generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
         ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
         ParametersStorage params = parametersStorage;
@@ -162,45 +162,60 @@ contract ServiceAgreementV1 is Named, Versioned {
         );
     }
 
-    // TODO: Split into smaller functions [update only epochsNumber / tokenAmount / scoreFunctionId etc.]
-    function updateServiceAgreement(
-        ServiceAgreementStructsV1.ServiceAgreementInputArgs calldata args
-    ) external onlyContracts {
-        bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
+    function updateAgreement(address assetOwner, bytes32 agreementId, uint96 tokenAmount) external onlyContracts {
+        if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
 
         ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
-        if (args.assetCreator == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-        if (!sasV1.serviceAgreementExists(agreementId))
-            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
-        if (args.epochsNumber == 0) revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
-        if (args.tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
-        if (!scoringProxy.isScoreFunction(args.scoreFunctionId))
-            revert ServiceAgreementErrorsV1.ScoreFunctionDoesntExist(args.scoreFunctionId);
+        uint16 epochsNumber;
+        uint128 epochLength;
+        uint96 agreementBalance;
+        uint8[2] memory uint8Params;
+        (, epochsNumber, epochLength, agreementBalance, uint8Params) = sasV1.getAgreementData(agreementId);
 
-        uint96 actualRewardAmount = sasV1.getAgreementTokenAmount(agreementId);
-
-        sasV1.setAgreementEpochsNumber(agreementId, args.epochsNumber);
-        sasV1.setAgreementTokenAmount(agreementId, args.tokenAmount);
-        sasV1.setAgreementScoreFunctionId(agreementId, args.scoreFunctionId);
-
-        IERC20 tknc = tokenContract;
-
-        if (tknc.allowance(args.assetCreator, address(this)) < (args.tokenAmount - actualRewardAmount))
-            revert ServiceAgreementErrorsV1.TooLowAllowance(tknc.allowance(args.assetCreator, address(this)));
-        if (tknc.balanceOf(args.assetCreator) < (args.tokenAmount - actualRewardAmount))
-            revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(args.assetCreator));
-
-        tknc.transferFrom(args.assetCreator, address(sasV1), args.tokenAmount - actualRewardAmount);
-
-        emit ServiceAgreementV1Updated(
-            args.assetContract,
-            args.tokenId,
-            args.keyword,
-            args.hashFunctionId,
-            args.epochsNumber,
-            args.tokenAmount
+        sasV1.deleteServiceAgreementObject(agreementId);
+        sasV1.createServiceAgreementObject(
+            agreementId,
+            epochsNumber,
+            epochLength,
+            agreementBalance,
+            uint8Params[0],
+            uint8Params[1]
         );
+
+        _addTokens(assetOwner, agreementId, tokenAmount);
+    }
+
+    function terminateAgreement(address assetOwner, bytes32 agreementId) external onlyContracts {
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+
+        uint96 agreementBalance = sasV1.getAgreementTokenAmount(agreementId);
+        sasV1.deleteServiceAgreementObject(agreementId);
+        sasV1.transferAgreementTokens(assetOwner, agreementBalance);
+    }
+
+    function extendStoringPeriod(
+        address assetOwner,
+        bytes32 agreementId,
+        uint16 epochsNumber,
+        uint96 tokenAmount
+    ) external onlyContracts {
+        if (!serviceAgreementStorageV1.serviceAgreementExists(agreementId))
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+        if (epochsNumber == 0) revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
+        if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        sasV1.setAgreementEpochsNumber(agreementId, sasV1.getAgreementEpochsNumber(agreementId) + epochsNumber);
+        _addTokens(assetOwner, agreementId, tokenAmount);
+    }
+
+    function addTokens(address assetOwner, bytes32 agreementId, uint96 tokenAmount) external onlyContracts {
+        if (!serviceAgreementStorageV1.serviceAgreementExists(agreementId))
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+        if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+
+        _addTokens(assetOwner, agreementId, tokenAmount);
     }
 
     function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
@@ -272,7 +287,7 @@ contract ServiceAgreementV1 is Named, Versioned {
     }
 
     function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
-        bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
+        bytes32 agreementId = generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
         if (!isCommitWindowOpen(agreementId, args.epoch)) {
             ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
@@ -358,7 +373,7 @@ contract ServiceAgreementV1 is Named, Versioned {
     }
 
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
-        bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
+        bytes32 agreementId = generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
         ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
@@ -437,6 +452,15 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         // To make sure that node already received reward
         sasV1.setCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId)), 0);
+    }
+
+    function generateAgreementId(
+        address assetContract,
+        uint256 tokenId,
+        bytes calldata keyword,
+        uint8 hashFunctionId
+    ) public view onlyContracts returns (bytes32) {
+        return hashingProxy.callHashFunction(hashFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
     }
 
     function _insertCommit(
@@ -529,13 +553,17 @@ contract ServiceAgreementV1 is Named, Versioned {
         );
     }
 
-    function _generateAgreementId(
-        address assetContract,
-        uint256 tokenId,
-        bytes calldata keyword,
-        uint8 hashFunctionId
-    ) private view returns (bytes32) {
-        return hashingProxy.callHashFunction(hashFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
+    function _addTokens(address assetOwner, bytes32 agreementId, uint96 tokenAmount) internal {
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        IERC20 tknc = tokenContract;
+
+        if (tknc.allowance(assetOwner, address(this)) < tokenAmount)
+            revert ServiceAgreementErrorsV1.TooLowAllowance(tknc.allowance(assetOwner, address(this)));
+        if (tknc.balanceOf(assetOwner) < tokenAmount)
+            revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(assetOwner));
+
+        sasV1.setAgreementTokenAmount(agreementId, sasV1.getAgreementTokenAmount(agreementId) + tokenAmount);
+        tknc.transferFrom(assetOwner, address(sasV1), tokenAmount);
     }
 
     function _generatePseudorandomUint8(address sender, uint8 limit) private view returns (uint8) {

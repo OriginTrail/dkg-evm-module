@@ -160,12 +160,12 @@ contract Staking is Named, Versioned {
 
         if (operatorFee != 0) {
             ps.setAccumulatedOperatorFee(identityId, ps.getAccumulatedOperatorFee(identityId) + operatorFee);
-            sasV1.transferReward(address(ps), operatorFee);
+            sasV1.transferAgreementTokens(address(ps), operatorFee);
         }
 
         if (delegatorsReward != 0) {
             ss.setTotalStake(identityId, ss.totalStakes(identityId) + delegatorsReward);
-            sasV1.transferReward(address(ss), delegatorsReward);
+            sasV1.transferAgreementTokens(address(ss), delegatorsReward);
 
             if (
                 !shardingTableStorage.nodeExists(identityId) &&
