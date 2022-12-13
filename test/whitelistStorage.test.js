@@ -19,6 +19,7 @@ contract('WhitelistStorage', async accounts => {
 
     expect(isWhitelisted).to.equal(false);
   });
+
   it('Whitelist address with owner, expect to pass', async () => {
     await truffleAssert.passes(
       whitelistStorage.whitelistAddress(address, { from: owner }),
@@ -44,9 +45,9 @@ contract('WhitelistStorage', async accounts => {
     await truffleAssert.passes(
       whitelistStorage.blacklistAddress(address, { from: owner }),
     );
-    const isBlacklisted = await whitelistStorage.whitelisted(address);
+    const isWhitelisted = await whitelistStorage.whitelisted(address);
 
-    expect(isBlacklisted).to.equal(false);
+    expect(isWhitelisted).to.equal(false);
   });
 
   it('Block address with non owner, expect to fail', async () => {
