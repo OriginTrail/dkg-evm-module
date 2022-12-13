@@ -1,6 +1,5 @@
 const { expect } = require('chai');
 const {
-  constants, // Common constants, like the zero address and largest integers
   expectEvent, // Assertions for emitted events
   expectRevert, // Assertions for transactions that should fail
 } = require('@openzeppelin/test-helpers');
@@ -24,8 +23,8 @@ let account0Key,
   nodeId2;
 let identityId, newIdentityId, newOperatorFeeAmount;
 
-contract('Profile', accounts => {
-  let owner = accounts[0];
+contract('Profile', (accounts) => {
+  const owner = accounts[0];
 
   before('Deploy a new instance of Profile before tests', async () => {
     profile = await Profile.deployed();
@@ -54,7 +53,7 @@ contract('Profile', accounts => {
 
     await expectEvent.inLogs(receipt.logs, 'ProfileCreated', {
       identityId: identityId.toString(),
-      nodeId: nodeId,
+      nodeId,
     });
     await expectEvent.inTransaction(receipt.tx, Identity, 'IdentityCreated', {
       identityId: identityId.toString(),
@@ -79,13 +78,13 @@ contract('Profile', accounts => {
     await whitelistStorage.enableWhitelist();
     const isWhitelisted = await whitelistStorage.whitelisted(owner);
 
-    expect(isWhitelisted).to.be.false;
+    expect(isWhitelisted).to.be.eql(false);
 
     await expectRevert(
       profile.createProfile(accounts[1], nodeId, 'Token', 'TKN', {
         from: accounts[1],
       }),
-      "Address isn't whitelisted",
+      'Address isn\'t whitelisted',
     );
   });
 
@@ -132,7 +131,7 @@ contract('Profile', accounts => {
       profile.createProfile(accounts[2], nodeId, 'Token2', 'TKN2', {
         from: accounts[2],
       }),
-      "Address isn't whitelisted",
+      'Address isn\'t whitelisted',
     );
   });
 
@@ -147,7 +146,7 @@ contract('Profile', accounts => {
 
   it('Cannot create a profile with registered nodeId, expect to fail', async () => {
     const isRegistered = await profileStorage.nodeIdsList(nodeId);
-    expect(isRegistered).to.be.true;
+    expect(isRegistered).to.be.eql(true);
 
     await whitelistStorage.whitelistAddress(accounts[3]);
     await expectRevert(
@@ -164,7 +163,7 @@ contract('Profile', accounts => {
       profile.createProfile(accounts[3], '0x', 'Token5', 'TKN5', {
         from: accounts[3],
       }),
-      "Node ID can't be empty",
+      'Node ID can\'t be empty',
     );
   });
 
@@ -190,7 +189,7 @@ contract('Profile', accounts => {
 
   it('Cannot create a profile with taken tokenName, expect to fail', async () => {
     const isTaken = await profileStorage.sharesNames('Token');
-    expect(isTaken).to.be.true;
+    expect(isTaken).to.be.eql(true);
 
     await whitelistStorage.whitelistAddress(accounts[3]);
     await expectRevert(
@@ -203,7 +202,7 @@ contract('Profile', accounts => {
 
   it('Cannot create a profile with taken tokenSymbol, expect to fail', async () => {
     const isTaken = await profileStorage.sharesSymbols('TKN');
-    expect(isTaken).to.be.true;
+    expect(isTaken).to.be.eql(true);
 
     await whitelistStorage.whitelistAddress(accounts[3]);
     await expectRevert(
@@ -222,7 +221,7 @@ contract('Profile', accounts => {
 
     await expectEvent.inLogs(setAskResponse.logs, 'AskUpdated', {
       identityId: identityId.toString(),
-      nodeId: nodeId,
+      nodeId,
       ask: newAsk.toString(),
     });
   });
@@ -241,9 +240,8 @@ contract('Profile', accounts => {
   });
 
   it('Get and verify data for created profile, expect to pass', async () => {
-    const getProfileSharesContractAddress = await profileStorage.getSharesContractAddress(
-      identityId.toString(),
-    );
+    const getProfileSharesContractAddress =
+      await profileStorage.getSharesContractAddress(identityId.toString());
     const profileData = await profileStorage.getProfile(identityId.toString());
 
     expect(profileData[0]).to.equal(nodeId);
@@ -287,16 +285,17 @@ contract('Profile', accounts => {
   });
 
   it('Start and withdraw accumulated operator fee for existing profile, expect to pass', async () => {
-    const getOperatorFeeWithdrawal = await profileStorage.getAccumulatedOperatorFeeWithdrawalAmount(
-      newIdentityId.toString(),
-    );
+    const getOperatorFeeWithdrawal =
+      await profileStorage.getAccumulatedOperatorFeeWithdrawalAmount(
+        newIdentityId.toString(),
+      );
 
     expect(getOperatorFeeWithdrawal.toString()).to.be.eql('0');
     await expectRevert(
       profile.withdrawAccumulatedOperatorFee(newIdentityId.toString(), {
         from: owner,
       }),
-      "Withdrawal hasn't been initiated",
+      'Withdrawal hasn\'t been initiated',
     );
     await truffleAssert.passes(
       profile.startAccumulatedOperatorFeeWithdrawal(newIdentityId.toString(), {
@@ -304,22 +303,24 @@ contract('Profile', accounts => {
       }),
     );
 
-    const checkWithdrawalAmount = await profileStorage.getAccumulatedOperatorFeeWithdrawalAmount(
-      newIdentityId.toString(),
-    );
-    const getWithdrawalTimestamp = await profileStorage.getAccumulatedOperatorFeeWithdrawalTimestamp(
-      newIdentityId.toString(),
-    );
+    const checkWithdrawalAmount =
+      await profileStorage.getAccumulatedOperatorFeeWithdrawalAmount(
+        newIdentityId.toString(),
+      );
+    const getWithdrawalTimestamp =
+      await profileStorage.getAccumulatedOperatorFeeWithdrawalTimestamp(
+        newIdentityId.toString(),
+      );
 
     expect(checkWithdrawalAmount.toString()).to.be.eql(
       newOperatorFeeAmount.toString(),
     );
-    expect(getWithdrawalTimestamp.toNumber()).to.not.be.null;
+    expect(getWithdrawalTimestamp.toNumber()).to.not.be.eql(null);
     await expectRevert(
       profile.withdrawAccumulatedOperatorFee(newIdentityId.toString(), {
         from: owner,
       }),
-      "Withdrawal period hasn't ended",
+      'Withdrawal period hasn\'t ended',
     );
   });
 });
