@@ -28,4 +28,4 @@ jobs:
       - name: Set up environment
         uses: ./.github/actions/setup
       - name: Run tests 
-        run: npm run test:no-compilation
+        run: npm run test
