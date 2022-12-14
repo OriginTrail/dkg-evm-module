@@ -467,7 +467,7 @@
         5851
       ],
       "ParametersStorage": [
-        14691
+        14690
       ]
     },
     "id": 13745,
@@ -542,7 +542,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 13745,
-        "sourceUnit": 14692,
+        "sourceUnit": 14691,
         "src": "140:67:46",
         "symbolAliases": [
           {
@@ -551,7 +551,7 @@
               "name": "ParametersStorage",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 14691,
+              "referencedDeclaration": 14690,
               "src": "148:17:46",
               "typeDescriptions": {}
             },
@@ -925,7 +925,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_ParametersStorage_$14691",
+              "typeIdentifier": "t_contract$_ParametersStorage_$14690",
               "typeString": "contract ParametersStorage"
             },
             "typeName": {
@@ -938,13 +938,13 @@
                   "743:17:46"
                 ],
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 14691,
+                "referencedDeclaration": 14690,
                 "src": "743:17:46"
               },
-              "referencedDeclaration": 14691,
+              "referencedDeclaration": 14690,
               "src": "743:17:46",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_ParametersStorage_$14691",
+                "typeIdentifier": "t_contract$_ParametersStorage_$14690",
                 "typeString": "contract ParametersStorage"
               }
             },
@@ -1688,7 +1688,7 @@
                             "referencedDeclaration": 13326,
                             "src": "1365:17:46",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_ParametersStorage_$14691",
+                              "typeIdentifier": "t_contract$_ParametersStorage_$14690",
                               "typeString": "contract ParametersStorage"
                             }
                           },
@@ -1700,7 +1700,7 @@
                           "memberLocation": "1383:12:46",
                           "memberName": "maximumStake",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 14411,
+                          "referencedDeclaration": 14410,
                           "src": "1365:30:46",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_external_view$__$returns$_t_uint96_$",
@@ -2410,7 +2410,7 @@
                       "referencedDeclaration": 13326,
                       "src": "1802:17:46",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ParametersStorage_$14691",
+                        "typeIdentifier": "t_contract$_ParametersStorage_$14690",
                         "typeString": "contract ParametersStorage"
                       }
                     },
@@ -2499,10 +2499,10 @@
                         "name": "ParametersStorage",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 14691,
+                        "referencedDeclaration": 14690,
                         "src": "1822:17:46",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_ParametersStorage_$14691_$",
+                          "typeIdentifier": "t_type$_t_contract$_ParametersStorage_$14690_$",
                           "typeString": "type(contract ParametersStorage)"
                         }
                       },
@@ -2518,13 +2518,13 @@
                       "src": "1822:62:46",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ParametersStorage_$14691",
+                        "typeIdentifier": "t_contract$_ParametersStorage_$14690",
                         "typeString": "contract ParametersStorage"
                       }
                     },
                     "src": "1802:82:46",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ParametersStorage_$14691",
+                      "typeIdentifier": "t_contract$_ParametersStorage_$14690",
                       "typeString": "contract ParametersStorage"
                     }
                   },
@@ -4752,7 +4752,7 @@
                             "referencedDeclaration": 13326,
                             "src": "3704:17:46",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_ParametersStorage_$14691",
+                              "typeIdentifier": "t_contract$_ParametersStorage_$14690",
                               "typeString": "contract ParametersStorage"
                             }
                           },
@@ -4764,7 +4764,7 @@
                           "memberLocation": "3722:12:46",
                           "memberName": "maximumStake",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 14411,
+                          "referencedDeclaration": 14410,
                           "src": "3704:30:46",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_external_view$__$returns$_t_uint96_$",
@@ -6072,7 +6072,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-14T11:36:06.433Z",
+  "updatedAt": "2022-12-14T11:55:11.635Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
