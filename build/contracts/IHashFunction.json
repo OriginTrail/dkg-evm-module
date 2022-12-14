@@ -35,15 +35,15 @@
     "absolutePath": "project:/contracts/interface/IHashFunction.sol",
     "exportedSymbols": {
       "IHashFunction": [
-        12980
+        13239
       ]
     },
-    "id": 12981,
+    "id": 13240,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 12972,
+        "id": 13231,
         "literals": [
           "solidity",
           "^",
@@ -60,9 +60,9 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 12980,
+        "id": 13239,
         "linearizedBaseContracts": [
-          12980
+          13239
         ],
         "name": "IHashFunction",
         "nameLocation": "68:13:41",
@@ -70,7 +70,7 @@
         "nodes": [
           {
             "functionSelector": "aa1e84de",
-            "id": 12979,
+            "id": 13238,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
@@ -78,17 +78,17 @@
             "nameLocation": "97:4:41",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 12975,
+              "id": 13234,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 12974,
+                  "id": 13233,
                   "mutability": "mutable",
                   "name": "data",
                   "nameLocation": "117:4:41",
                   "nodeType": "VariableDeclaration",
-                  "scope": 12979,
+                  "scope": 13238,
                   "src": "102:19:41",
                   "stateVariable": false,
                   "storageLocation": "calldata",
@@ -97,7 +97,7 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 12973,
+                    "id": 13232,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
                     "src": "102:5:41",
@@ -112,17 +112,17 @@
               "src": "101:21:41"
             },
             "returnParameters": {
-              "id": 12978,
+              "id": 13237,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 12977,
+                  "id": 13236,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 12979,
+                  "scope": 13238,
                   "src": "146:7:41",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -131,7 +131,7 @@
                     "typeString": "bytes32"
                   },
                   "typeName": {
-                    "id": 12976,
+                    "id": 13235,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
                     "src": "146:7:41",
@@ -145,14 +145,14 @@
               ],
               "src": "145:9:41"
             },
-            "scope": 12980,
+            "scope": 13239,
             "src": "88:67:41",
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 12981,
+        "scope": 13240,
         "src": "58:99:41",
         "usedErrors": []
       }
@@ -165,7 +165,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-12T12:30:10.731Z",
+  "updatedAt": "2022-12-14T11:36:06.430Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
