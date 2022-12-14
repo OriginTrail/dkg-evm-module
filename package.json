@@ -30,8 +30,8 @@
     "test:no-compilation": "truffle test --compile-none",
     "test": "truffle test",
     "truffle_deploy:otp_devnet": "truffle migrate --network otp_devnet --reset",
-    "truffle_deploy:otp_mainnet": "truffle migrate --network otp_mainnet --reset",
-    "truffle_deploy:otp_testnet": "truffle migrate --network otp_testnet --reset"
+    "truffle_deploy:otp_mainnet": "truffle migrate --network otp_mainnet --reset --compile-none",
+    "truffle_deploy:otp_testnet": "truffle migrate --network otp_testnet --reset --compile-none"
   },
   "repository": {
     "type": "git",

@@ -6,92 +6,92 @@
             "substrateAddress": ""
         },
         "hub": {
-            "evmAddress": "0xEF9FeCb85d03d6e624C434dF8298692d13853033",
+            "evmAddress": "0xBbfF7Ea6b2Addc1f38A0798329e12C08f03750A6",
             "deployed": true
         },
         "ParametersStorage": {
-            "evmAddress": "0x05832b7feE73564fB9f6739f9982f9C646e497ca",
+            "evmAddress": "0x3654f9Be970C64874d638585C6183Ddd9B41e506",
             "deployed": true
         },
         "WhitelistStorage": {
-            "evmAddress": "0x785cc84d5b5bEA1043B10a659Ec1486962648c36",
+            "evmAddress": "0xC539d3BCe5c8CD39Ad0fdaCF7f580e7F4A5CF958",
             "deployed": true
         },
         "HashingProxy": {
-            "evmAddress": "0xBaFb1d154e01be582Ba739647A4a844E3beF7C6a",
+            "evmAddress": "0xfC50C417292682540C0dc1F4d0c5f5169D432F37",
             "deployed": true
         },
         "sha256Contract": {
-            "evmAddress": "0x329AEB966A35B6AE098F88e524De206DE1af9088",
+            "evmAddress": "0x9751575Bdf9Cb6B7C8FeEC14e56bfcE45DAe6483",
             "deployed": true
         },
         "ScoringProxy": {
-            "evmAddress": "0x4A8Af5cd0153680502956485CbF03cA2357F043B",
+            "evmAddress": "0x1405BCB8D9B39553443e1F31e7DCF397df2Cd23D",
             "deployed": true
         },
         "log2pldsfContract": {
-            "evmAddress": "0xe15633d3Fd38aDEd7cF3739413547C9677b56de7",
+            "evmAddress": "0x7387a2272A4399a34594157d26B335497c6D6e9e",
             "deployed": true
         },
         "AssertionStorage": {
-            "evmAddress": "0xE7eaC8b9BFde868F353C4bb62185A38936EdDD97",
+            "evmAddress": "0x804C989a09F232fa77b3CC916c7882c8e96e883A",
             "deployed": true
         },
         "IdentityStorage": {
-            "evmAddress": "0x1e1d52E5728B2a4EbcceDfc9499FFbE5935b8199",
+            "evmAddress": "0x50D592fEf72F1C98A83e5DAA07fC057889430f03",
             "deployed": true
         },
         "ShardingTableStorage": {
-            "evmAddress": "0x5E15dD1DAC4833C8e3F50e35F32f90bb586bac88",
+            "evmAddress": "0x9398c9966ae22304Ce2EFb87c43ab029A2cfE220",
             "deployed": true
         },
         "StakingStorage": {
-            "evmAddress": "0x0a78233194E9ce794647ade8295C531820525Af1",
+            "evmAddress": "0x0F2F3dEac4bB44342881bE4CE9556DabC396411A",
             "deployed": true,
-            "substrateAddress": "5EMjsczNGoN1tBSScjBSRLRGcRTRhENHG9y45FxWxjrM6BMP"
+            "substrateAddress": "5EMjsczPDbhdT5zdGoxywZu8GhLJN2RKkCLvLYUjAKyr2Gc4"
         },
         "ProfileStorage": {
-            "evmAddress": "0xc4e43176fA791a791576C10755281cA05f6355dB",
+            "evmAddress": "0xf4d8fE67a28745aD3fb598e5D5060267CB3Dc2e7",
             "deployed": true,
-            "substrateAddress": "5EMjsd11dL5YTzWSB46DicsUwsf2x6Pb5HwwQByxvu7EyTGH"
+            "substrateAddress": "5EMjsd1BEfDvDV8eWCT7JcroK4r6nEFyBUsvqkXxFtMm7ewv"
         },
         "ServiceAgreementStorageV1": {
-            "evmAddress": "0xc436B4cf54E84c53E47541dD2a31C89B75853d98",
+            "evmAddress": "0xF43B6A63f3f6479c8f972D95858a1684d5f129F5",
             "deployed": true,
-            "substrateAddress": "5EMjsd11VTHPc1dzYJ3S69g21DJjRL87TuHLhxNWsiYFsiS7"
+            "substrateAddress": "5EMjsd1B7WKHA36XCAHdovQhUph9JANA9Ji9paoRFQ1Sxx7R"
         },
         "ContentAssetStorage": {
-            "evmAddress": "0x445dB2e6553CfF597136002596355e1eBD6ca7a5",
+            "evmAddress": "0x1A061136Ed9f5eD69395f18961a0a535EF4B3E5f",
             "deployed": true
         },
         "Assertion": {
-            "evmAddress": "0x2e24D50202F6166668BeD395C351982F96e4bAd1",
+            "evmAddress": "0x8Ad543c725c9a5991139A405818E563254BE7b5B",
             "deployed": true
         },
         "Identity": {
-            "evmAddress": "0x45D1e7781D365D2C1C5fE1B89f34F79F7dD09627",
+            "evmAddress": "0x05e31D7c12bB051761E5fc1D3F8b27D86Ffb912f",
             "deployed": true
         },
         "ShardingTable": {
-            "evmAddress": "0xadb5fc30Bf087cCe71a2D924767dd7Df686fADee",
+            "evmAddress": "0x0b70884456379781E82bF825178276acFD5cD12A",
             "deployed": true
         },
         "Staking": {
-            "evmAddress": "0xEEcB8049849674573b138D6F85F30D77CbfbC893",
+            "evmAddress": "0x441c7231328B44720b4a73aeb0EAE3b091AD0c39",
             "deployed": true
         },
         "Profile": {
-            "evmAddress": "0xA7d38bdbc13cbd0EaAbd7FA8139A1F8D171f8329",
+            "evmAddress": "0x78573468547C81d125E2aF95591cc564896C0b72",
             "deployed": true
         },
         "ServiceAgreementV1": {
-            "evmAddress": "0x53F2a98aC347AdAbEBA89423E82a997c4CC0dDdA",
+            "evmAddress": "0x743AA40be4d511e16d112516Ebb1584c667665BE",
             "deployed": true
         },
         "ContentAsset": {
-            "evmAddress": "0x0915e25b59A4FC3B30cb4b1dDE632fa539e1D3e1",
+            "evmAddress": "0xe8E864984c8891278618dbC67Fee232613647D94",
             "deployed": true
         }
     },
-    "deployedTimestamp": 1670587753173
+    "deployedTimestamp": 1671021720453
 }
