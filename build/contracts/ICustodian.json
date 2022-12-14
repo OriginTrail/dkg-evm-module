@@ -29,15 +29,15 @@
     "absolutePath": "project:/contracts/interface/ICustodian.sol",
     "exportedSymbols": {
       "ICustodian": [
-        12888
+        13147
       ]
     },
-    "id": 12889,
+    "id": 13148,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 12881,
+        "id": 13140,
         "literals": [
           "solidity",
           "^",
@@ -54,9 +54,9 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 12888,
+        "id": 13147,
         "linearizedBaseContracts": [
-          12888
+          13147
         ],
         "name": "ICustodian",
         "nameLocation": "68:10:39",
@@ -64,7 +64,7 @@
         "nodes": [
           {
             "functionSelector": "a0e67e2b",
-            "id": 12887,
+            "id": 13146,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
@@ -72,23 +72,23 @@
             "nameLocation": "94:9:39",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 12882,
+              "id": 13141,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "103:2:39"
             },
             "returnParameters": {
-              "id": 12886,
+              "id": 13145,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 12885,
+                  "id": 13144,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 12887,
+                  "scope": 13146,
                   "src": "129:16:39",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -98,7 +98,7 @@
                   },
                   "typeName": {
                     "baseType": {
-                      "id": 12883,
+                      "id": 13142,
                       "name": "address",
                       "nodeType": "ElementaryTypeName",
                       "src": "129:7:39",
@@ -108,7 +108,7 @@
                         "typeString": "address"
                       }
                     },
-                    "id": 12884,
+                    "id": 13143,
                     "nodeType": "ArrayTypeName",
                     "src": "129:9:39",
                     "typeDescriptions": {
@@ -121,14 +121,14 @@
               ],
               "src": "128:18:39"
             },
-            "scope": 12888,
+            "scope": 13147,
             "src": "85:62:39",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 12889,
+        "scope": 13148,
         "src": "58:91:39",
         "usedErrors": []
       }
@@ -141,7 +141,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-12T12:30:10.729Z",
+  "updatedAt": "2022-12-14T11:55:11.633Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

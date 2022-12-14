@@ -40,14 +40,40 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
         _mint(to, tokenId);
     }
 
+    function burn(uint256 tokenId) external onlyContracts {
+        _burn(tokenId);
+    }
+
     function generateTokenId() external onlyContracts returns (uint256) {
         unchecked {
             return _tokenId++;
         }
     }
 
+    function deleteAsset(uint256 tokenId) external onlyContracts {
+        bytes32[] memory assertionIds = assets[tokenId].assertionIds;
+        uint256 assertionIdsLength = assertionIds.length;
+
+        for (uint256 i; i < assertionIdsLength; ) {
+            delete issuers[_generateAssetAssertionId(tokenId, assertionIds[i], i)];
+            unchecked {
+                i++;
+            }
+        }
+
+        delete assets[tokenId];
+    }
+
     function getAsset(uint256 tokenId) external view returns (ContentAssetStructs.Asset memory) {
         return assets[tokenId];
+    }
+
+    function setMutability(uint256 tokenId, bool immutable_) external onlyContracts {
+        assets[tokenId].immutable_ = immutable_;
+    }
+
+    function isMutable(uint256 tokenId) external view returns (bool) {
+        return !assets[tokenId].immutable_;
     }
 
     function pushAssertionId(uint256 tokenId, bytes32 assertionId) external onlyContracts {
@@ -59,7 +85,11 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
     }
 
     function setAssertionIssuer(uint256 tokenId, bytes32 assertionId, address issuer) external onlyContracts {
-        issuers[keccak256(abi.encodePacked(tokenId, assertionId, this.getAssertionIdsLength(tokenId)))] = issuer;
+        issuers[_generateAssetAssertionId(tokenId, assertionId, this.getAssertionIdsLength(tokenId))] = issuer;
+    }
+
+    function deleteAssertionIssuer(uint256 tokenId, bytes32 assertionId, uint256 index) external onlyContracts {
+        delete issuers[_generateAssetAssertionId(tokenId, assertionId, index)];
     }
 
     function getAssertionIssuer(
@@ -72,6 +102,14 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
 
     function assertionExists(bytes32 assetAssertionId) external view returns (bool) {
         return issuers[assetAssertionId] != address(0);
+    }
+
+    function _generateAssetAssertionId(
+        uint256 tokenId,
+        bytes32 assertionId,
+        uint256 index
+    ) internal pure virtual returns (bytes32) {
+        return keccak256(abi.encodePacked(tokenId, assertionId, index));
     }
 
     function _checkHub() internal view virtual {

@@ -55,7 +55,7 @@ contract('DKG v6 Service Agreement V1 contract', async (accounts) => {
     };
 
     await parametersStorage.setEpochLength(60 * 60); // 60 minutes
-    await parametersStorage.setCommitWindowDuration(15 * 60); // 15 minutes
+    await parametersStorage.setCommitWindowDurationPerc(25); // 25% (15 minutes)
     await parametersStorage.setMinProofWindowOffsetPerc(50); // range from 50%
     await parametersStorage.setMaxProofWindowOffsetPerc(75); // range to 75%
     await parametersStorage.setProofWindowDurationPerc(25); // 25% (15 minutes)

@@ -53,7 +53,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
   it('Create an asset, send 0 assertionId, expect to fail', async () => {
     await truffleAssert.reverts(
       contentAsset.createAsset(
-        [ethers.utils.formatBytes32String(invalidTestAssetid), 1000, 10, 10, 5, 250, 1],
+        [ethers.utils.formatBytes32String(invalidTestAssetid), 1000, 10, 10, 5, 250, 1, false],
         { from: accounts[1] },
       ));
   });
@@ -61,7 +61,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
   it('Create an asset, send size 0, expect to fail', async () => {
     await truffleAssert.reverts(
       contentAsset.createAsset(
-        [ethers.utils.formatBytes32String(testAssetId), 0, 10, 10, 0, 250, 1],
+        [ethers.utils.formatBytes32String(testAssetId), 0, 10, 10, 0, 250, 1, false],
         { from: accounts[1] },
       ));
   });
@@ -69,7 +69,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
   it('Create an asset, send 0 epochs number, expect to fail', async () => {
     await truffleAssert.reverts(
       contentAsset.createAsset(
-        [ethers.utils.formatBytes32String(testAssetId), 1000, 10, 10, 0, 250, 1],
+        [ethers.utils.formatBytes32String(testAssetId), 1000, 10, 10, 0, 250, 1, false],
         { from: accounts[1] },
       ));
   });
@@ -77,7 +77,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
   it('Create an asset, send 0 token amount, expect to fail', async () => {
     await truffleAssert.reverts(
       contentAsset.createAsset(
-        [ethers.utils.formatBytes32String(testAssetId), 1000, 10, 10, 5, 0, 1],
+        [ethers.utils.formatBytes32String(testAssetId), 1000, 10, 10, 5, 0, 1, false],
         { from: accounts[1] },
       ));
   });
@@ -90,7 +90,7 @@ contract('DKG v6 assets/ContentAsset', async (accounts) => {
     await erc20Token.increaseAllowance(serviceAgreementV1.address, increase, { from: accounts[1] });
 
     const receipt = await contentAsset.createAsset([
-      ethers.utils.formatBytes32String(testAssetId), 1024, 10, 10, 5, tokenAmount, 1,
+      ethers.utils.formatBytes32String(testAssetId), 1024, 10, 10, 5, tokenAmount, 1, false,
     ],
     { from: accounts[1] },
     );

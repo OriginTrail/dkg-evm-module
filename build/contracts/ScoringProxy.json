@@ -259,19 +259,19 @@
         6952
       ],
       "IScoreFunction": [
-        13003
+        13262
       ],
       "Named": [
-        13019
+        13278
       ],
       "ScoringProxy": [
         8518
       ],
       "UnorderedIndexableContractDynamicSetLib": [
-        17057
+        17530
       ],
       "Versioned": [
-        13027
+        13286
       ]
     },
     "id": 8519,
@@ -321,7 +321,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 8519,
-        "sourceUnit": 13004,
+        "sourceUnit": 13263,
         "src": "89:62:27",
         "symbolAliases": [
           {
@@ -330,7 +330,7 @@
               "name": "IScoreFunction",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 13003,
+              "referencedDeclaration": 13262,
               "src": "97:14:27",
               "typeDescriptions": {}
             },
@@ -346,7 +346,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 8519,
-        "sourceUnit": 13020,
+        "sourceUnit": 13279,
         "src": "152:44:27",
         "symbolAliases": [
           {
@@ -355,7 +355,7 @@
               "name": "Named",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 13019,
+              "referencedDeclaration": 13278,
               "src": "160:5:27",
               "typeDescriptions": {}
             },
@@ -371,7 +371,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 8519,
-        "sourceUnit": 13028,
+        "sourceUnit": 13287,
         "src": "197:52:27",
         "symbolAliases": [
           {
@@ -380,7 +380,7 @@
               "name": "Versioned",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 13027,
+              "referencedDeclaration": 13286,
               "src": "205:9:27",
               "typeDescriptions": {}
             },
@@ -396,7 +396,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 8519,
-        "sourceUnit": 17058,
+        "sourceUnit": 17531,
         "src": "250:105:27",
         "symbolAliases": [
           {
@@ -405,7 +405,7 @@
               "name": "UnorderedIndexableContractDynamicSetLib",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 17057,
+              "referencedDeclaration": 17530,
               "src": "258:39:27",
               "typeDescriptions": {}
             },
@@ -425,7 +425,7 @@
                 "382:5:27"
               ],
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 13019,
+              "referencedDeclaration": 13278,
               "src": "382:5:27"
             },
             "id": 8272,
@@ -440,7 +440,7 @@
                 "389:9:27"
               ],
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 13027,
+              "referencedDeclaration": 13286,
               "src": "389:9:27"
             },
             "id": 8274,
@@ -455,8 +455,8 @@
         "id": 8518,
         "linearizedBaseContracts": [
           8518,
-          13027,
-          13019
+          13286,
+          13278
         ],
         "name": "ScoringProxy",
         "nameLocation": "366:12:27",
@@ -472,7 +472,7 @@
                 "411:39:27"
               ],
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 17057,
+              "referencedDeclaration": 17530,
               "src": "411:39:27"
             },
             "nodeType": "UsingForDirective",
@@ -488,13 +488,13 @@
                   "495:3:27"
                 ],
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 16765,
+                "referencedDeclaration": 17238,
                 "src": "455:43:27"
               },
-              "referencedDeclaration": 16765,
+              "referencedDeclaration": 17238,
               "src": "455:43:27",
               "typeDescriptions": {
-                "typeIdentifier": "t_struct$_Set_$16765_storage_ptr",
+                "typeIdentifier": "t_struct$_Set_$17238_storage_ptr",
                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
               }
             }
@@ -781,7 +781,7 @@
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_struct$_Set_$16765_storage",
+              "typeIdentifier": "t_struct$_Set_$17238_storage",
               "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
             },
             "typeName": {
@@ -795,13 +795,13 @@
                   "866:3:27"
                 ],
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 16765,
+                "referencedDeclaration": 17238,
                 "src": "826:43:27"
               },
-              "referencedDeclaration": 16765,
+              "referencedDeclaration": 17238,
               "src": "826:43:27",
               "typeDescriptions": {
-                "typeIdentifier": "t_struct$_Set_$16765_storage_ptr",
+                "typeIdentifier": "t_struct$_Set_$17238_storage_ptr",
                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set"
               }
             },
@@ -1170,7 +1170,7 @@
           },
           {
             "baseFunctions": [
-              13018
+              13277
             ],
             "body": {
               "id": 8339,
@@ -1259,7 +1259,7 @@
           },
           {
             "baseFunctions": [
-              13026
+              13285
             ],
             "body": {
               "id": 8348,
@@ -1383,7 +1383,7 @@
                         "referencedDeclaration": 8302,
                         "src": "1462:16:27",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$16765_storage",
+                          "typeIdentifier": "t_struct$_Set_$17238_storage",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                         }
                       },
@@ -1395,10 +1395,10 @@
                       "memberLocation": "1479:6:27",
                       "memberName": "exists",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 17043,
+                      "referencedDeclaration": 17516,
                       "src": "1462:23:27",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$16765_storage_ptr_$_t_uint8_$returns$_t_bool_$bound_to$_t_struct$_Set_$16765_storage_ptr_$",
+                        "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$17238_storage_ptr_$_t_uint8_$returns$_t_bool_$bound_to$_t_struct$_Set_$17238_storage_ptr_$",
                         "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (bool)"
                       }
                     },
@@ -1540,7 +1540,7 @@
                               "referencedDeclaration": 8302,
                               "src": "1789:16:27",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Set_$16765_storage",
+                                "typeIdentifier": "t_struct$_Set_$17238_storage",
                                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                               }
                             },
@@ -1552,10 +1552,10 @@
                             "memberLocation": "1806:6:27",
                             "memberName": "append",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 16823,
+                            "referencedDeclaration": 17296,
                             "src": "1789:23:27",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_function_internal_nonpayable$_t_struct$_Set_$16765_storage_ptr_$_t_uint8_$_t_address_$returns$__$bound_to$_t_struct$_Set_$16765_storage_ptr_$",
+                              "typeIdentifier": "t_function_internal_nonpayable$_t_struct$_Set_$17238_storage_ptr_$_t_uint8_$_t_address_$returns$__$bound_to$_t_struct$_Set_$17238_storage_ptr_$",
                               "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8,address)"
                             }
                           },
@@ -1706,7 +1706,7 @@
                               "referencedDeclaration": 8302,
                               "src": "1608:16:27",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Set_$16765_storage",
+                                "typeIdentifier": "t_struct$_Set_$17238_storage",
                                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                               }
                             },
@@ -1718,10 +1718,10 @@
                             "memberLocation": "1625:6:27",
                             "memberName": "update",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 16864,
+                            "referencedDeclaration": 17337,
                             "src": "1608:23:27",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_function_internal_nonpayable$_t_struct$_Set_$16765_storage_ptr_$_t_uint8_$_t_address_$returns$__$bound_to$_t_struct$_Set_$16765_storage_ptr_$",
+                              "typeIdentifier": "t_function_internal_nonpayable$_t_struct$_Set_$17238_storage_ptr_$_t_uint8_$_t_address_$returns$__$bound_to$_t_struct$_Set_$17238_storage_ptr_$",
                               "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8,address)"
                             }
                           },
@@ -1886,7 +1886,7 @@
                         "referencedDeclaration": 8302,
                         "src": "1955:16:27",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$16765_storage",
+                          "typeIdentifier": "t_struct$_Set_$17238_storage",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                         }
                       },
@@ -1898,10 +1898,10 @@
                       "memberLocation": "1972:6:27",
                       "memberName": "remove",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 16938,
+                      "referencedDeclaration": 17411,
                       "src": "1955:23:27",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_internal_nonpayable$_t_struct$_Set_$16765_storage_ptr_$_t_uint8_$returns$__$bound_to$_t_struct$_Set_$16765_storage_ptr_$",
+                        "typeIdentifier": "t_function_internal_nonpayable$_t_struct$_Set_$17238_storage_ptr_$_t_uint8_$returns$__$bound_to$_t_struct$_Set_$17238_storage_ptr_$",
                         "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8)"
                       }
                     },
@@ -2021,7 +2021,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IScoreFunction_$13003",
+                        "typeIdentifier": "t_contract$_IScoreFunction_$13262",
                         "typeString": "contract IScoreFunction"
                       },
                       "typeName": {
@@ -2034,13 +2034,13 @@
                             "2228:14:27"
                           ],
                           "nodeType": "IdentifierPath",
-                          "referencedDeclaration": 13003,
+                          "referencedDeclaration": 13262,
                           "src": "2228:14:27"
                         },
-                        "referencedDeclaration": 13003,
+                        "referencedDeclaration": 13262,
                         "src": "2228:14:27",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IScoreFunction_$13003",
+                          "typeIdentifier": "t_contract$_IScoreFunction_$13262",
                           "typeString": "contract IScoreFunction"
                         }
                       },
@@ -2081,7 +2081,7 @@
                               "referencedDeclaration": 8302,
                               "src": "2276:16:27",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Set_$16765_storage",
+                                "typeIdentifier": "t_struct$_Set_$17238_storage",
                                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                               }
                             },
@@ -2093,10 +2093,10 @@
                             "memberLocation": "2293:3:27",
                             "memberName": "get",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 16966,
+                            "referencedDeclaration": 17439,
                             "src": "2276:20:27",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$16765_storage_ptr_$_t_uint8_$returns$_t_struct$_Contract_$16756_memory_ptr_$bound_to$_t_struct$_Set_$16765_storage_ptr_$",
+                              "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$17238_storage_ptr_$_t_uint8_$returns$_t_struct$_Contract_$17229_memory_ptr_$bound_to$_t_struct$_Set_$17238_storage_ptr_$",
                               "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (struct UnorderedIndexableContractDynamicSetLib.Contract memory)"
                             }
                           },
@@ -2112,7 +2112,7 @@
                           "src": "2276:37:27",
                           "tryCall": false,
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Contract_$16756_memory_ptr",
+                            "typeIdentifier": "t_struct$_Contract_$17229_memory_ptr",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
                           }
                         },
@@ -2124,7 +2124,7 @@
                         "memberLocation": "2314:4:27",
                         "memberName": "addr",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 16755,
+                        "referencedDeclaration": 17228,
                         "src": "2276:42:27",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -2143,10 +2143,10 @@
                       "name": "IScoreFunction",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 13003,
+                      "referencedDeclaration": 13262,
                       "src": "2261:14:27",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_type$_t_contract$_IScoreFunction_$13003_$",
+                        "typeIdentifier": "t_type$_t_contract$_IScoreFunction_$13262_$",
                         "typeString": "type(contract IScoreFunction)"
                       }
                     },
@@ -2162,7 +2162,7 @@
                     "src": "2261:58:27",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IScoreFunction_$13003",
+                      "typeIdentifier": "t_contract$_IScoreFunction_$13262",
                       "typeString": "contract IScoreFunction"
                     }
                   },
@@ -2265,7 +2265,7 @@
                         "referencedDeclaration": 8421,
                         "src": "2348:15:27",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IScoreFunction_$13003",
+                          "typeIdentifier": "t_contract$_IScoreFunction_$13262",
                           "typeString": "contract IScoreFunction"
                         }
                       },
@@ -2277,7 +2277,7 @@
                       "memberLocation": "2364:17:27",
                       "memberName": "calculateDistance",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 13002,
+                      "referencedDeclaration": 13261,
                       "src": "2348:33:27",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$_t_uint8_$_t_bytes_memory_ptr_$_t_bytes_memory_ptr_$returns$_t_uint256_$",
@@ -2350,7 +2350,7 @@
                         "referencedDeclaration": 8421,
                         "src": "2431:15:27",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IScoreFunction_$13003",
+                          "typeIdentifier": "t_contract$_IScoreFunction_$13262",
                           "typeString": "contract IScoreFunction"
                         }
                       },
@@ -2362,7 +2362,7 @@
                       "memberLocation": "2447:14:27",
                       "memberName": "calculateScore",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 12991,
+                      "referencedDeclaration": 13250,
                       "src": "2431:30:27",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$_t_uint256_$_t_uint96_$returns$_t_uint40_$",
@@ -2626,7 +2626,7 @@
                                   "referencedDeclaration": 8302,
                                   "src": "2605:16:27",
                                   "typeDescriptions": {
-                                    "typeIdentifier": "t_struct$_Set_$16765_storage",
+                                    "typeIdentifier": "t_struct$_Set_$17238_storage",
                                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                                   }
                                 },
@@ -2638,10 +2638,10 @@
                                 "memberLocation": "2622:3:27",
                                 "memberName": "get",
                                 "nodeType": "MemberAccess",
-                                "referencedDeclaration": 16966,
+                                "referencedDeclaration": 17439,
                                 "src": "2605:20:27",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$16765_storage_ptr_$_t_uint8_$returns$_t_struct$_Contract_$16756_memory_ptr_$bound_to$_t_struct$_Set_$16765_storage_ptr_$",
+                                  "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$17238_storage_ptr_$_t_uint8_$returns$_t_struct$_Contract_$17229_memory_ptr_$bound_to$_t_struct$_Set_$17238_storage_ptr_$",
                                   "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (struct UnorderedIndexableContractDynamicSetLib.Contract memory)"
                                 }
                               },
@@ -2657,7 +2657,7 @@
                               "src": "2605:37:27",
                               "tryCall": false,
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Contract_$16756_memory_ptr",
+                                "typeIdentifier": "t_struct$_Contract_$17229_memory_ptr",
                                 "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
                               }
                             },
@@ -2669,7 +2669,7 @@
                             "memberLocation": "2643:4:27",
                             "memberName": "addr",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 16755,
+                            "referencedDeclaration": 17228,
                             "src": "2605:42:27",
                             "typeDescriptions": {
                               "typeIdentifier": "t_address",
@@ -2688,10 +2688,10 @@
                           "name": "Named",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 13019,
+                          "referencedDeclaration": 13278,
                           "src": "2599:5:27",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_type$_t_contract$_Named_$13019_$",
+                            "typeIdentifier": "t_type$_t_contract$_Named_$13278_$",
                             "typeString": "type(contract Named)"
                           }
                         },
@@ -2707,7 +2707,7 @@
                         "src": "2599:49:27",
                         "tryCall": false,
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Named_$13019",
+                          "typeIdentifier": "t_contract$_Named_$13278",
                           "typeString": "contract Named"
                         }
                       },
@@ -2719,7 +2719,7 @@
                       "memberLocation": "2649:4:27",
                       "memberName": "name",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 13018,
+                      "referencedDeclaration": 13277,
                       "src": "2599:54:27",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$__$returns$_t_string_memory_ptr_$",
@@ -2869,7 +2869,7 @@
                           "referencedDeclaration": 8302,
                           "src": "2781:16:27",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Set_$16765_storage",
+                            "typeIdentifier": "t_struct$_Set_$17238_storage",
                             "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                           }
                         },
@@ -2881,10 +2881,10 @@
                         "memberLocation": "2798:3:27",
                         "memberName": "get",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 16966,
+                        "referencedDeclaration": 17439,
                         "src": "2781:20:27",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$16765_storage_ptr_$_t_uint8_$returns$_t_struct$_Contract_$16756_memory_ptr_$bound_to$_t_struct$_Set_$16765_storage_ptr_$",
+                          "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$17238_storage_ptr_$_t_uint8_$returns$_t_struct$_Contract_$17229_memory_ptr_$bound_to$_t_struct$_Set_$17238_storage_ptr_$",
                           "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (struct UnorderedIndexableContractDynamicSetLib.Contract memory)"
                         }
                       },
@@ -2900,7 +2900,7 @@
                       "src": "2781:37:27",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_Contract_$16756_memory_ptr",
+                        "typeIdentifier": "t_struct$_Contract_$17229_memory_ptr",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory"
                       }
                     },
@@ -2912,7 +2912,7 @@
                     "memberLocation": "2819:4:27",
                     "memberName": "addr",
                     "nodeType": "MemberAccess",
-                    "referencedDeclaration": 16755,
+                    "referencedDeclaration": 17228,
                     "src": "2781:42:27",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -3028,7 +3028,7 @@
                         "referencedDeclaration": 8302,
                         "src": "2967:16:27",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$16765_storage",
+                          "typeIdentifier": "t_struct$_Set_$17238_storage",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                         }
                       },
@@ -3040,10 +3040,10 @@
                       "memberLocation": "2984:6:27",
                       "memberName": "getAll",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 16980,
+                      "referencedDeclaration": 17453,
                       "src": "2967:23:27",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$16765_storage_ptr_$returns$_t_array$_t_struct$_Contract_$16756_memory_ptr_$dyn_memory_ptr_$bound_to$_t_struct$_Set_$16765_storage_ptr_$",
+                        "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$17238_storage_ptr_$returns$_t_array$_t_struct$_Contract_$17229_memory_ptr_$dyn_memory_ptr_$bound_to$_t_struct$_Set_$17238_storage_ptr_$",
                         "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer) view returns (struct UnorderedIndexableContractDynamicSetLib.Contract memory[] memory)"
                       }
                     },
@@ -3059,7 +3059,7 @@
                     "src": "2967:25:27",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_struct$_Contract_$16756_memory_ptr_$dyn_memory_ptr",
+                      "typeIdentifier": "t_array$_t_struct$_Contract_$17229_memory_ptr_$dyn_memory_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract memory[] memory"
                     }
                   },
@@ -3100,7 +3100,7 @@
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_Contract_$16756_memory_ptr_$dyn_memory_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_Contract_$17229_memory_ptr_$dyn_memory_ptr",
                     "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
                   },
                   "typeName": {
@@ -3115,13 +3115,13 @@
                           "2931:8:27"
                         ],
                         "nodeType": "IdentifierPath",
-                        "referencedDeclaration": 16756,
+                        "referencedDeclaration": 17229,
                         "src": "2891:48:27"
                       },
-                      "referencedDeclaration": 16756,
+                      "referencedDeclaration": 17229,
                       "src": "2891:48:27",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_Contract_$16756_storage_ptr",
+                        "typeIdentifier": "t_struct$_Contract_$17229_storage_ptr",
                         "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract"
                       }
                     },
@@ -3129,7 +3129,7 @@
                     "nodeType": "ArrayTypeName",
                     "src": "2891:50:27",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_array$_t_struct$_Contract_$16756_storage_$dyn_storage_ptr",
+                      "typeIdentifier": "t_array$_t_struct$_Contract_$17229_storage_$dyn_storage_ptr",
                       "typeString": "struct UnorderedIndexableContractDynamicSetLib.Contract[]"
                     }
                   },
@@ -3181,7 +3181,7 @@
                         "referencedDeclaration": 8302,
                         "src": "3099:16:27",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Set_$16765_storage",
+                          "typeIdentifier": "t_struct$_Set_$17238_storage",
                           "typeString": "struct UnorderedIndexableContractDynamicSetLib.Set storage ref"
                         }
                       },
@@ -3193,10 +3193,10 @@
                       "memberLocation": "3116:6:27",
                       "memberName": "exists",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 17043,
+                      "referencedDeclaration": 17516,
                       "src": "3099:23:27",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$16765_storage_ptr_$_t_uint8_$returns$_t_bool_$bound_to$_t_struct$_Set_$16765_storage_ptr_$",
+                        "typeIdentifier": "t_function_internal_view$_t_struct$_Set_$17238_storage_ptr_$_t_uint8_$returns$_t_bool_$bound_to$_t_struct$_Set_$17238_storage_ptr_$",
                         "typeString": "function (struct UnorderedIndexableContractDynamicSetLib.Set storage pointer,uint8) view returns (bool)"
                       }
                     },
@@ -3509,7 +3509,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-12T12:30:10.649Z",
+  "updatedAt": "2022-12-14T11:55:11.605Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

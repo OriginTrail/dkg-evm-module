@@ -29,15 +29,15 @@
     "absolutePath": "project:/contracts/interface/Named.sol",
     "exportedSymbols": {
       "Named": [
-        13019
+        13278
       ]
     },
-    "id": 13020,
+    "id": 13279,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 13013,
+        "id": 13272,
         "literals": [
           "solidity",
           "^",
@@ -54,9 +54,9 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 13019,
+        "id": 13278,
         "linearizedBaseContracts": [
-          13019
+          13278
         ],
         "name": "Named",
         "nameLocation": "68:5:44",
@@ -64,7 +64,7 @@
         "nodes": [
           {
             "functionSelector": "06fdde03",
-            "id": 13018,
+            "id": 13277,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
@@ -72,23 +72,23 @@
             "nameLocation": "89:4:44",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 13014,
+              "id": 13273,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "93:2:44"
             },
             "returnParameters": {
-              "id": 13017,
+              "id": 13276,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 13016,
+                  "id": 13275,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 13018,
+                  "scope": 13277,
                   "src": "119:13:44",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -97,7 +97,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 13015,
+                    "id": 13274,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "119:6:44",
@@ -111,14 +111,14 @@
               ],
               "src": "118:15:44"
             },
-            "scope": 13019,
+            "scope": 13278,
             "src": "80:54:44",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 13020,
+        "scope": 13279,
         "src": "58:78:44",
         "usedErrors": []
       }
@@ -131,7 +131,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.10",
-  "updatedAt": "2022-12-12T12:30:10.734Z",
+  "updatedAt": "2022-12-14T11:55:11.635Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

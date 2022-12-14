@@ -14,7 +14,7 @@ contract ParametersStorage {
     uint32 public r1;
     uint32 public r0;
 
-    uint16 public commitWindowDuration;
+    uint8 public commitWindowDurationPerc;
     uint8 public minProofWindowOffsetPerc;
     uint8 public maxProofWindowOffsetPerc;
     uint8 public proofWindowDurationPerc;
@@ -38,7 +38,7 @@ contract ParametersStorage {
         r1 = 8;
         r0 = 3;
 
-        commitWindowDuration = 15 minutes;
+        commitWindowDurationPerc = 25;
         minProofWindowOffsetPerc = 50;
         maxProofWindowOffsetPerc = 75;
         proofWindowDurationPerc = 25;
@@ -72,8 +72,8 @@ contract ParametersStorage {
         r0 = newR0;
     }
 
-    function setCommitWindowDuration(uint16 newCommitWindowDuration) external onlyHubOwner {
-        commitWindowDuration = newCommitWindowDuration;
+    function setCommitWindowDurationPerc(uint8 newCommitWindowDurationPerc) external onlyHubOwner {
+        commitWindowDurationPerc = newCommitWindowDurationPerc;
     }
 
     function setMinProofWindowOffsetPerc(uint8 newMinProofWindowOffsetPerc) external onlyHubOwner {

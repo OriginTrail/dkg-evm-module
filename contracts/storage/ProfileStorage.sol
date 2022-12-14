@@ -143,7 +143,7 @@ contract ProfileStorage is Named, Versioned, Guardian {
         return keccak256(profiles[identityId].nodeId) != keccak256(bytes(""));
     }
 
-    function transferTokens(address receiver, uint96 amount) external onlyContracts {
+    function transferAccumulatedOperatorFee(address receiver, uint96 amount) external onlyContracts {
         tokenContract.transfer(receiver, amount);
     }
 

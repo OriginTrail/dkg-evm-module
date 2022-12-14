@@ -4,7 +4,7 @@ const ParametersStorage = artifacts.require('ParametersStorage');
 
 contract('ParametersStorage', async (accounts) => {
   let parameterStorage;
-  let minimumStake, r2, r1, r0, commitWindowDuration, minProofWindowOffsetPerc, maxProofWindowOffsetPerc;
+  let minimumStake, r2, r1, r0, commitWindowDurationPerc, minProofWindowOffsetPerc, maxProofWindowOffsetPerc;
   let proofWindowDurationPerc, replacementWindowDurationPerc, epochLength, stakeWithdrawalDelay,
     rewardWithdrawalDelay, slashingFreezeDuration;
   const owner = accounts[0];
@@ -94,25 +94,25 @@ contract('ParametersStorage', async (accounts) => {
     await truffleAssert.reverts(parameterStorage.setR0(r0.toString(), { from: nonOwner }));
   });
 
-  it('validate commit window duration for owner, expect to pass', async () => {
-    const valueInContract = 15;
+  it('validate commit window duration percentage for owner, expect to pass', async () => {
+    const valueInContract = '25';
     const newValue = '20';
-    commitWindowDuration = await parameterStorage.commitWindowDuration();
+    commitWindowDurationPerc = await parameterStorage.commitWindowDurationPerc();
 
-    expect(commitWindowDuration.toString() / 60).be.eql(valueInContract);
+    expect(commitWindowDurationPerc.toString()).be.eql(valueInContract);
 
     // set new value for commit window duration and validate is correct
-    const response = await parameterStorage.setCommitWindowDuration(newValue, { from: owner });
+    const response = await parameterStorage.setCommitWindowDurationPerc(newValue, { from: owner });
     await truffleAssert.passes(response, 'Successfully passed');
-    commitWindowDuration = await parameterStorage.commitWindowDuration();
+    commitWindowDurationPerc = await parameterStorage.commitWindowDurationPerc();
 
-    expect(commitWindowDuration.toString()).be.eql(newValue);
+    expect(commitWindowDurationPerc.toString()).be.eql(newValue);
   });
 
-  it('validate commit window duration for non owner. expect to fail', async () => {
-    commitWindowDuration = await parameterStorage.commitWindowDuration();
+  it('validate commit window duration percentage for non owner. expect to fail', async () => {
+    commitWindowDurationPerc = await parameterStorage.commitWindowDurationPerc();
     await truffleAssert.reverts(
-      parameterStorage.setCommitWindowDuration(commitWindowDuration.toString(), { from: nonOwner }),
+      parameterStorage.setCommitWindowDurationPerc(commitWindowDurationPerc, { from: nonOwner }),
     );
   });
 

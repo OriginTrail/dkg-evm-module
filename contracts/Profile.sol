@@ -150,7 +150,7 @@ contract Profile is Named, Versioned {
     // }
 
     // TODO: Define where it can be called, change internal modifier
-    function _setAvailableNodeAddresses(uint72 identityId) internal {
+    function _setAvailableNodeAddresses(uint72 identityId) internal virtual {
         ProfileStorage ps = profileStorage;
         HashingProxy hp = hashingProxy;
 
@@ -217,7 +217,7 @@ contract Profile is Named, Versioned {
 
         ps.setAccumulatedOperatorFeeWithdrawalAmount(identityId, 0);
         ps.setAccumulatedOperatorFeeWithdrawalTimestamp(identityId, 0);
-        ps.transferTokens(msg.sender, withdrawalAmount);
+        ps.transferAccumulatedOperatorFee(msg.sender, withdrawalAmount);
     }
 
     function _checkHubOwner() internal view virtual {

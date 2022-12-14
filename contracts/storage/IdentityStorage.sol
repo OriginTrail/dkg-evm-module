@@ -7,6 +7,7 @@ import {IERC734Extended} from "../interface/IERC734Extended.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 import {ByteArr} from "../utils/ByteArr.sol";
+import {OPERATIONAL_KEY} from "../constants/IdentityConstants.sol";
 
 contract IdentityStorage is IERC734Extended, Named, Versioned {
     using ByteArr for bytes32[];
@@ -50,6 +51,16 @@ contract IdentityStorage is IERC734Extended, Named, Versioned {
     }
 
     function deleteIdentity(uint72 identityId) external onlyContracts {
+        bytes32[] memory operationalKeys = identities[identityId].keysByPurpose[OPERATIONAL_KEY];
+        uint256 operationalKeysNumber = operationalKeys.length;
+
+        for (uint256 i; i < operationalKeysNumber; ) {
+            delete identityIds[operationalKeys[i]];
+            unchecked {
+                i++;
+            }
+        }
+
         delete identities[identityId];
     }
 

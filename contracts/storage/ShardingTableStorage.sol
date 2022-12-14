@@ -59,7 +59,7 @@ contract ShardingTableStorage is Named, Versioned {
         tail = identityId;
     }
 
-    function createNode(uint72 identityId, uint72 prevIdentityId, uint72 nextIdentityId) external onlyContracts {
+    function createNodeObject(uint72 identityId, uint72 prevIdentityId, uint72 nextIdentityId) external onlyContracts {
         nodes[identityId] = ShardingTableStructs.Node({
             identityId: identityId,
             prevIdentityId: prevIdentityId,
@@ -71,7 +71,7 @@ contract ShardingTableStorage is Named, Versioned {
         return nodes[identityId];
     }
 
-    function removeNode(uint72 identityId) external onlyContracts {
+    function deleteNodeObject(uint72 identityId) external onlyContracts {
         delete nodes[identityId];
     }
 

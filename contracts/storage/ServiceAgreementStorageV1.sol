@@ -50,6 +50,10 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
         agreement.proofWindowOffsetPerc = proofWindowOffsetPerc;
     }
 
+    function deleteServiceAgreementObject(bytes32 agreementId) external onlyContracts {
+        delete serviceAgreements[agreementId];
+    }
+
     function getAgreementData(
         bytes32 agreementId
     ) external view returns (uint256, uint16, uint128, uint96, uint8[2] memory) {
@@ -164,6 +168,10 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
         });
     }
 
+    function deleteCommitSubmissionsObject(bytes32 commitId) external onlyContracts {
+        delete commitSubmissions[commitId];
+    }
+
     function getCommitSubmission(
         bytes32 commitId
     ) external view returns (ServiceAgreementStructsV1.CommitSubmission memory) {
@@ -206,8 +214,8 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
         return commitSubmissions[commitId].identityId != 0;
     }
 
-    function transferReward(address receiver, uint96 rewardAmount) external onlyContracts {
-        tokenContract.transfer(receiver, rewardAmount);
+    function transferAgreementTokens(address receiver, uint96 tokenAmount) external onlyContracts {
+        tokenContract.transfer(receiver, tokenAmount);
     }
 
     function _checkHub() internal view virtual {
