@@ -54,7 +54,7 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
         bytes32[] memory assertionIds = assets[tokenId].assertionIds;
         uint256 assertionIdsLength = assertionIds.length;
 
-        for (uint256 i = 0; i < assertionIdsLength; ) {
+        for (uint256 i; i < assertionIdsLength; ) {
             delete issuers[_generateAssetAssertionId(tokenId, assertionIds[i], i)];
             unchecked {
                 i++;

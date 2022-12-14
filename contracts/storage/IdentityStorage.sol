@@ -54,7 +54,7 @@ contract IdentityStorage is IERC734Extended, Named, Versioned {
         bytes32[] memory operationalKeys = identities[identityId].keysByPurpose[OPERATIONAL_KEY];
         uint256 operationalKeysNumber = operationalKeys.length;
 
-        for (uint256 i = 0; i < operationalKeysNumber; ) {
+        for (uint256 i; i < operationalKeysNumber; ) {
             delete identityIds[operationalKeys[i]];
             unchecked {
                 i++;
