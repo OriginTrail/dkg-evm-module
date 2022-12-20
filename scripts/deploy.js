@@ -1,4 +1,4 @@
-require('dotenv').config({ path: __dirname.join('/../.env') });
+require('dotenv').config({ path: ('./.env') });
 const { ApiPromise, HttpProvider } = require('@polkadot/api');
 const { Keyring } = require('@polkadot/keyring');
 const { execSync } = require('child_process');
