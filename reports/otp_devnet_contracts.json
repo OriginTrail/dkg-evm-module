@@ -12,7 +12,86 @@
         "ParametersStorage": {
             "evmAddress": "0x374C9f3566E790B806B05E9f99623aF4Ece0b334",
             "deployed": true
+        },
+        "WhitelistStorage": {
+            "evmAddress": "0xDcEbFfd3DC577705cAAbE2Bc65AA6aeEd0ef8b85",
+            "deployed": true
+        },
+        "HashingProxy": {
+            "evmAddress": "0xC19E1444C03e38AA7FD54De55d19DB141f0b3B80",
+            "deployed": true
+        },
+        "sha256Contract": {
+            "evmAddress": "0x835b05736b0BbaB872E04A1db39eF33E32B3b814",
+            "deployed": true
+        },
+        "ScoringProxy": {
+            "evmAddress": "0xd6Ac571b8c5783F95d2B109A9B7195F8Af1704ea",
+            "deployed": true
+        },
+        "log2pldsfContract": {
+            "evmAddress": "0x92ac2aA2e50B125792Da7670183B89fAE67f0708",
+            "deployed": true
+        },
+        "AssertionStorage": {
+            "evmAddress": "0x3cf27B655f1F9930bBb80b3bE3394D9eECACDa9d",
+            "deployed": true
+        },
+        "IdentityStorage": {
+            "evmAddress": "0x42b2C4b7fEE9d9c23688829966c6b41580FDD08F",
+            "deployed": true
+        },
+        "ShardingTableStorage": {
+            "evmAddress": "0x822800D5eb7722bB22a06a28D1D7e2F51b829F18",
+            "deployed": true
+        },
+        "StakingStorage": {
+            "evmAddress": "0x697F7A4F384B54ACf2Ccb5034627F80C332dCB56",
+            "deployed": true,
+            "substrateAddress": "5EMjsczhKBuDuMTdoa9uFsGKiyGApyuehx69H8WMKnBtsFkY"
+        },
+        "ProfileStorage": {
+            "evmAddress": "0x9DC2265a9E62f0267AB79E163B9c8fa3C5a07F63",
+            "deployed": true,
+            "substrateAddress": "5EMjsczsnYJWiU2knfMdmEJgMEq2Kzo6UhJCXNajGcBL9Tdh"
+        },
+        "ServiceAgreementStorageV1": {
+            "evmAddress": "0x8A384775caADCE301cFd16CB648f385A8318239c",
+            "deployed": true,
+            "substrateAddress": "5EMjsczosUF52dv9jMKnYmuTzEuoM94qiSbXd6HYc7hn99ye"
+        },
+        "ContentAssetStorage": {
+            "evmAddress": "0xABd59A9aa71847F499d624c492d3903dA953d67a",
+            "deployed": true
+        },
+        "Assertion": {
+            "evmAddress": "0x4082832c777948BCdA55D84c83038d427Ae0B596",
+            "deployed": true
+        },
+        "Identity": {
+            "evmAddress": "0xb77D30149AF96fD23c731672ff3F44DdeA1F6F0d",
+            "deployed": true
+        },
+        "ShardingTable": {
+            "evmAddress": "0x48cbab861F6db9902b071E64Ad8956a1af8e499d",
+            "deployed": true
+        },
+        "Staking": {
+            "evmAddress": "0xFf0DEAd601c8B552922a316741b5437C3a3E38F1",
+            "deployed": true
+        },
+        "Profile": {
+            "evmAddress": "0xdc24806fC9F6CbaDC357Ef28d94b202B45f95241",
+            "deployed": true
+        },
+        "ServiceAgreementV1": {
+            "evmAddress": "0xfce6B761D779D55F89dBf7Ddaf4E797E66b27Fd3",
+            "deployed": true
+        },
+        "ContentAsset": {
+            "evmAddress": "0x5CC1bEeb5A209DB8A9DBf2fA4C90ca4c89e40cee",
+            "deployed": true
         }
     },
-    "deployedTimestamp": 1671547885770
+    "deployedTimestamp": 1671611431676
 }

@@ -20,7 +20,7 @@ async function whitelist () {
   const provider = new ethers.providers.JsonRpcProvider(endpoint);
   const whitelistStorageAddress = deployedContracts.contracts.WhitelistStorage.evmAddress;
   console.log(`Using ${whitelistStorageAddress} for whitelist storage`);
-  const deployerWallet = new ethers.Wallet(process.env.PRIVATE_KEY);
+  const deployerWallet = new ethers.Wallet(process.env[`${environment.toUpperCase()}_EVM_PRIVATE_KEY`]);
   console.log(`Using deployer wallet: ${deployerWallet.address}`);
   const signerWallet = deployerWallet.connect(provider);
   const whitelistStorageContract = new ethers.Contract(whitelistStorageAddress, WhitelistStorage.abi, provider);
