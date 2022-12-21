@@ -67,15 +67,15 @@ module.exports = {
     },
     otp_devnet: {
       network_id: 2160,
-      gas: 10000000, // Gas limit used for deploys
-      gasPrice: 10000000,
+      gas: 10_000_000, // Gas limit used for deploys
+      gasPrice: 1_000_000,
       skipDryRun: true,
       provider: () =>
         new HDWalletProvider([private_key], process.env.OTP_DEVNET_RPC),
     },
     otp_testnet: {
       network_id: 20430,
-      gas: 10000000, // Gas limit used for deploys
+      gas: 10_000_000, // Gas limit used for deploys
       gasPrice: 20,
       skipDryRun: true,
       provider: () =>
@@ -83,7 +83,7 @@ module.exports = {
     },
     otp_mainnet: {
       network_id: 2043,
-      gas: 10000000, // Gas limit used for deploys
+      gas: 10_000_000, // Gas limit used for deploys
       gasPrice: 10,
       skipDryRun: true,
       provider: () =>
@@ -126,8 +126,8 @@ module.exports = {
   mocha: {
     reporter: 'eth-gas-reporter',
     reporterOptions: {
-      excludeContracts: ['Migrations']
-    }
+      excludeContracts: ['Migrations'],
+    },
   },
 
   // Configure your compilers
@@ -186,7 +186,7 @@ module.exports = {
               // If set to an empty value, only the default clean-up sequence is used and
               // no optimization steps are applied.
               // optimizerSteps: "dhfoDgvulfnTUtnIf..."
-            }
+            },
           },
         },
         //  evmVersion: "byzantium"
@@ -195,24 +195,24 @@ module.exports = {
         viaIR: true,
         // Optional: Debugging settings
         // debug: {
-          // How to treat revert (and require) reason strings. Settings are
-          // "default", "strip", "debug" and "verboseDebug".
-          // "default" does not inject compiler-generated revert strings and keeps user-supplied ones.
-          // "strip" removes all revert strings (if possible, i.e. if literals are used) keeping side-effects
-          // "debug" injects strings for compiler-generated internal reverts, implemented for ABI encoders V1 and V2 for now.
-          // "verboseDebug" even appends further information to user-supplied revert strings (not yet implemented)
-          // revertStrings: "debug",
-          // Optional: How much extra debug information to include in comments in the produced EVM
-          // assembly and Yul code. Available components are:
-          // - `location`: Annotations of the form `@src <index>:<start>:<end>` indicating the
-          //    location of the corresponding element in the original Solidity file, where:
-          //     - `<index>` is the file index matching the `@use-src` annotation,
-          //     - `<start>` is the index of the first byte at that location,
-          //     - `<end>` is the index of the first byte after that location.
-          // - `snippet`: A single-line code snippet from the location indicated by `@src`.
-          //     The snippet is quoted and follows the corresponding `@src` annotation.
-          // - `*`: Wildcard value that can be used to request everything.
-          // debugInfo: ["location", "snippet"]
+        // How to treat revert (and require) reason strings. Settings are
+        // "default", "strip", "debug" and "verboseDebug".
+        // "default" does not inject compiler-generated revert strings and keeps user-supplied ones.
+        // "strip" removes all revert strings (if possible, i.e. if literals are used) keeping side-effects
+        // "debug" injects strings for compiler-generated internal reverts, implemented for ABI encoders V1 and V2 for now.
+        // "verboseDebug" even appends further information to user-supplied revert strings (not yet implemented)
+        // revertStrings: "debug",
+        // Optional: How much extra debug information to include in comments in the produced EVM
+        // assembly and Yul code. Available components are:
+        // - `location`: Annotations of the form `@src <index>:<start>:<end>` indicating the
+        //    location of the corresponding element in the original Solidity file, where:
+        //     - `<index>` is the file index matching the `@use-src` annotation,
+        //     - `<start>` is the index of the first byte at that location,
+        //     - `<end>` is the index of the first byte after that location.
+        // - `snippet`: A single-line code snippet from the location indicated by `@src`.
+        //     The snippet is quoted and follows the corresponding `@src` annotation.
+        // - `*`: Wildcard value that can be used to request everything.
+        // debugInfo: ["location", "snippet"]
         // },
       },
     },
@@ -221,7 +221,7 @@ module.exports = {
   // Plugins
   plugins: [
     // 'solidity-coverage',
-    'truffle-contract-size'
+    'truffle-contract-size',
   ],
 
   // Truffle DB is currently disabled by default; to enable it, change enabled:
