@@ -19,7 +19,7 @@ require('dotenv').config({ path: `${__dirname}/.env` });
  * phrase from a file you've .gitignored so it doesn't accidentally become public.
  *
  */
-const environment = process.argv.slice(2)[2].toUpperCase();
+const environment = process.argv.slice(2)[2]?.toUpperCase();
 const private_key = process.env[`${environment}_EVM_PRIVATE_KEY`];
 const rpc_endpoint = process.env[`${environment}_RPC`];
 
