@@ -63,13 +63,17 @@ module.exports = async (deployer, network, accounts) => {
     return new Promise((resolve, reject) => {
       try {
         if (passHubInConstructor) {
-          deployer.deploy(Contract, hub.address, { gas: 6000000, from: account }).then((result) => {
-            resolve(result);
-          });
+          deployer
+            .deploy(Contract, hub.address, { gas: 6000000, from: account })
+            .then((result) => {
+              resolve(result);
+            });
         } else {
-          deployer.deploy(Contract, { gas: 6000000, from: account }).then((result) => {
-            resolve(result);
-          });
+          deployer
+            .deploy(Contract, { gas: 6000000, from: account })
+            .then((result) => {
+              resolve(result);
+            });
         }
       } catch (error) {
         console.log(`Error while deploying contract. Error: ${error}`);

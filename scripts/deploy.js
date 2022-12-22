@@ -1,4 +1,4 @@
-require('dotenv').config({ path: __dirname.join('/../.env') });
+require('dotenv').config({ path: ('./.env') });
 const { ApiPromise, HttpProvider } = require('@polkadot/api');
 const { Keyring } = require('@polkadot/keyring');
 const { execSync } = require('child_process');
@@ -95,7 +95,7 @@ class Deployer {
     const transfer = api.tx.balances.transfer(address, INITIAL_TOKEN_AMOUNT);
 
     const keyring = new Keyring({ type: 'sr25519' });
-    const account = keyring.createFromUri(process.env.ACCOUNT_URI_WITH_OTP);
+    const account = keyring.createFromUri(process.env[`${environment.toUpperCase()}_ACCOUNT_URI_WITH_OTP`]);
 
     await transfer.signAndSend(account, { nonce: -1 });
     console.log('Waiting for 40 sec until transfer is completed');
