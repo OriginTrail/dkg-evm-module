@@ -1,0 +1,22 @@
+[
+  "event AssetStorageChanged(string,address)",
+  "event ContractChanged(string,address)",
+  "event NewAssetStorage(string,address)",
+  "event NewContract(string,address)",
+  "event OwnershipTransferred(address indexed,address indexed)",
+  "function getAllAssetStorages() view returns (tuple(string,address)[])",
+  "function getAllContracts() view returns (tuple(string,address)[])",
+  "function getAssetStorageAddress(string) view returns (address)",
+  "function getContractAddress(string) view returns (address)",
+  "function isAssetStorage(address) view returns (bool)",
+  "function isAssetStorage(string) view returns (bool)",
+  "function isContract(address) view returns (bool)",
+  "function isContract(string) view returns (bool)",
+  "function name() pure returns (string)",
+  "function owner() view returns (address)",
+  "function renounceOwnership()",
+  "function setAssetStorageAddress(string,address)",
+  "function setContractAddress(string,address)",
+  "function transferOwnership(address)",
+  "function version() pure returns (string)"
+]

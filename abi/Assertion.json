@@ -1,0 +1,10 @@
+[
+  "constructor(address)",
+  "event AssertionCreated(bytes32 indexed,uint128,uint32,uint96)",
+  "function assertionStorage() view returns (address)",
+  "function createAssertion(bytes32,uint128,uint32,uint96)",
+  "function hub() view returns (address)",
+  "function initialize()",
+  "function name() pure returns (string)",
+  "function version() pure returns (string)"
+]

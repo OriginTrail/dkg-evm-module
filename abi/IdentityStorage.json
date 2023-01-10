@@ -1,0 +1,19 @@
+[
+  "constructor(address)",
+  "event KeyAdded(uint72 indexed,bytes32 indexed,uint256,uint256)",
+  "event KeyRemoved(uint72 indexed,bytes32 indexed,uint256,uint256)",
+  "function addKey(uint72,bytes32,uint256,uint256)",
+  "function deleteIdentity(uint72)",
+  "function generateIdentityId() returns (uint72)",
+  "function getIdentityId(address) view returns (uint72)",
+  "function getKey(uint72,bytes32) view returns (uint256, uint256, bytes32)",
+  "function getKeysByPurpose(uint72,uint256) view returns (bytes32[])",
+  "function hub() view returns (address)",
+  "function identityIds(bytes32) view returns (uint72)",
+  "function keyHasPurpose(uint72,bytes32,uint256) view returns (bool)",
+  "function name() pure returns (string)",
+  "function removeKey(uint72,bytes32)",
+  "function removeOperationalKeyIdentityId(bytes32)",
+  "function setOperationalKeyIdentityId(bytes32,uint72)",
+  "function version() pure returns (string)"
+]
