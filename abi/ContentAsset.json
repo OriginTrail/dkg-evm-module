@@ -1,0 +1,17 @@
+[
+  "constructor(address)",
+  "event AssetBurnt(address indexed,uint256 indexed,bytes32 indexed)",
+  "event AssetMinted(address indexed,uint256 indexed,bytes32 indexed)",
+  "event AssetPaymentIncreased(address indexed,uint256 indexed,uint96)",
+  "event AssetStateUpdated(address indexed,uint256 indexed,bytes32 indexed)",
+  "event AssetStoringPeriondExtended(address indexed,uint256 indexed,uint16,uint96)",
+  "function assertionContract() view returns (address)",
+  "function contentAssetStorage() view returns (address)",
+  "function createAsset(tuple(bytes32,uint128,uint32,uint96,uint16,uint96,uint8,bool))",
+  "function createAssetWithVariables(bytes32,uint128,uint32,uint96,uint16,uint96,uint8,bool)",
+  "function hub() view returns (address)",
+  "function initialize()",
+  "function name() pure returns (string)",
+  "function serviceAgreementV1() view returns (address)",
+  "function version() pure returns (string)"
+]

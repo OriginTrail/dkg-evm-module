@@ -1,0 +1,3 @@
+[
+  "function getOwners() view returns (address[])"
+]

@@ -1,0 +1,4 @@
+[
+  "function calculateDistance(uint8,bytes,bytes) view returns (uint256)",
+  "function calculateScore(uint256,uint96) view returns (uint40)"
+]

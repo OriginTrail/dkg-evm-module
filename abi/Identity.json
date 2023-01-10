@@ -1,0 +1,14 @@
+[
+  "constructor(address)",
+  "event IdentityCreated(uint72 indexed,bytes32 indexed,bytes32 indexed)",
+  "event IdentityDeleted(uint72 indexed)",
+  "function addKey(uint72,bytes32,uint256,uint256)",
+  "function createIdentity(address,address) returns (uint72)",
+  "function deleteIdentity(uint72)",
+  "function hub() view returns (address)",
+  "function identityStorage() view returns (address)",
+  "function initialize()",
+  "function name() pure returns (string)",
+  "function removeKey(uint72,bytes32)",
+  "function version() pure returns (string)"
+]

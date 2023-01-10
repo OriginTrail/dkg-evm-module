@@ -1,0 +1,17 @@
+[
+  "constructor(address)",
+  "event NodeAdded(uint72 indexed,bytes,uint96,uint96)",
+  "event NodeRemoved(uint72 indexed,bytes)",
+  "function getShardingTable() view returns (tuple(bytes,uint72,uint96,uint96)[])",
+  "function getShardingTable(uint72,uint72) view returns (tuple(bytes,uint72,uint96,uint96)[])",
+  "function hub() view returns (address)",
+  "function initialize()",
+  "function name() pure returns (string)",
+  "function profileStorage() view returns (address)",
+  "function pushBack(uint72)",
+  "function pushFront(uint72)",
+  "function removeNode(uint72)",
+  "function shardingTableStorage() view returns (address)",
+  "function stakingStorage() view returns (address)",
+  "function version() pure returns (string)"
+]

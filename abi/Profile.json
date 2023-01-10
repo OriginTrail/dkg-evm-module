@@ -1,0 +1,22 @@
+[
+  "constructor(address)",
+  "event AskUpdated(uint72 indexed,bytes,uint96)",
+  "event ProfileCreated(uint72 indexed,bytes)",
+  "event ProfileDeleted(uint72 indexed)",
+  "function createProfile(address,bytes,string,string)",
+  "function hashingProxy() view returns (address)",
+  "function hub() view returns (address)",
+  "function identityContract() view returns (address)",
+  "function identityStorage() view returns (address)",
+  "function initialize()",
+  "function name() pure returns (string)",
+  "function parametersStorage() view returns (address)",
+  "function profileStorage() view returns (address)",
+  "function setAsk(uint72,uint96)",
+  "function stakeAccumulatedOperatorFee(uint72)",
+  "function stakingContract() view returns (address)",
+  "function startAccumulatedOperatorFeeWithdrawal(uint72)",
+  "function version() pure returns (string)",
+  "function whitelistStorage() view returns (address)",
+  "function withdrawAccumulatedOperatorFee(uint72)"
+]

@@ -1,0 +1,15 @@
+[
+  "constructor(address)",
+  "event HashFunctionContractChanged(uint8 indexed,address)",
+  "event NewHashFunctionContract(uint8 indexed,address)",
+  "function callHashFunction(uint8,bytes) view returns (bytes32)",
+  "function getAllHashFunctions() view returns (tuple(uint8,address)[])",
+  "function getHashFunctionContractAddress(uint8) view returns (address)",
+  "function getHashFunctionName(uint8) view returns (string)",
+  "function hub() view returns (address)",
+  "function isHashFunction(uint8) view returns (bool)",
+  "function name() pure returns (string)",
+  "function removeContract(uint8)",
+  "function setContractAddress(uint8,address)",
+  "function version() pure returns (string)"
+]

@@ -1,0 +1,15 @@
+[
+  "constructor(address)",
+  "event NewScoringFunctionContract(uint8 indexed,address)",
+  "event ScoringFunctionContractUpdated(uint8 indexed,address)",
+  "function callScoreFunction(uint8,uint8,bytes,bytes,uint96) view returns (uint40)",
+  "function getAllScoreFunctions() view returns (tuple(uint8,address)[])",
+  "function getScoreFunctionContractAddress(uint8) view returns (address)",
+  "function getScoreFunctionName(uint8) view returns (string)",
+  "function hub() view returns (address)",
+  "function isScoreFunction(uint8) view returns (bool)",
+  "function name() pure returns (string)",
+  "function removeContract(uint8)",
+  "function setContractAddress(uint8,address)",
+  "function version() pure returns (string)"
+]

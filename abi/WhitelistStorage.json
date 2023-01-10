@@ -1,0 +1,12 @@
+[
+  "constructor(address)",
+  "function blacklistAddress(address)",
+  "function disableWhitelist()",
+  "function enableWhitelist()",
+  "function hub() view returns (address)",
+  "function name() pure returns (string)",
+  "function version() pure returns (string)",
+  "function whitelistAddress(address)",
+  "function whitelisted(address) view returns (bool)",
+  "function whitelistingEnabled() view returns (bool)"
+]

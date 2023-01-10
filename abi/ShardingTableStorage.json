@@ -1,0 +1,21 @@
+[
+  "constructor(address)",
+  "function createNodeObject(uint72,uint72,uint72)",
+  "function decrementNodesCount()",
+  "function deleteNodeObject(uint72)",
+  "function getMultipleNodes(uint72,uint16) view returns (tuple(uint72,uint72,uint72)[])",
+  "function getNode(uint72) view returns (tuple(uint72,uint72,uint72))",
+  "function head() view returns (uint72)",
+  "function hub() view returns (address)",
+  "function incrementNodesCount()",
+  "function link(uint72,uint72)",
+  "function name() pure returns (string)",
+  "function nodeExists(uint72) view returns (bool)",
+  "function nodesCount() view returns (uint72)",
+  "function setHead(uint72)",
+  "function setNextIdentityId(uint72,uint72)",
+  "function setPrevIdentityId(uint72,uint72)",
+  "function setTail(uint72)",
+  "function tail() view returns (uint72)",
+  "function version() pure returns (string)"
+]

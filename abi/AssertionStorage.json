@@ -1,0 +1,14 @@
+[
+  "constructor(address)",
+  "function assertionExists(bytes32) view returns (bool)",
+  "function createAssertion(bytes32,uint128,uint32,uint96)",
+  "function deleteAssertion(bytes32)",
+  "function getAssertion(bytes32) view returns (tuple(uint256,uint128,uint32,uint96))",
+  "function getAssertionChunksNumber(bytes32) view returns (uint96)",
+  "function getAssertionSize(bytes32) view returns (uint128)",
+  "function getAssertionTimestamp(bytes32) view returns (uint256)",
+  "function getAssertionTriplesNumber(bytes32) view returns (uint32)",
+  "function hub() view returns (address)",
+  "function name() pure returns (string)",
+  "function version() pure returns (string)"
+]

@@ -1,0 +1,9 @@
+[
+  "function getAssertionIdByIndex(uint256,uint256) view returns (bytes32)",
+  "function getAssertionIds(uint256) view returns (bytes32[])",
+  "function getAssertionIdsLength(uint256) view returns (uint256)",
+  "function getLatestAssertionId(uint256) view returns (bytes32)",
+  "function hub() view returns (address)",
+  "function name() view returns (string)",
+  "function version() view returns (string)"
+]
