@@ -1,38 +1,38 @@
 import 'dotenv/config';
 
 export function rpc(networkName: string): string {
-	if (networkName) {
-		const rpc = process.env['RPC_' + networkName.toUpperCase()];
-		if (rpc && rpc !== '') {
-			return rpc;
-		}
-	}
+  if (networkName) {
+    const rpc = process.env['RPC_' + networkName.toUpperCase()];
+    if (rpc && rpc !== '') {
+      return rpc;
+    }
+  }
 
-	if (networkName === 'localhost') {
-		return 'http://localhost:8545';
-	}
+  if (networkName === 'localhost') {
+    return 'http://localhost:8545';
+  }
 
-	return '';
+  return '';
 }
 
 export function mnemonic(networkName?: string): string {
-    let mnemonic;
+  let mnemonic;
 
-	if (networkName) {
-		mnemonic = process.env['MNEMONIC_' + networkName.toUpperCase()];
-		if (mnemonic && mnemonic !== '') {
-			return mnemonic;
-		}
-	}
+  if (networkName) {
+    mnemonic = process.env['MNEMONIC_' + networkName.toUpperCase()];
+    if (mnemonic && mnemonic !== '') {
+      return mnemonic;
+    }
+  }
 
-	mnemonic = process.env.MNEMONIC;
-	if (!mnemonic || mnemonic === '') {
-		return 'test test test test test test test test test test test junk';
-	}
+  mnemonic = process.env.MNEMONIC;
+  if (!mnemonic || mnemonic === '') {
+    return 'test test test test test test test test test test test junk';
+  }
 
-	return mnemonic;
+  return mnemonic;
 }
 
-export function accounts(networkName?: string): {mnemonic: string} {
-	return {mnemonic: mnemonic(networkName)};
+export function accounts(networkName?: string): { mnemonic: string } {
+  return { mnemonic: mnemonic(networkName) };
 }

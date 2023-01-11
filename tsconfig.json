@@ -10,6 +10,6 @@
         "outDir": "dist",
         "resolveJsonModule": true
     },
-    "include": ["./scripts", "./tasks", "./deploy", "./test", "./typechain-types"],
+    "include": ["./scripts", "./tasks", "./deploy", "./test", "./typechain", "./utils"],
     "files": ["./hardhat.config.ts", "./index.ts"],
 }

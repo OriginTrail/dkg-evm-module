@@ -1,13 +1,11 @@
-import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {DeployFunction} from 'hardhat-deploy/types';
+import { DeployFunction } from 'hardhat-deploy/types';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-    const {helpers} = hre;
-
-    await helpers.deploy({
-        hre,
-        newContractName: 'ProfileStorage',
-    });
+  await hre.helpers.deploy({
+    hre,
+    newContractName: 'ProfileStorage',
+  });
 };
 
 export default func;

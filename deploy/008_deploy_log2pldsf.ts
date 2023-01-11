@@ -1,25 +1,22 @@
-import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {DeployFunction} from 'hardhat-deploy/types';
+import { DeployFunction } from 'hardhat-deploy/types';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-    const {deployments, helpers, getNamedAccounts} = hre;
-    const {execute} = deployments;
+  const { deployer } = await hre.getNamedAccounts();
 
-    const {deployer} = await getNamedAccounts();
+  const log2pldsfContract = await hre.helpers.deploy({
+    hre,
+    newContractName: 'Log2PLDSF',
+    setContractInHub: false,
+  });
 
-    const log2pldsfContract = await helpers.deploy({
-        hre,
-        newContractName: 'Log2PLDSF',
-        setContractInHub: false,
-    });
-
-    await execute(
-        'ScoringProxy',
-        {from: deployer, log: true},
-        'setContractAddress',
-        1,
-        log2pldsfContract.address,
-    );
+  await hre.deployments.execute(
+    'ScoringProxy',
+    { from: deployer, log: true },
+    'setContractAddress',
+    1,
+    log2pldsfContract.address,
+  );
 };
 
 export default func;

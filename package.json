@@ -3,44 +3,26 @@
   "description": "",
   "version": "3.2.1",
   "files": [
-    "truffle-config.js",
+    "hardhat.config.ts",
     "/contracts/**/*.sol",
-    "/build/contracts/*.json"
+    "/abi/*.json"
   ],
-  "scripts": {
-    "compile": "hardhat compile",
-    "coverage": "cross-env HARDHAT_DEPLOY_FIXTURE=true hardhat coverage",
-    "deploy:otp_devnet": "npm run deploy -- --network otp_devnet",
-    "deploy:otp_mainnet": "npm run deploy -- --network otp_mainnet",
-    "deploy:otp_testnet": "npm run deploy -- --network otp_testnet",
-    "deploy": "hardhat deploy",
-    "dev": "cross-env MINING_INTERVAL=\"3000,5000\" hardhat node --network hardhat",
-    "format:fix": "prettier --write '**/*.{ts,js,sol}'",
-    "format": "prettier --check '**/*.{ts,js,sol}'",
-    "lint:fix": "npm run lint:sol:fix && npm run lint:ts:fix",
-    "lint:sol:fix": "npm run lint:sol -- --fix",
-    "lint:sol": "solhint 'contracts/**/*.sol'",
-    "lint:ts:fix": "npm run lint:ts -- --fix",
-    "lint:ts": "eslint '**/*.{js,ts}'",
-    "lint": "npm run lint:sol && npm run lint:ts",
-    "mint-test-tokens": "cross-env HARDHAT_DEPLOY_FIXTURE=true hardhat run scripts/mint_test_tokens.ts --network localhost",
-    "test:gas": "cross-env GAS_REPORT=true && npm run test",
-    "test": "cross-env HARDHAT_DEPLOY_FIXTURE=true HARDHAT_COMPILE=true mocha --bail --recursive test"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/OriginTrail/dkg-evm-module"
   },
   "keywords": [
+    "dkg",
     "solidity",
     "ethereum",
     "smart",
     "contracts"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.5",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
     "@nomiclabs/hardhat-solhint": "^3.0.0",
     "@openzeppelin/test-helpers": "^0.5.16",
     "@polkadot/api": "^9.10.1",
@@ -57,6 +39,8 @@
     "dotenv": "^16.0.3",
     "eslint": "^8.31.0",
     "eslint-config-prettier": "^8.6.0",
+    "eslint-import-resolver-typescript": "^3.5.2",
+    "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-mocha": "^10.1.0",
     "eslint-plugin-prettier": "^4.2.1",
     "ethers": "^5.7.2",
@@ -82,5 +66,31 @@
   },
   "overrides": {
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.13"
+  },
+  "scripts": {
+    "clean": "hardhat clean",
+    "compile": "hardhat size-contracts",
+    "coverage": "cross-env HARDHAT_DEPLOY_FIXTURE=true hardhat coverage --solcoverjs ./.solcover.js --temp artifacts --testfiles './test/**/*.test.ts'",
+    "deploy:otp_devnet": "hardhat deploy --network otp_devnet",
+    "deploy:otp_mainnet": "hardhat deploy --network otp_mainnet",
+    "deploy:otp_testnet": "hardhat deploy --network otp_testnet",
+    "deploy": "hardhat deploy",
+    "dev": "cross-env MINING_INTERVAL=\"3000,5000\" hardhat node --network hardhat",
+    "format:fix": "prettier --write '**/*.{ts,js,sol}'",
+    "format": "prettier --check '**/*.{ts,js,sol}'",
+    "lint:fix": "npm run lint:sol:fix && npm run lint:ts:fix",
+    "lint:sol:fix": "solhint 'contracts/**/*.sol' --fix",
+    "lint:sol": "solhint 'contracts/**/*.sol'",
+    "lint:ts:fix": "eslint '**/*.{js,ts}' --fix",
+    "lint:ts": "eslint '**/*.{js,ts}'",
+    "lint": "npm run lint:sol && npm run lint:ts",
+    "mint-test-tokens": "cross-env HARDHAT_DEPLOY_FIXTURE=true hardhat run scripts/mint_test_tokens.ts --network localhost",
+    "postinstall": "husky install",
+    "test:fulltrace": "hardhat test --fulltrace",
+    "test:gas:fulltrace": "cross-env GAS_REPORT=true hardhat test --fulltrace",
+    "test:gas:trace": "cross-env GAS_REPORT=true hardhat test --trace",
+    "test:gas": "cross-env GAS_REPORT=true hardhat test",
+    "test:trace": "hardhat test --trace",
+    "test": "hardhat test"
   }
 }
