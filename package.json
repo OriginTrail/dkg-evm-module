@@ -85,12 +85,13 @@
     "lint:ts": "eslint '**/*.{js,ts}'",
     "lint": "npm run lint:sol && npm run lint:ts",
     "mint-test-tokens": "cross-env HARDHAT_DEPLOY_FIXTURE=true hardhat run scripts/mint_test_tokens.ts --network localhost",
-    "postinstall": "husky install && hardhat typechain",
+    "postinstall": "husky install",
     "test:fulltrace": "hardhat test --network hardhat --fulltrace",
     "test:gas:fulltrace": "cross-env GAS_REPORT=true hardhat test --network hardhat --fulltrace",
     "test:gas:trace": "cross-env GAS_REPORT=true hardhat test --network hardhat --trace",
     "test:gas": "cross-env GAS_REPORT=true hardhat test --network hardhat",
     "test:trace": "hardhat test --network hardhat --trace",
-    "test": "hardhat test --network hardhat"
+    "test": "hardhat test --network hardhat",
+    "typechain": "hardhat typechain"
   }
 }
