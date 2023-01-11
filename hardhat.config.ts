@@ -23,7 +23,7 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
 });
 
 const config: HardhatUserConfig = {
-  defaultNetwork: 'localhost',
+  defaultNetwork: 'hardhat',
   namedAccounts: {
     deployer: 0,
     minter: 0,
@@ -88,7 +88,7 @@ const config: HardhatUserConfig = {
           },
         },
       },
-      viaIR: true,
+      viaIR: process.env.COVERAGE_REPORT ? false : true,
     },
   },
   paths: {
