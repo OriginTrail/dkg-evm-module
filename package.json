@@ -27,6 +27,8 @@
     "@openzeppelin/test-helpers": "^0.5.16",
     "@polkadot/api": "^9.10.1",
     "@polkadot/keyring": "^10.2.1",
+    "@polkadot/util": "^10.2.3",
+    "@polkadot/util-crypto": "^10.2.3",
     "@typechain/hardhat": "^6.1.5",
     "@types/chai": "^4.3.4",
     "@types/mocha": "^10.0.1",

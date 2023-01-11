@@ -14,6 +14,7 @@ import { HardhatUserConfig, extendEnvironment } from 'hardhat/config';
 import { lazyObject } from 'hardhat/plugins';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
+import './tasks/address_converter';
 import './utils/type-extensions';
 import { Helpers } from './utils/helpers';
 import { accounts, rpc } from './utils/network';

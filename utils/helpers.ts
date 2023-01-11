@@ -1,3 +1,4 @@
+import * as polkadotCryptoUtils from '@polkadot/util-crypto';
 import { DeployResult } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
@@ -48,5 +49,13 @@ export class Helpers {
     }
 
     return newContract;
+  }
+
+  public convertEvmWallet(evmAddress: string, ss58Prefix: number): string {
+    if (!polkadotCryptoUtils.isEthereumAddress(evmAddress)) {
+      throw Error('Invalid EVM address.');
+    }
+
+    return polkadotCryptoUtils.evmToAddress(evmAddress, ss58Prefix);
   }
 }
