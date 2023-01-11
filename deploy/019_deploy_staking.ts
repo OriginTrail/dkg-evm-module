@@ -10,3 +10,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ['Staking'];
+func.dependencies = [
+  'Hub',
+  'ShardingTable',
+  'IdentityStorage',
+  'ParametersStorage',
+  'ProfileStorage',
+  'ServiceAgreementStorageV1',
+  'ShardingTableStorage',
+  'StakingStorage',
+];

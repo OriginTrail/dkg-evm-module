@@ -15,3 +15,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ['Token', 'ERC20Token'];
+func.dependencies = ['Hub'];

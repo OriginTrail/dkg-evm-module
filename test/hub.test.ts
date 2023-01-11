@@ -20,17 +20,17 @@ describe('Hub contract', function () {
     return { accounts, Hub };
   }
 
-  it('the contract is named "Hub"', async function () {
+  it('The contract is named "Hub"', async function () {
     const { Hub } = await loadFixture(deployHubFixture);
     expect(await Hub.name()).to.equal('Hub');
   });
 
-  it('the contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async function () {
     const { Hub } = await loadFixture(deployHubFixture);
     expect(await Hub.version()).to.equal('1.0.0');
   });
 
-  it('sets correct contract address and name; emits NewContract event', async () => {
+  it('Set correct contract address and name; emits NewContract event', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     expect(await Hub.setContractAddress('TestContract', accounts[1].address))
@@ -40,7 +40,7 @@ describe('Hub contract', function () {
     expect(await Hub.getContractAddress('TestContract')).to.equal(accounts[1].address);
   });
 
-  it('set contract address and name (non-owner wallet); expect revert: only hub owner can set contracts', async () => {
+  it('Set contract address and name (non-owner wallet); expect revert: only hub owner can set contracts', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     const HubWithNonOwnerSigner = await Hub.connect(accounts[1]);
@@ -50,7 +50,7 @@ describe('Hub contract', function () {
     );
   });
 
-  it('set contract with empty name; expect revert: name cannot be empty', async () => {
+  it('Set contract with empty name; expect revert: name cannot be empty', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     expect(Hub.setContractAddress('', accounts[1].address)).to.be.revertedWith(
@@ -58,7 +58,7 @@ describe('Hub contract', function () {
     );
   });
 
-  it('set contract with empty address; expect revert: address cannot be 0x0', async () => {
+  it('Set contract with empty address; expect revert: address cannot be 0x0', async () => {
     const { Hub } = await loadFixture(deployHubFixture);
 
     await expect(Hub.setContractAddress('TestContract', ZERO_ADDRESS)).to.be.revertedWith(
@@ -66,7 +66,7 @@ describe('Hub contract', function () {
     );
   });
 
-  it('updates contract address; emits ContractChanged event', async () => {
+  it('Update contract address; emits ContractChanged event', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     await Hub.setContractAddress('TestContract', accounts[1].address);
@@ -80,7 +80,7 @@ describe('Hub contract', function () {
     expect(await Hub.getContractAddress('TestContract')).to.equal(accounts[2].address);
   });
 
-  it('sets contract address; name should be in the Hub', async () => {
+  it('Set contract address; name should be in the Hub', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     await Hub.setContractAddress('TestContract', accounts[1].address);
@@ -88,7 +88,7 @@ describe('Hub contract', function () {
     expect(await Hub['isContract(string)']('TestContract')).to.equal(true);
   });
 
-  it('sets contract address; address should be in the Hub', async () => {
+  it('Set contract address; address should be in the Hub', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     await Hub.setContractAddress('TestContract', accounts[1].address);
@@ -96,7 +96,7 @@ describe('Hub contract', function () {
     expect(await Hub['isContract(address)'](accounts[1].address)).to.equal(true);
   });
 
-  it('get all contracts; all addresses and names should be in the Hub', async () => {
+  it('Get all contracts; all addresses and names should be in the Hub', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     for (let i = 0; i < 6; i++) {
@@ -110,7 +110,7 @@ describe('Hub contract', function () {
     });
   });
 
-  it('sets correct asset contract address and name; emits NewAssetContract event', async () => {
+  it('Set correct asset contract address and name; emits NewAssetContract event', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     expect(await Hub.setAssetStorageAddress('TestAssetContract', accounts[1].address))
@@ -120,7 +120,7 @@ describe('Hub contract', function () {
     expect(await Hub.getAssetStorageAddress('TestAssetContract')).to.equal(accounts[1].address);
   });
 
-  it('set asset contract address/name (non-owner); expect revert: only hub owner can set contracts', async () => {
+  it('Set asset contract address/name (non-owner); expect revert: only hub owner can set contracts', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     const HubWithNonOwnerSigner = await Hub.connect(accounts[1]);
@@ -130,7 +130,7 @@ describe('Hub contract', function () {
     );
   });
 
-  it('set asset contract with empty name; expect revert: name cannot be empty', async () => {
+  it('Set asset contract with empty name; expect revert: name cannot be empty', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     expect(Hub.setAssetStorageAddress('', accounts[1].address)).to.be.revertedWith(
@@ -138,7 +138,7 @@ describe('Hub contract', function () {
     );
   });
 
-  it('set asset contract with empty address; expect revert: address cannot be 0x0', async () => {
+  it('Set asset contract with empty address; expect revert: address cannot be 0x0', async () => {
     const { Hub } = await loadFixture(deployHubFixture);
 
     expect(Hub.setAssetStorageAddress('TestAssetContract', ZERO_ADDRESS)).to.be.revertedWith(
@@ -146,7 +146,7 @@ describe('Hub contract', function () {
     );
   });
 
-  it('updates asset contract address; emits AssetContractChanged event', async () => {
+  it('Update asset contract address; emits AssetContractChanged event', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     await Hub.setAssetStorageAddress('TestAssetContract', accounts[1].address);
@@ -160,7 +160,7 @@ describe('Hub contract', function () {
     expect(await Hub.getAssetStorageAddress('TestAssetContract')).to.equal(accounts[2].address);
   });
 
-  it('sets asset contract address; name should be in the Hub', async () => {
+  it('Set asset contract address; name should be in the Hub', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     await Hub.setAssetStorageAddress('TestAssetContract', accounts[1].address);
@@ -168,7 +168,7 @@ describe('Hub contract', function () {
     expect(await Hub['isAssetStorage(string)']('TestAssetContract')).to.equal(true);
   });
 
-  it('sets asset contract address; address should be in the Hub', async () => {
+  it('Set asset contract address; address should be in the Hub', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     await Hub.setAssetStorageAddress('TestAssetContract', accounts[1].address);
@@ -176,7 +176,7 @@ describe('Hub contract', function () {
     expect(await Hub['isAssetStorage(address)'](accounts[1].address)).to.equal(true);
   });
 
-  it('get all asset contracts; all addresses and names should be in the Hub', async () => {
+  it('Get all asset contracts; all addresses and names should be in the Hub', async () => {
     const { accounts, Hub } = await loadFixture(deployHubFixture);
 
     for (let i = 0; i < 6; i++) {
