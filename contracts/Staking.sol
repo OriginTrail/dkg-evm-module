@@ -185,10 +185,7 @@ contract Staking is Named, Versioned {
             ss.setTotalStake(identityId, oldStake + delegatorsReward);
             sasV1.transferAgreementTokens(address(ss), delegatorsReward);
 
-            if (
-                !shardingTableStorage.nodeExists(identityId) &&
-                oldStake >= parametersStorage.minimumStake()
-            ) {
+            if (!shardingTableStorage.nodeExists(identityId) && oldStake >= parametersStorage.minimumStake()) {
                 shardingTableContract.pushBack(identityId);
             }
         }
