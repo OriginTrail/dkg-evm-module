@@ -4,10 +4,19 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await hre.helpers.deploy({
     hre,
-    newContractName: 'ServiceAgreementV1',
+    newContractName: 'ProofManagerV1',
   });
 };
 
 export default func;
-func.tags = ['ServiceAgreementV1'];
-func.dependencies = ['HashingProxy', 'Hub', 'ScoringProxy', 'ParametersStorage', 'ServiceAgreementStorageV1'];
+func.tags = ['ProofManagerV1'];
+func.dependencies = [
+  'Hub',
+  'ServiceAgreementV1',
+  'Staking',
+  'AssertionStorage',
+  'IdentityStorage',
+  'ParametersStorage',
+  'ProfileStorage',
+  'ServiceAgreementStorageV1',
+];

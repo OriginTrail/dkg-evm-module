@@ -1,9 +1,9 @@
 [
   "constructor(address)",
   "event OperatorFeeUpdated(uint72 indexed,bytes,uint8)",
-  "event RewardAdded(uint72 indexed,bytes,uint96)",
-  "event StakeIncreased(uint72 indexed,bytes,address indexed,uint96)",
-  "event StakeWithdrawalStarted(uint72 indexed,bytes,address indexed,uint96,uint256)",
+  "event RewardAdded(uint72 indexed,bytes,uint96,uint96,uint96,uint96)",
+  "event StakeIncreased(uint72 indexed,bytes,address indexed,uint96,uint96)",
+  "event StakeWithdrawalStarted(uint72 indexed,bytes,address indexed,uint96,uint96,uint256)",
   "event StakeWithdrawn(uint72 indexed,bytes,address indexed,uint96)",
   "function addReward(uint72,uint96)",
   "function addStake(address,uint72,uint96)",
