@@ -9,5 +9,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['AsssertionStorage'];
+func.tags = ['AssertionStorage'];
 func.dependencies = ['Hub'];
