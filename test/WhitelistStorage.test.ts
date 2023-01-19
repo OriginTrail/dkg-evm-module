@@ -39,7 +39,7 @@ describe('WhitelistStorage contract', function () {
   it('Whitelist new address with non owner; expect to fail and not whitelisted', async () => {
     const WhitelistStorageWithNonOwnerSigner = WhitelistStorage.connect(accounts[1]);
 
-    expect(WhitelistStorageWithNonOwnerSigner.whitelistAddress(accounts[2].address)).to.be.revertedWith(
+    await expect(WhitelistStorageWithNonOwnerSigner.whitelistAddress(accounts[2].address)).to.be.revertedWith(
       'Fn can only be used by hub owner',
     );
 
@@ -56,7 +56,7 @@ describe('WhitelistStorage contract', function () {
   it('Block address with non owner, expect to be reverted', async () => {
     const WhitelistStorageWithNonOwnerSigner = WhitelistStorage.connect(accounts[1]);
 
-    expect(WhitelistStorageWithNonOwnerSigner.blacklistAddress(accounts[1].address)).to.be.revertedWith(
+    await expect(WhitelistStorageWithNonOwnerSigner.blacklistAddress(accounts[1].address)).to.be.revertedWith(
       'Fn can only be used by hub owner',
     );
   });

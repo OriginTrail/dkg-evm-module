@@ -17,20 +17,34 @@ import {ADMIN_KEY} from "./constants/IdentityConstants.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Staking is Named, Versioned {
-    event StakeIncreased(uint72 indexed identityId, bytes nodeId, address indexed staker, uint96 newStakeAmount);
+    event StakeIncreased(
+        uint72 indexed identityId,
+        bytes nodeId,
+        address indexed staker,
+        uint96 oldStake,
+        uint96 newStake
+    );
     event StakeWithdrawalStarted(
         uint72 indexed identityId,
         bytes nodeId,
         address indexed staker,
-        uint96 stakeAmount,
+        uint96 oldStake,
+        uint96 newStake,
         uint256 withdrawalPeriodEnd
     );
     event StakeWithdrawn(uint72 indexed identityId, bytes nodeId, address indexed staker, uint96 withdrawnStakeAmount);
-    event RewardAdded(uint72 indexed identityId, bytes nodeId, uint96 rewardAmount);
+    event RewardAdded(
+        uint72 indexed identityId,
+        bytes nodeId,
+        uint96 oldAccumulatedOperatorFee,
+        uint96 newAccumulatedOperatorFee,
+        uint96 oldStake,
+        uint96 newStake
+    );
     event OperatorFeeUpdated(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "1.0.1";
 
     Hub public hub;
     ShardingTable public shardingTableContract;
@@ -105,7 +119,7 @@ contract Staking is Named, Versioned {
         require(sharesToBurn <= sharesContract.balanceOf(msg.sender), "sharesToBurn must be <= balance");
 
         uint96 oldStake = ss.totalStakes(identityId);
-        uint96 stakeWithdrawalAmount = (uint96((uint256(oldStake) * sharesToBurn) / sharesContract.totalSupply()));
+        uint96 stakeWithdrawalAmount = uint96((uint256(oldStake) * sharesToBurn) / sharesContract.totalSupply());
         uint96 newStake = oldStake - stakeWithdrawalAmount;
         uint96 newStakeWithdrawalAmount = ss.getWithdrawalRequestAmount(identityId, msg.sender) + stakeWithdrawalAmount;
 
@@ -124,7 +138,8 @@ contract Staking is Named, Versioned {
             identityId,
             ps.getNodeId(identityId),
             msg.sender,
-            newStakeWithdrawalAmount,
+            oldStake,
+            newStake,
             withdrawalPeriodEnd
         );
     }
@@ -158,24 +173,31 @@ contract Staking is Named, Versioned {
 
         ProfileStorage ps = profileStorage;
 
+        uint96 oldAccumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
+        uint96 oldStake = ss.totalStakes(identityId);
+
         if (operatorFee != 0) {
-            ps.setAccumulatedOperatorFee(identityId, ps.getAccumulatedOperatorFee(identityId) + operatorFee);
+            ps.setAccumulatedOperatorFee(identityId, oldAccumulatedOperatorFee + operatorFee);
             sasV1.transferAgreementTokens(address(ps), operatorFee);
         }
 
         if (delegatorsReward != 0) {
-            ss.setTotalStake(identityId, ss.totalStakes(identityId) + delegatorsReward);
+            ss.setTotalStake(identityId, oldStake + delegatorsReward);
             sasV1.transferAgreementTokens(address(ss), delegatorsReward);
 
-            if (
-                !shardingTableStorage.nodeExists(identityId) &&
-                ss.totalStakes(identityId) >= parametersStorage.minimumStake()
-            ) {
+            if (!shardingTableStorage.nodeExists(identityId) && oldStake >= parametersStorage.minimumStake()) {
                 shardingTableContract.pushBack(identityId);
             }
         }
 
-        emit RewardAdded(identityId, ps.getNodeId(identityId), rewardAmount);
+        emit RewardAdded(
+            identityId,
+            ps.getNodeId(identityId),
+            oldAccumulatedOperatorFee,
+            oldAccumulatedOperatorFee + operatorFee,
+            oldStake,
+            oldStake + delegatorsReward
+        );
     }
 
     // solhint-disable-next-line no-empty-blocks
@@ -196,9 +218,12 @@ contract Staking is Named, Versioned {
         ParametersStorage params = parametersStorage;
         IERC20 tknc = tokenContract;
 
+        uint96 oldStake = ss.totalStakes(identityId);
+        uint96 newStake = oldStake + stakeAmount;
+
         require(ps.profileExists(identityId), "Profile doesn't exist");
         require(tknc.allowance(sender, address(this)) >= stakeAmount, "Allowance < stakeAmount");
-        require((stakeAmount + ss.totalStakes(identityId)) <= params.maximumStake(), "Exceeded the maximum stake");
+        require(newStake <= params.maximumStake(), "Exceeded the maximum stake");
 
         Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
 
@@ -206,18 +231,18 @@ contract Staking is Named, Versioned {
         if (sharesContract.totalSupply() == 0) {
             sharesMinted = stakeAmount;
         } else {
-            sharesMinted = ((stakeAmount * sharesContract.totalSupply()) / ss.totalStakes(identityId));
+            sharesMinted = ((stakeAmount * sharesContract.totalSupply()) / oldStake);
         }
         sharesContract.mint(sender, sharesMinted);
 
-        ss.setTotalStake(identityId, ss.totalStakes(identityId) + stakeAmount);
+        ss.setTotalStake(identityId, newStake);
         tknc.transferFrom(sender, address(ss), stakeAmount);
 
-        if (!shardingTableStorage.nodeExists(identityId) && ss.totalStakes(identityId) >= params.minimumStake()) {
+        if (!shardingTableStorage.nodeExists(identityId) && newStake >= params.minimumStake()) {
             shardingTableContract.pushBack(identityId);
         }
 
-        emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, stakeAmount);
+        emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, oldStake, newStake);
     }
 
     function _checkHubOwner() internal view virtual {

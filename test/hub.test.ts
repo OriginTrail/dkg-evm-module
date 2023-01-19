@@ -36,7 +36,7 @@ describe('Hub contract', function () {
   });
 
   it('Set correct contract address and name; emits NewContract event', async () => {
-    expect(await Hub.setContractAddress('TestContract', accounts[1].address))
+    await expect(Hub.setContractAddress('TestContract', accounts[1].address))
       .to.emit(Hub, 'NewContract')
       .withArgs('TestContract', accounts[1].address);
 
@@ -46,13 +46,13 @@ describe('Hub contract', function () {
   it('Set contract address and name (non-owner wallet); expect revert: only hub owner can set contracts', async () => {
     const HubWithNonOwnerSigner = await Hub.connect(accounts[1]);
 
-    expect(HubWithNonOwnerSigner.setContractAddress('TestContract', accounts[1].address)).to.be.revertedWith(
+    await expect(HubWithNonOwnerSigner.setContractAddress('TestContract', accounts[1].address)).to.be.revertedWith(
       'Ownable: caller is not the owner',
     );
   });
 
   it('Set contract with empty name; expect revert: name cannot be empty', async () => {
-    expect(Hub.setContractAddress('', accounts[1].address)).to.be.revertedWith(
+    await expect(Hub.setContractAddress('', accounts[1].address)).to.be.revertedWith(
       'NamedContractSet: Name cannot be empty',
     );
   });
@@ -100,7 +100,7 @@ describe('Hub contract', function () {
   });
 
   it('Set correct asset contract address and name; emits NewAssetContract event', async () => {
-    expect(await Hub.setAssetStorageAddress('TestAssetContract', accounts[1].address))
+    await expect(Hub.setAssetStorageAddress('TestAssetContract', accounts[1].address))
       .to.emit(Hub, 'NewAssetStorage')
       .withArgs('TestAssetContract', accounts[1].address);
 
@@ -110,19 +110,19 @@ describe('Hub contract', function () {
   it('Set asset contract address/name (non-owner); expect revert: only hub owner can set contracts', async () => {
     const HubWithNonOwnerSigner = await Hub.connect(accounts[1]);
 
-    expect(HubWithNonOwnerSigner.setAssetStorageAddress('TestAssetContract', accounts[1].address)).to.be.revertedWith(
-      'Ownable: caller is not the owner',
-    );
+    await expect(
+      HubWithNonOwnerSigner.setAssetStorageAddress('TestAssetContract', accounts[1].address),
+    ).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it('Set asset contract with empty name; expect revert: name cannot be empty', async () => {
-    expect(Hub.setAssetStorageAddress('', accounts[1].address)).to.be.revertedWith(
+    await expect(Hub.setAssetStorageAddress('', accounts[1].address)).to.be.revertedWith(
       'NamedContractSet: Name cannot be empty',
     );
   });
 
   it('Set asset contract with empty address; expect revert: address cannot be 0x0', async () => {
-    expect(Hub.setAssetStorageAddress('TestAssetContract', ZERO_ADDRESS)).to.be.revertedWith(
+    await expect(Hub.setAssetStorageAddress('TestAssetContract', ZERO_ADDRESS)).to.be.revertedWith(
       'NamedContractSet: Address cannot be 0x0',
     );
   });
@@ -132,7 +132,7 @@ describe('Hub contract', function () {
 
     expect(await Hub.getAssetStorageAddress('TestAssetContract')).to.equal(accounts[1].address);
 
-    expect(await Hub.setAssetStorageAddress('TestAssetContract', accounts[2].address))
+    await expect(Hub.setAssetStorageAddress('TestAssetContract', accounts[2].address))
       .to.emit(Hub, 'AssetStorageChanged')
       .withArgs('TestAssetContract', accounts[2].address);
 
