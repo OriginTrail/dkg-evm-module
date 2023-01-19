@@ -32,10 +32,10 @@ describe('AssertionStorage contract', function () {
   }
 
   beforeEach(async () => {
-    ({ accounts, AssertionStorage } = await loadFixture(deployAssertionStorageFixture));
+    ({ accounts, AssertionStorage, Hub } = await loadFixture(deployAssertionStorageFixture));
   });
 
-  it('The contract is named "AssertionStorge"', async function () {
+  it('The contract is named "AssertionStorage"', async function () {
     expect(await AssertionStorage.name()).to.equal('AssertionStorage');
   });
 
