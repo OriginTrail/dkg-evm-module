@@ -76,7 +76,7 @@ describe('ProfileStorage contract', function () {
     await ProfileStorage.setNodeId(createProfileValues.identityId, newNodeId);
     const resultNodeId = await ProfileStorage.getNodeId(createProfileValues.identityId);
 
-    expect(resultNodeId).to.be.eql(newNodeId);
+    expect(resultNodeId).to.equal(newNodeId);
   });
 
   it('Validate setting and getting ask, expect to pass', async () => {
@@ -85,7 +85,7 @@ describe('ProfileStorage contract', function () {
     await ProfileStorage.setAsk(createProfileValues.identityId, newAsk);
     const resultAsk = await ProfileStorage.getAsk(createProfileValues.identityId);
 
-    expect(resultAsk.toNumber()).to.be.eql(newAsk);
+    expect(resultAsk.toNumber()).to.equal(newAsk);
   });
 
   it('Validate setting and getting profile accumulated operator fee', async () => {
@@ -94,7 +94,7 @@ describe('ProfileStorage contract', function () {
     await ProfileStorage.setAccumulatedOperatorFee(createProfileValues.identityId, newOperatorFeeAmount);
     const resultOperatorFeeAmount = await ProfileStorage.getAccumulatedOperatorFee(createProfileValues.identityId);
 
-    expect(resultOperatorFeeAmount.toNumber()).to.be.eql(newOperatorFeeAmount);
+    expect(resultOperatorFeeAmount.toNumber()).to.equal(newOperatorFeeAmount);
   });
 
   it('Validate setting and getting profile accumulated operator fee withdrawal amount', async () => {
@@ -108,7 +108,7 @@ describe('ProfileStorage contract', function () {
       createProfileValues.identityId,
     );
 
-    expect(resultOperatorFeeWithdrawalAmount.toNumber()).to.be.eql(newOperatorFeeWithdrawalAmount);
+    expect(resultOperatorFeeWithdrawalAmount.toNumber()).to.equal(newOperatorFeeWithdrawalAmount);
   });
 
   it.skip('Validate profile accumulated operator fee amount transfer ', async () => {
@@ -126,34 +126,34 @@ describe('ProfileStorage contract', function () {
       createProfileValues.identityId,
     );
 
-    expect(resultOperatorFeeWithdrawalTimestamp.toNumber()).to.be.eql(newOperatorFeeWithdrawalTimestamp);
+    expect(resultOperatorFeeWithdrawalTimestamp.toNumber()).to.equal(newOperatorFeeWithdrawalTimestamp);
   });
 
   it('Check if profile exists with valid identityId, expect to pass', async () => {
     const createProfileValues = await createProfile();
     const profileExist = await ProfileStorage.profileExists(createProfileValues.identityId);
 
-    expect(profileExist).to.be.eql(true);
+    expect(profileExist).to.equal(true);
   });
 
   it('Check if profile exists with invalid identityId, expect to fail', async () => {
     const wrongIdentityId = 2;
     const profileExist = await ProfileStorage.profileExists(wrongIdentityId);
 
-    expect(profileExist).to.be.eql(false);
+    expect(profileExist).to.equal(false);
   });
 
   it('Validate that valid node id is registered, expect to pass', async () => {
     const createProfileValues = await createProfile();
     const isRegistered = await ProfileStorage.nodeIdsList(createProfileValues.nodeId);
 
-    expect(isRegistered).to.be.eql(true);
+    expect(isRegistered).to.equal(true);
   });
 
   it('Validate that invalid node id is not registered, expect to fail', async () => {
     const isRegistered = await ProfileStorage.nodeIdsList(newNodeId);
 
-    expect(isRegistered).to.be.eql(false);
+    expect(isRegistered).to.equal(false);
   });
 
   it('Validate setting and getting node address, expect to pass', async () => {
@@ -162,6 +162,6 @@ describe('ProfileStorage contract', function () {
     await ProfileStorage.setNodeAddress(createProfileValues.identityId, 1, newNodeAddress);
     const getNodeAddressResult = await ProfileStorage.getNodeAddress(createProfileValues.identityId, 1);
 
-    expect(getNodeAddressResult).to.be.eql(newNodeAddress);
+    expect(getNodeAddressResult).to.equal(newNodeAddress);
   });
 });
