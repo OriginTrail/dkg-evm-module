@@ -55,9 +55,9 @@ describe('AssertionStorage contract', function () {
     await AssertionStorage.createAssertion(assertionId, size, triplesNumber, chunksNumber);
 
     const getAssertionResponse = await AssertionStorage.getAssertion(assertionId);
-    expect(getAssertionResponse.size).to.be.equal(size);
-    expect(getAssertionResponse.triplesNumber).to.be.equal(triplesNumber);
-    expect(getAssertionResponse.chunksNumber).to.be.equal(chunksNumber);
+    expect(getAssertionResponse.size).to.equal(size);
+    expect(getAssertionResponse.triplesNumber).to.equal(triplesNumber);
+    expect(getAssertionResponse.chunksNumber).to.equal(chunksNumber);
   });
 
   it('Set non owner to be new contract owner and create an assertion, expect to pass', async () => {
@@ -67,16 +67,16 @@ describe('AssertionStorage contract', function () {
     await AssertionStorageWithNonOwnerAsSigner.createAssertion(assertionId, size, triplesNumber, chunksNumber);
     const getAssertionResponse = await AssertionStorage.getAssertion(assertionId);
 
-    expect(getAssertionResponse.size).to.be.equal(size);
-    expect(getAssertionResponse.triplesNumber).to.be.equal(triplesNumber);
-    expect(getAssertionResponse.chunksNumber).to.be.equal(chunksNumber);
+    expect(getAssertionResponse.size).to.equal(size);
+    expect(getAssertionResponse.triplesNumber).to.equal(triplesNumber);
+    expect(getAssertionResponse.chunksNumber).to.equal(chunksNumber);
   });
 
   it('Get assertion for non-existing assertionId, expect to get 0', async () => {
     const getAssertionResponse = await AssertionStorage.getAssertion(nonExistingAssertionId);
 
     getAssertionResponse.forEach((e) => {
-      expect(e.toString()).to.be.eql('0');
+      expect(e.toString()).to.equal('0');
     });
   });
 
@@ -86,59 +86,59 @@ describe('AssertionStorage contract', function () {
     const getTriplesNumber = await AssertionStorage.getAssertionTriplesNumber(nonExistingAssertionId);
     const getChunksNumber = await AssertionStorage.getAssertionChunksNumber(nonExistingAssertionId);
 
-    expect(getTimestampResult.toString()).to.be.eql('0');
-    expect(getSizeResult.toString()).to.be.eql('0');
-    expect(getTriplesNumber.toString()).to.be.eql('0');
-    expect(getChunksNumber.toString()).to.be.eql('0');
+    expect(getTimestampResult.toString()).to.equal('0');
+    expect(getSizeResult.toString()).to.equal('0');
+    expect(getTriplesNumber.toString()).to.equal('0');
+    expect(getChunksNumber.toString()).to.equal('0');
   });
 
   it('Get the assertion timestamp for valid assertion id, expect to pass', async () => {
     await AssertionStorage.createAssertion(assertionId, size, triplesNumber, chunksNumber);
     const getTimestampResult = await AssertionStorage.getAssertionTimestamp(assertionId);
 
-    expect(getTimestampResult.toString()).to.not.eql('0');
+    expect(getTimestampResult.toString()).to.not.equal('0');
   });
 
   it('Get the assertion size for valid assertion id, expect to pass', async () => {
     await AssertionStorage.createAssertion(assertionId, size, triplesNumber, chunksNumber);
     const getSizeResult = await AssertionStorage.getAssertionSize(assertionId);
 
-    expect(getSizeResult.toString()).to.be.eql(size.toString());
-    expect(getSizeResult.toString()).to.not.eql('0');
+    expect(getSizeResult.toString()).to.equal(size.toString());
+    expect(getSizeResult.toString()).to.not.equal('0');
   });
 
   it('Get the assertion triple number for valid assertion id, expect to pass', async () => {
     await AssertionStorage.createAssertion(assertionId, size, triplesNumber, chunksNumber);
     const getTriplesNumber = await AssertionStorage.getAssertionTriplesNumber(assertionId);
 
-    expect(getTriplesNumber.toString()).to.be.eql(triplesNumber.toString());
-    expect(getTriplesNumber.toString()).to.not.eql('0');
+    expect(getTriplesNumber.toString()).to.equal(triplesNumber.toString());
+    expect(getTriplesNumber.toString()).to.not.equal('0');
   });
 
   it('Get the assertion chunks number for valid assertion id, expect to pass', async () => {
     await AssertionStorage.createAssertion(assertionId, size, triplesNumber, chunksNumber);
     const getChunksNumber = await AssertionStorage.getAssertionChunksNumber(assertionId);
 
-    expect(getChunksNumber.toString()).to.be.eql(chunksNumber.toString());
-    expect(getChunksNumber.toString()).to.not.eql('0');
+    expect(getChunksNumber.toString()).to.equal(chunksNumber.toString());
+    expect(getChunksNumber.toString()).to.not.equal('0');
   });
 
   it('Validate that assertion exists with valid assertion id, expect to pass', async () => {
     await AssertionStorage.createAssertion(assertionId, size, triplesNumber, chunksNumber);
     const isAssertionExist = await AssertionStorage.assertionExists(assertionId);
 
-    expect(isAssertionExist).to.be.eql(true);
+    expect(isAssertionExist).to.equal(true);
   });
 
   it('Validate that assertion can be deleted, expect to pass', async () => {
     await AssertionStorage.createAssertion(assertionId, size, triplesNumber, chunksNumber);
     const isAssertionExist = await AssertionStorage.assertionExists(assertionId);
 
-    expect(isAssertionExist).to.be.eql(true);
+    expect(isAssertionExist).to.equal(true);
 
     await AssertionStorage.deleteAssertion(assertionId);
     const checkAssertion = await AssertionStorage.assertionExists(assertionId);
 
-    expect(checkAssertion).to.be.eql(false);
+    expect(checkAssertion).to.equal(false);
   });
 });
