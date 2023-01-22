@@ -19,7 +19,7 @@ describe('Identity contract', function () {
   let Identity: Identity;
   let Hub: Hub;
   let IdentityStorage: IdentityStorage;
-  let operationalWallet: string, adminWallet: string, identityId;
+  let operationalKey: string, adminKey: string, identityId, operationalKeyBytes32: string, adminKeyBytes32: string;
   const ADMIN_KEY = 1;
   const OPERATIONAL_KEY = 2;
   const ECDSA = 1;
@@ -35,17 +35,14 @@ describe('Identity contract', function () {
     return { accounts, Identity, Hub, IdentityStorage };
   }
 
-  async function createIdentity() {
-    operationalWallet = accounts[1].address;
-    adminWallet = accounts[2].address;
-
-    const createIdentity = await Identity.createIdentity(operationalWallet, adminWallet);
+  async function createIdentity(operationalKey: string, adminKey: string) {
+    const createIdentity = await Identity.createIdentity(operationalKey, adminKey);
     const receipt = await createIdentity.wait();
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     identityId = receipt.events[2].args.identityId.toNumber();
-    const fetchIdentityId = await IdentityStorage.getIdentityId(operationalWallet);
+    const fetchIdentityId = await IdentityStorage.getIdentityId(operationalKey);
 
     expect(createIdentity).to.emit(Identity, 'IdentityCreated');
     expect(identityId).not.equal(0);
@@ -56,6 +53,10 @@ describe('Identity contract', function () {
 
   beforeEach(async () => {
     ({ accounts, Identity, Hub, IdentityStorage } = await loadFixture(deployIdentityFixture));
+    operationalKey = accounts[1].address;
+    adminKey = accounts[2].address;
+    adminKeyBytes32 = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[2].address]));
+    operationalKeyBytes32 = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[1].address]));
   });
 
   it('The contract is named "Identity"', async function () {
@@ -67,37 +68,37 @@ describe('Identity contract', function () {
   });
 
   it('Create an identity as a contract, expect to pass', async () => {
-    await createIdentity();
+    await createIdentity(operationalKey, adminKey);
   });
 
   it('Create an identity with non-hub contract, expect to fail', async () => {
     const IdentityWithNonHubContract = Identity.connect(accounts[1]);
-    await expect(IdentityWithNonHubContract.createIdentity(operationalWallet, adminWallet)).to.be.revertedWith(
+    await expect(IdentityWithNonHubContract.createIdentity(operationalKey, adminKey)).to.be.revertedWith(
       'Fn can only be called by the hub',
     );
   });
 
   it('Create an identity with empty operational wallet, expect to fail', async () => {
-    await expect(Identity.createIdentity(ZERO_ADDRESS, adminWallet)).to.be.revertedWith(
+    await expect(Identity.createIdentity(ZERO_ADDRESS, adminKey)).to.be.revertedWith(
       "Operational address can't be 0x0",
     );
   });
 
   it('Create an identity with empty admin wallet, expect to fail', async () => {
-    await expect(Identity.createIdentity(operationalWallet, ZERO_ADDRESS)).to.be.revertedWith(
+    await expect(Identity.createIdentity(operationalKey, ZERO_ADDRESS)).to.be.revertedWith(
       "Admin address can't be 0x0",
     );
   });
 
-  it('Create an identity with same admin and operational wallet, expect to pass', async () => {
-    const walletAddress = accounts[4].address;
-    const createIdentity = await Identity.createIdentity(walletAddress, walletAddress);
+  it('Create an identity with same admin and operational key, expect to pass', async () => {
+    const keyAddress = accounts[4].address;
+    const createIdentity = await Identity.createIdentity(keyAddress, keyAddress);
 
     expect(createIdentity).to.emit(Identity, 'IdentityCreated');
   });
 
   it('Create and delete an identity, expect to pass', async () => {
-    const getIdentityId = await createIdentity();
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
     const deleteIdentity = await Identity.deleteIdentity(getIdentityId);
 
     expect(deleteIdentity).to.emit(Identity, 'IdentityDeleted');
@@ -105,7 +106,7 @@ describe('Identity contract', function () {
 
   it('Add an admin key to existing identity, expect to pass', async () => {
     const newAdminKey = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[4].address]));
-    const getIdentityId = await createIdentity();
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
     const AddKeyWithAdminWallet = Identity.connect(accounts[2]);
 
     await AddKeyWithAdminWallet.addKey(getIdentityId, newAdminKey, ADMIN_KEY, ECDSA);
@@ -119,7 +120,7 @@ describe('Identity contract', function () {
 
   it('Add an operational key to existing identity, expect to pass', async () => {
     const newOperationalKey = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[4].address]));
-    const getIdentityId = await createIdentity();
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
     const AddKeyWithAdminWallet = Identity.connect(accounts[2]);
 
     await AddKeyWithAdminWallet.addKey(getIdentityId, newOperationalKey, OPERATIONAL_KEY, ECDSA);
@@ -132,7 +133,7 @@ describe('Identity contract', function () {
   });
 
   it('Add keys to existing identity without key value, expect to fail', async () => {
-    const getIdentityId = await createIdentity();
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
     const AddKeyWithAdminWallet = Identity.connect(accounts[2]);
 
     await expect(AddKeyWithAdminWallet.addKey(getIdentityId, ZERO_BYTES32, ADMIN_KEY, ECDSA)).to.be.revertedWith(
@@ -146,7 +147,7 @@ describe('Identity contract', function () {
 
   it('Add an existing admin key to identity, expect to fail', async () => {
     const newAdminKey = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[4].address]));
-    const getIdentityId = await createIdentity();
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
     const AddKeyWithAdminWallet = Identity.connect(accounts[2]);
 
     await AddKeyWithAdminWallet.addKey(getIdentityId, newAdminKey, ADMIN_KEY, ECDSA);
@@ -163,7 +164,7 @@ describe('Identity contract', function () {
 
   it('Add an existing operational key to identity, expect to fail', async () => {
     const newOperationalKey = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[4].address]));
-    const getIdentityId = await createIdentity();
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
     const AddKeyWithAdminWallet = Identity.connect(accounts[2]);
 
     await AddKeyWithAdminWallet.addKey(getIdentityId, newOperationalKey, OPERATIONAL_KEY, ECDSA);
@@ -178,7 +179,7 @@ describe('Identity contract', function () {
 
   it('Add an admin key to existing identity with operational wallet, expect to fail', async () => {
     const newAdminKey = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[4].address]));
-    const getIdentityId = await createIdentity();
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
     const AddKeyWithOprWallet = Identity.connect(accounts[1]);
 
     await expect(AddKeyWithOprWallet.addKey(getIdentityId, newAdminKey, ADMIN_KEY, ECDSA)).to.be.revertedWith(
@@ -187,7 +188,7 @@ describe('Identity contract', function () {
   });
 
   it('Remove the admin key from existing identity, expect to pass', async () => {
-    const getIdentityId = await createIdentity();
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
     const AddKeyWithAdminWallet = Identity.connect(accounts[2]);
     const newAdminKey = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[4].address]));
     let adminKeysNumber;
@@ -204,7 +205,7 @@ describe('Identity contract', function () {
   });
 
   it('Remove the operational key from existing identity, expect to pass', async () => {
-    const getIdentityId = await createIdentity();
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
     const AddKeyWithAdminWallet = Identity.connect(accounts[2]);
     const newOperationalKey = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[7].address]));
     let adminKeysNumber;
@@ -221,14 +222,14 @@ describe('Identity contract', function () {
   });
 
   it('Remove admin key from existing identity without key value, expect to fail', async () => {
-    const getIdentityId = await createIdentity();
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
     const AddKeyWithAdminWallet = Identity.connect(accounts[2]);
 
     await expect(AddKeyWithAdminWallet.removeKey(getIdentityId, ZERO_BYTES32)).to.be.revertedWith('Key arg is empty');
   });
 
   it('Remove not attached admin key from existing identity, expect to fail', async () => {
-    const getIdentityId = await createIdentity();
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
     const notAttachedAdminKey = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[5].address]));
     const AddKeyWithAdminWallet = Identity.connect(accounts[2]);
 
@@ -238,33 +239,29 @@ describe('Identity contract', function () {
   });
 
   it('Remove the only admin key from existing identity, expect to fail', async () => {
-    const getIdentityId = await createIdentity();
-    const adminKey = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[2].address]));
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
     const RemoveKeyWithAdminWallet = Identity.connect(accounts[2]);
 
-    await expect(RemoveKeyWithAdminWallet.removeKey(getIdentityId, adminKey)).to.be.revertedWith(
+    await expect(RemoveKeyWithAdminWallet.removeKey(getIdentityId, adminKeyBytes32)).to.be.revertedWith(
       'Cannot delete the only admin key',
     );
   });
 
   it('Remove the only operational key from existing identity, expect to fail', async () => {
-    const getIdentityId = await createIdentity();
-    const operationalKey = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[1].address]));
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
     const RemoveKeyWithAdminWallet = Identity.connect(accounts[2]);
 
-    await expect(RemoveKeyWithAdminWallet.removeKey(getIdentityId, operationalKey)).to.be.revertedWith(
+    await expect(RemoveKeyWithAdminWallet.removeKey(getIdentityId, operationalKeyBytes32)).to.be.revertedWith(
       'Cannot delete the only oper. key',
     );
   });
 
   it('Add new admin key to existing identity, remove old admin key, expect to pass', async () => {
-    const operationalKey = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[1].address]));
-    const adminKey = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[2].address]));
     const newAdminKey = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[5].address]));
-    const getIdentityId = await createIdentity();
+    const getIdentityId = await createIdentity(operationalKey, adminKey);
 
-    expect(await IdentityStorage.keyHasPurpose(getIdentityId, adminKey, ADMIN_KEY)).to.be.true;
-    expect(await IdentityStorage.keyHasPurpose(getIdentityId, operationalKey, OPERATIONAL_KEY)).to.be.true;
+    expect(await IdentityStorage.keyHasPurpose(getIdentityId, adminKeyBytes32, ADMIN_KEY)).to.be.true;
+    expect(await IdentityStorage.keyHasPurpose(getIdentityId, operationalKeyBytes32, OPERATIONAL_KEY)).to.be.true;
 
     const AddKeyWithAdminWallet = Identity.connect(accounts[2]);
     await AddKeyWithAdminWallet.addKey(getIdentityId, newAdminKey, ADMIN_KEY, ECDSA);
@@ -272,8 +269,8 @@ describe('Identity contract', function () {
     expect(await IdentityStorage.keyHasPurpose(getIdentityId, newAdminKey, ADMIN_KEY)).to.be.true;
 
     const RemoveKeyWithNewAdminWallet = Identity.connect(accounts[5]);
-    await RemoveKeyWithNewAdminWallet.removeKey(getIdentityId, adminKey);
+    await RemoveKeyWithNewAdminWallet.removeKey(getIdentityId, adminKeyBytes32);
 
-    expect(await IdentityStorage.keyHasPurpose(getIdentityId, adminKey, ADMIN_KEY)).to.be.false;
+    expect(await IdentityStorage.keyHasPurpose(getIdentityId, adminKeyBytes32, ADMIN_KEY)).to.be.false;
   });
 });
