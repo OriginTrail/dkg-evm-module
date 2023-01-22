@@ -3,27 +3,30 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Hub, ProfileStorage } from '../typechain';
+import { ERC20Token, Hub, ProfileStorage } from '../typechain';
 import { ZERO_ADDRESS } from './helpers/constants';
 
 type ProfileStorageFixture = {
   accounts: SignerWithAddress[];
   ProfileStorage: ProfileStorage;
+  ERC20Token: ERC20Token;
 };
 
 describe('ProfileStorage contract', function () {
   let accounts: SignerWithAddress[];
   let ProfileStorage: ProfileStorage;
+  let ERC20Token: ERC20Token;
   const newNodeId = '0x0000000000000000000000000000000000000000000000000000000000000002';
 
   async function deployProfileStorageFixture(): Promise<ProfileStorageFixture> {
     await hre.deployments.fixture(['ProfileStorage']);
     const ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
+    const ERC20Token = await hre.ethers.getContract<ERC20Token>('ERC20Token');
     const accounts = await hre.ethers.getSigners();
     const Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
-    return { accounts, ProfileStorage };
+    return { accounts, ERC20Token, ProfileStorage };
   }
 
   async function createProfile() {
@@ -39,7 +42,7 @@ describe('ProfileStorage contract', function () {
   }
 
   beforeEach(async () => {
-    ({ accounts, ProfileStorage } = await loadFixture(deployProfileStorageFixture));
+    ({ accounts, ERC20Token, ProfileStorage } = await loadFixture(deployProfileStorageFixture));
   });
 
   it('The contract is named "ProfileStorage"', async function () {
@@ -54,10 +57,10 @@ describe('ProfileStorage contract', function () {
     const createProfileValues = await createProfile();
     const profileData = await ProfileStorage.getProfile(createProfileValues.identityId);
 
-    expect(profileData[0]).to.be.equal(createProfileValues.nodeId);
-    expect(profileData[1][0]).to.be.equal(0);
-    expect(profileData[1][1]).to.be.equal(0);
-    expect(profileData[2]).to.be.equal(createProfileValues.Shares.address);
+    expect(profileData[0]).to.equal(createProfileValues.nodeId);
+    expect(profileData[1][0]).to.equal(0);
+    expect(profileData[1][1]).to.equal(0);
+    expect(profileData[2]).to.equal(createProfileValues.Shares.address);
   });
 
   it('Validate deleting a profile, expect to pass', async () => {
@@ -111,8 +114,13 @@ describe('ProfileStorage contract', function () {
     expect(resultOperatorFeeWithdrawalAmount.toNumber()).to.equal(newOperatorFeeWithdrawalAmount);
   });
 
-  it.skip('Validate profile accumulated operator fee amount transfer ', async () => {
-    //TODO: It will be done by Nikola
+  it('Validate profile accumulated operator fee amount transfer ', async () => {
+    const transferAmount = 100;
+    const receiver = accounts[1].address;
+    await ERC20Token.mint(ProfileStorage.address, transferAmount);
+
+    await ProfileStorage.transferAccumulatedOperatorFee(receiver, transferAmount);
+    expect(await ERC20Token.balanceOf(receiver)).to.equal(transferAmount);
   });
 
   it('Validate setting and getting profile accumulated operator fee withdrawal timestamp', async () => {
