@@ -6,13 +6,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await hre.helpers.deploy({
     hre,
-    newContractName: 'ERC20Token',
-    newContractNameInHub: 'Token',
+    newContractName: 'Token',
   });
 
-  await hre.deployments.execute('ERC20Token', { from: deployer, log: true }, 'setupRole', minter);
+  await hre.deployments.execute('Token', { from: deployer, log: true }, 'setupRole', minter);
 };
 
 export default func;
-func.tags = ['Token', 'ERC20Token'];
+func.tags = ['Token'];
 func.dependencies = ['Hub'];
