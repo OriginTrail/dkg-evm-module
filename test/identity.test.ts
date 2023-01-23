@@ -219,6 +219,10 @@ describe('Identity contract', function () {
     adminKeysNumber = await IdentityStorage.getKeysByPurpose(getIdentityId, ADMIN_KEY);
 
     expect(adminKeysNumber.length).to.equal(1, 'Error: Failed to remove operational key!');
+
+    const fetchDeletedIdentityId = await IdentityStorage.getIdentityId(operationalKey);
+
+    expect(fetchDeletedIdentityId.toNumber()).to.equal(1, 'Error: Identity was not deleted!');
   });
 
   it('Remove admin key from existing identity without key value, expect to fail', async () => {
