@@ -53,7 +53,25 @@
       {
         "indexed": false,
         "internalType": "uint96",
-        "name": "rewardAmount",
+        "name": "oldAccumulatedOperatorFee",
+        "type": "uint96"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "newAccumulatedOperatorFee",
+        "type": "uint96"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "oldStake",
+        "type": "uint96"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "newStake",
         "type": "uint96"
       }
     ],
@@ -84,7 +102,13 @@
       {
         "indexed": false,
         "internalType": "uint96",
-        "name": "newStakeAmount",
+        "name": "oldStake",
+        "type": "uint96"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "newStake",
         "type": "uint96"
       }
     ],
@@ -115,7 +139,13 @@
       {
         "indexed": false,
         "internalType": "uint96",
-        "name": "stakeAmount",
+        "name": "oldStake",
+        "type": "uint96"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "newStake",
         "type": "uint96"
       },
       {
