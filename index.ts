@@ -1,61 +1,61 @@
-import AbstractAsset from './abi/AbstractAsset.json';
-import AssertionContract from './abi/Assertion.json';
-import AssertionStorage from './abi/AssertionStorage.json';
-import CommitManagerV1 from './abi/CommitManagerV1.json';
-import ContentAsset from './abi/ContentAsset.json';
-import ContentAssetStorage from './abi/ContentAssetStorage.json';
-import Guardian from './abi/Guardian.json';
-import HashingProxy from './abi/HashingProxy.json';
-import Hub from './abi/Hub.json';
-import IdentityContract from './abi/Identity.json';
-import IdentityStorage from './abi/IdentityStorage.json';
-import IHashFunction from './abi/IHashFunction.json';
-import Indexable from './abi/Indexable.json';
-import IScoreFunction from './abi/IScoreFunction.json';
-import Named from './abi/Named.json';
-import ParametersStorage from './abi/ParametersStorage.json';
-import ProfileContract from './abi/Profile.json';
-import ProfileStorage from './abi/ProfileStorage.json';
-import ProofManagerV1 from './abi/ProofManagerV1.json';
-import ScoringProxy from './abi/ScoringProxy.json';
-import ServiceAgreementStorageV1 from './abi/ServiceAgreementStorageV1.json';
-import ServiceAgreementContractV1 from './abi/ServiceAgreementV1.json';
-import ShardingTableContract from './abi/ShardingTable.json';
-import ShardingTableStorage from './abi/ShardingTableStorage.json';
-import StakingContract from './abi/Staking.json';
-import StakingStorage from './abi/StakingStorage.json';
-import Token from './abi/Token.json';
-import Versioned from './abi/Versioned.json';
-import WhitelistStorage from './abi/WhitelistStorage.json';
+import AbstractAssetABI from './abi/AbstractAsset.json';
+import AssertionABI from './abi/Assertion.json';
+import AssertionStorageABI from './abi/AssertionStorage.json';
+import CommitManagerV1ABI from './abi/CommitManagerV1.json';
+import ContentAssetABI from './abi/ContentAsset.json';
+import ContentAssetStorageABI from './abi/ContentAssetStorage.json';
+import GuardianABI from './abi/Guardian.json';
+import HashingProxyABI from './abi/HashingProxy.json';
+import HubABI from './abi/Hub.json';
+import IdentityABI from './abi/Identity.json';
+import IdentityStorageABI from './abi/IdentityStorage.json';
+import IHashFunctionABI from './abi/IHashFunction.json';
+import IndexableABI from './abi/Indexable.json';
+import IScoreFunctionABI from './abi/IScoreFunction.json';
+import NamedABI from './abi/Named.json';
+import ParametersStorageABI from './abi/ParametersStorage.json';
+import ProfileABI from './abi/Profile.json';
+import ProfileStorageABI from './abi/ProfileStorage.json';
+import ProofManagerV1ABI from './abi/ProofManagerV1.json';
+import ScoringProxyABI from './abi/ScoringProxy.json';
+import ServiceAgreementStorageV1ABI from './abi/ServiceAgreementStorageV1.json';
+import ServiceAgreementV1ABI from './abi/ServiceAgreementV1.json';
+import ShardingTableABI from './abi/ShardingTable.json';
+import ShardingTableStorageABI from './abi/ShardingTableStorage.json';
+import StakingABI from './abi/Staking.json';
+import StakingStorageABI from './abi/StakingStorage.json';
+import TokenABI from './abi/Token.json';
+import VersionedABI from './abi/Versioned.json';
+import WhitelistStorageABI from './abi/WhitelistStorage.json';
 
 export {
-  Hub,
-  ParametersStorage,
-  HashingProxy,
-  ScoringProxy,
-  ShardingTableStorage,
-  ShardingTableContract,
-  AssertionStorage,
-  AssertionContract,
-  ServiceAgreementStorageV1,
-  ServiceAgreementContractV1,
-  CommitManagerV1,
-  ProofManagerV1,
-  ContentAssetStorage,
-  ContentAsset,
-  Token,
-  IdentityStorage,
-  IdentityContract,
-  ProfileStorage,
-  ProfileContract,
-  StakingStorage,
-  StakingContract,
-  WhitelistStorage,
-  AbstractAsset,
-  Guardian,
-  IHashFunction,
-  Indexable,
-  IScoreFunction,
-  Named,
-  Versioned,
+  HubABI,
+  ParametersStorageABI,
+  HashingProxyABI,
+  ScoringProxyABI,
+  ShardingTableStorageABI,
+  ShardingTableABI,
+  AssertionStorageABI,
+  AssertionABI,
+  ServiceAgreementStorageV1ABI,
+  ServiceAgreementV1ABI,
+  CommitManagerV1ABI,
+  ProofManagerV1ABI,
+  ContentAssetStorageABI,
+  ContentAssetABI,
+  TokenABI,
+  IdentityStorageABI,
+  IdentityABI,
+  ProfileStorageABI,
+  ProfileABI,
+  StakingStorageABI,
+  StakingABI,
+  WhitelistStorageABI,
+  AbstractAssetABI,
+  GuardianABI,
+  IHashFunctionABI,
+  IndexableABI,
+  IScoreFunctionABI,
+  NamedABI,
+  VersionedABI,
 };
