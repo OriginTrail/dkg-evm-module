@@ -5,7 +5,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer, minter } = await hre.getNamedAccounts();
 
   await hre.helpers.deploy({
-    hre,
     newContractName: 'Token',
   });
 

@@ -20,7 +20,7 @@ import { Helpers } from './utils/helpers';
 import { accounts, rpc } from './utils/network';
 
 extendEnvironment((hre: HardhatRuntimeEnvironment) => {
-  hre.helpers = lazyObject(() => new Helpers());
+  hre.helpers = lazyObject(() => new Helpers(hre));
 });
 
 const config: HardhatUserConfig = {
@@ -53,6 +53,7 @@ const config: HardhatUserConfig = {
       gas: 10_000_000, // Gas limit used for deployments
       gasPrice: 1_000_000,
       accounts: accounts('otp_devnet'),
+      saveDeployments: false,
     },
     otp_testnet: {
       chainId: 20430,
@@ -60,6 +61,7 @@ const config: HardhatUserConfig = {
       gas: 10_000_000, // Gas limit used for deploys
       gasPrice: 20,
       accounts: accounts('otp_testnet'),
+      saveDeployments: false,
     },
     otp_mainnet: {
       chainId: 2043,
@@ -67,6 +69,7 @@ const config: HardhatUserConfig = {
       gas: 10_000_000, // Gas limit used for deploys
       gasPrice: 10,
       accounts: accounts('otp_mainnet'),
+      saveDeployments: false,
     },
   },
   solidity: {

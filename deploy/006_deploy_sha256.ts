@@ -4,20 +4,13 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
 
-  const sha256Contract = await hre.helpers.deploy({
-    hre,
+  const SHA256 = await hre.helpers.deploy({
     newContractName: 'SHA256',
     passHubInConstructor: false,
     setContractInHub: false,
   });
 
-  await hre.deployments.execute(
-    'HashingProxy',
-    { from: deployer, log: true },
-    'setContractAddress',
-    1,
-    sha256Contract.address,
-  );
+  await hre.deployments.execute('HashingProxy', { from: deployer, log: true }, 'setContractAddress', 1, SHA256.address);
 };
 
 export default func;

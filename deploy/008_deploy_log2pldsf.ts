@@ -4,8 +4,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
 
-  const log2pldsfContract = await hre.helpers.deploy({
-    hre,
+  const Log2PLDSF = await hre.helpers.deploy({
     newContractName: 'Log2PLDSF',
     setContractInHub: false,
   });
@@ -15,7 +14,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     { from: deployer, log: true },
     'setContractAddress',
     1,
-    log2pldsfContract.address,
+    Log2PLDSF.address,
   );
 };
 
