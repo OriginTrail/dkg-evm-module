@@ -12,6 +12,7 @@ import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
 import {GeneralErrors} from "./errors/GeneralErrors.sol";
 import {ServiceAgreementErrorsV1} from "./errors/ServiceAgreementErrorsV1.sol";
+import {TokenErrors} from "./errors/TokenErrors.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ServiceAgreementV1 is Named, Versioned {
@@ -23,14 +24,6 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint256 startTime,
         uint16 epochsNumber,
         uint128 epochLength,
-        uint96 tokenAmount
-    );
-    event ServiceAgreementV1Updated(
-        address indexed assetContract,
-        uint256 indexed tokenId,
-        bytes keyword,
-        uint8 hashFunctionId,
-        uint16 epochsNumber,
         uint96 tokenAmount
     );
     event ServiceAgreementV1Terminated(
@@ -102,7 +95,7 @@ contract ServiceAgreementV1 is Named, Versioned {
     ) external onlyContracts {
         if (args.assetCreator == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
         if (!hub.isAssetStorage(args.assetContract))
-            revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(args.assetContract);
+            revert ServiceAgreementErrorsV1.AssetStorageNotInTheHub(args.assetContract);
         if (keccak256(args.keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
         if (args.epochsNumber == 0) revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
         if (args.tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
@@ -129,9 +122,9 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         IERC20 tknc = tokenContract;
         if (tknc.allowance(args.assetCreator, address(this)) < args.tokenAmount)
-            revert ServiceAgreementErrorsV1.TooLowAllowance(tknc.allowance(args.assetCreator, address(this)));
+            revert TokenErrors.TooLowAllowance(tknc.allowance(args.assetCreator, address(this)));
         if (tknc.balanceOf(args.assetCreator) < args.tokenAmount)
-            revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(args.assetCreator));
+            revert TokenErrors.TooLowBalance(tknc.balanceOf(args.assetCreator));
 
         tknc.transferFrom(args.assetCreator, address(sasV1), args.tokenAmount);
 
@@ -147,109 +140,72 @@ contract ServiceAgreementV1 is Named, Versioned {
         );
     }
 
-    // function updateAgreement(
-    //     address assetOwner,
-    //     address assetContract,
-    //     uint256 tokenId,
-    //     bytes calldata keyword,
-    //     uint8 hashFunctionId,
-    //     uint96 tokenAmount
-    // ) external onlyContracts {
-    //     if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-    //     if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
-    //     if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
-    //     if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+    function terminateAgreement(
+        address assetOwner,
+        address assetContract,
+        uint256 tokenId,
+        bytes calldata keyword,
+        uint8 hashFunctionId
+    ) external onlyContracts {
+        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
+        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorageNotInTheHub(assetContract);
+        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
 
-    //     bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+        bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
-    //     ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
 
-    //     uint16 epochsNumber;
-    //     uint128 epochLength;
-    //     uint96 agreementBalance;
-    //     uint8[2] memory uint8Params;
-    //     (, epochsNumber, epochLength, agreementBalance, uint8Params) = sasV1.getAgreementData(agreementId);
+        uint96 agreementBalance = sasV1.getAgreementTokenAmount(agreementId);
+        sasV1.deleteServiceAgreementObject(agreementId);
+        sasV1.transferAgreementTokens(assetOwner, agreementBalance);
 
-    //     sasV1.deleteServiceAgreementObject(agreementId);
-    //     sasV1.createServiceAgreementObject(
-    //         agreementId,
-    //         epochsNumber,
-    //         epochLength,
-    //         agreementBalance,
-    //         uint8Params[0],
-    //         uint8Params[1]
-    //     );
+        emit ServiceAgreementV1Terminated(assetContract, tokenId, keyword, hashFunctionId);
+    }
 
-    //     _addTokens(assetOwner, agreementId, tokenAmount);
+    function extendStoringPeriod(
+        address assetOwner,
+        address assetContract,
+        uint256 tokenId,
+        bytes calldata keyword,
+        uint8 hashFunctionId,
+        uint16 epochsNumber,
+        uint96 tokenAmount
+    ) external onlyContracts {
+        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
+        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorageNotInTheHub(assetContract);
+        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
+        if (epochsNumber == 0) revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
+        if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
 
-    //     emit ServiceAgreementV1Updated(assetContract, tokenId, keyword, hashFunctionId, epochsNumber, tokenAmount);
-    // }
+        bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
-    // function terminateAgreement(
-    //     address assetOwner,
-    //     address assetContract,
-    //     uint256 tokenId,
-    //     bytes calldata keyword,
-    //     uint8 hashFunctionId
-    // ) external onlyContracts {
-    //     if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-    //     if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
-    //     if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        sasV1.setAgreementEpochsNumber(agreementId, sasV1.getAgreementEpochsNumber(agreementId) + epochsNumber);
+        _addTokens(assetOwner, agreementId, tokenAmount);
 
-    //     bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+        emit ServiceAgreementV1Extended(assetContract, tokenId, keyword, hashFunctionId, epochsNumber);
+    }
 
-    //     ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+    function addTokens(
+        address assetOwner,
+        address assetContract,
+        uint256 tokenId,
+        bytes calldata keyword,
+        uint8 hashFunctionId,
+        uint96 tokenAmount
+    ) external onlyContracts {
+        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
+        if (!hub.isAssetStorage(assetContract))
+            revert ServiceAgreementErrorsV1.AssetStorageNotInTheHub(assetContract);
+        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
+        if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
 
-    //     uint96 agreementBalance = sasV1.getAgreementTokenAmount(agreementId);
-    //     sasV1.deleteServiceAgreementObject(agreementId);
-    //     sasV1.transferAgreementTokens(assetOwner, agreementBalance);
+        bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
-    //     emit ServiceAgreementV1Terminated(assetContract, tokenId, keyword, hashFunctionId);
-    // }
+        _addTokens(assetOwner, agreementId, tokenAmount);
 
-    // function extendStoringPeriod(
-    //     address assetOwner,
-    //     address assetContract,
-    //     uint256 tokenId,
-    //     bytes calldata keyword,
-    //     uint8 hashFunctionId,
-    //     uint16 epochsNumber,
-    //     uint96 tokenAmount
-    // ) external onlyContracts {
-    //     if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-    //     if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
-    //     if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
-    //     if (epochsNumber == 0) revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
-    //     if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
-
-    //     bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
-
-    //     ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
-    //     sasV1.setAgreementEpochsNumber(agreementId, sasV1.getAgreementEpochsNumber(agreementId) + epochsNumber);
-    //     _addTokens(assetOwner, agreementId, tokenAmount);
-
-    //     emit ServiceAgreementV1Extended(assetContract, tokenId, keyword, hashFunctionId, epochsNumber);
-    // }
-
-    // function addTokens(
-    //     address assetOwner,
-    //     address assetContract,
-    //     uint256 tokenId,
-    //     bytes calldata keyword,
-    //     uint8 hashFunctionId,
-    //     uint96 tokenAmount
-    // ) external onlyContracts {
-    //     if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-    //     if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
-    //     if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
-    //     if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
-
-    //     bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
-
-    //     _addTokens(assetOwner, agreementId, tokenAmount);
-
-    //     emit ServiceAgreementV1RewardRaised(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
-    // }
+        emit ServiceAgreementV1RewardRaised(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
+    }
 
     function generateAgreementId(
         address assetContract,
@@ -260,18 +216,18 @@ contract ServiceAgreementV1 is Named, Versioned {
         return hashingProxy.callHashFunction(hashFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
     }
 
-    // function _addTokens(address assetOwner, bytes32 agreementId, uint96 tokenAmount) internal virtual {
-    //     ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
-    //     IERC20 tknc = tokenContract;
+    function _addTokens(address assetOwner, bytes32 agreementId, uint96 tokenAmount) internal virtual {
+        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        IERC20 tknc = tokenContract;
 
-    //     if (tknc.allowance(assetOwner, address(this)) < tokenAmount)
-    //         revert ServiceAgreementErrorsV1.TooLowAllowance(tknc.allowance(assetOwner, address(this)));
-    //     if (tknc.balanceOf(assetOwner) < tokenAmount)
-    //         revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(assetOwner));
+        if (tknc.allowance(assetOwner, address(this)) < tokenAmount)
+            revert TokenErrors.TooLowAllowance(tknc.allowance(assetOwner, address(this)));
+        if (tknc.balanceOf(assetOwner) < tokenAmount)
+            revert TokenErrors.TooLowBalance(tknc.balanceOf(assetOwner));
 
-    //     sasV1.setAgreementTokenAmount(agreementId, sasV1.getAgreementTokenAmount(agreementId) + tokenAmount);
-    //     tknc.transferFrom(assetOwner, address(sasV1), tokenAmount);
-    // }
+        sasV1.setAgreementTokenAmount(agreementId, sasV1.getAgreementTokenAmount(agreementId) + tokenAmount);
+        tknc.transferFrom(assetOwner, address(sasV1), tokenAmount);
+    }
 
     function _generatePseudorandomUint8(address sender, uint8 limit) internal view virtual returns (uint8) {
         return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, sender, block.number))) % limit);

@@ -4,13 +4,11 @@ pragma solidity ^0.8.4;
 
 library ServiceAgreementErrorsV1 {
     error EmptyAssetCreatorAddress();
-    error AssetStorgeNotInTheHub(address contractAddress);
+    error AssetStorageNotInTheHub(address contractAddress);
     error EmptyKeyword();
     error ZeroEpochsNumber();
     error ZeroTokenAmount();
     error ScoreFunctionDoesntExist(uint8 scoreFunctionId);
-    error TooLowAllowance(uint256 amount);
-    error TooLowBalance(uint256 amount);
     error ServiceAgreementDoesntExist(bytes32 agreementId);
     error ServiceAgreementHasBeenExpired(
         bytes32 agreementId,

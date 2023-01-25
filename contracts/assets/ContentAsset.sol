@@ -102,90 +102,90 @@ contract ContentAsset is Named, Versioned {
         );
     }
 
-    // function burnAsset(uint256 tokenId) external onlyAssetOwner(tokenId) {
-    //     ContentAssetStorage cas = contentAssetStorage;
-    //     address contentAssetStorageAddress = address(cas);
+    function burnAsset(uint256 tokenId) external onlyAssetOwner(tokenId) {
+        ContentAssetStorage cas = contentAssetStorage;
+        address contentAssetStorageAddress = address(cas);
 
-    //     bytes32 originalAssertionId = cas.getAssertionIdByIndex(tokenId, 0);
+        bytes32 originalAssertionId = cas.getAssertionIdByIndex(tokenId, 0);
 
-    //     cas.deleteAsset(tokenId);
-    //     cas.burn(tokenId);
-    //     serviceAgreementV1.terminateAgreement(
-    //         msg.sender,
-    //         contentAssetStorageAddress,
-    //         tokenId,
-    //         abi.encodePacked(contentAssetStorageAddress, originalAssertionId),
-    //         1
-    //     );
+        cas.deleteAsset(tokenId);
+        cas.burn(tokenId);
+        serviceAgreementV1.terminateAgreement(
+            msg.sender,
+            contentAssetStorageAddress,
+            tokenId,
+            abi.encodePacked(contentAssetStorageAddress, originalAssertionId),
+            1
+        );
 
-    //     emit AssetBurnt(contentAssetStorageAddress, tokenId, originalAssertionId);
-    // }
+        emit AssetBurnt(contentAssetStorageAddress, tokenId, originalAssertionId);
+    }
 
-    // function updateAssetState(
-    //     uint256 tokenId,
-    //     bytes32 assertionId,
-    //     uint128 size,
-    //     uint32 triplesNumber,
-    //     uint96 chunksNumber,
-    //     uint96 tokenAmount
-    // ) external onlyAssetOwner(tokenId) onlyMutable(tokenId) {
-    //     ContentAssetStorage cas = contentAssetStorage;
+    function updateAssetState(
+        uint256 tokenId,
+        bytes32 assertionId,
+        uint128 size,
+        uint32 triplesNumber,
+        uint96 chunksNumber,
+        uint96 tokenAmount
+    ) external onlyAssetOwner(tokenId) onlyMutable(tokenId) {
+        ContentAssetStorage cas = contentAssetStorage;
 
-    //     assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
-    //     cas.setAssertionIssuer(tokenId, assertionId, msg.sender);
-    //     cas.pushAssertionId(tokenId, assertionId);
+        assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
+        cas.setAssertionIssuer(tokenId, assertionId, msg.sender);
+        cas.pushAssertionId(tokenId, assertionId);
 
-    //     ServiceAgreementV1 sasV1 = serviceAgreementV1;
-    //     address contentAssetStorageAddress = address(contentAssetStorage);
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+        address contentAssetStorageAddress = address(contentAssetStorage);
 
-    //     sasV1.addTokens(
-    //         msg.sender,
-    //         contentAssetStorageAddress,
-    //         tokenId,
-    //         abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
-    //         1,
-    //         tokenAmount
-    //     );
+        sasV1.addTokens(
+            msg.sender,
+            contentAssetStorageAddress,
+            tokenId,
+            abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
+            1,
+            tokenAmount
+        );
 
-    //     emit AssetStateUpdated(contentAssetStorageAddress, tokenId, assertionId);
-    // }
+        emit AssetStateUpdated(contentAssetStorageAddress, tokenId, assertionId);
+    }
 
-    // function updateAssetStoringPeriod(
-    //     uint256 tokenId,
-    //     uint16 epochsNumber,
-    //     uint96 tokenAmount
-    // ) external onlyAssetOwner(tokenId) {
-    //     ServiceAgreementV1 sasV1 = serviceAgreementV1;
-    //     address contentAssetStorageAddress = address(contentAssetStorage);
+    function updateAssetStoringPeriod(
+        uint256 tokenId,
+        uint16 epochsNumber,
+        uint96 tokenAmount
+    ) external onlyAssetOwner(tokenId) {
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+        address contentAssetStorageAddress = address(contentAssetStorage);
 
-    //     sasV1.extendStoringPeriod(
-    //         msg.sender,
-    //         contentAssetStorageAddress,
-    //         tokenId,
-    //         abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
-    //         1,
-    //         epochsNumber,
-    //         tokenAmount
-    //     );
+        sasV1.extendStoringPeriod(
+            msg.sender,
+            contentAssetStorageAddress,
+            tokenId,
+            abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
+            1,
+            epochsNumber,
+            tokenAmount
+        );
 
-    //     emit AssetStoringPeriondExtended(contentAssetStorageAddress, tokenId, epochsNumber, tokenAmount);
-    // }
+        emit AssetStoringPeriondExtended(contentAssetStorageAddress, tokenId, epochsNumber, tokenAmount);
+    }
 
-    // function updateAssetTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
-    //     ServiceAgreementV1 sasV1 = serviceAgreementV1;
-    //     address contentAssetStorageAddress = address(contentAssetStorage);
+    function updateAssetTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+        address contentAssetStorageAddress = address(contentAssetStorage);
 
-    //     sasV1.addTokens(
-    //         msg.sender,
-    //         contentAssetStorageAddress,
-    //         tokenId,
-    //         abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
-    //         1,
-    //         tokenAmount
-    //     );
+        sasV1.addTokens(
+            msg.sender,
+            contentAssetStorageAddress,
+            tokenId,
+            abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
+            1,
+            tokenAmount
+        );
 
-    //     emit AssetPaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
-    // }
+        emit AssetPaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
+    }
 
     function _createAsset(
         bytes32 assertionId,
