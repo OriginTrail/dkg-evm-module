@@ -2,12 +2,14 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const stakingStorage = await hre.helpers.deploy({
+  const isDeployed = hre.helpers.isDeployed('StakingStorage');
+
+  await hre.helpers.deploy({
     newContractName: 'StakingStorage',
   });
 
-  if (hre.network.name.startsWith('otp')) {
-    const otpAddress = hre.helpers.convertEvmWallet(stakingStorage.address);
+  if (!isDeployed && hre.network.name.startsWith('otp')) {
+    const otpAddress = hre.helpers.contractDeployments.contracts['StakingStorage'].substrateAddress;
     hre.helpers.sendOTP(otpAddress, 2);
   }
 };

@@ -1,27 +1,23 @@
 import 'dotenv/config';
+import * as fs from 'fs';
+
 import { ApiPromise, HttpProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
 import { u8aToHex } from '@polkadot/util';
 import * as polkadotCryptoUtils from '@polkadot/util-crypto';
 import { KeypairType } from '@polkadot/util-crypto/types';
 import { Contract } from 'ethers';
-import { DeployResult } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import devnet_deployments from '../deployments/otp_devnet_contracts.json';
-import mainnet_deployments from '../deployments/otp_mainnet_contracts.json';
-import testnet_deployments from '../deployments/otp_testnet_contracts.json';
-
 type ContractDeployments = {
-  otp_devnet: typeof devnet_deployments;
-  otp_testnet: typeof testnet_deployments;
-  otp_mainnet: typeof mainnet_deployments;
-};
-
-const contract_deployments: ContractDeployments = {
-  otp_devnet: devnet_deployments,
-  otp_testnet: testnet_deployments,
-  otp_mainnet: mainnet_deployments,
+  contracts: {
+    [contractName: string]: {
+      evmAddress: string;
+      substrateAddress: string;
+      deployed: boolean;
+    };
+  };
+  deployedTimestamp: number;
 };
 
 type DeploymentParameters = {
@@ -47,6 +43,7 @@ type SubstrateWallet = {
 export class Helpers {
   hre: HardhatRuntimeEnvironment;
   provider: HttpProvider;
+  contractDeployments: ContractDeployments;
   reinitialization: boolean;
 
   constructor(hre: HardhatRuntimeEnvironment) {
@@ -54,6 +51,14 @@ export class Helpers {
 
     const endpoint = process.env[`${this.hre.network.name.toUpperCase()}_RPC`];
     this.provider = new HttpProvider(endpoint);
+
+    const deploymentsConfig = `deployments/${this.hre.network.name}_contracts.json`;
+
+    if (fs.existsSync(deploymentsConfig)) {
+      this.contractDeployments = JSON.parse(fs.readFileSync(deploymentsConfig).toString());
+    } else {
+      this.contractDeployments = { contracts: {}, deployedTimestamp: 0 };
+    }
 
     this.reinitialization = false;
   }
@@ -64,29 +69,31 @@ export class Helpers {
     passHubInConstructor = true,
     setContractInHub = true,
     setAssetStorageInHub = false,
-  }: DeploymentParameters): Promise<DeployResult | Contract> {
-    const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
-    const networkName = this.hre.network.name;
-
+  }: DeploymentParameters): Promise<Contract> {
     const { deployer } = await this.hre.getNamedAccounts();
 
-    if (networkName in contract_deployments) {
-      const deployedContracts = contract_deployments[networkName as keyof ContractDeployments].contracts;
-      const contract = deployedContracts[nameInHub as keyof typeof deployedContracts];
+    if (this.isDeployed(newContractName)) {
+      const contractInstance = await this.hre.ethers.getContractAt(
+        newContractName,
+        this.contractDeployments.contracts[newContractName].evmAddress,
+        deployer,
+      );
 
-      if (contract.deployed && !this.reinitialization) {
-        this.reinitialization = true;
-        const contractFactory = this.hre.ethers.getContractFactory(nameInHub, deployer);
-        return (await contractFactory).attach(contract.evmAddress);
-      } else if (contract.deployed && this.reinitialization) {
-        const contractFactory = this.hre.ethers.getContractFactory(nameInHub, deployer);
-        const contractInstance = (await contractFactory).attach(contract.evmAddress);
-        await contractInstance.initialize();
-        return contractInstance;
+      if (this.reinitialization) {
+        contractInstance.initialize();
       }
+
+      return contractInstance;
     }
 
-    const hub = await this.hre.deployments.get('Hub');
+    let hubAddress;
+    if ('Hub' in this.contractDeployments.contracts) {
+      hubAddress = this.contractDeployments.contracts['Hub'].evmAddress;
+    } else {
+      hubAddress = (await this.hre.deployments.get('Hub')).address;
+    }
+
+    const hub = await this.hre.ethers.getContractAt('Hub', hubAddress, deployer);
 
     const newContract = await this.hre.deployments.deploy(newContractName, {
       from: deployer,
@@ -94,25 +101,34 @@ export class Helpers {
       log: true,
     });
 
+    const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
     if (setContractInHub) {
-      await this.hre.deployments.execute(
-        'Hub',
-        { from: deployer, log: true },
-        'setContractAddress',
-        nameInHub,
-        newContract.address,
-      );
+      await hub.setContractAddress(nameInHub, newContract.address);
     } else if (setAssetStorageInHub) {
-      await this.hre.deployments.execute(
-        'Hub',
-        { from: deployer, log: true },
-        'setAssetStorageAddress',
-        nameInHub,
-        newContract.address,
-      );
+      await hub.setAssetStorageAddress(nameInHub, newContract.address);
     }
 
-    return newContract;
+    this.reinitialization = true;
+
+    this.contractDeployments.contracts[newContractName] = {
+      evmAddress: newContract.address,
+      substrateAddress: this.convertEvmWallet(newContract.address),
+      deployed: true,
+    };
+
+    return await this.hre.ethers.getContractAt(newContractName, newContract.address, deployer);
+  }
+
+  public inConfig(contractName: string): boolean {
+    return contractName in this.contractDeployments.contracts;
+  }
+
+  public isDeployed(contractName: string): boolean {
+    if (this.inConfig(contractName)) {
+      return this.contractDeployments.contracts[contractName].deployed;
+    } else {
+      return false;
+    }
   }
 
   public async sendOTP(address: string, tokenAmount = 2) {
