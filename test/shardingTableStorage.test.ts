@@ -5,7 +5,7 @@ import hre from 'hardhat';
 
 import { Hub, Profile, ShardingTableStorage } from '../typechain';
 
-type ShardingTableFixture = {
+type ShardingTableStorageFixture = {
   accounts: SignerWithAddress[];
   Hub: Hub;
   ShardingTableStorage: ShardingTableStorage;
@@ -14,8 +14,6 @@ type ShardingTableFixture = {
 
 describe('ShardingTableStorage Contract', function () {
   let accounts: SignerWithAddress[];
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let Hub: Hub;
   let ShardingTableStorage: ShardingTableStorage;
   let Profile: Profile;
   let identityId: number;
@@ -24,8 +22,8 @@ describe('ShardingTableStorage Contract', function () {
   const nodeId3 = '0x08f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb68';
   const nodeId4 = '0x08f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb69';
 
-  async function deployShardingTableFixture(): Promise<ShardingTableFixture> {
-    await hre.deployments.fixture(['ShardingTable']);
+  async function deployShardingTableStorageFixture(): Promise<ShardingTableStorageFixture> {
+    await hre.deployments.fixture(['ShardingTableStorage']);
     await hre.deployments.fixture(['Profile']);
     const accounts = await hre.ethers.getSigners();
     const Hub = await hre.ethers.getContract<Hub>('Hub');
@@ -49,7 +47,7 @@ describe('ShardingTableStorage Contract', function () {
     return receipt.events[3].args.identityId.toNumber();
   }
 
-  async function multipleProfiles() {
+  async function createMultipleProfiles() {
     const adminWallet1 = await Profile.connect(accounts[1]);
     const adminWallet2 = await Profile.connect(accounts[2]);
     const profile1 = await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
@@ -69,10 +67,10 @@ describe('ShardingTableStorage Contract', function () {
   }
 
   beforeEach(async () => {
-    ({ accounts, ShardingTableStorage, Hub, Profile } = await loadFixture(deployShardingTableFixture));
+    ({ accounts, ShardingTableStorage, Profile } = await loadFixture(deployShardingTableStorageFixture));
   });
 
-  it('The contract is named "ShardingTable"', async function () {
+  it('The contract is named "ShardingTableStorage"', async function () {
     expect(await ShardingTableStorage.name()).to.equal('ShardingTableStorage');
   });
 
@@ -81,7 +79,7 @@ describe('ShardingTableStorage Contract', function () {
   });
 
   it('Create 3 nodes and create node object, expect to pass', async () => {
-    const profiles = await multipleProfiles();
+    const profiles = await createMultipleProfiles();
     await ShardingTableStorage.createNodeObject(profiles[1], profiles[0], profiles[2]);
     const getNodeResult = await ShardingTableStorage.getNode(profiles[1]);
 
@@ -173,8 +171,8 @@ describe('ShardingTableStorage Contract', function () {
 
   it('Create 4 nodes, node 4 linked with node 2 and 3, get multiple nodes, expect to pass', async () => {
     // create 3 nodes and set node object for prev and next identityId
-    const profiles = await multipleProfiles();
-    await ShardingTableStorage.createNodeObject(profiles[1], profiles[0], profiles[2]); // 2, 1, 3
+    const profiles = await createMultipleProfiles();
+    await ShardingTableStorage.createNodeObject(profiles[1], profiles[0], profiles[2]); // identityId = 2, prevIdentityId = 1, nextIdentityId = 3
     const getNodeResult = await ShardingTableStorage.getNode(profiles[1]);
 
     expect(getNodeResult.identityId.toNumber()).to.equal(profiles[1]);
@@ -202,8 +200,8 @@ describe('ShardingTableStorage Contract', function () {
     const getValuesForNext2Nodes = await ShardingTableStorage.getMultipleNodes(profiles[1], 2);
 
     // NODE[2] has 2 linked nodes:
-    // FIRST: previous identity id 1 and next identity id 4
-    // SECOND: previous identity id 2 and next identity id 3
+    // FIRST: previous identityId 1 and nextIdentity id 4
+    // SECOND: previous identityId 2 and nextIdentity id 3
     expect(getValuesForNext2Nodes.length).to.equal(2);
     expect(getValuesForNext2Nodes[0].identityId.toNumber()).to.equal(profiles[1]);
     expect(getValuesForNext2Nodes[0].prevIdentityId.toNumber()).to.equal(profiles[0]);
