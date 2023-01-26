@@ -34,6 +34,14 @@ describe('ContentAsset contract', function () {
     immutable_: false,
   };
 
+  async function createAsset() {
+    await ERC20Token.mint(accounts[0].address, 1000000000000000);
+    await ERC20Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
+    const receipt = await (await ContentAsset.createAsset(assetInputStruct)).wait();
+    const tokenId = receipt.logs[0].topics[3];
+    return tokenId;
+  }
+
   async function deployContentAssetFixture(): Promise<ContentAssetFixture> {
     await hre.deployments.fixture(['ContentAsset']);
     const accounts = await hre.ethers.getSigners();
@@ -101,14 +109,76 @@ describe('ContentAsset contract', function () {
   });
 
   it('Get an existing asset, expect asset returned', async () => {
-    await ERC20Token.mint(accounts[0].address, 1000000000000000);
-    await ERC20Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
-    const receipt = await (await ContentAsset.createAsset(assetInputStruct)).wait();
-    const tokenId = receipt.logs[0].topics[3];
+    const tokenId = await createAsset();
 
     expect(await ContentAssetStorage.ownerOf(tokenId)).to.equal(accounts[0].address);
 
     const assertionIds = await ContentAssetStorage.getAssertionIds(tokenId);
     expect(assertionIds[0]).to.equal(assetInputStruct.assertionId);
+  });
+
+  // TODO: Update after finished implementation of update feature
+  it.skip('Burn an asset, expect asset removed', async () => {
+    const tokenId = await createAsset();
+
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      ContentAsset.burnAsset(tokenId)
+        .to.emit(ContentAsset, 'AssetBurnt')
+        .withArgs(ContentAssetStorage.address, tokenId, assetInputStruct.assertionId),
+    );
+    const assertionIds = await ContentAssetStorage.getAssertionIds(tokenId);
+    expect(assertionIds[0]).to.equal('0');
+  });
+
+  // TODO: Update after finished implementation of update feature
+  it.skip('Update an asset state, expect state updated', async () => {
+    const tokenId = await createAsset();
+    const newAssertionId = '0x1cc2117b68bcbb1535205d517cb42ef45f25838add571fce4cfb7de7bd6179eb';
+
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      ContentAsset.updateAssetState(
+        tokenId,
+        newAssertionId,
+        assetInputStruct.size,
+        assetInputStruct.triplesNumber,
+        assetInputStruct.epochsNumber,
+        assetInputStruct.chunksNumber,
+        assetInputStruct.tokenAmount,
+      )
+        .to.emit(ContentAsset, 'AssetStateUpdated')
+        .withArgs(tokenId, newAssertionId),
+    );
+  });
+
+  // TODO: Update after finished implementation of update feature
+  it.skip('Update an asset storing period, expect storing period updated', async () => {
+    const tokenId = await createAsset();
+    const newEpochsNumber = Number(assetInputStruct.epochsNumber) + 1;
+
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      ContentAsset.updateAssetStoringPeriod(tokenId, newEpochsNumber, assetInputStruct.tokenAmount)
+        .to.emit(ContentAsset, 'AssetStoringPeriodExtended')
+        .withArgs(ContentAssetStorage.address, tokenId, newEpochsNumber, assetInputStruct.tokenAmount),
+    );
+  });
+
+  // TODO: Update after finished implementation of update feature
+  it.skip('Update an asset token amount, expect token amount updated', async () => {
+    const tokenId = await createAsset();
+    const newTokenAmount = Number(assetInputStruct.tokenAmount) + 10;
+
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      ContentAsset.updateAssetTokenAmount(tokenId, newTokenAmount)
+        .to.emit(ContentAsset, 'AssetPaymentIncreased')
+        .withArgs(ContentAssetStorage.address, tokenId, newTokenAmount),
+    );
   });
 });
