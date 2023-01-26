@@ -1,0 +1,118 @@
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { expect } from 'chai';
+import hre from 'hardhat';
+
+import { ERC20Token, Hub, Staking, StakingStorage } from '../typechain';
+
+type StakingFixture = {
+  accounts: SignerWithAddress[];
+  Staking: Staking;
+  StakingStorage: StakingStorage;
+  ERC20Token: ERC20Token;
+};
+
+describe('Staking contract', function () {
+  let accounts: SignerWithAddress[];
+  let Staking: Staking;
+  let StakingStorage: StakingStorage;
+  let ERC20Token: ERC20Token;
+  const identityId1 = 1;
+  const totalStake = 1000;
+  const operatorFee = 10;
+  const transferAmount = 100;
+  const timestamp = 1674261619;
+
+  async function deployStakingFixture(): Promise<StakingFixture> {
+    await hre.deployments.fixture(['Staking']);
+    const Staking = await hre.ethers.getContract<Staking>('Staking');
+    const StakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
+    const ERC20Token = await hre.ethers.getContract<ERC20Token>('ERC20Token');
+    const accounts = await hre.ethers.getSigners();
+    const Hub = await hre.ethers.getContract<Hub>('Hub');
+    await Hub.setContractAddress('HubOwner', accounts[0].address);
+
+    return { accounts, ERC20Token, Staking, StakingStorage };
+  }
+
+  beforeEach(async () => {
+    ({ accounts, ERC20Token, Staking, StakingStorage } = await loadFixture(deployStakingFixture));
+  });
+
+  it('The contract is named "Staking"', async function () {
+    expect(await Staking.name()).to.equal('Staking');
+  });
+
+  it('The contract is version "1.0.1"', async function () {
+    expect(await Staking.version()).to.equal('1.0.1');
+  });
+
+  it('Non-Contract should not be able to setTotalStake; expect to fail', async function () {
+    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
+    await expect(StakingStorageWithNonHubOwner.setTotalStake(identityId1, totalStake)).to.be.revertedWith(
+      'Fn can only be called by the hub',
+    );
+  });
+
+  it('Contract should be able to setTotalStake; expect to pass', async function () {
+    await StakingStorage.setTotalStake(identityId1, totalStake);
+    expect(await StakingStorage.totalStakes(identityId1)).to.equal(totalStake);
+  });
+
+  it('Non-Contract should not be able to setOperatorFee; expect to fail', async function () {
+    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
+    await expect(StakingStorageWithNonHubOwner.setOperatorFee(identityId1, operatorFee)).to.be.revertedWith(
+      'Fn can only be called by the hub',
+    );
+  });
+
+  it('Contract should be able to setOperatorFee; expect to pass', async function () {
+    await StakingStorage.setOperatorFee(identityId1, operatorFee);
+    expect(await StakingStorage.operatorFees(identityId1)).to.equal(operatorFee);
+  });
+
+  it('Non-Contract should not be able to createWithdrawalRequest; expect to fail', async function () {
+    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
+    await expect(
+      StakingStorageWithNonHubOwner.createWithdrawalRequest(identityId1, accounts[1].address, totalStake, 2022),
+    ).to.be.revertedWith('Fn can only be called by the hub');
+  });
+
+  it('Contract should be able to createWithdrawalRequest; expect to pass', async function () {
+    await StakingStorage.createWithdrawalRequest(identityId1, accounts[1].address, totalStake, timestamp);
+
+    expect(await StakingStorage.withdrawalRequestExists(identityId1, accounts[1].address)).to.equal(true);
+    expect(await StakingStorage.getWithdrawalRequestAmount(identityId1, accounts[1].address)).to.equal(totalStake);
+    expect(await StakingStorage.getWithdrawalRequestTimestamp(identityId1, accounts[1].address)).to.equal(timestamp);
+  });
+
+  it('Non-Contract should not be able to deleteWithdrawalRequest; expect to fail', async function () {
+    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
+    await expect(
+      StakingStorageWithNonHubOwner.deleteWithdrawalRequest(identityId1, accounts[1].address),
+    ).to.be.revertedWith('Fn can only be called by the hub');
+  });
+
+  it('Contract should be able to deleteWithdrawalRequest; expect to pass', async function () {
+    await StakingStorage.createWithdrawalRequest(identityId1, accounts[1].address, totalStake, timestamp);
+
+    await StakingStorage.deleteWithdrawalRequest(identityId1, accounts[1].address);
+    expect(await StakingStorage.withdrawalRequestExists(identityId1, accounts[1].address)).to.equal(false);
+    expect(await StakingStorage.getWithdrawalRequestAmount(identityId1, accounts[1].address)).to.equal(0);
+    expect(await StakingStorage.getWithdrawalRequestTimestamp(identityId1, accounts[1].address)).to.equal(0);
+  });
+
+  it('Non-Contract should not be able to transferStake; expect to fail', async function () {
+    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
+    await expect(StakingStorageWithNonHubOwner.transferStake(accounts[1].address, transferAmount)).to.be.revertedWith(
+      'Fn can only be called by the hub',
+    );
+  });
+
+  it('Contract should be able to transferStake; expect to pass', async function () {
+    await ERC20Token.mint(StakingStorage.address, 1000000000000000);
+    await StakingStorage.transferStake(accounts[1].address, transferAmount);
+
+    expect(await ERC20Token.balanceOf(accounts[1].address)).to.equal(transferAmount);
+  });
+});
