@@ -138,10 +138,4 @@ describe('IdentityStorage contract', function () {
 
     expect(fetchIdentityId.toNumber()).to.equal(0);
   });
-
-  it.skip('Generate an identity id, expect to pass', async () => {
-    await Identity.createIdentity(operationalKey, adminKey);
-    const generateIdentityId = await IdentityStorage.generateIdentityId();
-    console.log(generateIdentityId);
-  });
 });
