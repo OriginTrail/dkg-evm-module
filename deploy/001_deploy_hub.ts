@@ -10,11 +10,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const Hub = await hre.deployments.deploy('Hub', { from: deployer, log: true });
 
-  hre.helpers.contractDeployments.contracts['Hub'] = {
-    evmAddress: Hub.address,
-    substrateAddress: hre.helpers.convertEvmWallet(Hub.address),
-    deployed: true,
-  };
+  hre.helpers.updateDeploymentsJson('Hub', Hub.address);
 };
 
 export default func;

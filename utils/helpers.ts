@@ -95,11 +95,22 @@ export class Helpers {
 
     const hub = await this.hre.ethers.getContractAt('Hub', hubAddress, deployer);
 
-    const newContract = await this.hre.deployments.deploy(newContractName, {
-      from: deployer,
-      args: passHubInConstructor ? [hub.address] : [],
-      log: true,
-    });
+    let newContract;
+    try {
+      newContract = await this.hre.deployments.deploy(newContractName, {
+        from: deployer,
+        args: passHubInConstructor ? [hub.address] : [],
+        log: true,
+      });
+    } catch (error) {
+      this.saveDeploymentsJson('deployments');
+
+      let message;
+      if (error instanceof Error) message = error.message;
+      else message = String(error);
+
+      throw Error(message);
+    }
 
     const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
     if (setContractInHub) {
@@ -110,11 +121,7 @@ export class Helpers {
 
     this.reinitialization = true;
 
-    this.contractDeployments.contracts[newContractName] = {
-      evmAddress: newContract.address,
-      substrateAddress: this.convertEvmWallet(newContract.address),
-      deployed: true,
-    };
+    this.updateDeploymentsJson(newContractName, newContract?.address);
 
     return await this.hre.ethers.getContractAt(newContractName, newContract.address, deployer);
   }
@@ -129,6 +136,21 @@ export class Helpers {
     } else {
       return false;
     }
+  }
+
+  public updateDeploymentsJson(newContractName: string, newContractAddress: string) {
+    this.contractDeployments.contracts[newContractName] = {
+      evmAddress: newContractAddress,
+      substrateAddress: this.convertEvmWallet(newContractAddress),
+      deployed: true,
+    };
+  }
+
+  public saveDeploymentsJson(folder: string) {
+    fs.writeFileSync(
+      `${folder}/${this.hre.network.name}_contracts.json`,
+      JSON.stringify(this.hre.helpers.contractDeployments, null, 4),
+    );
   }
 
   public async sendOTP(address: string, tokenAmount = 2) {
