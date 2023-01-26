@@ -3,24 +3,21 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Hub, Profile, ShardingTableStorage, WhitelistStorage } from '../typechain';
+import { Hub, Profile, ShardingTableStorage } from '../typechain';
 
 type ShardingTableFixture = {
   accounts: SignerWithAddress[];
   Hub: Hub;
   ShardingTableStorage: ShardingTableStorage;
   Profile: Profile;
-  WhitelistStorage: WhitelistStorage;
 };
 
-describe('ShardingTable Contract', function () {
+describe('ShardingTableStorage Contract', function () {
   let accounts: SignerWithAddress[];
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let Hub: Hub;
   let ShardingTableStorage: ShardingTableStorage;
   let Profile: Profile;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let WhitelistStorage: WhitelistStorage;
   let identityId: number;
   const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
   const nodeId2 = '0x08f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb67';
@@ -34,7 +31,6 @@ describe('ShardingTable Contract', function () {
     const Hub = await hre.ethers.getContract<Hub>('Hub');
     const Profile = await hre.ethers.getContract<Profile>('Profile');
     const ShardingTableStorage = await hre.ethers.getContract<ShardingTableStorage>('ShardingTableStorage');
-    const WhitelistStorage = await hre.ethers.getContract<WhitelistStorage>('WhitelistStorage');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return {
@@ -42,7 +38,6 @@ describe('ShardingTable Contract', function () {
       ShardingTableStorage,
       Hub,
       Profile,
-      WhitelistStorage,
     };
   }
 
@@ -74,9 +69,7 @@ describe('ShardingTable Contract', function () {
   }
 
   beforeEach(async () => {
-    ({ accounts, ShardingTableStorage, Hub, Profile, WhitelistStorage } = await loadFixture(
-      deployShardingTableFixture,
-    ));
+    ({ accounts, ShardingTableStorage, Hub, Profile } = await loadFixture(deployShardingTableFixture));
   });
 
   it('The contract is named "ShardingTable"', async function () {
