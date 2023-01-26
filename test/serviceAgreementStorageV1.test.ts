@@ -3,12 +3,12 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { ERC20Token, Hub, ServiceAgreementStorageV1 } from '../typechain';
+import { Token, Hub, ServiceAgreementStorageV1 } from '../typechain';
 
 type ServiceAgreementStorageV1Fixture = {
   accounts: SignerWithAddress[];
   ServiceAgreementStorageV1: ServiceAgreementStorageV1;
-  ERC20Token: ERC20Token;
+  Token: Token;
 };
 
 describe('ServiceAgreementStorageV1 contract', function () {
@@ -22,7 +22,7 @@ describe('ServiceAgreementStorageV1 contract', function () {
 
   let accounts: SignerWithAddress[];
   let ServiceAgreementStorageV1: ServiceAgreementStorageV1;
-  let ERC20Token: ERC20Token;
+  let Token: Token;
 
   async function deployServiceAgreementStorageV1Fixture(): Promise<ServiceAgreementStorageV1Fixture> {
     await hre.deployments.fixture(['ServiceAgreementStorageV1']);
@@ -30,11 +30,11 @@ describe('ServiceAgreementStorageV1 contract', function () {
     const ServiceAgreementStorageV1 = await hre.ethers.getContract<ServiceAgreementStorageV1>(
       'ServiceAgreementStorageV1',
     );
-    const ERC20Token = await hre.ethers.getContract<ERC20Token>('ERC20Token');
+    const Token = await hre.ethers.getContract<Token>('Token');
     const Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
-    return { accounts, ServiceAgreementStorageV1, ERC20Token };
+    return { accounts, ServiceAgreementStorageV1, Token };
   }
 
   async function createServiceAgreement() {
@@ -49,7 +49,7 @@ describe('ServiceAgreementStorageV1 contract', function () {
   }
 
   beforeEach(async () => {
-    ({ accounts, ServiceAgreementStorageV1, ERC20Token } = await loadFixture(deployServiceAgreementStorageV1Fixture));
+    ({ accounts, ServiceAgreementStorageV1, Token } = await loadFixture(deployServiceAgreementStorageV1Fixture));
   });
 
   it('The contract is named "ServiceAgreementStorageV1"', async function () {
@@ -164,9 +164,9 @@ describe('ServiceAgreementStorageV1 contract', function () {
   it('Should allow transferring reward', async function () {
     const transferAmount = 100;
     const receiver = accounts[1].address;
-    await ERC20Token.mint(ServiceAgreementStorageV1.address, transferAmount);
+    await Token.mint(ServiceAgreementStorageV1.address, transferAmount);
 
     await ServiceAgreementStorageV1.transferAgreementTokens(receiver, transferAmount);
-    expect(await ERC20Token.balanceOf(receiver)).to.equal(transferAmount);
+    expect(await Token.balanceOf(receiver)).to.equal(transferAmount);
   });
 });

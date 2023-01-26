@@ -3,11 +3,11 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { ERC20Token, Hub, Profile, ServiceAgreementStorageV1, Staking, StakingStorage } from '../typechain';
+import { Token, Hub, Profile, ServiceAgreementStorageV1, Staking, StakingStorage } from '../typechain';
 
 type StakingFixture = {
   accounts: SignerWithAddress[];
-  ERC20Token: ERC20Token;
+  Token: Token;
   Profile: Profile;
   ServiceAgreementStorageV1: ServiceAgreementStorageV1;
   Staking: Staking;
@@ -18,7 +18,7 @@ describe('Staking contract', function () {
   let accounts: SignerWithAddress[];
   let Staking: Staking;
   let StakingStorage: StakingStorage;
-  let ERC20Token: ERC20Token;
+  let Token: Token;
   let Profile: Profile;
   let ServiceAgreementStorageV1: ServiceAgreementStorageV1;
   const identityId1 = 1;
@@ -31,7 +31,7 @@ describe('Staking contract', function () {
     await hre.deployments.fixture(['Staking', 'Profile']);
     const Staking = await hre.ethers.getContract<Staking>('Staking');
     const StakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
-    const ERC20Token = await hre.ethers.getContract<ERC20Token>('ERC20Token');
+    const Token = await hre.ethers.getContract<Token>('Token');
     const Profile = await hre.ethers.getContract<Profile>('Profile');
     const ServiceAgreementStorageV1 = await hre.ethers.getContract<ServiceAgreementStorageV1>(
       'ServiceAgreementStorageV1',
@@ -40,11 +40,11 @@ describe('Staking contract', function () {
     const Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
-    return { accounts, ERC20Token, Profile, ServiceAgreementStorageV1, Staking, StakingStorage };
+    return { accounts, Token, Profile, ServiceAgreementStorageV1, Staking, StakingStorage };
   }
 
   beforeEach(async () => {
-    ({ accounts, ERC20Token, Profile, ServiceAgreementStorageV1, Staking, StakingStorage } = await loadFixture(
+    ({ accounts, Token, Profile, ServiceAgreementStorageV1, Staking, StakingStorage } = await loadFixture(
       deployStakingFixture,
     ));
   });
@@ -120,15 +120,15 @@ describe('Staking contract', function () {
   });
 
   it('Contract should be able to transferStake; expect to pass', async function () {
-    await ERC20Token.mint(StakingStorage.address, 1000000000000000);
+    await Token.mint(StakingStorage.address, 1000000000000000);
     await StakingStorage.transferStake(accounts[1].address, transferAmount);
 
-    expect(await ERC20Token.balanceOf(accounts[1].address)).to.equal(transferAmount);
+    expect(await Token.balanceOf(accounts[1].address)).to.equal(transferAmount);
   });
 
   it('Create 1 node; expect that stake is created and correctly set', async function () {
-    await ERC20Token.mint(accounts[0].address, 1000000000000000);
-    await ERC20Token.increaseAllowance(Staking.address, 1000000000000000);
+    await Token.mint(accounts[0].address, 1000000000000000);
+    await Token.increaseAllowance(Staking.address, 1000000000000000);
 
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
     await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
@@ -138,7 +138,7 @@ describe('Staking contract', function () {
   });
 
   it('Add reward; expect that total stake is increased', async function () {
-    await ERC20Token.mint(ServiceAgreementStorageV1.address, 1000000000000000);
+    await Token.mint(ServiceAgreementStorageV1.address, 1000000000000000);
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
     await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
 

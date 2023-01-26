@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { ContentAsset, ContentAssetStorage, ServiceAgreementV1, ERC20Token } from '../typechain';
+import { ContentAsset, ContentAssetStorage, ServiceAgreementV1, Token } from '../typechain';
 import { ContentAssetStructs } from '../typechain/contracts/assets/ContentAsset';
 import { ZERO_BYTES32 } from './helpers/constants';
 
@@ -12,7 +12,7 @@ type ContentAssetFixture = {
   ContentAsset: ContentAsset;
   ContentAssetStorage: ContentAssetStorage;
   ServiceAgreementV1: ServiceAgreementV1;
-  ERC20Token: ERC20Token;
+  Token: Token;
 };
 
 describe('ContentAsset contract', function () {
@@ -20,7 +20,7 @@ describe('ContentAsset contract', function () {
   let ContentAsset: ContentAsset;
   let ContentAssetStorage: ContentAssetStorage;
   let ServiceAgreementV1: ServiceAgreementV1;
-  let ERC20Token: ERC20Token;
+  let Token: Token;
   const nonExistingTokenId = 99;
   const assertionId = '0x8cc2117b68bcbb1535205d517cb42ef45f25838add571fce4cfb7de7bd617943';
   const assetInputStruct: ContentAssetStructs.AssetInputArgsStruct = {
@@ -35,8 +35,8 @@ describe('ContentAsset contract', function () {
   };
 
   async function createAsset() {
-    await ERC20Token.mint(accounts[0].address, 1000000000000000);
-    await ERC20Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
+    await Token.mint(accounts[0].address, 1000000000000000);
+    await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
     const receipt = await (await ContentAsset.createAsset(assetInputStruct)).wait();
     const tokenId = receipt.logs[0].topics[3];
     return tokenId;
@@ -48,13 +48,13 @@ describe('ContentAsset contract', function () {
     const ContentAsset = await hre.ethers.getContract<ContentAsset>('ContentAsset');
     const ContentAssetStorage = await hre.ethers.getContract<ContentAssetStorage>('ContentAssetStorage');
     const ServiceAgreementV1 = await hre.ethers.getContract<ServiceAgreementV1>('ServiceAgreementV1');
-    const ERC20Token = await hre.ethers.getContract<ERC20Token>('ERC20Token');
+    const Token = await hre.ethers.getContract<Token>('Token');
 
-    return { accounts, ContentAsset, ContentAssetStorage, ServiceAgreementV1, ERC20Token };
+    return { accounts, ContentAsset, ContentAssetStorage, ServiceAgreementV1, Token };
   }
 
   beforeEach(async () => {
-    ({ accounts, ContentAsset, ContentAssetStorage, ServiceAgreementV1, ERC20Token } = await loadFixture(
+    ({ accounts, ContentAsset, ContentAssetStorage, ServiceAgreementV1, Token } = await loadFixture(
       deployContentAssetFixture,
     ));
   });
@@ -98,8 +98,8 @@ describe('ContentAsset contract', function () {
   });
 
   it('Create an asset, expect asset created', async () => {
-    await ERC20Token.mint(accounts[0].address, 1000000000000000);
-    await ERC20Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
+    await Token.mint(accounts[0].address, 1000000000000000);
+    await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
 
     await expect(ContentAsset.createAsset(assetInputStruct)).to.emit(ContentAsset, 'AssetMinted');
   });

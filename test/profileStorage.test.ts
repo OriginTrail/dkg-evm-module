@@ -3,30 +3,30 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { ERC20Token, Hub, ProfileStorage } from '../typechain';
+import { Token, Hub, ProfileStorage } from '../typechain';
 import { ZERO_ADDRESS } from './helpers/constants';
 
 type ProfileStorageFixture = {
   accounts: SignerWithAddress[];
   ProfileStorage: ProfileStorage;
-  ERC20Token: ERC20Token;
+  Token: Token;
 };
 
 describe('ProfileStorage contract', function () {
   let accounts: SignerWithAddress[];
   let ProfileStorage: ProfileStorage;
-  let ERC20Token: ERC20Token;
+  let Token: Token;
   const newNodeId = '0x0000000000000000000000000000000000000000000000000000000000000002';
 
   async function deployProfileStorageFixture(): Promise<ProfileStorageFixture> {
     await hre.deployments.fixture(['ProfileStorage']);
     const ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
-    const ERC20Token = await hre.ethers.getContract<ERC20Token>('ERC20Token');
+    const Token = await hre.ethers.getContract<Token>('Token');
     const accounts = await hre.ethers.getSigners();
     const Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
-    return { accounts, ERC20Token, ProfileStorage };
+    return { accounts, Token, ProfileStorage };
   }
 
   async function createProfile() {
@@ -42,7 +42,7 @@ describe('ProfileStorage contract', function () {
   }
 
   beforeEach(async () => {
-    ({ accounts, ERC20Token, ProfileStorage } = await loadFixture(deployProfileStorageFixture));
+    ({ accounts, Token, ProfileStorage } = await loadFixture(deployProfileStorageFixture));
   });
 
   it('The contract is named "ProfileStorage"', async function () {
@@ -117,10 +117,10 @@ describe('ProfileStorage contract', function () {
   it('Validate profile accumulated operator fee amount transfer ', async () => {
     const transferAmount = 100;
     const receiver = accounts[1].address;
-    await ERC20Token.mint(ProfileStorage.address, transferAmount);
+    await Token.mint(ProfileStorage.address, transferAmount);
 
     await ProfileStorage.transferAccumulatedOperatorFee(receiver, transferAmount);
-    expect(await ERC20Token.balanceOf(receiver)).to.equal(transferAmount);
+    expect(await Token.balanceOf(receiver)).to.equal(transferAmount);
   });
 
   it('Validate setting and getting profile accumulated operator fee withdrawal timestamp', async () => {
