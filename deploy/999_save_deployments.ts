@@ -2,11 +2,13 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  await hre.helpers.deploy({
-    newContractName: 'ShardingTable',
-  });
+  if (!hre.network.name.startsWith('otp')) {
+    return;
+  }
+
+  hre.helpers.contractDeployments.deployedTimestamp = Date.now();
+  hre.helpers.saveDeploymentsJson('deployments');
 };
 
 export default func;
-func.tags = ['ShardingTable'];
-func.dependencies = ['Hub', 'ProfileStorage', 'ShardingTableStorage', 'StakingStorage'];
+func.runAtTheEnd = true;

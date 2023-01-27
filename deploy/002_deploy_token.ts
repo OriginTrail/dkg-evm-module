@@ -2,14 +2,18 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { deployer, minter } = await hre.getNamedAccounts();
+  const { minter } = await hre.getNamedAccounts();
 
-  await hre.helpers.deploy({
-    hre,
+  const isDeployed = hre.helpers.isDeployed('Token');
+
+  const Token = await hre.helpers.deploy({
     newContractName: 'Token',
   });
 
-  await hre.deployments.execute('Token', { from: deployer, log: true }, 'setupRole', minter);
+  if (!isDeployed) {
+    const setupRoleTx = await Token.setupRole(minter);
+    await setupRoleTx.wait();
+  }
 };
 
 export default func;

@@ -1,9 +1,26 @@
+import 'dotenv/config';
+import * as fs from 'fs';
+
+import { ApiPromise, HttpProvider } from '@polkadot/api';
+import { Keyring } from '@polkadot/keyring';
+import { u8aToHex } from '@polkadot/util';
 import * as polkadotCryptoUtils from '@polkadot/util-crypto';
-import { DeployResult } from 'hardhat-deploy/types';
+import { KeypairType } from '@polkadot/util-crypto/types';
+import { Contract } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
+type ContractDeployments = {
+  contracts: {
+    [contractName: string]: {
+      evmAddress: string;
+      otpAddress: string;
+      deployed: boolean;
+    };
+  };
+  deployedTimestamp: number;
+};
+
 type DeploymentParameters = {
-  hre: HardhatRuntimeEnvironment;
   newContractName: string;
   newContractNameInHub?: string;
   passHubInConstructor?: boolean;
@@ -11,51 +28,190 @@ type DeploymentParameters = {
   setAssetStorageInHub?: boolean;
 };
 
+type EvmWallet = {
+  address: string;
+  mnemonic: string;
+  privateKey: string;
+};
+
+type SubstrateWallet = {
+  address: string;
+  mnemonic: string;
+  privateKey: string;
+};
+
 export class Helpers {
+  hre: HardhatRuntimeEnvironment;
+  provider: HttpProvider;
+  contractDeployments: ContractDeployments;
+  reinitialization: boolean;
+
+  constructor(hre: HardhatRuntimeEnvironment) {
+    this.hre = hre;
+    const endpoint = process.env[`RPC_${this.hre.network.name.toUpperCase()}`];
+    this.provider = new HttpProvider(endpoint);
+
+    const deploymentsConfig = `deployments/${this.hre.network.name}_contracts.json`;
+
+    if (fs.existsSync(deploymentsConfig)) {
+      this.contractDeployments = JSON.parse(fs.readFileSync(deploymentsConfig).toString());
+    } else {
+      this.contractDeployments = { contracts: {}, deployedTimestamp: 0 };
+    }
+
+    this.reinitialization = false;
+  }
+
   public async deploy({
-    hre,
     newContractName,
     newContractNameInHub,
     passHubInConstructor = true,
     setContractInHub = true,
     setAssetStorageInHub = false,
-  }: DeploymentParameters): Promise<DeployResult> {
-    const { deployer } = await hre.getNamedAccounts();
+  }: DeploymentParameters): Promise<Contract> {
+    const { deployer } = await this.hre.getNamedAccounts();
 
-    const hub = await hre.deployments.get('Hub');
-
-    const newContract = await hre.deployments.deploy(newContractName, {
-      from: deployer,
-      args: passHubInConstructor ? [hub.address] : [],
-      log: true,
-    });
-
-    if (setContractInHub) {
-      await hre.deployments.execute(
-        'Hub',
-        { from: deployer, log: true },
-        'setContractAddress',
-        newContractNameInHub ? newContractNameInHub : newContractName,
-        newContract.address,
+    if (this.isDeployed(newContractName)) {
+      const contractInstance = await this.hre.ethers.getContractAt(
+        newContractName,
+        this.contractDeployments.contracts[newContractName].evmAddress,
+        deployer,
       );
-    } else if (setAssetStorageInHub) {
-      await hre.deployments.execute(
-        'Hub',
-        { from: deployer, log: true },
-        'setAssetStorageAddress',
-        newContractNameInHub ? newContractNameInHub : newContractName,
-        newContract.address,
-      );
+
+      // TODO: Implement check if specific contract should be reinitialized
+      if (this.reinitialization && contractInstance.initialize !== undefined) {
+        const reinitializationTx = await contractInstance.initialize();
+        console.log(`Reinitializing ${newContractName} contract...`);
+        await reinitializationTx.wait();
+      }
+
+      return contractInstance;
     }
 
-    return newContract;
+    let hubAddress;
+    if ('Hub' in this.contractDeployments.contracts) {
+      hubAddress = this.contractDeployments.contracts['Hub'].evmAddress;
+    } else {
+      hubAddress = (await this.hre.deployments.get('Hub')).address;
+    }
+
+    const hub = await this.hre.ethers.getContractAt('Hub', hubAddress, deployer);
+
+    let newContract;
+    try {
+      newContract = await this.hre.deployments.deploy(newContractName, {
+        from: deployer,
+        args: passHubInConstructor ? [hub.address] : [],
+        log: true,
+      });
+    } catch (error) {
+      this.saveDeploymentsJson('deployments');
+
+      let message;
+      if (error instanceof Error) message = error.message;
+      else message = String(error);
+
+      throw Error(message);
+    }
+
+    let tx;
+    const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
+    if (setContractInHub) {
+      tx = await hub.setContractAddress(nameInHub, newContract.address);
+      await tx.wait();
+    } else if (setAssetStorageInHub) {
+      tx = await hub.setAssetStorageAddress(nameInHub, newContract.address);
+      await tx.wait();
+    }
+
+    this.reinitialization = true;
+
+    this.updateDeploymentsJson(newContractName, newContract?.address);
+
+    return await this.hre.ethers.getContractAt(newContractName, newContract.address, deployer);
   }
 
-  public convertEvmWallet(evmAddress: string, ss58Prefix: number): string {
+  public inConfig(contractName: string): boolean {
+    return contractName in this.contractDeployments.contracts;
+  }
+
+  public isDeployed(contractName: string): boolean {
+    if (this.inConfig(contractName)) {
+      return this.contractDeployments.contracts[contractName].deployed;
+    } else {
+      return false;
+    }
+  }
+
+  public updateDeploymentsJson(newContractName: string, newContractAddress: string) {
+    this.contractDeployments.contracts[newContractName] = {
+      evmAddress: newContractAddress,
+      otpAddress: this.convertEvmWallet(newContractAddress),
+      deployed: true,
+    };
+  }
+
+  public saveDeploymentsJson(folder: string) {
+    fs.writeFileSync(
+      `${folder}/${this.hre.network.name}_contracts.json`,
+      JSON.stringify(this.hre.helpers.contractDeployments, null, 4),
+    );
+  }
+
+  public async sendOTP(address: string, tokenAmount = 2) {
+    const api = await ApiPromise.create({ provider: this.provider, noInitWarn: true });
+    const transfer = await api.tx.balances.transfer(
+      address,
+      Number(this.hre.ethers.utils.parseUnits(`${tokenAmount}`, 12)),
+    );
+
+    const keyring = new Keyring({ type: 'sr25519' });
+    const accountUri = process.env[`ACCOUNT_WITH_OTP_URI_${this.hre.network.name.toUpperCase()}`];
+    if (!accountUri) {
+      throw Error('URI for account with OTP is required!');
+    }
+    const account = keyring.createFromUri(accountUri);
+
+    const txHash = await transfer.signAndSend(account, { nonce: -1 });
+    console.log(`2 OTPs sent to contract at address ${address}. Transaction hash: ${txHash.toHuman()}`);
+    await this._delay(40000);
+  }
+
+  public generateEvmWallet(): EvmWallet {
+    const wallet = this.hre.ethers.Wallet.createRandom();
+
+    return {
+      address: wallet.address,
+      mnemonic: wallet.mnemonic.phrase,
+      privateKey: wallet.privateKey,
+    };
+  }
+
+  public async generateSubstrateWallet(type: KeypairType = 'sr25519', ss58Prefix = 101): Promise<SubstrateWallet> {
+    await polkadotCryptoUtils.cryptoWaitReady();
+    const keyring = new Keyring({ type: type, ss58Format: ss58Prefix });
+
+    const mnemonic = polkadotCryptoUtils.mnemonicGenerate();
+    const mnemonicMini = polkadotCryptoUtils.mnemonicToMiniSecret(mnemonic);
+    const substratePrivateKey = u8aToHex(mnemonicMini);
+    const otpAddress = keyring.createFromUri(substratePrivateKey).address;
+
+    return {
+      address: otpAddress,
+      mnemonic: mnemonic,
+      privateKey: substratePrivateKey,
+    };
+  }
+
+  public convertEvmWallet(evmAddress: string, ss58Prefix = 101): string {
     if (!polkadotCryptoUtils.isEthereumAddress(evmAddress)) {
       throw Error('Invalid EVM address.');
     }
 
     return polkadotCryptoUtils.evmToAddress(evmAddress, ss58Prefix);
+  }
+
+  private _delay(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
