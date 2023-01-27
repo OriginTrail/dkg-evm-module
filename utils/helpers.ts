@@ -105,8 +105,9 @@ export class Helpers {
         log: true,
       });
     } catch (error) {
-      this.saveDeploymentsJson('deployments');
-
+      if (this.hre.network.name !== 'hardhat') {
+        this.saveDeploymentsJson('deployments');
+      }
       let message;
       if (error instanceof Error) message = error.message;
       else message = String(error);
@@ -126,7 +127,9 @@ export class Helpers {
 
     this.reinitialization = true;
 
-    this.updateDeploymentsJson(newContractName, newContract?.address);
+    if (this.hre.network.name !== 'hardhat') {
+      this.updateDeploymentsJson(newContractName, newContract?.address);
+    }
 
     return await this.hre.ethers.getContractAt(newContractName, newContract.address, deployer);
   }

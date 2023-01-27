@@ -9,4 +9,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ['ServiceAgreementV1'];
-func.dependencies = ['HashingProxy', 'Hub', 'ScoringProxy', 'ParametersStorage', 'ServiceAgreementStorageV1'];
+func.dependencies = [
+  'HashingProxy',
+  'SHA256',
+  'Hub',
+  'ScoringProxy',
+  'Log2PLDSF',
+  'ParametersStorage',
+  'ServiceAgreementStorageV1',
+];
