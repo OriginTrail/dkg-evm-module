@@ -9,8 +9,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 
   if (!isDeployed && hre.network.name.startsWith('otp')) {
-    const otpAddress = hre.helpers.contractDeployments.contracts['ProfileStorage'].substrateAddress;
-    hre.helpers.sendOTP(otpAddress, 2);
+    const otpAddress = hre.helpers.contractDeployments.contracts['ProfileStorage'].otpAddress;
+    await hre.helpers.sendOTP(otpAddress, 2);
   }
 };
 

@@ -73,6 +73,7 @@
     "clean": "hardhat clean",
     "compile": "hardhat size-contracts",
     "coverage": "cross-env COVERAGE_REPORT=true HARDHAT_DEPLOY_FIXTURE=true hardhat coverage --network hardhat --solcoverjs ./.solcover.js --temp artifacts --testfiles './test/**/*.test.ts'",
+    "deploy:otp_alphanet": "hardhat deploy --network otp_alphanet",
     "deploy:otp_devnet": "hardhat deploy --network otp_devnet",
     "deploy:otp_mainnet": "hardhat deploy --network otp_mainnet",
     "deploy:otp_testnet": "hardhat deploy --network otp_testnet",
