@@ -203,11 +203,11 @@ describe('ShardingTableStorage Contract', function () {
     // FIRST: previous identityId 1 and nextIdentity id 4
     // SECOND: previous identityId 2 and nextIdentity id 3
     expect(getValuesForNext2Nodes.length).to.equal(2);
-    expect(getValuesForNext2Nodes[0].identityId.toNumber()).to.equal(profiles[1]);
-    expect(getValuesForNext2Nodes[0].prevIdentityId.toNumber()).to.equal(profiles[0]);
-    expect(getValuesForNext2Nodes[0].nextIdentityId.toNumber()).to.equal(newIdentityId);
-    expect(getValuesForNext2Nodes[1].identityId.toNumber()).to.equal(newIdentityId);
-    expect(getValuesForNext2Nodes[1].prevIdentityId.toNumber()).to.equal(profiles[1]);
-    expect(getValuesForNext2Nodes[1].nextIdentityId.toNumber()).to.equal(profiles[2]);
+    expect(getValuesForNext2Nodes[0].identityId).to.equal(profiles[1]);
+    expect(getValuesForNext2Nodes[0].prevIdentityId).to.equal(profiles[0]);
+    expect(getValuesForNext2Nodes[0].nextIdentityId).to.equal(newIdentityId);
+    expect(getValuesForNext2Nodes[1].identityId).to.equal(newIdentityId);
+    expect(getValuesForNext2Nodes[1].prevIdentityId).to.equal(profiles[1]);
+    expect(getValuesForNext2Nodes[1].nextIdentityId).to.equal(profiles[2]);
   });
 });
