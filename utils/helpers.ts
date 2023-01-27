@@ -49,7 +49,8 @@ export class Helpers {
   constructor(hre: HardhatRuntimeEnvironment) {
     this.hre = hre;
 
-    const endpoint = process.env[`${this.hre.network.name.toUpperCase()}_RPC`];
+    const endpoint = process.env[`RPC_${this.hre.network.name.toUpperCase()}`];
+
     this.provider = new HttpProvider(endpoint);
 
     const deploymentsConfig = `deployments/${this.hre.network.name}_contracts.json`;
@@ -79,7 +80,8 @@ export class Helpers {
         deployer,
       );
 
-      if (this.reinitialization) {
+      // TODO: Implement check if specific contract should be reinitialized
+      if (this.reinitialization && contractInstance.initialize !== undefined) {
         contractInstance.initialize();
       }
 
@@ -112,11 +114,14 @@ export class Helpers {
       throw Error(message);
     }
 
+    let tx;
     const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
     if (setContractInHub) {
-      await hub.setContractAddress(nameInHub, newContract.address);
+      tx = await hub.setContractAddress(nameInHub, newContract.address);
+      await tx.wait();
     } else if (setAssetStorageInHub) {
-      await hub.setAssetStorageAddress(nameInHub, newContract.address);
+      tx = await hub.setAssetStorageAddress(nameInHub, newContract.address);
+      await tx.wait();
     }
 
     this.reinitialization = true;
@@ -154,8 +159,11 @@ export class Helpers {
   }
 
   public async sendOTP(address: string, tokenAmount = 2) {
-    const api = await ApiPromise.create({ provider: this.provider });
-    const transfer = api.tx.balances.transfer(address, this.hre.ethers.utils.parseEther(`${tokenAmount}`));
+    const api = await ApiPromise.create({ provider: this.provider, noInitWarn: true });
+    const transfer = await api.tx.balances.transfer(
+      address,
+      Number(this.hre.ethers.utils.parseUnits(`${tokenAmount}`, 12)),
+    );
 
     const keyring = new Keyring({ type: 'sr25519' });
     const accountUri = process.env[`${this.hre.network.name.toUpperCase()}_ACCOUNT_URI_WITH_OTP`];
@@ -164,7 +172,8 @@ export class Helpers {
     }
     const account = keyring.createFromUri(accountUri);
 
-    await transfer.signAndSend(account, { nonce: -1 });
+    const txHash = await transfer.signAndSend(account, { nonce: -1 });
+    console.log(`2 OTPs sent to contract at address ${address}. Transaction hash: ${txHash.toHuman()}`);
     await this._delay(40000);
   }
 
