@@ -43,7 +43,7 @@ describe('Identity contract', function () {
     const createIdentity = await Identity.createIdentity(operationalKey, adminKey);
     const receipt = await createIdentity.wait();
 
-    identityId = receipt.events![2].args!.identityId.toNumber();
+    identityId = receipt.events?.[2].args?.identityId.toNumber();
     const fetchIdentityId = await IdentityStorage.getIdentityId(operationalKey);
 
     expect(createIdentity).to.emit(Identity, 'IdentityCreated');
