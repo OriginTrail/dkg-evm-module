@@ -43,7 +43,7 @@ describe('ShardingTableStorage Contract', function () {
     const profile = await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
     const receipt = await profile.wait();
 
-    return receipt.events![3].args!.identityId.toNumber();
+    return receipt.events?.[3].args?.identityId.toNumber();
   }
 
   async function createMultipleProfiles() {
@@ -58,7 +58,7 @@ describe('ShardingTableStorage Contract', function () {
     for (const singleIdentityId of profileArray) {
       const receipt = await singleIdentityId.wait();
 
-      identityId = receipt.events![3].args!.identityId.toNumber();
+      identityId = receipt.events?.[3].args?.identityId.toNumber();
       idsArray.push(identityId);
     }
     return idsArray;
@@ -182,7 +182,7 @@ describe('ShardingTableStorage Contract', function () {
     const newProfile = await adminWallet3.createProfile(accounts[0].address, nodeId4, 'Token4', 'TKN4');
 
     const receipt1 = await newProfile.wait();
-    const newIdentityId = receipt1.events![3].args!.identityId.toNumber();
+    const newIdentityId = receipt1.events?.[3].args?.identityId.toNumber();
 
     await ShardingTableStorage.createNodeObject(newIdentityId, newIdentityId, newIdentityId);
 
