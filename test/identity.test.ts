@@ -19,7 +19,11 @@ describe('Identity contract', function () {
   let Identity: Identity;
   let Hub: Hub;
   let IdentityStorage: IdentityStorage;
-  let operationalKey: string, adminKey: string, identityId, operationalKeyBytes32: string, adminKeyBytes32: string;
+  let operationalKey: string,
+    adminKey: string,
+    identityId: number,
+    operationalKeyBytes32: string,
+    adminKeyBytes32: string;
   const ADMIN_KEY = 1;
   const OPERATIONAL_KEY = 2;
   const ECDSA = 1;
