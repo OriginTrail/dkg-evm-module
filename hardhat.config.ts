@@ -52,7 +52,7 @@ const config: HardhatUserConfig = {
       url: rpc('otp_alphanet'),
       gas: 12_000_000, // Gas limit used for deployments
       gasPrice: 1_000_000,
-      accounts: ['0x7cc91951244b45baff330a17f4557418ee403d483385ccb6329ee32641d8c9f1'],
+      accounts: accounts('otp_alphanet'),
       saveDeployments: false,
     },
     otp_devnet: {
