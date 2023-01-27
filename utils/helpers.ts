@@ -48,9 +48,7 @@ export class Helpers {
 
   constructor(hre: HardhatRuntimeEnvironment) {
     this.hre = hre;
-
     const endpoint = process.env[`RPC_${this.hre.network.name.toUpperCase()}`];
-
     this.provider = new HttpProvider(endpoint);
 
     const deploymentsConfig = `deployments/${this.hre.network.name}_contracts.json`;
