@@ -182,7 +182,7 @@ describe('ShardingTableStorage Contract', function () {
     const newProfile = await adminWallet3.createProfile(accounts[0].address, nodeId4, 'Token4', 'TKN4');
 
     const receipt1 = await newProfile.wait();
-    const newIdentityId = receipt1.events?.[3].args?.identityId.toNumber();
+    const newIdentityId = receipt1.events?.[3].args?.identityId;
 
     await ShardingTableStorage.createNodeObject(newIdentityId, newIdentityId, newIdentityId);
 

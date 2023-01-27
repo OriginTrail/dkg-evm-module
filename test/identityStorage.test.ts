@@ -5,6 +5,7 @@ import { ethers } from 'ethers';
 import hre from 'hardhat';
 
 import { Hub, Identity, IdentityStorage } from '../typechain';
+import { ADMIN_KEY, ECDSA, OPERATIONAL_KEY } from './helpers/constants';
 
 type IdentityStorageFixture = {
   accounts: SignerWithAddress[];
@@ -24,9 +25,6 @@ describe('IdentityStorage contract', function () {
     operationalKeyBytes32: string,
     adminKeyBytes32: string,
     newOperationalKeyBytes32: string;
-  const ADMIN_KEY = 1;
-  const OPERATIONAL_KEY = 2;
-  const ECDSA = 1;
 
   async function deployIdentityStorageFixture(): Promise<IdentityStorageFixture> {
     await hre.deployments.fixture(['Identity']);
