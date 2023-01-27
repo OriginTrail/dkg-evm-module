@@ -35,7 +35,7 @@ describe('ContentAsset contract', function () {
   };
 
   async function createAsset() {
-    await Token.mint(accounts[0].address, 1000000000000000);
+    await Token.mint(accounts[0].address, await hre.ethers.utils.parseEther(`${5_000_000}`));
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
     const receipt = await (await ContentAsset.createAsset(assetInputStruct)).wait();
     const tokenId = receipt.logs[0].topics[3];
@@ -98,17 +98,19 @@ describe('ContentAsset contract', function () {
   });
 
   it('Create an asset, expect asset created', async () => {
-    await Token.mint(accounts[0].address, 1000000000000000);
+    await Token.mint(accounts[0].address, await hre.ethers.utils.parseEther(`${5_000_000}`));
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
 
-    await expect(ContentAsset.createAsset(assetInputStruct)).to.emit(ContentAsset, 'AssetMinted');
+    await expect(ContentAsset.createAsset(assetInputStruct))
+      .to.emit(ContentAsset, 'AssetMinted')
+      .withArgs(ContentAssetStorage.address, 0, assetInputStruct.assertionId);
   });
 
-  it('Get an non existing asset, expect 0 returned', async () => {
+  it('Get an assertion ids for non existing asset, expect nothing returned', async () => {
     expect(await ContentAssetStorage.getAssertionIds(nonExistingTokenId)).to.deep.equal([]);
   });
 
-  it('Get an existing asset, expect asset returned', async () => {
+  it('Get an existing asset assertion identifiers, expect one assertion id returned', async () => {
     const tokenId = await createAsset();
 
     expect(await ContentAssetStorage.ownerOf(tokenId)).to.equal(accounts[0].address);

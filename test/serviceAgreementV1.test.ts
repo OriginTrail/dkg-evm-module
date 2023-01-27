@@ -43,9 +43,7 @@ describe('ServiceAgreementV1 contract', function () {
   }
 
   beforeEach(async () => {
-    ({ accounts, ContentAssetStorage, ServiceAgreementV1, Token } = await loadFixture(
-      deployServiceAgreementV1Fixture,
-    ));
+    ({ accounts, ContentAssetStorage, ServiceAgreementV1, Token } = await loadFixture(deployServiceAgreementV1Fixture));
   });
 
   it('The contract is named "ServiceAgreementV1"', async function () {
