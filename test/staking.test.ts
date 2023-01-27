@@ -120,31 +120,38 @@ describe('Staking contract', function () {
   });
 
   it('Contract should be able to transferStake; expect to pass', async function () {
-    await Token.mint(StakingStorage.address, 1000000000000000);
+    await Token.mint(StakingStorage.address, await hre.ethers.utils.parseEther(`${5000000}`));
     await StakingStorage.transferStake(accounts[1].address, transferAmount);
 
     expect(await Token.balanceOf(accounts[1].address)).to.equal(transferAmount);
   });
 
   it('Create 1 node; expect that stake is created and correctly set', async function () {
-    await Token.mint(accounts[0].address, 1000000000000000);
-    await Token.increaseAllowance(Staking.address, 1000000000000000);
+    await Token.mint(accounts[0].address, await hre.ethers.utils.parseEther(`${5_000_000}`));
+    await Token.increaseAllowance(Staking.address, await hre.ethers.utils.parseEther(`${5_000_000}`));
 
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
     await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
 
-    await Staking['addStake(address,uint72,uint96)'](accounts[0].address, identityId1, 1000000000);
-    expect(await StakingStorage.totalStakes(identityId1)).to.equal(1000000000, 'Total amount of stake is not set');
+    await Staking['addStake(address,uint72,uint96)'](
+      accounts[0].address,
+      identityId1,
+      await hre.ethers.utils.parseEther(`${5_000_000}`),
+    );
+    expect(await StakingStorage.totalStakes(identityId1)).to.equal(
+      await hre.ethers.utils.parseEther(`${5_000_000}`),
+      'Total amount of stake is not set',
+    );
   });
 
   it('Add reward; expect that total stake is increased', async function () {
-    await Token.mint(ServiceAgreementStorageV1.address, 1000000000000000);
+    await Token.mint(ServiceAgreementStorageV1.address, await hre.ethers.utils.parseEther(`${5_000_000}`));
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
     await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
 
-    await Staking.addReward(identityId1, 1000000000);
+    await Staking.addReward(identityId1, await hre.ethers.utils.parseEther(`${5_000_000}`));
     expect(await StakingStorage.totalStakes(identityId1)).to.equal(
-      1000000000,
+      await hre.ethers.utils.parseEther(`${5_000_000}`),
       'Total amount of stake is not increased after adding reward',
     );
   });
