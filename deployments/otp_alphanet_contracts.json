@@ -66,8 +66,8 @@
             "deployed": true
         },
         "ServiceAgreementStorageV1": {
-            "evmAddress": "0x050d01Ed3d7e479a140B98FaBb9778CB3438b8c6",
-            "substrateAddress": "gJrv9pm1K2E8EVpaN5B4uTGkziemDk54Qi6hGDZpyET5ehGSf",
+            "evmAddress": "0x3aA92fe1c50358C92d0819F307Bb69987a5c7367",
+            "substrateAddress": "gJn44yQk7SEdthQQjz8UpTK3ZmuxiEZq17QxkJxHGUMnvhDw3",
             "deployed": true
         },
         "ContentAssetStorage": {
@@ -121,5 +121,5 @@
             "deployed": true
         }
     },
-    "deployedTimestamp": 1674779792836
+    "deployedTimestamp": 1674813415503
 }

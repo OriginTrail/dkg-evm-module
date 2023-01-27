@@ -48,8 +48,8 @@ npm run dev
 Update environment use OTP_DEVNET/OTP_TESTNET/OTP_MAINNET
 ```dotenv
 RPC_OTP_DEVNET='<https_endpoint>'
-OTP_DEVNET_PRIVATE_KEY='<0x_ethereum_private_key'
-OTP_DEVNET_ACCOUNT_URI_WITH_OTP='substrate_account_uri'
+EVM_PRIVATE_KEY_OTP_DEVNET='<0x_ethereum_private_key>'
+OTP_DEVNET_ACCOUNT_URI_WITH_OTP='<substrate_account_uri>'
 ```
 
 Devnet deployment command
