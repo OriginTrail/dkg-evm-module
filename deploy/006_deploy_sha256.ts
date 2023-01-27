@@ -20,7 +20,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     );
     const hashingProxyAddress = await Hub.getContractAddress('HashingProxy');
     const HashingProxy = await hre.ethers.getContractAt('HashingProxy', hashingProxyAddress, deployer);
-    await HashingProxy.setContractAddress(1, SHA256.address);
+    const setContractTx = await HashingProxy.setContractAddress(1, SHA256.address);
+    await setContractTx.wait();
   }
 };
 

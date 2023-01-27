@@ -19,7 +19,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     );
     const scorinfProxyAddress = await Hub.getContractAddress('ScoringProxy');
     const ScoringProxy = await hre.ethers.getContractAt('ScoringProxy', scorinfProxyAddress, deployer);
-    await ScoringProxy.setContractAddress(1, Log2PLDSF.address);
+    const setContractTx = await ScoringProxy.setContractAddress(1, Log2PLDSF.address);
+    await setContractTx.wait();
   }
 };
 

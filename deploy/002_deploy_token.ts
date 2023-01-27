@@ -11,7 +11,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 
   if (!isDeployed) {
-    await Token.setupRole(minter);
+    const setupRoleTx = await Token.setupRole(minter);
+    await setupRoleTx.wait();
   }
 };
 
