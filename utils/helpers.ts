@@ -13,7 +13,7 @@ type ContractDeployments = {
   contracts: {
     [contractName: string]: {
       evmAddress: string;
-      substrateAddress: string;
+      otpAddress: string;
       deployed: boolean;
     };
   };
@@ -81,6 +81,7 @@ export class Helpers {
       // TODO: Implement check if specific contract should be reinitialized
       if (this.reinitialization && contractInstance.initialize !== undefined) {
         const reinitializationTx = await contractInstance.initialize();
+        console.log(`Reinitializing ${newContractName} contract...`);
         await reinitializationTx.wait();
       }
 
@@ -145,7 +146,7 @@ export class Helpers {
   public updateDeploymentsJson(newContractName: string, newContractAddress: string) {
     this.contractDeployments.contracts[newContractName] = {
       evmAddress: newContractAddress,
-      substrateAddress: this.convertEvmWallet(newContractAddress),
+      otpAddress: this.convertEvmWallet(newContractAddress),
       deployed: true,
     };
   }
@@ -193,10 +194,10 @@ export class Helpers {
     const mnemonic = polkadotCryptoUtils.mnemonicGenerate();
     const mnemonicMini = polkadotCryptoUtils.mnemonicToMiniSecret(mnemonic);
     const substratePrivateKey = u8aToHex(mnemonicMini);
-    const substrateAddress = keyring.createFromUri(substratePrivateKey).address;
+    const otpAddress = keyring.createFromUri(substratePrivateKey).address;
 
     return {
-      address: substrateAddress,
+      address: otpAddress,
       mnemonic: mnemonic,
       privateKey: substratePrivateKey,
     };

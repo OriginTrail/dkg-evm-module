@@ -2,124 +2,124 @@
     "contracts": {
         "Hub": {
             "evmAddress": "0x7585a99C5C150a08f5CDeFD16465C6De8D41EbbD",
-            "substrateAddress": "gJnY9t2fYLwYywgkejjhffGc1D6kdKNW2kqD4tVGyqDPKNBpu",
+            "otpAddress": "gJnY9t2fYLwYywgkejjhffGc1D6kdKNW2kqD4tVGyqDPKNBpu",
             "deployed": true
         },
         "Token": {
             "evmAddress": "0x010ad2D4530cA5099b37F79d517375Ca931A4E12",
-            "substrateAddress": "gJnfhThL52cJMQn8KYuzsN3EHjHv5Gu9wsqkjnDPfSvzmLqY3",
+            "otpAddress": "gJnfhThL52cJMQn8KYuzsN3EHjHv5Gu9wsqkjnDPfSvzmLqY3",
             "deployed": true
         },
         "ParametersStorage": {
             "evmAddress": "0x8688127bEE68589FEDB82C75753e120AbF540EB7",
-            "substrateAddress": "gJrdgTpkKTHZtaQANguG2eNaUjG7ZdnnGhW3xoMAXUJEamdFd",
+            "otpAddress": "gJrdgTpkKTHZtaQANguG2eNaUjG7ZdnnGhW3xoMAXUJEamdFd",
             "deployed": true
         },
         "WhitelistStorage": {
             "evmAddress": "0x85ca25DE0b15839927410a7117051f67c480aA83",
-            "substrateAddress": "gJoL6CYh9o8EfELgwCKefJqizXBmQfKnkjusNrUkpXW2tXWNZ",
+            "otpAddress": "gJoL6CYh9o8EfELgwCKefJqizXBmQfKnkjusNrUkpXW2tXWNZ",
             "deployed": true
         },
         "HashingProxy": {
             "evmAddress": "0x07B8858F66d46e5008633cb049923Dca2dA959f8",
-            "substrateAddress": "gJqeQ5Tj8JfaLHPT5duyDyVdjcpk35gjPRi88q1G9J1EJEiJ1",
+            "otpAddress": "gJqeQ5Tj8JfaLHPT5duyDyVdjcpk35gjPRi88q1G9J1EJEiJ1",
             "deployed": true
         },
         "SHA256": {
             "evmAddress": "0x047fFf805ABff7733Bcb7be8Bf71eB4adb9E8D3f",
-            "substrateAddress": "gJpiKsXRV61V266o2Rh6r2kZaD33TNHM6To1YZadGPZ4quUDC",
+            "otpAddress": "gJpiKsXRV61V266o2Rh6r2kZaD33TNHM6To1YZadGPZ4quUDC",
             "deployed": true
         },
         "ScoringProxy": {
             "evmAddress": "0x5bC9De0276E1Deff86eb48DB2CE81E56ED8e932d",
-            "substrateAddress": "gJouPuCYiBFCaueKqNr9SM8GZwAcwVdMscENkLBZjRF2miSqh",
+            "otpAddress": "gJouPuCYiBFCaueKqNr9SM8GZwAcwVdMscENkLBZjRF2miSqh",
             "deployed": true
         },
         "Log2PLDSF": {
             "evmAddress": "0x3F5001d1F8dB7127F50f32c76883e9c0192D4b68",
-            "substrateAddress": "gJqPVHaBJBM7c8BukJ5R6SgRtDakuxRWzR2mTFBktAk8byLXD",
+            "otpAddress": "gJqPVHaBJBM7c8BukJ5R6SgRtDakuxRWzR2mTFBktAk8byLXD",
             "deployed": true
         },
         "AssertionStorage": {
             "evmAddress": "0x0009af84E5FB00D143f18b78dd0C0d7AA7b9ba2D",
-            "substrateAddress": "gJpXSdSBsiSP7ZuX5H684CUXqse6kubyYNTjQgsqBWog55WRi",
+            "otpAddress": "gJpXSdSBsiSP7ZuX5H684CUXqse6kubyYNTjQgsqBWog55WRi",
             "deployed": true
         },
         "IdentityStorage": {
             "evmAddress": "0x37cDE763a46C3bc01472E837F5F6347b65DE1AdC",
-            "substrateAddress": "gJpiXaaDWooZnFysawWWTYp2utJrrdLdStXAtYrFGnmEBMYJ8",
+            "otpAddress": "gJpiXaaDWooZnFysawWWTYp2utJrrdLdStXAtYrFGnmEBMYJ8",
             "deployed": true
         },
         "ShardingTableStorage": {
             "evmAddress": "0xC7d93274f9f39216B467d07c4Cd9eacb2cD66467",
-            "substrateAddress": "gJp4Hq6CsqBg3hcQt6kA4CgDLGTuz5eCzBaFGoowgruMPLy6T",
+            "otpAddress": "gJp4Hq6CsqBg3hcQt6kA4CgDLGTuz5eCzBaFGoowgruMPLy6T",
             "deployed": true
         },
         "StakingStorage": {
-            "evmAddress": "0xBFC41fC34c7FAc85E5921d9F2234a933cBdB0D70",
-            "substrateAddress": "gJnZgW63PsnqNijWSzM6adXNorsfSXjMrtALS5XuXhN8RAQAT",
+            "evmAddress": "0xd7d3751BcDd744897Aa479AB1d24BC79c118Fc09",
+            "otpAddress": "gJrw4BJNeBDgMtfWZwV3WVPPQCC3ZmNnWXYLRKPs4TMABxouZ",
             "deployed": true
         },
         "ProfileStorage": {
-            "evmAddress": "0xf1708A436D158026F2772463dc79481c263ac643",
-            "substrateAddress": "gJmmF2A2jBMmeXHvgxuD7Dtbz5nwWfDgumFoaL5HDzyzLjXe9",
+            "evmAddress": "0x8D71144642d8CdEcD255d193C5ea0dA4F56A2e81",
+            "otpAddress": "gJsFh8sUwCipA2QKMA1MX4iduYzeTtCie9VLPeFQiqLbKgVNh",
             "deployed": true
         },
         "ServiceAgreementStorageV1": {
-            "evmAddress": "0x3aA92fe1c50358C92d0819F307Bb69987a5c7367",
-            "substrateAddress": "gJn44yQk7SEdthQQjz8UpTK3ZmuxiEZq17QxkJxHGUMnvhDw3",
+            "evmAddress": "0x5954b83291826C0ebB03a94CE6927bb745141683",
+            "otpAddress": "gJrSG1gp9VPvkrTQMoZTA9W3KbSbzTUM9w7dDvsuE7nMN4TcE",
             "deployed": true
         },
         "ContentAssetStorage": {
             "evmAddress": "0x240f3dD7a221611E9d67399AeADcc650Cdbd1F39",
-            "substrateAddress": "gJmzZEYe6oTiA5ZGFe3MgYkzWaccVQqH1BmwdT4vKecVHYAi5",
+            "otpAddress": "gJmzZEYe6oTiA5ZGFe3MgYkzWaccVQqH1BmwdT4vKecVHYAi5",
             "deployed": true
         },
         "Assertion": {
             "evmAddress": "0x48837f4473de198CF6851757c77EFD9e07066d80",
-            "substrateAddress": "gJoZogg8yfuBa5sbx4GTzzqqTV1t1PMzt1jbYzg522jh5nHiM",
+            "otpAddress": "gJoZogg8yfuBa5sbx4GTzzqqTV1t1PMzt1jbYzg522jh5nHiM",
             "deployed": true
         },
         "Identity": {
             "evmAddress": "0xA8bFf58817a3BFa6363aa25b920EAd7423F4F383",
-            "substrateAddress": "gJp6Nk8svPWmqBPLJUhYqWaLrFdYC8JfYgkkm9TXZuieJs9dx",
+            "otpAddress": "gJp6Nk8svPWmqBPLJUhYqWaLrFdYC8JfYgkkm9TXZuieJs9dx",
             "deployed": true
         },
         "ShardingTable": {
             "evmAddress": "0x6137037F991FD9f9af9d19Fa5433c83C148DbdCf",
-            "substrateAddress": "gJmkn4YLq5DqfzMfLUB7oiN2pmwQLUW6qZAaMcJANbQg4jbvE",
+            "otpAddress": "gJmkn4YLq5DqfzMfLUB7oiN2pmwQLUW6qZAaMcJANbQg4jbvE",
             "deployed": true
         },
         "Staking": {
             "evmAddress": "0x96fE76818aaC64559C53af39d2Da54cFfD4FE415",
-            "substrateAddress": "gJoV5Lwm4s49isvLZYmjx4JmmcJC4sMmSMemDbPyyZwKWpJcY",
+            "otpAddress": "gJoV5Lwm4s49isvLZYmjx4JmmcJC4sMmSMemDbPyyZwKWpJcY",
             "deployed": true
         },
         "Profile": {
             "evmAddress": "0x947C9cBFB93C5D2d0ab32D76E21E3036CC42e79b",
-            "substrateAddress": "gJmww9Nga8cDsWAQFdeFJHYzTRcG69gCAQQUAnq69nugakvEx",
+            "otpAddress": "gJmww9Nga8cDsWAQFdeFJHYzTRcG69gCAQQUAnq69nugakvEx",
             "deployed": true
         },
         "ServiceAgreementV1": {
             "evmAddress": "0xa6f13524402B328A9Dd32047415d3686F7De6dEC",
-            "substrateAddress": "gJpniXBuDPUjsdY895Gcxv7fgK1q3dnQJ7WaiZmYZigVPzSC7",
+            "otpAddress": "gJpniXBuDPUjsdY895Gcxv7fgK1q3dnQJ7WaiZmYZigVPzSC7",
             "deployed": true
         },
         "CommitManagerV1": {
             "evmAddress": "0xC9204cBbc0EAE9d33161333CaC98BdF9E2C9dFD6",
-            "substrateAddress": "gJqcRNBVkEbc4RRdpXc9tBjpp4y7AcKggj6AL3WsnxfPs1fkm",
+            "otpAddress": "gJqcRNBVkEbc4RRdpXc9tBjpp4y7AcKggj6AL3WsnxfPs1fkm",
             "deployed": true
         },
         "ProofManagerV1": {
             "evmAddress": "0x940E6BCD34dd6b387735FF76668F388f51FaAD66",
-            "substrateAddress": "gJqMSMQ3j4Rcd39rbN6GKZjhcaa7BTgTRsLLdWMDBdX9i8XuS",
+            "otpAddress": "gJqMSMQ3j4Rcd39rbN6GKZjhcaa7BTgTRsLLdWMDBdX9i8XuS",
             "deployed": true
         },
         "ContentAsset": {
             "evmAddress": "0x0de5809aAba0a988F2203723Fde3F56bcDC09F9f",
-            "substrateAddress": "gJrCeoUKeaqZZ8KExMufrC451e5Enegu4VfTfVj24ukFBE3Dx",
+            "otpAddress": "gJrCeoUKeaqZZ8KExMufrC451e5Enegu4VfTfVj24ukFBE3Dx",
             "deployed": true
         }
     },
-    "deployedTimestamp": 1674813415503
+    "deployedTimestamp": 1674826672028
 }
