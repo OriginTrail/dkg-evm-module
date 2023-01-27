@@ -17,8 +17,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       hre.helpers.contractDeployments.contracts['Hub'].evmAddress,
       deployer,
     );
-    const scorinfProxyAddress = await Hub.getContractAddress('ScoringProxy');
-    const ScoringProxy = await hre.ethers.getContractAt('ScoringProxy', scorinfProxyAddress, deployer);
+
+    const scoringProxyAddress = await Hub.getContractAddress('ScoringProxy');
+    const ScoringProxy = await hre.ethers.getContractAt('ScoringProxy', scoringProxyAddress, deployer);
     const setContractTx = await ScoringProxy.setContractAddress(1, Log2PLDSF.address);
     await setContractTx.wait();
   }
