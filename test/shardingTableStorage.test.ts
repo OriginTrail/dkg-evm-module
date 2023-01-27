@@ -42,9 +42,8 @@ describe('ShardingTableStorage Contract', function () {
   async function createProfile() {
     const profile = await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
     const receipt = await profile.wait();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    return receipt.events[3].args.identityId.toNumber();
+
+    return receipt.events![3].args!.identityId.toNumber();
   }
 
   async function createMultipleProfiles() {
@@ -58,9 +57,8 @@ describe('ShardingTableStorage Contract', function () {
     const profileArray = [profile1, profile2, profile3];
     for (const singleIdentityId of profileArray) {
       const receipt = await singleIdentityId.wait();
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      identityId = receipt.events[3].args.identityId.toNumber();
+
+      identityId = receipt.events![3].args!.identityId.toNumber();
       idsArray.push(identityId);
     }
     return idsArray;
@@ -184,9 +182,7 @@ describe('ShardingTableStorage Contract', function () {
     const newProfile = await adminWallet3.createProfile(accounts[0].address, nodeId4, 'Token4', 'TKN4');
 
     const receipt1 = await newProfile.wait();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const newIdentityId = receipt1.events[3].args.identityId.toNumber();
+    const newIdentityId = receipt1.events![3].args!.identityId.toNumber();
 
     await ShardingTableStorage.createNodeObject(newIdentityId, newIdentityId, newIdentityId);
 
