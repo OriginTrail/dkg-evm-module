@@ -15,6 +15,19 @@ export function rpc(networkName: string): string {
   return '';
 }
 
+export function privateKey(networkName?: string): string | undefined {
+  let privateKey;
+
+  if (networkName) {
+    privateKey = process.env['EVM_PRIVATE_KEY_' + networkName.toUpperCase()];
+    if (privateKey && privateKey !== '') {
+      return privateKey;
+    }
+  }
+
+  return undefined;
+}
+
 export function mnemonic(networkName?: string): string {
   let mnemonic;
 
@@ -33,6 +46,12 @@ export function mnemonic(networkName?: string): string {
   return mnemonic;
 }
 
-export function accounts(networkName?: string): { mnemonic: string } {
-  return { mnemonic: mnemonic(networkName) };
+export function accounts(networkName?: string): [string] | { mnemonic: string } {
+  const privKey = privateKey(networkName);
+
+  if (privKey) {
+    return [privKey];
+  } else {
+    return { mnemonic: mnemonic(networkName) };
+  }
 }
