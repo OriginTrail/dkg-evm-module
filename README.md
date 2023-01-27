@@ -67,4 +67,4 @@ npm run deploy:otp_mainnet
 
 ### Redeploy contract on parachain
 
-To redeploy desired contract, set `deployed` to `true` in `deployments/network_contracts.json`.
+To redeploy desired contract, set `deployed` to `false` in `deployments/network_contracts.json`.
