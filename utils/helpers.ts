@@ -164,7 +164,7 @@ export class Helpers {
     );
 
     const keyring = new Keyring({ type: 'sr25519' });
-    const accountUri = process.env[`${this.hre.network.name.toUpperCase()}_ACCOUNT_URI_WITH_OTP`];
+    const accountUri = process.env[`ACCOUNT_WITH_OTP_URI_${this.hre.network.name.toUpperCase()}`];
     if (!accountUri) {
       throw Error('URI for account with OTP is required!');
     }
