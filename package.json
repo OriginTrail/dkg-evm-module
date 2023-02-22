@@ -73,7 +73,6 @@
     "clean": "hardhat clean",
     "compile": "hardhat size-contracts",
     "coverage": "cross-env COVERAGE_REPORT=true HARDHAT_DEPLOY_FIXTURE=true hardhat coverage --network hardhat --solcoverjs ./.solcover.js --temp artifacts --testfiles './test/**/*.test.ts'",
-    "start:local_blockchain": "hardhat node",
     "deploy:localhost": "hardhat deploy --network localhost",
     "deploy:otp_alphanet": "hardhat deploy --network otp_alphanet",
     "deploy:otp_devnet": "hardhat deploy --network otp_devnet",
