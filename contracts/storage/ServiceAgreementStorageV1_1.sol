@@ -2,11 +2,10 @@
 
 pragma solidity ^0.8.4;
 
-import { Guardian } from "../Guardian.sol";
+import {Guardian} from "../Guardian.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
-import { ServiceAgreementStructsV1 } from "../structs/ServiceAgreementStructsV1.sol";
-
+import {ServiceAgreementStructsV1} from "../structs/ServiceAgreementStructsV1.sol";
 
 contract ServiceAgreementStorageV1_1 is Named, Versioned, Guardian {
     string private constant _NAME = "ServiceAgreementStorageV1_1";
@@ -15,11 +14,14 @@ contract ServiceAgreementStorageV1_1 is Named, Versioned, Guardian {
     // AgreementId [hash(asset type contract + tokenId + key)] => ExtendedServiceAgreement
     mapping(bytes32 => ServiceAgreementStructsV1.ExtendedServiceAgreement) internal serviceAgreements;
 
-    // CommitId [keccak256(agreementId + epoch + assertionId + identityId)] => StateCommitSubmission
-    mapping(bytes32 => ServiceAgreementStructsV1.CommitSubmission) internal commitSubmissions;
+    // CommitId [keccak256(agreementId + epoch + assertionId + identityId)] => stateCommitSubmission
+    mapping(bytes32 => ServiceAgreementStructsV1.CommitSubmission) internal stateCommitSubmissions;
 
-    // StateId [keccak256(agreementId + epoch + assertionId)] => CommitDeadline
-    mapping(bytes32 => uint256) internal commitDeadlines;
+    // StateId [keccak256(agreementId + epoch + assertionId)] => stateCommitsCount
+    mapping(bytes32 => uint8) internal stateCommitsCount;
+
+    // StateId [keccak256(agreementId + epoch + assertionId)] => stateCommitDeadline
+    mapping(bytes32 => uint256) internal stateCommitsDeadlines;
 
     constructor(address hubAddress) Guardian(hubAddress) {}
 
@@ -134,7 +136,8 @@ contract ServiceAgreementStorageV1_1 is Named, Versioned, Guardian {
     }
 
     function setAgreementLatestFinalizedState(
-        bytes32 agreementId, bytes32 latestFinalizedState
+        bytes32 agreementId,
+        bytes32 latestFinalizedState
     ) external onlyContracts {
         serviceAgreements[agreementId].latestFinalizedState = latestFinalizedState;
     }
@@ -148,9 +151,7 @@ contract ServiceAgreementStorageV1_1 is Named, Versioned, Guardian {
         uint16 epoch,
         bytes32 assertionId
     ) external view returns (bytes32) {
-        return serviceAgreements[agreementId].epochSubmissionHeads[
-            keccak256(abi.encodePacked(epoch, assertionId))
-        ];
+        return serviceAgreements[agreementId].epochSubmissionHeads[keccak256(abi.encodePacked(epoch, assertionId))];
     }
 
     function setAgreementEpochSubmissionHead(
@@ -188,14 +189,14 @@ contract ServiceAgreementStorageV1_1 is Named, Versioned, Guardian {
         return serviceAgreements[agreementId].startTime != 0;
     }
 
-    function createCommitSubmissionObject(
+    function createStateCommitSubmissionObject(
         bytes32 commitId,
         uint72 identityId,
         uint72 prevIdentityId,
         uint72 nextIdentityId,
         uint40 score
     ) external onlyContracts {
-        commitSubmissions[commitId] = ServiceAgreementStructsV1.CommitSubmission({
+        stateCommitSubmissions[commitId] = ServiceAgreementStructsV1.CommitSubmission({
             identityId: identityId,
             prevIdentityId: prevIdentityId,
             nextIdentityId: nextIdentityId,
@@ -203,58 +204,78 @@ contract ServiceAgreementStorageV1_1 is Named, Versioned, Guardian {
         });
     }
 
-    function deleteCommitSubmissionsObject(bytes32 commitId) external onlyContracts {
-        delete commitSubmissions[commitId];
+    function deleteStateCommitSubmissionsObject(bytes32 commitId) external onlyContracts {
+        delete stateCommitSubmissions[commitId];
     }
 
-    function getCommitSubmission(
+    function getStateCommitSubmission(
         bytes32 commitId
     ) external view returns (ServiceAgreementStructsV1.CommitSubmission memory) {
-        return commitSubmissions[commitId];
+        return stateCommitSubmissions[commitId];
     }
 
-    function getCommitSubmissionIdentityId(bytes32 commitId) external view returns (uint72) {
-        return commitSubmissions[commitId].identityId;
+    function getStateCommitSubmissionIdentityId(bytes32 commitId) external view returns (uint72) {
+        return stateCommitSubmissions[commitId].identityId;
     }
 
-    function setCommitSubmissionIdentityId(bytes32 commitId, uint72 identityId) external onlyContracts {
-        commitSubmissions[commitId].identityId = identityId;
+    function setStateCommitSubmissionIdentityId(bytes32 commitId, uint72 identityId) external onlyContracts {
+        stateCommitSubmissions[commitId].identityId = identityId;
     }
 
-    function getCommitSubmissionPrevIdentityId(bytes32 commitId) external view returns (uint72) {
-        return commitSubmissions[commitId].prevIdentityId;
+    function getStateCommitSubmissionPrevIdentityId(bytes32 commitId) external view returns (uint72) {
+        return stateCommitSubmissions[commitId].prevIdentityId;
     }
 
-    function setCommitSubmissionPrevIdentityId(bytes32 commitId, uint72 prevIdentityId) external onlyContracts {
-        commitSubmissions[commitId].prevIdentityId = prevIdentityId;
+    function setStateCommitSubmissionPrevIdentityId(bytes32 commitId, uint72 prevIdentityId) external onlyContracts {
+        stateCommitSubmissions[commitId].prevIdentityId = prevIdentityId;
     }
 
-    function getCommitSubmissionNextIdentityId(bytes32 commitId) external view returns (uint72) {
-        return commitSubmissions[commitId].nextIdentityId;
+    function getStateCommitSubmissionNextIdentityId(bytes32 commitId) external view returns (uint72) {
+        return stateCommitSubmissions[commitId].nextIdentityId;
     }
 
-    function setCommitSubmissionNextIdentityId(bytes32 commitId, uint72 nextIdentityId) external onlyContracts {
-        commitSubmissions[commitId].nextIdentityId = nextIdentityId;
+    function setStateCommitSubmissionNextIdentityId(bytes32 commitId, uint72 nextIdentityId) external onlyContracts {
+        stateCommitSubmissions[commitId].nextIdentityId = nextIdentityId;
     }
 
-    function getCommitSubmissionScore(bytes32 commitId) external view returns (uint40) {
-        return commitSubmissions[commitId].score;
+    function getStateCommitSubmissionScore(bytes32 commitId) external view returns (uint40) {
+        return stateCommitSubmissions[commitId].score;
     }
 
-    function setCommitSubmissionScore(bytes32 commitId, uint40 score) external onlyContracts {
-        commitSubmissions[commitId].score = score;
+    function setStateCommitSubmissionScore(bytes32 commitId, uint40 score) external onlyContracts {
+        stateCommitSubmissions[commitId].score = score;
     }
 
-    function commitSubmissionExists(bytes32 commitId) external view returns (bool) {
-        return commitSubmissions[commitId].identityId != 0;
+    function stateCommitSubmissionExists(bytes32 commitId) external view returns (bool) {
+        return stateCommitSubmissions[commitId].identityId != 0;
     }
 
-    function getCommitDeadline(bytes32 stateId) external view returns (uint256) {
-        return commitDeadlines[stateId];
+    function incrementStateCommitsCount(bytes32 stateId) external onlyContracts {
+        stateCommitsCount[stateId]++;
     }
 
-    function setCommitDeadline(bytes32 stateId, uint256 deadline) external onlyContracts {
-        commitDeadlines[stateId] = deadline;
+    function decrementStateCommitsCount(bytes32 stateId) external onlyContracts {
+        stateCommitsCount[stateId]--;
+    }
+
+    function getStateCommitsCount(bytes32 stateId) external view returns (uint8) {
+        return stateCommitsCount[stateId];
+    }
+
+    function deleteStateCommitsCount(bytes32 stateId) external onlyContracts {
+        delete stateCommitsCount[stateId];
+    }
+
+    function getStateCommitsDeadline(bytes32 stateId) external view returns (uint256) {
+        return stateCommitsDeadlines[stateId];
+    }
+
+    function setStateCommitsDeadline(bytes32 stateId, uint256 deadline) external onlyContracts {
+        stateCommitsDeadlines[stateId] = deadline;
+    }
+
+    function deleteStateCommitsDeadline(bytes32 stateId) external onlyContracts {
+        delete stateCommitsDeadlines[stateId];
     }
 
     function transferAgreementTokens(address receiver, uint96 tokenAmount) external onlyContracts {

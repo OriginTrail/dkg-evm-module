@@ -10,7 +10,6 @@ import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 import {GeneralErrors} from "../errors/GeneralErrors.sol";
 
-
 contract ServiceAgreementStorageProxy is Named, Versioned {
     string private constant _NAME = "ServiceAgreementStorageProxy";
     string private constant _VERSION = "1.0.0";
@@ -210,7 +209,8 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
     }
 
     function setAgreementLatestFinalizedState(
-        bytes32 agreementId, bytes32 latestFinalizedState
+        bytes32 agreementId,
+        bytes32 latestFinalizedState
     ) external onlyContracts {
         storageV1_1.setAgreementLatestFinalizedState(agreementId, latestFinalizedState);
     }
@@ -230,7 +230,6 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
             return storageV1_1.getAgreementEpochSubmissionHead(agreementId, epoch, assertionId);
         }
     }
-
 
     function setAgreementEpochSubmissionHead(
         bytes32 agreementId,
@@ -285,21 +284,23 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         return (storageV1.serviceAgreementExists(agreementId)) || (storageV1_1.serviceAgreementExists(agreementId));
     }
 
-    function createCommitSubmissionObject(
+    function createStateCommitSubmissionObject(
         bytes32 commitId,
         uint72 identityId,
         uint72 prevIdentityId,
         uint72 nextIdentityId,
         uint40 score
     ) external onlyContracts {
-        storageV1_1.createCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
+        storageV1_1.createStateCommitSubmissionObject(
+            commitId, identityId, prevIdentityId, nextIdentityId, score
+        );
     }
 
     function deleteCommitSubmissionsObject(bytes32 commitId) external onlyContracts {
         if (this.isOldCommit(commitId)) {
             storageV1.deleteCommitSubmissionsObject(commitId);
         } else {
-            storageV1_1.deleteCommitSubmissionsObject(commitId);
+            storageV1_1.deleteStateCommitSubmissionsObject(commitId);
         }
     }
 
@@ -309,7 +310,7 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         if (this.isOldCommit(commitId)) {
             return storageV1.getCommitSubmission(commitId);
         } else {
-            return storageV1_1.getCommitSubmission(commitId);
+            return storageV1_1.getStateCommitSubmission(commitId);
         }
     }
 
@@ -317,7 +318,7 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         if (this.isOldCommit(commitId)) {
             return storageV1.getCommitSubmissionIdentityId(commitId);
         } else {
-            return storageV1_1.getCommitSubmissionIdentityId(commitId);
+            return storageV1_1.getStateCommitSubmissionIdentityId(commitId);
         }
     }
 
@@ -325,7 +326,7 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         if (this.isOldCommit(commitId)) {
             storageV1.setCommitSubmissionIdentityId(commitId, identityId);
         } else {
-            storageV1_1.setCommitSubmissionIdentityId(commitId, identityId);
+            storageV1_1.setStateCommitSubmissionIdentityId(commitId, identityId);
         }
     }
 
@@ -333,7 +334,7 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         if (this.isOldCommit(commitId)) {
             return storageV1.getCommitSubmissionPrevIdentityId(commitId);
         } else {
-            return storageV1_1.getCommitSubmissionPrevIdentityId(commitId);
+            return storageV1_1.getStateCommitSubmissionPrevIdentityId(commitId);
         }
     }
 
@@ -341,7 +342,7 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         if (this.isOldCommit(commitId)) {
             storageV1.setCommitSubmissionPrevIdentityId(commitId, prevIdentityId);
         } else {
-            storageV1_1.setCommitSubmissionPrevIdentityId(commitId, prevIdentityId);
+            storageV1_1.setStateCommitSubmissionPrevIdentityId(commitId, prevIdentityId);
         }
     }
 
@@ -349,7 +350,7 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         if (this.isOldCommit(commitId)) {
             return storageV1.getCommitSubmissionNextIdentityId(commitId);
         } else {
-            return storageV1_1.getCommitSubmissionNextIdentityId(commitId);
+            return storageV1_1.getStateCommitSubmissionNextIdentityId(commitId);
         }
     }
 
@@ -357,7 +358,7 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         if (this.isOldCommit(commitId)) {
             storageV1.setCommitSubmissionNextIdentityId(commitId, nextIdentityId);
         } else {
-            storageV1_1.setCommitSubmissionNextIdentityId(commitId, nextIdentityId);
+            storageV1_1.setStateCommitSubmissionNextIdentityId(commitId, nextIdentityId);
         }
     }
 
@@ -365,7 +366,7 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         if (this.isOldCommit(commitId)) {
             return storageV1.getCommitSubmissionScore(commitId);
         } else {
-            return storageV1_1.getCommitSubmissionScore(commitId);
+            return storageV1_1.getStateCommitSubmissionScore(commitId);
         }
     }
 
@@ -373,7 +374,7 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         if (this.isOldCommit(commitId)) {
             storageV1.setCommitSubmissionScore(commitId, score);
         } else {
-            storageV1_1.setCommitSubmissionScore(commitId, score);
+            storageV1_1.setStateCommitSubmissionScore(commitId, score);
         }
     }
 
@@ -381,16 +382,36 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         if (this.isOldCommit(commitId)) {
             return storageV1.commitSubmissionExists(commitId);
         } else {
-            return storageV1_1.commitSubmissionExists(commitId);
+            return storageV1_1.stateCommitSubmissionExists(commitId);
         }
     }
 
+    function incrementCommitsCount(bytes32 stateId) external onlyContracts {
+        storageV1_1.incrementStateCommitsCount(stateId);
+    }
+
+    function decrementCommitsCount(bytes32 stateId) external onlyContracts {
+        storageV1_1.decrementStateCommitsCount(stateId);
+    }
+
+    function getCommitsCount(bytes32 stateId) external view returns (uint8) {
+        return storageV1_1.getStateCommitsCount(stateId);
+    }
+
+    function deleteCommitsCount(bytes32 stateId) external onlyContracts {
+        storageV1_1.deleteStateCommitsCount(stateId);
+    }
+
     function getCommitDeadline(bytes32 stateId) external view returns (uint256) {
-        return storageV1_1.getCommitDeadline(stateId);
+        return storageV1_1.getStateCommitsDeadline(stateId);
     }
 
     function setCommitDeadline(bytes32 stateId, uint256 deadline) external onlyContracts {
-        storageV1_1.setCommitDeadline(stateId, deadline);
+        storageV1_1.setStateCommitsDeadline(stateId, deadline);
+    }
+
+    function deleteCommitDeadline(bytes32 stateId) external onlyContracts {
+        storageV1_1.deleteStateCommitsDeadline(stateId);
     }
 
     function transferAgreementTokens(address receiver, uint96 tokenAmount) external onlyContracts {
@@ -406,17 +427,16 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
     }
 
     function isOldCommit(bytes32 commitId) external view returns (bool) {
-        return storageV1.commitSubmissionExists(commitId) && !storageV1_1.commitSubmissionExists(commitId);
+        return storageV1.commitSubmissionExists(commitId) && !storageV1_1.stateCommitSubmissionExists(commitId);
     }
 
     function isNewCommit(bytes32 commitId) external view returns (bool) {
-        return !storageV1.commitSubmissionExists(commitId) && storageV1_1.commitSubmissionExists(commitId);
+        return !storageV1.commitSubmissionExists(commitId) && storageV1_1.stateCommitSubmissionExists(commitId);
     }
 
     function lastestStorageAddress() external view returns (address) {
         return address(storageV1_1);
     }
-
 
     function _checkHubOwner() internal view virtual {
         if (msg.sender != hub.owner()) revert GeneralErrors.OnlyHubOwnerFunction(msg.sender);

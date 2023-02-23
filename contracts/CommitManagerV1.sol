@@ -257,10 +257,7 @@ contract CommitManagerV1 is Named, Versioned {
         uint72 refCommitNextIdentityId = sasProxy.getCommitSubmissionNextIdentityId(refCommitId);
         uint32 r0 = params.r0();
         uint8 i;
-        while (
-            (score < sasProxy.getCommitSubmissionScore(refCommitId)) &&
-            (refCommitNextIdentityId != 0) && (i < r0)
-        ) {
+        while ((score < sasProxy.getCommitSubmissionScore(refCommitId)) && (refCommitNextIdentityId != 0) && (i < r0)) {
             refCommitId = keccak256(abi.encodePacked(agreementId, epoch, assertionId, refCommitNextIdentityId));
 
             refCommitNextIdentityId = sasProxy.getCommitSubmissionNextIdentityId(refCommitId);
