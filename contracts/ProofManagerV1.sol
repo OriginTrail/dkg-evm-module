@@ -24,6 +24,7 @@ contract ProofManagerV1 is Named, Versioned {
         bytes keyword,
         uint8 hashFunctionId,
         uint16 epoch,
+        bytes32 state,
         uint72 indexed identityId
     );
     event Logger(bool value, string message);
@@ -302,6 +303,7 @@ contract ProofManagerV1 is Named, Versioned {
             args.keyword,
             args.hashFunctionId,
             args.epoch,
+            latestFinalizedState,
             identityId
         );
 

@@ -26,6 +26,7 @@ contract CommitManagerV1 is Named, Versioned {
         bytes keyword,
         uint8 hashFunctionId,
         uint16 epoch,
+        bytes32 state,
         uint72 indexed identityId,
         uint40 score
     );
@@ -175,12 +176,12 @@ contract CommitManagerV1 is Named, Versioned {
         );
 
         AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
-        bytes32 assertionId = generalAssetInterface.getLatestAssertionId(args.tokenId);
+        bytes32 latestState = generalAssetInterface.getLatestAssertionId(args.tokenId);
 
-        if (!reqs[0] && !this.isCommitWindowOpen(agreementId, args.epoch, assertionId)) {
+        if (!reqs[0] && !this.isCommitWindowOpen(agreementId, args.epoch, latestState)) {
             ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-            bytes32 stateId = keccak256(abi.encodePacked(agreementId, args.epoch, assertionId));
+            bytes32 stateId = keccak256(abi.encodePacked(agreementId, args.epoch, latestState));
             uint256 commitWindowEnd = sasProxy.getCommitDeadline(stateId);
 
             revert ServiceAgreementErrorsV1.CommitWindowClosed(
@@ -191,7 +192,7 @@ contract CommitManagerV1 is Named, Versioned {
                 block.timestamp
             );
         }
-        emit Logger(!this.isCommitWindowOpen(agreementId, args.epoch, assertionId), "req1");
+        emit Logger(!this.isCommitWindowOpen(agreementId, args.epoch, latestState), "req1");
 
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -215,7 +216,7 @@ contract CommitManagerV1 is Named, Versioned {
             stakingStorage.totalStakes(identityId)
         );
 
-        _insertCommit(agreementId, args.epoch, assertionId, identityId, 0, 0, score);
+        _insertCommit(agreementId, args.epoch, latestState, identityId, 0, 0, score);
 
         emit CommitSubmitted(
             args.assetContract,
@@ -223,6 +224,7 @@ contract CommitManagerV1 is Named, Versioned {
             args.keyword,
             args.hashFunctionId,
             args.epoch,
+            latestState,
             identityId,
             score
         );
