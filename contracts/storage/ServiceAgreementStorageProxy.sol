@@ -47,6 +47,29 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         return _VERSION;
     }
 
+    function migrateOldServiceAgreement(bytes32 agreementId, bytes32 latestFinalizedState) external onlyContracts {
+        uint256 startTime;
+        uint16 epochsNumber;
+        uint128 epochLength;
+        uint96 tokenAmount;
+        uint8[2] memory scoreFunctionId_proofWindowOffsetPerc;
+        (startTime, epochsNumber, epochLength, tokenAmount, scoreFunctionId_proofWindowOffsetPerc) =
+            storageV1.getAgreementData(agreementId);
+
+        storageV1_1.createServiceAgreementObject(
+            agreementId,
+            epochsNumber,
+            epochLength,
+            tokenAmount,
+            scoreFunctionId_proofWindowOffsetPerc[0],
+            scoreFunctionId_proofWindowOffsetPerc[1]
+        );
+        storageV1_1.setAgreementStartTime(agreementId, startTime);
+        storageV1_1.setAgreementLatestFinalizedState(agreementId, latestFinalizedState);
+
+        storageV1.deleteServiceAgreementObject(agreementId);
+    }
+
     function createServiceAgreementObject(
         bytes32 agreementId,
         uint16 epochsNumber,
@@ -153,16 +176,16 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         }
     }
 
-    function getAddedTokenAmount(bytes32 agreementId) external view returns (uint96) {
+    function getAgreementAddedTokenAmount(bytes32 agreementId) external view returns (uint96) {
         if (this.isOldAgreement(agreementId)) {
             return 0;
         } else {
-            return storageV1_1.getAddedTokenAmount(agreementId);
+            return storageV1_1.getAgreementAddedTokenAmount(agreementId);
         }
     }
 
-    function setAddedTokenAmount(bytes32 agreementId, uint96 addedTokenAmount) external onlyContracts {
-        storageV1_1.setAgreementTokenAmount(agreementId, addedTokenAmount);
+    function setAgreementAddedTokenAmount(bytes32 agreementId, uint96 addedTokenAmount) external onlyContracts {
+        storageV1_1.setAgreementAddedTokenAmount(agreementId, addedTokenAmount);
     }
 
     function getAgreementScoreFunctionId(bytes32 agreementId) external view returns (uint8) {
@@ -284,16 +307,14 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         return (storageV1.serviceAgreementExists(agreementId)) || (storageV1_1.serviceAgreementExists(agreementId));
     }
 
-    function createStateCommitSubmissionObject(
+    function createCommitSubmissionObject(
         bytes32 commitId,
         uint72 identityId,
         uint72 prevIdentityId,
         uint72 nextIdentityId,
         uint40 score
     ) external onlyContracts {
-        storageV1_1.createStateCommitSubmissionObject(
-            commitId, identityId, prevIdentityId, nextIdentityId, score
-        );
+        storageV1_1.createStateCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
     }
 
     function deleteCommitSubmissionsObject(bytes32 commitId) external onlyContracts {

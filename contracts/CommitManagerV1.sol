@@ -305,6 +305,25 @@ contract CommitManagerV1 is Named, Versioned {
             // [] <-> [H] <-> [RC] <-(NL)-> [NC] <-> []
             _linkCommits(agreementId, epoch, assertionId, refCommit.identityId, identityId);
         }
+
+        bytes32 stateId = keccak256(abi.encodePacked(agreementId, epoch, assertionId));
+        sasProxy.incrementCommitsCount(stateId);
+
+        if (sasProxy.getCommitsCount(stateId) == params.finalizationCommitsNumber()) {
+            if (sasProxy.isOldAgreement(agreementId)) {
+                sasProxy.migrateOldServiceAgreement(agreementId, assertionId);
+            }
+
+            if (!sasProxy.isStateFinalized(agreementId, assertionId)) {
+                uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);
+                sasProxy.setAgreementTokenAmount(
+                    agreementId,
+                    tokenAmount + sasProxy.getAgreementAddedTokenAmount(agreementId)
+                );
+                sasProxy.setAgreementAddedTokenAmount(agreementId, 0);
+                sasProxy.setAgreementLatestFinalizedState(agreementId, assertionId);
+            }
+        }
     }
 
     function _linkCommits(

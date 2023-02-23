@@ -104,11 +104,11 @@ contract ServiceAgreementStorageV1_1 is Named, Versioned, Guardian {
         serviceAgreements[agreementId].tokenAmount = tokenAmount;
     }
 
-    function getAddedTokenAmount(bytes32 agreementId) external view returns (uint96) {
+    function getAgreementAddedTokenAmount(bytes32 agreementId) external view returns (uint96) {
         return serviceAgreements[agreementId].addedTokenAmount;
     }
 
-    function setAddedTokenAmount(bytes32 agreementId, uint96 addedTokenAmount) external onlyContracts {
+    function setAgreementAddedTokenAmount(bytes32 agreementId, uint96 addedTokenAmount) external onlyContracts {
         serviceAgreements[agreementId].addedTokenAmount = addedTokenAmount;
     }
 
