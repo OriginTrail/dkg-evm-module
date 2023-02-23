@@ -5,7 +5,6 @@ pragma solidity ^0.8.4;
 import {Hub} from "./Hub.sol";
 import {ServiceAgreementV1} from "./ServiceAgreementV1.sol";
 import {Staking} from "./Staking.sol";
-import {AbstractAsset} from "./assets/AbstractAsset.sol";
 import {AssertionStorage} from "./storage/AssertionStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
@@ -99,22 +98,8 @@ contract ProofManagerV1 is Named, Versioned {
             timeNow < (startTime + epochLength * epoch + proofWindowOffset + proofWindowDuration));
     }
 
-    function getChallenge(
-        address sender,
-        address assetContract,
-        uint256 tokenId,
-        uint16 epoch
-    ) public view returns (bytes32, uint256) {
-        uint72 identityId = identityStorage.getIdentityId(sender);
-
-        AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
-        bytes32 assertionId = generalAssetInterface.getLatestAssertionId(tokenId);
-
-        uint256 assertionChunksNumber = assertionStorage.getAssertionChunksNumber(assertionId);
-
-        // blockchash() function only works for last 256 blocks (25.6 min window in case of 6s block time)
-        // TODO: figure out how to achieve randomness
-        return (assertionId, uint256(sha256(abi.encodePacked(epoch, identityId))) % assertionChunksNumber);
+    function getChallenge(bytes32 agreementId, uint16 epoch) public view returns (bytes32, uint256) {
+        return _getChallenge(msg.sender, agreementId, epoch);
     }
 
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
@@ -197,6 +182,22 @@ contract ProofManagerV1 is Named, Versioned {
         reqs[index] = req;
     }
 
+    function _getChallenge(
+        address sender,
+        bytes32 agreementId,
+        uint16 epoch
+    ) internal view returns (bytes32, uint256) {
+        uint72 identityId = identityStorage.getIdentityId(sender);
+
+        bytes32 latestFinalizedState = serviceAgreementStorageProxy.getAgreementLatestFinalizedState(agreementId);
+
+        uint256 assertionChunksNumber = assertionStorage.getAssertionChunksNumber(latestFinalizedState);
+
+        // blockchash() function only works for last 256 blocks (25.6 min window in case of 6s block time)
+        // TODO: figure out how to achieve randomness
+        return (latestFinalizedState, uint256(sha256(abi.encodePacked(epoch, identityId))) % assertionChunksNumber);
+    }
+
     function _sendProof(
         ServiceAgreementStructsV1.ProofInputArgs calldata args
     ) internal virtual returns (bytes32, uint72) {
@@ -212,13 +213,17 @@ contract ProofManagerV1 is Named, Versioned {
         if (!reqs[0] && !isProofWindowOpen(agreementId, args.epoch)) {
             uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
 
-            uint256 actualCommitWindowStart = (sasProxy.getAgreementStartTime(agreementId) + args.epoch * epochLength);
+            uint256 actualProofWindowStart = (
+                sasProxy.getAgreementStartTime(agreementId) +
+                args.epoch * epochLength +
+                (sasProxy.getAgreementProofWindowOffsetPerc(agreementId) * epochLength) / 100
+            );
 
             revert ServiceAgreementErrorsV1.ProofWindowClosed(
                 agreementId,
                 args.epoch,
-                actualCommitWindowStart,
-                actualCommitWindowStart + (parametersStorage.commitWindowDurationPerc() * epochLength) / 100,
+                actualProofWindowStart,
+                actualProofWindowStart + (parametersStorage.proofWindowDurationPerc() * epochLength) / 100,
                 block.timestamp
             );
         }
@@ -243,12 +248,19 @@ contract ProofManagerV1 is Named, Versioned {
             "req2"
         );
 
-        bytes32 nextCommitId = sasProxy.getAgreementEpochSubmissionHead(agreementId, args.epoch);
+        bytes32 latestFinalizedState = sasProxy.getAgreementLatestFinalizedState(agreementId);
+
+        bytes32 nextCommitId = sasProxy.getAgreementEpochSubmissionHead(agreementId, args.epoch, latestFinalizedState);
         uint32 r0 = parametersStorage.r0();
         uint8 i;
         while ((identityId != sasProxy.getCommitSubmissionIdentityId(nextCommitId)) && (i < r0)) {
             nextCommitId = keccak256(
-                abi.encodePacked(agreementId, args.epoch, sasProxy.getCommitSubmissionNextIdentityId(nextCommitId))
+                abi.encodePacked(
+                    agreementId,
+                    args.epoch,
+                    latestFinalizedState,
+                    sasProxy.getCommitSubmissionNextIdentityId(nextCommitId)
+                )
             );
             unchecked {
                 i++;
@@ -267,7 +279,7 @@ contract ProofManagerV1 is Named, Versioned {
 
         bytes32 merkleRoot;
         uint256 challenge;
-        (merkleRoot, challenge) = getChallenge(msg.sender, args.assetContract, args.tokenId, args.epoch);
+        (merkleRoot, challenge) = _getChallenge(msg.sender, agreementId, args.epoch);
 
         if (
             !reqs[3] &&
