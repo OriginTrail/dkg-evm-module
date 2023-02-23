@@ -7,7 +7,7 @@ import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "../structs/ServiceAgreementStructsV1.sol";
 
-contract ServiceAgreementStorageV1_1 is Named, Versioned, Guardian {
+contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
     string private constant _NAME = "ServiceAgreementStorageV1_1";
     string private constant _VERSION = "1.0.0";
 
@@ -23,6 +23,7 @@ contract ServiceAgreementStorageV1_1 is Named, Versioned, Guardian {
     // StateId [keccak256(agreementId + epoch + assertionId)] => stateCommitDeadline
     mapping(bytes32 => uint256) internal stateCommitsDeadlines;
 
+    // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) Guardian(hubAddress) {}
 
     modifier onlyContracts() {
