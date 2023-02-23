@@ -68,6 +68,8 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         storageV1U1.setAgreementLatestFinalizedState(agreementId, latestFinalizedState);
 
         storageV1.deleteServiceAgreementObject(agreementId);
+
+        storageV1.transferAgreementTokens(address(storageV1U1), tokenAmount);
     }
 
     function createServiceAgreementObject(

@@ -182,11 +182,7 @@ contract ProofManagerV1 is Named, Versioned {
         reqs[index] = req;
     }
 
-    function _getChallenge(
-        address sender,
-        bytes32 agreementId,
-        uint16 epoch
-    ) internal view returns (bytes32, uint256) {
+    function _getChallenge(address sender, bytes32 agreementId, uint16 epoch) internal view returns (bytes32, uint256) {
         uint72 identityId = identityStorage.getIdentityId(sender);
 
         bytes32 latestFinalizedState = serviceAgreementStorageProxy.getAgreementLatestFinalizedState(agreementId);
@@ -213,11 +209,11 @@ contract ProofManagerV1 is Named, Versioned {
         if (!reqs[0] && !isProofWindowOpen(agreementId, args.epoch)) {
             uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
 
-            uint256 actualProofWindowStart = (
-                sasProxy.getAgreementStartTime(agreementId) +
-                args.epoch * epochLength +
-                (sasProxy.getAgreementProofWindowOffsetPerc(agreementId) * epochLength) / 100
-            );
+            uint256 actualProofWindowStart = (sasProxy.getAgreementStartTime(agreementId) +
+                args.epoch *
+                epochLength +
+                (sasProxy.getAgreementProofWindowOffsetPerc(agreementId) * epochLength) /
+                100);
 
             revert ServiceAgreementErrorsV1.ProofWindowClosed(
                 agreementId,
