@@ -6,7 +6,7 @@ import {HashingProxy} from "./HashingProxy.sol";
 import {Hub} from "./Hub.sol";
 import {ScoringProxy} from "./ScoringProxy.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
-import {ServiceAgreementStorageV1} from "./storage/ServiceAgreementStorageV1.sol";
+import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
@@ -61,7 +61,7 @@ contract ServiceAgreementV1 is Named, Versioned {
     HashingProxy public hashingProxy;
     ScoringProxy public scoringProxy;
     ParametersStorage public parametersStorage;
-    ServiceAgreementStorageV1 public serviceAgreementStorageV1;
+    ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     IERC20 public tokenContract;
 
     constructor(address hubAddress) {
@@ -85,7 +85,9 @@ contract ServiceAgreementV1 is Named, Versioned {
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
-        serviceAgreementStorageV1 = ServiceAgreementStorageV1(hub.getContractAddress("ServiceAgreementStorageV1"));
+        serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
+            hub.getContractAddress("ServiceAgreementStorageProxy")
+        );
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
@@ -111,10 +113,10 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         bytes32 agreementId = generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
-        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
         ParametersStorage params = parametersStorage;
 
-        sasV1.createServiceAgreementObject(
+        sasProxy.createServiceAgreementObject(
             agreementId,
             args.epochsNumber,
             params.epochLength(),
@@ -133,7 +135,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         if (tknc.balanceOf(args.assetCreator) < args.tokenAmount)
             revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(args.assetCreator));
 
-        tknc.transferFrom(args.assetCreator, address(sasV1), args.tokenAmount);
+        tknc.transferFrom(args.assetCreator, sasProxy.lastestStorageAddress(), args.tokenAmount);
 
         emit ServiceAgreementV1Created(
             args.assetContract,

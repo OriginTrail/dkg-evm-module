@@ -6,10 +6,11 @@ import {Hub} from "./Hub.sol";
 import {ScoringProxy} from "./ScoringProxy.sol";
 import {ServiceAgreementV1} from "./ServiceAgreementV1.sol";
 import {Staking} from "./Staking.sol";
+import {AbstractAsset} from "./assets/AbstractAsset.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
-import {ServiceAgreementStorageV1} from "./storage/ServiceAgreementStorageV1.sol";
+import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
 import {Named} from "./interface/Named.sol";
@@ -42,7 +43,7 @@ contract CommitManagerV1 is Named, Versioned {
     IdentityStorage public identityStorage;
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
-    ServiceAgreementStorageV1 public serviceAgreementStorageV1;
+    ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     ShardingTableStorage public shardingTableStorage;
     StakingStorage public stakingStorage;
 
@@ -65,7 +66,9 @@ contract CommitManagerV1 is Named, Versioned {
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        serviceAgreementStorageV1 = ServiceAgreementStorageV1(hub.getContractAddress("ServiceAgreementStorageV1"));
+        serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
+            hub.getContractAddress("ServiceAgreementStorageProxy")
+        );
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
     }
@@ -78,73 +81,70 @@ contract CommitManagerV1 is Named, Versioned {
         return _VERSION;
     }
 
-    function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
-        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
-        uint256 startTime = sasV1.getAgreementStartTime(agreementId);
+    function isCommitWindowOpen(bytes32 agreementId, uint16 epoch, bytes32 assertionId) public view returns (bool) {
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-        ParametersStorage params = parametersStorage;
-        uint128 epochLength = sasV1.getAgreementEpochLength(agreementId);
+        uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
 
-        if (startTime == 0) revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
-        if (epoch >= sasV1.getAgreementEpochsNumber(agreementId))
+        if (!sasProxy.serviceAgreementExists(agreementId))
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+        if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
             revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
                 agreementId,
-                startTime,
-                sasV1.getAgreementEpochsNumber(agreementId),
+                sasProxy.getAgreementStartTime(agreementId),
+                sasProxy.getAgreementEpochsNumber(agreementId),
                 epochLength
             );
 
         uint256 timeNow = block.timestamp;
-        uint256 commitWindowDuration = (params.commitWindowDurationPerc() * epochLength) / 100;
 
-        if (epoch == 0) {
-            return timeNow < (startTime + commitWindowDuration);
-        }
+        bytes32 stateId = keccak256(abi.encodePacked(agreementId, epoch, assertionId));
+        uint256 commitWindowEnd = sasProxy.getCommitDeadline(stateId);
 
-        return (timeNow > (startTime + epochLength * epoch) &&
-            timeNow < (startTime + epochLength * epoch + commitWindowDuration));
+        return timeNow < commitWindowEnd;
     }
 
     function getTopCommitSubmissions(
         bytes32 agreementId,
-        uint16 epoch
+        uint16 epoch,
+        bytes32 assertionId
     ) external view returns (ServiceAgreementStructsV1.CommitSubmission[] memory) {
-        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-        if (!sasV1.serviceAgreementExists(agreementId))
+        if (!sasProxy.serviceAgreementExists(agreementId))
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
-        if (epoch >= sasV1.getAgreementEpochsNumber(agreementId))
+        if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
             revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
                 agreementId,
-                sasV1.getAgreementStartTime(agreementId),
-                sasV1.getAgreementEpochsNumber(agreementId),
-                sasV1.getAgreementEpochLength(agreementId)
+                sasProxy.getAgreementStartTime(agreementId),
+                sasProxy.getAgreementEpochsNumber(agreementId),
+                sasProxy.getAgreementEpochLength(agreementId)
             );
 
         uint32 r0 = parametersStorage.r0();
 
         ServiceAgreementStructsV1.CommitSubmission[]
-            memory epochCommits = new ServiceAgreementStructsV1.CommitSubmission[](r0);
+            memory epochStateCommits = new ServiceAgreementStructsV1.CommitSubmission[](r0);
 
-        bytes32 epochSubmissionsHead = sasV1.getAgreementEpochSubmissionHead(agreementId, epoch);
+        bytes32 epochSubmissionsHead = sasProxy.getAgreementEpochSubmissionHead(agreementId, epoch, assertionId);
 
-        epochCommits[0] = sasV1.getCommitSubmission(epochSubmissionsHead);
+        epochStateCommits[0] = sasProxy.getCommitSubmission(epochSubmissionsHead);
 
         bytes32 commitId;
-        uint72 nextIdentityId = epochCommits[0].nextIdentityId;
+        uint72 nextIdentityId = epochStateCommits[0].nextIdentityId;
         uint8 submissionsIdx = 1;
         while ((submissionsIdx < r0) && (nextIdentityId != 0)) {
-            commitId = keccak256(abi.encodePacked(agreementId, epoch, nextIdentityId));
-            epochCommits[submissionsIdx] = sasV1.getCommitSubmission(commitId);
+            commitId = keccak256(abi.encodePacked(agreementId, epoch, assertionId, nextIdentityId));
+            epochStateCommits[submissionsIdx] = sasProxy.getCommitSubmission(commitId);
 
-            nextIdentityId = epochCommits[submissionsIdx].nextIdentityId;
+            nextIdentityId = epochStateCommits[submissionsIdx].nextIdentityId;
 
             unchecked {
                 submissionsIdx++;
             }
         }
 
-        return epochCommits;
+        return epochStateCommits;
     }
 
     function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
@@ -174,22 +174,24 @@ contract CommitManagerV1 is Named, Versioned {
             args.hashFunctionId
         );
 
-        if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {
-            ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
+        bytes32 assertionId = generalAssetInterface.getLatestAssertionId(args.tokenId);
 
-            uint128 epochLength = sasV1.getAgreementEpochLength(agreementId);
+        if (!reqs[0] && !this.isCommitWindowOpen(agreementId, args.epoch, assertionId)) {
+            ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-            uint256 actualCommitWindowStart = (sasV1.getAgreementStartTime(agreementId) + args.epoch * epochLength);
+            bytes32 stateId = keccak256(abi.encodePacked(agreementId, args.epoch, assertionId));
+            uint256 commitWindowEnd = sasProxy.getCommitDeadline(stateId);
 
             revert ServiceAgreementErrorsV1.CommitWindowClosed(
                 agreementId,
                 args.epoch,
-                actualCommitWindowStart,
-                actualCommitWindowStart + (parametersStorage.commitWindowDurationPerc() * epochLength) / 100,
+                commitWindowEnd - parametersStorage.commitWindowDuration(),
+                commitWindowEnd,
                 block.timestamp
             );
         }
-        emit Logger(!isCommitWindowOpen(agreementId, args.epoch), "req1");
+        emit Logger(!this.isCommitWindowOpen(agreementId, args.epoch, assertionId), "req1");
 
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -206,14 +208,14 @@ contract CommitManagerV1 is Named, Versioned {
         emit Logger(!shardingTableStorage.nodeExists(identityId), "req2");
 
         uint40 score = scoringProxy.callScoreFunction(
-            serviceAgreementStorageV1.getAgreementScoreFunctionId(agreementId),
+            serviceAgreementStorageProxy.getAgreementScoreFunctionId(agreementId),
             args.hashFunctionId,
             profileStorage.getNodeId(identityId),
             args.keyword,
             stakingStorage.totalStakes(identityId)
         );
 
-        _insertCommit(agreementId, args.epoch, identityId, 0, 0, score);
+        _insertCommit(agreementId, args.epoch, assertionId, identityId, 0, 0, score);
 
         emit CommitSubmitted(
             args.assetContract,
@@ -229,35 +231,39 @@ contract CommitManagerV1 is Named, Versioned {
     function _insertCommit(
         bytes32 agreementId,
         uint16 epoch,
+        bytes32 assertionId,
         uint72 identityId,
         uint72 prevIdentityId,
         uint72 nextIdentityId,
         uint40 score
     ) internal virtual {
-        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-        bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, identityId));
+        bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, assertionId, identityId));
 
-        if (!reqs[2] && sasV1.commitSubmissionExists(commitId))
+        if (!reqs[2] && sasProxy.commitSubmissionExists(commitId))
             revert ServiceAgreementErrorsV1.NodeAlreadySubmittedCommit(
                 agreementId,
                 epoch,
                 identityId,
                 profileStorage.getNodeId(identityId)
             );
-        emit Logger(sasV1.commitSubmissionExists(commitId), "req3");
+        emit Logger(sasProxy.commitSubmissionExists(commitId), "req3");
 
-        bytes32 refCommitId = sasV1.getAgreementEpochSubmissionHead(agreementId, epoch);
+        bytes32 refCommitId = sasProxy.getAgreementEpochSubmissionHead(agreementId, epoch, assertionId);
 
         ParametersStorage params = parametersStorage;
 
-        uint72 refCommitNextIdentityId = sasV1.getCommitSubmissionNextIdentityId(refCommitId);
+        uint72 refCommitNextIdentityId = sasProxy.getCommitSubmissionNextIdentityId(refCommitId);
         uint32 r0 = params.r0();
         uint8 i;
-        while ((score < sasV1.getCommitSubmissionScore(refCommitId)) && (refCommitNextIdentityId != 0) && (i < r0)) {
-            refCommitId = keccak256(abi.encodePacked(agreementId, epoch, refCommitNextIdentityId));
+        while (
+            (score < sasProxy.getCommitSubmissionScore(refCommitId)) &&
+            (refCommitNextIdentityId != 0) && (i < r0)
+        ) {
+            refCommitId = keccak256(abi.encodePacked(agreementId, epoch, assertionId, refCommitNextIdentityId));
 
-            refCommitNextIdentityId = sasV1.getCommitSubmissionNextIdentityId(refCommitId);
+            refCommitNextIdentityId = sasProxy.getCommitSubmissionNextIdentityId(refCommitId);
             unchecked {
                 i++;
             }
@@ -273,20 +279,20 @@ contract CommitManagerV1 is Named, Versioned {
             );
         emit Logger(i >= r0, "req4");
 
-        sasV1.createCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
+        sasProxy.createCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
 
-        ServiceAgreementStructsV1.CommitSubmission memory refCommit = sasV1.getCommitSubmission(refCommitId);
+        ServiceAgreementStructsV1.CommitSubmission memory refCommit = sasProxy.getCommitSubmission(refCommitId);
 
         if ((i == 0) && (refCommit.identityId == 0)) {
             //  No head -> Setting new head
-            sasV1.setAgreementEpochSubmissionHead(agreementId, epoch, commitId);
+            sasProxy.setAgreementEpochSubmissionHead(agreementId, epoch, assertionId, commitId);
         } else if ((i == 0) && (score <= refCommit.score)) {
             // There is a head with higher or equal score, add new commit on the right
-            _linkCommits(agreementId, epoch, refCommit.identityId, identityId);
+            _linkCommits(agreementId, epoch, assertionId, refCommit.identityId, identityId);
         } else if ((i == 0) && (score > refCommit.score)) {
             // There is a head with lower score, replace the head
-            sasV1.setAgreementEpochSubmissionHead(agreementId, epoch, commitId);
-            _linkCommits(agreementId, epoch, identityId, refCommit.identityId);
+            sasProxy.setAgreementEpochSubmissionHead(agreementId, epoch, assertionId, commitId);
+            _linkCommits(agreementId, epoch, assertionId, identityId, refCommit.identityId);
         } else if (score > refCommit.score) {
             // [H] - head
             // [RC] - reference commit
@@ -295,30 +301,31 @@ contract CommitManagerV1 is Named, Versioned {
             // [NC] - new commit
             // [] <-> [H] <-> [X] ... [RC-] <-> [RC] <-> [RC+] ... [C] <-> []
             // [] <-> [H] <-> [X] ... [RC-] <-(NL)-> [NC] <-(NL)-> [RC] <-> [RC+] ... [C] <-> []
-            _linkCommits(agreementId, epoch, refCommit.prevIdentityId, identityId);
-            _linkCommits(agreementId, epoch, identityId, refCommit.identityId);
+            _linkCommits(agreementId, epoch, assertionId, refCommit.prevIdentityId, identityId);
+            _linkCommits(agreementId, epoch, assertionId, identityId, refCommit.identityId);
         } else {
             // [] <-> [H] <-> [RC] <-> []
             // [] <-> [H] <-> [RC] <-(NL)-> [NC] <-> []
-            _linkCommits(agreementId, epoch, refCommit.identityId, identityId);
+            _linkCommits(agreementId, epoch, assertionId, refCommit.identityId, identityId);
         }
     }
 
     function _linkCommits(
         bytes32 agreementId,
         uint16 epoch,
+        bytes32 assertionId,
         uint72 leftIdentityId,
         uint72 rightIdentityId
     ) internal virtual {
-        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-        sasV1.setCommitSubmissionNextIdentityId(
-            keccak256(abi.encodePacked(agreementId, epoch, leftIdentityId)), // leftCommitId
+        sasProxy.setCommitSubmissionNextIdentityId(
+            keccak256(abi.encodePacked(agreementId, epoch, assertionId, leftIdentityId)), // leftCommitId
             rightIdentityId
         );
 
-        sasV1.setCommitSubmissionPrevIdentityId(
-            keccak256(abi.encodePacked(agreementId, epoch, rightIdentityId)), // rightCommitId
+        sasProxy.setCommitSubmissionPrevIdentityId(
+            keccak256(abi.encodePacked(agreementId, epoch, assertionId, rightIdentityId)), // rightCommitId
             leftIdentityId
         );
     }

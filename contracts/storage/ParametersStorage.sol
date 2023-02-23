@@ -10,11 +10,10 @@ contract ParametersStorage {
     uint96 public minimumStake;
     uint96 public maximumStake;
 
-    uint48 public r2;
-    uint32 public r1;
     uint32 public r0;
+    uint32 public r1;
+    uint48 public r2;
 
-    uint8 public commitWindowDurationPerc;
     uint8 public minProofWindowOffsetPerc;
     uint8 public maxProofWindowOffsetPerc;
     uint8 public proofWindowDurationPerc;
@@ -25,6 +24,10 @@ contract ParametersStorage {
     uint24 public stakeWithdrawalDelay;
     uint24 public rewardWithdrawalDelay;
     uint32 public slashingFreezeDuration;
+
+    uint16 public commitWindowDuration;
+
+    uint8 public finalizationCommitsNumber;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0), "Hub Address cannot be 0x0");
@@ -38,7 +41,6 @@ contract ParametersStorage {
         r1 = 8;
         r0 = 3;
 
-        commitWindowDurationPerc = 25;
         minProofWindowOffsetPerc = 50;
         maxProofWindowOffsetPerc = 75;
         proofWindowDurationPerc = 25;
@@ -49,6 +51,10 @@ contract ParametersStorage {
         stakeWithdrawalDelay = 5 minutes;
         rewardWithdrawalDelay = 5 minutes;
         slashingFreezeDuration = 730 days;
+
+        commitWindowDuration = 15 minutes;
+
+        finalizationCommitsNumber = 1;
     }
 
     modifier onlyHubOwner() {
@@ -70,10 +76,6 @@ contract ParametersStorage {
 
     function setR0(uint32 newR0) external onlyHubOwner {
         r0 = newR0;
-    }
-
-    function setCommitWindowDurationPerc(uint8 newCommitWindowDurationPerc) external onlyHubOwner {
-        commitWindowDurationPerc = newCommitWindowDurationPerc;
     }
 
     function setMinProofWindowOffsetPerc(uint8 newMinProofWindowOffsetPerc) external onlyHubOwner {
@@ -106,6 +108,14 @@ contract ParametersStorage {
 
     function setSlashingFreezeDuration(uint32 newSlashingFreezeDuration) external onlyHubOwner {
         slashingFreezeDuration = newSlashingFreezeDuration;
+    }
+
+    function setCommitWindowDuration(uint16 newCommitWindowDuration) external onlyHubOwner {
+        commitWindowDuration = newCommitWindowDuration;
+    }
+
+    function setFinalizationCommitsNumber(uint8 newFinalizationCommitsNumber) external onlyHubOwner {
+        finalizationCommitsNumber = newFinalizationCommitsNumber;
     }
 
     function _checkHubOwner() internal view virtual {
