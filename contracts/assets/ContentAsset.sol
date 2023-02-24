@@ -187,21 +187,21 @@ contract ContentAsset is Named, Versioned {
         emit AssetStoringPeriondExtended(contentAssetStorageAddress, tokenId, epochsNumber, tokenAmount);
     }
 
-    // function updateAssetTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
-    //     ServiceAgreementV1 sasV1 = serviceAgreementV1;
-    //     address contentAssetStorageAddress = address(contentAssetStorage);
+    function updateAssetTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+        address contentAssetStorageAddress = address(contentAssetStorage);
 
-    //     sasV1.addTokens(
-    //         msg.sender,
-    //         contentAssetStorageAddress,
-    //         tokenId,
-    //         abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
-    //         1,
-    //         tokenAmount
-    //     );
+        sasV1.addTokens(
+            msg.sender,
+            contentAssetStorageAddress,
+            tokenId,
+            abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
+            1,
+            tokenAmount
+        );
 
-    //     emit AssetPaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
-    // }
+        emit AssetPaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
+    }
 
     function _createAsset(
         bytes32 assertionId,
