@@ -178,7 +178,7 @@ contract CommitManagerV1 is Named, Versioned {
         AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
         bytes32 latestState = generalAssetInterface.getLatestAssertionId(args.tokenId);
 
-        if (!reqs[0] && !this.isCommitWindowOpen(agreementId, args.epoch, latestState)) {
+        if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch, latestState)) {
             ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
             bytes32 stateId = keccak256(abi.encodePacked(agreementId, args.epoch, latestState));
@@ -192,7 +192,7 @@ contract CommitManagerV1 is Named, Versioned {
                 block.timestamp
             );
         }
-        emit Logger(!this.isCommitWindowOpen(agreementId, args.epoch, latestState), "req1");
+        emit Logger(!isCommitWindowOpen(agreementId, args.epoch, latestState), "req1");
 
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 

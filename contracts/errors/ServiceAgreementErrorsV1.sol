@@ -46,4 +46,5 @@ library ServiceAgreementErrorsV1 {
         uint256 challenge
     );
     error NodeAlreadySubmittedCommit(bytes32 agreementId, uint16 epoch, uint72 identityId, bytes nodeId);
+    error LatestStateIsNotFinalized(bytes32 agreementId, bytes32 latestState, bytes32 latestFinalizedState);
 }

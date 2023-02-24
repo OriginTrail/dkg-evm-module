@@ -233,25 +233,25 @@ contract ServiceAgreementV1 is Named, Versioned {
     //     emit ServiceAgreementV1Extended(assetContract, tokenId, keyword, hashFunctionId, epochsNumber);
     // }
 
-    // function addTokens(
-    //     address assetOwner,
-    //     address assetContract,
-    //     uint256 tokenId,
-    //     bytes calldata keyword,
-    //     uint8 hashFunctionId,
-    //     uint96 tokenAmount
-    // ) external onlyContracts {
-    //     if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-    //     if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
-    //     if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
-    //     if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+    function addTokens(
+        address assetOwner,
+        address assetContract,
+        uint256 tokenId,
+        bytes calldata keyword,
+        uint8 hashFunctionId,
+        uint96 tokenAmount
+    ) external onlyContracts {
+        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
+        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
+        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
+        if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
 
-    //     bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+        bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
-    //     _addTokens(assetOwner, agreementId, tokenAmount);
+        _addTokens(assetOwner, agreementId, tokenAmount);
 
-    //     emit ServiceAgreementV1RewardRaised(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
-    // }
+        emit ServiceAgreementV1RewardRaised(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
+    }
 
     function generateAgreementId(
         address assetContract,
@@ -262,18 +262,18 @@ contract ServiceAgreementV1 is Named, Versioned {
         return hashingProxy.callHashFunction(hashFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
     }
 
-    // function _addTokens(address assetOwner, bytes32 agreementId, uint96 tokenAmount) internal virtual {
-    //     ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
-    //     IERC20 tknc = tokenContract;
+    function _addTokens(address assetOwner, bytes32 agreementId, uint96 tokenAmount) internal virtual {
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        IERC20 tknc = tokenContract;
 
-    //     if (tknc.allowance(assetOwner, address(this)) < tokenAmount)
-    //         revert ServiceAgreementErrorsV1.TooLowAllowance(tknc.allowance(assetOwner, address(this)));
-    //     if (tknc.balanceOf(assetOwner) < tokenAmount)
-    //         revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(assetOwner));
+        if (tknc.allowance(assetOwner, address(this)) < tokenAmount)
+            revert ServiceAgreementErrorsV1.TooLowAllowance(tknc.allowance(assetOwner, address(this)));
+        if (tknc.balanceOf(assetOwner) < tokenAmount)
+            revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(assetOwner));
 
-    //     sasV1.setAgreementTokenAmount(agreementId, sasV1.getAgreementTokenAmount(agreementId) + tokenAmount);
-    //     tknc.transferFrom(assetOwner, address(sasV1), tokenAmount);
-    // }
+        sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
+        tknc.transferFrom(assetOwner, sasProxy.lastestStorageAddress(), tokenAmount);
+    }
 
     function _generatePseudorandomUint8(address sender, uint8 limit) internal view virtual returns (uint8) {
         return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, sender, block.number))) % limit);
