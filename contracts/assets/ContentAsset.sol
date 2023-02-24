@@ -108,24 +108,41 @@ contract ContentAsset is Named, Versioned {
         );
     }
 
-    // function burnAsset(uint256 tokenId) external onlyAssetOwner(tokenId) {
-    //     ContentAssetStorage cas = contentAssetStorage;
-    //     address contentAssetStorageAddress = address(cas);
+    function burnAsset(uint256 tokenId) external onlyAssetOwner(tokenId) {
+        ContentAssetStorage cas = contentAssetStorage;
+        address contentAssetStorageAddress = address(cas);
 
-    //     bytes32 originalAssertionId = cas.getAssertionIdByIndex(tokenId, 0);
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
 
-    //     cas.deleteAsset(tokenId);
-    //     cas.burn(tokenId);
-    //     serviceAgreementV1.terminateAgreement(
-    //         msg.sender,
-    //         contentAssetStorageAddress,
-    //         tokenId,
-    //         abi.encodePacked(contentAssetStorageAddress, originalAssertionId),
-    //         1
-    //     );
+        bytes memory keyword = abi.encodePacked(
+            contentAssetStorageAddress,
+            contentAssetStorage.getAssertionIdByIndex(tokenId, 0)
+        );
+        bytes32 agreementId = sasV1.generateAgreementId(contentAssetStorageAddress, tokenId, keyword, 1);
 
-    //     emit AssetBurnt(contentAssetStorageAddress, tokenId, originalAssertionId);
-    // }
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+
+        if (
+            (sasProxy.getAgreementStartTime(agreementId) + sasProxy.getAgreementEpochLength(agreementId)) <
+            block.timestamp
+        ) {
+            revert ServiceAgreementErrorsV1.FirstEpochHasAlreadyEnded(agreementId);
+        }
+
+        bytes32 originalAssertionId = cas.getAssertionIdByIndex(tokenId, 0);
+
+        cas.deleteAsset(tokenId);
+        cas.burn(tokenId);
+        sasV1.terminateAgreement(
+            msg.sender,
+            contentAssetStorageAddress,
+            tokenId,
+            abi.encodePacked(contentAssetStorageAddress, originalAssertionId),
+            1
+        );
+
+        emit AssetBurnt(contentAssetStorageAddress, tokenId, originalAssertionId);
+    }
 
     function updateAssetState(
         uint256 tokenId,

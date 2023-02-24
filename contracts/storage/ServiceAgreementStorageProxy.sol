@@ -90,7 +90,7 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         );
     }
 
-    function deleteAgreement(bytes32 agreementId) external onlyContracts {
+    function deleteServiceAgreementObject(bytes32 agreementId) external onlyContracts {
         if (this.isOldAgreement(agreementId)) {
             storageV1.deleteServiceAgreementObject(agreementId);
         } else {

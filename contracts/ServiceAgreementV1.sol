@@ -149,65 +149,27 @@ contract ServiceAgreementV1 is Named, Versioned {
         );
     }
 
-    // function updateAgreement(
-    //     address assetOwner,
-    //     address assetContract,
-    //     uint256 tokenId,
-    //     bytes calldata keyword,
-    //     uint8 hashFunctionId,
-    //     uint96 tokenAmount
-    // ) external onlyContracts {
-    //     if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-    //     if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
-    //     if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
-    //     if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+    function terminateAgreement(
+        address assetOwner,
+        address assetContract,
+        uint256 tokenId,
+        bytes calldata keyword,
+        uint8 hashFunctionId
+    ) external onlyContracts {
+        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
+        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
+        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
 
-    //     bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+        bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
-    //     ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-    //     uint16 epochsNumber;
-    //     uint128 epochLength;
-    //     uint96 agreementBalance;
-    //     uint8[2] memory uint8Params;
-    //     (, epochsNumber, epochLength, agreementBalance, uint8Params) = sasV1.getAgreementData(agreementId);
+        uint96 agreementBalance = sasProxy.getAgreementTokenAmount(agreementId);
+        sasProxy.deleteServiceAgreementObject(agreementId);
+        sasProxy.transferAgreementTokens(assetOwner, agreementBalance);
 
-    //     sasV1.deleteServiceAgreementObject(agreementId);
-    //     sasV1.createServiceAgreementObject(
-    //         agreementId,
-    //         epochsNumber,
-    //         epochLength,
-    //         agreementBalance,
-    //         uint8Params[0],
-    //         uint8Params[1]
-    //     );
-
-    //     _addTokens(assetOwner, agreementId, tokenAmount);
-
-    //     emit ServiceAgreementV1Updated(assetContract, tokenId, keyword, hashFunctionId, epochsNumber, tokenAmount);
-    // }
-
-    // function terminateAgreement(
-    //     address assetOwner,
-    //     address assetContract,
-    //     uint256 tokenId,
-    //     bytes calldata keyword,
-    //     uint8 hashFunctionId
-    // ) external onlyContracts {
-    //     if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-    //     if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
-    //     if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
-
-    //     bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
-
-    //     ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
-
-    //     uint96 agreementBalance = sasV1.getAgreementTokenAmount(agreementId);
-    //     sasV1.deleteServiceAgreementObject(agreementId);
-    //     sasV1.transferAgreementTokens(assetOwner, agreementBalance);
-
-    //     emit ServiceAgreementV1Terminated(assetContract, tokenId, keyword, hashFunctionId);
-    // }
+        emit ServiceAgreementV1Terminated(assetContract, tokenId, keyword, hashFunctionId);
+    }
 
     function extendStoringPeriod(
         address assetOwner,
