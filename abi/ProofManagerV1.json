@@ -245,6 +245,12 @@
         "type": "uint16"
       },
       {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "state",
+        "type": "bytes32"
+      },
+      {
         "indexed": true,
         "internalType": "uint72",
         "name": "identityId",
@@ -320,19 +326,9 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "sender",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "assetContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
       },
       {
         "internalType": "uint16",
@@ -523,10 +519,10 @@
   },
   {
     "inputs": [],
-    "name": "serviceAgreementStorageV1",
+    "name": "serviceAgreementStorageProxy",
     "outputs": [
       {
-        "internalType": "contract ServiceAgreementStorageV1",
+        "internalType": "contract ServiceAgreementStorageProxy",
         "name": "",
         "type": "address"
       }

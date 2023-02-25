@@ -12,12 +12,12 @@
   },
   {
     "inputs": [],
-    "name": "commitWindowDurationPerc",
+    "name": "commitWindowDuration",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -31,6 +31,19 @@
         "internalType": "uint128",
         "name": "",
         "type": "uint128"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "finalizationCommitsNumber",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -182,12 +195,12 @@
   {
     "inputs": [
       {
-        "internalType": "uint8",
-        "name": "newCommitWindowDurationPerc",
-        "type": "uint8"
+        "internalType": "uint16",
+        "name": "newCommitWindowDuration",
+        "type": "uint16"
       }
     ],
-    "name": "setCommitWindowDurationPerc",
+    "name": "setCommitWindowDuration",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -209,11 +222,37 @@
     "inputs": [
       {
         "internalType": "uint8",
+        "name": "newFinalizationCommitsNumber",
+        "type": "uint8"
+      }
+    ],
+    "name": "setFinalizationCommitsNumber",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
         "name": "newMaxProofWindowOffsetPerc",
         "type": "uint8"
       }
     ],
     "name": "setMaxProofWindowOffsetPerc",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint96",
+        "name": "newMaximumStake",
+        "type": "uint96"
+      }
+    ],
+    "name": "setMaximumStake",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

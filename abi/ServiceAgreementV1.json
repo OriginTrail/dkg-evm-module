@@ -285,6 +285,43 @@
       },
       {
         "indexed": false,
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "ServiceAgreementV1UpdateRewardAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "assetContract",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "keyword",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "hashFunctionId",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
         "internalType": "uint16",
         "name": "epochsNumber",
         "type": "uint16"
@@ -298,6 +335,82 @@
     ],
     "name": "ServiceAgreementV1Updated",
     "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "assetOwner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "assetContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "keyword",
+        "type": "bytes"
+      },
+      {
+        "internalType": "uint8",
+        "name": "hashFunctionId",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "addAddedTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "assetOwner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "assetContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "keyword",
+        "type": "bytes"
+      },
+      {
+        "internalType": "uint8",
+        "name": "hashFunctionId",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "addTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [
@@ -350,6 +463,49 @@
       }
     ],
     "name": "createServiceAgreement",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "assetOwner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "assetContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "keyword",
+        "type": "bytes"
+      },
+      {
+        "internalType": "uint8",
+        "name": "hashFunctionId",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epochsNumber",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "extendStoringPeriod",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -462,15 +618,48 @@
   },
   {
     "inputs": [],
-    "name": "serviceAgreementStorageV1",
+    "name": "serviceAgreementStorageProxy",
     "outputs": [
       {
-        "internalType": "contract ServiceAgreementStorageV1",
+        "internalType": "contract ServiceAgreementStorageProxy",
         "name": "",
         "type": "address"
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "assetOwner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "assetContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "keyword",
+        "type": "bytes"
+      },
+      {
+        "internalType": "uint8",
+        "name": "hashFunctionId",
+        "type": "uint8"
+      }
+    ],
+    "name": "terminateAgreement",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

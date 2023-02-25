@@ -206,6 +206,12 @@
         "type": "uint16"
       },
       {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "state",
+        "type": "bytes32"
+      },
+      {
         "indexed": true,
         "internalType": "uint72",
         "name": "identityId",
@@ -291,6 +297,11 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "assertionId",
+        "type": "bytes32"
       }
     ],
     "name": "getTopCommitSubmissions",
@@ -370,6 +381,11 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "assertionId",
+        "type": "bytes32"
       }
     ],
     "name": "isCommitWindowOpen",
@@ -456,10 +472,10 @@
   },
   {
     "inputs": [],
-    "name": "serviceAgreementStorageV1",
+    "name": "serviceAgreementStorageProxy",
     "outputs": [
       {
-        "internalType": "contract ServiceAgreementStorageV1",
+        "internalType": "contract ServiceAgreementStorageProxy",
         "name": "",
         "type": "address"
       }

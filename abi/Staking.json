@@ -322,10 +322,10 @@
   },
   {
     "inputs": [],
-    "name": "serviceAgreementStorageV1",
+    "name": "serviceAgreementStorageProxy",
     "outputs": [
       {
-        "internalType": "contract ServiceAgreementStorageV1",
+        "internalType": "contract ServiceAgreementStorageProxy",
         "name": "",
         "type": "address"
       }

@@ -11,6 +11,70 @@
     "type": "constructor"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "FirstEpochHasAlreadyEnded",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "latestState",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "latestFinalizedState",
+        "type": "bytes32"
+      }
+    ],
+    "name": "LatestStateIsNotFinalized",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "latestState",
+        "type": "bytes32"
+      }
+    ],
+    "name": "PendingUpdateFinalization",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "latestFinalizedState",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UpdateFinalized",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -28,7 +92,7 @@
       {
         "indexed": true,
         "internalType": "bytes32",
-        "name": "stateCommitHash",
+        "name": "state",
         "type": "bytes32"
       }
     ],
@@ -53,7 +117,7 @@
       {
         "indexed": true,
         "internalType": "bytes32",
-        "name": "stateCommitHash",
+        "name": "state",
         "type": "bytes32"
       }
     ],
@@ -103,7 +167,32 @@
       {
         "indexed": true,
         "internalType": "bytes32",
-        "name": "stateCommitHash",
+        "name": "state",
+        "type": "bytes32"
+      }
+    ],
+    "name": "AssetStateUpdateCanceled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "assetContract",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "state",
         "type": "bytes32"
       }
     ],
@@ -152,6 +241,45 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "assertionStorage",
+    "outputs": [
+      {
+        "internalType": "contract AssertionStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "burnAsset",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "cancelAssetStateUpdate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -305,6 +433,19 @@
   },
   {
     "inputs": [],
+    "name": "serviceAgreementStorageProxy",
+    "outputs": [
+      {
+        "internalType": "contract ServiceAgreementStorageProxy",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "serviceAgreementV1",
     "outputs": [
       {
@@ -314,6 +455,85 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "assertionId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint128",
+        "name": "size",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint32",
+        "name": "triplesNumber",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint96",
+        "name": "chunksNumber",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "updateAssetState",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epochsNumber",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "updateAssetStoringPeriod",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "updateAssetTokenAmount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
