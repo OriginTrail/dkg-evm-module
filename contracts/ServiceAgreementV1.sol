@@ -53,6 +53,13 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint8 hashFunctionId,
         uint96 tokenAmount
     );
+    event ServiceAgreementV1UpdateRewardAdded(
+        address indexed assetContract,
+        uint256 indexed tokenId,
+        bytes keyword,
+        uint8 hashFunctionId,
+        uint96 tokenAmount
+    );
 
     string private constant _NAME = "ServiceAgreementV1";
     string private constant _VERSION = "1.1.0";
@@ -180,17 +187,17 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint16 epochsNumber,
         uint96 tokenAmount
     ) external onlyContracts {
-        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
         if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
         if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
         if (epochsNumber == 0) revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
-        if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+
+        _addTokens(assetOwner, tokenAmount);
 
         bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
         sasProxy.setAgreementEpochsNumber(agreementId, sasProxy.getAgreementEpochsNumber(agreementId) + epochsNumber);
-        _addTokens(assetOwner, agreementId, tokenAmount);
+        sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
 
         emit ServiceAgreementV1Extended(assetContract, tokenId, keyword, hashFunctionId, epochsNumber);
     }
@@ -203,16 +210,29 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint8 hashFunctionId,
         uint96 tokenAmount
     ) external onlyContracts {
-        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
-        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
-        if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+        _addTokens(assetOwner, tokenAmount);
 
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
         bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
-
-        _addTokens(assetOwner, agreementId, tokenAmount);
+        sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
 
         emit ServiceAgreementV1RewardRaised(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
+    }
+
+    function addAddedTokens(
+        address assetOwner,
+        address assetContract,
+        uint256 tokenId,
+        bytes calldata keyword,
+        uint8 hashFunctionId,
+        uint96 tokenAmount
+    ) external onlyContracts {
+        _addTokens(assetOwner, tokenAmount);
+
+        bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+        serviceAgreementStorageProxy.setAgreementAddedTokenAmount(agreementId, tokenAmount);
+
+        emit ServiceAgreementV1UpdateRewardAdded(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
     }
 
     function generateAgreementId(
@@ -224,8 +244,10 @@ contract ServiceAgreementV1 is Named, Versioned {
         return hashingProxy.callHashFunction(hashFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
     }
 
-    function _addTokens(address assetOwner, bytes32 agreementId, uint96 tokenAmount) internal virtual {
-        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+    function _addTokens(address assetOwner, uint96 tokenAmount) internal virtual {
+        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
+        if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+
         IERC20 tknc = tokenContract;
 
         if (tknc.allowance(assetOwner, address(this)) < tokenAmount)
@@ -233,8 +255,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         if (tknc.balanceOf(assetOwner) < tokenAmount)
             revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(assetOwner));
 
-        sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
-        tknc.transferFrom(assetOwner, sasProxy.lastestStorageAddress(), tokenAmount);
+        tknc.transferFrom(assetOwner, serviceAgreementStorageProxy.lastestStorageAddress(), tokenAmount);
     }
 
     function _generatePseudorandomUint8(address sender, uint8 limit) internal view virtual returns (uint8) {

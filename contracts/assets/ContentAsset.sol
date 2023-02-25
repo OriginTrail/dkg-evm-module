@@ -3,6 +3,7 @@
 pragma solidity ^0.8.4;
 
 import {Assertion} from "../Assertion.sol";
+import {AssertionStorage} from "../storage/AssertionStorage.sol";
 import {Hub} from "../Hub.sol";
 import {ServiceAgreementV1} from "../ServiceAgreementV1.sol";
 import {Named} from "../interface/Named.sol";
@@ -14,9 +15,10 @@ import {ServiceAgreementStructsV1} from "../structs/ServiceAgreementStructsV1.so
 import {ServiceAgreementErrorsV1} from "../errors/ServiceAgreementErrorsV1.sol";
 
 contract ContentAsset is Named, Versioned {
-    event AssetMinted(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
-    event AssetBurnt(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
-    event AssetStateUpdated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed stateCommitHash);
+    event AssetMinted(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
+    event AssetBurnt(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
+    event AssetStateUpdated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
+    event AssetStateUpdateCanceled(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
     event AssetStoringPeriondExtended(
         address indexed assetContract,
         uint256 indexed tokenId,
@@ -30,6 +32,7 @@ contract ContentAsset is Named, Versioned {
 
     Hub public hub;
     Assertion public assertionContract;
+    AssertionStorage public assertionStorage;
     ContentAssetStorage public contentAssetStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     ServiceAgreementV1 public serviceAgreementV1;
@@ -43,6 +46,7 @@ contract ContentAsset is Named, Versioned {
 
     function initialize() public onlyHubOwner {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));
+        assertionStorage = AssertionStorage(hub.getContractAddress("AssertionStorage"));
         contentAssetStorage = ContentAssetStorage(hub.getAssetStorageAddress("ContentAssetStorage"));
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
@@ -153,7 +157,8 @@ contract ContentAsset is Named, Versioned {
         uint96 tokenAmount
     ) external onlyAssetOwner(tokenId) onlyMutable(tokenId) {
         ContentAssetStorage cas = contentAssetStorage;
-        address contentAssetStorageAddress = address(contentAssetStorage);
+
+        address contentAssetStorageAddress = address(cas);
 
         bytes memory keyword = abi.encodePacked(
             contentAssetStorageAddress,
@@ -174,28 +179,59 @@ contract ContentAsset is Named, Versioned {
 
         ServiceAgreementV1 sasV1 = serviceAgreementV1;
 
-        sasV1.addTokens(msg.sender, contentAssetStorageAddress, tokenId, keyword, 1, tokenAmount);
+        sasV1.addAddedTokens(msg.sender, contentAssetStorageAddress, tokenId, keyword, 1, tokenAmount);
 
         emit AssetStateUpdated(contentAssetStorageAddress, tokenId, assertionId);
     }
 
-    // function cancelStateUpdate() {
+    function cancelAssetStateUpdate(uint256 tokenId) external onlyAssetOwner(tokenId) {
+        ContentAssetStorage cas = contentAssetStorage;
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-    // }
+        address contentAssetStorageAddress = address(cas);
+
+        bytes memory keyword = abi.encodePacked(
+            contentAssetStorageAddress,
+            contentAssetStorage.getAssertionIdByIndex(tokenId, 0)
+        );
+        bytes32 agreementId = serviceAgreementV1.generateAgreementId(contentAssetStorageAddress, tokenId, keyword, 1);
+        bytes32 latestState = contentAssetStorage.getLatestAssertionId(tokenId);
+
+        uint16 epoch = 0;
+        bytes32 stateId = keccak256(abi.encodePacked(agreementId, epoch, latestState));
+
+        if (sasProxy.isStateFinalized(agreementId, latestState)) {
+            revert ServiceAgreementErrorsV1.UpdateFinalized(agreementId, latestState);
+        } else if (block.timestamp <= sasProxy.getCommitDeadline(stateId)) {
+            revert ServiceAgreementErrorsV1.PendingUpdateFinalization(agreementId, latestState);
+        }
+
+        sasProxy.transferAgreementTokens(msg.sender, sasProxy.getAgreementAddedTokenAmount(agreementId));
+
+        assertionStorage.deleteAssertion(latestState);
+
+        uint256 latestStateIndex = cas.getAssertionIdsLength(tokenId) - 1;
+        cas.deleteAssertionIssuer(tokenId, latestState, latestStateIndex);
+        cas.removeAssertionId(tokenId, latestStateIndex);
+
+        emit AssetStateUpdateCanceled(contentAssetStorageAddress, tokenId, latestState);
+    }
 
     function updateAssetStoringPeriod(
         uint256 tokenId,
         uint16 epochsNumber,
         uint96 tokenAmount
     ) external onlyAssetOwner(tokenId) {
+        ContentAssetStorage cas = contentAssetStorage;
         ServiceAgreementV1 sasV1 = serviceAgreementV1;
-        address contentAssetStorageAddress = address(contentAssetStorage);
+
+        address contentAssetStorageAddress = address(cas);
 
         sasV1.extendStoringPeriod(
             msg.sender,
             contentAssetStorageAddress,
             tokenId,
-            abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
+            abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0)),
             1,
             epochsNumber,
             tokenAmount
@@ -205,14 +241,16 @@ contract ContentAsset is Named, Versioned {
     }
 
     function updateAssetTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
+        ContentAssetStorage cas = contentAssetStorage;
         ServiceAgreementV1 sasV1 = serviceAgreementV1;
-        address contentAssetStorageAddress = address(contentAssetStorage);
+
+        address contentAssetStorageAddress = address(cas);
 
         sasV1.addTokens(
             msg.sender,
             contentAssetStorageAddress,
             tokenId,
-            abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
+            abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0)),
             1,
             tokenAmount
         );
@@ -240,12 +278,14 @@ contract ContentAsset is Named, Versioned {
         cas.setMutability(tokenId, immutable_);
         cas.pushAssertionId(tokenId, assertionId);
 
+        address contentAssetStorageAddress = address(cas);
+
         serviceAgreementV1.createServiceAgreement(
             ServiceAgreementStructsV1.ServiceAgreementInputArgs({
                 assetCreator: msg.sender,
-                assetContract: address(contentAssetStorage),
+                assetContract: contentAssetStorageAddress,
                 tokenId: tokenId,
-                keyword: abi.encodePacked(address(contentAssetStorage), assertionId),
+                keyword: abi.encodePacked(contentAssetStorageAddress, assertionId),
                 hashFunctionId: 1, // hashFunctionId | 1 = sha256
                 epochsNumber: epochsNumber,
                 tokenAmount: tokenAmount,
@@ -253,7 +293,7 @@ contract ContentAsset is Named, Versioned {
             })
         );
 
-        emit AssetMinted(address(contentAssetStorage), tokenId, assertionId);
+        emit AssetMinted(contentAssetStorageAddress, tokenId, assertionId);
     }
 
     function _checkHubOwner() internal view virtual {
