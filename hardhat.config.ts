@@ -136,7 +136,6 @@ const config: HardhatUserConfig = {
       'IERC721Metadata.sol',
       'IERC721Receiver.sol',
       'IERC734Extended.sol',
-      'log2pldsf.sol',
       'Ownable.sol',
       'ServiceAgreementErrorsV1.sol',
       'sha256.sol',
