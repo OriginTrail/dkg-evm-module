@@ -22,6 +22,7 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
         hub = Hub(hubAddress);
+        initialize();
     }
 
     modifier onlyHubOwner() {
@@ -457,7 +458,7 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         return !storageV1.commitSubmissionExists(commitId) && storageV1U1.stateCommitSubmissionExists(commitId);
     }
 
-    function lastestStorageAddress() external view returns (address) {
+    function latestStorageAddress() external view returns (address) {
         return address(storageV1U1);
     }
 

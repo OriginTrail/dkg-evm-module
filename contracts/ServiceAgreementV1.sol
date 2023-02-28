@@ -142,7 +142,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         if (tknc.balanceOf(args.assetCreator) < args.tokenAmount)
             revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(args.assetCreator));
 
-        tknc.transferFrom(args.assetCreator, sasProxy.lastestStorageAddress(), args.tokenAmount);
+        tknc.transferFrom(args.assetCreator, sasProxy.latestStorageAddress(), args.tokenAmount);
 
         emit ServiceAgreementV1Created(
             args.assetContract,
@@ -255,7 +255,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         if (tknc.balanceOf(assetOwner) < tokenAmount)
             revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(assetOwner));
 
-        tknc.transferFrom(assetOwner, serviceAgreementStorageProxy.lastestStorageAddress(), tokenAmount);
+        tknc.transferFrom(assetOwner, serviceAgreementStorageProxy.latestStorageAddress(), tokenAmount);
     }
 
     function _generatePseudorandomUint8(address sender, uint8 limit) internal view virtual returns (uint8) {
