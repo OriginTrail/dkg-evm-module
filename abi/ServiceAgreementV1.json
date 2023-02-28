@@ -18,7 +18,7 @@
         "type": "address"
       }
     ],
-    "name": "AssetStorgeNotInTheHub",
+    "name": "AssetStorageNotInTheHub",
     "type": "error"
   },
   {
@@ -51,6 +51,11 @@
       }
     ],
     "name": "OnlyHubOwnerFunction",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ScoreError",
     "type": "error"
   },
   {

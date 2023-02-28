@@ -71,6 +71,8 @@ contract ServiceAgreementV1 is Named, Versioned {
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     IERC20 public tokenContract;
 
+    error ScoreError();
+
     constructor(address hubAddress) {
         require(hubAddress != address(0), "Hub Address cannot be 0x0");
 
@@ -111,7 +113,7 @@ contract ServiceAgreementV1 is Named, Versioned {
     ) external onlyContracts {
         if (args.assetCreator == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
         if (!hub.isAssetStorage(args.assetContract))
-            revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(args.assetContract);
+            revert ServiceAgreementErrorsV1.AssetStorageNotInTheHub(args.assetContract);
         if (keccak256(args.keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
         if (args.epochsNumber == 0) revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
         if (args.tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
@@ -164,7 +166,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint8 hashFunctionId
     ) external onlyContracts {
         if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
+        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorageNotInTheHub(assetContract);
         if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
 
         bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
@@ -187,7 +189,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint16 epochsNumber,
         uint96 tokenAmount
     ) external onlyContracts {
-        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorgeNotInTheHub(assetContract);
+        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorageNotInTheHub(assetContract);
         if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
         if (epochsNumber == 0) revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
 
