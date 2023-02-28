@@ -751,7 +751,7 @@
   },
   {
     "inputs": [],
-    "name": "lastestStorageAddress",
+    "name": "latestStorageAddress",
     "outputs": [
       {
         "internalType": "address",
