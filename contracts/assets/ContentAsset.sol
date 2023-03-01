@@ -19,7 +19,7 @@ contract ContentAsset is Named, Versioned {
     event AssetBurnt(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
     event AssetStateUpdated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
     event AssetStateUpdateCanceled(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
-    event AssetStoringPeriondExtended(
+    event AssetStoringPeriodExtended(
         address indexed assetContract,
         uint256 indexed tokenId,
         uint16 epochsNumber,
@@ -237,7 +237,7 @@ contract ContentAsset is Named, Versioned {
             tokenAmount
         );
 
-        emit AssetStoringPeriondExtended(contentAssetStorageAddress, tokenId, epochsNumber, tokenAmount);
+        emit AssetStoringPeriodExtended(contentAssetStorageAddress, tokenId, epochsNumber, tokenAmount);
     }
 
     function updateAssetTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
