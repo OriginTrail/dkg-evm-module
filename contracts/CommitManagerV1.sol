@@ -30,6 +30,14 @@ contract CommitManagerV1 is Named, Versioned {
         uint72 indexed identityId,
         uint40 score
     );
+    event StateFinalized(
+        address indexed assetContract,
+        uint256 indexed tokenId,
+        bytes keyword,
+        uint8 hashFunctionId,
+        uint16 epoch,
+        bytes32 state
+    );
     event Logger(bool value, string message);
 
     string private constant _NAME = "CommitManagerV1";
@@ -178,10 +186,10 @@ contract CommitManagerV1 is Named, Versioned {
         AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
         bytes32 latestState = generalAssetInterface.getLatestAssertionId(args.tokenId);
 
-        if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch, latestState)) {
-            ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        bytes32 stateId = keccak256(abi.encodePacked(agreementId, args.epoch, latestState));
 
-            bytes32 stateId = keccak256(abi.encodePacked(agreementId, args.epoch, latestState));
+        if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch, latestState)) {
             uint256 commitWindowEnd = sasProxy.getCommitDeadline(stateId);
 
             revert ServiceAgreementErrorsV1.CommitWindowClosed(
@@ -228,6 +236,17 @@ contract CommitManagerV1 is Named, Versioned {
             identityId,
             score
         );
+
+        if (sasProxy.getCommitsCount(stateId) == parametersStorage.finalizationCommitsNumber()) {
+            emit StateFinalized(
+                args.assetContract,
+                args.tokenId,
+                args.keyword,
+                args.hashFunctionId,
+                args.epoch,
+                latestState
+            );
+        }
     }
 
     function _insertCommit(
