@@ -118,7 +118,9 @@ contract CommitManagerV1 is Named, Versioned {
     }
 
     function isUpdateCommitWindowOpen(
-        bytes32 agreementId, uint16 epoch, bytes32 assertionId
+        bytes32 agreementId,
+        uint16 epoch,
+        bytes32 assertionId
     ) public view returns (bool) {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
