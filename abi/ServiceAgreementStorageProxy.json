@@ -247,11 +247,6 @@
         "internalType": "uint8[2]",
         "name": "",
         "type": "uint8[2]"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -319,25 +314,6 @@
         "internalType": "uint16",
         "name": "",
         "type": "uint16"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getAgreementLatestFinalizedState",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -726,30 +702,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
-      }
-    ],
-    "name": "isStateFinalized",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "latestStorageAddress",
     "outputs": [
@@ -767,11 +719,6 @@
       {
         "internalType": "bytes32",
         "name": "agreementId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "latestFinalizedState",
         "type": "bytes32"
       }
     ],
@@ -890,24 +837,6 @@
       }
     ],
     "name": "setAgreementEpochsNumber",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "latestFinalizedState",
-        "type": "bytes32"
-      }
-    ],
-    "name": "setAgreementLatestFinalizedState",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

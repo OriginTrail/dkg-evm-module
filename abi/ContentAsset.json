@@ -24,27 +24,6 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "latestState",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "latestFinalizedState",
-        "type": "bytes32"
-      }
-    ],
-    "name": "LatestStateIsNotFinalized",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "assetStorage",
         "type": "address"
@@ -519,6 +498,19 @@
     "outputs": [
       {
         "internalType": "contract ServiceAgreementV1",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "unfinalizedStateStorage",
+    "outputs": [
+      {
+        "internalType": "contract UnfinalizedStateStorage",
         "name": "",
         "type": "address"
       }

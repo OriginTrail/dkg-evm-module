@@ -44,6 +44,22 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "assetStorage",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "NoPendingUpdate",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "agreementId",
         "type": "bytes32"
@@ -367,6 +383,19 @@
     "name": "bulkSubmitUpdateCommit",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "contentAssetStorage",
+    "outputs": [
+      {
+        "internalType": "contract ContentAssetStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -738,6 +767,19 @@
     "name": "submitUpdateCommit",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "unfinalizedStateStorage",
+    "outputs": [
+      {
+        "internalType": "contract UnfinalizedStateStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
