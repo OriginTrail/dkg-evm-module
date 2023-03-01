@@ -16,16 +16,32 @@ import {ServiceAgreementErrorsV1} from "../errors/ServiceAgreementErrorsV1.sol";
 
 contract ContentAsset is Named, Versioned {
     event AssetMinted(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
-    event AssetBurnt(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
-    event AssetStateUpdated(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
-    event AssetStateUpdateCanceled(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
-    event AssetStoringPeriodExtended(
+    event AssetBurnt(
+        address indexed assetContract,
+        uint256 indexed tokenId,
+        bytes32 indexed state,
+        uint96 returnedTokenAmount
+    );
+    event AssetStateUpdated(
+        address indexed assetContract,
+        uint256 indexed tokenId,
+        bytes32 indexed state,
+        uint96 addedTokenAmount
+    );
+    event AssetStateUpdateCanceled(
+        address indexed assetContract,
+        uint256 indexed tokenId,
+        bytes32 indexed state,
+        uint96 returnedTokenAmount
+    );
+    event AssetStoringPeriondExtended(
         address indexed assetContract,
         uint256 indexed tokenId,
         uint16 epochsNumber,
         uint96 tokenAmount
     );
     event AssetPaymentIncreased(address indexed assetContract, uint256 indexed tokenId, uint96 tokenAmount);
+    event AssetUpdatePaymentIncreased(address indexed assetContract, uint256 indexed tokenId, uint96 tokenAmount);
 
     string private constant _NAME = "ContentAsset";
     string private constant _VERSION = "1.0.0";
@@ -123,6 +139,7 @@ contract ContentAsset is Named, Versioned {
             contentAssetStorage.getAssertionIdByIndex(tokenId, 0)
         );
         bytes32 agreementId = sasV1.generateAgreementId(contentAssetStorageAddress, tokenId, keyword, 1);
+        bytes32 latestState = contentAssetStorage.getLatestAssertionId(tokenId);
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
@@ -131,7 +148,11 @@ contract ContentAsset is Named, Versioned {
             block.timestamp
         ) {
             revert ServiceAgreementErrorsV1.FirstEpochHasAlreadyEnded(agreementId);
+        } else if (!sasProxy.isStateFinalized(agreementId, latestState)) {
+            revert ServiceAgreementErrorsV1.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, latestState);
         }
+
+        uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);
 
         bytes32 originalAssertionId = cas.getAssertionIdByIndex(tokenId, 0);
 
@@ -145,7 +166,7 @@ contract ContentAsset is Named, Versioned {
             1
         );
 
-        emit AssetBurnt(contentAssetStorageAddress, tokenId, originalAssertionId);
+        emit AssetBurnt(contentAssetStorageAddress, tokenId, originalAssertionId, tokenAmount);
     }
 
     function updateAssetState(
@@ -181,7 +202,7 @@ contract ContentAsset is Named, Versioned {
 
         sasV1.addAddedTokens(msg.sender, contentAssetStorageAddress, tokenId, keyword, 1, tokenAmount);
 
-        emit AssetStateUpdated(contentAssetStorageAddress, tokenId, assertionId);
+        emit AssetStateUpdated(contentAssetStorageAddress, tokenId, assertionId, tokenAmount);
     }
 
     function cancelAssetStateUpdate(uint256 tokenId) external onlyAssetOwner(tokenId) {
@@ -201,12 +222,13 @@ contract ContentAsset is Named, Versioned {
         bytes32 stateId = keccak256(abi.encodePacked(agreementId, epoch, latestState));
 
         if (sasProxy.isStateFinalized(agreementId, latestState)) {
-            revert ServiceAgreementErrorsV1.UpdateFinalized(agreementId, latestState);
+            revert ServiceAgreementErrorsV1.NoPendingUpdate(contentAssetStorageAddress, tokenId);
         } else if (block.timestamp <= sasProxy.getCommitDeadline(stateId)) {
-            revert ServiceAgreementErrorsV1.PendingUpdateFinalization(agreementId, latestState);
+            revert ServiceAgreementErrorsV1.PendingUpdateFinalization(contentAssetStorageAddress, tokenId, latestState);
         }
 
-        sasProxy.transferAgreementTokens(msg.sender, sasProxy.getAgreementAddedTokenAmount(agreementId));
+        uint96 addedTokenAmount = sasProxy.getAgreementAddedTokenAmount(agreementId);
+        sasProxy.transferAgreementTokens(msg.sender, addedTokenAmount);
 
         assertionStorage.deleteAssertion(latestState);
 
@@ -214,7 +236,7 @@ contract ContentAsset is Named, Versioned {
         cas.deleteAssertionIssuer(tokenId, latestState, latestStateIndex);
         cas.removeAssertionId(tokenId, latestStateIndex);
 
-        emit AssetStateUpdateCanceled(contentAssetStorageAddress, tokenId, latestState);
+        emit AssetStateUpdateCanceled(contentAssetStorageAddress, tokenId, latestState, addedTokenAmount);
     }
 
     function updateAssetStoringPeriod(
@@ -256,6 +278,34 @@ contract ContentAsset is Named, Versioned {
         );
 
         emit AssetPaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
+    }
+
+    function updateAssetAddedTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
+        ContentAssetStorage cas = contentAssetStorage;
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+
+        address contentAssetStorageAddress = address(cas);
+        bytes memory keyword = abi.encodePacked(
+            contentAssetStorageAddress,
+            contentAssetStorage.getAssertionIdByIndex(tokenId, 0)
+        );
+        bytes32 agreementId = sasV1.generateAgreementId(contentAssetStorageAddress, tokenId, keyword, 1);
+        bytes32 latestState = contentAssetStorage.getLatestAssertionId(tokenId);
+
+        if (serviceAgreementStorageProxy.isStateFinalized(agreementId, latestState)) {
+            revert ServiceAgreementErrorsV1.NoPendingUpdate(contentAssetStorageAddress, tokenId);
+        }
+
+        sasV1.addAddedTokens(
+            msg.sender,
+            contentAssetStorageAddress,
+            tokenId,
+            abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0)),
+            1,
+            tokenAmount
+        );
+
+        emit AssetUpdatePaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
     }
 
     function _createAsset(
