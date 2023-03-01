@@ -43,7 +43,7 @@ contract CommitManagerV1 is Named, Versioned {
     string private constant _NAME = "CommitManagerV1";
     string private constant _VERSION = "1.0.0";
 
-    bool[4] public reqs = [false, false, false, false];
+    bool[6] public reqs = [false, false, false, false, false, false];
 
     Hub public hub;
     ScoringProxy public scoringProxy;
@@ -90,7 +90,36 @@ contract CommitManagerV1 is Named, Versioned {
         return _VERSION;
     }
 
-    function isCommitWindowOpen(bytes32 agreementId, uint16 epoch, bytes32 assertionId) public view returns (bool) {
+    function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        uint256 startTime = sasProxy.getAgreementStartTime(agreementId);
+
+        ParametersStorage params = parametersStorage;
+        uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
+
+        if (startTime == 0) revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+        if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
+            revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
+                agreementId,
+                startTime,
+                sasProxy.getAgreementEpochsNumber(agreementId),
+                epochLength
+            );
+
+        uint256 timeNow = block.timestamp;
+        uint256 commitWindowDuration = (params.commitWindowDurationPerc() * epochLength) / 100;
+
+        if (epoch == 0) {
+            return timeNow < (startTime + commitWindowDuration);
+        }
+
+        return (timeNow > (startTime + epochLength * epoch) &&
+            timeNow < (startTime + epochLength * epoch + commitWindowDuration));
+    }
+
+    function isUpdateCommitWindowOpen(
+        bytes32 agreementId, uint16 epoch, bytes32 assertionId
+    ) public view returns (bool) {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
@@ -171,6 +200,21 @@ contract CommitManagerV1 is Named, Versioned {
         }
     }
 
+    function submitUpdateCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
+        _submitUpdateCommit(args);
+    }
+
+    function bulkSubmitUpdateCommit(ServiceAgreementStructsV1.CommitInputArgs[] calldata argsArray) external {
+        uint256 commitsNumber = argsArray.length;
+
+        for (uint256 i; i < commitsNumber; ) {
+            _submitUpdateCommit(argsArray[i]);
+            unchecked {
+                i++;
+            }
+        }
+    }
+
     function setReq(uint256 index, bool req) external onlyHubOwner {
         reqs[index] = req;
     }
@@ -183,24 +227,22 @@ contract CommitManagerV1 is Named, Versioned {
             args.hashFunctionId
         );
 
-        AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
-        bytes32 latestState = generalAssetInterface.getLatestAssertionId(args.tokenId);
-
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
-        bytes32 stateId = keccak256(abi.encodePacked(agreementId, args.epoch, latestState));
 
-        if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch, latestState)) {
-            uint256 commitWindowEnd = sasProxy.getCommitDeadline(stateId);
+        if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {
+            uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
+
+            uint256 actualCommitWindowStart = (sasProxy.getAgreementStartTime(agreementId) + args.epoch * epochLength);
 
             revert ServiceAgreementErrorsV1.CommitWindowClosed(
                 agreementId,
                 args.epoch,
-                commitWindowEnd - parametersStorage.commitWindowDuration(),
-                commitWindowEnd,
+                actualCommitWindowStart,
+                actualCommitWindowStart + (parametersStorage.commitWindowDurationPerc() * epochLength) / 100,
                 block.timestamp
             );
         }
-        emit Logger(!isCommitWindowOpen(agreementId, args.epoch, latestState), "req1");
+        emit Logger(!isCommitWindowOpen(agreementId, args.epoch), "req1");
 
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -215,6 +257,71 @@ contract CommitManagerV1 is Named, Versioned {
             );
         }
         emit Logger(!shardingTableStorage.nodeExists(identityId), "req2");
+
+        uint40 score = scoringProxy.callScoreFunction(
+            sasProxy.getAgreementScoreFunctionId(agreementId),
+            args.hashFunctionId,
+            profileStorage.getNodeId(identityId),
+            args.keyword,
+            stakingStorage.totalStakes(identityId)
+        );
+
+        bytes32 finalizedState = sasProxy.getAgreementLatestFinalizedState(agreementId);
+
+        _insertCommit(agreementId, args.epoch, finalizedState, identityId, 0, 0, score);
+
+        emit CommitSubmitted(
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId,
+            args.epoch,
+            finalizedState,
+            identityId,
+            score
+        );
+    }
+
+    function _submitUpdateCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) internal virtual {
+        bytes32 agreementId = serviceAgreementV1.generateAgreementId(
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId
+        );
+
+        AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
+        bytes32 latestState = generalAssetInterface.getLatestAssertionId(args.tokenId);
+
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        bytes32 stateId = keccak256(abi.encodePacked(agreementId, args.epoch, latestState));
+
+        if (!reqs[0] && !isUpdateCommitWindowOpen(agreementId, args.epoch, latestState)) {
+            uint256 commitWindowEnd = sasProxy.getCommitDeadline(stateId);
+
+            revert ServiceAgreementErrorsV1.CommitWindowClosed(
+                agreementId,
+                args.epoch,
+                commitWindowEnd - parametersStorage.updateCommitWindowDuration(),
+                commitWindowEnd,
+                block.timestamp
+            );
+        }
+        emit Logger(!isUpdateCommitWindowOpen(agreementId, args.epoch, latestState), "req3");
+
+        uint72 identityId = identityStorage.getIdentityId(msg.sender);
+
+        if (!reqs[1] && !shardingTableStorage.nodeExists(identityId)) {
+            ProfileStorage ps = profileStorage;
+
+            revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
+                identityId,
+                ps.getNodeId(identityId),
+                ps.getAsk(identityId),
+                stakingStorage.totalStakes(identityId)
+            );
+        }
+        emit Logger(!shardingTableStorage.nodeExists(identityId), "req4");
 
         uint40 score = scoringProxy.callScoreFunction(
             serviceAgreementStorageProxy.getAgreementScoreFunctionId(agreementId),
@@ -269,7 +376,7 @@ contract CommitManagerV1 is Named, Versioned {
                 identityId,
                 profileStorage.getNodeId(identityId)
             );
-        emit Logger(sasProxy.commitSubmissionExists(commitId), "req3");
+        emit Logger(sasProxy.commitSubmissionExists(commitId), "req5");
 
         bytes32 refCommitId = sasProxy.getAgreementEpochSubmissionHead(agreementId, epoch, assertionId);
 
@@ -295,7 +402,7 @@ contract CommitManagerV1 is Named, Versioned {
                 profileStorage.getNodeId(identityId),
                 i
             );
-        emit Logger(i >= r0, "req4");
+        emit Logger(i >= r0, "req6");
 
         sasProxy.createCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
 

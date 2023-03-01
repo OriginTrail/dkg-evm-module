@@ -9,10 +9,11 @@ contract ParametersStorage {
 
     // 0 - minProofWindowOffsetPerc
     // 1 - maxProofWindowOffsetPerc
-    // 2 - proofWindowDurationPerc
-    // 3 - replacementWindowDurationPerc
-    // 4 - finalizationCommitsNumber
-    uint8[5] internal args1;
+    // 2 - commitWindowDurationPerc
+    // 3 - proofWindowDurationPerc
+    // 4 - replacementWindowDurationPerc
+    // 5 - finalizationCommitsNumber
+    uint8[6] internal args1;
 
     // 0 - r0
     // 1 - r1
@@ -30,7 +31,7 @@ contract ParametersStorage {
     // 1 - rewardWithdrawalDelay
     uint24[2] internal args4;
 
-    uint16 public commitWindowDuration;
+    uint16 public updateCommitWindowDuration;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0), "Hub Address cannot be 0x0");
@@ -52,10 +53,12 @@ contract ParametersStorage {
         args1[0] = 50;
         // maxProofWindowOffsetPerc
         args1[1] = 75;
-        // proofWindowDurationPerc
+        // commitWindowDurationPerc
         args1[2] = 25;
+        // proofWindowDurationPerc
+        args1[3] = 25;
         // replacementWindowDurationPerc
-        args1[3] = 0;
+        args1[4] = 0;
 
         epochLength = 1 hours;
 
@@ -66,10 +69,10 @@ contract ParametersStorage {
         // slashingFreezeDuration
         args2[2] = 730 days;
 
-        commitWindowDuration = 15 minutes;
+        updateCommitWindowDuration = 30 minutes;
 
         // finalizationCommitsNumber
-        args1[4] = 1;
+        args1[5] = 1;
     }
 
     modifier onlyHubOwner() {
@@ -129,20 +132,28 @@ contract ParametersStorage {
         args1[1] = newMaxProofWindowOffsetPerc;
     }
 
-    function proofWindowDurationPerc() external view returns (uint8) {
+    function commitWindowDurationPerc() external view returns (uint8) {
         return args1[2];
     }
 
-    function setProofWindowDurationPerc(uint8 newProofWindowDurationPerc) external onlyHubOwner {
-        args1[2] = newProofWindowDurationPerc;
+    function setCommitWindowDurationPerc(uint8 newCommitWindowDurationPerc) external onlyHubOwner {
+        args1[2] = newCommitWindowDurationPerc;
     }
 
-    function replacementWindowDurationPerc() external view returns (uint8) {
+    function proofWindowDurationPerc() external view returns (uint8) {
         return args1[3];
     }
 
+    function setProofWindowDurationPerc(uint8 newProofWindowDurationPerc) external onlyHubOwner {
+        args1[3] = newProofWindowDurationPerc;
+    }
+
+    function replacementWindowDurationPerc() external view returns (uint8) {
+        return args1[4];
+    }
+
     function setReplacementWindowDurationPerc(uint8 newReplacementWindowDurationPerc) external onlyHubOwner {
-        args1[3] = newReplacementWindowDurationPerc;
+        args1[4] = newReplacementWindowDurationPerc;
     }
 
     function setEpochLength(uint128 newEpochLength) external onlyHubOwner {
@@ -173,16 +184,16 @@ contract ParametersStorage {
         args2[2] = newSlashingFreezeDuration;
     }
 
-    function setCommitWindowDuration(uint16 newCommitWindowDuration) external onlyHubOwner {
-        commitWindowDuration = newCommitWindowDuration;
+    function setUpdateCommitWindowDuration(uint16 newUpdateCommitWindowDuration) external onlyHubOwner {
+        updateCommitWindowDuration = newUpdateCommitWindowDuration;
     }
 
     function finalizationCommitsNumber() external view returns (uint8) {
-        return args1[4];
+        return args1[5];
     }
 
     function setFinalizationCommitsNumber(uint8 newFinalizationCommitsNumber) external onlyHubOwner {
-        args1[4] = newFinalizationCommitsNumber;
+        args1[5] = newFinalizationCommitsNumber;
     }
 
     function _checkHubOwner() internal view virtual {
