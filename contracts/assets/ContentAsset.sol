@@ -214,10 +214,7 @@ contract ContentAsset is Named, Versioned {
 
         address contentAssetStorageAddress = address(cas);
 
-        bytes memory keyword = abi.encodePacked(
-            contentAssetStorageAddress,
-            cas.getAssertionIdByIndex(tokenId, 0)
-        );
+        bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
         bytes32 agreementId = serviceAgreementV1.generateAgreementId(contentAssetStorageAddress, tokenId, keyword, 1);
         bytes32 unfinalizedState = uss.getUnfinalizedState(tokenId);
 
@@ -225,8 +222,15 @@ contract ContentAsset is Named, Versioned {
 
         if (unfinalizedState == bytes32(0)) {
             revert ServiceAgreementErrorsV1.NoPendingUpdate(contentAssetStorageAddress, tokenId);
-        } else if (block.timestamp <= sasProxy.getCommitDeadline(keccak256(abi.encodePacked(agreementId, epoch, unfinalizedState)))) {
-            revert ServiceAgreementErrorsV1.PendingUpdateFinalization(contentAssetStorageAddress, tokenId, unfinalizedState);
+        } else if (
+            block.timestamp <=
+            sasProxy.getCommitDeadline(keccak256(abi.encodePacked(agreementId, epoch, unfinalizedState)))
+        ) {
+            revert ServiceAgreementErrorsV1.PendingUpdateFinalization(
+                contentAssetStorageAddress,
+                tokenId,
+                unfinalizedState
+            );
         }
 
         uint96 addedTokenAmount = sasProxy.getAgreementAddedTokenAmount(agreementId);

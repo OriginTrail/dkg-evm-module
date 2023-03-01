@@ -184,7 +184,12 @@ contract ProofManagerV1 is Named, Versioned {
         reqs[index] = req;
     }
 
-    function _getChallenge(address sender, address assetContract, uint256 tokenId, uint16 epoch) internal view returns (bytes32, uint256) {
+    function _getChallenge(
+        address sender,
+        address assetContract,
+        uint256 tokenId,
+        uint16 epoch
+    ) internal view returns (bytes32, uint256) {
         uint72 identityId = identityStorage.getIdentityId(sender);
 
         AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
