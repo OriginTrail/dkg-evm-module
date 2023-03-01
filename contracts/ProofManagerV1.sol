@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.4;
 
+import {AbstractAsset} from "./assets/AbstractAsset.sol";
 import {Hub} from "./Hub.sol";
 import {ServiceAgreementV1} from "./ServiceAgreementV1.sol";
 import {Staking} from "./Staking.sol";
@@ -99,8 +100,8 @@ contract ProofManagerV1 is Named, Versioned {
             timeNow < (startTime + epochLength * epoch + proofWindowOffset + proofWindowDuration));
     }
 
-    function getChallenge(bytes32 agreementId, uint16 epoch) public view returns (bytes32, uint256) {
-        return _getChallenge(msg.sender, agreementId, epoch);
+    function getChallenge(address assetContract, uint256 tokenId, uint16 epoch) public view returns (bytes32, uint256) {
+        return _getChallenge(msg.sender, assetContract, tokenId, epoch);
     }
 
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
@@ -183,10 +184,11 @@ contract ProofManagerV1 is Named, Versioned {
         reqs[index] = req;
     }
 
-    function _getChallenge(address sender, bytes32 agreementId, uint16 epoch) internal view returns (bytes32, uint256) {
+    function _getChallenge(address sender, address assetContract, uint256 tokenId, uint16 epoch) internal view returns (bytes32, uint256) {
         uint72 identityId = identityStorage.getIdentityId(sender);
 
-        bytes32 latestFinalizedState = serviceAgreementStorageProxy.getAgreementLatestFinalizedState(agreementId);
+        AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
+        bytes32 latestFinalizedState = generalAssetInterface.getLatestAssertionId(tokenId);
 
         uint256 assertionChunksNumber = assertionStorage.getAssertionChunksNumber(latestFinalizedState);
 
@@ -245,7 +247,8 @@ contract ProofManagerV1 is Named, Versioned {
             "req2"
         );
 
-        bytes32 latestFinalizedState = sasProxy.getAgreementLatestFinalizedState(agreementId);
+        AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
+        bytes32 latestFinalizedState = generalAssetInterface.getLatestAssertionId(args.tokenId);
 
         bytes32 nextCommitId = sasProxy.getAgreementEpochSubmissionHead(agreementId, args.epoch, latestFinalizedState);
         uint32 r0 = parametersStorage.r0();
@@ -276,7 +279,7 @@ contract ProofManagerV1 is Named, Versioned {
 
         bytes32 merkleRoot;
         uint256 challenge;
-        (merkleRoot, challenge) = _getChallenge(msg.sender, agreementId, args.epoch);
+        (merkleRoot, challenge) = _getChallenge(msg.sender, args.assetContract, args.tokenId, args.epoch);
 
         if (
             !reqs[3] &&

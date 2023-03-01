@@ -3,8 +3,13 @@
 pragma solidity ^0.8.4;
 
 import {Hub} from "../Hub.sol";
+import {Named} from "../interface/Named.sol";
+import {Versioned} from "../interface/Versioned.sol";
 
-contract ParametersStorage {
+contract ParametersStorage is Named, Versioned {
+    string private constant _NAME = "ParametersStorage";
+    string private constant _VERSION = "1.1.0";
+
     Hub public hub;
 
     // 0 - minProofWindowOffsetPerc
@@ -78,6 +83,14 @@ contract ParametersStorage {
     modifier onlyHubOwner() {
         _checkHubOwner();
         _;
+    }
+
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
     }
 
     function minimumStake() external view returns (uint96) {

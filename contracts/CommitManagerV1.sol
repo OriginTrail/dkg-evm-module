@@ -7,12 +7,14 @@ import {ScoringProxy} from "./ScoringProxy.sol";
 import {ServiceAgreementV1} from "./ServiceAgreementV1.sol";
 import {Staking} from "./Staking.sol";
 import {AbstractAsset} from "./assets/AbstractAsset.sol";
+import {ContentAssetStorage} from "./storage/assets/ContentAssetStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
+import {UnfinalizedStateStorage} from "./storage/UnfinalizedStateStorage.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
@@ -49,12 +51,14 @@ contract CommitManagerV1 is Named, Versioned {
     ScoringProxy public scoringProxy;
     ServiceAgreementV1 public serviceAgreementV1;
     Staking public stakingContract;
+    ContentAssetStorage public contentAssetStorage;
     IdentityStorage public identityStorage;
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     ShardingTableStorage public shardingTableStorage;
     StakingStorage public stakingStorage;
+    UnfinalizedStateStorage public unfinalizedStateStorage;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0), "Hub Address cannot be 0x0");
@@ -72,6 +76,7 @@ contract CommitManagerV1 is Named, Versioned {
         scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
         serviceAgreementV1 = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
         stakingContract = Staking(hub.getContractAddress("Staking"));
+        contentAssetStorage = ContentAssetStorage(hub.getAssetStorageAddress("ContentAssetStorage"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
@@ -80,6 +85,7 @@ contract CommitManagerV1 is Named, Versioned {
         );
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
+        unfinalizedStateStorage = UnfinalizedStateStorage(hub.getContractAddress("UnfinalizedStateStorage"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -268,9 +274,10 @@ contract CommitManagerV1 is Named, Versioned {
             stakingStorage.totalStakes(identityId)
         );
 
-        bytes32 finalizedState = sasProxy.getAgreementLatestFinalizedState(agreementId);
+        AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
+        bytes32 latestFinalizedState = generalAssetInterface.getLatestAssertionId(args.tokenId);
 
-        _insertCommit(agreementId, args.epoch, finalizedState, identityId, 0, 0, score);
+        _insertCommit(agreementId, args.epoch, latestFinalizedState, identityId, 0, 0, score);
 
         emit CommitSubmitted(
             args.assetContract,
@@ -278,13 +285,21 @@ contract CommitManagerV1 is Named, Versioned {
             args.keyword,
             args.hashFunctionId,
             args.epoch,
-            finalizedState,
+            latestFinalizedState,
             identityId,
             score
         );
     }
 
     function _submitUpdateCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) internal virtual {
+        UnfinalizedStateStorage uss = unfinalizedStateStorage;
+
+        bytes32 unfinalizedState = uss.getUnfinalizedState(args.tokenId);
+
+        if (unfinalizedState == bytes32(0)) {
+            revert ServiceAgreementErrorsV1.NoPendingUpdate(args.assetContract, args.tokenId);
+        }
+
         bytes32 agreementId = serviceAgreementV1.generateAgreementId(
             args.assetContract,
             args.tokenId,
@@ -292,13 +307,10 @@ contract CommitManagerV1 is Named, Versioned {
             args.hashFunctionId
         );
 
-        AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
-        bytes32 latestState = generalAssetInterface.getLatestAssertionId(args.tokenId);
-
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
-        bytes32 stateId = keccak256(abi.encodePacked(agreementId, args.epoch, latestState));
+        bytes32 stateId = keccak256(abi.encodePacked(agreementId, args.epoch, unfinalizedState));
 
-        if (!reqs[0] && !isUpdateCommitWindowOpen(agreementId, args.epoch, latestState)) {
+        if (!reqs[2] && !isUpdateCommitWindowOpen(agreementId, args.epoch, unfinalizedState)) {
             uint256 commitWindowEnd = sasProxy.getCommitDeadline(stateId);
 
             revert ServiceAgreementErrorsV1.CommitWindowClosed(
@@ -309,11 +321,11 @@ contract CommitManagerV1 is Named, Versioned {
                 block.timestamp
             );
         }
-        emit Logger(!isUpdateCommitWindowOpen(agreementId, args.epoch, latestState), "req3");
+        emit Logger(!isUpdateCommitWindowOpen(agreementId, args.epoch, unfinalizedState), "req3");
 
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
-        if (!reqs[1] && !shardingTableStorage.nodeExists(identityId)) {
+        if (!reqs[3] && !shardingTableStorage.nodeExists(identityId)) {
             ProfileStorage ps = profileStorage;
 
             revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
@@ -333,7 +345,7 @@ contract CommitManagerV1 is Named, Versioned {
             stakingStorage.totalStakes(identityId)
         );
 
-        _insertCommit(agreementId, args.epoch, latestState, identityId, 0, 0, score);
+        _insertCommit(agreementId, args.epoch, unfinalizedState, identityId, 0, 0, score);
 
         emit CommitSubmitted(
             args.assetContract,
@@ -341,19 +353,39 @@ contract CommitManagerV1 is Named, Versioned {
             args.keyword,
             args.hashFunctionId,
             args.epoch,
-            latestState,
+            unfinalizedState,
             identityId,
             score
         );
 
         if (sasProxy.getCommitsCount(stateId) == parametersStorage.finalizationCommitsNumber()) {
+            if (sasProxy.isOldAgreement(agreementId)) {
+                sasProxy.migrateOldServiceAgreement(agreementId);
+            }
+
+            if (uss.hasPendingUpdate(args.tokenId)) {
+                uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);
+                sasProxy.setAgreementTokenAmount(
+                    agreementId,
+                    tokenAmount + sasProxy.getAgreementAddedTokenAmount(agreementId)
+                );
+                sasProxy.setAgreementAddedTokenAmount(agreementId, 0);
+
+                ContentAssetStorage cas = contentAssetStorage;
+                cas.setAssertionIssuer(args.tokenId, unfinalizedState, uss.getIssuer(args.tokenId));
+                cas.pushAssertionId(args.tokenId, unfinalizedState);
+
+                uss.deleteIssuer(args.tokenId);
+                uss.deleteUnfinalizedState(args.tokenId);
+            }
+
             emit StateFinalized(
                 args.assetContract,
                 args.tokenId,
                 args.keyword,
                 args.hashFunctionId,
                 args.epoch,
-                latestState
+                unfinalizedState
             );
         }
     }
@@ -371,7 +403,7 @@ contract CommitManagerV1 is Named, Versioned {
 
         bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, assertionId, identityId));
 
-        if (!reqs[2] && sasProxy.commitSubmissionExists(commitId))
+        if (!reqs[4] && sasProxy.commitSubmissionExists(commitId))
             revert ServiceAgreementErrorsV1.NodeAlreadySubmittedCommit(
                 agreementId,
                 epoch,
@@ -396,7 +428,7 @@ contract CommitManagerV1 is Named, Versioned {
             }
         }
 
-        if (!reqs[3] && (i >= r0))
+        if (!reqs[5] && (i >= r0))
             revert ServiceAgreementErrorsV1.NodeNotAwarded(
                 agreementId,
                 epoch,
@@ -436,24 +468,7 @@ contract CommitManagerV1 is Named, Versioned {
             _linkCommits(agreementId, epoch, assertionId, refCommit.identityId, identityId);
         }
 
-        bytes32 stateId = keccak256(abi.encodePacked(agreementId, epoch, assertionId));
-        sasProxy.incrementCommitsCount(stateId);
-
-        if (sasProxy.getCommitsCount(stateId) == params.finalizationCommitsNumber()) {
-            if (sasProxy.isOldAgreement(agreementId)) {
-                sasProxy.migrateOldServiceAgreement(agreementId, assertionId);
-            }
-
-            if (!sasProxy.isStateFinalized(agreementId, assertionId)) {
-                uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);
-                sasProxy.setAgreementTokenAmount(
-                    agreementId,
-                    tokenAmount + sasProxy.getAgreementAddedTokenAmount(agreementId)
-                );
-                sasProxy.setAgreementAddedTokenAmount(agreementId, 0);
-                sasProxy.setAgreementLatestFinalizedState(agreementId, assertionId);
-            }
-        }
+        sasProxy.incrementCommitsCount(keccak256(abi.encodePacked(agreementId, epoch, assertionId)));
     }
 
     function _linkCommits(
