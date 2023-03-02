@@ -35,7 +35,7 @@ contract ContentAsset is Named, Versioned {
         bytes32 indexed state,
         uint96 returnedTokenAmount
     );
-    event AssetStoringPeriondExtended(
+    event AssetStoringPeriodExtended(
         address indexed assetContract,
         uint256 indexed tokenId,
         uint16 epochsNumber,
