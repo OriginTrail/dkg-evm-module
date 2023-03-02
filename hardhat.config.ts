@@ -46,6 +46,10 @@ const config: HardhatUserConfig = {
       loggingEnabled: false,
       allowUnlimitedContractSize: false,
       saveDeployments: false,
+      mining: {
+        auto: true,
+        interval: [3000, 5000],
+      },
     },
     otp_alphanet: {
       chainId: 2043,
