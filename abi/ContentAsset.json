@@ -24,30 +24,30 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "assetStorage",
+        "type": "address"
       },
       {
-        "internalType": "bytes32",
-        "name": "latestState",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "latestFinalizedState",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
       }
     ],
-    "name": "LatestStateIsNotFinalized",
+    "name": "NoPendingUpdate",
     "type": "error"
   },
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "assetStorage",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
       },
       {
         "internalType": "bytes32",
@@ -61,17 +61,22 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "assetStorage",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
       },
       {
         "internalType": "bytes32",
-        "name": "latestFinalizedState",
+        "name": "latestState",
         "type": "bytes32"
       }
     ],
-    "name": "UpdateFinalized",
+    "name": "UpdateIsNotFinalized",
     "type": "error"
   },
   {
@@ -94,6 +99,12 @@
         "internalType": "bytes32",
         "name": "state",
         "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "returnedTokenAmount",
+        "type": "uint96"
       }
     ],
     "name": "AssetBurnt",
@@ -169,6 +180,12 @@
         "internalType": "bytes32",
         "name": "state",
         "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "returnedTokenAmount",
+        "type": "uint96"
       }
     ],
     "name": "AssetStateUpdateCanceled",
@@ -194,6 +211,12 @@
         "internalType": "bytes32",
         "name": "state",
         "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "addedTokenAmount",
+        "type": "uint96"
       }
     ],
     "name": "AssetStateUpdated",
@@ -228,6 +251,31 @@
       }
     ],
     "name": "AssetStoringPeriondExtended",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "assetContract",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "AssetUpdatePaymentIncreased",
     "type": "event"
   },
   {
@@ -455,6 +503,37 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "unfinalizedStateStorage",
+    "outputs": [
+      {
+        "internalType": "contract UnfinalizedStateStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "updateAssetAddedTokenAmount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

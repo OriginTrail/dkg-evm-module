@@ -62,14 +62,13 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
 
     function getAgreementData(
         bytes32 agreementId
-    ) external view returns (uint256, uint16, uint128, uint96[2] memory, uint8[2] memory, bytes32) {
+    ) external view returns (uint256, uint16, uint128, uint96[2] memory, uint8[2] memory) {
         return (
             serviceAgreements[agreementId].startTime,
             serviceAgreements[agreementId].epochsNumber,
             serviceAgreements[agreementId].epochLength,
             [serviceAgreements[agreementId].tokenAmount, serviceAgreements[agreementId].addedTokenAmount],
-            [serviceAgreements[agreementId].scoreFunctionId, serviceAgreements[agreementId].proofWindowOffsetPerc],
-            serviceAgreements[agreementId].latestFinalizedState
+            [serviceAgreements[agreementId].scoreFunctionId, serviceAgreements[agreementId].proofWindowOffsetPerc]
         );
     }
 
@@ -130,21 +129,6 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
         uint8 proofWindowOffsetPerc
     ) external onlyContracts {
         serviceAgreements[agreementId].proofWindowOffsetPerc = proofWindowOffsetPerc;
-    }
-
-    function getAgreementLatestFinalizedState(bytes32 agreementId) external view returns (bytes32) {
-        return serviceAgreements[agreementId].latestFinalizedState;
-    }
-
-    function setAgreementLatestFinalizedState(
-        bytes32 agreementId,
-        bytes32 latestFinalizedState
-    ) external onlyContracts {
-        serviceAgreements[agreementId].latestFinalizedState = latestFinalizedState;
-    }
-
-    function isStateFinalized(bytes32 agreementId, bytes32 state) external view returns (bool) {
-        return state == this.getAgreementLatestFinalizedState(agreementId);
     }
 
     function getAgreementEpochSubmissionHead(

@@ -80,12 +80,6 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
         assets[tokenId].assertionIds.push(assertionId);
     }
 
-    function removeAssertionId(uint256 tokenId, uint256 index) external onlyContracts {
-        bytes32[] storage assertionIds = assets[tokenId].assertionIds;
-        assertionIds[index] = assertionIds[assertionIds.length - 1];
-        assertionIds.pop();
-    }
-
     function getAssertionIds(uint256 tokenId) public view override returns (bytes32[] memory) {
         return assets[tokenId].assertionIds;
     }

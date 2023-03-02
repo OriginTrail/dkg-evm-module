@@ -12,12 +12,12 @@
   },
   {
     "inputs": [],
-    "name": "commitWindowDuration",
+    "name": "commitWindowDurationPerc",
     "outputs": [
       {
-        "internalType": "uint16",
+        "internalType": "uint8",
         "name": "",
-        "type": "uint16"
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -116,6 +116,19 @@
   },
   {
     "inputs": [],
+    "name": "name",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "proofWindowDurationPerc",
     "outputs": [
       {
@@ -195,12 +208,12 @@
   {
     "inputs": [
       {
-        "internalType": "uint16",
-        "name": "newCommitWindowDuration",
-        "type": "uint16"
+        "internalType": "uint8",
+        "name": "newCommitWindowDurationPerc",
+        "type": "uint8"
       }
     ],
-    "name": "setCommitWindowDuration",
+    "name": "setCommitWindowDurationPerc",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -388,6 +401,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "newUpdateCommitWindowDuration",
+        "type": "uint16"
+      }
+    ],
+    "name": "setUpdateCommitWindowDuration",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "slashingFreezeDuration",
     "outputs": [
@@ -411,6 +437,32 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "updateCommitWindowDuration",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "version",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
     "type": "function"
   }
 ]

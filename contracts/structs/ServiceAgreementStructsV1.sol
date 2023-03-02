@@ -42,7 +42,6 @@ library ServiceAgreementStructsV1 {
         uint96 addedTokenAmount;
         uint8 scoreFunctionId;
         uint8 proofWindowOffsetPerc;
-        bytes32 latestFinalizedState;
         // keccak256(epoch + assertionId) => headCommitId
         mapping(bytes32 => bytes32) epochSubmissionHeads;
         // epoch => number of nodes received rewards

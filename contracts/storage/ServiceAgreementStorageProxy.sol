@@ -48,7 +48,7 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         return _VERSION;
     }
 
-    function migrateOldServiceAgreement(bytes32 agreementId, bytes32 latestFinalizedState) external onlyContracts {
+    function migrateOldServiceAgreement(bytes32 agreementId) external onlyContracts {
         uint256 startTime;
         uint16 epochsNumber;
         uint128 epochLength;
@@ -66,7 +66,6 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
             scoreFunctionIdAndProofWindowOffsetPerc[1]
         );
         storageV1U1.setAgreementStartTime(agreementId, startTime);
-        storageV1U1.setAgreementLatestFinalizedState(agreementId, latestFinalizedState);
 
         storageV1.deleteServiceAgreementObject(agreementId);
 
@@ -101,15 +100,16 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
 
     function getAgreementData(
         bytes32 agreementId
-    ) external view returns (uint256, uint16, uint128, uint96[2] memory, uint8[2] memory, bytes32) {
+    ) external view returns (uint256, uint16, uint128, uint96[2] memory, uint8[2] memory) {
         if (this.isOldAgreement(agreementId)) {
-            uint256 arg1;
-            uint16 arg2;
-            uint128 arg3;
-            uint96 arg4;
-            uint8[2] memory arg5;
-            (arg1, arg2, arg3, arg4, arg5) = storageV1.getAgreementData(agreementId);
-            return (arg1, arg2, arg3, [arg4, 0], arg5, bytes32(""));
+            uint256 startTime;
+            uint16 epochsNumber;
+            uint128 epochLength;
+            uint96 tokenAmount;
+            uint8[2] memory scoreFunctionIdAndProofWindowOffsetPerc;
+            (startTime, epochsNumber, epochLength, tokenAmount, scoreFunctionIdAndProofWindowOffsetPerc) = storageV1
+                .getAgreementData(agreementId);
+            return (startTime, epochsNumber, epochLength, [tokenAmount, 0], scoreFunctionIdAndProofWindowOffsetPerc);
         } else {
             return storageV1U1.getAgreementData(agreementId);
         }
@@ -224,25 +224,6 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         } else {
             storageV1U1.setAgreementProofWindowOffsetPerc(agreementId, proofWindowOffsetPerc);
         }
-    }
-
-    function getAgreementLatestFinalizedState(bytes32 agreementId) external view returns (bytes32) {
-        if (this.isOldAgreement(agreementId)) {
-            return bytes32("");
-        } else {
-            return storageV1U1.getAgreementLatestFinalizedState(agreementId);
-        }
-    }
-
-    function setAgreementLatestFinalizedState(
-        bytes32 agreementId,
-        bytes32 latestFinalizedState
-    ) external onlyContracts {
-        storageV1U1.setAgreementLatestFinalizedState(agreementId, latestFinalizedState);
-    }
-
-    function isStateFinalized(bytes32 agreementId, bytes32 state) external view returns (bool) {
-        return storageV1U1.isStateFinalized(agreementId, state);
     }
 
     function getAgreementEpochSubmissionHead(
