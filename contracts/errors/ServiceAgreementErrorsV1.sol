@@ -46,6 +46,8 @@ library ServiceAgreementErrorsV1 {
         uint256 challenge
     );
     error NodeAlreadySubmittedCommit(bytes32 agreementId, uint16 epoch, uint72 identityId, bytes nodeId);
+    error CommitPhaseOngoing(bytes32 agreementId);
+    error CommitPhaseSucceeded(bytes32 agreementId);
     error FirstEpochHasAlreadyEnded(bytes32 agreementId);
     error NoPendingUpdate(address assetStorage, uint256 tokenId);
     error UpdateIsNotFinalized(address assetStorage, uint256 tokenId, bytes32 latestState);

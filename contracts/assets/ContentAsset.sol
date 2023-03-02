@@ -147,15 +147,29 @@ contract ContentAsset is Named, Versioned {
         bytes32 agreementId = sasV1.generateAgreementId(contentAssetStorageAddress, tokenId, keyword, 1);
         bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
 
-        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
-
-        if (
-            (sasProxy.getAgreementStartTime(agreementId) + sasProxy.getAgreementEpochLength(agreementId)) <
-            block.timestamp
-        ) {
-            revert ServiceAgreementErrorsV1.FirstEpochHasAlreadyEnded(agreementId);
-        } else if (unfinalizedState != bytes32(0)) {
+        if (unfinalizedState != bytes32(0)) {
             revert ServiceAgreementErrorsV1.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
+        }
+
+        bytes32 latestFinalizedState = cas.getLatestAssertionId(tokenId);
+
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        ParametersStorage params = parametersStorage;
+
+        uint256 timeNow = block.timestamp;
+        uint256 epochStart = sasProxy.getAgreementStartTime(agreementId);
+        uint256 commitPhaseEnd = epochStart + sasProxy.getAgreementEpochLength(agreementId) * params.commitWindowDurationPerc() / 100;
+        uint256 epochEnd = epochStart + sasProxy.getAgreementEpochLength(agreementId);
+        uint16 epoch = 0;
+        uint8 commitsCount = sasProxy.getCommitsCount(keccak256(abi.encodePacked(agreementId, epoch, latestFinalizedState)));
+        uint32 r0 = params.r0();
+
+        if ((timeNow < commitPhaseEnd) && (commitsCount < r0)) {
+            revert ServiceAgreementErrorsV1.CommitPhaseOngoing(agreementId);
+        } else if ((timeNow < epochEnd) && (commitsCount >= r0)) {
+            revert ServiceAgreementErrorsV1.CommitPhaseSucceeded(agreementId);
+        } else if (timeNow > epochEnd) {
+            revert ServiceAgreementErrorsV1.FirstEpochHasAlreadyEnded(agreementId);
         }
 
         uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);

@@ -3,7 +3,15 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { ContentAsset, ContentAssetStorage, ParametersStorage, ServiceAgreementV1, Token } from '../typechain';
+import {
+  ContentAsset,
+  ContentAssetStorage,
+  Hub,
+  ParametersStorage,
+  ServiceAgreementStorageProxy,
+  ServiceAgreementV1,
+  Token,
+} from '../typechain';
 import { ContentAssetStructs } from '../typechain/contracts/assets/ContentAsset';
 import { ZERO_BYTES32 } from './helpers/constants';
 
@@ -140,8 +148,13 @@ describe('ContentAsset contract', function () {
     expect(assertionIds[0]).to.equal(assetInputStruct.assertionId);
   });
 
-  it('Burn an asset during epoch 0, expect asset removed', async () => {
+  it('Burn an asset during epoch 0 with failed commit phase, expect asset to be removed', async () => {
     const tokenId = await createAsset();
+    const commitWindowDuration = (await ParametersStorage.epochLength())
+      .mul(await ParametersStorage.commitWindowDurationPerc())
+      .div(hre.ethers.BigNumber.from(100))
+      .toNumber();
+    await time.increase(commitWindowDuration);
 
     expect(await ContentAsset.burnAsset(tokenId))
       .to.emit(ContentAsset, 'AssetBurnt')
@@ -159,6 +172,40 @@ describe('ContentAsset contract', function () {
     await expect(ContentAssetWithNonOwnerSigner.burnAsset(tokenId)).to.be.revertedWith(
       'Only asset owner can use this fn',
     );
+  });
+
+  it('Burn an asset during commit phase, expect to be reverted', async () => {
+    const tokenId = await createAsset();
+
+    await expect(ContentAsset.burnAsset(tokenId)).to.be.revertedWithCustomError(ContentAsset, 'CommitPhaseOngoing');
+  });
+
+  it('Burn an asset with succeeded commit phase, expect to be reverted', async () => {
+    const tokenId = await createAsset();
+    const keyword = hre.ethers.utils.solidityPack(
+      ['address', 'bytes32'],
+      [ContentAssetStorage.address, assetInputStruct.assertionId],
+    );
+    const agreementId = hre.ethers.utils.soliditySha256(
+      ['address', 'uint256', 'bytes'],
+      [ContentAssetStorage.address, tokenId, keyword],
+    );
+    const epochStateId = hre.ethers.utils.solidityKeccak256(
+      ['bytes32', 'uint16', 'bytes32'],
+      [agreementId, 0, assetInputStruct.assertionId],
+    );
+    const ServiceAgreementStorageProxy = await hre.ethers.getContract<ServiceAgreementStorageProxy>(
+      'ServiceAgreementStorageProxy',
+    );
+    const r0 = await ParametersStorage.r0();
+
+    const Hub = await hre.ethers.getContract<Hub>('Hub');
+    await Hub.setContractAddress('Test', accounts[0].address);
+    for (let i = 0; i < r0; i++) {
+      await ServiceAgreementStorageProxy.incrementCommitsCount(epochStateId);
+    }
+
+    await expect(ContentAsset.burnAsset(tokenId)).to.be.revertedWithCustomError(ContentAsset, 'CommitPhaseSucceeded');
   });
 
   it('Burn an asset during epoch 1, expect ro be reverted', async () => {
@@ -198,6 +245,28 @@ describe('ContentAsset contract', function () {
     )
       .to.emit(ContentAsset, 'AssetStateUpdated')
       .withArgs(ContentAssetStorage.address, tokenId, newAssertionId, assetInputStruct.tokenAmount);
+  });
+
+  it('Update asset state of immutable asset, expect to be reverted', async () => {
+    const immutableAssetInputStruct = JSON.parse(JSON.stringify(assetInputStruct)) as typeof assetInputStruct;
+    immutableAssetInputStruct.immutable_ = true;
+    await Token.increaseAllowance(ServiceAgreementV1.address, immutableAssetInputStruct.tokenAmount);
+    const receipt = await (await ContentAsset.createAsset(immutableAssetInputStruct)).wait();
+    const tokenId = receipt.logs[0].topics[3];
+    const newAssertionId = '0x1cc2117b68bcbb1535205d517cb42ef45f25838add571fce4cfb7de7bd6179eb';
+
+    await Token.increaseAllowance(ServiceAgreementV1.address, immutableAssetInputStruct.tokenAmount);
+
+    await expect(
+      ContentAsset.updateAssetState(
+        tokenId,
+        newAssertionId,
+        immutableAssetInputStruct.size,
+        immutableAssetInputStruct.triplesNumber,
+        immutableAssetInputStruct.chunksNumber,
+        immutableAssetInputStruct.tokenAmount,
+      ),
+    ).to.be.revertedWith('Asset is immutable');
   });
 
   it('Update asset state using non-owner account, expect to be reverted', async () => {

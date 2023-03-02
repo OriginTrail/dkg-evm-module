@@ -18,6 +18,28 @@
         "type": "bytes32"
       }
     ],
+    "name": "CommitPhaseOngoing",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "CommitPhaseSucceeded",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      }
+    ],
     "name": "FirstEpochHasAlreadyEnded",
     "type": "error"
   },
