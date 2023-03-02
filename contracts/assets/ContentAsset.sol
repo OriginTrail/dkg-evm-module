@@ -158,10 +158,14 @@ contract ContentAsset is Named, Versioned {
 
         uint256 timeNow = block.timestamp;
         uint256 epochStart = sasProxy.getAgreementStartTime(agreementId);
-        uint256 commitPhaseEnd = epochStart + sasProxy.getAgreementEpochLength(agreementId) * params.commitWindowDurationPerc() / 100;
+        uint256 commitPhaseEnd = epochStart +
+            (sasProxy.getAgreementEpochLength(agreementId) * params.commitWindowDurationPerc()) /
+            100;
         uint256 epochEnd = epochStart + sasProxy.getAgreementEpochLength(agreementId);
         uint16 epoch = 0;
-        uint8 commitsCount = sasProxy.getCommitsCount(keccak256(abi.encodePacked(agreementId, epoch, latestFinalizedState)));
+        uint8 commitsCount = sasProxy.getCommitsCount(
+            keccak256(abi.encodePacked(agreementId, epoch, latestFinalizedState))
+        );
         uint32 r0 = params.r0();
 
         if ((timeNow < commitPhaseEnd) && (commitsCount < r0)) {
