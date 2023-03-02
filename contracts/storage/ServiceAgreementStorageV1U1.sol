@@ -17,11 +17,11 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
     // CommitId [keccak256(agreementId + epoch + assertionId + identityId)] => stateCommitSubmission
     mapping(bytes32 => ServiceAgreementStructsV1.CommitSubmission) internal stateCommitSubmissions;
 
-    // StateId [keccak256(agreementId + epoch + assertionId)] => stateCommitsCount
-    mapping(bytes32 => uint8) internal stateCommitsCount;
+    // EpochStateId [keccak256(agreementId + epoch + assertionId)] => epochStateCommitsCount
+    mapping(bytes32 => uint8) internal epochStateCommitsCount;
 
-    // StateId [keccak256(agreementId + epoch + assertionId)] => stateCommitDeadline
-    mapping(bytes32 => uint256) internal stateCommitsDeadlines;
+    // StateId [keccak256(agreementId + assertionId)] => updateCommitsDeadline
+    mapping(bytes32 => uint256) internal updateCommitsDeadlines;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) Guardian(hubAddress) {}
@@ -235,32 +235,32 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
         return stateCommitSubmissions[commitId].identityId != 0;
     }
 
-    function incrementStateCommitsCount(bytes32 stateId) external onlyContracts {
-        stateCommitsCount[stateId]++;
+    function incrementEpochStateCommitsCount(bytes32 epochStateId) external onlyContracts {
+        epochStateCommitsCount[epochStateId]++;
     }
 
-    function decrementStateCommitsCount(bytes32 stateId) external onlyContracts {
-        stateCommitsCount[stateId]--;
+    function decrementEpochStateCommitsCount(bytes32 epochStateId) external onlyContracts {
+        epochStateCommitsCount[epochStateId]--;
     }
 
-    function getStateCommitsCount(bytes32 stateId) external view returns (uint8) {
-        return stateCommitsCount[stateId];
+    function getEpochStateCommitsCount(bytes32 epochStateId) external view returns (uint8) {
+        return epochStateCommitsCount[epochStateId];
     }
 
-    function deleteStateCommitsCount(bytes32 stateId) external onlyContracts {
-        delete stateCommitsCount[stateId];
+    function deleteEpochStateCommitsCount(bytes32 epochStateId) external onlyContracts {
+        delete epochStateCommitsCount[epochStateId];
     }
 
-    function getStateCommitsDeadline(bytes32 stateId) external view returns (uint256) {
-        return stateCommitsDeadlines[stateId];
+    function getUpdateCommitsDeadline(bytes32 stateId) external view returns (uint256) {
+        return updateCommitsDeadlines[stateId];
     }
 
-    function setStateCommitsDeadline(bytes32 stateId, uint256 deadline) external onlyContracts {
-        stateCommitsDeadlines[stateId] = deadline;
+    function setUpdateCommitsDeadline(bytes32 stateId, uint256 deadline) external onlyContracts {
+        updateCommitsDeadlines[stateId] = deadline;
     }
 
-    function deleteStateCommitsDeadline(bytes32 stateId) external onlyContracts {
-        delete stateCommitsDeadlines[stateId];
+    function deleteUpdateCommitsDeadline(bytes32 stateId) external onlyContracts {
+        delete updateCommitsDeadlines[stateId];
     }
 
     function transferAgreementTokens(address receiver, uint96 tokenAmount) external onlyContracts {

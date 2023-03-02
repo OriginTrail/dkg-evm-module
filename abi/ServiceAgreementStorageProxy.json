@@ -133,24 +133,11 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "stateId",
+        "name": "epochStateId",
         "type": "bytes32"
       }
     ],
     "name": "decrementCommitsCount",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "stateId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "deleteCommitDeadline",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -172,7 +159,7 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "stateId",
+        "name": "epochStateId",
         "type": "bytes32"
       }
     ],
@@ -190,6 +177,19 @@
       }
     ],
     "name": "deleteServiceAgreementObject",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "stateId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "deleteUpdateCommitsDeadline",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -423,25 +423,6 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "stateId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getCommitDeadline",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
         "name": "commitId",
         "type": "bytes32"
       }
@@ -559,7 +540,7 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "stateId",
+        "name": "epochStateId",
         "type": "bytes32"
       }
     ],
@@ -569,6 +550,25 @@
         "internalType": "uint8",
         "name": "",
         "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "stateId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getUpdateCommitsDeadline",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -609,7 +609,7 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "stateId",
+        "name": "epochStateId",
         "type": "bytes32"
       }
     ],
@@ -940,24 +940,6 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "stateId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "deadline",
-        "type": "uint256"
-      }
-    ],
-    "name": "setCommitDeadline",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
         "name": "commitId",
         "type": "bytes32"
       },
@@ -1022,6 +1004,24 @@
       }
     ],
     "name": "setCommitSubmissionScore",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "stateId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      }
+    ],
+    "name": "setUpdateCommitsDeadline",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

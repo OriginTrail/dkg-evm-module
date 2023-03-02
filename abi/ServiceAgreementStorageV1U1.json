@@ -166,11 +166,24 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "stateId",
+        "name": "epochStateId",
         "type": "bytes32"
       }
     ],
-    "name": "decrementStateCommitsCount",
+    "name": "decrementEpochStateCommitsCount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "epochStateId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "deleteEpochStateCommitsCount",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -209,20 +222,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "deleteStateCommitsCount",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "stateId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "deleteStateCommitsDeadline",
+    "name": "deleteUpdateCommitsDeadline",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -456,6 +456,25 @@
     "inputs": [
       {
         "internalType": "bytes32",
+        "name": "epochStateId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getEpochStateCommitsCount",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
         "name": "commitId",
         "type": "bytes32"
       }
@@ -577,26 +596,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "getStateCommitsCount",
-    "outputs": [
-      {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "stateId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getStateCommitsDeadline",
+    "name": "getUpdateCommitsDeadline",
     "outputs": [
       {
         "internalType": "uint256",
@@ -642,11 +642,11 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "stateId",
+        "name": "epochStateId",
         "type": "bytes32"
       }
     ],
-    "name": "incrementStateCommitsCount",
+    "name": "incrementEpochStateCommitsCount",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -952,7 +952,7 @@
         "type": "uint256"
       }
     ],
-    "name": "setStateCommitsDeadline",
+    "name": "setUpdateCommitsDeadline",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

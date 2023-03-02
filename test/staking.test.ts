@@ -120,7 +120,7 @@ describe('Staking contract', function () {
   });
 
   it('Contract should be able to transferStake; expect to pass', async function () {
-    await Token.mint(StakingStorage.address, await hre.ethers.utils.parseEther(`${5_000_000}`));
+    await Token.mint(StakingStorage.address, hre.ethers.utils.parseEther(`${5_000_000}`));
 
     const initialReceiverBalance = await Token.balanceOf(accounts[1].address);
     await StakingStorage.transferStake(accounts[1].address, transferAmount);
@@ -129,8 +129,7 @@ describe('Staking contract', function () {
   });
 
   it('Create 1 node; expect that stake is created and correctly set', async function () {
-    await Token.mint(accounts[0].address, await hre.ethers.utils.parseEther(`${5_000_000}`));
-    await Token.increaseAllowance(Staking.address, await hre.ethers.utils.parseEther(`${5_000_000}`));
+    await Token.increaseAllowance(Staking.address, hre.ethers.utils.parseEther(`${5_000_000}`));
 
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
     await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
@@ -138,10 +137,10 @@ describe('Staking contract', function () {
     await Staking['addStake(address,uint72,uint96)'](
       accounts[0].address,
       identityId1,
-      await hre.ethers.utils.parseEther(`${5_000_000}`),
+      hre.ethers.utils.parseEther(`${5_000_000}`),
     );
     expect(await StakingStorage.totalStakes(identityId1)).to.equal(
-      await hre.ethers.utils.parseEther(`${5_000_000}`),
+      hre.ethers.utils.parseEther(`${5_000_000}`),
       'Total amount of stake is not set',
     );
   });

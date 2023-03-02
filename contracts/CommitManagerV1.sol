@@ -142,12 +142,9 @@ contract CommitManagerV1 is Named, Versioned {
                 epochLength
             );
 
-        uint256 timeNow = block.timestamp;
+        uint256 commitWindowEnd = sasProxy.getUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, assertionId)));
 
-        bytes32 stateId = keccak256(abi.encodePacked(agreementId, epoch, assertionId));
-        uint256 commitWindowEnd = sasProxy.getCommitDeadline(stateId);
-
-        return timeNow < commitWindowEnd;
+        return block.timestamp < commitWindowEnd;
     }
 
     function getTopCommitSubmissions(
@@ -308,10 +305,9 @@ contract CommitManagerV1 is Named, Versioned {
         );
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
-        bytes32 stateId = keccak256(abi.encodePacked(agreementId, args.epoch, unfinalizedState));
 
         if (!reqs[2] && !isUpdateCommitWindowOpen(agreementId, args.epoch, unfinalizedState)) {
-            uint256 commitWindowEnd = sasProxy.getCommitDeadline(stateId);
+            uint256 commitWindowEnd = sasProxy.getUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedState)));
 
             revert ServiceAgreementErrorsV1.CommitWindowClosed(
                 agreementId,
@@ -358,7 +354,7 @@ contract CommitManagerV1 is Named, Versioned {
             score
         );
 
-        if (sasProxy.getCommitsCount(stateId) == parametersStorage.finalizationCommitsNumber()) {
+        if (sasProxy.getCommitsCount(keccak256(abi.encodePacked(agreementId, args.epoch, unfinalizedState))) == parametersStorage.finalizationCommitsNumber()) {
             if (sasProxy.isOldAgreement(agreementId)) {
                 sasProxy.migrateOldServiceAgreement(agreementId);
             }

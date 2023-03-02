@@ -391,32 +391,32 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         }
     }
 
-    function incrementCommitsCount(bytes32 stateId) external onlyContracts {
-        storageV1U1.incrementStateCommitsCount(stateId);
+    function incrementCommitsCount(bytes32 epochStateId) external onlyContracts {
+        storageV1U1.incrementEpochStateCommitsCount(epochStateId);
     }
 
-    function decrementCommitsCount(bytes32 stateId) external onlyContracts {
-        storageV1U1.decrementStateCommitsCount(stateId);
+    function decrementCommitsCount(bytes32 epochStateId) external onlyContracts {
+        storageV1U1.decrementEpochStateCommitsCount(epochStateId);
     }
 
-    function getCommitsCount(bytes32 stateId) external view returns (uint8) {
-        return storageV1U1.getStateCommitsCount(stateId);
+    function getCommitsCount(bytes32 epochStateId) external view returns (uint8) {
+        return storageV1U1.getEpochStateCommitsCount(epochStateId);
     }
 
-    function deleteCommitsCount(bytes32 stateId) external onlyContracts {
-        storageV1U1.deleteStateCommitsCount(stateId);
+    function deleteCommitsCount(bytes32 epochStateId) external onlyContracts {
+        storageV1U1.deleteEpochStateCommitsCount(epochStateId);
     }
 
-    function getCommitDeadline(bytes32 stateId) external view returns (uint256) {
-        return storageV1U1.getStateCommitsDeadline(stateId);
+    function getUpdateCommitsDeadline(bytes32 stateId) external view returns (uint256) {
+        return storageV1U1.getUpdateCommitsDeadline(stateId);
     }
 
-    function setCommitDeadline(bytes32 stateId, uint256 deadline) external onlyContracts {
-        storageV1U1.setStateCommitsDeadline(stateId, deadline);
+    function setUpdateCommitsDeadline(bytes32 stateId, uint256 deadline) external onlyContracts {
+        storageV1U1.setUpdateCommitsDeadline(stateId, deadline);
     }
 
-    function deleteCommitDeadline(bytes32 stateId) external onlyContracts {
-        storageV1U1.deleteStateCommitsDeadline(stateId);
+    function deleteUpdateCommitsDeadline(bytes32 stateId) external onlyContracts {
+        storageV1U1.deleteUpdateCommitsDeadline(stateId);
     }
 
     function transferAgreementTokens(address receiver, uint96 tokenAmount) external onlyContracts {

@@ -9,6 +9,7 @@ import {ServiceAgreementV1} from "../ServiceAgreementV1.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 import {ContentAssetStorage} from "../storage/assets/ContentAssetStorage.sol";
+import {ParametersStorage} from "../storage/ParametersStorage.sol";
 import {ServiceAgreementStorageProxy} from "../storage/ServiceAgreementStorageProxy.sol";
 import {UnfinalizedStateStorage} from "../storage/UnfinalizedStateStorage.sol";
 import {ContentAssetStructs} from "../structs/assets/ContentAssetStructs.sol";
@@ -51,6 +52,7 @@ contract ContentAsset is Named, Versioned {
     Assertion public assertionContract;
     AssertionStorage public assertionStorage;
     ContentAssetStorage public contentAssetStorage;
+    ParametersStorage public parametersStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     ServiceAgreementV1 public serviceAgreementV1;
     UnfinalizedStateStorage public unfinalizedStateStorage;
@@ -66,6 +68,7 @@ contract ContentAsset is Named, Versioned {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));
         assertionStorage = AssertionStorage(hub.getContractAddress("AssertionStorage"));
         contentAssetStorage = ContentAssetStorage(hub.getAssetStorageAddress("ContentAssetStorage"));
+        parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
         );
@@ -204,6 +207,12 @@ contract ContentAsset is Named, Versioned {
 
         sasV1.addAddedTokens(msg.sender, contentAssetStorageAddress, tokenId, keyword, 1, tokenAmount);
 
+        bytes32 agreementId = serviceAgreementV1.generateAgreementId(contentAssetStorageAddress, tokenId, keyword, 1);
+        serviceAgreementStorageProxy.setUpdateCommitsDeadline(
+            keccak256(abi.encodePacked(agreementId, assertionId)),
+            block.timestamp + parametersStorage.updateCommitWindowDuration()
+        );
+
         emit AssetStateUpdated(contentAssetStorageAddress, tokenId, assertionId, tokenAmount);
     }
 
@@ -218,13 +227,11 @@ contract ContentAsset is Named, Versioned {
         bytes32 agreementId = serviceAgreementV1.generateAgreementId(contentAssetStorageAddress, tokenId, keyword, 1);
         bytes32 unfinalizedState = uss.getUnfinalizedState(tokenId);
 
-        uint16 epoch = 0;
-
         if (unfinalizedState == bytes32(0)) {
             revert ServiceAgreementErrorsV1.NoPendingUpdate(contentAssetStorageAddress, tokenId);
         } else if (
             block.timestamp <=
-            sasProxy.getCommitDeadline(keccak256(abi.encodePacked(agreementId, epoch, unfinalizedState)))
+            sasProxy.getUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedState)))
         ) {
             revert ServiceAgreementErrorsV1.PendingUpdateFinalization(
                 contentAssetStorageAddress,
