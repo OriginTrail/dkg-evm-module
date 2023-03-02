@@ -20,4 +20,5 @@ func.dependencies = [
   'ServiceAgreementStorageProxy',
   'ShardingTableStorage',
   'StakingStorage',
+  'UnfinalizedStateStorage',
 ];

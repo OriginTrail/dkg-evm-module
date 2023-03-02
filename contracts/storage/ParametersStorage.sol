@@ -186,7 +186,7 @@ contract ParametersStorage is Named, Versioned {
     }
 
     function setRewardWithdrawalDelay(uint24 newRewardWithdrawalDelay) external onlyHubOwner {
-        args4[0] = newRewardWithdrawalDelay;
+        args4[1] = newRewardWithdrawalDelay;
     }
 
     function slashingFreezeDuration() external view returns (uint32) {

@@ -3,13 +3,13 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Token, Hub, Profile, ServiceAgreementStorageV1, Staking, StakingStorage } from '../typechain';
+import { Token, Hub, Profile, ServiceAgreementStorageV1U1, Staking, StakingStorage } from '../typechain';
 
 type StakingFixture = {
   accounts: SignerWithAddress[];
   Token: Token;
   Profile: Profile;
-  ServiceAgreementStorageV1: ServiceAgreementStorageV1;
+  ServiceAgreementStorageV1U1: ServiceAgreementStorageV1U1;
   Staking: Staking;
   StakingStorage: StakingStorage;
 };
@@ -20,11 +20,11 @@ describe('Staking contract', function () {
   let StakingStorage: StakingStorage;
   let Token: Token;
   let Profile: Profile;
-  let ServiceAgreementStorageV1: ServiceAgreementStorageV1;
+  let ServiceAgreementStorageV1U1: ServiceAgreementStorageV1U1;
   const identityId1 = 1;
-  const totalStake = 1000;
-  const operatorFee = 10;
-  const transferAmount = 100;
+  const totalStake = hre.ethers.utils.parseEther('1000');
+  const operatorFee = hre.ethers.BigNumber.from(10);
+  const transferAmount = hre.ethers.utils.parseEther('100');
   const timestamp = 1674261619;
 
   async function deployStakingFixture(): Promise<StakingFixture> {
@@ -33,18 +33,18 @@ describe('Staking contract', function () {
     const StakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
     const Token = await hre.ethers.getContract<Token>('Token');
     const Profile = await hre.ethers.getContract<Profile>('Profile');
-    const ServiceAgreementStorageV1 = await hre.ethers.getContract<ServiceAgreementStorageV1>(
-      'ServiceAgreementStorageV1',
+    const ServiceAgreementStorageV1U1 = await hre.ethers.getContract<ServiceAgreementStorageV1U1>(
+      'ServiceAgreementStorageV1U1',
     );
     const accounts = await hre.ethers.getSigners();
     const Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
-    return { accounts, Token, Profile, ServiceAgreementStorageV1, Staking, StakingStorage };
+    return { accounts, Token, Profile, ServiceAgreementStorageV1U1, Staking, StakingStorage };
   }
 
   beforeEach(async () => {
-    ({ accounts, Token, Profile, ServiceAgreementStorageV1, Staking, StakingStorage } = await loadFixture(
+    ({ accounts, Token, Profile, ServiceAgreementStorageV1U1, Staking, StakingStorage } = await loadFixture(
       deployStakingFixture,
     ));
   });
@@ -120,10 +120,12 @@ describe('Staking contract', function () {
   });
 
   it('Contract should be able to transferStake; expect to pass', async function () {
-    await Token.mint(StakingStorage.address, await hre.ethers.utils.parseEther(`${5000000}`));
+    await Token.mint(StakingStorage.address, await hre.ethers.utils.parseEther(`${5_000_000}`));
+
+    const initialReceiverBalance = await Token.balanceOf(accounts[1].address);
     await StakingStorage.transferStake(accounts[1].address, transferAmount);
 
-    expect(await Token.balanceOf(accounts[1].address)).to.equal(transferAmount);
+    expect(await Token.balanceOf(accounts[1].address)).to.equal(initialReceiverBalance.add(transferAmount));
   });
 
   it('Create 1 node; expect that stake is created and correctly set', async function () {
@@ -145,13 +147,13 @@ describe('Staking contract', function () {
   });
 
   it('Add reward; expect that total stake is increased', async function () {
-    await Token.mint(ServiceAgreementStorageV1.address, await hre.ethers.utils.parseEther(`${5_000_000}`));
+    await Token.mint(ServiceAgreementStorageV1U1.address, hre.ethers.utils.parseEther(`${5_000_000}`));
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
     await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
 
-    await Staking.addReward(identityId1, await hre.ethers.utils.parseEther(`${5_000_000}`));
+    await Staking.addReward(identityId1, hre.ethers.utils.parseEther(`${5_000_000}`));
     expect(await StakingStorage.totalStakes(identityId1)).to.equal(
-      await hre.ethers.utils.parseEther(`${5_000_000}`),
+      hre.ethers.utils.parseEther(`${5_000_000}`),
       'Total amount of stake is not increased after adding reward',
     );
   });

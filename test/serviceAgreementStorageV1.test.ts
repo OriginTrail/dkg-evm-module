@@ -162,11 +162,12 @@ describe('ServiceAgreementStorageV1 contract', function () {
   });
 
   it('Should allow transferring reward', async function () {
-    const transferAmount = 100;
+    const transferAmount = hre.ethers.utils.parseEther('100');
     const receiver = accounts[1].address;
     await Token.mint(ServiceAgreementStorageV1.address, transferAmount);
 
+    const initialReceiverBalance = await Token.balanceOf(receiver);
     await ServiceAgreementStorageV1.transferAgreementTokens(receiver, transferAmount);
-    expect(await Token.balanceOf(receiver)).to.equal(transferAmount);
+    expect(await Token.balanceOf(receiver)).to.equal(initialReceiverBalance.add(transferAmount));
   });
 });

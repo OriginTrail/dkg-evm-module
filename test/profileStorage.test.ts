@@ -115,12 +115,13 @@ describe('ProfileStorage contract', function () {
   });
 
   it('Validate profile accumulated operator fee amount transfer ', async () => {
-    const transferAmount = 100;
+    const transferAmount = hre.ethers.utils.parseEther('100');
     const receiver = accounts[1].address;
     await Token.mint(ProfileStorage.address, transferAmount);
 
+    const initialReceiverBalance = await Token.balanceOf(receiver);
     await ProfileStorage.transferAccumulatedOperatorFee(receiver, transferAmount);
-    expect(await Token.balanceOf(receiver)).to.equal(transferAmount);
+    expect(await Token.balanceOf(receiver)).to.equal(initialReceiverBalance.add(transferAmount));
   });
 
   it('Validate setting and getting profile accumulated operator fee withdrawal timestamp', async () => {
