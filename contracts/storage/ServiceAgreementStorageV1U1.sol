@@ -211,7 +211,10 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
         return epochStateCommitSubmissions[commitId].prevIdentityId;
     }
 
-    function setEpochStateCommitSubmissionPrevIdentityId(bytes32 commitId, uint72 prevIdentityId) external onlyContracts {
+    function setEpochStateCommitSubmissionPrevIdentityId(
+        bytes32 commitId,
+        uint72 prevIdentityId
+    ) external onlyContracts {
         epochStateCommitSubmissions[commitId].prevIdentityId = prevIdentityId;
     }
 
@@ -219,7 +222,10 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
         return epochStateCommitSubmissions[commitId].nextIdentityId;
     }
 
-    function setEpochStateCommitSubmissionNextIdentityId(bytes32 commitId, uint72 nextIdentityId) external onlyContracts {
+    function setEpochStateCommitSubmissionNextIdentityId(
+        bytes32 commitId,
+        uint72 nextIdentityId
+    ) external onlyContracts {
         epochStateCommitSubmissions[commitId].nextIdentityId = nextIdentityId;
     }
 

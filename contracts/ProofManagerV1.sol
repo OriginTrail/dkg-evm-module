@@ -242,10 +242,7 @@ contract ProofManagerV1 is Named, Versioned {
         uint72 identityId = ids.getIdentityId(msg.sender);
         bytes32 commitId = keccak256(abi.encodePacked(agreementId, args.epoch, latestFinalizedState, identityId));
 
-        if (
-            !reqs[1] &&
-            (sasProxy.getCommitSubmissionScore(commitId) == 0)
-        )
+        if (!reqs[1] && (sasProxy.getCommitSubmissionScore(commitId) == 0))
             revert ServiceAgreementErrorsV1.NodeAlreadyRewarded(
                 agreementId,
                 args.epoch,
