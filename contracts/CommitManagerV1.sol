@@ -235,6 +235,9 @@ contract CommitManagerV1 is Named, Versioned {
         );
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
+
+        bytes32 latestFinalizedState = generalAssetInterface.getLatestAssertionId(args.tokenId);
 
         if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {
             uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
@@ -244,6 +247,7 @@ contract CommitManagerV1 is Named, Versioned {
             revert ServiceAgreementErrorsV1.CommitWindowClosed(
                 agreementId,
                 args.epoch,
+                latestFinalizedState,
                 actualCommitWindowStart,
                 actualCommitWindowStart + (parametersStorage.commitWindowDurationPerc() * epochLength) / 100,
                 block.timestamp
@@ -272,9 +276,6 @@ contract CommitManagerV1 is Named, Versioned {
             args.keyword,
             stakingStorage.totalStakes(identityId)
         );
-
-        AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
-        bytes32 latestFinalizedState = generalAssetInterface.getLatestAssertionId(args.tokenId);
 
         _insertCommit(agreementId, args.epoch, latestFinalizedState, identityId, 0, 0, score);
 
@@ -316,6 +317,7 @@ contract CommitManagerV1 is Named, Versioned {
             revert ServiceAgreementErrorsV1.CommitWindowClosed(
                 agreementId,
                 args.epoch,
+                unfinalizedState,
                 commitWindowEnd - parametersStorage.updateCommitWindowDuration(),
                 commitWindowEnd,
                 block.timestamp
@@ -410,6 +412,7 @@ contract CommitManagerV1 is Named, Versioned {
             revert ServiceAgreementErrorsV1.NodeAlreadySubmittedCommit(
                 agreementId,
                 epoch,
+                assertionId,
                 identityId,
                 profileStorage.getNodeId(identityId)
             );
@@ -435,6 +438,7 @@ contract CommitManagerV1 is Named, Versioned {
             revert ServiceAgreementErrorsV1.NodeNotAwarded(
                 agreementId,
                 epoch,
+                assertionId,
                 identityId,
                 profileStorage.getNodeId(identityId),
                 i

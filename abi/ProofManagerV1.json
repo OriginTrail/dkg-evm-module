@@ -23,6 +23,11 @@
         "type": "uint16"
       },
       {
+        "internalType": "bytes32",
+        "name": "state",
+        "type": "bytes32"
+      },
+      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -47,6 +52,11 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "state",
+        "type": "bytes32"
       },
       {
         "internalType": "uint72",
@@ -89,6 +99,11 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "state",
+        "type": "bytes32"
       },
       {
         "internalType": "uint256",
@@ -157,6 +172,11 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "state",
+        "type": "bytes32"
       },
       {
         "internalType": "uint72",

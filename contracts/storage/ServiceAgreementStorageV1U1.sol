@@ -15,7 +15,7 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
     mapping(bytes32 => ServiceAgreementStructsV1.ExtendedServiceAgreement) internal serviceAgreements;
 
     // CommitId [keccak256(agreementId + epoch + assertionId + identityId)] => stateCommitSubmission
-    mapping(bytes32 => ServiceAgreementStructsV1.CommitSubmission) internal stateCommitSubmissions;
+    mapping(bytes32 => ServiceAgreementStructsV1.CommitSubmission) internal epochStateCommitSubmissions;
 
     // EpochStateId [keccak256(agreementId + epoch + assertionId)] => epochStateCommitsCount
     mapping(bytes32 => uint8) internal epochStateCommitsCount;
@@ -174,14 +174,14 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
         return serviceAgreements[agreementId].startTime != 0;
     }
 
-    function createStateCommitSubmissionObject(
+    function createEpochStateCommitSubmissionObject(
         bytes32 commitId,
         uint72 identityId,
         uint72 prevIdentityId,
         uint72 nextIdentityId,
         uint40 score
     ) external onlyContracts {
-        stateCommitSubmissions[commitId] = ServiceAgreementStructsV1.CommitSubmission({
+        epochStateCommitSubmissions[commitId] = ServiceAgreementStructsV1.CommitSubmission({
             identityId: identityId,
             prevIdentityId: prevIdentityId,
             nextIdentityId: nextIdentityId,
@@ -189,50 +189,50 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
         });
     }
 
-    function deleteStateCommitSubmissionsObject(bytes32 commitId) external onlyContracts {
-        delete stateCommitSubmissions[commitId];
+    function deleteEpochStateCommitSubmissionsObject(bytes32 commitId) external onlyContracts {
+        delete epochStateCommitSubmissions[commitId];
     }
 
-    function getStateCommitSubmission(
+    function getEpochStateCommitSubmission(
         bytes32 commitId
     ) external view returns (ServiceAgreementStructsV1.CommitSubmission memory) {
-        return stateCommitSubmissions[commitId];
+        return epochStateCommitSubmissions[commitId];
     }
 
-    function getStateCommitSubmissionIdentityId(bytes32 commitId) external view returns (uint72) {
-        return stateCommitSubmissions[commitId].identityId;
+    function getEpochStateCommitSubmissionIdentityId(bytes32 commitId) external view returns (uint72) {
+        return epochStateCommitSubmissions[commitId].identityId;
     }
 
-    function setStateCommitSubmissionIdentityId(bytes32 commitId, uint72 identityId) external onlyContracts {
-        stateCommitSubmissions[commitId].identityId = identityId;
+    function setEpochStateCommitSubmissionIdentityId(bytes32 commitId, uint72 identityId) external onlyContracts {
+        epochStateCommitSubmissions[commitId].identityId = identityId;
     }
 
-    function getStateCommitSubmissionPrevIdentityId(bytes32 commitId) external view returns (uint72) {
-        return stateCommitSubmissions[commitId].prevIdentityId;
+    function getEpochStateCommitSubmissionPrevIdentityId(bytes32 commitId) external view returns (uint72) {
+        return epochStateCommitSubmissions[commitId].prevIdentityId;
     }
 
-    function setStateCommitSubmissionPrevIdentityId(bytes32 commitId, uint72 prevIdentityId) external onlyContracts {
-        stateCommitSubmissions[commitId].prevIdentityId = prevIdentityId;
+    function setEpochStateCommitSubmissionPrevIdentityId(bytes32 commitId, uint72 prevIdentityId) external onlyContracts {
+        epochStateCommitSubmissions[commitId].prevIdentityId = prevIdentityId;
     }
 
-    function getStateCommitSubmissionNextIdentityId(bytes32 commitId) external view returns (uint72) {
-        return stateCommitSubmissions[commitId].nextIdentityId;
+    function getEpochStateCommitSubmissionNextIdentityId(bytes32 commitId) external view returns (uint72) {
+        return epochStateCommitSubmissions[commitId].nextIdentityId;
     }
 
-    function setStateCommitSubmissionNextIdentityId(bytes32 commitId, uint72 nextIdentityId) external onlyContracts {
-        stateCommitSubmissions[commitId].nextIdentityId = nextIdentityId;
+    function setEpochStateCommitSubmissionNextIdentityId(bytes32 commitId, uint72 nextIdentityId) external onlyContracts {
+        epochStateCommitSubmissions[commitId].nextIdentityId = nextIdentityId;
     }
 
-    function getStateCommitSubmissionScore(bytes32 commitId) external view returns (uint40) {
-        return stateCommitSubmissions[commitId].score;
+    function getEpochStateCommitSubmissionScore(bytes32 commitId) external view returns (uint40) {
+        return epochStateCommitSubmissions[commitId].score;
     }
 
-    function setStateCommitSubmissionScore(bytes32 commitId, uint40 score) external onlyContracts {
-        stateCommitSubmissions[commitId].score = score;
+    function setEpochStateCommitSubmissionScore(bytes32 commitId, uint40 score) external onlyContracts {
+        epochStateCommitSubmissions[commitId].score = score;
     }
 
-    function stateCommitSubmissionExists(bytes32 commitId) external view returns (bool) {
-        return stateCommitSubmissions[commitId].identityId != 0;
+    function epochStateCommitSubmissionExists(bytes32 commitId) external view returns (bool) {
+        return epochStateCommitSubmissions[commitId].identityId != 0;
     }
 
     function incrementEpochStateCommitsCount(bytes32 epochStateId) external onlyContracts {
