@@ -65,7 +65,6 @@ describe('ServiceAgreementV1 contract', function () {
       tokenAmount: 100,
       scoreFunctionId: '1',
     };
-    await Token.mint(serviceAgreementInputArgs.assetCreator, serviceAgreementInputArgs.tokenAmount);
     await Token.increaseAllowance(ServiceAgreementV1.address, serviceAgreementInputArgs.tokenAmount);
 
     const blockNumber = await hre.ethers.provider.getBlockNumber();
