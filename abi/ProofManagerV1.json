@@ -23,11 +23,6 @@
         "type": "uint16"
       },
       {
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
-      },
-      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -52,11 +47,6 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
       },
       {
         "internalType": "uint72",
@@ -99,11 +89,6 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
       },
       {
         "internalType": "uint256",
@@ -172,11 +157,6 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
       },
       {
         "internalType": "uint72",
@@ -265,12 +245,6 @@
         "type": "uint16"
       },
       {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
-      },
-      {
         "indexed": true,
         "internalType": "uint72",
         "name": "identityId",
@@ -345,6 +319,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
       {
         "internalType": "address",
         "name": "assetContract",

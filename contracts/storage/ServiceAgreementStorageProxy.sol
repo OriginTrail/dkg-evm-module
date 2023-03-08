@@ -231,11 +231,14 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         uint16 epoch,
         bytes32 assertionId
     ) external view returns (bytes32) {
-        if (this.isOldAgreement(agreementId)) {
-            return storageV1.getAgreementEpochSubmissionHead(agreementId, epoch);
-        } else {
-            return storageV1U1.getAgreementEpochSubmissionHead(agreementId, epoch, assertionId);
-        }
+        return storageV1U1.getAgreementEpochSubmissionHead(agreementId, epoch, assertionId);
+    }
+
+    function getAgreementEpochSubmissionHead(
+        bytes32 agreementId,
+        uint16 epoch
+    ) external view returns (bytes32) {
+        return storageV1.getAgreementEpochSubmissionHead(agreementId, epoch);
     }
 
     function setAgreementEpochSubmissionHead(
@@ -244,11 +247,15 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         bytes32 assertionId,
         bytes32 headCommitId
     ) external onlyContracts {
-        if (this.isOldAgreement(agreementId)) {
-            storageV1.setAgreementEpochSubmissionHead(agreementId, epoch, headCommitId);
-        } else {
-            storageV1U1.setAgreementEpochSubmissionHead(agreementId, epoch, assertionId, headCommitId);
-        }
+        storageV1U1.setAgreementEpochSubmissionHead(agreementId, epoch, assertionId, headCommitId);
+    }
+
+    function setAgreementEpochSubmissionHead(
+        bytes32 agreementId,
+        uint16 epoch,
+        bytes32 headCommitId
+    ) external onlyContracts {
+        storageV1.setAgreementEpochSubmissionHead(agreementId, epoch, headCommitId);
     }
 
     function incrementAgreementRewardedNodesNumber(bytes32 agreementId, uint16 epoch) external onlyContracts {

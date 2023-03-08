@@ -282,6 +282,30 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
+      }
+    ],
+    "name": "getAgreementEpochSubmissionHead",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epoch",
+        "type": "uint16"
       },
       {
         "internalType": "bytes32",
@@ -811,6 +835,29 @@
         "internalType": "bytes32",
         "name": "assertionId",
         "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "headCommitId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "setAgreementEpochSubmissionHead",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epoch",
+        "type": "uint16"
       },
       {
         "internalType": "bytes32",

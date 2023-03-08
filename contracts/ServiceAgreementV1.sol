@@ -2,16 +2,18 @@
 
 pragma solidity ^0.8.4;
 
+import {CommitManagerV1} from "./CommitManagerV1.sol";
 import {HashingProxy} from "./HashingProxy.sol";
 import {Hub} from "./Hub.sol";
 import {ScoringProxy} from "./ScoringProxy.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
+import {ProofManagerV1} from "./ProofManagerV1.sol";
 import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
 import {GeneralErrors} from "./errors/GeneralErrors.sol";
-import {ServiceAgreementErrorsV1} from "./errors/ServiceAgreementErrorsV1.sol";
+import {ServiceAgreementErrorsV1U1} from "./errors/ServiceAgreementErrorsV1U1.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ServiceAgreementV1 is Named, Versioned {
@@ -23,14 +25,6 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint256 startTime,
         uint16 epochsNumber,
         uint128 epochLength,
-        uint96 tokenAmount
-    );
-    event ServiceAgreementV1Updated(
-        address indexed assetContract,
-        uint256 indexed tokenId,
-        bytes keyword,
-        uint8 hashFunctionId,
-        uint16 epochsNumber,
         uint96 tokenAmount
     );
     event ServiceAgreementV1Terminated(
@@ -65,6 +59,8 @@ contract ServiceAgreementV1 is Named, Versioned {
     string private constant _VERSION = "1.1.0";
 
     Hub public hub;
+    CommitManagerV1 public commitManagerV1;
+    ProofManagerV1 public proofManagerV1;
     HashingProxy public hashingProxy;
     ScoringProxy public scoringProxy;
     ParametersStorage public parametersStorage;
@@ -111,14 +107,14 @@ contract ServiceAgreementV1 is Named, Versioned {
     function createServiceAgreement(
         ServiceAgreementStructsV1.ServiceAgreementInputArgs calldata args
     ) external onlyContracts {
-        if (args.assetCreator == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
+        if (args.assetCreator == address(0x0)) revert ServiceAgreementErrorsV1U1.EmptyAssetCreatorAddress();
         if (!hub.isAssetStorage(args.assetContract))
-            revert ServiceAgreementErrorsV1.AssetStorageNotInTheHub(args.assetContract);
-        if (keccak256(args.keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
-        if (args.epochsNumber == 0) revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
-        if (args.tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+            revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(args.assetContract);
+        if (keccak256(args.keyword) == keccak256("")) revert ServiceAgreementErrorsV1U1.EmptyKeyword();
+        if (args.epochsNumber == 0) revert ServiceAgreementErrorsV1U1.ZeroEpochsNumber();
+        if (args.tokenAmount == 0) revert ServiceAgreementErrorsV1U1.ZeroTokenAmount();
         if (!scoringProxy.isScoreFunction(args.scoreFunctionId))
-            revert ServiceAgreementErrorsV1.ScoreFunctionDoesntExist(args.scoreFunctionId);
+            revert ServiceAgreementErrorsV1U1.ScoreFunctionDoesntExist(args.scoreFunctionId);
 
         bytes32 agreementId = generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
@@ -140,9 +136,9 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         IERC20 tknc = tokenContract;
         if (tknc.allowance(args.assetCreator, address(this)) < args.tokenAmount)
-            revert ServiceAgreementErrorsV1.TooLowAllowance(tknc.allowance(args.assetCreator, address(this)));
+            revert ServiceAgreementErrorsV1U1.TooLowAllowance(tknc.allowance(args.assetCreator, address(this)));
         if (tknc.balanceOf(args.assetCreator) < args.tokenAmount)
-            revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(args.assetCreator));
+            revert ServiceAgreementErrorsV1U1.TooLowBalance(tknc.balanceOf(args.assetCreator));
 
         tknc.transferFrom(args.assetCreator, sasProxy.latestStorageAddress(), args.tokenAmount);
 
@@ -165,9 +161,9 @@ contract ServiceAgreementV1 is Named, Versioned {
         bytes calldata keyword,
         uint8 hashFunctionId
     ) external onlyContracts {
-        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorageNotInTheHub(assetContract);
-        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
+        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1U1.EmptyAssetCreatorAddress();
+        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(assetContract);
+        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1U1.EmptyKeyword();
 
         bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
@@ -189,9 +185,9 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint16 epochsNumber,
         uint96 tokenAmount
     ) external onlyContracts {
-        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1.AssetStorageNotInTheHub(assetContract);
-        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1.EmptyKeyword();
-        if (epochsNumber == 0) revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
+        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(assetContract);
+        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1U1.EmptyKeyword();
+        if (epochsNumber == 0) revert ServiceAgreementErrorsV1U1.ZeroEpochsNumber();
 
         _addTokens(assetOwner, tokenAmount);
 
@@ -246,16 +242,48 @@ contract ServiceAgreementV1 is Named, Versioned {
         return hashingProxy.callHashFunction(hashFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
     }
 
+    function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
+        return commitManagerV1.isCommitWindowOpen(agreementId, epoch);
+    }
+
+    function getTopCommitSubmissions(
+        bytes32 agreementId,
+        uint16 epoch
+    ) external view returns (ServiceAgreementStructsV1.CommitSubmission[] memory) {
+        return commitManagerV1.getTopCommitSubmissions(agreementId, epoch);
+    }
+
+    function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
+        commitManagerV1.submitCommit(args);
+    }
+
+    function isProofWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
+        return proofManagerV1.isProofWindowOpen(agreementId, epoch);
+    }
+
+    function getChallenge(
+        address sender,
+        address assetContract,
+        uint256 tokenId,
+        uint16 epoch
+    ) public view returns (bytes32, uint256) {
+        return proofManagerV1.getChallenge(sender, assetContract, tokenId, epoch);
+    }
+
+    function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
+        proofManagerV1.sendProof(args);
+    }
+
     function _addTokens(address assetOwner, uint96 tokenAmount) internal virtual {
-        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1.EmptyAssetCreatorAddress();
-        if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1U1.EmptyAssetCreatorAddress();
+        if (tokenAmount == 0) revert ServiceAgreementErrorsV1U1.ZeroTokenAmount();
 
         IERC20 tknc = tokenContract;
 
         if (tknc.allowance(assetOwner, address(this)) < tokenAmount)
-            revert ServiceAgreementErrorsV1.TooLowAllowance(tknc.allowance(assetOwner, address(this)));
+            revert ServiceAgreementErrorsV1U1.TooLowAllowance(tknc.allowance(assetOwner, address(this)));
         if (tknc.balanceOf(assetOwner) < tokenAmount)
-            revert ServiceAgreementErrorsV1.TooLowBalance(tknc.balanceOf(assetOwner));
+            revert ServiceAgreementErrorsV1U1.TooLowBalance(tknc.balanceOf(assetOwner));
 
         tknc.transferFrom(assetOwner, serviceAgreementStorageProxy.latestStorageAddress(), tokenAmount);
     }

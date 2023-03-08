@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.4;
 
-library ServiceAgreementErrorsV1 {
+library ServiceAgreementErrorsV1U1 {
     error EmptyAssetCreatorAddress();
-    error AssetStorgeNotInTheHub(address contractAddress);
+    error AssetStorageNotInTheHub(address contractAddress);
     error EmptyKeyword();
     error ZeroEpochsNumber();
     error ZeroTokenAmount();
@@ -21,6 +21,7 @@ library ServiceAgreementErrorsV1 {
     error CommitWindowClosed(
         bytes32 agreementId,
         uint16 epoch,
+        bytes32 state,
         uint256 commitWindowOpen,
         uint256 commitWindowClose,
         uint256 timeNow
@@ -29,15 +30,17 @@ library ServiceAgreementErrorsV1 {
     error ProofWindowClosed(
         bytes32 agreementId,
         uint16 epoch,
+        bytes32 state,
         uint256 proofWindowOpen,
         uint256 proofWindowClose,
         uint256 timeNow
     );
-    error NodeAlreadyRewarded(bytes32 agreementId, uint16 epoch, uint72 identityId, bytes nodeId);
-    error NodeNotAwarded(bytes32 agreementId, uint16 epoch, uint72 identityId, bytes nodeId, uint8 rank);
+    error NodeAlreadyRewarded(bytes32 agreementId, uint16 epoch, bytes32 state, uint72 identityId, bytes nodeId);
+    error NodeNotAwarded(bytes32 agreementId, uint16 epoch, bytes32 state, uint72 identityId, bytes nodeId, uint8 rank);
     error WrongMerkleProof(
         bytes32 agreementId,
         uint16 epoch,
+        bytes32 state,
         uint72 identityId,
         bytes nodeId,
         bytes32[] merkleProof,
@@ -45,5 +48,11 @@ library ServiceAgreementErrorsV1 {
         bytes32 chunkHash,
         uint256 challenge
     );
-    error NodeAlreadySubmittedCommit(bytes32 agreementId, uint16 epoch, uint72 identityId, bytes nodeId);
+    error NodeAlreadySubmittedCommit(bytes32 agreementId, uint16 epoch, bytes32 state, uint72 identityId, bytes nodeId);
+    error CommitPhaseOngoing(bytes32 agreementId);
+    error CommitPhaseSucceeded(bytes32 agreementId);
+    error FirstEpochHasAlreadyEnded(bytes32 agreementId);
+    error NoPendingUpdate(address assetStorage, uint256 tokenId);
+    error UpdateIsNotFinalized(address assetStorage, uint256 tokenId, bytes32 latestState);
+    error PendingUpdateFinalization(address assetStorage, uint256 tokenId, bytes32 latestState);
 }

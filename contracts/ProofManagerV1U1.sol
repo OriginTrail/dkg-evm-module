@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.4;
 
+import {AbstractAsset} from "./assets/AbstractAsset.sol";
 import {Hub} from "./Hub.sol";
 import {ServiceAgreementV1} from "./ServiceAgreementV1.sol";
 import {Staking} from "./Staking.sol";
-import {AbstractAsset} from "./assets/AbstractAsset.sol";
 import {AssertionStorage} from "./storage/AssertionStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
@@ -15,16 +15,17 @@ import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
 import {GeneralErrors} from "./errors/GeneralErrors.sol";
-import {ServiceAgreementErrorsV1} from "./errors/ServiceAgreementErrorsV1.sol";
+import {ServiceAgreementErrorsV1U1} from "./errors/ServiceAgreementErrorsV1U1.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-contract ProofManagerV1 is Named, Versioned {
+contract ProofManagerV1U1 is Named, Versioned {
     event ProofSubmitted(
         address indexed assetContract,
         uint256 indexed tokenId,
         bytes keyword,
         uint8 hashFunctionId,
         uint16 epoch,
+        bytes32 state,
         uint72 indexed identityId
     );
     event Logger(bool value, string message);
@@ -79,9 +80,9 @@ contract ProofManagerV1 is Named, Versioned {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
         uint256 startTime = sasProxy.getAgreementStartTime(agreementId);
 
-        if (startTime == 0) revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+        if (startTime == 0) revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
         if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
-            revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
+            revert ServiceAgreementErrorsV1U1.ServiceAgreementHasBeenExpired(
                 agreementId,
                 startTime,
                 sasProxy.getAgreementEpochsNumber(agreementId),
@@ -100,21 +101,15 @@ contract ProofManagerV1 is Named, Versioned {
     }
 
     function getChallenge(
-        address sender,
-        address assetContract,
-        uint256 tokenId,
-        uint16 epoch
+        address assetContract, uint256 tokenId, uint16 epoch
     ) public view returns (bytes32, uint256) {
-        uint72 identityId = identityStorage.getIdentityId(sender);
+        return _getChallenge(msg.sender, assetContract, tokenId, epoch);
+    }
 
-        AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
-        bytes32 assertionId = generalAssetInterface.getLatestAssertionId(tokenId);
-
-        uint256 assertionChunksNumber = assertionStorage.getAssertionChunksNumber(assertionId);
-
-        // blockchash() function only works for last 256 blocks (25.6 min window in case of 6s block time)
-        // TODO: figure out how to achieve randomness
-        return (assertionId, uint256(sha256(abi.encodePacked(epoch, identityId))) % assertionChunksNumber);
+    function getChallenge(
+        address sender, address assetContract, uint256 tokenId, uint16 epoch
+    ) public view returns (bytes32, uint256) {
+        return _getChallenge(sender, assetContract, tokenId, epoch);
     }
 
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
@@ -136,9 +131,25 @@ contract ProofManagerV1 is Named, Versioned {
         reqs[index] = req;
     }
 
-    function _sendProof(
-        ServiceAgreementStructsV1.ProofInputArgs calldata args
-    ) internal virtual returns (bytes32, uint72) {
+    function _getChallenge(
+        address sender,
+        address assetContract,
+        uint256 tokenId,
+        uint16 epoch
+    ) internal view returns (bytes32, uint256) {
+        uint72 identityId = identityStorage.getIdentityId(sender);
+
+        AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
+        bytes32 latestFinalizedState = generalAssetInterface.getLatestAssertionId(tokenId);
+
+        uint256 assertionChunksNumber = assertionStorage.getAssertionChunksNumber(latestFinalizedState);
+
+        // blockchash() function only works for last 256 blocks (25.6 min window in case of 6s block time)
+        // TODO: figure out how to achieve randomness
+        return (latestFinalizedState, uint256(sha256(abi.encodePacked(epoch, identityId))) % assertionChunksNumber);
+    }
+
+    function _sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) internal virtual {
         bytes32 agreementId = serviceAgreementV1.generateAgreementId(
             args.assetContract,
             args.tokenId,
@@ -147,17 +158,25 @@ contract ProofManagerV1 is Named, Versioned {
         );
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
+
+        bytes32 latestFinalizedState = generalAssetInterface.getLatestAssertionId(args.tokenId);
 
         if (!reqs[0] && !isProofWindowOpen(agreementId, args.epoch)) {
             uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
 
-            uint256 actualCommitWindowStart = (sasProxy.getAgreementStartTime(agreementId) + args.epoch * epochLength);
+            uint256 actualProofWindowStart = (sasProxy.getAgreementStartTime(agreementId) +
+                args.epoch *
+                epochLength +
+                (sasProxy.getAgreementProofWindowOffsetPerc(agreementId) * epochLength) /
+                100);
 
-            revert ServiceAgreementErrorsV1.ProofWindowClosed(
+            revert ServiceAgreementErrorsV1U1.ProofWindowClosed(
                 agreementId,
                 args.epoch,
-                actualCommitWindowStart,
-                actualCommitWindowStart + (parametersStorage.commitWindowDurationPerc() * epochLength) / 100,
+                latestFinalizedState,
+                actualProofWindowStart,
+                actualProofWindowStart + (parametersStorage.proofWindowDurationPerc() * epochLength) / 100,
                 block.timestamp
             );
         }
@@ -166,28 +185,29 @@ contract ProofManagerV1 is Named, Versioned {
         IdentityStorage ids = identityStorage;
 
         uint72 identityId = ids.getIdentityId(msg.sender);
+        bytes32 commitId = keccak256(abi.encodePacked(agreementId, args.epoch, latestFinalizedState, identityId));
 
-        if (
-            !reqs[1] &&
-            (sasProxy.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) == 0)
-        )
-            revert ServiceAgreementErrorsV1.NodeAlreadyRewarded(
+        if (!reqs[1] && (sasProxy.getCommitSubmissionScore(commitId) == 0))
+            revert ServiceAgreementErrorsV1U1.NodeAlreadyRewarded(
                 agreementId,
                 args.epoch,
+                latestFinalizedState,
                 identityId,
                 profileStorage.getNodeId(identityId)
             );
-        emit Logger(
-            sasProxy.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) == 0,
-            "req2"
-        );
+        emit Logger(sasProxy.getCommitSubmissionScore(commitId) == 0, "req2");
 
-        bytes32 nextCommitId = sasProxy.getAgreementEpochSubmissionHead(agreementId, args.epoch);
+        bytes32 nextCommitId = sasProxy.getAgreementEpochSubmissionHead(agreementId, args.epoch, latestFinalizedState);
         uint32 r0 = parametersStorage.r0();
         uint8 i;
         while ((identityId != sasProxy.getCommitSubmissionIdentityId(nextCommitId)) && (i < r0)) {
             nextCommitId = keccak256(
-                abi.encodePacked(agreementId, args.epoch, sasProxy.getCommitSubmissionNextIdentityId(nextCommitId))
+                abi.encodePacked(
+                    agreementId,
+                    args.epoch,
+                    latestFinalizedState,
+                    sasProxy.getCommitSubmissionNextIdentityId(nextCommitId)
+                )
             );
             unchecked {
                 i++;
@@ -195,9 +215,10 @@ contract ProofManagerV1 is Named, Versioned {
         }
 
         if (!reqs[2] && (i >= r0))
-            revert ServiceAgreementErrorsV1.NodeNotAwarded(
+            revert ServiceAgreementErrorsV1U1.NodeNotAwarded(
                 agreementId,
                 args.epoch,
+                latestFinalizedState,
                 identityId,
                 profileStorage.getNodeId(identityId),
                 i
@@ -206,15 +227,16 @@ contract ProofManagerV1 is Named, Versioned {
 
         bytes32 merkleRoot;
         uint256 challenge;
-        (merkleRoot, challenge) = getChallenge(msg.sender, args.assetContract, args.tokenId, args.epoch);
+        (merkleRoot, challenge) = _getChallenge(msg.sender, args.assetContract, args.tokenId, args.epoch);
 
         if (
             !reqs[3] &&
             !MerkleProof.verify(args.proof, merkleRoot, keccak256(abi.encodePacked(args.chunkHash, challenge)))
         )
-            revert ServiceAgreementErrorsV1.WrongMerkleProof(
+            revert ServiceAgreementErrorsV1U1.WrongMerkleProof(
                 agreementId,
                 args.epoch,
+                latestFinalizedState,
                 identityId,
                 profileStorage.getNodeId(identityId),
                 args.proof,
@@ -233,6 +255,7 @@ contract ProofManagerV1 is Named, Versioned {
             args.keyword,
             args.hashFunctionId,
             args.epoch,
+            latestFinalizedState,
             identityId
         );
 
@@ -245,9 +268,7 @@ contract ProofManagerV1 is Named, Versioned {
         sasProxy.incrementAgreementRewardedNodesNumber(agreementId, args.epoch);
 
         // To make sure that node already received reward
-        sasProxy.setCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId)), 0);
-
-        return (agreementId, identityId);
+        sasProxy.setCommitSubmissionScore(commitId, 0);
     }
 
     function _checkHubOwner() internal view virtual {
