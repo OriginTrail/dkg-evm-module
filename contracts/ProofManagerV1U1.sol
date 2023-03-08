@@ -100,14 +100,15 @@ contract ProofManagerV1U1 is Named, Versioned {
             timeNow < (startTime + epochLength * epoch + proofWindowOffset + proofWindowDuration));
     }
 
-    function getChallenge(
-        address assetContract, uint256 tokenId, uint16 epoch
-    ) public view returns (bytes32, uint256) {
+    function getChallenge(address assetContract, uint256 tokenId, uint16 epoch) public view returns (bytes32, uint256) {
         return _getChallenge(msg.sender, assetContract, tokenId, epoch);
     }
 
     function getChallenge(
-        address sender, address assetContract, uint256 tokenId, uint16 epoch
+        address sender,
+        address assetContract,
+        uint256 tokenId,
+        uint16 epoch
     ) public view returns (bytes32, uint256) {
         return _getChallenge(sender, assetContract, tokenId, epoch);
     }

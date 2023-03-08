@@ -373,18 +373,18 @@ describe('ContentAsset contract', function () {
     ).to.be.revertedWith('Only asset owner can use this fn');
   });
 
-  it('Update asset token amount, expect token amount to be updated', async () => {
+  it('Increase asset token amount, expect token amount to be updated', async () => {
     const tokenId = await createAsset();
     const newTokenAmount = Number(assetInputStruct.tokenAmount) + 10;
 
     await Token.increaseAllowance(ServiceAgreementV1.address, newTokenAmount);
 
-    expect(await ContentAsset.updateAssetTokenAmount(tokenId, newTokenAmount))
+    expect(await ContentAsset.increaseAssetTokenAmount(tokenId, newTokenAmount))
       .to.emit(ContentAsset, 'AssetPaymentIncreased')
       .withArgs(ContentAssetStorage.address, tokenId, newTokenAmount);
   });
 
-  it('Update asset token amount using non-owner account, expect to be reverted', async () => {
+  it('Increase asset token amount using non-owner account, expect to be reverted', async () => {
     const tokenId = await createAsset();
     const newTokenAmount = Number(assetInputStruct.tokenAmount) + 10;
 
@@ -392,46 +392,45 @@ describe('ContentAsset contract', function () {
 
     const ContentAssetWithNonOwnerSigner = ContentAsset.connect(accounts[1]);
 
-    await expect(ContentAssetWithNonOwnerSigner.updateAssetTokenAmount(tokenId, newTokenAmount)).to.be.revertedWith(
+    await expect(ContentAssetWithNonOwnerSigner.increaseAssetTokenAmount(tokenId, newTokenAmount)).to.be.revertedWith(
       'Only asset owner can use this fn',
     );
   });
 
-  it('Update asset added token amount, expect added token amount to be updated', async () => {
+  it('Increase asset update token amount, expect update token amount to be updated', async () => {
     const tokenId = await createAsset();
     await updateAsset(tokenId);
-    const newAddedTokenAmount = assetUpdateArgs.tokenAmount.add(hre.ethers.utils.parseEther('10'));
+    const newUpdateTokenAmount = assetUpdateArgs.tokenAmount.add(hre.ethers.utils.parseEther('10'));
 
-    await Token.increaseAllowance(ServiceAgreementV1.address, newAddedTokenAmount);
+    await Token.increaseAllowance(ServiceAgreementV1.address, newUpdateTokenAmount);
 
-    expect(await ContentAsset.updateAssetAddedTokenAmount(tokenId, newAddedTokenAmount))
+    expect(await ContentAsset.increaseAssetUpdateTokenAmount(tokenId, newUpdateTokenAmount))
       .to.emit(ContentAsset, 'AssetUpdatePaymentIncreased')
-      .withArgs(ContentAssetStorage.address, tokenId, newAddedTokenAmount);
+      .withArgs(ContentAssetStorage.address, tokenId, newUpdateTokenAmount);
   });
 
-  it('Update asset added token amount using non-owner account, expect to be reverted', async () => {
+  it('Increase asset update token amount using non-owner account, expect to be reverted', async () => {
     const tokenId = await createAsset();
     await updateAsset(tokenId);
-    const newAddedTokenAmount = assetUpdateArgs.tokenAmount.add(hre.ethers.utils.parseEther('10'));
+    const newUpdateTokenAmount = assetUpdateArgs.tokenAmount.add(hre.ethers.utils.parseEther('10'));
 
-    await Token.increaseAllowance(ServiceAgreementV1.address, newAddedTokenAmount);
+    await Token.increaseAllowance(ServiceAgreementV1.address, newUpdateTokenAmount);
 
     const ContentAssetWithNonOwnerSigner = ContentAsset.connect(accounts[1]);
 
     await expect(
-      ContentAssetWithNonOwnerSigner.updateAssetAddedTokenAmount(tokenId, newAddedTokenAmount),
+      ContentAssetWithNonOwnerSigner.increaseAssetUpdateTokenAmount(tokenId, newUpdateTokenAmount),
     ).to.be.revertedWith('Only asset owner can use this fn');
   });
 
-  it('Update asset added token amount without pending update, expect to be reverted', async () => {
+  it('Increase asset update token amount without pending update, expect to be reverted', async () => {
     const tokenId = await createAsset();
-    const newAddedTokenAmount = assetUpdateArgs.tokenAmount.add(hre.ethers.utils.parseEther('10'));
+    const newUpdateTokenAmount = assetUpdateArgs.tokenAmount.add(hre.ethers.utils.parseEther('10'));
 
-    await Token.increaseAllowance(ServiceAgreementV1.address, newAddedTokenAmount);
+    await Token.increaseAllowance(ServiceAgreementV1.address, newUpdateTokenAmount);
 
-    await expect(ContentAsset.updateAssetAddedTokenAmount(tokenId, newAddedTokenAmount)).to.be.revertedWithCustomError(
-      ContentAsset,
-      'NoPendingUpdate',
-    );
+    await expect(
+      ContentAsset.increaseAssetUpdateTokenAmount(tokenId, newUpdateTokenAmount),
+    ).to.be.revertedWithCustomError(ContentAsset, 'NoPendingUpdate');
   });
 });

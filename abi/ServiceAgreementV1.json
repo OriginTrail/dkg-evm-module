@@ -295,7 +295,7 @@
         "type": "uint96"
       }
     ],
-    "name": "ServiceAgreementV1UpdateRewardAdded",
+    "name": "ServiceAgreementV1UpdateRewardRaised",
     "type": "event"
   },
   {
@@ -331,7 +331,7 @@
         "type": "uint96"
       }
     ],
-    "name": "addAddedTokens",
+    "name": "addTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -369,7 +369,7 @@
         "type": "uint96"
       }
     ],
-    "name": "addTokens",
+    "name": "addUpdateTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

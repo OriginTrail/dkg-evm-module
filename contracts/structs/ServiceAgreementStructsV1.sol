@@ -39,7 +39,7 @@ library ServiceAgreementStructsV1 {
         uint16 epochsNumber;
         uint128 epochLength;
         uint96 tokenAmount;
-        uint96 addedTokenAmount;
+        uint96 updateTokenAmount;
         uint8 scoreFunctionId;
         uint8 proofWindowOffsetPerc;
         // keccak256(epoch + assertionId) => headCommitId

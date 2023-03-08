@@ -28,7 +28,7 @@ contract ContentAsset is Named, Versioned {
         address indexed assetContract,
         uint256 indexed tokenId,
         bytes32 indexed state,
-        uint96 addedTokenAmount
+        uint96 updateTokenAmount
     );
     event AssetStateUpdateCanceled(
         address indexed assetContract,
@@ -148,7 +148,11 @@ contract ContentAsset is Named, Versioned {
         bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
 
         if (unfinalizedState != bytes32(0)) {
-            revert ServiceAgreementErrorsV1U1.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
+            revert ServiceAgreementErrorsV1U1.UpdateIsNotFinalized(
+                contentAssetStorageAddress,
+                tokenId,
+                unfinalizedState
+            );
         }
 
         bytes32 latestFinalizedState = cas.getLatestAssertionId(tokenId);
@@ -209,7 +213,11 @@ contract ContentAsset is Named, Versioned {
         bytes32 unfinalizedState = uss.getUnfinalizedState(tokenId);
 
         if (unfinalizedState != bytes32(0)) {
-            revert ServiceAgreementErrorsV1U1.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
+            revert ServiceAgreementErrorsV1U1.UpdateIsNotFinalized(
+                contentAssetStorageAddress,
+                tokenId,
+                unfinalizedState
+            );
         }
 
         assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
@@ -223,7 +231,7 @@ contract ContentAsset is Named, Versioned {
             contentAssetStorage.getAssertionIdByIndex(tokenId, 0)
         );
 
-        sasV1.addAddedTokens(msg.sender, contentAssetStorageAddress, tokenId, keyword, 1, tokenAmount);
+        sasV1.addUpdateTokens(msg.sender, contentAssetStorageAddress, tokenId, keyword, 1, tokenAmount);
 
         bytes32 agreementId = serviceAgreementV1.generateAgreementId(contentAssetStorageAddress, tokenId, keyword, 1);
         serviceAgreementStorageProxy.setUpdateCommitsDeadline(
@@ -258,15 +266,15 @@ contract ContentAsset is Named, Versioned {
             );
         }
 
-        uint96 addedTokenAmount = sasProxy.getAgreementAddedTokenAmount(agreementId);
-        sasProxy.transferAgreementTokens(msg.sender, addedTokenAmount);
+        uint96 updateTokenAmount = sasProxy.getAgreementUpdateTokenAmount(agreementId);
+        sasProxy.transferAgreementTokens(msg.sender, updateTokenAmount);
 
         assertionStorage.deleteAssertion(unfinalizedState);
 
         uss.deleteIssuer(tokenId);
         uss.deleteUnfinalizedState(tokenId);
 
-        emit AssetStateUpdateCanceled(contentAssetStorageAddress, tokenId, unfinalizedState, addedTokenAmount);
+        emit AssetStateUpdateCanceled(contentAssetStorageAddress, tokenId, unfinalizedState, updateTokenAmount);
     }
 
     function updateAssetStoringPeriod(
@@ -292,7 +300,7 @@ contract ContentAsset is Named, Versioned {
         emit AssetStoringPeriodExtended(contentAssetStorageAddress, tokenId, epochsNumber, tokenAmount);
     }
 
-    function updateAssetTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
+    function increaseAssetTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
         ContentAssetStorage cas = contentAssetStorage;
         ServiceAgreementV1 sasV1 = serviceAgreementV1;
 
@@ -310,7 +318,7 @@ contract ContentAsset is Named, Versioned {
         emit AssetPaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
     }
 
-    function updateAssetAddedTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
+    function increaseAssetUpdateTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
         ContentAssetStorage cas = contentAssetStorage;
         ServiceAgreementV1 sasV1 = serviceAgreementV1;
 
@@ -322,7 +330,7 @@ contract ContentAsset is Named, Versioned {
             revert ServiceAgreementErrorsV1U1.NoPendingUpdate(contentAssetStorageAddress, tokenId);
         }
 
-        sasV1.addAddedTokens(
+        sasV1.addUpdateTokens(
             msg.sender,
             contentAssetStorageAddress,
             tokenId,

@@ -237,7 +237,7 @@
       {
         "indexed": false,
         "internalType": "uint96",
-        "name": "addedTokenAmount",
+        "name": "updateTokenAmount",
         "type": "uint96"
       }
     ],
@@ -482,6 +482,42 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "increaseAssetTokenAmount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "increaseAssetUpdateTokenAmount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "initialize",
     "outputs": [],
@@ -561,24 +597,6 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint96",
-        "name": "tokenAmount",
-        "type": "uint96"
-      }
-    ],
-    "name": "updateAssetAddedTokenAmount",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
         "internalType": "bytes32",
         "name": "assertionId",
         "type": "bytes32"
@@ -628,24 +646,6 @@
       }
     ],
     "name": "updateAssetStoringPeriod",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint96",
-        "name": "tokenAmount",
-        "type": "uint96"
-      }
-    ],
-    "name": "updateAssetTokenAmount",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

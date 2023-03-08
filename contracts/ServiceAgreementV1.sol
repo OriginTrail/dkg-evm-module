@@ -47,7 +47,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint8 hashFunctionId,
         uint96 tokenAmount
     );
-    event ServiceAgreementV1UpdateRewardAdded(
+    event ServiceAgreementV1UpdateRewardRaised(
         address indexed assetContract,
         uint256 indexed tokenId,
         bytes keyword,
@@ -162,7 +162,8 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint8 hashFunctionId
     ) external onlyContracts {
         if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1U1.EmptyAssetCreatorAddress();
-        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(assetContract);
+        if (!hub.isAssetStorage(assetContract))
+            revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(assetContract);
         if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1U1.EmptyKeyword();
 
         bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
@@ -185,7 +186,8 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint16 epochsNumber,
         uint96 tokenAmount
     ) external onlyContracts {
-        if (!hub.isAssetStorage(assetContract)) revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(assetContract);
+        if (!hub.isAssetStorage(assetContract))
+            revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(assetContract);
         if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1U1.EmptyKeyword();
         if (epochsNumber == 0) revert ServiceAgreementErrorsV1U1.ZeroEpochsNumber();
 
@@ -217,7 +219,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         emit ServiceAgreementV1RewardRaised(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
     }
 
-    function addAddedTokens(
+    function addUpdateTokens(
         address assetOwner,
         address assetContract,
         uint256 tokenId,
@@ -228,9 +230,9 @@ contract ServiceAgreementV1 is Named, Versioned {
         _addTokens(assetOwner, tokenAmount);
 
         bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
-        serviceAgreementStorageProxy.setAgreementAddedTokenAmount(agreementId, tokenAmount);
+        serviceAgreementStorageProxy.setAgreementUpdateTokenAmount(agreementId, tokenAmount);
 
-        emit ServiceAgreementV1UpdateRewardAdded(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
+        emit ServiceAgreementV1UpdateRewardRaised(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
     }
 
     function generateAgreementId(

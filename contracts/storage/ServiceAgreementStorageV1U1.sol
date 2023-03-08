@@ -67,7 +67,7 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
             serviceAgreements[agreementId].startTime,
             serviceAgreements[agreementId].epochsNumber,
             serviceAgreements[agreementId].epochLength,
-            [serviceAgreements[agreementId].tokenAmount, serviceAgreements[agreementId].addedTokenAmount],
+            [serviceAgreements[agreementId].tokenAmount, serviceAgreements[agreementId].updateTokenAmount],
             [serviceAgreements[agreementId].scoreFunctionId, serviceAgreements[agreementId].proofWindowOffsetPerc]
         );
     }
@@ -104,12 +104,12 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
         serviceAgreements[agreementId].tokenAmount = tokenAmount;
     }
 
-    function getAgreementAddedTokenAmount(bytes32 agreementId) external view returns (uint96) {
-        return serviceAgreements[agreementId].addedTokenAmount;
+    function getAgreementUpdateTokenAmount(bytes32 agreementId) external view returns (uint96) {
+        return serviceAgreements[agreementId].updateTokenAmount;
     }
 
-    function setAgreementAddedTokenAmount(bytes32 agreementId, uint96 addedTokenAmount) external onlyContracts {
-        serviceAgreements[agreementId].addedTokenAmount = addedTokenAmount;
+    function setAgreementUpdateTokenAmount(bytes32 agreementId, uint96 updateTokenAmount) external onlyContracts {
+        serviceAgreements[agreementId].updateTokenAmount = updateTokenAmount;
     }
 
     function getAgreementScoreFunctionId(bytes32 agreementId) external view returns (uint8) {

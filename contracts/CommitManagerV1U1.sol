@@ -372,9 +372,9 @@ contract CommitManagerV1U1 is Named, Versioned {
                 uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);
                 sasProxy.setAgreementTokenAmount(
                     agreementId,
-                    tokenAmount + sasProxy.getAgreementAddedTokenAmount(agreementId)
+                    tokenAmount + sasProxy.getAgreementUpdateTokenAmount(agreementId)
                 );
-                sasProxy.setAgreementAddedTokenAmount(agreementId, 0);
+                sasProxy.setAgreementUpdateTokenAmount(agreementId, 0);
 
                 ContentAssetStorage cas = contentAssetStorage;
                 cas.setAssertionIssuer(args.tokenId, unfinalizedState, uss.getIssuer(args.tokenId));
