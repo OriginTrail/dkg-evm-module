@@ -229,9 +229,9 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
     function getAgreementEpochSubmissionHead(
         bytes32 agreementId,
         uint16 epoch,
-        bytes32 assertionId
+        uint256 stateIndex
     ) external view returns (bytes32) {
-        return storageV1U1.getAgreementEpochSubmissionHead(agreementId, epoch, assertionId);
+        return storageV1U1.getAgreementEpochSubmissionHead(agreementId, epoch, stateIndex);
     }
 
     function getAgreementEpochSubmissionHead(bytes32 agreementId, uint16 epoch) external view returns (bytes32) {
@@ -241,10 +241,10 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
     function setAgreementEpochSubmissionHead(
         bytes32 agreementId,
         uint16 epoch,
-        bytes32 assertionId,
+        uint256 stateIndex,
         bytes32 headCommitId
     ) external onlyContracts {
-        storageV1U1.setAgreementEpochSubmissionHead(agreementId, epoch, assertionId, headCommitId);
+        storageV1U1.setAgreementEpochSubmissionHead(agreementId, epoch, stateIndex, headCommitId);
     }
 
     function setAgreementEpochSubmissionHead(

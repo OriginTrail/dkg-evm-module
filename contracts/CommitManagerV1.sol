@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.4;
 
+import {HashingProxy} from "./HashingProxy.sol";
 import {Hub} from "./Hub.sol";
 import {ScoringProxy} from "./ScoringProxy.sol";
-import {ServiceAgreementV1} from "./ServiceAgreementV1.sol";
 import {Staking} from "./Staking.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
@@ -35,9 +35,9 @@ contract CommitManagerV1 is Named, Versioned {
 
     bool[4] public reqs = [false, false, false, false];
 
+    HashingProxy public hashingProxy;
     Hub public hub;
     ScoringProxy public scoringProxy;
-    ServiceAgreementV1 public serviceAgreementV1;
     Staking public stakingContract;
     IdentityStorage public identityStorage;
     ParametersStorage public parametersStorage;
@@ -59,8 +59,8 @@ contract CommitManagerV1 is Named, Versioned {
     }
 
     function initialize() public onlyHubOwner {
+        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
-        serviceAgreementV1 = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
         stakingContract = Staking(hub.getContractAddress("Staking"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
@@ -169,7 +169,7 @@ contract CommitManagerV1 is Named, Versioned {
     }
 
     function _submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) internal virtual {
-        bytes32 agreementId = serviceAgreementV1.generateAgreementId(
+        bytes32 agreementId = _generateAgreementId(
             args.assetContract,
             args.tokenId,
             args.keyword,
@@ -323,6 +323,15 @@ contract CommitManagerV1 is Named, Versioned {
             keccak256(abi.encodePacked(agreementId, epoch, rightIdentityId)), // rightCommitId
             leftIdentityId
         );
+    }
+
+    function _generateAgreementId(
+        address assetContract,
+        uint256 tokenId,
+        bytes calldata keyword,
+        uint8 hashFunctionId
+    ) internal view returns (bytes32) {
+        return hashingProxy.callHashFunction(hashFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
     }
 
     function _checkHubOwner() internal view virtual {

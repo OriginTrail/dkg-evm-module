@@ -317,9 +317,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "bytes32",
-        "name": "assertionId",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       }
     ],
     "name": "getAgreementEpochSubmissionHead",
@@ -740,9 +740,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "bytes32",
-        "name": "assertionId",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "internalType": "bytes32",

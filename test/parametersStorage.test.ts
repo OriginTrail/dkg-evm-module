@@ -95,6 +95,12 @@ describe('ParametersStorage contract', function () {
     expect(r1.toString()).be.eql(newR1value);
   });
 
+  it('set r1 < 2r0-1, expect to revert', async () => {
+    const r0 = await ParametersStorage.r0();
+
+    await expect(ParametersStorage.setR1(2 * r0 - 2)).to.be.revertedWith('R1 should be >= 2*R0-1');
+  });
+
   it('validate r1 for non owner, expect to fail', async () => {
     const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     r1 = await ParametersStorage.r1();
@@ -106,7 +112,7 @@ describe('ParametersStorage contract', function () {
 
   it('validate r0 for owner, expect to pass', async () => {
     const r0valueInContract = '3';
-    const newR0value = '6';
+    const newR0value = '4';
     r0 = await ParametersStorage.r0();
 
     expect(r0.toString()).be.eql(r0valueInContract);
@@ -116,6 +122,12 @@ describe('ParametersStorage contract', function () {
     r0 = await ParametersStorage.r0();
 
     expect(r0.toString()).be.eql(newR0value);
+  });
+
+  it('set r0 > (r1+1)/2, expect to revert', async () => {
+    const r1 = await ParametersStorage.r1();
+
+    await expect(ParametersStorage.setR0(Math.floor((r1 + 1) / 2) + 1)).to.be.revertedWith('R0 should be <= (R1+1)/2');
   });
 
   it('validate r0 for non owner, expect to fail', async () => {

@@ -289,9 +289,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "bytes32",
-        "name": "assertionId",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       }
     ],
     "name": "getAgreementEpochSubmissionHead",
@@ -815,11 +815,6 @@
       },
       {
         "internalType": "bytes32",
-        "name": "assertionId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
         "name": "headCommitId",
         "type": "bytes32"
       }
@@ -840,6 +835,11 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "internalType": "bytes32",

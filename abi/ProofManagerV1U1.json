@@ -23,9 +23,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "internalType": "uint72",
@@ -54,9 +54,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "internalType": "uint72",
@@ -101,9 +101,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "internalType": "uint256",
@@ -174,9 +174,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "internalType": "uint72",
@@ -266,9 +266,9 @@
       },
       {
         "indexed": false,
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "indexed": true,

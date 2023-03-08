@@ -25,7 +25,7 @@ contract ProofManagerV1U1 is Named, Versioned {
         bytes keyword,
         uint8 hashFunctionId,
         uint16 epoch,
-        bytes32 state,
+        uint256 stateIndex,
         uint72 indexed identityId
     );
     event Logger(bool value, string message);
@@ -161,7 +161,7 @@ contract ProofManagerV1U1 is Named, Versioned {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
         AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
 
-        bytes32 latestFinalizedState = generalAssetInterface.getLatestAssertionId(args.tokenId);
+        uint256 latestFinalizedStateIndex = generalAssetInterface.getAssertionIdsLength(args.tokenId) - 1;
 
         if (!reqs[0] && !isProofWindowOpen(agreementId, args.epoch)) {
             uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
@@ -175,7 +175,7 @@ contract ProofManagerV1U1 is Named, Versioned {
             revert ServiceAgreementErrorsV1U1.ProofWindowClosed(
                 agreementId,
                 args.epoch,
-                latestFinalizedState,
+                latestFinalizedStateIndex,
                 actualProofWindowStart,
                 actualProofWindowStart + (parametersStorage.proofWindowDurationPerc() * epochLength) / 100,
                 block.timestamp
@@ -186,19 +186,23 @@ contract ProofManagerV1U1 is Named, Versioned {
         IdentityStorage ids = identityStorage;
 
         uint72 identityId = ids.getIdentityId(msg.sender);
-        bytes32 commitId = keccak256(abi.encodePacked(agreementId, args.epoch, latestFinalizedState, identityId));
+        bytes32 commitId = keccak256(abi.encodePacked(agreementId, args.epoch, latestFinalizedStateIndex, identityId));
 
         if (!reqs[1] && (sasProxy.getCommitSubmissionScore(commitId) == 0))
             revert ServiceAgreementErrorsV1U1.NodeAlreadyRewarded(
                 agreementId,
                 args.epoch,
-                latestFinalizedState,
+                latestFinalizedStateIndex,
                 identityId,
                 profileStorage.getNodeId(identityId)
             );
         emit Logger(sasProxy.getCommitSubmissionScore(commitId) == 0, "req2");
 
-        bytes32 nextCommitId = sasProxy.getAgreementEpochSubmissionHead(agreementId, args.epoch, latestFinalizedState);
+        bytes32 nextCommitId = sasProxy.getAgreementEpochSubmissionHead(
+            agreementId,
+            args.epoch,
+            latestFinalizedStateIndex
+        );
         uint32 r0 = parametersStorage.r0();
         uint8 i;
         while ((identityId != sasProxy.getCommitSubmissionIdentityId(nextCommitId)) && (i < r0)) {
@@ -206,7 +210,7 @@ contract ProofManagerV1U1 is Named, Versioned {
                 abi.encodePacked(
                     agreementId,
                     args.epoch,
-                    latestFinalizedState,
+                    latestFinalizedStateIndex,
                     sasProxy.getCommitSubmissionNextIdentityId(nextCommitId)
                 )
             );
@@ -219,7 +223,7 @@ contract ProofManagerV1U1 is Named, Versioned {
             revert ServiceAgreementErrorsV1U1.NodeNotAwarded(
                 agreementId,
                 args.epoch,
-                latestFinalizedState,
+                latestFinalizedStateIndex,
                 identityId,
                 profileStorage.getNodeId(identityId),
                 i
@@ -237,7 +241,7 @@ contract ProofManagerV1U1 is Named, Versioned {
             revert ServiceAgreementErrorsV1U1.WrongMerkleProof(
                 agreementId,
                 args.epoch,
-                latestFinalizedState,
+                latestFinalizedStateIndex,
                 identityId,
                 profileStorage.getNodeId(identityId),
                 args.proof,
@@ -256,7 +260,7 @@ contract ProofManagerV1U1 is Named, Versioned {
             args.keyword,
             args.hashFunctionId,
             args.epoch,
-            latestFinalizedState,
+            latestFinalizedStateIndex,
             identityId
         );
 

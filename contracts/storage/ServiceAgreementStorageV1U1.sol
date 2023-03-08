@@ -11,16 +11,16 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
     string private constant _NAME = "ServiceAgreementStorageV1_1";
     string private constant _VERSION = "1.0.0";
 
-    // AgreementId [hash(asset type contract + tokenId + key)] => ExtendedServiceAgreement
+    // AgreementId [hash(assetStorage + tokenId + key)] => ExtendedServiceAgreement
     mapping(bytes32 => ServiceAgreementStructsV1.ExtendedServiceAgreement) internal serviceAgreements;
 
-    // CommitId [keccak256(agreementId + epoch + assertionId + identityId)] => stateCommitSubmission
+    // CommitId [keccak256(agreementId + epoch + stateIndex + identityId)] => stateCommitSubmission
     mapping(bytes32 => ServiceAgreementStructsV1.CommitSubmission) internal epochStateCommitSubmissions;
 
-    // EpochStateId [keccak256(agreementId + epoch + assertionId)] => epochStateCommitsCount
+    // EpochStateId [keccak256(agreementId + epoch + stateIndex)] => epochStateCommitsCount
     mapping(bytes32 => uint8) internal epochStateCommitsCount;
 
-    // StateId [keccak256(agreementId + assertionId)] => updateCommitsDeadline
+    // StateId [keccak256(agreementId + stateIndex)] => updateCommitsDeadline
     mapping(bytes32 => uint256) internal updateCommitsDeadlines;
 
     // solhint-disable-next-line no-empty-blocks
@@ -134,19 +134,19 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
     function getAgreementEpochSubmissionHead(
         bytes32 agreementId,
         uint16 epoch,
-        bytes32 assertionId
+        uint256 stateIndex
     ) external view returns (bytes32) {
-        return serviceAgreements[agreementId].epochSubmissionHeads[keccak256(abi.encodePacked(epoch, assertionId))];
+        return serviceAgreements[agreementId].epochSubmissionHeads[keccak256(abi.encodePacked(epoch, stateIndex))];
     }
 
     function setAgreementEpochSubmissionHead(
         bytes32 agreementId,
         uint16 epoch,
-        bytes32 assertionId,
+        uint256 stateIndex,
         bytes32 headCommitId
     ) external onlyContracts {
         serviceAgreements[agreementId].epochSubmissionHeads[
-            keccak256(abi.encodePacked(epoch, assertionId))
+            keccak256(abi.encodePacked(epoch, stateIndex))
         ] = headCommitId;
     }
 

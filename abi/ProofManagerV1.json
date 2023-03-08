@@ -358,6 +358,19 @@
   },
   {
     "inputs": [],
+    "name": "hashingProxy",
+    "outputs": [
+      {
+        "internalType": "contract HashingProxy",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "hub",
     "outputs": [
       {
@@ -527,19 +540,6 @@
     "outputs": [
       {
         "internalType": "contract ServiceAgreementStorageProxy",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "serviceAgreementV1",
-    "outputs": [
-      {
-        "internalType": "contract ServiceAgreementV1",
         "name": "",
         "type": "address"
       }
