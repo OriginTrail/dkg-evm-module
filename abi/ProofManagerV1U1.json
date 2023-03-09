@@ -23,6 +23,11 @@
         "type": "uint16"
       },
       {
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
+      },
+      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -47,6 +52,11 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "internalType": "uint72",
@@ -89,6 +99,11 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "internalType": "uint256",
@@ -157,6 +172,11 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "internalType": "uint72",
@@ -243,6 +263,12 @@
         "internalType": "uint16",
         "name": "epoch",
         "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "indexed": true,
@@ -357,13 +383,34 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "hashingProxy",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "assetContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epoch",
+        "type": "uint16"
+      }
+    ],
+    "name": "getChallenge",
     "outputs": [
       {
-        "internalType": "contract HashingProxy",
+        "internalType": "bytes32",
         "name": "",
-        "type": "address"
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -540,6 +587,19 @@
     "outputs": [
       {
         "internalType": "contract ServiceAgreementStorageProxy",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "serviceAgreementV1",
+    "outputs": [
+      {
+        "internalType": "contract ServiceAgreementV1",
         "name": "",
         "type": "address"
       }

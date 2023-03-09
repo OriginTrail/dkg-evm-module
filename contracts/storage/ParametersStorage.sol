@@ -118,6 +118,8 @@ contract ParametersStorage is Named, Versioned {
     }
 
     function setR1(uint32 newR1) external onlyHubOwner {
+        require(newR1 >= (2 * args2[0] - 1), "R1 should be >= 2*R0-1");
+
         args2[1] = newR1;
     }
 
@@ -126,6 +128,8 @@ contract ParametersStorage is Named, Versioned {
     }
 
     function setR0(uint32 newR0) external onlyHubOwner {
+        require(newR0 <= ((args2[1] + 1) / 2), "R0 should be <= (R1+1)/2");
+
         args2[0] = newR0;
     }
 

@@ -254,25 +254,6 @@
         "type": "bytes32"
       }
     ],
-    "name": "getAgreementAddedTokenAmount",
-    "outputs": [
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
-      }
-    ],
     "name": "getAgreementData",
     "outputs": [
       {
@@ -336,9 +317,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "bytes32",
-        "name": "assertionId",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       }
     ],
     "name": "getAgreementEpochSubmissionHead",
@@ -461,6 +442,25 @@
       }
     ],
     "name": "getAgreementTokenAmount",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getAgreementUpdateTokenAmount",
     "outputs": [
       {
         "internalType": "uint96",
@@ -717,24 +717,6 @@
         "type": "bytes32"
       },
       {
-        "internalType": "uint96",
-        "name": "addedTokenAmount",
-        "type": "uint96"
-      }
-    ],
-    "name": "setAgreementAddedTokenAmount",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
-      },
-      {
         "internalType": "uint128",
         "name": "epochLength",
         "type": "uint128"
@@ -758,9 +740,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "bytes32",
-        "name": "assertionId",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "internalType": "bytes32",
@@ -882,6 +864,24 @@
       }
     ],
     "name": "setAgreementTokenAmount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint96",
+        "name": "updateTokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "setAgreementUpdateTokenAmount",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
