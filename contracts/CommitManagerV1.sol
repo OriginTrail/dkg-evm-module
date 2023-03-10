@@ -169,12 +169,7 @@ contract CommitManagerV1 is Named, Versioned {
     }
 
     function _submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) internal virtual {
-        bytes32 agreementId = _generateAgreementId(
-            args.assetContract,
-            args.tokenId,
-            args.keyword,
-            args.hashFunctionId
-        );
+        bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
         if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {
             ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;

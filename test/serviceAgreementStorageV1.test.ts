@@ -21,17 +21,16 @@ describe('ServiceAgreementStorageV1 contract', function () {
   const proofWindowOffsetPerc = 10;
 
   let accounts: SignerWithAddress[];
+  let Hub: Hub;
   let ServiceAgreementStorageV1: ServiceAgreementStorageV1;
   let Token: Token;
 
   async function deployServiceAgreementStorageV1Fixture(): Promise<ServiceAgreementStorageV1Fixture> {
     await hre.deployments.fixture(['ServiceAgreementStorageV1']);
-    const accounts = await hre.ethers.getSigners();
-    const ServiceAgreementStorageV1 = await hre.ethers.getContract<ServiceAgreementStorageV1>(
-      'ServiceAgreementStorageV1',
-    );
-    const Token = await hre.ethers.getContract<Token>('Token');
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
+    accounts = await hre.ethers.getSigners();
+    ServiceAgreementStorageV1 = await hre.ethers.getContract<ServiceAgreementStorageV1>('ServiceAgreementStorageV1');
+    Token = await hre.ethers.getContract<Token>('Token');
+    Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, ServiceAgreementStorageV1, Token };

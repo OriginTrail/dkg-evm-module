@@ -23,9 +23,9 @@ describe('AssertionStorage contract', function () {
 
   async function deployAssertionStorageFixture(): Promise<AssertionStorageFixture> {
     await hre.deployments.fixture(['AssertionStorage']);
-    const AssertionStorage = await hre.ethers.getContract<AssertionStorage>('AssertionStorage');
+    AssertionStorage = await hre.ethers.getContract<AssertionStorage>('AssertionStorage');
     Hub = await hre.ethers.getContract<Hub>('Hub');
-    const accounts = await hre.ethers.getSigners();
+    accounts = await hre.ethers.getSigners();
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, AssertionStorage, Hub };

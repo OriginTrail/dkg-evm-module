@@ -28,10 +28,10 @@ describe('IdentityStorage contract', function () {
 
   async function deployIdentityStorageFixture(): Promise<IdentityStorageFixture> {
     await hre.deployments.fixture(['Identity']);
-    const Identity = await hre.ethers.getContract<Identity>('Identity');
-    const IdentityStorage = await hre.ethers.getContract<IdentityStorage>('IdentityStorage');
+    Identity = await hre.ethers.getContract<Identity>('Identity');
+    IdentityStorage = await hre.ethers.getContract<IdentityStorage>('IdentityStorage');
     Hub = await hre.ethers.getContract<Hub>('Hub');
-    const accounts = await hre.ethers.getSigners();
+    accounts = await hre.ethers.getSigners();
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, Identity, Hub, IdentityStorage };

@@ -7,31 +7,30 @@ import { ContentAssetStorage, Token, Hub, ParametersStorage, ServiceAgreementV1 
 
 type ServiceAgreementV1Fixture = {
   accounts: SignerWithAddress[];
+  ContentAssetStorage: ContentAssetStorage;
+  ParametersStorage: ParametersStorage;
   ServiceAgreementV1: ServiceAgreementV1;
   Token: Token;
-  ContentAssetStorage: ContentAssetStorage;
 };
 
 describe('ServiceAgreementV1 contract', function () {
   let accounts: SignerWithAddress[];
+  let Hub: Hub;
+  let ContentAssetStorage: ContentAssetStorage;
+  let ParametersStorage: ParametersStorage;
   let ServiceAgreementV1: ServiceAgreementV1;
   let Token: Token;
-  let ContentAssetStorage: ContentAssetStorage;
 
   async function deployServiceAgreementV1Fixture(): Promise<ServiceAgreementV1Fixture> {
-    await hre.deployments.fixture(['ServiceAgreementV1']);
-    const accounts = await hre.ethers.getSigners();
-    const ServiceAgreementV1 = await hre.ethers.getContract<ServiceAgreementV1>('ServiceAgreementV1');
-    const Token = await hre.ethers.getContract<Token>('Token');
-    const ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
+    await hre.deployments.fixture(['ServiceAgreementV1', 'ContentAssetStorage']);
+    accounts = await hre.ethers.getSigners();
+    ServiceAgreementV1 = await hre.ethers.getContract<ServiceAgreementV1>('ServiceAgreementV1');
+    Token = await hre.ethers.getContract<Token>('Token');
+    ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
+    Hub = await hre.ethers.getContract<Hub>('Hub');
+    ContentAssetStorage = await hre.ethers.getContract<ContentAssetStorage>('ContentAssetStorage');
+
     await Hub.setContractAddress('HubOwner', accounts[0].address);
-    const ContentAssetContract = await hre.ethers.getContractFactory('ContentAssetStorage');
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const ContentAssetStorage: ContentAssetStorage = await ContentAssetContract.deploy(Hub.address);
-    await ContentAssetStorage.deployed();
-    await Hub.setAssetStorageAddress('ContentAssetStorage', ContentAssetStorage.address);
 
     await ParametersStorage.setEpochLength(60 * 60); // 60 minutes
     await ParametersStorage.setCommitWindowDurationPerc(25); // 25% (15 minutes)
@@ -39,11 +38,13 @@ describe('ServiceAgreementV1 contract', function () {
     await ParametersStorage.setMaxProofWindowOffsetPerc(75); // range to 75%
     await ParametersStorage.setProofWindowDurationPerc(25); // 25% (15 minutes)
 
-    return { accounts, ContentAssetStorage, ServiceAgreementV1, Token };
+    return { accounts, ContentAssetStorage, ParametersStorage, ServiceAgreementV1, Token };
   }
 
   beforeEach(async () => {
-    ({ accounts, ContentAssetStorage, ServiceAgreementV1, Token } = await loadFixture(deployServiceAgreementV1Fixture));
+    ({ accounts, ContentAssetStorage, ParametersStorage, ServiceAgreementV1, Token } = await loadFixture(
+      deployServiceAgreementV1Fixture,
+    ));
   });
 
   it('The contract is named "ServiceAgreementV1"', async function () {
@@ -54,7 +55,7 @@ describe('ServiceAgreementV1 contract', function () {
     expect(await ServiceAgreementV1.version()).to.equal('1.1.0');
   });
 
-  it('Create new service agreement with valid input args; await all parameters to be set up', async function () {
+  it('Create new SA with valid input args; await all parameters to be set up', async function () {
     const serviceAgreementInputArgs = {
       assetCreator: accounts[0].address,
       assetContract: ContentAssetStorage.address,
@@ -68,7 +69,6 @@ describe('ServiceAgreementV1 contract', function () {
     await Token.increaseAllowance(ServiceAgreementV1.address, serviceAgreementInputArgs.tokenAmount);
 
     const blockNumber = await hre.ethers.provider.getBlockNumber();
-    const epochLength = 60 * 60;
 
     await expect(await ServiceAgreementV1.createServiceAgreement(serviceAgreementInputArgs))
       .to.emit(ServiceAgreementV1, 'ServiceAgreementV1Created')
@@ -79,8 +79,109 @@ describe('ServiceAgreementV1 contract', function () {
         Number(serviceAgreementInputArgs.hashFunctionId),
         (await hre.ethers.provider.getBlock(blockNumber)).timestamp + 1,
         Number(serviceAgreementInputArgs.epochsNumber),
-        epochLength,
+        await ParametersStorage.epochLength(),
         serviceAgreementInputArgs.tokenAmount,
       );
+  });
+
+  it.skip('Create new SA with 0x0 creator address, expect to be reverted', async () => {
+    return;
+  });
+
+  it.skip('Create new SA with asset storage not in the hub, expect to be reverted', async () => {
+    return;
+  });
+
+  it.skip('Create new SA with empty keyword, expect to be reverted', async () => {
+    return;
+  });
+
+  it.skip('Create new SA with 0 epochs number, expect to be reverted', async () => {
+    return;
+  });
+
+  it.skip('Create new SA with 0 tokens, expect to be reverted', async () => {
+    return;
+  });
+
+  it.skip('Create new SA with non-existent score function, expect to be reverted', async () => {
+    return;
+  });
+
+  it.skip('Create new SA with too low allowance, expect to be reverted', async () => {
+    return;
+  });
+
+  it.skip('Create new SA with too low balance, expect to be reverted', async () => {
+    return;
+  });
+
+  it.skip('Create new SA and terminate it, expect SA to be terminated', async () => {
+    return;
+  });
+
+  it.skip('Create new SA and try terminating it with empty creator address, expect to be reverted', async () => {
+    return;
+  });
+
+  it.skip('Create new SA and try terminating it with asset storage not in the hub, expect to be reverted', async () => {
+    return;
+  });
+
+  it.skip('Create new SA and try terminating it with empty keyword, expect to be reverted', async () => {
+    return;
+  });
+
+  it.skip('Create new SA and extend storing period, expect epochs number to be increased', async () => {
+    return;
+  });
+
+  // if (!hub.isAssetStorage(assetContract))
+  //           revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(assetContract);
+  //       if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1U1.EmptyKeyword();
+  //       if (epochsNumber == 0) revert ServiceAgreementErrorsV1U1.ZeroEpochsNumber();
+
+  it.skip('', async () => {
+    return;
+  });
+
+  it.skip('', async () => {
+    return;
+  });
+
+  it.skip('', async () => {
+    return;
+  });
+
+  it.skip('Create new SA and add tokens, expect token amount to be increased', async () => {
+    return;
+  });
+
+  it.skip('', async () => {
+    return;
+  });
+
+  it.skip('', async () => {
+    return;
+  });
+
+  it.skip('', async () => {
+    return;
+  });
+
+  it.skip('', async () => {
+    return;
+  });
+
+  it.skip('', async () => {
+    return;
+  });
+
+  it.skip('', async () => {
+    return;
+  });
+
+  it.skip('', async () => {
+    return;
   });
 });

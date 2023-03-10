@@ -14,16 +14,17 @@ type ProfileStorageFixture = {
 
 describe('ProfileStorage contract', function () {
   let accounts: SignerWithAddress[];
+  let Hub: Hub;
   let ProfileStorage: ProfileStorage;
   let Token: Token;
   const newNodeId = '0x0000000000000000000000000000000000000000000000000000000000000002';
 
   async function deployProfileStorageFixture(): Promise<ProfileStorageFixture> {
     await hre.deployments.fixture(['ProfileStorage']);
-    const ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
-    const Token = await hre.ethers.getContract<Token>('Token');
-    const accounts = await hre.ethers.getSigners();
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
+    ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
+    Token = await hre.ethers.getContract<Token>('Token');
+    accounts = await hre.ethers.getSigners();
+    Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, Token, ProfileStorage };

@@ -14,6 +14,7 @@ type ShardingTableStorageFixture = {
 
 describe('ShardingTableStorage Contract', function () {
   let accounts: SignerWithAddress[];
+  let Hub: Hub;
   let ShardingTableStorage: ShardingTableStorage;
   let Profile: Profile;
   let identityId: number;
@@ -25,10 +26,10 @@ describe('ShardingTableStorage Contract', function () {
   async function deployShardingTableStorageFixture(): Promise<ShardingTableStorageFixture> {
     await hre.deployments.fixture(['ShardingTableStorage']);
     await hre.deployments.fixture(['Profile']);
-    const accounts = await hre.ethers.getSigners();
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
-    const Profile = await hre.ethers.getContract<Profile>('Profile');
-    const ShardingTableStorage = await hre.ethers.getContract<ShardingTableStorage>('ShardingTableStorage');
+    accounts = await hre.ethers.getSigners();
+    Hub = await hre.ethers.getContract<Hub>('Hub');
+    Profile = await hre.ethers.getContract<Profile>('Profile');
+    ShardingTableStorage = await hre.ethers.getContract<ShardingTableStorage>('ShardingTableStorage');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return {

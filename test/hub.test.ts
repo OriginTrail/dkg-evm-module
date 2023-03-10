@@ -17,8 +17,8 @@ describe('Hub contract', function () {
 
   async function deployHubFixture(): Promise<HubFixture> {
     await hre.deployments.fixture(['Hub']);
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
-    const accounts = await hre.ethers.getSigners();
+    Hub = await hre.ethers.getContract<Hub>('Hub');
+    accounts = await hre.ethers.getSigners();
 
     return { accounts, Hub };
   }

@@ -16,6 +16,7 @@ type StakingFixture = {
 
 describe('Staking contract', function () {
   let accounts: SignerWithAddress[];
+  let Hub: Hub;
   let Staking: Staking;
   let StakingStorage: StakingStorage;
   let Token: Token;
@@ -29,15 +30,15 @@ describe('Staking contract', function () {
 
   async function deployStakingFixture(): Promise<StakingFixture> {
     await hre.deployments.fixture(['Staking', 'Profile']);
-    const Staking = await hre.ethers.getContract<Staking>('Staking');
-    const StakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
-    const Token = await hre.ethers.getContract<Token>('Token');
-    const Profile = await hre.ethers.getContract<Profile>('Profile');
-    const ServiceAgreementStorageV1U1 = await hre.ethers.getContract<ServiceAgreementStorageV1U1>(
+    Staking = await hre.ethers.getContract<Staking>('Staking');
+    StakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
+    Token = await hre.ethers.getContract<Token>('Token');
+    Profile = await hre.ethers.getContract<Profile>('Profile');
+    ServiceAgreementStorageV1U1 = await hre.ethers.getContract<ServiceAgreementStorageV1U1>(
       'ServiceAgreementStorageV1U1',
     );
-    const accounts = await hre.ethers.getSigners();
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
+    accounts = await hre.ethers.getSigners();
+    Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, Token, Profile, ServiceAgreementStorageV1U1, Staking, StakingStorage };

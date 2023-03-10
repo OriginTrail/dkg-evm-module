@@ -12,6 +12,7 @@ type ParametersStorageFixture = {
 
 describe('ParametersStorage contract', function () {
   let accounts: SignerWithAddress[];
+  let Hub: Hub;
   let ParametersStorage: ParametersStorage;
   let minimumStake, r2, r1, r0, commitWindowDurationPerc, minProofWindowOffsetPerc, maxProofWindowOffsetPerc;
   let proofWindowDurationPerc,
@@ -23,9 +24,9 @@ describe('ParametersStorage contract', function () {
 
   async function deployParametersStorageFixture(): Promise<ParametersStorageFixture> {
     await hre.deployments.fixture(['ParametersStorage']);
-    const ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
-    const accounts = await hre.ethers.getSigners();
+    ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
+    Hub = await hre.ethers.getContract<Hub>('Hub');
+    accounts = await hre.ethers.getSigners();
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, ParametersStorage };

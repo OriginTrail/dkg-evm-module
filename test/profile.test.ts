@@ -14,6 +14,7 @@ type ProfileFixture = {
 
 describe('Profile contract', function () {
   let accounts: SignerWithAddress[];
+  let Hub: Hub;
   let Profile: Profile;
   let ProfileStorage: ProfileStorage;
   let WhitelistStorage: WhitelistStorage;
@@ -29,11 +30,11 @@ describe('Profile contract', function () {
 
   async function deployProfileFixture(): Promise<ProfileFixture> {
     await hre.deployments.fixture(['Profile']);
-    const Profile = await hre.ethers.getContract<Profile>('Profile');
-    const ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
-    const WhitelistStorage = await hre.ethers.getContract<WhitelistStorage>('WhitelistStorage');
-    const accounts = await hre.ethers.getSigners();
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
+    Profile = await hre.ethers.getContract<Profile>('Profile');
+    ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
+    WhitelistStorage = await hre.ethers.getContract<WhitelistStorage>('WhitelistStorage');
+    accounts = await hre.ethers.getSigners();
+    Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, Profile, ProfileStorage, WhitelistStorage };
