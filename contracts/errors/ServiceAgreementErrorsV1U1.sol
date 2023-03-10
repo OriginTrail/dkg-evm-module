@@ -67,5 +67,5 @@ library ServiceAgreementErrorsV1U1 {
     error FirstEpochHasAlreadyEnded(bytes32 agreementId);
     error NoPendingUpdate(address assetStorage, uint256 tokenId);
     error UpdateIsNotFinalized(address assetStorage, uint256 tokenId, bytes32 latestState);
-    error PendingUpdateFinalization(address assetStorage, uint256 tokenId, bytes32 latestState);
+    error PendingUpdateFinalization(address assetStorage, uint256 tokenId, uint256 latestStateIndex);
 }
