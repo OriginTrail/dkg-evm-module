@@ -120,7 +120,7 @@ contract CommitManagerV1U1 is Named, Versioned {
             return timeNow < (startTime + commitWindowDuration);
         }
 
-        return (timeNow > (startTime + epochLength * epoch) &&
+        return (timeNow >= (startTime + epochLength * epoch) &&
             timeNow < (startTime + epochLength * epoch + commitWindowDuration));
     }
 
@@ -197,30 +197,8 @@ contract CommitManagerV1U1 is Named, Versioned {
         _submitCommit(args);
     }
 
-    function bulkSubmitCommit(ServiceAgreementStructsV1.CommitInputArgs[] calldata argsArray) external {
-        uint256 commitsNumber = argsArray.length;
-
-        for (uint256 i; i < commitsNumber; ) {
-            _submitCommit(argsArray[i]);
-            unchecked {
-                i++;
-            }
-        }
-    }
-
     function submitUpdateCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
         _submitUpdateCommit(args);
-    }
-
-    function bulkSubmitUpdateCommit(ServiceAgreementStructsV1.CommitInputArgs[] calldata argsArray) external {
-        uint256 commitsNumber = argsArray.length;
-
-        for (uint256 i; i < commitsNumber; ) {
-            _submitUpdateCommit(argsArray[i]);
-            unchecked {
-                i++;
-            }
-        }
     }
 
     function setReq(uint256 index, bool req) external onlyHubOwner {

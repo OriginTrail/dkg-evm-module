@@ -23,7 +23,7 @@ describe('Profile contract', function () {
   const identityId1 = 1;
 
   async function createProfile() {
-    await expect(Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN'))
+    expect(await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN'))
       .to.emit(Profile, 'ProfileCreated')
       .withArgs(identityId1, nodeId1);
   }

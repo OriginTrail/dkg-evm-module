@@ -32,6 +32,7 @@ describe('ContentAsset contract', function () {
   let ServiceAgreementV1: ServiceAgreementV1;
   let Token: Token;
   let Hub: Hub;
+
   const nonExistingTokenId = 99;
   const assertionId = '0x8cc2117b68bcbb1535205d517cb42ef45f25838add571fce4cfb7de7bd617943';
   const assertionId1 = '0x8cc2117b68bcbb1535205d517cb42ef45f25838add571fce4cfb7de7bd289172';
