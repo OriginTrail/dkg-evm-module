@@ -72,9 +72,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "bytes32",
-        "name": "latestState",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "latestStateIndex",
+        "type": "uint256"
       }
     ],
     "name": "PendingUpdateFinalization",
@@ -115,12 +115,6 @@
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -199,9 +193,9 @@
       },
       {
         "indexed": true,
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -230,9 +224,9 @@
       },
       {
         "indexed": true,
-        "internalType": "bytes32",
-        "name": "state",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
       },
       {
         "indexed": false,

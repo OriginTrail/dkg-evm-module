@@ -190,10 +190,7 @@ describe('ContentAsset contract', function () {
       ['address', 'uint256', 'bytes'],
       [ContentAssetStorage.address, tokenId, keyword],
     );
-    const epochStateId = hre.ethers.utils.solidityKeccak256(
-      ['bytes32', 'uint16', 'bytes32'],
-      [agreementId, 0, assetInputStruct.assertionId],
-    );
+    const epochStateId = hre.ethers.utils.solidityKeccak256(['bytes32', 'uint16', 'uint256'], [agreementId, 0, 0]);
     const ServiceAgreementStorageProxy = await hre.ethers.getContract<ServiceAgreementStorageProxy>(
       'ServiceAgreementStorageProxy',
     );

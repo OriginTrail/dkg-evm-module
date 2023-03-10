@@ -139,12 +139,7 @@ contract ProofManagerV1 is Named, Versioned {
     function _sendProof(
         ServiceAgreementStructsV1.ProofInputArgs calldata args
     ) internal virtual returns (bytes32, uint72) {
-        bytes32 agreementId = _generateAgreementId(
-            args.assetContract,
-            args.tokenId,
-            args.keyword,
-            args.hashFunctionId
-        );
+        bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
