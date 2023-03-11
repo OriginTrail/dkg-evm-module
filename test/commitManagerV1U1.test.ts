@@ -55,11 +55,11 @@ describe('CommitManagerV1U1 contract', function () {
   };
   let commitInputArgs: ServiceAgreementStructsV1.CommitInputArgsStruct;
 
-  async function createAsset(): Promise<{ tokenId: string; keyword: BytesLike; agreementId: BytesLike }> {
+  async function createAsset(): Promise<{ tokenId: number; keyword: BytesLike; agreementId: BytesLike }> {
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
     const receipt = await (await ContentAsset.createAsset(assetInputStruct)).wait();
 
-    const tokenId = receipt.logs[0].topics[3];
+    const tokenId = Number(receipt.logs[0].topics[3]);
     const keyword = hre.ethers.utils.solidityPack(
       ['address', 'bytes32'],
       [ContentAssetStorage.address, assetInputStruct.assertionId],
@@ -72,7 +72,7 @@ describe('CommitManagerV1U1 contract', function () {
     return { tokenId, keyword, agreementId };
   }
 
-  async function updateAsset(tokenId: string) {
+  async function updateAsset(tokenId: number) {
     await Token.increaseAllowance(ServiceAgreementV1.address, assetUpdateArgs.tokenAmount);
     await ContentAsset.updateAssetState(
       tokenId,
@@ -84,7 +84,7 @@ describe('CommitManagerV1U1 contract', function () {
     );
   }
 
-  async function createProfile(operational: SignerWithAddress, admin: SignerWithAddress): Promise<string> {
+  async function createProfile(operational: SignerWithAddress, admin: SignerWithAddress): Promise<number> {
     const OperationalProfile = Profile.connect(operational);
 
     const receipt = await (
@@ -95,7 +95,7 @@ describe('CommitManagerV1U1 contract', function () {
         randomBytes(2).toString('hex'),
       )
     ).wait();
-    const identityId = receipt.logs[0].topics[1];
+    const identityId = Number(receipt.logs[0].topics[1]);
 
     await OperationalProfile.setAsk(identityId, hre.ethers.utils.parseEther('0.25'));
 

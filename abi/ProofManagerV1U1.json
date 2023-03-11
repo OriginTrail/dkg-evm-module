@@ -296,56 +296,6 @@
   {
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "assetContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes",
-            "name": "keyword",
-            "type": "bytes"
-          },
-          {
-            "internalType": "uint8",
-            "name": "hashFunctionId",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint16",
-            "name": "epoch",
-            "type": "uint16"
-          },
-          {
-            "internalType": "bytes32[]",
-            "name": "proof",
-            "type": "bytes32[]"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "chunkHash",
-            "type": "bytes32"
-          }
-        ],
-        "internalType": "struct ServiceAgreementStructsV1.ProofInputArgs[]",
-        "name": "argsArray",
-        "type": "tuple[]"
-      }
-    ],
-    "name": "bulkSendProof",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "assetContract",
         "type": "address"

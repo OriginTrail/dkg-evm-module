@@ -54,14 +54,14 @@ describe('ContentAsset contract', function () {
     tokenAmount: hre.ethers.utils.parseEther('500'),
   };
 
-  async function createAsset(): Promise<string> {
+  async function createAsset(): Promise<number> {
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
     const receipt = await (await ContentAsset.createAsset(assetInputStruct)).wait();
-    const tokenId = receipt.logs[0].topics[3];
+    const tokenId = Number(receipt.logs[0].topics[3]);
     return tokenId;
   }
 
-  async function updateAsset(tokenId: string) {
+  async function updateAsset(tokenId: number) {
     await Token.increaseAllowance(ServiceAgreementV1.address, assetUpdateArgs.tokenAmount);
     await ContentAsset.updateAssetState(
       tokenId,
