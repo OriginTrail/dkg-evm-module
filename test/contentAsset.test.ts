@@ -31,6 +31,8 @@ describe('ContentAsset contract', function () {
   let ContentAssetStorage: ContentAssetStorage;
   let ServiceAgreementV1: ServiceAgreementV1;
   let Token: Token;
+  let Hub: Hub;
+
   const nonExistingTokenId = 99;
   const assertionId = '0x8cc2117b68bcbb1535205d517cb42ef45f25838add571fce4cfb7de7bd617943';
   const assertionId1 = '0x8cc2117b68bcbb1535205d517cb42ef45f25838add571fce4cfb7de7bd289172';
@@ -52,14 +54,14 @@ describe('ContentAsset contract', function () {
     tokenAmount: hre.ethers.utils.parseEther('500'),
   };
 
-  async function createAsset(): Promise<string> {
+  async function createAsset(): Promise<number> {
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
     const receipt = await (await ContentAsset.createAsset(assetInputStruct)).wait();
-    const tokenId = receipt.logs[0].topics[3];
+    const tokenId = Number(receipt.logs[0].topics[3]);
     return tokenId;
   }
 
-  async function updateAsset(tokenId: string) {
+  async function updateAsset(tokenId: number) {
     await Token.increaseAllowance(ServiceAgreementV1.address, assetUpdateArgs.tokenAmount);
     await ContentAsset.updateAssetState(
       tokenId,
@@ -73,12 +75,14 @@ describe('ContentAsset contract', function () {
 
   async function deployContentAssetFixture(): Promise<ContentAssetFixture> {
     await hre.deployments.fixture(['ContentAsset']);
-    const accounts = await hre.ethers.getSigners();
-    const ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
-    const ContentAsset = await hre.ethers.getContract<ContentAsset>('ContentAsset');
-    const ContentAssetStorage = await hre.ethers.getContract<ContentAssetStorage>('ContentAssetStorage');
-    const ServiceAgreementV1 = await hre.ethers.getContract<ServiceAgreementV1>('ServiceAgreementV1');
-    const Token = await hre.ethers.getContract<Token>('Token');
+    accounts = await hre.ethers.getSigners();
+    ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
+    ContentAsset = await hre.ethers.getContract<ContentAsset>('ContentAsset');
+    ContentAssetStorage = await hre.ethers.getContract<ContentAssetStorage>('ContentAssetStorage');
+    ServiceAgreementV1 = await hre.ethers.getContract<ServiceAgreementV1>('ServiceAgreementV1');
+    Token = await hre.ethers.getContract<Token>('Token');
+    Hub = await hre.ethers.getContract<Hub>('Hub');
+    await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, ParametersStorage, ContentAsset, ContentAssetStorage, ServiceAgreementV1, Token };
   }
@@ -89,11 +93,11 @@ describe('ContentAsset contract', function () {
     ));
   });
 
-  it('The contract is named "ContentAsset"', async function () {
+  it('The contract is named "ContentAsset"', async () => {
     expect(await ContentAsset.name()).to.equal('ContentAsset');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await ContentAsset.version()).to.equal('1.0.0');
   });
 
@@ -196,8 +200,6 @@ describe('ContentAsset contract', function () {
     );
     const r0 = await ParametersStorage.r0();
 
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
-    await Hub.setContractAddress('Test', accounts[0].address);
     for (let i = 0; i < r0; i++) {
       await ServiceAgreementStorageProxy.incrementCommitsCount(epochStateId);
     }

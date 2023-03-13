@@ -16,6 +16,7 @@ type StakingFixture = {
 
 describe('Staking contract', function () {
   let accounts: SignerWithAddress[];
+  let Hub: Hub;
   let Staking: Staking;
   let StakingStorage: StakingStorage;
   let Token: Token;
@@ -29,15 +30,15 @@ describe('Staking contract', function () {
 
   async function deployStakingFixture(): Promise<StakingFixture> {
     await hre.deployments.fixture(['Staking', 'Profile']);
-    const Staking = await hre.ethers.getContract<Staking>('Staking');
-    const StakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
-    const Token = await hre.ethers.getContract<Token>('Token');
-    const Profile = await hre.ethers.getContract<Profile>('Profile');
-    const ServiceAgreementStorageV1U1 = await hre.ethers.getContract<ServiceAgreementStorageV1U1>(
+    Staking = await hre.ethers.getContract<Staking>('Staking');
+    StakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
+    Token = await hre.ethers.getContract<Token>('Token');
+    Profile = await hre.ethers.getContract<Profile>('Profile');
+    ServiceAgreementStorageV1U1 = await hre.ethers.getContract<ServiceAgreementStorageV1U1>(
       'ServiceAgreementStorageV1U1',
     );
-    const accounts = await hre.ethers.getSigners();
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
+    accounts = await hre.ethers.getSigners();
+    Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, Token, Profile, ServiceAgreementStorageV1U1, Staking, StakingStorage };
@@ -49,46 +50,46 @@ describe('Staking contract', function () {
     ));
   });
 
-  it('The contract is named "Staking"', async function () {
+  it('The contract is named "Staking"', async () => {
     expect(await Staking.name()).to.equal('Staking');
   });
 
-  it('The contract is version "1.0.1"', async function () {
+  it('The contract is version "1.0.1"', async () => {
     expect(await Staking.version()).to.equal('1.0.1');
   });
 
-  it('Non-Contract should not be able to setTotalStake; expect to fail', async function () {
+  it('Non-Contract should not be able to setTotalStake; expect to fail', async () => {
     const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
     await expect(StakingStorageWithNonHubOwner.setTotalStake(identityId1, totalStake)).to.be.revertedWith(
       'Fn can only be called by the hub',
     );
   });
 
-  it('Contract should be able to setTotalStake; expect to pass', async function () {
+  it('Contract should be able to setTotalStake; expect to pass', async () => {
     await StakingStorage.setTotalStake(identityId1, totalStake);
     expect(await StakingStorage.totalStakes(identityId1)).to.equal(totalStake);
   });
 
-  it('Non-Contract should not be able to setOperatorFee; expect to fail', async function () {
+  it('Non-Contract should not be able to setOperatorFee; expect to fail', async () => {
     const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
     await expect(StakingStorageWithNonHubOwner.setOperatorFee(identityId1, operatorFee)).to.be.revertedWith(
       'Fn can only be called by the hub',
     );
   });
 
-  it('Contract should be able to setOperatorFee; expect to pass', async function () {
+  it('Contract should be able to setOperatorFee; expect to pass', async () => {
     await StakingStorage.setOperatorFee(identityId1, operatorFee);
     expect(await StakingStorage.operatorFees(identityId1)).to.equal(operatorFee);
   });
 
-  it('Non-Contract should not be able to createWithdrawalRequest; expect to fail', async function () {
+  it('Non-Contract should not be able to createWithdrawalRequest; expect to fail', async () => {
     const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
     await expect(
       StakingStorageWithNonHubOwner.createWithdrawalRequest(identityId1, accounts[1].address, totalStake, 2022),
     ).to.be.revertedWith('Fn can only be called by the hub');
   });
 
-  it('Contract should be able to createWithdrawalRequest; expect to pass', async function () {
+  it('Contract should be able to createWithdrawalRequest; expect to pass', async () => {
     await StakingStorage.createWithdrawalRequest(identityId1, accounts[1].address, totalStake, timestamp);
 
     expect(await StakingStorage.withdrawalRequestExists(identityId1, accounts[1].address)).to.equal(true);
@@ -96,14 +97,14 @@ describe('Staking contract', function () {
     expect(await StakingStorage.getWithdrawalRequestTimestamp(identityId1, accounts[1].address)).to.equal(timestamp);
   });
 
-  it('Non-Contract should not be able to deleteWithdrawalRequest; expect to fail', async function () {
+  it('Non-Contract should not be able to deleteWithdrawalRequest; expect to fail', async () => {
     const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
     await expect(
       StakingStorageWithNonHubOwner.deleteWithdrawalRequest(identityId1, accounts[1].address),
     ).to.be.revertedWith('Fn can only be called by the hub');
   });
 
-  it('Contract should be able to deleteWithdrawalRequest; expect to pass', async function () {
+  it('Contract should be able to deleteWithdrawalRequest; expect to pass', async () => {
     await StakingStorage.createWithdrawalRequest(identityId1, accounts[1].address, totalStake, timestamp);
 
     await StakingStorage.deleteWithdrawalRequest(identityId1, accounts[1].address);
@@ -112,14 +113,14 @@ describe('Staking contract', function () {
     expect(await StakingStorage.getWithdrawalRequestTimestamp(identityId1, accounts[1].address)).to.equal(0);
   });
 
-  it('Non-Contract should not be able to transferStake; expect to fail', async function () {
+  it('Non-Contract should not be able to transferStake; expect to fail', async () => {
     const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
     await expect(StakingStorageWithNonHubOwner.transferStake(accounts[1].address, transferAmount)).to.be.revertedWith(
       'Fn can only be called by the hub',
     );
   });
 
-  it('Contract should be able to transferStake; expect to pass', async function () {
+  it('Contract should be able to transferStake; expect to pass', async () => {
     await Token.mint(StakingStorage.address, hre.ethers.utils.parseEther(`${5_000_000}`));
 
     const initialReceiverBalance = await Token.balanceOf(accounts[1].address);
@@ -128,7 +129,7 @@ describe('Staking contract', function () {
     expect(await Token.balanceOf(accounts[1].address)).to.equal(initialReceiverBalance.add(transferAmount));
   });
 
-  it('Create 1 node; expect that stake is created and correctly set', async function () {
+  it('Create 1 node; expect that stake is created and correctly set', async () => {
     await Token.increaseAllowance(Staking.address, hre.ethers.utils.parseEther(`${5_000_000}`));
 
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
@@ -145,7 +146,7 @@ describe('Staking contract', function () {
     );
   });
 
-  it('Add reward; expect that total stake is increased', async function () {
+  it('Add reward; expect that total stake is increased', async () => {
     await Token.mint(ServiceAgreementStorageV1U1.address, hre.ethers.utils.parseEther(`${5_000_000}`));
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
     await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');

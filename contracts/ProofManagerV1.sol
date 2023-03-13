@@ -95,7 +95,7 @@ contract ProofManagerV1 is Named, Versioned {
         uint256 proofWindowOffset = (epochLength * proofWindowOffsetPerc) / 100;
         uint256 proofWindowDuration = (epochLength * parametersStorage.proofWindowDurationPerc()) / 100;
 
-        return (timeNow > (startTime + epochLength * epoch + proofWindowOffset) &&
+        return (timeNow >= (startTime + epochLength * epoch + proofWindowOffset) &&
             timeNow < (startTime + epochLength * epoch + proofWindowOffset + proofWindowDuration));
     }
 
@@ -119,17 +119,6 @@ contract ProofManagerV1 is Named, Versioned {
 
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
         _sendProof(args);
-    }
-
-    function bulkSendProof(ServiceAgreementStructsV1.ProofInputArgs[] calldata argsArray) external {
-        uint256 proofsNumber = argsArray.length;
-
-        for (uint256 i; i < proofsNumber; ) {
-            _sendProof(argsArray[i]);
-            unchecked {
-                i++;
-            }
-        }
     }
 
     function setReq(uint256 index, bool req) external onlyHubOwner {

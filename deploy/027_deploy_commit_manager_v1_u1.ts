@@ -14,6 +14,7 @@ func.dependencies = [
   'ScoringProxy',
   'ServiceAgreementV1',
   'Staking',
+  'ContentAssetStorage',
   'IdentityStorage',
   'ParametersStorage',
   'ProfileStorage',

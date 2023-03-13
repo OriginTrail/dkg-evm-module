@@ -9,5 +9,6 @@ module.exports = {
       'interface',
       'structs',
       'utils',
+      'Token.sol',
   ],
 };

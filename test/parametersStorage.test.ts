@@ -12,6 +12,7 @@ type ParametersStorageFixture = {
 
 describe('ParametersStorage contract', function () {
   let accounts: SignerWithAddress[];
+  let Hub: Hub;
   let ParametersStorage: ParametersStorage;
   let minimumStake, r2, r1, r0, commitWindowDurationPerc, minProofWindowOffsetPerc, maxProofWindowOffsetPerc;
   let proofWindowDurationPerc,
@@ -23,9 +24,9 @@ describe('ParametersStorage contract', function () {
 
   async function deployParametersStorageFixture(): Promise<ParametersStorageFixture> {
     await hre.deployments.fixture(['ParametersStorage']);
-    const ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
-    const accounts = await hre.ethers.getSigners();
+    ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
+    Hub = await hre.ethers.getContract<Hub>('Hub');
+    accounts = await hre.ethers.getSigners();
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, ParametersStorage };
@@ -259,7 +260,7 @@ describe('ParametersStorage contract', function () {
     epochLength = await ParametersStorage.epochLength();
     const expectedValue = `${epochLength}/3600`;
 
-    expect(eval(expectedValue)).to.be.eql(valueInContract);
+    expect(eval(expectedValue)).to.eql(valueInContract);
 
     // set new value for epoch length and validate is correct
     await ParametersStorage.setEpochLength(newValue);
@@ -284,7 +285,7 @@ describe('ParametersStorage contract', function () {
     stakeWithdrawalDelay = await ParametersStorage.stakeWithdrawalDelay();
     const expectedValue = `${stakeWithdrawalDelay}/60`;
 
-    expect(eval(expectedValue)).to.be.eql(valueInContract);
+    expect(eval(expectedValue)).to.eql(valueInContract);
 
     // set new value for stake withdrawal delay and validate is correct
     await ParametersStorage.setStakeWithdrawalDelay(newValue);
@@ -308,7 +309,7 @@ describe('ParametersStorage contract', function () {
     rewardWithdrawalDelay = await ParametersStorage.rewardWithdrawalDelay();
     const expectedValue = `${rewardWithdrawalDelay}/60`;
 
-    expect(eval(expectedValue)).to.be.eql(valueInContract);
+    expect(eval(expectedValue)).to.eql(valueInContract);
 
     // set new value for reward withdrawal delay and validate is correct
     await ParametersStorage.setRewardWithdrawalDelay(newValue);
@@ -332,7 +333,7 @@ describe('ParametersStorage contract', function () {
     slashingFreezeDuration = await ParametersStorage.slashingFreezeDuration();
     const expectedValue = `${slashingFreezeDuration}/(3600 * 24)`;
 
-    expect(eval(expectedValue)).to.be.eql(valueInContract);
+    expect(eval(expectedValue)).to.eql(valueInContract);
 
     // set new value for slashing freeze duration and validate is correct
     await ParametersStorage.setSlashingFreezeDuration(newValue);

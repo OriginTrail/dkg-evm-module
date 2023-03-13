@@ -103,7 +103,7 @@ contract CommitManagerV1 is Named, Versioned {
             return timeNow < (startTime + commitWindowDuration);
         }
 
-        return (timeNow > (startTime + epochLength * epoch) &&
+        return (timeNow >= (startTime + epochLength * epoch) &&
             timeNow < (startTime + epochLength * epoch + commitWindowDuration));
     }
 
@@ -151,17 +151,6 @@ contract CommitManagerV1 is Named, Versioned {
 
     function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
         _submitCommit(args);
-    }
-
-    function bulkSubmitCommit(ServiceAgreementStructsV1.CommitInputArgs[] calldata argsArray) external {
-        uint256 commitsNumber = argsArray.length;
-
-        for (uint256 i; i < commitsNumber; ) {
-            _submitCommit(argsArray[i]);
-            unchecked {
-                i++;
-            }
-        }
     }
 
     function setReq(uint256 index, bool req) external onlyHubOwner {
@@ -270,7 +259,7 @@ contract CommitManagerV1 is Named, Versioned {
             );
         emit Logger(i >= r0, "req4");
 
-        sasProxy.createCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
+        sasProxy.createOldCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
 
         ServiceAgreementStructsV1.CommitSubmission memory refCommit = sasProxy.getCommitSubmission(refCommitId);
 

@@ -30,10 +30,10 @@ describe('Identity contract', function () {
 
   async function deployIdentityFixture(): Promise<IdentityFixture> {
     await hre.deployments.fixture(['Identity']);
-    const Identity = await hre.ethers.getContract<Identity>('Identity');
-    const IdentityStorage = await hre.ethers.getContract<IdentityStorage>('IdentityStorage');
+    Identity = await hre.ethers.getContract<Identity>('Identity');
+    IdentityStorage = await hre.ethers.getContract<IdentityStorage>('IdentityStorage');
     Hub = await hre.ethers.getContract<Hub>('Hub');
-    const accounts = await hre.ethers.getSigners();
+    accounts = await hre.ethers.getSigners();
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, Identity, Hub, IdentityStorage };
@@ -61,11 +61,11 @@ describe('Identity contract', function () {
     operationalKeyBytes32 = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[1].address]));
   });
 
-  it('The contract is named "Identity"', async function () {
+  it('The contract is named "Identity"', async () => {
     expect(await Identity.name()).to.equal('Identity');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await Identity.version()).to.equal('1.0.0');
   });
 
