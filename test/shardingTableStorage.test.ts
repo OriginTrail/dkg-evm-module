@@ -69,11 +69,11 @@ describe('ShardingTableStorage Contract', function () {
     ({ accounts, ShardingTableStorage, Profile } = await loadFixture(deployShardingTableStorageFixture));
   });
 
-  it('The contract is named "ShardingTableStorage"', async function () {
+  it('The contract is named "ShardingTableStorage"', async () => {
     expect(await ShardingTableStorage.name()).to.equal('ShardingTableStorage');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await ShardingTableStorage.version()).to.equal('1.0.0');
   });
 

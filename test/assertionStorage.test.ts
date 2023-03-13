@@ -35,11 +35,11 @@ describe('AssertionStorage contract', function () {
     ({ accounts, AssertionStorage, Hub } = await loadFixture(deployAssertionStorageFixture));
   });
 
-  it('The contract is named "AssertionStorage"', async function () {
+  it('The contract is named "AssertionStorage"', async () => {
     expect(await AssertionStorage.name()).to.equal('AssertionStorage');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await AssertionStorage.version()).to.equal('1.0.0');
   });
 

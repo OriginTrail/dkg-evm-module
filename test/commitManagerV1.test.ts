@@ -37,7 +37,7 @@ describe('CommitManagerV1 contract', function () {
   let Staking: Staking;
 
   const assetInputStruct: ContentAssetStructs.AssetInputArgsStruct = {
-    assertionId: randomBytes(32),
+    assertionId: '0x' + randomBytes(32).toString('hex'),
     size: 1000,
     triplesNumber: 10,
     chunksNumber: 10,
@@ -71,7 +71,7 @@ describe('CommitManagerV1 contract', function () {
     const receipt = await (
       await OperationalProfile.createProfile(
         admin.address,
-        randomBytes(32),
+        '0x' + randomBytes(32).toString('hex'),
         randomBytes(3).toString('hex'),
         randomBytes(2).toString('hex'),
       )
@@ -106,10 +106,18 @@ describe('CommitManagerV1 contract', function () {
     ({ accounts, CommitManagerV1 } = await loadFixture(deployCommitManagerV1Fixture));
   });
 
+  it('The contract is named "CommitManagerV1"', async () => {
+    expect(await CommitManagerV1.name()).to.equal('CommitManagerV1');
+  });
+
+  it('The contract is version "1.0.0"', async () => {
+    expect(await CommitManagerV1.version()).to.equal('1.0.0');
+  });
+
   it('Create new asset, check if commit window is open, expect to be true', async () => {
     const { agreementId } = await createAsset();
 
-    expect(await CommitManagerV1.isCommitWindowOpen(agreementId, 0)).to.be.eql(true);
+    expect(await CommitManagerV1.isCommitWindowOpen(agreementId, 0)).to.eql(true);
   });
 
   it('Create new asset, teleport to the end of commit phase and check if commit window is open, expect to be false', async () => {
@@ -121,7 +129,7 @@ describe('CommitManagerV1 contract', function () {
 
     await time.increase(commitWindowDuration + 1);
 
-    expect(await CommitManagerV1.isCommitWindowOpen(agreementId, 0)).to.be.eql(false);
+    expect(await CommitManagerV1.isCommitWindowOpen(agreementId, 0)).to.eql(false);
   });
 
   it('Create new asset, teleport to second epoch and check if commit window is open, expect to be true', async () => {
@@ -130,7 +138,7 @@ describe('CommitManagerV1 contract', function () {
     const epochLength = (await ParametersStorage.epochLength()).toNumber();
     await time.increase(epochLength);
 
-    expect(await CommitManagerV1.isCommitWindowOpen(agreementId, 1)).to.be.eql(true);
+    expect(await CommitManagerV1.isCommitWindowOpen(agreementId, 1)).to.eql(true);
   });
 
   it('Create new asset, submit commit, expect CommitSubmitted event', async () => {

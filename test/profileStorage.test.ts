@@ -46,11 +46,11 @@ describe('ProfileStorage contract', function () {
     ({ accounts, Token, ProfileStorage } = await loadFixture(deployProfileStorageFixture));
   });
 
-  it('The contract is named "ProfileStorage"', async function () {
+  it('The contract is named "ProfileStorage"', async () => {
     expect(await ProfileStorage.name()).to.equal('ProfileStorage');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await ProfileStorage.version()).to.equal('1.0.0');
   });
 

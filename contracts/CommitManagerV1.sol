@@ -259,7 +259,7 @@ contract CommitManagerV1 is Named, Versioned {
             );
         emit Logger(i >= r0, "req4");
 
-        sasProxy.createCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
+        sasProxy.createOldCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
 
         ServiceAgreementStructsV1.CommitSubmission memory refCommit = sasProxy.getCommitSubmission(refCommitId);
 

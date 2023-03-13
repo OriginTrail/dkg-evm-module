@@ -44,11 +44,11 @@ describe('Profile contract', function () {
     ({ accounts, Profile, ProfileStorage, WhitelistStorage } = await loadFixture(deployProfileFixture));
   });
 
-  it('The contract is named "Profile"', async function () {
+  it('The contract is named "Profile"', async () => {
     expect(await Profile.name()).to.equal('Profile');
   });
 
-  it('The contract is version "1.0.1"', async function () {
+  it('The contract is version "1.0.1"', async () => {
     expect(await Profile.version()).to.equal('1.0.1');
   });
 

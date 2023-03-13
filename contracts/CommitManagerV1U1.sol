@@ -43,7 +43,7 @@ contract CommitManagerV1U1 is Named, Versioned {
     );
     event Logger(bool value, string message);
 
-    string private constant _NAME = "CommitManagerV1";
+    string private constant _NAME = "CommitManagerV1U1";
     string private constant _VERSION = "1.0.0";
 
     bool[6] public reqs = [false, false, false, false, false, false];

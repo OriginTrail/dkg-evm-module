@@ -26,11 +26,11 @@ describe('WhitelistStorage contract', function () {
     ({ accounts, WhitelistStorage } = await loadFixture(deployWhitelistStorageFixture));
   });
 
-  it('The contract is named "WhitelistStorage"', async function () {
+  it('The contract is named "WhitelistStorage"', async () => {
     expect(await WhitelistStorage.name()).to.equal('WhitelistStorage');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await WhitelistStorage.version()).to.equal('1.0.0');
   });
 

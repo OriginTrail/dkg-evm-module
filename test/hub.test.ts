@@ -27,11 +27,11 @@ describe('Hub contract', function () {
     ({ accounts, Hub } = await loadFixture(deployHubFixture));
   });
 
-  it('The contract is named "Hub"', async function () {
+  it('The contract is named "Hub"', async () => {
     expect(await Hub.name()).to.equal('Hub');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await Hub.version()).to.equal('1.0.0');
   });
 

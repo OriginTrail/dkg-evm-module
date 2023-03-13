@@ -260,7 +260,7 @@ describe('ParametersStorage contract', function () {
     epochLength = await ParametersStorage.epochLength();
     const expectedValue = `${epochLength}/3600`;
 
-    expect(eval(expectedValue)).to.be.eql(valueInContract);
+    expect(eval(expectedValue)).to.eql(valueInContract);
 
     // set new value for epoch length and validate is correct
     await ParametersStorage.setEpochLength(newValue);
@@ -285,7 +285,7 @@ describe('ParametersStorage contract', function () {
     stakeWithdrawalDelay = await ParametersStorage.stakeWithdrawalDelay();
     const expectedValue = `${stakeWithdrawalDelay}/60`;
 
-    expect(eval(expectedValue)).to.be.eql(valueInContract);
+    expect(eval(expectedValue)).to.eql(valueInContract);
 
     // set new value for stake withdrawal delay and validate is correct
     await ParametersStorage.setStakeWithdrawalDelay(newValue);
@@ -309,7 +309,7 @@ describe('ParametersStorage contract', function () {
     rewardWithdrawalDelay = await ParametersStorage.rewardWithdrawalDelay();
     const expectedValue = `${rewardWithdrawalDelay}/60`;
 
-    expect(eval(expectedValue)).to.be.eql(valueInContract);
+    expect(eval(expectedValue)).to.eql(valueInContract);
 
     // set new value for reward withdrawal delay and validate is correct
     await ParametersStorage.setRewardWithdrawalDelay(newValue);
@@ -333,7 +333,7 @@ describe('ParametersStorage contract', function () {
     slashingFreezeDuration = await ParametersStorage.slashingFreezeDuration();
     const expectedValue = `${slashingFreezeDuration}/(3600 * 24)`;
 
-    expect(eval(expectedValue)).to.be.eql(valueInContract);
+    expect(eval(expectedValue)).to.eql(valueInContract);
 
     // set new value for slashing freeze duration and validate is correct
     await ParametersStorage.setSlashingFreezeDuration(newValue);

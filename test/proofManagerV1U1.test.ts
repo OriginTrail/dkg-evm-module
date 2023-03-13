@@ -98,7 +98,7 @@ describe('ProofManagerV1U1 contract', function () {
     const receipt = await (
       await OperationalProfile.createProfile(
         admin.address,
-        randomBytes(32),
+        '0x' + randomBytes(32).toString('hex'),
         randomBytes(3).toString('hex'),
         randomBytes(2).toString('hex'),
       )
@@ -139,6 +139,14 @@ describe('ProofManagerV1U1 contract', function () {
       await loadFixture(deployProofManagerV1U1Fixture));
   });
 
+  it('The contract is named "ProofManagerV1U1"', async () => {
+    expect(await ProofManagerV1U1.name()).to.equal('ProofManagerV1U1');
+  });
+
+  it('The contract is version "1.0.0"', async () => {
+    expect(await ProofManagerV1U1.version()).to.equal('1.0.0');
+  });
+
   it('Create a new asset, teleport to the proof phase and check if window is open, expect true', async () => {
     const { agreementId } = await createAsset();
 
@@ -148,7 +156,7 @@ describe('ProofManagerV1U1 contract', function () {
 
     await time.increase(delay);
 
-    expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.be.eql(true);
+    expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.eql(true);
   });
 
   it('Create a new asset, teleport to the moment before proof phase and check if window is open, expect false', async () => {
@@ -160,7 +168,7 @@ describe('ProofManagerV1U1 contract', function () {
 
     await time.increase(delay - 1);
 
-    expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.be.eql(false);
+    expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.eql(false);
   });
 
   it('Create a new asset, teleport to the moment after proof phase and check if window is open, expect false', async () => {
@@ -173,7 +181,7 @@ describe('ProofManagerV1U1 contract', function () {
 
     await time.increase(delay);
 
-    expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.be.eql(false);
+    expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.eql(false);
   });
 
   it('Create a new asset, send commit, teleport and send proof, expect ProofSent event and reward received', async () => {
@@ -211,11 +219,11 @@ describe('ProofManagerV1U1 contract', function () {
     expect(await ProofManagerV1U1.sendProof(proofInputArgs)).to.emit(ProofManagerV1U1, 'ProofSubmitted');
 
     const endAssetReward = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
-    expect(await StakingStorage.totalStakes(identityId)).to.be.equal(
+    expect(await StakingStorage.totalStakes(identityId)).to.equal(
       initialStake.add(initialAssetReward).sub(endAssetReward),
     );
 
-    expect(await ServiceAgreementStorageProxy.getCommitSubmissionScore(commitId)).to.be.equal(0);
+    expect(await ServiceAgreementStorageProxy.getCommitSubmissionScore(commitId)).to.equal(0);
   });
 
   it('Create a new asset and get challenge, expect challenge to be valid', async () => {
@@ -223,7 +231,7 @@ describe('ProofManagerV1U1 contract', function () {
 
     const challenge = await ProofManagerV1U1.getChallenge(ContentAssetStorage.address, tokenId, 0);
 
-    expect(challenge[0]).to.be.equal(assetInputStruct.assertionId);
+    expect(challenge[0]).to.equal(assetInputStruct.assertionId);
     expect(challenge[1]).to.be.within(0, nQuads.length - 1);
   });
 

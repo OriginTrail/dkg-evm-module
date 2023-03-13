@@ -8,7 +8,7 @@ import {Versioned} from "../interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "../structs/ServiceAgreementStructsV1.sol";
 
 contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
-    string private constant _NAME = "ServiceAgreementStorageV1_1";
+    string private constant _NAME = "ServiceAgreementStorageV1U1";
     string private constant _VERSION = "1.0.0";
 
     // AgreementId [hash(assetStorage + tokenId + key)] => ExtendedServiceAgreement
@@ -170,6 +170,10 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
         serviceAgreements[agreementId].rewardedNodesNumber[epoch] = rewardedNodesNumber;
     }
 
+    function deleteAgreementRewardedNodesNumber(bytes32 agreementId, uint16 epoch) external onlyContracts {
+        delete serviceAgreements[agreementId].rewardedNodesNumber[epoch];
+    }
+
     function serviceAgreementExists(bytes32 agreementId) external view returns (bool) {
         return serviceAgreements[agreementId].startTime != 0;
     }
@@ -251,6 +255,10 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
 
     function getEpochStateCommitsCount(bytes32 epochStateId) external view returns (uint8) {
         return epochStateCommitsCount[epochStateId];
+    }
+
+    function setEpochStateCommitsCount(bytes32 epochStateId, uint8 newEpochStateCommitsCount) external onlyContracts {
+        epochStateCommitsCount[epochStateId] = newEpochStateCommitsCount;
     }
 
     function deleteEpochStateCommitsCount(bytes32 epochStateId) external onlyContracts {

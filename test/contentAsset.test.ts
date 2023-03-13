@@ -93,11 +93,11 @@ describe('ContentAsset contract', function () {
     ));
   });
 
-  it('The contract is named "ContentAsset"', async function () {
+  it('The contract is named "ContentAsset"', async () => {
     expect(await ContentAsset.name()).to.equal('ContentAsset');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await ContentAsset.version()).to.equal('1.0.0');
   });
 

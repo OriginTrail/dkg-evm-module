@@ -47,11 +47,11 @@ describe('IdentityStorage contract', function () {
     newAdminKeyBytes32 = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[3].address]));
   });
 
-  it('The contract is named "Identity"', async function () {
+  it('The contract is named "Identity"', async () => {
     expect(await IdentityStorage.name()).to.equal('IdentityStorage');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await IdentityStorage.version()).to.equal('1.0.0');
   });
 

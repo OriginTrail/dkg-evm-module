@@ -72,6 +72,24 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         storageV1.transferAgreementTokens(address(storageV1U1), tokenAmount);
     }
 
+    function createOldServiceAgreementObject(
+        bytes32 agreementId,
+        uint16 epochsNumber,
+        uint128 epochLength,
+        uint96 tokenAmount,
+        uint8 scoreFunctionId,
+        uint8 proofWindowOffsetPerc
+    ) external onlyContracts {
+        storageV1.createServiceAgreementObject(
+            agreementId,
+            epochsNumber,
+            epochLength,
+            tokenAmount,
+            scoreFunctionId,
+            proofWindowOffsetPerc
+        );
+    }
+
     function createServiceAgreementObject(
         bytes32 agreementId,
         uint16 epochsNumber,
@@ -291,8 +309,26 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
         }
     }
 
+    function deleteAgreementRewardedNodesNumber(bytes32 agreementId, uint16 epoch) external onlyContracts {
+        if (this.isOldAgreement(agreementId)) {
+            storageV1.setAgreementRewardedNodesNumber(agreementId, epoch, 0);
+        } else {
+            storageV1U1.deleteAgreementRewardedNodesNumber(agreementId, epoch);
+        }
+    }
+
     function serviceAgreementExists(bytes32 agreementId) external view returns (bool) {
         return (storageV1.serviceAgreementExists(agreementId)) || (storageV1U1.serviceAgreementExists(agreementId));
+    }
+
+    function createOldCommitSubmissionObject(
+        bytes32 commitId,
+        uint72 identityId,
+        uint72 prevIdentityId,
+        uint72 nextIdentityId,
+        uint40 score
+    ) external onlyContracts {
+        storageV1.createCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
     }
 
     function createCommitSubmissionObject(
@@ -405,6 +441,10 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
 
     function getCommitsCount(bytes32 epochStateId) external view returns (uint8) {
         return storageV1U1.getEpochStateCommitsCount(epochStateId);
+    }
+
+    function setCommitsCount(bytes32 epochStateId, uint8 epochStateCommitsCount) external onlyContracts {
+        storageV1U1.setEpochStateCommitsCount(epochStateId, epochStateCommitsCount);
     }
 
     function deleteCommitsCount(bytes32 epochStateId) external onlyContracts {
