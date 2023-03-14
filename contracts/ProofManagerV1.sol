@@ -11,6 +11,7 @@ import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
+import {ServiceAgreementHelperFunctions} from "./ServiceAgreementHelperFunctions.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
@@ -42,6 +43,7 @@ contract ProofManagerV1 is Named, Versioned {
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
+    ServiceAgreementHelperFunctions public serviceAgreementHelperFunctions;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0), "Hub Address cannot be 0x0");
@@ -64,6 +66,9 @@ contract ProofManagerV1 is Named, Versioned {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
+        );
+        serviceAgreementHelperFunctions = ServiceAgreementHelperFunctions(
+            hub.getContractAddress("ServiceAgreementHelperFunctions")
         );
     }
 
@@ -128,7 +133,12 @@ contract ProofManagerV1 is Named, Versioned {
     function _sendProof(
         ServiceAgreementStructsV1.ProofInputArgs calldata args
     ) internal virtual returns (bytes32, uint72) {
-        bytes32 agreementId = _generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId
+        );
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
@@ -166,7 +176,7 @@ contract ProofManagerV1 is Named, Versioned {
             "req2"
         );
 
-        bytes32 nextCommitId = sasProxy.getAgreementEpochSubmissionHead(agreementId, args.epoch);
+        bytes32 nextCommitId = sasProxy.getV1AgreementEpochSubmissionHead(agreementId, args.epoch);
         uint32 r0 = parametersStorage.r0();
         uint8 i;
         while ((identityId != sasProxy.getCommitSubmissionIdentityId(nextCommitId)) && (i < r0)) {
@@ -224,7 +234,7 @@ contract ProofManagerV1 is Named, Versioned {
             (sasProxy.getAgreementEpochsNumber(agreementId) - args.epoch + 1) /
             (r0 - sasProxy.getAgreementRewardedNodesNumber(agreementId, args.epoch)));
 
-        stakingContract.addReward(identityId, reward);
+        stakingContract.addReward(agreementId, identityId, reward);
         sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) - reward);
         sasProxy.incrementAgreementRewardedNodesNumber(agreementId, args.epoch);
 
@@ -232,15 +242,6 @@ contract ProofManagerV1 is Named, Versioned {
         sasProxy.setCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId)), 0);
 
         return (agreementId, identityId);
-    }
-
-    function _generateAgreementId(
-        address assetContract,
-        uint256 tokenId,
-        bytes calldata keyword,
-        uint8 hashFunctionId
-    ) internal view returns (bytes32) {
-        return hashingProxy.callHashFunction(hashFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
     }
 
     function _checkHubOwner() internal view virtual {

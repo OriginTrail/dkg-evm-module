@@ -11,24 +11,8 @@
     "type": "constructor"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "contractAddress",
-        "type": "address"
-      }
-    ],
-    "name": "AssetStorageNotInTheHub",
-    "type": "error"
-  },
-  {
     "inputs": [],
     "name": "EmptyAssetCreatorAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "EmptyKeyword",
     "type": "error"
   },
   {
@@ -388,6 +372,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "commitManagerV1U1",
+    "outputs": [
+      {
+        "internalType": "contract CommitManagerV1U1",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "components": [
@@ -483,40 +480,6 @@
     "name": "extendStoringPeriod",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "assetContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "keyword",
-        "type": "bytes"
-      },
-      {
-        "internalType": "uint8",
-        "name": "hashFunctionId",
-        "type": "uint8"
-      }
-    ],
-    "name": "generateAgreementId",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -726,6 +689,19 @@
   },
   {
     "inputs": [],
+    "name": "proofManagerV1U1",
+    "outputs": [
+      {
+        "internalType": "contract ProofManagerV1U1",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "scoringProxy",
     "outputs": [
       {
@@ -785,6 +761,19 @@
     "name": "sendProof",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "serviceAgreementHelperFunctions",
+    "outputs": [
+      {
+        "internalType": "contract ServiceAgreementHelperFunctions",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

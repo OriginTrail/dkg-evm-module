@@ -22,6 +22,32 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "agreementV1StorageAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "agreementV1U1StorageAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -68,7 +94,45 @@
         "type": "uint40"
       }
     ],
-    "name": "createCommitSubmissionObject",
+    "name": "createV1CommitSubmissionObject",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epochsNumber",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint128",
+        "name": "epochLength",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint8",
+        "name": "scoreFunctionId",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "proofWindowOffsetPerc",
+        "type": "uint8"
+      }
+    ],
+    "name": "createV1ServiceAgreementObject",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -101,7 +165,7 @@
         "type": "uint40"
       }
     ],
-    "name": "createOldCommitSubmissionObject",
+    "name": "createV1U1CommitSubmissionObject",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -139,45 +203,7 @@
         "type": "uint8"
       }
     ],
-    "name": "createOldServiceAgreementObject",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint16",
-        "name": "epochsNumber",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint128",
-        "name": "epochLength",
-        "type": "uint128"
-      },
-      {
-        "internalType": "uint96",
-        "name": "tokenAmount",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint8",
-        "name": "scoreFunctionId",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint8",
-        "name": "proofWindowOffsetPerc",
-        "type": "uint8"
-      }
-    ],
-    "name": "createServiceAgreementObject",
+    "name": "createV1U1ServiceAgreementObject",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -336,59 +362,6 @@
         "internalType": "uint128",
         "name": "",
         "type": "uint128"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint16",
-        "name": "epoch",
-        "type": "uint16"
-      }
-    ],
-    "name": "getAgreementEpochSubmissionHead",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint16",
-        "name": "epoch",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint256",
-        "name": "stateIndex",
-        "type": "uint256"
-      }
-    ],
-    "name": "getAgreementEpochSubmissionHead",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -688,6 +661,59 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epoch",
+        "type": "uint16"
+      }
+    ],
+    "name": "getV1AgreementEpochSubmissionHead",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epoch",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "getV1U1AgreementEpochSubmissionHead",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "hub",
     "outputs": [
@@ -746,7 +772,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "isNewAgreement",
+    "name": "isV1Agreement",
     "outputs": [
       {
         "internalType": "bool",
@@ -765,7 +791,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "isNewCommit",
+    "name": "isV1Commit",
     "outputs": [
       {
         "internalType": "bool",
@@ -784,7 +810,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "isOldAgreement",
+    "name": "isV1U1Agreement",
     "outputs": [
       {
         "internalType": "bool",
@@ -803,25 +829,12 @@
         "type": "bytes32"
       }
     ],
-    "name": "isOldCommit",
+    "name": "isV1U1Commit",
     "outputs": [
       {
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "latestStorageAddress",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -835,7 +848,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "migrateOldServiceAgreement",
+    "name": "migrateV1ServiceAgreement",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -886,57 +899,6 @@
       }
     ],
     "name": "setAgreementEpochLength",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint16",
-        "name": "epoch",
-        "type": "uint16"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "headCommitId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "setAgreementEpochSubmissionHead",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "agreementId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint16",
-        "name": "epoch",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint256",
-        "name": "stateIndex",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "headCommitId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "setAgreementEpochSubmissionHead",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1181,6 +1143,57 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epoch",
+        "type": "uint16"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "headCommitId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "setV1AgreementEpochSubmissionHead",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epoch",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stateIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "headCommitId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "setV1U1AgreementEpochSubmissionHead",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "storageV1",
     "outputs": [
@@ -1219,7 +1232,25 @@
         "type": "uint96"
       }
     ],
-    "name": "transferAgreementTokens",
+    "name": "transferV1AgreementTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "transferV1U1AgreementTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

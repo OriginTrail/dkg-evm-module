@@ -6,6 +6,7 @@ import {Assertion} from "../Assertion.sol";
 import {AssertionStorage} from "../storage/AssertionStorage.sol";
 import {Hub} from "../Hub.sol";
 import {ServiceAgreementV1} from "../ServiceAgreementV1.sol";
+import {ServiceAgreementHelperFunctions} from "../ServiceAgreementHelperFunctions.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 import {ContentAssetStorage} from "../storage/assets/ContentAssetStorage.sol";
@@ -50,6 +51,7 @@ contract ContentAsset is Named, Versioned {
     ParametersStorage public parametersStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     ServiceAgreementV1 public serviceAgreementV1;
+    ServiceAgreementHelperFunctions public serviceAgreementHelperFunctions;
     UnfinalizedStateStorage public unfinalizedStateStorage;
 
     constructor(address hubAddress) {
@@ -68,6 +70,9 @@ contract ContentAsset is Named, Versioned {
             hub.getContractAddress("ServiceAgreementStorageProxy")
         );
         serviceAgreementV1 = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
+        serviceAgreementHelperFunctions = ServiceAgreementHelperFunctions(
+            hub.getContractAddress("ServiceAgreementHelperFunctions")
+        );
         unfinalizedStateStorage = UnfinalizedStateStorage(hub.getContractAddress("UnfinalizedStateStorage"));
     }
 
@@ -131,7 +136,6 @@ contract ContentAsset is Named, Versioned {
 
     function burnAsset(uint256 tokenId) external onlyAssetOwner(tokenId) {
         ContentAssetStorage cas = contentAssetStorage;
-        ServiceAgreementV1 sasV1 = serviceAgreementV1;
 
         address contentAssetStorageAddress = address(cas);
 
@@ -139,7 +143,7 @@ contract ContentAsset is Named, Versioned {
             revert ContentAssetErrors.AssetDoesntExist(tokenId);
         }
 
-        bytes32 agreementId = sasV1.generateAgreementId(
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
             contentAssetStorageAddress,
             tokenId,
             abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
@@ -180,7 +184,7 @@ contract ContentAsset is Named, Versioned {
 
         cas.deleteAsset(tokenId);
         cas.burn(tokenId);
-        sasV1.terminateAgreement(
+        serviceAgreementV1.terminateAgreement(
             msg.sender,
             contentAssetStorageAddress,
             tokenId,
@@ -227,7 +231,12 @@ contract ContentAsset is Named, Versioned {
 
         sasV1.addUpdateTokens(msg.sender, contentAssetStorageAddress, tokenId, keyword, 1, tokenAmount);
 
-        bytes32 agreementId = serviceAgreementV1.generateAgreementId(contentAssetStorageAddress, tokenId, keyword, 1);
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
+            contentAssetStorageAddress,
+            tokenId,
+            keyword,
+            1
+        );
         uint256 unfinalizedStateIndex = cas.getAssertionIdsLength(tokenId);
         serviceAgreementStorageProxy.setUpdateCommitsDeadline(
             keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)),
@@ -248,7 +257,7 @@ contract ContentAsset is Named, Versioned {
             revert ContentAssetErrors.AssetDoesntExist(tokenId);
         }
 
-        bytes32 agreementId = serviceAgreementV1.generateAgreementId(
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
             contentAssetStorageAddress,
             tokenId,
             abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0)),
@@ -271,7 +280,7 @@ contract ContentAsset is Named, Versioned {
         }
 
         uint96 updateTokenAmount = sasProxy.getAgreementUpdateTokenAmount(agreementId);
-        sasProxy.transferAgreementTokens(msg.sender, updateTokenAmount);
+        sasProxy.transferV1U1AgreementTokens(msg.sender, updateTokenAmount);
 
         assertionStorage.deleteAssertion(unfinalizedState);
 
