@@ -10,10 +10,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 export default func;
 func.tags = ['ServiceAgreementV1'];
 func.dependencies = [
-  'HashingProxy',
   'SHA256',
   'Hub',
-  'ScoringProxy',
   'Log2PLDSF',
   'ParametersStorage',
   'ServiceAgreementStorageProxy',
@@ -22,4 +20,5 @@ func.dependencies = [
   'CommitManagerV1U1',
   'ProofManagerV1',
   'ProofManagerV1U1',
+  'Token',
 ];
