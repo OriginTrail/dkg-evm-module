@@ -9,6 +9,7 @@ library ServiceAgreementErrorsV1U1 {
     error ZeroEpochsNumber();
     error ZeroTokenAmount();
     error ScoreFunctionDoesntExist(uint8 scoreFunctionId);
+    error HashFunctionDoesntExist(uint8 hashFunctionId);
     error TooLowAllowance(uint256 amount);
     error TooLowBalance(uint256 amount);
     error ServiceAgreementDoesntExist(bytes32 agreementId);
@@ -62,10 +63,5 @@ library ServiceAgreementErrorsV1U1 {
         uint72 identityId,
         bytes nodeId
     );
-    error CommitPhaseOngoing(bytes32 agreementId);
-    error CommitPhaseSucceeded(bytes32 agreementId);
-    error FirstEpochHasAlreadyEnded(bytes32 agreementId);
     error NoPendingUpdate(address assetStorage, uint256 tokenId);
-    error UpdateIsNotFinalized(address assetStorage, uint256 tokenId, bytes32 latestState);
-    error PendingUpdateFinalization(address assetStorage, uint256 tokenId, uint256 latestStateIndex);
 }

@@ -14,7 +14,7 @@ import {ServiceAgreementStorageProxy} from "../storage/ServiceAgreementStoragePr
 import {UnfinalizedStateStorage} from "../storage/UnfinalizedStateStorage.sol";
 import {ContentAssetStructs} from "../structs/assets/ContentAssetStructs.sol";
 import {ServiceAgreementStructsV1} from "../structs/ServiceAgreementStructsV1.sol";
-import {ServiceAgreementErrorsV1U1} from "../errors/ServiceAgreementErrorsV1U1.sol";
+import {ContentAssetErrors} from "../errors/ContentAssetErrors.sol";
 
 contract ContentAsset is Named, Versioned {
     event AssetMinted(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
@@ -131,9 +131,13 @@ contract ContentAsset is Named, Versioned {
 
     function burnAsset(uint256 tokenId) external onlyAssetOwner(tokenId) {
         ContentAssetStorage cas = contentAssetStorage;
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+
         address contentAssetStorageAddress = address(cas);
 
-        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+        if (cas.getAssertionIdsLength(tokenId) == 0) {
+            revert ContentAssetErrors.AssetDoesntExist(tokenId);
+        }
 
         bytes32 agreementId = sasV1.generateAgreementId(
             contentAssetStorageAddress,
@@ -144,11 +148,7 @@ contract ContentAsset is Named, Versioned {
         bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
 
         if (unfinalizedState != bytes32(0)) {
-            revert ServiceAgreementErrorsV1U1.UpdateIsNotFinalized(
-                contentAssetStorageAddress,
-                tokenId,
-                unfinalizedState
-            );
+            revert ContentAssetErrors.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
         }
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
@@ -167,11 +167,11 @@ contract ContentAsset is Named, Versioned {
         uint32 r0 = params.r0();
 
         if ((timeNow < commitPhaseEnd) && (commitsCount < r0)) {
-            revert ServiceAgreementErrorsV1U1.CommitPhaseOngoing(agreementId);
+            revert ContentAssetErrors.CommitPhaseOngoing(agreementId);
         } else if ((timeNow < epochEnd) && (commitsCount >= r0)) {
-            revert ServiceAgreementErrorsV1U1.CommitPhaseSucceeded(agreementId);
+            revert ContentAssetErrors.CommitPhaseSucceeded(agreementId);
         } else if (timeNow > epochEnd) {
-            revert ServiceAgreementErrorsV1U1.FirstEpochHasAlreadyEnded(agreementId);
+            revert ContentAssetErrors.FirstEpochHasAlreadyEnded(agreementId);
         }
 
         uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);
@@ -204,14 +204,14 @@ contract ContentAsset is Named, Versioned {
 
         address contentAssetStorageAddress = address(cas);
 
+        if (cas.getAssertionIdsLength(tokenId) == 0) {
+            revert ContentAssetErrors.AssetDoesntExist(tokenId);
+        }
+
         bytes32 unfinalizedState = uss.getUnfinalizedState(tokenId);
 
         if (unfinalizedState != bytes32(0)) {
-            revert ServiceAgreementErrorsV1U1.UpdateIsNotFinalized(
-                contentAssetStorageAddress,
-                tokenId,
-                unfinalizedState
-            );
+            revert ContentAssetErrors.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
         }
 
         assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
@@ -244,6 +244,10 @@ contract ContentAsset is Named, Versioned {
 
         address contentAssetStorageAddress = address(cas);
 
+        if (cas.getAssertionIdsLength(tokenId) == 0) {
+            revert ContentAssetErrors.AssetDoesntExist(tokenId);
+        }
+
         bytes32 agreementId = serviceAgreementV1.generateAgreementId(
             contentAssetStorageAddress,
             tokenId,
@@ -254,12 +258,12 @@ contract ContentAsset is Named, Versioned {
         uint256 unfinalizedStateIndex = cas.getAssertionIdsLength(tokenId);
 
         if (unfinalizedState == bytes32(0)) {
-            revert ServiceAgreementErrorsV1U1.NoPendingUpdate(contentAssetStorageAddress, tokenId);
+            revert ContentAssetErrors.NoPendingUpdate(contentAssetStorageAddress, tokenId);
         } else if (
             block.timestamp <=
             sasProxy.getUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)))
         ) {
-            revert ServiceAgreementErrorsV1U1.PendingUpdateFinalization(
+            revert ContentAssetErrors.PendingUpdateFinalization(
                 contentAssetStorageAddress,
                 tokenId,
                 unfinalizedStateIndex
@@ -292,6 +296,10 @@ contract ContentAsset is Named, Versioned {
 
         address contentAssetStorageAddress = address(cas);
 
+        if (cas.getAssertionIdsLength(tokenId) == 0) {
+            revert ContentAssetErrors.AssetDoesntExist(tokenId);
+        }
+
         sasV1.extendStoringPeriod(
             msg.sender,
             contentAssetStorageAddress,
@@ -311,6 +319,10 @@ contract ContentAsset is Named, Versioned {
 
         address contentAssetStorageAddress = address(cas);
 
+        if (cas.getAssertionIdsLength(tokenId) == 0) {
+            revert ContentAssetErrors.AssetDoesntExist(tokenId);
+        }
+
         sasV1.addTokens(
             msg.sender,
             contentAssetStorageAddress,
@@ -329,10 +341,14 @@ contract ContentAsset is Named, Versioned {
 
         address contentAssetStorageAddress = address(cas);
 
+        if (cas.getAssertionIdsLength(tokenId) == 0) {
+            revert ContentAssetErrors.AssetDoesntExist(tokenId);
+        }
+
         bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
 
         if (unfinalizedState == bytes32(0)) {
-            revert ServiceAgreementErrorsV1U1.NoPendingUpdate(contentAssetStorageAddress, tokenId);
+            revert ContentAssetErrors.NoPendingUpdate(contentAssetStorageAddress, tokenId);
         }
 
         sasV1.addUpdateTokens(

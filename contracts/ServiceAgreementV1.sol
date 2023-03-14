@@ -108,9 +108,6 @@ contract ServiceAgreementV1 is Named, Versioned {
         ServiceAgreementStructsV1.ServiceAgreementInputArgs calldata args
     ) external onlyContracts {
         if (args.assetCreator == address(0x0)) revert ServiceAgreementErrorsV1U1.EmptyAssetCreatorAddress();
-        if (!hub.isAssetStorage(args.assetContract))
-            revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(args.assetContract);
-        if (keccak256(args.keyword) == keccak256("")) revert ServiceAgreementErrorsV1U1.EmptyKeyword();
         if (args.epochsNumber == 0) revert ServiceAgreementErrorsV1U1.ZeroEpochsNumber();
         if (args.tokenAmount == 0) revert ServiceAgreementErrorsV1U1.ZeroTokenAmount();
         if (!scoringProxy.isScoreFunction(args.scoreFunctionId))
@@ -162,9 +159,6 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint8 hashFunctionId
     ) external onlyContracts {
         if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1U1.EmptyAssetCreatorAddress();
-        if (!hub.isAssetStorage(assetContract))
-            revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(assetContract);
-        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1U1.EmptyKeyword();
 
         bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
 
@@ -186,9 +180,6 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint16 epochsNumber,
         uint96 tokenAmount
     ) external onlyContracts {
-        if (!hub.isAssetStorage(assetContract))
-            revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(assetContract);
-        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1U1.EmptyKeyword();
         if (epochsNumber == 0) revert ServiceAgreementErrorsV1U1.ZeroEpochsNumber();
 
         _addTokens(assetOwner, tokenAmount);
@@ -241,6 +232,10 @@ contract ServiceAgreementV1 is Named, Versioned {
         bytes calldata keyword,
         uint8 hashFunctionId
     ) public view virtual returns (bytes32) {
+        if (!hub.isAssetStorage(assetContract))
+            revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(assetContract);
+        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1U1.EmptyKeyword();
+
         return hashingProxy.callHashFunction(hashFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
     }
 
