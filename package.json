@@ -1,7 +1,7 @@
 {
   "name": "dkg-evm-module",
   "description": "",
-  "version": "3.2.2",
+  "version": "4.0.0",
   "files": [
     "hardhat.config.ts",
     "/contracts/**/*.sol",
