@@ -14,16 +14,17 @@ type ProfileStorageFixture = {
 
 describe('ProfileStorage contract', function () {
   let accounts: SignerWithAddress[];
+  let Hub: Hub;
   let ProfileStorage: ProfileStorage;
   let Token: Token;
   const newNodeId = '0x0000000000000000000000000000000000000000000000000000000000000002';
 
   async function deployProfileStorageFixture(): Promise<ProfileStorageFixture> {
     await hre.deployments.fixture(['ProfileStorage']);
-    const ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
-    const Token = await hre.ethers.getContract<Token>('Token');
-    const accounts = await hre.ethers.getSigners();
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
+    ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
+    Token = await hre.ethers.getContract<Token>('Token');
+    accounts = await hre.ethers.getSigners();
+    Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, Token, ProfileStorage };
@@ -45,11 +46,11 @@ describe('ProfileStorage contract', function () {
     ({ accounts, Token, ProfileStorage } = await loadFixture(deployProfileStorageFixture));
   });
 
-  it('The contract is named "ProfileStorage"', async function () {
+  it('The contract is named "ProfileStorage"', async () => {
     expect(await ProfileStorage.name()).to.equal('ProfileStorage');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await ProfileStorage.version()).to.equal('1.0.0');
   });
 
@@ -115,12 +116,13 @@ describe('ProfileStorage contract', function () {
   });
 
   it('Validate profile accumulated operator fee amount transfer ', async () => {
-    const transferAmount = 100;
+    const transferAmount = hre.ethers.utils.parseEther('100');
     const receiver = accounts[1].address;
     await Token.mint(ProfileStorage.address, transferAmount);
 
+    const initialReceiverBalance = await Token.balanceOf(receiver);
     await ProfileStorage.transferAccumulatedOperatorFee(receiver, transferAmount);
-    expect(await Token.balanceOf(receiver)).to.equal(transferAmount);
+    expect(await Token.balanceOf(receiver)).to.equal(initialReceiverBalance.add(transferAmount));
   });
 
   it('Validate setting and getting profile accumulated operator fee withdrawal timestamp', async () => {

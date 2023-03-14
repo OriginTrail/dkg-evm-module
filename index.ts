@@ -18,13 +18,16 @@ import ProfileABI from './abi/Profile.json';
 import ProfileStorageABI from './abi/ProfileStorage.json';
 import ProofManagerV1ABI from './abi/ProofManagerV1.json';
 import ScoringProxyABI from './abi/ScoringProxy.json';
+import ServiceAgreementStorageProxyABI from './abi/ServiceAgreementStorageProxy.json';
 import ServiceAgreementStorageV1ABI from './abi/ServiceAgreementStorageV1.json';
+import ServiceAgreementStorageV1U1ABI from './abi/ServiceAgreementStorageV1U1.json';
 import ServiceAgreementV1ABI from './abi/ServiceAgreementV1.json';
 import ShardingTableABI from './abi/ShardingTable.json';
 import ShardingTableStorageABI from './abi/ShardingTableStorage.json';
 import StakingABI from './abi/Staking.json';
 import StakingStorageABI from './abi/StakingStorage.json';
 import TokenABI from './abi/Token.json';
+import UnfinalizedStateStorageABI from './abi/UnfinalizedStateStorage.json';
 import VersionedABI from './abi/Versioned.json';
 import WhitelistStorageABI from './abi/WhitelistStorage.json';
 
@@ -38,6 +41,8 @@ export {
   AssertionStorageABI,
   AssertionABI,
   ServiceAgreementStorageV1ABI,
+  ServiceAgreementStorageV1U1ABI,
+  ServiceAgreementStorageProxyABI,
   ServiceAgreementV1ABI,
   CommitManagerV1ABI,
   ProofManagerV1ABI,
@@ -50,6 +55,7 @@ export {
   ProfileABI,
   StakingStorageABI,
   StakingABI,
+  UnfinalizedStateStorageABI,
   WhitelistStorageABI,
   AbstractAssetABI,
   GuardianABI,

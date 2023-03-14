@@ -17,8 +17,8 @@ describe('Hub contract', function () {
 
   async function deployHubFixture(): Promise<HubFixture> {
     await hre.deployments.fixture(['Hub']);
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
-    const accounts = await hre.ethers.getSigners();
+    Hub = await hre.ethers.getContract<Hub>('Hub');
+    accounts = await hre.ethers.getSigners();
 
     return { accounts, Hub };
   }
@@ -27,11 +27,11 @@ describe('Hub contract', function () {
     ({ accounts, Hub } = await loadFixture(deployHubFixture));
   });
 
-  it('The contract is named "Hub"', async function () {
+  it('The contract is named "Hub"', async () => {
     expect(await Hub.name()).to.equal('Hub');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await Hub.version()).to.equal('1.0.0');
   });
 

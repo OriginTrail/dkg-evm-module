@@ -2,7 +2,7 @@
     "compilerOptions": {
         "target": "ES2022",
         "module": "commonjs",
-        "typeRoots": [],
+        "typeRoots": ["./custom_types"],
         "strict": true,
         "esModuleInterop": true,
         "moduleResolution": "node",

@@ -243,46 +243,6 @@
   {
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "assetContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes",
-            "name": "keyword",
-            "type": "bytes"
-          },
-          {
-            "internalType": "uint8",
-            "name": "hashFunctionId",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint16",
-            "name": "epoch",
-            "type": "uint16"
-          }
-        ],
-        "internalType": "struct ServiceAgreementStructsV1.CommitInputArgs[]",
-        "name": "argsArray",
-        "type": "tuple[]"
-      }
-    ],
-    "name": "bulkSubmitCommit",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes32",
         "name": "agreementId",
         "type": "bytes32"
@@ -321,6 +281,19 @@
         "internalType": "struct ServiceAgreementStructsV1.CommitSubmission[]",
         "name": "",
         "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "hashingProxy",
+    "outputs": [
+      {
+        "internalType": "contract HashingProxy",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -456,10 +429,10 @@
   },
   {
     "inputs": [],
-    "name": "serviceAgreementStorageV1",
+    "name": "serviceAgreementHelperFunctions",
     "outputs": [
       {
-        "internalType": "contract ServiceAgreementStorageV1",
+        "internalType": "contract ServiceAgreementHelperFunctions",
         "name": "",
         "type": "address"
       }
@@ -469,10 +442,10 @@
   },
   {
     "inputs": [],
-    "name": "serviceAgreementV1",
+    "name": "serviceAgreementStorageProxy",
     "outputs": [
       {
-        "internalType": "contract ServiceAgreementV1",
+        "internalType": "contract ServiceAgreementStorageProxy",
         "name": "",
         "type": "address"
       }

@@ -3,10 +3,10 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await hre.helpers.deploy({
-    newContractName: 'ContentAsset',
+    newContractName: 'UnfinalizedStateStorage',
   });
 };
 
 export default func;
-func.tags = ['ContentAsset'];
-func.dependencies = ['Assertion', 'Hub', 'ServiceAgreementV1', 'ContentAssetStorage'];
+func.tags = ['UnfinalizedStateStorage'];
+func.dependencies = ['Hub'];

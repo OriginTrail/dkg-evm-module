@@ -14,6 +14,7 @@ type ProfileFixture = {
 
 describe('Profile contract', function () {
   let accounts: SignerWithAddress[];
+  let Hub: Hub;
   let Profile: Profile;
   let ProfileStorage: ProfileStorage;
   let WhitelistStorage: WhitelistStorage;
@@ -22,18 +23,18 @@ describe('Profile contract', function () {
   const identityId1 = 1;
 
   async function createProfile() {
-    await expect(Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN'))
+    expect(await Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN'))
       .to.emit(Profile, 'ProfileCreated')
       .withArgs(identityId1, nodeId1);
   }
 
   async function deployProfileFixture(): Promise<ProfileFixture> {
     await hre.deployments.fixture(['Profile']);
-    const Profile = await hre.ethers.getContract<Profile>('Profile');
-    const ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
-    const WhitelistStorage = await hre.ethers.getContract<WhitelistStorage>('WhitelistStorage');
-    const accounts = await hre.ethers.getSigners();
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
+    Profile = await hre.ethers.getContract<Profile>('Profile');
+    ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
+    WhitelistStorage = await hre.ethers.getContract<WhitelistStorage>('WhitelistStorage');
+    accounts = await hre.ethers.getSigners();
+    Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, Profile, ProfileStorage, WhitelistStorage };
@@ -43,11 +44,11 @@ describe('Profile contract', function () {
     ({ accounts, Profile, ProfileStorage, WhitelistStorage } = await loadFixture(deployProfileFixture));
   });
 
-  it('The contract is named "Profile"', async function () {
+  it('The contract is named "Profile"', async () => {
     expect(await Profile.name()).to.equal('Profile');
   });
 
-  it('The contract is version "1.0.1"', async function () {
+  it('The contract is version "1.0.1"', async () => {
     expect(await Profile.version()).to.equal('1.0.1');
   });
 
@@ -134,7 +135,7 @@ describe('Profile contract', function () {
   it('Set ask for a profile with non identity owner, expect to fail', async () => {
     await createProfile();
 
-    const ProfileWithAccount1 = await Profile.connect(accounts[1]);
+    const ProfileWithAccount1 = await Profile.connect(accounts[2]);
     await expect(ProfileWithAccount1.setAsk(identityId1, 1)).to.be.revertedWith('Fn can be used only by id owner');
   });
 

@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
@@ -12,26 +14,25 @@ type ServiceAgreementStorageV1Fixture = {
 };
 
 describe('ServiceAgreementStorageV1 contract', function () {
-  const agreementId = '0x5181b8cb24ae9feb3a1c987c1abe95b6ba62ef4807b6d589f64455c9dba7f1fc';
-  const newAgreementId = '0x4181b8cb24ae9feb3a1c987c1abe95b6ba62ef4807b6d589f64455c9dba7f1fc';
+  const agreementId = '0x' + randomBytes(32).toString('hex');
+  const newAgreementId = '0x' + randomBytes(32).toString('hex');
   const epochsNumber = 5;
   const epochLength = 10;
-  const tokenAmount = 100;
+  const tokenAmount = hre.ethers.utils.parseEther('100');
   const scoreFunctionId = 0;
   const proofWindowOffsetPerc = 10;
 
   let accounts: SignerWithAddress[];
+  let Hub: Hub;
   let ServiceAgreementStorageV1: ServiceAgreementStorageV1;
   let Token: Token;
 
   async function deployServiceAgreementStorageV1Fixture(): Promise<ServiceAgreementStorageV1Fixture> {
     await hre.deployments.fixture(['ServiceAgreementStorageV1']);
-    const accounts = await hre.ethers.getSigners();
-    const ServiceAgreementStorageV1 = await hre.ethers.getContract<ServiceAgreementStorageV1>(
-      'ServiceAgreementStorageV1',
-    );
-    const Token = await hre.ethers.getContract<Token>('Token');
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
+    accounts = await hre.ethers.getSigners();
+    ServiceAgreementStorageV1 = await hre.ethers.getContract<ServiceAgreementStorageV1>('ServiceAgreementStorageV1');
+    Token = await hre.ethers.getContract<Token>('Token');
+    Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, ServiceAgreementStorageV1, Token };
@@ -52,27 +53,32 @@ describe('ServiceAgreementStorageV1 contract', function () {
     ({ accounts, ServiceAgreementStorageV1, Token } = await loadFixture(deployServiceAgreementStorageV1Fixture));
   });
 
-  it('The contract is named "ServiceAgreementStorageV1"', async function () {
+  it('The contract is named "ServiceAgreementStorageV1"', async () => {
     expect(await ServiceAgreementStorageV1.name()).to.equal('ServiceAgreementStorageV1');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await ServiceAgreementStorageV1.version()).to.equal('1.0.0');
   });
 
-  it('Should allow creating service agreement object', async function () {
+  it('Should allow creating service agreement object', async () => {
     await createServiceAgreement();
+
+    const blockNumber = await hre.ethers.provider.getBlockNumber();
+    const blockTimestamp = (await hre.ethers.provider.getBlock(blockNumber)).timestamp;
 
     const agreementData = await ServiceAgreementStorageV1.getAgreementData(agreementId);
 
-    expect(agreementData[1]).to.equal(epochsNumber);
-    expect(agreementData[2]).to.equal(epochLength);
-    expect(agreementData[3]).to.equal(tokenAmount);
-    expect(agreementData[4][0]).to.equal(scoreFunctionId);
-    expect(agreementData[4][1]).to.equal(proofWindowOffsetPerc);
+    expect(agreementData).to.deep.equal([
+      blockTimestamp,
+      epochsNumber,
+      epochLength,
+      tokenAmount,
+      [scoreFunctionId, proofWindowOffsetPerc],
+    ]);
   });
 
-  it('Should allow updating service agreement data using get and set', async function () {
+  it('Should allow updating service agreement data using get and set', async () => {
     await createServiceAgreement();
 
     const blockNumber = await hre.ethers.provider.getBlockNumber();
@@ -80,22 +86,22 @@ describe('ServiceAgreementStorageV1 contract', function () {
     const newBlockTimestamp = blockTimestamp + 1;
     const newEpochsNumber = 10;
     const newEpochLength = 15;
-    const newTokenAmount = 200;
+    const newTokenAmount = hre.ethers.utils.parseEther('200');
     const newScoreFunctionId = 1;
     const newProofWindowOffsetPerc = 20;
-    const agreementEpochSubmissionHead = '0x5181b8cb24ae9feb3a1c987c1abe95b6ba62ef4807b6d589f64455c9dba7f1fc';
+    const agreementEpochSubmissionHead = '0x' + randomBytes(32).toString('hex');
 
     await ServiceAgreementStorageV1.setAgreementStartTime(agreementId, newBlockTimestamp);
-    expect((await ServiceAgreementStorageV1.getAgreementStartTime(agreementId)).toNumber()).to.equal(newBlockTimestamp);
+    expect(await ServiceAgreementStorageV1.getAgreementStartTime(agreementId)).to.equal(newBlockTimestamp);
 
     await ServiceAgreementStorageV1.setAgreementEpochsNumber(agreementId, newEpochsNumber);
     expect(await ServiceAgreementStorageV1.getAgreementEpochsNumber(agreementId)).to.equal(newEpochsNumber);
 
     await ServiceAgreementStorageV1.setAgreementEpochLength(agreementId, newEpochLength);
-    expect((await ServiceAgreementStorageV1.getAgreementEpochLength(agreementId)).toNumber()).to.equal(newEpochLength);
+    expect(await ServiceAgreementStorageV1.getAgreementEpochLength(agreementId)).to.equal(newEpochLength);
 
     await ServiceAgreementStorageV1.setAgreementTokenAmount(agreementId, newTokenAmount);
-    expect((await ServiceAgreementStorageV1.getAgreementTokenAmount(agreementId)).toNumber()).to.equal(newTokenAmount);
+    expect(await ServiceAgreementStorageV1.getAgreementTokenAmount(agreementId)).to.equal(newTokenAmount);
 
     await ServiceAgreementStorageV1.setAgreementScoreFunctionId(agreementId, newScoreFunctionId);
     expect(await ServiceAgreementStorageV1.getAgreementScoreFunctionId(agreementId)).to.equal(newScoreFunctionId);
@@ -111,7 +117,7 @@ describe('ServiceAgreementStorageV1 contract', function () {
     );
   });
 
-  it('Should allow increment and decrement agreement rewarded number', async function () {
+  it('Should allow increment and decrement agreement rewarded number', async () => {
     await createServiceAgreement();
 
     const initialNodesNumber = await ServiceAgreementStorageV1.getAgreementRewardedNodesNumber(agreementId, 0);
@@ -131,15 +137,15 @@ describe('ServiceAgreementStorageV1 contract', function () {
     expect(await ServiceAgreementStorageV1.getAgreementRewardedNodesNumber(agreementId, 0)).to.equal(nodesNumber);
   });
 
-  it('Service agreement exists should return true for existing agreement', async function () {
+  it('Service agreement exists should return true for existing agreement', async () => {
     await createServiceAgreement();
 
     expect(await ServiceAgreementStorageV1.serviceAgreementExists(agreementId)).to.equal(true);
     expect(await ServiceAgreementStorageV1.serviceAgreementExists(newAgreementId)).to.equal(false);
   });
 
-  it('Should allow creating commit submission object', async function () {
-    const commitId = '0x1181b8cb24ae9feb3a1c987c1abe95b6ba62ef4807b6d589f64455c9dba7f1fc';
+  it('Should allow creating commit submission object', async () => {
+    const commitId = '0x' + randomBytes(32).toString('hex');
     const identityId = 2;
     const prevIdentityId = 1;
     const nextIdentityId = 3;
@@ -155,18 +161,16 @@ describe('ServiceAgreementStorageV1 contract', function () {
 
     const commitSubmission = await ServiceAgreementStorageV1.getCommitSubmission(commitId);
 
-    expect(commitSubmission.identityId).to.equal(identityId);
-    expect(commitSubmission.prevIdentityId).to.equal(prevIdentityId);
-    expect(commitSubmission.nextIdentityId).to.equal(nextIdentityId);
-    expect(commitSubmission.score).to.equal(score);
+    expect(commitSubmission).to.deep.equal([identityId, prevIdentityId, nextIdentityId, score]);
   });
 
-  it('Should allow transferring reward', async function () {
-    const transferAmount = 100;
+  it('Should allow transferring reward', async () => {
+    const transferAmount = hre.ethers.utils.parseEther('100');
     const receiver = accounts[1].address;
     await Token.mint(ServiceAgreementStorageV1.address, transferAmount);
 
+    const initialReceiverBalance = await Token.balanceOf(receiver);
     await ServiceAgreementStorageV1.transferAgreementTokens(receiver, transferAmount);
-    expect(await Token.balanceOf(receiver)).to.equal(transferAmount);
+    expect(await Token.balanceOf(receiver)).to.equal(initialReceiverBalance.add(transferAmount));
   });
 });

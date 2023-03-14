@@ -2,15 +2,16 @@
 
 pragma solidity ^0.8.4;
 
+import {HashingProxy} from "./HashingProxy.sol";
 import {Hub} from "./Hub.sol";
-import {ServiceAgreementV1} from "./ServiceAgreementV1.sol";
 import {Staking} from "./Staking.sol";
 import {AbstractAsset} from "./assets/AbstractAsset.sol";
 import {AssertionStorage} from "./storage/AssertionStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
-import {ServiceAgreementStorageV1} from "./storage/ServiceAgreementStorageV1.sol";
+import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
+import {ServiceAgreementHelperFunctions} from "./ServiceAgreementHelperFunctions.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
@@ -34,14 +35,15 @@ contract ProofManagerV1 is Named, Versioned {
 
     bool[4] public reqs = [false, false, false, false];
 
+    HashingProxy public hashingProxy;
     Hub public hub;
-    ServiceAgreementV1 public serviceAgreementV1;
     Staking public stakingContract;
     AssertionStorage public assertionStorage;
     IdentityStorage public identityStorage;
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
-    ServiceAgreementStorageV1 public serviceAgreementStorageV1;
+    ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
+    ServiceAgreementHelperFunctions public serviceAgreementHelperFunctions;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0), "Hub Address cannot be 0x0");
@@ -56,13 +58,18 @@ contract ProofManagerV1 is Named, Versioned {
     }
 
     function initialize() public onlyHubOwner {
-        serviceAgreementV1 = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
+        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         stakingContract = Staking(hub.getContractAddress("Staking"));
         assertionStorage = AssertionStorage(hub.getContractAddress("AssertionStorage"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        serviceAgreementStorageV1 = ServiceAgreementStorageV1(hub.getContractAddress("ServiceAgreementStorageV1"));
+        serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
+            hub.getContractAddress("ServiceAgreementStorageProxy")
+        );
+        serviceAgreementHelperFunctions = ServiceAgreementHelperFunctions(
+            hub.getContractAddress("ServiceAgreementHelperFunctions")
+        );
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -74,26 +81,26 @@ contract ProofManagerV1 is Named, Versioned {
     }
 
     function isProofWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
-        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
-        uint256 startTime = sasV1.getAgreementStartTime(agreementId);
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        uint256 startTime = sasProxy.getAgreementStartTime(agreementId);
 
         if (startTime == 0) revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
-        if (epoch >= sasV1.getAgreementEpochsNumber(agreementId))
+        if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
             revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
                 agreementId,
                 startTime,
-                sasV1.getAgreementEpochsNumber(agreementId),
-                sasV1.getAgreementEpochLength(agreementId)
+                sasProxy.getAgreementEpochsNumber(agreementId),
+                sasProxy.getAgreementEpochLength(agreementId)
             );
 
         uint256 timeNow = block.timestamp;
-        uint128 epochLength = sasV1.getAgreementEpochLength(agreementId);
-        uint8 proofWindowOffsetPerc = sasV1.getAgreementProofWindowOffsetPerc(agreementId);
+        uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
+        uint8 proofWindowOffsetPerc = sasProxy.getAgreementProofWindowOffsetPerc(agreementId);
 
         uint256 proofWindowOffset = (epochLength * proofWindowOffsetPerc) / 100;
         uint256 proofWindowDuration = (epochLength * parametersStorage.proofWindowDurationPerc()) / 100;
 
-        return (timeNow > (startTime + epochLength * epoch + proofWindowOffset) &&
+        return (timeNow >= (startTime + epochLength * epoch + proofWindowOffset) &&
             timeNow < (startTime + epochLength * epoch + proofWindowOffset + proofWindowDuration));
     }
 
@@ -119,78 +126,6 @@ contract ProofManagerV1 is Named, Versioned {
         _sendProof(args);
     }
 
-    function bulkSendProof(ServiceAgreementStructsV1.ProofInputArgs[] calldata argsArray) external {
-        uint256 proofsNumber = argsArray.length;
-
-        for (uint256 i; i < proofsNumber; ) {
-            _sendProof(argsArray[i]);
-            unchecked {
-                i++;
-            }
-        }
-    }
-
-    // function sendProofWithAutoCommit(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
-    //     bytes32 agreementId;
-    //     uint72 identityId;
-    //     (agreementId, identityId) = _sendProof(args);
-
-    //     uint40 score = scoringProxy.callScoreFunction(
-    //         serviceAgreementStorageV1.getAgreementScoreFunctionId(agreementId),
-    //         args.hashFunctionId,
-    //         profileStorage.getNodeId(identityId),
-    //         args.keyword,
-    //         stakingStorage.totalStakes(identityId)
-    //     );
-
-    //     _insertCommit(agreementId, (args.epoch + 1), identityId, 0, 0, score);
-
-    //     emit CommitSubmitted(
-    //         args.assetContract,
-    //         args.tokenId,
-    //         args.keyword,
-    //         args.hashFunctionId,
-    //         (args.epoch + 1),
-    //         identityId,
-    //         score
-    //     );
-    // }
-
-    // function bulkSendProofWithAutoCommit(ServiceAgreementStructsV1.ProofInputArgs[] calldata argsArray) external {
-    //     uint256 proofsNumber = argsArray.length;
-
-    //     bytes32 agreementId;
-    //     uint72 identityId;
-    //     uint40 score;
-    //     for (uint256 i; i < proofsNumber; ) {
-    //         (agreementId, identityId) = _sendProof(argsArray[i]);
-
-    //         score = scoringProxy.callScoreFunction(
-    //             serviceAgreementStorageV1.getAgreementScoreFunctionId(agreementId),
-    //             argsArray[i].hashFunctionId,
-    //             profileStorage.getNodeId(identityId),
-    //             argsArray[i].keyword,
-    //             stakingStorage.totalStakes(identityId)
-    //         );
-
-    //         _insertCommit(agreementId, (argsArray[i].epoch + 1), identityId, 0, 0, score);
-
-    //         emit CommitSubmitted(
-    //             argsArray[i].assetContract,
-    //             argsArray[i].tokenId,
-    //             argsArray[i].keyword,
-    //             argsArray[i].hashFunctionId,
-    //             (argsArray[i].epoch + 1),
-    //             identityId,
-    //             score
-    //         );
-
-    //         unchecked {
-    //             i++;
-    //         }
-    //     }
-    // }
-
     function setReq(uint256 index, bool req) external onlyHubOwner {
         reqs[index] = req;
     }
@@ -198,19 +133,19 @@ contract ProofManagerV1 is Named, Versioned {
     function _sendProof(
         ServiceAgreementStructsV1.ProofInputArgs calldata args
     ) internal virtual returns (bytes32, uint72) {
-        bytes32 agreementId = serviceAgreementV1.generateAgreementId(
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
             args.assetContract,
             args.tokenId,
             args.keyword,
             args.hashFunctionId
         );
 
-        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         if (!reqs[0] && !isProofWindowOpen(agreementId, args.epoch)) {
-            uint128 epochLength = sasV1.getAgreementEpochLength(agreementId);
+            uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
 
-            uint256 actualCommitWindowStart = (sasV1.getAgreementStartTime(agreementId) + args.epoch * epochLength);
+            uint256 actualCommitWindowStart = (sasProxy.getAgreementStartTime(agreementId) + args.epoch * epochLength);
 
             revert ServiceAgreementErrorsV1.ProofWindowClosed(
                 agreementId,
@@ -228,7 +163,7 @@ contract ProofManagerV1 is Named, Versioned {
 
         if (
             !reqs[1] &&
-            (sasV1.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) == 0)
+            (sasProxy.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) == 0)
         )
             revert ServiceAgreementErrorsV1.NodeAlreadyRewarded(
                 agreementId,
@@ -237,16 +172,16 @@ contract ProofManagerV1 is Named, Versioned {
                 profileStorage.getNodeId(identityId)
             );
         emit Logger(
-            sasV1.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) == 0,
+            sasProxy.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) == 0,
             "req2"
         );
 
-        bytes32 nextCommitId = sasV1.getAgreementEpochSubmissionHead(agreementId, args.epoch);
+        bytes32 nextCommitId = sasProxy.getV1AgreementEpochSubmissionHead(agreementId, args.epoch);
         uint32 r0 = parametersStorage.r0();
         uint8 i;
-        while ((identityId != sasV1.getCommitSubmissionIdentityId(nextCommitId)) && (i < r0)) {
+        while ((identityId != sasProxy.getCommitSubmissionIdentityId(nextCommitId)) && (i < r0)) {
             nextCommitId = keccak256(
-                abi.encodePacked(agreementId, args.epoch, sasV1.getCommitSubmissionNextIdentityId(nextCommitId))
+                abi.encodePacked(agreementId, args.epoch, sasProxy.getCommitSubmissionNextIdentityId(nextCommitId))
             );
             unchecked {
                 i++;
@@ -295,16 +230,16 @@ contract ProofManagerV1 is Named, Versioned {
             identityId
         );
 
-        uint96 reward = (sasV1.getAgreementTokenAmount(agreementId) /
-            (sasV1.getAgreementEpochsNumber(agreementId) - args.epoch + 1) /
-            (r0 - sasV1.getAgreementRewardedNodesNumber(agreementId, args.epoch)));
+        uint96 reward = (sasProxy.getAgreementTokenAmount(agreementId) /
+            (sasProxy.getAgreementEpochsNumber(agreementId) - args.epoch + 1) /
+            (r0 - sasProxy.getAgreementRewardedNodesNumber(agreementId, args.epoch)));
 
-        stakingContract.addReward(identityId, reward);
-        sasV1.setAgreementTokenAmount(agreementId, sasV1.getAgreementTokenAmount(agreementId) - reward);
-        sasV1.incrementAgreementRewardedNodesNumber(agreementId, args.epoch);
+        stakingContract.addReward(agreementId, identityId, reward);
+        sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) - reward);
+        sasProxy.incrementAgreementRewardedNodesNumber(agreementId, args.epoch);
 
         // To make sure that node already received reward
-        sasV1.setCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId)), 0);
+        sasProxy.setCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId)), 0);
 
         return (agreementId, identityId);
     }

@@ -23,9 +23,9 @@ describe('AssertionStorage contract', function () {
 
   async function deployAssertionStorageFixture(): Promise<AssertionStorageFixture> {
     await hre.deployments.fixture(['AssertionStorage']);
-    const AssertionStorage = await hre.ethers.getContract<AssertionStorage>('AssertionStorage');
+    AssertionStorage = await hre.ethers.getContract<AssertionStorage>('AssertionStorage');
     Hub = await hre.ethers.getContract<Hub>('Hub');
-    const accounts = await hre.ethers.getSigners();
+    accounts = await hre.ethers.getSigners();
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, AssertionStorage, Hub };
@@ -35,11 +35,11 @@ describe('AssertionStorage contract', function () {
     ({ accounts, AssertionStorage, Hub } = await loadFixture(deployAssertionStorageFixture));
   });
 
-  it('The contract is named "AssertionStorage"', async function () {
+  it('The contract is named "AssertionStorage"', async () => {
     expect(await AssertionStorage.name()).to.equal('AssertionStorage');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await AssertionStorage.version()).to.equal('1.0.0');
   });
 

@@ -16,14 +16,22 @@ describe('WhitelistStorage contract', function () {
 
   async function deployWhitelistStorageFixture(): Promise<WhitelistStorageFixture> {
     await hre.deployments.fixture(['WhitelistStorage']);
-    const WhitelistStorage = await hre.ethers.getContract<WhitelistStorage>('WhitelistStorage');
-    const accounts = await hre.ethers.getSigners();
+    WhitelistStorage = await hre.ethers.getContract<WhitelistStorage>('WhitelistStorage');
+    accounts = await hre.ethers.getSigners();
 
     return { accounts, WhitelistStorage };
   }
 
   beforeEach(async () => {
     ({ accounts, WhitelistStorage } = await loadFixture(deployWhitelistStorageFixture));
+  });
+
+  it('The contract is named "WhitelistStorage"', async () => {
+    expect(await WhitelistStorage.name()).to.equal('WhitelistStorage');
+  });
+
+  it('The contract is version "1.0.0"', async () => {
+    expect(await WhitelistStorage.version()).to.equal('1.0.0');
   });
 
   it('Address is not whitelisted; expect to be false', async () => {

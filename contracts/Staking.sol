@@ -8,7 +8,7 @@ import {Shares} from "./Shares.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
-import {ServiceAgreementStorageV1} from "./storage/ServiceAgreementStorageV1.sol";
+import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
 import {Named} from "./interface/Named.sol";
@@ -33,13 +33,11 @@ contract Staking is Named, Versioned {
         uint256 withdrawalPeriodEnd
     );
     event StakeWithdrawn(uint72 indexed identityId, bytes nodeId, address indexed staker, uint96 withdrawnStakeAmount);
-    event RewardAdded(
+    event AccumulatedOperatorFeeIncreased(
         uint72 indexed identityId,
         bytes nodeId,
         uint96 oldAccumulatedOperatorFee,
-        uint96 newAccumulatedOperatorFee,
-        uint96 oldStake,
-        uint96 newStake
+        uint96 newAccumulatedOperatorFee
     );
     event OperatorFeeUpdated(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
@@ -52,7 +50,7 @@ contract Staking is Named, Versioned {
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     StakingStorage public stakingStorage;
-    ServiceAgreementStorageV1 public serviceAgreementStorageV1;
+    ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     ShardingTableStorage public shardingTableStorage;
     IERC20 public tokenContract;
 
@@ -85,7 +83,9 @@ contract Staking is Named, Versioned {
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
-        serviceAgreementStorageV1 = ServiceAgreementStorageV1(hub.getContractAddress("ServiceAgreementStorageV1"));
+        serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
+            hub.getContractAddress("ServiceAgreementStorageProxy")
+        );
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }
@@ -164,8 +164,8 @@ contract Staking is Named, Versioned {
         emit StakeWithdrawn(identityId, ps.getNodeId(identityId), msg.sender, stakeWithdrawalAmount);
     }
 
-    function addReward(uint72 identityId, uint96 rewardAmount) external onlyContracts {
-        ServiceAgreementStorageV1 sasV1 = serviceAgreementStorageV1;
+    function addReward(bytes32 agreementId, uint72 identityId, uint96 rewardAmount) external onlyContracts {
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
         StakingStorage ss = stakingStorage;
 
         uint96 operatorFee = (rewardAmount * ss.operatorFees(identityId)) / 100;
@@ -178,26 +178,41 @@ contract Staking is Named, Versioned {
 
         if (operatorFee != 0) {
             ps.setAccumulatedOperatorFee(identityId, oldAccumulatedOperatorFee + operatorFee);
-            sasV1.transferAgreementTokens(address(ps), operatorFee);
+            if (sasProxy.isV1U1Agreement(agreementId)) {
+                sasProxy.transferV1U1AgreementTokens(address(ps), operatorFee);
+            } else {
+                sasProxy.transferV1AgreementTokens(address(ps), operatorFee);
+            }
         }
 
         if (delegatorsReward != 0) {
             ss.setTotalStake(identityId, oldStake + delegatorsReward);
-            sasV1.transferAgreementTokens(address(ss), delegatorsReward);
+            if (sasProxy.isV1U1Agreement(agreementId)) {
+                sasProxy.transferV1U1AgreementTokens(address(ss), delegatorsReward);
+            } else {
+                sasProxy.transferV1AgreementTokens(address(ss), delegatorsReward);
+            }
 
             if (!shardingTableStorage.nodeExists(identityId) && oldStake >= parametersStorage.minimumStake()) {
                 shardingTableContract.pushBack(identityId);
             }
         }
 
-        emit RewardAdded(
+        emit AccumulatedOperatorFeeIncreased(
             identityId,
             ps.getNodeId(identityId),
             oldAccumulatedOperatorFee,
-            oldAccumulatedOperatorFee + operatorFee,
-            oldStake,
-            oldStake + delegatorsReward
+            oldAccumulatedOperatorFee + operatorFee
         );
+
+        address sasAddress;
+        if (sasProxy.isV1U1Agreement(agreementId)) {
+            sasAddress = sasProxy.agreementV1U1StorageAddress();
+        } else {
+            sasAddress = sasProxy.agreementV1StorageAddress();
+        }
+
+        emit StakeIncreased(identityId, ps.getNodeId(identityId), sasAddress, oldStake, oldStake + delegatorsReward);
     }
 
     // solhint-disable-next-line no-empty-blocks

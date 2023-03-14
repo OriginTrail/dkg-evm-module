@@ -34,6 +34,20 @@ library ServiceAgreementStructsV1 {
         mapping(uint16 => uint32) rewardedNodesNumber;
     }
 
+    struct ExtendedServiceAgreement {
+        uint256 startTime;
+        uint16 epochsNumber;
+        uint128 epochLength;
+        uint96 tokenAmount;
+        uint96 updateTokenAmount;
+        uint8 scoreFunctionId;
+        uint8 proofWindowOffsetPerc;
+        // keccak256(epoch + stateIndex) => headCommitId
+        mapping(bytes32 => bytes32) epochSubmissionHeads;
+        // epoch => number of nodes received rewards
+        mapping(uint16 => uint32) rewardedNodesNumber;
+    }
+
     struct CommitInputArgs {
         address assetContract;
         uint256 tokenId;

@@ -38,6 +38,19 @@
   },
   {
     "inputs": [],
+    "name": "finalizationCommitsNumber",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "hub",
     "outputs": [
       {
@@ -99,6 +112,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "name",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -209,11 +235,37 @@
     "inputs": [
       {
         "internalType": "uint8",
+        "name": "newFinalizationCommitsNumber",
+        "type": "uint8"
+      }
+    ],
+    "name": "setFinalizationCommitsNumber",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
         "name": "newMaxProofWindowOffsetPerc",
         "type": "uint8"
       }
     ],
     "name": "setMaxProofWindowOffsetPerc",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint96",
+        "name": "newMaximumStake",
+        "type": "uint96"
+      }
+    ],
+    "name": "setMaximumStake",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -349,6 +401,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "newUpdateCommitWindowDuration",
+        "type": "uint16"
+      }
+    ],
+    "name": "setUpdateCommitWindowDuration",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "slashingFreezeDuration",
     "outputs": [
@@ -372,6 +437,32 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "updateCommitWindowDuration",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "version",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
     "type": "function"
   }
 ]

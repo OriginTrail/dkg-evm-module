@@ -14,6 +14,7 @@ type ShardingTableStorageFixture = {
 
 describe('ShardingTableStorage Contract', function () {
   let accounts: SignerWithAddress[];
+  let Hub: Hub;
   let ShardingTableStorage: ShardingTableStorage;
   let Profile: Profile;
   let identityId: number;
@@ -25,10 +26,10 @@ describe('ShardingTableStorage Contract', function () {
   async function deployShardingTableStorageFixture(): Promise<ShardingTableStorageFixture> {
     await hre.deployments.fixture(['ShardingTableStorage']);
     await hre.deployments.fixture(['Profile']);
-    const accounts = await hre.ethers.getSigners();
-    const Hub = await hre.ethers.getContract<Hub>('Hub');
-    const Profile = await hre.ethers.getContract<Profile>('Profile');
-    const ShardingTableStorage = await hre.ethers.getContract<ShardingTableStorage>('ShardingTableStorage');
+    accounts = await hre.ethers.getSigners();
+    Hub = await hre.ethers.getContract<Hub>('Hub');
+    Profile = await hre.ethers.getContract<Profile>('Profile');
+    ShardingTableStorage = await hre.ethers.getContract<ShardingTableStorage>('ShardingTableStorage');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return {
@@ -40,7 +41,7 @@ describe('ShardingTableStorage Contract', function () {
   }
 
   async function createProfile() {
-    const profile = await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
+    const profile = await Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN');
     const receipt = await profile.wait();
 
     return receipt.events?.[3].args?.identityId.toNumber();
@@ -49,9 +50,9 @@ describe('ShardingTableStorage Contract', function () {
   async function createMultipleProfiles() {
     const adminWallet1 = await Profile.connect(accounts[1]);
     const adminWallet2 = await Profile.connect(accounts[2]);
-    const profile1 = await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
-    const profile2 = await adminWallet1.createProfile(accounts[1].address, nodeId2, 'Token1', 'TKN1');
-    const profile3 = await adminWallet2.createProfile(accounts[2].address, nodeId3, 'Token2', 'TKN2');
+    const profile1 = await Profile.createProfile(accounts[3].address, nodeId1, 'Token', 'TKN');
+    const profile2 = await adminWallet1.createProfile(accounts[4].address, nodeId2, 'Token1', 'TKN1');
+    const profile3 = await adminWallet2.createProfile(accounts[5].address, nodeId3, 'Token2', 'TKN2');
     const idsArray = [];
 
     const profileArray = [profile1, profile2, profile3];
@@ -68,11 +69,11 @@ describe('ShardingTableStorage Contract', function () {
     ({ accounts, ShardingTableStorage, Profile } = await loadFixture(deployShardingTableStorageFixture));
   });
 
-  it('The contract is named "ShardingTableStorage"', async function () {
+  it('The contract is named "ShardingTableStorage"', async () => {
     expect(await ShardingTableStorage.name()).to.equal('ShardingTableStorage');
   });
 
-  it('The contract is version "1.0.0"', async function () {
+  it('The contract is version "1.0.0"', async () => {
     expect(await ShardingTableStorage.version()).to.equal('1.0.0');
   });
 

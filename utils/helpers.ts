@@ -81,8 +81,8 @@ export class Helpers {
       // TODO: Implement check if specific contract should be reinitialized
       if (this.reinitialization && contractInstance.initialize !== undefined) {
         const reinitializationTx = await contractInstance.initialize();
-        console.log(`Reinitializing ${newContractName} contract...`);
         await reinitializationTx.wait();
+        console.log(`${newContractName} contract reinitialized.`);
       }
 
       return contractInstance;
