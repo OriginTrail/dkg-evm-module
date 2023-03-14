@@ -23,7 +23,7 @@ describe('Profile contract', function () {
   const identityId1 = 1;
 
   async function createProfile() {
-    expect(await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN'))
+    expect(await Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN'))
       .to.emit(Profile, 'ProfileCreated')
       .withArgs(identityId1, nodeId1);
   }
@@ -135,7 +135,7 @@ describe('Profile contract', function () {
   it('Set ask for a profile with non identity owner, expect to fail', async () => {
     await createProfile();
 
-    const ProfileWithAccount1 = await Profile.connect(accounts[1]);
+    const ProfileWithAccount1 = await Profile.connect(accounts[2]);
     await expect(ProfileWithAccount1.setAsk(identityId1, 1)).to.be.revertedWith('Fn can be used only by id owner');
   });
 

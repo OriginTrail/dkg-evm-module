@@ -41,7 +41,7 @@ describe('ShardingTableStorage Contract', function () {
   }
 
   async function createProfile() {
-    const profile = await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
+    const profile = await Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN');
     const receipt = await profile.wait();
 
     return receipt.events?.[3].args?.identityId.toNumber();
@@ -50,9 +50,9 @@ describe('ShardingTableStorage Contract', function () {
   async function createMultipleProfiles() {
     const adminWallet1 = await Profile.connect(accounts[1]);
     const adminWallet2 = await Profile.connect(accounts[2]);
-    const profile1 = await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
-    const profile2 = await adminWallet1.createProfile(accounts[1].address, nodeId2, 'Token1', 'TKN1');
-    const profile3 = await adminWallet2.createProfile(accounts[2].address, nodeId3, 'Token2', 'TKN2');
+    const profile1 = await Profile.createProfile(accounts[3].address, nodeId1, 'Token', 'TKN');
+    const profile2 = await adminWallet1.createProfile(accounts[4].address, nodeId2, 'Token1', 'TKN1');
+    const profile3 = await adminWallet2.createProfile(accounts[5].address, nodeId3, 'Token2', 'TKN2');
     const idsArray = [];
 
     const profileArray = [profile1, profile2, profile3];

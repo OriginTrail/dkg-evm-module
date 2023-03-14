@@ -40,6 +40,7 @@ describe('Staking contract', function () {
     accounts = await hre.ethers.getSigners();
     Hub = await hre.ethers.getContract<Hub>('Hub');
     await Hub.setContractAddress('HubOwner', accounts[0].address);
+    await Hub.setContractAddress('NotHubOwner', accounts[1].address);
 
     return { accounts, Token, Profile, ServiceAgreementStorageV1U1, Staking, StakingStorage };
   }
@@ -59,7 +60,7 @@ describe('Staking contract', function () {
   });
 
   it('Non-Contract should not be able to setTotalStake; expect to fail', async () => {
-    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
+    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[2]);
     await expect(StakingStorageWithNonHubOwner.setTotalStake(identityId1, totalStake)).to.be.revertedWith(
       'Fn can only be called by the hub',
     );
@@ -71,7 +72,7 @@ describe('Staking contract', function () {
   });
 
   it('Non-Contract should not be able to setOperatorFee; expect to fail', async () => {
-    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
+    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[2]);
     await expect(StakingStorageWithNonHubOwner.setOperatorFee(identityId1, operatorFee)).to.be.revertedWith(
       'Fn can only be called by the hub',
     );
@@ -83,9 +84,9 @@ describe('Staking contract', function () {
   });
 
   it('Non-Contract should not be able to createWithdrawalRequest; expect to fail', async () => {
-    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
+    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[2]);
     await expect(
-      StakingStorageWithNonHubOwner.createWithdrawalRequest(identityId1, accounts[1].address, totalStake, 2022),
+      StakingStorageWithNonHubOwner.createWithdrawalRequest(identityId1, accounts[2].address, totalStake, 2022),
     ).to.be.revertedWith('Fn can only be called by the hub');
   });
 
@@ -98,9 +99,9 @@ describe('Staking contract', function () {
   });
 
   it('Non-Contract should not be able to deleteWithdrawalRequest; expect to fail', async () => {
-    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
+    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[2]);
     await expect(
-      StakingStorageWithNonHubOwner.deleteWithdrawalRequest(identityId1, accounts[1].address),
+      StakingStorageWithNonHubOwner.deleteWithdrawalRequest(identityId1, accounts[2].address),
     ).to.be.revertedWith('Fn can only be called by the hub');
   });
 
@@ -114,8 +115,8 @@ describe('Staking contract', function () {
   });
 
   it('Non-Contract should not be able to transferStake; expect to fail', async () => {
-    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[1]);
-    await expect(StakingStorageWithNonHubOwner.transferStake(accounts[1].address, transferAmount)).to.be.revertedWith(
+    const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[2]);
+    await expect(StakingStorageWithNonHubOwner.transferStake(accounts[2].address, transferAmount)).to.be.revertedWith(
       'Fn can only be called by the hub',
     );
   });
@@ -133,9 +134,9 @@ describe('Staking contract', function () {
     await Token.increaseAllowance(Staking.address, hre.ethers.utils.parseEther(`${5_000_000}`));
 
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
-    await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
+    await Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN');
 
-    await Staking['addStake(address,uint72,uint96)'](
+    await Staking.connect(accounts[1])['addStake(address,uint72,uint96)'](
       accounts[0].address,
       identityId1,
       hre.ethers.utils.parseEther(`${5_000_000}`),
@@ -149,9 +150,9 @@ describe('Staking contract', function () {
   it('Add reward; expect that total stake is increased', async () => {
     await Token.mint(ServiceAgreementStorageV1U1.address, hre.ethers.utils.parseEther(`${5_000_000}`));
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
-    await Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN');
+    await Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN');
 
-    await Staking.addReward(identityId1, hre.ethers.utils.parseEther(`${5_000_000}`));
+    await Staking.connect(accounts[1]).addReward(identityId1, hre.ethers.utils.parseEther(`${5_000_000}`));
     expect(await StakingStorage.totalStakes(identityId1)).to.equal(
       hre.ethers.utils.parseEther(`${5_000_000}`),
       'Total amount of stake is not increased after adding reward',

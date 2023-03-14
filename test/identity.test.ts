@@ -92,11 +92,10 @@ describe('Identity contract', function () {
     );
   });
 
-  it('Create an identity with same admin and operational key, expect to pass', async () => {
+  it('Create an identity with same admin and operational key, expect to revert', async () => {
     const keyAddress = accounts[4].address;
-    const createIdentity = await Identity.createIdentity(keyAddress, keyAddress);
 
-    expect(createIdentity).to.emit(Identity, 'IdentityCreated');
+    await expect(Identity.createIdentity(keyAddress, keyAddress)).to.revertedWith('Admin should != Operational');
   });
 
   it('Create and delete an identity, expect to pass', async () => {

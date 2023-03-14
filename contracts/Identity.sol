@@ -55,6 +55,7 @@ contract Identity is Named, Versioned {
     function createIdentity(address operational, address admin) external onlyContracts returns (uint72) {
         require(operational != address(0), "Operational address can't be 0x0");
         require(admin != address(0), "Admin address can't be 0x0");
+        require(admin != operational, "Admin should != Operational");
 
         IdentityStorage ids = identityStorage;
 
