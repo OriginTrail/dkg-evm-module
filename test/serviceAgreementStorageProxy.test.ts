@@ -40,8 +40,8 @@ describe('ServiceAgreementStorageProxy contract', function () {
     return { accounts, ServiceAgreementStorageProxy, Token };
   }
 
-  async function createOldServiceAgreement() {
-    await ServiceAgreementStorageProxy.createOldServiceAgreementObject(
+  async function createV1ServiceAgreement() {
+    await ServiceAgreementStorageProxy.createV1ServiceAgreementObject(
       agreementId,
       epochsNumber,
       epochLength,
@@ -51,8 +51,8 @@ describe('ServiceAgreementStorageProxy contract', function () {
     );
   }
 
-  async function createNewServiceAgreement() {
-    await ServiceAgreementStorageProxy.createServiceAgreementObject(
+  async function createV1U1ServiceAgreement() {
+    await ServiceAgreementStorageProxy.createV1U1ServiceAgreementObject(
       agreementId,
       epochsNumber,
       epochLength,
@@ -74,8 +74,8 @@ describe('ServiceAgreementStorageProxy contract', function () {
     expect(await ServiceAgreementStorageProxy.version()).to.equal('1.0.0');
   });
 
-  it('Should allow creating old service agreement object', async () => {
-    await createOldServiceAgreement();
+  it('Should allow creating V1 service agreement object', async () => {
+    await createV1ServiceAgreement();
 
     const blockNumber = await hre.ethers.provider.getBlockNumber();
     const blockTimestamp = (await hre.ethers.provider.getBlock(blockNumber)).timestamp;
@@ -91,8 +91,8 @@ describe('ServiceAgreementStorageProxy contract', function () {
     ]);
   });
 
-  it('Should allow deleting old service agreement object', async () => {
-    await createOldServiceAgreement();
+  it('Should allow deleting V1 service agreement object', async () => {
+    await createV1ServiceAgreement();
 
     await ServiceAgreementStorageProxy.deleteServiceAgreementObject(agreementId);
 
@@ -101,8 +101,8 @@ describe('ServiceAgreementStorageProxy contract', function () {
     expect(agreementData).to.deep.equal([0, 0, 0, [0, 0], [0, 0]]);
   });
 
-  it('Should allow updating old service agreement data using get and set', async () => {
-    await createNewServiceAgreement();
+  it('Should allow updating V1 service agreement data using get and set', async () => {
+    await createV1ServiceAgreement();
 
     const blockNumber = await hre.ethers.provider.getBlockNumber();
     const blockTimestamp = (await hre.ethers.provider.getBlock(blockNumber)).timestamp;
@@ -134,18 +134,14 @@ describe('ServiceAgreementStorageProxy contract', function () {
       newProofWindowOffsetPerc,
     );
 
-    await ServiceAgreementStorageProxy['setAgreementEpochSubmissionHead(bytes32,uint16,bytes32)'](
-      agreementId,
-      0,
+    await ServiceAgreementStorageProxy.setV1AgreementEpochSubmissionHead(agreementId, 0, agreementEpochSubmissionHead);
+    expect(await ServiceAgreementStorageProxy.getV1AgreementEpochSubmissionHead(agreementId, 0)).to.equal(
       agreementEpochSubmissionHead,
     );
-    expect(
-      await ServiceAgreementStorageProxy['getAgreementEpochSubmissionHead(bytes32,uint16)'](agreementId, 0),
-    ).to.equal(agreementEpochSubmissionHead);
   });
 
-  it('Should allow incrementing/decrementing/setting/deleting agreement rewarded number for old SA', async () => {
-    await createOldServiceAgreement();
+  it('Should allow incrementing/decrementing/setting/deleting agreement rewarded number for V1 SA', async () => {
+    await createV1ServiceAgreement();
 
     const initialNodesNumber = await ServiceAgreementStorageProxy.getAgreementRewardedNodesNumber(agreementId, 0);
 
@@ -167,21 +163,21 @@ describe('ServiceAgreementStorageProxy contract', function () {
     expect(await ServiceAgreementStorageProxy.getAgreementRewardedNodesNumber(agreementId, 0)).to.equal(0);
   });
 
-  it('Service agreement exists should return true for existing new agreement', async () => {
-    await createNewServiceAgreement();
+  it('Service agreement exists should return true for existing V1U1 agreement', async () => {
+    await createV1U1ServiceAgreement();
 
     expect(await ServiceAgreementStorageProxy.serviceAgreementExists(agreementId)).to.equal(true);
     expect(await ServiceAgreementStorageProxy.serviceAgreementExists(newAgreementId)).to.equal(false);
   });
 
-  it('Should allow creating/deleting commit submission object for old SA', async () => {
+  it('Should allow creating/deleting commit submission object for V1 SA', async () => {
     const commitId = '0x' + randomBytes(32).toString('hex');
     const identityId = 2;
     const prevIdentityId = 1;
     const nextIdentityId = 3;
     const score = 5;
 
-    await ServiceAgreementStorageProxy.createOldCommitSubmissionObject(
+    await ServiceAgreementStorageProxy.createV1CommitSubmissionObject(
       commitId,
       identityId,
       prevIdentityId,
@@ -198,8 +194,8 @@ describe('ServiceAgreementStorageProxy contract', function () {
     expect(commitSubmission).to.deep.equal([0, 0, 0, 0]);
   });
 
-  it('Should allow creating new service agreement object', async () => {
-    await createNewServiceAgreement();
+  it('Should allow creating V1U1 service agreement object', async () => {
+    await createV1U1ServiceAgreement();
 
     const blockNumber = await hre.ethers.provider.getBlockNumber();
     const blockTimestamp = (await hre.ethers.provider.getBlock(blockNumber)).timestamp;
@@ -215,8 +211,8 @@ describe('ServiceAgreementStorageProxy contract', function () {
     ]);
   });
 
-  it('Should allow deleting new service agreement object', async () => {
-    await createNewServiceAgreement();
+  it('Should allow deleting V1U1 service agreement object', async () => {
+    await createV1U1ServiceAgreement();
 
     await ServiceAgreementStorageProxy.deleteServiceAgreementObject(agreementId);
 
@@ -225,8 +221,8 @@ describe('ServiceAgreementStorageProxy contract', function () {
     expect(agreementData).to.deep.equal([0, 0, 0, [0, 0], [0, 0]]);
   });
 
-  it('Should allow updating new service agreement data using get and set', async () => {
-    await createNewServiceAgreement();
+  it('Should allow updating V1U1 service agreement data using get and set', async () => {
+    await createV1U1ServiceAgreement();
 
     const blockNumber = await hre.ethers.provider.getBlockNumber();
     const blockTimestamp = (await hre.ethers.provider.getBlock(blockNumber)).timestamp;
@@ -264,19 +260,19 @@ describe('ServiceAgreementStorageProxy contract', function () {
       newProofWindowOffsetPerc,
     );
 
-    await ServiceAgreementStorageProxy['setAgreementEpochSubmissionHead(bytes32,uint16,uint256,bytes32)'](
+    await ServiceAgreementStorageProxy.setV1U1AgreementEpochSubmissionHead(
       agreementId,
       0,
       0,
       agreementEpochSubmissionHead,
     );
-    expect(
-      await ServiceAgreementStorageProxy['getAgreementEpochSubmissionHead(bytes32,uint16,uint256)'](agreementId, 0, 0),
-    ).to.equal(agreementEpochSubmissionHead);
+    expect(await ServiceAgreementStorageProxy.getV1U1AgreementEpochSubmissionHead(agreementId, 0, 0)).to.equal(
+      agreementEpochSubmissionHead,
+    );
   });
 
-  it('Should allow incrementing/decrementing/setting/deleting agreement rewarded number for new SA', async () => {
-    await createNewServiceAgreement();
+  it('Should allow incrementing/decrementing/setting/deleting agreement rewarded number for V1U1 SA', async () => {
+    await createV1U1ServiceAgreement();
 
     const initialNodesNumber = await ServiceAgreementStorageProxy.getAgreementRewardedNodesNumber(agreementId, 0);
 
@@ -298,21 +294,21 @@ describe('ServiceAgreementStorageProxy contract', function () {
     expect(await ServiceAgreementStorageProxy.getAgreementRewardedNodesNumber(agreementId, 0)).to.equal(0);
   });
 
-  it('Service agreement exists should return true for existing new agreement', async () => {
-    await createNewServiceAgreement();
+  it('Service agreement exists should return true for existing V1U1 agreement', async () => {
+    await createV1U1ServiceAgreement();
 
     expect(await ServiceAgreementStorageProxy.serviceAgreementExists(agreementId)).to.equal(true);
     expect(await ServiceAgreementStorageProxy.serviceAgreementExists(newAgreementId)).to.equal(false);
   });
 
-  it('Should allow creating/deleting commit submission object for new SA', async () => {
+  it('Should allow creating/deleting commit submission object for V1U1 SA', async () => {
     const commitId = '0x' + randomBytes(32).toString('hex');
     const identityId = 2;
     const prevIdentityId = 1;
     const nextIdentityId = 3;
     const score = 5;
 
-    await ServiceAgreementStorageProxy.createCommitSubmissionObject(
+    await ServiceAgreementStorageProxy.createV1U1CommitSubmissionObject(
       commitId,
       identityId,
       prevIdentityId,
@@ -329,8 +325,8 @@ describe('ServiceAgreementStorageProxy contract', function () {
     expect(commitSubmission).to.deep.equal([0, 0, 0, 0]);
   });
 
-  it('Should allow increasing/deacreasing/deleting epoch state commits count for new SA', async () => {
-    await createNewServiceAgreement();
+  it('Should allow increasing/deacreasing/deleting epoch state commits count for V1U1 SA', async () => {
+    await createV1U1ServiceAgreement();
 
     const epochStateId = '0x' + randomBytes(32).toString('hex');
 
@@ -350,8 +346,8 @@ describe('ServiceAgreementStorageProxy contract', function () {
     expect(await ServiceAgreementStorageProxy.getCommitsCount(epochStateId)).to.equal(0);
   });
 
-  it('Should allow setting/deleting update commits deadline for new SA', async () => {
-    await createNewServiceAgreement();
+  it('Should allow setting/deleting update commits deadline for V1U1 SA', async () => {
+    await createV1U1ServiceAgreement();
 
     const blockNumber = await hre.ethers.provider.getBlockNumber();
     const blockTimestamp = (await hre.ethers.provider.getBlock(blockNumber)).timestamp;
@@ -366,13 +362,13 @@ describe('ServiceAgreementStorageProxy contract', function () {
     expect(await ServiceAgreementStorageProxy.getUpdateCommitsDeadline(stateId)).to.equal(0);
   });
 
-  it('Should allow transferring reward for new SA', async () => {
+  it('Should allow transferring reward for V1U1 SA', async () => {
     const transferAmount = hre.ethers.utils.parseEther('100');
     const receiver = accounts[1].address;
-    await Token.mint(await ServiceAgreementStorageProxy.latestStorageAddress(), transferAmount);
+    await Token.mint(await ServiceAgreementStorageProxy.agreementV1U1StorageAddress(), transferAmount);
 
     const initialReceiverBalance = await Token.balanceOf(receiver);
-    await ServiceAgreementStorageProxy.transferAgreementTokens(receiver, transferAmount);
+    await ServiceAgreementStorageProxy.transferV1U1AgreementTokens(receiver, transferAmount);
     expect(await Token.balanceOf(receiver)).to.equal(initialReceiverBalance.add(transferAmount));
   });
 });

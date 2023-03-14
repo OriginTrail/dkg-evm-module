@@ -3,23 +3,17 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await hre.helpers.deploy({
-    newContractName: 'CommitManagerV1U1',
+    newContractName: 'ContentAsset',
   });
 };
 
 export default func;
-func.tags = ['CommitManagerV1U1'];
+func.tags = ['ContentAsset'];
 func.dependencies = [
+  'Assertion',
   'Hub',
-  'ScoringProxy',
+  'ServiceAgreementV1',
   'ServiceAgreementHelperFunctions',
-  'Staking',
   'ContentAssetStorage',
-  'IdentityStorage',
-  'ParametersStorage',
-  'ProfileStorage',
-  'ServiceAgreementStorageProxy',
-  'ShardingTableStorage',
-  'StakingStorage',
   'UnfinalizedStateStorage',
 ];

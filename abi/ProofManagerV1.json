@@ -486,6 +486,19 @@
   },
   {
     "inputs": [],
+    "name": "serviceAgreementHelperFunctions",
+    "outputs": [
+      {
+        "internalType": "contract ServiceAgreementHelperFunctions",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "serviceAgreementStorageProxy",
     "outputs": [
       {

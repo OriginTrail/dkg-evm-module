@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 
 import {AbstractAsset} from "./assets/AbstractAsset.sol";
 import {Hub} from "./Hub.sol";
-import {ServiceAgreementV1} from "./ServiceAgreementV1.sol";
+import {ServiceAgreementHelperFunctions} from "./ServiceAgreementHelperFunctions.sol";
 import {Staking} from "./Staking.sol";
 import {AssertionStorage} from "./storage/AssertionStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
@@ -36,7 +36,7 @@ contract ProofManagerV1U1 is Named, Versioned {
     bool[4] public reqs = [false, false, false, false];
 
     Hub public hub;
-    ServiceAgreementV1 public serviceAgreementV1;
+    ServiceAgreementHelperFunctions public serviceAgreementHelperFunctions;
     Staking public stakingContract;
     AssertionStorage public assertionStorage;
     IdentityStorage public identityStorage;
@@ -57,7 +57,9 @@ contract ProofManagerV1U1 is Named, Versioned {
     }
 
     function initialize() public onlyHubOwner {
-        serviceAgreementV1 = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
+        serviceAgreementHelperFunctions = ServiceAgreementHelperFunctions(
+            hub.getContractAddress("ServiceAgreementHelperFunctions")
+        );
         stakingContract = Staking(hub.getContractAddress("Staking"));
         assertionStorage = AssertionStorage(hub.getContractAddress("AssertionStorage"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
@@ -131,7 +133,7 @@ contract ProofManagerV1U1 is Named, Versioned {
     }
 
     function _sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) internal virtual {
-        bytes32 agreementId = serviceAgreementV1.generateAgreementId(
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
             args.assetContract,
             args.tokenId,
             args.keyword,
@@ -178,7 +180,7 @@ contract ProofManagerV1U1 is Named, Versioned {
             );
         emit Logger(sasProxy.getCommitSubmissionScore(commitId) == 0, "req2");
 
-        bytes32 nextCommitId = sasProxy.getAgreementEpochSubmissionHead(
+        bytes32 nextCommitId = sasProxy.getV1U1AgreementEpochSubmissionHead(
             agreementId,
             args.epoch,
             latestFinalizedStateIndex
@@ -248,7 +250,7 @@ contract ProofManagerV1U1 is Named, Versioned {
             (sasProxy.getAgreementEpochsNumber(agreementId) - args.epoch + 1) /
             (r0 - sasProxy.getAgreementRewardedNodesNumber(agreementId, args.epoch)));
 
-        stakingContract.addReward(identityId, reward);
+        stakingContract.addReward(agreementId, identityId, reward);
         sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) - reward);
         sasProxy.incrementAgreementRewardedNodesNumber(agreementId, args.epoch);
 

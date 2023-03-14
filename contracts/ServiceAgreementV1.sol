@@ -3,12 +3,15 @@
 pragma solidity ^0.8.4;
 
 import {CommitManagerV1} from "./CommitManagerV1.sol";
+import {CommitManagerV1U1} from "./CommitManagerV1U1.sol";
 import {HashingProxy} from "./HashingProxy.sol";
 import {Hub} from "./Hub.sol";
 import {ScoringProxy} from "./ScoringProxy.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProofManagerV1} from "./ProofManagerV1.sol";
+import {ProofManagerV1U1} from "./ProofManagerV1U1.sol";
 import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
+import {ServiceAgreementHelperFunctions} from "./ServiceAgreementHelperFunctions.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
@@ -60,11 +63,14 @@ contract ServiceAgreementV1 is Named, Versioned {
 
     Hub public hub;
     CommitManagerV1 public commitManagerV1;
+    CommitManagerV1U1 public commitManagerV1U1;
     ProofManagerV1 public proofManagerV1;
+    ProofManagerV1U1 public proofManagerV1U1;
     HashingProxy public hashingProxy;
     ScoringProxy public scoringProxy;
     ParametersStorage public parametersStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
+    ServiceAgreementHelperFunctions public serviceAgreementHelperFunctions;
     IERC20 public tokenContract;
 
     error ScoreError();
@@ -87,11 +93,18 @@ contract ServiceAgreementV1 is Named, Versioned {
     }
 
     function initialize() public onlyHubOwner {
+        commitManagerV1 = CommitManagerV1(hub.getContractAddress("CommitManagerV1"));
+        commitManagerV1U1 = CommitManagerV1U1(hub.getContractAddress("CommitManagerV1U1"));
+        proofManagerV1 = ProofManagerV1(hub.getContractAddress("ProofManagerV1"));
+        proofManagerV1U1 = ProofManagerV1U1(hub.getContractAddress("ProofManagerV1U1"));
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
+        );
+        serviceAgreementHelperFunctions = ServiceAgreementHelperFunctions(
+            hub.getContractAddress("ServiceAgreementHelperFunctions")
         );
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }
@@ -113,12 +126,17 @@ contract ServiceAgreementV1 is Named, Versioned {
         if (!scoringProxy.isScoreFunction(args.scoreFunctionId))
             revert ServiceAgreementErrorsV1U1.ScoreFunctionDoesntExist(args.scoreFunctionId);
 
-        bytes32 agreementId = generateAgreementId(args.assetContract, args.tokenId, args.keyword, args.hashFunctionId);
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId
+        );
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
         ParametersStorage params = parametersStorage;
 
-        sasProxy.createServiceAgreementObject(
+        sasProxy.createV1U1ServiceAgreementObject(
             agreementId,
             args.epochsNumber,
             params.epochLength(),
@@ -137,7 +155,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         if (tknc.balanceOf(args.assetCreator) < args.tokenAmount)
             revert ServiceAgreementErrorsV1U1.TooLowBalance(tknc.balanceOf(args.assetCreator));
 
-        tknc.transferFrom(args.assetCreator, sasProxy.latestStorageAddress(), args.tokenAmount);
+        tknc.transferFrom(args.assetCreator, sasProxy.agreementV1U1StorageAddress(), args.tokenAmount);
 
         emit ServiceAgreementV1Created(
             args.assetContract,
@@ -160,13 +178,18 @@ contract ServiceAgreementV1 is Named, Versioned {
     ) external onlyContracts {
         if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1U1.EmptyAssetCreatorAddress();
 
-        bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
+            assetContract,
+            tokenId,
+            keyword,
+            hashFunctionId
+        );
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         uint96 agreementBalance = sasProxy.getAgreementTokenAmount(agreementId);
         sasProxy.deleteServiceAgreementObject(agreementId);
-        sasProxy.transferAgreementTokens(assetOwner, agreementBalance);
+        sasProxy.transferV1U1AgreementTokens(assetOwner, agreementBalance);
 
         emit ServiceAgreementV1Terminated(assetContract, tokenId, keyword, hashFunctionId);
     }
@@ -184,7 +207,12 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         _addTokens(assetOwner, tokenAmount);
 
-        bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
+            assetContract,
+            tokenId,
+            keyword,
+            hashFunctionId
+        );
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
         sasProxy.setAgreementEpochsNumber(agreementId, sasProxy.getAgreementEpochsNumber(agreementId) + epochsNumber);
@@ -204,7 +232,12 @@ contract ServiceAgreementV1 is Named, Versioned {
         _addTokens(assetOwner, tokenAmount);
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
-        bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
+            assetContract,
+            tokenId,
+            keyword,
+            hashFunctionId
+        );
         sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
 
         emit ServiceAgreementV1RewardRaised(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
@@ -220,42 +253,57 @@ contract ServiceAgreementV1 is Named, Versioned {
     ) external onlyContracts {
         _addTokens(assetOwner, tokenAmount);
 
-        bytes32 agreementId = generateAgreementId(assetContract, tokenId, keyword, hashFunctionId);
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
+            assetContract,
+            tokenId,
+            keyword,
+            hashFunctionId
+        );
         serviceAgreementStorageProxy.setAgreementUpdateTokenAmount(agreementId, tokenAmount);
 
         emit ServiceAgreementV1UpdateRewardRaised(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
     }
 
-    function generateAgreementId(
-        address assetContract,
-        uint256 tokenId,
-        bytes calldata keyword,
-        uint8 hashFunctionId
-    ) public view virtual returns (bytes32) {
-        if (!hub.isAssetStorage(assetContract))
-            revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(assetContract);
-        if (keccak256(keyword) == keccak256("")) revert ServiceAgreementErrorsV1U1.EmptyKeyword();
-
-        return hashingProxy.callHashFunction(hashFunctionId, abi.encodePacked(assetContract, tokenId, keyword));
-    }
-
     function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
-        return commitManagerV1.isCommitWindowOpen(agreementId, epoch);
+        if (serviceAgreementStorageProxy.isV1U1Agreement(agreementId)) {
+            return commitManagerV1U1.isCommitWindowOpen(agreementId, epoch);
+        } else {
+            return commitManagerV1.isCommitWindowOpen(agreementId, epoch);
+        }
     }
 
     function getTopCommitSubmissions(
         bytes32 agreementId,
         uint16 epoch
     ) external view returns (ServiceAgreementStructsV1.CommitSubmission[] memory) {
-        return commitManagerV1.getTopCommitSubmissions(agreementId, epoch);
+        if (serviceAgreementStorageProxy.isV1U1Agreement(agreementId)) {
+            return commitManagerV1U1.getTopCommitSubmissions(agreementId, epoch, 0);
+        } else {
+            return commitManagerV1.getTopCommitSubmissions(agreementId, epoch);
+        }
     }
 
     function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
-        commitManagerV1.submitCommit(args);
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId
+        );
+
+        if (serviceAgreementStorageProxy.isV1U1Agreement(agreementId)) {
+            commitManagerV1U1.submitCommit(args);
+        } else {
+            commitManagerV1.submitCommit(args);
+        }
     }
 
     function isProofWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
-        return proofManagerV1.isProofWindowOpen(agreementId, epoch);
+        if (serviceAgreementStorageProxy.isV1U1Agreement(agreementId)) {
+            return proofManagerV1U1.isProofWindowOpen(agreementId, epoch);
+        } else {
+            return proofManagerV1.isProofWindowOpen(agreementId, epoch);
+        }
     }
 
     function getChallenge(
@@ -268,7 +316,18 @@ contract ServiceAgreementV1 is Named, Versioned {
     }
 
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
-        proofManagerV1.sendProof(args);
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId
+        );
+
+        if (serviceAgreementStorageProxy.isV1U1Agreement(agreementId)) {
+            proofManagerV1U1.sendProof(args);
+        } else {
+            proofManagerV1.sendProof(args);
+        }
     }
 
     function _addTokens(address assetOwner, uint96 tokenAmount) internal virtual {
@@ -282,7 +341,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         if (tknc.balanceOf(assetOwner) < tokenAmount)
             revert ServiceAgreementErrorsV1U1.TooLowBalance(tknc.balanceOf(assetOwner));
 
-        tknc.transferFrom(assetOwner, serviceAgreementStorageProxy.latestStorageAddress(), tokenAmount);
+        tknc.transferFrom(assetOwner, serviceAgreementStorageProxy.agreementV1U1StorageAddress(), tokenAmount);
     }
 
     function _generatePseudorandomUint8(address sender, uint8 limit) internal view virtual returns (uint8) {

@@ -11,7 +11,7 @@ export default func;
 func.tags = ['ProofManagerV1U1'];
 func.dependencies = [
   'Hub',
-  'ServiceAgreementV1',
+  'ServiceAgreementHelperFunctions',
   'Staking',
   'AssertionStorage',
   'IdentityStorage',

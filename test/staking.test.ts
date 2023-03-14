@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
@@ -152,7 +154,23 @@ describe('Staking contract', function () {
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
     await Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN');
 
-    await Staking.connect(accounts[1]).addReward(identityId1, hre.ethers.utils.parseEther(`${5_000_000}`));
+    const agreementId = '0x' + randomBytes(32).toString('hex');
+    const epochsNumber = 5;
+    const epochLength = 10;
+    const tokenAmount = hre.ethers.utils.parseEther('100');
+    const scoreFunctionId = 0;
+    const proofWindowOffsetPerc = 10;
+
+    await ServiceAgreementStorageV1U1.createServiceAgreementObject(
+      agreementId,
+      epochsNumber,
+      epochLength,
+      tokenAmount,
+      scoreFunctionId,
+      proofWindowOffsetPerc,
+    );
+
+    await Staking.connect(accounts[1]).addReward(agreementId, identityId1, hre.ethers.utils.parseEther(`${5_000_000}`));
     expect(await StakingStorage.totalStakes(identityId1)).to.equal(
       hre.ethers.utils.parseEther(`${5_000_000}`),
       'Total amount of stake is not increased after adding reward',

@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 
 import {Hub} from "./Hub.sol";
 import {ScoringProxy} from "./ScoringProxy.sol";
-import {ServiceAgreementV1} from "./ServiceAgreementV1.sol";
+import {ServiceAgreementHelperFunctions} from "./ServiceAgreementHelperFunctions.sol";
 import {Staking} from "./Staking.sol";
 import {AbstractAsset} from "./assets/AbstractAsset.sol";
 import {ContentAssetStorage} from "./storage/assets/ContentAssetStorage.sol";
@@ -50,7 +50,7 @@ contract CommitManagerV1U1 is Named, Versioned {
 
     Hub public hub;
     ScoringProxy public scoringProxy;
-    ServiceAgreementV1 public serviceAgreementV1;
+    ServiceAgreementHelperFunctions public serviceAgreementHelperFunctions;
     Staking public stakingContract;
     ContentAssetStorage public contentAssetStorage;
     IdentityStorage public identityStorage;
@@ -75,7 +75,9 @@ contract CommitManagerV1U1 is Named, Versioned {
 
     function initialize() public onlyHubOwner {
         scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
-        serviceAgreementV1 = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
+        serviceAgreementHelperFunctions = ServiceAgreementHelperFunctions(
+            hub.getContractAddress("ServiceAgreementHelperFunctions")
+        );
         stakingContract = Staking(hub.getContractAddress("Staking"));
         contentAssetStorage = ContentAssetStorage(hub.getAssetStorageAddress("ContentAssetStorage"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
@@ -172,7 +174,7 @@ contract CommitManagerV1U1 is Named, Versioned {
         ServiceAgreementStructsV1.CommitSubmission[]
             memory epochStateCommits = new ServiceAgreementStructsV1.CommitSubmission[](r0);
 
-        bytes32 epochSubmissionsHead = sasProxy.getAgreementEpochSubmissionHead(agreementId, epoch, stateIndex);
+        bytes32 epochSubmissionsHead = sasProxy.getV1U1AgreementEpochSubmissionHead(agreementId, epoch, stateIndex);
 
         epochStateCommits[0] = sasProxy.getCommitSubmission(epochSubmissionsHead);
 
@@ -206,7 +208,7 @@ contract CommitManagerV1U1 is Named, Versioned {
     }
 
     function _submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) internal virtual {
-        bytes32 agreementId = serviceAgreementV1.generateAgreementId(
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
             args.assetContract,
             args.tokenId,
             args.keyword,
@@ -281,7 +283,7 @@ contract CommitManagerV1U1 is Named, Versioned {
             revert ServiceAgreementErrorsV1U1.NoPendingUpdate(args.assetContract, args.tokenId);
         }
 
-        bytes32 agreementId = serviceAgreementV1.generateAgreementId(
+        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
             args.assetContract,
             args.tokenId,
             args.keyword,
@@ -345,8 +347,8 @@ contract CommitManagerV1U1 is Named, Versioned {
             sasProxy.getCommitsCount(keccak256(abi.encodePacked(agreementId, args.epoch, unfinalizedStateIndex))) ==
             parametersStorage.finalizationCommitsNumber()
         ) {
-            if (sasProxy.isOldAgreement(agreementId)) {
-                sasProxy.migrateOldServiceAgreement(agreementId);
+            if (sasProxy.isV1Agreement(agreementId)) {
+                sasProxy.migrateV1ServiceAgreement(agreementId);
             }
 
             if (uss.hasPendingUpdate(args.tokenId)) {
@@ -400,7 +402,7 @@ contract CommitManagerV1U1 is Named, Versioned {
             );
         emit Logger(sasProxy.commitSubmissionExists(commitId), "req5");
 
-        bytes32 refCommitId = sasProxy.getAgreementEpochSubmissionHead(agreementId, epoch, stateIndex);
+        bytes32 refCommitId = sasProxy.getV1U1AgreementEpochSubmissionHead(agreementId, epoch, stateIndex);
 
         ParametersStorage params = parametersStorage;
 
@@ -427,19 +429,19 @@ contract CommitManagerV1U1 is Named, Versioned {
             );
         emit Logger(i >= r0, "req6");
 
-        sasProxy.createCommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
+        sasProxy.createV1U1CommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
 
         ServiceAgreementStructsV1.CommitSubmission memory refCommit = sasProxy.getCommitSubmission(refCommitId);
 
         if ((i == 0) && (refCommit.identityId == 0)) {
             //  No head -> Setting new head
-            sasProxy.setAgreementEpochSubmissionHead(agreementId, epoch, stateIndex, commitId);
+            sasProxy.setV1U1AgreementEpochSubmissionHead(agreementId, epoch, stateIndex, commitId);
         } else if ((i == 0) && (score <= refCommit.score)) {
             // There is a head with higher or equal score, add new commit on the right
             _linkCommits(agreementId, epoch, stateIndex, refCommit.identityId, identityId);
         } else if ((i == 0) && (score > refCommit.score)) {
             // There is a head with lower score, replace the head
-            sasProxy.setAgreementEpochSubmissionHead(agreementId, epoch, stateIndex, commitId);
+            sasProxy.setV1U1AgreementEpochSubmissionHead(agreementId, epoch, stateIndex, commitId);
             _linkCommits(agreementId, epoch, stateIndex, identityId, refCommit.identityId);
         } else if (score > refCommit.score) {
             // [H] - head
