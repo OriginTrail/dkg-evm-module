@@ -92,6 +92,8 @@
     "lint": "npm run lint:sol && npm run lint:ts",
     "mint-test-tokens": "cross-env HARDHAT_DEPLOY_FIXTURE=true hardhat run scripts/mint_test_tokens.ts --network localhost",
     "postinstall": "husky install && hardhat typechain",
+    "slither": "slither .",
+    "slither:reentrancy": "slither . --detect reentrancy-eth,reentrancy-no-eth,reentrancy-unlimited-gas",
     "test:fulltrace": "hardhat test --network hardhat --fulltrace",
     "test:gas:fulltrace": "cross-env GAS_REPORT=true hardhat test --network hardhat --fulltrace",
     "test:gas:trace": "cross-env GAS_REPORT=true hardhat test --network hardhat --trace",
