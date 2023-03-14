@@ -11,8 +11,8 @@
             "deployed": true
         },
         "ParametersStorage": {
-            "evmAddress": "0x8688127bEE68589FEDB82C75753e120AbF540EB7",
-            "otpAddress": "gJrdgTpkKTHZtaQANguG2eNaUjG7ZdnnGhW3xoMAXUJEamdFd",
+            "evmAddress": "0x9E44F498684a6582dBFba53aed0b66aC00D5dBfe",
+            "otpAddress": "gJnN61NzomfEwyXj4UfXXaxnmShfzUFzACBnrTU3VjpPAydQ2",
             "deployed": true
         },
         "WhitelistStorage": {
@@ -81,8 +81,8 @@
             "deployed": true
         },
         "Identity": {
-            "evmAddress": "0xA8bFf58817a3BFa6363aa25b920EAd7423F4F383",
-            "otpAddress": "gJp6Nk8svPWmqBPLJUhYqWaLrFdYC8JfYgkkm9TXZuieJs9dx",
+            "evmAddress": "0x627DFed4F5C7d6dBadfBC385e766a345f16E5e06",
+            "otpAddress": "gJoa78mrvMmAtC71MiPkyyFe6BFUTt4k4xjRbGef9FwkKJV3F",
             "deployed": true
         },
         "ShardingTable": {
@@ -91,35 +91,60 @@
             "deployed": true
         },
         "Staking": {
-            "evmAddress": "0x96fE76818aaC64559C53af39d2Da54cFfD4FE415",
-            "otpAddress": "gJoV5Lwm4s49isvLZYmjx4JmmcJC4sMmSMemDbPyyZwKWpJcY",
+            "evmAddress": "0x4d9D2E3d62F32784409AA61b170045119E828662",
+            "otpAddress": "gJqymzUc1A5h9ibPV8sZDvNhx6gUdPktiAeyCVYWTmXJqFKjc",
             "deployed": true
         },
         "Profile": {
-            "evmAddress": "0x947C9cBFB93C5D2d0ab32D76E21E3036CC42e79b",
-            "otpAddress": "gJmww9Nga8cDsWAQFdeFJHYzTRcG69gCAQQUAnq69nugakvEx",
+            "evmAddress": "0xdFB2434481d925e002a4456f2b994Eb850E7bAC6",
+            "otpAddress": "gJp4uRgfCm5GRcmevz8J9L2prppQNBMUZpQBk836NVsNtDiet",
             "deployed": true
         },
         "ServiceAgreementV1": {
-            "evmAddress": "0xa6f13524402B328A9Dd32047415d3686F7De6dEC",
-            "otpAddress": "gJpniXBuDPUjsdY895Gcxv7fgK1q3dnQJ7WaiZmYZigVPzSC7",
+            "evmAddress": "0xea5E1C2b95bED690054931299E6A329189Ccb361",
+            "otpAddress": "gJrXdm4NNL7XkCCP69aYC3HksseDfgPx6jeYZctcrdrRXCxnq",
             "deployed": true
         },
         "CommitManagerV1": {
-            "evmAddress": "0xC9204cBbc0EAE9d33161333CaC98BdF9E2C9dFD6",
-            "otpAddress": "gJqcRNBVkEbc4RRdpXc9tBjpp4y7AcKggj6AL3WsnxfPs1fkm",
+            "evmAddress": "0xCf54C828Df2B7697c16884997EB7195593E63f1a",
+            "otpAddress": "gJqTraoUiEgntJBouNnM9xb2UGe5bHncb6kyvniwpoS9FSCj8",
             "deployed": true
         },
         "ProofManagerV1": {
-            "evmAddress": "0x940E6BCD34dd6b387735FF76668F388f51FaAD66",
-            "otpAddress": "gJqMSMQ3j4Rcd39rbN6GKZjhcaa7BTgTRsLLdWMDBdX9i8XuS",
+            "evmAddress": "0x3983162c44A46A9A022ddf9c0Ac7dD03B993E1dC",
+            "otpAddress": "gJrC2DzDZmeRAec5cZ6VCEA1YGEZPk2KqLMn3iGhbB2VbtCzF",
             "deployed": true
         },
         "ContentAsset": {
-            "evmAddress": "0x0de5809aAba0a988F2203723Fde3F56bcDC09F9f",
-            "otpAddress": "gJrCeoUKeaqZZ8KExMufrC451e5Enegu4VfTfVj24ukFBE3Dx",
+            "evmAddress": "0xFF2ce8ddcaA097a11FEE2Ad9C8eAC0BfD284947f",
+            "otpAddress": "gJsHt3vRSjVjvwRMcZnjmHWDqHt2mHqVRNdxRJWurHkosa2SA",
+            "deployed": true
+        },
+        "ServiceAgreementStorageV1U1": {
+            "evmAddress": "0x1D025B706Df7dc3A1c848F3D176FF1918e01690B",
+            "otpAddress": "gJoWvDv3dEakcZcSSzVyk8hGj7ddbaTMXuGn69n4cbJqGUWBZ",
+            "deployed": true
+        },
+        "ServiceAgreementStorageProxy": {
+            "evmAddress": "0x57B74260a2d8787E1B6774Fc770269922371E25F",
+            "otpAddress": "gJpCaPWZZ9BPJa5HpNgqh9iWZSkEQsnvwQKPUgkmt8Uimg3YX",
+            "deployed": true
+        },
+        "UnfinalizedStateStorage": {
+            "evmAddress": "0xF9a29361415106b8D16D2E391025C29FCD1FcC15",
+            "otpAddress": "gJpNog4hPYYCxA2qqreSpDi6eK9mXthitxTao3BeZrYnv5eBU",
+            "deployed": true
+        },
+        "CommitManagerV1U1": {
+            "evmAddress": "0xA53aD0b4666c08681d2A48Ab7B56e4Fe2B62047e",
+            "otpAddress": "gJp1wu2ivw3EM4nCwTTmFSE7EJDBLe5aTz8c5dNPGZfJDzjLU",
+            "deployed": true
+        },
+        "ProofManagerV1U1": {
+            "evmAddress": "0xf53450bD6c04C755bE704D3d521a583A5e35DcBB",
+            "otpAddress": "gJqj8AbeX5iEAdVzAK4R5fpYpEoAN4PRdynZgvC4trR5GJiDx",
             "deployed": true
         }
     },
-    "deployedTimestamp": 1674826672028
+    "deployedTimestamp": 1678757018471
 }
