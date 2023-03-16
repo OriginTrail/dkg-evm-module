@@ -136,7 +136,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
         ParametersStorage params = parametersStorage;
 
-        sasProxy.createV1U1ServiceAgreementObject(
+        sasProxy.createV1ServiceAgreementObject(
             agreementId,
             args.epochsNumber,
             params.epochLength(),
@@ -155,7 +155,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         if (tknc.balanceOf(args.assetCreator) < args.tokenAmount)
             revert ServiceAgreementErrorsV1U1.TooLowBalance(tknc.balanceOf(args.assetCreator));
 
-        tknc.transferFrom(args.assetCreator, sasProxy.agreementV1U1StorageAddress(), args.tokenAmount);
+        tknc.transferFrom(args.assetCreator, sasProxy.agreementV1StorageAddress(), args.tokenAmount);
 
         emit ServiceAgreementV1Created(
             args.assetContract,
@@ -188,8 +188,10 @@ contract ServiceAgreementV1 is Named, Versioned {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         uint96 agreementBalance = sasProxy.getAgreementTokenAmount(agreementId);
+
+        sasProxy.setAgreementTokenAmount(agreementId, 0);
+        sasProxy.transferAgreementTokens(agreementId, assetOwner, agreementBalance);
         sasProxy.deleteServiceAgreementObject(agreementId);
-        sasProxy.transferV1U1AgreementTokens(assetOwner, agreementBalance);
 
         emit ServiceAgreementV1Terminated(assetContract, tokenId, keyword, hashFunctionId);
     }

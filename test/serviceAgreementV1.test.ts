@@ -116,11 +116,11 @@ describe('ServiceAgreementV1 contract', function () {
     expect(await ServiceAgreementV1.version()).to.equal('1.1.0');
   });
 
-  it('Create new SA with valid input args; await all parameters to be set up', async () => {
+  it('Create old SA with valid input args; await all parameters to be set up', async () => {
     await createServiceAgreement();
   });
 
-  it('Create new SA and terminate it, expect SA to be terminated', async () => {
+  it('Create old SA and terminate it, expect SA to be terminated', async () => {
     const agreementId = await createServiceAgreement();
 
     expect(await ServiceAgreementStorageProxy.serviceAgreementExists(agreementId)).to.eql(true);
@@ -138,7 +138,7 @@ describe('ServiceAgreementV1 contract', function () {
     expect(await ServiceAgreementStorageProxy.serviceAgreementExists(agreementId)).to.eql(false);
   });
 
-  it('Create new SA and extend storing period, expect epochs number to be increased', async () => {
+  it('Create old SA and extend storing period, expect epochs number to be increased', async () => {
     const agreementId = await createServiceAgreement();
 
     const oldEpochsNumber = Number(serviceAgreementInputArgs.epochsNumber);
@@ -173,7 +173,7 @@ describe('ServiceAgreementV1 contract', function () {
     );
   });
 
-  it('Create new SA and add tokens, expect token amount to be increased', async () => {
+  it('Create old SA and add tokens, expect token amount to be increased', async () => {
     const agreementId = await createServiceAgreement();
 
     const oldTokenAmount: BigNumber = hre.ethers.utils.parseEther(
@@ -201,7 +201,7 @@ describe('ServiceAgreementV1 contract', function () {
     );
   });
 
-  it('Create new SA and add update tokens, expect update token amount to be increased', async () => {
+  it('Create old SA and add update tokens, expect update token amount to be increased', async () => {
     const agreementId = await createServiceAgreement();
 
     const oldUpdateTokenAmount: BigNumber = hre.ethers.utils.parseEther('0');

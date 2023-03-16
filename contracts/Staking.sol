@@ -178,20 +178,12 @@ contract Staking is Named, Versioned {
 
         if (operatorFee != 0) {
             ps.setAccumulatedOperatorFee(identityId, oldAccumulatedOperatorFee + operatorFee);
-            if (sasProxy.isV1U1Agreement(agreementId)) {
-                sasProxy.transferV1U1AgreementTokens(address(ps), operatorFee);
-            } else {
-                sasProxy.transferV1AgreementTokens(address(ps), operatorFee);
-            }
+            sasProxy.transferAgreementTokens(agreementId, address(ps), operatorFee);
         }
 
         if (delegatorsReward != 0) {
             ss.setTotalStake(identityId, oldStake + delegatorsReward);
-            if (sasProxy.isV1U1Agreement(agreementId)) {
-                sasProxy.transferV1U1AgreementTokens(address(ss), delegatorsReward);
-            } else {
-                sasProxy.transferV1AgreementTokens(address(ss), delegatorsReward);
-            }
+            sasProxy.transferAgreementTokens(agreementId, address(ss), delegatorsReward);
 
             if (!shardingTableStorage.nodeExists(identityId) && oldStake >= parametersStorage.minimumStake()) {
                 shardingTableContract.pushBack(identityId);

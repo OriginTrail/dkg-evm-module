@@ -16,6 +16,7 @@ type ServiceAgreementStorageV1U1Fixture = {
 describe('ServiceAgreementStorageV1U1 contract', function () {
   const agreementId = '0x' + randomBytes(32).toString('hex');
   const newAgreementId = '0x' + randomBytes(32).toString('hex');
+  const startTime = Math.floor(Date.now() / 1000).toString();
   const epochsNumber = 5;
   const epochLength = 10;
   const tokenAmount = hre.ethers.utils.parseEther('100');
@@ -43,6 +44,7 @@ describe('ServiceAgreementStorageV1U1 contract', function () {
   async function createServiceAgreement() {
     await ServiceAgreementStorageV1U1.createServiceAgreementObject(
       agreementId,
+      startTime,
       epochsNumber,
       epochLength,
       tokenAmount,
@@ -66,13 +68,10 @@ describe('ServiceAgreementStorageV1U1 contract', function () {
   it('Should allow creating service agreement object', async () => {
     await createServiceAgreement();
 
-    const blockNumber = await hre.ethers.provider.getBlockNumber();
-    const blockTimestamp = (await hre.ethers.provider.getBlock(blockNumber)).timestamp;
-
     const agreementData = await ServiceAgreementStorageV1U1.getAgreementData(agreementId);
 
     expect(agreementData).to.deep.equal([
-      blockTimestamp,
+      startTime,
       epochsNumber,
       epochLength,
       [tokenAmount, 0],

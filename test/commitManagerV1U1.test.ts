@@ -220,7 +220,7 @@ describe('CommitManagerV1U1 contract', function () {
 
     const topCommits = await CommitManagerV1U1.getTopCommitSubmissions(agreementId, 0, 0);
 
-    expect(topCommits.map((arr) => arr[0])).to.include.deep.members(
+    expect(topCommits.map((arr) => arr[0])).to.have.deep.members(
       identityIds.map((identityId) => hre.ethers.BigNumber.from(identityId)),
     );
   });

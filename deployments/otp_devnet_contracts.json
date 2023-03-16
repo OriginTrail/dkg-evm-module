@@ -81,7 +81,7 @@
         "Staking": {
             "evmAddress": "0xaA613D9b5D8F58d6a546248087888B6086eD62E1",
             "otpAddress": "gJopgAtauSKWSdqiC6ffxAoaG2ejf22T9nKi7ui1bz8V1rs7F",
-            "deployed": true
+            "deployed": false
         },
         "Profile": {
             "evmAddress": "0xD09d6db15b388dd0B0F828435F228Fe8006C0Cd5",
@@ -91,22 +91,22 @@
         "ServiceAgreementV1": {
             "evmAddress": "0x073a9FC2d29d118ed84333F662b67F3090733c58",
             "otpAddress": "gJs9uzmuap5rXfGBcVenjABebQKc4U5jVFhtTnZKKiX8nWere",
-            "deployed": true
+            "deployed": false
         },
         "ContentAsset": {
             "evmAddress": "0xDF4cA6Cdc28f5Be0319Cc27A3BB472Ba7D709EB9",
             "otpAddress": "gJpPdEjgPpppFRLsCscNcfb1ZUC2iDcasMYxyGyrDJQUH8Ei6",
-            "deployed": true
+            "deployed": false
         },
         "ServiceAgreementStorageV1U1": {
             "evmAddress": "0xDaa3E279E7394891fBb062DeCE1ff603A57B5a1c",
             "otpAddress": "gJpEwCMMrUh9cBnRijxWt6Z3adrarF2Fe8LEYxB7N2sJ6mWgK",
-            "deployed": true
+            "deployed": false
         },
         "ServiceAgreementStorageProxy": {
             "evmAddress": "0xDE73530140d7214Bbf921f89365eD22F8A86d99e",
             "otpAddress": "gJrAq1QY5bFJgobnQTkhwgjisgM1abQVRgws68SifouS2MrAk",
-            "deployed": true
+            "deployed": false
         },
         "UnfinalizedStateStorage": {
             "evmAddress": "0xbA18D10b43B671438Ef39533baE6728aF35eFf64",
@@ -131,7 +131,7 @@
         "CommitManagerV1U1": {
             "evmAddress": "0x1cBC4Aa3E990d82a9846979a619728A8196659fA",
             "otpAddress": "gJravAhwfM4onrAgKREjrvmDP3EDQM83HU2FKsLJevrWwV5yW",
-            "deployed": true
+            "deployed": false
         },
         "ProofManagerV1U1": {
             "evmAddress": "0xC7cC6dce94EB6d69e775802f8B0ede8178a24b99",
