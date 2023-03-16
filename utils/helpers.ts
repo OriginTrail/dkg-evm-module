@@ -14,7 +14,7 @@ type ContractDeployments = {
   contracts: {
     [contractName: string]: {
       evmAddress: string;
-      otpAddress: string;
+      substrateAddress: string;
       deployed: boolean;
     };
   };
@@ -150,7 +150,7 @@ export class Helpers {
   public updateDeploymentsJson(newContractName: string, newContractAddress: string) {
     this.contractDeployments.contracts[newContractName] = {
       evmAddress: newContractAddress,
-      otpAddress: this.convertEvmWallet(newContractAddress),
+      substrateAddress: this.convertEvmWallet(newContractAddress),
       deployed: true,
     };
   }
@@ -198,10 +198,10 @@ export class Helpers {
     const mnemonic = polkadotCryptoUtils.mnemonicGenerate();
     const mnemonicMini = polkadotCryptoUtils.mnemonicToMiniSecret(mnemonic);
     const substratePrivateKey = u8aToHex(mnemonicMini);
-    const otpAddress = keyring.createFromUri(substratePrivateKey).address;
+    const substrateAddress = keyring.createFromUri(substratePrivateKey).address;
 
     return {
-      address: otpAddress,
+      address: substrateAddress,
       mnemonic: mnemonic,
       privateKey: substratePrivateKey,
     };

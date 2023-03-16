@@ -3,7 +3,7 @@
         "Token": {
             "deployed": true,
             "evmAddress": "0xffffffff00000000000000000000000000000001",
-            "otpAddress": ""
+            "substrateAddress": ""
         },
         "Hub": {
             "evmAddress": "0xBbfF7Ea6b2Addc1f38A0798329e12C08f03750A6",
@@ -48,17 +48,17 @@
         "StakingStorage": {
             "evmAddress": "0x0F2F3dEac4bB44342881bE4CE9556DabC396411A",
             "deployed": true,
-            "otpAddress": "5EMjsczPDbhdT5zdGoxywZu8GhLJN2RKkCLvLYUjAKyr2Gc4"
+            "substrateAddress": "5EMjsczPDbhdT5zdGoxywZu8GhLJN2RKkCLvLYUjAKyr2Gc4"
         },
         "ProfileStorage": {
             "evmAddress": "0xf4d8fE67a28745aD3fb598e5D5060267CB3Dc2e7",
             "deployed": true,
-            "otpAddress": "5EMjsd1BEfDvDV8eWCT7JcroK4r6nEFyBUsvqkXxFtMm7ewv"
+            "substrateAddress": "5EMjsd1BEfDvDV8eWCT7JcroK4r6nEFyBUsvqkXxFtMm7ewv"
         },
         "ServiceAgreementStorageV1": {
             "evmAddress": "0xF43B6A63f3f6479c8f972D95858a1684d5f129F5",
             "deployed": true,
-            "otpAddress": "5EMjsd1B7WKHA36XCAHdovQhUph9JANA9Ji9paoRFQ1Sxx7R"
+            "substrateAddress": "5EMjsd1B7WKHA36XCAHdovQhUph9JANA9Ji9paoRFQ1Sxx7R"
         },
         "ContentAssetStorage": {
             "evmAddress": "0x1A061136Ed9f5eD69395f18961a0a535EF4B3E5f",
