@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { execSync } from 'child_process';
 import * as fs from 'fs';
 
 import { ApiPromise, HttpProvider } from '@polkadot/api';
@@ -206,12 +207,13 @@ export class Helpers {
     };
   }
 
-  public convertEvmWallet(evmAddress: string, ss58Prefix = 101): string {
-    if (!polkadotCryptoUtils.isEthereumAddress(evmAddress)) {
-      throw Error('Invalid EVM address.');
-    }
+  public convertEvmWallet(evmAddress: string): string {
+    const address = evmAddress.startsWith('0x') ? evmAddress.slice(2) : evmAddress;
+    const substrateAddress = execSync(`utils/evm-contract-into-substrate-address ${address}`)
+      .toString()
+      .replace(/[\r\n]/gm, '');
 
-    return polkadotCryptoUtils.evmToAddress(evmAddress, ss58Prefix);
+    return substrateAddress;
   }
 
   private _delay(ms: number) {

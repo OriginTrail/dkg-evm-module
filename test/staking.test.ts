@@ -155,6 +155,7 @@ describe('Staking contract', function () {
     await Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN');
 
     const agreementId = '0x' + randomBytes(32).toString('hex');
+    const startTime = Math.floor(Date.now() / 1000).toString();
     const epochsNumber = 5;
     const epochLength = 10;
     const tokenAmount = hre.ethers.utils.parseEther('100');
@@ -163,6 +164,7 @@ describe('Staking contract', function () {
 
     await ServiceAgreementStorageV1U1.createServiceAgreementObject(
       agreementId,
+      startTime,
       epochsNumber,
       epochLength,
       tokenAmount,

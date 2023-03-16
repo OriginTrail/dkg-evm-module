@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 
 library ContentAssetErrors {
     error AssetDoesntExist(uint256 tokenId);
+    error AssetExpired(uint256 tokenId);
     error CommitPhaseOngoing(bytes32 agreementId);
     error CommitPhaseSucceeded(bytes32 agreementId);
     error FirstEpochHasAlreadyEnded(bytes32 agreementId);

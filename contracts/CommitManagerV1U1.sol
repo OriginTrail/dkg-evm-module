@@ -351,21 +351,19 @@ contract CommitManagerV1U1 is Named, Versioned {
                 sasProxy.migrateV1ServiceAgreement(agreementId);
             }
 
-            if (uss.hasPendingUpdate(args.tokenId)) {
-                uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);
-                sasProxy.setAgreementTokenAmount(
-                    agreementId,
-                    tokenAmount + sasProxy.getAgreementUpdateTokenAmount(agreementId)
-                );
-                sasProxy.setAgreementUpdateTokenAmount(agreementId, 0);
+            uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);
+            sasProxy.setAgreementTokenAmount(
+                agreementId,
+                tokenAmount + sasProxy.getAgreementUpdateTokenAmount(agreementId)
+            );
+            sasProxy.setAgreementUpdateTokenAmount(agreementId, 0);
 
-                ContentAssetStorage cas = contentAssetStorage;
-                cas.setAssertionIssuer(args.tokenId, unfinalizedState, uss.getIssuer(args.tokenId));
-                cas.pushAssertionId(args.tokenId, unfinalizedState);
+            ContentAssetStorage cas = contentAssetStorage;
+            cas.setAssertionIssuer(args.tokenId, unfinalizedState, uss.getIssuer(args.tokenId));
+            cas.pushAssertionId(args.tokenId, unfinalizedState);
 
-                uss.deleteIssuer(args.tokenId);
-                uss.deleteUnfinalizedState(args.tokenId);
-            }
+            uss.deleteIssuer(args.tokenId);
+            uss.deleteUnfinalizedState(args.tokenId);
 
             emit StateFinalized(
                 args.assetContract,

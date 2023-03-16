@@ -114,6 +114,11 @@
         "type": "bytes32"
       },
       {
+        "internalType": "uint256",
+        "name": "startTime",
+        "type": "uint256"
+      },
+      {
         "internalType": "uint16",
         "name": "epochsNumber",
         "type": "uint16"

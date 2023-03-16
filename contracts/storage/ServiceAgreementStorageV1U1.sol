@@ -41,6 +41,7 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
 
     function createServiceAgreementObject(
         bytes32 agreementId,
+        uint256 startTime,
         uint16 epochsNumber,
         uint128 epochLength,
         uint96 tokenAmount,
@@ -48,7 +49,7 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
         uint8 proofWindowOffsetPerc
     ) external onlyContracts {
         ServiceAgreementStructsV1.ExtendedServiceAgreement storage agreement = serviceAgreements[agreementId];
-        agreement.startTime = block.timestamp;
+        agreement.startTime = startTime;
         agreement.epochsNumber = epochsNumber;
         agreement.epochLength = epochLength;
         agreement.tokenAmount = tokenAmount;
