@@ -16,9 +16,9 @@
             "substrateAddress": "5EMjsczufrGGSnkhCzzD9QS7gUG1kqHr8zvEbtPe3tuV1iU6"
         },
         "CommitManagerV1U1": {
-            "deployed": false,
-            "evmAddress": "0x1e7E432C6EB3CcDB4F87af6AAFE6B3BE912Dcfb1",
-            "substrateAddress": "5EMjsczSHWb1moNeHYRiUtNpXLoPYYjjR6Bw4F8Xp8pcppe7"
+            "deployed": true,
+            "evmAddress": "0x66e1F507200a38BA0d168FC377AA2482a09F8b17",
+            "substrateAddress": "5EMjsczgno31Z3deNiseVejZgQysGLQdUP98XMXVxtHBna4o"
         },
         "ContentAsset": {
             "deployed": true,
@@ -91,9 +91,9 @@
             "substrateAddress": "5EMjsd15Bz1C8PdqiAF5VdTBKpfE3i32SBMZaTwz2i2ZD4Kp"
         },
         "ServiceAgreementStorageProxy": {
-            "deployed": false,
-            "evmAddress": "0x6bbFe6b8c3887508011d37e9Bd285cbb96053152",
-            "substrateAddress": "5EMjsczhmMe46UrsRU7EYVaZvXBTizSiRPKP3TB1ycsTQoUo"
+            "deployed": true,
+            "evmAddress": "0x8a820a0e7C996709b37F8b08EA286CFd3Abd37c9",
+            "substrateAddress": "5EMjsczovpTPe6JpCYvbwSwbCjWAvfD2wt4xmcLokxeEj74C"
         },
         "ServiceAgreementStorageV1": {
             "deployed": true,
@@ -146,5 +146,5 @@
             "substrateAddress": "5EMjsd16Sbx1X1f3SquRJm9Y2jbZVZQp2Z1qJmLaGKxBuNff"
         }
     },
-    "deployedTimestamp": 1679065436802
+    "deployedTimestamp": 1679068976018
 }
