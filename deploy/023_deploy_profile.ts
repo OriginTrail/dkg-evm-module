@@ -10,12 +10,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 export default func;
 func.tags = ['Profile'];
 func.dependencies = [
-  'HashingProxy',
   'Hub',
   'Identity',
-  'Staking',
   'IdentityStorage',
   'ParametersStorage',
   'ProfileStorage',
+  'SHA256',
+  'Staking',
   'WhitelistStorage',
 ];

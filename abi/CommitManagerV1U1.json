@@ -13,6 +13,28 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "AssetDoesntExist",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "contractAddress",
+        "type": "address"
+      }
+    ],
+    "name": "AssetStorageNotInTheHub",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "agreementId",
         "type": "bytes32"
@@ -262,25 +284,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "value",
-        "type": "bool"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "message",
-        "type": "string"
-      }
-    ],
-    "name": "Logger",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "assetContract",
@@ -385,6 +388,19 @@
         "internalType": "struct ServiceAgreementStructsV1.CommitSubmission[]",
         "name": "",
         "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "hashingProxy",
+    "outputs": [
+      {
+        "internalType": "contract HashingProxy",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -540,19 +556,6 @@
     "outputs": [
       {
         "internalType": "contract ScoringProxy",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "serviceAgreementHelperFunctions",
-    "outputs": [
-      {
-        "internalType": "contract ServiceAgreementHelperFunctions",
         "name": "",
         "type": "address"
       }

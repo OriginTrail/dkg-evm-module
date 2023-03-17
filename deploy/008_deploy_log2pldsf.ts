@@ -27,4 +27,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ['Log2PLDSF'];
-func.dependencies = ['Hub', 'HashingProxy', 'ScoringProxy', 'ParametersStorage'];
+func.dependencies = ['Hub', 'SHA256', 'ScoringProxy', 'ParametersStorage'];

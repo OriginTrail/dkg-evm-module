@@ -11,7 +11,6 @@ import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProofManagerV1} from "./ProofManagerV1.sol";
 import {ProofManagerV1U1} from "./ProofManagerV1U1.sol";
 import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
-import {ServiceAgreementHelperFunctions} from "./ServiceAgreementHelperFunctions.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
@@ -70,7 +69,6 @@ contract ServiceAgreementV1 is Named, Versioned {
     ScoringProxy public scoringProxy;
     ParametersStorage public parametersStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
-    ServiceAgreementHelperFunctions public serviceAgreementHelperFunctions;
     IERC20 public tokenContract;
 
     error ScoreError();
@@ -103,9 +101,6 @@ contract ServiceAgreementV1 is Named, Versioned {
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
         );
-        serviceAgreementHelperFunctions = ServiceAgreementHelperFunctions(
-            hub.getContractAddress("ServiceAgreementHelperFunctions")
-        );
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
@@ -120,17 +115,14 @@ contract ServiceAgreementV1 is Named, Versioned {
     function createServiceAgreement(
         ServiceAgreementStructsV1.ServiceAgreementInputArgs calldata args
     ) external onlyContracts {
-        if (args.assetCreator == address(0x0)) revert ServiceAgreementErrorsV1U1.EmptyAssetCreatorAddress();
         if (args.epochsNumber == 0) revert ServiceAgreementErrorsV1U1.ZeroEpochsNumber();
         if (args.tokenAmount == 0) revert ServiceAgreementErrorsV1U1.ZeroTokenAmount();
         if (!scoringProxy.isScoreFunction(args.scoreFunctionId))
             revert ServiceAgreementErrorsV1U1.ScoreFunctionDoesntExist(args.scoreFunctionId);
 
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            args.assetContract,
-            args.tokenId,
-            args.keyword,
-            args.hashFunctionId
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            args.hashFunctionId,
+            abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
@@ -176,13 +168,9 @@ contract ServiceAgreementV1 is Named, Versioned {
         bytes calldata keyword,
         uint8 hashFunctionId
     ) external onlyContracts {
-        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1U1.EmptyAssetCreatorAddress();
-
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            assetContract,
-            tokenId,
-            keyword,
-            hashFunctionId
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            hashFunctionId,
+            abi.encodePacked(assetContract, tokenId, keyword)
         );
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
@@ -209,11 +197,9 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         _addTokens(assetOwner, tokenAmount);
 
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            assetContract,
-            tokenId,
-            keyword,
-            hashFunctionId
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            hashFunctionId,
+            abi.encodePacked(assetContract, tokenId, keyword)
         );
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
@@ -233,13 +219,13 @@ contract ServiceAgreementV1 is Named, Versioned {
     ) external onlyContracts {
         _addTokens(assetOwner, tokenAmount);
 
-        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            assetContract,
-            tokenId,
-            keyword,
-            hashFunctionId
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            hashFunctionId,
+            abi.encodePacked(assetContract, tokenId, keyword)
         );
+
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+
         sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
 
         emit ServiceAgreementV1RewardRaised(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
@@ -255,12 +241,11 @@ contract ServiceAgreementV1 is Named, Versioned {
     ) external onlyContracts {
         _addTokens(assetOwner, tokenAmount);
 
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            assetContract,
-            tokenId,
-            keyword,
-            hashFunctionId
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            hashFunctionId,
+            abi.encodePacked(assetContract, tokenId, keyword)
         );
+
         serviceAgreementStorageProxy.setAgreementUpdateTokenAmount(agreementId, tokenAmount);
 
         emit ServiceAgreementV1UpdateRewardRaised(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
@@ -286,11 +271,9 @@ contract ServiceAgreementV1 is Named, Versioned {
     }
 
     function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            args.assetContract,
-            args.tokenId,
-            args.keyword,
-            args.hashFunctionId
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            args.hashFunctionId,
+            abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
         if (serviceAgreementStorageProxy.isV1U1Agreement(agreementId)) {
@@ -318,11 +301,9 @@ contract ServiceAgreementV1 is Named, Versioned {
     }
 
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            args.assetContract,
-            args.tokenId,
-            args.keyword,
-            args.hashFunctionId
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            args.hashFunctionId,
+            abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
         if (serviceAgreementStorageProxy.isV1U1Agreement(agreementId)) {
@@ -333,7 +314,6 @@ contract ServiceAgreementV1 is Named, Versioned {
     }
 
     function _addTokens(address assetOwner, uint96 tokenAmount) internal virtual {
-        if (assetOwner == address(0x0)) revert ServiceAgreementErrorsV1U1.EmptyAssetCreatorAddress();
         if (tokenAmount == 0) revert ServiceAgreementErrorsV1U1.ZeroTokenAmount();
 
         IERC20 tknc = tokenContract;

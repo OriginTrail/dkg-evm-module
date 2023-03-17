@@ -4,18 +4,19 @@ pragma solidity ^0.8.4;
 
 import {Assertion} from "../Assertion.sol";
 import {AssertionStorage} from "../storage/AssertionStorage.sol";
+import {HashingProxy} from "../HashingProxy.sol";
 import {Hub} from "../Hub.sol";
 import {ServiceAgreementV1} from "../ServiceAgreementV1.sol";
-import {ServiceAgreementHelperFunctions} from "../ServiceAgreementHelperFunctions.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 import {ContentAssetStorage} from "../storage/assets/ContentAssetStorage.sol";
 import {ParametersStorage} from "../storage/ParametersStorage.sol";
 import {ServiceAgreementStorageProxy} from "../storage/ServiceAgreementStorageProxy.sol";
 import {UnfinalizedStateStorage} from "../storage/UnfinalizedStateStorage.sol";
+import {HASH_FUNCTION_ID} from "../constants/assets/ContentAssetConstants.sol";
 import {ContentAssetStructs} from "../structs/assets/ContentAssetStructs.sol";
 import {ServiceAgreementStructsV1} from "../structs/ServiceAgreementStructsV1.sol";
-import {ContentAssetErrors} from "../errors/ContentAssetErrors.sol";
+import {ContentAssetErrors} from "../errors/assets/ContentAssetErrors.sol";
 
 contract ContentAsset is Named, Versioned {
     event AssetMinted(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
@@ -47,11 +48,11 @@ contract ContentAsset is Named, Versioned {
     Hub public hub;
     Assertion public assertionContract;
     AssertionStorage public assertionStorage;
+    HashingProxy public hashingProxy;
     ContentAssetStorage public contentAssetStorage;
     ParametersStorage public parametersStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     ServiceAgreementV1 public serviceAgreementV1;
-    ServiceAgreementHelperFunctions public serviceAgreementHelperFunctions;
     UnfinalizedStateStorage public unfinalizedStateStorage;
 
     constructor(address hubAddress) {
@@ -64,15 +65,13 @@ contract ContentAsset is Named, Versioned {
     function initialize() public onlyHubOwner {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));
         assertionStorage = AssertionStorage(hub.getContractAddress("AssertionStorage"));
+        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         contentAssetStorage = ContentAssetStorage(hub.getAssetStorageAddress("ContentAssetStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
         );
         serviceAgreementV1 = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
-        serviceAgreementHelperFunctions = ServiceAgreementHelperFunctions(
-            hub.getContractAddress("ServiceAgreementHelperFunctions")
-        );
         unfinalizedStateStorage = UnfinalizedStateStorage(hub.getContractAddress("UnfinalizedStateStorage"));
     }
 
@@ -139,14 +138,13 @@ contract ContentAsset is Named, Versioned {
 
         address contentAssetStorageAddress = address(cas);
 
-        if (cas.getAssertionIdsLength(tokenId) == 0) revert ContentAssetErrors.AssetDoesntExist(tokenId);
+        bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
 
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            contentAssetStorageAddress,
-            tokenId,
-            abi.encodePacked(contentAssetStorageAddress, contentAssetStorage.getAssertionIdByIndex(tokenId, 0)),
-            1
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            HASH_FUNCTION_ID,
+            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
         );
+
         bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
 
         if (unfinalizedState != bytes32(0))
@@ -177,16 +175,14 @@ contract ContentAsset is Named, Versioned {
 
         uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);
 
-        bytes32 originalAssertionId = cas.getAssertionIdByIndex(tokenId, 0);
-
         cas.deleteAsset(tokenId);
         cas.burn(tokenId);
         serviceAgreementV1.terminateAgreement(
             msg.sender,
             contentAssetStorageAddress,
             tokenId,
-            abi.encodePacked(contentAssetStorageAddress, originalAssertionId),
-            1
+            keyword,
+            HASH_FUNCTION_ID
         );
 
         emit AssetBurnt(contentAssetStorageAddress, tokenId, tokenAmount);
@@ -206,15 +202,11 @@ contract ContentAsset is Named, Versioned {
 
         address contentAssetStorageAddress = address(cas);
 
-        if (cas.getAssertionIdsLength(tokenId) == 0) revert ContentAssetErrors.AssetDoesntExist(tokenId);
-
         bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
 
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            contentAssetStorageAddress,
-            tokenId,
-            keyword,
-            1
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            HASH_FUNCTION_ID,
+            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
         );
 
         uint256 startTime;
@@ -241,7 +233,7 @@ contract ContentAsset is Named, Versioned {
             startTime,
             epochsNumber,
             epochLength,
-            0,
+            0, // tokenAmount, migrated from sasV1 during update finalization
             scoreFunctionIdAndProofWindowOffsetPerc[0],
             scoreFunctionIdAndProofWindowOffsetPerc[1]
         );
@@ -252,7 +244,7 @@ contract ContentAsset is Named, Versioned {
                 contentAssetStorageAddress,
                 tokenId,
                 keyword,
-                1,
+                HASH_FUNCTION_ID,
                 updateTokenAmount
             );
 
@@ -272,15 +264,11 @@ contract ContentAsset is Named, Versioned {
 
         address contentAssetStorageAddress = address(cas);
 
-        if (cas.getAssertionIdsLength(tokenId) == 0) revert ContentAssetErrors.AssetDoesntExist(tokenId);
-
         bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
 
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            contentAssetStorageAddress,
-            tokenId,
-            keyword,
-            1
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            HASH_FUNCTION_ID,
+            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
         );
 
         uint256 startTime;
@@ -332,8 +320,6 @@ contract ContentAsset is Named, Versioned {
 
         address contentAssetStorageAddress = address(cas);
 
-        if (cas.getAssertionIdsLength(tokenId) == 0) revert ContentAssetErrors.AssetDoesntExist(tokenId);
-
         bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
 
         if (unfinalizedState != bytes32(0))
@@ -341,11 +327,9 @@ contract ContentAsset is Named, Versioned {
 
         bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
 
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            contentAssetStorageAddress,
-            tokenId,
-            keyword,
-            1
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            HASH_FUNCTION_ID,
+            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
         );
 
         uint256 startTime;
@@ -361,8 +345,8 @@ contract ContentAsset is Named, Versioned {
             msg.sender,
             contentAssetStorageAddress,
             tokenId,
-            abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0)),
-            1,
+            keyword,
+            HASH_FUNCTION_ID,
             epochsNumber,
             tokenAmount
         );
@@ -376,8 +360,6 @@ contract ContentAsset is Named, Versioned {
 
         address contentAssetStorageAddress = address(cas);
 
-        if (cas.getAssertionIdsLength(tokenId) == 0) revert ContentAssetErrors.AssetDoesntExist(tokenId);
-
         bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
 
         if (unfinalizedState != bytes32(0))
@@ -385,11 +367,9 @@ contract ContentAsset is Named, Versioned {
 
         bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
 
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            contentAssetStorageAddress,
-            tokenId,
-            keyword,
-            1
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            HASH_FUNCTION_ID,
+            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
         );
 
         uint256 startTime;
@@ -399,14 +379,7 @@ contract ContentAsset is Named, Versioned {
 
         if (block.timestamp > startTime + epochsNumber * epochLength) revert ContentAssetErrors.AssetExpired(tokenId);
 
-        sasV1.addTokens(
-            msg.sender,
-            contentAssetStorageAddress,
-            tokenId,
-            abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0)),
-            1,
-            tokenAmount
-        );
+        sasV1.addTokens(msg.sender, contentAssetStorageAddress, tokenId, keyword, HASH_FUNCTION_ID, tokenAmount);
 
         emit AssetPaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
     }
@@ -417,8 +390,6 @@ contract ContentAsset is Named, Versioned {
 
         address contentAssetStorageAddress = address(cas);
 
-        if (cas.getAssertionIdsLength(tokenId) == 0) revert ContentAssetErrors.AssetDoesntExist(tokenId);
-
         bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
 
         if (unfinalizedState == bytes32(0))
@@ -426,11 +397,9 @@ contract ContentAsset is Named, Versioned {
 
         bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
 
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            contentAssetStorageAddress,
-            tokenId,
-            keyword,
-            1
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            HASH_FUNCTION_ID,
+            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
         );
 
         uint256 startTime;
@@ -440,14 +409,7 @@ contract ContentAsset is Named, Versioned {
 
         if (block.timestamp > startTime + epochsNumber * epochLength) revert ContentAssetErrors.AssetExpired(tokenId);
 
-        sasV1.addUpdateTokens(
-            msg.sender,
-            contentAssetStorageAddress,
-            tokenId,
-            abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0)),
-            1,
-            tokenAmount
-        );
+        sasV1.addUpdateTokens(msg.sender, contentAssetStorageAddress, tokenId, keyword, HASH_FUNCTION_ID, tokenAmount);
 
         emit AssetUpdatePaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
     }
@@ -480,7 +442,7 @@ contract ContentAsset is Named, Versioned {
                 assetContract: contentAssetStorageAddress,
                 tokenId: tokenId,
                 keyword: abi.encodePacked(contentAssetStorageAddress, assertionId),
-                hashFunctionId: 1, // hashFunctionId | 1 = sha256
+                hashFunctionId: HASH_FUNCTION_ID,
                 epochsNumber: epochsNumber,
                 tokenAmount: tokenAmount,
                 scoreFunctionId: scoreFunctionId
