@@ -209,7 +209,7 @@ export class Helpers {
 
   public convertEvmWallet(evmAddress: string): string {
     const address = evmAddress.startsWith('0x') ? evmAddress.slice(2) : evmAddress;
-    const substrateAddress = execSync(`utils/evm-contract-into-substrate-address ${address}`)
+    const substrateAddress = execSync(`utils/converters/evm-contract-into-substrate-address ${address}`)
       .toString()
       .replace(/[\r\n]/gm, '');
 

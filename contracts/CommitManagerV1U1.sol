@@ -330,15 +330,13 @@ contract CommitManagerV1U1 is Named, Versioned {
             sasProxy.getCommitsCount(keccak256(abi.encodePacked(agreementId, args.epoch, unfinalizedStateIndex))) ==
             parametersStorage.finalizationCommitsNumber()
         ) {
-            uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);
-
-            if (sasProxy.isV1Agreement(agreementId)) {
+            if (sasProxy.agreementV1Exists(agreementId)) {
                 sasProxy.migrateV1ServiceAgreement(agreementId);
             }
 
             sasProxy.setAgreementTokenAmount(
                 agreementId,
-                tokenAmount + sasProxy.getAgreementUpdateTokenAmount(agreementId)
+                sasProxy.getAgreementTokenAmount(agreementId) + sasProxy.getAgreementUpdateTokenAmount(agreementId)
             );
             sasProxy.setAgreementUpdateTokenAmount(agreementId, 0);
 

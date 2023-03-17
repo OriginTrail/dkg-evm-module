@@ -17,8 +17,8 @@
         },
         "CommitManagerV1U1": {
             "deployed": true,
-            "evmAddress": "0x66e1F507200a38BA0d168FC377AA2482a09F8b17",
-            "substrateAddress": "5EMjsczgno31Z3deNiseVejZgQysGLQdUP98XMXVxtHBna4o"
+            "evmAddress": "0xcea711Ec79877A25ab26B786288807beCD585351",
+            "substrateAddress": "5EMjsd13amgtjAsBcqkFqS9HC5XwH41NeSjHbxXWRCyCEfob"
         },
         "ContentAsset": {
             "deployed": true,
@@ -57,8 +57,8 @@
         },
         "ParametersStorage": {
             "deployed": true,
-            "evmAddress": "0xEab6a27506Ace2Ec48E73E0BAB066cF6BbA5016D",
-            "substrateAddress": "5EMjsd19CtCvbhw6sjwnhRNrN2aCkQ7hY3tsRPwnj6MkaGUV"
+            "evmAddress": "0xA6F56eBd1d18fa1faD241A8cca4731ecDcd592bC",
+            "substrateAddress": "5EMjsczudTppUeHdZx7kNEzYj2kjZyfU6UEFkFv3TuoQ4WVs"
         },
         "Profile": {
             "deployed": true,
@@ -92,8 +92,8 @@
         },
         "ServiceAgreementStorageProxy": {
             "deployed": true,
-            "evmAddress": "0x8a820a0e7C996709b37F8b08EA286CFd3Abd37c9",
-            "substrateAddress": "5EMjsczovpTPe6JpCYvbwSwbCjWAvfD2wt4xmcLokxeEj74C"
+            "evmAddress": "0xA1f350a96Da6B32B65b2346F01afE39822359723",
+            "substrateAddress": "5EMjscztdFyYEAUZf2woa2SJsuAQJeWHooJ96BfSWvm2rywt"
         },
         "ServiceAgreementStorageV1": {
             "deployed": true,
@@ -107,8 +107,8 @@
         },
         "ServiceAgreementV1": {
             "deployed": true,
-            "evmAddress": "0xD88D46180661072De29C774c06fD333A66769959",
-            "substrateAddress": "5EMjsd15ZpKDw98fyRLGkAbXbnJNnwedxAvkBCBzCbsqnQHi"
+            "evmAddress": "0x25d57824F89A7CDF13641132CF60E228CFFDCD8d",
+            "substrateAddress": "5EMjsczTkpb8rc9Y2ddXr2Cs1CbNN2tmuGhCd9U25i2o3vHT"
         },
         "ShardingTable": {
             "deployed": true,
@@ -122,8 +122,8 @@
         },
         "Staking": {
             "deployed": true,
-            "evmAddress": "0xa6fD4cD94D7a20c2962BE09A341ee9240B120994",
-            "substrateAddress": "5EMjsczudpYKv7UEh9TdZcQZjZ8GZKqp56mB1hzk3qsMkayo"
+            "evmAddress": "0xFDaC17377156E186d724F827d2e328CFcd7a1076",
+            "substrateAddress": "5EMjsd1D1DV9mw9ghjiit5EjPMgNmt4Fpp4wxcxEE8ei8kCE"
         },
         "StakingStorage": {
             "deployed": true,
@@ -146,5 +146,5 @@
             "substrateAddress": "5EMjsd16Sbx1X1f3SquRJm9Y2jbZVZQp2Z1qJmLaGKxBuNff"
         }
     },
-    "deployedTimestamp": 1679068976018
+    "deployedTimestamp": 1679075445115
 }

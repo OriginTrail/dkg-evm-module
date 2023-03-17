@@ -198,7 +198,7 @@ contract Staking is Named, Versioned {
         );
 
         address sasAddress;
-        if (sasProxy.isV1Agreement(agreementId)) {
+        if (sasProxy.agreementV1Exists(agreementId)) {
             sasAddress = sasProxy.agreementV1StorageAddress();
         } else {
             sasAddress = sasProxy.agreementV1U1StorageAddress();

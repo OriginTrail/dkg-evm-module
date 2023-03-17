@@ -160,14 +160,14 @@ contract ServiceAgreementV1 is Named, Versioned {
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-        if (sasProxy.isV1Agreement(agreementId)) {
+        sasProxy.setAgreementEpochsNumber(agreementId, sasProxy.getAgreementEpochsNumber(agreementId) + epochsNumber);
+        sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
+
+        if (sasProxy.agreementV1Exists(agreementId)) {
             _addTokens(assetOwner, sasProxy.agreementV1StorageAddress(), tokenAmount);
         } else {
             _addTokens(assetOwner, sasProxy.agreementV1U1StorageAddress(), tokenAmount);
         }
-
-        sasProxy.setAgreementEpochsNumber(agreementId, sasProxy.getAgreementEpochsNumber(agreementId) + epochsNumber);
-        sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
 
         emit ServiceAgreementV1Extended(agreementId, epochsNumber);
     }
@@ -175,13 +175,13 @@ contract ServiceAgreementV1 is Named, Versioned {
     function addTokens(address assetOwner, bytes32 agreementId, uint96 tokenAmount) external onlyContracts {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-        if (sasProxy.isV1Agreement(agreementId)) {
+        sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
+
+        if (sasProxy.agreementV1Exists(agreementId)) {
             _addTokens(assetOwner, sasProxy.agreementV1StorageAddress(), tokenAmount);
         } else {
             _addTokens(assetOwner, sasProxy.agreementV1U1StorageAddress(), tokenAmount);
         }
-
-        sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
 
         emit ServiceAgreementV1RewardRaised(agreementId, tokenAmount);
     }
@@ -189,15 +189,18 @@ contract ServiceAgreementV1 is Named, Versioned {
     function addUpdateTokens(address assetOwner, bytes32 agreementId, uint96 tokenAmount) external onlyContracts {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-        _addTokens(assetOwner, sasProxy.agreementV1U1StorageAddress(), tokenAmount);
+        sasProxy.setAgreementUpdateTokenAmount(
+            agreementId,
+            sasProxy.getAgreementUpdateTokenAmount(agreementId) + tokenAmount
+        );
 
-        sasProxy.setAgreementUpdateTokenAmount(agreementId, tokenAmount);
+        _addTokens(assetOwner, sasProxy.agreementV1U1StorageAddress(), tokenAmount);
 
         emit ServiceAgreementV1UpdateRewardRaised(agreementId, tokenAmount);
     }
 
     function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
-        if (serviceAgreementStorageProxy.isV1Agreement(agreementId)) {
+        if (serviceAgreementStorageProxy.agreementV1Exists(agreementId)) {
             return commitManagerV1.isCommitWindowOpen(agreementId, epoch);
         } else {
             return commitManagerV1U1.isCommitWindowOpen(agreementId, epoch);
@@ -208,7 +211,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         bytes32 agreementId,
         uint16 epoch
     ) external view returns (ServiceAgreementStructsV1.CommitSubmission[] memory) {
-        if (serviceAgreementStorageProxy.isV1Agreement(agreementId)) {
+        if (serviceAgreementStorageProxy.agreementV1Exists(agreementId)) {
             return commitManagerV1.getTopCommitSubmissions(agreementId, epoch);
         } else {
             return commitManagerV1U1.getTopCommitSubmissions(agreementId, epoch, 0);
@@ -221,7 +224,7 @@ contract ServiceAgreementV1 is Named, Versioned {
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        if (serviceAgreementStorageProxy.isV1Agreement(agreementId)) {
+        if (serviceAgreementStorageProxy.agreementV1Exists(agreementId)) {
             commitManagerV1.submitCommit(args);
         } else {
             commitManagerV1U1.submitCommit(args);
@@ -229,7 +232,7 @@ contract ServiceAgreementV1 is Named, Versioned {
     }
 
     function isProofWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
-        if (serviceAgreementStorageProxy.isV1Agreement(agreementId)) {
+        if (serviceAgreementStorageProxy.agreementV1Exists(agreementId)) {
             return proofManagerV1.isProofWindowOpen(agreementId, epoch);
         } else {
             return proofManagerV1U1.isProofWindowOpen(agreementId, epoch);
@@ -251,7 +254,7 @@ contract ServiceAgreementV1 is Named, Versioned {
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        if (serviceAgreementStorageProxy.isV1Agreement(agreementId)) {
+        if (serviceAgreementStorageProxy.agreementV1Exists(agreementId)) {
             proofManagerV1.sendProof(args);
         } else {
             proofManagerV1U1.sendProof(args);

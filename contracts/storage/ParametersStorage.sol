@@ -77,7 +77,7 @@ contract ParametersStorage is Named, Versioned {
         updateCommitWindowDuration = 30 minutes;
 
         // finalizationCommitsNumber
-        args1[5] = 1;
+        args1[5] = 3;
     }
 
     modifier onlyHubOwner() {
