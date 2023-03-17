@@ -113,7 +113,13 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
             uint8[2] memory scoreFunctionIdAndProofWindowOffsetPerc;
             (startTime, epochsNumber, epochLength, tokenAmount, scoreFunctionIdAndProofWindowOffsetPerc) = storageV1
                 .getAgreementData(agreementId);
-            return (startTime, epochsNumber, epochLength, [tokenAmount, 0], scoreFunctionIdAndProofWindowOffsetPerc);
+            return (
+                startTime,
+                epochsNumber,
+                epochLength,
+                [tokenAmount, storageV1U1.getAgreementUpdateTokenAmount(agreementId)],
+                scoreFunctionIdAndProofWindowOffsetPerc
+            );
         } else {
             return storageV1U1.getAgreementData(agreementId);
         }
