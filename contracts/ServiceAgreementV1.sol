@@ -29,33 +29,10 @@ contract ServiceAgreementV1 is Named, Versioned {
         uint128 epochLength,
         uint96 tokenAmount
     );
-    event ServiceAgreementV1Terminated(
-        address indexed assetContract,
-        uint256 indexed tokenId,
-        bytes keyword,
-        uint8 hashFunctionId
-    );
-    event ServiceAgreementV1Extended(
-        address indexed assetContract,
-        uint256 indexed tokenId,
-        bytes keyword,
-        uint8 hashFunctionId,
-        uint16 epochsNumber
-    );
-    event ServiceAgreementV1RewardRaised(
-        address indexed assetContract,
-        uint256 indexed tokenId,
-        bytes keyword,
-        uint8 hashFunctionId,
-        uint96 tokenAmount
-    );
-    event ServiceAgreementV1UpdateRewardRaised(
-        address indexed assetContract,
-        uint256 indexed tokenId,
-        bytes keyword,
-        uint8 hashFunctionId,
-        uint96 tokenAmount
-    );
+    event ServiceAgreementV1Terminated(bytes32 indexed agreementId);
+    event ServiceAgreementV1Extended(bytes32 indexed agreementId, uint16 epochsNumber);
+    event ServiceAgreementV1RewardRaised(bytes32 indexed agreementId, uint96 tokenAmount);
+    event ServiceAgreementV1UpdateRewardRaised(bytes32 indexed agreementId, uint96 updateTokenAmount);
 
     string private constant _NAME = "ServiceAgreementV1";
     string private constant _VERSION = "1.1.0";
@@ -161,18 +138,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         );
     }
 
-    function terminateAgreement(
-        address assetOwner,
-        address assetContract,
-        uint256 tokenId,
-        bytes calldata keyword,
-        uint8 hashFunctionId
-    ) external onlyContracts {
-        bytes32 agreementId = hashingProxy.callHashFunction(
-            hashFunctionId,
-            abi.encodePacked(assetContract, tokenId, keyword)
-        );
-
+    function terminateAgreement(address assetOwner, bytes32 agreementId) external onlyContracts {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         uint96 agreementBalance = sasProxy.getAgreementTokenAmount(agreementId);
@@ -181,81 +147,60 @@ contract ServiceAgreementV1 is Named, Versioned {
         sasProxy.transferAgreementTokens(agreementId, assetOwner, agreementBalance);
         sasProxy.deleteServiceAgreementObject(agreementId);
 
-        emit ServiceAgreementV1Terminated(assetContract, tokenId, keyword, hashFunctionId);
+        emit ServiceAgreementV1Terminated(agreementId);
     }
 
     function extendStoringPeriod(
         address assetOwner,
-        address assetContract,
-        uint256 tokenId,
-        bytes calldata keyword,
-        uint8 hashFunctionId,
+        bytes32 agreementId,
         uint16 epochsNumber,
         uint96 tokenAmount
     ) external onlyContracts {
         if (epochsNumber == 0) revert ServiceAgreementErrorsV1U1.ZeroEpochsNumber();
 
-        _addTokens(assetOwner, tokenAmount);
-
-        bytes32 agreementId = hashingProxy.callHashFunction(
-            hashFunctionId,
-            abi.encodePacked(assetContract, tokenId, keyword)
-        );
-
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+
+        if (sasProxy.isV1Agreement(agreementId)) {
+            _addTokens(assetOwner, sasProxy.agreementV1StorageAddress(), tokenAmount);
+        } else {
+            _addTokens(assetOwner, sasProxy.agreementV1U1StorageAddress(), tokenAmount);
+        }
+
         sasProxy.setAgreementEpochsNumber(agreementId, sasProxy.getAgreementEpochsNumber(agreementId) + epochsNumber);
         sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
 
-        emit ServiceAgreementV1Extended(assetContract, tokenId, keyword, hashFunctionId, epochsNumber);
+        emit ServiceAgreementV1Extended(agreementId, epochsNumber);
     }
 
-    function addTokens(
-        address assetOwner,
-        address assetContract,
-        uint256 tokenId,
-        bytes calldata keyword,
-        uint8 hashFunctionId,
-        uint96 tokenAmount
-    ) external onlyContracts {
-        _addTokens(assetOwner, tokenAmount);
-
-        bytes32 agreementId = hashingProxy.callHashFunction(
-            hashFunctionId,
-            abi.encodePacked(assetContract, tokenId, keyword)
-        );
-
+    function addTokens(address assetOwner, bytes32 agreementId, uint96 tokenAmount) external onlyContracts {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+
+        if (sasProxy.isV1Agreement(agreementId)) {
+            _addTokens(assetOwner, sasProxy.agreementV1StorageAddress(), tokenAmount);
+        } else {
+            _addTokens(assetOwner, sasProxy.agreementV1U1StorageAddress(), tokenAmount);
+        }
 
         sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
 
-        emit ServiceAgreementV1RewardRaised(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
+        emit ServiceAgreementV1RewardRaised(agreementId, tokenAmount);
     }
 
-    function addUpdateTokens(
-        address assetOwner,
-        address assetContract,
-        uint256 tokenId,
-        bytes calldata keyword,
-        uint8 hashFunctionId,
-        uint96 tokenAmount
-    ) external onlyContracts {
-        _addTokens(assetOwner, tokenAmount);
+    function addUpdateTokens(address assetOwner, bytes32 agreementId, uint96 tokenAmount) external onlyContracts {
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-        bytes32 agreementId = hashingProxy.callHashFunction(
-            hashFunctionId,
-            abi.encodePacked(assetContract, tokenId, keyword)
-        );
+        _addTokens(assetOwner, sasProxy.agreementV1U1StorageAddress(), tokenAmount);
 
-        serviceAgreementStorageProxy.setAgreementUpdateTokenAmount(agreementId, tokenAmount);
+        sasProxy.setAgreementUpdateTokenAmount(agreementId, tokenAmount);
 
-        emit ServiceAgreementV1UpdateRewardRaised(assetContract, tokenId, keyword, hashFunctionId, tokenAmount);
+        emit ServiceAgreementV1UpdateRewardRaised(agreementId, tokenAmount);
     }
 
     function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
-        if (serviceAgreementStorageProxy.isV1U1Agreement(agreementId)) {
-            return commitManagerV1U1.isCommitWindowOpen(agreementId, epoch);
-        } else {
+        if (serviceAgreementStorageProxy.isV1Agreement(agreementId)) {
             return commitManagerV1.isCommitWindowOpen(agreementId, epoch);
+        } else {
+            return commitManagerV1U1.isCommitWindowOpen(agreementId, epoch);
         }
     }
 
@@ -263,10 +208,10 @@ contract ServiceAgreementV1 is Named, Versioned {
         bytes32 agreementId,
         uint16 epoch
     ) external view returns (ServiceAgreementStructsV1.CommitSubmission[] memory) {
-        if (serviceAgreementStorageProxy.isV1U1Agreement(agreementId)) {
-            return commitManagerV1U1.getTopCommitSubmissions(agreementId, epoch, 0);
-        } else {
+        if (serviceAgreementStorageProxy.isV1Agreement(agreementId)) {
             return commitManagerV1.getTopCommitSubmissions(agreementId, epoch);
+        } else {
+            return commitManagerV1U1.getTopCommitSubmissions(agreementId, epoch, 0);
         }
     }
 
@@ -276,18 +221,18 @@ contract ServiceAgreementV1 is Named, Versioned {
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        if (serviceAgreementStorageProxy.isV1U1Agreement(agreementId)) {
-            commitManagerV1U1.submitCommit(args);
-        } else {
+        if (serviceAgreementStorageProxy.isV1Agreement(agreementId)) {
             commitManagerV1.submitCommit(args);
+        } else {
+            commitManagerV1U1.submitCommit(args);
         }
     }
 
     function isProofWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
-        if (serviceAgreementStorageProxy.isV1U1Agreement(agreementId)) {
-            return proofManagerV1U1.isProofWindowOpen(agreementId, epoch);
-        } else {
+        if (serviceAgreementStorageProxy.isV1Agreement(agreementId)) {
             return proofManagerV1.isProofWindowOpen(agreementId, epoch);
+        } else {
+            return proofManagerV1U1.isProofWindowOpen(agreementId, epoch);
         }
     }
 
@@ -306,14 +251,14 @@ contract ServiceAgreementV1 is Named, Versioned {
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        if (serviceAgreementStorageProxy.isV1U1Agreement(agreementId)) {
-            proofManagerV1U1.sendProof(args);
-        } else {
+        if (serviceAgreementStorageProxy.isV1Agreement(agreementId)) {
             proofManagerV1.sendProof(args);
+        } else {
+            proofManagerV1U1.sendProof(args);
         }
     }
 
-    function _addTokens(address assetOwner, uint96 tokenAmount) internal virtual {
+    function _addTokens(address assetOwner, address sasAddress, uint96 tokenAmount) internal virtual {
         if (tokenAmount == 0) revert ServiceAgreementErrorsV1U1.ZeroTokenAmount();
 
         IERC20 tknc = tokenContract;
@@ -323,7 +268,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         if (tknc.balanceOf(assetOwner) < tokenAmount)
             revert ServiceAgreementErrorsV1U1.TooLowBalance(tknc.balanceOf(assetOwner));
 
-        tknc.transferFrom(assetOwner, serviceAgreementStorageProxy.agreementV1U1StorageAddress(), tokenAmount);
+        tknc.transferFrom(assetOwner, sasAddress, tokenAmount);
     }
 
     function _generatePseudorandomUint8(address sender, uint8 limit) internal view virtual returns (uint8) {

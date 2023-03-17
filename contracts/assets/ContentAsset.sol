@@ -177,13 +177,7 @@ contract ContentAsset is Named, Versioned {
 
         cas.deleteAsset(tokenId);
         cas.burn(tokenId);
-        serviceAgreementV1.terminateAgreement(
-            msg.sender,
-            contentAssetStorageAddress,
-            tokenId,
-            keyword,
-            HASH_FUNCTION_ID
-        );
+        serviceAgreementV1.terminateAgreement(msg.sender, agreementId);
 
         emit AssetBurnt(contentAssetStorageAddress, tokenId, tokenAmount);
     }
@@ -238,15 +232,7 @@ contract ContentAsset is Named, Versioned {
             scoreFunctionIdAndProofWindowOffsetPerc[1]
         );
 
-        if (updateTokenAmount != 0)
-            serviceAgreementV1.addUpdateTokens(
-                msg.sender,
-                contentAssetStorageAddress,
-                tokenId,
-                keyword,
-                HASH_FUNCTION_ID,
-                updateTokenAmount
-            );
+        if (updateTokenAmount != 0) serviceAgreementV1.addUpdateTokens(msg.sender, agreementId, updateTokenAmount);
 
         uint256 unfinalizedStateIndex = cas.getAssertionIdsLength(tokenId);
         sasProxy.setUpdateCommitsDeadline(
@@ -341,15 +327,7 @@ contract ContentAsset is Named, Versioned {
             revert ContentAssetErrors.AssetExpired(tokenId);
         }
 
-        sasV1.extendStoringPeriod(
-            msg.sender,
-            contentAssetStorageAddress,
-            tokenId,
-            keyword,
-            HASH_FUNCTION_ID,
-            epochsNumber,
-            tokenAmount
-        );
+        sasV1.extendStoringPeriod(msg.sender, agreementId, epochsNumber, tokenAmount);
 
         emit AssetStoringPeriodExtended(contentAssetStorageAddress, tokenId, epochsNumber, tokenAmount);
     }
@@ -379,7 +357,7 @@ contract ContentAsset is Named, Versioned {
 
         if (block.timestamp > startTime + epochsNumber * epochLength) revert ContentAssetErrors.AssetExpired(tokenId);
 
-        sasV1.addTokens(msg.sender, contentAssetStorageAddress, tokenId, keyword, HASH_FUNCTION_ID, tokenAmount);
+        sasV1.addTokens(msg.sender, agreementId, tokenAmount);
 
         emit AssetPaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
     }
@@ -409,7 +387,7 @@ contract ContentAsset is Named, Versioned {
 
         if (block.timestamp > startTime + epochsNumber * epochLength) revert ContentAssetErrors.AssetExpired(tokenId);
 
-        sasV1.addUpdateTokens(msg.sender, contentAssetStorageAddress, tokenId, keyword, HASH_FUNCTION_ID, tokenAmount);
+        sasV1.addUpdateTokens(msg.sender, agreementId, tokenAmount);
 
         emit AssetUpdatePaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
     }

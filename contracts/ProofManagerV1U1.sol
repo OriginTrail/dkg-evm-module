@@ -105,20 +105,17 @@ contract ProofManagerV1U1 is Named, Versioned {
     }
 
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
-        if (!hub.isAssetStorage(args.assetContract))
-            revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(args.assetContract);
-        if (AbstractAsset(args.assetContract).getAssertionIdsLength(args.tokenId) == 0)
-            revert ContentAssetErrors.AssetDoesntExist(args.tokenId);
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         bytes32 agreementId = hashingProxy.callHashFunction(
             args.hashFunctionId,
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
-        AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
+        if (!sasProxy.serviceAgreementExists(agreementId))
+            revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
 
-        uint256 latestFinalizedStateIndex = generalAssetInterface.getAssertionIdsLength(args.tokenId) - 1;
+        uint256 latestFinalizedStateIndex = AbstractAsset(args.assetContract).getAssertionIdsLength(args.tokenId) - 1;
 
         if (!reqs[0] && !isProofWindowOpen(agreementId, args.epoch)) {
             uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);

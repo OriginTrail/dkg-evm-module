@@ -125,15 +125,10 @@ describe('ServiceAgreementV1 contract', function () {
 
     expect(await ServiceAgreementStorageProxy.serviceAgreementExists(agreementId)).to.eql(true);
 
-    expect(
-      await ServiceAgreementV1.terminateAgreement(
-        serviceAgreementInputArgs.assetCreator,
-        serviceAgreementInputArgs.assetContract,
-        serviceAgreementInputArgs.tokenId,
-        serviceAgreementInputArgs.keyword,
-        serviceAgreementInputArgs.hashFunctionId,
-      ),
-    ).to.emit(ServiceAgreementV1, 'ServiceAgreementV1Terminated');
+    expect(await ServiceAgreementV1.terminateAgreement(serviceAgreementInputArgs.assetCreator, agreementId)).to.emit(
+      ServiceAgreementV1,
+      'ServiceAgreementV1Terminated',
+    );
 
     expect(await ServiceAgreementStorageProxy.serviceAgreementExists(agreementId)).to.eql(false);
   });
@@ -156,10 +151,7 @@ describe('ServiceAgreementV1 contract', function () {
     expect(
       await ServiceAgreementV1.extendStoringPeriod(
         serviceAgreementInputArgs.assetCreator,
-        serviceAgreementInputArgs.assetContract,
-        serviceAgreementInputArgs.tokenId,
-        serviceAgreementInputArgs.keyword,
-        serviceAgreementInputArgs.hashFunctionId,
+        agreementId,
         additionalEpochsNumber,
         additionalTokenAmount,
       ),
@@ -186,14 +178,7 @@ describe('ServiceAgreementV1 contract', function () {
 
     await Token.increaseAllowance(ServiceAgreementV1.address, additionalTokenAmount);
     expect(
-      await ServiceAgreementV1.addTokens(
-        serviceAgreementInputArgs.assetCreator,
-        serviceAgreementInputArgs.assetContract,
-        serviceAgreementInputArgs.tokenId,
-        serviceAgreementInputArgs.keyword,
-        serviceAgreementInputArgs.hashFunctionId,
-        additionalTokenAmount,
-      ),
+      await ServiceAgreementV1.addTokens(serviceAgreementInputArgs.assetCreator, agreementId, additionalTokenAmount),
     ).to.emit(ServiceAgreementV1, 'ServiceAgreementV1RewardRaised');
 
     expect(await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId)).to.equal(
@@ -216,10 +201,7 @@ describe('ServiceAgreementV1 contract', function () {
     expect(
       await ServiceAgreementV1.addUpdateTokens(
         serviceAgreementInputArgs.assetCreator,
-        serviceAgreementInputArgs.assetContract,
-        serviceAgreementInputArgs.tokenId,
-        serviceAgreementInputArgs.keyword,
-        serviceAgreementInputArgs.hashFunctionId,
+        agreementId,
         additionalUpdateTokenAmount,
       ),
     ).to.emit(ServiceAgreementV1, 'ServiceAgreementV1UpdateRewardRaised');

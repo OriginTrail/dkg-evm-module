@@ -198,10 +198,10 @@ contract Staking is Named, Versioned {
         );
 
         address sasAddress;
-        if (sasProxy.isV1U1Agreement(agreementId)) {
-            sasAddress = sasProxy.agreementV1U1StorageAddress();
-        } else {
+        if (sasProxy.isV1Agreement(agreementId)) {
             sasAddress = sasProxy.agreementV1StorageAddress();
+        } else {
+            sasAddress = sasProxy.agreementV1U1StorageAddress();
         }
 
         emit StakeIncreased(identityId, ps.getNodeId(identityId), sasAddress, oldStake, oldStake + delegatorsReward);

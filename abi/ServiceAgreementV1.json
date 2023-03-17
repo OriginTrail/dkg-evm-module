@@ -140,27 +140,9 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "address",
-        "name": "assetContract",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "keyword",
-        "type": "bytes"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "hashFunctionId",
-        "type": "uint8"
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -177,27 +159,9 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "address",
-        "name": "assetContract",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "keyword",
-        "type": "bytes"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "hashFunctionId",
-        "type": "uint8"
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -214,27 +178,9 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "address",
-        "name": "assetContract",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "keyword",
-        "type": "bytes"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "hashFunctionId",
-        "type": "uint8"
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
       }
     ],
     "name": "ServiceAgreementV1Terminated",
@@ -245,32 +191,14 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "address",
-        "name": "assetContract",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "keyword",
-        "type": "bytes"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "hashFunctionId",
-        "type": "uint8"
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
       },
       {
         "indexed": false,
         "internalType": "uint96",
-        "name": "tokenAmount",
+        "name": "updateTokenAmount",
         "type": "uint96"
       }
     ],
@@ -285,24 +213,9 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "assetContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "keyword",
-        "type": "bytes"
-      },
-      {
-        "internalType": "uint8",
-        "name": "hashFunctionId",
-        "type": "uint8"
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
       },
       {
         "internalType": "uint96",
@@ -323,24 +236,9 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "assetContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "keyword",
-        "type": "bytes"
-      },
-      {
-        "internalType": "uint8",
-        "name": "hashFunctionId",
-        "type": "uint8"
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
       },
       {
         "internalType": "uint96",
@@ -442,24 +340,9 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "assetContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "keyword",
-        "type": "bytes"
-      },
-      {
-        "internalType": "uint8",
-        "name": "hashFunctionId",
-        "type": "uint8"
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
       },
       {
         "internalType": "uint16",
@@ -819,24 +702,9 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "assetContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "keyword",
-        "type": "bytes"
-      },
-      {
-        "internalType": "uint8",
-        "name": "hashFunctionId",
-        "type": "uint8"
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
       }
     ],
     "name": "terminateAgreement",

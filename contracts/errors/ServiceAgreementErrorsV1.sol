@@ -3,6 +3,7 @@
 pragma solidity ^0.8.4;
 
 library ServiceAgreementErrorsV1 {
+    error ServiceAgreementDoesntExist(bytes32 agreementId);
     error EmptyAssetCreatorAddress();
     error AssetStorageNotInTheHub(address contractAddress);
     error EmptyKeyword();
@@ -11,7 +12,6 @@ library ServiceAgreementErrorsV1 {
     error ScoreFunctionDoesntExist(uint8 scoreFunctionId);
     error TooLowAllowance(uint256 amount);
     error TooLowBalance(uint256 amount);
-    error ServiceAgreementDoesntExist(bytes32 agreementId);
     error ServiceAgreementHasBeenExpired(
         bytes32 agreementId,
         uint256 startTime,

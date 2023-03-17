@@ -13,28 +13,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      }
-    ],
-    "name": "AssetDoesntExist",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "contractAddress",
-        "type": "address"
-      }
-    ],
-    "name": "AssetStorageNotInTheHub",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes32",
         "name": "agreementId",
         "type": "bytes32"

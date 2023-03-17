@@ -195,19 +195,16 @@ contract CommitManagerV1U1 is Named, Versioned {
 
     function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
-        AbstractAsset generalAssetInterface = AbstractAsset(args.assetContract);
-
-        if (!hub.isAssetStorage(args.assetContract))
-            revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(args.assetContract);
-        if (generalAssetInterface.getAssertionIdsLength(args.tokenId) == 0)
-            revert ContentAssetErrors.AssetDoesntExist(args.tokenId);
 
         bytes32 agreementId = hashingProxy.callHashFunction(
             args.hashFunctionId,
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        uint256 latestFinalizedStateIndex = generalAssetInterface.getAssertionIdsLength(args.tokenId) - 1;
+        if (!sasProxy.serviceAgreementExists(agreementId))
+            revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
+
+        uint256 latestFinalizedStateIndex = AbstractAsset(args.assetContract).getAssertionIdsLength(args.tokenId) - 1;
 
         if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {
             uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
@@ -270,17 +267,15 @@ contract CommitManagerV1U1 is Named, Versioned {
             revert ServiceAgreementErrorsV1U1.NoPendingUpdate(args.assetContract, args.tokenId);
         }
 
-        if (!hub.isAssetStorage(args.assetContract))
-            revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(args.assetContract);
-        if (generalAssetInterface.getAssertionIdsLength(args.tokenId) == 0)
-            revert ContentAssetErrors.AssetDoesntExist(args.tokenId);
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         bytes32 agreementId = hashingProxy.callHashFunction(
             args.hashFunctionId,
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        if (!sasProxy.serviceAgreementExists(agreementId))
+            revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
 
         if (!reqs[2] && !isUpdateCommitWindowOpen(agreementId, args.epoch, unfinalizedStateIndex)) {
             uint256 commitWindowEnd = sasProxy.getUpdateCommitsDeadline(

@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.4;
 
-import {AbstractAsset} from "./assets/AbstractAsset.sol";
 import {HashingProxy} from "./HashingProxy.sol";
 import {Hub} from "./Hub.sol";
 import {ScoringProxy} from "./ScoringProxy.sol";
@@ -151,19 +150,17 @@ contract CommitManagerV1 is Named, Versioned {
     }
 
     function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
-        if (!hub.isAssetStorage(args.assetContract))
-            revert ServiceAgreementErrorsV1.AssetStorageNotInTheHub(args.assetContract);
-        if (AbstractAsset(args.assetContract).getAssertionIdsLength(args.tokenId) == 0)
-            revert ContentAssetErrors.AssetDoesntExist(args.tokenId);
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         bytes32 agreementId = hashingProxy.callHashFunction(
             args.hashFunctionId,
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {
-            ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        if (!sasProxy.serviceAgreementExists(agreementId))
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
 
+        if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {
             uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
 
             uint256 actualCommitWindowStart = (sasProxy.getAgreementStartTime(agreementId) + args.epoch * epochLength);
@@ -191,7 +188,7 @@ contract CommitManagerV1 is Named, Versioned {
         }
 
         uint40 score = scoringProxy.callScoreFunction(
-            serviceAgreementStorageProxy.getAgreementScoreFunctionId(agreementId),
+            sasProxy.getAgreementScoreFunctionId(agreementId),
             args.hashFunctionId,
             profileStorage.getNodeId(identityId),
             args.keyword,
