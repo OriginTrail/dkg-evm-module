@@ -1,0 +1,55 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "hashFunctionId",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes",
+        "name": "nodeId",
+        "type": "bytes"
+      },
+      {
+        "internalType": "bytes",
+        "name": "keyword",
+        "type": "bytes"
+      }
+    ],
+    "name": "calculateDistance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "distance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "stake",
+        "type": "uint96"
+      }
+    ],
+    "name": "calculateScore",
+    "outputs": [
+      {
+        "internalType": "uint40",
+        "name": "",
+        "type": "uint40"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

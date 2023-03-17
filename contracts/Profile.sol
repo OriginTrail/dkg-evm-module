@@ -22,7 +22,7 @@ contract Profile is Named, Versioned {
     event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
 
     string private constant _NAME = "Profile";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "1.0.1";
 
     Hub public hub;
     HashingProxy public hashingProxy;
@@ -173,8 +173,6 @@ contract Profile is Named, Versioned {
     function stakeAccumulatedOperatorFee(uint72 identityId) external onlyAdmin(identityId) {
         ProfileStorage ps = profileStorage;
 
-        require(ps.profileExists(identityId), "Profile doesn't exist");
-
         uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
         require(accumulatedOperatorFee != 0, "You have no operator fees");
 
@@ -184,8 +182,6 @@ contract Profile is Named, Versioned {
 
     function startAccumulatedOperatorFeeWithdrawal(uint72 identityId) external onlyAdmin(identityId) {
         ProfileStorage ps = profileStorage;
-
-        require(ps.profileExists(identityId), "Profile doesn't exist");
 
         uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
 
@@ -204,8 +200,6 @@ contract Profile is Named, Versioned {
 
     function withdrawAccumulatedOperatorFee(uint72 identityId) external onlyAdmin(identityId) {
         ProfileStorage ps = profileStorage;
-
-        require(ps.profileExists(identityId), "Profile doesn't exist");
 
         uint96 withdrawalAmount = ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId);
 

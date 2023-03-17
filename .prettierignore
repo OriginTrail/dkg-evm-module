@@ -1,0 +1,9 @@
+abi/
+artifacts/
+cache/
+coverage/
+deployments/
+node_modules/
+typechain/
+package.json
+.*.js
