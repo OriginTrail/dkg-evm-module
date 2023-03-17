@@ -11,11 +11,6 @@
     "type": "constructor"
   },
   {
-    "inputs": [],
-    "name": "EmptyAssetCreatorAddress",
-    "type": "error"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -761,19 +756,6 @@
     "name": "sendProof",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "serviceAgreementHelperFunctions",
-    "outputs": [
-      {
-        "internalType": "contract ServiceAgreementHelperFunctions",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

@@ -11,10 +11,10 @@ import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
-import {ServiceAgreementHelperFunctions} from "./ServiceAgreementHelperFunctions.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
+import {ContentAssetErrors} from "./errors/assets/ContentAssetErrors.sol";
 import {GeneralErrors} from "./errors/GeneralErrors.sol";
 import {ServiceAgreementErrorsV1} from "./errors/ServiceAgreementErrorsV1.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
@@ -28,7 +28,6 @@ contract ProofManagerV1 is Named, Versioned {
         uint16 epoch,
         uint72 indexed identityId
     );
-    event Logger(bool value, string message);
 
     string private constant _NAME = "ProofManagerV1";
     string private constant _VERSION = "1.0.0";
@@ -43,7 +42,6 @@ contract ProofManagerV1 is Named, Versioned {
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
-    ServiceAgreementHelperFunctions public serviceAgreementHelperFunctions;
 
     constructor(address hubAddress) {
         require(hubAddress != address(0), "Hub Address cannot be 0x0");
@@ -66,9 +64,6 @@ contract ProofManagerV1 is Named, Versioned {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
-        );
-        serviceAgreementHelperFunctions = ServiceAgreementHelperFunctions(
-            hub.getContractAddress("ServiceAgreementHelperFunctions")
         );
     }
 
@@ -123,21 +118,14 @@ contract ProofManagerV1 is Named, Versioned {
     }
 
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
-        _sendProof(args);
-    }
+        if (!hub.isAssetStorage(args.assetContract))
+            revert ServiceAgreementErrorsV1.AssetStorageNotInTheHub(args.assetContract);
+        if (AbstractAsset(args.assetContract).getAssertionIdsLength(args.tokenId) == 0)
+            revert ContentAssetErrors.AssetDoesntExist(args.tokenId);
 
-    function setReq(uint256 index, bool req) external onlyHubOwner {
-        reqs[index] = req;
-    }
-
-    function _sendProof(
-        ServiceAgreementStructsV1.ProofInputArgs calldata args
-    ) internal virtual returns (bytes32, uint72) {
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            args.assetContract,
-            args.tokenId,
-            args.keyword,
-            args.hashFunctionId
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            args.hashFunctionId,
+            abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
@@ -155,7 +143,6 @@ contract ProofManagerV1 is Named, Versioned {
                 block.timestamp
             );
         }
-        emit Logger(!isProofWindowOpen(agreementId, args.epoch), "req1");
 
         IdentityStorage ids = identityStorage;
 
@@ -171,10 +158,6 @@ contract ProofManagerV1 is Named, Versioned {
                 identityId,
                 profileStorage.getNodeId(identityId)
             );
-        emit Logger(
-            sasProxy.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) == 0,
-            "req2"
-        );
 
         bytes32 nextCommitId = sasProxy.getV1AgreementEpochSubmissionHead(agreementId, args.epoch);
         uint32 r0 = parametersStorage.r0();
@@ -196,7 +179,6 @@ contract ProofManagerV1 is Named, Versioned {
                 profileStorage.getNodeId(identityId),
                 i
             );
-        emit Logger(i >= r0, "req3");
 
         bytes32 merkleRoot;
         uint256 challenge;
@@ -216,10 +198,6 @@ contract ProofManagerV1 is Named, Versioned {
                 args.chunkHash,
                 challenge
             );
-        emit Logger(
-            !MerkleProof.verify(args.proof, merkleRoot, keccak256(abi.encodePacked(args.chunkHash, challenge))),
-            "req4"
-        );
 
         emit ProofSubmitted(
             args.assetContract,
@@ -240,8 +218,10 @@ contract ProofManagerV1 is Named, Versioned {
 
         // To make sure that node already received reward
         sasProxy.setCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId)), 0);
+    }
 
-        return (agreementId, identityId);
+    function setReq(uint256 index, bool req) external onlyHubOwner {
+        reqs[index] = req;
     }
 
     function _checkHubOwner() internal view virtual {

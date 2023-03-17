@@ -18,17 +18,6 @@
         "type": "uint256"
       }
     ],
-    "name": "AssetDoesntExist",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      }
-    ],
     "name": "AssetExpired",
     "type": "error"
   },
@@ -486,6 +475,19 @@
   },
   {
     "inputs": [],
+    "name": "hashingProxy",
+    "outputs": [
+      {
+        "internalType": "contract HashingProxy",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "hub",
     "outputs": [
       {
@@ -559,19 +561,6 @@
     "outputs": [
       {
         "internalType": "contract ParametersStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "serviceAgreementHelperFunctions",
-    "outputs": [
-      {
-        "internalType": "contract ServiceAgreementHelperFunctions",
         "name": "",
         "type": "address"
       }

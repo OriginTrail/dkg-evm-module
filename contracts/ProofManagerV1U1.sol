@@ -3,8 +3,8 @@
 pragma solidity ^0.8.4;
 
 import {AbstractAsset} from "./assets/AbstractAsset.sol";
+import {HashingProxy} from "./HashingProxy.sol";
 import {Hub} from "./Hub.sol";
-import {ServiceAgreementHelperFunctions} from "./ServiceAgreementHelperFunctions.sol";
 import {Staking} from "./Staking.sol";
 import {AssertionStorage} from "./storage/AssertionStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
@@ -14,6 +14,7 @@ import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStoragePro
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
+import {ContentAssetErrors} from "./errors/assets/ContentAssetErrors.sol";
 import {GeneralErrors} from "./errors/GeneralErrors.sol";
 import {ServiceAgreementErrorsV1U1} from "./errors/ServiceAgreementErrorsV1U1.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
@@ -28,7 +29,6 @@ contract ProofManagerV1U1 is Named, Versioned {
         uint256 stateIndex,
         uint72 indexed identityId
     );
-    event Logger(bool value, string message);
 
     string private constant _NAME = "ProofManagerV1U1";
     string private constant _VERSION = "1.0.0";
@@ -36,7 +36,7 @@ contract ProofManagerV1U1 is Named, Versioned {
     bool[4] public reqs = [false, false, false, false];
 
     Hub public hub;
-    ServiceAgreementHelperFunctions public serviceAgreementHelperFunctions;
+    HashingProxy public hashingProxy;
     Staking public stakingContract;
     AssertionStorage public assertionStorage;
     IdentityStorage public identityStorage;
@@ -57,9 +57,7 @@ contract ProofManagerV1U1 is Named, Versioned {
     }
 
     function initialize() public onlyHubOwner {
-        serviceAgreementHelperFunctions = ServiceAgreementHelperFunctions(
-            hub.getContractAddress("ServiceAgreementHelperFunctions")
-        );
+        hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         stakingContract = Staking(hub.getContractAddress("Staking"));
         assertionStorage = AssertionStorage(hub.getContractAddress("AssertionStorage"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
@@ -107,37 +105,14 @@ contract ProofManagerV1U1 is Named, Versioned {
     }
 
     function sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) external {
-        _sendProof(args);
-    }
+        if (!hub.isAssetStorage(args.assetContract))
+            revert ServiceAgreementErrorsV1U1.AssetStorageNotInTheHub(args.assetContract);
+        if (AbstractAsset(args.assetContract).getAssertionIdsLength(args.tokenId) == 0)
+            revert ContentAssetErrors.AssetDoesntExist(args.tokenId);
 
-    function setReq(uint256 index, bool req) external onlyHubOwner {
-        reqs[index] = req;
-    }
-
-    function _getChallenge(
-        address sender,
-        address assetContract,
-        uint256 tokenId,
-        uint16 epoch
-    ) internal view returns (bytes32, uint256) {
-        uint72 identityId = identityStorage.getIdentityId(sender);
-
-        AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
-        bytes32 latestFinalizedState = generalAssetInterface.getLatestAssertionId(tokenId);
-
-        uint256 assertionChunksNumber = assertionStorage.getAssertionChunksNumber(latestFinalizedState);
-
-        // blockchash() function only works for last 256 blocks (25.6 min window in case of 6s block time)
-        // TODO: figure out how to achieve randomness
-        return (latestFinalizedState, uint256(sha256(abi.encodePacked(epoch, identityId))) % assertionChunksNumber);
-    }
-
-    function _sendProof(ServiceAgreementStructsV1.ProofInputArgs calldata args) internal virtual {
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            args.assetContract,
-            args.tokenId,
-            args.keyword,
-            args.hashFunctionId
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            args.hashFunctionId,
+            abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
@@ -163,7 +138,6 @@ contract ProofManagerV1U1 is Named, Versioned {
                 block.timestamp
             );
         }
-        emit Logger(!isProofWindowOpen(agreementId, args.epoch), "req1");
 
         IdentityStorage ids = identityStorage;
 
@@ -178,7 +152,6 @@ contract ProofManagerV1U1 is Named, Versioned {
                 identityId,
                 profileStorage.getNodeId(identityId)
             );
-        emit Logger(sasProxy.getCommitSubmissionScore(commitId) == 0, "req2");
 
         bytes32 nextCommitId = sasProxy.getV1U1AgreementEpochSubmissionHead(
             agreementId,
@@ -210,7 +183,6 @@ contract ProofManagerV1U1 is Named, Versioned {
                 profileStorage.getNodeId(identityId),
                 i
             );
-        emit Logger(i >= r0, "req3");
 
         bytes32 merkleRoot;
         uint256 challenge;
@@ -231,10 +203,6 @@ contract ProofManagerV1U1 is Named, Versioned {
                 args.chunkHash,
                 challenge
             );
-        emit Logger(
-            !MerkleProof.verify(args.proof, merkleRoot, keccak256(abi.encodePacked(args.chunkHash, challenge))),
-            "req4"
-        );
 
         emit ProofSubmitted(
             args.assetContract,
@@ -256,6 +224,28 @@ contract ProofManagerV1U1 is Named, Versioned {
 
         // To make sure that node already received reward
         sasProxy.setCommitSubmissionScore(commitId, 0);
+    }
+
+    function setReq(uint256 index, bool req) external onlyHubOwner {
+        reqs[index] = req;
+    }
+
+    function _getChallenge(
+        address sender,
+        address assetContract,
+        uint256 tokenId,
+        uint16 epoch
+    ) internal view returns (bytes32, uint256) {
+        uint72 identityId = identityStorage.getIdentityId(sender);
+
+        AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
+        bytes32 latestFinalizedState = generalAssetInterface.getLatestAssertionId(tokenId);
+
+        uint256 assertionChunksNumber = assertionStorage.getAssertionChunksNumber(latestFinalizedState);
+
+        // blockchash() function only works for last 256 blocks (25.6 min window in case of 6s block time)
+        // TODO: figure out how to achieve randomness
+        return (latestFinalizedState, uint256(sha256(abi.encodePacked(epoch, identityId))) % assertionChunksNumber);
     }
 
     function _checkHubOwner() internal view virtual {

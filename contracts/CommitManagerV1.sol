@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.4;
 
+import {AbstractAsset} from "./assets/AbstractAsset.sol";
 import {HashingProxy} from "./HashingProxy.sol";
 import {Hub} from "./Hub.sol";
 import {ScoringProxy} from "./ScoringProxy.sol";
@@ -10,13 +11,13 @@ import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
-import {ServiceAgreementHelperFunctions} from "./ServiceAgreementHelperFunctions.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
 import {GeneralErrors} from "./errors/GeneralErrors.sol";
+import {ContentAssetErrors} from "./errors/assets/ContentAssetErrors.sol";
 import {ServiceAgreementErrorsV1} from "./errors/ServiceAgreementErrorsV1.sol";
 
 contract CommitManagerV1 is Named, Versioned {
@@ -29,7 +30,6 @@ contract CommitManagerV1 is Named, Versioned {
         uint72 indexed identityId,
         uint40 score
     );
-    event Logger(bool value, string message);
 
     string private constant _NAME = "CommitManagerV1";
     string private constant _VERSION = "1.0.0";
@@ -44,7 +44,6 @@ contract CommitManagerV1 is Named, Versioned {
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
-    ServiceAgreementHelperFunctions public serviceAgreementHelperFunctions;
     ShardingTableStorage public shardingTableStorage;
     StakingStorage public stakingStorage;
 
@@ -69,9 +68,6 @@ contract CommitManagerV1 is Named, Versioned {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
-        );
-        serviceAgreementHelperFunctions = ServiceAgreementHelperFunctions(
-            hub.getContractAddress("ServiceAgreementHelperFunctions")
         );
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
@@ -155,19 +151,14 @@ contract CommitManagerV1 is Named, Versioned {
     }
 
     function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
-        _submitCommit(args);
-    }
+        if (!hub.isAssetStorage(args.assetContract))
+            revert ServiceAgreementErrorsV1.AssetStorageNotInTheHub(args.assetContract);
+        if (AbstractAsset(args.assetContract).getAssertionIdsLength(args.tokenId) == 0)
+            revert ContentAssetErrors.AssetDoesntExist(args.tokenId);
 
-    function setReq(uint256 index, bool req) external onlyHubOwner {
-        reqs[index] = req;
-    }
-
-    function _submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) internal virtual {
-        bytes32 agreementId = serviceAgreementHelperFunctions.generateAgreementId(
-            args.assetContract,
-            args.tokenId,
-            args.keyword,
-            args.hashFunctionId
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            args.hashFunctionId,
+            abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
         if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {
@@ -185,7 +176,6 @@ contract CommitManagerV1 is Named, Versioned {
                 block.timestamp
             );
         }
-        emit Logger(!isCommitWindowOpen(agreementId, args.epoch), "req1");
 
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -199,7 +189,6 @@ contract CommitManagerV1 is Named, Versioned {
                 stakingStorage.totalStakes(identityId)
             );
         }
-        emit Logger(!shardingTableStorage.nodeExists(identityId), "req2");
 
         uint40 score = scoringProxy.callScoreFunction(
             serviceAgreementStorageProxy.getAgreementScoreFunctionId(agreementId),
@@ -222,6 +211,10 @@ contract CommitManagerV1 is Named, Versioned {
         );
     }
 
+    function setReq(uint256 index, bool req) external onlyHubOwner {
+        reqs[index] = req;
+    }
+
     function _insertCommit(
         bytes32 agreementId,
         uint16 epoch,
@@ -241,7 +234,6 @@ contract CommitManagerV1 is Named, Versioned {
                 identityId,
                 profileStorage.getNodeId(identityId)
             );
-        emit Logger(sasProxy.commitSubmissionExists(commitId), "req3");
 
         bytes32 refCommitId = sasProxy.getV1AgreementEpochSubmissionHead(agreementId, epoch);
 
@@ -267,7 +259,6 @@ contract CommitManagerV1 is Named, Versioned {
                 profileStorage.getNodeId(identityId),
                 i
             );
-        emit Logger(i >= r0, "req4");
 
         sasProxy.createV1CommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
 
