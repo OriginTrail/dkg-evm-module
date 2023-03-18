@@ -14,8 +14,6 @@ cache/*
 coverage/*
 metadata/*
 coverage.json
-abi/SHA256.json
-abi/Log2PLDSF.json
 abi/PRBMath*.json
 abi/*Structs*.json
 abi/*Errors*.json

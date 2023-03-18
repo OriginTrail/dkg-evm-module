@@ -142,7 +142,6 @@ const config: HardhatUserConfig = {
       'IERC734Extended.sol',
       'Ownable.sol',
       'ServiceAgreementErrorsV1.sol',
-      'sha256.sol',
       'Shares.sol',
     ],
     spacing: 2,
