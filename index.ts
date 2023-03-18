@@ -12,6 +12,7 @@ import IdentityStorageABI from './abi/IdentityStorage.json';
 import IHashFunctionABI from './abi/IHashFunction.json';
 import IndexableABI from './abi/Indexable.json';
 import IScoreFunctionABI from './abi/IScoreFunction.json';
+import Log2PLDSFABI from './abi/Log2PLDSF.json';
 import NamedABI from './abi/Named.json';
 import ParametersStorageABI from './abi/ParametersStorage.json';
 import ProfileABI from './abi/Profile.json';
@@ -22,6 +23,7 @@ import ServiceAgreementStorageProxyABI from './abi/ServiceAgreementStorageProxy.
 import ServiceAgreementStorageV1ABI from './abi/ServiceAgreementStorageV1.json';
 import ServiceAgreementStorageV1U1ABI from './abi/ServiceAgreementStorageV1U1.json';
 import ServiceAgreementV1ABI from './abi/ServiceAgreementV1.json';
+import SHA256ABI from './abi/SHA256.json';
 import ShardingTableABI from './abi/ShardingTable.json';
 import ShardingTableStorageABI from './abi/ShardingTableStorage.json';
 import StakingABI from './abi/Staking.json';
@@ -36,6 +38,7 @@ export {
   ParametersStorageABI,
   HashingProxyABI,
   ScoringProxyABI,
+  SHA256ABI,
   ShardingTableStorageABI,
   ShardingTableABI,
   AssertionStorageABI,
@@ -51,6 +54,7 @@ export {
   TokenABI,
   IdentityStorageABI,
   IdentityABI,
+  Log2PLDSFABI,
   ProfileStorageABI,
   ProfileABI,
   StakingStorageABI,
