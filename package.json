@@ -12,11 +12,12 @@
     "url": "https://github.com/OriginTrail/dkg-evm-module"
   },
   "keywords": [
-    "dkg",
-    "solidity",
-    "ethereum",
-    "smart",
-    "contracts"
+    "OriginTrail",
+    "DKG",
+    "Solidity",
+    "Ethereum",
+    "Smart",
+    "Contracts"
   ],
   "author": "",
   "license": "Apache-2.0",
@@ -79,7 +80,7 @@
     "deploy:otp_mainnet": "hardhat deploy --network otp_mainnet",
     "deploy:otp_testnet": "hardhat deploy --network otp_testnet",
     "deploy": "hardhat deploy",
-    "dev": "cross-env MINING_INTERVAL='3000,5000' hardhat node --network hardhat",
+    "dev": "hardhat node --network hardhat",
     "format:fix": "prettier --write '**/*.{ts,js,sol}'",
     "format": "prettier --check '**/*.{ts,js,sol}'",
     "generate-evm-account": "hardhat run scripts/generate_evm_account.ts --network localhost",
