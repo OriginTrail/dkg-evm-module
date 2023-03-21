@@ -1,10 +1,11 @@
 {
   "name": "dkg-evm-module",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Smart contracts for OriginTrail V6",
   "main": "index.ts",
   "files": [
     "hardhat.config.ts",
+    "hardhat.node.config.ts",
     "/contracts/**/*.sol",
     "/deploy/*.ts",
     "/abi/*.json"
@@ -28,10 +29,6 @@
     "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
     "@nomiclabs/hardhat-solhint": "^3.0.0",
     "@openzeppelin/test-helpers": "^0.5.16",
-    "@polkadot/api": "^9.12.1",
-    "@polkadot/keyring": "^10.2.6",
-    "@polkadot/util": "^10.2.6",
-    "@polkadot/util-crypto": "^10.2.6",
     "@typechain/hardhat": "^6.1.5",
     "@types/chai": "^4.3.4",
     "@types/mocha": "^10.0.1",
@@ -41,7 +38,6 @@
     "assertion-tools": "^2.0.2",
     "chai": "^4.3.7",
     "cross-env": "^7.0.3",
-    "dotenv": "^16.0.3",
     "eslint": "^8.31.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-import-resolver-typescript": "^3.5.2",
@@ -49,11 +45,8 @@
     "eslint-plugin-mocha": "^10.1.0",
     "eslint-plugin-prettier": "^4.2.1",
     "ethers": "^5.7.2",
-    "hardhat": "^2.12.5",
     "hardhat-abi-exporter": "^2.10.1",
     "hardhat-contract-sizer": "^2.6.1",
-    "hardhat-deploy": "^0.11.22",
-    "hardhat-deploy-ethers": "^0.3.0-beta.13",
     "hardhat-gas-reporter": "^1.0.9",
     "hardhat-tracer": "^1.2.1",
     "husky": "^8.0.2",
@@ -67,14 +60,23 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.7.3",
-    "@prb/math": "^2.5.0"
+    "@polkadot/api": "^10.1.4",
+    "@polkadot/keyring": "^11.1.1",
+    "@polkadot/util": "^11.1.1",
+    "@polkadot/util-crypto": "^11.1.1",
+    "@prb/math": "^2.5.0",
+    "dotenv": "^16.0.3",
+    "hardhat": "^2.13.0",
+    "hardhat-deploy": "^0.11.25",
+    "hardhat-deploy-ethers": "^0.3.0-beta.13"
   },
   "overrides": {
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.13"
   },
   "scripts": {
     "clean": "hardhat clean",
-    "compile": "hardhat size-contracts",
+    "compile": "hardhat compile --config hardhat.node.config.ts",
+    "compile:size": "hardhat size-contracts",
     "coverage": "cross-env COVERAGE_REPORT=true HARDHAT_DEPLOY_FIXTURE=true hardhat coverage --network hardhat --solcoverjs ./.solcover.js --temp artifacts --testfiles './test/**/*.test.ts'",
     "deploy:localhost": "hardhat deploy --network localhost",
     "deploy:otp_alphanet": "hardhat deploy --network otp_alphanet",
@@ -82,7 +84,7 @@
     "deploy:otp_mainnet": "hardhat deploy --network otp_mainnet",
     "deploy:otp_testnet": "hardhat deploy --network otp_testnet",
     "deploy": "hardhat deploy",
-    "dev": "hardhat node --network hardhat",
+    "dev": "hardhat node --network hardhat --config hardhat.node.config.ts",
     "format:fix": "prettier --write '**/*.{ts,js,sol}'",
     "format": "prettier --check '**/*.{ts,js,sol}'",
     "generate-evm-account": "hardhat run scripts/generate_evm_account.ts --network localhost",
