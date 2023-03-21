@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import 'hardhat-abi-exporter';
 import 'hardhat-deploy';
 import 'hardhat-deploy-ethers';
