@@ -2,11 +2,13 @@ import AbstractAssetABI from './abi/AbstractAsset.json';
 import AssertionABI from './abi/Assertion.json';
 import AssertionStorageABI from './abi/AssertionStorage.json';
 import CommitManagerV1ABI from './abi/CommitManagerV1.json';
+import CommitManagerV1U1ABI from './abi/CommitManagerV1U1.json';
 import ContentAssetABI from './abi/ContentAsset.json';
 import ContentAssetStorageABI from './abi/ContentAssetStorage.json';
 import GuardianABI from './abi/Guardian.json';
 import HashingProxyABI from './abi/HashingProxy.json';
 import HubABI from './abi/Hub.json';
+import ICustodian from './abi/ICustodian.json';
 import IdentityABI from './abi/Identity.json';
 import IdentityStorageABI from './abi/IdentityStorage.json';
 import IHashFunctionABI from './abi/IHashFunction.json';
@@ -18,6 +20,7 @@ import ParametersStorageABI from './abi/ParametersStorage.json';
 import ProfileABI from './abi/Profile.json';
 import ProfileStorageABI from './abi/ProfileStorage.json';
 import ProofManagerV1ABI from './abi/ProofManagerV1.json';
+import ProofManagerV1U1ABI from './abi/ProofManagerV1U1.json';
 import ScoringProxyABI from './abi/ScoringProxy.json';
 import ServiceAgreementStorageProxyABI from './abi/ServiceAgreementStorageProxy.json';
 import ServiceAgreementStorageV1ABI from './abi/ServiceAgreementStorageV1.json';
@@ -48,7 +51,9 @@ export {
   ServiceAgreementStorageProxyABI,
   ServiceAgreementV1ABI,
   CommitManagerV1ABI,
+  CommitManagerV1U1ABI,
   ProofManagerV1ABI,
+  ProofManagerV1U1ABI,
   ContentAssetStorageABI,
   ContentAssetABI,
   TokenABI,
@@ -63,6 +68,7 @@ export {
   WhitelistStorageABI,
   AbstractAssetABI,
   GuardianABI,
+  ICustodian,
   IHashFunctionABI,
   IndexableABI,
   IScoreFunctionABI,
