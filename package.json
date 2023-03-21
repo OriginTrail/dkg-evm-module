@@ -1,10 +1,12 @@
 {
   "name": "dkg-evm-module",
-  "description": "",
-  "version": "4.0.0",
+  "version": "4.0.1",
+  "description": "Smart contracts for OriginTrail V6",
+  "main": "index.ts",
   "files": [
     "hardhat.config.ts",
     "/contracts/**/*.sol",
+    "/deploy/*.ts",
     "/abi/*.json"
   ],
   "repository": {
