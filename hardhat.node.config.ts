@@ -60,7 +60,7 @@ const config: HardhatUserConfig = {
           },
         },
       },
-      viaIR: true,
+      viaIR: process.env.COVERAGE_REPORT ? false : true,
     },
   },
   paths: {
