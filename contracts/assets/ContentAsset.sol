@@ -3,7 +3,6 @@
 pragma solidity ^0.8.4;
 
 import {Assertion} from "../Assertion.sol";
-import {AssertionStorage} from "../storage/AssertionStorage.sol";
 import {HashingProxy} from "../HashingProxy.sol";
 import {Hub} from "../Hub.sol";
 import {ServiceAgreementV1} from "../ServiceAgreementV1.sol";
@@ -47,7 +46,6 @@ contract ContentAsset is Named, Versioned {
 
     Hub public hub;
     Assertion public assertionContract;
-    AssertionStorage public assertionStorage;
     HashingProxy public hashingProxy;
     ContentAssetStorage public contentAssetStorage;
     ParametersStorage public parametersStorage;
@@ -64,7 +62,6 @@ contract ContentAsset is Named, Versioned {
 
     function initialize() public onlyHubOwner {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));
-        assertionStorage = AssertionStorage(hub.getContractAddress("AssertionStorage"));
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         contentAssetStorage = ContentAssetStorage(hub.getAssetStorageAddress("ContentAssetStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
@@ -283,8 +280,6 @@ contract ContentAsset is Named, Versioned {
         uint96 updateTokenAmount = sasProxy.getAgreementUpdateTokenAmount(agreementId);
         sasProxy.transferV1U1AgreementTokens(msg.sender, updateTokenAmount);
 
-        assertionStorage.deleteAssertion(unfinalizedState);
-
         uss.deleteIssuer(tokenId);
         uss.deleteUnfinalizedState(tokenId);
 
@@ -296,7 +291,7 @@ contract ContentAsset is Named, Versioned {
         );
     }
 
-    function updateAssetStoringPeriod(
+    function extendAssetStoringPeriod(
         uint256 tokenId,
         uint16 epochsNumber,
         uint96 tokenAmount

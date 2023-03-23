@@ -354,7 +354,7 @@ describe('ContentAsset contract', function () {
 
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
 
-    expect(await ContentAsset.updateAssetStoringPeriod(tokenId, newEpochsNumber, assetInputStruct.tokenAmount))
+    expect(await ContentAsset.extendAssetStoringPeriod(tokenId, newEpochsNumber, assetInputStruct.tokenAmount))
       .to.emit(ContentAsset, 'AssetStoringPeriodExtended')
       .withArgs(ContentAssetStorage.address, tokenId, newEpochsNumber, assetInputStruct.tokenAmount);
   });
@@ -368,7 +368,7 @@ describe('ContentAsset contract', function () {
     const ContentAssetWithNonOwnerSigner = ContentAsset.connect(accounts[1]);
 
     await expect(
-      ContentAssetWithNonOwnerSigner.updateAssetStoringPeriod(tokenId, newEpochsNumber, assetInputStruct.tokenAmount),
+      ContentAssetWithNonOwnerSigner.extendAssetStoringPeriod(tokenId, newEpochsNumber, assetInputStruct.tokenAmount),
     ).to.be.revertedWith('Only asset owner can use this fn');
   });
 

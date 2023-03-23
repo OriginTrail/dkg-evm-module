@@ -319,19 +319,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "assertionStorage",
-    "outputs": [
-      {
-        "internalType": "contract AssertionStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -469,6 +456,29 @@
       }
     ],
     "name": "createAssetWithVariables",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epochsNumber",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "extendAssetStoringPeriod",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -641,29 +651,6 @@
       }
     ],
     "name": "updateAssetState",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint16",
-        "name": "epochsNumber",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint96",
-        "name": "tokenAmount",
-        "type": "uint96"
-      }
-    ],
-    "name": "updateAssetStoringPeriod",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
