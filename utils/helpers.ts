@@ -151,7 +151,7 @@ export class Helpers {
   }
 
   public updateDeploymentsJson(newContractName: string, newContractAddress: string) {
-    const variables = this.contractDeployments.contracts[newContractName].variables;
+    const variables = this.contractDeployments.contracts[newContractName]?.variables ?? undefined;
 
     this.contractDeployments.contracts[newContractName] = {
       evmAddress: newContractAddress,
