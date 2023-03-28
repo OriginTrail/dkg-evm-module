@@ -21,9 +21,9 @@
       "substrateAddress": "5EMjsczPAQAuupobdfrAtRNxbDuZs6YHo8hwsWnFBDw9YABH"
     },
     "ContentAsset": {
-      "deployed": false,
-      "evmAddress": "0xCd30e1D5258d6A7Db306DC58F7E050082A248710",
-      "substrateAddress": "5EMjsd13HnSb2xyHpaWoB3TnroiXHwnbYqZQvSWGZfhZSbjt"
+      "deployed": true,
+      "evmAddress": "0xED1F6289aC492cf24D8D85CC1355EFA1B221300f",
+      "substrateAddress": "5EMjsd19gt8HmNSDJ7aq6coDxC4UHyEmSjSQAHboE7yVJ25b"
     },
     "ContentAssetStorage": {
       "deployed": true,
@@ -56,14 +56,9 @@
       "substrateAddress": "5EMjsczYrvc6cf27hHvw5Hrd5PBy9zx2mXzPdsHy1SYiJfFD"
     },
     "ParametersStorage": {
-      "deployed": false,
-      "evmAddress": "0x4ECA63dCad044AE25c7980074b96ed6Eb766Ee8e",
-      "substrateAddress": "5EMjsczbxofbrw4bECAz8Yp4yyFtrsEbLtJswMoGVZhww6vX",
-      "variables": {
-        "epochLength": 3600,
-        "finalizationCommitsNumber": 3,
-        "updateCommitWindowDuration": 600
-      }
+      "deployed": true,
+      "evmAddress": "0x82c49672C396e066fd881b7bBdf4cF9085dECb89",
+      "substrateAddress": "5EMjscznNsEv7sAj7c2p7p6btEsswyW6muGJF2371nyq9Eak"
     },
     "Profile": {
       "deployed": true,
@@ -151,5 +146,5 @@
       "substrateAddress": "5EMjscznyz3bRzqCSrbQa7DwwCzaa6amztJof9SJkGyJ7WYn"
     }
   },
-  "deployedTimestamp": 1679926298937
+  "deployedTimestamp": 1680041954906
 }
