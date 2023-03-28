@@ -1,0 +1,15 @@
+name: update-cache
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-cache:
+    name: Build Cache
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up environment
+        uses: ./.github/actions/setup
