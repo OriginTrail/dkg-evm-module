@@ -51,6 +51,7 @@
     "hardhat-gas-reporter": "^1.0.9",
     "hardhat-tracer": "^1.2.1",
     "husky": "^8.0.2",
+    "lint-staged": "^13.2.0",
     "prettier": "^2.8.1",
     "prettier-plugin-solidity": "^1.0.0",
     "solhint-plugin-prettier": "^0.0.5",
