@@ -16,6 +16,9 @@ type ContractDeployments = {
       evmAddress: string;
       substrateAddress: string;
       deployed: boolean;
+      variables?: {
+        [variableName: string]: unknown;
+      };
     };
   };
   deployedTimestamp: number;

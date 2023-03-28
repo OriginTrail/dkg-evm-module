@@ -255,19 +255,17 @@ describe('@unit ParametersStorage contract', function () {
   });
 
   it('validate epoch length for owner, expect to pass', async () => {
-    const valueInContract = 1;
+    const valueInContract = 90;
     const newValue = '2';
     epochLength = await ParametersStorage.epochLength();
-    const expectedValue = `${epochLength}/3600`;
+    const expectedValue = `${epochLength}/86400`;
 
     expect(eval(expectedValue)).to.eql(valueInContract);
 
     // set new value for epoch length and validate is correct
     await ParametersStorage.setEpochLength(newValue);
 
-    epochLength = await ParametersStorage.epochLength();
-
-    expect(epochLength.toString()).be.eql(newValue);
+    expect(await ParametersStorage.epochLength()).be.equal(newValue);
   });
 
   it('validate epoch length for non owner, expect to fail', async () => {
