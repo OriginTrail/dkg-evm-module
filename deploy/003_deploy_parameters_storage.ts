@@ -10,6 +10,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const variablesMap = hre.helpers.contractDeployments.contracts['ParametersStorage'].variables;
     for (const variable in variablesMap) {
       await ParametersStorage[`set${variable.charAt(0).toUpperCase() + variable.slice(1)}`](variablesMap[variable]);
+      console.log(`[ParametersStorage] ${variable} parameter set to ${variablesMap[variable]}`);
     }
   }
 };
