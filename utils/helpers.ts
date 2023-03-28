@@ -151,10 +151,13 @@ export class Helpers {
   }
 
   public updateDeploymentsJson(newContractName: string, newContractAddress: string) {
+    const variables = this.contractDeployments.contracts[newContractName]?.variables ?? undefined;
+
     this.contractDeployments.contracts[newContractName] = {
       evmAddress: newContractAddress,
       substrateAddress: this.convertEvmWallet(newContractAddress),
       deployed: true,
+      variables,
     };
   }
 
