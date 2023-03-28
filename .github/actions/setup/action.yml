@@ -40,10 +40,12 @@ runs:
             ${{ runner.os }}-typechain-types-${{ hashFiles('contracts/**/*.sol') }}
             ${{ runner.os }}-typechain-types-
 
-    - if: |
-        ${{ steps.cache-node-modules.outputs.cache-hit != 'true' }} ||
-        ${{ steps.cache-hardhat-artifacts.outputs.cache-hit != 'true' }} ||
-        ${{ steps.cache-typechain-types.outputs.cache-hit != 'true' }}
+    - if: >
+        ${{ (
+          steps.cache-node-modules.outputs.cache-hit != 'true' ||
+          steps.cache-hardhat-artifacts.outputs.cache-hit != 'true' ||
+          steps.cache-typechain-types.outputs.cache-hit != 'true'
+        ) }}
       name: Install dependencies & run prepare
       shell: bash
       run: npm ci
