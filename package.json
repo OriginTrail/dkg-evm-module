@@ -1,6 +1,6 @@
 {
   "name": "dkg-evm-module",
-  "version": "4.0.4",
+  "version": "4.0.5",
   "description": "Smart contracts for OriginTrail V6",
   "main": "index.ts",
   "files": [
@@ -76,8 +76,8 @@
   },
   "scripts": {
     "clean": "hardhat clean",
-    "compile": "hardhat compile --config hardhat.node.config.ts",
     "compile:size": "hardhat size-contracts",
+    "compile": "hardhat compile --config hardhat.node.config.ts",
     "coverage": "cross-env COVERAGE_REPORT=true HARDHAT_DEPLOY_FIXTURE=true hardhat coverage --network hardhat --solcoverjs ./.solcover.js --temp artifacts --testfiles './test/**/*.test.ts'",
     "deploy:localhost": "hardhat deploy --network localhost",
     "deploy:otp_alphanet": "hardhat deploy --network otp_alphanet",
@@ -104,7 +104,9 @@
     "test:gas:fulltrace": "cross-env GAS_REPORT=true hardhat test --network hardhat --fulltrace",
     "test:gas:trace": "cross-env GAS_REPORT=true hardhat test --network hardhat --trace",
     "test:gas": "cross-env GAS_REPORT=true hardhat test --network hardhat",
+    "test:integration": "hardhat test --network hardhat --grep '@integration'",
     "test:trace": "hardhat test --network hardhat --trace",
+    "test:unit": "hardhat test --network hardhat --grep '@unit'",
     "test": "hardhat test --network hardhat",
     "typechain": "hardhat typechain"
   }

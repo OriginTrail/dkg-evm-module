@@ -278,6 +278,7 @@ contract ContentAsset is Named, Versioned {
         }
 
         uint96 updateTokenAmount = sasProxy.getAgreementUpdateTokenAmount(agreementId);
+        sasProxy.setAgreementUpdateTokenAmount(agreementId, 0);
         sasProxy.transferV1U1AgreementTokens(msg.sender, updateTokenAmount);
 
         uss.deleteIssuer(tokenId);

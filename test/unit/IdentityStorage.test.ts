@@ -4,8 +4,8 @@ import { expect } from 'chai';
 import { ethers } from 'ethers';
 import hre from 'hardhat';
 
-import { Hub, Identity, IdentityStorage } from '../typechain';
-import { ADMIN_KEY, ECDSA, OPERATIONAL_KEY } from './helpers/constants';
+import { Hub, Identity, IdentityStorage } from '../../typechain';
+import { ADMIN_KEY, ECDSA, OPERATIONAL_KEY } from '../helpers/constants';
 
 type IdentityStorageFixture = {
   accounts: SignerWithAddress[];
@@ -14,7 +14,7 @@ type IdentityStorageFixture = {
   IdentityStorage: IdentityStorage;
 };
 
-describe('IdentityStorage contract', function () {
+describe('@unit IdentityStorage contract', function () {
   let accounts: SignerWithAddress[];
   let Identity: Identity;
   let Hub: Hub;

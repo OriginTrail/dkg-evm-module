@@ -8,39 +8,39 @@ import { BytesLike } from 'ethers';
 import hre from 'hardhat';
 
 import {
-  CommitManagerV1U1,
+  CommitManagerV1,
   ContentAsset,
   ContentAssetStorage,
   ParametersStorage,
   Profile,
-  ProofManagerV1U1,
+  ProofManagerV1,
   ServiceAgreementStorageProxy,
   ServiceAgreementV1,
   Staking,
   StakingStorage,
   Token,
-} from '../typechain';
-import { ContentAssetStructs } from '../typechain/contracts/assets/ContentAsset';
-import { ServiceAgreementStructsV1 as CommitStructs } from '../typechain/contracts/CommitManagerV1U1';
-import { ServiceAgreementStructsV1 as ProofStructs } from '../typechain/contracts/ProofManagerV1U1';
+} from '../../typechain';
+import { ContentAssetStructs } from '../../typechain/contracts/assets/ContentAsset';
+import { ServiceAgreementStructsV1 as CommitStructs } from '../../typechain/contracts/CommitManagerV1';
+import { ServiceAgreementStructsV1 as ProofStructs } from '../../typechain/contracts/ProofManagerV1';
 
-type ProofManagerV1U1Fixture = {
+type ProofManagerV1Fixture = {
   accounts: SignerWithAddress[];
   ServiceAgreementStorageProxy: ServiceAgreementStorageProxy;
-  CommitManagerV1U1: CommitManagerV1U1;
-  ProofManagerV1U1: ProofManagerV1U1;
+  CommitManagerV1: CommitManagerV1;
+  ProofManagerV1: ProofManagerV1;
   ParametersStorage: ParametersStorage;
 };
 
-describe('ProofManagerV1U1 contract', function () {
+describe('@unit ProofManagerV1 contract', function () {
   let accounts: SignerWithAddress[];
   let Token: Token;
   let ServiceAgreementV1: ServiceAgreementV1;
   let ServiceAgreementStorageProxy: ServiceAgreementStorageProxy;
   let ContentAsset: ContentAsset;
   let ContentAssetStorage: ContentAssetStorage;
-  let CommitManagerV1U1: CommitManagerV1U1;
-  let ProofManagerV1U1: ProofManagerV1U1;
+  let CommitManagerV1: CommitManagerV1;
+  let ProofManagerV1: ProofManagerV1;
   let ParametersStorage: ParametersStorage;
   let Profile: Profile;
   let Staking: Staking;
@@ -89,7 +89,7 @@ describe('ProofManagerV1U1 contract', function () {
       epoch: 0,
     };
 
-    await CommitManagerV1U1.connect(operational).submitCommit(commitInputArgs);
+    await CommitManagerV1.connect(operational).submitCommit(commitInputArgs);
   }
 
   async function createProfile(operational: SignerWithAddress, admin: SignerWithAddress): Promise<number> {
@@ -114,8 +114,8 @@ describe('ProofManagerV1U1 contract', function () {
     return identityId;
   }
 
-  async function deployProofManagerV1U1Fixture(): Promise<ProofManagerV1U1Fixture> {
-    await hre.deployments.fixture(['ContentAsset', 'CommitManagerV1U1', 'ProofManagerV1U1', 'Profile']);
+  async function deployProofManagerV1Fixture(): Promise<ProofManagerV1Fixture> {
+    await hre.deployments.fixture(['ContentAsset', 'CommitManagerV1', 'ProofManagerV1', 'Profile']);
     Token = await hre.ethers.getContract<Token>('Token');
     ServiceAgreementV1 = await hre.ethers.getContract<ServiceAgreementV1>('ServiceAgreementV1');
     ServiceAgreementStorageProxy = await hre.ethers.getContract<ServiceAgreementStorageProxy>(
@@ -123,28 +123,28 @@ describe('ProofManagerV1U1 contract', function () {
     );
     ContentAsset = await hre.ethers.getContract<ContentAsset>('ContentAsset');
     ContentAssetStorage = await hre.ethers.getContract<ContentAssetStorage>('ContentAssetStorage');
-    CommitManagerV1U1 = await hre.ethers.getContract<CommitManagerV1U1>('CommitManagerV1U1');
-    ProofManagerV1U1 = await hre.ethers.getContract<ProofManagerV1U1>('ProofManagerV1U1');
+    CommitManagerV1 = await hre.ethers.getContract<CommitManagerV1>('CommitManagerV1');
+    ProofManagerV1 = await hre.ethers.getContract<ProofManagerV1>('ProofManagerV1');
     ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
     Profile = await hre.ethers.getContract<Profile>('Profile');
     Staking = await hre.ethers.getContract<Staking>('Staking');
     StakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
     accounts = await hre.ethers.getSigners();
 
-    return { accounts, ServiceAgreementStorageProxy, CommitManagerV1U1, ProofManagerV1U1, ParametersStorage };
+    return { accounts, ServiceAgreementStorageProxy, CommitManagerV1, ProofManagerV1, ParametersStorage };
   }
 
   beforeEach(async () => {
-    ({ accounts, ServiceAgreementStorageProxy, CommitManagerV1U1, CommitManagerV1U1, ParametersStorage } =
-      await loadFixture(deployProofManagerV1U1Fixture));
+    ({ accounts, ServiceAgreementStorageProxy, CommitManagerV1, CommitManagerV1, ParametersStorage } =
+      await loadFixture(deployProofManagerV1Fixture));
   });
 
-  it('The contract is named "ProofManagerV1U1"', async () => {
-    expect(await ProofManagerV1U1.name()).to.equal('ProofManagerV1U1');
+  it('The contract is named "ProofManagerV1"', async () => {
+    expect(await ProofManagerV1.name()).to.equal('ProofManagerV1');
   });
 
   it('The contract is version "1.0.0"', async () => {
-    expect(await ProofManagerV1U1.version()).to.equal('1.0.0');
+    expect(await ProofManagerV1.version()).to.equal('1.0.0');
   });
 
   it('Create a new asset, teleport to the proof phase and check if window is open, expect true', async () => {
@@ -156,7 +156,7 @@ describe('ProofManagerV1U1 contract', function () {
 
     await time.increase(delay);
 
-    expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.eql(true);
+    expect(await ProofManagerV1.isProofWindowOpen(agreementId, 0)).to.eql(true);
   });
 
   it('Create a new asset, teleport to the moment before proof phase and check if window is open, expect false', async () => {
@@ -168,7 +168,7 @@ describe('ProofManagerV1U1 contract', function () {
 
     await time.increase(delay - 1);
 
-    expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.eql(false);
+    expect(await ProofManagerV1.isProofWindowOpen(agreementId, 0)).to.eql(false);
   });
 
   it('Create a new asset, teleport to the moment after proof phase and check if window is open, expect false', async () => {
@@ -181,7 +181,7 @@ describe('ProofManagerV1U1 contract', function () {
 
     await time.increase(delay);
 
-    expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.eql(false);
+    expect(await ProofManagerV1.isProofWindowOpen(agreementId, 0)).to.eql(false);
   });
 
   it('Create a new asset, send commit, teleport and send proof, expect ProofSent event and reward received', async () => {
@@ -194,7 +194,7 @@ describe('ProofManagerV1U1 contract', function () {
       [agreementId, 0, 0, identityId],
     );
 
-    const challenge = await ProofManagerV1U1.getChallenge(ContentAssetStorage.address, tokenId, 0);
+    const challenge = await ProofManagerV1.getChallenge(accounts[0].address, ContentAssetStorage.address, tokenId, 0);
 
     const epochLength = (await ParametersStorage.epochLength()).toNumber();
     const proofWindowOffsetPerc = await ServiceAgreementStorageProxy.getAgreementProofWindowOffsetPerc(agreementId);
@@ -216,7 +216,7 @@ describe('ProofManagerV1U1 contract', function () {
     const initialStake = await StakingStorage.totalStakes(identityId);
     const initialAssetReward = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
 
-    expect(await ProofManagerV1U1.sendProof(proofInputArgs)).to.emit(ProofManagerV1U1, 'ProofSubmitted');
+    expect(await ProofManagerV1.sendProof(proofInputArgs)).to.emit(ProofManagerV1, 'ProofSubmitted');
 
     const endAssetReward = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
     expect(await StakingStorage.totalStakes(identityId)).to.equal(
@@ -229,7 +229,7 @@ describe('ProofManagerV1U1 contract', function () {
   it('Create a new asset and get challenge, expect challenge to be valid', async () => {
     const { tokenId } = await createAsset();
 
-    const challenge = await ProofManagerV1U1.getChallenge(ContentAssetStorage.address, tokenId, 0);
+    const challenge = await ProofManagerV1.getChallenge(accounts[0].address, ContentAssetStorage.address, tokenId, 0);
 
     expect(challenge[0]).to.equal(assetInputStruct.assertionId);
     expect(challenge[1]).to.be.within(0, nQuads.length - 1);
@@ -240,7 +240,7 @@ describe('ProofManagerV1U1 contract', function () {
     const { tokenId, keyword, agreementId } = await createAsset();
     await submitCommit(accounts[0], tokenId, keyword);
 
-    const challenge = await ProofManagerV1U1.getChallenge(ContentAssetStorage.address, tokenId, 0);
+    const challenge = await ProofManagerV1.getChallenge(accounts[0].address, ContentAssetStorage.address, tokenId, 0);
 
     const epochLength = (await ParametersStorage.epochLength()).toNumber();
     const proofWindowOffsetPerc = await ServiceAgreementStorageProxy.getAgreementProofWindowOffsetPerc(agreementId);
@@ -259,9 +259,9 @@ describe('ProofManagerV1U1 contract', function () {
       chunkHash: leaf,
     };
 
-    expect(await ProofManagerV1U1.sendProof(proofInputArgs)).to.emit(ProofManagerV1U1, 'ProofSubmitted');
-    await expect(ProofManagerV1U1.sendProof(proofInputArgs)).to.be.revertedWithCustomError(
-      ProofManagerV1U1,
+    expect(await ProofManagerV1.sendProof(proofInputArgs)).to.emit(ProofManagerV1, 'ProofSubmitted');
+    await expect(ProofManagerV1.sendProof(proofInputArgs)).to.be.revertedWithCustomError(
+      ProofManagerV1,
       'NodeAlreadyRewarded',
     );
   });

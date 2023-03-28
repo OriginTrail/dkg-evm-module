@@ -5,7 +5,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Token, Hub, Profile, ServiceAgreementStorageV1U1, Staking, StakingStorage } from '../typechain';
+import { Token, Hub, Profile, ServiceAgreementStorageV1U1, Staking, StakingStorage } from '../../typechain';
 
 type StakingFixture = {
   accounts: SignerWithAddress[];
@@ -16,7 +16,7 @@ type StakingFixture = {
   StakingStorage: StakingStorage;
 };
 
-describe('Staking contract', function () {
+describe('@unit Staking contract', function () {
   let accounts: SignerWithAddress[];
   let Hub: Hub;
   let Staking: Staking;

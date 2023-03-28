@@ -13,8 +13,8 @@ import {
   ParametersStorage,
   ServiceAgreementV1,
   ServiceAgreementStorageProxy,
-} from '../typechain';
-import { ServiceAgreementStructsV1 } from '../typechain/contracts/ServiceAgreementV1';
+} from '../../typechain';
+import { ServiceAgreementStructsV1 } from '../../typechain/contracts/ServiceAgreementV1';
 
 type ServiceAgreementV1Fixture = {
   accounts: SignerWithAddress[];
@@ -25,7 +25,7 @@ type ServiceAgreementV1Fixture = {
   Token: Token;
 };
 
-describe('ServiceAgreementV1 contract', function () {
+describe('@unit ServiceAgreementV1 contract', function () {
   let accounts: SignerWithAddress[];
   let Hub: Hub;
   let ContentAssetStorage: ContentAssetStorage;

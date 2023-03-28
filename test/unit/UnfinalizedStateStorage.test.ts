@@ -3,15 +3,15 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Hub, UnfinalizedStateStorage } from '../typechain';
-import { ZERO_ADDRESS, ZERO_BYTES32 } from './helpers/constants';
+import { Hub, UnfinalizedStateStorage } from '../../typechain';
+import { ZERO_ADDRESS, ZERO_BYTES32 } from '../helpers/constants';
 
 type UnfinalizedStateStorageFixture = {
   accounts: SignerWithAddress[];
   UnfinalizedStateStorage: UnfinalizedStateStorage;
 };
 
-describe('UnfinalizedStateStorage contract', function () {
+describe('@unit UnfinalizedStateStorage contract', function () {
   let accounts: SignerWithAddress[];
   let UnfinalizedStateStorage: UnfinalizedStateStorage;
   let Hub: Hub;

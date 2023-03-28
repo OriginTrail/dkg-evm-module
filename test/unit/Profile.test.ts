@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Hub, Profile, ProfileStorage, WhitelistStorage } from '../typechain';
+import { Hub, Profile, ProfileStorage, WhitelistStorage } from '../../typechain';
 
 type ProfileFixture = {
   accounts: SignerWithAddress[];
@@ -12,7 +12,7 @@ type ProfileFixture = {
   WhitelistStorage: WhitelistStorage;
 };
 
-describe('Profile contract', function () {
+describe('@unit Profile contract', function () {
   let accounts: SignerWithAddress[];
   let Hub: Hub;
   let Profile: Profile;
