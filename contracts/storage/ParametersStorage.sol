@@ -65,7 +65,7 @@ contract ParametersStorage is Named, Versioned {
         // replacementWindowDurationPerc
         args1[4] = 0;
 
-        epochLength = 1 hours;
+        epochLength = 90 days;
 
         // stakeWithdrawalDelay
         args4[0] = 5 minutes;
