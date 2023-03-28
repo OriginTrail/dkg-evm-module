@@ -3,15 +3,15 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Hub } from '../typechain';
-import { ZERO_ADDRESS } from './helpers/constants';
+import { Hub } from '../../typechain';
+import { ZERO_ADDRESS } from '../helpers/constants';
 
 type HubFixture = {
   accounts: SignerWithAddress[];
   Hub: Hub;
 };
 
-describe('Hub contract', function () {
+describe('@unit Hub contract', function () {
   let accounts: SignerWithAddress[];
   let Hub: Hub;
 

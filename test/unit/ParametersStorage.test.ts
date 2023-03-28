@@ -3,14 +3,14 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { ParametersStorage, Hub } from '../typechain';
+import { ParametersStorage, Hub } from '../../typechain';
 
 type ParametersStorageFixture = {
   accounts: SignerWithAddress[];
   ParametersStorage: ParametersStorage;
 };
 
-describe('ParametersStorage contract', function () {
+describe('@unit ParametersStorage contract', function () {
   let accounts: SignerWithAddress[];
   let Hub: Hub;
   let ParametersStorage: ParametersStorage;

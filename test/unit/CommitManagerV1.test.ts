@@ -16,16 +16,16 @@ import {
   ServiceAgreementV1,
   Staking,
   Token,
-} from '../typechain';
-import { ContentAssetStructs } from '../typechain/contracts/assets/ContentAsset';
-import { ServiceAgreementStructsV1 } from '../typechain/contracts/CommitManagerV1';
+} from '../../typechain';
+import { ContentAssetStructs } from '../../typechain/contracts/assets/ContentAsset';
+import { ServiceAgreementStructsV1 } from '../../typechain/contracts/CommitManagerV1';
 
 type CommitManagerV1Fixture = {
   accounts: SignerWithAddress[];
   CommitManagerV1: CommitManagerV1;
 };
 
-describe('CommitManagerV1 contract', function () {
+describe('@unit CommitManagerV1 contract', function () {
   let accounts: SignerWithAddress[];
   let Token: Token;
   let ServiceAgreementV1: ServiceAgreementV1;
@@ -157,7 +157,7 @@ describe('CommitManagerV1 contract', function () {
     expect(await CommitManagerV1.submitCommit(commitInputArgs)).to.emit(CommitManagerV1, 'CommitSubmitted');
   });
 
-  it('Create new asset, submit and R0 commits, expect R0 commits to be returned', async () => {
+  it('Create new asset, submit R0 commits, expect R0 commits to be returned', async () => {
     const r0 = await ParametersStorage.r0();
 
     const identityIds = [];

@@ -10,10 +10,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
       - name: Set up environment
         uses: ./.github/actions/setup
-      - name: Run linter & fix
-        run: npm run lint:fix
+
+      - name: Run linters
+        run: npm run lint
+
+      - name: Run formatters
+        run: npm run format
+
       - name: Run tests
         run: npm run test
 
@@ -23,8 +29,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
       - name: Set up environment
         uses: ./.github/actions/setup
+
       - name: Publish npm package
         run: npm publish
         env:

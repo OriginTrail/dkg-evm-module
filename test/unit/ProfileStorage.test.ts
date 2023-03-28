@@ -3,8 +3,8 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Token, Hub, ProfileStorage } from '../typechain';
-import { ZERO_ADDRESS } from './helpers/constants';
+import { Token, Hub, ProfileStorage } from '../../typechain';
+import { ZERO_ADDRESS } from '../helpers/constants';
 
 type ProfileStorageFixture = {
   accounts: SignerWithAddress[];
@@ -12,7 +12,7 @@ type ProfileStorageFixture = {
   Token: Token;
 };
 
-describe('ProfileStorage contract', function () {
+describe('@unit ProfileStorage contract', function () {
   let accounts: SignerWithAddress[];
   let Hub: Hub;
   let ProfileStorage: ProfileStorage;

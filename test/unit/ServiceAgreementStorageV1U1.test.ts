@@ -5,7 +5,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Token, Hub, ServiceAgreementStorageV1U1 } from '../typechain';
+import { Token, Hub, ServiceAgreementStorageV1U1 } from '../../typechain';
 
 type ServiceAgreementStorageV1U1Fixture = {
   accounts: SignerWithAddress[];
@@ -13,7 +13,7 @@ type ServiceAgreementStorageV1U1Fixture = {
   Token: Token;
 };
 
-describe('ServiceAgreementStorageV1U1 contract', function () {
+describe('@unit ServiceAgreementStorageV1U1 contract', function () {
   const agreementId = '0x' + randomBytes(32).toString('hex');
   const newAgreementId = '0x' + randomBytes(32).toString('hex');
   const startTime = Math.floor(Date.now() / 1000).toString();

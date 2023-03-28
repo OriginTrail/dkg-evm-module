@@ -15,19 +15,33 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
       - name: Set up environment
         uses: ./.github/actions/setup
-      - name: Generate Solidity types for Typescript (Typechain)
-        run: npm run typechain
+
       - name: Run Solidity and Typescript linters
         run: npm run lint
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up environment
+        uses: ./.github/actions/setup
+
+      - name: Run Solidity and Typescript formatters
+        run: npm run format
 
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
       - name: Set up environment
         uses: ./.github/actions/setup
+
       - name: Run tests
         run: npm run test

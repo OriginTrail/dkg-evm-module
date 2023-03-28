@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
@@ -11,9 +13,9 @@ import {
   ServiceAgreementStorageProxy,
   ServiceAgreementV1,
   Token,
-} from '../typechain';
-import { ContentAssetStructs } from '../typechain/contracts/assets/ContentAsset';
-import { ZERO_BYTES32 } from './helpers/constants';
+} from '../../typechain';
+import { ContentAssetStructs } from '../../typechain/contracts/assets/ContentAsset';
+import { ZERO_BYTES32 } from '../helpers/constants';
 
 type ContentAssetFixture = {
   accounts: SignerWithAddress[];
@@ -24,7 +26,7 @@ type ContentAssetFixture = {
   Token: Token;
 };
 
-describe('ContentAsset contract', function () {
+describe('@unit ContentAsset contract', function () {
   let accounts: SignerWithAddress[];
   let ParametersStorage: ParametersStorage;
   let ContentAsset: ContentAsset;
@@ -34,8 +36,8 @@ describe('ContentAsset contract', function () {
   let Hub: Hub;
 
   const nonExistingTokenId = 99;
-  const assertionId = '0x8cc2117b68bcbb1535205d517cb42ef45f25838add571fce4cfb7de7bd617943';
-  const assertionId1 = '0x8cc2117b68bcbb1535205d517cb42ef45f25838add571fce4cfb7de7bd289172';
+  const assertionId = '0x' + randomBytes(32).toString('hex');
+  const assertionId1 = '0x' + randomBytes(32).toString('hex');
   const assetInputStruct: ContentAssetStructs.AssetInputArgsStruct = {
     assertionId: assertionId,
     size: 1000,
@@ -134,7 +136,7 @@ describe('ContentAsset contract', function () {
   it('Create an asset, expect asset created', async () => {
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
 
-    await expect(ContentAsset.createAsset(assetInputStruct))
+    expect(await ContentAsset.createAsset(assetInputStruct))
       .to.emit(ContentAsset, 'AssetMinted')
       .withArgs(ContentAssetStorage.address, 0, assetInputStruct.assertionId);
   });
@@ -313,7 +315,7 @@ describe('ContentAsset contract', function () {
     await updateAsset(tokenId);
     await time.increase(await ParametersStorage.updateCommitWindowDuration());
 
-    expect(ContentAsset.cancelAssetStateUpdate(tokenId))
+    expect(await ContentAsset.cancelAssetStateUpdate(tokenId))
       .to.emit(ContentAsset, 'AssetStateUpdateCanceled')
       .withArgs(ContentAssetStorage.address, tokenId, assetUpdateArgs.assertionId, assetUpdateArgs.tokenAmount);
   });
@@ -350,86 +352,90 @@ describe('ContentAsset contract', function () {
 
   it('Update asset storing period, expect storing period updated', async () => {
     const tokenId = await createAsset();
-    const newEpochsNumber = Number(assetInputStruct.epochsNumber) + 1;
+    const additionalEpochsNumber = Number(assetInputStruct.epochsNumber) + 1;
 
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
 
-    expect(await ContentAsset.extendAssetStoringPeriod(tokenId, newEpochsNumber, assetInputStruct.tokenAmount))
+    expect(await ContentAsset.extendAssetStoringPeriod(tokenId, additionalEpochsNumber, assetInputStruct.tokenAmount))
       .to.emit(ContentAsset, 'AssetStoringPeriodExtended')
-      .withArgs(ContentAssetStorage.address, tokenId, newEpochsNumber, assetInputStruct.tokenAmount);
+      .withArgs(ContentAssetStorage.address, tokenId, additionalEpochsNumber, assetInputStruct.tokenAmount);
   });
 
   it('Update asset storing period using non-owner account, expect to be reverted', async () => {
     const tokenId = await createAsset();
-    const newEpochsNumber = Number(assetInputStruct.epochsNumber) + 1;
+    const additionalEpochsNumber = Number(assetInputStruct.epochsNumber) + 1;
 
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
 
     const ContentAssetWithNonOwnerSigner = ContentAsset.connect(accounts[1]);
 
     await expect(
-      ContentAssetWithNonOwnerSigner.extendAssetStoringPeriod(tokenId, newEpochsNumber, assetInputStruct.tokenAmount),
+      ContentAssetWithNonOwnerSigner.extendAssetStoringPeriod(
+        tokenId,
+        additionalEpochsNumber,
+        assetInputStruct.tokenAmount,
+      ),
     ).to.be.revertedWith('Only asset owner can use this fn');
   });
 
   it('Increase asset token amount, expect token amount to be updated', async () => {
     const tokenId = await createAsset();
-    const newTokenAmount = Number(assetInputStruct.tokenAmount) + 10;
+    const additionalTokenAmount = hre.ethers.utils.parseEther('10');
 
-    await Token.increaseAllowance(ServiceAgreementV1.address, newTokenAmount);
+    await Token.increaseAllowance(ServiceAgreementV1.address, additionalTokenAmount);
 
-    expect(await ContentAsset.increaseAssetTokenAmount(tokenId, newTokenAmount))
+    expect(await ContentAsset.increaseAssetTokenAmount(tokenId, additionalTokenAmount))
       .to.emit(ContentAsset, 'AssetPaymentIncreased')
-      .withArgs(ContentAssetStorage.address, tokenId, newTokenAmount);
+      .withArgs(ContentAssetStorage.address, tokenId, additionalTokenAmount);
   });
 
   it('Increase asset token amount using non-owner account, expect to be reverted', async () => {
     const tokenId = await createAsset();
-    const newTokenAmount = Number(assetInputStruct.tokenAmount) + 10;
+    const additionalTokenAmount = hre.ethers.utils.parseEther('10');
 
-    await Token.increaseAllowance(ServiceAgreementV1.address, newTokenAmount);
+    await Token.increaseAllowance(ServiceAgreementV1.address, additionalTokenAmount);
 
     const ContentAssetWithNonOwnerSigner = ContentAsset.connect(accounts[1]);
 
-    await expect(ContentAssetWithNonOwnerSigner.increaseAssetTokenAmount(tokenId, newTokenAmount)).to.be.revertedWith(
-      'Only asset owner can use this fn',
-    );
+    await expect(
+      ContentAssetWithNonOwnerSigner.increaseAssetTokenAmount(tokenId, additionalTokenAmount),
+    ).to.be.revertedWith('Only asset owner can use this fn');
   });
 
   it('Increase asset update token amount, expect update token amount to be updated', async () => {
     const tokenId = await createAsset();
     await updateAsset(tokenId);
-    const newUpdateTokenAmount = assetUpdateArgs.tokenAmount.add(hre.ethers.utils.parseEther('10'));
+    const additionalUpdateTokenAmount = hre.ethers.utils.parseEther('10');
 
-    await Token.increaseAllowance(ServiceAgreementV1.address, newUpdateTokenAmount);
+    await Token.increaseAllowance(ServiceAgreementV1.address, additionalUpdateTokenAmount);
 
-    expect(await ContentAsset.increaseAssetUpdateTokenAmount(tokenId, newUpdateTokenAmount))
+    expect(await ContentAsset.increaseAssetUpdateTokenAmount(tokenId, additionalUpdateTokenAmount))
       .to.emit(ContentAsset, 'AssetUpdatePaymentIncreased')
-      .withArgs(ContentAssetStorage.address, tokenId, newUpdateTokenAmount);
+      .withArgs(ContentAssetStorage.address, tokenId, additionalUpdateTokenAmount);
   });
 
   it('Increase asset update token amount using non-owner account, expect to be reverted', async () => {
     const tokenId = await createAsset();
     await updateAsset(tokenId);
-    const newUpdateTokenAmount = assetUpdateArgs.tokenAmount.add(hre.ethers.utils.parseEther('10'));
+    const additionalUpdateTokenAmount = hre.ethers.utils.parseEther('10');
 
-    await Token.increaseAllowance(ServiceAgreementV1.address, newUpdateTokenAmount);
+    await Token.increaseAllowance(ServiceAgreementV1.address, additionalUpdateTokenAmount);
 
     const ContentAssetWithNonOwnerSigner = ContentAsset.connect(accounts[1]);
 
     await expect(
-      ContentAssetWithNonOwnerSigner.increaseAssetUpdateTokenAmount(tokenId, newUpdateTokenAmount),
+      ContentAssetWithNonOwnerSigner.increaseAssetUpdateTokenAmount(tokenId, additionalUpdateTokenAmount),
     ).to.be.revertedWith('Only asset owner can use this fn');
   });
 
   it('Increase asset update token amount without pending update, expect to be reverted', async () => {
     const tokenId = await createAsset();
-    const newUpdateTokenAmount = assetUpdateArgs.tokenAmount.add(hre.ethers.utils.parseEther('10'));
+    const additionalUpdateTokenAmount = hre.ethers.utils.parseEther('10');
 
-    await Token.increaseAllowance(ServiceAgreementV1.address, newUpdateTokenAmount);
+    await Token.increaseAllowance(ServiceAgreementV1.address, additionalUpdateTokenAmount);
 
     await expect(
-      ContentAsset.increaseAssetUpdateTokenAmount(tokenId, newUpdateTokenAmount),
+      ContentAsset.increaseAssetUpdateTokenAmount(tokenId, additionalUpdateTokenAmount),
     ).to.be.revertedWithCustomError(ContentAsset, 'NoPendingUpdate');
   });
 });

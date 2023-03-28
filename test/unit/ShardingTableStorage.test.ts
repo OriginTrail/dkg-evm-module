@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Hub, Profile, ShardingTableStorage } from '../typechain';
+import { Hub, Profile, ShardingTableStorage } from '../../typechain';
 
 type ShardingTableStorageFixture = {
   accounts: SignerWithAddress[];
@@ -12,7 +12,7 @@ type ShardingTableStorageFixture = {
   Profile: Profile;
 };
 
-describe('ShardingTableStorage Contract', function () {
+describe('@unit ShardingTableStorage Contract', function () {
   let accounts: SignerWithAddress[];
   let Hub: Hub;
   let ShardingTableStorage: ShardingTableStorage;

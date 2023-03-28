@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { AssertionStorage, Hub } from '../typechain';
+import { AssertionStorage, Hub } from '../../typechain';
 
 type AssertionStorageFixture = {
   accounts: SignerWithAddress[];
@@ -11,7 +11,7 @@ type AssertionStorageFixture = {
   Hub: Hub;
 };
 
-describe('AssertionStorage contract', function () {
+describe('@unit AssertionStorage contract', function () {
   const assertionId = '0x74657374696e6720617373657274696f6e2069640209100f5047b080c0440ae1';
   const nonExistingAssertionId = '0x23457374696e6720617373657274696f6e2069640209100f5047b080c0440ae1';
   const size = 20;

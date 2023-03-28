@@ -3,14 +3,14 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { WhitelistStorage } from '../typechain';
+import { WhitelistStorage } from '../../typechain';
 
 type WhitelistStorageFixture = {
   accounts: SignerWithAddress[];
   WhitelistStorage: WhitelistStorage;
 };
 
-describe('WhitelistStorage contract', function () {
+describe('@unit WhitelistStorage contract', function () {
   let accounts: SignerWithAddress[];
   let WhitelistStorage: WhitelistStorage;
 
