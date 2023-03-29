@@ -22,8 +22,8 @@
     },
     "ContentAsset": {
       "deployed": true,
-      "evmAddress": "0x64261001d1206710646E5D5849B2040717525918",
-      "substrateAddress": "5EMjsczgF2CDc5TneuSTUKUKXNWSRgJCoSbPnZTByGFboaZc"
+      "evmAddress": "0xC572AA584cAA61552a750dc32C3502D051D5C3A6",
+      "substrateAddress": "5EMjsd11joDGAKdNd4TxxkqbXuC2eSGMNdRmgBSUcbrEDrqz"
     },
     "ContentAssetStorage": {
       "deployed": true,
@@ -57,8 +57,8 @@
     },
     "ParametersStorage": {
       "deployed": true,
-      "evmAddress": "0xA32456C5e17d7335bC0B52B30ae9f2cC019c6df6",
-      "substrateAddress": "5EMjsczts77RnkgSSuJK42gzPmSf43KJdt4yWVNZURmkon1S",
+      "evmAddress": "0xcD24a3306C4fD2eb9e62077001dE7D18d318ed28",
+      "substrateAddress": "5EMjsd13HECda4mu6jTh1VYjDEzHz5Fwv2bPGFG6jcN52iAL",
       "variables": {}
     },
     "Profile": {
@@ -147,5 +147,5 @@
       "substrateAddress": "5EMjsd11hDZAj6HGYQuJyUiEbE2hYHJLHzWz4GSVfiemQN4K"
     }
   },
-  "deployedTimestamp": 1679666940287
+  "deployedTimestamp": 1680051900509
 }
