@@ -1,30 +1,41 @@
-
 {
-	"language": "Solidity",
-	"settings": {
-		"optimizer": {
-			"enabled": true,
-			"runs": 200,
-			"details": {
-			  "peephole": true,
-			  "inliner": true,
-			  "jumpdestRemover": true,
-			  "orderLiterals": true,
-			  "deduplicate": true,
-			  "cse": true,
-			  "constantOptimizer": true,
-			  "yul": true,
-			  "yulDetails": {
-				"stackAllocation": true
-			  }
-			}
-		},
-        "viaIR": true,
-		"outputSelection": {
-			"*": {
-			"": ["ast"],
-			"*": ["abi", "metadata", "devdoc", "userdoc", "storageLayout", "evm.legacyAssembly", "evm.bytecode", "evm.deployedBytecode", "evm.methodIdentifiers", "evm.gasEstimates", "evm.assembly"]
-			}
-		}
-	}
+  "language": "Solidity",
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200,
+      "details": {
+        "peephole": true,
+        "inliner": true,
+        "jumpdestRemover": true,
+        "orderLiterals": true,
+        "deduplicate": true,
+        "cse": true,
+        "constantOptimizer": true,
+        "yul": true,
+        "yulDetails": {
+          "stackAllocation": true
+        }
+      }
+    },
+    "viaIR": true,
+    "outputSelection": {
+      "*": {
+        "": ["ast"],
+        "*": [
+          "abi",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.legacyAssembly",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "evm.gasEstimates",
+          "evm.assembly"
+        ]
+      }
+    }
+  }
 }
