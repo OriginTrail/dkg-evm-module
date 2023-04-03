@@ -3,28 +3,28 @@
 pragma solidity ^0.8.4;
 
 import {HashingProxy} from "./HashingProxy.sol";
-import {Hub} from "./Hub.sol";
 import {Identity} from "./Identity.sol";
 import {Shares} from "./Shares.sol";
-import {Staking} from "./Staking.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
+import {Staking} from "./Staking.sol";
 import {WhitelistStorage} from "./storage/WhitelistStorage.sol";
+import {ContractStatus} from "./abstract/ContractStatus.sol";
+import {Initializable} from "./interface/Initializable.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {UnorderedIndexableContractDynamicSetLib} from "./utils/UnorderedIndexableContractDynamicSet.sol";
 import {ADMIN_KEY, OPERATIONAL_KEY} from "./constants/IdentityConstants.sol";
 
-contract Profile is Named, Versioned {
+contract Profile is Named, Versioned, ContractStatus, Initializable {
     event ProfileCreated(uint72 indexed identityId, bytes nodeId);
     event ProfileDeleted(uint72 indexed identityId);
     event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
 
     string private constant _NAME = "Profile";
-    string private constant _VERSION = "1.0.1";
+    string private constant _VERSION = "1.0.2";
 
-    Hub public hub;
     HashingProxy public hashingProxy;
     Identity public identityContract;
     Staking public stakingContract;
@@ -33,16 +33,8 @@ contract Profile is Named, Versioned {
     ProfileStorage public profileStorage;
     WhitelistStorage public whitelistStorage;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
+    constructor(address hubAddress) ContractStatus(hubAddress) {
         initialize();
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
     }
 
     modifier onlyIdentityOwner(uint72 identityId) {
@@ -212,10 +204,6 @@ contract Profile is Named, Versioned {
         ps.setAccumulatedOperatorFeeWithdrawalAmount(identityId, 0);
         ps.setAccumulatedOperatorFeeWithdrawalTimestamp(identityId, 0);
         ps.transferAccumulatedOperatorFee(msg.sender, withdrawalAmount);
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
     function _checkIdentityOwner(uint72 identityId) internal view virtual {

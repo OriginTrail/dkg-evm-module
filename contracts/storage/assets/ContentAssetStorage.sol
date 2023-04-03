@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.4;
 
-import {AbstractAsset} from "../../assets/AbstractAsset.sol";
 import {Hub} from "../../Hub.sol";
+import {AbstractAsset} from "../../abstract/AbstractAsset.sol";
 import {Named} from "../../interface/Named.sol";
 import {ContentAssetStructs} from "../../structs/assets/ContentAssetStructs.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";

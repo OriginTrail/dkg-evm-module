@@ -2,35 +2,25 @@
 
 pragma solidity ^0.8.4;
 
-import {Hub} from "./Hub.sol";
+import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IHashFunction} from "./interface/IHashFunction.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {UnorderedIndexableContractDynamicSetLib} from "./utils/UnorderedIndexableContractDynamicSet.sol";
 
-contract HashingProxy is Named, Versioned {
+contract HashingProxy is Named, Versioned, ContractStatus {
     using UnorderedIndexableContractDynamicSetLib for UnorderedIndexableContractDynamicSetLib.Set;
 
     event NewHashFunctionContract(uint8 indexed hashFunctionId, address newContractAddress);
     event HashFunctionContractChanged(uint8 indexed hashFunctionId, address newContractAddress);
 
     string private constant _NAME = "HashingProxy";
-    string private constant _VERSION = "1.0.0";
-
-    Hub public hub;
+    string private constant _VERSION = "1.0.1";
 
     UnorderedIndexableContractDynamicSetLib.Set internal hashFunctionSet;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -72,9 +62,5 @@ contract HashingProxy is Named, Versioned {
 
     function isHashFunction(uint8 hashFunctionId) external view returns (bool) {
         return hashFunctionSet.exists(hashFunctionId);
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 }

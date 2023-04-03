@@ -2,15 +2,13 @@
 
 pragma solidity ^0.8.4;
 
-import {Hub} from "../Hub.sol";
+import {HubDependent} from "../abstract/HubDependent.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 
-contract ParametersStorage is Named, Versioned {
+contract ParametersStorage is Named, Versioned, HubDependent {
     string private constant _NAME = "ParametersStorage";
     string private constant _VERSION = "1.1.0";
-
-    Hub public hub;
 
     // 0 - minProofWindowOffsetPerc
     // 1 - maxProofWindowOffsetPerc
@@ -38,11 +36,7 @@ contract ParametersStorage is Named, Versioned {
 
     uint16 public updateCommitWindowDuration;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-
+    constructor(address hubAddress) HubDependent(hubAddress) {
         // minimumStake
         args3[0] = 50_000 ether;
         // maximumStake
@@ -78,11 +72,6 @@ contract ParametersStorage is Named, Versioned {
 
         // finalizationCommitsNumber
         args1[5] = 3;
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -211,9 +200,5 @@ contract ParametersStorage is Named, Versioned {
 
     function setFinalizationCommitsNumber(uint8 newFinalizationCommitsNumber) external onlyHubOwner {
         args1[5] = newFinalizationCommitsNumber;
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 }

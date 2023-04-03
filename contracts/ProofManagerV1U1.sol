@@ -2,15 +2,16 @@
 
 pragma solidity ^0.8.4;
 
-import {AbstractAsset} from "./assets/AbstractAsset.sol";
 import {HashingProxy} from "./HashingProxy.sol";
-import {Hub} from "./Hub.sol";
 import {Staking} from "./Staking.sol";
 import {AssertionStorage} from "./storage/AssertionStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
+import {AbstractAsset} from "./abstract/AbstractAsset.sol";
+import {ContractStatus} from "./abstract/ContractStatus.sol";
+import {Initializable} from "./interface/Initializable.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
@@ -19,7 +20,7 @@ import {GeneralErrors} from "./errors/GeneralErrors.sol";
 import {ServiceAgreementErrorsV1U1} from "./errors/ServiceAgreementErrorsV1U1.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-contract ProofManagerV1U1 is Named, Versioned {
+contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
     event ProofSubmitted(
         address indexed assetContract,
         uint256 indexed tokenId,
@@ -35,7 +36,6 @@ contract ProofManagerV1U1 is Named, Versioned {
 
     bool[4] public reqs = [false, false, false, false];
 
-    Hub public hub;
     HashingProxy public hashingProxy;
     Staking public stakingContract;
     AssertionStorage public assertionStorage;
@@ -44,16 +44,8 @@ contract ProofManagerV1U1 is Named, Versioned {
     ProfileStorage public profileStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
+    constructor(address hubAddress) ContractStatus(hubAddress) {
         initialize();
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
     }
 
     function initialize() public onlyHubOwner {
@@ -243,9 +235,5 @@ contract ProofManagerV1U1 is Named, Versioned {
         // blockchash() function only works for last 256 blocks (25.6 min window in case of 6s block time)
         // TODO: figure out how to achieve randomness
         return (latestFinalizedState, uint256(sha256(abi.encodePacked(epoch, identityId))) % assertionChunksNumber);
-    }
-
-    function _checkHubOwner() internal view virtual {
-        if (msg.sender != hub.owner()) revert GeneralErrors.OnlyHubOwnerFunction(msg.sender);
     }
 }

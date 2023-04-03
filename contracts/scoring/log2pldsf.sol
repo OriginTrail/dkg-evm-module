@@ -3,21 +3,21 @@
 pragma solidity ^0.8.4;
 
 import {HashingProxy} from "../HashingProxy.sol";
-import {Hub} from "../Hub.sol";
 import {ParametersStorage} from "../storage/ParametersStorage.sol";
+import {HubDependent} from "../abstract/HubDependent.sol";
 import {Indexable} from "../interface/Indexable.sol";
+import {Initializable} from "../interface/Initializable.sol";
 import {IScoreFunction} from "../interface/IScoreFunction.sol";
 import {Named} from "../interface/Named.sol";
 import {PRBMathUD60x18} from "@prb/math/contracts/PRBMathUD60x18.sol";
 
 // Logarithmic Polynomial Long Division Score Function
-contract Log2PLDSF is IScoreFunction, Indexable, Named {
+contract Log2PLDSF is IScoreFunction, Indexable, Named, HubDependent, Initializable {
     using PRBMathUD60x18 for uint256;
 
     uint8 private constant _ID = 1;
     string private constant _NAME = "Log2PLDSF";
 
-    Hub public hub;
     HashingProxy public hashingProxy;
     ParametersStorage public parametersStorage;
 
@@ -33,10 +33,7 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
     uint32 public distanceExponent;
     uint32 public d;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
+    constructor(address hubAddress) HubDependent(hubAddress) {
         initialize();
 
         distanceMappingCoefficient = type(uint256).max / 1_000;
@@ -50,11 +47,6 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
         c = 1;
         distanceExponent = 2;
         d = 1;
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
     }
 
     function initialize() public onlyHubOwner {
@@ -144,9 +136,5 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
 
     function setD(uint32 d_) external onlyHubOwner {
         d = d_;
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 }

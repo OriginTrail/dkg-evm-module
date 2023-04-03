@@ -6,11 +6,12 @@ import {Hub} from "../Hub.sol";
 import {ServiceAgreementStorageV1} from "./ServiceAgreementStorageV1.sol";
 import {ServiceAgreementStorageV1U1} from "./ServiceAgreementStorageV1U1.sol";
 import {ServiceAgreementStructsV1} from "../structs/ServiceAgreementStructsV1.sol";
+import {Initializable} from "../interface/Initializable.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 import {GeneralErrors} from "../errors/GeneralErrors.sol";
 
-contract ServiceAgreementStorageProxy is Named, Versioned {
+contract ServiceAgreementStorageProxy is Named, Versioned, Initializable {
     string private constant _NAME = "ServiceAgreementStorageProxy";
     string private constant _VERSION = "1.0.0";
 

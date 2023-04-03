@@ -4,20 +4,21 @@ pragma solidity ^0.8.4;
 
 import {Assertion} from "../Assertion.sol";
 import {HashingProxy} from "../HashingProxy.sol";
-import {Hub} from "../Hub.sol";
 import {ServiceAgreementV1} from "../ServiceAgreementV1.sol";
-import {Named} from "../interface/Named.sol";
-import {Versioned} from "../interface/Versioned.sol";
 import {ContentAssetStorage} from "../storage/assets/ContentAssetStorage.sol";
 import {ParametersStorage} from "../storage/ParametersStorage.sol";
 import {ServiceAgreementStorageProxy} from "../storage/ServiceAgreementStorageProxy.sol";
 import {UnfinalizedStateStorage} from "../storage/UnfinalizedStateStorage.sol";
-import {HASH_FUNCTION_ID} from "../constants/assets/ContentAssetConstants.sol";
+import {HubDependent} from "../abstract/HubDependent.sol";
+import {Initializable} from "../interface/Initializable.sol";
+import {Named} from "../interface/Named.sol";
+import {Versioned} from "../interface/Versioned.sol";
 import {ContentAssetStructs} from "../structs/assets/ContentAssetStructs.sol";
 import {ServiceAgreementStructsV1} from "../structs/ServiceAgreementStructsV1.sol";
 import {ContentAssetErrors} from "../errors/assets/ContentAssetErrors.sol";
+import {HASH_FUNCTION_ID} from "../constants/assets/ContentAssetConstants.sol";
 
-contract ContentAsset is Named, Versioned {
+contract ContentAsset is Named, Versioned, HubDependent, Initializable {
     event AssetMinted(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
     event AssetBurnt(address indexed assetContract, uint256 indexed tokenId, uint96 returnedTokenAmount);
     event AssetStateUpdated(
@@ -44,7 +45,6 @@ contract ContentAsset is Named, Versioned {
     string private constant _NAME = "ContentAsset";
     string private constant _VERSION = "1.0.0";
 
-    Hub public hub;
     Assertion public assertionContract;
     HashingProxy public hashingProxy;
     ContentAssetStorage public contentAssetStorage;
@@ -53,10 +53,7 @@ contract ContentAsset is Named, Versioned {
     ServiceAgreementV1 public serviceAgreementV1;
     UnfinalizedStateStorage public unfinalizedStateStorage;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
+    constructor(address hubAddress) HubDependent(hubAddress) {
         initialize();
     }
 
@@ -70,11 +67,6 @@ contract ContentAsset is Named, Versioned {
         );
         serviceAgreementV1 = ServiceAgreementV1(hub.getContractAddress("ServiceAgreementV1"));
         unfinalizedStateStorage = UnfinalizedStateStorage(hub.getContractAddress("UnfinalizedStateStorage"));
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
     }
 
     modifier onlyAssetOwner(uint256 tokenId) {
@@ -424,10 +416,6 @@ contract ContentAsset is Named, Versioned {
         );
 
         emit AssetMinted(contentAssetStorageAddress, tokenId, assertionId);
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
     function _checkAssetOwner(uint256 tokenId) internal view virtual {

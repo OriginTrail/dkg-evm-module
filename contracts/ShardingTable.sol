@@ -2,42 +2,29 @@
 
 pragma solidity ^0.8.4;
 
-import {Hub} from "./Hub.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
+import {ContractStatus} from "./abstract/ContractStatus.sol";
+import {Initializable} from "./interface/Initializable.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ShardingTableStructs} from "./structs/ShardingTableStructs.sol";
 import {NULL} from "./constants/ShardingTableConstants.sol";
 
-contract ShardingTable is Named, Versioned {
+contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
     event NodeAdded(uint72 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
     event NodeRemoved(uint72 indexed identityId, bytes nodeId);
 
     string private constant _NAME = "ShardingTable";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "1.0.1";
 
-    Hub public hub;
     ProfileStorage public profileStorage;
     ShardingTableStorage public shardingTableStorage;
     StakingStorage public stakingStorage;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
+    constructor(address hubAddress) ContractStatus(hubAddress) {
         initialize();
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
-
-    modifier onlyContracts() {
-        _checkHub();
-        _;
     }
 
     function initialize() public onlyHubOwner {
@@ -189,13 +176,5 @@ contract ShardingTable is Named, Versioned {
         }
 
         return nodesPage;
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }
