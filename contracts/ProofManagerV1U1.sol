@@ -92,7 +92,11 @@ contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
             timeNow < (startTime + epochLength * epoch + proofWindowOffset + proofWindowDuration));
     }
 
-    function getChallenge(address assetContract, uint256 tokenId, uint16 epoch) public view returns (bytes32, uint256) {
+    function getChallenge(
+        address assetContract,
+        uint256 tokenId,
+        uint16 epoch
+    ) public view returns (bytes32 assertionId, uint256 challenge) {
         return _getChallenge(msg.sender, assetContract, tokenId, epoch);
     }
 
@@ -224,7 +228,7 @@ contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         address assetContract,
         uint256 tokenId,
         uint16 epoch
-    ) internal view returns (bytes32, uint256) {
+    ) internal view returns (bytes32 assertionId, uint256 challenge) {
         uint72 identityId = identityStorage.getIdentityId(sender);
 
         AbstractAsset generalAssetInterface = AbstractAsset(assetContract);

@@ -158,17 +158,17 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "distanceMapCoefficient",
         "type": "uint256"
       },
       {
         "internalType": "uint96",
-        "name": "",
+        "name": "stakeMapCoefficient",
         "type": "uint96"
       },
       {
         "internalType": "uint32[8]",
-        "name": "",
+        "name": "formulaCoefficients",
         "type": "uint32[8]"
       }
     ],

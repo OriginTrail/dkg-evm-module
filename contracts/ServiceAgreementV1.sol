@@ -231,7 +231,7 @@ contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
         address assetContract,
         uint256 tokenId,
         uint16 epoch
-    ) public view returns (bytes32, uint256) {
+    ) public view returns (bytes32 assertionId, uint256 challenge) {
         return proofManagerV1.getChallenge(sender, assetContract, tokenId, epoch);
     }
 

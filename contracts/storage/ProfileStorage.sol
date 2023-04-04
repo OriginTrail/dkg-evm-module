@@ -63,7 +63,9 @@ contract ProfileStorage is Named, Versioned, Guardian {
         sharesSymbols[sharesContract.symbol()] = true;
     }
 
-    function getProfile(uint72 identityId) external view returns (bytes memory, uint96[2] memory, address) {
+    function getProfile(
+        uint72 identityId
+    ) external view returns (bytes memory nodeId, uint96[2] memory profileSettings, address sharesContractAddress) {
         ProfileDefinition storage profile = profiles[identityId];
         return (profile.nodeId, [profile.ask, profile.accumulatedOperatorFee], profile.sharesContractAddress);
     }

@@ -63,7 +63,17 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
 
     function getAgreementData(
         bytes32 agreementId
-    ) external view returns (uint256, uint16, uint128, uint96[2] memory, uint8[2] memory) {
+    )
+        external
+        view
+        returns (
+            uint256 startTime,
+            uint16 epochsNumber,
+            uint128 epochLength,
+            uint96[2] memory tokens,
+            uint8[2] memory scoreFunctionIdAndProofWindowOffsetPerc
+        )
+    {
         return (
             serviceAgreements[agreementId].startTime,
             serviceAgreements[agreementId].epochsNumber,

@@ -90,7 +90,11 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named, HubDependent, Initializa
         return uint256(nodeIdHash ^ keywordHash);
     }
 
-    function getParameters() external view returns (uint256, uint96, uint32[8] memory) {
+    function getParameters()
+        external
+        view
+        returns (uint256 distanceMapCoefficient, uint96 stakeMapCoefficient, uint32[8] memory formulaCoefficients)
+    {
         return (
             distanceMappingCoefficient,
             stakeMappingCoefficient,

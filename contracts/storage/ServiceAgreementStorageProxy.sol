@@ -109,13 +109,19 @@ contract ServiceAgreementStorageProxy is Named, Versioned, Initializable {
 
     function getAgreementData(
         bytes32 agreementId
-    ) external view returns (uint256, uint16, uint128, uint96[2] memory, uint8[2] memory) {
+    )
+        external
+        view
+        returns (
+            uint256 startTime,
+            uint16 epochsNumber,
+            uint128 epochLength,
+            uint96[2] memory tokens,
+            uint8[2] memory scoreFunctionIdAndProofWindowOffsetPerc
+        )
+    {
         if (this.agreementV1Exists(agreementId)) {
-            uint256 startTime;
-            uint16 epochsNumber;
-            uint128 epochLength;
             uint96 tokenAmount;
-            uint8[2] memory scoreFunctionIdAndProofWindowOffsetPerc;
             (startTime, epochsNumber, epochLength, tokenAmount, scoreFunctionIdAndProofWindowOffsetPerc) = storageV1
                 .getAgreementData(agreementId);
             return (
