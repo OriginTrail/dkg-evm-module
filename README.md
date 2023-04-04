@@ -26,7 +26,7 @@ Before running the commands, make sure you have the following prerequisites inst
 
 - [Node.js](https://nodejs.org/) (version 14.x or higher)
 - [npm](https://www.npmjs.com/)
-- [slither](https://github.com/crytic/slither) (Optional, needed for statis analysis)
+- [slither](https://github.com/crytic/slither) (Optional, needed for static Solidity code analysis)
 
 Clone the repository and install the dependencies:
 
