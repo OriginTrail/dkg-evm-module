@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 uint256 constant ADMIN_KEY = 1;
 uint256 constant OPERATIONAL_KEY = 2;

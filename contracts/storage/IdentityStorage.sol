@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import {Hub} from "../Hub.sol";
 import {IERC734Extended} from "../interface/IERC734Extended.sol";

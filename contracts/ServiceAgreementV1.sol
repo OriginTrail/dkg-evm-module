@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import {CommitManagerV1} from "./CommitManagerV1.sol";
 import {CommitManagerV1U1} from "./CommitManagerV1U1.sol";

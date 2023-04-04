@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";

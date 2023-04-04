@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 library ServiceAgreementErrorsV1 {
     error ServiceAgreementDoesntExist(bytes32 agreementId);
