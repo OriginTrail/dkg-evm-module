@@ -23,9 +23,8 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
     ShardingTableStorage public shardingTableStorage;
     StakingStorage public stakingStorage;
 
-    constructor(address hubAddress) ContractStatus(hubAddress) {
-        initialize();
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));

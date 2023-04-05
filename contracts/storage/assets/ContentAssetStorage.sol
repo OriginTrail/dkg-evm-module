@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.16;
 
-import {Hub} from "../../Hub.sol";
 import {AbstractAsset} from "../../abstract/AbstractAsset.sol";
 import {Named} from "../../interface/Named.sol";
 import {ContentAssetStructs} from "../../structs/assets/ContentAssetStructs.sol";
@@ -22,11 +21,6 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) AbstractAsset(hubAddress) ERC721("ContentAssetStorage", "DKG") {}
-
-    modifier onlyContracts() {
-        _checkHub();
-        _;
-    }
 
     function name() public view override(Named, ERC721) returns (string memory) {
         return ERC721.name();
@@ -110,9 +104,5 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
         uint256 index
     ) internal pure virtual returns (bytes32) {
         return keccak256(abi.encodePacked(tokenId, assertionId, index));
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

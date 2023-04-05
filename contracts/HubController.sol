@@ -43,14 +43,23 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
     ) external onlyOwner {
         for (uint i; i < newContracts.length; ) {
             hub.setContractAddress(newContracts[i].name, newContracts[i].addr);
+            unchecked {
+                i++;
+            }
         }
 
         for (uint i; i < newAssetStorageContracts.length; ) {
             hub.setAssetStorageAddress(newAssetStorageContracts[i].name, newAssetStorageContracts[i].addr);
+            unchecked {
+                i++;
+            }
         }
 
         for (uint i; i < contractsToReinitialize.length; ) {
             Initializable(contractsToReinitialize[i]).initialize();
+            unchecked {
+                i++;
+            }
         }
     }
 

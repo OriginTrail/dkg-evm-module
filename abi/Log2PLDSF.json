@@ -394,11 +394,11 @@
     "inputs": [
       {
         "internalType": "uint96",
-        "name": "stakeRangeMax",
+        "name": "stakeRangeMax_",
         "type": "uint96"
       }
     ],
-    "name": "setStakeMappingCoefficient",
+    "name": "setStakeRangeMax",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -411,19 +411,6 @@
         "internalType": "uint32",
         "name": "",
         "type": "uint32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "stakeMappingCoefficient",
-    "outputs": [
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
       }
     ],
     "stateMutability": "view",

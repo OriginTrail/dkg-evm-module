@@ -22,7 +22,7 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named, HubDependent, Initializa
     ParametersStorage public parametersStorage;
 
     uint256 public distanceMappingCoefficient;
-    uint96 public stakeMappingCoefficient;
+    uint96 stakeRangeMax;
 
     uint32 public multiplier;
     uint32 public logArgumentConstant;
@@ -34,10 +34,8 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named, HubDependent, Initializa
     uint32 public d;
 
     constructor(address hubAddress) HubDependent(hubAddress) {
-        initialize();
-
         distanceMappingCoefficient = type(uint256).max / 1_000;
-        stakeMappingCoefficient = parametersStorage.maximumStake() / 200_000;
+        stakeRangeMax = 200_000;
 
         multiplier = 10000;
         logArgumentConstant = 1;
@@ -64,7 +62,7 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named, HubDependent, Initializa
 
     function calculateScore(uint256 distance, uint96 stake) external view returns (uint40) {
         uint256 mappedDistance = distance / distanceMappingCoefficient;
-        uint96 mappedStake = stake / stakeMappingCoefficient;
+        uint96 mappedStake = stake / (parametersStorage.maximumStake() / stakeRangeMax);
 
         uint64 coefficient = 1 ether;
 
@@ -97,7 +95,7 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named, HubDependent, Initializa
     {
         return (
             distanceMappingCoefficient,
-            stakeMappingCoefficient,
+            (parametersStorage.maximumStake() / stakeRangeMax),
             [multiplier, logArgumentConstant, a, stakeExponent, b, c, distanceExponent, d]
         );
     }
@@ -106,8 +104,8 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named, HubDependent, Initializa
         distanceMappingCoefficient = type(uint256).max / distanceRangeMax;
     }
 
-    function setStakeMappingCoefficient(uint96 stakeRangeMax) external onlyHubOwner {
-        stakeMappingCoefficient = parametersStorage.maximumStake() / stakeRangeMax;
+    function setStakeRangeMax(uint96 stakeRangeMax_) external onlyHubOwner {
+        stakeRangeMax = stakeRangeMax_;
     }
 
     function setMultiplier(uint32 multiplier_) external onlyHubOwner {

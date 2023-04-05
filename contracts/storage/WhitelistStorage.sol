@@ -2,31 +2,20 @@
 
 pragma solidity ^0.8.16;
 
-import {Hub} from "../Hub.sol";
+import {HubDependent} from "../abstract/HubDependent.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 
-contract WhitelistStorage is Named, Versioned {
+contract WhitelistStorage is Named, Versioned, HubDependent {
     string private constant _NAME = "WhitelistStorage";
     string private constant _VERSION = "1.0.0";
-
-    Hub public hub;
 
     bool public whitelistingEnabled;
 
     mapping(address => bool) public whitelisted;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-
+    constructor(address hubAddress) HubDependent(hubAddress) {
         whitelistingEnabled = false;
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -51,9 +40,5 @@ contract WhitelistStorage is Named, Versioned {
 
     function disableWhitelist() external onlyHubOwner {
         whitelistingEnabled = false;
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 }

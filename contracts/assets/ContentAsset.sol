@@ -53,9 +53,8 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
     ServiceAgreementV1 public serviceAgreementV1;
     UnfinalizedStateStorage public unfinalizedStateStorage;
 
-    constructor(address hubAddress) HubDependent(hubAddress) {
-        initialize();
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) HubDependent(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));

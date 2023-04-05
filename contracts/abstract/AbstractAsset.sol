@@ -2,18 +2,13 @@
 
 pragma solidity ^0.8.16;
 
-import {Hub} from "../Hub.sol";
+import {HubDependent} from "../abstract/HubDependent.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 
-abstract contract AbstractAsset is Named, Versioned {
-    Hub public hub;
-
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-    }
+abstract contract AbstractAsset is Named, Versioned, HubDependent {
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) HubDependent(hubAddress) {}
 
     function getAssertionIds(uint256 tokenId) public view virtual returns (bytes32[] memory);
 

@@ -13,17 +13,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "caller",
-        "type": "address"
-      }
-    ],
-    "name": "OnlyHubOwnerFunction",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes32",
         "name": "agreementId",
         "type": "bytes32"

@@ -13,12 +13,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 
   if (!isDeployed) {
-    const Hub = await hre.ethers.getContractAt(
-      'Hub',
-      hre.helpers.contractDeployments.contracts['Hub'].evmAddress,
-      deployer,
-    );
-    const hashingProxyAddress = await Hub.getContractAddress('HashingProxy');
+    const hashingProxyAddress = hre.helpers.contractDeployments.contracts['HashingProxy'].evmAddress;
     const HashingProxy = await hre.ethers.getContractAt('HashingProxy', hashingProxyAddress, deployer);
     const setContractTx = await HashingProxy.setContractAddress(1, SHA256.address);
     await setContractTx.wait();

@@ -26,11 +26,6 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) Guardian(hubAddress) {}
 
-    modifier onlyContracts() {
-        _checkHub();
-        _;
-    }
-
     function name() external pure virtual override returns (string memory) {
         return _NAME;
     }
@@ -290,9 +285,5 @@ contract ServiceAgreementStorageV1U1 is Named, Versioned, Guardian {
 
     function transferAgreementTokens(address receiver, uint96 tokenAmount) external onlyContracts {
         tokenContract.transfer(receiver, tokenAmount);
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

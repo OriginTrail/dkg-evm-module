@@ -46,9 +46,8 @@ contract CommitManagerV1 is Named, Versioned, ContractStatus, Initializable {
     ShardingTableStorage public shardingTableStorage;
     StakingStorage public stakingStorage;
 
-    constructor(address hubAddress) ContractStatus(hubAddress) {
-        initialize();
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));

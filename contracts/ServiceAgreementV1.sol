@@ -50,9 +50,8 @@ contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
 
     error ScoreError();
 
-    constructor(address hubAddress) ContractStatus(hubAddress) {
-        initialize();
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         commitManagerV1 = CommitManagerV1(hub.getContractAddress("CommitManagerV1"));

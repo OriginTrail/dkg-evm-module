@@ -33,9 +33,8 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
     ProfileStorage public profileStorage;
     WhitelistStorage public whitelistStorage;
 
-    constructor(address hubAddress) ContractStatus(hubAddress) {
-        initialize();
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     modifier onlyIdentityOwner(uint72 identityId) {
         _checkIdentityOwner(identityId);

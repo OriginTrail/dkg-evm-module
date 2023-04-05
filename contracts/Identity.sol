@@ -18,9 +18,8 @@ contract Identity is Named, Versioned, ContractStatus, Initializable {
 
     IdentityStorage public identityStorage;
 
-    constructor(address hubAddress) ContractStatus(hubAddress) {
-        initialize();
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     modifier onlyAdmin(uint72 identityId) {
         _checkAdmin(identityId);

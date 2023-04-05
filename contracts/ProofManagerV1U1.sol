@@ -44,9 +44,8 @@ contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
     ProfileStorage public profileStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
 
-    constructor(address hubAddress) ContractStatus(hubAddress) {
-        initialize();
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));

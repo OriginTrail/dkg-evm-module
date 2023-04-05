@@ -9,16 +9,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const Log2PLDSF = await hre.helpers.deploy({
     newContractName: 'Log2PLDSF',
     setContractInHub: false,
+    dependencies: func.dependencies,
   });
 
   if (!isDeployed) {
-    const Hub = await hre.ethers.getContractAt(
-      'Hub',
-      hre.helpers.contractDeployments.contracts['Hub'].evmAddress,
-      deployer,
-    );
-
-    const scoringProxyAddress = await Hub.getContractAddress('ScoringProxy');
+    const scoringProxyAddress = hre.helpers.contractDeployments.contracts['ScoringProxy'].evmAddress;
     const ScoringProxy = await hre.ethers.getContractAt('ScoringProxy', scoringProxyAddress, deployer);
     const setContractTx = await ScoringProxy.setContractAddress(1, Log2PLDSF.address);
     await setContractTx.wait();
@@ -27,4 +22,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ['Log2PLDSF'];
-func.dependencies = ['Hub', 'SHA256', 'ScoringProxy', 'ParametersStorage'];
+func.dependencies = ['Hub', 'HashingProxy', 'SHA256', 'ScoringProxy', 'ParametersStorage'];

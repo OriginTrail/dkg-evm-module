@@ -17,9 +17,8 @@ contract Assertion is Named, Versioned, ContractStatus, Initializable {
 
     AssertionStorage public assertionStorage;
 
-    constructor(address hubAddress) ContractStatus(hubAddress) {
-        initialize();
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         assertionStorage = AssertionStorage(hub.getContractAddress("AssertionStorage"));

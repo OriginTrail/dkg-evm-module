@@ -34,11 +34,6 @@ contract ProfileStorage is Named, Versioned, Guardian {
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) Guardian(hubAddress) {}
 
-    modifier onlyContracts() {
-        _checkHub();
-        _;
-    }
-
     function name() external pure virtual override returns (string memory) {
         return _NAME;
     }
@@ -147,9 +142,5 @@ contract ProfileStorage is Named, Versioned, Guardian {
 
     function transferAccumulatedOperatorFee(address receiver, uint96 amount) external onlyContracts {
         tokenContract.transfer(receiver, amount);
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

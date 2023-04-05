@@ -54,9 +54,8 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
     ShardingTableStorage public shardingTableStorage;
     IERC20 public tokenContract;
 
-    constructor(address hubAddress) ContractStatus(hubAddress) {
-        initialize();
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     modifier onlyAdmin(uint72 identityId) {
         _checkAdmin(identityId);
