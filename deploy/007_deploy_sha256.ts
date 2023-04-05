@@ -13,9 +13,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 
   if (!isDeployed) {
+    const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
+    const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
+
+    const HashingProxyAbi = hre.helpers.getAbi('HashingProxy');
+    const HashingProxyInterface = new hre.ethers.utils.Interface(HashingProxyAbi);
     const hashingProxyAddress = hre.helpers.contractDeployments.contracts['HashingProxy'].evmAddress;
-    const HashingProxy = await hre.ethers.getContractAt('HashingProxy', hashingProxyAddress, deployer);
-    const setContractTx = await HashingProxy.setContractAddress(1, SHA256.address);
+
+    const setContractTx = await HubController.forwardCall(
+      hashingProxyAddress,
+      HashingProxyInterface.encodeFunctionData('setContractAddress', [1, SHA256.address]),
+    );
     await setContractTx.wait();
   }
 };

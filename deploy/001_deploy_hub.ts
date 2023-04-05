@@ -4,13 +4,11 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
 
-  if (hre.helpers.isDeployed('Hub') && hre.network.name !== 'hardhat') {
-    return;
+  if (!hre.helpers.isDeployed('Hub') || hre.network.name === 'hardhat') {
+    const Hub = await hre.deployments.deploy('Hub', { from: deployer, log: true });
+
+    hre.helpers.updateDeploymentsJson('Hub', Hub.address);
   }
-
-  const Hub = await hre.deployments.deploy('Hub', { from: deployer, log: true });
-
-  hre.helpers.updateDeploymentsJson('Hub', Hub.address);
 };
 
 export default func;

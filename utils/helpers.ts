@@ -117,13 +117,11 @@ export class Helpers {
       hubAddress = (await this.hre.deployments.get('Hub')).address;
     }
 
-    const hub = await this.hre.ethers.getContractAt('Hub', hubAddress, deployer);
-
     let newContract;
     try {
       newContract = await this.hre.deployments.deploy(newContractName, {
         from: deployer,
-        args: passHubInConstructor ? [hub.address] : [],
+        args: passHubInConstructor ? [hubAddress] : [],
         log: true,
       });
     } catch (error) {
@@ -137,11 +135,26 @@ export class Helpers {
       throw Error(message);
     }
 
+    const Hub = await this.hre.ethers.getContractAt('Hub', hubAddress, deployer);
+    const hubControllerAddress = await Hub.owner();
+    const HubController = await this.hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
+
+    let tx;
     const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
     if (setContractInHub) {
-      this.redeployedContracts.push([nameInHub, newContract.address]);
+      if (this.hre.network.name === 'hardhat') {
+        tx = await HubController.setContractAddress(nameInHub, newContract.address);
+        await tx.wait();
+      } else {
+        this.redeployedContracts.push([nameInHub, newContract.address]);
+      }
     } else if (setAssetStorageInHub) {
-      this.redeployedAssetStorageContracts.push([nameInHub, newContract.address]);
+      if (this.hre.network.name === 'hardhat') {
+        tx = await HubController.setAssetStorageAddress(nameInHub, newContract.address);
+        await tx.wait();
+      } else {
+        this.redeployedAssetStorageContracts.push([nameInHub, newContract.address]);
+      }
     }
 
     if (this.hasFunction(newContractName, 'initialize')) {
@@ -166,9 +179,12 @@ export class Helpers {
   }
 
   public hasFunction(contractName: string, functionName: string): boolean {
-    const contractAbiJsonContent = fs.readFileSync(`./abi/${contractName}.json`, 'utf-8');
-    const contractAbi: AbiEntry[] = JSON.parse(contractAbiJsonContent);
+    const contractAbi = this.getAbi(contractName);
     return contractAbi.some((entry) => entry.type === 'function' && entry.name === functionName);
+  }
+
+  public getAbi(contractName: string): AbiEntry[] {
+    return JSON.parse(fs.readFileSync(`./abi/${contractName}.json`, 'utf-8'));
   }
 
   public updateDeploymentsJson(newContractName: string, newContractAddress: string) {
