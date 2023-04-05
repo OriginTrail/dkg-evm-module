@@ -3,28 +3,31 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Hub } from '../../typechain';
+import { Hub, HubController } from '../../typechain';
 import { ZERO_ADDRESS } from '../helpers/constants';
 
 type HubFixture = {
   accounts: SignerWithAddress[];
   Hub: Hub;
+  HubController: HubController;
 };
 
 describe('@unit Hub contract', function () {
   let accounts: SignerWithAddress[];
   let Hub: Hub;
+  let HubController: HubController;
 
   async function deployHubFixture(): Promise<HubFixture> {
     await hre.deployments.fixture(['Hub']);
     Hub = await hre.ethers.getContract<Hub>('Hub');
+    HubController = await hre.ethers.getContract<HubController>('HubController');
     accounts = await hre.ethers.getSigners();
 
-    return { accounts, Hub };
+    return { accounts, Hub, HubController };
   }
 
   beforeEach(async () => {
-    ({ accounts, Hub } = await loadFixture(deployHubFixture));
+    ({ accounts, Hub, HubController } = await loadFixture(deployHubFixture));
   });
 
   it('The contract is named "Hub"', async () => {
@@ -36,7 +39,7 @@ describe('@unit Hub contract', function () {
   });
 
   it('Set correct contract address and name; emits NewContract event', async () => {
-    await expect(Hub.setContractAddress('TestContract', accounts[1].address))
+    await expect(HubController.setContractAddress('TestContract', accounts[1].address))
       .to.emit(Hub, 'NewContract')
       .withArgs('TestContract', accounts[1].address);
 
@@ -52,23 +55,23 @@ describe('@unit Hub contract', function () {
   });
 
   it('Set contract with empty name; expect revert: name cannot be empty', async () => {
-    await expect(Hub.setContractAddress('', accounts[1].address)).to.be.revertedWith(
+    await expect(HubController.setContractAddress('', accounts[1].address)).to.be.revertedWith(
       'NamedContractSet: Name cannot be empty',
     );
   });
 
   it('Set contract with empty address; expect revert: address cannot be 0x0', async () => {
-    await expect(Hub.setContractAddress('TestContract', ZERO_ADDRESS)).to.be.revertedWith(
+    await expect(HubController.setContractAddress('TestContract', ZERO_ADDRESS)).to.be.revertedWith(
       'NamedContractSet: Address cannot be 0x0',
     );
   });
 
   it('Update contract address; emits ContractChanged event', async () => {
-    await Hub.setContractAddress('TestContract', accounts[1].address);
+    await HubController.setContractAddress('TestContract', accounts[1].address);
 
     expect(await Hub.getContractAddress('TestContract')).to.equal(accounts[1].address);
 
-    expect(await Hub.setContractAddress('TestContract', accounts[2].address))
+    expect(await HubController.setContractAddress('TestContract', accounts[2].address))
       .to.emit(Hub, 'ContractChanged')
       .withArgs('TestContract', accounts[2]);
 
@@ -76,20 +79,20 @@ describe('@unit Hub contract', function () {
   });
 
   it('Set contract address; name should be in the Hub', async () => {
-    await Hub.setContractAddress('TestContract', accounts[1].address);
+    await HubController.setContractAddress('TestContract', accounts[1].address);
 
     expect(await Hub['isContract(string)']('TestContract')).to.equal(true);
   });
 
   it('Set contract address; address should be in the Hub', async () => {
-    await Hub.setContractAddress('TestContract', accounts[1].address);
+    await HubController.setContractAddress('TestContract', accounts[1].address);
 
     expect(await Hub['isContract(address)'](accounts[1].address)).to.equal(true);
   });
 
   it('Get all contracts; all addresses and names should be in the Hub', async () => {
     for (let i = 0; i < 6; i++) {
-      await Hub.setContractAddress(`TestContract${i}`, accounts[i].address);
+      await HubController.setContractAddress(`TestContract${i}`, accounts[i].address);
     }
 
     const contracts = await Hub.getAllContracts();
@@ -100,7 +103,7 @@ describe('@unit Hub contract', function () {
   });
 
   it('Set correct asset contract address and name; emits NewAssetContract event', async () => {
-    await expect(Hub.setAssetStorageAddress('TestAssetContract', accounts[1].address))
+    await expect(HubController.setAssetStorageAddress('TestAssetContract', accounts[1].address))
       .to.emit(Hub, 'NewAssetStorage')
       .withArgs('TestAssetContract', accounts[1].address);
 
@@ -116,23 +119,23 @@ describe('@unit Hub contract', function () {
   });
 
   it('Set asset contract with empty name; expect revert: name cannot be empty', async () => {
-    await expect(Hub.setAssetStorageAddress('', accounts[1].address)).to.be.revertedWith(
+    await expect(HubController.setAssetStorageAddress('', accounts[1].address)).to.be.revertedWith(
       'NamedContractSet: Name cannot be empty',
     );
   });
 
   it('Set asset contract with empty address; expect revert: address cannot be 0x0', async () => {
-    await expect(Hub.setAssetStorageAddress('TestAssetContract', ZERO_ADDRESS)).to.be.revertedWith(
+    await expect(HubController.setAssetStorageAddress('TestAssetContract', ZERO_ADDRESS)).to.be.revertedWith(
       'NamedContractSet: Address cannot be 0x0',
     );
   });
 
   it('Update asset contract address; emits AssetContractChanged event', async () => {
-    await Hub.setAssetStorageAddress('TestAssetContract', accounts[1].address);
+    await HubController.setAssetStorageAddress('TestAssetContract', accounts[1].address);
 
     expect(await Hub.getAssetStorageAddress('TestAssetContract')).to.equal(accounts[1].address);
 
-    await expect(Hub.setAssetStorageAddress('TestAssetContract', accounts[2].address))
+    await expect(HubController.setAssetStorageAddress('TestAssetContract', accounts[2].address))
       .to.emit(Hub, 'AssetStorageChanged')
       .withArgs('TestAssetContract', accounts[2].address);
 
@@ -140,20 +143,20 @@ describe('@unit Hub contract', function () {
   });
 
   it('Set asset contract address; name should be in the Hub', async () => {
-    await Hub.setAssetStorageAddress('TestAssetContract', accounts[1].address);
+    await HubController.setAssetStorageAddress('TestAssetContract', accounts[1].address);
 
     expect(await Hub['isAssetStorage(string)']('TestAssetContract')).to.equal(true);
   });
 
   it('Set asset contract address; address should be in the Hub', async () => {
-    await Hub.setAssetStorageAddress('TestAssetContract', accounts[1].address);
+    await HubController.setAssetStorageAddress('TestAssetContract', accounts[1].address);
 
     expect(await Hub['isAssetStorage(address)'](accounts[1].address)).to.equal(true);
   });
 
   it('Get all asset contracts; all addresses and names should be in the Hub', async () => {
     for (let i = 0; i < 6; i++) {
-      await Hub.setAssetStorageAddress(`TestAssetContract${i}`, accounts[i].address);
+      await HubController.setAssetStorageAddress(`TestAssetContract${i}`, accounts[i].address);
     }
 
     const contracts = await Hub.getAllAssetStorages();

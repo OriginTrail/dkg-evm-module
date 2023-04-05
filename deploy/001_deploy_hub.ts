@@ -14,7 +14,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     hre.helpers.updateDeploymentsJson('Hub', Hub.address);
   }
 
-  if (!hre.helpers.isDeployed('TraceLabsMultiSigWallet')) {
+  if (!hre.helpers.isDeployed('TraceLabsMultiSigWallet') && ['otp_testnet', 'otp_mainnet'].includes(hre.network.name)) {
     await hre.helpers.deploy({
       newContractName: 'TraceLabsMultiSigWallet',
       passHubInConstructor: false,

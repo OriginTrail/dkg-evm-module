@@ -8,7 +8,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const Log2PLDSF = await hre.helpers.deploy({
     newContractName: 'Log2PLDSF',
-    setContractInHub: false,
     dependencies: func.dependencies,
   });
 

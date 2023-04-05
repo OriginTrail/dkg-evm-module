@@ -37,7 +37,12 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         (bool success, bytes memory result) = target.call{value: 0}(data);
 
         if (!success) {
-            revert(string(result));
+            assembly {
+                let ptr := mload(0x40)
+                let size := returndatasize()
+                returndatacopy(ptr, 0, size)
+                revert(ptr, size)
+            }
         }
 
         return result;

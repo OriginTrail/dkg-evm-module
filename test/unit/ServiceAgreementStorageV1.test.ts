@@ -5,7 +5,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Token, Hub, ServiceAgreementStorageV1 } from '../../typechain';
+import { Token, ServiceAgreementStorageV1, HubController } from '../../typechain';
 
 type ServiceAgreementStorageV1Fixture = {
   accounts: SignerWithAddress[];
@@ -23,7 +23,6 @@ describe('@unit ServiceAgreementStorageV1 contract', function () {
   const proofWindowOffsetPerc = 10;
 
   let accounts: SignerWithAddress[];
-  let Hub: Hub;
   let ServiceAgreementStorageV1: ServiceAgreementStorageV1;
   let Token: Token;
 
@@ -32,8 +31,8 @@ describe('@unit ServiceAgreementStorageV1 contract', function () {
     accounts = await hre.ethers.getSigners();
     ServiceAgreementStorageV1 = await hre.ethers.getContract<ServiceAgreementStorageV1>('ServiceAgreementStorageV1');
     Token = await hre.ethers.getContract<Token>('Token');
-    Hub = await hre.ethers.getContract<Hub>('Hub');
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
+    const HubController = await hre.ethers.getContract<HubController>('HubController');
+    await HubController.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, ServiceAgreementStorageV1, Token };
   }

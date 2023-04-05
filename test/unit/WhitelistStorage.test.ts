@@ -1,29 +1,36 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
+import { Interface } from 'ethers/lib/utils';
 import hre from 'hardhat';
 
-import { WhitelistStorage } from '../../typechain';
+import { HubController, WhitelistStorage } from '../../typechain';
 
 type WhitelistStorageFixture = {
   accounts: SignerWithAddress[];
+  HubController: HubController;
+  WhitelistStorageInterface: Interface;
   WhitelistStorage: WhitelistStorage;
 };
 
 describe('@unit WhitelistStorage contract', function () {
   let accounts: SignerWithAddress[];
+  let HubController: HubController;
+  let WhitelistStorageInterface: Interface;
   let WhitelistStorage: WhitelistStorage;
 
   async function deployWhitelistStorageFixture(): Promise<WhitelistStorageFixture> {
     await hre.deployments.fixture(['WhitelistStorage']);
+    HubController = await hre.ethers.getContract<HubController>('HubController');
     WhitelistStorage = await hre.ethers.getContract<WhitelistStorage>('WhitelistStorage');
+    WhitelistStorageInterface = new hre.ethers.utils.Interface(hre.helpers.getAbi('WhitelistStorage'));
     accounts = await hre.ethers.getSigners();
 
-    return { accounts, WhitelistStorage };
+    return { accounts, HubController, WhitelistStorageInterface, WhitelistStorage };
   }
 
   beforeEach(async () => {
-    ({ accounts, WhitelistStorage } = await loadFixture(deployWhitelistStorageFixture));
+    ({ accounts, HubController, WhitelistStorage } = await loadFixture(deployWhitelistStorageFixture));
   });
 
   it('The contract is named "WhitelistStorage"', async () => {
@@ -39,7 +46,10 @@ describe('@unit WhitelistStorage contract', function () {
   });
 
   it('Whitelist address with owner; expect address to be whitelisted', async () => {
-    await WhitelistStorage.whitelistAddress(accounts[1].address);
+    await HubController.forwardCall(
+      WhitelistStorage.address,
+      WhitelistStorageInterface.encodeFunctionData('whitelistAddress', [accounts[1].address]),
+    );
 
     expect(await WhitelistStorage.whitelisted(accounts[1].address)).to.equal(true);
   });
@@ -55,8 +65,14 @@ describe('@unit WhitelistStorage contract', function () {
   });
 
   it('Whitelist and blacklist address with owner; expect to be blacklisted', async () => {
-    await WhitelistStorage.whitelistAddress(accounts[1].address);
-    await WhitelistStorage.blacklistAddress(accounts[1].address);
+    await HubController.forwardCall(
+      WhitelistStorage.address,
+      WhitelistStorageInterface.encodeFunctionData('whitelistAddress', [accounts[1].address]),
+    );
+    await HubController.forwardCall(
+      WhitelistStorage.address,
+      WhitelistStorageInterface.encodeFunctionData('blacklistAddress', [accounts[1].address]),
+    );
 
     expect(await WhitelistStorage.whitelisted(accounts[1].address)).to.equal(false);
   });
@@ -70,14 +86,23 @@ describe('@unit WhitelistStorage contract', function () {
   });
 
   it('Enable whitelist, expect to be true', async () => {
-    await WhitelistStorage.enableWhitelist();
+    await HubController.forwardCall(
+      WhitelistStorage.address,
+      WhitelistStorageInterface.encodeFunctionData('enableWhitelist'),
+    );
 
     expect(await WhitelistStorage.whitelistingEnabled()).to.equal(true);
   });
 
   it('Disable whitelist, expect to be false', async () => {
-    await WhitelistStorage.enableWhitelist();
-    await WhitelistStorage.disableWhitelist();
+    await HubController.forwardCall(
+      WhitelistStorage.address,
+      WhitelistStorageInterface.encodeFunctionData('enableWhitelist'),
+    );
+    await HubController.forwardCall(
+      WhitelistStorage.address,
+      WhitelistStorageInterface.encodeFunctionData('disableWhitelist'),
+    );
 
     expect(await WhitelistStorage.whitelistingEnabled()).to.equal(false);
   });

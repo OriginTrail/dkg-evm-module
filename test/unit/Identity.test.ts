@@ -4,20 +4,18 @@ import { expect } from 'chai';
 import { ethers } from 'ethers';
 import hre from 'hardhat';
 
-import { Identity, Hub, IdentityStorage } from '../../typechain';
+import { Identity, IdentityStorage, HubController } from '../../typechain';
 import { ZERO_ADDRESS, ZERO_BYTES32 } from '../helpers/constants';
 
 type IdentityFixture = {
   accounts: SignerWithAddress[];
   Identity: Identity;
-  Hub: Hub;
   IdentityStorage: IdentityStorage;
 };
 
 describe('@unit Identity contract', function () {
   let accounts: SignerWithAddress[];
   let Identity: Identity;
-  let Hub: Hub;
   let IdentityStorage: IdentityStorage;
   let operationalKey: string,
     adminKey: string,
@@ -32,11 +30,11 @@ describe('@unit Identity contract', function () {
     await hre.deployments.fixture(['Identity']);
     Identity = await hre.ethers.getContract<Identity>('Identity');
     IdentityStorage = await hre.ethers.getContract<IdentityStorage>('IdentityStorage');
-    Hub = await hre.ethers.getContract<Hub>('Hub');
+    const HubController = await hre.ethers.getContract<HubController>('HubController');
     accounts = await hre.ethers.getSigners();
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
+    await HubController.setContractAddress('HubOwner', accounts[0].address);
 
-    return { accounts, Identity, Hub, IdentityStorage };
+    return { accounts, Identity, IdentityStorage };
   }
 
   async function createIdentity(operationalKey: string, adminKey: string) {
@@ -54,7 +52,7 @@ describe('@unit Identity contract', function () {
   }
 
   beforeEach(async () => {
-    ({ accounts, Identity, Hub, IdentityStorage } = await loadFixture(deployIdentityFixture));
+    ({ accounts, Identity, IdentityStorage } = await loadFixture(deployIdentityFixture));
     operationalKey = accounts[1].address;
     adminKey = accounts[2].address;
     adminKeyBytes32 = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[2].address]));
@@ -65,8 +63,8 @@ describe('@unit Identity contract', function () {
     expect(await Identity.name()).to.equal('Identity');
   });
 
-  it('The contract is version "1.0.0"', async () => {
-    expect(await Identity.version()).to.equal('1.0.0');
+  it('The contract is version "1.0.1"', async () => {
+    expect(await Identity.version()).to.equal('1.0.1');
   });
 
   it('Create an identity as a contract, expect to pass', async () => {

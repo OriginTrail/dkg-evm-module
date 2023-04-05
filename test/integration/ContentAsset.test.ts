@@ -11,6 +11,7 @@ import {
   ContentAsset,
   ContentAssetStorage,
   Hub,
+  HubController,
   ParametersStorage,
   Profile,
   ServiceAgreementStorageProxy,
@@ -141,7 +142,8 @@ describe('@integration ContentAsset contract', function () {
     Staking = await hre.ethers.getContract<Staking>('Staking');
     UnfinalizedStateStorage = await hre.ethers.getContract<UnfinalizedStateStorage>('UnfinalizedStateStorage');
     Hub = await hre.ethers.getContract<Hub>('Hub');
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
+    const HubController = await hre.ethers.getContract<HubController>('HubController');
+    await HubController.setContractAddress('HubOwner', accounts[0].address);
 
     return {
       accounts,
