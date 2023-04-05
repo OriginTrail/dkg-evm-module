@@ -5,6 +5,7 @@ pragma solidity ^0.8.16;
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
+import {ICustodian} from "./interface/ICustodian.sol";
 import {Initializable} from "./interface/Initializable.sol";
 import {GeneralStructs} from "./structs/GeneralStructs.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -16,6 +17,12 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
 
+    // @dev Only transactions by HubController owner or one of the owners of the MultiSig Wallet
+    modifier onlyOwnerOrMultiSigOwner() {
+        _checkOwnerOrMultiSigOwner();
+        _;
+    }
+
     function name() external pure virtual override returns (string memory) {
         return _NAME;
     }
@@ -24,7 +31,7 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         return _VERSION;
     }
 
-    function forwardCall(address target, bytes calldata data) external onlyOwner returns (bytes memory) {
+    function forwardCall(address target, bytes calldata data) external onlyOwnerOrMultiSigOwner returns (bytes memory) {
         require(hub.isContract(target), "Target contract isn't in the Hub");
 
         (bool success, bytes memory result) = target.call{value: 0}(data);
@@ -40,7 +47,7 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         GeneralStructs.Contract[] calldata newContracts,
         GeneralStructs.Contract[] calldata newAssetStorageContracts,
         address[] calldata contractsToReinitialize
-    ) external onlyOwner {
+    ) external onlyOwnerOrMultiSigOwner {
         for (uint i; i < newContracts.length; ) {
             hub.setContractAddress(newContracts[i].name, newContracts[i].addr);
             unchecked {
@@ -63,11 +70,34 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         }
     }
 
-    function setContractAddress(string calldata contractName, address newContractAddress) external onlyOwner {
+    function setContractAddress(
+        string calldata contractName,
+        address newContractAddress
+    ) external onlyOwnerOrMultiSigOwner {
         hub.setContractAddress(contractName, newContractAddress);
     }
 
-    function setAssetStorageAddress(string calldata assetStorageName, address assetStorageAddress) external onlyOwner {
+    function setAssetStorageAddress(
+        string calldata assetStorageName,
+        address assetStorageAddress
+    ) external onlyOwnerOrMultiSigOwner {
         hub.setAssetStorageAddress(assetStorageName, assetStorageAddress);
+    }
+
+    function _isMultiSigOwner() internal view returns (bool) {
+        address[] memory multiSigOwners = ICustodian(hub.getContractAddress("TraceLabsMultiSigWallet")).getOwners();
+
+        for (uint i; i < multiSigOwners.length; ) {
+            if (msg.sender == multiSigOwners[i]) return true;
+            unchecked {
+                i++;
+            }
+        }
+
+        return false;
+    }
+
+    function _checkOwnerOrMultiSigOwner() internal view virtual {
+        require((msg.sender == owner()) || _isMultiSigOwner(), "");
     }
 }

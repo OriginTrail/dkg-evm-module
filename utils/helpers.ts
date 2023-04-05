@@ -187,6 +187,12 @@ export class Helpers {
     return JSON.parse(fs.readFileSync(`./abi/${contractName}.json`, 'utf-8'));
   }
 
+  public resetDeploymentsJson() {
+    for (const contract in this.hre.helpers.contractDeployments.contracts) {
+      this.hre.helpers.contractDeployments.contracts[contract].deployed = false;
+    }
+  }
+
   public updateDeploymentsJson(newContractName: string, newContractAddress: string) {
     const variables = this.contractDeployments.contracts[newContractName]?.variables ?? undefined;
 

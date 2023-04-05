@@ -1,2 +1,3 @@
 contracts/utils/*.sol
 contracts/Guardian.sol
+contracts/TraceLabsMultiSigWallet.sol

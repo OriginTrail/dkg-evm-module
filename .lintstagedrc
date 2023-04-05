@@ -6,6 +6,6 @@
     "eslint --fix"
   ],
   "*.sol": [
-    "solhint --write"
+    "solhint --write --ignore-path contracts/TraceLabsMultiSigWallet.sol"
   ]
 }
