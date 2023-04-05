@@ -5,7 +5,7 @@
   "*.{js,ts}": [
     "eslint --fix"
   ],
-  "*.sol": [
-    "solhint --write --ignore-path contracts/TraceLabsMultiSigWallet.sol"
+  "*.sol,!contracts/{utils/*.sol,Guardian.sol,TraceLabsMultiSigWallet.sol}": [
+    "solhint --write"
   ]
 }
