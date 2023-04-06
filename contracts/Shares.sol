@@ -13,8 +13,7 @@ contract Shares is HubDependent, ERC20, ERC20Burnable {
         string memory symbol
     )
         HubDependent(hubAddress)
-        // solhint-disable-next-line no-empty-blocks
-        ERC20(name, symbol)
+        ERC20(name, symbol) // solhint-disable-next-line no-empty-blocks
     {}
 
     function mint(address to, uint256 amount) external onlyContracts {

@@ -89,6 +89,14 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         hub.setAssetStorageAddress(assetStorageName, assetStorageAddress);
     }
 
+    function renounceHubOwnership() external onlyOwnerOrMultiSigOwner {
+        hub.renounceOwnership();
+    }
+
+    function transferHubOwnership(address newOwner) external onlyOwnerOrMultiSigOwner {
+        hub.transferOwnership(newOwner);
+    }
+
     function _isMultiSigOwner() internal view returns (bool) {
         address[] memory multiSigOwners = ICustodian(hub.getContractAddress("TraceLabsMultiSigWallet")).getOwners();
 

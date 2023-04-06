@@ -22,7 +22,7 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named, HubDependent, Initializa
     ParametersStorage public parametersStorage;
 
     uint256 public distanceMappingCoefficient;
-    uint96 stakeRangeMax;
+    uint96 public stakeRangeMax;
 
     uint32 public multiplier;
     uint32 public logArgumentConstant;
