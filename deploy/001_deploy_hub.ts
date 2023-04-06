@@ -27,14 +27,23 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       setContractInHub: false,
     });
 
-    if (!['otp_testnet', 'otp_mainnet'].includes(hre.network.name)) {
-      const hubAddress = hre.helpers.contractDeployments.contracts['Hub'].evmAddress;
-      const Hub = await hre.ethers.getContractAt('Hub', hubAddress, deployer);
-      const hubOwner = await Hub.owner();
+    const hubAddress = hre.helpers.contractDeployments.contracts['Hub'].evmAddress;
+    const Hub = await hre.ethers.getContractAt('Hub', hubAddress, deployer);
+    const hubOwner = await Hub.owner();
 
-      if (hubOwner != HubController.address) {
-        const transferOwneshipTx = await Hub.transferOwnership(HubController.address);
-        await transferOwneshipTx.wait();
+    if (hubOwner != HubController.address) {
+      const transferHubOwneshipTx = await Hub.transferOwnership(HubController.address);
+      await transferHubOwneshipTx.wait();
+    }
+
+    if (['otp_testnet', 'otp_mainnet'].includes(hre.network.name)) {
+      const hubControllerOwner = await HubController.owner();
+      const traceLabsMultiSigWalletAddress =
+        hre.helpers.contractDeployments.contracts['TraceLabsMultiSigWallet'].evmAddress;
+
+      if (hubControllerOwner != traceLabsMultiSigWalletAddress) {
+        const transferHubControllerOwnershipTx = await HubController.transferOwnership(traceLabsMultiSigWalletAddress);
+        await transferHubControllerOwnershipTx.wait();
       }
     }
   }

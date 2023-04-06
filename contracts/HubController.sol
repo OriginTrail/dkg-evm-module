@@ -31,16 +31,32 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         return _VERSION;
     }
 
+    /**
+     * @dev Forwards a function call to a specified target contract.
+     * @notice This function can only be called by the contract owner or a multisig owner.
+     * @param target The address of the target contract.
+     * @param data The calldata containing the function signature and arguments for the target contract's function.
+     * @return result The return data of the target contract's function call.
+     */
     function forwardCall(address target, bytes calldata data) external onlyOwnerOrMultiSigOwner returns (bytes memory) {
+        // Check if the target contract is registered in the Hub
         require(hub.isContract(target), "Target contract isn't in the Hub");
 
+        // Perform the function call to the target contract with the specified calldata
         (bool success, bytes memory result) = target.call{value: 0}(data);
 
+        // If the call is unsuccessful, revert the transaction with the original revert reason
         if (!success) {
             assembly {
+                // Load the free memory pointer from memory slot 0x40
+                // Memory slot 0x40 is conventionally used to store the free memory pointer in Solidity, which points
+                // to the next available memory slot for storing data during the execution of a contract function.
                 let ptr := mload(0x40)
+                // Get the size of the return data from the unsuccessful call
                 let size := returndatasize()
+                // Copy the return data to the memory location pointed to by ptr
                 returndatacopy(ptr, 0, size)
+                // Revert the transaction with the return data as the revert reason
                 revert(ptr, size)
             }
         }
