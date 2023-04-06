@@ -160,7 +160,11 @@ export class Helpers {
     if (this.hasFunction(newContractName, 'initialize')) {
       if (this.hre.network.name === 'hardhat') {
         const newContractInterface = new this.hre.ethers.utils.Interface(this.getAbi(newContractName));
-        await HubController.forwardCall(newContract.address, newContractInterface.encodeFunctionData('initialize'));
+        const initializeTx = await HubController.forwardCall(
+          newContract.address,
+          newContractInterface.encodeFunctionData('initialize'),
+        );
+        await initializeTx.wait();
       }
       this.contractsForReinitialization.push(newContract.address);
     }
