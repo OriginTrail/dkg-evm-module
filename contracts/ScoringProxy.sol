@@ -1,36 +1,26 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
-import {Hub} from "./Hub.sol";
+import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IScoreFunction} from "./interface/IScoreFunction.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {UnorderedIndexableContractDynamicSetLib} from "./utils/UnorderedIndexableContractDynamicSet.sol";
 
-contract ScoringProxy is Named, Versioned {
+contract ScoringProxy is Named, Versioned, ContractStatus {
     using UnorderedIndexableContractDynamicSetLib for UnorderedIndexableContractDynamicSetLib.Set;
 
     event NewScoringFunctionContract(uint8 indexed scoreFunctionId, address newContractAddress);
     event ScoringFunctionContractUpdated(uint8 indexed scoreFunctionId, address newContractAddress);
 
     string private constant _NAME = "ScoringProxy";
-    string private constant _VERSION = "1.0.0";
-
-    Hub public hub;
+    string private constant _VERSION = "1.0.1";
 
     UnorderedIndexableContractDynamicSetLib.Set internal scoreFunctionSet;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -80,9 +70,5 @@ contract ScoringProxy is Named, Versioned {
 
     function isScoreFunction(uint8 scoreFunctionId) external view returns (bool) {
         return scoreFunctionSet.exists(scoreFunctionId);
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 }

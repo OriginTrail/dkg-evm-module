@@ -5,14 +5,18 @@ import CommitManagerV1ABI from './abi/CommitManagerV1.json';
 import CommitManagerV1U1ABI from './abi/CommitManagerV1U1.json';
 import ContentAssetABI from './abi/ContentAsset.json';
 import ContentAssetStorageABI from './abi/ContentAssetStorage.json';
+import ContractStatusABI from './abi/ContractStatus.json';
 import GuardianABI from './abi/Guardian.json';
 import HashingProxyABI from './abi/HashingProxy.json';
 import HubABI from './abi/Hub.json';
+import HubControllerABI from './abi/HubController.json';
+import HubDependentABI from './abi/HubDependent.json';
 import ICustodian from './abi/ICustodian.json';
 import IdentityABI from './abi/Identity.json';
 import IdentityStorageABI from './abi/IdentityStorage.json';
 import IHashFunctionABI from './abi/IHashFunction.json';
 import IndexableABI from './abi/Indexable.json';
+import InitializableABI from './abi/Initializable.json';
 import IScoreFunctionABI from './abi/IScoreFunction.json';
 import Log2PLDSFABI from './abi/Log2PLDSF.json';
 import NamedABI from './abi/Named.json';
@@ -38,6 +42,7 @@ import WhitelistStorageABI from './abi/WhitelistStorage.json';
 
 export {
   HubABI,
+  HubControllerABI,
   ParametersStorageABI,
   HashingProxyABI,
   ScoringProxyABI,
@@ -67,10 +72,13 @@ export {
   UnfinalizedStateStorageABI,
   WhitelistStorageABI,
   AbstractAssetABI,
+  HubDependentABI,
+  ContractStatusABI,
   GuardianABI,
   ICustodian,
   IHashFunctionABI,
   IndexableABI,
+  InitializableABI,
   IScoreFunctionABI,
   NamedABI,
   VersionedABI,

@@ -87,6 +87,7 @@
     "deploy:otp_testnet": "hardhat deploy --network otp_testnet",
     "deploy": "hardhat deploy",
     "dev": "hardhat node --network hardhat --config hardhat.node.config.ts",
+    "export-abi": "hardhat export-abi",
     "format:fix": "prettier --write '**/*.{json,js,ts,sol}'",
     "format": "prettier --check '**/*.{json,js,ts,sol}'",
     "generate-evm-account": "hardhat run scripts/generate_evm_account.ts --network localhost",

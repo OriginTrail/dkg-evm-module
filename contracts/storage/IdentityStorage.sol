@@ -1,21 +1,19 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
-import {Hub} from "../Hub.sol";
+import {HubDependent} from "../abstract/HubDependent.sol";
 import {IERC734Extended} from "../interface/IERC734Extended.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 import {ByteArr} from "../utils/ByteArr.sol";
 import {OPERATIONAL_KEY} from "../constants/IdentityConstants.sol";
 
-contract IdentityStorage is IERC734Extended, Named, Versioned {
+contract IdentityStorage is IERC734Extended, Named, Versioned, HubDependent {
     using ByteArr for bytes32[];
 
     string private constant _NAME = "IdentityStorage";
     string private constant _VERSION = "1.0.0";
-
-    Hub public hub;
 
     uint72 private _identityId;
 
@@ -29,17 +27,8 @@ contract IdentityStorage is IERC734Extended, Named, Versioned {
     // identityId => Identity
     mapping(uint72 => Identity) internal identities;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-
+    constructor(address hubAddress) HubDependent(hubAddress) {
         _identityId = 1;
-    }
-
-    modifier onlyContracts() {
-        _checkHub();
-        _;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -118,9 +107,5 @@ contract IdentityStorage is IERC734Extended, Named, Versioned {
         unchecked {
             return _identityId++;
         }
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

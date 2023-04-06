@@ -1,26 +1,16 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
-import {Hub} from "./Hub.sol";
+import {HubDependent} from "./abstract/HubDependent.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract Token is ERC20, AccessControl {
-    Hub public hub;
-
+contract Token is HubDependent, ERC20, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    constructor(address hubAddress) ERC20("TEST TOKEN", "TEST") {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) HubDependent(hubAddress) ERC20("TEST TOKEN", "TEST") {}
 
     function setupRole(address minter) public onlyHubOwner {
         _setupRole(MINTER_ROLE, minter);
@@ -30,9 +20,5 @@ contract Token is ERC20, AccessControl {
         require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
 
         _mint(to, amount);
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 }

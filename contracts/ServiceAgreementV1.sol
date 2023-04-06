@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import {CommitManagerV1} from "./CommitManagerV1.sol";
 import {CommitManagerV1U1} from "./CommitManagerV1U1.sol";
 import {HashingProxy} from "./HashingProxy.sol";
-import {Hub} from "./Hub.sol";
-import {ScoringProxy} from "./ScoringProxy.sol";
-import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProofManagerV1} from "./ProofManagerV1.sol";
 import {ProofManagerV1U1} from "./ProofManagerV1U1.sol";
+import {ScoringProxy} from "./ScoringProxy.sol";
+import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
+import {ContractStatus} from "./abstract/ContractStatus.sol";
+import {Initializable} from "./interface/Initializable.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
@@ -18,7 +19,7 @@ import {GeneralErrors} from "./errors/GeneralErrors.sol";
 import {ServiceAgreementErrorsV1U1} from "./errors/ServiceAgreementErrorsV1U1.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract ServiceAgreementV1 is Named, Versioned {
+contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
     event ServiceAgreementV1Created(
         address indexed assetContract,
         uint256 indexed tokenId,
@@ -35,9 +36,8 @@ contract ServiceAgreementV1 is Named, Versioned {
     event ServiceAgreementV1UpdateRewardRaised(bytes32 indexed agreementId, uint96 updateTokenAmount);
 
     string private constant _NAME = "ServiceAgreementV1";
-    string private constant _VERSION = "1.1.0";
+    string private constant _VERSION = "1.1.1";
 
-    Hub public hub;
     CommitManagerV1 public commitManagerV1;
     CommitManagerV1U1 public commitManagerV1U1;
     ProofManagerV1 public proofManagerV1;
@@ -50,22 +50,8 @@ contract ServiceAgreementV1 is Named, Versioned {
 
     error ScoreError();
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-        initialize();
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
-
-    modifier onlyContracts() {
-        _checkHub();
-        _;
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         commitManagerV1 = CommitManagerV1(hub.getContractAddress("CommitManagerV1"));
@@ -244,7 +230,7 @@ contract ServiceAgreementV1 is Named, Versioned {
         address assetContract,
         uint256 tokenId,
         uint16 epoch
-    ) public view returns (bytes32, uint256) {
+    ) public view returns (bytes32 assertionId, uint256 challenge) {
         return proofManagerV1.getChallenge(sender, assetContract, tokenId, epoch);
     }
 
@@ -276,13 +262,5 @@ contract ServiceAgreementV1 is Named, Versioned {
 
     function _generatePseudorandomUint8(address sender, uint8 limit) internal view virtual returns (uint8) {
         return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, sender, block.number))) % limit);
-    }
-
-    function _checkHubOwner() internal view virtual {
-        if (msg.sender != hub.owner()) revert GeneralErrors.OnlyHubOwnerFunction(msg.sender);
-    }
-
-    function _checkHub() internal view virtual {
-        if (!hub.isContract(msg.sender)) revert GeneralErrors.OnlyHubContractsFunction(msg.sender);
     }
 }

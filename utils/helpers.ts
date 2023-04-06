@@ -10,6 +10,14 @@ import { KeypairType } from '@polkadot/util-crypto/types';
 import { Contract } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
+type AbiEntry = {
+  inputs?: Array<{ internalType: string; name: string; type: string }>;
+  name?: string;
+  outputs?: Array<{ internalType: string; name: string; type: string }>;
+  stateMutability?: string;
+  type: string;
+};
+
 type ContractDeployments = {
   contracts: {
     [contractName: string]: {
@@ -30,6 +38,7 @@ type DeploymentParameters = {
   passHubInConstructor?: boolean;
   setContractInHub?: boolean;
   setAssetStorageInHub?: boolean;
+  dependencies?: Array<string>;
 };
 
 type EvmWallet = {
@@ -48,14 +57,16 @@ export class Helpers {
   hre: HardhatRuntimeEnvironment;
   provider: HttpProvider;
   contractDeployments: ContractDeployments;
-  reinitialization: boolean;
+  redeployedContracts: Array<Array<string>>;
+  redeployedAssetStorageContracts: Array<Array<string>>;
+  contractsForReinitialization: Array<string>;
 
   constructor(hre: HardhatRuntimeEnvironment) {
     this.hre = hre;
     const endpoint = process.env[`RPC_${this.hre.network.name.toUpperCase()}`];
     this.provider = new HttpProvider(endpoint);
 
-    const deploymentsConfig = `deployments/${this.hre.network.name}_contracts.json`;
+    const deploymentsConfig = `./deployments/${this.hre.network.name}_contracts.json`;
 
     if (fs.existsSync(deploymentsConfig)) {
       this.contractDeployments = JSON.parse(fs.readFileSync(deploymentsConfig).toString());
@@ -63,7 +74,9 @@ export class Helpers {
       this.contractDeployments = { contracts: {}, deployedTimestamp: 0 };
     }
 
-    this.reinitialization = false;
+    this.redeployedContracts = [];
+    this.redeployedAssetStorageContracts = [];
+    this.contractsForReinitialization = [];
   }
 
   public async deploy({
@@ -72,6 +85,7 @@ export class Helpers {
     passHubInConstructor = true,
     setContractInHub = true,
     setAssetStorageInHub = false,
+    dependencies = [],
   }: DeploymentParameters): Promise<Contract> {
     const { deployer } = await this.hre.getNamedAccounts();
 
@@ -82,14 +96,18 @@ export class Helpers {
         deployer,
       );
 
-      // TODO: Implement check if specific contract should be reinitialized
-      if (this.reinitialization && contractInstance.initialize !== undefined) {
-        const reinitializationTx = await contractInstance.initialize();
-        await reinitializationTx.wait();
-        console.log(`${newContractName} contract reinitialized.`);
-      }
+      if (this.hasFunction(newContractName, 'initialize')) {
+        const allRedeployedContracts = this.redeployedContracts.concat(this.redeployedAssetStorageContracts);
 
-      return contractInstance;
+        for (const contract of allRedeployedContracts) {
+          if (dependencies.includes(contract[0])) {
+            this.contractsForReinitialization.push(contractInstance.address);
+            break;
+          }
+        }
+      } else {
+        return contractInstance;
+      }
     }
 
     let hubAddress;
@@ -99,13 +117,11 @@ export class Helpers {
       hubAddress = (await this.hre.deployments.get('Hub')).address;
     }
 
-    const hub = await this.hre.ethers.getContractAt('Hub', hubAddress, deployer);
-
     let newContract;
     try {
       newContract = await this.hre.deployments.deploy(newContractName, {
         from: deployer,
-        args: passHubInConstructor ? [hub.address] : [],
+        args: passHubInConstructor ? [hubAddress] : [],
         log: true,
       });
     } catch (error) {
@@ -119,21 +135,37 @@ export class Helpers {
       throw Error(message);
     }
 
+    const Hub = await this.hre.ethers.getContractAt('Hub', hubAddress, deployer);
+    const hubControllerAddress = await Hub.owner();
+    const HubController = await this.hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
+
     let tx;
     const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
     if (setContractInHub) {
-      tx = await hub.setContractAddress(nameInHub, newContract.address);
-      await tx.wait();
+      if (this.hre.network.name === 'hardhat') {
+        tx = await HubController.setContractAddress(nameInHub, newContract.address);
+        await tx.wait();
+      } else {
+        this.redeployedContracts.push([nameInHub, newContract.address]);
+      }
     } else if (setAssetStorageInHub) {
-      tx = await hub.setAssetStorageAddress(nameInHub, newContract.address);
-      await tx.wait();
+      if (this.hre.network.name === 'hardhat') {
+        tx = await HubController.setAssetStorageAddress(nameInHub, newContract.address);
+        await tx.wait();
+      } else {
+        this.redeployedAssetStorageContracts.push([nameInHub, newContract.address]);
+      }
     }
 
-    this.reinitialization = true;
-
-    if (this.hre.network.name !== 'hardhat') {
-      this.updateDeploymentsJson(newContractName, newContract?.address);
+    if (this.hasFunction(newContractName, 'initialize')) {
+      if (this.hre.network.name === 'hardhat') {
+        const newContractInterface = new this.hre.ethers.utils.Interface(this.getAbi(newContractName));
+        await HubController.forwardCall(newContract.address, newContractInterface.encodeFunctionData('initialize'));
+      }
+      this.contractsForReinitialization.push(newContract.address);
     }
+
+    this.updateDeploymentsJson(newContractName, newContract.address);
 
     return await this.hre.ethers.getContractAt(newContractName, newContract.address, deployer);
   }
@@ -147,6 +179,21 @@ export class Helpers {
       return this.contractDeployments.contracts[contractName].deployed;
     } else {
       return false;
+    }
+  }
+
+  public hasFunction(contractName: string, functionName: string): boolean {
+    const contractAbi = this.getAbi(contractName);
+    return contractAbi.some((entry) => entry.type === 'function' && entry.name === functionName);
+  }
+
+  public getAbi(contractName: string): AbiEntry[] {
+    return JSON.parse(fs.readFileSync(`./abi/${contractName}.json`, 'utf-8'));
+  }
+
+  public resetDeploymentsJson() {
+    for (const contract in this.hre.helpers.contractDeployments.contracts) {
+      this.hre.helpers.contractDeployments.contracts[contract].deployed = false;
     }
   }
 

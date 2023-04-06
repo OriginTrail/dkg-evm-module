@@ -3,18 +3,16 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Hub, Profile, ShardingTableStorage } from '../../typechain';
+import { HubController, Profile, ShardingTableStorage } from '../../typechain';
 
 type ShardingTableStorageFixture = {
   accounts: SignerWithAddress[];
-  Hub: Hub;
   ShardingTableStorage: ShardingTableStorage;
   Profile: Profile;
 };
 
 describe('@unit ShardingTableStorage Contract', function () {
   let accounts: SignerWithAddress[];
-  let Hub: Hub;
   let ShardingTableStorage: ShardingTableStorage;
   let Profile: Profile;
   let identityId: number;
@@ -24,18 +22,16 @@ describe('@unit ShardingTableStorage Contract', function () {
   const nodeId4 = '0x08f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb69';
 
   async function deployShardingTableStorageFixture(): Promise<ShardingTableStorageFixture> {
-    await hre.deployments.fixture(['ShardingTableStorage']);
-    await hre.deployments.fixture(['Profile']);
+    await hre.deployments.fixture(['ShardingTableStorage', 'Profile']);
     accounts = await hre.ethers.getSigners();
-    Hub = await hre.ethers.getContract<Hub>('Hub');
+    const HubController = await hre.ethers.getContract<HubController>('HubController');
     Profile = await hre.ethers.getContract<Profile>('Profile');
     ShardingTableStorage = await hre.ethers.getContract<ShardingTableStorage>('ShardingTableStorage');
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
+    await HubController.setContractAddress('HubOwner', accounts[0].address);
 
     return {
       accounts,
       ShardingTableStorage,
-      Hub,
       Profile,
     };
   }

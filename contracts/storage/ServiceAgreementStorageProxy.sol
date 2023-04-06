@@ -1,39 +1,25 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
-import {Hub} from "../Hub.sol";
 import {ServiceAgreementStorageV1} from "./ServiceAgreementStorageV1.sol";
 import {ServiceAgreementStorageV1U1} from "./ServiceAgreementStorageV1U1.sol";
 import {ServiceAgreementStructsV1} from "../structs/ServiceAgreementStructsV1.sol";
+import {HubDependent} from "../abstract/HubDependent.sol";
+import {Initializable} from "../interface/Initializable.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 import {GeneralErrors} from "../errors/GeneralErrors.sol";
 
-contract ServiceAgreementStorageProxy is Named, Versioned {
+contract ServiceAgreementStorageProxy is Named, Versioned, HubDependent, Initializable {
     string private constant _NAME = "ServiceAgreementStorageProxy";
     string private constant _VERSION = "1.0.0";
 
-    Hub public hub;
     ServiceAgreementStorageV1 public storageV1;
     ServiceAgreementStorageV1U1 public storageV1U1;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-        initialize();
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
-
-    modifier onlyContracts() {
-        _checkHub();
-        _;
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) HubDependent(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         storageV1 = ServiceAgreementStorageV1(hub.getContractAddress("ServiceAgreementStorageV1"));
@@ -108,13 +94,19 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
 
     function getAgreementData(
         bytes32 agreementId
-    ) external view returns (uint256, uint16, uint128, uint96[2] memory, uint8[2] memory) {
+    )
+        external
+        view
+        returns (
+            uint256 startTime,
+            uint16 epochsNumber,
+            uint128 epochLength,
+            uint96[2] memory tokens,
+            uint8[2] memory scoreFunctionIdAndProofWindowOffsetPerc
+        )
+    {
         if (this.agreementV1Exists(agreementId)) {
-            uint256 startTime;
-            uint16 epochsNumber;
-            uint128 epochLength;
             uint96 tokenAmount;
-            uint8[2] memory scoreFunctionIdAndProofWindowOffsetPerc;
             (startTime, epochsNumber, epochLength, tokenAmount, scoreFunctionIdAndProofWindowOffsetPerc) = storageV1
                 .getAgreementData(agreementId);
             return (
@@ -493,13 +485,5 @@ contract ServiceAgreementStorageProxy is Named, Versioned {
 
     function agreementV1U1StorageAddress() external view returns (address) {
         return address(storageV1U1);
-    }
-
-    function _checkHubOwner() internal view virtual {
-        if (msg.sender != hub.owner()) revert GeneralErrors.OnlyHubOwnerFunction(msg.sender);
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

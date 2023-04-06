@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import {Guardian} from "../Guardian.sol";
 import {Shares} from "../Shares.sol";
@@ -34,11 +34,6 @@ contract ProfileStorage is Named, Versioned, Guardian {
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) Guardian(hubAddress) {}
 
-    modifier onlyContracts() {
-        _checkHub();
-        _;
-    }
-
     function name() external pure virtual override returns (string memory) {
         return _NAME;
     }
@@ -63,7 +58,9 @@ contract ProfileStorage is Named, Versioned, Guardian {
         sharesSymbols[sharesContract.symbol()] = true;
     }
 
-    function getProfile(uint72 identityId) external view returns (bytes memory, uint96[2] memory, address) {
+    function getProfile(
+        uint72 identityId
+    ) external view returns (bytes memory nodeId, uint96[2] memory profileSettings, address sharesContractAddress) {
         ProfileDefinition storage profile = profiles[identityId];
         return (profile.nodeId, [profile.ask, profile.accumulatedOperatorFee], profile.sharesContractAddress);
     }
@@ -145,9 +142,5 @@ contract ProfileStorage is Named, Versioned, Guardian {
 
     function transferAccumulatedOperatorFee(address receiver, uint96 amount) external onlyContracts {
         tokenContract.transfer(receiver, amount);
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

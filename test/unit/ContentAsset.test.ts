@@ -8,7 +8,7 @@ import hre from 'hardhat';
 import {
   ContentAsset,
   ContentAssetStorage,
-  Hub,
+  HubController,
   ParametersStorage,
   ServiceAgreementStorageProxy,
   ServiceAgreementV1,
@@ -33,7 +33,6 @@ describe('@unit ContentAsset contract', function () {
   let ContentAssetStorage: ContentAssetStorage;
   let ServiceAgreementV1: ServiceAgreementV1;
   let Token: Token;
-  let Hub: Hub;
 
   const nonExistingTokenId = 99;
   const assertionId = '0x' + randomBytes(32).toString('hex');
@@ -83,8 +82,8 @@ describe('@unit ContentAsset contract', function () {
     ContentAssetStorage = await hre.ethers.getContract<ContentAssetStorage>('ContentAssetStorage');
     ServiceAgreementV1 = await hre.ethers.getContract<ServiceAgreementV1>('ServiceAgreementV1');
     Token = await hre.ethers.getContract<Token>('Token');
-    Hub = await hre.ethers.getContract<Hub>('Hub');
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
+    const HubController = await hre.ethers.getContract<HubController>('HubController');
+    await HubController.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, ParametersStorage, ContentAsset, ContentAssetStorage, ServiceAgreementV1, Token };
   }

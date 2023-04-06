@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Token, Hub, ProfileStorage } from '../../typechain';
+import { Token, ProfileStorage, HubController } from '../../typechain';
 import { ZERO_ADDRESS } from '../helpers/constants';
 
 type ProfileStorageFixture = {
@@ -14,7 +14,6 @@ type ProfileStorageFixture = {
 
 describe('@unit ProfileStorage contract', function () {
   let accounts: SignerWithAddress[];
-  let Hub: Hub;
   let ProfileStorage: ProfileStorage;
   let Token: Token;
   const newNodeId = '0x0000000000000000000000000000000000000000000000000000000000000002';
@@ -24,8 +23,8 @@ describe('@unit ProfileStorage contract', function () {
     ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
     Token = await hre.ethers.getContract<Token>('Token');
     accounts = await hre.ethers.getSigners();
-    Hub = await hre.ethers.getContract<Hub>('Hub');
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
+    const HubController = await hre.ethers.getContract<HubController>('HubController');
+    await HubController.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, Token, ProfileStorage };
   }

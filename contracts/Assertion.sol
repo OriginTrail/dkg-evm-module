@@ -1,38 +1,24 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
-import {Hub} from "./Hub.sol";
 import {AssertionStorage} from "./storage/AssertionStorage.sol";
+import {ContractStatus} from "./abstract/ContractStatus.sol";
+import {Initializable} from "./interface/Initializable.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {AssertionStructs} from "./structs/AssertionStructs.sol";
 
-contract Assertion is Named, Versioned {
+contract Assertion is Named, Versioned, ContractStatus, Initializable {
     event AssertionCreated(bytes32 indexed assertionId, uint128 size, uint32 triplesNumber, uint96 chunksNumber);
 
     string private constant _NAME = "Assertion";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "1.0.1";
 
-    Hub public hub;
     AssertionStorage public assertionStorage;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-        initialize();
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
-
-    modifier onlyContracts() {
-        _checkHub();
-        _;
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         assertionStorage = AssertionStorage(hub.getContractAddress("AssertionStorage"));
@@ -62,13 +48,5 @@ contract Assertion is Named, Versioned {
         ans.createAssertion(assertionId, size, triplesNumber, chunksNumber);
 
         emit AssertionCreated(assertionId, size, triplesNumber, chunksNumber);
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

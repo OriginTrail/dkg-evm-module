@@ -4,20 +4,18 @@ import { expect } from 'chai';
 import { ethers } from 'ethers';
 import hre from 'hardhat';
 
-import { Hub, Identity, IdentityStorage } from '../../typechain';
+import { HubController, Identity, IdentityStorage } from '../../typechain';
 import { ADMIN_KEY, ECDSA, OPERATIONAL_KEY } from '../helpers/constants';
 
 type IdentityStorageFixture = {
   accounts: SignerWithAddress[];
   Identity: Identity;
-  Hub: Hub;
   IdentityStorage: IdentityStorage;
 };
 
 describe('@unit IdentityStorage contract', function () {
   let accounts: SignerWithAddress[];
   let Identity: Identity;
-  let Hub: Hub;
   let IdentityStorage: IdentityStorage;
   let operationalKey: string,
     adminKey: string,
@@ -30,15 +28,15 @@ describe('@unit IdentityStorage contract', function () {
     await hre.deployments.fixture(['Identity']);
     Identity = await hre.ethers.getContract<Identity>('Identity');
     IdentityStorage = await hre.ethers.getContract<IdentityStorage>('IdentityStorage');
-    Hub = await hre.ethers.getContract<Hub>('Hub');
+    const HubController = await hre.ethers.getContract<HubController>('HubController');
     accounts = await hre.ethers.getSigners();
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
+    await HubController.setContractAddress('HubOwner', accounts[0].address);
 
-    return { accounts, Identity, Hub, IdentityStorage };
+    return { accounts, Identity, IdentityStorage };
   }
 
   beforeEach(async () => {
-    ({ accounts, Hub, Identity, IdentityStorage } = await loadFixture(deployIdentityStorageFixture));
+    ({ accounts, Identity, IdentityStorage } = await loadFixture(deployIdentityStorageFixture));
     operationalKey = accounts[1].address;
     adminKey = accounts[2].address;
     adminKeyBytes32 = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[2].address]));

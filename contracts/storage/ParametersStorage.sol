@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
-import {Hub} from "../Hub.sol";
+import {HubDependent} from "../abstract/HubDependent.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 
-contract ParametersStorage is Named, Versioned {
+contract ParametersStorage is Named, Versioned, HubDependent {
+    event ParameterChanged(string parameterName, uint256 parameterValue);
+
     string private constant _NAME = "ParametersStorage";
     string private constant _VERSION = "1.1.0";
-
-    Hub public hub;
 
     // 0 - minProofWindowOffsetPerc
     // 1 - maxProofWindowOffsetPerc
@@ -38,11 +38,7 @@ contract ParametersStorage is Named, Versioned {
 
     uint16 public updateCommitWindowDuration;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-
+    constructor(address hubAddress) HubDependent(hubAddress) {
         // minimumStake
         args3[0] = 50_000 ether;
         // maximumStake
@@ -80,11 +76,6 @@ contract ParametersStorage is Named, Versioned {
         args1[5] = 3;
     }
 
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
-
     function name() external pure virtual override returns (string memory) {
         return _NAME;
     }
@@ -99,6 +90,8 @@ contract ParametersStorage is Named, Versioned {
 
     function setMinimumStake(uint96 newMinimumStake) external onlyHubOwner {
         args3[0] = newMinimumStake;
+
+        emit ParameterChanged("minimumStake", newMinimumStake);
     }
 
     function maximumStake() external view returns (uint96) {
@@ -107,10 +100,14 @@ contract ParametersStorage is Named, Versioned {
 
     function setMaximumStake(uint96 newMaximumStake) external onlyHubOwner {
         args3[1] = newMaximumStake;
+
+        emit ParameterChanged("maximumStake", newMaximumStake);
     }
 
     function setR2(uint48 newR2) external onlyHubOwner {
         r2 = newR2;
+
+        emit ParameterChanged("r2", newR2);
     }
 
     function r1() external view returns (uint32) {
@@ -121,6 +118,8 @@ contract ParametersStorage is Named, Versioned {
         require(newR1 >= (2 * args2[0] - 1), "R1 should be >= 2*R0-1");
 
         args2[1] = newR1;
+
+        emit ParameterChanged("r1", newR1);
     }
 
     function r0() external view returns (uint32) {
@@ -131,6 +130,8 @@ contract ParametersStorage is Named, Versioned {
         require(newR0 <= ((args2[1] + 1) / 2), "R0 should be <= (R1+1)/2");
 
         args2[0] = newR0;
+
+        emit ParameterChanged("r0", newR0);
     }
 
     function minProofWindowOffsetPerc() external view returns (uint8) {
@@ -139,6 +140,8 @@ contract ParametersStorage is Named, Versioned {
 
     function setMinProofWindowOffsetPerc(uint8 newMinProofWindowOffsetPerc) external onlyHubOwner {
         args1[0] = newMinProofWindowOffsetPerc;
+
+        emit ParameterChanged("minProofWindowOffsetPerc", newMinProofWindowOffsetPerc);
     }
 
     function maxProofWindowOffsetPerc() external view returns (uint8) {
@@ -147,6 +150,8 @@ contract ParametersStorage is Named, Versioned {
 
     function setMaxProofWindowOffsetPerc(uint8 newMaxProofWindowOffsetPerc) external onlyHubOwner {
         args1[1] = newMaxProofWindowOffsetPerc;
+
+        emit ParameterChanged("maxProofWindowOffsetPerc", newMaxProofWindowOffsetPerc);
     }
 
     function commitWindowDurationPerc() external view returns (uint8) {
@@ -155,6 +160,8 @@ contract ParametersStorage is Named, Versioned {
 
     function setCommitWindowDurationPerc(uint8 newCommitWindowDurationPerc) external onlyHubOwner {
         args1[2] = newCommitWindowDurationPerc;
+
+        emit ParameterChanged("commitWindowDurationPerc", newCommitWindowDurationPerc);
     }
 
     function proofWindowDurationPerc() external view returns (uint8) {
@@ -163,6 +170,8 @@ contract ParametersStorage is Named, Versioned {
 
     function setProofWindowDurationPerc(uint8 newProofWindowDurationPerc) external onlyHubOwner {
         args1[3] = newProofWindowDurationPerc;
+
+        emit ParameterChanged("proofWindowDurationPerc", newProofWindowDurationPerc);
     }
 
     function replacementWindowDurationPerc() external view returns (uint8) {
@@ -171,10 +180,14 @@ contract ParametersStorage is Named, Versioned {
 
     function setReplacementWindowDurationPerc(uint8 newReplacementWindowDurationPerc) external onlyHubOwner {
         args1[4] = newReplacementWindowDurationPerc;
+
+        emit ParameterChanged("replacementWindowDurationPerc", newReplacementWindowDurationPerc);
     }
 
     function setEpochLength(uint128 newEpochLength) external onlyHubOwner {
         epochLength = newEpochLength;
+
+        emit ParameterChanged("epochLength", newEpochLength);
     }
 
     function stakeWithdrawalDelay() external view returns (uint24) {
@@ -183,6 +196,8 @@ contract ParametersStorage is Named, Versioned {
 
     function setStakeWithdrawalDelay(uint24 newStakeWithdrawalDelay) external onlyHubOwner {
         args4[0] = newStakeWithdrawalDelay;
+
+        emit ParameterChanged("stakeWithdrawalDelay", newStakeWithdrawalDelay);
     }
 
     function rewardWithdrawalDelay() external view returns (uint24) {
@@ -191,6 +206,8 @@ contract ParametersStorage is Named, Versioned {
 
     function setRewardWithdrawalDelay(uint24 newRewardWithdrawalDelay) external onlyHubOwner {
         args4[1] = newRewardWithdrawalDelay;
+
+        emit ParameterChanged("rewardWithdrawalDelay", newRewardWithdrawalDelay);
     }
 
     function slashingFreezeDuration() external view returns (uint32) {
@@ -199,10 +216,14 @@ contract ParametersStorage is Named, Versioned {
 
     function setSlashingFreezeDuration(uint32 newSlashingFreezeDuration) external onlyHubOwner {
         args2[2] = newSlashingFreezeDuration;
+
+        emit ParameterChanged("slashingFreezeDuration", newSlashingFreezeDuration);
     }
 
     function setUpdateCommitWindowDuration(uint16 newUpdateCommitWindowDuration) external onlyHubOwner {
         updateCommitWindowDuration = newUpdateCommitWindowDuration;
+
+        emit ParameterChanged("updateCommitWindowDuration", newUpdateCommitWindowDuration);
     }
 
     function finalizationCommitsNumber() external view returns (uint8) {
@@ -211,9 +232,7 @@ contract ParametersStorage is Named, Versioned {
 
     function setFinalizationCommitsNumber(uint8 newFinalizationCommitsNumber) external onlyHubOwner {
         args1[5] = newFinalizationCommitsNumber;
-    }
 
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+        emit ParameterChanged("finalizationCommitsNumber", newFinalizationCommitsNumber);
     }
 }

@@ -5,7 +5,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Token, Hub, Profile, ServiceAgreementStorageV1U1, Staking, StakingStorage } from '../../typechain';
+import { Token, Profile, ServiceAgreementStorageV1U1, Staking, StakingStorage, HubController } from '../../typechain';
 
 type StakingFixture = {
   accounts: SignerWithAddress[];
@@ -18,7 +18,6 @@ type StakingFixture = {
 
 describe('@unit Staking contract', function () {
   let accounts: SignerWithAddress[];
-  let Hub: Hub;
   let Staking: Staking;
   let StakingStorage: StakingStorage;
   let Token: Token;
@@ -40,9 +39,9 @@ describe('@unit Staking contract', function () {
       'ServiceAgreementStorageV1U1',
     );
     accounts = await hre.ethers.getSigners();
-    Hub = await hre.ethers.getContract<Hub>('Hub');
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
-    await Hub.setContractAddress('NotHubOwner', accounts[1].address);
+    const HubController = await hre.ethers.getContract<HubController>('HubController');
+    await HubController.setContractAddress('HubOwner', accounts[0].address);
+    await HubController.setContractAddress('NotHubOwner', accounts[1].address);
 
     return { accounts, Token, Profile, ServiceAgreementStorageV1U1, Staking, StakingStorage };
   }
@@ -57,8 +56,8 @@ describe('@unit Staking contract', function () {
     expect(await Staking.name()).to.equal('Staking');
   });
 
-  it('The contract is version "1.0.1"', async () => {
-    expect(await Staking.version()).to.equal('1.0.1');
+  it('The contract is version "1.0.2"', async () => {
+    expect(await Staking.version()).to.equal('1.0.2');
   });
 
   it('Non-Contract should not be able to setTotalStake; expect to fail', async () => {

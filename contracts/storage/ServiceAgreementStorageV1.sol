@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import {Guardian} from "../Guardian.sol";
 import {Named} from "../interface/Named.sol";
@@ -19,11 +19,6 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) Guardian(hubAddress) {}
-
-    modifier onlyContracts() {
-        _checkHub();
-        _;
-    }
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -56,7 +51,17 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
 
     function getAgreementData(
         bytes32 agreementId
-    ) external view returns (uint256, uint16, uint128, uint96, uint8[2] memory) {
+    )
+        external
+        view
+        returns (
+            uint256 startTime,
+            uint16 epochsNumber,
+            uint128 epochLength,
+            uint96 tokenAmount,
+            uint8[2] memory scoreFunctionIdAndProofWindowOffsetPerc
+        )
+    {
         return (
             serviceAgreements[agreementId].startTime,
             serviceAgreements[agreementId].epochsNumber,
@@ -216,9 +221,5 @@ contract ServiceAgreementStorageV1 is Named, Versioned, Guardian {
 
     function transferAgreementTokens(address receiver, uint96 tokenAmount) external onlyContracts {
         tokenContract.transfer(receiver, tokenAmount);
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

@@ -2,7 +2,7 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { minter } = await hre.getNamedAccounts();
+  const { deployer, minter } = await hre.getNamedAccounts();
 
   const isDeployed = hre.helpers.isDeployed('Token');
 
@@ -11,7 +11,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 
   if (!isDeployed) {
-    const setupRoleTx = await Token.setupRole(minter);
+    const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
+    const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
+
+    const TokenAbi = hre.helpers.getAbi('Token');
+    const TokenInterface = new hre.ethers.utils.Interface(TokenAbi);
+
+    const setupRoleTx = await HubController.forwardCall(
+      Token.address,
+      TokenInterface.encodeFunctionData('setupRole', [minter]),
+    );
     await setupRoleTx.wait();
   }
   if (hre.network.name === 'hardhat') {

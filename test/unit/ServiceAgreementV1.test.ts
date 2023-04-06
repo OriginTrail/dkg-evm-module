@@ -9,10 +9,10 @@ import hre from 'hardhat';
 import {
   ContentAssetStorage,
   Token,
-  Hub,
   ParametersStorage,
   ServiceAgreementV1,
   ServiceAgreementStorageProxy,
+  HubController,
 } from '../../typechain';
 import { ServiceAgreementStructsV1 } from '../../typechain/contracts/ServiceAgreementV1';
 
@@ -27,7 +27,6 @@ type ServiceAgreementV1Fixture = {
 
 describe('@unit ServiceAgreementV1 contract', function () {
   let accounts: SignerWithAddress[];
-  let Hub: Hub;
   let ContentAssetStorage: ContentAssetStorage;
   let ParametersStorage: ParametersStorage;
   let ServiceAgreementStorageProxy: ServiceAgreementStorageProxy;
@@ -78,19 +77,35 @@ describe('@unit ServiceAgreementV1 contract', function () {
     ServiceAgreementV1 = await hre.ethers.getContract<ServiceAgreementV1>('ServiceAgreementV1');
     Token = await hre.ethers.getContract<Token>('Token');
     ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
-    Hub = await hre.ethers.getContract<Hub>('Hub');
+    const HubController = await hre.ethers.getContract<HubController>('HubController');
     ContentAssetStorage = await hre.ethers.getContract<ContentAssetStorage>('ContentAssetStorage');
 
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
+    await HubController.setContractAddress('HubOwner', accounts[0].address);
 
     serviceAgreementInputArgs.assetCreator = accounts[0].address;
     serviceAgreementInputArgs.assetContract = ContentAssetStorage.address;
 
-    await ParametersStorage.setEpochLength(60 * 60); // 60 minutes
-    await ParametersStorage.setCommitWindowDurationPerc(25); // 25% (15 minutes)
-    await ParametersStorage.setMinProofWindowOffsetPerc(50); // range from 50%
-    await ParametersStorage.setMaxProofWindowOffsetPerc(75); // range to 75%
-    await ParametersStorage.setProofWindowDurationPerc(25); // 25% (15 minutes)
+    const ParametersStorageInterface = new hre.ethers.utils.Interface(hre.helpers.getAbi('ParametersStorage'));
+    HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setEpochLength', [60 * 60]), // 60 minutes
+    );
+    HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setCommitWindowDurationPerc', [25]), // 25% (15 minutes)
+    );
+    HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setMinProofWindowOffsetPerc', [50]), // range from 50%
+    );
+    HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setMaxProofWindowOffsetPerc', [75]), // range to 75%
+    );
+    HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setProofWindowDurationPerc', [25]), // 25% (15 minutes)
+    );
 
     return {
       accounts,
@@ -112,8 +127,8 @@ describe('@unit ServiceAgreementV1 contract', function () {
     expect(await ServiceAgreementV1.name()).to.equal('ServiceAgreementV1');
   });
 
-  it('The contract is version "1.1.0"', async () => {
-    expect(await ServiceAgreementV1.version()).to.equal('1.1.0');
+  it('The contract is version "1.1.1"', async () => {
+    expect(await ServiceAgreementV1.version()).to.equal('1.1.1');
   });
 
   it('Create old SA with valid input args; await all parameters to be set up', async () => {

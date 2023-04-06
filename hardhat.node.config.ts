@@ -41,26 +41,35 @@ const config: HardhatUserConfig = {
     },
   },
   solidity: {
-    version: '0.8.16',
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
-        details: {
-          peephole: true,
-          inliner: true,
-          jumpdestRemover: true,
-          orderLiterals: true,
-          deduplicate: true,
-          cse: true,
-          constantOptimizer: true,
-          yul: true,
-          yulDetails: {
-            stackAllocation: true,
+    compilers: [
+      {
+        version: '0.8.16',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+            details: {
+              peephole: true,
+              inliner: true,
+              jumpdestRemover: true,
+              orderLiterals: true,
+              deduplicate: true,
+              cse: true,
+              constantOptimizer: true,
+              yul: true,
+              yulDetails: {
+                stackAllocation: true,
+              },
+            },
           },
+          viaIR: process.env.COVERAGE_REPORT ? false : true,
         },
       },
-      viaIR: process.env.COVERAGE_REPORT ? false : true,
+    ],
+    overrides: {
+      'contracts/TraceLabsMultiSigWallet.sol': {
+        version: '0.4.15',
+      },
     },
   },
   paths: {

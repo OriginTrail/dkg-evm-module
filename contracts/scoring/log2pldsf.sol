@@ -1,28 +1,28 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import {HashingProxy} from "../HashingProxy.sol";
-import {Hub} from "../Hub.sol";
 import {ParametersStorage} from "../storage/ParametersStorage.sol";
+import {HubDependent} from "../abstract/HubDependent.sol";
 import {Indexable} from "../interface/Indexable.sol";
+import {Initializable} from "../interface/Initializable.sol";
 import {IScoreFunction} from "../interface/IScoreFunction.sol";
 import {Named} from "../interface/Named.sol";
 import {PRBMathUD60x18} from "@prb/math/contracts/PRBMathUD60x18.sol";
 
 // Logarithmic Polynomial Long Division Score Function
-contract Log2PLDSF is IScoreFunction, Indexable, Named {
+contract Log2PLDSF is IScoreFunction, Indexable, Named, HubDependent, Initializable {
     using PRBMathUD60x18 for uint256;
 
     uint8 private constant _ID = 1;
     string private constant _NAME = "Log2PLDSF";
 
-    Hub public hub;
     HashingProxy public hashingProxy;
     ParametersStorage public parametersStorage;
 
     uint256 public distanceMappingCoefficient;
-    uint96 public stakeMappingCoefficient;
+    uint96 public stakeRangeMax;
 
     uint32 public multiplier;
     uint32 public logArgumentConstant;
@@ -33,14 +33,9 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
     uint32 public distanceExponent;
     uint32 public d;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-        initialize();
-
+    constructor(address hubAddress) HubDependent(hubAddress) {
         distanceMappingCoefficient = type(uint256).max / 1_000;
-        stakeMappingCoefficient = parametersStorage.maximumStake() / 200_000;
+        stakeRangeMax = 200_000;
 
         multiplier = 10000;
         logArgumentConstant = 1;
@@ -50,11 +45,6 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
         c = 1;
         distanceExponent = 2;
         d = 1;
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
     }
 
     function initialize() public onlyHubOwner {
@@ -72,7 +62,7 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
 
     function calculateScore(uint256 distance, uint96 stake) external view returns (uint40) {
         uint256 mappedDistance = distance / distanceMappingCoefficient;
-        uint96 mappedStake = stake / stakeMappingCoefficient;
+        uint96 mappedStake = stake / (parametersStorage.maximumStake() / stakeRangeMax);
 
         uint64 coefficient = 1 ether;
 
@@ -98,10 +88,14 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
         return uint256(nodeIdHash ^ keywordHash);
     }
 
-    function getParameters() external view returns (uint256, uint96, uint32[8] memory) {
+    function getParameters()
+        external
+        view
+        returns (uint256 distanceMapCoefficient, uint96 stakeMapCoefficient, uint32[8] memory formulaCoefficients)
+    {
         return (
             distanceMappingCoefficient,
-            stakeMappingCoefficient,
+            (parametersStorage.maximumStake() / stakeRangeMax),
             [multiplier, logArgumentConstant, a, stakeExponent, b, c, distanceExponent, d]
         );
     }
@@ -110,8 +104,8 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
         distanceMappingCoefficient = type(uint256).max / distanceRangeMax;
     }
 
-    function setStakeMappingCoefficient(uint96 stakeRangeMax) external onlyHubOwner {
-        stakeMappingCoefficient = parametersStorage.maximumStake() / stakeRangeMax;
+    function setStakeRangeMax(uint96 stakeRangeMax_) external onlyHubOwner {
+        stakeRangeMax = stakeRangeMax_;
     }
 
     function setMultiplier(uint32 multiplier_) external onlyHubOwner {
@@ -144,9 +138,5 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named {
 
     function setD(uint32 d_) external onlyHubOwner {
         d = d_;
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 }

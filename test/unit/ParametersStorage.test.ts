@@ -1,18 +1,22 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
+import { Interface } from 'ethers/lib/utils';
 import hre from 'hardhat';
 
-import { ParametersStorage, Hub } from '../../typechain';
+import { ParametersStorage, HubController } from '../../typechain';
 
 type ParametersStorageFixture = {
   accounts: SignerWithAddress[];
+  HubController: HubController;
+  ParametersStorageInterface: Interface;
   ParametersStorage: ParametersStorage;
 };
 
 describe('@unit ParametersStorage contract', function () {
   let accounts: SignerWithAddress[];
-  let Hub: Hub;
+  let HubController: HubController;
+  let ParametersStorageInterface: Interface;
   let ParametersStorage: ParametersStorage;
   let minimumStake, r2, r1, r0, commitWindowDurationPerc, minProofWindowOffsetPerc, maxProofWindowOffsetPerc;
   let proofWindowDurationPerc,
@@ -24,16 +28,19 @@ describe('@unit ParametersStorage contract', function () {
 
   async function deployParametersStorageFixture(): Promise<ParametersStorageFixture> {
     await hre.deployments.fixture(['ParametersStorage']);
+    HubController = await hre.ethers.getContract<HubController>('HubController');
+    ParametersStorageInterface = new hre.ethers.utils.Interface(hre.helpers.getAbi('ParametersStorage'));
     ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
-    Hub = await hre.ethers.getContract<Hub>('Hub');
     accounts = await hre.ethers.getSigners();
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
+    await HubController.setContractAddress('HubOwner', accounts[0].address);
 
-    return { accounts, ParametersStorage };
+    return { accounts, HubController, ParametersStorageInterface, ParametersStorage };
   }
 
   beforeEach(async () => {
-    ({ accounts, ParametersStorage } = await loadFixture(deployParametersStorageFixture));
+    ({ accounts, HubController, ParametersStorageInterface, ParametersStorage } = await loadFixture(
+      deployParametersStorageFixture,
+    ));
   });
 
   it('validate minimum stake for owner, expect to pass', async () => {
@@ -44,17 +51,19 @@ describe('@unit ParametersStorage contract', function () {
     expect(minimumStake.toString()).be.eql(minStakeInContract);
 
     // set a new value for min stake and validate is correct
-    await ParametersStorage.setMinimumStake(newMinSakeValue);
+    await HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setMinimumStake', [newMinSakeValue]),
+    );
     minimumStake = await ParametersStorage.minimumStake();
 
     expect(minimumStake.toString()).be.eql(newMinSakeValue);
   });
 
   it('validate minimum stake for non owner, expect to fail', async () => {
-    const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     minimumStake = await ParametersStorage.minimumStake();
 
-    await expect(ParametersStorageWithNonOwnerAsSigner.setMinimumStake(minimumStake.toString())).to.be.revertedWith(
+    await expect(ParametersStorage.setMinimumStake(minimumStake.toString())).to.be.revertedWith(
       'Fn can only be used by hub owner',
     );
   });
@@ -67,19 +76,19 @@ describe('@unit ParametersStorage contract', function () {
     expect(r2.toString()).be.eql(r2valueInContract);
 
     // set a new value for r2 and validate is correct
-    await ParametersStorage.setR2(newR2value);
+    await HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setR2', [newR2value]),
+    );
     r2 = await ParametersStorage.r2();
 
     expect(r2.toString()).be.eql(newR2value);
   });
 
   it('validate r2 for non owner, expect to fail', async () => {
-    const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     r2 = await ParametersStorage.r2();
 
-    await expect(ParametersStorageWithNonOwnerAsSigner.setR2(r2.toString())).to.be.revertedWith(
-      'Fn can only be used by hub owner',
-    );
+    await expect(ParametersStorage.setR2(r2)).to.be.revertedWith('Fn can only be used by hub owner');
   });
 
   it('validate r1 for owner, expect to pass', async () => {
@@ -90,7 +99,10 @@ describe('@unit ParametersStorage contract', function () {
     expect(r1.toString()).be.eql(r1valueInContract);
 
     // set a new value for r1 and validate is correct
-    await ParametersStorage.setR1(newR1value);
+    await HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setR1', [newR1value]),
+    );
     r1 = await ParametersStorage.r1();
 
     expect(r1.toString()).be.eql(newR1value);
@@ -99,16 +111,18 @@ describe('@unit ParametersStorage contract', function () {
   it('set r1 < 2r0-1, expect to revert', async () => {
     const r0 = await ParametersStorage.r0();
 
-    await expect(ParametersStorage.setR1(2 * r0 - 2)).to.be.revertedWith('R1 should be >= 2*R0-1');
+    await expect(
+      HubController.forwardCall(
+        ParametersStorage.address,
+        ParametersStorageInterface.encodeFunctionData('setR1', [2 * r0 - 2]),
+      ),
+    ).to.be.revertedWith('R1 should be >= 2*R0-1');
   });
 
   it('validate r1 for non owner, expect to fail', async () => {
-    const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     r1 = await ParametersStorage.r1();
 
-    await expect(ParametersStorageWithNonOwnerAsSigner.setR1(r1.toString())).to.be.revertedWith(
-      'Fn can only be used by hub owner',
-    );
+    await expect(ParametersStorage.setR1(r1.toString())).to.be.revertedWith('Fn can only be used by hub owner');
   });
 
   it('validate r0 for owner, expect to pass', async () => {
@@ -119,7 +133,10 @@ describe('@unit ParametersStorage contract', function () {
     expect(r0.toString()).be.eql(r0valueInContract);
 
     // set a new value for r0 and validate is correct
-    await ParametersStorage.setR0(newR0value);
+    await HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setR0', [newR0value]),
+    );
     r0 = await ParametersStorage.r0();
 
     expect(r0.toString()).be.eql(newR0value);
@@ -128,16 +145,18 @@ describe('@unit ParametersStorage contract', function () {
   it('set r0 > (r1+1)/2, expect to revert', async () => {
     const r1 = await ParametersStorage.r1();
 
-    await expect(ParametersStorage.setR0(Math.floor((r1 + 1) / 2) + 1)).to.be.revertedWith('R0 should be <= (R1+1)/2');
+    await expect(
+      HubController.forwardCall(
+        ParametersStorage.address,
+        ParametersStorageInterface.encodeFunctionData('setR0', [Math.floor((r1 + 1) / 2) + 1]),
+      ),
+    ).to.be.revertedWith('R0 should be <= (R1+1)/2');
   });
 
   it('validate r0 for non owner, expect to fail', async () => {
-    const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     r0 = await ParametersStorage.r0();
 
-    await expect(ParametersStorageWithNonOwnerAsSigner.setR0(r0.toString())).to.be.revertedWith(
-      'Fn can only be used by hub owner',
-    );
+    await expect(ParametersStorage.setR0(r0.toString())).to.be.revertedWith('Fn can only be used by hub owner');
   });
 
   it('validate commit window duration percentage for owner, expect to pass', async () => {
@@ -148,19 +167,21 @@ describe('@unit ParametersStorage contract', function () {
     expect(commitWindowDurationPerc.toString()).be.eql(valueInContract);
 
     // set new value for commit window duration and validate is correct
-    await ParametersStorage.setCommitWindowDurationPerc(newValue);
+    await HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setCommitWindowDurationPerc', [newValue]),
+    );
     commitWindowDurationPerc = await ParametersStorage.commitWindowDurationPerc();
 
     expect(commitWindowDurationPerc.toString()).be.eql(newValue);
   });
 
   it('validate commit window duration percentage for non owner. expect to fail', async () => {
-    const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     commitWindowDurationPerc = await ParametersStorage.commitWindowDurationPerc();
 
-    await expect(
-      ParametersStorageWithNonOwnerAsSigner.setCommitWindowDurationPerc(commitWindowDurationPerc),
-    ).to.be.revertedWith('Fn can only be used by hub owner');
+    await expect(ParametersStorage.setCommitWindowDurationPerc(commitWindowDurationPerc)).to.be.revertedWith(
+      'Fn can only be used by hub owner',
+    );
   });
 
   it('validate min proof window offset perc for owner, expect to pass', async () => {
@@ -171,19 +192,21 @@ describe('@unit ParametersStorage contract', function () {
     expect(minProofWindowOffsetPerc.toString()).be.eql(valueInContract);
 
     // set new value for min proof window offset perc and validate is correct
-    await ParametersStorage.setMinProofWindowOffsetPerc(newValue);
+    await HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setMinProofWindowOffsetPerc', [newValue]),
+    );
 
     minProofWindowOffsetPerc = await ParametersStorage.minProofWindowOffsetPerc();
     expect(minProofWindowOffsetPerc.toString()).be.eql(newValue);
   });
 
   it('validate min proof window offset percentage for non owner, expect to fail', async () => {
-    const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     minProofWindowOffsetPerc = await ParametersStorage.minProofWindowOffsetPerc();
 
-    await expect(
-      ParametersStorageWithNonOwnerAsSigner.setMinProofWindowOffsetPerc(minProofWindowOffsetPerc.toString()),
-    ).to.be.revertedWith('Fn can only be used by hub owner');
+    await expect(ParametersStorage.setMinProofWindowOffsetPerc(minProofWindowOffsetPerc.toString())).to.be.revertedWith(
+      'Fn can only be used by hub owner',
+    );
   });
 
   it('validate max proof window offset perc for owner, expect to pass', async () => {
@@ -194,18 +217,20 @@ describe('@unit ParametersStorage contract', function () {
     expect(maxProofWindowOffsetPerc.toString()).be.eql(valueInContract);
 
     // set new value for max proof window offset perc and validate is correct
-    await ParametersStorage.setMaxProofWindowOffsetPerc(newValue);
+    await HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setMaxProofWindowOffsetPerc', [newValue]),
+    );
     maxProofWindowOffsetPerc = await ParametersStorage.maxProofWindowOffsetPerc();
     expect(maxProofWindowOffsetPerc.toString()).be.eql(newValue);
   });
 
   it('validate max proof window offset percentage for non owner, expect to fail', async () => {
-    const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     maxProofWindowOffsetPerc = await ParametersStorage.maxProofWindowOffsetPerc();
 
-    await expect(
-      ParametersStorageWithNonOwnerAsSigner.setMaxProofWindowOffsetPerc(maxProofWindowOffsetPerc.toString()),
-    ).to.be.revertedWith('Fn can only be used by hub owner');
+    await expect(ParametersStorage.setMaxProofWindowOffsetPerc(maxProofWindowOffsetPerc.toString())).to.be.revertedWith(
+      'Fn can only be used by hub owner',
+    );
   });
 
   it('validate proof window duration perc for owner, expect to pass', async () => {
@@ -216,19 +241,21 @@ describe('@unit ParametersStorage contract', function () {
     expect(proofWindowDurationPerc.toString()).be.eql(valueInContract);
 
     // set new value for proof window duration perc and validate is correct
-    await ParametersStorage.setProofWindowDurationPerc(newValue);
+    await HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setProofWindowDurationPerc', [newValue]),
+    );
     proofWindowDurationPerc = await ParametersStorage.proofWindowDurationPerc();
 
     expect(proofWindowDurationPerc.toString()).be.eql(newValue);
   });
 
   it('validate proof window duration perc for non owner, expect to fail', async () => {
-    const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     proofWindowDurationPerc = await ParametersStorage.proofWindowDurationPerc();
 
-    await expect(
-      ParametersStorageWithNonOwnerAsSigner.setProofWindowDurationPerc(proofWindowDurationPerc.toString()),
-    ).to.be.revertedWith('Fn can only be used by hub owner');
+    await expect(ParametersStorage.setProofWindowDurationPerc(proofWindowDurationPerc.toString())).to.be.revertedWith(
+      'Fn can only be used by hub owner',
+    );
   });
 
   it('validate replacement window duration perc for owner, expect to pass', async () => {
@@ -239,18 +266,20 @@ describe('@unit ParametersStorage contract', function () {
     expect(replacementWindowDurationPerc.toString()).be.eql(valueInContract);
 
     // set new value for replacement window duration perc and validate is correct
-    await ParametersStorage.setReplacementWindowDurationPerc(newValue);
+    await HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setReplacementWindowDurationPerc', [newValue]),
+    );
     replacementWindowDurationPerc = await ParametersStorage.replacementWindowDurationPerc();
 
     expect(replacementWindowDurationPerc.toString()).be.eql(newValue);
   });
 
   it('validate replacement window duration perc for non owner, expect to fail', async () => {
-    const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     replacementWindowDurationPerc = await ParametersStorage.replacementWindowDurationPerc();
 
     await expect(
-      ParametersStorageWithNonOwnerAsSigner.setReplacementWindowDurationPerc(replacementWindowDurationPerc.toString()),
+      ParametersStorage.setReplacementWindowDurationPerc(replacementWindowDurationPerc.toString()),
     ).to.be.revertedWith('Fn can only be used by hub owner');
   });
 
@@ -263,16 +292,18 @@ describe('@unit ParametersStorage contract', function () {
     expect(eval(expectedValue)).to.eql(valueInContract);
 
     // set new value for epoch length and validate is correct
-    await ParametersStorage.setEpochLength(newValue);
+    await HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setEpochLength', [newValue]),
+    );
 
     expect(await ParametersStorage.epochLength()).be.equal(newValue);
   });
 
   it('validate epoch length for non owner, expect to fail', async () => {
-    const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     epochLength = await ParametersStorage.epochLength();
 
-    await expect(ParametersStorageWithNonOwnerAsSigner.setEpochLength(epochLength.toString())).to.be.revertedWith(
+    await expect(ParametersStorage.setEpochLength(epochLength.toString())).to.be.revertedWith(
       'Fn can only be used by hub owner',
     );
   });
@@ -286,19 +317,21 @@ describe('@unit ParametersStorage contract', function () {
     expect(eval(expectedValue)).to.eql(valueInContract);
 
     // set new value for stake withdrawal delay and validate is correct
-    await ParametersStorage.setStakeWithdrawalDelay(newValue);
+    await HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setStakeWithdrawalDelay', [newValue]),
+    );
     stakeWithdrawalDelay = await ParametersStorage.stakeWithdrawalDelay();
 
     expect(stakeWithdrawalDelay.toString()).be.eql(newValue);
   });
 
   it('validate stake withdrawal delay for non owner', async () => {
-    const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     stakeWithdrawalDelay = await ParametersStorage.stakeWithdrawalDelay();
 
-    await expect(
-      ParametersStorageWithNonOwnerAsSigner.setStakeWithdrawalDelay(stakeWithdrawalDelay.toString()),
-    ).to.be.revertedWith('Fn can only be used by hub owner');
+    await expect(ParametersStorage.setStakeWithdrawalDelay(stakeWithdrawalDelay.toString())).to.be.revertedWith(
+      'Fn can only be used by hub owner',
+    );
   });
 
   it('validate reward withdrawal delay for owner, expect to pass', async () => {
@@ -310,19 +343,21 @@ describe('@unit ParametersStorage contract', function () {
     expect(eval(expectedValue)).to.eql(valueInContract);
 
     // set new value for reward withdrawal delay and validate is correct
-    await ParametersStorage.setRewardWithdrawalDelay(newValue);
+    await HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setRewardWithdrawalDelay', [newValue]),
+    );
     rewardWithdrawalDelay = await ParametersStorage.rewardWithdrawalDelay();
 
     expect(rewardWithdrawalDelay.toString()).be.eql(newValue);
   });
 
   it('validate reward withdrawal delay for non owner, expect to fail', async () => {
-    const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     rewardWithdrawalDelay = await ParametersStorage.rewardWithdrawalDelay();
 
-    await expect(
-      ParametersStorageWithNonOwnerAsSigner.setRewardWithdrawalDelay(rewardWithdrawalDelay.toString()),
-    ).to.be.revertedWith('Fn can only be used by hub owner');
+    await expect(ParametersStorage.setRewardWithdrawalDelay(rewardWithdrawalDelay.toString())).to.be.revertedWith(
+      'Fn can only be used by hub owner',
+    );
   });
 
   it('validate slashing freeze duration for owner, expect to pass', async () => {
@@ -334,18 +369,20 @@ describe('@unit ParametersStorage contract', function () {
     expect(eval(expectedValue)).to.eql(valueInContract);
 
     // set new value for slashing freeze duration and validate is correct
-    await ParametersStorage.setSlashingFreezeDuration(newValue);
+    await HubController.forwardCall(
+      ParametersStorage.address,
+      ParametersStorageInterface.encodeFunctionData('setSlashingFreezeDuration', [newValue]),
+    );
     slashingFreezeDuration = await ParametersStorage.slashingFreezeDuration();
 
     expect(slashingFreezeDuration.toString()).be.eql(newValue);
   });
 
   it('validate slashing freeze duration for non owner, expect to fail', async () => {
-    const ParametersStorageWithNonOwnerAsSigner = ParametersStorage.connect(accounts[1]);
     slashingFreezeDuration = await ParametersStorage.slashingFreezeDuration();
 
-    await expect(
-      ParametersStorageWithNonOwnerAsSigner.setSlashingFreezeDuration(slashingFreezeDuration.toString()),
-    ).to.be.revertedWith('Fn can only be used by hub owner');
+    await expect(ParametersStorage.setSlashingFreezeDuration(slashingFreezeDuration.toString())).to.be.revertedWith(
+      'Fn can only be used by hub owner',
+    );
   });
 });

@@ -1,23 +1,28 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
+import { Interface } from 'ethers/lib/utils';
 import hre from 'hardhat';
 
-import { Hub, Profile, ProfileStorage, WhitelistStorage } from '../../typechain';
+import { HubController, Profile, ProfileStorage, WhitelistStorage } from '../../typechain';
 
 type ProfileFixture = {
   accounts: SignerWithAddress[];
+  HubController: HubController;
   Profile: Profile;
   ProfileStorage: ProfileStorage;
+  WhitelistStorageInterface: Interface;
   WhitelistStorage: WhitelistStorage;
 };
 
 describe('@unit Profile contract', function () {
   let accounts: SignerWithAddress[];
-  let Hub: Hub;
+  let HubController: HubController;
   let Profile: Profile;
   let ProfileStorage: ProfileStorage;
+  let WhitelistStorageInterface: Interface;
   let WhitelistStorage: WhitelistStorage;
+
   const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
   const nodeId2 = '0x08f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb67';
   const identityId1 = 1;
@@ -32,24 +37,26 @@ describe('@unit Profile contract', function () {
     await hre.deployments.fixture(['Profile']);
     Profile = await hre.ethers.getContract<Profile>('Profile');
     ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
+    WhitelistStorageInterface = new hre.ethers.utils.Interface(hre.helpers.getAbi('WhitelistStorage'));
     WhitelistStorage = await hre.ethers.getContract<WhitelistStorage>('WhitelistStorage');
     accounts = await hre.ethers.getSigners();
-    Hub = await hre.ethers.getContract<Hub>('Hub');
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
+    HubController = await hre.ethers.getContract<HubController>('HubController');
+    await HubController.setContractAddress('HubOwner', accounts[0].address);
 
-    return { accounts, Profile, ProfileStorage, WhitelistStorage };
+    return { accounts, HubController, Profile, ProfileStorage, WhitelistStorageInterface, WhitelistStorage };
   }
 
   beforeEach(async () => {
-    ({ accounts, Profile, ProfileStorage, WhitelistStorage } = await loadFixture(deployProfileFixture));
+    ({ accounts, HubController, Profile, ProfileStorage, WhitelistStorageInterface, WhitelistStorage } =
+      await loadFixture(deployProfileFixture));
   });
 
   it('The contract is named "Profile"', async () => {
     expect(await Profile.name()).to.equal('Profile');
   });
 
-  it('The contract is version "1.0.1"', async () => {
-    expect(await Profile.version()).to.equal('1.0.1');
+  it('The contract is version "1.0.2"', async () => {
+    expect(await Profile.version()).to.equal('1.0.2');
   });
 
   it('Create a profile with whitelisted node, expect to pass', async () => {
@@ -57,7 +64,10 @@ describe('@unit Profile contract', function () {
   });
 
   it('Cannot create a profile with not whitelisted node, expect to fail', async () => {
-    await WhitelistStorage.enableWhitelist();
+    await HubController.forwardCall(
+      WhitelistStorage.address,
+      WhitelistStorageInterface.encodeFunctionData('enableWhitelist'),
+    );
     expect(await WhitelistStorage.whitelisted(accounts[0].address)).to.equal(false);
 
     await expect(Profile.createProfile(accounts[0].address, nodeId1, 'Token', 'TKN')).to.be.revertedWith(
@@ -66,8 +76,14 @@ describe('@unit Profile contract', function () {
   });
 
   it('Should allow creating a profile (whitelist enabled) for node in the whitelist', async () => {
-    await WhitelistStorage.enableWhitelist();
-    await WhitelistStorage.whitelistAddress(accounts[0].address);
+    await HubController.forwardCall(
+      WhitelistStorage.address,
+      WhitelistStorageInterface.encodeFunctionData('enableWhitelist'),
+    );
+    await HubController.forwardCall(
+      WhitelistStorage.address,
+      WhitelistStorageInterface.encodeFunctionData('whitelistAddress', [accounts[0].address]),
+    );
     expect(await WhitelistStorage.whitelisted(accounts[0].address)).to.equal(true);
 
     await createProfile();

@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Hub, UnfinalizedStateStorage } from '../../typechain';
+import { HubController, UnfinalizedStateStorage } from '../../typechain';
 import { ZERO_ADDRESS, ZERO_BYTES32 } from '../helpers/constants';
 
 type UnfinalizedStateStorageFixture = {
@@ -14,15 +14,14 @@ type UnfinalizedStateStorageFixture = {
 describe('@unit UnfinalizedStateStorage contract', function () {
   let accounts: SignerWithAddress[];
   let UnfinalizedStateStorage: UnfinalizedStateStorage;
-  let Hub: Hub;
   const assertionId = '0x8cc2117b68bcbb1535205d517cb42ef45f25838add571fce4cfb7de7bd617943';
 
   async function deployUnfinalizedStateStorageFixture(): Promise<UnfinalizedStateStorageFixture> {
     await hre.deployments.fixture(['UnfinalizedStateStorage']);
     UnfinalizedStateStorage = await hre.ethers.getContract<UnfinalizedStateStorage>('UnfinalizedStateStorage');
     accounts = await hre.ethers.getSigners();
-    Hub = await hre.ethers.getContract<Hub>('Hub');
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
+    const HubController = await hre.ethers.getContract<HubController>('HubController');
+    await HubController.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, UnfinalizedStateStorage };
   }

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import {HashingProxy} from "./HashingProxy.sol";
-import {Hub} from "./Hub.sol";
 import {ScoringProxy} from "./ScoringProxy.sol";
 import {Staking} from "./Staking.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
@@ -12,14 +11,16 @@ import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
+import {ContractStatus} from "./abstract/ContractStatus.sol";
+import {Initializable} from "./interface/Initializable.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
-import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
-import {GeneralErrors} from "./errors/GeneralErrors.sol";
 import {ContentAssetErrors} from "./errors/assets/ContentAssetErrors.sol";
+import {GeneralErrors} from "./errors/GeneralErrors.sol";
 import {ServiceAgreementErrorsV1} from "./errors/ServiceAgreementErrorsV1.sol";
+import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
 
-contract CommitManagerV1 is Named, Versioned {
+contract CommitManagerV1 is Named, Versioned, ContractStatus, Initializable {
     event CommitSubmitted(
         address indexed assetContract,
         uint256 indexed tokenId,
@@ -36,7 +37,6 @@ contract CommitManagerV1 is Named, Versioned {
     bool[4] public reqs = [false, false, false, false];
 
     HashingProxy public hashingProxy;
-    Hub public hub;
     ScoringProxy public scoringProxy;
     Staking public stakingContract;
     IdentityStorage public identityStorage;
@@ -46,17 +46,8 @@ contract CommitManagerV1 is Named, Versioned {
     ShardingTableStorage public shardingTableStorage;
     StakingStorage public stakingStorage;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-        initialize();
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
@@ -305,9 +296,5 @@ contract CommitManagerV1 is Named, Versioned {
             keccak256(abi.encodePacked(agreementId, epoch, rightIdentityId)), // rightCommitId
             leftIdentityId
         );
-    }
-
-    function _checkHubOwner() internal view virtual {
-        if (msg.sender != hub.owner()) revert GeneralErrors.OnlyHubOwnerFunction(msg.sender);
     }
 }

@@ -3,12 +3,11 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { AssertionStorage, Hub } from '../../typechain';
+import { AssertionStorage, HubController } from '../../typechain';
 
 type AssertionStorageFixture = {
   accounts: SignerWithAddress[];
   AssertionStorage: AssertionStorage;
-  Hub: Hub;
 };
 
 describe('@unit AssertionStorage contract', function () {
@@ -19,20 +18,19 @@ describe('@unit AssertionStorage contract', function () {
   const chunksNumber = 3;
   let accounts: SignerWithAddress[];
   let AssertionStorage: AssertionStorage;
-  let Hub: Hub;
 
   async function deployAssertionStorageFixture(): Promise<AssertionStorageFixture> {
     await hre.deployments.fixture(['AssertionStorage']);
     AssertionStorage = await hre.ethers.getContract<AssertionStorage>('AssertionStorage');
-    Hub = await hre.ethers.getContract<Hub>('Hub');
+    const HubController = await hre.ethers.getContract<HubController>('HubController');
     accounts = await hre.ethers.getSigners();
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
+    await HubController.setContractAddress('HubOwner', accounts[0].address);
 
-    return { accounts, AssertionStorage, Hub };
+    return { accounts, AssertionStorage };
   }
 
   beforeEach(async () => {
-    ({ accounts, AssertionStorage, Hub } = await loadFixture(deployAssertionStorageFixture));
+    ({ accounts, AssertionStorage } = await loadFixture(deployAssertionStorageFixture));
   });
 
   it('The contract is named "AssertionStorage"', async () => {
@@ -60,16 +58,12 @@ describe('@unit AssertionStorage contract', function () {
     expect(getAssertionResponse.chunksNumber).to.equal(chunksNumber);
   });
 
-  it('Set non owner to be new contract owner and create an assertion, expect to pass', async () => {
-    await Hub.setContractAddress('HubOwner', accounts[1].address);
+  it('Create an assertion from non-owner wallet, expect to revert', async () => {
     const AssertionStorageWithNonOwnerAsSigner = AssertionStorage.connect(accounts[1]);
 
-    await AssertionStorageWithNonOwnerAsSigner.createAssertion(assertionId, size, triplesNumber, chunksNumber);
-    const getAssertionResponse = await AssertionStorage.getAssertion(assertionId);
-
-    expect(getAssertionResponse.size).to.equal(size);
-    expect(getAssertionResponse.triplesNumber).to.equal(triplesNumber);
-    expect(getAssertionResponse.chunksNumber).to.equal(chunksNumber);
+    await expect(
+      AssertionStorageWithNonOwnerAsSigner.createAssertion(assertionId, size, triplesNumber, chunksNumber),
+    ).to.be.revertedWith('Fn can only be called by the hub');
   });
 
   it('Get assertion for non-existing assertionId, expect to get 0', async () => {

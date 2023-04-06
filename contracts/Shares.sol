@@ -1,30 +1,22 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
-import {Hub} from "./Hub.sol";
+import {HubDependent} from "./abstract/HubDependent.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
-contract Shares is ERC20, ERC20Burnable {
-    Hub public hub;
-
-    modifier onlyContracts() {
-        _checkHub();
-        _;
-    }
-
-    constructor(address hubAddress, string memory name, string memory symbol) ERC20(name, symbol) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-    }
+contract Shares is HubDependent, ERC20, ERC20Burnable {
+    constructor(
+        address hubAddress,
+        string memory name,
+        string memory symbol
+    )
+        HubDependent(hubAddress)
+        ERC20(name, symbol) // solhint-disable-next-line no-empty-blocks
+    {}
 
     function mint(address to, uint256 amount) external onlyContracts {
         _mint(to, amount);
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

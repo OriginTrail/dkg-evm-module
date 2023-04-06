@@ -1,31 +1,21 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
-import {Hub} from "../Hub.sol";
+import {HubDependent} from "../abstract/HubDependent.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 import {AssertionStructs} from "../structs/AssertionStructs.sol";
 
-contract AssertionStorage is Named, Versioned {
+contract AssertionStorage is Named, Versioned, HubDependent {
     string private constant _NAME = "AssertionStorage";
     string private constant _VERSION = "1.0.0";
-
-    Hub public hub;
 
     // assertionId => Assertion
     mapping(bytes32 => AssertionStructs.Assertion) internal assertions;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-    }
-
-    modifier onlyContracts() {
-        _checkHub();
-        _;
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) HubDependent(hubAddress) {}
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -75,9 +65,5 @@ contract AssertionStorage is Named, Versioned {
 
     function assertionExists(bytes32 assertionId) external view returns (bool) {
         return assertions[assertionId].timestamp != 0;
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

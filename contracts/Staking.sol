@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
-import {Hub} from "./Hub.sol";
 import {ShardingTable} from "./ShardingTable.sol";
 import {Shares} from "./Shares.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
@@ -11,12 +10,14 @@ import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
+import {ContractStatus} from "./abstract/ContractStatus.sol";
+import {Initializable} from "./interface/Initializable.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ADMIN_KEY} from "./constants/IdentityConstants.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Staking is Named, Versioned {
+contract Staking is Named, Versioned, ContractStatus, Initializable {
     event StakeIncreased(
         uint72 indexed identityId,
         bytes nodeId,
@@ -42,9 +43,8 @@ contract Staking is Named, Versioned {
     event OperatorFeeUpdated(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
-    string private constant _VERSION = "1.0.1";
+    string private constant _VERSION = "1.0.2";
 
-    Hub public hub;
     ShardingTable public shardingTableContract;
     IdentityStorage public identityStorage;
     ParametersStorage public parametersStorage;
@@ -54,23 +54,8 @@ contract Staking is Named, Versioned {
     ShardingTableStorage public shardingTableStorage;
     IERC20 public tokenContract;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-
-        initialize();
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
-
-    modifier onlyContracts() {
-        _checkHub();
-        _;
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     modifier onlyAdmin(uint72 identityId) {
         _checkAdmin(identityId);
@@ -250,14 +235,6 @@ contract Staking is Named, Versioned {
         }
 
         emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, oldStake, newStake);
-    }
-
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 
     function _checkAdmin(uint72 identityId) internal view virtual {

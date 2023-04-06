@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
-import {Hub} from "../Hub.sol";
+import {HubDependent} from "../abstract/HubDependent.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 import {ShardingTableStructs} from "../structs/ShardingTableStructs.sol";
 import {NULL} from "../constants/ShardingTableConstants.sol";
 
-contract ShardingTableStorage is Named, Versioned {
+contract ShardingTableStorage is Named, Versioned, HubDependent {
     string private constant _NAME = "ShardingTableStorage";
     string private constant _VERSION = "1.0.0";
-
-    Hub public hub;
 
     uint72 public head;
     uint72 public tail;
@@ -21,18 +19,9 @@ contract ShardingTableStorage is Named, Versioned {
     // identityId => Node
     mapping(uint72 => ShardingTableStructs.Node) internal nodes;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-
+    constructor(address hubAddress) HubDependent(hubAddress) {
         head = NULL;
         tail = NULL;
-    }
-
-    modifier onlyContracts() {
-        _checkHub();
-        _;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -108,9 +97,5 @@ contract ShardingTableStorage is Named, Versioned {
     function link(uint72 leftNodeIdentityId, uint72 rightNodeIdentityId) external onlyContracts {
         nodes[leftNodeIdentityId].nextIdentityId = rightNodeIdentityId;
         nodes[rightNodeIdentityId].prevIdentityId = leftNodeIdentityId;
-    }
-
-    function _checkHub() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

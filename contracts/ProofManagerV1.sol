@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.16;
 
 import {HashingProxy} from "./HashingProxy.sol";
-import {Hub} from "./Hub.sol";
 import {Staking} from "./Staking.sol";
-import {AbstractAsset} from "./assets/AbstractAsset.sol";
 import {AssertionStorage} from "./storage/AssertionStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
+import {AbstractAsset} from "./abstract/AbstractAsset.sol";
+import {ContractStatus} from "./abstract/ContractStatus.sol";
+import {Initializable} from "./interface/Initializable.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
@@ -19,7 +20,7 @@ import {GeneralErrors} from "./errors/GeneralErrors.sol";
 import {ServiceAgreementErrorsV1} from "./errors/ServiceAgreementErrorsV1.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-contract ProofManagerV1 is Named, Versioned {
+contract ProofManagerV1 is Named, Versioned, ContractStatus, Initializable {
     event ProofSubmitted(
         address indexed assetContract,
         uint256 indexed tokenId,
@@ -35,7 +36,6 @@ contract ProofManagerV1 is Named, Versioned {
     bool[4] public reqs = [false, false, false, false];
 
     HashingProxy public hashingProxy;
-    Hub public hub;
     Staking public stakingContract;
     AssertionStorage public assertionStorage;
     IdentityStorage public identityStorage;
@@ -43,17 +43,8 @@ contract ProofManagerV1 is Named, Versioned {
     ProfileStorage public profileStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
 
-    constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
-
-        hub = Hub(hubAddress);
-        initialize();
-    }
-
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
@@ -104,11 +95,11 @@ contract ProofManagerV1 is Named, Versioned {
         address assetContract,
         uint256 tokenId,
         uint16 epoch
-    ) public view returns (bytes32, uint256) {
+    ) public view returns (bytes32 assertionId, uint256 challenge) {
         uint72 identityId = identityStorage.getIdentityId(sender);
 
         AbstractAsset generalAssetInterface = AbstractAsset(assetContract);
-        bytes32 assertionId = generalAssetInterface.getLatestAssertionId(tokenId);
+        assertionId = generalAssetInterface.getLatestAssertionId(tokenId);
 
         uint256 assertionChunksNumber = assertionStorage.getAssertionChunksNumber(assertionId);
 
@@ -220,9 +211,5 @@ contract ProofManagerV1 is Named, Versioned {
 
     function setReq(uint256 index, bool req) external onlyHubOwner {
         reqs[index] = req;
-    }
-
-    function _checkHubOwner() internal view virtual {
-        if (msg.sender != hub.owner()) revert GeneralErrors.OnlyHubOwnerFunction(msg.sender);
     }
 }

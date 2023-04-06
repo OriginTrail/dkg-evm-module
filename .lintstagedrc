@@ -1,9 +1,11 @@
 {
-  "*.{js,ts,sol}": [
-    "prettier --write",
+  "*.{json,js,ts,sol}": [
+    "prettier --write"
+  ],
+  "*.{js,ts}": [
     "eslint --fix"
   ],
-  "*.json": [
-    "prettier --write"
+  "*.sol,!contracts/{utils/*.sol,Guardian.sol,TraceLabsMultiSigWallet.sol}": [
+    "solhint --write"
   ]
 }
