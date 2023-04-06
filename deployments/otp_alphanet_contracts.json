@@ -61,7 +61,7 @@
       "substrateAddress": "5EMjsczYrvc6cf27hHvw5Hrd5PBy9zx2mXzPdsHy1SYiJfFD"
     },
     "ParametersStorage": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0xb64564e819337bA5A6C8F7976e507B37E6Eb3A8B",
       "substrateAddress": "5EMjsczxhRBvF2Uf3BPA23b2LLQmmgziwkMPj7yL3uUKKJAY",
       "variables": {
