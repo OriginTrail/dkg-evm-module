@@ -9,7 +9,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (['otp_alphanet', 'otp_devnet', 'otp_testnet'].includes(hre.network.name)) {
     const variablesMap = hre.helpers.contractDeployments.contracts['ParametersStorage'].variables;
     for (const variable in variablesMap) {
-      await ParametersStorage[`set${variable.charAt(0).toUpperCase() + variable.slice(1)}`](variablesMap[variable]);
+      const setParamTx = await ParametersStorage[`set${variable.charAt(0).toUpperCase() + variable.slice(1)}`](
+        variablesMap[variable],
+      );
+      await setParamTx.wait();
       console.log(`[ParametersStorage] ${variable} parameter set to ${variablesMap[variable]}`);
     }
   }
