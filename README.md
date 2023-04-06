@@ -79,6 +79,7 @@ npm run compile
 Hardhat has plenty of other useful commands, extended by the installed plugins. Here's a brief description of the most useful tasks:
 
 - `decode`: Decodes encoded ABI data (e.g. input data of transaction).
+- `encode_data`: Encodes data for low-level function call (through HubController).
 
 These tasks can be run using the `npx hardhat <task-name>` command. For example, to decode input data, you can run:
 
