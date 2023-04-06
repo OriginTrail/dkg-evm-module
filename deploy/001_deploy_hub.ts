@@ -34,6 +34,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     if (hubOwner != HubController.address) {
       const transferHubOwneshipTx = await Hub.transferOwnership(HubController.address);
       await transferHubOwneshipTx.wait();
+
+      console.log(`Hub ownership transferred to HubController (${HubController.address})`);
     }
 
     if (['otp_testnet', 'otp_mainnet'].includes(hre.network.name)) {
@@ -44,6 +46,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       if (hubControllerOwner != traceLabsMultiSigWalletAddress) {
         const transferHubControllerOwnershipTx = await HubController.transferOwnership(traceLabsMultiSigWalletAddress);
         await transferHubControllerOwnershipTx.wait();
+
+        console.log(
+          `HubController ownership transferred to TraceLabsMultiSigWallet (${traceLabsMultiSigWalletAddress})`,
+        );
       }
     }
   }
