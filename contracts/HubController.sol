@@ -89,11 +89,11 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         hub.setAssetStorageAddress(assetStorageName, assetStorageAddress);
     }
 
-    function renounceHubOwnership() external onlyOwnerOrMultiSigOwner {
+    function renounceHubOwnership() external onlyOwner {
         hub.renounceOwnership();
     }
 
-    function transferHubOwnership(address newOwner) external onlyOwnerOrMultiSigOwner {
+    function transferHubOwnership(address newOwner) external onlyOwner {
         hub.transferOwnership(newOwner);
     }
 

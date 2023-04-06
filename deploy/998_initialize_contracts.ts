@@ -24,6 +24,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['tests'];
-func.dependencies = ['HubController'];
 func.runAtTheEnd = true;
