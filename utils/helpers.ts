@@ -57,9 +57,12 @@ export class Helpers {
   hre: HardhatRuntimeEnvironment;
   provider: HttpProvider;
   contractDeployments: ContractDeployments;
-  redeployedContracts: Array<Array<string>>;
-  redeployedAssetStorageContracts: Array<Array<string>>;
+  newContracts: Array<Array<string>>;
+  newAssetStorageContracts: Array<Array<string>>;
   contractsForReinitialization: Array<string>;
+  setParametersEncodedData: Array<string>;
+  newHashFunctions: Array<string>;
+  newScoreFunctions: Array<string>;
 
   constructor(hre: HardhatRuntimeEnvironment) {
     this.hre = hre;
@@ -74,9 +77,12 @@ export class Helpers {
       this.contractDeployments = { contracts: {}, deployedTimestamp: 0 };
     }
 
-    this.redeployedContracts = [];
-    this.redeployedAssetStorageContracts = [];
+    this.newContracts = [];
+    this.newAssetStorageContracts = [];
     this.contractsForReinitialization = [];
+    this.setParametersEncodedData = [];
+    this.newHashFunctions = [];
+    this.newScoreFunctions = [];
   }
 
   public async deploy({
@@ -97,9 +103,9 @@ export class Helpers {
       );
 
       if (this.hasFunction(newContractName, 'initialize')) {
-        const allRedeployedContracts = this.redeployedContracts.concat(this.redeployedAssetStorageContracts);
+        const allnewContracts = this.newContracts.concat(this.newAssetStorageContracts);
 
-        for (const contract of allRedeployedContracts) {
+        for (const contract of allnewContracts) {
           if (dependencies.includes(contract[0])) {
             this.contractsForReinitialization.push(contractInstance.address);
             break;
@@ -146,14 +152,14 @@ export class Helpers {
         tx = await HubController.setContractAddress(nameInHub, newContract.address);
         await tx.wait();
       } else {
-        this.redeployedContracts.push([nameInHub, newContract.address]);
+        this.newContracts.push([nameInHub, newContract.address]);
       }
     } else if (setAssetStorageInHub) {
       if (this.hre.network.name === 'hardhat') {
         tx = await HubController.setAssetStorageAddress(nameInHub, newContract.address);
         await tx.wait();
       } else {
-        this.redeployedAssetStorageContracts.push([nameInHub, newContract.address]);
+        this.newAssetStorageContracts.push([nameInHub, newContract.address]);
       }
     }
 
@@ -196,9 +202,7 @@ export class Helpers {
   }
 
   public resetDeploymentsJson() {
-    for (const contract in this.hre.helpers.contractDeployments.contracts) {
-      this.hre.helpers.contractDeployments.contracts[contract].deployed = false;
-    }
+    this.hre.helpers.contractDeployments = { contracts: {}, deployedTimestamp: 0 };
   }
 
   public updateDeploymentsJson(newContractName: string, newContractAddress: string) {
