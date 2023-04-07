@@ -41,7 +41,7 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
      * @param data The calldata containing the function signature and arguments for the target contract's function.
      * @return result The return data of the target contract's function call.
      */
-    function forwardCall(address target, bytes calldata data) external onlyOwnerOrMultiSigOwner returns (bytes memory) {
+    function forwardCall(address target, bytes calldata data) public onlyOwnerOrMultiSigOwner returns (bytes memory) {
         // Check if the target contract is registered in the Hub
         require(hub.isContract(target), "Target contract isn't in the Hub");
 
@@ -135,7 +135,7 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
     function _setParameters(bytes[] calldata setParametersEncodedData) internal {
         address parametersStorageAddress = hub.getContractAddress("ParametersStorage");
         for (uint i; i < setParametersEncodedData.length; ) {
-            this.forwardCall(parametersStorageAddress, setParametersEncodedData[i]);
+            forwardCall(parametersStorageAddress, setParametersEncodedData[i]);
             unchecked {
                 i++;
             }
@@ -163,19 +163,19 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
     }
 
     function _isMultiSigOwner() internal view returns (bool) {
-        address[] memory multiSigOwners = ICustodian(hub.getContractAddress("TraceLabsMultiSigWallet")).getOwners();
-
-        for (uint i; i < multiSigOwners.length; ) {
-            if (msg.sender == multiSigOwners[i]) return true;
-            unchecked {
-                i++;
+        try hub.getContractAddress("TraceLabsMultiSigWallet") returns (address multiSigAddress) {
+            address[] memory multiSigOwners = ICustodian(multiSigAddress).getOwners();
+            for (uint i = 0; i < multiSigOwners.length; i++) {
+                if (msg.sender == multiSigOwners[i]) {
+                    return true;
+                }
             }
-        }
+        } catch {}
 
         return false;
     }
 
     function _checkOwnerOrMultiSigOwner() internal view virtual {
-        require((msg.sender == owner()) || _isMultiSigOwner(), "");
+        require((msg.sender == owner()) || _isMultiSigOwner(), "Owner / MultiSig owner function!");
     }
 }

@@ -2,23 +2,24 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const isDeployed = hre.helpers.isDeployed('Token');
+  const isDeployed = hre.helpers.isDeployed('ParametersStorage');
 
   await hre.helpers.deploy({
     newContractName: 'ParametersStorage',
   });
 
   if (!isDeployed && ['otp_alphanet', 'otp_devnet', 'otp_testnet'].includes(hre.network.name)) {
-    const variables = hre.helpers.contractDeployments.contracts['ParametersStorage'].variables;
+    const variables = hre.helpers.contractDeployments.contracts['ParametersStorage'].variables ?? {};
 
     const ParametersStorageAbi = hre.helpers.getAbi('ParametersStorage');
     const ParametersStorageInterface = new hre.ethers.utils.Interface(ParametersStorageAbi);
 
-    for (const variable in variables) {
+    for (const variableName in variables) {
       hre.helpers.setParametersEncodedData.push(
-        ParametersStorageInterface.encodeFunctionData(`set${variable.charAt(0).toUpperCase() + variable.slice(1)}`, [
-          variable,
-        ]),
+        ParametersStorageInterface.encodeFunctionData(
+          `set${variableName.charAt(0).toUpperCase() + variableName.slice(1)}`,
+          [variables[variableName]],
+        ),
       );
     }
   }
