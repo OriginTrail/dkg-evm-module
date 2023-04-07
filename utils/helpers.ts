@@ -101,6 +101,7 @@ export class Helpers {
       );
 
       if (this.hasFunction(newContractName, 'initialize')) {
+        // TODO: Reinitialize only if any dependency contract was redeployed
         this.contractsForReinitialization.push(contractInstance.address);
       }
 
