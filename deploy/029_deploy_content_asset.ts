@@ -7,7 +7,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const isDeployed = hre.helpers.isDeployed('ContentAsset');
   const oldContentAssetAddress = hre.helpers.contractDeployments.contracts['ContentAsset'].evmAddress;
 
-  await hre.helpers.deploy({
+  const ContentAsset = await hre.helpers.deploy({
     newContractName: 'ContentAsset',
   });
 
@@ -15,11 +15,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
     const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
 
-    const setContractAddressTx = await HubController.setContractAddress(
-      'ContentAssetV1Deprecated',
-      oldContentAssetAddress,
-    );
+    let setContractAddressTx = await HubController.setContractAddress('ContentAsset', ContentAsset.address);
     await setContractAddressTx.wait();
+
+    setContractAddressTx = await HubController.setContractAddress('ContentAssetV1Deprecated', oldContentAssetAddress);
+    await setContractAddressTx.wait();
+
+    hre.helpers.contractsForReinitialization.push(oldContentAssetAddress);
   }
 };
 

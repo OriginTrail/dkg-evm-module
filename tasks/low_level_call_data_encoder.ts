@@ -10,7 +10,7 @@ type EncoderParameters = {
 task('encode_data', 'Encodes data needed for low-level contract call from HubController')
   .addParam<string>('contractName')
   .addParam<string>('functionName')
-  .addVariadicPositionalParam<Array<string>>('functionArgs')
+  .addOptionalVariadicPositionalParam<Array<string>>('functionArgs')
   .setAction(async (taskArgs: EncoderParameters, hre: HardhatRuntimeEnvironment) => {
     const contractInterface = new hre.ethers.utils.Interface(hre.helpers.getAbi(taskArgs.contractName));
     const encodedData = contractInterface.encodeFunctionData(taskArgs.functionName, taskArgs.functionArgs);
