@@ -5,10 +5,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
 
   const isDeployed = hre.helpers.isDeployed('ContentAsset');
+  const oldContentAssetAddress = hre.helpers.contractDeployments.contracts['ContentAsset'].evmAddress;
+
+  await hre.helpers.deploy({
+    newContractName: 'ContentAsset',
+  });
 
   if (isDeployed) {
-    const oldContentAssetAddress = hre.helpers.contractDeployments.contracts['ContentAsset'].evmAddress;
-
     const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
     const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
 
@@ -18,10 +21,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     );
     await setContractAddressTx.wait();
   }
-
-  await hre.helpers.deploy({
-    newContractName: 'ContentAsset',
-  });
 };
 
 export default func;
