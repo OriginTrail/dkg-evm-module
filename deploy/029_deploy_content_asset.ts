@@ -2,26 +2,20 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { deployer } = await hre.getNamedAccounts();
-
   const isDeployed = hre.helpers.isDeployed('ContentAsset');
-
+  let oldContentAssetAddress = '';
   if (isDeployed) {
-    const oldContentAssetAddress = hre.helpers.contractDeployments.contracts['ContentAsset'].evmAddress;
-
-    const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
-    const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
-
-    const setContractAddressTx = await HubController.setContractAddress(
-      'ContentAssetV1Deprecated',
-      oldContentAssetAddress,
-    );
-    await setContractAddressTx.wait();
+    oldContentAssetAddress = hre.helpers.contractDeployments.contracts['ContentAsset'].evmAddress;
   }
 
   await hre.helpers.deploy({
     newContractName: 'ContentAsset',
   });
+
+  if (isDeployed) {
+    hre.helpers.newContracts.push(['ContentAssetV1Deprecated', oldContentAssetAddress]);
+    hre.helpers.contractsForReinitialization.push(oldContentAssetAddress);
+  }
 };
 
 export default func;
