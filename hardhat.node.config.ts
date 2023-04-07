@@ -25,7 +25,7 @@ const config: HardhatUserConfig = {
     },
     hardhat: {
       chainId: 31337,
-      gas: 6_000_000,
+      gas: 15_000_000,
       gasMultiplier: 1,
       blockGasLimit: 30_000_000,
       hardfork: 'merge',

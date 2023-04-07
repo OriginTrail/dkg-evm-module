@@ -31,8 +31,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`New or redeployed Asset Storage contracts: ${JSON.stringify(newAssetStorageContracts)}`);
     console.log(`Initialized contracts: ${JSON.stringify(contractsForReinitialization)}`);
     console.log(`Encoded data for parameters settings: ${JSON.stringify(setParametersEncodedData)}`);
-    console.log(`New or redeployed hash functions set in the proxy: ${newHashFunctions}`);
-    console.log(`New ot redeployed score functions set in the proxy: ${newScoreFunctions}`);
+    console.log(`New or redeployed hash functions set in the proxy: ${JSON.stringify(newHashFunctions)}`);
+    console.log(`New ot redeployed score functions set in the proxy: ${JSON.stringify(newScoreFunctions)}`);
   }
 };
 
