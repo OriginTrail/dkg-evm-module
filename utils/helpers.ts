@@ -38,7 +38,6 @@ type DeploymentParameters = {
   passHubInConstructor?: boolean;
   setContractInHub?: boolean;
   setAssetStorageInHub?: boolean;
-  dependencies?: Array<string>;
 };
 
 type EvmWallet = {
@@ -91,7 +90,6 @@ export class Helpers {
     passHubInConstructor = true,
     setContractInHub = true,
     setAssetStorageInHub = false,
-    dependencies = [],
   }: DeploymentParameters): Promise<Contract> {
     const { deployer } = await this.hre.getNamedAccounts();
 
@@ -103,17 +101,11 @@ export class Helpers {
       );
 
       if (this.hasFunction(newContractName, 'initialize')) {
-        const allnewContracts = this.newContracts.concat(this.newAssetStorageContracts);
-
-        for (const contract of allnewContracts) {
-          if (dependencies.includes(contract[0])) {
-            this.contractsForReinitialization.push(contractInstance.address);
-            break;
-          }
-        }
-      } else {
-        return contractInstance;
+        // TODO: Reinitialize only if any dependency contract was redeployed
+        this.contractsForReinitialization.push(contractInstance.address);
       }
+
+      return contractInstance;
     }
 
     let hubAddress;

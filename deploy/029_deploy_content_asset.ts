@@ -21,7 +21,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await hre.helpers.deploy({
     newContractName: 'ContentAsset',
-    dependencies: func.dependencies,
   });
 };
 
