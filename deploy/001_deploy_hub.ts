@@ -6,6 +6,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   if (hre.network.name === 'hardhat') {
     hre.helpers.resetDeploymentsJson();
+    console.log('Hardhat deployments config reset.');
   }
 
   if (!hre.helpers.isDeployed('Hub')) {
