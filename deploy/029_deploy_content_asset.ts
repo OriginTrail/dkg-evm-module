@@ -12,7 +12,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
     const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
 
-    const setContractAddressTx = await HubController.setContractAddress('oldContentAsset', oldContentAssetAddress);
+    const setContractAddressTx = await HubController.setContractAddress(
+      'ContentAssetV1Deprecated',
+      oldContentAssetAddress,
+    );
     await setContractAddressTx.wait();
   }
 

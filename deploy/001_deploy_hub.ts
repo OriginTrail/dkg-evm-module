@@ -14,44 +14,37 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     hre.helpers.updateDeploymentsJson('Hub', Hub.address);
   }
 
-  if (!hre.helpers.isDeployed('TraceLabsMultiSigWallet') && ['otp_testnet', 'otp_mainnet'].includes(hre.network.name)) {
-    await hre.helpers.deploy({
-      newContractName: 'TraceLabsMultiSigWallet',
-      passHubInConstructor: false,
-    });
-  }
-
   if (!hre.helpers.isDeployed('HubController')) {
+    let previousHubControllerAddress;
+    if (hre.helpers.inConfig('HubController')) {
+      previousHubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
+    } else {
+      previousHubControllerAddress = null;
+    }
+
     const HubController = await hre.helpers.deploy({
       newContractName: 'HubController',
       setContractInHub: false,
     });
 
-    const hubAddress = hre.helpers.contractDeployments.contracts['Hub'].evmAddress;
-    const Hub = await hre.ethers.getContractAt('Hub', hubAddress, deployer);
-    const hubOwner = await Hub.owner();
+    if (previousHubControllerAddress == null) {
+      const hubAddress = hre.helpers.contractDeployments.contracts['Hub'].evmAddress;
+      const Hub = await hre.ethers.getContractAt('Hub', hubAddress, deployer);
 
-    if (hubOwner != HubController.address) {
       const transferHubOwneshipTx = await Hub.transferOwnership(HubController.address);
       await transferHubOwneshipTx.wait();
+    } else {
+      const previousHubController = await hre.ethers.getContractAt(
+        'HubController',
+        previousHubControllerAddress,
+        deployer,
+      );
 
-      console.log(`Hub ownership transferred to HubController (${HubController.address})`);
+      const transferHubOwneshipTx = await previousHubController.transferHubOwnership(HubController.address);
+      await transferHubOwneshipTx.wait();
     }
 
-    if (['otp_testnet', 'otp_mainnet'].includes(hre.network.name)) {
-      const hubControllerOwner = await HubController.owner();
-      const traceLabsMultiSigWalletAddress =
-        hre.helpers.contractDeployments.contracts['TraceLabsMultiSigWallet'].evmAddress;
-
-      if (hubControllerOwner != traceLabsMultiSigWalletAddress) {
-        const transferHubControllerOwnershipTx = await HubController.transferOwnership(traceLabsMultiSigWalletAddress);
-        await transferHubControllerOwnershipTx.wait();
-
-        console.log(
-          `HubController ownership transferred to TraceLabsMultiSigWallet (${traceLabsMultiSigWalletAddress})`,
-        );
-      }
-    }
+    console.log(`Hub ownership transferred to HubController (${HubController.address})`);
   }
 };
 

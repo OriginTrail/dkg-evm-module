@@ -2,11 +2,14 @@
 
 pragma solidity ^0.8.16;
 
+import {HashingProxy} from "./HashingProxy.sol";
+import {ScoringProxy} from "./ScoringProxy.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
+import {ICustodian} from "./interface/ICustodian.sol";
+import {Indexable} from "./interface/Indexable.sol";
+import {Initializable} from "./interface/Initializable.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
-import {ICustodian} from "./interface/ICustodian.sol";
-import {Initializable} from "./interface/Initializable.sol";
 import {GeneralStructs} from "./structs/GeneralStructs.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -67,28 +70,17 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
     function setAndReinitializeContracts(
         GeneralStructs.Contract[] calldata newContracts,
         GeneralStructs.Contract[] calldata newAssetStorageContracts,
-        address[] calldata contractsToReinitialize
+        address[] calldata contractsToReinitialize,
+        bytes[] calldata setParametersEncodedData,
+        address[] calldata newHashFunctions,
+        address[] calldata newScoreFunctions
     ) external onlyOwnerOrMultiSigOwner {
-        for (uint i; i < newContracts.length; ) {
-            hub.setContractAddress(newContracts[i].name, newContracts[i].addr);
-            unchecked {
-                i++;
-            }
-        }
-
-        for (uint i; i < newAssetStorageContracts.length; ) {
-            hub.setAssetStorageAddress(newAssetStorageContracts[i].name, newAssetStorageContracts[i].addr);
-            unchecked {
-                i++;
-            }
-        }
-
-        for (uint i; i < contractsToReinitialize.length; ) {
-            Initializable(contractsToReinitialize[i]).initialize();
-            unchecked {
-                i++;
-            }
-        }
+        _setContracts(newContracts);
+        _setAssetStorageContracts(newAssetStorageContracts);
+        _reinitializeContracts(contractsToReinitialize);
+        _setParameters(setParametersEncodedData);
+        _setHashFunctions(newHashFunctions);
+        _setScoreFunctions(newScoreFunctions);
     }
 
     function setContractAddress(
@@ -111,6 +103,63 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
 
     function transferHubOwnership(address newOwner) external onlyOwner {
         hub.transferOwnership(newOwner);
+    }
+
+    function _setContracts(GeneralStructs.Contract[] calldata newContracts) internal {
+        for (uint i; i < newContracts.length; ) {
+            hub.setContractAddress(newContracts[i].name, newContracts[i].addr);
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    function _setAssetStorageContracts(GeneralStructs.Contract[] calldata newAssetStorageContracts) internal {
+        for (uint i; i < newAssetStorageContracts.length; ) {
+            hub.setAssetStorageAddress(newAssetStorageContracts[i].name, newAssetStorageContracts[i].addr);
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    function _reinitializeContracts(address[] calldata contractsToReinitialize) internal {
+        for (uint i; i < contractsToReinitialize.length; ) {
+            Initializable(contractsToReinitialize[i]).initialize();
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    function _setParameters(bytes[] calldata setParametersEncodedData) internal {
+        address parametersStorageAddress = hub.getContractAddress("ParametersStorage");
+        for (uint i; i < setParametersEncodedData.length; ) {
+            this.forwardCall(parametersStorageAddress, setParametersEncodedData[i]);
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    function _setHashFunctions(address[] calldata newHashFunctions) internal {
+        HashingProxy hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
+        for (uint i; i < newHashFunctions.length; ) {
+            hashingProxy.setContractAddress(Indexable(newHashFunctions[i]).id(), newHashFunctions[i]);
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    function _setScoreFunctions(address[] calldata newScoreFunctions) internal {
+        ScoringProxy scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
+        for (uint i; i < newScoreFunctions.length; ) {
+            scoringProxy.setContractAddress(Indexable(newScoreFunctions[i]).id(), newScoreFunctions[i]);
+            unchecked {
+                i++;
+            }
+        }
     }
 
     function _isMultiSigOwner() internal view returns (bool) {

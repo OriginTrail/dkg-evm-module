@@ -4,22 +4,35 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
 
-  const { redeployedContracts, redeployedAssetStorageContracts, contractsForReinitialization } = hre.helpers;
+  const {
+    newContracts,
+    newAssetStorageContracts,
+    contractsForReinitialization,
+    setParametersEncodedData,
+    newHashFunctions,
+    newScoreFunctions,
+  } = hre.helpers;
 
-  if (!['hardhat', 'otp_testnet', 'otp_mainnet'].includes(hre.network.name)) {
+  if (hre.network.name !== 'hardhat') {
     const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
     const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
 
     const setAndReinitializeContractsTx = await HubController.setAndReinitializeContracts(
-      redeployedContracts,
-      redeployedAssetStorageContracts,
+      newContracts,
+      newAssetStorageContracts,
       contractsForReinitialization,
+      setParametersEncodedData,
+      newHashFunctions,
+      newScoreFunctions,
     );
     await setAndReinitializeContractsTx.wait();
-  } else if (hre.network.name !== 'hardhat') {
-    console.log(`New or redeployed contracts: ${JSON.stringify(redeployedContracts)}`);
-    console.log(`New or redeployed Asset Storage contracts: ${JSON.stringify(redeployedAssetStorageContracts)}`);
-    console.log(`Contracts that need to be reinitialized: ${JSON.stringify(contractsForReinitialization)}`);
+
+    console.log(`New or redeployed contracts: ${JSON.stringify(newContracts)}`);
+    console.log(`New or redeployed Asset Storage contracts: ${JSON.stringify(newAssetStorageContracts)}`);
+    console.log(`Initialized contracts: ${JSON.stringify(contractsForReinitialization)}`);
+    console.log(`Encoded data for parameters settings: ${JSON.stringify(setParametersEncodedData)}`);
+    console.log(`New or redeployed hash functions set in the proxy: ${newHashFunctions}`);
+    console.log(`New ot redeployed score functions set in the proxy: ${newScoreFunctions}`);
   }
 };
 
