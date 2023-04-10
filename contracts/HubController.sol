@@ -162,20 +162,23 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         }
     }
 
-    function _isMultiSigOwner() internal view returns (bool) {
-        try hub.getContractAddress("TraceLabsMultiSigWallet") returns (address multiSigAddress) {
-            address[] memory multiSigOwners = ICustodian(multiSigAddress).getOwners();
+    function _isMultiSigOwner(address multiSigAddress) internal view returns (bool) {
+        try ICustodian(multiSigAddress).getOwners() returns (address[] memory multiSigOwners) {
             for (uint i = 0; i < multiSigOwners.length; i++) {
                 if (msg.sender == multiSigOwners[i]) {
                     return true;
                 }
-            }
+            } // solhint-disable-next-line no-empty-blocks
         } catch {}
 
         return false;
     }
 
     function _checkOwnerOrMultiSigOwner() internal view virtual {
-        require((msg.sender == owner()) || _isMultiSigOwner(), "Owner / MultiSig owner function!");
+        address hubControllerOwner = owner();
+        require(
+            (msg.sender == hubControllerOwner) || _isMultiSigOwner(hubControllerOwner),
+            "Owner / MultiSig owner function!"
+        );
     }
 }

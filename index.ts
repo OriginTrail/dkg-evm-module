@@ -19,6 +19,7 @@ import IndexableABI from './abi/Indexable.json';
 import InitializableABI from './abi/Initializable.json';
 import IScoreFunctionABI from './abi/IScoreFunction.json';
 import Log2PLDSFABI from './abi/Log2PLDSF.json';
+import MultiSigWalletABI from './abi/MultiSigWallet.json';
 import NamedABI from './abi/Named.json';
 import ParametersStorageABI from './abi/ParametersStorage.json';
 import ProfileABI from './abi/Profile.json';
@@ -71,6 +72,7 @@ export {
   StakingABI,
   UnfinalizedStateStorageABI,
   WhitelistStorageABI,
+  MultiSigWalletABI,
   AbstractAssetABI,
   HubDependentABI,
   ContractStatusABI,
