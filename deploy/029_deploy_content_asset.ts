@@ -4,9 +4,9 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const hasOldVersion = hre.helpers.inConfig('ContentAsset');
 
-  let oldContentAssetAddress = '';
+  let deprecatedContentAssetAddress = '';
   if (hasOldVersion) {
-    oldContentAssetAddress = hre.helpers.contractDeployments.contracts['ContentAsset'].evmAddress;
+    deprecatedContentAssetAddress = hre.helpers.contractDeployments.contracts['ContentAsset'].evmAddress;
   }
 
   await hre.helpers.deploy({
@@ -14,8 +14,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 
   if (hasOldVersion) {
-    hre.helpers.newContracts.push(['ContentAssetV1Deprecated', oldContentAssetAddress]);
-    hre.helpers.contractsForReinitialization.push(oldContentAssetAddress);
+    hre.helpers.newContracts.push(['ContentAssetDeprecated', deprecatedContentAssetAddress]);
   }
 };
 
