@@ -9,4 +9,4 @@ node_modules
 package-lock.json
 package.json
 typechain
-contracts/TraceLabsMultiSigWallet.sol
+contracts/MultiSigWallet.sol

@@ -67,7 +67,7 @@ const config: HardhatUserConfig = {
       },
     ],
     overrides: {
-      'contracts/TraceLabsMultiSigWallet.sol': {
+      'contracts/MultiSigWallet.sol': {
         version: '0.4.15',
       },
     },

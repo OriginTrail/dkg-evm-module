@@ -357,23 +357,6 @@
     "constant": false,
     "inputs": [
       {
-        "name": "_owners",
-        "type": "address[]"
-      },
-      {
-        "name": "_required",
-        "type": "uint256"
-      }
-    ],
-    "name": "MultiSigWallet",
-    "outputs": [],
-    "payable": false,
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
         "name": "transactionId",
         "type": "uint256"
       }
@@ -382,6 +365,20 @@
     "outputs": [],
     "payable": false,
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "_owners",
+        "type": "address[]"
+      },
+      {
+        "name": "_required",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "type": "constructor"
   },
   {
     "payable": true,
