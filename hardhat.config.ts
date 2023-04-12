@@ -30,8 +30,8 @@ config.networks = {
   otp_alphanet: {
     chainId: 2043,
     url: rpc('otp_alphanet'),
-    gas: 12_000_000, // Gas limit used for deployments
-    gasPrice: 1_000_000,
+    gas: 10_000_000, // Gas limit used for deployments
+    gasPrice: 20,
     accounts: accounts('otp_alphanet'),
     saveDeployments: false,
   },
