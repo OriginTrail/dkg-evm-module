@@ -19,7 +19,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // 1. Deploy HubController contract using software wallet.
   // 2. Transfer ownership of the Hub to the new HubController, using transferHubOwnership function in the old HubController.
   // 3. Transfer ownership of the new HubController to the MultiSig Wallet.
-  // 4. Add software burner wallet that will be used for redeployment of other contracts to the MultiSig (remove after redeployment).
+  // 4. Update address of new HubController to deployments/otp_{testnet/mainnet}_contracts.json and commit the change
+  // 5. Add software burner wallet that will be used for redeployment of other contracts to the MultiSig (remove after redeployment).
   if (!hre.helpers.isDeployed('HubController') && !['otp_testnet', 'otp_mainnet'].includes(hre.network.name)) {
     let previousHubControllerAddress;
     if (hre.helpers.inConfig('HubController')) {
