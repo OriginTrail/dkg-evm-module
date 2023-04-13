@@ -8,6 +8,7 @@ import {ServiceAgreementV1} from "../ServiceAgreementV1.sol";
 import {ContentAssetStorage} from "../storage/assets/ContentAssetStorage.sol";
 import {ParametersStorage} from "../storage/ParametersStorage.sol";
 import {ServiceAgreementStorageProxy} from "../storage/ServiceAgreementStorageProxy.sol";
+import {ServiceAgreementStorageV1U1} from "../storage/ServiceAgreementStorageV1U1.sol";
 import {UnfinalizedStateStorage} from "../storage/UnfinalizedStateStorage.sol";
 import {HubDependent} from "../abstract/HubDependent.sol";
 import {Initializable} from "../interface/Initializable.sol";
@@ -49,6 +50,7 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
     HashingProxy public hashingProxy;
     ContentAssetStorage public contentAssetStorage;
     ParametersStorage public parametersStorage;
+    ServiceAgreementStorageV1U1 public serviceAgreementStorageV1U1;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     ServiceAgreementV1 public serviceAgreementV1;
     UnfinalizedStateStorage public unfinalizedStateStorage;
@@ -61,6 +63,9 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         contentAssetStorage = ContentAssetStorage(hub.getAssetStorageAddress("ContentAssetStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+        serviceAgreementStorageV1U1 = ServiceAgreementStorageV1U1(
+            hub.getContractAddress("ServiceAgreementStorageV1U1")
+        );
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
         );
@@ -215,7 +220,7 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
             startTime,
             epochsNumber,
             epochLength,
-            0, // tokenAmount, migrated from sasV1 during update finalization
+            serviceAgreementStorageV1U1.getAgreementTokenAmount(agreementId),
             scoreFunctionIdAndProofWindowOffsetPerc[0],
             scoreFunctionIdAndProofWindowOffsetPerc[1]
         );
