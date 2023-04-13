@@ -18,7 +18,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     console.log(`HubController: ${hubControllerAddress}`);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
 
     console.log(`New or redeployed contracts: ${JSON.stringify(newContracts)}`);
@@ -28,15 +27,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`New or redeployed hash functions set in the proxy: ${JSON.stringify(newHashFunctions)}`);
     console.log(`New ot redeployed score functions set in the proxy: ${JSON.stringify(newScoreFunctions)}`);
 
-    // const setAndReinitializeContractsTx = await HubController.setAndReinitializeContracts(
-    //   newContracts,
-    //   newAssetStorageContracts,
-    //   contractsForReinitialization,
-    //   setParametersEncodedData,
-    //   newHashFunctions,
-    //   newScoreFunctions,
-    // );
-    // await setAndReinitializeContractsTx.wait();
+    const setAndReinitializeContractsTx = await HubController.setAndReinitializeContracts(
+      newContracts,
+      newAssetStorageContracts,
+      contractsForReinitialization,
+      setParametersEncodedData,
+      newHashFunctions,
+      newScoreFunctions,
+    );
+    await setAndReinitializeContractsTx.wait();
   }
 };
 
