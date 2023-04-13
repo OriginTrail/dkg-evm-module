@@ -8,7 +8,6 @@ import {ServiceAgreementV1} from "../ServiceAgreementV1.sol";
 import {ContentAssetStorage} from "../storage/assets/ContentAssetStorage.sol";
 import {ParametersStorage} from "../storage/ParametersStorage.sol";
 import {ServiceAgreementStorageProxy} from "../storage/ServiceAgreementStorageProxy.sol";
-import {ServiceAgreementStorageV1U1} from "../storage/ServiceAgreementStorageV1U1.sol";
 import {UnfinalizedStateStorage} from "../storage/UnfinalizedStateStorage.sol";
 import {HubDependent} from "../abstract/HubDependent.sol";
 import {Initializable} from "../interface/Initializable.sol";
@@ -50,7 +49,6 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
     HashingProxy public hashingProxy;
     ContentAssetStorage public contentAssetStorage;
     ParametersStorage public parametersStorage;
-    ServiceAgreementStorageV1U1 public serviceAgreementStorageV1U1;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     ServiceAgreementV1 public serviceAgreementV1;
     UnfinalizedStateStorage public unfinalizedStateStorage;
@@ -63,9 +61,6 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         contentAssetStorage = ContentAssetStorage(hub.getAssetStorageAddress("ContentAssetStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
-        serviceAgreementStorageV1U1 = ServiceAgreementStorageV1U1(
-            hub.getContractAddress("ServiceAgreementStorageV1U1")
-        );
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
         );
@@ -215,15 +210,17 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         uss.setUnfinalizedState(tokenId, assertionId);
         uss.setIssuer(tokenId, msg.sender);
 
-        sasProxy.createV1U1ServiceAgreementObject(
-            agreementId,
-            startTime,
-            epochsNumber,
-            epochLength,
-            serviceAgreementStorageV1U1.getAgreementTokenAmount(agreementId),
-            scoreFunctionIdAndProofWindowOffsetPerc[0],
-            scoreFunctionIdAndProofWindowOffsetPerc[1]
-        );
+        if (!sasProxy.agreementV1U1Exists(agreementId)) {
+            sasProxy.createV1U1ServiceAgreementObject(
+                agreementId,
+                startTime,
+                epochsNumber,
+                epochLength,
+                0,
+                scoreFunctionIdAndProofWindowOffsetPerc[0],
+                scoreFunctionIdAndProofWindowOffsetPerc[1]
+            );
+        }
 
         if (updateTokenAmount != 0) serviceAgreementV1.addUpdateTokens(msg.sender, agreementId, updateTokenAmount);
 
