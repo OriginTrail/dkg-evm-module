@@ -593,19 +593,6 @@
   },
   {
     "inputs": [],
-    "name": "serviceAgreementStorageV1U1",
-    "outputs": [
-      {
-        "internalType": "contract ServiceAgreementStorageV1U1",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "serviceAgreementV1",
     "outputs": [
       {
