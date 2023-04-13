@@ -210,15 +210,17 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         uss.setUnfinalizedState(tokenId, assertionId);
         uss.setIssuer(tokenId, msg.sender);
 
-        sasProxy.createV1U1ServiceAgreementObject(
-            agreementId,
-            startTime,
-            epochsNumber,
-            epochLength,
-            0, // tokenAmount, migrated from sasV1 during update finalization
-            scoreFunctionIdAndProofWindowOffsetPerc[0],
-            scoreFunctionIdAndProofWindowOffsetPerc[1]
-        );
+        if (!sasProxy.agreementV1U1Exists(agreementId)) {
+            sasProxy.createV1U1ServiceAgreementObject(
+                agreementId,
+                startTime,
+                epochsNumber,
+                epochLength,
+                0,
+                scoreFunctionIdAndProofWindowOffsetPerc[0],
+                scoreFunctionIdAndProofWindowOffsetPerc[1]
+            );
+        }
 
         if (updateTokenAmount != 0) serviceAgreementV1.addUpdateTokens(msg.sender, agreementId, updateTokenAmount);
 
