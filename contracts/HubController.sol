@@ -75,6 +75,7 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         address[] calldata newHashFunctions,
         address[] calldata newScoreFunctions
     ) external onlyOwnerOrMultiSigOwner {
+        _setOldContractsStatuses(newContracts);
         _setContracts(newContracts);
         _setAssetStorageContracts(newAssetStorageContracts);
         _reinitializeContracts(contractsToReinitialize);
@@ -105,9 +106,19 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         hub.transferOwnership(newOwner);
     }
 
+    function _setOldContractsStatuses(GeneralStructs.Contract[] calldata newContracts) internal {
+        for (uint i; i < newContracts.length; ) {
+            ContractStatus(hub.getContractAddress(newContracts[i].name)).setStatus(false);
+            unchecked {
+                i++;
+            }
+        }
+    }
+
     function _setContracts(GeneralStructs.Contract[] calldata newContracts) internal {
         for (uint i; i < newContracts.length; ) {
             hub.setContractAddress(newContracts[i].name, newContracts[i].addr);
+            ContractStatus(newContracts[i].addr).setStatus(true);
             unchecked {
                 i++;
             }
