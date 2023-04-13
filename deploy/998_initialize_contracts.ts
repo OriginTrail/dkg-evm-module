@@ -18,6 +18,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
 
+    console.log(`HubController: ${hubControllerAddress}`);
     console.log(`New or redeployed contracts: ${JSON.stringify(newContracts)}`);
     console.log(`New or redeployed Asset Storage contracts: ${JSON.stringify(newAssetStorageContracts)}`);
     console.log(`Initialized contracts: ${JSON.stringify(contractsForReinitialization)}`);
