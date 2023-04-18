@@ -32,7 +32,7 @@ contract CommitManagerV1 is Named, Versioned, ContractStatus, Initializable {
     );
 
     string private constant _NAME = "CommitManagerV1";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "1.0.1";
 
     bool[4] public reqs = [false, false, false, false];
 
@@ -73,12 +73,15 @@ contract CommitManagerV1 is Named, Versioned, ContractStatus, Initializable {
 
     function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+
+        if (!sasProxy.agreementV1Exists(agreementId))
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+
         uint256 startTime = sasProxy.getAgreementStartTime(agreementId);
 
         ParametersStorage params = parametersStorage;
         uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
 
-        if (startTime == 0) revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
         if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
             revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
                 agreementId,
@@ -104,7 +107,7 @@ contract CommitManagerV1 is Named, Versioned, ContractStatus, Initializable {
     ) external view returns (ServiceAgreementStructsV1.CommitSubmission[] memory) {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-        if (!sasProxy.serviceAgreementExists(agreementId))
+        if (!sasProxy.agreementV1Exists(agreementId))
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
         if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
             revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
@@ -148,7 +151,7 @@ contract CommitManagerV1 is Named, Versioned, ContractStatus, Initializable {
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        if (!sasProxy.serviceAgreementExists(agreementId))
+        if (!sasProxy.agreementV1Exists(agreementId))
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
 
         if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {

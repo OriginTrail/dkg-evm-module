@@ -32,7 +32,7 @@ contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
     );
 
     string private constant _NAME = "ProofManagerV1U1";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "1.0.1";
 
     bool[4] public reqs = [false, false, false, false];
 
@@ -69,9 +69,12 @@ contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
 
     function isProofWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+
+        if (sasProxy.agreementV1Exists(agreementId))
+            revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
+
         uint256 startTime = sasProxy.getAgreementStartTime(agreementId);
 
-        if (startTime == 0) revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
         if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
             revert ServiceAgreementErrorsV1U1.ServiceAgreementHasBeenExpired(
                 agreementId,
@@ -107,7 +110,7 @@ contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        if (!sasProxy.serviceAgreementExists(agreementId))
+        if (sasProxy.agreementV1Exists(agreementId))
             revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
 
         uint256 latestFinalizedStateIndex = AbstractAsset(args.assetContract).getAssertionIdsLength(args.tokenId) - 1;

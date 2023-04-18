@@ -84,6 +84,14 @@ contract ServiceAgreementStorageProxy is Named, Versioned, HubDependent, Initial
         );
     }
 
+    function deleteServiceAgreementV1Object(bytes32 agreementId) external onlyContracts {
+        storageV1.deleteServiceAgreementObject(agreementId);
+    }
+
+    function deleteServiceAgreementV1U1Object(bytes32 agreementId) external onlyContracts {
+        storageV1U1.deleteServiceAgreementObject(agreementId);
+    }
+
     function deleteServiceAgreementObject(bytes32 agreementId) external onlyContracts {
         if (this.agreementV1Exists(agreementId)) {
             storageV1.deleteServiceAgreementObject(agreementId);

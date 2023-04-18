@@ -43,7 +43,7 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
     event AssetUpdatePaymentIncreased(address indexed assetContract, uint256 indexed tokenId, uint96 tokenAmount);
 
     string private constant _NAME = "ContentAsset";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "1.0.2";
 
     Assertion public assertionContract;
     HashingProxy public hashingProxy;
@@ -271,7 +271,11 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         }
 
         uint96 updateTokenAmount = sasProxy.getAgreementUpdateTokenAmount(agreementId);
-        sasProxy.setAgreementUpdateTokenAmount(agreementId, 0);
+        if (sasProxy.agreementV1Exists(agreementId)) {
+            sasProxy.deleteServiceAgreementV1U1Object(agreementId);
+        } else {
+            sasProxy.setAgreementUpdateTokenAmount(agreementId, 0);
+        }
         sasProxy.transferV1U1AgreementTokens(msg.sender, updateTokenAmount);
 
         uss.deleteIssuer(tokenId);

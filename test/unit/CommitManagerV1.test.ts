@@ -110,8 +110,8 @@ describe('@unit CommitManagerV1 contract', function () {
     expect(await CommitManagerV1.name()).to.equal('CommitManagerV1');
   });
 
-  it('The contract is version "1.0.0"', async () => {
-    expect(await CommitManagerV1.version()).to.equal('1.0.0');
+  it('The contract is version "1.0.1"', async () => {
+    expect(await CommitManagerV1.version()).to.equal('1.0.1');
   });
 
   it('Create new asset, check if commit window is open, expect to be true', async () => {

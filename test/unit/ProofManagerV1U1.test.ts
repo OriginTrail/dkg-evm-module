@@ -52,7 +52,7 @@ describe('@unit ProofManagerV1U1 contract', function () {
     '<http://dbpedia.org/resource/John_Lenno0.6097080100809427> <http://xmlns.com/foaf/0.1/name> "John Lennon" .',
   ];
   const assetInputStruct: ContentAssetStructs.AssetInputArgsStruct = {
-    assertionId: calculateRoot(nQuads),
+    assertionId: '0x' + randomBytes(32).toString('hex'),
     size: 1000,
     triplesNumber: nQuads.length,
     chunksNumber: nQuads.length,
@@ -61,6 +61,14 @@ describe('@unit ProofManagerV1U1 contract', function () {
     scoreFunctionId: 1,
     immutable_: false,
   };
+  const assetUpdateArgs = {
+    assertionId: calculateRoot(nQuads),
+    size: 2000,
+    triplesNumber: 20,
+    chunksNumber: 20,
+    tokenAmount: hre.ethers.utils.parseEther('500'),
+  };
+  let commitInputArgs: CommitStructs.CommitInputArgsStruct;
   let proofInputArgs: ProofStructs.ProofInputArgsStruct;
 
   async function createAsset(): Promise<{ tokenId: number; keyword: BytesLike; agreementId: BytesLike }> {
@@ -80,13 +88,51 @@ describe('@unit ProofManagerV1U1 contract', function () {
     return { tokenId, keyword, agreementId };
   }
 
-  async function submitCommit(operational: SignerWithAddress, tokenId: number, keyword: BytesLike) {
-    const commitInputArgs: CommitStructs.CommitInputArgsStruct = {
+  async function updateAsset(tokenId: number) {
+    await Token.increaseAllowance(ServiceAgreementV1.address, assetUpdateArgs.tokenAmount);
+    await ContentAsset.updateAssetState(
+      tokenId,
+      assetUpdateArgs.assertionId,
+      assetUpdateArgs.size,
+      assetUpdateArgs.triplesNumber,
+      assetUpdateArgs.chunksNumber,
+      assetUpdateArgs.tokenAmount,
+    );
+  }
+
+  async function finalizeUpdate(tokenId: number, keyword: BytesLike): Promise<number[]> {
+    const finalizationRequirement = await ParametersStorage.finalizationCommitsNumber();
+
+    const identityIds = [];
+    for (let i = 0; i < finalizationRequirement; i++) {
+      identityIds.push(await createProfile(accounts[i], accounts[accounts.length - 1]));
+    }
+
+    commitInputArgs = {
       assetContract: ContentAssetStorage.address,
       tokenId: tokenId,
       keyword: keyword,
       hashFunctionId: 1,
       epoch: 0,
+    };
+
+    for (let i = 0; i < finalizationRequirement; i++) {
+      expect(await CommitManagerV1U1.connect(accounts[i]).submitUpdateCommit(commitInputArgs)).to.emit(
+        CommitManagerV1U1,
+        'CommitSubmitted',
+      );
+    }
+
+    return identityIds;
+  }
+
+  async function submitCommit(operational: SignerWithAddress, tokenId: number, keyword: BytesLike, epoch: number) {
+    const commitInputArgs: CommitStructs.CommitInputArgsStruct = {
+      assetContract: ContentAssetStorage.address,
+      tokenId: tokenId,
+      keyword: keyword,
+      hashFunctionId: 1,
+      epoch,
     };
 
     await CommitManagerV1U1.connect(operational).submitCommit(commitInputArgs);
@@ -143,12 +189,14 @@ describe('@unit ProofManagerV1U1 contract', function () {
     expect(await ProofManagerV1U1.name()).to.equal('ProofManagerV1U1');
   });
 
-  it('The contract is version "1.0.0"', async () => {
-    expect(await ProofManagerV1U1.version()).to.equal('1.0.0');
+  it('The contract is version "1.0.1"', async () => {
+    expect(await ProofManagerV1U1.version()).to.equal('1.0.1');
   });
 
-  it('Create a new asset, teleport to the proof phase and check if window is open, expect true', async () => {
-    const { agreementId } = await createAsset();
+  it('Create a new asset, update and finalize update, teleport to the proof phase and check if window is open, expect true', async () => {
+    const { tokenId, keyword, agreementId } = await createAsset();
+    await updateAsset(tokenId);
+    await finalizeUpdate(tokenId, keyword);
 
     const epochLength = (await ParametersStorage.epochLength()).toNumber();
     const proofWindowOffsetPerc = await ServiceAgreementStorageProxy.getAgreementProofWindowOffsetPerc(agreementId);
@@ -159,44 +207,54 @@ describe('@unit ProofManagerV1U1 contract', function () {
     expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.eql(true);
   });
 
-  it('Create a new asset, teleport to the moment before proof phase and check if window is open, expect false', async () => {
-    const { agreementId } = await createAsset();
+  it('Create a new asset, update and finalize update, teleport to the moment before proof phase and check if window is open, expect false', async () => {
+    const { tokenId, keyword, agreementId } = await createAsset();
+    await updateAsset(tokenId);
+    await finalizeUpdate(tokenId, keyword);
 
     const epochLength = (await ParametersStorage.epochLength()).toNumber();
+    const startTime = (await ServiceAgreementStorageProxy.getAgreementStartTime(agreementId)).toNumber();
     const proofWindowOffsetPerc = await ServiceAgreementStorageProxy.getAgreementProofWindowOffsetPerc(agreementId);
-    const delay = (epochLength * proofWindowOffsetPerc) / 100;
+    const proofWindowStart = startTime + (epochLength * proofWindowOffsetPerc) / 100;
 
-    await time.increase(delay - 1);
+    await time.increaseTo(proofWindowStart - 1);
 
     expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.eql(false);
   });
 
-  it('Create a new asset, teleport to the moment after proof phase and check if window is open, expect false', async () => {
-    const { agreementId } = await createAsset();
+  it('Create a new asset, update and finalize update, teleport to the moment after proof phase and check if window is open, expect false', async () => {
+    const { tokenId, keyword, agreementId } = await createAsset();
+    await updateAsset(tokenId);
+    await finalizeUpdate(tokenId, keyword);
 
     const epochLength = (await ParametersStorage.epochLength()).toNumber();
+    const startTime = (await ServiceAgreementStorageProxy.getAgreementStartTime(agreementId)).toNumber();
     const proofWindowOffsetPerc = await ServiceAgreementStorageProxy.getAgreementProofWindowOffsetPerc(agreementId);
     const proofWindowDurationPerc = await ParametersStorage.proofWindowDurationPerc();
-    const delay = (epochLength * (proofWindowOffsetPerc + proofWindowDurationPerc)) / 100;
+    const proofWindowEnd = startTime + (epochLength * (proofWindowOffsetPerc + proofWindowDurationPerc)) / 100;
 
-    await time.increase(delay);
+    await time.increaseTo(proofWindowEnd);
 
     expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.eql(false);
   });
 
-  it('Create a new asset, send commit, teleport and send proof, expect ProofSent event and reward received', async () => {
-    const identityId = await createProfile(accounts[0], accounts[1]);
+  it('Create a new asset, update and finalize update, teleport to the second epoch, send commit, teleport and send proof, expect ProofSent event and reward received', async () => {
     const { tokenId, keyword, agreementId } = await createAsset();
-    await submitCommit(accounts[0], tokenId, keyword);
+    await updateAsset(tokenId);
+    const identityIds = await finalizeUpdate(tokenId, keyword);
+
+    const epochLength = (await ParametersStorage.epochLength()).toNumber();
+    await time.increase(epochLength);
+
+    await submitCommit(accounts[0], tokenId, keyword, 1);
 
     const commitId = hre.ethers.utils.solidityKeccak256(
       ['bytes32', 'uint16', 'uint256', 'uint96'],
-      [agreementId, 0, 0, identityId],
+      [agreementId, 1, 1, identityIds[0]],
     );
 
-    const challenge = await ProofManagerV1U1.getChallenge(ContentAssetStorage.address, tokenId, 0);
+    const challenge = await ProofManagerV1U1.getChallenge(ContentAssetStorage.address, tokenId, 1);
 
-    const epochLength = (await ParametersStorage.epochLength()).toNumber();
     const proofWindowOffsetPerc = await ServiceAgreementStorageProxy.getAgreementProofWindowOffsetPerc(agreementId);
     const delay = (epochLength * proofWindowOffsetPerc) / 100;
 
@@ -208,41 +266,47 @@ describe('@unit ProofManagerV1U1 contract', function () {
       tokenId,
       keyword,
       hashFunctionId: 1,
-      epoch: 0,
+      epoch: 1,
       proof,
       chunkHash: leaf,
     };
 
-    const initialStake = await StakingStorage.totalStakes(identityId);
+    const initialStake = await StakingStorage.totalStakes(identityIds[0]);
     const initialAssetReward = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
 
     expect(await ProofManagerV1U1.sendProof(proofInputArgs)).to.emit(ProofManagerV1U1, 'ProofSubmitted');
 
     const endAssetReward = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
-    expect(await StakingStorage.totalStakes(identityId)).to.equal(
+    expect(await StakingStorage.totalStakes(identityIds[0])).to.equal(
       initialStake.add(initialAssetReward).sub(endAssetReward),
     );
 
     expect(await ServiceAgreementStorageProxy.getCommitSubmissionScore(commitId)).to.equal(0);
   });
 
-  it('Create a new asset and get challenge, expect challenge to be valid', async () => {
-    const { tokenId } = await createAsset();
+  it('Create a new asset, update and finalize update, get challenge, expect challenge to be valid', async () => {
+    const { tokenId, keyword } = await createAsset();
+    await updateAsset(tokenId);
+    await finalizeUpdate(tokenId, keyword);
 
-    const challenge = await ProofManagerV1U1.getChallenge(ContentAssetStorage.address, tokenId, 0);
+    const challenge = await ProofManagerV1U1.getChallenge(ContentAssetStorage.address, tokenId, 1);
 
-    expect(challenge[0]).to.equal(assetInputStruct.assertionId);
+    expect(challenge[0]).to.equal(assetUpdateArgs.assertionId);
     expect(challenge[1]).to.be.within(0, nQuads.length - 1);
   });
 
-  it('Create a new asset, send commit, teleport and send 2 proofs, expect second proof to be reverted', async () => {
-    await createProfile(accounts[0], accounts[1]);
+  it('Create a new asset, update and finalize update, teleport to the second epoch, send commit, teleport and send 2 proofs, expect second proof to be reverted', async () => {
     const { tokenId, keyword, agreementId } = await createAsset();
-    await submitCommit(accounts[0], tokenId, keyword);
-
-    const challenge = await ProofManagerV1U1.getChallenge(ContentAssetStorage.address, tokenId, 0);
+    await updateAsset(tokenId);
+    await finalizeUpdate(tokenId, keyword);
 
     const epochLength = (await ParametersStorage.epochLength()).toNumber();
+    await time.increase(epochLength);
+
+    await submitCommit(accounts[0], tokenId, keyword, 1);
+
+    const challenge = await ProofManagerV1U1.getChallenge(ContentAssetStorage.address, tokenId, 1);
+
     const proofWindowOffsetPerc = await ServiceAgreementStorageProxy.getAgreementProofWindowOffsetPerc(agreementId);
     const delay = (epochLength * proofWindowOffsetPerc) / 100;
 
@@ -254,7 +318,7 @@ describe('@unit ProofManagerV1U1 contract', function () {
       tokenId,
       keyword,
       hashFunctionId: 1,
-      epoch: 0,
+      epoch: 1,
       proof,
       chunkHash: leaf,
     };

@@ -45,7 +45,7 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
     );
 
     string private constant _NAME = "CommitManagerV1U1";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "1.0.1";
 
     bool[6] public reqs = [false, false, false, false, false, false];
 
@@ -90,12 +90,15 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
 
     function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+
+        if (sasProxy.agreementV1Exists(agreementId))
+            revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
+
         uint256 startTime = sasProxy.getAgreementStartTime(agreementId);
 
         ParametersStorage params = parametersStorage;
         uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
 
-        if (startTime == 0) revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
         if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
             revert ServiceAgreementErrorsV1U1.ServiceAgreementHasBeenExpired(
                 agreementId,
@@ -124,7 +127,7 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
 
         uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
 
-        if (!sasProxy.serviceAgreementExists(agreementId))
+        if (!sasProxy.agreementV1U1Exists(agreementId))
             revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
         if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
             revert ServiceAgreementErrorsV1U1.ServiceAgreementHasBeenExpired(
@@ -148,7 +151,7 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
     ) external view returns (ServiceAgreementStructsV1.CommitSubmission[] memory) {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-        if (!sasProxy.serviceAgreementExists(agreementId))
+        if (sasProxy.agreementV1Exists(agreementId))
             revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
         if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
             revert ServiceAgreementErrorsV1U1.ServiceAgreementHasBeenExpired(
@@ -192,7 +195,7 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        if (!sasProxy.serviceAgreementExists(agreementId))
+        if (sasProxy.agreementV1Exists(agreementId))
             revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
 
         uint256 latestFinalizedStateIndex = AbstractAsset(args.assetContract).getAssertionIdsLength(args.tokenId) - 1;
@@ -265,7 +268,7 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        if (!sasProxy.serviceAgreementExists(agreementId))
+        if (!sasProxy.agreementV1U1Exists(agreementId))
             revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
 
         if (!reqs[2] && !isUpdateCommitWindowOpen(agreementId, args.epoch, unfinalizedStateIndex)) {

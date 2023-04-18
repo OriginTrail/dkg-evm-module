@@ -84,6 +84,32 @@ describe('@unit CommitManagerV1U1 contract', function () {
     );
   }
 
+  async function finalizeUpdate(tokenId: number, keyword: BytesLike): Promise<number[]> {
+    const finalizationRequirement = await ParametersStorage.finalizationCommitsNumber();
+
+    const identityIds = [];
+    for (let i = 0; i < finalizationRequirement; i++) {
+      identityIds.push(await createProfile(accounts[i], accounts[accounts.length - 1]));
+    }
+
+    commitInputArgs = {
+      assetContract: ContentAssetStorage.address,
+      tokenId: tokenId,
+      keyword: keyword,
+      hashFunctionId: 1,
+      epoch: 0,
+    };
+
+    for (let i = 0; i < finalizationRequirement; i++) {
+      expect(await CommitManagerV1U1.connect(accounts[i]).submitUpdateCommit(commitInputArgs)).to.emit(
+        CommitManagerV1U1,
+        'CommitSubmitted',
+      );
+    }
+
+    return identityIds;
+  }
+
   async function createProfile(operational: SignerWithAddress, admin: SignerWithAddress): Promise<number> {
     const OperationalProfile = Profile.connect(operational);
 
@@ -129,18 +155,22 @@ describe('@unit CommitManagerV1U1 contract', function () {
     expect(await CommitManagerV1U1.name()).to.equal('CommitManagerV1U1');
   });
 
-  it('The contract is version "1.0.0"', async () => {
-    expect(await CommitManagerV1U1.version()).to.equal('1.0.0');
+  it('The contract is version "1.0.1"', async () => {
+    expect(await CommitManagerV1U1.version()).to.equal('1.0.1');
   });
 
-  it('Create new asset, check if commit window is open, expect to be true', async () => {
-    const { agreementId } = await createAsset();
+  it('Create new asset, update and finalize update, check if commit window is open, expect to be true', async () => {
+    const { tokenId, keyword, agreementId } = await createAsset();
+    await updateAsset(tokenId);
+    await finalizeUpdate(tokenId, keyword);
 
     expect(await CommitManagerV1U1.isCommitWindowOpen(agreementId, 0)).to.eql(true);
   });
 
-  it('Create new asset, teleport to the end of commit phase and check if commit window is open, expect to be false', async () => {
-    const { agreementId } = await createAsset();
+  it('Create new asset, update and finalize update, teleport to the end of commit phase and check if commit window is open, expect to be false', async () => {
+    const { tokenId, keyword, agreementId } = await createAsset();
+    await updateAsset(tokenId);
+    await finalizeUpdate(tokenId, keyword);
 
     const epochLength = (await ParametersStorage.epochLength()).toNumber();
     const commitWindowDurationPerc = await ParametersStorage.commitWindowDurationPerc();
@@ -151,8 +181,10 @@ describe('@unit CommitManagerV1U1 contract', function () {
     expect(await CommitManagerV1U1.isCommitWindowOpen(agreementId, 0)).to.eql(false);
   });
 
-  it('Create new asset, teleport to second epoch and check if commit window is open, expect to be true', async () => {
-    const { agreementId } = await createAsset();
+  it('Create new asset, update and finalize update, teleport to second epoch and check if commit window is open, expect to be true', async () => {
+    const { tokenId, keyword, agreementId } = await createAsset();
+    await updateAsset(tokenId);
+    await finalizeUpdate(tokenId, keyword);
 
     const epochLength = (await ParametersStorage.epochLength()).toNumber();
     await time.increase(epochLength);
@@ -160,14 +192,14 @@ describe('@unit CommitManagerV1U1 contract', function () {
     expect(await CommitManagerV1U1.isCommitWindowOpen(agreementId, 1)).to.eql(true);
   });
 
-  it('Create new asset, update it and check if update commit window is open, expect to be true', async () => {
+  it('Create new asset, update it, check if update commit window is open, expect to be true', async () => {
     const { tokenId, agreementId } = await createAsset();
     await updateAsset(tokenId);
 
     expect(await CommitManagerV1U1.isUpdateCommitWindowOpen(agreementId, 0, 1)).to.eql(true);
   });
 
-  it('Create new asset, update it, teleport to the end of commit window and check if update commit window is open, expect to be false', async () => {
+  it('Create new asset, update it, teleport to the end of update commit window and check if its open, expect to be false', async () => {
     const { tokenId, agreementId } = await createAsset();
     await updateAsset(tokenId);
 
@@ -177,38 +209,41 @@ describe('@unit CommitManagerV1U1 contract', function () {
     expect(await CommitManagerV1U1.isUpdateCommitWindowOpen(agreementId, 0, 1)).to.eql(false);
   });
 
-  it('Create new asset, submit commit, expect CommitSubmitted event', async () => {
-    await createProfile(accounts[0], accounts[1]);
-
+  it('Create new asset, update finalize update, teleport to the second epoch, submit commit, expect CommitSubmitted event', async () => {
     const { tokenId, keyword } = await createAsset();
+    await updateAsset(tokenId);
+    await finalizeUpdate(tokenId, keyword);
+
+    const epochLength = (await ParametersStorage.epochLength()).toNumber();
+    await time.increase(epochLength);
 
     commitInputArgs = {
       assetContract: ContentAssetStorage.address,
       tokenId: tokenId,
       keyword: keyword,
       hashFunctionId: 1,
-      epoch: 0,
+      epoch: 1,
     };
 
     expect(await CommitManagerV1U1.submitCommit(commitInputArgs)).to.emit(CommitManagerV1U1, 'CommitSubmitted');
   });
 
-  it('Create new asset, submit R0 commits, expect R0 commits to be returned', async () => {
+  it('Create new asset, update it, finalize update, teleport to the second epoch, submit R0 commits, expect R0 commits to be returned', async () => {
     const r0 = await ParametersStorage.r0();
 
-    const identityIds = [];
-    for (let i = 0; i < r0; i++) {
-      identityIds.push(await createProfile(accounts[i], accounts[accounts.length - 1]));
-    }
-
     const { tokenId, keyword, agreementId } = await createAsset();
+    await updateAsset(tokenId);
+    const identityIds = await finalizeUpdate(tokenId, keyword);
+
+    const epochLength = (await ParametersStorage.epochLength()).toNumber();
+    await time.increase(epochLength);
 
     commitInputArgs = {
       assetContract: ContentAssetStorage.address,
       tokenId: tokenId,
       keyword: keyword,
       hashFunctionId: 1,
-      epoch: 0,
+      epoch: 1,
     };
 
     for (let i = 0; i < r0; i++) {
@@ -218,7 +253,7 @@ describe('@unit CommitManagerV1U1 contract', function () {
       );
     }
 
-    const topCommits = await CommitManagerV1U1.getTopCommitSubmissions(agreementId, 0, 0);
+    const topCommits = await CommitManagerV1U1.getTopCommitSubmissions(agreementId, 1, 1);
 
     expect(topCommits.map((arr) => arr[0])).to.have.deep.members(
       identityIds.map((identityId) => hre.ethers.BigNumber.from(identityId)),
