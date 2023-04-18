@@ -14,8 +14,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const ParametersStorageAbi = hre.helpers.getAbi('ParametersStorage');
     const ParametersStorageInterface = new hre.ethers.utils.Interface(ParametersStorageAbi);
 
+    hre.helpers.setParametersEncodedData = [['ParametersStorage', []]];
+
     for (const variableName in variables) {
-      hre.helpers.setParametersEncodedData.push(
+      hre.helpers.setParametersEncodedData[0][1].push(
         ParametersStorageInterface.encodeFunctionData(
           `set${variableName.charAt(0).toUpperCase() + variableName.slice(1)}`,
           [variables[variableName]],

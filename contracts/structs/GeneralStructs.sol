@@ -7,4 +7,9 @@ library GeneralStructs {
         string name;
         address addr;
     }
+
+    struct ForwardCallInputArgs {
+        string contractName;
+        bytes[] encodedData;
+    }
 }

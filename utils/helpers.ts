@@ -59,7 +59,7 @@ export class Helpers {
   newContracts: Array<Array<string>>;
   newAssetStorageContracts: Array<Array<string>>;
   contractsForReinitialization: Array<string>;
-  setParametersEncodedData: Array<string>;
+  setParametersEncodedData: Array<[string, Array<string>]>;
   newHashFunctions: Array<string>;
   newScoreFunctions: Array<string>;
 

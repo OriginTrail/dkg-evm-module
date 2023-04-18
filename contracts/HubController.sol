@@ -71,7 +71,7 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         GeneralStructs.Contract[] calldata newContracts,
         GeneralStructs.Contract[] calldata newAssetStorageContracts,
         address[] calldata contractsToReinitialize,
-        bytes[] calldata setParametersEncodedData,
+        GeneralStructs.ForwardCallInputArgs[] calldata forwardCallsData,
         address[] calldata newHashFunctions,
         address[] calldata newScoreFunctions
     ) external onlyOwnerOrMultiSigOwner {
@@ -79,7 +79,7 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         _setContracts(newContracts);
         _setAssetStorageContracts(newAssetStorageContracts);
         _reinitializeContracts(contractsToReinitialize);
-        _setParameters(setParametersEncodedData);
+        _forwardCalls(forwardCallsData);
         _setHashFunctions(newHashFunctions);
         _setScoreFunctions(newScoreFunctions);
     }
@@ -143,10 +143,15 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         }
     }
 
-    function _setParameters(bytes[] calldata setParametersEncodedData) internal {
-        address parametersStorageAddress = hub.getContractAddress("ParametersStorage");
-        for (uint i; i < setParametersEncodedData.length; ) {
-            forwardCall(parametersStorageAddress, setParametersEncodedData[i]);
+    function _forwardCalls(GeneralStructs.ForwardCallInputArgs[] calldata forwardCallsData) internal {
+        for (uint i; i < forwardCallsData.length; ) {
+            address contractAddress = hub.getContractAddress(forwardCallsData[i].contractName);
+            for (uint j; j < forwardCallsData[i].encodedData.length; ) {
+                forwardCall(contractAddress, forwardCallsData[i].encodedData[j]);
+                unchecked {
+                    j++;
+                }
+            }
             unchecked {
                 i++;
             }
