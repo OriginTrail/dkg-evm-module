@@ -3,9 +3,9 @@
 pragma solidity ^0.8.16;
 
 import {Guardian} from "../Guardian.sol";
-import {Shares} from "../Shares.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract ProfileStorage is Named, Versioned, Guardian {
     string private constant _NAME = "ProfileStorage";
@@ -53,9 +53,9 @@ contract ProfileStorage is Named, Versioned, Guardian {
 
         nodeIdsList[nodeId] = true;
 
-        Shares sharesContract = Shares(sharesContractAddress);
-        sharesNames[sharesContract.name()] = true;
-        sharesSymbols[sharesContract.symbol()] = true;
+        IERC20Metadata sharesContractMetadata = IERC20Metadata(sharesContractAddress);
+        sharesNames[sharesContractMetadata.name()] = true;
+        sharesSymbols[sharesContractMetadata.symbol()] = true;
     }
 
     function getProfile(

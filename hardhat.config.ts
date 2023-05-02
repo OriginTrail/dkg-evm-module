@@ -94,7 +94,6 @@ config.abiExporter = {
     'ContentAssetErrors.sol',
     'ServiceAgreementErrorsV1.sol',
     'ServiceAgreementErrorsV1U1.sol',
-    'Shares.sol',
   ],
   spacing: 2,
   format: 'json',

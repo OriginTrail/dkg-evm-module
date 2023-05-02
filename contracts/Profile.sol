@@ -4,7 +4,7 @@ pragma solidity ^0.8.16;
 
 import {HashingProxy} from "./HashingProxy.sol";
 import {Identity} from "./Identity.sol";
-import {Shares} from "./Shares.sol";
+import {SharesPoolToken} from "./SharesPoolToken.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
@@ -99,7 +99,12 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
 
         uint72 identityId = identityContract.createIdentity(msg.sender, adminWallet);
 
-        Shares sharesContract = new Shares(address(hub), sharesTokenName, sharesTokenSymbol);
+        SharesPoolToken sharesContract = new SharesPoolToken(
+            address(hub),
+            identityId,
+            sharesTokenName,
+            sharesTokenSymbol
+        );
 
         ps.createProfile(identityId, nodeId, address(sharesContract));
         _setAvailableNodeAddresses(identityId);

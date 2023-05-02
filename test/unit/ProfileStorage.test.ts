@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { Token, ProfileStorage, HubController } from '../../typechain';
+import { Token, ProfileStorage, HubController, Hub } from '../../typechain';
 import { ZERO_ADDRESS } from '../helpers/constants';
 
 type ProfileStorageFixture = {
@@ -19,7 +19,7 @@ describe('@unit ProfileStorage contract', function () {
   const newNodeId = '0x0000000000000000000000000000000000000000000000000000000000000002';
 
   async function deployProfileStorageFixture(): Promise<ProfileStorageFixture> {
-    await hre.deployments.fixture(['ProfileStorage']);
+    await hre.deployments.fixture(['ProfileStorage', 'IdentityStorage']);
     ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
     Token = await hre.ethers.getContract<Token>('Token');
     accounts = await hre.ethers.getSigners();
@@ -30,10 +30,12 @@ describe('@unit ProfileStorage contract', function () {
   }
 
   async function createProfile() {
+    const Hub = await hre.ethers.getContract<Hub>('Hub');
+
     const identityId = 1;
     const nodeId = '0x0000000000000000000000000000000000000000000000000000000000000001';
-    const SharesContract = await hre.ethers.getContractFactory('Shares');
-    const Shares = await SharesContract.deploy(accounts[0].address, 'Token1', 'TKN1');
+    const SharesContract = await hre.ethers.getContractFactory('SharesPoolToken');
+    const Shares = await SharesContract.deploy(Hub.address, identityId, 'Token1', 'TKN1');
 
     await Shares.deployed();
     await ProfileStorage.createProfile(identityId, nodeId, Shares.address);

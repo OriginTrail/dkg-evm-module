@@ -157,12 +157,12 @@ describe('@unit Profile contract', function () {
 
   it('Get and verify data for created profile, expect to pass', async () => {
     await createProfile();
-    const sharesContractAddress = await ProfileStorage.getSharesContractAddress(identityId1);
+    const sharesPoolTokenContractAddress = await ProfileStorage.getSharesContractAddress(identityId1);
     const profileData = await ProfileStorage.getProfile(identityId1);
 
     expect(profileData[0]).to.equal(nodeId1);
     expect(profileData[1][0]).to.equal(0);
     expect(profileData[1][1]).to.equal(0);
-    expect(profileData[2]).to.equal(sharesContractAddress);
+    expect(profileData[2]).to.equal(sharesPoolTokenContractAddress);
   });
 });
