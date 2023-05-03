@@ -114,9 +114,15 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
         ss.createWithdrawalRequest(identityId, msg.sender, newStakeWithdrawalAmount, withdrawalPeriodEnd);
         ss.setTotalStake(identityId, newStake);
 
+        bool poolBurnSuccess = false;
+
         if (_isAdmin(msg.sender, identityId)) {
-            sharesContract.poolBurn(sharesToBurn);
-        } else {
+            try sharesContract.poolBurn(sharesToBurn) {
+                poolBurnSuccess = true;
+            } catch {}
+        }
+
+        if (!poolBurnSuccess) {
             sharesContract.burn(msg.sender, sharesToBurn);
         }
 
@@ -231,9 +237,15 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
             sharesMinted = ((stakeAmount * sharesContract.totalSupply()) / oldStake);
         }
 
+        bool poolMintSuccess = false;
+
         if (_isAdmin(sender, identityId)) {
-            sharesContract.poolMint(sharesMinted);
-        } else {
+            try sharesContract.poolMint(sharesMinted) {
+                poolMintSuccess = true;
+            } catch {}
+        }
+
+        if (!poolMintSuccess) {
             sharesContract.mint(sender, sharesMinted);
         }
 
