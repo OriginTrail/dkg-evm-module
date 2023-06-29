@@ -10,7 +10,7 @@ contract Token is HubDependent, ERC20, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) HubDependent(hubAddress) ERC20("TEST TOKEN", "TEST") {}
+    constructor(address hubAddress) HubDependent(hubAddress) ERC20("RLC TRAC", "rlcTRAC") {}
 
     function setupRole(address minter) public onlyHubOwner {
         _setupRole(MINTER_ROLE, minter);
