@@ -27,11 +27,11 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
 
 config.networks = {
   ...config.networks,
-  polygon_testnet: {
+  bellecour_testnet: {
     chainId: 80001,
-    url: '',
+    url: rpc('bellecour_testnet'),
     gas: 10_000_000, // Gas limit used for deployments
-    accounts: accounts('polygon_testnet'),
+    accounts: accounts('bellecour_testnet'),
     saveDeployments: true,
   },
   otp_alphanet: {

@@ -10,7 +10,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 
   if (!isDeployed) {
-    if (hre.network.name === 'hardhat' || hre.network.name === 'polygon_testnet') {
+    if (hre.network.name === 'hardhat' || hre.network.name === 'bellecour_testnet') {
       const { deployer } = await hre.getNamedAccounts();
 
       const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;

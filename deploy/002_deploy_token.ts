@@ -23,7 +23,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     );
     await setupRoleTx.wait();
   }
-  if (hre.network.name === 'hardhat' || hre.network.name == 'polygon_testnet') {
+  if (hre.network.name === 'hardhat' || hre.network.name == 'bellecour_testnet') {
     const amountToMint = hre.ethers.utils.parseEther(`${5_000_000}`);
     const accounts = await hre.ethers.getSigners();
 
