@@ -25,10 +25,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   }
   if (hre.network.name === 'hardhat' || hre.network.name == 'bellecour_testnet') {
     const amountToMint = hre.ethers.utils.parseEther(`${5_000_000}`);
-    const accounts = await hre.ethers.getSigners();
+    const signersAccounts = await hre.ethers.getSigners();
+    const accounts = [signersAccounts[0].address];
 
     for (const acc of accounts) {
-      const mintTx = await Token.mint(acc.address, amountToMint, { from: minter, gasLimit: 80_000 });
+      const mintTx = await Token.mint(acc, amountToMint, { from: minter, gasLimit: 80_000 });
       await mintTx.wait();
     }
   }
