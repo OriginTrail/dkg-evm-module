@@ -1,0 +1,253 @@
+{
+  "address": "0xcB858543CA9525350D4CD2CA1B4ED308D9769D6d",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "hubAddress",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "assertionId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "size",
+          "type": "uint128"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "triplesNumber",
+          "type": "uint32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint96",
+          "name": "chunksNumber",
+          "type": "uint96"
+        }
+      ],
+      "name": "AssertionCreated",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "assertionStorage",
+      "outputs": [
+        {
+          "internalType": "contract AssertionStorage",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "assertionId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint128",
+          "name": "size",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint32",
+          "name": "triplesNumber",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint96",
+          "name": "chunksNumber",
+          "type": "uint96"
+        }
+      ],
+      "name": "createAssertion",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "hub",
+      "outputs": [
+        {
+          "internalType": "contract Hub",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "name",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "_status",
+          "type": "bool"
+        }
+      ],
+      "name": "setStatus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "status",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "version",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x943794852370c19d0f61d21da06771b47edf1a21c57462d588bc569cff564089",
+  "receipt": {
+    "to": null,
+    "from": "0xEfB65B890462206e3453dbd0bC8B2e6D6E0e7bD1",
+    "contractAddress": "0xcB858543CA9525350D4CD2CA1B4ED308D9769D6d",
+    "transactionIndex": 13,
+    "gasUsed": "478327",
+    "logsBloom": "0x00000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000008000000000000000000000000000000000800000000000000000000100000000000200000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000080000000000000000000000000000000000000000004000000000000000000001000000000100000000000000000000100000000000000000000000000000000000000000000000000008000000000000000000100000",
+    "blockHash": "0xb62ae9539f5191e68dffb54cded31c9aa1e6e01c159625a24e290f91575dbc48",
+    "transactionHash": "0x943794852370c19d0f61d21da06771b47edf1a21c57462d588bc569cff564089",
+    "logs": [
+      {
+        "transactionIndex": 13,
+        "blockNumber": 37384484,
+        "transactionHash": "0x943794852370c19d0f61d21da06771b47edf1a21c57462d588bc569cff564089",
+        "address": "0x0000000000000000000000000000000000001010",
+        "topics": [
+          "0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63",
+          "0x0000000000000000000000000000000000000000000000000000000000001010",
+          "0x000000000000000000000000efb65b890462206e3453dbd0bc8b2e6d6e0e7bd1",
+          "0x0000000000000000000000003a22c8bc68e98b0faf40f349dd2b2890fae01484"
+        ],
+        "data": "0x0000000000000000000000000000000000000000000000000006f7a5a6526790000000000000000000000000000000000000000000000000880631f123b10008000000000000000000000000000000000000000000000c05adb168a9138d14e900000000000000000000000000000000000000000000000087ff3a4b7d5e9878000000000000000000000000000000000000000000000c05adb8604eb9df7c79",
+        "logIndex": 31,
+        "blockHash": "0xb62ae9539f5191e68dffb54cded31c9aa1e6e01c159625a24e290f91575dbc48"
+      }
+    ],
+    "blockNumber": 37384484,
+    "cumulativeGasUsed": "917820",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": ["0x224aEC6891d26e994D4Dbf207aE099ca029b3E67"],
+  "numDeployments": 1,
+  "solcInputHash": "6736b5a2b01ed07b57366e384b7e7c88",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"hubAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assertionId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"size\",\"type\":\"uint128\"},{\"indexed\":false,\"internalType\":\"uint32\",\"name\":\"triplesNumber\",\"type\":\"uint32\"},{\"indexed\":false,\"internalType\":\"uint96\",\"name\":\"chunksNumber\",\"type\":\"uint96\"}],\"name\":\"AssertionCreated\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"assertionStorage\",\"outputs\":[{\"internalType\":\"contract AssertionStorage\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"assertionId\",\"type\":\"bytes32\"},{\"internalType\":\"uint128\",\"name\":\"size\",\"type\":\"uint128\"},{\"internalType\":\"uint32\",\"name\":\"triplesNumber\",\"type\":\"uint32\"},{\"internalType\":\"uint96\",\"name\":\"chunksNumber\",\"type\":\"uint96\"}],\"name\":\"createAssertion\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"hub\",\"outputs\":[{\"internalType\":\"contract Hub\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"_status\",\"type\":\"bool\"}],\"name\":\"setStatus\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"status\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"version\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/Assertion.sol\":\"Assertion\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[],\"viaIR\":true},\"sources\":{\"@openzeppelin/contracts/access/Ownable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.7.0) (access/Ownable.sol)\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"../utils/Context.sol\\\";\\n\\n/**\\n * @dev Contract module which provides a basic access control mechanism, where\\n * there is an account (an owner) that can be granted exclusive access to\\n * specific functions.\\n *\\n * By default, the owner account will be the one that deploys the contract. This\\n * can later be changed with {transferOwnership}.\\n *\\n * This module is used through inheritance. It will make available the modifier\\n * `onlyOwner`, which can be applied to your functions to restrict their use to\\n * the owner.\\n */\\nabstract contract Ownable is Context {\\n    address private _owner;\\n\\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n\\n    /**\\n     * @dev Initializes the contract setting the deployer as the initial owner.\\n     */\\n    constructor() {\\n        _transferOwnership(_msgSender());\\n    }\\n\\n    /**\\n     * @dev Throws if called by any account other than the owner.\\n     */\\n    modifier onlyOwner() {\\n        _checkOwner();\\n        _;\\n    }\\n\\n    /**\\n     * @dev Returns the address of the current owner.\\n     */\\n    function owner() public view virtual returns (address) {\\n        return _owner;\\n    }\\n\\n    /**\\n     * @dev Throws if the sender is not the owner.\\n     */\\n    function _checkOwner() internal view virtual {\\n        require(owner() == _msgSender(), \\\"Ownable: caller is not the owner\\\");\\n    }\\n\\n    /**\\n     * @dev Leaves the contract without owner. It will not be possible to call\\n     * `onlyOwner` functions anymore. Can only be called by the current owner.\\n     *\\n     * NOTE: Renouncing ownership will leave the contract without an owner,\\n     * thereby removing any functionality that is only available to the owner.\\n     */\\n    function renounceOwnership() public virtual onlyOwner {\\n        _transferOwnership(address(0));\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Can only be called by the current owner.\\n     */\\n    function transferOwnership(address newOwner) public virtual onlyOwner {\\n        require(newOwner != address(0), \\\"Ownable: new owner is the zero address\\\");\\n        _transferOwnership(newOwner);\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Internal function without access restriction.\\n     */\\n    function _transferOwnership(address newOwner) internal virtual {\\n        address oldOwner = _owner;\\n        _owner = newOwner;\\n        emit OwnershipTransferred(oldOwner, newOwner);\\n    }\\n}\\n\",\"keccak256\":\"0xa94b34880e3c1b0b931662cb1c09e5dfa6662f31cba80e07c5ee71cd135c9673\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n    function _msgSender() internal view virtual returns (address) {\\n        return msg.sender;\\n    }\\n\\n    function _msgData() internal view virtual returns (bytes calldata) {\\n        return msg.data;\\n    }\\n}\\n\",\"keccak256\":\"0xe2e337e6dde9ef6b680e07338c493ebea1b5fd09b43424112868e9cc1706bca7\",\"license\":\"MIT\"},\"contracts/Assertion.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\nimport {AssertionStorage} from \\\"./storage/AssertionStorage.sol\\\";\\nimport {ContractStatus} from \\\"./abstract/ContractStatus.sol\\\";\\nimport {Initializable} from \\\"./interface/Initializable.sol\\\";\\nimport {Named} from \\\"./interface/Named.sol\\\";\\nimport {Versioned} from \\\"./interface/Versioned.sol\\\";\\nimport {AssertionStructs} from \\\"./structs/AssertionStructs.sol\\\";\\n\\ncontract Assertion is Named, Versioned, ContractStatus, Initializable {\\n    event AssertionCreated(bytes32 indexed assertionId, uint128 size, uint32 triplesNumber, uint96 chunksNumber);\\n\\n    string private constant _NAME = \\\"Assertion\\\";\\n    string private constant _VERSION = \\\"1.0.1\\\";\\n\\n    AssertionStorage public assertionStorage;\\n\\n    // solhint-disable-next-line no-empty-blocks\\n    constructor(address hubAddress) ContractStatus(hubAddress) {}\\n\\n    function initialize() public onlyHubOwner {\\n        assertionStorage = AssertionStorage(hub.getContractAddress(\\\"AssertionStorage\\\"));\\n    }\\n\\n    function name() external pure virtual override returns (string memory) {\\n        return _NAME;\\n    }\\n\\n    function version() external pure virtual override returns (string memory) {\\n        return _VERSION;\\n    }\\n\\n    function createAssertion(\\n        bytes32 assertionId,\\n        uint128 size,\\n        uint32 triplesNumber,\\n        uint96 chunksNumber\\n    ) external onlyContracts {\\n        AssertionStorage ans = assertionStorage;\\n\\n        require(assertionId != bytes32(0), \\\"Assertion ID cannot be empty\\\");\\n        require(size != 0, \\\"Size cannot be 0\\\");\\n        require(triplesNumber != 0, \\\"Triples number cannot be 0\\\");\\n        require(chunksNumber != 0, \\\"Chunks number cannot be 0\\\");\\n\\n        ans.createAssertion(assertionId, size, triplesNumber, chunksNumber);\\n\\n        emit AssertionCreated(assertionId, size, triplesNumber, chunksNumber);\\n    }\\n}\\n\",\"keccak256\":\"0xbf236472ca3126b0ae799d60a0c546bff9e7115fe3fb14eb3fda88604b166bb8\",\"license\":\"MIT\"},\"contracts/Hub.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\nimport {Named} from \\\"./interface/Named.sol\\\";\\nimport {Versioned} from \\\"./interface/Versioned.sol\\\";\\nimport {UnorderedNamedContractDynamicSetLib} from \\\"./utils/UnorderedNamedContractDynamicSet.sol\\\";\\nimport {Ownable} from \\\"@openzeppelin/contracts/access/Ownable.sol\\\";\\n\\ncontract Hub is Named, Versioned, Ownable {\\n    using UnorderedNamedContractDynamicSetLib for UnorderedNamedContractDynamicSetLib.Set;\\n\\n    event NewContract(string contractName, address newContractAddress);\\n    event ContractChanged(string contractName, address newContractAddress);\\n    event NewAssetStorage(string contractName, address newContractAddress);\\n    event AssetStorageChanged(string contractName, address newContractAddress);\\n\\n    string private constant _NAME = \\\"Hub\\\";\\n    string private constant _VERSION = \\\"1.0.0\\\";\\n\\n    UnorderedNamedContractDynamicSetLib.Set internal contractSet;\\n    UnorderedNamedContractDynamicSetLib.Set internal assetStorageSet;\\n\\n    function name() external pure virtual override returns (string memory) {\\n        return _NAME;\\n    }\\n\\n    function version() external pure virtual override returns (string memory) {\\n        return _VERSION;\\n    }\\n\\n    function setContractAddress(string calldata contractName, address newContractAddress) external onlyOwner {\\n        if (contractSet.exists(contractName)) {\\n            emit ContractChanged(contractName, newContractAddress);\\n            contractSet.update(contractName, newContractAddress);\\n        } else {\\n            emit NewContract(contractName, newContractAddress);\\n            contractSet.append(contractName, newContractAddress);\\n        }\\n    }\\n\\n    function setAssetStorageAddress(string calldata assetStorageName, address assetStorageAddress) external onlyOwner {\\n        if (assetStorageSet.exists(assetStorageName)) {\\n            emit AssetStorageChanged(assetStorageName, assetStorageAddress);\\n            assetStorageSet.update(assetStorageName, assetStorageAddress);\\n        } else {\\n            emit NewAssetStorage(assetStorageName, assetStorageAddress);\\n            assetStorageSet.append(assetStorageName, assetStorageAddress);\\n        }\\n    }\\n\\n    function getContractAddress(string calldata contractName) external view returns (address) {\\n        return contractSet.get(contractName).addr;\\n    }\\n\\n    function getAssetStorageAddress(string calldata assetStorageName) external view returns (address) {\\n        return assetStorageSet.get(assetStorageName).addr;\\n    }\\n\\n    function getAllContracts() external view returns (UnorderedNamedContractDynamicSetLib.Contract[] memory) {\\n        return contractSet.getAll();\\n    }\\n\\n    function getAllAssetStorages() external view returns (UnorderedNamedContractDynamicSetLib.Contract[] memory) {\\n        return assetStorageSet.getAll();\\n    }\\n\\n    function isContract(string calldata contractName) external view returns (bool) {\\n        return contractSet.exists(contractName);\\n    }\\n\\n    function isContract(address selectedContractAddress) external view returns (bool) {\\n        return contractSet.exists(selectedContractAddress);\\n    }\\n\\n    function isAssetStorage(string calldata assetStorageName) external view returns (bool) {\\n        return assetStorageSet.exists(assetStorageName);\\n    }\\n\\n    function isAssetStorage(address assetStorageAddress) external view returns (bool) {\\n        return assetStorageSet.exists(assetStorageAddress);\\n    }\\n}\\n\",\"keccak256\":\"0xf93b8b90622b1a49cd00a3558f64766e6bbca7b2f192f8e036a773d01e5c3382\",\"license\":\"MIT\"},\"contracts/abstract/ContractStatus.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\nimport {HubDependent} from \\\"./HubDependent.sol\\\";\\n\\nabstract contract ContractStatus is HubDependent {\\n    bool public status;\\n\\n    // solhint-disable-next-line no-empty-blocks\\n    constructor(address hubAddress) HubDependent(hubAddress) {}\\n\\n    function setStatus(bool _status) external onlyHubOwner {\\n        status = _status;\\n    }\\n}\\n\",\"keccak256\":\"0x1a770a3dea223c33b0d6d7e522186af2b41e6d1012209f329cd4b3cf4180ef61\",\"license\":\"MIT\"},\"contracts/abstract/HubDependent.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\nimport {Hub} from \\\"../Hub.sol\\\";\\n\\nabstract contract HubDependent {\\n    Hub public hub;\\n\\n    constructor(address hubAddress) {\\n        require(hubAddress != address(0), \\\"Hub Address cannot be 0x0\\\");\\n\\n        hub = Hub(hubAddress);\\n    }\\n\\n    modifier onlyHubOwner() {\\n        _checkHubOwner();\\n        _;\\n    }\\n\\n    modifier onlyContracts() {\\n        _checkHub();\\n        _;\\n    }\\n\\n    function _checkHubOwner() internal view virtual {\\n        require(msg.sender == hub.owner(), \\\"Fn can only be used by hub owner\\\");\\n    }\\n\\n    function _checkHub() internal view virtual {\\n        require(hub.isContract(msg.sender), \\\"Fn can only be called by the hub\\\");\\n    }\\n}\\n\",\"keccak256\":\"0xf9cadb8d1ee628ef5ece2631ca5d622b30bfd54d4666812b401746a4e5643fbe\",\"license\":\"MIT\"},\"contracts/interface/Initializable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\ninterface Initializable {\\n    function initialize() external;\\n}\\n\",\"keccak256\":\"0xac823de4540de0fac2d1ec548a5083404ab8abd858c34a69f4f8947b24789507\",\"license\":\"MIT\"},\"contracts/interface/Named.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\ninterface Named {\\n    function name() external view returns (string memory);\\n}\\n\",\"keccak256\":\"0xb468c85b178d2377c1a6dd77f2e4f843fe280932663ffef8d9fba56dcdc7b796\",\"license\":\"MIT\"},\"contracts/interface/Versioned.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\ninterface Versioned {\\n    function version() external view returns (string memory);\\n}\\n\",\"keccak256\":\"0x6012f1a5c6b2fe5d8457ab1b913602c6f2d40dbea225bb4cec9fe3e325209f90\",\"license\":\"MIT\"},\"contracts/storage/AssertionStorage.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\nimport {HubDependent} from \\\"../abstract/HubDependent.sol\\\";\\nimport {Named} from \\\"../interface/Named.sol\\\";\\nimport {Versioned} from \\\"../interface/Versioned.sol\\\";\\nimport {AssertionStructs} from \\\"../structs/AssertionStructs.sol\\\";\\n\\ncontract AssertionStorage is Named, Versioned, HubDependent {\\n    string private constant _NAME = \\\"AssertionStorage\\\";\\n    string private constant _VERSION = \\\"1.0.0\\\";\\n\\n    // assertionId => Assertion\\n    mapping(bytes32 => AssertionStructs.Assertion) internal assertions;\\n\\n    // solhint-disable-next-line no-empty-blocks\\n    constructor(address hubAddress) HubDependent(hubAddress) {}\\n\\n    function name() external pure virtual override returns (string memory) {\\n        return _NAME;\\n    }\\n\\n    function version() external pure virtual override returns (string memory) {\\n        return _VERSION;\\n    }\\n\\n    function createAssertion(\\n        bytes32 assertionId,\\n        uint128 size,\\n        uint32 triplesNumber,\\n        uint96 chunksNumber\\n    ) external onlyContracts {\\n        assertions[assertionId] = AssertionStructs.Assertion({\\n            timestamp: block.timestamp,\\n            size: size,\\n            triplesNumber: triplesNumber,\\n            chunksNumber: chunksNumber\\n        });\\n    }\\n\\n    function deleteAssertion(bytes32 assertionId) external onlyContracts {\\n        delete assertions[assertionId];\\n    }\\n\\n    function getAssertion(bytes32 assertionId) external view returns (AssertionStructs.Assertion memory) {\\n        return assertions[assertionId];\\n    }\\n\\n    function getAssertionTimestamp(bytes32 assertionId) external view returns (uint256) {\\n        return assertions[assertionId].timestamp;\\n    }\\n\\n    function getAssertionSize(bytes32 assertionId) external view returns (uint128) {\\n        return assertions[assertionId].size;\\n    }\\n\\n    function getAssertionTriplesNumber(bytes32 assertionId) external view returns (uint32) {\\n        return assertions[assertionId].triplesNumber;\\n    }\\n\\n    function getAssertionChunksNumber(bytes32 assertionId) external view returns (uint96) {\\n        return assertions[assertionId].chunksNumber;\\n    }\\n\\n    function assertionExists(bytes32 assertionId) external view returns (bool) {\\n        return assertions[assertionId].timestamp != 0;\\n    }\\n}\\n\",\"keccak256\":\"0xf523695eba20ece14bab74fc2581e01d7b9f02220c3d0577fc5f4eafeb4eeb88\",\"license\":\"MIT\"},\"contracts/structs/AssertionStructs.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\nlibrary AssertionStructs {\\n    struct Assertion {\\n        uint256 timestamp;\\n        uint128 size;\\n        uint32 triplesNumber;\\n        uint96 chunksNumber;\\n    }\\n}\\n\",\"keccak256\":\"0x8d76943e65e0ad3a959570064870312a0cfa4287c117516b1a1c35e685beb49b\",\"license\":\"MIT\"},\"contracts/utils/UnorderedNamedContractDynamicSet.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\nlibrary UnorderedNamedContractDynamicSetLib {\\n    struct Contract {\\n        string name;\\n        address addr;\\n    }\\n\\n    struct Set {\\n        mapping(string => uint256) stringIndexPointers;\\n        mapping(address => uint256) addressIndexPointers;\\n        Contract[] contractList;\\n    }\\n\\n    function append(Set storage self, string calldata name, address addr) internal {\\n        require(\\n            keccak256(abi.encodePacked(name)) != keccak256(abi.encodePacked(\\\"\\\")),\\n            \\\"NamedContractSet: Name cannot be empty\\\"\\n        );\\n        require(addr != address(0), \\\"NamedContractSet: Address cannot be 0x0\\\");\\n        require(!exists(self, name), \\\"NamedContractSet: Contract with given name already exists\\\");\\n        self.stringIndexPointers[name] = size(self);\\n        self.addressIndexPointers[addr] = size(self);\\n        self.contractList.push(Contract(name, addr));\\n    }\\n\\n    function update(Set storage self, string calldata name, address addr) internal {\\n        require(addr != address(0), \\\"NamedContractSet: Address cannot be 0x0\\\");\\n        require(exists(self, name), \\\"NamedContractSet: Contract with given name doesn't exists\\\");\\n        delete self.addressIndexPointers[self.contractList[self.stringIndexPointers[name]].addr];\\n        self.addressIndexPointers[addr] = self.stringIndexPointers[name];\\n        self.contractList[self.stringIndexPointers[name]].addr = addr;\\n    }\\n\\n    function remove(Set storage self, string calldata name) internal {\\n        require(exists(self, name), \\\"NamedContractSet: Contract with given name doesn't exist\\\");\\n        uint256 contractToRemoveIndex = self.stringIndexPointers[name];\\n\\n        delete self.addressIndexPointers[self.contractList[contractToRemoveIndex].addr];\\n\\n        Contract memory contractToMove = self.contractList[size(self) - 1];\\n\\n        self.stringIndexPointers[contractToMove.name] = contractToRemoveIndex;\\n        self.addressIndexPointers[contractToMove.addr] = contractToRemoveIndex;\\n        self.contractList[contractToRemoveIndex] = contractToMove;\\n\\n        delete self.stringIndexPointers[name];\\n        self.contractList.pop();\\n    }\\n\\n    function remove(Set storage self, address addr) internal {\\n        require(exists(self, addr), \\\"NamedContractSet: Contract with given address doesn't exist\\\");\\n        uint256 contractToRemoveIndex = self.addressIndexPointers[addr];\\n\\n        delete self.stringIndexPointers[self.contractList[contractToRemoveIndex].name];\\n\\n        Contract memory contractToMove = self.contractList[size(self) - 1];\\n\\n        self.stringIndexPointers[contractToMove.name] = contractToRemoveIndex;\\n        self.addressIndexPointers[contractToMove.addr] = contractToRemoveIndex;\\n        self.contractList[contractToRemoveIndex] = contractToMove;\\n\\n        delete self.addressIndexPointers[addr];\\n        self.contractList.pop();\\n    }\\n\\n    function get(Set storage self, string calldata name) internal view returns (Contract memory) {\\n        require(exists(self, name), \\\"NamedContractSet: Contract with given name doesn't exist\\\");\\n        return self.contractList[self.stringIndexPointers[name]];\\n    }\\n\\n    function get(Set storage self, address addr) internal view returns (Contract memory) {\\n        require(exists(self, addr), \\\"NamedContractSet: Contract with given address doesn't exist\\\");\\n        return self.contractList[self.addressIndexPointers[addr]];\\n    }\\n\\n    function get(Set storage self, uint256 index) internal view returns (Contract memory) {\\n        return self.contractList[index];\\n    }\\n\\n    function getAll(Set storage self) internal view returns (Contract[] memory) {\\n        return self.contractList;\\n    }\\n\\n    function getIndex(Set storage self, string calldata name) internal view returns (uint256) {\\n        return self.stringIndexPointers[name];\\n    }\\n\\n    function getIndex(Set storage self, address addr) internal view returns (uint256) {\\n        return self.addressIndexPointers[addr];\\n    }\\n\\n    function exists(Set storage self, string calldata name) internal view returns (bool) {\\n        if (size(self) == 0) return false;\\n        return\\n            keccak256(abi.encodePacked(self.contractList[self.stringIndexPointers[name]].name)) ==\\n            keccak256(abi.encodePacked(name));\\n    }\\n\\n    function exists(Set storage self, address addr) internal view returns (bool) {\\n        if (size(self) == 0) return false;\\n        return addr == self.contractList[self.addressIndexPointers[addr]].addr;\\n    }\\n\\n    function size(Set storage self) internal view returns (uint256) {\\n        return self.contractList.length;\\n    }\\n}\\n\",\"keccak256\":\"0x2da60d9913c236156764f13a514bc7a9a294feadd4fad9c7a111072fd6bef25a\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x6080346100bf57601f61081438819003918201601f19168301916001600160401b038311848410176100c4578084926020946040528339810103126100bf57516001600160a01b038116908190036100bf57801561007a57600080546001600160a01b03191691909117905560405161073990816100db8239f35b60405162461bcd60e51b815260206004820152601960248201527f48756220416464726573732063616e6e6f7420626520307830000000000000006044820152606490fd5b600080fd5b634e487b7160e01b600052604160045260246000fdfe608060408181526004918236101561001657600080fd5b600092833560e01c91826306fdde031461055757508163200d2ed214610532578163365a86fc1461050a57816354fd4d50146104c95781635c40f6f4146104885781638129fc1c146103bc578163b83838f2146100a8575063d210b7cf1461007d57600080fd5b346100a457816003193601126100a45760015490516001600160a01b039091168152602090f35b5080fd5b90503461023f57608036600319011261023f578035906024908135916fffffffffffffffffffffffffffffffff83168093036103b85760449081359163ffffffff83168093036103b4576064918235946bffffffffffffffffffffffff86168096036103b05789548951631627905560e01b81523383820152602095916001600160a01b039190879082908790829086165afa9081156103a6578d9161036c575b501561032e57600154169089156102f05788156102bf57861561028157871561024357908b91813b1561023f578a838b938b8f948c608496519b8c988997635c1c1c7960e11b89528c8901528c8801528601528401525af18015610235576101e4575b5050865194855250830152818401527f6228bc6c1a8f028a2e3476a455a34f5fa23b4387611f3c147a965e375ebd17ba90606090a251f35b67ffffffffffffffff839a949a116102245750508652958160607f6228bc6c1a8f028a2e3476a455a34f5fa23b4387611f3c147a965e375ebd17ba6101ac565b634e487b7160e01b84526041905282fd5b89513d8c823e3d90fd5b8280fd5b8a5162461bcd60e51b81528084018790526019818601527f4368756e6b73206e756d6265722063616e6e6f7420626520300000000000000081870152fd5b8a5162461bcd60e51b8152808401879052601a818601527f547269706c6573206e756d6265722063616e6e6f74206265203000000000000081870152fd5b8a5162461bcd60e51b81528084018790526010818601526f053697a652063616e6e6f7420626520360841b81870152fd5b8a5162461bcd60e51b8152808401879052601c818601527f417373657274696f6e2049442063616e6e6f7420626520656d7074790000000081870152fd5b5092847f466e2063616e206f6e6c792062652063616c6c656420627920746865206875629293818c519562461bcd60e51b8752860152840152820152fd5b90508681813d831161039f575b610383818361060f565b8101031261039b5751801515810361039b5738610149565b8c80fd5b503d610379565b8c513d8f823e3d90fd5b8980fd5b8780fd5b8580fd5b90503461023f578260031936011261023f576103d6610655565b82548251630110ceef60e21b81526020928101839052601060248201526f417373657274696f6e53746f7261676560801b60448201526001600160a01b039290918290606490829086165afa90811561047b57849161044d575b50166bffffffffffffffffffffffff60a01b600154161760015551f35b61046e915060203d8111610474575b610466818361060f565b810190610631565b38610430565b503d61045c565b50505051903d90823e3d90fd5b90503461023f57602036600319011261023f573580151580910361023f576104ae610655565b825460ff60a01b191660a09190911b60ff60a01b1617825551f35b5050346100a457816003193601126100a4578051610506916104ea826105dd565b6005825264312e302e3160d81b60208301525191829182610594565b0390f35b5050346100a457816003193601126100a457905490516001600160a01b039091168152602090f35b5050346100a457816003193601126100a45760ff6020925460a01c1690519015158152f35b8490843461023f578260031936011261023f576105069250610578826105dd565b600982526820b9b9b2b93a34b7b760b91b602083015251918291825b6020808252825181830181905290939260005b8281106105c957505060409293506000838284010152601f8019910116010190565b8181018601518482016040015285016105a7565b6040810190811067ffffffffffffffff8211176105f957604052565b634e487b7160e01b600052604160045260246000fd5b90601f8019910116810190811067ffffffffffffffff8211176105f957604052565b9081602091031261065057516001600160a01b03811681036106505790565b600080fd5b600054604051638da5cb5b60e01b81526001600160a01b03916020908290600490829086165afa9081156106f7576000916106d9575b5016330361069557565b606460405162461bcd60e51b815260206004820152602060248201527f466e2063616e206f6e6c79206265207573656420627920687562206f776e65726044820152fd5b6106f1915060203d811161047457610466818361060f565b3861068b565b6040513d6000823e3d90fdfea2646970667358221220b9cb9f49a2845ea0f06b1aea155193d5b06df5c501701bfbfca0ac75a7ba7a2764736f6c63430008100033",
+  "deployedBytecode": "0x608060408181526004918236101561001657600080fd5b600092833560e01c91826306fdde031461055757508163200d2ed214610532578163365a86fc1461050a57816354fd4d50146104c95781635c40f6f4146104885781638129fc1c146103bc578163b83838f2146100a8575063d210b7cf1461007d57600080fd5b346100a457816003193601126100a45760015490516001600160a01b039091168152602090f35b5080fd5b90503461023f57608036600319011261023f578035906024908135916fffffffffffffffffffffffffffffffff83168093036103b85760449081359163ffffffff83168093036103b4576064918235946bffffffffffffffffffffffff86168096036103b05789548951631627905560e01b81523383820152602095916001600160a01b039190879082908790829086165afa9081156103a6578d9161036c575b501561032e57600154169089156102f05788156102bf57861561028157871561024357908b91813b1561023f578a838b938b8f948c608496519b8c988997635c1c1c7960e11b89528c8901528c8801528601528401525af18015610235576101e4575b5050865194855250830152818401527f6228bc6c1a8f028a2e3476a455a34f5fa23b4387611f3c147a965e375ebd17ba90606090a251f35b67ffffffffffffffff839a949a116102245750508652958160607f6228bc6c1a8f028a2e3476a455a34f5fa23b4387611f3c147a965e375ebd17ba6101ac565b634e487b7160e01b84526041905282fd5b89513d8c823e3d90fd5b8280fd5b8a5162461bcd60e51b81528084018790526019818601527f4368756e6b73206e756d6265722063616e6e6f7420626520300000000000000081870152fd5b8a5162461bcd60e51b8152808401879052601a818601527f547269706c6573206e756d6265722063616e6e6f74206265203000000000000081870152fd5b8a5162461bcd60e51b81528084018790526010818601526f053697a652063616e6e6f7420626520360841b81870152fd5b8a5162461bcd60e51b8152808401879052601c818601527f417373657274696f6e2049442063616e6e6f7420626520656d7074790000000081870152fd5b5092847f466e2063616e206f6e6c792062652063616c6c656420627920746865206875629293818c519562461bcd60e51b8752860152840152820152fd5b90508681813d831161039f575b610383818361060f565b8101031261039b5751801515810361039b5738610149565b8c80fd5b503d610379565b8c513d8f823e3d90fd5b8980fd5b8780fd5b8580fd5b90503461023f578260031936011261023f576103d6610655565b82548251630110ceef60e21b81526020928101839052601060248201526f417373657274696f6e53746f7261676560801b60448201526001600160a01b039290918290606490829086165afa90811561047b57849161044d575b50166bffffffffffffffffffffffff60a01b600154161760015551f35b61046e915060203d8111610474575b610466818361060f565b810190610631565b38610430565b503d61045c565b50505051903d90823e3d90fd5b90503461023f57602036600319011261023f573580151580910361023f576104ae610655565b825460ff60a01b191660a09190911b60ff60a01b1617825551f35b5050346100a457816003193601126100a4578051610506916104ea826105dd565b6005825264312e302e3160d81b60208301525191829182610594565b0390f35b5050346100a457816003193601126100a457905490516001600160a01b039091168152602090f35b5050346100a457816003193601126100a45760ff6020925460a01c1690519015158152f35b8490843461023f578260031936011261023f576105069250610578826105dd565b600982526820b9b9b2b93a34b7b760b91b602083015251918291825b6020808252825181830181905290939260005b8281106105c957505060409293506000838284010152601f8019910116010190565b8181018601518482016040015285016105a7565b6040810190811067ffffffffffffffff8211176105f957604052565b634e487b7160e01b600052604160045260246000fd5b90601f8019910116810190811067ffffffffffffffff8211176105f957604052565b9081602091031261065057516001600160a01b03811681036106505790565b600080fd5b600054604051638da5cb5b60e01b81526001600160a01b03916020908290600490829086165afa9081156106f7576000916106d9575b5016330361069557565b606460405162461bcd60e51b815260206004820152602060248201527f466e2063616e206f6e6c79206265207573656420627920687562206f776e65726044820152fd5b6106f1915060203d811161047457610466818361060f565b3861068b565b6040513d6000823e3d90fdfea2646970667358221220b9cb9f49a2845ea0f06b1aea155193d5b06df5c501701bfbfca0ac75a7ba7a2764736f6c63430008100033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 15408,
+        "contract": "contracts/Assertion.sol:Assertion",
+        "label": "hub",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_contract(Hub)9211"
+      },
+      {
+        "astId": 15379,
+        "contract": "contracts/Assertion.sol:Assertion",
+        "label": "status",
+        "offset": 20,
+        "slot": "0",
+        "type": "t_bool"
+      },
+      {
+        "astId": 5892,
+        "contract": "contracts/Assertion.sol:Assertion",
+        "label": "assertionStorage",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_contract(AssertionStorage)18073"
+      }
+    ],
+    "types": {
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_contract(AssertionStorage)18073": {
+        "encoding": "inplace",
+        "label": "contract AssertionStorage",
+        "numberOfBytes": "20"
+      },
+      "t_contract(Hub)9211": {
+        "encoding": "inplace",
+        "label": "contract Hub",
+        "numberOfBytes": "20"
+      }
+    }
+  }
+}

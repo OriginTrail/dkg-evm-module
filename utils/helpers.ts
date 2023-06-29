@@ -140,14 +140,14 @@ export class Helpers {
     let tx;
     const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
     if (setContractInHub) {
-      if (this.hre.network.name === 'hardhat') {
+      if (this.hre.network.name === 'hardhat' || this.hre.network.name === 'polygon_testnet') {
         tx = await HubController.setContractAddress(nameInHub, newContract.address);
         await tx.wait();
       } else {
         this.newContracts.push([nameInHub, newContract.address]);
       }
     } else if (setAssetStorageInHub) {
-      if (this.hre.network.name === 'hardhat') {
+      if (this.hre.network.name === 'hardhat' || this.hre.network.name === 'polygon_testnet') {
         tx = await HubController.setAssetStorageAddress(nameInHub, newContract.address);
         await tx.wait();
       } else {
@@ -156,7 +156,7 @@ export class Helpers {
     }
 
     if (this.hasFunction(newContractName, 'initialize')) {
-      if (this.hre.network.name === 'hardhat') {
+      if (this.hre.network.name === 'hardhat' || this.hre.network.name === 'polygon_testnet') {
         const newContractInterface = new this.hre.ethers.utils.Interface(this.getAbi(newContractName));
         const initializeTx = await HubController.forwardCall(
           newContract.address,

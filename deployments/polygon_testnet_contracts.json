@@ -1,0 +1,30 @@
+{
+  "contracts": {
+    "Hub": {
+      "evmAddress": "0x6E1c92ff28E1E118FA4C0E5A1249b2Ac0862C78b",
+      "substrateAddress": "5EMjscziEom1yA8A3Xn8eVo9cnt46aqBteiUi9N6DT4XN5oH",
+      "deployed": true
+    },
+    "HubController": {
+      "evmAddress": "0xCB6f18cF781F41F677c588Db5Ef67a50b2C99E22",
+      "substrateAddress": "5EMjsd12wN9PLJ5GAqLYnbBTZg4uYUbdMHmBkkCdTwcJgrWW",
+      "deployed": true
+    },
+    "Token": {
+      "evmAddress": "0xac0d1bC9298fdAA466B2Ae2530563Dd9f09c31Ce",
+      "substrateAddress": "5EMjsczveeSQyxRH8Wa2MpMXofphvmxgUCBRr3zu8SdJ9f6X",
+      "deployed": true
+    },
+    "ParametersStorage": {
+      "evmAddress": "0x096F6FDd05c83a123f663997beB56D393781E056",
+      "substrateAddress": "5EMjsczN4nQ8b359uG84S11erwkRkoF9WvU6prvEqeFhXkh5",
+      "deployed": true
+    },
+    "WhitelistStorage": {
+      "evmAddress": "0xE6D892374445d8502234FF29F8d28B8456898Ae4",
+      "substrateAddress": "5EMjsd18RwLqeesnSHWbWFdc8d3ykh14gSZ6jx6KSdHZN1rg",
+      "deployed": true
+    }
+  },
+  "deployedTimestamp": 0
+}

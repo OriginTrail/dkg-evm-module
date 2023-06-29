@@ -1,0 +1,672 @@
+{
+  "address": "0xCc9FbE746460a82544Df426cC02Dc80746A0Cfd6",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "hubAddress",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "parameterName",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "parameterValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "ParameterChanged",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "commitWindowDurationPerc",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "epochLength",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "finalizationCommitsNumber",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "hub",
+      "outputs": [
+        {
+          "internalType": "contract Hub",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "maxProofWindowOffsetPerc",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "maximumStake",
+      "outputs": [
+        {
+          "internalType": "uint96",
+          "name": "",
+          "type": "uint96"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minProofWindowOffsetPerc",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minimumStake",
+      "outputs": [
+        {
+          "internalType": "uint96",
+          "name": "",
+          "type": "uint96"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "name",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "proofWindowDurationPerc",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "r0",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "r1",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "r2",
+      "outputs": [
+        {
+          "internalType": "uint48",
+          "name": "",
+          "type": "uint48"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "replacementWindowDurationPerc",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "rewardWithdrawalDelay",
+      "outputs": [
+        {
+          "internalType": "uint24",
+          "name": "",
+          "type": "uint24"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "newCommitWindowDurationPerc",
+          "type": "uint8"
+        }
+      ],
+      "name": "setCommitWindowDurationPerc",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint128",
+          "name": "newEpochLength",
+          "type": "uint128"
+        }
+      ],
+      "name": "setEpochLength",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "newFinalizationCommitsNumber",
+          "type": "uint8"
+        }
+      ],
+      "name": "setFinalizationCommitsNumber",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "newMaxProofWindowOffsetPerc",
+          "type": "uint8"
+        }
+      ],
+      "name": "setMaxProofWindowOffsetPerc",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint96",
+          "name": "newMaximumStake",
+          "type": "uint96"
+        }
+      ],
+      "name": "setMaximumStake",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "newMinProofWindowOffsetPerc",
+          "type": "uint8"
+        }
+      ],
+      "name": "setMinProofWindowOffsetPerc",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint96",
+          "name": "newMinimumStake",
+          "type": "uint96"
+        }
+      ],
+      "name": "setMinimumStake",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "newProofWindowDurationPerc",
+          "type": "uint8"
+        }
+      ],
+      "name": "setProofWindowDurationPerc",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "newR0",
+          "type": "uint32"
+        }
+      ],
+      "name": "setR0",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "newR1",
+          "type": "uint32"
+        }
+      ],
+      "name": "setR1",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint48",
+          "name": "newR2",
+          "type": "uint48"
+        }
+      ],
+      "name": "setR2",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "newReplacementWindowDurationPerc",
+          "type": "uint8"
+        }
+      ],
+      "name": "setReplacementWindowDurationPerc",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint24",
+          "name": "newRewardWithdrawalDelay",
+          "type": "uint24"
+        }
+      ],
+      "name": "setRewardWithdrawalDelay",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "newSlashingFreezeDuration",
+          "type": "uint32"
+        }
+      ],
+      "name": "setSlashingFreezeDuration",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint24",
+          "name": "newStakeWithdrawalDelay",
+          "type": "uint24"
+        }
+      ],
+      "name": "setStakeWithdrawalDelay",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint16",
+          "name": "newUpdateCommitWindowDuration",
+          "type": "uint16"
+        }
+      ],
+      "name": "setUpdateCommitWindowDuration",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "slashingFreezeDuration",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "stakeWithdrawalDelay",
+      "outputs": [
+        {
+          "internalType": "uint24",
+          "name": "",
+          "type": "uint24"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "updateCommitWindowDuration",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "version",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x83bc9198974c041ad05db3462cfea9929ca985595aa038e827f03e7d517f4361",
+  "receipt": {
+    "to": null,
+    "from": "0xEfB65B890462206e3453dbd0bC8B2e6D6E0e7bD1",
+    "contractAddress": "0xCc9FbE746460a82544Df426cC02Dc80746A0Cfd6",
+    "transactionIndex": 14,
+    "gasUsed": "1112875",
+    "logsBloom": "0x00000000000000020000000000800000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000800000000000000000000100000000000200000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000020000000000000000001000000000000000000000000004000000000000000000001000000000000000000000000000000100000000000000000000000000000000000000000000000000008000000000000000000100000",
+    "blockHash": "0x51428cd73dc573ff30a3e677ee9bed90fc7b0b5453e6cc9bc25d7dbc784a4428",
+    "transactionHash": "0x83bc9198974c041ad05db3462cfea9929ca985595aa038e827f03e7d517f4361",
+    "logs": [
+      {
+        "transactionIndex": 14,
+        "blockNumber": 37384375,
+        "transactionHash": "0x83bc9198974c041ad05db3462cfea9929ca985595aa038e827f03e7d517f4361",
+        "address": "0x0000000000000000000000000000000000001010",
+        "topics": [
+          "0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63",
+          "0x0000000000000000000000000000000000000000000000000000000000001010",
+          "0x000000000000000000000000efb65b890462206e3453dbd0bc8b2e6d6e0e7bd1",
+          "0x000000000000000000000000c26880a0af2ea0c7e8130e6ec47af756465452e8"
+        ],
+        "data": "0x000000000000000000000000000000000000000000000000000a772be0e02e9000000000000000000000000000000000000000000000000088f389bb88c1ec8700000000000000000000000000000000000000000000207c33f2c3a72c7b174b00000000000000000000000000000000000000000000000088e9128fa7e1bdf700000000000000000000000000000000000000000000207c33fd3ad30d5b45db",
+        "logIndex": 28,
+        "blockHash": "0x51428cd73dc573ff30a3e677ee9bed90fc7b0b5453e6cc9bc25d7dbc784a4428"
+      }
+    ],
+    "blockNumber": 37384375,
+    "cumulativeGasUsed": "1406875",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": ["0x224aEC6891d26e994D4Dbf207aE099ca029b3E67"],
+  "numDeployments": 1,
+  "solcInputHash": "6736b5a2b01ed07b57366e384b7e7c88",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"hubAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"parameterName\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"parameterValue\",\"type\":\"uint256\"}],\"name\":\"ParameterChanged\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"commitWindowDurationPerc\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"epochLength\",\"outputs\":[{\"internalType\":\"uint128\",\"name\":\"\",\"type\":\"uint128\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"finalizationCommitsNumber\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"hub\",\"outputs\":[{\"internalType\":\"contract Hub\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"maxProofWindowOffsetPerc\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"maximumStake\",\"outputs\":[{\"internalType\":\"uint96\",\"name\":\"\",\"type\":\"uint96\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"minProofWindowOffsetPerc\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"minimumStake\",\"outputs\":[{\"internalType\":\"uint96\",\"name\":\"\",\"type\":\"uint96\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proofWindowDurationPerc\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"r0\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"r1\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"r2\",\"outputs\":[{\"internalType\":\"uint48\",\"name\":\"\",\"type\":\"uint48\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"replacementWindowDurationPerc\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"rewardWithdrawalDelay\",\"outputs\":[{\"internalType\":\"uint24\",\"name\":\"\",\"type\":\"uint24\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"newCommitWindowDurationPerc\",\"type\":\"uint8\"}],\"name\":\"setCommitWindowDurationPerc\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint128\",\"name\":\"newEpochLength\",\"type\":\"uint128\"}],\"name\":\"setEpochLength\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"newFinalizationCommitsNumber\",\"type\":\"uint8\"}],\"name\":\"setFinalizationCommitsNumber\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"newMaxProofWindowOffsetPerc\",\"type\":\"uint8\"}],\"name\":\"setMaxProofWindowOffsetPerc\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint96\",\"name\":\"newMaximumStake\",\"type\":\"uint96\"}],\"name\":\"setMaximumStake\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"newMinProofWindowOffsetPerc\",\"type\":\"uint8\"}],\"name\":\"setMinProofWindowOffsetPerc\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint96\",\"name\":\"newMinimumStake\",\"type\":\"uint96\"}],\"name\":\"setMinimumStake\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"newProofWindowDurationPerc\",\"type\":\"uint8\"}],\"name\":\"setProofWindowDurationPerc\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"newR0\",\"type\":\"uint32\"}],\"name\":\"setR0\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"newR1\",\"type\":\"uint32\"}],\"name\":\"setR1\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint48\",\"name\":\"newR2\",\"type\":\"uint48\"}],\"name\":\"setR2\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"newReplacementWindowDurationPerc\",\"type\":\"uint8\"}],\"name\":\"setReplacementWindowDurationPerc\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint24\",\"name\":\"newRewardWithdrawalDelay\",\"type\":\"uint24\"}],\"name\":\"setRewardWithdrawalDelay\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"newSlashingFreezeDuration\",\"type\":\"uint32\"}],\"name\":\"setSlashingFreezeDuration\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint24\",\"name\":\"newStakeWithdrawalDelay\",\"type\":\"uint24\"}],\"name\":\"setStakeWithdrawalDelay\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"newUpdateCommitWindowDuration\",\"type\":\"uint16\"}],\"name\":\"setUpdateCommitWindowDuration\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"slashingFreezeDuration\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"stakeWithdrawalDelay\",\"outputs\":[{\"internalType\":\"uint24\",\"name\":\"\",\"type\":\"uint24\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"updateCommitWindowDuration\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"version\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/storage/ParametersStorage.sol\":\"ParametersStorage\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[],\"viaIR\":true},\"sources\":{\"@openzeppelin/contracts/access/Ownable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.7.0) (access/Ownable.sol)\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"../utils/Context.sol\\\";\\n\\n/**\\n * @dev Contract module which provides a basic access control mechanism, where\\n * there is an account (an owner) that can be granted exclusive access to\\n * specific functions.\\n *\\n * By default, the owner account will be the one that deploys the contract. This\\n * can later be changed with {transferOwnership}.\\n *\\n * This module is used through inheritance. It will make available the modifier\\n * `onlyOwner`, which can be applied to your functions to restrict their use to\\n * the owner.\\n */\\nabstract contract Ownable is Context {\\n    address private _owner;\\n\\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n\\n    /**\\n     * @dev Initializes the contract setting the deployer as the initial owner.\\n     */\\n    constructor() {\\n        _transferOwnership(_msgSender());\\n    }\\n\\n    /**\\n     * @dev Throws if called by any account other than the owner.\\n     */\\n    modifier onlyOwner() {\\n        _checkOwner();\\n        _;\\n    }\\n\\n    /**\\n     * @dev Returns the address of the current owner.\\n     */\\n    function owner() public view virtual returns (address) {\\n        return _owner;\\n    }\\n\\n    /**\\n     * @dev Throws if the sender is not the owner.\\n     */\\n    function _checkOwner() internal view virtual {\\n        require(owner() == _msgSender(), \\\"Ownable: caller is not the owner\\\");\\n    }\\n\\n    /**\\n     * @dev Leaves the contract without owner. It will not be possible to call\\n     * `onlyOwner` functions anymore. Can only be called by the current owner.\\n     *\\n     * NOTE: Renouncing ownership will leave the contract without an owner,\\n     * thereby removing any functionality that is only available to the owner.\\n     */\\n    function renounceOwnership() public virtual onlyOwner {\\n        _transferOwnership(address(0));\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Can only be called by the current owner.\\n     */\\n    function transferOwnership(address newOwner) public virtual onlyOwner {\\n        require(newOwner != address(0), \\\"Ownable: new owner is the zero address\\\");\\n        _transferOwnership(newOwner);\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Internal function without access restriction.\\n     */\\n    function _transferOwnership(address newOwner) internal virtual {\\n        address oldOwner = _owner;\\n        _owner = newOwner;\\n        emit OwnershipTransferred(oldOwner, newOwner);\\n    }\\n}\\n\",\"keccak256\":\"0xa94b34880e3c1b0b931662cb1c09e5dfa6662f31cba80e07c5ee71cd135c9673\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n    function _msgSender() internal view virtual returns (address) {\\n        return msg.sender;\\n    }\\n\\n    function _msgData() internal view virtual returns (bytes calldata) {\\n        return msg.data;\\n    }\\n}\\n\",\"keccak256\":\"0xe2e337e6dde9ef6b680e07338c493ebea1b5fd09b43424112868e9cc1706bca7\",\"license\":\"MIT\"},\"contracts/Hub.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\nimport {Named} from \\\"./interface/Named.sol\\\";\\nimport {Versioned} from \\\"./interface/Versioned.sol\\\";\\nimport {UnorderedNamedContractDynamicSetLib} from \\\"./utils/UnorderedNamedContractDynamicSet.sol\\\";\\nimport {Ownable} from \\\"@openzeppelin/contracts/access/Ownable.sol\\\";\\n\\ncontract Hub is Named, Versioned, Ownable {\\n    using UnorderedNamedContractDynamicSetLib for UnorderedNamedContractDynamicSetLib.Set;\\n\\n    event NewContract(string contractName, address newContractAddress);\\n    event ContractChanged(string contractName, address newContractAddress);\\n    event NewAssetStorage(string contractName, address newContractAddress);\\n    event AssetStorageChanged(string contractName, address newContractAddress);\\n\\n    string private constant _NAME = \\\"Hub\\\";\\n    string private constant _VERSION = \\\"1.0.0\\\";\\n\\n    UnorderedNamedContractDynamicSetLib.Set internal contractSet;\\n    UnorderedNamedContractDynamicSetLib.Set internal assetStorageSet;\\n\\n    function name() external pure virtual override returns (string memory) {\\n        return _NAME;\\n    }\\n\\n    function version() external pure virtual override returns (string memory) {\\n        return _VERSION;\\n    }\\n\\n    function setContractAddress(string calldata contractName, address newContractAddress) external onlyOwner {\\n        if (contractSet.exists(contractName)) {\\n            emit ContractChanged(contractName, newContractAddress);\\n            contractSet.update(contractName, newContractAddress);\\n        } else {\\n            emit NewContract(contractName, newContractAddress);\\n            contractSet.append(contractName, newContractAddress);\\n        }\\n    }\\n\\n    function setAssetStorageAddress(string calldata assetStorageName, address assetStorageAddress) external onlyOwner {\\n        if (assetStorageSet.exists(assetStorageName)) {\\n            emit AssetStorageChanged(assetStorageName, assetStorageAddress);\\n            assetStorageSet.update(assetStorageName, assetStorageAddress);\\n        } else {\\n            emit NewAssetStorage(assetStorageName, assetStorageAddress);\\n            assetStorageSet.append(assetStorageName, assetStorageAddress);\\n        }\\n    }\\n\\n    function getContractAddress(string calldata contractName) external view returns (address) {\\n        return contractSet.get(contractName).addr;\\n    }\\n\\n    function getAssetStorageAddress(string calldata assetStorageName) external view returns (address) {\\n        return assetStorageSet.get(assetStorageName).addr;\\n    }\\n\\n    function getAllContracts() external view returns (UnorderedNamedContractDynamicSetLib.Contract[] memory) {\\n        return contractSet.getAll();\\n    }\\n\\n    function getAllAssetStorages() external view returns (UnorderedNamedContractDynamicSetLib.Contract[] memory) {\\n        return assetStorageSet.getAll();\\n    }\\n\\n    function isContract(string calldata contractName) external view returns (bool) {\\n        return contractSet.exists(contractName);\\n    }\\n\\n    function isContract(address selectedContractAddress) external view returns (bool) {\\n        return contractSet.exists(selectedContractAddress);\\n    }\\n\\n    function isAssetStorage(string calldata assetStorageName) external view returns (bool) {\\n        return assetStorageSet.exists(assetStorageName);\\n    }\\n\\n    function isAssetStorage(address assetStorageAddress) external view returns (bool) {\\n        return assetStorageSet.exists(assetStorageAddress);\\n    }\\n}\\n\",\"keccak256\":\"0xf93b8b90622b1a49cd00a3558f64766e6bbca7b2f192f8e036a773d01e5c3382\",\"license\":\"MIT\"},\"contracts/abstract/HubDependent.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\nimport {Hub} from \\\"../Hub.sol\\\";\\n\\nabstract contract HubDependent {\\n    Hub public hub;\\n\\n    constructor(address hubAddress) {\\n        require(hubAddress != address(0), \\\"Hub Address cannot be 0x0\\\");\\n\\n        hub = Hub(hubAddress);\\n    }\\n\\n    modifier onlyHubOwner() {\\n        _checkHubOwner();\\n        _;\\n    }\\n\\n    modifier onlyContracts() {\\n        _checkHub();\\n        _;\\n    }\\n\\n    function _checkHubOwner() internal view virtual {\\n        require(msg.sender == hub.owner(), \\\"Fn can only be used by hub owner\\\");\\n    }\\n\\n    function _checkHub() internal view virtual {\\n        require(hub.isContract(msg.sender), \\\"Fn can only be called by the hub\\\");\\n    }\\n}\\n\",\"keccak256\":\"0xf9cadb8d1ee628ef5ece2631ca5d622b30bfd54d4666812b401746a4e5643fbe\",\"license\":\"MIT\"},\"contracts/interface/Named.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\ninterface Named {\\n    function name() external view returns (string memory);\\n}\\n\",\"keccak256\":\"0xb468c85b178d2377c1a6dd77f2e4f843fe280932663ffef8d9fba56dcdc7b796\",\"license\":\"MIT\"},\"contracts/interface/Versioned.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\ninterface Versioned {\\n    function version() external view returns (string memory);\\n}\\n\",\"keccak256\":\"0x6012f1a5c6b2fe5d8457ab1b913602c6f2d40dbea225bb4cec9fe3e325209f90\",\"license\":\"MIT\"},\"contracts/storage/ParametersStorage.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\nimport {HubDependent} from \\\"../abstract/HubDependent.sol\\\";\\nimport {Named} from \\\"../interface/Named.sol\\\";\\nimport {Versioned} from \\\"../interface/Versioned.sol\\\";\\n\\ncontract ParametersStorage is Named, Versioned, HubDependent {\\n    event ParameterChanged(string parameterName, uint256 parameterValue);\\n\\n    string private constant _NAME = \\\"ParametersStorage\\\";\\n    string private constant _VERSION = \\\"1.1.0\\\";\\n\\n    // 0 - minProofWindowOffsetPerc\\n    // 1 - maxProofWindowOffsetPerc\\n    // 2 - commitWindowDurationPerc\\n    // 3 - proofWindowDurationPerc\\n    // 4 - replacementWindowDurationPerc\\n    // 5 - finalizationCommitsNumber\\n    uint8[6] internal args1;\\n\\n    // 0 - r0\\n    // 1 - r1\\n    // 2 - slashingFreezeDuration\\n    uint32[3] internal args2;\\n    uint48 public r2;\\n\\n    // 0 - minimumStake\\n    // 1 - maximumStake\\n    uint96[2] internal args3;\\n\\n    uint128 public epochLength;\\n\\n    // 0 - stakeWithdrawalDelay\\n    // 1 - rewardWithdrawalDelay\\n    uint24[2] internal args4;\\n\\n    uint16 public updateCommitWindowDuration;\\n\\n    constructor(address hubAddress) HubDependent(hubAddress) {\\n        // minimumStake\\n        args3[0] = 50_000 ether;\\n        // maximumStake\\n        args3[1] = 5_000_000 ether;\\n\\n        r2 = 20;\\n        // r1\\n        args2[1] = 8;\\n        // r0\\n        args2[0] = 3;\\n\\n        // minProofWindowOffsetPerc\\n        args1[0] = 50;\\n        // maxProofWindowOffsetPerc\\n        args1[1] = 75;\\n        // commitWindowDurationPerc\\n        args1[2] = 25;\\n        // proofWindowDurationPerc\\n        args1[3] = 25;\\n        // replacementWindowDurationPerc\\n        args1[4] = 0;\\n\\n        epochLength = 90 days;\\n\\n        // stakeWithdrawalDelay\\n        args4[0] = 5 minutes;\\n        // rewardWithdrawalDelay\\n        args4[1] = 5 minutes;\\n        // slashingFreezeDuration\\n        args2[2] = 730 days;\\n\\n        updateCommitWindowDuration = 30 minutes;\\n\\n        // finalizationCommitsNumber\\n        args1[5] = 3;\\n    }\\n\\n    function name() external pure virtual override returns (string memory) {\\n        return _NAME;\\n    }\\n\\n    function version() external pure virtual override returns (string memory) {\\n        return _VERSION;\\n    }\\n\\n    function minimumStake() external view returns (uint96) {\\n        return args3[0];\\n    }\\n\\n    function setMinimumStake(uint96 newMinimumStake) external onlyHubOwner {\\n        args3[0] = newMinimumStake;\\n\\n        emit ParameterChanged(\\\"minimumStake\\\", newMinimumStake);\\n    }\\n\\n    function maximumStake() external view returns (uint96) {\\n        return args3[1];\\n    }\\n\\n    function setMaximumStake(uint96 newMaximumStake) external onlyHubOwner {\\n        args3[1] = newMaximumStake;\\n\\n        emit ParameterChanged(\\\"maximumStake\\\", newMaximumStake);\\n    }\\n\\n    function setR2(uint48 newR2) external onlyHubOwner {\\n        r2 = newR2;\\n\\n        emit ParameterChanged(\\\"r2\\\", newR2);\\n    }\\n\\n    function r1() external view returns (uint32) {\\n        return args2[1];\\n    }\\n\\n    function setR1(uint32 newR1) external onlyHubOwner {\\n        require(newR1 >= (2 * args2[0] - 1), \\\"R1 should be >= 2*R0-1\\\");\\n\\n        args2[1] = newR1;\\n\\n        emit ParameterChanged(\\\"r1\\\", newR1);\\n    }\\n\\n    function r0() external view returns (uint32) {\\n        return args2[0];\\n    }\\n\\n    function setR0(uint32 newR0) external onlyHubOwner {\\n        require(newR0 <= ((args2[1] + 1) / 2), \\\"R0 should be <= (R1+1)/2\\\");\\n\\n        args2[0] = newR0;\\n\\n        emit ParameterChanged(\\\"r0\\\", newR0);\\n    }\\n\\n    function minProofWindowOffsetPerc() external view returns (uint8) {\\n        return args1[0];\\n    }\\n\\n    function setMinProofWindowOffsetPerc(uint8 newMinProofWindowOffsetPerc) external onlyHubOwner {\\n        args1[0] = newMinProofWindowOffsetPerc;\\n\\n        emit ParameterChanged(\\\"minProofWindowOffsetPerc\\\", newMinProofWindowOffsetPerc);\\n    }\\n\\n    function maxProofWindowOffsetPerc() external view returns (uint8) {\\n        return args1[1];\\n    }\\n\\n    function setMaxProofWindowOffsetPerc(uint8 newMaxProofWindowOffsetPerc) external onlyHubOwner {\\n        args1[1] = newMaxProofWindowOffsetPerc;\\n\\n        emit ParameterChanged(\\\"maxProofWindowOffsetPerc\\\", newMaxProofWindowOffsetPerc);\\n    }\\n\\n    function commitWindowDurationPerc() external view returns (uint8) {\\n        return args1[2];\\n    }\\n\\n    function setCommitWindowDurationPerc(uint8 newCommitWindowDurationPerc) external onlyHubOwner {\\n        args1[2] = newCommitWindowDurationPerc;\\n\\n        emit ParameterChanged(\\\"commitWindowDurationPerc\\\", newCommitWindowDurationPerc);\\n    }\\n\\n    function proofWindowDurationPerc() external view returns (uint8) {\\n        return args1[3];\\n    }\\n\\n    function setProofWindowDurationPerc(uint8 newProofWindowDurationPerc) external onlyHubOwner {\\n        args1[3] = newProofWindowDurationPerc;\\n\\n        emit ParameterChanged(\\\"proofWindowDurationPerc\\\", newProofWindowDurationPerc);\\n    }\\n\\n    function replacementWindowDurationPerc() external view returns (uint8) {\\n        return args1[4];\\n    }\\n\\n    function setReplacementWindowDurationPerc(uint8 newReplacementWindowDurationPerc) external onlyHubOwner {\\n        args1[4] = newReplacementWindowDurationPerc;\\n\\n        emit ParameterChanged(\\\"replacementWindowDurationPerc\\\", newReplacementWindowDurationPerc);\\n    }\\n\\n    function setEpochLength(uint128 newEpochLength) external onlyHubOwner {\\n        epochLength = newEpochLength;\\n\\n        emit ParameterChanged(\\\"epochLength\\\", newEpochLength);\\n    }\\n\\n    function stakeWithdrawalDelay() external view returns (uint24) {\\n        return args4[0];\\n    }\\n\\n    function setStakeWithdrawalDelay(uint24 newStakeWithdrawalDelay) external onlyHubOwner {\\n        args4[0] = newStakeWithdrawalDelay;\\n\\n        emit ParameterChanged(\\\"stakeWithdrawalDelay\\\", newStakeWithdrawalDelay);\\n    }\\n\\n    function rewardWithdrawalDelay() external view returns (uint24) {\\n        return args4[1];\\n    }\\n\\n    function setRewardWithdrawalDelay(uint24 newRewardWithdrawalDelay) external onlyHubOwner {\\n        args4[1] = newRewardWithdrawalDelay;\\n\\n        emit ParameterChanged(\\\"rewardWithdrawalDelay\\\", newRewardWithdrawalDelay);\\n    }\\n\\n    function slashingFreezeDuration() external view returns (uint32) {\\n        return args2[2];\\n    }\\n\\n    function setSlashingFreezeDuration(uint32 newSlashingFreezeDuration) external onlyHubOwner {\\n        args2[2] = newSlashingFreezeDuration;\\n\\n        emit ParameterChanged(\\\"slashingFreezeDuration\\\", newSlashingFreezeDuration);\\n    }\\n\\n    function setUpdateCommitWindowDuration(uint16 newUpdateCommitWindowDuration) external onlyHubOwner {\\n        updateCommitWindowDuration = newUpdateCommitWindowDuration;\\n\\n        emit ParameterChanged(\\\"updateCommitWindowDuration\\\", newUpdateCommitWindowDuration);\\n    }\\n\\n    function finalizationCommitsNumber() external view returns (uint8) {\\n        return args1[5];\\n    }\\n\\n    function setFinalizationCommitsNumber(uint8 newFinalizationCommitsNumber) external onlyHubOwner {\\n        args1[5] = newFinalizationCommitsNumber;\\n\\n        emit ParameterChanged(\\\"finalizationCommitsNumber\\\", newFinalizationCommitsNumber);\\n    }\\n}\\n\",\"keccak256\":\"0xcf85cdc898aa106de1841fc603229d8a8985c1bed128e8efd3c2e827b9c0cca1\",\"license\":\"MIT\"},\"contracts/utils/UnorderedNamedContractDynamicSet.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\nlibrary UnorderedNamedContractDynamicSetLib {\\n    struct Contract {\\n        string name;\\n        address addr;\\n    }\\n\\n    struct Set {\\n        mapping(string => uint256) stringIndexPointers;\\n        mapping(address => uint256) addressIndexPointers;\\n        Contract[] contractList;\\n    }\\n\\n    function append(Set storage self, string calldata name, address addr) internal {\\n        require(\\n            keccak256(abi.encodePacked(name)) != keccak256(abi.encodePacked(\\\"\\\")),\\n            \\\"NamedContractSet: Name cannot be empty\\\"\\n        );\\n        require(addr != address(0), \\\"NamedContractSet: Address cannot be 0x0\\\");\\n        require(!exists(self, name), \\\"NamedContractSet: Contract with given name already exists\\\");\\n        self.stringIndexPointers[name] = size(self);\\n        self.addressIndexPointers[addr] = size(self);\\n        self.contractList.push(Contract(name, addr));\\n    }\\n\\n    function update(Set storage self, string calldata name, address addr) internal {\\n        require(addr != address(0), \\\"NamedContractSet: Address cannot be 0x0\\\");\\n        require(exists(self, name), \\\"NamedContractSet: Contract with given name doesn't exists\\\");\\n        delete self.addressIndexPointers[self.contractList[self.stringIndexPointers[name]].addr];\\n        self.addressIndexPointers[addr] = self.stringIndexPointers[name];\\n        self.contractList[self.stringIndexPointers[name]].addr = addr;\\n    }\\n\\n    function remove(Set storage self, string calldata name) internal {\\n        require(exists(self, name), \\\"NamedContractSet: Contract with given name doesn't exist\\\");\\n        uint256 contractToRemoveIndex = self.stringIndexPointers[name];\\n\\n        delete self.addressIndexPointers[self.contractList[contractToRemoveIndex].addr];\\n\\n        Contract memory contractToMove = self.contractList[size(self) - 1];\\n\\n        self.stringIndexPointers[contractToMove.name] = contractToRemoveIndex;\\n        self.addressIndexPointers[contractToMove.addr] = contractToRemoveIndex;\\n        self.contractList[contractToRemoveIndex] = contractToMove;\\n\\n        delete self.stringIndexPointers[name];\\n        self.contractList.pop();\\n    }\\n\\n    function remove(Set storage self, address addr) internal {\\n        require(exists(self, addr), \\\"NamedContractSet: Contract with given address doesn't exist\\\");\\n        uint256 contractToRemoveIndex = self.addressIndexPointers[addr];\\n\\n        delete self.stringIndexPointers[self.contractList[contractToRemoveIndex].name];\\n\\n        Contract memory contractToMove = self.contractList[size(self) - 1];\\n\\n        self.stringIndexPointers[contractToMove.name] = contractToRemoveIndex;\\n        self.addressIndexPointers[contractToMove.addr] = contractToRemoveIndex;\\n        self.contractList[contractToRemoveIndex] = contractToMove;\\n\\n        delete self.addressIndexPointers[addr];\\n        self.contractList.pop();\\n    }\\n\\n    function get(Set storage self, string calldata name) internal view returns (Contract memory) {\\n        require(exists(self, name), \\\"NamedContractSet: Contract with given name doesn't exist\\\");\\n        return self.contractList[self.stringIndexPointers[name]];\\n    }\\n\\n    function get(Set storage self, address addr) internal view returns (Contract memory) {\\n        require(exists(self, addr), \\\"NamedContractSet: Contract with given address doesn't exist\\\");\\n        return self.contractList[self.addressIndexPointers[addr]];\\n    }\\n\\n    function get(Set storage self, uint256 index) internal view returns (Contract memory) {\\n        return self.contractList[index];\\n    }\\n\\n    function getAll(Set storage self) internal view returns (Contract[] memory) {\\n        return self.contractList;\\n    }\\n\\n    function getIndex(Set storage self, string calldata name) internal view returns (uint256) {\\n        return self.stringIndexPointers[name];\\n    }\\n\\n    function getIndex(Set storage self, address addr) internal view returns (uint256) {\\n        return self.addressIndexPointers[addr];\\n    }\\n\\n    function exists(Set storage self, string calldata name) internal view returns (bool) {\\n        if (size(self) == 0) return false;\\n        return\\n            keccak256(abi.encodePacked(self.contractList[self.stringIndexPointers[name]].name)) ==\\n            keccak256(abi.encodePacked(name));\\n    }\\n\\n    function exists(Set storage self, address addr) internal view returns (bool) {\\n        if (size(self) == 0) return false;\\n        return addr == self.contractList[self.addressIndexPointers[addr]].addr;\\n    }\\n\\n    function size(Set storage self) internal view returns (uint256) {\\n        return self.contractList.length;\\n    }\\n}\\n\",\"keccak256\":\"0x2da60d9913c236156764f13a514bc7a9a294feadd4fad9c7a111072fd6bef25a\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x60803461016257601f61115b38819003918201601f19168301916001600160401b038311848410176101675780849260209460405283398101031261016257516001600160a01b0381169081900361016257801561011d57600080546001600160a01b031916919091179055600480546001600160c01b031916760422ca8b0a00a42500000000000a968163f0a57b4000001790556003805465ffffffffffff199081166014179091556002805460018054600580546001600160801b0319166276a70017905560068054861664012c00012c1790556001600160601b03199092166b03c267000000000800000003179092556007805461ffff191661070817905590911665030019194b32179055604051610fdd908161017e8239f35b60405162461bcd60e51b815260206004820152601960248201527f48756220416464726573732063616e6e6f7420626520307830000000000000006044820152606490fd5b600080fd5b634e487b7160e01b600052604160045260246000fdfe608060408181526004918236101561001657600080fd5b600092833560e01c91826306fdde0314610dcd575081630bcbbd2114610da65781630d8d840b14610d2c578163108778f514610d09578163151db1b914610ce5578163175b07f814610bfe57816319bd84dc14610ae957816322a0d62914610a5a5781632b4be0db146109cd578163365a86fc146109a55781633de3fdf41461097f57816351ce6d3e146108fd578163539711571461088257816354fd4d501461084157816357d775f814610819578163659621b5146107f45781636ca5b5b0146107ce5781637ad65f27146107a9578163862bc1311461071e5781638e626242146106fc57816392c62af3146106d7578163998d95dc146106475781639d3ceb0c14610622578163b13a8c07146105a6578163b5c6b4531461057c578163b7f854fc1461050d578163cd3e290c1461048d578163d1287dba14610400578163daa303cf146103dd578163e28dcb1d1461034a578163e74a3017146102b7578163ec5ffac21461028d578163f1b776f514610266578163fdf1afa2146101cd575063ff211743146101a657600080fd5b346101c957816003193601126101c95760209060ff60015460081c169051908152f35b5080fd5b905034610262576020366003190112610262573560ff81169081810361025e57600080516020610f8883398151915291608091610208610e8d565b64ff000000006001549160201b169064ff00000000191617600155835190848252601d858301527f7265706c6163656d656e7457696e646f774475726174696f6e5065726300000060608301526020820152a151f35b8380fd5b8280fd5b5050346101c957816003193601126101c95760209062ffffff60065460181c169051908152f35b8284346102b457806003193601126102b457506001600160601b0360209254169051908152f35b80fd5b905034610262576020366003190112610262573560ff81169081810361025e57600080516020610f88833981519152916080916102f2610e8d565b65ff00000000006001549160281b169065ff00000000001916176001558351908482526019858301527f66696e616c697a6174696f6e436f6d6d6974734e756d6265720000000000000060608301526020820152a151f35b9050346102625760203660031901126102625780356001600160601b0381168082036103d957600080516020610f888339815191529260809261038b610e8d565b8154906001600160601b0360601b9060601b16906001600160601b0360601b1916179055835190848252600c858301526b6d6178696d756d5374616b6560a01b60608301526020820152a151f35b8480fd5b5050346101c957816003193601126101c95760209061ffff600754169051908152f35b905034610262576020366003190112610262573562ffffff81169081810361025e57600080516020610f888339815191529160809161043d610e8d565b65ffffff0000006006549160181b169065ffffff000000191617600655835190848252601585830152747265776172645769746864726177616c44656c617960581b60608301526020820152a151f35b905034610262576020366003190112610262573560ff8116809103610262576080600080516020610f88833981519152916104c6610e8d565b8060ff1960015416176001558351908482526018858301527f6d696e50726f6f6657696e646f774f666673657450657263000000000000000060608301526020820152a151f35b905034610262576020366003190112610262573565ffffffffffff8116809103610262576080600080516020610f888339815191529161054b610e8d565b8065ffffffffffff19600354161760035583519084825260028583015261391960f11b60608301526020820152a151f35b8284346102b457806003193601126102b457506001600160601b036020925460601c169051908152f35b905034610262576020366003190112610262578035906001600160601b03821680920361025e57600080516020610f88833981519152916080916105e8610e8d565b816001600160601b0319825416179055835190848252600c858301526b6d696e696d756d5374616b6560a01b60608301526020820152a151f35b5050346101c957816003193601126101c95760209060ff60015460181c169051908152f35b905034610262576020366003190112610262573563ffffffff81169081810361025e57600080516020610f8883398151915291608091610685610e8d565b63ffffffff60401b60025491861b169063ffffffff60401b1916176002558351908482526016858301527539b630b9b434b733a33932b2bd32a23ab930ba34b7b760511b60608301526020820152a151f35b5050346101c957816003193601126101c95760209060ff60015460281c169051908152f35b5050346101c957816003193601126101c95760209060ff600154169051908152f35b905034610262576020366003190112610262573560ff81169081810361025e57600080516020610f8883398151915291608091610759610e8d565b61ff006001549160081b169061ff001916176001558351908482526018858301527f6d617850726f6f6657696e646f774f666673657450657263000000000000000060608301526020820152a151f35b5050346101c957816003193601126101c95760209060ff60015460101c169051908152f35b5050346101c957816003193601126101c9576002549051602091821c63ffffffff168152f35b5050346101c957816003193601126101c95760209063ffffffff600254169051908152f35b5050346101c957816003193601126101c9576020906001600160801b03600554169051908152f35b5050346101c957816003193601126101c957805161087e9161086282610e5b565b60058252640312e312e360dc1b60208301525191829182610e12565b0390f35b905034610262576020366003190112610262573562ffffff8116809103610262576080600080516020610f88833981519152916108bd610e8d565b8062ffffff196006541617600655835190848252601485830152737374616b655769746864726177616c44656c617960601b60608301526020820152a151f35b905034610262576020366003190112610262573561ffff8116809103610262576080600080516020610f8883398151915291610937610e8d565b8061ffff196007541617600755835190848252601a858301527f757064617465436f6d6d697457696e646f774475726174696f6e00000000000060608301526020820152a151f35b5050346101c957816003193601126101c9576002548151911c63ffffffff168152602090f35b5050346101c957816003193601126101c957905490516001600160a01b039091168152602090f35b905034610262576020366003190112610262573560ff81169081810361025e57600080516020610f8883398151915291608091610a08610e8d565b62ff00006001549160101b169062ff00001916176001558351908482526018858301527f636f6d6d697457696e646f774475726174696f6e50657263000000000000000060608301526020820152a151f35b905034610262576020366003190112610262573560ff81169081810361025e57600080516020610f8883398151915291608091610a95610e8d565b63ff0000006001549160181b169063ff0000001916176001558351908482526017858301527f70726f6f6657696e646f774475726174696f6e5065726300000000000000000060608301526020820152a151f35b9050346102625760203660031901126102625763ffffffff813581811692838203610bfa57610b16610e8d565b60025492637fffffff81851611600116610be75760001963fffffffe8560011b1601818111610bd457168410610b9857509160809167ffffffff00000000600080516020610f888339815191529460201b169067ffffffff0000000019161760025583519084825260028583015261723160f01b60608301526020820152a151f35b606490602086519162461bcd60e51b8352820152601660248201527552312073686f756c64206265203e3d20322a52302d3160501b6044820152fd5b634e487b7160e01b885260118352602488fd5b634e487b7160e01b875260118252602487fd5b8580fd5b9050346102625760203660031901126102625780359063ffffffff908183168093036103d957610c2c610e8d565b600254916001818460201c1601908111610cd25760011c637fffffff168311610c8f575081600080516020610f888339815191529260809263ffffffff19161760025583519084825260028583015261072360f41b60608301526020820152a151f35b606490602085519162461bcd60e51b8352820152601860248201527f52302073686f756c64206265203c3d202852312b31292f3200000000000000006044820152fd5b634e487b7160e01b865260118252602486fd5b5050346101c957816003193601126101c95760209062ffffff600654169051908152f35b5050346101c957816003193601126101c9576001549051602091821c60ff168152f35b90503461026257602036600319011261026257356001600160801b038116809103610262576080600080516020610f8883398151915291610d6b610e8d565b806001600160801b03196005541617600555835190848252600b858301526a0cae0dec6d098cadccee8d60ab1b60608301526020820152a151f35b5050346101c957816003193601126101c95760209065ffffffffffff600354169051908152f35b8490843461026257826003193601126102625761087e9250610dee82610e5b565b6011825270506172616d657465727353746f7261676560781b602083015251918291825b6020808252825181830181905290939260005b828110610e4757505060409293506000838284010152601f8019910116010190565b818101860151848201604001528501610e25565b6040810190811067ffffffffffffffff821117610e7757604052565b634e487b7160e01b600052604160045260246000fd5b60008054604051638da5cb5b60e01b81526020926001600160a01b039284908390600490829087165afa918215610f7a578192610f14575b5050163303610ed15750565b6064906040519062461bcd60e51b825280600483015260248201527f466e2063616e206f6e6c79206265207573656420627920687562206f776e65726044820152fd5b909150833d8511610f73575b601f8101601f1916820167ffffffffffffffff811183821017610f5f5785918391604052810103126101c957519082821682036102b457503880610ec5565b634e487b7160e01b84526041600452602484fd5b503d610f20565b50604051903d90823e3d90fdfe18af1c2db06558764ef7e5f81f429c1ec57050d7b3eb7c0cdd985ce6257ec972a2646970667358221220c373341bb8aa20da14da53cddfff59029fc48c27a7a6238a6ca270b750f2076f64736f6c63430008100033",
+  "deployedBytecode": "0x608060408181526004918236101561001657600080fd5b600092833560e01c91826306fdde0314610dcd575081630bcbbd2114610da65781630d8d840b14610d2c578163108778f514610d09578163151db1b914610ce5578163175b07f814610bfe57816319bd84dc14610ae957816322a0d62914610a5a5781632b4be0db146109cd578163365a86fc146109a55781633de3fdf41461097f57816351ce6d3e146108fd578163539711571461088257816354fd4d501461084157816357d775f814610819578163659621b5146107f45781636ca5b5b0146107ce5781637ad65f27146107a9578163862bc1311461071e5781638e626242146106fc57816392c62af3146106d7578163998d95dc146106475781639d3ceb0c14610622578163b13a8c07146105a6578163b5c6b4531461057c578163b7f854fc1461050d578163cd3e290c1461048d578163d1287dba14610400578163daa303cf146103dd578163e28dcb1d1461034a578163e74a3017146102b7578163ec5ffac21461028d578163f1b776f514610266578163fdf1afa2146101cd575063ff211743146101a657600080fd5b346101c957816003193601126101c95760209060ff60015460081c169051908152f35b5080fd5b905034610262576020366003190112610262573560ff81169081810361025e57600080516020610f8883398151915291608091610208610e8d565b64ff000000006001549160201b169064ff00000000191617600155835190848252601d858301527f7265706c6163656d656e7457696e646f774475726174696f6e5065726300000060608301526020820152a151f35b8380fd5b8280fd5b5050346101c957816003193601126101c95760209062ffffff60065460181c169051908152f35b8284346102b457806003193601126102b457506001600160601b0360209254169051908152f35b80fd5b905034610262576020366003190112610262573560ff81169081810361025e57600080516020610f88833981519152916080916102f2610e8d565b65ff00000000006001549160281b169065ff00000000001916176001558351908482526019858301527f66696e616c697a6174696f6e436f6d6d6974734e756d6265720000000000000060608301526020820152a151f35b9050346102625760203660031901126102625780356001600160601b0381168082036103d957600080516020610f888339815191529260809261038b610e8d565b8154906001600160601b0360601b9060601b16906001600160601b0360601b1916179055835190848252600c858301526b6d6178696d756d5374616b6560a01b60608301526020820152a151f35b8480fd5b5050346101c957816003193601126101c95760209061ffff600754169051908152f35b905034610262576020366003190112610262573562ffffff81169081810361025e57600080516020610f888339815191529160809161043d610e8d565b65ffffff0000006006549160181b169065ffffff000000191617600655835190848252601585830152747265776172645769746864726177616c44656c617960581b60608301526020820152a151f35b905034610262576020366003190112610262573560ff8116809103610262576080600080516020610f88833981519152916104c6610e8d565b8060ff1960015416176001558351908482526018858301527f6d696e50726f6f6657696e646f774f666673657450657263000000000000000060608301526020820152a151f35b905034610262576020366003190112610262573565ffffffffffff8116809103610262576080600080516020610f888339815191529161054b610e8d565b8065ffffffffffff19600354161760035583519084825260028583015261391960f11b60608301526020820152a151f35b8284346102b457806003193601126102b457506001600160601b036020925460601c169051908152f35b905034610262576020366003190112610262578035906001600160601b03821680920361025e57600080516020610f88833981519152916080916105e8610e8d565b816001600160601b0319825416179055835190848252600c858301526b6d696e696d756d5374616b6560a01b60608301526020820152a151f35b5050346101c957816003193601126101c95760209060ff60015460181c169051908152f35b905034610262576020366003190112610262573563ffffffff81169081810361025e57600080516020610f8883398151915291608091610685610e8d565b63ffffffff60401b60025491861b169063ffffffff60401b1916176002558351908482526016858301527539b630b9b434b733a33932b2bd32a23ab930ba34b7b760511b60608301526020820152a151f35b5050346101c957816003193601126101c95760209060ff60015460281c169051908152f35b5050346101c957816003193601126101c95760209060ff600154169051908152f35b905034610262576020366003190112610262573560ff81169081810361025e57600080516020610f8883398151915291608091610759610e8d565b61ff006001549160081b169061ff001916176001558351908482526018858301527f6d617850726f6f6657696e646f774f666673657450657263000000000000000060608301526020820152a151f35b5050346101c957816003193601126101c95760209060ff60015460101c169051908152f35b5050346101c957816003193601126101c9576002549051602091821c63ffffffff168152f35b5050346101c957816003193601126101c95760209063ffffffff600254169051908152f35b5050346101c957816003193601126101c9576020906001600160801b03600554169051908152f35b5050346101c957816003193601126101c957805161087e9161086282610e5b565b60058252640312e312e360dc1b60208301525191829182610e12565b0390f35b905034610262576020366003190112610262573562ffffff8116809103610262576080600080516020610f88833981519152916108bd610e8d565b8062ffffff196006541617600655835190848252601485830152737374616b655769746864726177616c44656c617960601b60608301526020820152a151f35b905034610262576020366003190112610262573561ffff8116809103610262576080600080516020610f8883398151915291610937610e8d565b8061ffff196007541617600755835190848252601a858301527f757064617465436f6d6d697457696e646f774475726174696f6e00000000000060608301526020820152a151f35b5050346101c957816003193601126101c9576002548151911c63ffffffff168152602090f35b5050346101c957816003193601126101c957905490516001600160a01b039091168152602090f35b905034610262576020366003190112610262573560ff81169081810361025e57600080516020610f8883398151915291608091610a08610e8d565b62ff00006001549160101b169062ff00001916176001558351908482526018858301527f636f6d6d697457696e646f774475726174696f6e50657263000000000000000060608301526020820152a151f35b905034610262576020366003190112610262573560ff81169081810361025e57600080516020610f8883398151915291608091610a95610e8d565b63ff0000006001549160181b169063ff0000001916176001558351908482526017858301527f70726f6f6657696e646f774475726174696f6e5065726300000000000000000060608301526020820152a151f35b9050346102625760203660031901126102625763ffffffff813581811692838203610bfa57610b16610e8d565b60025492637fffffff81851611600116610be75760001963fffffffe8560011b1601818111610bd457168410610b9857509160809167ffffffff00000000600080516020610f888339815191529460201b169067ffffffff0000000019161760025583519084825260028583015261723160f01b60608301526020820152a151f35b606490602086519162461bcd60e51b8352820152601660248201527552312073686f756c64206265203e3d20322a52302d3160501b6044820152fd5b634e487b7160e01b885260118352602488fd5b634e487b7160e01b875260118252602487fd5b8580fd5b9050346102625760203660031901126102625780359063ffffffff908183168093036103d957610c2c610e8d565b600254916001818460201c1601908111610cd25760011c637fffffff168311610c8f575081600080516020610f888339815191529260809263ffffffff19161760025583519084825260028583015261072360f41b60608301526020820152a151f35b606490602085519162461bcd60e51b8352820152601860248201527f52302073686f756c64206265203c3d202852312b31292f3200000000000000006044820152fd5b634e487b7160e01b865260118252602486fd5b5050346101c957816003193601126101c95760209062ffffff600654169051908152f35b5050346101c957816003193601126101c9576001549051602091821c60ff168152f35b90503461026257602036600319011261026257356001600160801b038116809103610262576080600080516020610f8883398151915291610d6b610e8d565b806001600160801b03196005541617600555835190848252600b858301526a0cae0dec6d098cadccee8d60ab1b60608301526020820152a151f35b5050346101c957816003193601126101c95760209065ffffffffffff600354169051908152f35b8490843461026257826003193601126102625761087e9250610dee82610e5b565b6011825270506172616d657465727353746f7261676560781b602083015251918291825b6020808252825181830181905290939260005b828110610e4757505060409293506000838284010152601f8019910116010190565b818101860151848201604001528501610e25565b6040810190811067ffffffffffffffff821117610e7757604052565b634e487b7160e01b600052604160045260246000fd5b60008054604051638da5cb5b60e01b81526020926001600160a01b039284908390600490829087165afa918215610f7a578192610f14575b5050163303610ed15750565b6064906040519062461bcd60e51b825280600483015260248201527f466e2063616e206f6e6c79206265207573656420627920687562206f776e65726044820152fd5b909150833d8511610f73575b601f8101601f1916820167ffffffffffffffff811183821017610f5f5785918391604052810103126101c957519082821682036102b457503880610ec5565b634e487b7160e01b84526041600452602484fd5b503d610f20565b50604051903d90823e3d90fdfe18af1c2db06558764ef7e5f81f429c1ec57050d7b3eb7c0cdd985ce6257ec972a2646970667358221220c373341bb8aa20da14da53cddfff59029fc48c27a7a6238a6ca270b750f2076f64736f6c63430008100033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 15408,
+        "contract": "contracts/storage/ParametersStorage.sol:ParametersStorage",
+        "label": "hub",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_contract(Hub)9211"
+      },
+      {
+        "astId": 18515,
+        "contract": "contracts/storage/ParametersStorage.sol:ParametersStorage",
+        "label": "args1",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_array(t_uint8)6_storage"
+      },
+      {
+        "astId": 18519,
+        "contract": "contracts/storage/ParametersStorage.sol:ParametersStorage",
+        "label": "args2",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_array(t_uint32)3_storage"
+      },
+      {
+        "astId": 18521,
+        "contract": "contracts/storage/ParametersStorage.sol:ParametersStorage",
+        "label": "r2",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_uint48"
+      },
+      {
+        "astId": 18525,
+        "contract": "contracts/storage/ParametersStorage.sol:ParametersStorage",
+        "label": "args3",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_array(t_uint96)2_storage"
+      },
+      {
+        "astId": 18527,
+        "contract": "contracts/storage/ParametersStorage.sol:ParametersStorage",
+        "label": "epochLength",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_uint128"
+      },
+      {
+        "astId": 18531,
+        "contract": "contracts/storage/ParametersStorage.sol:ParametersStorage",
+        "label": "args4",
+        "offset": 0,
+        "slot": "6",
+        "type": "t_array(t_uint24)2_storage"
+      },
+      {
+        "astId": 18533,
+        "contract": "contracts/storage/ParametersStorage.sol:ParametersStorage",
+        "label": "updateCommitWindowDuration",
+        "offset": 0,
+        "slot": "7",
+        "type": "t_uint16"
+      }
+    ],
+    "types": {
+      "t_array(t_uint24)2_storage": {
+        "base": "t_uint24",
+        "encoding": "inplace",
+        "label": "uint24[2]",
+        "numberOfBytes": "32"
+      },
+      "t_array(t_uint32)3_storage": {
+        "base": "t_uint32",
+        "encoding": "inplace",
+        "label": "uint32[3]",
+        "numberOfBytes": "32"
+      },
+      "t_array(t_uint8)6_storage": {
+        "base": "t_uint8",
+        "encoding": "inplace",
+        "label": "uint8[6]",
+        "numberOfBytes": "32"
+      },
+      "t_array(t_uint96)2_storage": {
+        "base": "t_uint96",
+        "encoding": "inplace",
+        "label": "uint96[2]",
+        "numberOfBytes": "32"
+      },
+      "t_contract(Hub)9211": {
+        "encoding": "inplace",
+        "label": "contract Hub",
+        "numberOfBytes": "20"
+      },
+      "t_uint128": {
+        "encoding": "inplace",
+        "label": "uint128",
+        "numberOfBytes": "16"
+      },
+      "t_uint16": {
+        "encoding": "inplace",
+        "label": "uint16",
+        "numberOfBytes": "2"
+      },
+      "t_uint24": {
+        "encoding": "inplace",
+        "label": "uint24",
+        "numberOfBytes": "3"
+      },
+      "t_uint32": {
+        "encoding": "inplace",
+        "label": "uint32",
+        "numberOfBytes": "4"
+      },
+      "t_uint48": {
+        "encoding": "inplace",
+        "label": "uint48",
+        "numberOfBytes": "6"
+      },
+      "t_uint8": {
+        "encoding": "inplace",
+        "label": "uint8",
+        "numberOfBytes": "1"
+      },
+      "t_uint96": {
+        "encoding": "inplace",
+        "label": "uint96",
+        "numberOfBytes": "12"
+      }
+    }
+  }
+}

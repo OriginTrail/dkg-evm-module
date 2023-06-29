@@ -4,7 +4,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
 
-  if (hre.network.name === 'hardhat') {
+  if (hre.network.name === 'hardhat' || hre.network.name === 'polygon_testnet') {
     hre.helpers.resetDeploymentsJson();
     console.log('Hardhat deployments config reset.');
   }

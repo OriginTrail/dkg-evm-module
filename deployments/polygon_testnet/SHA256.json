@@ -1,0 +1,102 @@
+{
+  "address": "0xF0F47693968d6eD9Df2EE57119a9AeAe96211a35",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "hash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "id",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "name",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x9ab8f3ea156dd8c1ba79b788fe25554fd235a5b942d94f371fd1c486e30af289",
+  "receipt": {
+    "to": null,
+    "from": "0xEfB65B890462206e3453dbd0bC8B2e6D6E0e7bD1",
+    "contractAddress": "0xF0F47693968d6eD9Df2EE57119a9AeAe96211a35",
+    "transactionIndex": 13,
+    "gasUsed": "146865",
+    "logsBloom": "0x00000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000008000000000000000000000000000000000800000000000000000000100000000000200000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000080000000000000000000000000000000000000000004000000000000000000001000000000100000000000000000000100000000000000000000000000000000000000000000000000008000000000000000000100000",
+    "blockHash": "0x6cd62e4c59246042310744393d8165c6ed611072f52b14df2ac8954bb3d56840",
+    "transactionHash": "0x9ab8f3ea156dd8c1ba79b788fe25554fd235a5b942d94f371fd1c486e30af289",
+    "logs": [
+      {
+        "transactionIndex": 13,
+        "blockNumber": 37384394,
+        "transactionHash": "0x9ab8f3ea156dd8c1ba79b788fe25554fd235a5b942d94f371fd1c486e30af289",
+        "address": "0x0000000000000000000000000000000000001010",
+        "topics": [
+          "0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63",
+          "0x0000000000000000000000000000000000000000000000000000000000001010",
+          "0x000000000000000000000000efb65b890462206e3453dbd0bc8b2e6d6e0e7bd1",
+          "0x0000000000000000000000003a22c8bc68e98b0faf40f349dd2b2890fae01484"
+        ],
+        "data": "0x0000000000000000000000000000000000000000000000000000dc6535aa163100000000000000000000000000000000000000000000000088dd1d7325dc2937000000000000000000000000000000000000000000000c058d291efff23b290f00000000000000000000000000000000000000000000000088dc410df0321306000000000000000000000000000000000000000000000c058d29fb6527e53f40",
+        "logIndex": 54,
+        "blockHash": "0x6cd62e4c59246042310744393d8165c6ed611072f52b14df2ac8954bb3d56840"
+      }
+    ],
+    "blockNumber": 37384394,
+    "cumulativeGasUsed": "2326747",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "6736b5a2b01ed07b57366e384b7e7c88",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"hash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"id\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/hashing/sha256.sol\":\"SHA256\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[],\"viaIR\":true},\"sources\":{\"contracts/hashing/sha256.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\nimport {IHashFunction} from \\\"../interface/IHashFunction.sol\\\";\\nimport {Indexable} from \\\"../interface/Indexable.sol\\\";\\nimport {Named} from \\\"../interface/Named.sol\\\";\\n\\ncontract SHA256 is IHashFunction, Indexable, Named {\\n    uint8 private constant _ID = 1;\\n    string private constant _NAME = \\\"sha256\\\";\\n\\n    function id() external pure virtual override returns (uint8) {\\n        return _ID;\\n    }\\n\\n    function name() external pure virtual override returns (string memory) {\\n        return _NAME;\\n    }\\n\\n    function hash(bytes calldata data) external pure returns (bytes32) {\\n        return sha256(data);\\n    }\\n}\\n\",\"keccak256\":\"0x764cbb752479e2bd4e425b4da05b69b0ab1051c0a8cb3f72dc9dd48d9e7cde32\",\"license\":\"MIT\"},\"contracts/interface/IHashFunction.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\ninterface IHashFunction {\\n    function hash(bytes calldata data) external pure returns (bytes32);\\n}\\n\",\"keccak256\":\"0x2fca3d77fdcb26c5026f75259e19b326354d5c759775838fd070b49a766c75bd\",\"license\":\"MIT\"},\"contracts/interface/Indexable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\ninterface Indexable {\\n    function id() external view returns (uint8);\\n}\\n\",\"keccak256\":\"0xa5142e26633487e63c7448e3419186e24b97353b5d5c0b5b2886c2d15884cd9d\",\"license\":\"MIT\"},\"contracts/interface/Named.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.16;\\n\\ninterface Named {\\n    function name() external view returns (string memory);\\n}\\n\",\"keccak256\":\"0xb468c85b178d2377c1a6dd77f2e4f843fe280932663ffef8d9fba56dcdc7b796\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x60808060405234610016576101b1908161001c8239f35b600080fdfe60806040818152600436101561001457600080fd5b600091823560e01c90816306fdde03146100de57508063aa1e84de146100615763af640d0f1461004357600080fd5b3461005d578160031936011261005d576020905160018152f35b5080fd5b503461005d57602036600319011261005d576004358267ffffffffffffffff80831161005d573660238401121561005d57826004013590811161005d57366024828501011161005d576020928160249286519384930183378101838152039060025afa156100d457602091519051908152f35b51903d90823e3d90fd5b90503461017757826003193601126101775781810181811067ffffffffffffffff821117610163578252600681526020906539b430991a9b60d11b8282015282519382859384528251928382860152825b84811061014d57505050828201840152601f01601f19168101030190f35b818101830151888201880152879550820161012f565b634e487b7160e01b84526041600452602484fd5b8280fdfea2646970667358221220b9c2a8b8820960bda77119c74d6389665f26866e19d4ec50f61213c06b9432ee64736f6c63430008100033",
+  "deployedBytecode": "0x60806040818152600436101561001457600080fd5b600091823560e01c90816306fdde03146100de57508063aa1e84de146100615763af640d0f1461004357600080fd5b3461005d578160031936011261005d576020905160018152f35b5080fd5b503461005d57602036600319011261005d576004358267ffffffffffffffff80831161005d573660238401121561005d57826004013590811161005d57366024828501011161005d576020928160249286519384930183378101838152039060025afa156100d457602091519051908152f35b51903d90823e3d90fd5b90503461017757826003193601126101775781810181811067ffffffffffffffff821117610163578252600681526020906539b430991a9b60d11b8282015282519382859384528251928382860152825b84811061014d57505050828201840152601f01601f19168101030190f35b818101830151888201880152879550820161012f565b634e487b7160e01b84526041600452602484fd5b8280fdfea2646970667358221220b9c2a8b8820960bda77119c74d6389665f26866e19d4ec50f61213c06b9432ee64736f6c63430008100033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}

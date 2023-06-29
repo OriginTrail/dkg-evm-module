@@ -85,6 +85,7 @@
     "deploy:otp_devnet": "hardhat deploy --network otp_devnet",
     "deploy:otp_mainnet": "hardhat deploy --network otp_mainnet",
     "deploy:otp_testnet": "hardhat deploy --network otp_testnet",
+    "deploy:polygon_testnet": "hardhat deploy --network polygon_testnet",
     "deploy": "hardhat deploy",
     "dev": "hardhat node --network hardhat --config hardhat.node.config.ts",
     "export-abi": "hardhat export-abi",
