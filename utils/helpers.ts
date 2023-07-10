@@ -195,6 +195,7 @@ export class Helpers {
 
   public resetDeploymentsJson() {
     this.hre.helpers.contractDeployments = { contracts: {}, deployedTimestamp: 0 };
+    this.contractDeployments = { contracts: {}, deployedTimestamp: 0 };
   }
 
   public updateDeploymentsJson(newContractName: string, newContractAddress: string) {
