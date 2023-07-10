@@ -194,7 +194,7 @@ export class Helpers {
   }
 
   public resetDeploymentsJson() {
-    this.hre.helpers.contractDeployments = { contracts: {}, deployedTimestamp: 0 };
+    this.contractDeployments = { contracts: {}, deployedTimestamp: 0 };
   }
 
   public updateDeploymentsJson(newContractName: string, newContractAddress: string) {
@@ -211,7 +211,7 @@ export class Helpers {
   public saveDeploymentsJson(folder: string) {
     fs.writeFileSync(
       `${folder}/${this.hre.network.name}_contracts.json`,
-      JSON.stringify(this.hre.helpers.contractDeployments, null, 4),
+      JSON.stringify(this.contractDeployments, null, 4),
     );
   }
 
