@@ -92,7 +92,7 @@
     "format": "prettier --check '**/*.{json,js,ts,sol}'",
     "generate-evm-account": "hardhat run scripts/generate_evm_account.ts --network localhost",
     "generate-otp-account": "hardhat run scripts/generate_otp_account.ts --network localhost",
-    "install": "husky install && hardhat typechain",
+    "prepare": "husky install && hardhat typechain",
     "lint:fix": "npm run lint:sol:fix && npm run lint:ts:fix",
     "lint:sol:fix": "solhint 'contracts/**/*.sol' --fix",
     "lint:sol": "solhint 'contracts/**/*.sol'",
