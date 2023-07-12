@@ -183,10 +183,10 @@ export class Helpers {
 
     this.updateDeploymentsJson(newContractName, newContract.address);
 
-    if (newContractName === 'ShardingTable') {
-      const contr = await this.hre.ethers.getContractAt(newContractName, newContract.address, deployer);
-      console.log(await contr.getShardingTable());
-    }
+    // if (newContractName === 'ShardingTable') {
+    //   const contr = await this.hre.ethers.getContractAt(newContractName, newContract.address, deployer);
+    //   console.log(await contr.getShardingTable());
+    // }
 
     return await this.hre.ethers.getContractAt(newContractName, newContract.address, deployer);
   }
