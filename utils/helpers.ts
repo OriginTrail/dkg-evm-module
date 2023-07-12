@@ -178,7 +178,8 @@ export class Helpers {
 
   public isDeployed(contractName: string): boolean {
     if (this.inConfig(contractName)) {
-      return this.contractDeployments.contracts[contractName].deployed;
+      this.contractDeployments.contracts[contractName].deployed;
+      return false;
     } else {
       return false;
     }
