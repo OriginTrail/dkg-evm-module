@@ -92,8 +92,9 @@ export class Helpers {
     setAssetStorageInHub = false,
   }: DeploymentParameters): Promise<Contract> {
     const { deployer } = await this.hre.getNamedAccounts();
-
+    console.log('Starting deployment of: ', newContractName);
     if (this.isDeployed(newContractName)) {
+      console.log('Contract is already deployed');
       const contractInstance = await this.hre.ethers.getContractAt(
         newContractName,
         this.contractDeployments.contracts[newContractName].evmAddress,
@@ -107,7 +108,7 @@ export class Helpers {
 
       return contractInstance;
     }
-
+    console.log('Contract is not deployed');
     let hubAddress;
     if ('Hub' in this.contractDeployments.contracts) {
       hubAddress = this.contractDeployments.contracts['Hub'].evmAddress;
@@ -132,7 +133,7 @@ export class Helpers {
 
       throw Error(message);
     }
-
+    console.log('Contract is redeployed');
     const Hub = await this.hre.ethers.getContractAt('Hub', hubAddress, deployer);
     const hubControllerAddress = await Hub.owner();
     const HubController = await this.hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
