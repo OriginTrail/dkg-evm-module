@@ -5,6 +5,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await hre.helpers.deploy({
     newContractName: 'ShardingTableStorage',
   });
+  console.log('Sharding table storage deployed!!!');
 };
 
 export default func;
