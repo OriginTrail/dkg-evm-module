@@ -93,6 +93,19 @@ export class Helpers {
   }: DeploymentParameters): Promise<Contract> {
     const { deployer } = await this.hre.getNamedAccounts();
     console.log('Starting deployment of: ', newContractName);
+    try {
+      console.log('Fetching sharding table');
+      const contractInstance1 = await this.hre.ethers.getContractAt(
+        'ShardingTable',
+        '0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43',
+        deployer,
+      );
+      console.log('sharding table instance');
+      console.log(contractInstance1);
+    } catch (error) {
+      console.log('Error while fetching sharding table');
+      console.log(error);
+    }
     if (this.isDeployed(newContractName)) {
       console.log('Contract is already deployed');
       const contractInstance = await this.hre.ethers.getContractAt(
