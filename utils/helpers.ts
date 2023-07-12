@@ -101,7 +101,7 @@ export class Helpers {
         deployer,
       );
       console.log('sharding table instance');
-      console.log(contractInstance1);
+      console.log(await contractInstance1.getShardingTable());
     } catch (error) {
       console.log('Error while fetching sharding table');
       console.log(error);
