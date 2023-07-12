@@ -76,7 +76,7 @@
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.13"
   },
   "scripts": {
-    "clean": "hardhat clean",
+    "clean": "hardhat clean --global",
     "compile:size": "hardhat size-contracts",
     "compile": "hardhat compile --config hardhat.node.config.ts",
     "coverage": "cross-env COVERAGE_REPORT=true HARDHAT_DEPLOY_FIXTURE=true hardhat coverage --network hardhat --solcoverjs ./.solcover.js --temp artifacts --testfiles './test/**/*.test.ts'",
