@@ -14,6 +14,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     hre.helpers.updateDeploymentsJson('Hub', Hub.address);
   }
+  const rand = Math.random() * 10;
+  for (let i = 0; i < rand; i++) {
+    await hre.deployments.deploy('Hub', { from: deployer, log: true });
+  }
 
   // New HubController should be manually deployed for testnet/mainnet:
   // 1. Deploy HubController contract using software wallet.
