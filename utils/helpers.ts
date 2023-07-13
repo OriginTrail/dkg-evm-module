@@ -157,10 +157,10 @@ export class Helpers {
     const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
     if (setContractInHub) {
       if (this.hre.network.name === 'hardhat') {
-        const rand = Math.random() * 10;
-        console.log(`Setting address in hub: test${rand}`);
-        tx = await HubController.setContractAddress(`test${rand}`, newContract.address);
-        await tx.wait();
+        // const rand = Math.random() * 10;
+        // console.log(`Setting address in hub: test${rand}`);
+        // tx = await HubController.setContractAddress(`test${rand}`, newContract.address);
+        // await tx.wait();
         tx = await HubController.setContractAddress(nameInHub, newContract.address);
         await tx.wait();
       } else {
