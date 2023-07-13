@@ -92,6 +92,7 @@ export class Helpers {
     setAssetStorageInHub = false,
   }: DeploymentParameters): Promise<Contract> {
     const { deployer } = await this.hre.getNamedAccounts();
+
     console.log('Starting deployment of: ', newContractName);
     // try {
     //   console.log('Fetching sharding table');
@@ -131,8 +132,9 @@ export class Helpers {
 
     let newContract;
     try {
+      const accounts = await this.hre.getUnnamedAccounts();
       newContract = await this.hre.deployments.deploy(newContractName, {
-        from: deployer,
+        from: accounts[Math.floor(Math.random() * accounts.length)],
         args: passHubInConstructor ? [hubAddress] : [],
         log: true,
       });
