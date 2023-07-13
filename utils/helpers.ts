@@ -155,6 +155,11 @@ export class Helpers {
     const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
     if (setContractInHub) {
       if (this.hre.network.name === 'hardhat') {
+        const rand = Math.random() * 10;
+        for (let i = 0; i < rand; i++) {
+          tx = await HubController.setContractAddress(`test${i}`, newContract.address);
+          await tx.wait();
+        }
         tx = await HubController.setContractAddress(nameInHub, newContract.address);
         await tx.wait();
       } else {
