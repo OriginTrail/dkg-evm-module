@@ -132,9 +132,9 @@ export class Helpers {
 
     let newContract;
     try {
-      const accounts = await this.hre.getUnnamedAccounts();
+      // const accounts = await this.hre.getUnnamedAccounts();
       newContract = await this.hre.deployments.deploy(newContractName, {
-        from: accounts[Math.floor(Math.random() * accounts.length)],
+        from: deployer,
         args: passHubInConstructor ? [hubAddress] : [],
         log: true,
       });
