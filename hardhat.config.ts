@@ -9,7 +9,7 @@ import '@typechain/hardhat';
 import '@nomicfoundation/hardhat-chai-matchers';
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-solhint';
-import { extendEnvironment } from 'hardhat/config';
+import { extendEnvironment, task } from 'hardhat/config';
 import { lazyObject } from 'hardhat/plugins';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
@@ -20,6 +20,14 @@ import './utils/type-extensions';
 import config from './hardhat.node.config';
 import { Helpers } from './utils/helpers';
 import { accounts, rpc } from './utils/network';
+
+task('reset', 'Resets the local Hardhat node and deploys contracts').setAction(async (_, hre) => {
+  await hre.network.provider.request({
+    method: 'hardhat_reset',
+    params: [],
+  });
+  console.log('Local Hardhat node has been reset');
+});
 
 extendEnvironment((hre: HardhatRuntimeEnvironment) => {
   hre.helpers = lazyObject(() => new Helpers(hre));

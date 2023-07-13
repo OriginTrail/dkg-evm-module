@@ -222,6 +222,7 @@ export class Helpers {
   public async resetDeploymentsJson() {
     this.contractDeployments = { contracts: {}, deployedTimestamp: 0 };
     await this.hre.network.provider.send('hardhat_reset');
+    await this.hre.run('reset');
   }
 
   public updateDeploymentsJson(newContractName: string, newContractAddress: string) {
