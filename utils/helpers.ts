@@ -93,19 +93,19 @@ export class Helpers {
   }: DeploymentParameters): Promise<Contract> {
     const { deployer } = await this.hre.getNamedAccounts();
     console.log('Starting deployment of: ', newContractName);
-    try {
-      console.log('Fetching sharding table');
-      const contractInstance1 = await this.hre.ethers.getContractAt(
-        'ShardingTable',
-        '0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43',
-        deployer,
-      );
-      console.log('sharding table instance');
-      console.log(await contractInstance1.getShardingTable());
-    } catch (error) {
-      console.log('Error while fetching sharding table');
-      console.log(error);
-    }
+    // try {
+    //   console.log('Fetching sharding table');
+    //   const contractInstance1 = await this.hre.ethers.getContractAt(
+    //     'ShardingTable',
+    //     '0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43',
+    //     deployer,
+    //   );
+    //   console.log('sharding table instance');
+    //   console.log(await contractInstance1.getShardingTable());
+    // } catch (error) {
+    //   console.log('Error while fetching sharding table');
+    //   console.log(error);
+    // }
     if (this.isDeployed(newContractName)) {
       console.log('Contract is already deployed');
       const contractInstance = await this.hre.ethers.getContractAt(
@@ -156,10 +156,9 @@ export class Helpers {
     if (setContractInHub) {
       if (this.hre.network.name === 'hardhat') {
         const rand = Math.random() * 10;
-        for (let i = 0; i < rand; i++) {
-          tx = await HubController.setContractAddress(`test${i}`, newContract.address);
-          await tx.wait();
-        }
+        console.log(`Setting address in hub: test${rand}`);
+        tx = await HubController.setContractAddress(`test${rand}`, newContract.address);
+        await tx.wait();
         tx = await HubController.setContractAddress(nameInHub, newContract.address);
         await tx.wait();
       } else {
