@@ -213,8 +213,9 @@ export class Helpers {
     return JSON.parse(fs.readFileSync(`./abi/${contractName}.json`, 'utf-8'));
   }
 
-  public resetDeploymentsJson() {
+  public async resetDeploymentsJson() {
     this.contractDeployments = { contracts: {}, deployedTimestamp: 0 };
+    await this.hre.network.provider.send('hardhat_reset');
   }
 
   public updateDeploymentsJson(newContractName: string, newContractAddress: string) {

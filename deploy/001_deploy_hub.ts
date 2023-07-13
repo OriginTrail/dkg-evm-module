@@ -5,7 +5,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
 
   if (hre.network.name === 'hardhat') {
-    hre.helpers.resetDeploymentsJson();
+    await hre.helpers.resetDeploymentsJson();
     console.log('Hardhat deployments config reset.');
   }
 
