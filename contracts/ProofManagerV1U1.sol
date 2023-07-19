@@ -206,13 +206,10 @@ contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
             identityId
         );
 
-        uint32 remainingNodesInCurrentEpoch = r0 - sasProxy.getAgreementRewardedNodesNumber(agreementId, args.epoch);
-
-        uint32 remainingEpochs = sasProxy.getAgreementEpochsNumber(agreementId) - args.epoch;
-
-        uint32 totalRemainingNodes = remainingNodesInCurrentEpoch + (remainingEpochs * r0);
-
-        uint96 reward = sasProxy.getAgreementTokenAmount(agreementId) / totalRemainingNodes;
+        uint96 reward = sasProxy.getAgreementTokenAmount(agreementId) /
+            ((r0 - sasProxy.getAgreementRewardedNodesNumber(agreementId, args.epoch)) +
+                (sasProxy.getAgreementEpochsNumber(agreementId) - args.epoch) *
+                r0);
 
         stakingContract.addReward(agreementId, identityId, reward);
         sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) - reward);
