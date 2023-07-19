@@ -451,4 +451,138 @@ describe('@unit ProofManagerV1U1 contract', function () {
       }
     }
   });
+
+  it('Each node submits commits and proofs for each epoch, verify all rewards in all epochs are the same, and total rewards equals initial token amount in service agreement', async () => {
+    const operationalWallets = [accounts[0], accounts[2], accounts[3]];
+    const identities = [];
+    let rewards: BigNumber[] = [];
+    const totalEpochs = 5;
+
+    for (const operationalWallet of operationalWallets) {
+      const identity = await createProfile(operationalWallet, accounts[1]);
+      identities.push(identity);
+    }
+
+    const { tokenId, keyword, agreementId } = await createAsset();
+    const initialTokenAmount = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
+
+    let totalReward = BigNumber.from(0);
+    // Run through each epoch
+    for (let epoch = 0; epoch < totalEpochs; epoch++) {
+      // All nodes submit their commits
+      for (const operationalWallet of operationalWallets) {
+        await submitCommit(operationalWallet, tokenId, keyword, epoch);
+      }
+
+      const epochLength = (await ParametersStorage.epochLength()).toNumber();
+      const proofWindowOffsetPerc = await ServiceAgreementStorageProxy.getAgreementProofWindowOffsetPerc(agreementId);
+      const delay = (epochLength * proofWindowOffsetPerc) / 100;
+      await time.increase(delay);
+
+      // All nodes submit their proofs and store the rewards received
+      for (const i in operationalWallets) {
+        const reward = await submitProofAndReturnReward(identities[i], operationalWallets[i], tokenId, keyword, epoch);
+        rewards.push(reward);
+      }
+
+      // Check that all nodes received the same reward (or the discrepancy is less than or equal to 1 wei)
+      for (let i = 0; i < rewards.length - 1; i++) {
+        expect(
+          rewards[i]
+            .sub(rewards[i + 1])
+            .abs()
+            .lte(1),
+        ).to.be.true;
+      }
+
+      await time.increase(epochLength - delay);
+      // Calculate total reward and reset rewards for next epoch
+      totalReward = rewards.reduce((total, reward) => total.add(reward), totalReward);
+      rewards = []; // Reset rewards for next epoch
+    }
+
+    expect(totalReward.eq(initialTokenAmount)).to.be.true;
+
+    // Check that the token amount stored in the service agreement at the end of the test is 0
+    const finalTokenAmount = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
+    expect(finalTokenAmount.eq(0)).to.be.true;
+  });
+  it('Variable number of nodes send commits and proofs each epoch, verify all rewards in all epochs are the same, and total rewards equals initial token amount in service agreement', async () => {
+    const operationalWallets = [accounts[0], accounts[1], accounts[2], accounts[3], accounts[4], accounts[5]];
+    const identities = [];
+    let rewards = [];
+    const totalEpochs = 5;
+
+    for (const operationalWallet of operationalWallets) {
+      const identity = await createProfile(operationalWallet, accounts[6]);
+      identities.push(identity);
+    }
+
+    const { tokenId, keyword, agreementId } = await createAsset();
+    const initialTokenAmount = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
+
+    let totalReward = BigNumber.from(0);
+
+    // Define wallet subsets for commit and proof phases for each epoch
+    const walletSubsetsForCommit = [
+      operationalWallets.slice(0, 3), // 3 nodes send commits
+      operationalWallets.slice(0, 2), // less than 3 nodes send commits
+      operationalWallets.slice(0, 3), // 3 nodes send commits
+      operationalWallets.slice(0, 3), // 3 nodes send commits
+      operationalWallets.slice(0, 3), // 3 nodes send commits
+    ];
+
+    const walletSubsetsForProof = [
+      operationalWallets.slice(0, 3), // 3 nodes send proofs
+      operationalWallets.slice(0, 2), // Less than 3 nodes send proofs
+      operationalWallets.slice(0, 2), // Less than 3 nodes send proofs
+      operationalWallets.slice(0, 3), // 3 nodes send proofs
+      operationalWallets.slice(0, 3), // 3 nodes send proofs
+    ];
+
+    // Run through each epoch
+    for (let epoch = 0; epoch < totalEpochs; epoch++) {
+      const currentWalletSubsetForCommit = walletSubsetsForCommit[epoch];
+      const currentWalletSubsetForProof = walletSubsetsForProof[epoch];
+
+      // Subset of nodes submit their commits
+      for (const operationalWallet of currentWalletSubsetForCommit) {
+        await submitCommit(operationalWallet, tokenId, keyword, epoch);
+      }
+
+      const epochLength = (await ParametersStorage.epochLength()).toNumber();
+      const proofWindowOffsetPerc = await ServiceAgreementStorageProxy.getAgreementProofWindowOffsetPerc(agreementId);
+      const delay = (epochLength * proofWindowOffsetPerc) / 100;
+      await time.increase(delay);
+
+      // Subset of nodes submit their proofs and store the rewards received
+      for (const operationalWallet of currentWalletSubsetForProof) {
+        const identity = identities[operationalWallets.indexOf(operationalWallet)];
+        const reward = await submitProofAndReturnReward(identity, operationalWallet, tokenId, keyword, epoch);
+        rewards.push(reward);
+      }
+
+      // Check that all nodes received the same reward (or the discrepancy is less than or equal to 1 wei)
+      for (let i = 0; i < rewards.length - 1; i++) {
+        expect(
+          rewards[i]
+            .sub(rewards[i + 1])
+            .abs()
+            .lte(1),
+        ).to.be.true;
+      }
+
+      await time.increase(epochLength - delay);
+
+      // Calculate total reward and reset rewards for next epoch
+      totalReward = rewards.reduce((total, reward) => total.add(reward), totalReward);
+      rewards = []; // Reset rewards for next epoch
+    }
+
+    expect(totalReward.eq(initialTokenAmount)).to.be.true;
+
+    // Check that the token amount stored in the service agreement at the end of the test is 0
+    const finalTokenAmount = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
+    expect(finalTokenAmount.eq(0)).to.be.true;
+  });
 });
