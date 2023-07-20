@@ -32,7 +32,7 @@ contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
     );
 
     string private constant _NAME = "ProofManagerV1U1";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "1.0.1";
 
     bool[4] public reqs = [false, false, false, false];
 
