@@ -77,13 +77,13 @@
     },
     "ProofManagerV1": {
       "deployed": true,
-      "evmAddress": "0xB93Ca48ccC05061Dd3D58534a6FB14F1734565B4",
-      "substrateAddress": "5EMjsczyHtJzKPruz1FA2BQRbc7PN5ZSpz24qVXPZqU22oXt"
+      "evmAddress": "0xE85c5f8116918B9EAFf4F8d5E74d060b23d65233",
+      "substrateAddress": "5EMjsd18jYSDqKXvHF4bfjQRSFeY2pp4S7MHsUW6t5b9AtgF"
     },
     "ProofManagerV1U1": {
       "deployed": true,
-      "evmAddress": "0x5Afb109DFBb1D5B3fa54Fba1e9e6E3Ede9dC3142",
-      "substrateAddress": "5EMjsczeQUVBT8LbauhjeZ4qLPbMw1RiMxgDKHnS4LGTsXpB"
+      "evmAddress": "0x5A20C1aC07666345C05eC08C0A36cfd556967b8B",
+      "substrateAddress": "5EMjsczeEZg6Y8rzk8JfNSXjpEN8KTmczSibJnVRTcjhp3ZP"
     },
     "SHA256": {
       "deployed": true,
@@ -151,5 +151,5 @@
       "substrateAddress": "5EMjsczht7sKQb2oGkuGwKi9WBeinEB1mJ6bWkGLyApmUV1a"
     }
   },
-  "deployedTimestamp": 1681409208877
+  "deployedTimestamp": 1689935103953
 }
