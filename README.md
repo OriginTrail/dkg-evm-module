@@ -86,6 +86,12 @@ These tasks can be run using the `npx hardhat <task-name>` command. For example,
 npx hardhat decode --data <bytes-data>
 ```
 
+Usage example of `encode_data` task. Here we want to call ProofManagerV1 function called setReq, and this function can be called only through `forwardCall` in HubController and encoding arguments for this function can be done by using this task:
+```sh
+npx hardhat encode_data --contract-name ProofManagerV1 --function-name setReq 1 true
+```
+Alternatively, encoded data can be produced from Remix by copying prepared calldata from ProofManagerV1 setReq call.
+
 ## Contracts deployment on parachains
 
 Update environment use OTP_DEVNET/OTP_TESTNET/OTP_MAINNET
