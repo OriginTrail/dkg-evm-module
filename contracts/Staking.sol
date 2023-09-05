@@ -3,7 +3,7 @@
 pragma solidity ^0.8.16;
 
 import {ShardingTable} from "./ShardingTable.sol";
-import {Shares} from "./Shares.sol";
+import {SharesPoolToken} from "./SharesPoolToken.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
@@ -99,7 +99,7 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
 
         require(ps.profileExists(identityId), "Profile doesn't exist");
 
-        Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
+        SharesPoolToken sharesContract = SharesPoolToken(ps.getSharesContractAddress(identityId));
 
         require(sharesToBurn <= sharesContract.balanceOf(msg.sender), "sharesToBurn must be <= balance");
 
@@ -113,7 +113,18 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
         uint256 withdrawalPeriodEnd = block.timestamp + params.stakeWithdrawalDelay();
         ss.createWithdrawalRequest(identityId, msg.sender, newStakeWithdrawalAmount, withdrawalPeriodEnd);
         ss.setTotalStake(identityId, newStake);
-        sharesContract.burnFrom(msg.sender, sharesToBurn);
+
+        bool poolBurnSuccess = false;
+
+        if (_isAdmin(msg.sender, identityId)) {
+            try sharesContract.poolBurn(sharesToBurn) {
+                poolBurnSuccess = true;
+            } catch {}
+        }
+
+        if (!poolBurnSuccess) {
+            sharesContract.burn(msg.sender, sharesToBurn);
+        }
 
         if (shardingTableStorage.nodeExists(identityId) && (newStake < params.minimumStake())) {
             shardingTableContract.removeNode(identityId);
@@ -217,7 +228,7 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
         require(tknc.allowance(sender, address(this)) >= stakeAmount, "Allowance < stakeAmount");
         require(newStake <= params.maximumStake(), "Exceeded the maximum stake");
 
-        Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
+        SharesPoolToken sharesContract = SharesPoolToken(ps.getSharesContractAddress(identityId));
 
         uint256 sharesMinted;
         if (sharesContract.totalSupply() == 0) {
@@ -225,7 +236,18 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
         } else {
             sharesMinted = ((stakeAmount * sharesContract.totalSupply()) / oldStake);
         }
-        sharesContract.mint(sender, sharesMinted);
+
+        bool poolMintSuccess = false;
+
+        if (_isAdmin(sender, identityId)) {
+            try sharesContract.poolMint(sharesMinted) {
+                poolMintSuccess = true;
+            } catch {}
+        }
+
+        if (!poolMintSuccess) {
+            sharesContract.mint(sender, sharesMinted);
+        }
 
         ss.setTotalStake(identityId, newStake);
         tknc.transferFrom(sender, address(ss), stakeAmount);
@@ -237,10 +259,11 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
         emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, oldStake, newStake);
     }
 
+    function _isAdmin(address sender, uint72 identityId) internal view virtual returns (bool) {
+        return identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(sender)), ADMIN_KEY);
+    }
+
     function _checkAdmin(uint72 identityId) internal view virtual {
-        require(
-            identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY),
-            "Admin function"
-        );
+        require(_isAdmin(msg.sender, identityId), "Admin function");
     }
 }
