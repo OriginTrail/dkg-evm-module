@@ -59,6 +59,19 @@ config.networks = {
     accounts: accounts('otp_mainnet'),
     saveDeployments: false,
   },
+  gno_chiado: {
+    chainId: 10200,
+    url: rpc('gno_chiado'),
+    gasPrice: 1_000_000_000,
+    accounts: accounts('gno_chiado'),
+    saveDeployments: false,
+  },
+  gno_mainnet: {
+    chainId: 100,
+    url: rpc('gno_mainnet'),
+    accounts: accounts('gno_mainnet'),
+    saveDeployments: false,
+  },
 };
 
 config.typechain = {
@@ -90,6 +103,7 @@ config.abiExporter = {
     'IERC721Metadata.sol',
     'IERC721Receiver.sol',
     'IERC734Extended.sol',
+    'IERC4906.sol',
     'Ownable.sol',
     'ContentAssetErrors.sol',
     'ServiceAgreementErrorsV1.sol',

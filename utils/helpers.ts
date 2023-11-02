@@ -38,6 +38,7 @@ type DeploymentParameters = {
   passHubInConstructor?: boolean;
   setContractInHub?: boolean;
   setAssetStorageInHub?: boolean;
+  additionalArgs?: Array<unknown>;
 };
 
 type EvmWallet = {
@@ -59,7 +60,7 @@ export class Helpers {
   newContracts: Array<Array<string>>;
   newAssetStorageContracts: Array<Array<string>>;
   contractsForReinitialization: Array<string>;
-  setParametersEncodedData: Array<string>;
+  setParametersEncodedData: Array<[string, Array<string>]>;
   newHashFunctions: Array<string>;
   newScoreFunctions: Array<string>;
 
@@ -90,6 +91,7 @@ export class Helpers {
     passHubInConstructor = true,
     setContractInHub = true,
     setAssetStorageInHub = false,
+    additionalArgs = [],
   }: DeploymentParameters): Promise<Contract> {
     const { deployer } = await this.hre.getNamedAccounts();
 
@@ -119,7 +121,7 @@ export class Helpers {
     try {
       newContract = await this.hre.deployments.deploy(newContractName, {
         from: deployer,
-        args: passHubInConstructor ? [hubAddress] : [],
+        args: passHubInConstructor ? [hubAddress, ...additionalArgs] : additionalArgs,
         log: true,
       });
     } catch (error) {

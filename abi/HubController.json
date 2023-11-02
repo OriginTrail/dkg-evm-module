@@ -148,9 +148,21 @@
         "type": "address[]"
       },
       {
-        "internalType": "bytes[]",
-        "name": "setParametersEncodedData",
-        "type": "bytes[]"
+        "components": [
+          {
+            "internalType": "string",
+            "name": "contractName",
+            "type": "string"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "encodedData",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct GeneralStructs.ForwardCallInputArgs[]",
+        "name": "forwardCallsData",
+        "type": "tuple[]"
       },
       {
         "internalType": "address[]",
