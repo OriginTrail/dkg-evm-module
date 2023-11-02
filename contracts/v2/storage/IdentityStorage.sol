@@ -15,6 +15,7 @@ contract IdentityStorageV2 is IdentityStorage {
 
     string private constant _VERSION_V2 = "2.0.0";
 
+    // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) IdentityStorage(hubAddress) {}
 
     function version() external pure virtual override returns (string memory) {
