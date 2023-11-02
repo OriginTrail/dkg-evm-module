@@ -2,6 +2,8 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  console.log('Deploying ContentAssetStorage V2...');
+
   await hre.helpers.deploy({
     newContractName: 'ContentAssetStorageV2',
     newContractNameInHub: 'ContentAssetStorage',
@@ -13,4 +15,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ['ContentAssetStorageV2', 'v2'];
-func.dependencies = ['Hub'];
+func.dependencies = ['HubV2'];

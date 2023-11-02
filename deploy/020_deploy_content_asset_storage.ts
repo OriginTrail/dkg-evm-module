@@ -6,6 +6,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     return;
   }
 
+  console.log('Deploying ContentAssetStorage V1...');
+
   await hre.helpers.deploy({
     newContractName: 'ContentAssetStorage',
     setContractInHub: false,

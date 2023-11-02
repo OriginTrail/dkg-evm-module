@@ -2,8 +2,9 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if (hre.network.name.startsWith('otp')) {
-    hre.helpers.contractDeployments.deployedTimestamp = Date.now();
+  const networkPrefixes = ['otp', 'gno'];
+
+  if (networkPrefixes.some((networkPrefix) => hre.network.name.startsWith(networkPrefix))) {
     hre.helpers.saveDeploymentsJson('deployments');
   }
 };

@@ -2,7 +2,7 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if (hre.helpers.isDeployed('Hub')) {
+  if (hre.helpers.isDeployed('Hub') && hre.helpers.contractDeployments.contracts['Hub'].version.startsWith('2.')) {
     return;
   }
 
@@ -13,9 +13,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log('Hardhat deployments config reset.');
   }
 
-  const Hub = await hre.deployments.deploy('Hub', { from: deployer, log: true });
+  if (!hre.helpers.isDeployed('Hub')) {
+    console.log('Deploying Hub V1...');
 
-  hre.helpers.updateDeploymentsJson('Hub', Hub.address);
+    const Hub = await hre.deployments.deploy('Hub', { from: deployer, log: true });
+
+    hre.helpers.updateDeploymentsJson('Hub', Hub.address);
+  }
 
   // New HubController should be manually deployed for testnet/mainnet:
   // 1. Deploy HubController contract using software wallet.

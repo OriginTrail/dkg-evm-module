@@ -2,6 +2,10 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  if (hre.helpers.isDeployed('Hub') && hre.helpers.contractDeployments.contracts['Hub'].version.startsWith('1.')) {
+    return;
+  }
+
   const { deployer } = await hre.getNamedAccounts();
 
   if (hre.network.name === 'hardhat') {
@@ -10,7 +14,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   }
 
   if (!hre.helpers.isDeployed('Hub')) {
-    const Hub = await hre.deployments.deploy('Hub', { from: deployer, log: true });
+    console.log('Deploying Hub V2...');
+
+    const Hub = await hre.deployments.deploy('Hub', { contract: 'HubV2', from: deployer, log: true });
 
     hre.helpers.updateDeploymentsJson('Hub', Hub.address);
   }
@@ -56,4 +62,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['Hub', 'HubV2', 'v2'];
+func.tags = ['HubV2', 'v2'];

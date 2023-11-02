@@ -23,13 +23,16 @@ type ContractDeployments = {
     [contractName: string]: {
       evmAddress: string;
       substrateAddress: string;
+      version: string;
+      gitBranch: string;
+      gitCommitHash: string;
+      deploymentTimestamp: number;
       deployed: boolean;
       variables?: {
         [variableName: string]: unknown;
       };
     };
   };
-  deployedTimestamp: number;
 };
 
 type DeploymentParameters = {
@@ -56,6 +59,7 @@ type SubstrateWallet = {
 export class Helpers {
   hre: HardhatRuntimeEnvironment;
   provider: HttpProvider;
+  repositoryPath: string;
   contractDeployments: ContractDeployments;
   newContracts: Array<Array<string>>;
   newAssetStorageContracts: Array<Array<string>>;
@@ -69,12 +73,14 @@ export class Helpers {
     const endpoint = process.env[`RPC_${this.hre.network.name.toUpperCase()}`];
     this.provider = new HttpProvider(endpoint);
 
+    this.repositoryPath = this._getGitRepositoryPath();
+
     const deploymentsConfig = `./deployments/${this.hre.network.name}_contracts.json`;
 
     if (fs.existsSync(deploymentsConfig)) {
       this.contractDeployments = JSON.parse(fs.readFileSync(deploymentsConfig).toString());
     } else {
-      this.contractDeployments = { contracts: {}, deployedTimestamp: 0 };
+      this.contractDeployments = { contracts: {} };
     }
 
     this.newContracts = [];
@@ -118,8 +124,10 @@ export class Helpers {
     }
 
     let newContract;
+    const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
     try {
-      newContract = await this.hre.deployments.deploy(newContractName, {
+      newContract = await this.hre.deployments.deploy(nameInHub, {
+        contract: newContractName,
         from: deployer,
         args: passHubInConstructor ? [hubAddress, ...additionalArgs] : additionalArgs,
         log: true,
@@ -140,7 +148,6 @@ export class Helpers {
     const HubController = await this.hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
 
     let tx;
-    const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
     if (setContractInHub) {
       if (this.hre.network.name === 'hardhat') {
         tx = await HubController.setContractAddress(nameInHub, newContract.address);
@@ -169,7 +176,7 @@ export class Helpers {
       this.contractsForReinitialization.push(newContract.address);
     }
 
-    this.updateDeploymentsJson(newContractName, newContract.address);
+    await this.updateDeploymentsJson(newContractName, newContract.address);
 
     return await this.hre.ethers.getContractAt(newContractName, newContract.address, deployer);
   }
@@ -196,15 +203,33 @@ export class Helpers {
   }
 
   public resetDeploymentsJson() {
-    this.contractDeployments = { contracts: {}, deployedTimestamp: 0 };
+    this.contractDeployments = { contracts: {} };
   }
 
-  public updateDeploymentsJson(newContractName: string, newContractAddress: string) {
+  public async updateDeploymentsJson(newContractName: string, newContractAddress: string) {
     const variables = this.contractDeployments.contracts[newContractName]?.variables ?? undefined;
+
+    const contractABI = this.getAbi(newContractName);
+    const isVersionedContract = contractABI.some(
+      (abiEntry) => abiEntry.type === 'function' && abiEntry.name === 'version',
+    );
+
+    let contractVersion;
+
+    if (isVersionedContract) {
+      const VersionedContract = await this.hre.ethers.getContractAt(newContractName, newContractAddress);
+      contractVersion = await VersionedContract.version();
+    } else {
+      contractVersion = null;
+    }
 
     this.contractDeployments.contracts[newContractName] = {
       evmAddress: newContractAddress,
       substrateAddress: this.convertEvmWallet(newContractAddress),
+      version: contractVersion,
+      gitBranch: this.getCurrentGitBranch(),
+      gitCommitHash: this.getCurrentGitCommitHash(),
+      deploymentTimestamp: Date.now(),
       deployed: true,
       variables,
     };
@@ -274,7 +299,33 @@ export class Helpers {
     return substrateAddress;
   }
 
+  public getCurrentGitCommitHash(): string {
+    return this._executeGitCommandSync('git rev-parse HEAD');
+  }
+
+  public getCurrentGitBranch(): string {
+    return this._executeGitCommandSync('git rev-parse --abbrev-ref HEAD');
+  }
+
   private _delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private _executeGitCommandSync(command: string): string {
+    try {
+      const stdout = execSync(command, { cwd: this.repositoryPath });
+      return stdout.toString().trim();
+    } catch (error) {
+      throw new Error(`exec error: ${error}`);
+    }
+  }
+
+  private _getGitRepositoryPath(): string {
+    try {
+      const stdout = execSync('git rev-parse --show-toplevel');
+      return stdout.toString().trim();
+    } catch (error) {
+      throw new Error(`Could not determine the repository path: ${error}`);
+    }
   }
 }
