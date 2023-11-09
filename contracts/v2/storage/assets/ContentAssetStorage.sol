@@ -57,7 +57,7 @@ contract ContentAssetStorageV2 is ContentAssetStorage, IERC4906 {
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         string memory base = tokenBaseURI;
         string memory _ual = string(
-            abi.encodePacked("dkg:", blockchainName, "/", address(this), "/", tokenId.toString())
+            abi.encodePacked("dkg:", blockchainName, ":", block.chainid, "/", address(this), "/", tokenId.toString())
         );
 
         // If there is no base URI, return the Knowledge Asset UAL.
