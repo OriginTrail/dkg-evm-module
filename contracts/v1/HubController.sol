@@ -15,7 +15,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract HubController is Named, Versioned, ContractStatus, Ownable {
     string private constant _NAME = "HubController";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "1.0.1";
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -43,7 +43,7 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
      */
     function forwardCall(address target, bytes calldata data) public onlyOwnerOrMultiSigOwner returns (bytes memory) {
         // Check if the target contract is registered in the Hub
-        require(hub.isContract(target), "Target contract isn't in the Hub");
+        require(hub.isContract(target) || hub.isAssetStorage(target), "Target contract isn't in the Hub");
 
         // Perform the function call to the target contract with the specified calldata
         (bool success, bytes memory result) = target.call{value: 0}(data);

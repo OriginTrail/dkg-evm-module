@@ -11,7 +11,7 @@ type ShardingTableStorageFixture = {
   Profile: Profile;
 };
 
-describe('@unit ShardingTableStorage Contract', function () {
+describe('@v1 @unit ShardingTableStorage Contract', function () {
   let accounts: SignerWithAddress[];
   let ShardingTableStorage: ShardingTableStorage;
   let Profile: Profile;
@@ -62,6 +62,7 @@ describe('@unit ShardingTableStorage Contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, ShardingTableStorage, Profile } = await loadFixture(deployShardingTableStorageFixture));
   });
 

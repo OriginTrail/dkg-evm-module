@@ -13,7 +13,7 @@ type ServiceAgreementStorageV1Fixture = {
   Token: Token;
 };
 
-describe('@unit ServiceAgreementStorageV1 contract', function () {
+describe('@v1 @unit ServiceAgreementStorageV1 contract', function () {
   const agreementId = '0x' + randomBytes(32).toString('hex');
   const newAgreementId = '0x' + randomBytes(32).toString('hex');
   const epochsNumber = 5;
@@ -49,6 +49,7 @@ describe('@unit ServiceAgreementStorageV1 contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, ServiceAgreementStorageV1, Token } = await loadFixture(deployServiceAgreementStorageV1Fixture));
   });
 

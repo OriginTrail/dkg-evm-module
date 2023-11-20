@@ -13,7 +13,6 @@ contract ContentAssetStorageV2 is ContentAssetStorage, IERC4906 {
     using Strings for address;
     using Strings for uint256;
 
-    string private constant _NAME = "ContentAssetStorage";
     string private constant _VERSION = "2.0.0";
 
     // Interface ID as defined in ERC-4906. This does not correspond to a traditional interface ID as ERC-4906 only
@@ -28,6 +27,10 @@ contract ContentAssetStorageV2 is ContentAssetStorage, IERC4906 {
 
     constructor(address hubAddress, string memory blockchainName_) ContentAssetStorage(hubAddress) {
         blockchainName = blockchainName_;
+    }
+
+    function version() external pure override returns (string memory) {
+        return _VERSION;
     }
 
     /**
@@ -57,7 +60,16 @@ contract ContentAssetStorageV2 is ContentAssetStorage, IERC4906 {
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         string memory base = tokenBaseURI;
         string memory _ual = string(
-            abi.encodePacked("dkg:", blockchainName, ":", block.chainid, "/", address(this), "/", tokenId.toString())
+            abi.encodePacked(
+                "did:dkg:",
+                blockchainName,
+                ":",
+                Strings.toString(block.chainid),
+                "/",
+                address(this).toHexString(),
+                "/",
+                Strings.toString(tokenId)
+            )
         );
 
         // If there is no base URI, return the Knowledge Asset UAL.
@@ -68,7 +80,7 @@ contract ContentAssetStorageV2 is ContentAssetStorage, IERC4906 {
         return string.concat(base, _ual);
     }
 
-    function _setBaseURI(string memory baseURI) external virtual onlyHubOwner {
+    function setBaseURI(string memory baseURI) external virtual onlyHubOwner {
         tokenBaseURI = baseURI;
         emit BatchMetadataUpdate(0, lastTokenId());
     }

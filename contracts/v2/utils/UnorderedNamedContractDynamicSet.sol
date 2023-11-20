@@ -16,7 +16,11 @@ library UnorderedNamedContractDynamicSetLibV2 {
         );
         require(addr != address(0), "NamedContractSet: Address cannot be 0x0");
         require(!exists(self, name), "NamedContractSet: Contract with given name already exists");
-        require(self.addressIndexPointers[addr] == 0, "NamedContractSet: Address already in the set");
+        require(
+            (self.contractList.length == 0) ||
+                ((self.addressIndexPointers[addr] == 0) && (self.contractList[0].addr != addr)),
+            "NamedContractSet: Address already in the set"
+        );
         self.stringIndexPointers[name] = size(self);
         self.addressIndexPointers[addr] = size(self);
         self.contractList.push(UnorderedNamedContractDynamicSetStructs.Contract(name, addr));
@@ -29,7 +33,11 @@ library UnorderedNamedContractDynamicSetLibV2 {
     ) internal {
         require(addr != address(0), "NamedContractSet: Address cannot be 0x0");
         require(exists(self, name), "NamedContractSet: Contract with given name doesn't exists");
-        require(self.addressIndexPointers[addr] == 0, "NamedContractSet: Address already in the set");
+        require(
+            (self.contractList.length == 0) ||
+                ((self.addressIndexPointers[addr] == 0) && (self.contractList[0].addr != addr)),
+            "NamedContractSet: Address already in the set"
+        );
         delete self.addressIndexPointers[self.contractList[self.stringIndexPointers[name]].addr];
         self.addressIndexPointers[addr] = self.stringIndexPointers[name];
         self.contractList[self.stringIndexPointers[name]].addr = addr;

@@ -2,7 +2,10 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if (hre.helpers.isDeployed('IdentityStorageV2')) {
+  if (
+    hre.helpers.isDeployed('IdentityStorage') &&
+    hre.helpers.contractDeployments.contracts['IdentityStorage'].version.startsWith('2.')
+  ) {
     return;
   }
 

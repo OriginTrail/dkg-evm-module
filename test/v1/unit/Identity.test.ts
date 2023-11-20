@@ -13,7 +13,7 @@ type IdentityFixture = {
   IdentityStorage: IdentityStorage;
 };
 
-describe('@unit Identity contract', function () {
+describe('@v1 @unit Identity contract', function () {
   let accounts: SignerWithAddress[];
   let Identity: Identity;
   let IdentityStorage: IdentityStorage;
@@ -52,6 +52,7 @@ describe('@unit Identity contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, Identity, IdentityStorage } = await loadFixture(deployIdentityFixture));
     operationalKey = accounts[1].address;
     adminKey = accounts[2].address;

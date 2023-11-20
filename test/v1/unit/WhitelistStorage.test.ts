@@ -13,7 +13,7 @@ type WhitelistStorageFixture = {
   WhitelistStorage: WhitelistStorage;
 };
 
-describe('@unit WhitelistStorage contract', function () {
+describe('@v1 @unit WhitelistStorage contract', function () {
   let accounts: SignerWithAddress[];
   let HubController: HubController;
   let WhitelistStorageInterface: Interface;
@@ -30,6 +30,7 @@ describe('@unit WhitelistStorage contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, HubController, WhitelistStorage } = await loadFixture(deployWhitelistStorageFixture));
   });
 

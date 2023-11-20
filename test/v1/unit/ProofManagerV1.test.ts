@@ -32,7 +32,7 @@ type ProofManagerV1Fixture = {
   ParametersStorage: ParametersStorage;
 };
 
-describe('@unit ProofManagerV1 contract', function () {
+describe('@v1 @unit ProofManagerV1 contract', function () {
   let accounts: SignerWithAddress[];
   let Token: Token;
   let ServiceAgreementV1: ServiceAgreementV1;
@@ -162,6 +162,7 @@ describe('@unit ProofManagerV1 contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, ServiceAgreementStorageProxy, CommitManagerV1, CommitManagerV1, ParametersStorage } =
       await loadFixture(deployProofManagerV1Fixture));
   });

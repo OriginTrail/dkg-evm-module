@@ -10,7 +10,7 @@ type AssertionStorageFixture = {
   AssertionStorage: AssertionStorage;
 };
 
-describe('@unit AssertionStorage contract', function () {
+describe('@v1 @unit AssertionStorage contract', function () {
   const assertionId = '0x74657374696e6720617373657274696f6e2069640209100f5047b080c0440ae1';
   const nonExistingAssertionId = '0x23457374696e6720617373657274696f6e2069640209100f5047b080c0440ae1';
   const size = 20;
@@ -30,6 +30,7 @@ describe('@unit AssertionStorage contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, AssertionStorage } = await loadFixture(deployAssertionStorageFixture));
   });
 

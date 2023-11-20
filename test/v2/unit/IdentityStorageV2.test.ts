@@ -4,19 +4,19 @@ import { expect } from 'chai';
 import { ethers } from 'ethers';
 import hre from 'hardhat';
 
-import { HubController, Identity, IdentityStorage } from '../../../typechain';
-import { ADMIN_KEY, ECDSA, OPERATIONAL_KEY, ZERO_BYTES32 } from '../../helpers/constants';
+import { HubController, Identity, IdentityStorageV2 } from '../../../typechain';
+import { ECDSA, OPERATIONAL_KEY, ADMIN_KEY } from '../../helpers/constants';
 
 type IdentityStorageFixture = {
   accounts: SignerWithAddress[];
   Identity: Identity;
-  IdentityStorage: IdentityStorage;
+  IdentityStorageV2: IdentityStorageV2;
 };
 
-describe('@unit IdentityStorage contract', function () {
+describe('@v2 @unit IdentityStorageV2 contract', function () {
   let accounts: SignerWithAddress[];
   let Identity: Identity;
-  let IdentityStorage: IdentityStorage;
+  let IdentityStorageV2: IdentityStorageV2;
   let operationalKey: string,
     adminKey: string,
     newAdminKeyBytes32: string,
@@ -25,19 +25,19 @@ describe('@unit IdentityStorage contract', function () {
     newOperationalKeyBytes32: string;
 
   async function deployIdentityStorageFixture(): Promise<IdentityStorageFixture> {
-    await hre.deployments.fixture(['Identity']);
+    await hre.deployments.fixture(['IdentityStorageV2', 'Identity'], { keepExistingDeployments: false });
     Identity = await hre.ethers.getContract<Identity>('Identity');
-    IdentityStorage = await hre.ethers.getContract<IdentityStorage>('IdentityStorage');
+    IdentityStorageV2 = await hre.ethers.getContract<IdentityStorageV2>('IdentityStorage');
     const HubController = await hre.ethers.getContract<HubController>('HubController');
     accounts = await hre.ethers.getSigners();
     await HubController.setContractAddress('HubOwner', accounts[0].address);
 
-    return { accounts, Identity, IdentityStorage };
+    return { accounts, Identity, IdentityStorageV2 };
   }
 
   beforeEach(async () => {
     hre.helpers.resetDeploymentsJson();
-    ({ accounts, Identity, IdentityStorage } = await loadFixture(deployIdentityStorageFixture));
+    ({ accounts, Identity, IdentityStorageV2 } = await loadFixture(deployIdentityStorageFixture));
     operationalKey = accounts[1].address;
     adminKey = accounts[2].address;
     adminKeyBytes32 = ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[2].address]));
@@ -47,25 +47,25 @@ describe('@unit IdentityStorage contract', function () {
   });
 
   it('The contract is named "Identity"', async () => {
-    expect(await IdentityStorage.name()).to.equal('IdentityStorage');
+    expect(await IdentityStorageV2.name()).to.equal('IdentityStorage');
   });
 
-  it('The contract is version "1.0.0"', async () => {
-    expect(await IdentityStorage.version()).to.equal('1.0.0');
+  it('The contract is version "2.0.0"', async () => {
+    expect(await IdentityStorageV2.version()).to.equal('2.0.0');
   });
 
   it('Get the identity id for operational key, expect to pass', async () => {
     await Identity.createIdentity(operationalKey, adminKey);
-    const getIdentityId = await IdentityStorage.getIdentityId(operationalKey);
+    const identityId = await IdentityStorageV2.getIdentityId(operationalKey);
 
-    expect(getIdentityId.toNumber()).to.equal(1);
+    expect(identityId.toNumber()).to.equal(1);
   });
 
   it('Validate the purpose of the admin and operational key, expect to pass', async () => {
     await Identity.createIdentity(operationalKey, adminKey);
-    const getIdentityId = await IdentityStorage.getIdentityId(operationalKey);
-    const isAdminKey = await IdentityStorage.keyHasPurpose(getIdentityId, adminKeyBytes32, ADMIN_KEY);
-    const isOperationalKey = await IdentityStorage.keyHasPurpose(getIdentityId, operationalKeyBytes32, OPERATIONAL_KEY);
+    const identityId = await IdentityStorageV2.getIdentityId(operationalKey);
+    const isAdminKey = await IdentityStorageV2.keyHasPurpose(identityId, adminKeyBytes32, ADMIN_KEY);
+    const isOperationalKey = await IdentityStorageV2.keyHasPurpose(identityId, operationalKeyBytes32, OPERATIONAL_KEY);
 
     expect(isAdminKey).to.be.true;
     expect(isOperationalKey).to.be.true;
@@ -73,8 +73,8 @@ describe('@unit IdentityStorage contract', function () {
 
   it('Get the admin key values and should matched, expect to pass', async () => {
     await Identity.createIdentity(operationalKey, adminKey);
-    const getIdentityId = await IdentityStorage.getIdentityId(operationalKey);
-    const getAdminKeyValue = await IdentityStorage.getKey(getIdentityId, adminKeyBytes32);
+    const identityId = await IdentityStorageV2.getIdentityId(operationalKey);
+    const getAdminKeyValue = await IdentityStorageV2.getKey(identityId, adminKeyBytes32);
 
     expect(getAdminKeyValue[0].toNumber()).to.equal(ADMIN_KEY);
     expect(getAdminKeyValue[1].toNumber()).to.equal(ECDSA);
@@ -83,8 +83,8 @@ describe('@unit IdentityStorage contract', function () {
 
   it('Get the operational key values and should matched, expect to pass', async () => {
     await Identity.createIdentity(operationalKey, adminKey);
-    const getIdentityId = await IdentityStorage.getIdentityId(operationalKey);
-    const getOperationalKeyValue = await IdentityStorage.getKey(getIdentityId, operationalKeyBytes32);
+    const identityId = await IdentityStorageV2.getIdentityId(operationalKey);
+    const getOperationalKeyValue = await IdentityStorageV2.getKey(identityId, operationalKeyBytes32);
 
     expect(getOperationalKeyValue[0].toNumber()).to.equal(OPERATIONAL_KEY);
     expect(getOperationalKeyValue[1].toNumber()).to.equal(ECDSA);
@@ -93,9 +93,9 @@ describe('@unit IdentityStorage contract', function () {
 
   it('Get the list of keys with admin purpose, expect to pass', async () => {
     await Identity.createIdentity(operationalKey, adminKey);
-    const getIdentityId = await IdentityStorage.getIdentityId(operationalKey);
-    await IdentityStorage.addKey(getIdentityId, newAdminKeyBytes32, ADMIN_KEY, ECDSA);
-    const getKeysByPurpose = await IdentityStorage.getKeysByPurpose(getIdentityId, ADMIN_KEY);
+    const identityId = await IdentityStorageV2.getIdentityId(operationalKey);
+    await IdentityStorageV2.addKey(identityId, newAdminKeyBytes32, ADMIN_KEY, ECDSA);
+    const getKeysByPurpose = await IdentityStorageV2.getKeysByPurpose(identityId, ADMIN_KEY);
 
     expect(getKeysByPurpose.length).to.equal(2);
     expect(getKeysByPurpose[0]).to.equal(adminKeyBytes32);
@@ -104,9 +104,9 @@ describe('@unit IdentityStorage contract', function () {
 
   it('Get the list of keys with operational purpose, expect to pass', async () => {
     await Identity.createIdentity(operationalKey, adminKey);
-    const getIdentityId = await IdentityStorage.getIdentityId(operationalKey);
-    await IdentityStorage.addKey(getIdentityId, newOperationalKeyBytes32, OPERATIONAL_KEY, ECDSA);
-    const getKeysByPurpose = await IdentityStorage.getKeysByPurpose(getIdentityId, OPERATIONAL_KEY);
+    const identityId = await IdentityStorageV2.getIdentityId(operationalKey);
+    await IdentityStorageV2.addKey(identityId, newOperationalKeyBytes32, OPERATIONAL_KEY, ECDSA);
+    const getKeysByPurpose = await IdentityStorageV2.getKeysByPurpose(identityId, OPERATIONAL_KEY);
 
     expect(getKeysByPurpose.length).to.equal(2);
     expect(getKeysByPurpose[0]).to.equal(operationalKeyBytes32);
@@ -115,13 +115,13 @@ describe('@unit IdentityStorage contract', function () {
 
   it('Set a new operational key identity id, expect to pass', async () => {
     await Identity.createIdentity(operationalKey, adminKey);
-    const getIdentityId = await IdentityStorage.getIdentityId(operationalKey);
+    const identityId = await IdentityStorageV2.getIdentityId(operationalKey);
 
-    expect(getIdentityId.toNumber()).to.equal(1);
+    expect(identityId.toNumber()).to.equal(1);
 
     const newIdentityId = 2;
-    await IdentityStorage.setOperationalKeyIdentityId(operationalKeyBytes32, newIdentityId);
-    const fetchNewIdentityId = await IdentityStorage.getIdentityId(operationalKey);
+    await IdentityStorageV2.setOperationalKeyIdentityId(operationalKeyBytes32, newIdentityId);
+    const fetchNewIdentityId = await IdentityStorageV2.getIdentityId(operationalKey);
 
     expect(fetchNewIdentityId.toNumber()).to.equal(newIdentityId);
   });
@@ -129,20 +129,20 @@ describe('@unit IdentityStorage contract', function () {
   it('Remove a new set operational key identity id, expect to pass', async () => {
     await Identity.createIdentity(operationalKey, adminKey);
     const newIdentityId = 2;
-    await IdentityStorage.setOperationalKeyIdentityId(operationalKeyBytes32, newIdentityId);
-    await IdentityStorage.removeOperationalKeyIdentityId(operationalKeyBytes32);
-    const fetchIdentityId = await IdentityStorage.getIdentityId(operationalKey);
+    await IdentityStorageV2.setOperationalKeyIdentityId(operationalKeyBytes32, newIdentityId);
+    await IdentityStorageV2.removeOperationalKeyIdentityId(operationalKeyBytes32);
+    const fetchIdentityId = await IdentityStorageV2.getIdentityId(operationalKey);
 
     expect(fetchIdentityId.toNumber()).to.equal(0);
   });
 
-  it('Add 2 operational keys, remove operational key, expect event to be empty (bug)', async () => {
+  it('Add 2 operational keys, remove operational key, expect KeyRemoved event to be emitted', async () => {
     await Identity.createIdentity(operationalKey, adminKey);
-    const identityId = await IdentityStorage.getIdentityId(operationalKey);
-    await IdentityStorage.addKey(identityId, newOperationalKeyBytes32, OPERATIONAL_KEY, ECDSA);
+    const identityId = await IdentityStorageV2.getIdentityId(operationalKey);
+    await IdentityStorageV2.addKey(identityId, newOperationalKeyBytes32, OPERATIONAL_KEY, ECDSA);
 
-    expect(await IdentityStorage.removeKey(identityId, newOperationalKeyBytes32))
-      .to.emit(IdentityStorage, 'KeyRemoved')
-      .withArgs(0, ZERO_BYTES32, 0, 0);
+    expect(await IdentityStorageV2.removeKey(identityId, newOperationalKeyBytes32))
+      .to.emit(IdentityStorageV2, 'KeyRemoved')
+      .withArgs(identityId, newOperationalKeyBytes32, OPERATIONAL_KEY, ECDSA);
   });
 });

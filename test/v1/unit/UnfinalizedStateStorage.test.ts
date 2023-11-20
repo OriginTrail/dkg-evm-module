@@ -11,7 +11,7 @@ type UnfinalizedStateStorageFixture = {
   UnfinalizedStateStorage: UnfinalizedStateStorage;
 };
 
-describe('@unit UnfinalizedStateStorage contract', function () {
+describe('@v1 @unit UnfinalizedStateStorage contract', function () {
   let accounts: SignerWithAddress[];
   let UnfinalizedStateStorage: UnfinalizedStateStorage;
   const assertionId = '0x8cc2117b68bcbb1535205d517cb42ef45f25838add571fce4cfb7de7bd617943';
@@ -27,6 +27,7 @@ describe('@unit UnfinalizedStateStorage contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, UnfinalizedStateStorage } = await loadFixture(deployUnfinalizedStateStorageFixture));
   });
 

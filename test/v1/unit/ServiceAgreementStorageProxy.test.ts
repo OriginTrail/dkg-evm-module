@@ -13,7 +13,7 @@ type ServiceAgreementStorageProxyFixture = {
   Token: Token;
 };
 
-describe('@unit ServiceAgreementStorageProxy contract', function () {
+describe('@v1 @unit ServiceAgreementStorageProxy contract', function () {
   const agreementId = '0x' + randomBytes(32).toString('hex');
   const newAgreementId = '0x' + randomBytes(32).toString('hex');
   const startTime = Math.floor(Date.now() / 1000).toString();
@@ -64,6 +64,7 @@ describe('@unit ServiceAgreementStorageProxy contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, ServiceAgreementStorageProxy, Token } = await loadFixture(deployServiceAgreementStorageProxyFixture));
   });
 

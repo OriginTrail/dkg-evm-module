@@ -25,7 +25,7 @@ type ServiceAgreementV1Fixture = {
   Token: Token;
 };
 
-describe('@unit ServiceAgreementV1 contract', function () {
+describe('@v1 @unit ServiceAgreementV1 contract', function () {
   let accounts: SignerWithAddress[];
   let ContentAssetStorage: ContentAssetStorage;
   let ParametersStorage: ParametersStorage;
@@ -118,6 +118,7 @@ describe('@unit ServiceAgreementV1 contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, ContentAssetStorage, ParametersStorage, ServiceAgreementV1, Token } = await loadFixture(
       deployServiceAgreementV1Fixture,
     ));

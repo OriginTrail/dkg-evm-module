@@ -7,6 +7,7 @@ import { BytesLike } from 'ethers';
 import hre from 'hardhat';
 
 import {
+  CommitManagerV1,
   CommitManagerV1U1,
   ContentAsset,
   ContentAssetStorage,
@@ -21,16 +22,18 @@ import { ServiceAgreementStructsV1 } from '../../../typechain/contracts/v1/Commi
 
 type CommitManagerV1U1Fixture = {
   accounts: SignerWithAddress[];
+  CommitManagerV1: CommitManagerV1;
   CommitManagerV1U1: CommitManagerV1U1;
   ParametersStorage: ParametersStorage;
 };
 
-describe('@unit CommitManagerV1U1 contract', function () {
+describe('@v1 @unit CommitManagerV1U1 contract', function () {
   let accounts: SignerWithAddress[];
   let Token: Token;
   let ServiceAgreementV1: ServiceAgreementV1;
   let ContentAsset: ContentAsset;
   let ContentAssetStorage: ContentAssetStorage;
+  let CommitManagerV1: CommitManagerV1;
   let CommitManagerV1U1: CommitManagerV1U1;
   let ParametersStorage: ParametersStorage;
   let Profile: Profile;
@@ -133,21 +136,23 @@ describe('@unit CommitManagerV1U1 contract', function () {
   }
 
   async function deployCommitManagerV1U1Fixture(): Promise<CommitManagerV1U1Fixture> {
-    await hre.deployments.fixture(['ContentAsset', 'CommitManagerV1U1', 'Profile']);
+    await hre.deployments.fixture(['ContentAsset', 'CommitManagerV1', 'CommitManagerV1U1', 'Profile']);
     Token = await hre.ethers.getContract<Token>('Token');
     ServiceAgreementV1 = await hre.ethers.getContract<ServiceAgreementV1>('ServiceAgreementV1');
     ContentAsset = await hre.ethers.getContract<ContentAsset>('ContentAsset');
     ContentAssetStorage = await hre.ethers.getContract<ContentAssetStorage>('ContentAssetStorage');
+    CommitManagerV1 = await hre.ethers.getContract<CommitManagerV1>('CommitManagerV1');
     CommitManagerV1U1 = await hre.ethers.getContract<CommitManagerV1U1>('CommitManagerV1U1');
     ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
     Profile = await hre.ethers.getContract<Profile>('Profile');
     Staking = await hre.ethers.getContract<Staking>('Staking');
     accounts = await hre.ethers.getSigners();
 
-    return { accounts, CommitManagerV1U1, ParametersStorage };
+    return { accounts, CommitManagerV1, CommitManagerV1U1, ParametersStorage };
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, CommitManagerV1U1 } = await loadFixture(deployCommitManagerV1U1Fixture));
   });
 
@@ -164,6 +169,10 @@ describe('@unit CommitManagerV1U1 contract', function () {
     await updateAsset(tokenId);
     await finalizeUpdate(tokenId, keyword);
 
+    await expect(CommitManagerV1.isCommitWindowOpen(agreementId, 0)).to.be.revertedWithCustomError(
+      CommitManagerV1,
+      'ServiceAgreementDoesntExist',
+    );
     expect(await CommitManagerV1U1.isCommitWindowOpen(agreementId, 0)).to.eql(true);
   });
 
@@ -178,6 +187,10 @@ describe('@unit CommitManagerV1U1 contract', function () {
 
     await time.increase(commitWindowDuration + 1);
 
+    await expect(CommitManagerV1.isCommitWindowOpen(agreementId, 0)).to.be.revertedWithCustomError(
+      CommitManagerV1,
+      'ServiceAgreementDoesntExist',
+    );
     expect(await CommitManagerV1U1.isCommitWindowOpen(agreementId, 0)).to.eql(false);
   });
 
@@ -189,6 +202,10 @@ describe('@unit CommitManagerV1U1 contract', function () {
     const epochLength = (await ParametersStorage.epochLength()).toNumber();
     await time.increase(epochLength);
 
+    await expect(CommitManagerV1.isCommitWindowOpen(agreementId, 1)).to.be.revertedWithCustomError(
+      CommitManagerV1,
+      'ServiceAgreementDoesntExist',
+    );
     expect(await CommitManagerV1U1.isCommitWindowOpen(agreementId, 1)).to.eql(true);
   });
 
@@ -225,6 +242,10 @@ describe('@unit CommitManagerV1U1 contract', function () {
       epoch: 1,
     };
 
+    await expect(CommitManagerV1.submitCommit(commitInputArgs)).to.be.revertedWithCustomError(
+      CommitManagerV1,
+      'ServiceAgreementDoesntExist',
+    );
     expect(await CommitManagerV1U1.submitCommit(commitInputArgs)).to.emit(CommitManagerV1U1, 'CommitSubmitted');
   });
 
@@ -247,12 +268,20 @@ describe('@unit CommitManagerV1U1 contract', function () {
     };
 
     for (let i = 0; i < r0; i++) {
+      await expect(CommitManagerV1.connect(accounts[i]).submitCommit(commitInputArgs)).to.be.revertedWithCustomError(
+        CommitManagerV1,
+        'ServiceAgreementDoesntExist',
+      );
       expect(await CommitManagerV1U1.connect(accounts[i]).submitCommit(commitInputArgs)).to.emit(
         CommitManagerV1U1,
         'CommitSubmitted',
       );
     }
 
+    await expect(CommitManagerV1.getTopCommitSubmissions(agreementId, 1)).to.be.revertedWithCustomError(
+      CommitManagerV1,
+      'ServiceAgreementDoesntExist',
+    );
     const topCommits = await CommitManagerV1U1.getTopCommitSubmissions(agreementId, 1, 1);
 
     expect(topCommits.map((arr) => arr[0])).to.have.deep.members(

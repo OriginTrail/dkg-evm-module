@@ -13,7 +13,7 @@ type ParametersStorageFixture = {
   ParametersStorage: ParametersStorage;
 };
 
-describe('@unit ParametersStorage contract', function () {
+describe('@v1 @unit ParametersStorage contract', function () {
   let accounts: SignerWithAddress[];
   let HubController: HubController;
   let ParametersStorageInterface: Interface;
@@ -38,6 +38,7 @@ describe('@unit ParametersStorage contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, HubController, ParametersStorageInterface, ParametersStorage } = await loadFixture(
       deployParametersStorageFixture,
     ));

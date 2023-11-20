@@ -12,7 +12,7 @@ type ProfileStorageFixture = {
   Token: Token;
 };
 
-describe('@unit ProfileStorage contract', function () {
+describe('@v1 @unit ProfileStorage contract', function () {
   let accounts: SignerWithAddress[];
   let ProfileStorage: ProfileStorage;
   let Token: Token;
@@ -42,6 +42,7 @@ describe('@unit ProfileStorage contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, Token, ProfileStorage } = await loadFixture(deployProfileStorageFixture));
   });
 

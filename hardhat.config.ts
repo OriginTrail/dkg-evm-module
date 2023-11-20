@@ -15,6 +15,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import './tasks/address_converter';
 import './tasks/low_level_call_data_encoder';
+import './tasks/selector_encoder';
 import './tasks/send_otp';
 import './utils/type-extensions';
 import config from './hardhat.node.config';

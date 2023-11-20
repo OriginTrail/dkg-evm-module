@@ -39,7 +39,7 @@ type ContentAssetFixture = {
   UnfinalizedStateStorage: UnfinalizedStateStorage;
 };
 
-describe('@integration ContentAsset contract', function () {
+describe('@v1 @integration ContentAsset contract', function () {
   let accounts: SignerWithAddress[];
   let AssertionStorage: AssertionStorage;
   let ParametersStorage: ParametersStorage;

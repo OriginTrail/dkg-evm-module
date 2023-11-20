@@ -8,12 +8,14 @@ import { BigNumber, BytesLike } from 'ethers';
 import hre from 'hardhat';
 
 import {
+  CommitManagerV1,
   CommitManagerV1U1,
   ContentAsset,
   ContentAssetStorage,
   IdentityStorage,
   ParametersStorage,
   Profile,
+  ProofManagerV1,
   ProofManagerV1U1,
   ServiceAgreementStorageProxy,
   ServiceAgreementV1,
@@ -28,20 +30,24 @@ import { ServiceAgreementStructsV1 as ProofStructs } from '../../../typechain/co
 type ProofManagerV1U1Fixture = {
   accounts: SignerWithAddress[];
   ServiceAgreementStorageProxy: ServiceAgreementStorageProxy;
+  CommitManagerV1: CommitManagerV1;
   CommitManagerV1U1: CommitManagerV1U1;
+  ProofManagerV1: ProofManagerV1;
   ProofManagerV1U1: ProofManagerV1U1;
   ParametersStorage: ParametersStorage;
   IdentityStorage: IdentityStorage;
 };
 
-describe('@unit ProofManagerV1U1 contract', function () {
+describe('@v1 @unit ProofManagerV1U1 contract', function () {
   let accounts: SignerWithAddress[];
   let Token: Token;
   let ServiceAgreementV1: ServiceAgreementV1;
   let ServiceAgreementStorageProxy: ServiceAgreementStorageProxy;
   let ContentAsset: ContentAsset;
   let ContentAssetStorage: ContentAssetStorage;
+  let CommitManagerV1: CommitManagerV1;
   let CommitManagerV1U1: CommitManagerV1U1;
+  let ProofManagerV1: ProofManagerV1;
   let ProofManagerV1U1: ProofManagerV1U1;
   let ParametersStorage: ParametersStorage;
   let IdentityStorage: IdentityStorage;
@@ -143,6 +149,10 @@ describe('@unit ProofManagerV1U1 contract', function () {
       epoch,
     };
 
+    await expect(CommitManagerV1.connect(operational).submitCommit(commitInputArgs)).to.be.revertedWithCustomError(
+      CommitManagerV1,
+      'ServiceAgreementDoesntExist',
+    );
     await CommitManagerV1U1.connect(operational).submitCommit(commitInputArgs);
   }
 
@@ -182,7 +192,9 @@ describe('@unit ProofManagerV1U1 contract', function () {
     );
     ContentAsset = await hre.ethers.getContract<ContentAsset>('ContentAsset');
     ContentAssetStorage = await hre.ethers.getContract<ContentAssetStorage>('ContentAssetStorage');
+    CommitManagerV1 = await hre.ethers.getContract<CommitManagerV1>('CommitManagerV1');
     CommitManagerV1U1 = await hre.ethers.getContract<CommitManagerV1U1>('CommitManagerV1U1');
+    ProofManagerV1 = await hre.ethers.getContract<ProofManagerV1>('ProofManagerV1');
     ProofManagerV1U1 = await hre.ethers.getContract<ProofManagerV1U1>('ProofManagerV1U1');
     ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
     IdentityStorage = await hre.ethers.getContract<IdentityStorage>('IdentityStorage');
@@ -194,7 +206,9 @@ describe('@unit ProofManagerV1U1 contract', function () {
     return {
       accounts,
       ServiceAgreementStorageProxy,
+      CommitManagerV1,
       CommitManagerV1U1,
+      ProofManagerV1,
       ProofManagerV1U1,
       ParametersStorage,
       IdentityStorage,
@@ -221,6 +235,10 @@ describe('@unit ProofManagerV1U1 contract', function () {
       chunkHash: leaf,
     };
 
+    await expect(ProofManagerV1.connect(account).sendProof(proofInputArgs)).to.be.revertedWithCustomError(
+      ProofManagerV1,
+      'ServiceAgreementDoesntExist',
+    );
     await ProofManagerV1U1.connect(account).sendProof(proofInputArgs);
     const filter = Staking.filters.StakeIncreased(identityId);
     const event = (await Staking.queryFilter(filter)).pop();
@@ -229,6 +247,7 @@ describe('@unit ProofManagerV1U1 contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, ServiceAgreementStorageProxy, CommitManagerV1U1, CommitManagerV1U1, ParametersStorage } =
       await loadFixture(deployProofManagerV1U1Fixture));
   });
@@ -252,6 +271,10 @@ describe('@unit ProofManagerV1U1 contract', function () {
 
     await time.increase(delay);
 
+    await expect(ProofManagerV1.isProofWindowOpen(agreementId, 0)).to.be.revertedWithCustomError(
+      ProofManagerV1,
+      'ServiceAgreementDoesntExist',
+    );
     expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.eql(true);
   });
 
@@ -267,6 +290,10 @@ describe('@unit ProofManagerV1U1 contract', function () {
 
     await time.increaseTo(proofWindowStart - 1);
 
+    await expect(ProofManagerV1.isProofWindowOpen(agreementId, 0)).to.be.revertedWithCustomError(
+      ProofManagerV1,
+      'ServiceAgreementDoesntExist',
+    );
     expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.eql(false);
   });
 
@@ -283,6 +310,10 @@ describe('@unit ProofManagerV1U1 contract', function () {
 
     await time.increaseTo(proofWindowEnd);
 
+    await expect(ProofManagerV1.isProofWindowOpen(agreementId, 0)).to.be.revertedWithCustomError(
+      ProofManagerV1,
+      'ServiceAgreementDoesntExist',
+    );
     expect(await ProofManagerV1U1.isProofWindowOpen(agreementId, 0)).to.eql(false);
   });
 
@@ -322,6 +353,10 @@ describe('@unit ProofManagerV1U1 contract', function () {
     const initialStake = await StakingStorage.totalStakes(identityIds[0]);
     const initialAssetReward = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
 
+    await expect(ProofManagerV1.sendProof(proofInputArgs)).to.be.revertedWithCustomError(
+      ProofManagerV1,
+      'ServiceAgreementDoesntExist',
+    );
     expect(await ProofManagerV1U1.sendProof(proofInputArgs)).to.emit(ProofManagerV1U1, 'ProofSubmitted');
 
     const endAssetReward = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
@@ -372,6 +407,10 @@ describe('@unit ProofManagerV1U1 contract', function () {
       chunkHash: leaf,
     };
 
+    await expect(ProofManagerV1.sendProof(proofInputArgs)).to.be.revertedWithCustomError(
+      ProofManagerV1,
+      'ServiceAgreementDoesntExist',
+    );
     expect(await ProofManagerV1U1.sendProof(proofInputArgs)).to.emit(ProofManagerV1U1, 'ProofSubmitted');
     await expect(ProofManagerV1U1.sendProof(proofInputArgs)).to.be.revertedWithCustomError(
       ProofManagerV1U1,

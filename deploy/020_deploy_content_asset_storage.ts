@@ -2,7 +2,10 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if (hre.helpers.isDeployed('ContentAssetStorageV2')) {
+  if (
+    hre.helpers.isDeployed('ContentAssetStorage') &&
+    hre.helpers.contractDeployments.contracts['ContentAssetStorage'].version.startsWith('2.')
+  ) {
     return;
   }
 
@@ -10,6 +13,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await hre.helpers.deploy({
     newContractName: 'ContentAssetStorage',
+    passHubInConstructor: true,
     setContractInHub: false,
     setAssetStorageInHub: true,
   });

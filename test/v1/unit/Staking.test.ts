@@ -23,7 +23,7 @@ type StakingFixture = {
   StakingStorage: StakingStorage;
 };
 
-describe('@unit Staking contract', function () {
+describe('@v1 @unit Staking contract', function () {
   let accounts: SignerWithAddress[];
   let Staking: Staking;
   let StakingStorage: StakingStorage;
@@ -54,6 +54,7 @@ describe('@unit Staking contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, Token, Profile, ServiceAgreementStorageV1U1, Staking, StakingStorage } = await loadFixture(
       deployStakingFixture,
     ));

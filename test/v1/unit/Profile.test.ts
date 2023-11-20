@@ -15,7 +15,7 @@ type ProfileFixture = {
   WhitelistStorage: WhitelistStorage;
 };
 
-describe('@unit Profile contract', function () {
+describe('@v1 @unit Profile contract', function () {
   let accounts: SignerWithAddress[];
   let HubController: HubController;
   let Profile: Profile;
@@ -47,6 +47,7 @@ describe('@unit Profile contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, HubController, Profile, ProfileStorage, WhitelistStorageInterface, WhitelistStorage } =
       await loadFixture(deployProfileFixture));
   });

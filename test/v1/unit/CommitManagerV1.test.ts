@@ -25,7 +25,7 @@ type CommitManagerV1Fixture = {
   CommitManagerV1: CommitManagerV1;
 };
 
-describe('@unit CommitManagerV1 contract', function () {
+describe('@v1 @unit CommitManagerV1 contract', function () {
   let accounts: SignerWithAddress[];
   let Token: Token;
   let ServiceAgreementV1: ServiceAgreementV1;
@@ -103,6 +103,7 @@ describe('@unit CommitManagerV1 contract', function () {
   }
 
   beforeEach(async () => {
+    hre.helpers.resetDeploymentsJson();
     ({ accounts, CommitManagerV1 } = await loadFixture(deployCommitManagerV1Fixture));
   });
 

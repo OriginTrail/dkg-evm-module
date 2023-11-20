@@ -130,19 +130,6 @@
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "baseURI",
-        "type": "string"
-      }
-    ],
-    "name": "_setBaseURI",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "to",
         "type": "address"
@@ -675,6 +662,19 @@
       }
     ],
     "name": "setAssertionIssuer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "baseURI",
+        "type": "string"
+      }
+    ],
+    "name": "setBaseURI",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -101,14 +101,16 @@ export class Helpers {
   }: DeploymentParameters): Promise<Contract> {
     const { deployer } = await this.hre.getNamedAccounts();
 
-    if (this.isDeployed(newContractName)) {
+    const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
+
+    if (this.isDeployed(nameInHub)) {
       const contractInstance = await this.hre.ethers.getContractAt(
-        newContractName,
-        this.contractDeployments.contracts[newContractName].evmAddress,
+        nameInHub,
+        this.contractDeployments.contracts[nameInHub].evmAddress,
         deployer,
       );
 
-      if (this.hasFunction(newContractName, 'initialize')) {
+      if (this.hasFunction(nameInHub, 'initialize')) {
         // TODO: Reinitialize only if any dependency contract was redeployed
         this.contractsForReinitialization.push(contractInstance.address);
       }
@@ -124,7 +126,6 @@ export class Helpers {
     }
 
     let newContract;
-    const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
     try {
       newContract = await this.hre.deployments.deploy(nameInHub, {
         contract: newContractName,
@@ -164,9 +165,9 @@ export class Helpers {
       }
     }
 
-    if (this.hasFunction(newContractName, 'initialize')) {
+    if (this.hasFunction(nameInHub, 'initialize')) {
       if (this.hre.network.name === 'hardhat') {
-        const newContractInterface = new this.hre.ethers.utils.Interface(this.getAbi(newContractName));
+        const newContractInterface = new this.hre.ethers.utils.Interface(this.getAbi(nameInHub));
         const initializeTx = await HubController.forwardCall(
           newContract.address,
           newContractInterface.encodeFunctionData('initialize'),
@@ -176,9 +177,9 @@ export class Helpers {
       this.contractsForReinitialization.push(newContract.address);
     }
 
-    await this.updateDeploymentsJson(newContractName, newContract.address);
+    await this.updateDeploymentsJson(nameInHub, newContract.address);
 
-    return await this.hre.ethers.getContractAt(newContractName, newContract.address, deployer);
+    return await this.hre.ethers.getContractAt(nameInHub, newContract.address, deployer);
   }
 
   public inConfig(contractName: string): boolean {

@@ -111,6 +111,8 @@
     "test:integration": "hardhat test --network hardhat --grep '@integration'",
     "test:trace": "hardhat test --network hardhat --trace",
     "test:unit": "hardhat test --network hardhat --grep '@unit'",
+    "test:v1": "hardhat test --network hardhat --grep '@v1'",
+    "test:v2": "hardhat test --network hardhat --grep '@v2'",
     "test": "hardhat test --network hardhat",
     "typechain": "hardhat typechain"
   }
