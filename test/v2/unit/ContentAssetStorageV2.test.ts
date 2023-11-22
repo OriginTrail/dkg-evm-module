@@ -85,9 +85,9 @@ describe('@v2 @unit ContentAssetStorageV2', function () {
   // Test for token ID generation
   it('Should increment and return correct token ID on generateTokenId', async function () {
     const { tokenId: tokenId1 } = await createAsset();
-    expect(tokenId1).to.be.equal(0);
+    expect(tokenId1).to.be.equal(1);
     const { tokenId: tokenId2 } = await createAsset();
-    expect(tokenId2).to.be.equal(1);
+    expect(tokenId2).to.be.equal(2);
   });
 
   // Test for token URI generation
