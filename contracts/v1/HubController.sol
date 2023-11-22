@@ -88,12 +88,17 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         address newContractAddress
     ) external onlyOwnerOrMultiSigOwner {
         if (hub.isContract(contractName)) {
-            // solhint-disable-next-line no-empty-blocks
-            try ContractStatus(hub.getContractAddress(contractName)).setStatus(false) {} catch {}
+            address oldContractAddress = hub.getContractAddress(contractName);
+            if (_isContract(oldContractAddress)) {
+                // solhint-disable-next-line no-empty-blocks
+                try ContractStatus(hub.getContractAddress(contractName)).setStatus(false) {} catch {}
+            }
         }
         hub.setContractAddress(contractName, newContractAddress);
-        // solhint-disable-next-line no-empty-blocks
-        try ContractStatus(newContractAddress).setStatus(true) {} catch {}
+        if (_isContract(newContractAddress)) {
+            // solhint-disable-next-line no-empty-blocks
+            try ContractStatus(newContractAddress).setStatus(true) {} catch {}
+        }
     }
 
     function setAssetStorageAddress(
@@ -114,12 +119,17 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
     function _setContracts(GeneralStructs.Contract[] calldata newContracts) internal {
         for (uint i; i < newContracts.length; ) {
             if (hub.isContract(newContracts[i].name)) {
-                // solhint-disable-next-line no-empty-blocks
-                try ContractStatus(hub.getContractAddress(newContracts[i].name)).setStatus(false) {} catch {}
+                address oldContractAddress = hub.getContractAddress(newContracts[i].name);
+                if (_isContract(oldContractAddress)) {
+                    // solhint-disable-next-line no-empty-blocks
+                    try ContractStatus(oldContractAddress).setStatus(false) {} catch {}
+                }
             }
             hub.setContractAddress(newContracts[i].name, newContracts[i].addr);
-            // solhint-disable-next-line no-empty-blocks
-            try ContractStatus(newContracts[i].addr).setStatus(true) {} catch {}
+            if (_isContract(newContracts[i].addr)) {
+                // solhint-disable-next-line no-empty-blocks
+                try ContractStatus(newContracts[i].addr).setStatus(true) {} catch {}
+            }
             unchecked {
                 i++;
             }
@@ -179,6 +189,14 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
                 i++;
             }
         }
+    }
+
+    function _isContract(address addr) internal view returns (bool) {
+        uint size;
+        assembly {
+            size := extcodesize(addr)
+        }
+        return size > 0;
     }
 
     function _isMultiSigOwner(address multiSigAddress) internal view returns (bool) {
