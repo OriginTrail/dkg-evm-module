@@ -42,6 +42,7 @@ type DeploymentParameters = {
   setContractInHub?: boolean;
   setAssetStorageInHub?: boolean;
   additionalArgs?: Array<unknown>;
+  deterministicDeployment?: boolean;
 };
 
 type EvmWallet = {
@@ -98,6 +99,7 @@ export class Helpers {
     setContractInHub = true,
     setAssetStorageInHub = false,
     additionalArgs = [],
+    deterministicDeployment = false,
   }: DeploymentParameters): Promise<Contract> {
     const { deployer } = await this.hre.getNamedAccounts();
 
@@ -131,6 +133,7 @@ export class Helpers {
         contract: newContractName,
         from: deployer,
         args: passHubInConstructor ? [hubAddress, ...additionalArgs] : additionalArgs,
+        deterministicDeployment,
         log: true,
       });
     } catch (error) {
@@ -166,7 +169,7 @@ export class Helpers {
     }
 
     if (this.hasFunction(nameInHub, 'initialize')) {
-      if (this.hre.network.name === 'hardhat') {
+      if ((setContractInHub || setAssetStorageInHub) && this.hre.network.name === 'hardhat') {
         const newContractInterface = new this.hre.ethers.utils.Interface(this.getAbi(nameInHub));
         const initializeTx = await HubController.forwardCall(
           newContract.address,
