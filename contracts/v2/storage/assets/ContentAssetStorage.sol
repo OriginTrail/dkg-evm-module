@@ -21,7 +21,7 @@ contract ContentAssetStorageV2 is ContentAssetStorage, IERC4906 {
 
     string public blockchainName;
 
-    uint256 internal _tokenId;
+    uint256 internal _tokenId = 1;
 
     string public tokenBaseURI;
 

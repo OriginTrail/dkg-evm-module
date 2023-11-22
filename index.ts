@@ -96,7 +96,7 @@ const ABIV2 = {
 };
 
 export {
-  Hub as HubABI,
+  HubV2 as HubABI,
   HubController as HubControllerABI,
   ParametersStorage as ParametersStorageABI,
   HashingProxy as HashingProxyABI,
@@ -114,10 +114,10 @@ export {
   CommitManagerV1U1 as CommitManagerV1U1ABI,
   ProofManagerV1 as ProofManagerV1ABI,
   ProofManagerV1U1 as ProofManagerV1U1ABI,
-  ContentAssetStorage as ContentAssetStorageABI,
+  ContentAssetStorageV2 as ContentAssetStorageABI,
   ContentAsset as ContentAssetABI,
   Token as TokenABI,
-  IdentityStorage as IdentityStorageABI,
+  IdentityStorageV2 as IdentityStorageABI,
   Identity as IdentityABI,
   Log2PLDSF as Log2PLDSFABI,
   ProfileStorage as ProfileStorageABI,
