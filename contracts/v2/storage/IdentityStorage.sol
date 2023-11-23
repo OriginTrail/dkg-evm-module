@@ -13,13 +13,13 @@ import {IdentityStorage} from "../../v1/storage/IdentityStorage.sol";
 contract IdentityStorageV2 is IdentityStorage {
     using ByteArr for bytes32[];
 
-    string private constant _VERSION_V2 = "2.0.0";
+    string private constant _VERSION = "2.0.0";
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) IdentityStorage(hubAddress) {}
 
     function version() external pure virtual override returns (string memory) {
-        return _VERSION_V2;
+        return _VERSION;
     }
 
     function removeKey(uint72 identityId, bytes32 _key) external virtual override onlyContracts {
