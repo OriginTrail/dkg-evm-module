@@ -94,7 +94,7 @@ export class Helpers {
 
   public async deploy({
     newContractName,
-    newContractNameInHub,
+    newContractNameInHub = undefined,
     passHubInConstructor = true,
     setContractInHub = true,
     setAssetStorageInHub = false,

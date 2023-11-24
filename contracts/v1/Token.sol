@@ -2,17 +2,17 @@
 
 pragma solidity ^0.8.16;
 
-import {HubDependent} from "./abstract/HubDependent.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Token is HubDependent, ERC20, AccessControl {
+contract Token is Ownable, ERC20, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) HubDependent(hubAddress) ERC20("TEST TOKEN", "TEST") {}
+    constructor(string memory tokenName, string memory tokenSymbol) ERC20(tokenName, tokenSymbol) {}
 
-    function setupRole(address minter) public onlyHubOwner {
+    function setupRole(address minter) public onlyOwner {
         _setupRole(MINTER_ROLE, minter);
     }
 
