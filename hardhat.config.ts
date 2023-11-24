@@ -14,6 +14,7 @@ import { lazyObject } from 'hardhat/plugins';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import './tasks/address_converter';
+import './tasks/deploy_test_token';
 import './tasks/low_level_call_data_encoder';
 import './tasks/selector_encoder';
 import './tasks/send_otp';
