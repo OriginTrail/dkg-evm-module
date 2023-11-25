@@ -4,7 +4,7 @@ async function main() {
   const accounts = await hre.ethers.getSigners();
   const { minter } = await hre.getNamedAccounts();
 
-  const tokenContract = await hre.ethers.getContract('ERC20Token');
+  const tokenContract = await hre.ethers.getContract('Token');
   const amountToMint = hre.ethers.utils.parseEther(`${5_000_000}`);
 
   for (const acc of accounts) {
