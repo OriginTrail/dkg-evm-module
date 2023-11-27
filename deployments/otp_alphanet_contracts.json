@@ -1,7 +1,7 @@
 {
   "contracts": {
     "Assertion": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0x10ebB3E603775Fa056b216B71f5943E3536911c9",
       "substrateAddress": "5EMjsczPZmyiTqDuNC4ruh5FKsnw9o9RAviYTxVLK4ss8fBZ"
     },
@@ -11,17 +11,17 @@
       "substrateAddress": "5EMjsczLBZzVAwGtTrUbzzN6ZSgWQRx7x52tRNTLP3Dceefh"
     },
     "CommitManagerV1": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0x39DB6E49B9BF5D1170BAa879E82E4481Ab411bd3",
       "substrateAddress": "5EMjsczXmXPBE3L1nBRw8BHPQ8R9UwZb8WzN7USuXVBqM8Gc"
     },
     "CommitManagerV1U1": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0xf6F1F71E97ED47adcCd39217F2da0A6f7377F561",
       "substrateAddress": "5EMjsd1Bf35pjekEqNYzsSBJDmE3ToL6r8RUUZhMEEDsnT2i"
     },
     "ContentAsset": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0xd084a56c7d7fe1479A6Ae25cCc50f93c05Dbe5f3",
       "substrateAddress": "5EMjsd13xTACe93RZJazvwzd4xzAVX8LF198qMqM8qsQ35dj"
     },
@@ -31,7 +31,7 @@
       "substrateAddress": "5EMjsczTQCbVhq79Wn5oWogDueq5SVjQcMYVLUVG2ZSRVDMp"
     },
     "HashingProxy": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0x140Cd29F952182046FB09dF6AeB9afc7e7EbA52A",
       "substrateAddress": "5EMjsczQC9MCf5VDaU62KTJoVQGKzxTAxdvVjM8fjqDZJjk9"
     },
@@ -41,12 +41,12 @@
       "substrateAddress": "5EMjsczjivqukkFgd9GAzHPdSJ9zwUuUDe2jPZXKi7CShqJo"
     },
     "HubController": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0xa7465BeE7A36bcC98553CCCdb616b7475FA81960",
       "substrateAddress": "5EMjsczuh8uZRMddrLVF1P6DFh4regUzGD2TmsaKDNDP6h1s"
     },
     "Identity": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0xeBF8752971460C12fB9Fc4FBBA5835202a352788",
       "substrateAddress": "5EMjsd19TVaK46HkMhyBum5nTaXGQeTHTt4mQWnJFJ3Jeuo4"
     },
@@ -56,12 +56,12 @@
       "substrateAddress": "5EMjsczXMff3DRs5p19xJ5voP2Dieh2qFdT6Wdau2XwN4Aur"
     },
     "Log2PLDSF": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0x10c66a6908560637e7504D1dd6d561F8A6cA2a39",
       "substrateAddress": "5EMjsczPY5oQDybKWj1ZKfFGhBMXgT8a5yLsobCETHhu9p9m"
     },
     "ParametersStorage": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0xcAD4C7050D7741b31e6385C1D738eB93acD1554f",
       "substrateAddress": "5EMjsd12pMpQ6SCo9LYR6R3mg1QNLtC12VD7JSvAz3VHbb5j",
       "variables": {
@@ -71,7 +71,7 @@
       }
     },
     "Profile": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0x8266B8E9AF78b9BF81B21273aF54A190c569E371",
       "substrateAddress": "5EMjscznJc6DPURnGaEpFvU5tMmLhYeuS76aFe7QxbQJJUeM"
     },
@@ -81,27 +81,27 @@
       "substrateAddress": "5EMjsczpWuxsCSdk2JDcYQhzfZqjJXivRvnj4rw8vGhA7HwE"
     },
     "ProofManagerV1": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0xF3f86E8FfdEF56adf55934D98679Be634bDbFb11",
       "substrateAddress": "5EMjsd1B4TwpsV7xvHiYxGKxqr1eiANTeDvirEsZnnenm8iw"
     },
     "ProofManagerV1U1": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0xA70a83488C538f4f81A29CBc433f901F39E9087b",
       "substrateAddress": "5EMjsczueRL6rhD6Wd1WT33iaVGHNtUZ2SJGESaoTpB7PWs1"
     },
     "SHA256": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0x5F2bD12f57AfF5aAd9464C43079371420d043136",
       "substrateAddress": "5EMjsczfFB58Q4PCM9nYWVxoMZCajeALo313BHebFZo4MfCk"
     },
     "ScoringProxy": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0x935aA8FE40C0c2A5E6B355Ec4C6005D430b2bf0F",
       "substrateAddress": "5EMjsczqhdGDNsk9RLwCsPMuYqp8YVYUbVnZB3DZmieNMWYh"
     },
     "ServiceAgreementStorageProxy": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0x6Ad2EAF77f4a902e8d7c2BCc5CC0715f5d4e3028",
       "substrateAddress": "5EMjsczhabezzUTTgd43pafGKJuBqyFJ9AjB5Ks7kiYA7nBG"
     },
@@ -116,12 +116,12 @@
       "substrateAddress": "5EMjsd1DMKBmsKoMbdqxii1eJBooqcJk6KMt2tvByP5KiXPn"
     },
     "ServiceAgreementV1": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0xEFFD1e8D01c444692F83e018F5cE6a9d25D6b301",
       "substrateAddress": "5EMjsd1AGC4wvyM1F9WBvU1t9DjnVxDPnXGEDGNCvFeHAHRV"
     },
     "ShardingTable": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0x6BD869cc23A4E254f373E04254e5EAFdA7d48FDa",
       "substrateAddress": "5EMjsczhnUBRK5dZLENvm6TkFyjdPHZAePZ55anApcxeFchf"
     },
@@ -131,7 +131,7 @@
       "substrateAddress": "5EMjsd12DhHoq96MassSx3nQFJZQMmrdNr8DuaxRVQtKVsCv"
     },
     "Staking": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0x8feA23dE6B7F3811991956128dc299Cb01D52397",
       "substrateAddress": "5EMjsczq1eq7YMUqWpTSa9BA9fgNQ1xGe77hSLTScxnQApgM"
     },
