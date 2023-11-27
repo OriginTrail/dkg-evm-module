@@ -141,7 +141,7 @@ describe('@v2 @unit IdentityStorageV2 contract', function () {
     const identityId = await IdentityStorageV2.getIdentityId(operationalKey);
     await IdentityStorageV2.addKey(identityId, newOperationalKeyBytes32, OPERATIONAL_KEY, ECDSA);
 
-    expect(await IdentityStorageV2.removeKey(identityId, newOperationalKeyBytes32))
+    await expect(IdentityStorageV2.removeKey(identityId, newOperationalKeyBytes32))
       .to.emit(IdentityStorageV2, 'KeyRemoved')
       .withArgs(identityId, newOperationalKeyBytes32, OPERATIONAL_KEY, ECDSA);
   });

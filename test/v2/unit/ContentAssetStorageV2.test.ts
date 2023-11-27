@@ -106,8 +106,8 @@ describe('@v2 @unit ContentAssetStorageV2', function () {
     );
 
     // Update Base URI
-    expect(
-      await HubController.forwardCall(
+    await expect(
+      HubController.forwardCall(
         ContentAssetStorageV2.address,
         ContentAssetStorageV2.interface.encodeFunctionData('setBaseURI', ['https://dkg.resolver.origintrail.io/']),
       ),

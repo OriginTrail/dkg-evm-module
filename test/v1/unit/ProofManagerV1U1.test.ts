@@ -131,7 +131,7 @@ describe('@v1 @unit ProofManagerV1U1 contract', function () {
     };
 
     for (let i = 0; i < finalizationRequirement; i++) {
-      expect(await CommitManagerV1U1.connect(accounts[i]).submitUpdateCommit(commitInputArgs)).to.emit(
+      await expect(CommitManagerV1U1.connect(accounts[i]).submitUpdateCommit(commitInputArgs)).to.emit(
         CommitManagerV1U1,
         'CommitSubmitted',
       );
@@ -357,7 +357,7 @@ describe('@v1 @unit ProofManagerV1U1 contract', function () {
       ProofManagerV1,
       'ServiceAgreementDoesntExist',
     );
-    expect(await ProofManagerV1U1.sendProof(proofInputArgs)).to.emit(ProofManagerV1U1, 'ProofSubmitted');
+    await expect(ProofManagerV1U1.sendProof(proofInputArgs)).to.emit(ProofManagerV1U1, 'ProofSubmitted');
 
     const endAssetReward = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
     expect(await StakingStorage.totalStakes(identityIds[0])).to.equal(
@@ -411,7 +411,7 @@ describe('@v1 @unit ProofManagerV1U1 contract', function () {
       ProofManagerV1,
       'ServiceAgreementDoesntExist',
     );
-    expect(await ProofManagerV1U1.sendProof(proofInputArgs)).to.emit(ProofManagerV1U1, 'ProofSubmitted');
+    await expect(ProofManagerV1U1.sendProof(proofInputArgs)).to.emit(ProofManagerV1U1, 'ProofSubmitted');
     await expect(ProofManagerV1U1.sendProof(proofInputArgs)).to.be.revertedWithCustomError(
       ProofManagerV1U1,
       'NodeAlreadyRewarded',

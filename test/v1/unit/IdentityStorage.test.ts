@@ -13,7 +13,7 @@ type IdentityStorageFixture = {
   IdentityStorage: IdentityStorage;
 };
 
-describe('@unit IdentityStorage contract', function () {
+describe('@v1 @unit IdentityStorage contract', function () {
   let accounts: SignerWithAddress[];
   let Identity: Identity;
   let IdentityStorage: IdentityStorage;
@@ -141,8 +141,8 @@ describe('@unit IdentityStorage contract', function () {
     const identityId = await IdentityStorage.getIdentityId(operationalKey);
     await IdentityStorage.addKey(identityId, newOperationalKeyBytes32, OPERATIONAL_KEY, ECDSA);
 
-    expect(await IdentityStorage.removeKey(identityId, newOperationalKeyBytes32))
+    await expect(IdentityStorage.removeKey(identityId, newOperationalKeyBytes32))
       .to.emit(IdentityStorage, 'KeyRemoved')
-      .withArgs(0, ZERO_BYTES32, 0, 0);
+      .withArgs(identityId, ZERO_BYTES32, 0, 0);
   });
 });

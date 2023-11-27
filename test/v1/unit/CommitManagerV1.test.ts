@@ -155,7 +155,7 @@ describe('@v1 @unit CommitManagerV1 contract', function () {
       epoch: 0,
     };
 
-    expect(await CommitManagerV1.submitCommit(commitInputArgs)).to.emit(CommitManagerV1, 'CommitSubmitted');
+    await expect(CommitManagerV1.submitCommit(commitInputArgs)).to.emit(CommitManagerV1, 'CommitSubmitted');
   });
 
   it('Create new asset, submit R0 commits, expect R0 commits to be returned', async () => {
@@ -177,7 +177,7 @@ describe('@v1 @unit CommitManagerV1 contract', function () {
     };
 
     for (let i = 0; i < r0; i++) {
-      expect(await CommitManagerV1.connect(accounts[i]).submitCommit(commitInputArgs)).to.emit(
+      await expect(CommitManagerV1.connect(accounts[i]).submitCommit(commitInputArgs)).to.emit(
         CommitManagerV1,
         'CommitSubmitted',
       );

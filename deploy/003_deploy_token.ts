@@ -6,17 +6,36 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const isDeployed = hre.helpers.isDeployed('Token');
 
-  const Token = await hre.helpers.deploy({
-    newContractName: 'Token',
-    passHubInConstructor: false,
-    additionalArgs: ['TEST TOKEN', 'TEST'],
-  });
+  if (isDeployed) {
+    const hubAddress = hre.helpers.contractDeployments.contracts['Hub'].evmAddress;
+    const Hub = await hre.ethers.getContractAt('Hub', hubAddress, deployer);
 
-  if (!isDeployed) {
-    const setupRoleTx = await Token.setupRole(deployer, { from: deployer });
-    await setupRoleTx.wait();
-  }
-  if (hre.network.name === 'hardhat') {
+    const tokenInHub = await Hub['isContract(string)']('Token');
+
+    if (!tokenInHub) {
+      const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
+      const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
+
+      const tokenAddress = hre.helpers.contractDeployments.contracts['Token'].evmAddress;
+
+      console.log(`Setting Token (${tokenAddress}) in the Hub (${Hub.address}).`);
+      const setTokenTx = await HubController.setContractAddress('Token', tokenAddress);
+      await setTokenTx.wait();
+    }
+  } else if (!isDeployed && hre.network.name === 'hardhat') {
+    const Token = await hre.helpers.deploy({
+      newContractName: 'Token',
+      passHubInConstructor: false,
+      additionalArgs: ['TEST TOKEN', 'TEST'],
+    });
+
+    const minterRole = await Token.MINTER_ROLE();
+    if (!(await Token.hasRole(minterRole, deployer))) {
+      console.log(`Setting minter role for ${deployer}.`);
+      const setupMinterRoleTx = await Token.setupRole(deployer, { from: deployer });
+      await setupMinterRoleTx.wait();
+    }
+
     const amountToMint = hre.ethers.utils.parseEther(`${5_000_000}`);
     const accounts = await hre.ethers.getSigners();
 

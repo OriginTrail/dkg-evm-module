@@ -22,7 +22,7 @@ type ContractDeployments = {
   contracts: {
     [contractName: string]: {
       evmAddress: string;
-      substrateAddress: string;
+      substrateAddress?: string;
       version: string;
       gitBranch: string;
       gitCommitHash: string;
@@ -229,7 +229,7 @@ export class Helpers {
 
     this.contractDeployments.contracts[newContractName] = {
       evmAddress: newContractAddress,
-      substrateAddress: this.convertEvmWallet(newContractAddress),
+      substrateAddress: this.hre.network.name.startsWith('otp') ? this.convertEvmWallet(newContractAddress) : undefined,
       version: contractVersion,
       gitBranch: this.getCurrentGitBranch(),
       gitCommitHash: this.getCurrentGitCommitHash(),
@@ -246,7 +246,11 @@ export class Helpers {
     );
   }
 
-  public async sendOTP(address: string, tokenAmount = 2) {
+  public async sendOTP(address: string | undefined, tokenAmount = 2) {
+    if (address === undefined) {
+      throw Error('Address cannot be undefined!');
+    }
+
     const api = await ApiPromise.create({ provider: this.provider, noInitWarn: true });
     const transfer = await api.tx.balances.transfer(
       address,
