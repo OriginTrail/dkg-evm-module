@@ -28,7 +28,7 @@ const config: HardhatUserConfig = {
       gas: 15_000_000,
       gasMultiplier: 1,
       blockGasLimit: 30_000_000,
-      hardfork: 'merge',
+      hardfork: 'shanghai',
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       loggingEnabled: false,
@@ -45,6 +45,7 @@ const config: HardhatUserConfig = {
       {
         version: '0.8.16',
         settings: {
+          evmVersion: 'london',
           optimizer: {
             enabled: true,
             runs: 200,
@@ -67,7 +68,7 @@ const config: HardhatUserConfig = {
       },
     ],
     overrides: {
-      'contracts/MultiSigWallet.sol': {
+      'contracts/v1/MultiSigWallet.sol': {
         version: '0.4.15',
       },
     },
