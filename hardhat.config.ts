@@ -62,17 +62,24 @@ config.networks = {
     accounts: accounts('otp_mainnet'),
     saveDeployments: false,
   },
-  gno_chiado: {
+  gnosis_chiado_dev: {
     chainId: 10200,
-    url: rpc('gno_chiado'),
+    url: rpc('gnosis_chiado_dev'),
     gasPrice: 1_000_000_000,
-    accounts: accounts('gno_chiado'),
+    accounts: accounts('gnosis_chiado_dev'),
     saveDeployments: false,
   },
-  gno_mainnet: {
+  gnosis_chiado_test: {
+    chainId: 10200,
+    url: rpc('gnosis_chiado_test'),
+    gasPrice: 1_000_000_000,
+    accounts: accounts('gnosis_chiado_test'),
+    saveDeployments: false,
+  },
+  gnosis_mainnet: {
     chainId: 100,
-    url: rpc('gno_mainnet'),
-    accounts: accounts('gno_mainnet'),
+    url: rpc('gnosis_mainnet'),
+    accounts: accounts('gnosis_mainnet'),
     saveDeployments: false,
   },
 };

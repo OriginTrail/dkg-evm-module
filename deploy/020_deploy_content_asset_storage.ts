@@ -4,7 +4,8 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (
     hre.helpers.isDeployed('ContentAssetStorage') &&
-    hre.helpers.contractDeployments.contracts['ContentAssetStorage'].version.startsWith('2.')
+    (hre.helpers.contractDeployments.contracts['ContentAssetStorage'].version === undefined ||
+      hre.helpers.contractDeployments.contracts['ContentAssetStorage'].version?.startsWith('2.'))
   ) {
     return;
   }
