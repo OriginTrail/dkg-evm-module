@@ -2,7 +2,11 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if (hre.helpers.isDeployed('Hub') && hre.helpers.contractDeployments.contracts['Hub'].version.startsWith('2.')) {
+  if (
+    hre.helpers.isDeployed('Hub') &&
+    (hre.helpers.contractDeployments.contracts['Hub'].version === undefined ||
+      hre.helpers.contractDeployments.contracts['Hub'].version?.startsWith('2.'))
+  ) {
     return;
   }
 

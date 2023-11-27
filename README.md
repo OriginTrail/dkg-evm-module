@@ -45,8 +45,8 @@ This project utilizes a variety of NPM scripts to run various tasks and processe
 - `compile:size`: Compiles the smart contracts and analyzes the size of the compiled contracts using the hardhat-contract-sizer plugin.
 - `compile`: Compiles the smart contracts with specific configuration using `hardhat.node.config.ts`.
 - `coverage`: Generates a code coverage report for the smart contracts with specific network and coverage settings.
-- `deploy:v1:gno_chiado`, `deploy:v1:gno_mainnet`, `deploy:v1:localhost`, `deploy:v1:otp_alphanet`, `deploy:v1:otp_devnet`, `deploy:v1:otp_mainnet`, `deploy:v1:otp_testnet`, and `deploy:v1`: Deploy version 1 of the smart contracts to various networks including Gnosis Chiado, Hardhat, OriginTrail Parachain Alphanet, OriginTrail Parachain Devnet, OriginTrail Parachain Testnet, and OriginTrail Parachain Mainnet.
-- `deploy:v2:gno_chiado`, `deploy:v2:gno_mainnet`, `deploy:v2:localhost`, `deploy:v2:otp_alphanet`, `deploy:v2:otp_devnet`, `deploy:v2:otp_mainnet`, `deploy:v2:otp_testnet`, and `deploy:v2`: Similar to the v1 deploy scripts, these deploy version 2 of the smart contracts to the respective networks.
+- `deploy:v1:gnosis_chiado_dev`, `deploy:v1:gnosis_chiado_test`, `deploy:v1:gnosis_mainnet`, `deploy:v1:localhost`, `deploy:v1:otp_alphanet`, `deploy:v1:otp_devnet`, `deploy:v1:otp_mainnet`, `deploy:v1:otp_testnet`, and `deploy:v1`: Deploy version 1 of the smart contracts to various networks including Gnosis Chiado, Hardhat, OriginTrail Parachain Alphanet, OriginTrail Parachain Devnet, OriginTrail Parachain Testnet, and OriginTrail Parachain Mainnet.
+- `deploy:v2:gnosis_chiado_dev`, `deploy:v2:gnosis_chiado_test`, `deploy:v2:gnosis_mainnet`, `deploy:v2:localhost`, `deploy:v2:otp_alphanet`, `deploy:v2:otp_devnet`, `deploy:v2:otp_mainnet`, `deploy:v2:otp_testnet`, and `deploy:v2`: Similar to the v1 deploy scripts, these deploy version 2 of the smart contracts to the respective networks.
 - `dev:v1`, `dev:v2`, and `dev`: Run local development nodes with Hardhat for different versions of contracts.
 - `export-abi`: Updates ABI files according to the current state of the smart contracts.
 - `format:fix`: Automatically fixes code formatting issues for JSON, JavaScript, TypeScript, and Solidity files using Prettier.
@@ -128,24 +128,35 @@ npm run deploy:v2:otp_mainnet
 
 <br/>
 
-Gnosis Chiado (v1 contracts)
+Gnosis Chiado Dev (v1 contracts)
 ```sh
-npm run deploy:v1:gno_chiado
+npm run deploy:v1:gnosis_chiado_dev
 ```
 or (v2 contracts)
 ```sh
-npm run deploy:v2:gno_chiado
+npm run deploy:v2:gnosis_chiado_dev
+```
+
+<br/>
+
+Gnosis Chiado Test (v1 contracts)
+```sh
+npm run deploy:v1:gnosis_chiado_test
+```
+or (v2 contracts)
+```sh
+npm run deploy:v2:gnosis_chiado_test
 ```
 
 <br/>
 
 Gnosis Mainnet (v1 contracts)
 ```sh
-npm run deploy:v1:gno_mainnet
+npm run deploy:v1:gnosis_mainnet
 ```
 or (v2 contracts)
 ```sh
-npm run deploy:v2:gno_mainnet
+npm run deploy:v2:gnosis_mainnet
 ```
 
 <br/>
