@@ -144,6 +144,16 @@
       },
       {
         "internalType": "address[]",
+        "name": "newHashFunctions",
+        "type": "address[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "newScoreFunctions",
+        "type": "address[]"
+      },
+      {
+        "internalType": "address[]",
         "name": "contractsToReinitialize",
         "type": "address[]"
       },
@@ -163,16 +173,6 @@
         "internalType": "struct GeneralStructs.ForwardCallInputArgs[]",
         "name": "forwardCallsData",
         "type": "tuple[]"
-      },
-      {
-        "internalType": "address[]",
-        "name": "newHashFunctions",
-        "type": "address[]"
-      },
-      {
-        "internalType": "address[]",
-        "name": "newScoreFunctions",
-        "type": "address[]"
       }
     ],
     "name": "setAndReinitializeContracts",

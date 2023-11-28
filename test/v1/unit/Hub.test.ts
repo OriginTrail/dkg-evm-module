@@ -72,9 +72,9 @@ describe('@v1 @unit Hub contract', function () {
 
     expect(await Hub.getContractAddress('TestContract')).to.equal(accounts[1].address);
 
-    expect(await HubController.setContractAddress('TestContract', accounts[2].address))
+    await expect(HubController.setContractAddress('TestContract', accounts[2].address))
       .to.emit(Hub, 'ContractChanged')
-      .withArgs('TestContract', accounts[2]);
+      .withArgs('TestContract', accounts[2].address);
 
     expect(await Hub.getContractAddress('TestContract')).to.equal(accounts[2].address);
   });
@@ -168,8 +168,8 @@ describe('@v1 @unit Hub contract', function () {
   });
 
   it('Set contract address, set the same address with different name; Expect to have 2 contracts with the same address (bug)', async () => {
-    expect(await HubController.setContractAddress('TestContract1', accounts[1].address)).to.emit(Hub, 'NewContract');
-    expect(await HubController.setContractAddress('TestContract2', accounts[1].address)).to.emit(Hub, 'NewContract');
+    await expect(HubController.setContractAddress('TestContract1', accounts[1].address)).to.emit(Hub, 'NewContract');
+    await expect(HubController.setContractAddress('TestContract2', accounts[1].address)).to.emit(Hub, 'NewContract');
 
     expect(await Hub.getContractAddress('TestContract1')).to.equal(accounts[1].address);
     expect(await Hub.getContractAddress('TestContract2')).to.equal(accounts[1].address);

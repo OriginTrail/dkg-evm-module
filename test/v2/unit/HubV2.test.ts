@@ -72,9 +72,9 @@ describe('@v2 @unit Hub contract', function () {
 
     expect(await HubV2.getContractAddress('TestContract')).to.equal(accounts[1].address);
 
-    expect(await HubController.setContractAddress('TestContract', accounts[2].address))
+    await expect(HubController.setContractAddress('TestContract', accounts[2].address))
       .to.emit(HubV2, 'ContractChanged')
-      .withArgs('TestContract', accounts[2]);
+      .withArgs('TestContract', accounts[2].address);
 
     expect(await HubV2.getContractAddress('TestContract')).to.equal(accounts[2].address);
   });
@@ -168,7 +168,7 @@ describe('@v2 @unit Hub contract', function () {
   });
 
   it('Set contract address, set the same address with different name; Expect to be reverted as address is already in the set', async () => {
-    expect(await HubController.setContractAddress('TestContract1', accounts[1].address)).to.emit(HubV2, 'NewContract');
+    await expect(HubController.setContractAddress('TestContract1', accounts[1].address)).to.emit(HubV2, 'NewContract');
     await expect(HubController.setContractAddress('TestContract2', accounts[1].address)).to.be.revertedWith(
       'NamedContractSet: Address already in the set',
     );

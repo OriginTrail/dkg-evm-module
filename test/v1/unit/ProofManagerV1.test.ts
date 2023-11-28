@@ -244,7 +244,7 @@ describe('@v1 @unit ProofManagerV1 contract', function () {
     const initialStake = await StakingStorage.totalStakes(identityId);
     const initialAssetReward = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
 
-    expect(await ProofManagerV1.sendProof(proofInputArgs)).to.emit(ProofManagerV1, 'ProofSubmitted');
+    await expect(ProofManagerV1.sendProof(proofInputArgs)).to.emit(ProofManagerV1, 'ProofSubmitted');
 
     const endAssetReward = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
     expect(await StakingStorage.totalStakes(identityId)).to.equal(
@@ -287,7 +287,7 @@ describe('@v1 @unit ProofManagerV1 contract', function () {
       chunkHash: leaf,
     };
 
-    expect(await ProofManagerV1.sendProof(proofInputArgs)).to.emit(ProofManagerV1, 'ProofSubmitted');
+    await expect(ProofManagerV1.sendProof(proofInputArgs)).to.emit(ProofManagerV1, 'ProofSubmitted');
     await expect(ProofManagerV1.sendProof(proofInputArgs)).to.be.revertedWithCustomError(
       ProofManagerV1,
       'NodeAlreadyRewarded',

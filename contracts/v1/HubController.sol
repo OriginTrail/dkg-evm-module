@@ -70,17 +70,17 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
     function setAndReinitializeContracts(
         GeneralStructs.Contract[] calldata newContracts,
         GeneralStructs.Contract[] calldata newAssetStorageContracts,
-        address[] calldata contractsToReinitialize,
-        GeneralStructs.ForwardCallInputArgs[] calldata forwardCallsData,
         address[] calldata newHashFunctions,
-        address[] calldata newScoreFunctions
+        address[] calldata newScoreFunctions,
+        address[] calldata contractsToReinitialize,
+        GeneralStructs.ForwardCallInputArgs[] calldata forwardCallsData
     ) external onlyOwnerOrMultiSigOwner {
         _setContracts(newContracts);
         _setAssetStorageContracts(newAssetStorageContracts);
-        _reinitializeContracts(contractsToReinitialize);
-        _forwardCalls(forwardCallsData);
         _setHashFunctions(newHashFunctions);
         _setScoreFunctions(newScoreFunctions);
+        _reinitializeContracts(contractsToReinitialize);
+        _forwardCalls(forwardCallsData);
     }
 
     function setContractAddress(

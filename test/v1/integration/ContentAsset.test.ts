@@ -229,9 +229,9 @@ describe('@v1 @integration ContentAsset contract', function () {
     const initialBalance = await Token.balanceOf(serviceAgreementStorageV1Address);
     const initialOwnerBalance = await Token.balanceOf(accounts[0].address);
 
-    expect(await ContentAsset.burnAsset(tokenId))
+    await expect(ContentAsset.burnAsset(tokenId))
       .to.emit(ContentAsset, 'AssetBurnt')
-      .withArgs(ContentAssetStorage.address, tokenId, assetInputStruct.assertionId, assetInputStruct.tokenAmount);
+      .withArgs(ContentAssetStorage.address, tokenId, assetInputStruct.tokenAmount);
 
     const resultBalance = await Token.balanceOf(serviceAgreementStorageV1Address);
     const resultOwnerBalance = await Token.balanceOf(accounts[0].address);
@@ -388,9 +388,9 @@ describe('@v1 @integration ContentAsset contract', function () {
     const initialBalance = await Token.balanceOf(serviceAgreementStorageV1U1Address);
     const initialOwnerBalance = await Token.balanceOf(accounts[0].address);
 
-    expect(await ContentAsset.cancelAssetStateUpdate(tokenId))
+    await expect(ContentAsset.cancelAssetStateUpdate(tokenId))
       .to.emit(ContentAsset, 'AssetStateUpdateCanceled')
-      .withArgs(ContentAssetStorage.address, tokenId, assetUpdateArgs.assertionId, assetUpdateArgs.tokenAmount);
+      .withArgs(ContentAssetStorage.address, tokenId, 1, assetUpdateArgs.tokenAmount);
 
     const resultBalance = await Token.balanceOf(serviceAgreementStorageV1U1Address);
     const resultOwnerBalance = await Token.balanceOf(accounts[0].address);
@@ -439,7 +439,7 @@ describe('@v1 @integration ContentAsset contract', function () {
 
     const initialTokenAmount = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
 
-    expect(await ContentAsset.extendAssetStoringPeriod(tokenId, additionalEpochsNumber, assetInputStruct.tokenAmount))
+    await expect(ContentAsset.extendAssetStoringPeriod(tokenId, additionalEpochsNumber, assetInputStruct.tokenAmount))
       .to.emit(ContentAsset, 'AssetStoringPeriodExtended')
       .withArgs(ContentAssetStorage.address, tokenId, additionalEpochsNumber, assetInputStruct.tokenAmount);
 
@@ -468,7 +468,7 @@ describe('@v1 @integration ContentAsset contract', function () {
 
     const initialTokenAmount = await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId);
 
-    expect(await ContentAsset.increaseAssetTokenAmount(tokenId, additionalTokenAmount))
+    await expect(ContentAsset.increaseAssetTokenAmount(tokenId, additionalTokenAmount))
       .to.emit(ContentAsset, 'AssetPaymentIncreased')
       .withArgs(ContentAssetStorage.address, tokenId, additionalTokenAmount);
 
@@ -495,7 +495,7 @@ describe('@v1 @integration ContentAsset contract', function () {
 
     const initialUpdateTokenAmount = await ServiceAgreementStorageProxy.getAgreementUpdateTokenAmount(agreementId);
 
-    expect(await ContentAsset.increaseAssetUpdateTokenAmount(tokenId, additionalUpdateTokenAmount))
+    await expect(ContentAsset.increaseAssetUpdateTokenAmount(tokenId, additionalUpdateTokenAmount))
       .to.emit(ContentAsset, 'AssetUpdatePaymentIncreased')
       .withArgs(ContentAssetStorage.address, tokenId, additionalUpdateTokenAmount);
 

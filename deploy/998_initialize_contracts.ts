@@ -30,10 +30,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const setAndReinitializeContractsTx = await HubController.setAndReinitializeContracts(
       newContracts,
       newAssetStorageContracts,
-      contractsForReinitialization,
-      setParametersEncodedData,
       newHashFunctions,
       newScoreFunctions,
+      contractsForReinitialization,
+      setParametersEncodedData,
     );
     await setAndReinitializeContractsTx.wait();
   }

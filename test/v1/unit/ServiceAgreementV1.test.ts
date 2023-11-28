@@ -49,7 +49,7 @@ describe('@v1 @unit ServiceAgreementV1 contract', function () {
 
     const blockNumber = await hre.ethers.provider.getBlockNumber();
 
-    await expect(await ServiceAgreementV1.createServiceAgreement(serviceAgreementInputArgs))
+    await expect(ServiceAgreementV1.createServiceAgreement(serviceAgreementInputArgs))
       .to.emit(ServiceAgreementV1, 'ServiceAgreementV1Created')
       .withArgs(
         serviceAgreementInputArgs.assetContract,
@@ -141,7 +141,7 @@ describe('@v1 @unit ServiceAgreementV1 contract', function () {
 
     expect(await ServiceAgreementStorageProxy.serviceAgreementExists(agreementId)).to.eql(true);
 
-    expect(await ServiceAgreementV1.terminateAgreement(serviceAgreementInputArgs.assetCreator, agreementId)).to.emit(
+    await expect(ServiceAgreementV1.terminateAgreement(serviceAgreementInputArgs.assetCreator, agreementId)).to.emit(
       ServiceAgreementV1,
       'ServiceAgreementV1Terminated',
     );
@@ -164,8 +164,8 @@ describe('@v1 @unit ServiceAgreementV1 contract', function () {
     const additionalTokenAmount = hre.ethers.utils.parseEther('10');
 
     await Token.increaseAllowance(ServiceAgreementV1.address, additionalTokenAmount);
-    expect(
-      await ServiceAgreementV1.extendStoringPeriod(
+    await expect(
+      ServiceAgreementV1.extendStoringPeriod(
         serviceAgreementInputArgs.assetCreator,
         agreementId,
         additionalEpochsNumber,
@@ -193,8 +193,8 @@ describe('@v1 @unit ServiceAgreementV1 contract', function () {
     const additionalTokenAmount = hre.ethers.utils.parseEther('10');
 
     await Token.increaseAllowance(ServiceAgreementV1.address, additionalTokenAmount);
-    expect(
-      await ServiceAgreementV1.addTokens(serviceAgreementInputArgs.assetCreator, agreementId, additionalTokenAmount),
+    await expect(
+      ServiceAgreementV1.addTokens(serviceAgreementInputArgs.assetCreator, agreementId, additionalTokenAmount),
     ).to.emit(ServiceAgreementV1, 'ServiceAgreementV1RewardRaised');
 
     expect(await ServiceAgreementStorageProxy.getAgreementTokenAmount(agreementId)).to.equal(
@@ -214,8 +214,8 @@ describe('@v1 @unit ServiceAgreementV1 contract', function () {
     const additionalUpdateTokenAmount = hre.ethers.utils.parseEther('10');
 
     await Token.increaseAllowance(ServiceAgreementV1.address, additionalUpdateTokenAmount);
-    expect(
-      await ServiceAgreementV1.addUpdateTokens(
+    await expect(
+      ServiceAgreementV1.addUpdateTokens(
         serviceAgreementInputArgs.assetCreator,
         agreementId,
         additionalUpdateTokenAmount,

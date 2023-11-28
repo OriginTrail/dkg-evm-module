@@ -136,7 +136,7 @@ describe('@v1 @unit ContentAsset contract', function () {
   it('Create an asset, expect asset created', async () => {
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
 
-    expect(await ContentAsset.createAsset(assetInputStruct))
+    await expect(ContentAsset.createAsset(assetInputStruct))
       .to.emit(ContentAsset, 'AssetMinted')
       .withArgs(ContentAssetStorage.address, 0, assetInputStruct.assertionId);
   });
@@ -162,9 +162,9 @@ describe('@v1 @unit ContentAsset contract', function () {
       .toNumber();
     await time.increase(commitWindowDuration);
 
-    expect(await ContentAsset.burnAsset(tokenId))
+    await expect(ContentAsset.burnAsset(tokenId))
       .to.emit(ContentAsset, 'AssetBurnt')
-      .withArgs(ContentAssetStorage.address, tokenId, assetInputStruct.assertionId, assetInputStruct.tokenAmount);
+      .withArgs(ContentAssetStorage.address, tokenId, assetInputStruct.tokenAmount);
 
     expect(await ContentAssetStorage.getAssertionIds(tokenId)).to.eql([]);
     expect(await ContentAssetStorage.assertionExists(assetInputStruct.assertionId)).to.equal(false);
@@ -234,8 +234,8 @@ describe('@v1 @unit ContentAsset contract', function () {
 
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
 
-    expect(
-      await ContentAsset.updateAssetState(
+    await expect(
+      ContentAsset.updateAssetState(
         tokenId,
         newAssertionId,
         assetInputStruct.size,
@@ -245,7 +245,7 @@ describe('@v1 @unit ContentAsset contract', function () {
       ),
     )
       .to.emit(ContentAsset, 'AssetStateUpdated')
-      .withArgs(ContentAssetStorage.address, tokenId, newAssertionId, assetInputStruct.tokenAmount);
+      .withArgs(ContentAssetStorage.address, tokenId, 1, assetInputStruct.tokenAmount);
   });
 
   it('Update asset state of immutable asset, expect to be reverted', async () => {
@@ -315,9 +315,9 @@ describe('@v1 @unit ContentAsset contract', function () {
     await updateAsset(tokenId);
     await time.increase(await ParametersStorage.updateCommitWindowDuration());
 
-    expect(await ContentAsset.cancelAssetStateUpdate(tokenId))
+    await expect(ContentAsset.cancelAssetStateUpdate(tokenId))
       .to.emit(ContentAsset, 'AssetStateUpdateCanceled')
-      .withArgs(ContentAssetStorage.address, tokenId, assetUpdateArgs.assertionId, assetUpdateArgs.tokenAmount);
+      .withArgs(ContentAssetStorage.address, tokenId, 1, assetUpdateArgs.tokenAmount);
   });
 
   it('Cancel asset state update using non-owner account, expect to be reverted', async () => {
@@ -356,7 +356,7 @@ describe('@v1 @unit ContentAsset contract', function () {
 
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
 
-    expect(await ContentAsset.extendAssetStoringPeriod(tokenId, additionalEpochsNumber, assetInputStruct.tokenAmount))
+    await expect(ContentAsset.extendAssetStoringPeriod(tokenId, additionalEpochsNumber, assetInputStruct.tokenAmount))
       .to.emit(ContentAsset, 'AssetStoringPeriodExtended')
       .withArgs(ContentAssetStorage.address, tokenId, additionalEpochsNumber, assetInputStruct.tokenAmount);
   });
@@ -384,7 +384,7 @@ describe('@v1 @unit ContentAsset contract', function () {
 
     await Token.increaseAllowance(ServiceAgreementV1.address, additionalTokenAmount);
 
-    expect(await ContentAsset.increaseAssetTokenAmount(tokenId, additionalTokenAmount))
+    await expect(ContentAsset.increaseAssetTokenAmount(tokenId, additionalTokenAmount))
       .to.emit(ContentAsset, 'AssetPaymentIncreased')
       .withArgs(ContentAssetStorage.address, tokenId, additionalTokenAmount);
   });
@@ -409,7 +409,7 @@ describe('@v1 @unit ContentAsset contract', function () {
 
     await Token.increaseAllowance(ServiceAgreementV1.address, additionalUpdateTokenAmount);
 
-    expect(await ContentAsset.increaseAssetUpdateTokenAmount(tokenId, additionalUpdateTokenAmount))
+    await expect(ContentAsset.increaseAssetUpdateTokenAmount(tokenId, additionalUpdateTokenAmount))
       .to.emit(ContentAsset, 'AssetUpdatePaymentIncreased')
       .withArgs(ContentAssetStorage.address, tokenId, additionalUpdateTokenAmount);
   });

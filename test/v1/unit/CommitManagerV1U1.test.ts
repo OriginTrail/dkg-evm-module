@@ -104,7 +104,7 @@ describe('@v1 @unit CommitManagerV1U1 contract', function () {
     };
 
     for (let i = 0; i < finalizationRequirement; i++) {
-      expect(await CommitManagerV1U1.connect(accounts[i]).submitUpdateCommit(commitInputArgs)).to.emit(
+      await expect(CommitManagerV1U1.connect(accounts[i]).submitUpdateCommit(commitInputArgs)).to.emit(
         CommitManagerV1U1,
         'CommitSubmitted',
       );
@@ -246,7 +246,7 @@ describe('@v1 @unit CommitManagerV1U1 contract', function () {
       CommitManagerV1,
       'ServiceAgreementDoesntExist',
     );
-    expect(await CommitManagerV1U1.submitCommit(commitInputArgs)).to.emit(CommitManagerV1U1, 'CommitSubmitted');
+    await expect(CommitManagerV1U1.submitCommit(commitInputArgs)).to.emit(CommitManagerV1U1, 'CommitSubmitted');
   });
 
   it('Create new asset, update it, finalize update, teleport to the second epoch, submit R0 commits, expect R0 commits to be returned', async () => {
@@ -272,7 +272,7 @@ describe('@v1 @unit CommitManagerV1U1 contract', function () {
         CommitManagerV1,
         'ServiceAgreementDoesntExist',
       );
-      expect(await CommitManagerV1U1.connect(accounts[i]).submitCommit(commitInputArgs)).to.emit(
+      await expect(CommitManagerV1U1.connect(accounts[i]).submitCommit(commitInputArgs)).to.emit(
         CommitManagerV1U1,
         'CommitSubmitted',
       );
@@ -303,7 +303,7 @@ describe('@v1 @unit CommitManagerV1U1 contract', function () {
       epoch: 0,
     };
 
-    expect(await CommitManagerV1U1.submitUpdateCommit(commitInputArgs)).to.emit(CommitManagerV1U1, 'CommitSubmitted');
+    await expect(CommitManagerV1U1.submitUpdateCommit(commitInputArgs)).to.emit(CommitManagerV1U1, 'CommitSubmitted');
   });
 
   it('Create new asset, update it and submit <finalizationCommitsNumber> update commits, expect StateFinalized event', async () => {
@@ -325,13 +325,13 @@ describe('@v1 @unit CommitManagerV1U1 contract', function () {
       epoch: 0,
     };
     for (let i = 0; i < finalizationRequirement - 1; i++) {
-      expect(await CommitManagerV1U1.connect(accounts[i]).submitUpdateCommit(commitInputArgs)).to.emit(
+      await expect(CommitManagerV1U1.connect(accounts[i]).submitUpdateCommit(commitInputArgs)).to.emit(
         CommitManagerV1U1,
         'CommitSubmitted',
       );
     }
-    expect(
-      await CommitManagerV1U1.connect(accounts[identityIds.length - 1]).submitUpdateCommit(commitInputArgs),
+    await expect(
+      CommitManagerV1U1.connect(accounts[identityIds.length - 1]).submitUpdateCommit(commitInputArgs),
     ).to.emit(CommitManagerV1U1, 'StateFinalized');
     const topCommits = await CommitManagerV1U1.getTopCommitSubmissions(agreementId, 0, 1);
     expect(topCommits.map((arr) => arr[0])).to.include.deep.members(

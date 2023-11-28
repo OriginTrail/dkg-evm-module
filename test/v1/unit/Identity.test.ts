@@ -39,12 +39,14 @@ describe('@v1 @unit Identity contract', function () {
 
   async function createIdentity(operationalKey: string, adminKey: string) {
     const createIdentity = await Identity.createIdentity(operationalKey, adminKey);
+
+    await expect(createIdentity).to.emit(Identity, 'IdentityCreated');
+
     const receipt = await createIdentity.wait();
 
     identityId = receipt.events?.[2].args?.identityId.toNumber();
     const fetchIdentityId = await IdentityStorage.getIdentityId(operationalKey);
 
-    expect(createIdentity).to.emit(Identity, 'IdentityCreated');
     expect(identityId).not.equal(0);
     expect(identityId).to.equal(fetchIdentityId.toNumber(), 'Error: Identities are not matched!');
 
@@ -101,7 +103,7 @@ describe('@v1 @unit Identity contract', function () {
     const getIdentityId = await createIdentity(operationalKey, adminKey);
     const deleteIdentity = await Identity.deleteIdentity(getIdentityId);
 
-    expect(deleteIdentity).to.emit(Identity, 'IdentityDeleted');
+    await expect(deleteIdentity).to.emit(Identity, 'IdentityDeleted');
   });
 
   it('Add an admin key to existing identity, expect to pass', async () => {
