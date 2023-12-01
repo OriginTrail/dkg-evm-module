@@ -2,9 +2,11 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  await hre.helpers.deploy({
+  const ProofManagerV1U1 = await hre.helpers.deploy({
     newContractName: 'ProofManagerV1U1',
   });
+
+  await hre.helpers.updateContractParameters('ProofManagerV1U1', ProofManagerV1U1);
 };
 
 export default func;

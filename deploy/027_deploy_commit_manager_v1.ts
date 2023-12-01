@@ -2,9 +2,11 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  await hre.helpers.deploy({
+  const CommitManagerV1 = await hre.helpers.deploy({
     newContractName: 'CommitManagerV1',
   });
+
+  await hre.helpers.updateContractParameters('CommitManagerV1', CommitManagerV1);
 };
 
 export default func;
