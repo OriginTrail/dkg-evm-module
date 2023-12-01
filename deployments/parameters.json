@@ -81,14 +81,14 @@
       "stakeRangeMax": "200000"
     },
     "ParametersStorage": {
-      "commitWindowDurationPerc": "33",
-      "epochLength": "360",
+      "commitWindowDurationPerc": "25",
+      "epochLength": "7776000",
       "finalizationCommitsNumber": "3",
-      "maxProofWindowOffsetPerc": "66",
+      "maxProofWindowOffsetPerc": "75",
       "maximumStake": "5000000000000000000000000",
-      "minProofWindowOffsetPerc": "66",
+      "minProofWindowOffsetPerc": "50",
       "minimumStake": "50000000000000000000000",
-      "proofWindowDurationPerc": "33",
+      "proofWindowDurationPerc": "25",
       "r0": "3",
       "r1": "8",
       "r2": "20",
@@ -96,7 +96,7 @@
       "rewardWithdrawalDelay": "300",
       "slashingFreezeDuration": "63072000",
       "stakeWithdrawalDelay": "300",
-      "updateCommitWindowDuration": "60"
+      "updateCommitWindowDuration": "1800"
     },
     "ProofManagerV1": {
       "reqs": [
