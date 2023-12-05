@@ -31,6 +31,7 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
 config.networks = {
   ...config.networks,
   otp_alphanet: {
+    environment: 'devnet',
     chainId: 2043,
     url: rpc('otp_alphanet'),
     gas: 10_000_000, // Gas limit used for deployments
@@ -39,6 +40,7 @@ config.networks = {
     saveDeployments: false,
   },
   otp_devnet: {
+    environment: 'devnet',
     chainId: 2160,
     url: rpc('otp_devnet'),
     gas: 10_000_000, // Gas limit used for deployments
@@ -47,6 +49,7 @@ config.networks = {
     saveDeployments: false,
   },
   otp_testnet: {
+    environment: 'testnet',
     chainId: 20430,
     url: rpc('otp_testnet'),
     gas: 10_000_000, // Gas limit used for deploys
@@ -55,6 +58,7 @@ config.networks = {
     saveDeployments: false,
   },
   otp_mainnet: {
+    environment: 'mainnet',
     chainId: 2043,
     url: rpc('otp_mainnet'),
     gas: 10_000_000, // Gas limit used for deploys
@@ -63,6 +67,7 @@ config.networks = {
     saveDeployments: false,
   },
   gnosis_chiado_dev: {
+    environment: 'devnet',
     chainId: 10200,
     url: rpc('gnosis_chiado_dev'),
     gasPrice: 1_000_000_000,
@@ -70,6 +75,7 @@ config.networks = {
     saveDeployments: false,
   },
   gnosis_chiado_test: {
+    environment: 'testnet',
     chainId: 10200,
     url: rpc('gnosis_chiado_test'),
     gasPrice: 1_000_000_000,
@@ -77,6 +83,7 @@ config.networks = {
     saveDeployments: false,
   },
   gnosis_mainnet: {
+    environment: 'mainnet',
     chainId: 100,
     url: rpc('gnosis_mainnet'),
     accounts: accounts('gnosis_mainnet'),

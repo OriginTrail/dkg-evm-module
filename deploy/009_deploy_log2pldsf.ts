@@ -28,6 +28,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       hre.helpers.newScoreFunctions.push(Log2PLDSF.address);
     }
   }
+
+  await hre.helpers.updateContractParameters('Log2PLDSF', Log2PLDSF);
 };
 
 export default func;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import 'dotenv/config';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
@@ -28,9 +29,6 @@ type ContractDeployments = {
       gitCommitHash: string;
       deploymentTimestamp: number;
       deployed: boolean;
-      variables?: {
-        [variableName: string]: unknown;
-      };
     };
   };
 };
@@ -43,6 +41,25 @@ type DeploymentParameters = {
   setAssetStorageInHub?: boolean;
   additionalArgs?: Array<unknown>;
   deterministicDeployment?: boolean;
+};
+
+type ContractParameter = {
+  getterArgs?: any[];
+  desiredValue?: any[];
+  setter?: string;
+  setterArgs: any[];
+};
+
+type ContractParametersConfig = {
+  [parameter: string]: ContractParameter | string | ContractParameter[];
+};
+
+type EnvironmentParametersConfig = {
+  [contractName: string]: ContractParametersConfig;
+};
+
+type ParametersConfig = {
+  [environment: string]: EnvironmentParametersConfig;
 };
 
 type EvmWallet = {
@@ -62,6 +79,7 @@ export class Helpers {
   provider: HttpProvider;
   repositoryPath: string;
   contractDeployments: ContractDeployments;
+  parametersConfig: ParametersConfig;
   newContracts: Array<Array<string>>;
   newAssetStorageContracts: Array<Array<string>>;
   contractsForReinitialization: Array<string>;
@@ -82,6 +100,19 @@ export class Helpers {
       this.contractDeployments = JSON.parse(fs.readFileSync(deploymentsConfig).toString());
     } else {
       this.contractDeployments = { contracts: {} };
+    }
+
+    const parametersConfig = './deployments/parameters.json';
+
+    if (fs.existsSync(parametersConfig)) {
+      this.parametersConfig = JSON.parse(fs.readFileSync(parametersConfig).toString());
+    } else {
+      this.parametersConfig = {
+        development: {},
+        devnet: {},
+        testnet: {},
+        mainnet: {},
+      };
     }
 
     this.newContracts = [];
@@ -185,6 +216,81 @@ export class Helpers {
     return await this.hre.ethers.getContractAt(nameInHub, newContract.address, deployer);
   }
 
+  public async updateContractParameters(contractName: string, contract: Contract) {
+    const parameters =
+      this.parametersConfig[this.hre.network.config.environment as keyof ParametersConfig]?.[contractName];
+    if (!parameters) {
+      return;
+    }
+
+    const encodedData: [string, string[]] = [contractName, []];
+    for (const [getterName, paramValue] of Object.entries(parameters)) {
+      const values = Array.isArray(paramValue) ? paramValue : [paramValue];
+
+      for (const value of values) {
+        let getterArgs = [];
+        let desiredValue;
+        let setterName;
+        let setterArgs;
+
+        if (value instanceof Object) {
+          getterArgs = value.getterArgs ? value.getterArgs : [];
+          desiredValue = value.setterArgs.length === 1 ? value.setterArgs[0] : value.desiredValue;
+          setterName = value.setter ? value.setter : `set${getterName.charAt(0).toUpperCase() + getterName.slice(1)}`;
+          setterArgs = value.setterArgs;
+        } else {
+          desiredValue = value;
+          setterName = `set${getterName.charAt(0).toUpperCase() + getterName.slice(1)}`;
+          setterArgs = [value];
+        }
+
+        if (getterName in contract.functions) {
+          const currentValue = await contract[getterName](...getterArgs);
+
+          if (currentValue.toString() !== desiredValue.toString()) {
+            console.log(
+              `Parameter '${getterName}' for ${contractName} in the contract isn't the same as define in config. Blockchain: ${currentValue}. Config: ${desiredValue}.`,
+            );
+            if (setterName in contract.functions) {
+              const encodedFunctionData = contract.interface.encodeFunctionData(setterName, setterArgs);
+
+              if (this.hre.network.config.environment === 'development') {
+                console.log(`[${contractName}] Setting parameter '${getterName}' value to be ${desiredValue}.`);
+
+                const { deployer } = await this.hre.getNamedAccounts();
+
+                const targetContractAddress = this.contractDeployments.contracts[contractName].evmAddress;
+                const hubControllerAddress = this.contractDeployments.contracts['HubController'].evmAddress;
+                const HubController = await this.hre.ethers.getContractAt(
+                  'HubController',
+                  hubControllerAddress,
+                  deployer,
+                );
+
+                const tx = await HubController.forwardCall(targetContractAddress, encodedFunctionData);
+                await tx.wait();
+              } else {
+                console.log(
+                  `[${contractName}] Adding parameter '${getterName}' value to be set to ${desiredValue} using HubController.`,
+                );
+
+                encodedData[1].push(encodedFunctionData);
+              }
+            } else {
+              throw Error(`Setter '${setterName}' doesn't exist in the contract '${contractName}'.`);
+            }
+          }
+        } else {
+          throw Error(`Parameter '${getterName}' doesn't exist in the contract '${contractName}'.`);
+        }
+
+        if (encodedData[1].length !== 0) {
+          this.setParametersEncodedData.push(encodedData);
+        }
+      }
+    }
+  }
+
   public inConfig(contractName: string): boolean {
     return contractName in this.contractDeployments.contracts;
   }
@@ -211,8 +317,6 @@ export class Helpers {
   }
 
   public async updateDeploymentsJson(newContractName: string, newContractAddress: string) {
-    const variables = this.contractDeployments.contracts[newContractName]?.variables ?? undefined;
-
     const contractABI = this.getAbi(newContractName);
     const isVersionedContract = contractABI.some(
       (abiEntry) => abiEntry.type === 'function' && abiEntry.name === 'version',
@@ -235,7 +339,6 @@ export class Helpers {
       gitCommitHash: this.getCurrentGitCommitHash(),
       deploymentTimestamp: Date.now(),
       deployed: true,
-      variables,
     };
   }
 

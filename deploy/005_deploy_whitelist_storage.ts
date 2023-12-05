@@ -2,9 +2,11 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  await hre.helpers.deploy({
+  const WhitelistStorage = await hre.helpers.deploy({
     newContractName: 'WhitelistStorage',
   });
+
+  await hre.helpers.updateContractParameters('WhitelistStorage', WhitelistStorage);
 };
 
 export default func;

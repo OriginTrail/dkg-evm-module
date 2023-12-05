@@ -1,8 +1,8 @@
 import 'hardhat-deploy';
 import 'hardhat-deploy-ethers';
-import { HardhatUserConfig, extendEnvironment } from 'hardhat/config';
+import { extendEnvironment } from 'hardhat/config';
 import { lazyObject } from 'hardhat/plugins';
-import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { HardhatRuntimeEnvironment, HardhatUserConfig } from 'hardhat/types';
 
 import { Helpers } from './utils/helpers';
 import { accounts, rpc } from './utils/network';
@@ -19,11 +19,13 @@ const config: HardhatUserConfig = {
   },
   networks: {
     localhost: {
+      environment: 'development',
       url: rpc('localhost'),
       accounts: accounts('localhost'),
       saveDeployments: false,
     },
     hardhat: {
+      environment: 'development',
       chainId: 31337,
       gas: 15_000_000,
       gasMultiplier: 1,
