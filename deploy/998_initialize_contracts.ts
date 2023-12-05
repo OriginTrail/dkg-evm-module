@@ -40,6 +40,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       setParametersEncodedData,
     ]);
 
+    MultiSigWallet.on('Submission', (transactionId) => {
+      console.log(`[Multisig] HubController.setAndReinitializeContracts Transaction ID: ${transactionId}`);
+    });
+
     // Submit the transaction to the multisig wallet
     const submitTx = await MultiSigWallet.submitTransaction(hubControllerAddress, 0, encodedData);
     await submitTx.wait();
