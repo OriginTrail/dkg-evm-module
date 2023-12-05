@@ -13,12 +13,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     newScoreFunctions,
   } = hre.helpers;
 
-  if (hre.network.name !== 'hardhat') {
+  if (hre.network.config.environment === 'testnet' || hre.network.config.environment == 'mainnet') {
     const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
+    const multiSigWalletAddress = hre.helpers.contractDeployments.contracts['Multisig'].evmAddress;
 
     console.log(`HubController: ${hubControllerAddress}`);
+    console.log(`MultiSigWallet: ${multiSigWalletAddress}`);
 
     const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
+    const MultiSigWallet = await hre.ethers.getContractAt('MultiSigWallet', multiSigWalletAddress, deployer);
 
     console.log(`New or redeployed contracts: ${JSON.stringify(newContracts)}`);
     console.log(`New or redeployed Asset Storage contracts: ${JSON.stringify(newAssetStorageContracts)}`);
@@ -27,15 +30,22 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`New or redeployed hash functions set in the proxy: ${JSON.stringify(newHashFunctions)}`);
     console.log(`New or redeployed score functions set in the proxy: ${JSON.stringify(newScoreFunctions)}`);
 
-    const setAndReinitializeContractsTx = await HubController.setAndReinitializeContracts(
+    // Prepare the data for the setAndReinitializeContracts function call
+    const encodedData = HubController.interface.encodeFunctionData('setAndReinitializeContracts', [
       newContracts,
       newAssetStorageContracts,
       newHashFunctions,
       newScoreFunctions,
       contractsForReinitialization,
       setParametersEncodedData,
-    );
-    await setAndReinitializeContractsTx.wait();
+    ]);
+
+    // Submit the transaction to the multisig wallet
+    const submitTx = await MultiSigWallet.submitTransaction(hubControllerAddress, 0, encodedData);
+    await submitTx.wait();
+
+    // After that, other owners of the multisig wallet should use 'confirmTransaction' function.
+    // When needed confirmations amount is reached, 'executeTransaction' should be executed.
   }
 };
 
