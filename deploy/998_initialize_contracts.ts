@@ -13,9 +13,24 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     newScoreFunctions,
   } = hre.helpers;
 
-  if (hre.network.config.environment === 'testnet' || hre.network.config.environment == 'mainnet') {
+  const noChangesWereMade = [
+    newContracts,
+    newAssetStorageContracts,
+    setParametersEncodedData,
+    newHashFunctions,
+    newScoreFunctions,
+  ].every((arr) => arr.length === 0);
+
+  if (
+    !noChangesWereMade &&
+    (hre.network.config.environment === 'testnet' || hre.network.config.environment == 'mainnet')
+  ) {
     const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
-    const multiSigWalletAddress = hre.helpers.contractDeployments.contracts['Multisig'].evmAddress;
+    const multiSigWalletAddress = process.env['MULTISIG_' + hre.network.name.toUpperCase()];
+
+    if (multiSigWalletAddress === undefined) {
+      throw new Error(`MULTISIG_ADDRESS should be defined in the environment for the ${hre.network.name} blockchain!`);
+    }
 
     console.log(`HubController: ${hubControllerAddress}`);
     console.log(`MultiSigWallet: ${multiSigWalletAddress}`);

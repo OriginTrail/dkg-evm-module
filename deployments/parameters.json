@@ -407,7 +407,7 @@
       "replacementWindowDurationPerc": "0",
       "rewardWithdrawalDelay": "300",
       "slashingFreezeDuration": "63072000",
-      "stakeWithdrawalDelay": "3600",
+      "stakeWithdrawalDelay": "300",
       "updateCommitWindowDuration": "1800"
     },
     "ProofManagerV1": {
