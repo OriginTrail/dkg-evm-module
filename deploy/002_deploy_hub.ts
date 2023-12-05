@@ -48,7 +48,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
       const transferHubOwneshipTx = await Hub.transferOwnership(HubController.address);
       await transferHubOwneshipTx.wait();
-    } else {
+
+      console.log(`Hub ownership transferred to HubController (${HubController.address})`);
+    } else if (hre.network.config.environment !== 'testnet' && hre.network.config.environment !== 'mainnet') {
       const previousHubController = await hre.ethers.getContractAt(
         'HubController',
         previousHubControllerAddress,
@@ -57,9 +59,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
       const transferHubOwneshipTx = await previousHubController.transferHubOwnership(HubController.address);
       await transferHubOwneshipTx.wait();
-    }
 
-    console.log(`Hub ownership transferred to HubController (${HubController.address})`);
+      console.log(`Hub ownership transferred to HubController (${HubController.address})`);
+    }
   }
 };
 

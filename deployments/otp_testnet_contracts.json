@@ -42,8 +42,8 @@
     },
     "HubController": {
       "deployed": true,
-      "evmAddress": "0x07cC87F5F1A91f088C8084563cDEf8EfdF25cBC7",
-      "substrateAddress": "5EMjsczMjmQgzmKkT2LzZ2mtVHJUAV4hwor7AAfhCxxFUXDV"
+      "evmAddress": "0x591575F5DC9d2FD6C68603E85Bfe0365bEDf11AB",
+      "substrateAddress": "5EMjscze2RssuPD9NTzW845nJ71CrxUNPNZqL9b1JFjmmpv4"
     },
     "Identity": {
       "deployed": true,
