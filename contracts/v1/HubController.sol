@@ -166,7 +166,7 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
                 try hub.getAssetStorageAddress(forwardCallsData[i].contractName) returns (address addr) {
                     contractAddress = addr;
                 } catch {
-                    revert("Failed to get contract or asset storage address");
+                    revert("Failed to get contract address");
                 }
             }
             for (uint j; j < forwardCallsData[i].encodedData.length; ) {
