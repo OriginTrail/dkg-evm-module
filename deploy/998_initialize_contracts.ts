@@ -21,10 +21,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     newScoreFunctions,
   ].every((arr) => arr.length === 0);
 
-  if (
-    !noChangesWereMade &&
-    (hre.network.config.environment === 'testnet' || hre.network.config.environment == 'mainnet')
-  ) {
+  if (!noChangesWereMade && hre.network.config.environment !== 'development') {
     const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
 
     console.log(`HubController: ${hubControllerAddress}`);

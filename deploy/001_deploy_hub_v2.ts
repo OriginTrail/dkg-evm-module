@@ -9,7 +9,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     (hre.helpers.contractDeployments.contracts['Hub'].version !== undefined &&
       !hre.helpers.contractDeployments.contracts['Hub'].version.startsWith('1.'))
   ) {
-    if (hre.network.name === 'hardhat') {
+    if (hre.network.config.environment === 'development') {
       hre.helpers.resetDeploymentsJson();
       console.log('Hardhat deployments config reset.');
     }
