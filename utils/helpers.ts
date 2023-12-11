@@ -213,7 +213,7 @@ export class Helpers {
 
     await this.updateDeploymentsJson(nameInHub, newContract.address);
 
-    return await this.hre.ethers.getContractAt(nameInHub, newContract.address, deployer);
+    return await this.hre.ethers.getContractAt(newContractName, newContract.address, deployer);
   }
 
   public async updateContractParameters(contractName: string, contract: Contract) {

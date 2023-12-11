@@ -12,14 +12,29 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   console.log('Deploying ContentAssetStorage V2...');
 
-  await hre.helpers.deploy({
+  const ContentAssetStorage = await hre.helpers.deploy({
     newContractName: 'ContentAssetStorageV2',
     newContractNameInHub: 'ContentAssetStorage',
     passHubInConstructor: true,
     setContractInHub: false,
     setAssetStorageInHub: true,
-    additionalArgs: [hre.network.name.split('_')[0]],
   });
+
+  const encodedData = ContentAssetStorage.interface.encodeFunctionData('setBaseURI', [
+    `did:dkg:${hre.network.name.split('_')[0]}:${hre.network.config.chainId}/${ContentAssetStorage.address}/`,
+  ]);
+
+  if (hre.network.config.environment == 'development') {
+    const { deployer } = await hre.getNamedAccounts();
+
+    const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
+    const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
+
+    const setBaseURITx = await HubController.forwardCall(ContentAssetStorage.address, encodedData);
+    await setBaseURITx.wait();
+  } else {
+    hre.helpers.setParametersEncodedData.push(['ContentAssetStorage', [encodedData]]);
+  }
 };
 
 export default func;

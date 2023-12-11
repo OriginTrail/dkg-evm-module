@@ -5,11 +5,6 @@
         "internalType": "address",
         "name": "hubAddress",
         "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "blockchainName_",
-        "type": "string"
       }
     ],
     "stateMutability": "nonpayable",
@@ -178,19 +173,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "blockchainName",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
       }
     ],
     "stateMutability": "view",

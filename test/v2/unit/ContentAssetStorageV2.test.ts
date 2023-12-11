@@ -74,7 +74,7 @@ describe('@v2 @unit ContentAssetStorageV2', function () {
   // Test for successful deployment
   it('Should deploy successfully with correct initial parameters', async function () {
     expect(await ContentAssetStorageV2.name()).to.equal('ContentAssetStorage');
-    expect(await ContentAssetStorageV2.version()).to.equal('2.0.0');
+    expect(await ContentAssetStorageV2.version()).to.equal('2.0.1');
   });
 
   // Test for ERC4906 interface support
@@ -109,7 +109,9 @@ describe('@v2 @unit ContentAssetStorageV2', function () {
     await expect(
       HubController.forwardCall(
         ContentAssetStorageV2.address,
-        ContentAssetStorageV2.interface.encodeFunctionData('setBaseURI', ['https://dkg.resolver.origintrail.io/']),
+        ContentAssetStorageV2.interface.encodeFunctionData('setBaseURI', [
+          `https://dkg.resolver.origintrail.io/did:dkg:hardhat:31337/${ContentAssetStorageV2.address.toLowerCase()}/`,
+        ]),
       ),
     ).to.emit(ContentAssetStorageV2, 'BatchMetadataUpdate');
 
