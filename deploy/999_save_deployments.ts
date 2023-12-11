@@ -2,9 +2,7 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const networkPrefixes = ['otp', 'gnosis'];
-
-  if (networkPrefixes.some((networkPrefix) => hre.network.name.startsWith(networkPrefix))) {
+  if (hre.network.config.environment !== 'development') {
     hre.helpers.saveDeploymentsJson('deployments');
   }
 };

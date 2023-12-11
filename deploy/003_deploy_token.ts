@@ -22,7 +22,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       const setTokenTx = await HubController.setContractAddress('Token', tokenAddress);
       await setTokenTx.wait();
     }
-  } else if (!isDeployed && hre.network.name === 'hardhat') {
+  } else if (!isDeployed && hre.network.config.environment === 'development') {
     const Token = await hre.helpers.deploy({
       newContractName: 'Token',
       passHubInConstructor: false,

@@ -168,7 +168,7 @@ export class Helpers {
         log: true,
       });
     } catch (error) {
-      if (this.hre.network.name !== 'hardhat') {
+      if (this.hre.network.config.environment !== 'development') {
         this.saveDeploymentsJson('deployments');
       }
       let message;
@@ -184,14 +184,14 @@ export class Helpers {
 
     let tx;
     if (setContractInHub) {
-      if (this.hre.network.name === 'hardhat') {
+      if (this.hre.network.config.environment === 'development') {
         tx = await HubController.setContractAddress(nameInHub, newContract.address);
         await tx.wait();
       } else {
         this.newContracts.push([nameInHub, newContract.address]);
       }
     } else if (setAssetStorageInHub) {
-      if (this.hre.network.name === 'hardhat') {
+      if (this.hre.network.config.environment === 'development') {
         tx = await HubController.setAssetStorageAddress(nameInHub, newContract.address);
         await tx.wait();
       } else {
@@ -200,7 +200,7 @@ export class Helpers {
     }
 
     if (this.hasFunction(nameInHub, 'initialize')) {
-      if ((setContractInHub || setAssetStorageInHub) && this.hre.network.name === 'hardhat') {
+      if ((setContractInHub || setAssetStorageInHub) && this.hre.network.config.environment === 'development') {
         const newContractInterface = new this.hre.ethers.utils.Interface(this.getAbi(nameInHub));
         const initializeTx = await HubController.forwardCall(
           newContract.address,
