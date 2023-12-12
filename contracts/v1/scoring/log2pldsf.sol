@@ -15,6 +15,8 @@ import {PRBMathUD60x18} from "@prb/math/contracts/PRBMathUD60x18.sol";
 contract Log2PLDSF is IScoreFunction, Indexable, Named, HubDependent, Initializable {
     using PRBMathUD60x18 for uint256;
 
+    event ParameterChanged(string parameterName, uint256 parameterValue);
+
     uint8 private constant _ID = 1;
     string private constant _NAME = "Log2PLDSF";
 
@@ -102,41 +104,61 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named, HubDependent, Initializa
 
     function setDistanceMappingCoefficient(uint256 distanceRangeMax) external onlyHubOwner {
         distanceMappingCoefficient = type(uint256).max / distanceRangeMax;
+
+        emit ParameterChanged("distanceMappingCoefficient", distanceMappingCoefficient);
     }
 
     function setStakeRangeMax(uint96 stakeRangeMax_) external onlyHubOwner {
         stakeRangeMax = stakeRangeMax_;
+
+        emit ParameterChanged("stakeRangeMax", stakeRangeMax);
     }
 
     function setMultiplier(uint32 multiplier_) external onlyHubOwner {
         multiplier = multiplier_;
+
+        emit ParameterChanged("multiplier", multiplier);
     }
 
     function setLogArgumentConstant(uint32 logArgumentConstant_) external onlyHubOwner {
         logArgumentConstant = logArgumentConstant_;
+
+        emit ParameterChanged("logArgumentConstant", logArgumentConstant);
     }
 
     function setA(uint32 a_) external onlyHubOwner {
         a = a_;
+
+        emit ParameterChanged("a", a);
     }
 
     function setStakeExponent(uint32 stakeExponent_) external onlyHubOwner {
         stakeExponent = stakeExponent_;
+
+        emit ParameterChanged("stakeExponent", stakeExponent);
     }
 
     function setB(uint32 b_) external onlyHubOwner {
         b = b_;
+
+        emit ParameterChanged("b", b);
     }
 
     function setC(uint32 c_) external onlyHubOwner {
         c = c_;
+
+        emit ParameterChanged("c", c);
     }
 
     function setDistanceExponent(uint32 distanceExponent_) external onlyHubOwner {
         distanceExponent = distanceExponent_;
+
+        emit ParameterChanged("distanceExponent", distanceExponent);
     }
 
     function setD(uint32 d_) external onlyHubOwner {
         d = d_;
+
+        emit ParameterChanged("d", d);
     }
 }
