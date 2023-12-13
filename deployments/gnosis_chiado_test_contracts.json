@@ -42,11 +42,11 @@
     },
     "ContentAssetStorage": {
       "deployed": true,
-      "deploymentTimestamp": 1701109027906,
-      "evmAddress": "0x480cA6618929357d070e2B646f8b505Fbf44aa10",
+      "deploymentTimestamp": 1702464503710,
+      "evmAddress": "0xeA3423e02c8d231532dab1BCE5D034f3737B3638",
       "gitBranch": "main",
-      "gitCommitHash": "83b739de2ea02ce8027e2fccc6e04e9d5da48814",
-      "version": "2.0.0"
+      "gitCommitHash": "24d3e2392c0bb6a6164533219a84cd216b46a6a5",
+      "version": "2.0.1"
     },
     "HashingProxy": {
       "deployed": true,
@@ -66,10 +66,10 @@
     },
     "HubController": {
       "deployed": true,
-      "deploymentTimestamp": 1701108771400,
-      "evmAddress": "0x38a5b58e6E4872129AF67D5ddDeB0cD52B280503",
+      "deploymentTimestamp": 1702464414306,
+      "evmAddress": "0x9197fD3277cA04E7FF66257F2E89A11998105D4d",
       "gitBranch": "main",
-      "gitCommitHash": "83b739de2ea02ce8027e2fccc6e04e9d5da48814",
+      "gitCommitHash": "24d3e2392c0bb6a6164533219a84cd216b46a6a5",
       "version": "1.0.1"
     },
     "Identity": {
@@ -90,10 +90,10 @@
     },
     "Log2PLDSF": {
       "deployed": true,
-      "deploymentTimestamp": 1701108876100,
-      "evmAddress": "0x9d0936936D226be3116a8bFD90DDcB40f468796e",
+      "deploymentTimestamp": 1702464453332,
+      "evmAddress": "0xe2f70b7168EBeC9ff8Fe51219Da5c89E5846e6e4",
       "gitBranch": "main",
-      "gitCommitHash": "83b739de2ea02ce8027e2fccc6e04e9d5da48814",
+      "gitCommitHash": "24d3e2392c0bb6a6164533219a84cd216b46a6a5",
       "version": null
     },
     "ParametersStorage": {
