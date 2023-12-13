@@ -156,7 +156,19 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
 
     function _forwardCalls(GeneralStructs.ForwardCallInputArgs[] calldata forwardCallsData) internal {
         for (uint i; i < forwardCallsData.length; ) {
-            address contractAddress = hub.getContractAddress(forwardCallsData[i].contractName);
+            address contractAddress;
+
+            // Try to get the contract address using getContractAddress
+            try hub.getContractAddress(forwardCallsData[i].contractName) returns (address addr) {
+                contractAddress = addr;
+            } catch {
+                // If getContractAddress fails, try getAssetStorageAddress
+                try hub.getAssetStorageAddress(forwardCallsData[i].contractName) returns (address addr) {
+                    contractAddress = addr;
+                } catch {
+                    revert("Failed to get contract address");
+                }
+            }
             for (uint j; j < forwardCallsData[i].encodedData.length; ) {
                 forwardCall(contractAddress, forwardCallsData[i].encodedData[j]);
                 unchecked {

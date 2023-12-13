@@ -13,21 +13,18 @@ contract ContentAssetStorageV2 is ContentAssetStorage, IERC4906 {
     using Strings for address;
     using Strings for uint256;
 
-    string private constant _VERSION = "2.0.0";
+    string private constant _VERSION = "2.0.1";
 
     // Interface ID as defined in ERC-4906. This does not correspond to a traditional interface ID as ERC-4906 only
     // defines events and does not include any external function.
     bytes4 private constant ERC4906_INTERFACE_ID = bytes4(0x49064906);
 
-    string public blockchainName;
-
     uint256 internal _tokenId = 1;
 
     string public tokenBaseURI;
 
-    constructor(address hubAddress, string memory blockchainName_) ContentAssetStorage(hubAddress) {
-        blockchainName = blockchainName_;
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) ContentAssetStorage(hubAddress) {}
 
     function version() external pure override returns (string memory) {
         return _VERSION;
@@ -47,41 +44,22 @@ contract ContentAssetStorageV2 is ContentAssetStorage, IERC4906 {
     }
 
     function lastTokenId() public view virtual returns (uint256) {
-        if (_tokenId <= 0) revert ContentAssetErrors.NoMintedAssets();
+        if (_tokenId == 1) revert ContentAssetErrors.NoMintedAssets();
 
         unchecked {
             return _tokenId - 1;
         }
     }
 
-    /**
-     * @dev See {IERC721Metadata-tokenURI}.
-     */
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        string memory base = tokenBaseURI;
-        string memory _ual = string(
-            abi.encodePacked(
-                "did:dkg:",
-                blockchainName,
-                ":",
-                Strings.toString(block.chainid),
-                "/",
-                address(this).toHexString(),
-                "/",
-                Strings.toString(tokenId)
-            )
-        );
-
-        // If there is no base URI, return the Knowledge Asset UAL.
-        if (bytes(base).length == 0) {
-            return _ual;
-        }
-
-        return string.concat(base, _ual);
-    }
-
     function setBaseURI(string memory baseURI) external virtual onlyHubOwner {
         tokenBaseURI = baseURI;
-        emit BatchMetadataUpdate(0, lastTokenId());
+
+        if (_tokenId > 1) {
+            emit BatchMetadataUpdate(1, lastTokenId());
+        }
+    }
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return tokenBaseURI;
     }
 }
