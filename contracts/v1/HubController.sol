@@ -15,7 +15,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract HubController is Named, Versioned, ContractStatus, Ownable {
     string private constant _NAME = "HubController";
-    string private constant _VERSION = "1.0.1";
+    string private constant _VERSION = "1.0.2";
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}

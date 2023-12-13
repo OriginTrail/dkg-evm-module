@@ -33,7 +33,7 @@ describe('@v1 @unit HubController contract', function () {
 
   it('Should deploy successfully with correct initial parameters', async function () {
     expect(await HubController.name()).to.equal('HubController');
-    expect(await HubController.version()).to.equal('1.0.1');
+    expect(await HubController.version()).to.equal('1.0.2');
   });
 
   it('New Profile contract set in the Hub through the HubController; Expect status for old Profile to be false, status for the new Profile to be true', async function () {
