@@ -283,11 +283,11 @@ export class Helpers {
         } else {
           throw Error(`Parameter '${getterName}' doesn't exist in the contract '${contractName}'.`);
         }
-
-        if (encodedData[1].length !== 0) {
-          this.setParametersEncodedData.push(encodedData);
-        }
       }
+    }
+
+    if (encodedData[1].length !== 0) {
+      this.setParametersEncodedData.push(encodedData);
     }
   }
 

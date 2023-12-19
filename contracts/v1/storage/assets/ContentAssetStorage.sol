@@ -20,7 +20,7 @@ contract ContentAssetStorage is AbstractAsset, ERC721 {
     mapping(bytes32 => address) public issuers;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) AbstractAsset(hubAddress) ERC721("ContentAssetStorage", "DKG") {}
+    constructor(address hubAddress) AbstractAsset(hubAddress) ERC721("KnowledgeAssetCollection", "DKG") {}
 
     function name() public view virtual override(Named, ERC721) returns (string memory) {
         return ERC721.name();
