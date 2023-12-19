@@ -138,7 +138,7 @@ export class Helpers {
 
     if (this.isDeployed(nameInHub)) {
       const contractInstance = await this.hre.ethers.getContractAt(
-        nameInHub,
+        this.getAbi(newContractName),
         this.contractDeployments.contracts[nameInHub].evmAddress,
         deployer,
       );

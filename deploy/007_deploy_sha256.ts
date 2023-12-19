@@ -7,7 +7,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const SHA256 = await hre.helpers.deploy({
     newContractName: 'SHA256',
     passHubInConstructor: false,
-    setContractInHub: false,
   });
 
   if (!isDeployed) {

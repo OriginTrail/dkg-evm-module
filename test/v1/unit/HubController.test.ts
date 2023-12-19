@@ -13,8 +13,6 @@ type HubControllerFixture = {
 };
 
 describe('@v1 @unit HubController contract', function () {
-  this.timeout(1000000);
-
   let accounts: SignerWithAddress[];
   let HubController: HubController;
   let Profile: Profile;
@@ -125,13 +123,9 @@ describe('@v1 @unit HubController contract', function () {
     const SHA256 = await hre.helpers.deploy({
       newContractName: 'SHA256',
       passHubInConstructor: false,
-      setContractInHub: false,
     });
     const ScoringProxy = await hre.helpers.deploy({ newContractName: 'ScoringProxy' });
-    const Log2PLDSF = await hre.helpers.deploy({
-      newContractName: 'Log2PLDSF',
-      setContractInHub: false,
-    });
+    const Log2PLDSF = await hre.helpers.deploy({ newContractName: 'Log2PLDSF' });
     const AssertionStorage = await hre.helpers.deploy({ newContractName: 'AssertionStorage' });
     const IdentityStorage = await hre.helpers.deploy({ newContractName: 'IdentityStorage' });
     const ShardingTableStorage = await hre.helpers.deploy({ newContractName: 'ShardingTableStorage' });
@@ -164,7 +158,9 @@ describe('@v1 @unit HubController contract', function () {
       { name: 'ParametersStorage', addr: ParametersStorage.address },
       { name: 'WhitelistStorage', addr: WhitelistStorage.address },
       { name: 'HashingProxy', addr: HashingProxy.address },
+      { name: 'SHA256', addr: SHA256.address },
       { name: 'ScoringProxy', addr: ScoringProxy.address },
+      { name: 'Log2PLDSF', addr: Log2PLDSF.address },
       { name: 'AssertionStorage', addr: AssertionStorage.address },
       { name: 'IdentityStorage', addr: IdentityStorage.address },
       { name: 'ShardingTableStorage', addr: ShardingTableStorage.address },
@@ -223,7 +219,7 @@ describe('@v1 @unit HubController contract', function () {
         ],
       },
       {
-        contractName: 'ProogManagerV1',
+        contractName: 'ProofManagerV1',
         encodedData: [
           '0x7ea63c6e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001',
           '0x7ea63c6e00000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000001',

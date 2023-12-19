@@ -90,10 +90,10 @@
     },
     "Log2PLDSF": {
       "deployed": true,
-      "deploymentTimestamp": 1703022975903,
-      "evmAddress": "0x7A1a6f2262da962E2f0c2117668C8b03976C43FF",
-      "gitBranch": "main",
-      "gitCommitHash": "c993c8564d17e5b8fbab770b020d7c926608ea24",
+      "deploymentTimestamp": 1703025999344,
+      "evmAddress": "0xcA9f750Cd07ACd2F1Ca9cB1d1Dfdcf19e2E9773e",
+      "gitBranch": "gnosis-mainnet-deployment",
+      "gitCommitHash": "e1347318d5badad802c1b802f3aa270be7843e26",
       "version": null
     },
     "ParametersStorage": {
@@ -138,10 +138,10 @@
     },
     "SHA256": {
       "deployed": true,
-      "deploymentTimestamp": 1703022954842,
-      "evmAddress": "0xDD21D2607D3f7e0fe939D25200f0256Cb7C7C9F7",
-      "gitBranch": "main",
-      "gitCommitHash": "c993c8564d17e5b8fbab770b020d7c926608ea24",
+      "deploymentTimestamp": 1703025987942,
+      "evmAddress": "0x01BF84f88861294Dc6FcAF14f6cAA9FAe604A528",
+      "gitBranch": "gnosis-mainnet-deployment",
+      "gitCommitHash": "e1347318d5badad802c1b802f3aa270be7843e26",
       "version": null
     },
     "ScoringProxy": {
