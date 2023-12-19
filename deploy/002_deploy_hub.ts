@@ -42,7 +42,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       setContractInHub: false,
     });
 
-    if (previousHubControllerAddress == null) {
+    if (previousHubControllerAddress === null) {
       const hubAddress = hre.helpers.contractDeployments.contracts['Hub'].evmAddress;
       const Hub = await hre.ethers.getContractAt('Hub', hubAddress, deployer);
 
