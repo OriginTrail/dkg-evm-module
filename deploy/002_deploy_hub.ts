@@ -46,21 +46,29 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       const hubAddress = hre.helpers.contractDeployments.contracts['Hub'].evmAddress;
       const Hub = await hre.ethers.getContractAt('Hub', hubAddress, deployer);
 
-      const transferHubOwneshipTx = await Hub.transferOwnership(HubController.address);
-      await transferHubOwneshipTx.wait();
+      const hubOwner = await Hub.owner();
 
-      console.log(`Hub ownership transferred to HubController (${HubController.address})`);
-    } else if (hre.network.config.environment !== 'testnet' && hre.network.config.environment !== 'mainnet') {
+      if (deployer.toLowerCase() === hubOwner.toLowerCase()) {
+        const transferHubOwneshipTx = await Hub.transferOwnership(HubController.address);
+        await transferHubOwneshipTx.wait();
+
+        console.log(`Hub ownership transferred to HubController (${HubController.address})`);
+      }
+    } else {
       const previousHubController = await hre.ethers.getContractAt(
         'HubController',
         previousHubControllerAddress,
         deployer,
       );
 
-      const transferHubOwneshipTx = await previousHubController.transferHubOwnership(HubController.address);
-      await transferHubOwneshipTx.wait();
+      const previousHubControllerOwner = await previousHubController.owner();
 
-      console.log(`Hub ownership transferred to HubController (${HubController.address})`);
+      if (deployer.toLowerCase() === previousHubControllerOwner.toLowerCase()) {
+        const transferHubOwneshipTx = await previousHubController.transferHubOwnership(HubController.address);
+        await transferHubOwneshipTx.wait();
+
+        console.log(`Hub ownership transferred to HubController (${HubController.address})`);
+      }
     }
   }
 };
