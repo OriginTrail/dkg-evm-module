@@ -138,7 +138,7 @@ export class Helpers {
 
     if (this.isDeployed(nameInHub)) {
       const contractInstance = await this.hre.ethers.getContractAt(
-        nameInHub,
+        this.getAbi(newContractName),
         this.contractDeployments.contracts[nameInHub].evmAddress,
         deployer,
       );
@@ -213,7 +213,7 @@ export class Helpers {
 
     await this.updateDeploymentsJson(nameInHub, newContract.address);
 
-    return await this.hre.ethers.getContractAt(newContractName, newContract.address, deployer);
+    return await this.hre.ethers.getContractAt(this.getAbi(newContractName), newContract.address, deployer);
   }
 
   public async updateContractParameters(contractName: string, contract: Contract) {
@@ -283,11 +283,11 @@ export class Helpers {
         } else {
           throw Error(`Parameter '${getterName}' doesn't exist in the contract '${contractName}'.`);
         }
-
-        if (encodedData[1].length !== 0) {
-          this.setParametersEncodedData.push(encodedData);
-        }
       }
+    }
+
+    if (encodedData[1].length !== 0) {
+      this.setParametersEncodedData.push(encodedData);
     }
   }
 

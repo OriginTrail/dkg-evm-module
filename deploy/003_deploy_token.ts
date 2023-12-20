@@ -13,14 +13,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const tokenInHub = await Hub['isContract(string)']('Token');
 
     if (!tokenInHub) {
-      const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
-      const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
-
-      const tokenAddress = hre.helpers.contractDeployments.contracts['Token'].evmAddress;
-
-      console.log(`Setting Token (${tokenAddress}) in the Hub (${Hub.address}).`);
-      const setTokenTx = await HubController.setContractAddress('Token', tokenAddress);
-      await setTokenTx.wait();
+      hre.helpers.newContracts.push(['Token', hre.helpers.contractDeployments.contracts['Token'].evmAddress]);
     }
   } else if (!isDeployed && hre.network.config.environment === 'development') {
     const Token = await hre.helpers.deploy({
@@ -43,6 +36,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       const mintTx = await Token.mint(acc.address, amountToMint, { from: deployer, gasLimit: 80_000 });
       await mintTx.wait();
     }
+  } else {
+    throw new Error('Missing Token address in the JSON config!');
   }
 };
 
