@@ -146,7 +146,7 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
 
         require(count > 1, "Invalid nodes count");
         for (uint72 i = nodeToRemove.index; i < count - 1; i++) {
-            nextNode.index = i;
+            sts.setIndex(nextNode.identityId, i);
             nextNode = sts.getNode(nextNode.nextIdentityId);
         }
 

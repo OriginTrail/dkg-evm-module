@@ -13,7 +13,6 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
     string private constant _VERSION = "2.0.0";
 
     uint72 public head;
-    uint72 public tail;
     uint72 public nodesCount;
 
     // identityId => Node
@@ -21,7 +20,6 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
 
     constructor(address hubAddress) HubDependent(hubAddress) {
         head = NULL;
-        tail = NULL;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -42,10 +40,6 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
 
     function setHead(uint72 identityId) external onlyContracts {
         head = identityId;
-    }
-
-    function setTail(uint72 identityId) external onlyContracts {
-        tail = identityId;
     }
 
     function createNodeObject(
