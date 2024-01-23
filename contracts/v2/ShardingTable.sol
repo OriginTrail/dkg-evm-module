@@ -7,11 +7,11 @@ import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "../v1/storage/StakingStorage.sol";
 import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
 import {Initializable} from "../v1/interface/Initializable.sol";
-import {Named} from "./interface/Named.sol";
-import {Versioned} from "./interface/Versioned.sol";
+import {Named} from "../v1/interface/Named.sol";
+import {Versioned} from "../v1/interface/Versioned.sol";
 import {ShardingTableStructs} from "./structs/ShardingTableStructs.sol";
 
-//import {NULL} from "../v1/constants/ShardingTableConstants.sol";
+import {NULL} from "../v1/constants/ShardingTableConstants.sol";
 
 contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
     event NodeAdded(uint72 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
@@ -53,68 +53,19 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
         return _getShardingTable(sts.head(), sts.nodesCount());
     }
 
-    //
-    //    function pushBack(uint72 identityId) external onlyContracts {
-    //        ProfileStorage ps = profileStorage;
-    //        require(ps.profileExists(identityId), "Profile doesn't exist");
-    //
-    //        ShardingTableStorage sts = shardingTableStorage;
-    //
-    //        sts.createNodeObject(identityId, NULL, NULL);
-    //
-    //        if (sts.tail() != NULL) sts.link(sts.tail(), identityId);
-    //
-    //        sts.setTail(identityId);
-    //
-    //        if (sts.head() == NULL) sts.setHead(identityId);
-    //
-    //        sts.incrementNodesCount();
-    //
-    //        emit NodeAdded(
-    //            identityId,
-    //            ps.getNodeId(identityId),
-    //            ps.getAsk(identityId),
-    //            stakingStorage.totalStakes(identityId)
-    //        );
-    //    }
-    //
-    //    function pushFront(uint72 identityId) external onlyContracts {
-    //        ProfileStorage ps = profileStorage;
-    //        require(ps.profileExists(identityId), "Profile doesn't exist");
-    //
-    //        ShardingTableStorage sts = shardingTableStorage;
-    //
-    //        sts.createNodeObject(identityId, NULL, NULL);
-    //
-    //        if (sts.head() != NULL) sts.link(identityId, sts.head());
-    //
-    //        shardingTableStorage.setHead(identityId);
-    //
-    //        if (sts.tail() == NULL) sts.setTail(identityId);
-    //
-    //        sts.incrementNodesCount();
-    //
-    //        emit NodeAdded(
-    //            identityId,
-    //            ps.getNodeId(identityId),
-    //            ps.getAsk(identityId),
-    //            stakingStorage.totalStakes(identityId)
-    //        );
-    //    }
-
     function insertNode(uint72 identityId, uint72 previousIdentityId, uint72 nextIdentityId) external onlyContracts {
         ProfileStorage ps = profileStorage;
         require(ps.profileExists(identityId), "Profile doesn't exist");
 
         ShardingTableStorage sts = shardingTableStorage;
 
-        ShardingTableStructs.Node previousNode = sts.getNode(previousIdentityId);
+        ShardingTableStructs.Node memory previousNode = sts.getNode(previousIdentityId);
 
-        ShardingTableStructs.Node nextNode = sts.getNode(nextIdentityId);
+        ShardingTableStructs.Node memory nextNode = sts.getNode(nextIdentityId);
 
         if (
             previousIdentityId == identityId ||
-            (previousIdentityId > identityId && previousNode.index != sts.nodesCount)
+            (previousIdentityId > identityId && previousNode.index != sts.nodesCount())
         ) {
             revert("Invalid previous node id");
         }
@@ -129,7 +80,10 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
 
         sts.createNodeObject(identityId, nextNode.index, previousIdentityId, nextIdentityId);
 
-        for (uint i = nextNode.index + 1; i < sts.nodesCount - 1; i++) {
+        uint72 count = sts.nodesCount();
+
+        require(count > 1, "Invalid nodes count");
+        for (uint72 i = nextNode.index + 1; i < count - 1; i++) {
             nextNode.index = i;
             nextNode = sts.getNode(nextNode.nextIdentityId);
         }
@@ -154,11 +108,14 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
 
         ShardingTableStructs.Node memory nodeToRemove = sts.getNode(identityId);
 
-        ShardingTableStructs.Node nextNode = sts.getNode(nodeToRemove.nextIdentityId);
+        ShardingTableStructs.Node memory nextNode = sts.getNode(nodeToRemove.nextIdentityId);
 
         sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
 
-        for (uint i = nodeToRemove.index; i < sts.nodesCount - 1; i++) {
+        uint72 count = sts.nodesCount();
+
+        require(count > 1, "Invalid nodes count");
+        for (uint72 i = nodeToRemove.index; i < count - 1; i++) {
             nextNode.index = i;
             nextNode = sts.getNode(nextNode.nextIdentityId);
         }
