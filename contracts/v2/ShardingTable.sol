@@ -102,7 +102,6 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
             prevIdentityId,
             nextIdentityId
         );
-
         sts.incrementNodesCount();
 
         if (prevIdentityId == NULL) {
@@ -136,16 +135,12 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
 
         ShardingTableStructs.Node memory nodeToRemove = sts.getNode(identityId);
 
-        ShardingTableStructs.Node memory nextNode = sts.getNode(nodeToRemove.nextIdentityId);
-
         sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
 
-        uint72 count = sts.nodesCount();
-
-        require(count > 1, "Invalid nodes count");
-        for (uint72 i = nodeToRemove.index; i < count - 1; i++) {
-            sts.setIndex(nextNode.identityId, i);
-            nextNode = sts.getNode(nextNode.nextIdentityId);
+        uint72 nextIdentityId = nodeToRemove.nextIdentityId;
+        while (nextIdentityId != NULL) {
+            sts.decrementNodeIndex(nextIdentityId);
+            nextIdentityId = sts.getNode(nextIdentityId).nextIdentityId;
         }
 
         sts.deleteNodeObject(identityId);
