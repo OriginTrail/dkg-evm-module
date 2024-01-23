@@ -111,9 +111,7 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
             sts.link(prevIdentityId, identityId);
         }
 
-        if (nextIdentityId == NULL) {
-            sts.setTail(identityId);
-        } else {
+        if (nextIdentityId != NULL) {
             sts.link(identityId, nextIdentityId);
         }
 
