@@ -128,12 +128,11 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
     }
 
     function removeNode(uint72 identityId) external onlyContracts {
-        ProfileStorage ps = profileStorage;
-        require(ps.profileExists(identityId), "Profile doesn't exist");
-
         ShardingTableStorageV2 sts = shardingTableStorage;
 
         ShardingTableStructs.Node memory nodeToRemove = sts.getNode(identityId);
+
+        require(nodeToRemove.identityId != 0, "Profile doesn't exist");
 
         sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
 
@@ -146,7 +145,7 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
         sts.deleteNodeObject(identityId);
         sts.decrementNodesCount();
 
-        emit NodeRemoved(identityId, ps.getNodeId(identityId));
+        emit NodeRemoved(identityId, profileStorage.getNodeId(identityId));
     }
 
     function _getShardingTable(
