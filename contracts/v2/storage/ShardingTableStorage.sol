@@ -8,7 +8,7 @@ import {Versioned} from "../../v1/interface/Versioned.sol";
 import {ShardingTableStructs} from "../structs/ShardingTableStructs.sol";
 import {NULL} from "../../v1/constants/ShardingTableConstants.sol";
 
-contract ShardingTableStorage is Named, Versioned, HubDependent {
+contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
     string private constant _NAME = "ShardingTableStorage";
     string private constant _VERSION = "2.0.0";
 
@@ -43,14 +43,16 @@ contract ShardingTableStorage is Named, Versioned, HubDependent {
     }
 
     function createNodeObject(
+        uint256 hashRingPosition,
         uint72 identityId,
         uint72 prevIdentityId,
         uint72 nextIdentityId,
         uint72 index
     ) external onlyContracts {
         nodes[identityId] = ShardingTableStructs.Node({
-            identityId: identityId,
+            hashRingPosition: hashRingPosition,
             index: index,
+            identityId: identityId,
             prevIdentityId: prevIdentityId,
             nextIdentityId: nextIdentityId
         });
@@ -76,8 +78,12 @@ contract ShardingTableStorage is Named, Versioned, HubDependent {
         nodes[identityId].nextIdentityId = newNextIdentityId;
     }
 
-    function setIndex(uint72 identityId, uint72 index) external onlyContracts {
-        nodes[identityId].index = index;
+    function incrementNodeIndex(uint72 identityId) external onlyContracts {
+        nodes[identityId].index += 1;
+    }
+
+    function decrementNodeIndex(uint72 identityId) external onlyContracts {
+        nodes[identityId].index -= 1;
     }
 
     function getMultipleNodes(
@@ -96,11 +102,6 @@ contract ShardingTableStorage is Named, Versioned, HubDependent {
         }
 
         return nodesPage;
-    }
-
-    function link(uint72 leftNodeIdentityId, uint72 newIdentityId, uint72 rightNodeIdentityId) external onlyContracts {
-        nodes[leftNodeIdentityId].nextIdentityId = newIdentityId;
-        nodes[rightNodeIdentityId].prevIdentityId = newIdentityId;
     }
 
     function link(uint72 leftNodeIdentityId, uint72 rightNodeIdentityId) external onlyContracts {
