@@ -63,32 +63,45 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
 
         ShardingTableStructs.Node memory nextNode = sts.getNode(nextIdentityId);
 
-        if (
+        if (sts.nodesCount() == 0) {
+            sts.createNodeObject(identityId, 0, NULL, NULL);
+            sts.setHead(identityId);
+        } else if (sts.nodesCount() == 1) {
+            ShardingTableStructs.Node memory head = sts.getNode(sts.head());
+            if (head.identityId < identityId) {
+                sts.createNodeObject(identityId, 1, head.identityId, head.identityId);
+            } else {
+                sts.createNodeObject(identityId, 0, head.identityId, head.identityId);
+                sts.setHead(identityId);
+            }
+            sts.setNextIdentityId(head.identityId, identityId);
+            sts.setPrevIdentityId(head.identityId, identityId);
+        } else if (
             previousIdentityId == identityId ||
             (previousIdentityId > identityId && previousNode.index != sts.nodesCount())
         ) {
             revert("Invalid previous node id");
-        }
-
-        if (nextIdentityId == identityId || (nextIdentityId < identityId && nextNode.index != 0)) {
+        } else if (nextIdentityId == identityId || (nextIdentityId < identityId && nextNode.index != 0)) {
             revert("Invalid next node id");
-        }
-
-        if (nextNode.index - previousNode.index != 1 && nextNode.index != 0) {
+        } else if (nextNode.index - previousNode.index != 1 && nextNode.index != 0) {
             revert("Invalid previous and next node id");
+        } else {
+            sts.createNodeObject(identityId, nextNode.index, previousIdentityId, nextIdentityId);
+
+            if (nextNode.index == 0) {
+                sts.setHead(identityId);
+            }
+
+            uint72 count = sts.nodesCount();
+
+            require(count > 1, "Invalid nodes count");
+            for (uint72 i = nextNode.index + 1; i < count - 1; i++) {
+                sts.setIndex(nextNode.identityId, i);
+                nextNode = sts.getNode(nextNode.nextIdentityId);
+            }
+
+            sts.link(previousIdentityId, identityId, nextIdentityId);
         }
-
-        sts.createNodeObject(identityId, nextNode.index, previousIdentityId, nextIdentityId);
-
-        uint72 count = sts.nodesCount();
-
-        require(count > 1, "Invalid nodes count");
-        for (uint72 i = nextNode.index + 1; i < count - 1; i++) {
-            nextNode.index = i;
-            nextNode = sts.getNode(nextNode.nextIdentityId);
-        }
-
-        sts.link(previousIdentityId, identityId, nextIdentityId);
 
         sts.incrementNodesCount();
 
@@ -116,7 +129,7 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
 
         require(count > 1, "Invalid nodes count");
         for (uint72 i = nodeToRemove.index; i < count - 1; i++) {
-            nextNode.index = i;
+            sts.setIndex(nextNode.identityId, i);
             nextNode = sts.getNode(nextNode.nextIdentityId);
         }
 
