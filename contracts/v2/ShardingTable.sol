@@ -63,30 +63,32 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
 
         ShardingTableStructs.Node memory nextNode = sts.getNode(nextIdentityId);
 
-        if (sts.nodesCount() == 0) {
-            sts.createNodeObject(identityId, 0, NULL, NULL);
-        } else if (
+        if (
             previousIdentityId == identityId ||
             (previousIdentityId > identityId && previousNode.index != sts.nodesCount())
         ) {
             revert("Invalid previous node id");
-        } else if (nextIdentityId == identityId || (nextIdentityId < identityId && nextNode.index != 0)) {
-            revert("Invalid next node id");
-        } else if (nextNode.index - previousNode.index != 1 && nextNode.index != 0) {
-            revert("Invalid previous and next node id");
-        } else {
-            sts.createNodeObject(identityId, nextNode.index, previousIdentityId, nextIdentityId);
-
-            uint72 count = sts.nodesCount();
-
-            require(count > 1, "Invalid nodes count");
-            for (uint72 i = nextNode.index + 1; i < count - 1; i++) {
-                nextNode.index = i;
-                nextNode = sts.getNode(nextNode.nextIdentityId);
-            }
-
-            sts.link(previousIdentityId, identityId, nextIdentityId);
         }
+
+        if (nextIdentityId == identityId || (nextIdentityId < identityId && nextNode.index != 0)) {
+            revert("Invalid next node id");
+        }
+
+        if (nextNode.index - previousNode.index != 1 && nextNode.index != 0) {
+            revert("Invalid previous and next node id");
+        }
+
+        sts.createNodeObject(identityId, nextNode.index, previousIdentityId, nextIdentityId);
+
+        uint72 count = sts.nodesCount();
+
+        require(count > 1, "Invalid nodes count");
+        for (uint72 i = nextNode.index + 1; i < count - 1; i++) {
+            nextNode.index = i;
+            nextNode = sts.getNode(nextNode.nextIdentityId);
+        }
+
+        sts.link(previousIdentityId, identityId, nextIdentityId);
 
         sts.incrementNodesCount();
 
