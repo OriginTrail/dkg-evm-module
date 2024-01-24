@@ -44,16 +44,15 @@ contract ScoringProxy is Named, Versioned, ContractStatus {
         scoreFunctionSet.remove(scoreFunctionId);
     }
 
+    //remove everthring except id, noramlised distance, normalized stake
     function callScoreFunction(
         uint8 scoreFunctionId,
-        uint8 hashFunctionId,
-        bytes calldata nodeId,
-        bytes calldata keyword,
-        uint96 stake
+        uint256 mappedDistance,
+        uint256 mappedStake
     ) external view returns (uint40) {
         IScoreFunction scoringFunction = IScoreFunction(scoreFunctionSet.get(scoreFunctionId).addr);
-        uint256 distance = scoringFunction.calculateDistance(hashFunctionId, nodeId, keyword);
-        return scoringFunction.calculateScore(distance, stake);
+
+        return scoringFunction.calculateScore(mappedDistance, mappedStake);
     }
 
     function getScoreFunctionName(uint8 scoreFunctionId) external view returns (string memory) {
