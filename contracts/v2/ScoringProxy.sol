@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.16;
 
-import {ContractStatus} from "./abstract/ContractStatus.sol";
-import {IScoreFunction} from "./interface/IScoreFunction.sol";
-import {Named} from "./interface/Named.sol";
-import {Versioned} from "./interface/Versioned.sol";
-import {UnorderedIndexableContractDynamicSetLib} from "./utils/UnorderedIndexableContractDynamicSet.sol";
+import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
+import {IScoreFunction} from "../v1/interface/IScoreFunction.sol";
+import {Named} from "../v1/interface/Named.sol";
+import {Versioned} from "../v1/interface/Versioned.sol";
+import {UnorderedIndexableContractDynamicSetLib} from "../v1/utils/UnorderedIndexableContractDynamicSet.sol";
 
-contract ScoringProxy is Named, Versioned, ContractStatus {
+contract ScoringProxyV2 is Named, Versioned, ContractStatus {
     using UnorderedIndexableContractDynamicSetLib for UnorderedIndexableContractDynamicSetLib.Set;
 
     event NewScoringFunctionContract(uint8 indexed scoreFunctionId, address newContractAddress);
@@ -44,16 +44,15 @@ contract ScoringProxy is Named, Versioned, ContractStatus {
         scoreFunctionSet.remove(scoreFunctionId);
     }
 
+    //remove everthring except id, noramlised distance, normalized stake
     function callScoreFunction(
         uint8 scoreFunctionId,
-        uint8 hashFunctionId,
-        bytes calldata nodeId,
-        bytes calldata keyword,
-        uint96 stake
+        uint256 mappedDistance,
+        uint256 mappedStake
     ) external view returns (uint40) {
         IScoreFunction scoringFunction = IScoreFunction(scoreFunctionSet.get(scoreFunctionId).addr);
-        uint256 distance = scoringFunction.calculateDistance(hashFunctionId, nodeId, keyword);
-        return scoringFunction.calculateScore(distance, stake);
+
+        return scoringFunction.calculateScore(mappedDistance, mappedStake);
     }
 
     function getScoreFunctionName(uint8 scoreFunctionId) external view returns (string memory) {

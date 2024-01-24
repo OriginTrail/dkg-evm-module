@@ -14,7 +14,7 @@ import {ShardingTableErrors} from "./errors/ShardingTableErrors.sol";
 
 import {NULL} from "../v1/constants/ShardingTableConstants.sol";
 
-contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
+contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     event NodeAdded(uint72 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
     event NodeRemoved(uint72 indexed identityId, bytes nodeId);
 

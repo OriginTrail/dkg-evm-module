@@ -2,28 +2,27 @@
 
 pragma solidity ^0.8.16;
 
-import {HashingProxy} from "./HashingProxy.sol";
-import {ScoringProxy} from "./ScoringProxy.sol";
-import {Staking} from "./Staking.sol";
+import {HashingProxy} from "../v1/HashingProxy.sol";
+import {ScoringProxy} from "../v1/ScoringProxy.sol";
+import {Staking} from "../v1/Staking.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
-import {ParametersStorage} from "./storage/ParametersStorage.sol";
-import {ProfileStorage} from "./storage/ProfileStorage.sol";
-import {ServiceAgreementStorageProxy} from "./storage/ServiceAgreementStorageProxy.sol";
+import {ParametersStorage} from "../v1/storage/ParametersStorage.sol";
+import {ProfileStorage} from "../v1/storage/ProfileStorage.sol";
+import {ServiceAgreementStorageProxy} from "../v1/storage/ServiceAgreementStorageProxy.sol";
 import {ShardingTableStorageV2} from "../v2/storage/ShardingTableStorage.sol";
-import {StakingStorage} from "./storage/StakingStorage.sol";
-import {ContractStatus} from "./abstract/ContractStatus.sol";
-import {Initializable} from "./interface/Initializable.sol";
-import {Named} from "./interface/Named.sol";
-import {Versioned} from "./interface/Versioned.sol";
+import {StakingStorage} from "../v1/storage/StakingStorage.sol";
+import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
+import {Initializable} from "../v1/interface/Initializable.sol";
+import {Named} from "../v1/interface/Named.sol";
+import {Versioned} from "../v1/interface/Versioned.sol";
 import {ContentAssetErrors} from "./errors/assets/ContentAssetErrors.sol";
-import {GeneralErrors} from "./errors/GeneralErrors.sol";
-import {ServiceAgreementErrorsV1} from "./errors/ServiceAgreementErrorsV1.sol";
-import {ServiceAgreementErrorsV1New} from "./errors/ServiceAgreementErrorsV1New.sol";
-import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
+import {GeneralErrors} from "../v1/errors/GeneralErrors.sol";
+import {ServiceAgreementErrorsV1} from "../v1/errors/ServiceAgreementErrorsV1.sol";
+import {ServiceAgreementStructsV1} from "../v1/structs/ServiceAgreementStructsV1.sol";
 import {ShardingTableStructs} from "../v2/structs/ShardingTableStructs.sol";
-import {CommitManagerErrorsV1} from "./errors/CommitManagerErrorsV1.sol";
+import {CommitManagerErrorsV1} from "../v1/errors/CommitManagerErrorsV1.sol";
 
-contract CommitManagerV1New is Named, Versioned, ContractStatus, Initializable {
+contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
     event CommitSubmitted(
         address indexed assetContract,
         uint256 indexed tokenId,
@@ -34,8 +33,8 @@ contract CommitManagerV1New is Named, Versioned, ContractStatus, Initializable {
         uint40 score
     );
 
-    string private constant _NAME = "CommitManagerV1-new";
-    string private constant _VERSION = "1.0.1";
+    string private constant _NAME = "CommitManagerV1U1";
+    string private constant _VERSION = "2.0.0";
 
     bool[4] public reqs = [false, false, false, false];
 
@@ -189,7 +188,7 @@ contract CommitManagerV1New is Named, Versioned, ContractStatus, Initializable {
         uint8 agreementScoreFunctionId = sasProxy.getAgreementScoreFunctionId(agreementId);
 
         if (agreementScoreFunctionId != 2) {
-            revert ServiceAgreementErrorsV1New.WrongScoreFunctionId(
+            revert ServiceAgreementErrorsV1.WrongScoreFunctionId(
                 agreementId,
                 args.epoch,
                 agreementScoreFunctionId,

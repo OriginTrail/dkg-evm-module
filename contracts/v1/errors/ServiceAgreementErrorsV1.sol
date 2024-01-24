@@ -46,4 +46,11 @@ library ServiceAgreementErrorsV1 {
         uint256 challenge
     );
     error NodeAlreadySubmittedCommit(bytes32 agreementId, uint16 epoch, uint72 identityId, bytes nodeId);
+    error WrongScoreFunctionId(
+        bytes32 agreementId,
+        uint16 epoch,
+        uint8 agreementScoreFunctionId,
+        uint8 expectedScoreFunctionId,
+        uint256 timeNow
+    );
 }
