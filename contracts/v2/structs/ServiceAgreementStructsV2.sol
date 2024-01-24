@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.16;
 
-library ServiceAgreementStructsV1 {
+library ServiceAgreementStructsV2 {
     struct CommitSubmission {
         uint72 identityId;
         uint72 prevIdentityId;
@@ -54,6 +54,9 @@ library ServiceAgreementStructsV1 {
         bytes keyword;
         uint8 hashFunctionId;
         uint16 epoch;
+        uint72 closestNode;
+        uint72 leftNeighborhoodEdge;
+        uint72 rightNeighborhoodEdge;
     }
 
     struct ProofInputArgs {

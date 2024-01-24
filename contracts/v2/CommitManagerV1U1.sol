@@ -18,9 +18,10 @@ import {Versioned} from "../v1/interface/Versioned.sol";
 import {ContentAssetErrors} from "./errors/assets/ContentAssetErrors.sol";
 import {GeneralErrors} from "../v1/errors/GeneralErrors.sol";
 import {ServiceAgreementErrorsV1} from "../v1/errors/ServiceAgreementErrorsV1.sol";
-import {ServiceAgreementStructsV1} from "../v1/structs/ServiceAgreementStructsV1.sol";
+import {ServiceAgreementErrorsV2} from "./errors/ServiceAgreementErrorsV2.sol";
+import {ServiceAgreementStructsV2} from "./structs/ServiceAgreementStructsV2.sol";
 import {ShardingTableStructs} from "../v2/structs/ShardingTableStructs.sol";
-import {CommitManagerErrorsV1} from "../v1/errors/CommitManagerErrorsV1.sol";
+import {CommitManagerErrorsV2} from "./errors/CommitManagerErrorsV2.sol";
 
 contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
     event CommitSubmitted(
@@ -108,7 +109,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
     function getTopCommitSubmissions(
         bytes32 agreementId,
         uint16 epoch
-    ) external view returns (ServiceAgreementStructsV1.CommitSubmission[] memory) {
+    ) external view returns (ServiceAgreementStructsV2.CommitSubmission[] memory) {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         if (!sasProxy.agreementV1Exists(agreementId))
@@ -123,8 +124,8 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
         uint32 r0 = parametersStorage.r0();
 
-        ServiceAgreementStructsV1.CommitSubmission[]
-            memory epochCommits = new ServiceAgreementStructsV1.CommitSubmission[](r0);
+        ServiceAgreementStructsV2.CommitSubmission[]
+            memory epochCommits = new ServiceAgreementStructsV2.CommitSubmission[](r0);
 
         bytes32 epochSubmissionsHead = sasProxy.getV1AgreementEpochSubmissionHead(agreementId, epoch);
 
@@ -147,7 +148,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
         return epochCommits;
     }
 
-    function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
+    function submitCommit(ServiceAgreementStructsV2.CommitInputArgs calldata args) external {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         bytes32 agreementId = hashingProxy.callHashFunction(
@@ -188,7 +189,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
         uint8 agreementScoreFunctionId = sasProxy.getAgreementScoreFunctionId(agreementId);
 
         if (agreementScoreFunctionId != 2) {
-            revert ServiceAgreementErrorsV1.WrongScoreFunctionId(
+            revert ServiceAgreementErrorsV2.WrongScoreFunctionId(
                 agreementId,
                 args.epoch,
                 agreementScoreFunctionId,
@@ -208,45 +209,43 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
             );
         }
 
-        if (!shardingTableStorage.nodeExists(args.leftNeighbourHoodEdge)) {
+        if (!shardingTableStorage.nodeExists(args.leftNeighborhoodEdge)) {
             ProfileStorage ps = profileStorage;
 
             revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
-                args.leftNeighbourHoodEdge,
-                ps.getNodeId(args.leftNeighbourHoodEdge),
-                ps.getAsk(args.leftNeighbourHoodEdge),
-                stakingStorage.totalStakes(args.leftNeighbourHoodEdge)
+                args.leftNeighborhoodEdge,
+                ps.getNodeId(args.leftNeighborhoodEdge),
+                ps.getAsk(args.leftNeighborhoodEdge),
+                stakingStorage.totalStakes(args.leftNeighborhoodEdge)
             );
         }
 
-        if (!shardingTableStorage.nodeExists(args.rightNeighbourHoodEdge)) {
+        if (!shardingTableStorage.nodeExists(args.rightNeighborhoodEdge)) {
             ProfileStorage ps = profileStorage;
 
             revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
-                args.rightNeighbourHoodEdge,
-                ps.getNodeId(args.rightNeighbourHoodEdge),
-                ps.getAsk(args.rightNeighbourHoodEdge),
-                stakingStorage.totalStakes(args.rightNeighbourHoodEdge)
+                args.rightNeighborhoodEdge,
+                ps.getNodeId(args.rightNeighborhoodEdge),
+                ps.getAsk(args.rightNeighborhoodEdge),
+                stakingStorage.totalStakes(args.rightNeighborhoodEdge)
             );
         }
 
         ShardingTableStructs.Node memory closestNode = shardingTableStorage.getNode(args.closestNode);
-        ShardingTableStructs.Node memory leftNeighbourhoodEdge = shardingTableStorage.getNode(
-            args.leftNeighbourHoodEdge
-        );
-        ShardingTableStructs.Node memory rightNeighbourhoodEdge = shardingTableStorage.getNode(
-            args.rightNeighbourHoodEdge
+        ShardingTableStructs.Node memory leftNeighborhoodEdge = shardingTableStorage.getNode(args.leftNeighborhoodEdge);
+        ShardingTableStructs.Node memory rightNeighborhoodEdge = shardingTableStorage.getNode(
+            args.rightNeighborhoodEdge
         );
 
-        bool isBetween = (leftNeighbourhoodEdge.index > rightNeighbourhoodEdge.index)
-            ? ((closestNode.index > leftNeighbourhoodEdge.index) || (closestNode.index < rightNeighbourhoodEdge.index))
-            : ((closestNode.index > leftNeighbourhoodEdge.index) && (closestNode.index < rightNeighbourhoodEdge.index));
+        bool isBetween = (leftNeighborhoodEdge.index > rightNeighborhoodEdge.index)
+            ? ((closestNode.index > leftNeighborhoodEdge.index) || (closestNode.index < rightNeighborhoodEdge.index))
+            : ((closestNode.index > leftNeighborhoodEdge.index) && (closestNode.index < rightNeighborhoodEdge.index));
 
         if (!isBetween) {
-            revert CommitManagerErrorsV1.closestNodeNotInNeighbourhood(
+            revert CommitManagerErrorsV2.closestNodeNotInNeighborhood(
                 agreementId,
-                args.leftNeighbourHoodEdge,
-                args.rightNeighbourHoodEdge,
+                args.leftNeighborhoodEdge,
+                args.rightNeighborhoodEdge,
                 args.closestNode,
                 args.epoch,
                 block.timestamp
@@ -254,11 +253,10 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
         }
 
         uint256 numberOfNodes = shardingTableStorage.nodesCount();
-        uint256 clockwiseDistance = (rightNeighbourhoodEdge.index + numberOfNodes - leftNeighbourhoodEdge.index) %
+        uint256 clockwiseDistance = (rightNeighborhoodEdge.index + numberOfNodes - leftNeighborhoodEdge.index) %
             numberOfNodes;
-        uint256 counterclockwiseDistance = (leftNeighbourhoodEdge.index +
-            numberOfNodes -
-            rightNeighbourhoodEdge.index) % numberOfNodes;
+        uint256 counterclockwiseDistance = (leftNeighborhoodEdge.index + numberOfNodes - rightNeighborhoodEdge.index) %
+            numberOfNodes;
 
         uint256 indexDistance = (clockwiseDistance < counterclockwiseDistance)
             ? clockwiseDistance
@@ -266,10 +264,10 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
         //distance between 20 nodes is 19 (this shold be constant)
         if (!(indexDistance == 19)) {
-            revert CommitManagerErrorsV1.negihbourhoodWrongSize(
+            revert CommitManagerErrorsV2.negihbourhoodWrongSize(
                 agreementId,
-                args.leftNeighbourHoodEdge,
-                args.rightNeighbourHoodEdge,
+                args.leftNeighborhoodEdge,
+                args.rightNeighborhoodEdge,
                 numberOfNodes,
                 20,
                 indexDistance,
@@ -278,17 +276,17 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
             );
         }
 
-        uint256 hashRingNeighbourhoodDistance = calculateHashRingDistance(
-            leftNeighbourhoodEdge.hashRingPosition,
-            rightNeighbourhoodEdge.hashRingPosition
+        uint256 hashRingNeighborhoodDistance = calculateHashRingDistance(
+            leftNeighborhoodEdge.hashRingPosition,
+            rightNeighborhoodEdge.hashRingPosition
         );
 
         bytes32 keywordHash = hashingProxy.callHashFunction(args.hashFunctionId, args.keyword);
         bytes32 nodeIdHash = hashingProxy.callHashFunction(args.hashFunctionId, profileStorage.getNodeId(identityId));
 
         uint256 distance = calculateHashRingDistance(
-            leftNeighbourhoodEdge.hashRingPosition,
-            rightNeighbourhoodEdge.hashRingPosition
+            leftNeighborhoodEdge.hashRingPosition,
+            rightNeighborhoodEdge.hashRingPosition
         );
 
         // uint40 score = scoringProxy.callScoreFunction(
@@ -360,7 +358,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
         sasProxy.createV1CommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
 
-        ServiceAgreementStructsV1.CommitSubmission memory refCommit = sasProxy.getCommitSubmission(refCommitId);
+        ServiceAgreementStructsV2.CommitSubmission memory refCommit = sasProxy.getCommitSubmission(refCommitId);
 
         if ((i == 0) && (refCommit.identityId == 0)) {
             //  No head -> Setting new head

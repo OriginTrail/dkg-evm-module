@@ -2,16 +2,15 @@
 
 pragma solidity ^0.8.16;
 
-import {HashingProxy} from "../HashingProxy.sol";
-import {ParametersStorage} from "../storage/ParametersStorage.sol";
-import {HubDependent} from "../abstract/HubDependent.sol";
-import {Indexable} from "../interface/Indexable.sol";
-import {Initializable} from "../interface/Initializable.sol";
-import {IScoreFunction} from "../interface/IScoreFunction.sol";
-import {Named} from "../interface/Named.sol";
+import {HashingProxy} from "../../v1/HashingProxy.sol";
+import {ParametersStorage} from "../../v1/storage/ParametersStorage.sol";
+import {HubDependent} from "../../v1/abstract/HubDependent.sol";
+import {Indexable} from "../../v1/interface/Indexable.sol";
+import {Initializable} from "../../v1/interface/Initializable.sol";
+import {IScoreFunction} from "../../v1/interface/IScoreFunction.sol";
+import {Named} from "../../v1/interface/Named.sol";
 import {PRBMathUD60x18} from "@prb/math/contracts/PRBMathUD60x18.sol";
 
-// Logarithmic Polynomial Long Division Score Function
 contract LinearSum is IScoreFunction, Indexable, Named, HubDependent, Initializable {
     using PRBMathUD60x18 for uint256;
 
