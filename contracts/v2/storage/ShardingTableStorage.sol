@@ -5,7 +5,7 @@ pragma solidity ^0.8.16;
 import {HubDependent} from "../../v1/abstract/HubDependent.sol";
 import {Named} from "../../v1/interface/Named.sol";
 import {Versioned} from "../../v1/interface/Versioned.sol";
-import {ShardingTableStructs} from "../structs/ShardingTableStructs.sol";
+import {ShardingTableStructsV2} from "../structs/ShardingTableStructsV2.sol";
 import {NULL} from "../../v1/constants/ShardingTableConstants.sol";
 
 contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
@@ -16,7 +16,9 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
     uint72 public nodesCount;
 
     // identityId => Node
-    mapping(uint72 => ShardingTableStructs.Node) internal nodes;
+    mapping(uint72 => ShardingTableStructsV2.Node) internal nodes;
+    // index => identityId
+    mapping(uint72 => uint72) internal identityIds;
 
     constructor(address hubAddress) HubDependent(hubAddress) {
         head = NULL;
@@ -49,7 +51,7 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
         uint72 nextIdentityId,
         uint72 index
     ) external onlyContracts {
-        nodes[identityId] = ShardingTableStructs.Node({
+        nodes[identityId] = ShardingTableStructsV2.Node({
             hashRingPosition: hashRingPosition,
             index: index,
             identityId: identityId,
@@ -58,7 +60,7 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
         });
     }
 
-    function getNode(uint72 identityId) external view returns (ShardingTableStructs.Node memory) {
+    function getNode(uint72 identityId) external view returns (ShardingTableStructsV2.Node memory) {
         return nodes[identityId];
     }
 
@@ -86,13 +88,25 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
         nodes[identityId].index -= 1;
     }
 
+    function getIdentityIdByIndex(uint72 index) external view returns (uint72) {
+        return identityIds[index];
+    }
+
+    function setIdentityId(uint72 index, uint72 identityId) external onlyContracts {
+        identityIds[index] = identityId;
+    }
+
+    function getNodeByIndex(uint72 index) external view returns (ShardingTableStructsV2.Node memory) {
+        return nodes[identityIds[index]];
+    }
+
     function getMultipleNodes(
         uint72 firstIdentityId,
         uint16 nodesNumber
-    ) external view returns (ShardingTableStructs.Node[] memory) {
-        ShardingTableStructs.Node[] memory nodesPage = new ShardingTableStructs.Node[](nodesNumber);
+    ) external view returns (ShardingTableStructsV2.Node[] memory) {
+        ShardingTableStructsV2.Node[] memory nodesPage = new ShardingTableStructsV2.Node[](nodesNumber);
 
-        ShardingTableStructs.Node memory currentNode = nodes[firstIdentityId];
+        ShardingTableStructsV2.Node memory currentNode = nodes[firstIdentityId];
         for (uint256 i; i < nodesNumber; ) {
             nodesPage[i] = currentNode;
             currentNode = nodes[currentNode.nextIdentityId];

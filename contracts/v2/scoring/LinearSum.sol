@@ -70,29 +70,6 @@ contract LinearSum is IScoreFunction, Indexable, Named, HubDependent, Initializa
         return uint256(nodeIdHash ^ keywordHash);
     }
 
-    function calculateClockwiseProximityOnHashRing(
-        uint8 hashFunctionId,
-        bytes calldata nodeId,
-        bytes calldata keyword
-    ) external view returns (uint256) {
-        HashingProxy hp = hashingProxy;
-        bytes32 nodeIdHash = hp.callHashFunction(hashFunctionId, nodeId);
-        bytes32 keywordHash = hp.callHashFunction(hashFunctionId, keyword);
-
-        uint256 peerPositionOnHashRing = uint256(nodeIdHash);
-        uint256 keyPositionOnHashRing = uint256(keywordHash);
-
-        uint256 clockwiseDistance;
-        if (peerPositionOnHashRing > keyPositionOnHashRing) {
-            uint256 distanceToEnd = HASH_RING_SIZE - peerPositionOnHashRing;
-            clockwiseDistance = distanceToEnd + keyPositionOnHashRing;
-        } else {
-            clockwiseDistance = keyPositionOnHashRing - peerPositionOnHashRing;
-        }
-
-        return clockwiseDistance;
-    }
-
     function calculateBidirectionalProximityOnHashRing(
         uint8 hashFunctionId,
         bytes calldata peerHash,

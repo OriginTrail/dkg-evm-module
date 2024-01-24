@@ -9,7 +9,7 @@ import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
 import {Initializable} from "../v1/interface/Initializable.sol";
 import {Named} from "../v1/interface/Named.sol";
 import {Versioned} from "../v1/interface/Versioned.sol";
-import {ShardingTableStructs} from "./structs/ShardingTableStructs.sol";
+import {ShardingTableStructsV2} from "./structs/ShardingTableStructsV2.sol";
 import {ShardingTableErrors} from "./errors/ShardingTableErrors.sol";
 
 import {NULL} from "../v1/constants/ShardingTableConstants.sol";
@@ -45,25 +45,90 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     function getShardingTable(
         uint72 startingIdentityId,
         uint72 nodesNumber
-    ) external view returns (ShardingTableStructs.NodeInfo[] memory) {
+    ) external view returns (ShardingTableStructsV2.NodeInfo[] memory) {
         return _getShardingTable(startingIdentityId, nodesNumber);
     }
 
-    function getShardingTable() external view returns (ShardingTableStructs.NodeInfo[] memory) {
+    function getShardingTable() external view returns (ShardingTableStructsV2.NodeInfo[] memory) {
         ShardingTableStorageV2 sts = shardingTableStorage;
         return _getShardingTable(sts.head(), sts.nodesCount());
     }
 
+    function insertNode(uint72 identityId) external onlyContracts {
+        uint256 newNodeHashRingPosition = uint256(profileStorage.getNodeAddress(identityId, 1));
+        (uint72 prevIdentityId, uint72 nextIdentityId) = _binarySearchForPosition(newNodeHashRingPosition);
+
+        _insertNode(newNodeHashRingPosition, identityId, prevIdentityId, nextIdentityId);
+    }
+
     function insertNode(uint72 identityId, uint72 prevIdentityId, uint72 nextIdentityId) external onlyContracts {
-        ProfileStorage ps = profileStorage;
+        _insertNode(uint256(profileStorage.getNodeAddress(identityId, 1)), identityId, prevIdentityId, nextIdentityId);
+    }
 
-        uint256 newNodeHashRingPosition = uint256(ps.getNodeAddress(identityId, 1));
-
-        require(newNodeHashRingPosition != 0, "Profile doesn't exist");
-
+    function removeNode(uint72 identityId) external onlyContracts {
         ShardingTableStorageV2 sts = shardingTableStorage;
 
-        ShardingTableStructs.Node memory prevNode = sts.getNode(prevIdentityId);
+        ShardingTableStructsV2.Node memory nodeToRemove = sts.getNode(identityId);
+
+        sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
+
+        uint72 index = nodeToRemove.index;
+        uint72 nextIdentityId = nodeToRemove.nextIdentityId;
+        while (nextIdentityId != NULL) {
+            sts.decrementNodeIndex(nextIdentityId);
+            sts.setIdentityId(index, nextIdentityId);
+
+            unchecked {
+                index += 1;
+            }
+            nextIdentityId = sts.getNode(nextIdentityId).nextIdentityId;
+        }
+
+        sts.deleteNodeObject(identityId);
+        sts.decrementNodesCount();
+
+        emit NodeRemoved(identityId, profileStorage.getNodeId(identityId));
+    }
+
+    function _binarySearchForPosition(uint256 hashRingPosition) internal virtual returns (uint72, uint72) {
+        ShardingTableStorageV2 sts = shardingTableStorage;
+
+        uint72 left = 0;
+        uint72 mid;
+        uint72 right = sts.nodesCount() - 1;
+
+        uint72 prevIdentityId;
+        uint72 nextIdentityId;
+        while (left <= right) {
+            mid = (left + right) / 2;
+            ShardingTableStructsV2.Node memory currentNode = sts.getNodeByIndex(mid);
+
+            if (currentNode.hashRingPosition < hashRingPosition) {
+                prevIdentityId = currentNode.identityId;
+                left = mid + 1;
+            } else if (currentNode.hashRingPosition > hashRingPosition) {
+                nextIdentityId = currentNode.identityId;
+                right = mid - 1;
+            } else {
+                prevIdentityId = currentNode.identityId;
+                nextIdentityId = currentNode.nextIdentityId;
+                break;
+            }
+        }
+
+        return (prevIdentityId, nextIdentityId);
+    }
+
+    function _insertNode(
+        uint256 newNodeHashRingPosition,
+        uint72 identityId,
+        uint72 prevIdentityId,
+        uint72 nextIdentityId
+    ) internal virtual {
+        ShardingTableStorageV2 sts = shardingTableStorage;
+        ProfileStorage ps = profileStorage;
+
+        ShardingTableStructsV2.Node memory prevNode = sts.getNode(prevIdentityId);
 
         if (prevNode.hashRingPosition > newNodeHashRingPosition) {
             revert ShardingTableErrors.InvalidPreviousIdentityId(
@@ -74,7 +139,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
             );
         }
 
-        ShardingTableStructs.Node memory nextNode = sts.getNode(nextIdentityId);
+        ShardingTableStructsV2.Node memory nextNode = sts.getNode(nextIdentityId);
 
         if (nextNode.identityId != NULL && nextNode.hashRingPosition < newNodeHashRingPosition) {
             revert ShardingTableErrors.InvalidNextIdentityId(
@@ -95,13 +160,8 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
             );
         }
 
-        sts.createNodeObject(
-            uint256(ps.getNodeAddress(identityId, 1)),
-            nextNode.index,
-            identityId,
-            prevIdentityId,
-            nextIdentityId
-        );
+        sts.createNodeObject(newNodeHashRingPosition, identityId, prevIdentityId, nextIdentityId, nextNode.index);
+        sts.setIdentityId(nextNode.index, identityId);
         sts.incrementNodesCount();
 
         if (prevIdentityId == NULL) {
@@ -114,8 +174,14 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
             sts.link(identityId, nextIdentityId);
         }
 
+        uint72 index = nextNode.index + 1;
         while (nextIdentityId != NULL) {
             sts.incrementNodeIndex(nextIdentityId);
+            sts.setIdentityId(index, nextIdentityId);
+
+            unchecked {
+                index += 1;
+            }
             nextIdentityId = sts.getNode(nextIdentityId).nextIdentityId;
         }
 
@@ -127,65 +193,38 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         );
     }
 
-    function removeNode(uint72 identityId) external onlyContracts {
-        ShardingTableStorageV2 sts = shardingTableStorage;
-
-        ShardingTableStructs.Node memory nodeToRemove = sts.getNode(identityId);
-
-        require(nodeToRemove.identityId != 0, "Profile doesn't exist");
-
-        sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
-
-        uint72 nextIdentityId = nodeToRemove.nextIdentityId;
-        while (nextIdentityId != NULL) {
-            sts.decrementNodeIndex(nextIdentityId);
-            nextIdentityId = sts.getNode(nextIdentityId).nextIdentityId;
-        }
-
-        sts.deleteNodeObject(identityId);
-        sts.decrementNodesCount();
-
-        emit NodeRemoved(identityId, profileStorage.getNodeId(identityId));
-    }
-
     function _getShardingTable(
         uint72 startingIdentityId,
         uint72 nodesNumber
-    ) internal view virtual returns (ShardingTableStructs.NodeInfo[] memory) {
-        ShardingTableStructs.NodeInfo[] memory nodesPage;
+    ) internal view virtual returns (ShardingTableStructsV2.NodeInfo[] memory) {
+        ShardingTableStructsV2.NodeInfo[] memory nodesPage;
         ShardingTableStorageV2 sts = shardingTableStorage;
 
         if ((sts.nodesCount() == 0) || (nodesNumber == 0)) {
             return nodesPage;
         }
 
-        ShardingTableStructs.Node memory startingNode = sts.getNode(startingIdentityId);
+        ShardingTableStructsV2.Node memory startingNode = sts.getNode(startingIdentityId);
 
         require((startingIdentityId == NULL) || (startingNode.identityId != NULL), "Wrong starting Identity ID");
 
-        nodesPage = new ShardingTableStructs.NodeInfo[](nodesNumber);
+        nodesPage = new ShardingTableStructsV2.NodeInfo[](nodesNumber);
 
         ProfileStorage ps = profileStorage;
         StakingStorage ss = stakingStorage;
 
-        nodesPage[0] = ShardingTableStructs.NodeInfo({
-            nodeId: ps.getNodeId(startingIdentityId),
-            identityId: startingIdentityId,
-            ask: ps.getAsk(startingNode.identityId),
-            stake: ss.totalStakes(startingNode.identityId)
-        });
-
         uint72 nextIdentityId = startingIdentityId;
-        uint72 i = 1;
+        uint72 i;
         while ((i < nodesNumber) && (nextIdentityId != NULL)) {
-            nextIdentityId = sts.getNode(nextIdentityId).nextIdentityId;
-
-            nodesPage[i] = ShardingTableStructs.NodeInfo({
+            nodesPage[i] = ShardingTableStructsV2.NodeInfo({
+                hashRingPosition: uint256(ps.getNodeAddress(nextIdentityId, 1)),
                 nodeId: ps.getNodeId(nextIdentityId),
                 identityId: nextIdentityId,
                 ask: ps.getAsk(nextIdentityId),
                 stake: ss.totalStakes(nextIdentityId)
             });
+
+            nextIdentityId = sts.getNode(nextIdentityId).nextIdentityId;
 
             unchecked {
                 i += 1;

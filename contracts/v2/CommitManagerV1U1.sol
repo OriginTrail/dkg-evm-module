@@ -20,7 +20,7 @@ import {GeneralErrors} from "../v1/errors/GeneralErrors.sol";
 import {ServiceAgreementErrorsV1} from "../v1/errors/ServiceAgreementErrorsV1.sol";
 import {ServiceAgreementErrorsV2} from "./errors/ServiceAgreementErrorsV2.sol";
 import {ServiceAgreementStructsV2} from "./structs/ServiceAgreementStructsV2.sol";
-import {ShardingTableStructs} from "../v2/structs/ShardingTableStructs.sol";
+import {ShardingTableStructsV2} from "../v2/structs/ShardingTableStructsV2.sol";
 import {CommitManagerErrorsV2} from "./errors/CommitManagerErrorsV2.sol";
 
 contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
