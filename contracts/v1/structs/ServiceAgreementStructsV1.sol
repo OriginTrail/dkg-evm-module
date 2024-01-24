@@ -54,6 +54,9 @@ library ServiceAgreementStructsV1 {
         bytes keyword;
         uint8 hashFunctionId;
         uint16 epoch;
+        uint72 closestNode;
+        uint72 leftNeighbourHoodEdge;
+        uint72 rightNeighbourHoodEdge;
     }
 
     struct ProofInputArgs {
