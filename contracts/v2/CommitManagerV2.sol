@@ -19,6 +19,7 @@ import {ContentAssetErrors} from "./errors/assets/ContentAssetErrors.sol";
 import {GeneralErrors} from "../v1/errors/GeneralErrors.sol";
 import {ServiceAgreementErrorsV1} from "../v1/errors/ServiceAgreementErrorsV1.sol";
 import {ServiceAgreementErrorsV2} from "./errors/ServiceAgreementErrorsV2.sol";
+import {ServiceAgreementStructsV1} from "../v1/structs/ServiceAgreementStructsV1.sol";
 import {ServiceAgreementStructsV2} from "./structs/ServiceAgreementStructsV2.sol";
 import {ShardingTableStructsV2} from "../v2/structs/ShardingTableStructsV2.sol";
 import {CommitManagerErrorsV2} from "./errors/CommitManagerErrorsV2.sol";
@@ -109,7 +110,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
     function getTopCommitSubmissions(
         bytes32 agreementId,
         uint16 epoch
-    ) external view returns (ServiceAgreementStructsV2.CommitSubmission[] memory) {
+    ) external view returns (ServiceAgreementStructsV1.CommitSubmission[] memory) {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         if (!sasProxy.agreementV1Exists(agreementId))
@@ -124,8 +125,8 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
         uint32 r0 = parametersStorage.r0();
 
-        ServiceAgreementStructsV2.CommitSubmission[]
-            memory epochCommits = new ServiceAgreementStructsV2.CommitSubmission[](r0);
+        ServiceAgreementStructsV1.CommitSubmission[]
+            memory epochCommits = new ServiceAgreementStructsV1.CommitSubmission[](r0);
 
         bytes32 epochSubmissionsHead = sasProxy.getV1AgreementEpochSubmissionHead(agreementId, epoch);
 
@@ -231,9 +232,11 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
             );
         }
 
-        ShardingTableStructs.Node memory closestNode = shardingTableStorage.getNode(args.closestNode);
-        ShardingTableStructs.Node memory leftNeighborhoodEdge = shardingTableStorage.getNode(args.leftNeighborhoodEdge);
-        ShardingTableStructs.Node memory rightNeighborhoodEdge = shardingTableStorage.getNode(
+        ShardingTableStructsV2.Node memory closestNode = shardingTableStorage.getNode(args.closestNode);
+        ShardingTableStructsV2.Node memory leftNeighborhoodEdge = shardingTableStorage.getNode(
+            args.leftNeighborhoodEdge
+        );
+        ShardingTableStructsV2.Node memory rightNeighborhoodEdge = shardingTableStorage.getNode(
             args.rightNeighborhoodEdge
         );
 
@@ -358,7 +361,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
         sasProxy.createV1CommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
 
-        ServiceAgreementStructsV2.CommitSubmission memory refCommit = sasProxy.getCommitSubmission(refCommitId);
+        ServiceAgreementStructsV1.CommitSubmission memory refCommit = sasProxy.getCommitSubmission(refCommitId);
 
         if ((i == 0) && (refCommit.identityId == 0)) {
             //  No head -> Setting new head

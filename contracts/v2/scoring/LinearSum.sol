@@ -7,30 +7,27 @@ import {ParametersStorage} from "../../v1/storage/ParametersStorage.sol";
 import {HubDependent} from "../../v1/abstract/HubDependent.sol";
 import {Indexable} from "../../v1/interface/Indexable.sol";
 import {Initializable} from "../../v1/interface/Initializable.sol";
-import {IScoreFunction} from "../../v1/interface/IScoreFunction.sol";
+import {IProximityScoreFunctionsPair} from "../interface/IProximityScoreFunctionsPair.sol";
 import {Named} from "../../v1/interface/Named.sol";
-import {PRBMathUD60x18} from "@prb/math/contracts/PRBMathUD60x18.sol";
 
-contract LinearSum is IScoreFunction, Indexable, Named, HubDependent, Initializable {
-    using PRBMathUD60x18 for uint256;
-
+contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDependent, Initializable {
     event ParameterChanged(string parameterName, uint256 parameterValue);
 
     uint8 private constant _ID = 2;
     string private constant _NAME = "LinearSum";
 
+    uint256 constant HASH_RING_SIZE = type(uint256).max;
+
     HashingProxy public hashingProxy;
     ParametersStorage public parametersStorage;
 
-    uint256 constant HASH_RING_SIZE = type(uint256).max;
-
-    uint256 public distanceScaleFactor;
-
+    uint96 public distanceScaleFactor;
+    uint96 public stakeScaleFactor;
     uint32 public w1;
     uint32 public w2;
 
     constructor(address hubAddress) HubDependent(hubAddress) {
-        distanceScaleFactor = 1000000000000000000;
+        distanceScaleFactor = 1e18;
         w1 = 1;
         w2 = 1;
     }
@@ -48,50 +45,83 @@ contract LinearSum is IScoreFunction, Indexable, Named, HubDependent, Initializa
         return _NAME;
     }
 
-    // TODO: Implement scoring function
     function calculateScore(
-        uint8 hashFunctionId,
-        bytes calldata nodeId,
-        bytes calldata keyword
-    ) external view returns (uint40) {
-        return 1;
+        uint256 distance,
+        uint256 maxDistance,
+        uint72 maxNodesNumber,
+        uint96 stake
+    ) external view returns (uint64) {
+        return ((1e18 - normalizeDistance(distance, maxDistance, maxNodesNumber)) * w1 + normalizeStake(stake) * w2);
     }
 
-    // TODO: Change this
     function calculateDistance(
         uint8 hashFunctionId,
         bytes calldata nodeId,
         bytes calldata keyword
     ) external view returns (uint256) {
-        HashingProxy hp = hashingProxy;
-        bytes32 nodeIdHash = hp.callHashFunction(hashFunctionId, nodeId);
-        bytes32 keywordHash = hp.callHashFunction(hashFunctionId, keyword);
+        uint256 nodePositionOnHashRing = uint256(hashingProxy.callHashFunction(hashFunctionId, nodeId));
+        uint256 keywordPositionOnHashRing = uint256(hashingProxy.callHashFunction(hashFunctionId, keyword));
 
-        return uint256(nodeIdHash ^ keywordHash);
+        uint256 directDistance = (
+            (nodePositionOnHashRing > keywordPositionOnHashRing)
+                ? nodePositionOnHashRing - keywordPositionOnHashRing
+                : keywordPositionOnHashRing - nodePositionOnHashRing
+        );
+
+        return (directDistance < HASH_RING_SIZE - directDistance) ? directDistance : HASH_RING_SIZE - directDistance;
     }
 
-    function calculateBidirectionalProximityOnHashRing(
-        uint8 hashFunctionId,
-        bytes calldata peerHash,
-        bytes calldata keyHash
-    ) external view returns (uint256) {
-        uint256 peerPositionOnHashRing = uint256(hashingProxy.callHashFunction(hashFunctionId, peerHash));
-        uint256 keyPositionOnHashRing = uint256(hashingProxy.callHashFunction(hashFunctionId, keyHash));
-
-        uint256 directDistance;
-        if (peerPositionOnHashRing > keyPositionOnHashRing) {
-            directDistance = peerPositionOnHashRing - keyPositionOnHashRing;
-        } else {
-            directDistance = keyPositionOnHashRing - peerPositionOnHashRing;
+    function normalizeDistance(
+        uint256 distance,
+        uint256 maxDistance,
+        uint72 maxNodesNumber
+    ) public view returns (uint64) {
+        if (distance == 0) {
+            return 0;
         }
 
-        uint256 wraparoundDistance = HASH_RING_SIZE - directDistance;
+        uint256 idealMaxDistance = (HASH_RING_SIZE / maxNodesNumber) * (parametersStorage.r2() / 2);
+        uint256 divisor = (maxDistance <= idealMaxDistance) ? maxDistance : idealMaxDistance;
 
-        return (directDistance < wraparoundDistance) ? directDistance : wraparoundDistance;
+        uint256 maxMultiplier = type(uint256).max / distance;
+
+        uint256 scaledDistanceScaleFactor = distanceScaleFactor;
+        uint256 compensationFactor = 1;
+
+        if (scaledDistanceScaleFactor > maxMultiplier) {
+            compensationFactor = scaledDistanceScaleFactor / maxMultiplier;
+            scaledDistanceScaleFactor = maxMultiplier;
+        }
+
+        uint256 scaledDistance = distance * scaledDistanceScaleFactor;
+        uint256 adjustedDivisor = divisor / compensationFactor;
+
+        return uint64(scaledDistance / adjustedDivisor);
     }
 
-    function getParameters() external view returns (uint256, uint32, uint32) {
+    function normalizeStake(uint96 stake) public view returns (uint64) {
+        ParametersStorage ps = parametersStorage;
+
+        uint96 minStake = ps.minimumStake();
+        uint96 maxStake = ps.maximumStake();
+
+        return uint64((uint256(distanceScaleFactor) * (stake - minStake)) / (maxStake - minStake));
+    }
+
+    function getParameters() external view returns (uint192, uint32, uint32) {
         return (distanceScaleFactor, w1, w2);
+    }
+
+    function setDistanceScaleFactor(uint96 distanceScaleFactor_) external onlyHubOwner {
+        distanceScaleFactor = distanceScaleFactor_;
+
+        emit ParameterChanged("distanceScaleFactor", distanceScaleFactor);
+    }
+
+    function setStakeScaleFactor(uint96 stakeScaleFactor_) external onlyHubOwner {
+        stakeScaleFactor = stakeScaleFactor_;
+
+        emit ParameterChanged("stakeScaleFactor", stakeScaleFactor);
     }
 
     function setW1(uint32 w1_) external onlyHubOwner {
@@ -105,6 +135,4 @@ contract LinearSum is IScoreFunction, Indexable, Named, HubDependent, Initializa
 
         emit ParameterChanged("w2", w2);
     }
-
-    function calculateScore(uint256 distance, uint96 stake) external view override returns (uint40) {}
 }

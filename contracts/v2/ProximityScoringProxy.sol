@@ -3,12 +3,13 @@
 pragma solidity ^0.8.16;
 
 import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
+import {IProximityScoreFunctionsPair} from "./interface/IProximityScoreFunctionsPair.sol";
 import {IScoreFunction} from "../v1/interface/IScoreFunction.sol";
 import {Named} from "../v1/interface/Named.sol";
 import {Versioned} from "../v1/interface/Versioned.sol";
 import {UnorderedIndexableContractDynamicSetLib} from "../v1/utils/UnorderedIndexableContractDynamicSet.sol";
 
-contract ScoringProxyV2 is Named, Versioned, ContractStatus {
+contract ProximityScoringProxy is Named, Versioned, ContractStatus {
     using UnorderedIndexableContractDynamicSetLib for UnorderedIndexableContractDynamicSetLib.Set;
 
     event NewScoringFunctionContract(uint8 indexed scoreFunctionId, address newContractAddress);
@@ -44,15 +45,36 @@ contract ScoringProxyV2 is Named, Versioned, ContractStatus {
         scoreFunctionSet.remove(scoreFunctionId);
     }
 
-    //remove everthring except id, noramlised distance, normalized stake
+    function callScoreFunction(uint8 scoreFunctionId, uint256 distance, uint96 stake) external view returns (uint40) {
+        IScoreFunction scoreFunction = IScoreFunction(scoreFunctionSet.get(scoreFunctionId).addr);
+        return scoreFunction.calculateScore(distance, stake);
+    }
+
     function callScoreFunction(
         uint8 scoreFunctionId,
-        uint256 mappedDistance,
-        uint256 mappedStake
-    ) external view returns (uint40) {
-        IScoreFunction scoringFunction = IScoreFunction(scoreFunctionSet.get(scoreFunctionId).addr);
+        uint256 distance,
+        uint256 maxDistance,
+        uint72 maxNodesNumber,
+        uint96 stake
+    ) external view returns (uint64) {
+        IProximityScoreFunctionsPair proximityScoreFunctionsPair = IProximityScoreFunctionsPair(
+            scoreFunctionSet.get(scoreFunctionId).addr
+        );
 
-        return scoringFunction.calculateScore(mappedDistance, mappedStake);
+        return proximityScoreFunctionsPair.calculateScore(distance, maxDistance, maxNodesNumber, stake);
+    }
+
+    function callProximityFunction(
+        uint8 proximityFunctionId,
+        uint8 hashFunctionId,
+        bytes memory nodeId,
+        bytes memory keyword
+    ) external view returns (uint256) {
+        IProximityScoreFunctionsPair proximityScoreFunctionsPair = IProximityScoreFunctionsPair(
+            scoreFunctionSet.get(proximityFunctionId).addr
+        );
+
+        return proximityScoreFunctionsPair.calculateDistance(hashFunctionId, nodeId, keyword);
     }
 
     function getScoreFunctionName(uint8 scoreFunctionId) external view returns (string memory) {
