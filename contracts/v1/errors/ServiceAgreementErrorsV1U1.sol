@@ -11,8 +11,6 @@ library ServiceAgreementErrorsV1U1 {
     error ZeroTokenAmount();
     error ScoreFunctionDoesntExist(uint8 scoreFunctionId);
     error HashFunctionDoesntExist(uint8 hashFunctionId);
-    error TooLowAllowance(uint256 amount);
-    error TooLowBalance(uint256 amount);
     error ServiceAgreementHasBeenExpired(
         bytes32 agreementId,
         uint256 startTime,

@@ -16,6 +16,7 @@ import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
 import {GeneralErrors} from "./errors/GeneralErrors.sol";
+import {TokenErrors} from "./errors/TokenErrors.sol";
 import {ServiceAgreementErrorsV1U1} from "./errors/ServiceAgreementErrorsV1U1.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -106,9 +107,9 @@ contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
 
         IERC20 tknc = tokenContract;
         if (tknc.allowance(args.assetCreator, address(this)) < args.tokenAmount)
-            revert ServiceAgreementErrorsV1U1.TooLowAllowance(tknc.allowance(args.assetCreator, address(this)));
+            revert TokenErrors.TooLowAllowance(address(tknc), tknc.allowance(args.assetCreator, address(this)));
         if (tknc.balanceOf(args.assetCreator) < args.tokenAmount)
-            revert ServiceAgreementErrorsV1U1.TooLowBalance(tknc.balanceOf(args.assetCreator));
+            revert TokenErrors.TooLowBalance(address(tknc), tknc.balanceOf(args.assetCreator));
 
         tknc.transferFrom(args.assetCreator, sasProxy.agreementV1StorageAddress(), args.tokenAmount);
 
@@ -253,9 +254,9 @@ contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
         IERC20 tknc = tokenContract;
 
         if (tknc.allowance(assetOwner, address(this)) < tokenAmount)
-            revert ServiceAgreementErrorsV1U1.TooLowAllowance(tknc.allowance(assetOwner, address(this)));
+            revert TokenErrors.TooLowAllowance(address(tknc), tknc.allowance(assetOwner, address(this)));
         if (tknc.balanceOf(assetOwner) < tokenAmount)
-            revert ServiceAgreementErrorsV1U1.TooLowBalance(tknc.balanceOf(assetOwner));
+            revert TokenErrors.TooLowBalance(address(tknc), tknc.balanceOf(assetOwner));
 
         tknc.transferFrom(assetOwner, sasAddress, tokenAmount);
     }

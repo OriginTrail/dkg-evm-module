@@ -5,7 +5,7 @@ pragma solidity ^0.8.16;
 import {HubDependent} from "../abstract/HubDependent.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
-import {ShardingTableStructs} from "../structs/ShardingTableStructs.sol";
+import {ShardingTableStructsV1} from "../structs/ShardingTableStructsV1.sol";
 import {NULL} from "../constants/ShardingTableConstants.sol";
 
 contract ShardingTableStorage is Named, Versioned, HubDependent {
@@ -17,7 +17,7 @@ contract ShardingTableStorage is Named, Versioned, HubDependent {
     uint72 public nodesCount;
 
     // identityId => Node
-    mapping(uint72 => ShardingTableStructs.Node) internal nodes;
+    mapping(uint72 => ShardingTableStructsV1.Node) internal nodes;
 
     constructor(address hubAddress) HubDependent(hubAddress) {
         head = NULL;
@@ -49,14 +49,14 @@ contract ShardingTableStorage is Named, Versioned, HubDependent {
     }
 
     function createNodeObject(uint72 identityId, uint72 prevIdentityId, uint72 nextIdentityId) external onlyContracts {
-        nodes[identityId] = ShardingTableStructs.Node({
+        nodes[identityId] = ShardingTableStructsV1.Node({
             identityId: identityId,
             prevIdentityId: prevIdentityId,
             nextIdentityId: nextIdentityId
         });
     }
 
-    function getNode(uint72 identityId) external view returns (ShardingTableStructs.Node memory) {
+    function getNode(uint72 identityId) external view returns (ShardingTableStructsV1.Node memory) {
         return nodes[identityId];
     }
 
@@ -79,10 +79,10 @@ contract ShardingTableStorage is Named, Versioned, HubDependent {
     function getMultipleNodes(
         uint72 firstIdentityId,
         uint16 nodesNumber
-    ) external view returns (ShardingTableStructs.Node[] memory) {
-        ShardingTableStructs.Node[] memory nodesPage = new ShardingTableStructs.Node[](nodesNumber);
+    ) external view returns (ShardingTableStructsV1.Node[] memory) {
+        ShardingTableStructsV1.Node[] memory nodesPage = new ShardingTableStructsV1.Node[](nodesNumber);
 
-        ShardingTableStructs.Node memory currentNode = nodes[firstIdentityId];
+        ShardingTableStructsV1.Node memory currentNode = nodes[firstIdentityId];
         for (uint256 i; i < nodesNumber; ) {
             nodesPage[i] = currentNode;
             currentNode = nodes[currentNode.nextIdentityId];

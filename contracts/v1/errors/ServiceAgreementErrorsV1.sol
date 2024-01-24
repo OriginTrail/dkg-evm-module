@@ -10,8 +10,6 @@ library ServiceAgreementErrorsV1 {
     error ZeroEpochsNumber();
     error ZeroTokenAmount();
     error ScoreFunctionDoesntExist(uint8 scoreFunctionId);
-    error TooLowAllowance(uint256 amount);
-    error TooLowBalance(uint256 amount);
     error ServiceAgreementHasBeenExpired(
         bytes32 agreementId,
         uint256 startTime,
