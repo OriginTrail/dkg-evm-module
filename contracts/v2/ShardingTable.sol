@@ -93,15 +93,15 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     function _binarySearchForPosition(uint256 hashRingPosition) internal virtual returns (uint72, uint72) {
         ShardingTableStorageV2 sts = shardingTableStorage;
 
-        uint72 left = 0;
-        uint72 mid;
-        uint72 right = sts.nodesCount() - 1;
+        int72 left;
+        int72 mid;
+        int72 right = int72(sts.nodesCount()) - 1;
 
         uint72 prevIdentityId;
         uint72 nextIdentityId;
         while (left <= right) {
             mid = (left + right) / 2;
-            ShardingTableStructsV2.Node memory currentNode = sts.getNodeByIndex(mid);
+            ShardingTableStructsV2.Node memory currentNode = sts.getNodeByIndex(uint72(mid));
 
             if (currentNode.hashRingPosition < hashRingPosition) {
                 prevIdentityId = currentNode.identityId;
