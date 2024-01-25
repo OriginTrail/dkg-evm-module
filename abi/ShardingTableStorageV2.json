@@ -13,6 +13,11 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "hashRingPosition",
+        "type": "uint256"
+      },
+      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -26,9 +31,27 @@
         "internalType": "uint72",
         "name": "nextIdentityId",
         "type": "uint72"
+      },
+      {
+        "internalType": "uint72",
+        "name": "index",
+        "type": "uint72"
       }
     ],
     "name": "createNodeObject",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "decrementNodeIndex",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -57,6 +80,25 @@
     "inputs": [
       {
         "internalType": "uint72",
+        "name": "index",
+        "type": "uint72"
+      }
+    ],
+    "name": "getIdentityIdByIndex",
+    "outputs": [
+      {
+        "internalType": "uint72",
+        "name": "",
+        "type": "uint72"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
         "name": "firstIdentityId",
         "type": "uint72"
       },
@@ -70,6 +112,16 @@
     "outputs": [
       {
         "components": [
+          {
+            "internalType": "uint256",
+            "name": "hashRingPosition",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint72",
+            "name": "index",
+            "type": "uint72"
+          },
           {
             "internalType": "uint72",
             "name": "identityId",
@@ -86,7 +138,7 @@
             "type": "uint72"
           }
         ],
-        "internalType": "struct ShardingTableStructsV1.Node[]",
+        "internalType": "struct ShardingTableStructsV2.Node[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -107,6 +159,16 @@
       {
         "components": [
           {
+            "internalType": "uint256",
+            "name": "hashRingPosition",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint72",
+            "name": "index",
+            "type": "uint72"
+          },
+          {
             "internalType": "uint72",
             "name": "identityId",
             "type": "uint72"
@@ -122,7 +184,53 @@
             "type": "uint72"
           }
         ],
-        "internalType": "struct ShardingTableStructsV1.Node",
+        "internalType": "struct ShardingTableStructsV2.Node",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "index",
+        "type": "uint72"
+      }
+    ],
+    "name": "getNodeByIndex",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "hashRingPosition",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint72",
+            "name": "index",
+            "type": "uint72"
+          },
+          {
+            "internalType": "uint72",
+            "name": "identityId",
+            "type": "uint72"
+          },
+          {
+            "internalType": "uint72",
+            "name": "prevIdentityId",
+            "type": "uint72"
+          },
+          {
+            "internalType": "uint72",
+            "name": "nextIdentityId",
+            "type": "uint72"
+          }
+        ],
+        "internalType": "struct ShardingTableStructsV2.Node",
         "name": "",
         "type": "tuple"
       }
@@ -154,6 +262,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "incrementNodeIndex",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -243,6 +364,24 @@
     "inputs": [
       {
         "internalType": "uint72",
+        "name": "index",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "setIdentityId",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
       },
@@ -273,32 +412,6 @@
     "name": "setPrevIdentityId",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      }
-    ],
-    "name": "setTail",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "tail",
-    "outputs": [
-      {
-        "internalType": "uint72",
-        "name": "",
-        "type": "uint72"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

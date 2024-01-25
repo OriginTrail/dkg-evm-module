@@ -11,6 +11,89 @@
     "type": "constructor"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "hashRingPosition",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72",
+        "name": "nextIdentityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "nextHashRingPosition",
+        "type": "uint256"
+      }
+    ],
+    "name": "InvalidNextIdentityId",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "hashRingPosition",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72",
+        "name": "prevIdentityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "prevHashRingPosition",
+        "type": "uint256"
+      }
+    ],
+    "name": "InvalidPreviousIdentityId",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint72",
+        "name": "sentPrevIdentityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint72",
+        "name": "realPrevIdentityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint72",
+        "name": "sentNextIdentityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint72",
+        "name": "realNextIdentityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "InvalidPreviousOrNextIdentityId",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -67,6 +150,11 @@
       {
         "components": [
           {
+            "internalType": "uint256",
+            "name": "hashRingPosition",
+            "type": "uint256"
+          },
+          {
             "internalType": "bytes",
             "name": "nodeId",
             "type": "bytes"
@@ -87,7 +175,7 @@
             "type": "uint96"
           }
         ],
-        "internalType": "struct ShardingTableStructsV1.NodeInfo[]",
+        "internalType": "struct ShardingTableStructsV2.NodeInfo[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -113,6 +201,11 @@
       {
         "components": [
           {
+            "internalType": "uint256",
+            "name": "hashRingPosition",
+            "type": "uint256"
+          },
+          {
             "internalType": "bytes",
             "name": "nodeId",
             "type": "bytes"
@@ -133,7 +226,7 @@
             "type": "uint96"
           }
         ],
-        "internalType": "struct ShardingTableStructsV1.NodeInfo[]",
+        "internalType": "struct ShardingTableStructsV2.NodeInfo[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -157,6 +250,42 @@
   {
     "inputs": [],
     "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "insertNode",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint72",
+        "name": "prevIdentityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint72",
+        "name": "nextIdentityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "insertNode",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -195,32 +324,6 @@
         "type": "uint72"
       }
     ],
-    "name": "pushBack",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      }
-    ],
-    "name": "pushFront",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      }
-    ],
     "name": "removeNode",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -244,7 +347,7 @@
     "name": "shardingTableStorage",
     "outputs": [
       {
-        "internalType": "contract ShardingTableStorage",
+        "internalType": "contract ShardingTableStorageV2",
         "name": "",
         "type": "address"
       }
