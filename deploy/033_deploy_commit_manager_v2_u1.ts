@@ -10,10 +10,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     return;
   }
 
-  console.log('Deploying CommitManager V2...');
+  console.log('Deploying CommitManager V2U1...');
 
   const CommitManagerV1U1 = await hre.helpers.deploy({
-    newContractName: 'CommitManagerV2',
+    newContractName: 'CommitManagerV2U1',
     newContractNameInHub: 'CommitManagerV1U1',
   });
 
@@ -21,12 +21,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['CommitManagerV2', 'v2'];
+func.tags = ['CommitManagerV2U1', 'v2'];
 func.dependencies = [
   'ContentAssetStorage',
   'HubV2',
   'IdentityStorageV2',
-  'ScoringProxy',
+  'ProximityScoringProxy',
   'Log2PLDSF',
   'ParametersStorage',
   'ProfileStorage',
