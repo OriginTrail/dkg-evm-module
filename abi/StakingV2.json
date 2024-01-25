@@ -43,6 +43,27 @@
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timeNow",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "delayEnd",
+        "type": "uint96"
+      }
+    ],
+    "name": "OperatorFeeChangeOnCooldown",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
       }
     ],
     "name": "ProfileDoesntExist",
@@ -149,9 +170,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint8",
+        "internalType": "uint96",
         "name": "operatorFee",
-        "type": "uint8"
+        "type": "uint96"
       }
     ],
     "name": "OperatorFeeUpdated",

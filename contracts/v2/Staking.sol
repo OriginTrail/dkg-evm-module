@@ -44,7 +44,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint96 oldAccumulatedOperatorFee,
         uint96 newAccumulatedOperatorFee
     );
-    event OperatorFeeUpdated(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
+    event OperatorFeeUpdated(uint72 indexed identityId, bytes nodeId, uint96 operatorFee);
 
     string private constant _NAME = "Staking";
     string private constant _VERSION = "2.0.0";
@@ -157,7 +157,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
         StakingStorage ss = stakingStorage;
 
-        uint96 operatorFee = (rewardAmount * ss.operatorFees(identityId)) / 100;
+        uint96 operatorFee = (rewardAmount * (ss.operatorFees(identityId) & 127)) / 100;
         uint96 delegatorsReward = rewardAmount - operatorFee;
 
         ProfileStorage ps = profileStorage;
@@ -199,9 +199,21 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
 
     function setOperatorFee(uint72 identityId, uint8 operatorFee) external onlyAdmin(identityId) {
         if (operatorFee > 100) revert StakingErrors.InvalidOperatorFee();
-        stakingStorage.setOperatorFee(identityId, operatorFee);
 
-        emit OperatorFeeUpdated(identityId, profileStorage.getNodeId(identityId), operatorFee);
+        StakingStorage ss = stakingStorage;
+
+        uint96 latestDelayEndTimestamp = ss.operatorFees(identityId) >> 7;
+
+        if (block.timestamp < latestDelayEndTimestamp) {
+            revert StakingErrors.OperatorFeeChangeOnCooldown(identityId, block.timestamp, latestDelayEndTimestamp);
+        }
+
+        uint96 operatorFeeWithTimestamp = ((uint96(block.timestamp + parametersStorage.stakeWithdrawalDelay()) << 7) |
+            operatorFee);
+
+        ss.setOperatorFee(identityId, operatorFeeWithTimestamp);
+
+        emit OperatorFeeUpdated(identityId, profileStorage.getNodeId(identityId), operatorFeeWithTimestamp);
     }
 
     function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal virtual {
