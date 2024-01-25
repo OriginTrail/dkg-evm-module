@@ -67,9 +67,13 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
 
     function removeNode(uint72 identityId) external onlyContracts {
         ShardingTableStorageV2 sts = shardingTableStorage;
+        ProfileStorage ps = profileStorage;
+
+        require(ps.profileExists(identityId), "Profile doesn't exist");
 
         ShardingTableStructsV2.Node memory nodeToRemove = sts.getNode(identityId);
 
+        if (nodeToRemove.prevIdentityId == NULL) sts.setHead(nodeToRemove.nextIdentityId);
         sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
 
         uint72 index = nodeToRemove.index;
@@ -128,6 +132,8 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         ShardingTableStorageV2 sts = shardingTableStorage;
         ProfileStorage ps = profileStorage;
 
+        require(ps.profileExists(identityId), "Profile doesn't exist");
+
         ShardingTableStructsV2.Node memory prevNode = sts.getNode(prevIdentityId);
 
         if (prevNode.hashRingPosition > newNodeHashRingPosition)
@@ -148,7 +154,10 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
                 nextNode.hashRingPosition
             );
 
-        if (prevNode.nextIdentityId != nextNode.prevIdentityId)
+        if (
+            (prevIdentityId != NULL && nextIdentityId != prevNode.nextIdentityId) ||
+            (nextIdentityId != NULL && prevIdentityId != nextNode.prevIdentityId)
+        )
             revert ShardingTableErrors.InvalidPreviousOrNextIdentityId(
                 identityId,
                 prevIdentityId,
@@ -157,7 +166,8 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
                 prevNode.nextIdentityId
             );
 
-        sts.createNodeObject(newNodeHashRingPosition, identityId, prevIdentityId, nextIdentityId, nextNode.index);
+        uint72 index = nextIdentityId == NULL ? sts.nodesCount() : nextNode.index;
+        sts.createNodeObject(newNodeHashRingPosition, identityId, prevIdentityId, nextIdentityId, index);
         sts.setIdentityId(nextNode.index, identityId);
         sts.incrementNodesCount();
 
@@ -166,11 +176,12 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
 
         if (nextIdentityId != NULL) sts.link(identityId, nextIdentityId);
 
-        uint72 index = nextNode.index + 1;
+        unchecked {
+            index += 1;
+        }
         while (nextIdentityId != NULL) {
             sts.incrementNodeIndex(nextIdentityId);
             sts.setIdentityId(index, nextIdentityId);
-
             unchecked {
                 index += 1;
             }
