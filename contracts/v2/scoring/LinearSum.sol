@@ -50,8 +50,9 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
         uint256 maxDistance,
         uint72 maxNodesNumber,
         uint96 stake
-    ) external view returns (uint64) {
-        return ((1e18 - normalizeDistance(distance, maxDistance, maxNodesNumber)) * w1 + normalizeStake(stake) * w2);
+    ) external view returns (uint40) {
+        return
+            uint40((1e18 - normalizeDistance(distance, maxDistance, maxNodesNumber)) * w1 + normalizeStake(stake) * w2);
     }
 
     function calculateDistance(
@@ -62,25 +63,25 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
         uint256 nodePositionOnHashRing = uint256(hashingProxy.callHashFunction(hashFunctionId, nodeId));
         uint256 keywordPositionOnHashRing = uint256(hashingProxy.callHashFunction(hashFunctionId, keyword));
 
-        uint256 directDistance = (
+        uint256 distanceClockwise = (
             (nodePositionOnHashRing > keywordPositionOnHashRing)
                 ? nodePositionOnHashRing - keywordPositionOnHashRing
                 : keywordPositionOnHashRing - nodePositionOnHashRing
         );
 
-        return (directDistance < HASH_RING_SIZE - directDistance) ? directDistance : HASH_RING_SIZE - directDistance;
+        return (
+            (distanceClockwise < HASH_RING_SIZE - distanceClockwise)
+                ? distanceClockwise
+                : HASH_RING_SIZE - distanceClockwise
+        );
     }
 
-    function normalizeDistance(
-        uint256 distance,
-        uint256 maxDistance,
-        uint72 maxNodesNumber
-    ) public view returns (uint64) {
+    function normalizeDistance(uint256 distance, uint256 maxDistance, uint72 nodesCount) public view returns (uint64) {
         if (distance == 0) {
             return 0;
         }
 
-        uint256 idealMaxDistance = (HASH_RING_SIZE / maxNodesNumber) * (parametersStorage.r2() / 2);
+        uint256 idealMaxDistance = (HASH_RING_SIZE / nodesCount) * (parametersStorage.r2() / 2);
         uint256 divisor = (maxDistance <= idealMaxDistance) ? maxDistance : idealMaxDistance;
 
         uint256 maxMultiplier = type(uint256).max / distance;

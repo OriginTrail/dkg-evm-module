@@ -8,7 +8,7 @@ interface IProximityScoreFunctionsPair {
         uint256 maxDistance,
         uint72 maxNodesNumber,
         uint96 stake
-    ) external view returns (uint64);
+    ) external view returns (uint40);
 
     function calculateDistance(
         uint8 hashFunctionId,

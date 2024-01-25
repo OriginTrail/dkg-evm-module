@@ -54,14 +54,14 @@ contract ProximityScoringProxy is Named, Versioned, ContractStatus {
         uint8 scoreFunctionId,
         uint256 distance,
         uint256 maxDistance,
-        uint72 maxNodesNumber,
+        uint72 nodesCount,
         uint96 stake
-    ) external view returns (uint64) {
+    ) external view returns (uint40) {
         IProximityScoreFunctionsPair proximityScoreFunctionsPair = IProximityScoreFunctionsPair(
             scoreFunctionSet.get(scoreFunctionId).addr
         );
 
-        return proximityScoreFunctionsPair.calculateScore(distance, maxDistance, maxNodesNumber, stake);
+        return proximityScoreFunctionsPair.calculateScore(distance, maxDistance, nodesCount, stake);
     }
 
     function callProximityFunction(

@@ -9,8 +9,8 @@ library ServiceAgreementStructsV2 {
         bytes keyword;
         uint8 hashFunctionId;
         uint16 epoch;
-        uint72 closestNode;
-        uint72 leftNeighborhoodEdge;
-        uint72 rightNeighborhoodEdge;
+        uint72 closestNodeIndex;
+        uint72 leftEdgeNodeIndex;
+        uint72 rightEdgeNodeIndex;
     }
 }

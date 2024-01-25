@@ -3,25 +3,25 @@
 pragma solidity ^0.8.16;
 
 import {HashingProxy} from "../v1/HashingProxy.sol";
-import {ScoringProxy} from "../v1/ScoringProxy.sol";
-import {Staking} from "../v1/Staking.sol";
-import {IdentityStorage} from "./storage/IdentityStorage.sol";
+import {ProximityScoringProxy} from "./ProximityScoringProxy.sol";
+import {StakingV2} from "./Staking.sol";
+import {IdentityStorageV2} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "../v1/storage/ParametersStorage.sol";
 import {ProfileStorage} from "../v1/storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "../v1/storage/ServiceAgreementStorageProxy.sol";
-import {ShardingTableStorageV2} from "../v2/storage/ShardingTableStorage.sol";
+import {ShardingTableStorageV2} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "../v1/storage/StakingStorage.sol";
 import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
 import {Initializable} from "../v1/interface/Initializable.sol";
 import {Named} from "../v1/interface/Named.sol";
 import {Versioned} from "../v1/interface/Versioned.sol";
+import {ServiceAgreementStructsV1} from "../v1/structs/ServiceAgreementStructsV1.sol";
+import {ServiceAgreementStructsV2} from "./structs/ServiceAgreementStructsV2.sol";
+import {ShardingTableStructsV2} from "../v2/structs/ShardingTableStructsV2.sol";
 import {ContentAssetErrors} from "./errors/assets/ContentAssetErrors.sol";
 import {GeneralErrors} from "../v1/errors/GeneralErrors.sol";
 import {ServiceAgreementErrorsV1} from "../v1/errors/ServiceAgreementErrorsV1.sol";
 import {ServiceAgreementErrorsV2} from "./errors/ServiceAgreementErrorsV2.sol";
-import {ServiceAgreementStructsV1} from "../v1/structs/ServiceAgreementStructsV1.sol";
-import {ServiceAgreementStructsV2} from "./structs/ServiceAgreementStructsV2.sol";
-import {ShardingTableStructsV2} from "../v2/structs/ShardingTableStructsV2.sol";
 import {CommitManagerErrorsV2} from "./errors/CommitManagerErrorsV2.sol";
 
 contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
@@ -35,15 +35,17 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
         uint40 score
     );
 
-    string private constant _NAME = "CommitManagerV1U1";
+    string private constant _NAME = "CommitManagerV1";
     string private constant _VERSION = "2.0.0";
+
+    uint8 private constant LOG2PLDSF_ID = 1;
 
     bool[4] public reqs = [false, false, false, false];
 
     HashingProxy public hashingProxy;
-    ScoringProxy public scoringProxy;
-    Staking public stakingContract;
-    IdentityStorage public identityStorage;
+    ProximityScoringProxy public proximityScoringProxy;
+    StakingV2 public stakingContract;
+    IdentityStorageV2 public identityStorage;
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
@@ -57,9 +59,9 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
     function initialize() public onlyHubOwner {
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
-        scoringProxy = ScoringProxy(hub.getContractAddress("ScoringProxy"));
-        stakingContract = Staking(hub.getContractAddress("Staking"));
-        identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+        proximityScoringProxy = ProximityScoringProxy(hub.getContractAddress("ScoringProxy"));
+        stakingContract = StakingV2(hub.getContractAddress("Staking"));
+        identityStorage = IdentityStorageV2(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
@@ -151,6 +153,8 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
     function submitCommit(ServiceAgreementStructsV2.CommitInputArgs calldata args) external {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        ShardingTableStorageV2 sts = shardingTableStorage;
+        ProfileStorage ps = profileStorage;
 
         bytes32 agreementId = hashingProxy.callHashFunction(
             args.hashFunctionId,
@@ -159,6 +163,16 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
         if (!sasProxy.agreementV1Exists(agreementId))
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+
+        uint8 proximityScoreFunctionPairId = sasProxy.getAgreementScoreFunctionId(agreementId);
+
+        if (proximityScoreFunctionPairId == LOG2PLDSF_ID)
+            revert ServiceAgreementErrorsV2.InvalidProximityScoreFunctionsPairId(
+                agreementId,
+                args.epoch,
+                proximityScoreFunctionPairId,
+                block.timestamp
+            );
 
         if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {
             uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
@@ -176,9 +190,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
-        if (!reqs[1] && !shardingTableStorage.nodeExists(identityId)) {
-            ProfileStorage ps = profileStorage;
-
+        if (!reqs[1] && !sts.nodeExists(identityId)) {
             revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
                 identityId,
                 ps.getNodeId(identityId),
@@ -187,115 +199,176 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
             );
         }
 
-        uint8 agreementScoreFunctionId = sasProxy.getAgreementScoreFunctionId(agreementId);
+        ShardingTableStructsV2.Node memory closestNode = sts.getNodeByIndex(args.closestNodeIndex);
+        ShardingTableStructsV2.Node memory leftEdgeNode = sts.getNodeByIndex(args.leftEdgeNodeIndex);
+        ShardingTableStructsV2.Node memory rightEdgeNode = sts.getNodeByIndex(args.rightEdgeNodeIndex);
 
-        if (agreementScoreFunctionId != 2) {
-            revert ServiceAgreementErrorsV2.WrongScoreFunctionId(
-                agreementId,
-                args.epoch,
-                agreementScoreFunctionId,
-                2,
-                block.timestamp
-            );
-        }
-
-        if (!shardingTableStorage.nodeExists(args.closestNode)) {
-            ProfileStorage ps = profileStorage;
-
-            revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
-                args.closestNode,
-                ps.getNodeId(args.closestNode),
-                ps.getAsk(args.closestNode),
-                stakingStorage.totalStakes(args.closestNode)
-            );
-        }
-
-        if (!shardingTableStorage.nodeExists(args.leftNeighborhoodEdge)) {
-            ProfileStorage ps = profileStorage;
-
-            revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
-                args.leftNeighborhoodEdge,
-                ps.getNodeId(args.leftNeighborhoodEdge),
-                ps.getAsk(args.leftNeighborhoodEdge),
-                stakingStorage.totalStakes(args.leftNeighborhoodEdge)
-            );
-        }
-
-        if (!shardingTableStorage.nodeExists(args.rightNeighborhoodEdge)) {
-            ProfileStorage ps = profileStorage;
-
-            revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
-                args.rightNeighborhoodEdge,
-                ps.getNodeId(args.rightNeighborhoodEdge),
-                ps.getAsk(args.rightNeighborhoodEdge),
-                stakingStorage.totalStakes(args.rightNeighborhoodEdge)
-            );
-        }
-
-        ShardingTableStructsV2.Node memory closestNode = shardingTableStorage.getNode(args.closestNode);
-        ShardingTableStructsV2.Node memory leftNeighborhoodEdge = shardingTableStorage.getNode(
-            args.leftNeighborhoodEdge
-        );
-        ShardingTableStructsV2.Node memory rightNeighborhoodEdge = shardingTableStorage.getNode(
-            args.rightNeighborhoodEdge
-        );
-
-        bool isBetween = (leftNeighborhoodEdge.index > rightNeighborhoodEdge.index)
-            ? ((closestNode.index > leftNeighborhoodEdge.index) || (closestNode.index < rightNeighborhoodEdge.index))
-            : ((closestNode.index > leftNeighborhoodEdge.index) && (closestNode.index < rightNeighborhoodEdge.index));
+        // Verify that closestNode is in smaller arc between leftNode and rightNode
+        bool isBetween = (leftEdgeNode.hashRingPosition <= rightEdgeNode.hashRingPosition)
+            ? (closestNode.hashRingPosition >= leftEdgeNode.hashRingPosition &&
+                closestNode.hashRingPosition <= rightEdgeNode.hashRingPosition)
+            : (leftEdgeNode.hashRingPosition <= closestNode.hashRingPosition ||
+                closestNode.hashRingPosition <= rightEdgeNode.hashRingPosition);
 
         if (!isBetween) {
-            revert CommitManagerErrorsV2.closestNodeNotInNeighborhood(
+            revert CommitManagerErrorsV2.ClosestNodeNotInNeighborhood(
                 agreementId,
-                args.leftNeighborhoodEdge,
-                args.rightNeighborhoodEdge,
-                args.closestNode,
                 args.epoch,
+                args.closestNodeIndex,
+                args.leftEdgeNodeIndex,
+                args.rightEdgeNodeIndex,
                 block.timestamp
             );
         }
 
-        uint256 numberOfNodes = shardingTableStorage.nodesCount();
-        uint256 clockwiseDistance = (rightNeighborhoodEdge.index + numberOfNodes - leftNeighborhoodEdge.index) %
-            numberOfNodes;
-        uint256 counterclockwiseDistance = (leftNeighborhoodEdge.index + numberOfNodes - rightNeighborhoodEdge.index) %
-            numberOfNodes;
+        // Verify number of nodes between leftNode and rightNode (should be R2)
+        uint72 nodesCount = sts.nodesCount();
+        uint72 nodesInBetweenClockwise = (
+            (rightEdgeNode.index > leftEdgeNode.index)
+                ? rightEdgeNode.index - leftEdgeNode.index - 1
+                : leftEdgeNode.index - rightEdgeNode.index - 1
+        );
+        uint72 neighborhoodSize = (nodesInBetweenClockwise < nodesCount - 2 - nodesInBetweenClockwise)
+            ? nodesInBetweenClockwise + 2
+            : nodesCount - nodesInBetweenClockwise;
 
-        uint256 indexDistance = (clockwiseDistance < counterclockwiseDistance)
-            ? clockwiseDistance
-            : counterclockwiseDistance;
-
-        //distance between 20 nodes is 19 (this shold be constant)
-        if (!(indexDistance == 19)) {
-            revert CommitManagerErrorsV2.negihbourhoodWrongSize(
+        if (neighborhoodSize != parametersStorage.r2()) {
+            revert CommitManagerErrorsV2.InvalidNeighborhoodSize(
                 agreementId,
-                args.leftNeighborhoodEdge,
-                args.rightNeighborhoodEdge,
-                numberOfNodes,
-                20,
-                indexDistance,
                 args.epoch,
+                args.leftEdgeNodeIndex,
+                args.rightEdgeNodeIndex,
+                nodesCount,
+                parametersStorage.r2(),
+                neighborhoodSize,
                 block.timestamp
             );
         }
 
-        uint256 hashRingNeighborhoodDistance = calculateHashRingDistance(
-            leftNeighborhoodEdge.hashRingPosition,
-            rightNeighborhoodEdge.hashRingPosition
+        // Verify that closestNode is indeed closest
+        uint256 closestDistance = proximityScoringProxy.callProximityFunction(
+            proximityScoreFunctionPairId,
+            args.hashFunctionId,
+            args.keyword,
+            ps.getNodeId(closestNode.identityId)
         );
 
-        bytes32 keywordHash = hashingProxy.callHashFunction(args.hashFunctionId, args.keyword);
-        bytes32 nodeIdHash = hashingProxy.callHashFunction(args.hashFunctionId, profileStorage.getNodeId(identityId));
+        if (
+            closestDistance >
+            proximityScoringProxy.callProximityFunction(
+                proximityScoreFunctionPairId,
+                args.hashFunctionId,
+                args.keyword,
+                ps.getNodeId(closestNode.prevIdentityId)
+            ) ||
+            closestDistance >
+            proximityScoringProxy.callProximityFunction(
+                proximityScoreFunctionPairId,
+                args.hashFunctionId,
+                args.keyword,
+                ps.getNodeId(closestNode.nextIdentityId)
+            )
+        ) {
+            revert CommitManagerErrorsV2.InvalidClosestNode(
+                agreementId,
+                args.epoch,
+                args.closestNodeIndex,
+                closestDistance,
+                proximityScoringProxy.callProximityFunction(
+                    proximityScoreFunctionPairId,
+                    args.hashFunctionId,
+                    args.keyword,
+                    ps.getNodeId(closestNode.prevIdentityId)
+                ),
+                proximityScoringProxy.callProximityFunction(
+                    proximityScoreFunctionPairId,
+                    args.hashFunctionId,
+                    args.keyword,
+                    ps.getNodeId(closestNode.nextIdentityId)
+                ),
+                block.timestamp
+            );
+        }
 
-        uint256 distance = calculateHashRingDistance(
-            leftNeighborhoodEdge.hashRingPosition,
-            rightNeighborhoodEdge.hashRingPosition
+        // Verify that leftNode is indeed the left edge of the Neighborhood
+        uint256 leftEdgeDistance = proximityScoringProxy.callProximityFunction(
+            proximityScoreFunctionPairId,
+            args.hashFunctionId,
+            args.keyword,
+            ps.getNodeId(leftEdgeNode.identityId)
         );
 
-        // uint40 score = scoringProxy.callScoreFunction(
-        //     mappedDistance,
-        //     mappedStake
-        // );
+        if (
+            leftEdgeDistance >
+            proximityScoringProxy.callProximityFunction(
+                proximityScoreFunctionPairId,
+                args.hashFunctionId,
+                args.keyword,
+                ps.getNodeId(rightEdgeNode.nextIdentityId)
+            )
+        ) {
+            revert CommitManagerErrorsV2.InvalidLeftEdgeNode(
+                agreementId,
+                args.epoch,
+                args.leftEdgeNodeIndex,
+                leftEdgeDistance,
+                proximityScoringProxy.callProximityFunction(
+                    proximityScoreFunctionPairId,
+                    args.hashFunctionId,
+                    args.keyword,
+                    ps.getNodeId(rightEdgeNode.nextIdentityId)
+                ),
+                block.timestamp
+            );
+        }
+
+        // Verify that rightNode is indeed the right edge of the Neighborhood
+        uint256 rightEdgeDistance = proximityScoringProxy.callProximityFunction(
+            proximityScoreFunctionPairId,
+            args.hashFunctionId,
+            args.keyword,
+            ps.getNodeId(rightEdgeNode.identityId)
+        );
+
+        if (
+            rightEdgeDistance >
+            proximityScoringProxy.callProximityFunction(
+                proximityScoreFunctionPairId,
+                args.hashFunctionId,
+                args.keyword,
+                ps.getNodeId(leftEdgeNode.prevIdentityId)
+            )
+        ) {
+            revert CommitManagerErrorsV2.InvalidRightEdgeNode(
+                agreementId,
+                args.epoch,
+                args.rightEdgeNodeIndex,
+                rightEdgeDistance,
+                proximityScoringProxy.callProximityFunction(
+                    proximityScoreFunctionPairId,
+                    args.hashFunctionId,
+                    args.keyword,
+                    ps.getNodeId(leftEdgeNode.prevIdentityId)
+                ),
+                block.timestamp
+            );
+        }
+
+        uint256 distance = proximityScoringProxy.callProximityFunction(
+            proximityScoreFunctionPairId,
+            args.hashFunctionId,
+            args.keyword,
+            ps.getNodeId(identityId)
+        );
+        uint256 maxDistance = (leftEdgeDistance > rightEdgeDistance) ? leftEdgeDistance : rightEdgeDistance;
+
+        uint40 score = proximityScoringProxy.callScoreFunction(
+            proximityScoreFunctionPairId,
+            distance,
+            maxDistance,
+            nodesCount,
+            stakingStorage.totalStakes(identityId)
+        );
 
         _insertCommit(agreementId, args.epoch, identityId, 0, 0, score);
 
@@ -407,18 +480,5 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
             keccak256(abi.encodePacked(agreementId, epoch, rightIdentityId)), // rightCommitId
             leftIdentityId
         );
-    }
-
-    function calculateHashRingDistance(
-        uint leftNodePositionOnHashRing,
-        uint rightNodePositionOnHashRing
-    ) private view returns (uint256) {
-        uint256 directDistance = (leftNodePositionOnHashRing >= rightNodePositionOnHashRing)
-            ? (leftNodePositionOnHashRing - rightNodePositionOnHashRing)
-            : (rightNodePositionOnHashRing - leftNodePositionOnHashRing);
-
-        uint256 reverseDistance = HASH_RING_SIZE - directDistance;
-
-        return (directDistance < reverseDistance) ? directDistance : reverseDistance;
     }
 }
