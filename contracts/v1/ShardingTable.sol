@@ -120,9 +120,7 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
         } else if (head == identityId) {
             sts.setHead(nodeToRemove.nextIdentityId);
             sts.setPrevIdentityId(head, NULL);
-        } else {
-            sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
-        }
+        } else sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
 
         sts.deleteNodeObject(identityId);
         sts.decrementNodesCount();

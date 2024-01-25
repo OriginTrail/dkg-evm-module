@@ -130,27 +130,25 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
 
         ShardingTableStructsV2.Node memory prevNode = sts.getNode(prevIdentityId);
 
-        if (prevNode.hashRingPosition > newNodeHashRingPosition) {
+        if (prevNode.hashRingPosition > newNodeHashRingPosition)
             revert ShardingTableErrors.InvalidPreviousIdentityId(
                 identityId,
                 newNodeHashRingPosition,
                 prevIdentityId,
                 prevNode.hashRingPosition
             );
-        }
 
         ShardingTableStructsV2.Node memory nextNode = sts.getNode(nextIdentityId);
 
-        if (nextNode.identityId != NULL && nextNode.hashRingPosition < newNodeHashRingPosition) {
+        if (nextNode.identityId != NULL && nextNode.hashRingPosition < newNodeHashRingPosition)
             revert ShardingTableErrors.InvalidNextIdentityId(
                 identityId,
                 newNodeHashRingPosition,
                 nextIdentityId,
                 nextNode.hashRingPosition
             );
-        }
 
-        if (prevNode.nextIdentityId != nextNode.prevIdentityId) {
+        if (prevNode.nextIdentityId != nextNode.prevIdentityId)
             revert ShardingTableErrors.InvalidPreviousOrNextIdentityId(
                 identityId,
                 prevIdentityId,
@@ -158,21 +156,15 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
                 nextIdentityId,
                 prevNode.nextIdentityId
             );
-        }
 
         sts.createNodeObject(newNodeHashRingPosition, identityId, prevIdentityId, nextIdentityId, nextNode.index);
         sts.setIdentityId(nextNode.index, identityId);
         sts.incrementNodesCount();
 
-        if (prevIdentityId == NULL) {
-            sts.setHead(identityId);
-        } else {
-            sts.link(prevIdentityId, identityId);
-        }
+        if (prevIdentityId == NULL) sts.setHead(identityId);
+        else sts.link(prevIdentityId, identityId);
 
-        if (nextIdentityId != NULL) {
-            sts.link(identityId, nextIdentityId);
-        }
+        if (nextIdentityId != NULL) sts.link(identityId, nextIdentityId);
 
         uint72 index = nextNode.index + 1;
         while (nextIdentityId != NULL) {
@@ -200,9 +192,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         ShardingTableStructsV2.NodeInfo[] memory nodesPage;
         ShardingTableStorageV2 sts = shardingTableStorage;
 
-        if ((sts.nodesCount() == 0) || (nodesNumber == 0)) {
-            return nodesPage;
-        }
+        if ((sts.nodesCount() == 0) || (nodesNumber == 0)) return nodesPage;
 
         ShardingTableStructsV2.Node memory startingNode = sts.getNode(startingIdentityId);
 

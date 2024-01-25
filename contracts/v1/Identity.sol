@@ -82,9 +82,7 @@ contract Identity is Named, Versioned, ContractStatus, Initializable {
 
         ids.addKey(identityId, key, keyPurpose, keyType);
 
-        if (keyPurpose == OPERATIONAL_KEY) {
-            ids.setOperationalKeyIdentityId(key, identityId);
-        }
+        if (keyPurpose == OPERATIONAL_KEY) ids.setOperationalKeyIdentityId(key, identityId);
     }
 
     function removeKey(uint72 identityId, bytes32 key) external onlyAdmin(identityId) {
@@ -109,9 +107,7 @@ contract Identity is Named, Versioned, ContractStatus, Initializable {
 
         ids.removeKey(identityId, key);
 
-        if (purpose == OPERATIONAL_KEY) {
-            ids.removeOperationalKeyIdentityId(key);
-        }
+        if (purpose == OPERATIONAL_KEY) ids.removeOperationalKeyIdentityId(key);
     }
 
     function _checkAdmin(uint72 identityId) internal view virtual {

@@ -229,8 +229,6 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
 
     function _checkWhitelist() internal view virtual {
         WhitelistStorage ws = whitelistStorage;
-        if (ws.whitelistingEnabled()) {
-            require(ws.whitelisted(msg.sender), "Address isn't whitelisted");
-        }
+        if (ws.whitelistingEnabled()) require(ws.whitelisted(msg.sender), "Address isn't whitelisted");
     }
 }

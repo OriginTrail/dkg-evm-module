@@ -3,20 +3,7 @@
 pragma solidity ^0.8.16;
 
 library ServiceAgreementErrorsV1U1 {
-    error ServiceAgreementDoesntExist(bytes32 agreementId);
-    error EmptyAssetCreatorAddress();
-    error AssetStorageNotInTheHub(address contractAddress);
-    error EmptyKeyword();
-    error ZeroEpochsNumber();
-    error ZeroTokenAmount();
-    error ScoreFunctionDoesntExist(uint8 scoreFunctionId);
     error HashFunctionDoesntExist(uint8 hashFunctionId);
-    error ServiceAgreementHasBeenExpired(
-        bytes32 agreementId,
-        uint256 startTime,
-        uint16 epochsNumber,
-        uint128 epochLength
-    );
     error CommitWindowClosed(
         bytes32 agreementId,
         uint16 epoch,
@@ -25,7 +12,6 @@ library ServiceAgreementErrorsV1U1 {
         uint256 commitWindowClose,
         uint256 timeNow
     );
-    error NodeNotInShardingTable(uint72 identityId, bytes nodeId, uint96 ask, uint96 stake);
     error ProofWindowClosed(
         bytes32 agreementId,
         uint16 epoch,

@@ -89,16 +89,14 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
     ) external onlyOwnerOrMultiSigOwner {
         if (hub.isContract(contractName)) {
             address oldContractAddress = hub.getContractAddress(contractName);
-            if (_isContract(oldContractAddress)) {
+            if (_isContract(oldContractAddress))
                 // solhint-disable-next-line no-empty-blocks
                 try ContractStatus(hub.getContractAddress(contractName)).setStatus(false) {} catch {}
-            }
         }
         hub.setContractAddress(contractName, newContractAddress);
-        if (_isContract(newContractAddress)) {
+        if (_isContract(newContractAddress))
             // solhint-disable-next-line no-empty-blocks
             try ContractStatus(newContractAddress).setStatus(true) {} catch {}
-        }
     }
 
     function setAssetStorageAddress(
@@ -120,16 +118,14 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
         for (uint i; i < newContracts.length; ) {
             if (hub.isContract(newContracts[i].name)) {
                 address oldContractAddress = hub.getContractAddress(newContracts[i].name);
-                if (_isContract(oldContractAddress)) {
+                if (_isContract(oldContractAddress))
                     // solhint-disable-next-line no-empty-blocks
                     try ContractStatus(oldContractAddress).setStatus(false) {} catch {}
-                }
             }
             hub.setContractAddress(newContracts[i].name, newContracts[i].addr);
-            if (_isContract(newContracts[i].addr)) {
+            if (_isContract(newContracts[i].addr))
                 // solhint-disable-next-line no-empty-blocks
                 try ContractStatus(newContracts[i].addr).setStatus(true) {} catch {}
-            }
             unchecked {
                 i++;
             }
@@ -214,9 +210,7 @@ contract HubController is Named, Versioned, ContractStatus, Ownable {
     function _isMultiSigOwner(address multiSigAddress) internal view returns (bool) {
         try ICustodian(multiSigAddress).getOwners() returns (address[] memory multiSigOwners) {
             for (uint i = 0; i < multiSigOwners.length; i++) {
-                if (msg.sender == multiSigOwners[i]) {
-                    return true;
-                }
+                if (msg.sender == multiSigOwners[i]) return true;
             } // solhint-disable-next-line no-empty-blocks
         } catch {}
 
