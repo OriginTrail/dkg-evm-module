@@ -44,8 +44,8 @@ describe('@v1 @unit ShardingTableStorage Contract', function () {
   }
 
   async function createMultipleProfiles() {
-    const adminWallet1 = await Profile.connect(accounts[1]);
-    const adminWallet2 = await Profile.connect(accounts[2]);
+    const adminWallet1 = Profile.connect(accounts[1]);
+    const adminWallet2 = Profile.connect(accounts[2]);
     const profile1 = await Profile.createProfile(accounts[3].address, nodeId1, 'Token', 'TKN');
     const profile2 = await adminWallet1.createProfile(accounts[4].address, nodeId2, 'Token1', 'TKN1');
     const profile3 = await adminWallet2.createProfile(accounts[5].address, nodeId3, 'Token2', 'TKN2');
@@ -56,6 +56,7 @@ describe('@v1 @unit ShardingTableStorage Contract', function () {
       const receipt = await singleIdentityId.wait();
 
       identityId = receipt.events?.[3].args?.identityId.toNumber();
+      console.log(identityId);
       idsArray.push(identityId);
     }
     return idsArray;

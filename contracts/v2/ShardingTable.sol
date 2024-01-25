@@ -70,8 +70,13 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
 
         ShardingTableStructsV2.Node memory nodeToRemove = sts.getNode(identityId);
 
+        // If removing Head => set new Head (can also be 0 if there is only 1 node in the list)
+        if (nodeToRemove.prevIdentityId == NULL) sts.setHead(nodeToRemove.nextIdentityId);
+
+        // Link left and right nodes (both can be NULL, there is a check in link function)
         sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
 
+        // Decrement indexes of all nodes after removed one + add pointers to identityId for changed indexes
         uint72 index = nodeToRemove.index;
         uint72 nextIdentityId = nodeToRemove.nextIdentityId;
         while (nextIdentityId != NULL) {
@@ -84,7 +89,9 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
             nextIdentityId = sts.getNode(nextIdentityId).nextIdentityId;
         }
 
+        // Delete node object + set last index pointer to be NULL + decrement total nodes count
         sts.deleteNodeObject(identityId);
+        sts.setIdentityId(index, 0);
         sts.decrementNodesCount();
 
         emit NodeRemoved(identityId, profileStorage.getNodeId(identityId));
@@ -104,12 +111,15 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
             ShardingTableStructsV2.Node memory currentNode = sts.getNodeByIndex(uint72(mid));
 
             if (currentNode.hashRingPosition < hashRingPosition) {
+                // Node is in the right half of the range, move left pointers
                 prevIdentityId = currentNode.identityId;
                 left = mid + 1;
             } else if (currentNode.hashRingPosition > hashRingPosition) {
+                // Node is in the left half of the range, move right pointers
                 nextIdentityId = currentNode.identityId;
                 right = mid - 1;
             } else {
+                // Exact match found
                 prevIdentityId = currentNode.identityId;
                 nextIdentityId = currentNode.nextIdentityId;
                 break;
@@ -130,7 +140,9 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
 
         ShardingTableStructsV2.Node memory prevNode = sts.getNode(prevIdentityId);
 
-        if (prevNode.hashRingPosition > newNodeHashRingPosition)
+        // Check that the new Node is indeed on the right from the prevNode
+        // Also allows new Head insertion as prevNode.hashRingPosition will be 0 in such case
+        if (newNodeHashRingPosition < prevNode.hashRingPosition)
             revert ShardingTableErrors.InvalidPreviousIdentityId(
                 identityId,
                 newNodeHashRingPosition,
@@ -140,7 +152,9 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
 
         ShardingTableStructsV2.Node memory nextNode = sts.getNode(nextIdentityId);
 
-        if (nextNode.identityId != NULL && nextNode.hashRingPosition < newNodeHashRingPosition)
+        // Check that the new Node is indeed on the left from the nextNode
+        // Check is skipped when inserting new Tail
+        if (nextNode.identityId != NULL && newNodeHashRingPosition > nextNode.hashRingPosition)
             revert ShardingTableErrors.InvalidNextIdentityId(
                 identityId,
                 newNodeHashRingPosition,
@@ -148,7 +162,11 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
                 nextNode.hashRingPosition
             );
 
-        if (prevNode.nextIdentityId != nextNode.prevIdentityId)
+        // Verify that prevNode and nextNode are direct neighbors before inserting a new node between them
+        if (
+            (prevIdentityId != NULL && nextIdentityId != prevNode.nextIdentityId) ||
+            (nextIdentityId != NULL && prevIdentityId != nextNode.prevIdentityId)
+        )
             revert ShardingTableErrors.InvalidPreviousOrNextIdentityId(
                 identityId,
                 prevIdentityId,
@@ -157,16 +175,38 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
                 prevNode.nextIdentityId
             );
 
-        sts.createNodeObject(newNodeHashRingPosition, identityId, prevIdentityId, nextIdentityId, nextNode.index);
-        sts.setIdentityId(nextNode.index, identityId);
+        uint72 index;
+        if (nextIdentityId == NULL) {
+            // Inserting a new Tail
+            if (prevIdentityId != NULL) {
+                // The list is not empty, calculate the new Tail's index
+                index = prevNode.index + 1;
+            } else {
+                // The list is empty, start with index 0
+                index = 0;
+            }
+        } else {
+            // Inserting a node before the nextNode
+            index = nextNode.index;
+        }
+
+        // Create node object + set index pointer to new identityId + increment total nodes count
+        sts.createNodeObject(newNodeHashRingPosition, identityId, prevIdentityId, nextIdentityId, index);
+        sts.setIdentityId(index, identityId);
         sts.incrementNodesCount();
 
+        // If Head => add Head pointer
+        // If not Head => add the link between prevNode and new Node
         if (prevIdentityId == NULL) sts.setHead(identityId);
         else sts.link(prevIdentityId, identityId);
 
+        // If not Tail => add the link between new Node and nextNode
         if (nextIdentityId != NULL) sts.link(identityId, nextIdentityId);
 
-        uint72 index = nextNode.index + 1;
+        // Increment indexes of all nodes after inserted one + add pointers to identityId for changed indexes
+        unchecked {
+            index += 1;
+        }
         while (nextIdentityId != NULL) {
             sts.incrementNodeIndex(nextIdentityId);
             sts.setIdentityId(index, nextIdentityId);
