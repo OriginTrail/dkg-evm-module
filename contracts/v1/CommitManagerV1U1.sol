@@ -46,7 +46,9 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
     );
 
     string private constant _NAME = "CommitManagerV1U1";
-    string private constant _VERSION = "1.0.1";
+    string private constant _VERSION = "1.0.2";
+
+    uint8 private constant _LOG2PLDSF_ID = 1;
 
     bool[6] public reqs = [false, false, false, false, false, false];
 
@@ -197,6 +199,14 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         if (sasProxy.agreementV1Exists(agreementId) || !sasProxy.agreementV1U1Exists(agreementId))
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
 
+        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LOG2PLDSF_ID)
+            revert ServiceAgreementErrorsV1.InvalidScoreFunctionId(
+                agreementId,
+                args.epoch,
+                sasProxy.getAgreementScoreFunctionId(agreementId),
+                block.timestamp
+            );
+
         uint256 latestFinalizedStateIndex = AbstractAsset(args.assetContract).getAssertionIdsLength(args.tokenId) - 1;
 
         if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {
@@ -268,6 +278,14 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
 
         if (!sasProxy.agreementV1U1Exists(agreementId))
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+
+        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LOG2PLDSF_ID)
+            revert ServiceAgreementErrorsV1.InvalidScoreFunctionId(
+                agreementId,
+                args.epoch,
+                sasProxy.getAgreementScoreFunctionId(agreementId),
+                block.timestamp
+            );
 
         if (!reqs[2] && !isUpdateCommitWindowOpen(agreementId, args.epoch, unfinalizedStateIndex)) {
             uint256 commitWindowEnd = sasProxy.getUpdateCommitsDeadline(

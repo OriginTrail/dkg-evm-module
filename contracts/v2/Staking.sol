@@ -47,7 +47,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     event OperatorFeeUpdated(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
-    string private constant _VERSION = "1.0.2";
+    string private constant _VERSION = "2.0.0";
 
     ShardingTableV2 public shardingTableContract;
     IdentityStorageV2 public identityStorage;

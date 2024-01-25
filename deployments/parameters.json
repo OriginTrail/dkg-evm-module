@@ -68,6 +68,12 @@
         }
       ]
     },
+    "LinearSum": {
+      "w1": "1",
+      "w2": "1",
+      "distanceScaleFactor": "1000000000000000000",
+      "stakeScaleFactor": "1000000000000000000"
+    },
     "Log2PLDSF": {
       "a": "1",
       "b": "0",
@@ -223,6 +229,12 @@
           "setterArgs": [5, false]
         }
       ]
+    },
+    "LinearSum": {
+      "w1": "1",
+      "w2": "1",
+      "distanceScaleFactor": "1000000000000000000",
+      "stakeScaleFactor": "1000000000000000000"
     },
     "Log2PLDSF": {
       "a": "1",
@@ -380,6 +392,12 @@
         }
       ]
     },
+    "LinearSum": {
+      "w1": "1",
+      "w2": "1",
+      "distanceScaleFactor": "1000000000000000000",
+      "stakeScaleFactor": "1000000000000000000"
+    },
     "Log2PLDSF": {
       "a": "1",
       "b": "0",
@@ -535,6 +553,12 @@
           "setterArgs": [5, false]
         }
       ]
+    },
+    "LinearSum": {
+      "w1": "1",
+      "w2": "1",
+      "distanceScaleFactor": "1000000000000000000",
+      "stakeScaleFactor": "1000000000000000000"
     },
     "Log2PLDSF": {
       "a": "1",

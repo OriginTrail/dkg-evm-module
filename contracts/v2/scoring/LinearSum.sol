@@ -28,6 +28,7 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
 
     constructor(address hubAddress) HubDependent(hubAddress) {
         distanceScaleFactor = 1e18;
+        stakeScaleFactor = 1e18;
         w1 = 1;
         w2 = 1;
     }
@@ -104,7 +105,7 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
         uint96 minStake = ps.minimumStake();
         uint96 maxStake = ps.maximumStake();
 
-        return uint64((uint256(distanceScaleFactor) * (stake - minStake)) / (maxStake - minStake));
+        return uint64((uint256(stakeScaleFactor) * (stake - minStake)) / (maxStake - minStake));
     }
 
     function getParameters() external view returns (uint192, uint32, uint32) {

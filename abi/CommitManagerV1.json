@@ -54,6 +54,32 @@
         "type": "uint16"
       },
       {
+        "internalType": "uint8",
+        "name": "agreementScoreFunctionId",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timeNow",
+        "type": "uint256"
+      }
+    ],
+    "name": "InvalidScoreFunctionId",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epoch",
+        "type": "uint16"
+      },
+      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"

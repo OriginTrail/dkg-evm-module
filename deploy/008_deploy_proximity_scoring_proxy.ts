@@ -9,5 +9,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['ProximityScoringProxy', 'v2'];
+func.tags = ['ScoringProxy', 'v2'];
 func.dependencies = ['HubV2'];

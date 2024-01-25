@@ -16,7 +16,7 @@ contract ProximityScoringProxy is Named, Versioned, ContractStatus {
     event ScoringFunctionContractUpdated(uint8 indexed scoreFunctionId, address newContractAddress);
 
     string private constant _NAME = "ScoringProxy";
-    string private constant _VERSION = "1.0.1";
+    string private constant _VERSION = "2.0.0";
 
     UnorderedIndexableContractDynamicSetLib.Set internal scoreFunctionSet;
 
@@ -45,9 +45,16 @@ contract ProximityScoringProxy is Named, Versioned, ContractStatus {
         scoreFunctionSet.remove(scoreFunctionId);
     }
 
-    function callScoreFunction(uint8 scoreFunctionId, uint256 distance, uint96 stake) external view returns (uint40) {
-        IScoreFunction scoreFunction = IScoreFunction(scoreFunctionSet.get(scoreFunctionId).addr);
-        return scoreFunction.calculateScore(distance, stake);
+    function callScoreFunction(
+        uint8 scoreFunctionId,
+        uint8 hashFunctionId,
+        bytes calldata nodeId,
+        bytes calldata keyword,
+        uint96 stake
+    ) external view returns (uint40) {
+        IScoreFunction scoringFunction = IScoreFunction(scoreFunctionSet.get(scoreFunctionId).addr);
+        uint256 distance = scoringFunction.calculateDistance(hashFunctionId, nodeId, keyword);
+        return scoringFunction.calculateScore(distance, stake);
     }
 
     function callScoreFunction(

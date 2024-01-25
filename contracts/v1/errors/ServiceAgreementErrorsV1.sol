@@ -24,6 +24,7 @@ library ServiceAgreementErrorsV1 {
         uint256 timeNow
     );
     error NodeNotInShardingTable(uint72 identityId, bytes nodeId, uint96 ask, uint96 stake);
+    error InvalidScoreFunctionId(bytes32 agreementId, uint16 epoch, uint8 agreementScoreFunctionId, uint256 timeNow);
     error ProofWindowClosed(
         bytes32 agreementId,
         uint16 epoch,

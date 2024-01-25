@@ -90,19 +90,19 @@
         "type": "uint8"
       },
       {
-        "internalType": "uint256",
-        "name": "distance",
-        "type": "uint256"
+        "internalType": "uint8",
+        "name": "hashFunctionId",
+        "type": "uint8"
       },
       {
-        "internalType": "uint256",
-        "name": "maxDistance",
-        "type": "uint256"
+        "internalType": "bytes",
+        "name": "nodeId",
+        "type": "bytes"
       },
       {
-        "internalType": "uint72",
-        "name": "nodesCount",
-        "type": "uint72"
+        "internalType": "bytes",
+        "name": "keyword",
+        "type": "bytes"
       },
       {
         "internalType": "uint96",
@@ -132,6 +132,16 @@
         "internalType": "uint256",
         "name": "distance",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxDistance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72",
+        "name": "nodesCount",
+        "type": "uint72"
       },
       {
         "internalType": "uint96",

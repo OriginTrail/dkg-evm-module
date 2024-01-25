@@ -39,7 +39,18 @@ describe('@v2 @unit ContentAssetStorageV2', function () {
   };
 
   async function deployContentAssetStorageV2Fixture(): Promise<ContentAssetStorageV2Fixture> {
-    await hre.deployments.fixture(['HubV2', 'Token', 'ContentAssetStorageV2', 'IdentityStorageV2', 'ContentAsset']);
+    await hre.deployments.fixture([
+      'HubV2',
+      'Token',
+      'ContentAssetStorageV2',
+      'IdentityStorageV2',
+      'ShardingTableStorageV2',
+      'ShardingTableV2',
+      'StakingV2',
+      'CommitManagerV2',
+      'CommitManagerV2U1',
+      'ContentAsset',
+    ]);
     HubController = await hre.ethers.getContract<HubController>('HubController');
     Token = await hre.ethers.getContract<Token>('Token');
     ServiceAgreementV1 = await hre.ethers.getContract<ServiceAgreementV1>('ServiceAgreementV1');
