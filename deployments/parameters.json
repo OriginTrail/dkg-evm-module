@@ -68,6 +68,74 @@
         }
       ]
     },
+    "CommitManagerV2": {
+      "reqs": [
+        {
+          "desiredValue": false,
+          "getterArgs": [0],
+          "setter": "setReq",
+          "setterArgs": [0, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [1],
+          "setter": "setReq",
+          "setterArgs": [1, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [2],
+          "setter": "setReq",
+          "setterArgs": [2, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [3],
+          "setter": "setReq",
+          "setterArgs": [3, false]
+        }
+      ]
+    },
+    "CommitManagerV2U1": {
+      "reqs": [
+        {
+          "desiredValue": false,
+          "getterArgs": [0],
+          "setter": "setReq",
+          "setterArgs": [0, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [1],
+          "setter": "setReq",
+          "setterArgs": [1, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [2],
+          "setter": "setReq",
+          "setterArgs": [2, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [3],
+          "setter": "setReq",
+          "setterArgs": [3, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [4],
+          "setter": "setReq",
+          "setterArgs": [4, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [5],
+          "setter": "setReq",
+          "setterArgs": [5, false]
+        }
+      ]
+    },
     "LinearSum": {
       "w1": "1",
       "w2": "1",
@@ -91,7 +159,7 @@
       "epochLength": "7776000",
       "finalizationCommitsNumber": "3",
       "maxProofWindowOffsetPerc": "75",
-      "maximumStake": "5000000000000000000000000",
+      "maximumStake": "2000000000000000000000000",
       "minProofWindowOffsetPerc": "50",
       "minimumStake": "50000000000000000000000",
       "proofWindowDurationPerc": "25",
@@ -230,6 +298,74 @@
         }
       ]
     },
+    "CommitManagerV2": {
+      "reqs": [
+        {
+          "desiredValue": true,
+          "getterArgs": [0],
+          "setter": "setReq",
+          "setterArgs": [0, true]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [1],
+          "setter": "setReq",
+          "setterArgs": [1, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [2],
+          "setter": "setReq",
+          "setterArgs": [2, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [3],
+          "setter": "setReq",
+          "setterArgs": [3, false]
+        }
+      ]
+    },
+    "CommitManagerV2U1": {
+      "reqs": [
+        {
+          "desiredValue": true,
+          "getterArgs": [0],
+          "setter": "setReq",
+          "setterArgs": [0, true]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [1],
+          "setter": "setReq",
+          "setterArgs": [1, false]
+        },
+        {
+          "desiredValue": true,
+          "getterArgs": [2],
+          "setter": "setReq",
+          "setterArgs": [2, true]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [3],
+          "setter": "setReq",
+          "setterArgs": [3, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [4],
+          "setter": "setReq",
+          "setterArgs": [4, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [5],
+          "setter": "setReq",
+          "setterArgs": [5, false]
+        }
+      ]
+    },
     "LinearSum": {
       "w1": "1",
       "w2": "1",
@@ -253,7 +389,7 @@
       "epochLength": "3600",
       "finalizationCommitsNumber": "3",
       "maxProofWindowOffsetPerc": "75",
-      "maximumStake": "5000000000000000000000000",
+      "maximumStake": "2000000000000000000000000",
       "minProofWindowOffsetPerc": "50",
       "minimumStake": "50000000000000000000000",
       "proofWindowDurationPerc": "25",
@@ -392,6 +528,74 @@
         }
       ]
     },
+    "CommitManagerV2": {
+      "reqs": [
+        {
+          "desiredValue": true,
+          "getterArgs": [0],
+          "setter": "setReq",
+          "setterArgs": [0, true]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [1],
+          "setter": "setReq",
+          "setterArgs": [1, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [2],
+          "setter": "setReq",
+          "setterArgs": [2, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [3],
+          "setter": "setReq",
+          "setterArgs": [3, false]
+        }
+      ]
+    },
+    "CommitManagerV2U1": {
+      "reqs": [
+        {
+          "desiredValue": true,
+          "getterArgs": [0],
+          "setter": "setReq",
+          "setterArgs": [0, true]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [1],
+          "setter": "setReq",
+          "setterArgs": [1, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [2],
+          "setter": "setReq",
+          "setterArgs": [2, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [3],
+          "setter": "setReq",
+          "setterArgs": [3, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [4],
+          "setter": "setReq",
+          "setterArgs": [4, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [5],
+          "setter": "setReq",
+          "setterArgs": [5, false]
+        }
+      ]
+    },
     "LinearSum": {
       "w1": "1",
       "w2": "1",
@@ -415,7 +619,7 @@
       "epochLength": "7776000",
       "finalizationCommitsNumber": "3",
       "maxProofWindowOffsetPerc": "75",
-      "maximumStake": "5000000000000000000000000",
+      "maximumStake": "2000000000000000000000000",
       "minProofWindowOffsetPerc": "50",
       "minimumStake": "50000000000000000000000",
       "proofWindowDurationPerc": "25",
@@ -423,9 +627,9 @@
       "r1": "8",
       "r2": "20",
       "replacementWindowDurationPerc": "0",
-      "rewardWithdrawalDelay": "300",
+      "rewardWithdrawalDelay": "86400",
       "slashingFreezeDuration": "63072000",
-      "stakeWithdrawalDelay": "300",
+      "stakeWithdrawalDelay": "86400",
       "updateCommitWindowDuration": "1800"
     },
     "ProofManagerV1": {
@@ -554,6 +758,74 @@
         }
       ]
     },
+    "CommitManagerV2": {
+      "reqs": [
+        {
+          "desiredValue": true,
+          "getterArgs": [0],
+          "setter": "setReq",
+          "setterArgs": [0, true]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [1],
+          "setter": "setReq",
+          "setterArgs": [1, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [2],
+          "setter": "setReq",
+          "setterArgs": [2, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [3],
+          "setter": "setReq",
+          "setterArgs": [3, false]
+        }
+      ]
+    },
+    "CommitManagerV2U1": {
+      "reqs": [
+        {
+          "desiredValue": true,
+          "getterArgs": [0],
+          "setter": "setReq",
+          "setterArgs": [0, true]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [1],
+          "setter": "setReq",
+          "setterArgs": [1, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [2],
+          "setter": "setReq",
+          "setterArgs": [2, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [3],
+          "setter": "setReq",
+          "setterArgs": [3, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [4],
+          "setter": "setReq",
+          "setterArgs": [4, false]
+        },
+        {
+          "desiredValue": false,
+          "getterArgs": [5],
+          "setter": "setReq",
+          "setterArgs": [5, false]
+        }
+      ]
+    },
     "LinearSum": {
       "w1": "1",
       "w2": "1",
@@ -577,7 +849,7 @@
       "epochLength": "7776000",
       "finalizationCommitsNumber": "3",
       "maxProofWindowOffsetPerc": "75",
-      "maximumStake": "5000000000000000000000000",
+      "maximumStake": "2000000000000000000000000",
       "minProofWindowOffsetPerc": "50",
       "minimumStake": "50000000000000000000000",
       "proofWindowDurationPerc": "25",
@@ -585,9 +857,9 @@
       "r1": "8",
       "r2": "20",
       "replacementWindowDurationPerc": "0",
-      "rewardWithdrawalDelay": "300",
+      "rewardWithdrawalDelay": "2419200",
       "slashingFreezeDuration": "63072000",
-      "stakeWithdrawalDelay": "3600",
+      "stakeWithdrawalDelay": "2419200",
       "updateCommitWindowDuration": "1800"
     },
     "ProofManagerV1": {

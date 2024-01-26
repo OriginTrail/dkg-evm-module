@@ -42,7 +42,7 @@ contract ParametersStorage is Named, Versioned, HubDependent {
         // minimumStake
         args3[0] = 50_000 ether;
         // maximumStake
-        args3[1] = 5_000_000 ether;
+        args3[1] = 2_000_000 ether;
 
         r2 = 20;
         // r1
@@ -64,9 +64,9 @@ contract ParametersStorage is Named, Versioned, HubDependent {
         epochLength = 90 days;
 
         // stakeWithdrawalDelay
-        args4[0] = 5 minutes;
+        args4[0] = 28 days;
         // rewardWithdrawalDelay
-        args4[1] = 5 minutes;
+        args4[1] = 28 days;
         // slashingFreezeDuration
         args2[2] = 730 days;
 

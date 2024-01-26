@@ -47,6 +47,8 @@ describe('@v2 @unit ContentAssetStorageV2', function () {
       'ShardingTableStorageV2',
       'ShardingTableV2',
       'StakingV2',
+      'CommitManagerV1',
+      'CommitManagerV1U1',
       'CommitManagerV2',
       'CommitManagerV2U1',
       'ContentAsset',
