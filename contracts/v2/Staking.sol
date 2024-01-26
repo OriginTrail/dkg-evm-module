@@ -44,7 +44,12 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint96 oldAccumulatedOperatorFee,
         uint96 newAccumulatedOperatorFee
     );
-    event OperatorFeeUpdated(uint72 indexed identityId, bytes nodeId, uint96 operatorFee);
+    event OperatorFeeUpdated(
+        uint72 indexed identityId,
+        bytes nodeId,
+        uint8 newOperatorFee,
+        uint96 operatorFeeChangeCooldownEndTimestamp
+    );
 
     string private constant _NAME = "Staking";
     string private constant _VERSION = "2.0.0";
@@ -197,23 +202,35 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         // TBD
     }
 
+    function getOperatorFee(uint72 identityId) public view returns (uint8) {
+        return uint8(stakingStorage.operatorFees(identityId) & 127);
+    }
+
+    function getOperatorFeeChangeCooldownEndTimestamp(uint72 identityId) public view returns (uint96) {
+        return stakingStorage.operatorFees(identityId) >> 7;
+    }
+
     function setOperatorFee(uint72 identityId, uint8 operatorFee) external onlyAdmin(identityId) {
         if (operatorFee > 100) revert StakingErrors.InvalidOperatorFee();
 
         StakingStorage ss = stakingStorage;
 
-        uint96 latestDelayEndTimestamp = ss.operatorFees(identityId) >> 7;
+        uint96 operatorFeeChangeCooldownEnd = ss.operatorFees(identityId) >> 7;
 
-        if (block.timestamp < latestDelayEndTimestamp) {
-            revert StakingErrors.OperatorFeeChangeOnCooldown(identityId, block.timestamp, latestDelayEndTimestamp);
+        if (block.timestamp < operatorFeeChangeCooldownEnd) {
+            revert StakingErrors.OperatorFeeChangeOnCooldown(identityId, block.timestamp, operatorFeeChangeCooldownEnd);
         }
 
-        uint96 operatorFeeWithTimestamp = ((uint96(block.timestamp + parametersStorage.stakeWithdrawalDelay()) << 7) |
-            operatorFee);
+        uint96 newOperatorFeeChangeCooldownEnd = uint96(block.timestamp + parametersStorage.stakeWithdrawalDelay());
 
-        ss.setOperatorFee(identityId, operatorFeeWithTimestamp);
+        ss.setOperatorFee(identityId, (newOperatorFeeChangeCooldownEnd << 7) | operatorFee);
 
-        emit OperatorFeeUpdated(identityId, profileStorage.getNodeId(identityId), operatorFeeWithTimestamp);
+        emit OperatorFeeUpdated(
+            identityId,
+            profileStorage.getNodeId(identityId),
+            operatorFee,
+            newOperatorFeeChangeCooldownEnd
+        );
     }
 
     function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal virtual {
