@@ -202,11 +202,11 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         // TBD
     }
 
-    function getOperatorFee(uint72 identityId) public view returns (uint8) {
+    function getOperatorFee(uint72 identityId) external view returns (uint8) {
         return uint8(stakingStorage.operatorFees(identityId) & 127);
     }
 
-    function getOperatorFeeChangeCooldownEndTimestamp(uint72 identityId) public view returns (uint96) {
+    function getOperatorFeeChangeCooldownEndTimestamp(uint72 identityId) external view returns (uint96) {
         return stakingStorage.operatorFees(identityId) >> 7;
     }
 
