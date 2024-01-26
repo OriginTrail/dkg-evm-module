@@ -54,8 +54,8 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         return _getShardingTable(sts.head(), sts.nodesCount());
     }
 
-    function insertNode(uint72 identityId) external onlyContracts {
-        uint256 newNodeHashRingPosition = uint256(profileStorage.getNodeAddress(identityId, 1));
+    function insertNode(uint72 identityId, uint256 newNodeHashRingPosition) external onlyContracts {
+        // uint256 newNodeHashRingPosition = uint256(profileStorage.getNodeAddress(identityId, 1));
         (uint72 prevIdentityId, uint72 nextIdentityId) = _binarySearchForPosition(newNodeHashRingPosition);
 
         _insertNode(newNodeHashRingPosition, identityId, prevIdentityId, nextIdentityId);
@@ -94,7 +94,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         sts.setIdentityId(index, 0);
         sts.decrementNodesCount();
 
-        emit NodeRemoved(identityId, profileStorage.getNodeId(identityId));
+        //emit NodeRemoved(identityId, profileStorage.getNodeId(identityId));
     }
 
     function _binarySearchForPosition(uint256 hashRingPosition) internal virtual returns (uint72, uint72) {
@@ -217,12 +217,12 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
             nextIdentityId = sts.getNode(nextIdentityId).nextIdentityId;
         }
 
-        emit NodeAdded(
-            identityId,
-            ps.getNodeId(identityId),
-            ps.getAsk(identityId),
-            stakingStorage.totalStakes(identityId)
-        );
+        //        emit NodeAdded(
+        //            identityId,
+        //            ps.getNodeId(identityId),
+        //            ps.getAsk(identityId),
+        //            stakingStorage.totalStakes(identityId)
+        //        );
     }
 
     function _getShardingTable(

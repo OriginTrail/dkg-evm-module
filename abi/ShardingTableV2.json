@@ -260,6 +260,11 @@
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newNodeHashRingPosition",
+        "type": "uint256"
       }
     ],
     "name": "insertNode",

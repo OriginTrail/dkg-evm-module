@@ -174,8 +174,8 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
             ss.setTotalStake(identityId, oldStake + delegatorsReward);
             sasProxy.transferAgreementTokens(agreementId, address(ss), delegatorsReward);
 
-            if (!shardingTableStorage.nodeExists(identityId) && oldStake >= parametersStorage.minimumStake())
-                shardingTableContract.insertNode(identityId);
+            //if (!shardingTableStorage.nodeExists(identityId) && oldStake >= parametersStorage.minimumStake())
+            //shardingTableContract.insertNode(identityId);
         }
 
         emit AccumulatedOperatorFeeIncreased(
@@ -229,8 +229,8 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         ss.setTotalStake(identityId, newStake);
         tknc.transferFrom(sender, address(ss), stakeAmount);
 
-        if (!shardingTableStorage.nodeExists(identityId) && newStake >= params.minimumStake())
-            shardingTableContract.insertNode(identityId);
+        //        if (!shardingTableStorage.nodeExists(identityId) && newStake >= params.minimumStake())
+        //            shardingTableContract.insertNode(identityId);
 
         emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, oldStake, newStake);
     }
