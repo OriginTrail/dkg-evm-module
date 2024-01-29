@@ -78,6 +78,10 @@ describe('@v2 @unit ShardingTableV2 contract', function () {
 
       expect(node.index.toNumber(), 'Invalid node index').to.equal(i);
     }
+
+    const shardingTable = (await ShardingTable['getShardingTable()']()).map((node) => node.identityId.toNumber());
+
+    expect(shardingTable).to.be.eql(identityIds);
   }
 
   beforeEach(async () => {
