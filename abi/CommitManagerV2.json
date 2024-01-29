@@ -549,6 +549,19 @@
   },
   {
     "inputs": [],
+    "name": "linearSum",
+    "outputs": [
+      {
+        "internalType": "contract LinearSum",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "name",
     "outputs": [
       {

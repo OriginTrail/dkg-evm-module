@@ -42,6 +42,7 @@ describe('@v2 @unit ContentAssetStorageV2', function () {
     await hre.deployments.fixture([
       'HubV2',
       'Token',
+      'LinearSum',
       'ContentAssetStorageV2',
       'IdentityStorageV2',
       'ShardingTableStorageV2',

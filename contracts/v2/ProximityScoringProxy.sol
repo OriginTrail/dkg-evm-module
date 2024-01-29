@@ -74,8 +74,8 @@ contract ProximityScoringProxy is Named, Versioned, ContractStatus {
     function callProximityFunction(
         uint8 proximityFunctionId,
         uint8 hashFunctionId,
-        bytes memory nodeId,
-        bytes memory keyword
+        bytes calldata nodeId,
+        bytes calldata keyword
     ) external view returns (uint256) {
         IProximityScoreFunctionsPair proximityScoreFunctionsPair = IProximityScoreFunctionsPair(
             scoreFunctionSet.get(proximityFunctionId).addr

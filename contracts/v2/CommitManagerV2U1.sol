@@ -3,6 +3,7 @@
 pragma solidity ^0.8.16;
 
 import {HashingProxy} from "../v1/HashingProxy.sol";
+import {LinearSum} from "./scoring/LinearSum.sol";
 import {ProximityScoringProxy} from "./ProximityScoringProxy.sol";
 import {StakingV2} from "./Staking.sol";
 import {ContentAssetStorageV2} from "./storage/assets/ContentAssetStorage.sol";
@@ -27,6 +28,7 @@ import {GeneralErrors} from "../v1/errors/GeneralErrors.sol";
 import {ServiceAgreementErrorsV1} from "../v1/errors/ServiceAgreementErrorsV1.sol";
 import {ServiceAgreementErrorsV1U1} from "../v1/errors/ServiceAgreementErrorsV1U1.sol";
 import {ServiceAgreementErrorsV2} from "./errors/ServiceAgreementErrorsV2.sol";
+import {NULL} from "../v1/constants/ShardingTableConstants.sol";
 
 contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
     event CommitSubmitted(
@@ -52,11 +54,12 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
     string private constant _NAME = "CommitManagerV1U1";
     string private constant _VERSION = "2.0.0";
 
-    uint8 private constant _LOG2PLDSF_ID = 1;
+    uint8 private constant _LINEAR_SUM_ID = 2;
 
     bool[6] public reqs = [false, false, false, false, false, false];
 
     HashingProxy public hashingProxy;
+    LinearSum public linearSum;
     ProximityScoringProxy public proximityScoringProxy;
     StakingV2 public stakingContract;
     ContentAssetStorageV2 public contentAssetStorage;
@@ -74,6 +77,7 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
     function initialize() public onlyHubOwner {
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         proximityScoringProxy = ProximityScoringProxy(hub.getContractAddress("ScoringProxy"));
+        linearSum = LinearSum(proximityScoringProxy.getScoreFunctionContractAddress(_LINEAR_SUM_ID));
         stakingContract = StakingV2(hub.getContractAddress("Staking"));
         contentAssetStorage = ContentAssetStorageV2(hub.getAssetStorageAddress("ContentAssetStorage"));
         identityStorage = IdentityStorageV2(hub.getContractAddress("IdentityStorage"));
@@ -203,13 +207,11 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
         if (sasProxy.agreementV1Exists(agreementId) || !sasProxy.agreementV1U1Exists(agreementId))
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
 
-        uint8 proximityScoreFunctionPairId = sasProxy.getAgreementScoreFunctionId(agreementId);
-
-        if (proximityScoreFunctionPairId == _LOG2PLDSF_ID)
+        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LINEAR_SUM_ID)
             revert ServiceAgreementErrorsV2.InvalidProximityScoreFunctionsPairId(
                 agreementId,
                 args.epoch,
-                proximityScoreFunctionPairId,
+                sasProxy.getAgreementScoreFunctionId(agreementId),
                 block.timestamp
             );
 
@@ -246,7 +248,6 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
         (uint72 nodesCount, uint256 maxDistance) = _verifyNeighborhood(
             agreementId,
             args.epoch,
-            proximityScoreFunctionPairId,
             args.hashFunctionId,
             args.keyword,
             args.closestNodeIndex,
@@ -254,15 +255,13 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
             args.rightEdgeNodeIndex
         );
 
-        uint256 distance = proximityScoringProxy.callProximityFunction(
-            proximityScoreFunctionPairId,
+        uint256 distance = linearSum.calculateDistance(
             args.hashFunctionId,
             args.keyword,
             profileStorage.getNodeId(identityId)
         );
 
-        uint40 score = proximityScoringProxy.callScoreFunction(
-            proximityScoreFunctionPairId,
+        uint40 score = linearSum.calculateScore(
             distance,
             maxDistance,
             nodesCount,
@@ -303,13 +302,11 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
         if (!sasProxy.agreementV1U1Exists(agreementId))
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
 
-        uint8 proximityScoreFunctionPairId = sasProxy.getAgreementScoreFunctionId(agreementId);
-
-        if (proximityScoreFunctionPairId == _LOG2PLDSF_ID)
+        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LINEAR_SUM_ID)
             revert ServiceAgreementErrorsV2.InvalidProximityScoreFunctionsPairId(
                 agreementId,
                 args.epoch,
-                proximityScoreFunctionPairId,
+                sasProxy.getAgreementScoreFunctionId(agreementId),
                 block.timestamp
             );
 
@@ -344,7 +341,6 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
         (uint72 nodesCount, uint256 maxDistance) = _verifyNeighborhood(
             agreementId,
             args.epoch,
-            proximityScoreFunctionPairId,
             args.hashFunctionId,
             args.keyword,
             args.closestNodeIndex,
@@ -352,15 +348,13 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
             args.rightEdgeNodeIndex
         );
 
-        uint256 distance = proximityScoringProxy.callProximityFunction(
-            proximityScoreFunctionPairId,
+        uint256 distance = linearSum.calculateDistance(
             args.hashFunctionId,
-            args.keyword,
-            profileStorage.getNodeId(identityId)
+            profileStorage.getNodeId(identityId),
+            args.keyword
         );
 
-        uint40 score = proximityScoringProxy.callScoreFunction(
-            proximityScoreFunctionPairId,
+        uint40 score = linearSum.calculateScore(
             distance,
             maxDistance,
             nodesCount,
@@ -418,7 +412,6 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
     function _verifyNeighborhood(
         bytes32 agreementId,
         uint16 epoch,
-        uint8 proximityScoreFunctionPairId,
         uint8 hashFunctionId,
         bytes calldata keyword,
         uint72 closestNodeIndex,
@@ -428,17 +421,44 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
         ShardingTableStorageV2 sts = shardingTableStorage;
         ProfileStorage ps = profileStorage;
 
-        ShardingTableStructsV2.Node memory closestNode = sts.getNodeByIndex(closestNodeIndex);
-        ShardingTableStructsV2.Node memory leftEdgeNode = sts.getNodeByIndex(leftEdgeNodeIndex);
-        ShardingTableStructsV2.Node memory rightEdgeNode = sts.getNodeByIndex(rightEdgeNodeIndex);
+        (
+            ShardingTableStructsV2.Node memory leftEdgeNode,
+            ShardingTableStructsV2.Node memory closestNode,
+            ShardingTableStructsV2.Node memory rightEdgeNode
+        ) = sts.getNeighborhoodBoundaryByIndexes(leftEdgeNodeIndex, closestNodeIndex, rightEdgeNodeIndex);
 
-        // Verify that closestNode is in smaller arc between leftNode and rightNode
         bool isBetween = (leftEdgeNode.hashRingPosition <= rightEdgeNode.hashRingPosition)
             ? (closestNode.hashRingPosition >= leftEdgeNode.hashRingPosition &&
                 closestNode.hashRingPosition <= rightEdgeNode.hashRingPosition)
             : (leftEdgeNode.hashRingPosition <= closestNode.hashRingPosition ||
                 closestNode.hashRingPosition <= rightEdgeNode.hashRingPosition);
 
+        uint72 nodesCount = sts.nodesCount();
+        uint72 nodesInBetweenClockwise = (
+            (rightEdgeNode.index > leftEdgeNode.index)
+                ? rightEdgeNode.index - leftEdgeNode.index - 1
+                : leftEdgeNode.index - rightEdgeNode.index - 1
+        );
+        uint72 neighborhoodSize = (nodesInBetweenClockwise < nodesCount - 2 - nodesInBetweenClockwise)
+            ? nodesInBetweenClockwise + 2
+            : nodesCount - nodesInBetweenClockwise;
+
+        (uint72 closestPrevIdentityId, uint72 closestNextIdentityId) = sts.getAdjacentIdentityIdsByIndex(
+            closestNodeIndex
+        );
+        uint72 rightEdgeNextIdentityId = sts.indexToIdentityId(rightEdgeNodeIndex + 1);
+        uint72 leftEdgePrevIdentityId = leftEdgeNodeIndex != 0 ? sts.indexToIdentityId(leftEdgeNodeIndex - 1) : NULL;
+
+        (uint256 leftEdgeDistance, uint256 closestDistance, uint256 rightEdgeDistance) = linearSum
+            .calculateNeighborhoodBoundaryDistances(
+                hashFunctionId,
+                ps.getNodeId(leftEdgeNode.identityId),
+                ps.getNodeId(closestNode.identityId),
+                ps.getNodeId(rightEdgeNode.identityId),
+                keyword
+            );
+
+        // Verify that closestNode is in smaller arc between leftNode and rightNode
         if (!isBetween)
             revert CommitManagerErrorsV2.ClosestNodeNotInNeighborhood(
                 agreementId,
@@ -450,16 +470,6 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
             );
 
         // Verify number of nodes between leftNode and rightNode (should be R2)
-        uint72 nodesCount = sts.nodesCount();
-        uint72 nodesInBetweenClockwise = (
-            (rightEdgeNode.index > leftEdgeNode.index)
-                ? rightEdgeNode.index - leftEdgeNode.index - 1
-                : leftEdgeNode.index - rightEdgeNode.index - 1
-        );
-        uint72 neighborhoodSize = (nodesInBetweenClockwise < nodesCount - 2 - nodesInBetweenClockwise)
-            ? nodesInBetweenClockwise + 2
-            : nodesCount - nodesInBetweenClockwise;
-
         if (neighborhoodSize != parametersStorage.r2())
             revert CommitManagerErrorsV2.InvalidNeighborhoodSize(
                 agreementId,
@@ -473,108 +483,46 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
             );
 
         // Verify that closestNode is indeed closest
-        uint256 closestDistance = proximityScoringProxy.callProximityFunction(
-            proximityScoreFunctionPairId,
-            hashFunctionId,
-            keyword,
-            ps.getNodeId(closestNode.identityId)
-        );
-
         if (
             closestDistance >
-            proximityScoringProxy.callProximityFunction(
-                proximityScoreFunctionPairId,
-                hashFunctionId,
-                keyword,
-                ps.getNodeId(closestNode.prevIdentityId)
-            ) ||
-            closestDistance >
-            proximityScoringProxy.callProximityFunction(
-                proximityScoreFunctionPairId,
-                hashFunctionId,
-                keyword,
-                ps.getNodeId(closestNode.nextIdentityId)
-            )
+            linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(closestPrevIdentityId)) ||
+            closestDistance > linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(closestNextIdentityId))
         )
             revert CommitManagerErrorsV2.InvalidClosestNode(
                 agreementId,
                 epoch,
                 closestNodeIndex,
                 closestDistance,
-                proximityScoringProxy.callProximityFunction(
-                    proximityScoreFunctionPairId,
-                    hashFunctionId,
-                    keyword,
-                    ps.getNodeId(closestNode.prevIdentityId)
-                ),
-                proximityScoringProxy.callProximityFunction(
-                    proximityScoreFunctionPairId,
-                    hashFunctionId,
-                    keyword,
-                    ps.getNodeId(closestNode.nextIdentityId)
-                ),
+                linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(closestPrevIdentityId)),
+                linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(closestNextIdentityId)),
                 block.timestamp
             );
 
         // Verify that leftNode is indeed the left edge of the Neighborhood
-        uint256 leftEdgeDistance = proximityScoringProxy.callProximityFunction(
-            proximityScoreFunctionPairId,
-            hashFunctionId,
-            keyword,
-            ps.getNodeId(leftEdgeNode.identityId)
-        );
-
         if (
             leftEdgeDistance >
-            proximityScoringProxy.callProximityFunction(
-                proximityScoreFunctionPairId,
-                hashFunctionId,
-                keyword,
-                ps.getNodeId(rightEdgeNode.nextIdentityId)
-            )
+            linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(rightEdgeNextIdentityId))
         )
             revert CommitManagerErrorsV2.InvalidLeftEdgeNode(
                 agreementId,
                 epoch,
                 leftEdgeNodeIndex,
                 leftEdgeDistance,
-                proximityScoringProxy.callProximityFunction(
-                    proximityScoreFunctionPairId,
-                    hashFunctionId,
-                    keyword,
-                    ps.getNodeId(rightEdgeNode.nextIdentityId)
-                ),
+                linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(rightEdgeNextIdentityId)),
                 block.timestamp
             );
 
         // Verify that rightNode is indeed the right edge of the Neighborhood
-        uint256 rightEdgeDistance = proximityScoringProxy.callProximityFunction(
-            proximityScoreFunctionPairId,
-            hashFunctionId,
-            keyword,
-            ps.getNodeId(rightEdgeNode.identityId)
-        );
-
         if (
             rightEdgeDistance >
-            proximityScoringProxy.callProximityFunction(
-                proximityScoreFunctionPairId,
-                hashFunctionId,
-                keyword,
-                ps.getNodeId(leftEdgeNode.prevIdentityId)
-            )
+            linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(leftEdgePrevIdentityId))
         )
             revert CommitManagerErrorsV2.InvalidRightEdgeNode(
                 agreementId,
                 epoch,
                 rightEdgeNodeIndex,
                 rightEdgeDistance,
-                proximityScoringProxy.callProximityFunction(
-                    proximityScoreFunctionPairId,
-                    hashFunctionId,
-                    keyword,
-                    ps.getNodeId(leftEdgeNode.prevIdentityId)
-                ),
+                linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(leftEdgePrevIdentityId)),
                 block.timestamp
             );
 

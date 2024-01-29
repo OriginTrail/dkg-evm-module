@@ -15,7 +15,5 @@ library ShardingTableStructsV2 {
         uint256 hashRingPosition;
         uint72 index;
         uint72 identityId;
-        uint72 prevIdentityId;
-        uint72 nextIdentityId;
     }
 }
