@@ -119,7 +119,8 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
     }
 
     function link(uint72 leftNodeIdentityId, uint72 rightNodeIdentityId) external onlyContracts {
-        nodes[leftNodeIdentityId].nextIdentityId = rightNodeIdentityId;
-        nodes[rightNodeIdentityId].prevIdentityId = leftNodeIdentityId;
+        if (leftNodeIdentityId != NULL) nodes[leftNodeIdentityId].nextIdentityId = rightNodeIdentityId;
+
+        if (rightNodeIdentityId != NULL) nodes[rightNodeIdentityId].prevIdentityId = leftNodeIdentityId;
     }
 }
