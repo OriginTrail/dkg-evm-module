@@ -94,7 +94,7 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
     function normalizeDistance(uint256 distance, uint256 maxDistance, uint72 nodesCount) public view returns (uint64) {
         if (distance == 0) return 0;
 
-        uint256 idealMaxDistance = (HASH_RING_SIZE / nodesCount) * (parametersStorage.r2() / 2);
+        uint256 idealMaxDistance = (HASH_RING_SIZE / nodesCount) * ((parametersStorage.r2() + 1) / 2);
         uint256 divisor = (maxDistance <= idealMaxDistance) ? maxDistance : idealMaxDistance;
 
         uint256 maxMultiplier = type(uint256).max / distance;
@@ -122,8 +122,8 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
         return uint64((uint256(stakeScaleFactor) * (stake - minStake)) / (maxStake - minStake));
     }
 
-    function getParameters() external view returns (uint192, uint32, uint32) {
-        return (distanceScaleFactor, w1, w2);
+    function getParameters() external view returns (uint96, uint96, uint32, uint32) {
+        return (distanceScaleFactor, stakeScaleFactor, w1, w2);
     }
 
     function setDistanceScaleFactor(uint96 distanceScaleFactor_) external onlyHubOwner {

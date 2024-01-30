@@ -159,9 +159,14 @@
     "name": "getParameters",
     "outputs": [
       {
-        "internalType": "uint192",
+        "internalType": "uint96",
         "name": "",
-        "type": "uint192"
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
       },
       {
         "internalType": "uint32",
