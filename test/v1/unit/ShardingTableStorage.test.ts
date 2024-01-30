@@ -56,7 +56,6 @@ describe('@v1 @unit ShardingTableStorage Contract', function () {
       const receipt = await singleIdentityId.wait();
 
       identityId = receipt.events?.[3].args?.identityId.toNumber();
-      console.log(identityId);
       idsArray.push(identityId);
     }
     return idsArray;

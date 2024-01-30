@@ -12,17 +12,15 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
     string private constant _NAME = "ShardingTableStorage";
     string private constant _VERSION = "2.0.0";
 
-    uint72 public head;
     uint72 public nodesCount;
 
     // identityId => Node
     mapping(uint72 => ShardingTableStructsV2.Node) internal nodes;
     // index => identityId
-    mapping(uint72 => uint72) internal identityIds;
+    mapping(uint72 => uint72) public indexToIdentityId;
 
-    constructor(address hubAddress) HubDependent(hubAddress) {
-        head = NULL;
-    }
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address hubAddress) HubDependent(hubAddress) {}
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -40,23 +38,11 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
         nodesCount--;
     }
 
-    function setHead(uint72 identityId) external onlyContracts {
-        head = identityId;
-    }
-
-    function createNodeObject(
-        uint256 hashRingPosition,
-        uint72 identityId,
-        uint72 prevIdentityId,
-        uint72 nextIdentityId,
-        uint72 index
-    ) external onlyContracts {
+    function createNodeObject(uint256 hashRingPosition, uint72 identityId, uint72 index) external onlyContracts {
         nodes[identityId] = ShardingTableStructsV2.Node({
             hashRingPosition: hashRingPosition,
             index: index,
-            identityId: identityId,
-            prevIdentityId: prevIdentityId,
-            nextIdentityId: nextIdentityId
+            identityId: identityId
         });
     }
 
@@ -72,12 +58,12 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
         return nodes[identityId].identityId != 0;
     }
 
-    function setPrevIdentityId(uint72 identityId, uint72 newPrevIdentityId) external onlyContracts {
-        nodes[identityId].prevIdentityId = newPrevIdentityId;
+    function head() external view returns (uint72) {
+        return indexToIdentityId[0];
     }
 
-    function setNextIdentityId(uint72 identityId, uint72 newNextIdentityId) external onlyContracts {
-        nodes[identityId].nextIdentityId = newNextIdentityId;
+    function getHashRingPosition(uint72 identityId) external view returns (uint256) {
+        return nodes[identityId].hashRingPosition;
     }
 
     function incrementNodeIndex(uint72 identityId) external onlyContracts {
@@ -88,16 +74,48 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
         nodes[identityId].index -= 1;
     }
 
-    function getIdentityIdByIndex(uint72 index) external view returns (uint72) {
-        return identityIds[index];
-    }
-
     function setIdentityId(uint72 index, uint72 identityId) external onlyContracts {
-        identityIds[index] = identityId;
+        indexToIdentityId[index] = identityId;
     }
 
     function getNodeByIndex(uint72 index) external view returns (ShardingTableStructsV2.Node memory) {
-        return nodes[identityIds[index]];
+        return nodes[indexToIdentityId[index]];
+    }
+
+    function getNeighborhoodBoundaryByIndexes(
+        uint72 leftEdgeIndex,
+        uint72 closestNodeIndex,
+        uint72 rightEdgeIndex
+    )
+        external
+        view
+        returns (
+            ShardingTableStructsV2.Node memory,
+            ShardingTableStructsV2.Node memory,
+            ShardingTableStructsV2.Node memory
+        )
+    {
+        return (
+            nodes[indexToIdentityId[leftEdgeIndex]],
+            nodes[indexToIdentityId[closestNodeIndex]],
+            nodes[indexToIdentityId[rightEdgeIndex]]
+        );
+    }
+
+    function getAdjacentIdentityIdsByIndex(uint72 index) external view returns (uint72, uint72) {
+        if (index == 0) {
+            return (NULL, nodes[indexToIdentityId[index + 1]].identityId);
+        }
+
+        return (nodes[indexToIdentityId[index - 1]].identityId, nodes[indexToIdentityId[index + 1]].identityId);
+    }
+
+    function getHashRingPositionByIndex(uint72 index) external view returns (uint256) {
+        return nodes[indexToIdentityId[index]].hashRingPosition;
+    }
+
+    function nodeExistsByIndex(uint72 index) external view returns (bool) {
+        return nodes[indexToIdentityId[index]].identityId != 0;
     }
 
     function getMultipleNodes(
@@ -109,18 +127,12 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
         ShardingTableStructsV2.Node memory currentNode = nodes[firstIdentityId];
         for (uint256 i; i < nodesNumber; ) {
             nodesPage[i] = currentNode;
-            currentNode = nodes[currentNode.nextIdentityId];
+            currentNode = nodes[indexToIdentityId[currentNode.index + 1]];
             unchecked {
                 i++;
             }
         }
 
         return nodesPage;
-    }
-
-    function link(uint72 leftNodeIdentityId, uint72 rightNodeIdentityId) external onlyContracts {
-        if (leftNodeIdentityId != NULL) nodes[leftNodeIdentityId].nextIdentityId = rightNodeIdentityId;
-
-        if (rightNodeIdentityId != NULL) nodes[rightNodeIdentityId].prevIdentityId = leftNodeIdentityId;
     }
 }

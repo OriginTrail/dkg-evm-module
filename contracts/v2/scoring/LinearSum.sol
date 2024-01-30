@@ -60,7 +60,7 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
         uint8 hashFunctionId,
         bytes calldata nodeId,
         bytes calldata keyword
-    ) external view returns (uint256) {
+    ) public view returns (uint256) {
         uint256 nodePositionOnHashRing = uint256(hashingProxy.callHashFunction(hashFunctionId, nodeId));
         uint256 keywordPositionOnHashRing = uint256(hashingProxy.callHashFunction(hashFunctionId, keyword));
 
@@ -74,6 +74,20 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
             (distanceClockwise < HASH_RING_SIZE - distanceClockwise)
                 ? distanceClockwise
                 : HASH_RING_SIZE - distanceClockwise
+        );
+    }
+
+    function calculateNeighborhoodBoundaryDistances(
+        uint8 hashFunctionId,
+        bytes calldata leftEdgeNodeId,
+        bytes calldata closestEdgeNodeId,
+        bytes calldata rightEdgeNodeId,
+        bytes calldata keyword
+    ) external view returns (uint256, uint256, uint256) {
+        return (
+            calculateDistance(hashFunctionId, leftEdgeNodeId, keyword),
+            calculateDistance(hashFunctionId, closestEdgeNodeId, keyword),
+            calculateDistance(hashFunctionId, rightEdgeNodeId, keyword)
         );
     }
 

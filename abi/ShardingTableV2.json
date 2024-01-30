@@ -23,17 +23,12 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint72",
-        "name": "nextIdentityId",
-        "type": "uint72"
-      },
-      {
         "internalType": "uint256",
         "name": "nextHashRingPosition",
         "type": "uint256"
       }
     ],
-    "name": "InvalidNextIdentityId",
+    "name": "InvalidIndexWithRespectToNextNode",
     "type": "error"
   },
   {
@@ -49,48 +44,12 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint72",
-        "name": "prevIdentityId",
-        "type": "uint72"
-      },
-      {
         "internalType": "uint256",
         "name": "prevHashRingPosition",
         "type": "uint256"
       }
     ],
-    "name": "InvalidPreviousIdentityId",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "uint72",
-        "name": "sentPrevIdentityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "uint72",
-        "name": "realPrevIdentityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "uint72",
-        "name": "sentNextIdentityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "uint72",
-        "name": "realNextIdentityId",
-        "type": "uint72"
-      }
-    ],
-    "name": "InvalidPreviousOrNextIdentityId",
+    "name": "InvalidIndexWithRespectToPreviousNode",
     "type": "error"
   },
   {
@@ -150,11 +109,6 @@
       {
         "components": [
           {
-            "internalType": "uint256",
-            "name": "hashRingPosition",
-            "type": "uint256"
-          },
-          {
             "internalType": "bytes",
             "name": "nodeId",
             "type": "bytes"
@@ -175,7 +129,7 @@
             "type": "uint96"
           }
         ],
-        "internalType": "struct ShardingTableStructsV2.NodeInfo[]",
+        "internalType": "struct ShardingTableStructsV1.NodeInfo[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -201,11 +155,6 @@
       {
         "components": [
           {
-            "internalType": "uint256",
-            "name": "hashRingPosition",
-            "type": "uint256"
-          },
-          {
             "internalType": "bytes",
             "name": "nodeId",
             "type": "bytes"
@@ -226,7 +175,7 @@
             "type": "uint96"
           }
         ],
-        "internalType": "struct ShardingTableStructsV2.NodeInfo[]",
+        "internalType": "struct ShardingTableStructsV1.NodeInfo[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -258,6 +207,11 @@
     "inputs": [
       {
         "internalType": "uint72",
+        "name": "index",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
       }
@@ -272,16 +226,6 @@
       {
         "internalType": "uint72",
         "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "uint72",
-        "name": "prevIdentityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "uint72",
-        "name": "nextIdentityId",
         "type": "uint72"
       }
     ],

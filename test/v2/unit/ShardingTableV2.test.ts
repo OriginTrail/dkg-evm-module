@@ -27,12 +27,6 @@ describe('@v2 @unit ShardingTableV2 contract', function () {
 
   // 3 1 2 4 5
 
-  // console.log(hre.ethers.BigNumber.from(hre.ethers.utils.sha256(nodeId1)).toString());
-  // console.log(hre.ethers.BigNumber.from(hre.ethers.utils.sha256(nodeId2)).toString());
-  // console.log(hre.ethers.BigNumber.from(hre.ethers.utils.sha256(nodeId3)).toString());
-  // console.log(hre.ethers.BigNumber.from(hre.ethers.utils.sha256(nodeId4)).toString());
-  // console.log(hre.ethers.BigNumber.from(hre.ethers.utils.sha256(nodeId5)).toString());
-
   async function deployShardingTableFixture(): Promise<ShardingTableFixture> {
     await hre.deployments.fixture(['ShardingTableV2', 'IdentityStorageV2', 'StakingV2', 'Profile'], {
       keepExistingDeployments: false,
@@ -83,18 +77,11 @@ describe('@v2 @unit ShardingTableV2 contract', function () {
       expect(node.identityId.toNumber(), 'Invalid node on this position').to.equal(identityIds[i]);
 
       expect(node.index.toNumber(), 'Invalid node index').to.equal(i);
-      if (i === 0) {
-        expect(node.prevIdentityId.toNumber(), 'Invalid prevIdentityId').to.equal(0);
-      } else {
-        expect(node.prevIdentityId.toNumber(), 'Invalid prevIdentityId').to.equal(identityIds[i - 1]);
-      }
-
-      if (i === nodesCount - 1) {
-        expect(node.nextIdentityId.toNumber(), 'Invalid nextIdentityId').to.equal(0);
-      } else {
-        expect(node.nextIdentityId.toNumber(), 'Invalid nextIdentityId').to.equal(identityIds[i + 1]);
-      }
     }
+
+    const shardingTable = (await ShardingTable['getShardingTable()']()).map((node) => node.identityId.toNumber());
+
+    expect(shardingTable).to.be.eql(identityIds);
   }
 
   beforeEach(async () => {
@@ -114,23 +101,23 @@ describe('@v2 @unit ShardingTableV2 contract', function () {
     const profiles = await createMultipleProfiles();
 
     // 2
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[1], 0, 0);
+    await ShardingTable['insertNode(uint72,uint72)'](0, profiles[1]);
     await validateShardingTableResult([2]);
 
     // 3 2
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[2], 0, profiles[1]);
+    await ShardingTable['insertNode(uint72,uint72)'](0, profiles[2]);
     await validateShardingTableResult([3, 2]);
 
     // 3 2 5
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[4], profiles[1], 0);
+    await ShardingTable['insertNode(uint72,uint72)'](2, profiles[4]);
     await validateShardingTableResult([3, 2, 5]);
 
     // 3 2 4 5
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[3], profiles[1], profiles[4]);
+    await ShardingTable['insertNode(uint72,uint72)'](2, profiles[3]);
     await validateShardingTableResult([3, 2, 4, 5]);
 
     // 3 1 2 4 5
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[0], profiles[2], profiles[1]);
+    await ShardingTable['insertNode(uint72,uint72)'](1, profiles[0]);
     await validateShardingTableResult([3, 1, 2, 4, 5]);
   });
 
@@ -161,43 +148,33 @@ describe('@v2 @unit ShardingTableV2 contract', function () {
   it('Insert node with invalid prevIdentityId expect to fail', async () => {
     const profiles = await createMultipleProfiles();
 
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[1], 0, 0);
+    await ShardingTable['insertNode(uint72,uint72)'](0, profiles[1]);
 
-    await expect(
-      ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[0], profiles[1], 0),
-    ).to.be.revertedWithCustomError(ShardingTable, 'InvalidPreviousIdentityId');
+    await expect(ShardingTable['insertNode(uint72,uint72)'](1, profiles[0])).to.be.revertedWithCustomError(
+      ShardingTable,
+      'InvalidIndexWithRespectToPreviousNode',
+    );
   });
 
   it('Insert node with invalid nextIdentityId expect to fail', async () => {
     const profiles = await createMultipleProfiles();
 
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[1], 0, 0);
+    await ShardingTable['insertNode(uint72,uint72)'](0, profiles[1]);
 
-    await expect(
-      ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[3], 0, profiles[1]),
-    ).to.be.revertedWithCustomError(ShardingTable, 'InvalidNextIdentityId');
-  });
-
-  it('Insert node with invalid prevIdentityId and nextIdentityId expect to fail', async () => {
-    const profiles = await createMultipleProfiles();
-
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[2], 0, 0);
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[1], profiles[2], 0);
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[3], profiles[1], 0);
-
-    await expect(
-      ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[0], profiles[2], profiles[3]),
-    ).to.be.revertedWithCustomError(ShardingTable, 'InvalidPreviousOrNextIdentityId');
+    await expect(ShardingTable['insertNode(uint72,uint72)'](0, profiles[3])).to.be.revertedWithCustomError(
+      ShardingTable,
+      'InvalidIndexWithRespectToNextNode',
+    );
   });
 
   it('Remove node from sharding table, expect to pass', async () => {
     const profiles = await createMultipleProfiles();
 
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[2], 0, 0);
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[0], profiles[2], 0);
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[1], profiles[0], 0);
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[3], profiles[1], 0);
-    await ShardingTable['insertNode(uint72,uint72,uint72)'](profiles[4], profiles[3], 0);
+    await ShardingTable['insertNode(uint72,uint72)'](0, profiles[2]);
+    await ShardingTable['insertNode(uint72,uint72)'](1, profiles[0]);
+    await ShardingTable['insertNode(uint72,uint72)'](2, profiles[1]);
+    await ShardingTable['insertNode(uint72,uint72)'](3, profiles[3]);
+    await ShardingTable['insertNode(uint72,uint72)'](4, profiles[4]);
 
     // remove from index 0
     await ShardingTable.removeNode(profiles[2]);
