@@ -59,7 +59,7 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
     }
 
     function head() external view returns (uint72) {
-        return nodes[0].identityId;
+        return indexToIdentityId[0];
     }
 
     function getHashRingPosition(uint72 identityId) external view returns (uint256) {
