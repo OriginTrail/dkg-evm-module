@@ -275,6 +275,32 @@
         "type": "uint16"
       },
       {
+        "internalType": "uint8",
+        "name": "agreementScoreFunctionId",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timeNow",
+        "type": "uint256"
+      }
+    ],
+    "name": "InvalidScoreFunctionId",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epoch",
+        "type": "uint16"
+      },
+      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -562,6 +588,19 @@
   },
   {
     "inputs": [],
+    "name": "log2pldsf",
+    "outputs": [
+      {
+        "internalType": "contract Log2PLDSF",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "name",
     "outputs": [
       {
@@ -592,19 +631,6 @@
     "outputs": [
       {
         "internalType": "contract ProfileStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "proximityScoringProxy",
-    "outputs": [
-      {
-        "internalType": "contract ProximityScoringProxy",
         "name": "",
         "type": "address"
       }
@@ -725,6 +751,46 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "assetContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "keyword",
+            "type": "bytes"
+          },
+          {
+            "internalType": "uint8",
+            "name": "hashFunctionId",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint16",
+            "name": "epoch",
+            "type": "uint16"
+          }
+        ],
+        "internalType": "struct ServiceAgreementStructsV1.CommitInputArgs",
+        "name": "args",
+        "type": "tuple"
+      }
+    ],
+    "name": "submitCommit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

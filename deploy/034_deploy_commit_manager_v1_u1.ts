@@ -2,7 +2,11 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  if (hre.helpers.isDeployed('CommitManagerV2U1')) {
+  if (
+    hre.helpers.isDeployed('CommitManagerV1U1') &&
+    (hre.helpers.contractDeployments.contracts['CommitManagerV1U1'].version === undefined ||
+      hre.helpers.contractDeployments.contracts['CommitManagerV1U1'].version?.startsWith('2.'))
+  ) {
     return;
   }
 

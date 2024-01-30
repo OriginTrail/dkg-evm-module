@@ -3,6 +3,7 @@
 pragma solidity ^0.8.16;
 
 import {HashingProxy} from "../v1/HashingProxy.sol";
+import {Log2PLDSF} from "../v1/scoring/log2pldsf.sol";
 import {LinearSum} from "./scoring/LinearSum.sol";
 import {ProximityScoringProxy} from "./ProximityScoringProxy.sol";
 import {StakingV2} from "./Staking.sol";
@@ -40,13 +41,15 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
     string private constant _NAME = "CommitManagerV1";
     string private constant _VERSION = "2.0.0";
 
+    uint8 private constant _LOG2PLDSF_ID = 1;
     uint8 private constant _LINEAR_SUM_ID = 2;
 
     bool[4] public reqs = [false, false, false, false];
 
     HashingProxy public hashingProxy;
+
+    Log2PLDSF public log2pldsf;
     LinearSum public linearSum;
-    ProximityScoringProxy public proximityScoringProxy;
     StakingV2 public stakingContract;
     IdentityStorageV2 public identityStorage;
     ParametersStorage public parametersStorage;
@@ -62,8 +65,14 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
     function initialize() public onlyHubOwner {
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
-        proximityScoringProxy = ProximityScoringProxy(hub.getContractAddress("ScoringProxy"));
-        linearSum = LinearSum(proximityScoringProxy.getScoreFunctionContractAddress(_LINEAR_SUM_ID));
+        log2pldsf = Log2PLDSF(
+            ProximityScoringProxy(hub.getContractAddress("ScoringProxy")).getScoreFunctionContractAddress(_LOG2PLDSF_ID)
+        );
+        linearSum = LinearSum(
+            ProximityScoringProxy(hub.getContractAddress("ScoringProxy")).getScoreFunctionContractAddress(
+                _LINEAR_SUM_ID
+            )
+        );
         stakingContract = StakingV2(hub.getContractAddress("Staking"));
         identityStorage = IdentityStorageV2(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
@@ -153,6 +162,72 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
         return epochCommits;
     }
 
+    function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            args.hashFunctionId,
+            abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
+        );
+
+        if (!sasProxy.agreementV1Exists(agreementId))
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+
+        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LOG2PLDSF_ID)
+            revert ServiceAgreementErrorsV1.InvalidScoreFunctionId(
+                agreementId,
+                args.epoch,
+                sasProxy.getAgreementScoreFunctionId(agreementId),
+                block.timestamp
+            );
+
+        if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {
+            uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
+
+            uint256 actualCommitWindowStart = (sasProxy.getAgreementStartTime(agreementId) + args.epoch * epochLength);
+
+            revert ServiceAgreementErrorsV1.CommitWindowClosed(
+                agreementId,
+                args.epoch,
+                actualCommitWindowStart,
+                actualCommitWindowStart + (parametersStorage.commitWindowDurationPerc() * epochLength) / 100,
+                block.timestamp
+            );
+        }
+
+        uint72 identityId = identityStorage.getIdentityId(msg.sender);
+
+        if (!reqs[1] && !shardingTableStorage.nodeExists(identityId)) {
+            ProfileStorage ps = profileStorage;
+
+            revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
+                identityId,
+                ps.getNodeId(identityId),
+                ps.getAsk(identityId),
+                stakingStorage.totalStakes(identityId)
+            );
+        }
+
+        Log2PLDSF l2p = log2pldsf;
+
+        uint40 score = l2p.calculateScore(
+            l2p.calculateDistance(args.hashFunctionId, profileStorage.getNodeId(identityId), args.keyword),
+            stakingStorage.totalStakes(identityId)
+        );
+
+        _insertCommit(agreementId, args.epoch, identityId, 0, 0, score);
+
+        emit CommitSubmitted(
+            args.assetContract,
+            args.tokenId,
+            args.keyword,
+            args.hashFunctionId,
+            args.epoch,
+            identityId,
+            score
+        );
+    }
+
     function submitCommit(ServiceAgreementStructsV2.CommitInputArgs calldata args) external {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
@@ -209,18 +284,15 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
             args.rightEdgeNodeIndex
         );
 
-        uint256 distance = linearSum.calculateDistance(
+        LinearSum ls = linearSum;
+
+        uint256 distance = ls.calculateDistance(
             args.hashFunctionId,
             profileStorage.getNodeId(identityId),
             args.keyword
         );
 
-        uint40 score = linearSum.calculateScore(
-            distance,
-            maxDistance,
-            nodesCount,
-            stakingStorage.totalStakes(identityId)
-        );
+        uint40 score = ls.calculateScore(distance, maxDistance, nodesCount, stakingStorage.totalStakes(identityId));
 
         _insertCommit(agreementId, args.epoch, identityId, 0, 0, score);
 
@@ -250,6 +322,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
     ) internal virtual returns (uint72, uint256) {
         ShardingTableStorageV2 sts = shardingTableStorage;
         ProfileStorage ps = profileStorage;
+        LinearSum ls = linearSum;
 
         (
             ShardingTableStructsV2.Node memory leftEdgeNode,
@@ -279,7 +352,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
         uint72 rightEdgeNextIdentityId = sts.indexToIdentityId(rightEdgeNodeIndex + 1);
         uint72 leftEdgePrevIdentityId = leftEdgeNodeIndex != 0 ? sts.indexToIdentityId(leftEdgeNodeIndex - 1) : NULL;
 
-        (uint256 leftEdgeDistance, uint256 closestDistance, uint256 rightEdgeDistance) = linearSum
+        (uint256 leftEdgeDistance, uint256 closestDistance, uint256 rightEdgeDistance) = ls
             .calculateNeighborhoodBoundaryDistances(
                 hashFunctionId,
                 ps.getNodeId(leftEdgeNode.identityId),
@@ -314,45 +387,38 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
         // Verify that closestNode is indeed closest
         if (
-            closestDistance >
-            linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(closestPrevIdentityId)) ||
-            closestDistance > linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(closestNextIdentityId))
+            closestDistance > ls.calculateDistance(hashFunctionId, keyword, ps.getNodeId(closestPrevIdentityId)) ||
+            closestDistance > ls.calculateDistance(hashFunctionId, keyword, ps.getNodeId(closestNextIdentityId))
         )
             revert CommitManagerErrorsV2.InvalidClosestNode(
                 agreementId,
                 epoch,
                 closestNodeIndex,
                 closestDistance,
-                linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(closestPrevIdentityId)),
-                linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(closestNextIdentityId)),
+                ls.calculateDistance(hashFunctionId, keyword, ps.getNodeId(closestPrevIdentityId)),
+                ls.calculateDistance(hashFunctionId, keyword, ps.getNodeId(closestNextIdentityId)),
                 block.timestamp
             );
 
         // Verify that leftNode is indeed the left edge of the Neighborhood
-        if (
-            leftEdgeDistance >
-            linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(rightEdgeNextIdentityId))
-        )
+        if (leftEdgeDistance > ls.calculateDistance(hashFunctionId, keyword, ps.getNodeId(rightEdgeNextIdentityId)))
             revert CommitManagerErrorsV2.InvalidLeftEdgeNode(
                 agreementId,
                 epoch,
                 leftEdgeNodeIndex,
                 leftEdgeDistance,
-                linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(rightEdgeNextIdentityId)),
+                ls.calculateDistance(hashFunctionId, keyword, ps.getNodeId(rightEdgeNextIdentityId)),
                 block.timestamp
             );
 
         // Verify that rightNode is indeed the right edge of the Neighborhood
-        if (
-            rightEdgeDistance >
-            linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(leftEdgePrevIdentityId))
-        )
+        if (rightEdgeDistance > ls.calculateDistance(hashFunctionId, keyword, ps.getNodeId(leftEdgePrevIdentityId)))
             revert CommitManagerErrorsV2.InvalidRightEdgeNode(
                 agreementId,
                 epoch,
                 rightEdgeNodeIndex,
                 rightEdgeDistance,
-                linearSum.calculateDistance(hashFunctionId, keyword, ps.getNodeId(leftEdgePrevIdentityId)),
+                ls.calculateDistance(hashFunctionId, keyword, ps.getNodeId(leftEdgePrevIdentityId)),
                 block.timestamp
             );
 
