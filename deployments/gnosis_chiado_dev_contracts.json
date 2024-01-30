@@ -81,12 +81,12 @@
       "version": "1.0.1"
     },
     "IdentityStorage": {
-      "deployed": true,
-      "deploymentTimestamp": 1701108151627,
-      "evmAddress": "0xf0c302F9F7DC143BedF575ad9a3697194FF1bdCf",
-      "gitBranch": "main",
-      "gitCommitHash": "83b739de2ea02ce8027e2fccc6e04e9d5da48814",
-      "version": "2.0.0"
+      "evmAddress": "0x969cc6855df69C9aEdC6ee94102fD042B4323C2C",
+      "version": "2.0.0",
+      "gitBranch": "release/delegations",
+      "gitCommitHash": "4c13a9e957bee2991d38f3b477818d6a155c2d4c",
+      "deploymentTimestamp": 1706646689410,
+      "deployed": true
     },
     "LinearSum": {
       "deployed": true,
