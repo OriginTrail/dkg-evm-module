@@ -109,11 +109,6 @@
       {
         "components": [
           {
-            "internalType": "uint256",
-            "name": "hashRingPosition",
-            "type": "uint256"
-          },
-          {
             "internalType": "bytes",
             "name": "nodeId",
             "type": "bytes"
@@ -134,7 +129,7 @@
             "type": "uint96"
           }
         ],
-        "internalType": "struct ShardingTableStructsV2.NodeInfo[]",
+        "internalType": "struct ShardingTableStructsV1.NodeInfo[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -160,11 +155,6 @@
       {
         "components": [
           {
-            "internalType": "uint256",
-            "name": "hashRingPosition",
-            "type": "uint256"
-          },
-          {
             "internalType": "bytes",
             "name": "nodeId",
             "type": "bytes"
@@ -185,7 +175,7 @@
             "type": "uint96"
           }
         ],
-        "internalType": "struct ShardingTableStructsV2.NodeInfo[]",
+        "internalType": "struct ShardingTableStructsV1.NodeInfo[]",
         "name": "",
         "type": "tuple[]"
       }

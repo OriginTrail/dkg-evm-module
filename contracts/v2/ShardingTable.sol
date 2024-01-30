@@ -9,6 +9,7 @@ import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
 import {Initializable} from "../v1/interface/Initializable.sol";
 import {Named} from "../v1/interface/Named.sol";
 import {Versioned} from "../v1/interface/Versioned.sol";
+import {ShardingTableStructsV1} from "../v1/structs/ShardingTableStructsV1.sol";
 import {ShardingTableStructsV2} from "./structs/ShardingTableStructsV2.sol";
 import {ShardingTableErrors} from "./errors/ShardingTableErrors.sol";
 
@@ -45,11 +46,11 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     function getShardingTable(
         uint72 startingIdentityId,
         uint72 nodesNumber
-    ) external view returns (ShardingTableStructsV2.NodeInfo[] memory) {
+    ) external view returns (ShardingTableStructsV1.NodeInfo[] memory) {
         return _getShardingTable(startingIdentityId, nodesNumber);
     }
 
-    function getShardingTable() external view returns (ShardingTableStructsV2.NodeInfo[] memory) {
+    function getShardingTable() external view returns (ShardingTableStructsV1.NodeInfo[] memory) {
         ShardingTableStorageV2 sts = shardingTableStorage;
         return _getShardingTable(sts.indexToIdentityId(0), sts.nodesCount());
     }
@@ -186,8 +187,8 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     function _getShardingTable(
         uint72 startingIdentityId,
         uint72 nodesNumber
-    ) internal view virtual returns (ShardingTableStructsV2.NodeInfo[] memory) {
-        ShardingTableStructsV2.NodeInfo[] memory nodesPage;
+    ) internal view virtual returns (ShardingTableStructsV1.NodeInfo[] memory) {
+        ShardingTableStructsV1.NodeInfo[] memory nodesPage;
         ShardingTableStorageV2 sts = shardingTableStorage;
 
         if ((sts.nodesCount() == 0) || (nodesNumber == 0)) return nodesPage;
@@ -196,7 +197,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
 
         require((startingIdentityId == NULL) || (startingNode.identityId != NULL), "Wrong starting Identity ID");
 
-        nodesPage = new ShardingTableStructsV2.NodeInfo[](nodesNumber);
+        nodesPage = new ShardingTableStructsV1.NodeInfo[](nodesNumber);
 
         ProfileStorage ps = profileStorage;
         StakingStorage ss = stakingStorage;
@@ -204,8 +205,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         uint72 nextIdentityId = startingIdentityId;
         uint72 index;
         while ((index < nodesNumber) && (nextIdentityId != NULL)) {
-            nodesPage[index] = ShardingTableStructsV2.NodeInfo({
-                hashRingPosition: uint256(ps.getNodeAddress(nextIdentityId, 1)),
+            nodesPage[index] = ShardingTableStructsV1.NodeInfo({
                 nodeId: ps.getNodeId(nextIdentityId),
                 identityId: nextIdentityId,
                 ask: ps.getAsk(nextIdentityId),

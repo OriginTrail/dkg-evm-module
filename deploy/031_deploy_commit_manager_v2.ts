@@ -23,10 +23,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 export default func;
 func.tags = ['CommitManagerV2', 'v2'];
 func.dependencies = [
-  'Hub',
+  'HubV2',
   'IdentityStorageV2',
   'ProximityScoringProxy',
   'Log2PLDSF',
+  'LinearSum',
   'ParametersStorage',
   'ProfileStorage',
   'ServiceAgreementStorageProxy',
