@@ -215,7 +215,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
             unchecked {
                 index += 1;
             }
-            nextIdentityId = sts.indexToIdentityId(index);
+            nextIdentityId = sts.indexToIdentityId(index + startingNode.index);
         }
 
         return nodesPage;
