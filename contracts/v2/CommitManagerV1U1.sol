@@ -607,20 +607,19 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
                 closestNode.hashRingPosition <= rightEdgeNode.hashRingPosition);
 
         uint72 nodesCount = sts.nodesCount();
-        uint72 nodesInBetweenClockwise = (
-            (rightEdgeNode.index > leftEdgeNode.index)
-                ? rightEdgeNode.index - leftEdgeNode.index - 1
-                : leftEdgeNode.index - rightEdgeNode.index - 1
-        );
-        uint72 neighborhoodSize = (nodesInBetweenClockwise < nodesCount - 2 - nodesInBetweenClockwise)
-            ? nodesInBetweenClockwise + 2
-            : nodesCount - nodesInBetweenClockwise;
+        uint72 neighborhoodSize = (leftEdgeNode.index <= rightEdgeNode.index)
+            ? rightEdgeNode.index - leftEdgeNode.index + 1
+            : (nodesCount - leftEdgeNode.index) + rightEdgeNode.index + 1;
 
         (uint72 closestPrevIdentityId, uint72 closestNextIdentityId) = sts.getAdjacentIdentityIdsByIndex(
             closestNodeIndex
         );
-        uint72 rightEdgeNextIdentityId = sts.indexToIdentityId(rightEdgeNodeIndex + 1);
-        uint72 leftEdgePrevIdentityId = leftEdgeNodeIndex != 0 ? sts.indexToIdentityId(leftEdgeNodeIndex - 1) : NULL;
+        uint72 rightEdgeNextIdentityId = rightEdgeNodeIndex != nodesCount - 1
+            ? sts.indexToIdentityId(rightEdgeNodeIndex + 1)
+            : sts.indexToIdentityId(0);
+        uint72 leftEdgePrevIdentityId = leftEdgeNodeIndex != 0
+            ? sts.indexToIdentityId(leftEdgeNodeIndex - 1)
+            : sts.indexToIdentityId(nodesCount - 1);
 
         (uint256 leftEdgeDistance, uint256 closestDistance, uint256 rightEdgeDistance) = linearSum
             .calculateNeighborhoodBoundaryDistances(
@@ -676,6 +675,7 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
                 agreementId,
                 epoch,
                 leftEdgeNodeIndex,
+                rightEdgeNodeIndex != nodesCount - 1 ? rightEdgeNodeIndex + 1 : 0,
                 leftEdgeDistance,
                 ls.calculateDistance(hashFunctionId, keyword, ps.getNodeId(rightEdgeNextIdentityId)),
                 block.timestamp
@@ -687,6 +687,7 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
                 agreementId,
                 epoch,
                 rightEdgeNodeIndex,
+                leftEdgeNodeIndex != 0 ? leftEdgeNodeIndex - 1 : nodesCount - 1,
                 rightEdgeDistance,
                 ls.calculateDistance(hashFunctionId, keyword, ps.getNodeId(leftEdgePrevIdentityId)),
                 block.timestamp

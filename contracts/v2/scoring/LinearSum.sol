@@ -52,8 +52,18 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
         uint72 maxNodesNumber,
         uint96 stake
     ) external view returns (uint40) {
-        return
-            uint40((1e18 - normalizeDistance(distance, maxDistance, maxNodesNumber)) * w1 + normalizeStake(stake) * w2);
+        uint64 normalizedDistance = normalizeDistance(distance, maxDistance, maxNodesNumber);
+
+        if (1e18 >= normalizedDistance) {
+            return uint40((1e18 - normalizedDistance) * w1 + normalizeStake(stake) * w2);
+        } else {
+            uint64 proximityScore = (normalizedDistance - 1e18) * w1;
+            uint64 stakeScore = normalizeStake(stake) * w2;
+            if (stakeScore > proximityScore) {
+                return 0;
+            }
+            return uint40(proximityScore - stakeScore);
+        }
     }
 
     function calculateDistance(

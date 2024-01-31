@@ -141,6 +141,11 @@
         "type": "uint72"
       },
       {
+        "internalType": "uint72",
+        "name": "rightEdgeNodeAdjacentIndex",
+        "type": "uint72"
+      },
+      {
         "internalType": "uint256",
         "name": "leftEdgeNodeDistance",
         "type": "uint256"
@@ -246,6 +251,11 @@
       {
         "internalType": "uint72",
         "name": "rightEdgeNodeIndex",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint72",
+        "name": "leftEdgeNodeAdjacentIndex",
         "type": "uint72"
       },
       {

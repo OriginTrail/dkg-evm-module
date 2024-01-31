@@ -34,6 +34,7 @@ library CommitManagerErrorsV2 {
         bytes32 agreementId,
         uint16 epoch,
         uint72 leftEdgeNodeIndex,
+        uint72 rightEdgeNodeAdjacentIndex,
         uint256 leftEdgeNodeDistance,
         uint256 rightEdgeNodeAdjacentDistance,
         uint256 timeNow
@@ -42,6 +43,7 @@ library CommitManagerErrorsV2 {
         bytes32 agreementId,
         uint16 epoch,
         uint72 rightEdgeNodeIndex,
+        uint72 leftEdgeNodeAdjacentIndex,
         uint256 rightEdgeNodeDistance,
         uint256 leftEdgeNodeAdjacentDistance,
         uint256 timeNow
