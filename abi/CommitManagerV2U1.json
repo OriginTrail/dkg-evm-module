@@ -141,6 +141,11 @@
         "type": "uint72"
       },
       {
+        "internalType": "uint72",
+        "name": "rightEdgeNodeAdjacentIndex",
+        "type": "uint72"
+      },
+      {
         "internalType": "uint256",
         "name": "leftEdgeNodeDistance",
         "type": "uint256"
@@ -246,6 +251,11 @@
       {
         "internalType": "uint72",
         "name": "rightEdgeNodeIndex",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint72",
+        "name": "leftEdgeNodeAdjacentIndex",
         "type": "uint72"
       },
       {
@@ -443,13 +453,13 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
         "name": "assetContract",
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
@@ -479,7 +489,7 @@
         "type": "uint256"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -498,13 +508,13 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
         "name": "assetContract",
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
@@ -602,19 +612,6 @@
         "internalType": "struct ServiceAgreementStructsV1.CommitSubmission[]",
         "name": "",
         "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "hashingProxy",
-    "outputs": [
-      {
-        "internalType": "contract HashingProxy",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -840,19 +837,6 @@
     "outputs": [
       {
         "internalType": "contract ShardingTableStorageV2",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "stakingContract",
-    "outputs": [
-      {
-        "internalType": "contract StakingV2",
         "name": "",
         "type": "address"
       }

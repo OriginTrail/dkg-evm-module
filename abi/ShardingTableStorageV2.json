@@ -18,6 +18,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "bytes",
+        "name": "nodeId",
+        "type": "bytes"
+      },
+      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -151,6 +156,11 @@
             "type": "uint256"
           },
           {
+            "internalType": "bytes",
+            "name": "nodeId",
+            "type": "bytes"
+          },
+          {
             "internalType": "uint72",
             "name": "index",
             "type": "uint72"
@@ -197,26 +207,9 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint72",
-            "name": "index",
-            "type": "uint72"
-          },
-          {
-            "internalType": "uint72",
-            "name": "identityId",
-            "type": "uint72"
-          }
-        ],
-        "internalType": "struct ShardingTableStructsV2.Node",
-        "name": "",
-        "type": "tuple"
-      },
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "hashRingPosition",
-            "type": "uint256"
+            "internalType": "bytes",
+            "name": "nodeId",
+            "type": "bytes"
           },
           {
             "internalType": "uint72",
@@ -239,6 +232,38 @@
             "internalType": "uint256",
             "name": "hashRingPosition",
             "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "nodeId",
+            "type": "bytes"
+          },
+          {
+            "internalType": "uint72",
+            "name": "index",
+            "type": "uint72"
+          },
+          {
+            "internalType": "uint72",
+            "name": "identityId",
+            "type": "uint72"
+          }
+        ],
+        "internalType": "struct ShardingTableStructsV2.Node",
+        "name": "",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "hashRingPosition",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "nodeId",
+            "type": "bytes"
           },
           {
             "internalType": "uint72",
@@ -277,6 +302,11 @@
             "type": "uint256"
           },
           {
+            "internalType": "bytes",
+            "name": "nodeId",
+            "type": "bytes"
+          },
+          {
             "internalType": "uint72",
             "name": "index",
             "type": "uint72"
@@ -311,6 +341,11 @@
             "internalType": "uint256",
             "name": "hashRingPosition",
             "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "nodeId",
+            "type": "bytes"
           },
           {
             "internalType": "uint72",

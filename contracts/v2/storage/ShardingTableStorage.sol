@@ -38,10 +38,16 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
         nodesCount--;
     }
 
-    function createNodeObject(uint256 hashRingPosition, uint72 identityId, uint72 index) external onlyContracts {
+    function createNodeObject(
+        uint256 hashRingPosition,
+        bytes calldata nodeId,
+        uint72 identityId,
+        uint72 index
+    ) external onlyContracts {
         nodes[identityId] = ShardingTableStructsV2.Node({
             hashRingPosition: hashRingPosition,
             index: index,
+            nodeId: nodeId,
             identityId: identityId
         });
     }
