@@ -40,6 +40,17 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "endTimestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "OperatorFeeChangeDelayPending",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -154,7 +165,75 @@
         "type": "uint8"
       }
     ],
-    "name": "OperatorFeeUpdated",
+    "name": "OperatorFeeChangeFinished",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "nodeId",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "operatorFee",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "OperatorFeeChangeStarted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "nodeId",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "serviceAgreementAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "nodeOperatorFee",
+        "type": "uint96"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "delegatorsReward",
+        "type": "uint96"
+      }
+    ],
+    "name": "RewardCollected",
     "type": "event"
   },
   {
@@ -333,6 +412,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "finishOperatorFeeChange",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "hub",
     "outputs": [
@@ -380,6 +472,19 @@
   },
   {
     "inputs": [],
+    "name": "nodeOperatorFeeChangesStorage",
+    "outputs": [
+      {
+        "internalType": "contract NodeOperatorFeeChangesStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "parametersStorage",
     "outputs": [
       {
@@ -415,24 +520,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "uint8",
-        "name": "operatorFee",
-        "type": "uint8"
-      }
-    ],
-    "name": "setOperatorFee",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -498,6 +585,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint8",
+        "name": "newOperatorFee",
+        "type": "uint8"
+      }
+    ],
+    "name": "startOperatorFeeChange",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

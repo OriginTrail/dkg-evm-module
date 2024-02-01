@@ -5,6 +5,7 @@ pragma solidity ^0.8.16;
 import {ShardingTableV2} from "./ShardingTable.sol";
 import {Shares} from "../v1/Shares.sol";
 import {IdentityStorageV2} from "./storage/IdentityStorage.sol";
+import {NodeOperatorFeeChangesStorage} from "./storage/NodeOperatorFeeChangesStorage.sol";
 import {ParametersStorage} from "../v1/storage/ParametersStorage.sol";
 import {ProfileStorage} from "../v1/storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "../v1/storage/ServiceAgreementStorageProxy.sol";
@@ -29,6 +30,13 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint96 oldStake,
         uint96 newStake
     );
+    event RewardCollected(
+        uint72 indexed identityId,
+        bytes nodeId,
+        address serviceAgreementAddress,
+        uint96 nodeOperatorFee,
+        uint96 delegatorsReward
+    );
     event StakeWithdrawalStarted(
         uint72 indexed identityId,
         bytes nodeId,
@@ -44,13 +52,15 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint96 oldAccumulatedOperatorFee,
         uint96 newAccumulatedOperatorFee
     );
-    event OperatorFeeUpdated(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
+    event OperatorFeeChangeStarted(uint72 indexed identityId, bytes nodeId, uint8 operatorFee, uint256 timestamp);
+    event OperatorFeeChangeFinished(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
     string private constant _VERSION = "2.0.0";
 
     ShardingTableV2 public shardingTableContract;
     IdentityStorageV2 public identityStorage;
+    NodeOperatorFeeChangesStorage public nodeOperatorFeeChangesStorage;
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     StakingStorage public stakingStorage;
@@ -69,6 +79,9 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     function initialize() public onlyHubOwner {
         shardingTableContract = ShardingTableV2(hub.getContractAddress("ShardingTable"));
         identityStorage = IdentityStorageV2(hub.getContractAddress("IdentityStorage"));
+        nodeOperatorFeeChangesStorage = NodeOperatorFeeChangesStorage(
+            hub.getContractAddress("NodeOperatorFeeChangesStorage")
+        );
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
@@ -190,6 +203,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         else sasAddress = sasProxy.agreementV1U1StorageAddress();
 
         emit StakeIncreased(identityId, ps.getNodeId(identityId), sasAddress, oldStake, oldStake + delegatorsReward);
+        emit RewardCollected(identityId, ps.getNodeId(identityId), sasAddress, operatorFee, delegatorsReward);
     }
 
     // solhint-disable-next-line no-empty-blocks
@@ -197,11 +211,33 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         // TBD
     }
 
-    function setOperatorFee(uint72 identityId, uint8 operatorFee) external onlyAdmin(identityId) {
-        if (operatorFee > 100) revert StakingErrors.InvalidOperatorFee();
-        stakingStorage.setOperatorFee(identityId, operatorFee);
+    function startOperatorFeeChange(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {
+        if (newOperatorFee > 100) revert StakingErrors.InvalidOperatorFee();
 
-        emit OperatorFeeUpdated(identityId, profileStorage.getNodeId(identityId), operatorFee);
+        uint256 feeChangeDelayEnd = block.timestamp + parametersStorage.stakeWithdrawalDelay();
+        nodeOperatorFeeChangesStorage.createOperatorFeeChangeRequest(identityId, newOperatorFee, feeChangeDelayEnd);
+
+        emit OperatorFeeChangeStarted(
+            identityId,
+            profileStorage.getNodeId(identityId),
+            newOperatorFee,
+            feeChangeDelayEnd
+        );
+    }
+
+    function finishOperatorFeeChange(uint72 identityId) external onlyAdmin(identityId) {
+        NodeOperatorFeeChangesStorage nofcs = nodeOperatorFeeChangesStorage;
+
+        uint8 newFee;
+        uint256 feeChangeDelayEnd;
+        (newFee, feeChangeDelayEnd) = nofcs.operatorFeeChangeRequests(identityId);
+
+        if (block.timestamp < feeChangeDelayEnd) revert StakingErrors.OperatorFeeChangeDelayPending(feeChangeDelayEnd);
+
+        stakingStorage.setOperatorFee(identityId, newFee);
+        nofcs.deleteOperatorFeeChangeRequest(identityId);
+
+        emit OperatorFeeChangeFinished(identityId, profileStorage.getNodeId(identityId), newFee);
     }
 
     function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal virtual {

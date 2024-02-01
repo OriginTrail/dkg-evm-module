@@ -1,9 +1,12 @@
+import { randomBytes } from 'crypto';
+
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
+import { BytesLike, BigNumber } from 'ethers';
 import hre from 'hardhat';
 
-import { HubController, Profile, ShardingTableStorageV2, ShardingTableV2 } from '../../../typechain';
+import { HubController, Profile, ProfileStorage, ShardingTableStorageV2, ShardingTableV2 } from '../../../typechain';
 
 type ShardingTableFixture = {
   accounts: SignerWithAddress[];
@@ -12,11 +15,19 @@ type ShardingTableFixture = {
   ShardingTable: ShardingTableV2;
 };
 
+type Node = {
+  account: SignerWithAddress;
+  identityId: number;
+  nodeId: BytesLike;
+  sha256: BytesLike;
+};
+
 describe('@v2 @unit ShardingTableV2 contract', function () {
   let accounts: SignerWithAddress[];
   let Profile: Profile;
   let ShardingTableStorage: ShardingTableStorageV2;
   let ShardingTable: ShardingTableV2;
+  let ProfileStorage: ProfileStorage;
   let identityId: number;
 
   const nodeId1 = '0x01';
@@ -36,9 +47,50 @@ describe('@v2 @unit ShardingTableV2 contract', function () {
     Profile = await hre.ethers.getContract<Profile>('Profile');
     ShardingTableStorage = await hre.ethers.getContract<ShardingTableStorageV2>('ShardingTableStorage');
     ShardingTable = await hre.ethers.getContract<ShardingTableV2>('ShardingTable');
+    ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
     await HubController.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, Profile, ShardingTableStorage, ShardingTable };
+  }
+
+  async function createProfile(operational: SignerWithAddress, admin: SignerWithAddress): Promise<Node> {
+    const OperationalProfile = Profile.connect(operational);
+
+    const nodeId = '0x' + randomBytes(32).toString('hex');
+    const sha256 = hre.ethers.utils.soliditySha256(['bytes'], [nodeId]);
+
+    const receipt = await (
+      await OperationalProfile.createProfile(
+        admin.address,
+        nodeId,
+        randomBytes(5).toString('hex'),
+        randomBytes(3).toString('hex'),
+      )
+    ).wait();
+    const identityId = Number(receipt.logs[0].topics[1]);
+    const blockchainNodeId = await ProfileStorage.getNodeId(identityId);
+    const blockchainSha256 = await ProfileStorage.getNodeAddress(identityId, 1);
+
+    expect(blockchainNodeId).to.be.equal(nodeId);
+    expect(blockchainSha256).to.be.equal(sha256);
+
+    return {
+      account: operational,
+      identityId,
+      nodeId,
+      sha256,
+    };
+  }
+
+  async function createMultipleRandomProfiles(count = 150): Promise<Node[]> {
+    const nodes = [];
+
+    for (let i = 0; i < count; i++) {
+      const node = await createProfile(accounts[i], accounts[i + count]);
+      nodes.push(node);
+    }
+
+    return nodes;
   }
 
   async function createMultipleProfiles() {
@@ -66,7 +118,7 @@ describe('@v2 @unit ShardingTableV2 contract', function () {
   async function validateShardingTableResult(identityIds: number[]) {
     const nodesCount = (await ShardingTableStorage.nodesCount()).toNumber();
 
-    expect(identityIds.length, 'Invalid number of nodes').to.equal(nodesCount);
+    expect(identityIds.length).to.equal(nodesCount, 'Invalid number of nodes');
 
     for (let i = 0; i < identityIds.length; i++) {
       const node = await ShardingTableStorage.getNode(identityIds[i]);
@@ -74,9 +126,9 @@ describe('@v2 @unit ShardingTableV2 contract', function () {
 
       expect(node).to.be.eql(nodeByIndex);
 
-      expect(node.identityId.toNumber(), 'Invalid node on this position').to.equal(identityIds[i]);
+      expect(node.identityId.toNumber()).to.equal(identityIds[i], 'Invalid node on this position');
 
-      expect(node.index.toNumber(), 'Invalid node index').to.equal(i);
+      expect(node.index.toNumber()).to.equal(i, 'Invalid node index');
     }
 
     const shardingTable = (await ShardingTable['getShardingTable()']()).map((node) => node.identityId.toNumber());
@@ -143,6 +195,27 @@ describe('@v2 @unit ShardingTableV2 contract', function () {
     // 3 1 2 4 5
     await ShardingTable['insertNode(uint72)'](profiles[0]);
     await validateShardingTableResult([3, 1, 2, 4, 5]);
+  });
+
+  it('Insert 100 nodes to the beginning of the Sharding Table, expect gas consumption to fit in 1_000_000 wei', async () => {
+    const gasConsumptionThreshold = hre.ethers.utils.parseEther('1000000');
+
+    const nodes = await createMultipleRandomProfiles(100);
+
+    const sortedNodes = nodes.sort((a, b) => {
+      const aBN = BigNumber.from(a.sha256);
+      const bBN = BigNumber.from(b.sha256);
+      if (bBN.eq(aBN)) {
+        return 0;
+      }
+      return bBN.lt(aBN) ? -1 : 1;
+    });
+
+    for (const node of sortedNodes) {
+      const tx = await ShardingTable['insertNode(uint72,uint72)'](0, node.identityId);
+      const receipt = await tx.wait();
+      expect(receipt.gasUsed).to.be.lessThanOrEqual(gasConsumptionThreshold);
+    }
   });
 
   it('Insert node with invalid prevIdentityId expect to fail', async () => {

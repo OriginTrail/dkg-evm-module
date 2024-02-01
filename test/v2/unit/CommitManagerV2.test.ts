@@ -23,10 +23,6 @@ import { ContentAssetStructs } from '../../../typechain/contracts/v1/assets/Cont
 import { ServiceAgreementStructsV1 } from '../../../typechain/contracts/v1/CommitManagerV1';
 import { ServiceAgreementStructsV2 } from '../../../typechain/contracts/v2/CommitManagerV2';
 
-const UINT256_MAX_BN = BigNumber.from(2).pow(256).sub(1);
-const UINT64_MAX_BN = BigNumber.from(2).pow(64).sub(1);
-const UINT40_MAX_BN = BigNumber.from(2).pow(40).sub(1);
-
 type CommitManagerV2Fixture = {
   accounts: SignerWithAddress[];
   CommitManagerV2: CommitManagerV2;
@@ -51,7 +47,10 @@ type NodeWithDistance = {
 };
 
 describe('@v2 @unit CommitManagerV2 contract', function () {
-  const HASH_RING_SIZE = BigNumber.from(2).pow(256);
+  const HASH_RING_SIZE = BigNumber.from(2).pow(256).sub(1);
+  const UINT256_MAX_BN = BigNumber.from(2).pow(256).sub(1);
+  const UINT64_MAX_BN = BigNumber.from(2).pow(64).sub(1);
+  const UINT40_MAX_BN = BigNumber.from(2).pow(40).sub(1);
 
   let accounts: SignerWithAddress[];
   let Token: Token;
@@ -108,8 +107,8 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
       await OperationalProfile.createProfile(
         admin.address,
         nodeId,
+        randomBytes(5).toString('hex'),
         randomBytes(3).toString('hex'),
-        randomBytes(2).toString('hex'),
       )
     ).wait();
     const identityId = Number(receipt.logs[0].topics[1]);
@@ -138,7 +137,7 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
     };
   }
 
-  async function createMultipleProfiles(count = 150) {
+  async function createMultipleProfiles(count = 150): Promise<Node[]> {
     const nodes = [];
 
     for (let i = 0; i < count; i++) {
@@ -287,7 +286,7 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
     };
   }
 
-  async function deployCommitManagerV1Fixture(): Promise<CommitManagerV2Fixture> {
+  async function deployCommitManagerV2Fixture(): Promise<CommitManagerV2Fixture> {
     await hre.deployments.fixture([
       'HubV2',
       'ContentAssetStorageV2',
@@ -315,7 +314,7 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
 
   beforeEach(async () => {
     hre.helpers.resetDeploymentsJson();
-    ({ accounts, CommitManagerV2 } = await loadFixture(deployCommitManagerV1Fixture));
+    ({ accounts, CommitManagerV2 } = await loadFixture(deployCommitManagerV2Fixture));
   });
 
   it('The contract is named "CommitManagerV1"', async () => {

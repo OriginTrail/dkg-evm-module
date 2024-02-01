@@ -121,6 +121,7 @@
     "test:gas:trace": "cross-env GAS_REPORT=true hardhat test --network hardhat --trace",
     "test:gas": "cross-env GAS_REPORT=true hardhat test --network hardhat",
     "test:integration": "hardhat test --network hardhat --grep '@integration'",
+    "test:parallel": "hardhat test --network hardhat --parallel",
     "test:trace": "hardhat test --network hardhat --trace",
     "test:unit": "hardhat test --network hardhat --grep '@unit'",
     "test:v1:integration": "hardhat test --network hardhat --grep '@v1 @integration'",
