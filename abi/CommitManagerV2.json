@@ -515,19 +515,6 @@
   },
   {
     "inputs": [],
-    "name": "hashingProxy",
-    "outputs": [
-      {
-        "internalType": "contract HashingProxy",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "hub",
     "outputs": [
       {
@@ -717,19 +704,6 @@
     "outputs": [
       {
         "internalType": "contract ShardingTableStorageV2",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "stakingContract",
-    "outputs": [
-      {
-        "internalType": "contract StakingV2",
         "name": "",
         "type": "address"
       }

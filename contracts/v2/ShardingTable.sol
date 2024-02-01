@@ -157,7 +157,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
             );
 
         // Create node object + set index pointer to new identityId + increment total nodes count
-        sts.createNodeObject(newNodeHashRingPosition, identityId, index);
+        sts.createNodeObject(newNodeHashRingPosition, ps.getNodeId(identityId), identityId, index);
         sts.setIdentityId(index, identityId);
         sts.incrementNodesCount();
 

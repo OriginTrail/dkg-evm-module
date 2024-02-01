@@ -395,9 +395,26 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
       rightEdgeNodeIndex: rightEdgeNode.index,
     };
 
+    const r2 = await ParametersStorage.r2();
+    const minStake = await ParametersStorage.minimumStake();
+    const maxStake = await ParametersStorage.maximumStake();
+    const score = await calculateScore(
+      closestNode.distance,
+      closestNode.stake,
+      neighborhood[neighborhood.length - 1].distance,
+      r2,
+      nodes.length,
+      minStake,
+      maxStake,
+    );
+
     await expect(
-      CommitManagerV2['submitCommit((address,uint256,bytes,uint8,uint16,uint72,uint72,uint72))'](commitV2InputArgs),
-    ).to.emit(CommitManagerV2, 'CommitSubmitted');
+      CommitManagerV2.connect(closestNode.account)[
+        'submitCommit((address,uint256,bytes,uint8,uint16,uint72,uint72,uint72))'
+      ](commitV2InputArgs),
+    )
+      .to.emit(CommitManagerV2, 'CommitSubmitted')
+      .withArgs(ContentAssetStorageV2.address, tokenId, keyword, 1, 0, closestNode.identityId, score);
   });
 
   it('Create new asset with scoreFunction 1, submit R0 V1 commits, expect R0 V1 commits to be returned', async () => {
@@ -459,17 +476,9 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
       rightEdgeNodeIndex: rightEdgeNode.index,
     };
 
-    for (const node of neighborhood.slice(0, 3).reverse()) {
-      await expect(
-        CommitManagerV2.connect(node.account)[
-          'submitCommit((address,uint256,bytes,uint8,uint16,uint72,uint72,uint72))'
-        ](commitV2InputArgs),
-      ).to.emit(CommitManagerV2, 'CommitSubmitted');
-    }
-
-    const topCommits = await CommitManagerV2.getTopCommitSubmissions(agreementId, 0);
     const scoredNeighborhood = await Promise.all(
       neighborhood.map(async (node) => ({
+        account: node.account,
         identityId: node.identityId,
         score: (
           await calculateScore(
@@ -484,7 +493,22 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
         ).toNumber(),
       })),
     );
-    const expectedWinners = scoredNeighborhood.sort((a, b) => b.score - a.score).slice(0, r0);
+
+    scoredNeighborhood.sort((a, b) => b.score - a.score);
+
+    for (const node of [...scoredNeighborhood].reverse()) {
+      await expect(
+        CommitManagerV2.connect(node.account)[
+          'submitCommit((address,uint256,bytes,uint8,uint16,uint72,uint72,uint72))'
+        ](commitV2InputArgs),
+      )
+        .to.emit(CommitManagerV2, 'CommitSubmitted')
+        .withArgs(ContentAssetStorageV2.address, tokenId, keyword, 1, 0, node.identityId, node.score);
+    }
+
+    const topCommits = await CommitManagerV2.getTopCommitSubmissions(agreementId, 0);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const expectedWinners = scoredNeighborhood.map(({ account, ...rest }) => rest).slice(0, r0);
 
     expect(
       topCommits.map((commit) => ({ identityId: commit.identityId.toNumber(), score: commit.score })),

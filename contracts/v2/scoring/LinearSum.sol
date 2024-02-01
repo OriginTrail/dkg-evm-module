@@ -59,10 +59,10 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
         } else {
             uint64 proximityScore = (normalizedDistance - 1e18) * w1;
             uint64 stakeScore = normalizeStake(stake) * w2;
-            if (stakeScore > proximityScore) {
+            if (stakeScore <= proximityScore) {
                 return 0;
             }
-            return uint40(proximityScore - stakeScore);
+            return uint40(stakeScore - proximityScore);
         }
     }
 
