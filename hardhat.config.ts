@@ -100,6 +100,7 @@ config.mocha = {
   reporterOptions: {
     excludeContracts: [],
   },
+  timeout: 100000000,
 };
 
 config.abiExporter = {
