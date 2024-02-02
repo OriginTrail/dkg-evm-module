@@ -117,10 +117,7 @@ describe('@v2 @unit LinearSum', function () {
     } else {
       finalScore = BigNumber.from(0);
     }
-
-    if (finalScore.gt(UINT40_MAX_BN)) {
-      finalScore = toUint40(finalScore, UINT64_MAX_BN);
-    }
+    finalScore = toUint40(finalScore, UINT64_MAX_BN);
 
     return finalScore;
   }
