@@ -99,9 +99,9 @@
       "r1": "8",
       "r2": "20",
       "replacementWindowDurationPerc": "0",
-      "rewardWithdrawalDelay": "300",
+      "rewardWithdrawalDelay": "60",
       "slashingFreezeDuration": "63072000",
-      "stakeWithdrawalDelay": "300",
+      "stakeWithdrawalDelay": "60",
       "updateCommitWindowDuration": "1800"
     },
     "ProofManagerV1": {
@@ -261,9 +261,9 @@
       "r1": "8",
       "r2": "20",
       "replacementWindowDurationPerc": "0",
-      "rewardWithdrawalDelay": "300",
+      "rewardWithdrawalDelay": "60",
       "slashingFreezeDuration": "63072000",
-      "stakeWithdrawalDelay": "300",
+      "stakeWithdrawalDelay": "60",
       "updateCommitWindowDuration": "600"
     },
     "ProofManagerV1": {
@@ -423,9 +423,9 @@
       "r1": "8",
       "r2": "20",
       "replacementWindowDurationPerc": "0",
-      "rewardWithdrawalDelay": "86400",
+      "rewardWithdrawalDelay": "60",
       "slashingFreezeDuration": "63072000",
-      "stakeWithdrawalDelay": "86400",
+      "stakeWithdrawalDelay": "60",
       "updateCommitWindowDuration": "1800"
     },
     "ProofManagerV1": {
