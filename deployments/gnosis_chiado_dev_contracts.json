@@ -89,11 +89,11 @@
       "deployed": true
     },
     "LinearSum": {
-      "evmAddress": "0xf3B574a736B11C28B94796BfBEe19b5fb7D66dCe",
+      "evmAddress": "0x50c8Bcea7935242b991934Eb0251ff0CdAD4ED7f",
       "version": null,
       "gitBranch": "release/delegations",
-      "gitCommitHash": "5fcbdfba99d8b8b9d23d9e2277f73a1bfa70c50c",
-      "deploymentTimestamp": 1706798797798,
+      "gitCommitHash": "3170df6307d65977d66d8bc22134ecaf5fef8fe5",
+      "deploymentTimestamp": 1706896901040,
       "deployed": true
     },
     "Log2PLDSF": {

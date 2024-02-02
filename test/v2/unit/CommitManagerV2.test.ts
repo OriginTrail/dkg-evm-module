@@ -224,7 +224,7 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
       finalScore = BigNumber.from(0);
     }
 
-    finalScore = toUint40(finalScore, UINT64_MAX_BN);
+    finalScore = toUint40(finalScore, oneEther.mul(w1 + w2));
 
     return finalScore;
   }
