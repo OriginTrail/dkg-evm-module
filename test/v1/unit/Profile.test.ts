@@ -57,8 +57,8 @@ describe('@v1 @unit Profile contract', function () {
     expect(await Profile.name()).to.equal('Profile');
   });
 
-  it('The contract is version "1.0.2"', async () => {
-    expect(await Profile.version()).to.equal('1.0.2');
+  it('The contract is version "1.0.3"', async () => {
+    expect(await Profile.version()).to.equal('1.0.3');
   });
 
   it('Create a profile with whitelisted node, expect to pass', async () => {
