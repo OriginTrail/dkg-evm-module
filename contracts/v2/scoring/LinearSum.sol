@@ -9,6 +9,7 @@ import {Indexable} from "../../v1/interface/Indexable.sol";
 import {Initializable} from "../../v1/interface/Initializable.sol";
 import {IProximityScoreFunctionsPair} from "../interface/IProximityScoreFunctionsPair.sol";
 import {Named} from "../../v1/interface/Named.sol";
+import {ScaleDownLib} from "../utils/ScaleDownLibrary.sol";
 
 contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDependent, Initializable {
     event ParameterChanged(string parameterName, uint256 parameterValue);
@@ -55,14 +56,15 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
         uint64 normalizedDistance = normalizeDistance(distance, maxDistance, maxNodesNumber);
 
         if (1e18 >= normalizedDistance) {
-            return uint40((1e18 - normalizedDistance) * w1 + normalizeStake(stake) * w2);
+            return
+                ScaleDownLib.toUint40((1e18 - normalizedDistance) * w1 + normalizeStake(stake) * w2, type(uint64).max);
         } else {
             uint64 proximityScore = (normalizedDistance - 1e18) * w1;
             uint64 stakeScore = normalizeStake(stake) * w2;
             if (stakeScore <= proximityScore) {
                 return 0;
             }
-            return uint40(stakeScore - proximityScore);
+            return ScaleDownLib.toUint40(stakeScore - proximityScore, type(uint64).max);
         }
     }
 

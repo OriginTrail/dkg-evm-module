@@ -160,6 +160,11 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
     return directDistance.lt(wraparoundDistance) ? directDistance : wraparoundDistance;
   }
 
+  function toUint40(value: BigNumber, maxValue: BigNumber): BigNumber {
+    const result = value.mul(UINT40_MAX_BN).div(maxValue);
+    return result;
+  }
+
   async function calculateScore(
     distance: BigNumber,
     stake: BigNumber,
@@ -220,7 +225,7 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
     }
 
     if (finalScore.gt(UINT40_MAX_BN)) {
-      finalScore = finalScore.mod(UINT40_MAX_BN.add(1));
+      finalScore = toUint40(finalScore, UINT64_MAX_BN);
     }
 
     return finalScore;
