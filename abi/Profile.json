@@ -49,6 +49,12 @@
         "internalType": "bytes",
         "name": "nodeId",
         "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sharesContractAddress",
+        "type": "address"
       }
     ],
     "name": "ProfileCreated",

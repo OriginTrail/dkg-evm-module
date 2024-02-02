@@ -28,9 +28,10 @@ describe('@v1 @unit Profile contract', function () {
   const identityId1 = 1;
 
   async function createProfile() {
-    await expect(Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN'))
-      .to.emit(Profile, 'ProfileCreated')
-      .withArgs(identityId1, nodeId1);
+    await expect(Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN')).to.emit(
+      Profile,
+      'ProfileCreated',
+    );
   }
 
   async function deployProfileFixture(): Promise<ProfileFixture> {

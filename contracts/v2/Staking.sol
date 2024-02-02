@@ -30,6 +30,12 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint96 oldStake,
         uint96 newStake
     );
+    event SharesMinted(
+        address indexed sharesContractAddress,
+        address indexed delegator,
+        uint256 sharesMintedAmount,
+        uint256 newTotalSupply
+    );
     event RewardCollected(
         uint72 indexed identityId,
         bytes nodeId,
@@ -46,6 +52,12 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint256 withdrawalPeriodEnd
     );
     event StakeWithdrawn(uint72 indexed identityId, bytes nodeId, address indexed staker, uint96 withdrawnStakeAmount);
+    event SharesBurned(
+        address indexed sharesContractAddress,
+        address indexed delegator,
+        uint256 sharesBurnedAmount,
+        uint256 newTotalSupply
+    );
     event AccumulatedOperatorFeeIncreased(
         uint72 indexed identityId,
         bytes nodeId,
@@ -144,6 +156,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
             newStake,
             withdrawalPeriodEnd
         );
+        emit SharesBurned(address(sharesContract), msg.sender, sharesToBurn, sharesContract.totalSupply());
     }
 
     function withdrawStake(uint72 identityId) external {
@@ -158,7 +171,8 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         (stakeWithdrawalAmount, withdrawalTimestamp) = ss.withdrawalRequests(identityId, msg.sender);
 
         if (stakeWithdrawalAmount == 0) revert StakingErrors.WithdrawalWasntInitiated();
-        if (withdrawalTimestamp >= block.timestamp) revert StakingErrors.WithdrawalPeriodPending(withdrawalTimestamp);
+        if (block.timestamp < withdrawalTimestamp)
+            revert StakingErrors.WithdrawalPeriodPending(block.timestamp, withdrawalTimestamp);
 
         ss.deleteWithdrawalRequest(identityId, msg.sender);
         ss.transferStake(msg.sender, stakeWithdrawalAmount);
@@ -232,7 +246,8 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint256 feeChangeDelayEnd;
         (newFee, feeChangeDelayEnd) = nofcs.operatorFeeChangeRequests(identityId);
 
-        if (block.timestamp < feeChangeDelayEnd) revert StakingErrors.OperatorFeeChangeDelayPending(feeChangeDelayEnd);
+        if (block.timestamp < feeChangeDelayEnd)
+            revert StakingErrors.OperatorFeeChangeDelayPending(block.timestamp, feeChangeDelayEnd);
 
         stakingStorage.setOperatorFee(identityId, newFee);
         nofcs.deleteOperatorFeeChangeRequest(identityId);
@@ -269,6 +284,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
             shardingTableContract.insertNode(identityId);
 
         emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, oldStake, newStake);
+        emit SharesMinted(address(sharesContract), sender, sharesMinted, sharesContract.totalSupply());
     }
 
     function _checkAdmin(uint72 identityId) internal view virtual {
