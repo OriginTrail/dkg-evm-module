@@ -228,8 +228,12 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     function startOperatorFeeChange(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {
         if (newOperatorFee > 100) revert StakingErrors.InvalidOperatorFee();
 
-        uint256 feeChangeDelayEnd = block.timestamp + parametersStorage.stakeWithdrawalDelay();
-        nodeOperatorFeeChangesStorage.createOperatorFeeChangeRequest(identityId, newOperatorFee, feeChangeDelayEnd);
+        NodeOperatorFeeChangesStorage nofcs = nodeOperatorFeeChangesStorage;
+
+        uint256 feeChangeDelayEnd = block.timestamp > nofcs.delayFreePeriodEnd()
+            ? block.timestamp + parametersStorage.stakeWithdrawalDelay()
+            : block.timestamp;
+        nofcs.createOperatorFeeChangeRequest(identityId, newOperatorFee, feeChangeDelayEnd);
 
         emit OperatorFeeChangeStarted(
             identityId,

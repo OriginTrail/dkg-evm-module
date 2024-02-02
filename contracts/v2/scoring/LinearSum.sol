@@ -128,8 +128,9 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
 
         uint96 minStake = ps.minimumStake();
         uint96 maxStake = ps.maximumStake();
+        uint96 balancedStake = stake <= maxStake ? stake : maxStake;
 
-        return uint64((uint256(stakeScaleFactor) * (stake - minStake)) / (maxStake - minStake));
+        return uint64((uint256(stakeScaleFactor) * (balancedStake - minStake)) / (maxStake - minStake));
     }
 
     function getParameters() external view returns (uint96, uint96, uint32, uint32) {

@@ -310,7 +310,7 @@ describe('@v1 @unit ParametersStorage contract', function () {
   });
 
   it('validate stake withdrawal delay for owner, expect to pass', async () => {
-    const valueInContract = 5;
+    const valueInContract = 1;
     const newValue = '7';
     stakeWithdrawalDelay = await ParametersStorage.stakeWithdrawalDelay();
     const expectedValue = `${stakeWithdrawalDelay}/60`;
@@ -336,7 +336,7 @@ describe('@v1 @unit ParametersStorage contract', function () {
   });
 
   it('validate reward withdrawal delay for owner, expect to pass', async () => {
-    const valueInContract = 5;
+    const valueInContract = 1;
     const newValue = '7';
     rewardWithdrawalDelay = await ParametersStorage.rewardWithdrawalDelay();
     const expectedValue = `${rewardWithdrawalDelay}/60`;

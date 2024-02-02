@@ -10,7 +10,7 @@ contract ParametersStorage is Named, Versioned, HubDependent {
     event ParameterChanged(string parameterName, uint256 parameterValue);
 
     string private constant _NAME = "ParametersStorage";
-    string private constant _VERSION = "1.1.0";
+    string private constant _VERSION = "1.1.1";
 
     // 0 - minProofWindowOffsetPerc
     // 1 - maxProofWindowOffsetPerc

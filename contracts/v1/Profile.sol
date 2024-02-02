@@ -23,7 +23,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
     event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
 
     string private constant _NAME = "Profile";
-    string private constant _VERSION = "1.0.2";
+    string private constant _VERSION = "1.0.3";
 
     HashingProxy public hashingProxy;
     Identity public identityContract;

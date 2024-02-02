@@ -15,11 +15,20 @@ contract NodeOperatorFeeChangesStorage is Named, Versioned, HubDependent {
         uint256 timestamp;
     }
 
+    bool private _delayFreePeriodSet;
+    uint256 public delayFreePeriodEnd;
+
     // identityId => operatorFeeChangeRequest
     mapping(uint72 => OperatorFeeChangeRequest) public operatorFeeChangeRequests;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependent(hubAddress) {}
+
+    modifier onlyOnce() {
+        require(!_delayFreePeriodSet, "Function has already been executed.");
+        _;
+        _delayFreePeriodSet = true;
+    }
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -47,5 +56,9 @@ contract NodeOperatorFeeChangesStorage is Named, Versioned, HubDependent {
 
     function operatorFeeChangeRequestExists(uint72 identityId) external view returns (bool) {
         return operatorFeeChangeRequests[identityId].timestamp != 0;
+    }
+
+    function setDelayFreePeriodEnd(uint256 timestamp) external onlyHubOwner onlyOnce {
+        delayFreePeriodEnd = timestamp;
     }
 }
