@@ -3,10 +3,11 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await hre.helpers.deploy({
-    newContractName: 'ShardingTable',
+    newContractName: 'ProximityScoringProxy',
+    newContractNameInHub: 'ScoringProxy',
   });
 };
 
 export default func;
-func.tags = ['ShardingTable', 'v1'];
-func.dependencies = ['Hub', 'ProfileStorage', 'ShardingTableStorage', 'StakingStorage'];
+func.tags = ['ScoringProxy', 'v2'];
+func.dependencies = ['HubV2'];

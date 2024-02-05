@@ -17,6 +17,7 @@ import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
 import {ContentAssetErrors} from "./errors/assets/ContentAssetErrors.sol";
 import {GeneralErrors} from "./errors/GeneralErrors.sol";
+import {ServiceAgreementErrorsV1} from "./errors/ServiceAgreementErrorsV1.sol";
 import {ServiceAgreementErrorsV1U1} from "./errors/ServiceAgreementErrorsV1U1.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
@@ -71,12 +72,12 @@ contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         if (sasProxy.agreementV1Exists(agreementId) || !sasProxy.agreementV1U1Exists(agreementId))
-            revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
 
         uint256 startTime = sasProxy.getAgreementStartTime(agreementId);
 
         if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
-            revert ServiceAgreementErrorsV1U1.ServiceAgreementHasBeenExpired(
+            revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
                 agreementId,
                 startTime,
                 sasProxy.getAgreementEpochsNumber(agreementId),
@@ -111,7 +112,7 @@ contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         );
 
         if (sasProxy.agreementV1Exists(agreementId) || !sasProxy.agreementV1U1Exists(agreementId))
-            revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
 
         uint256 latestFinalizedStateIndex = AbstractAsset(args.assetContract).getAssertionIdsLength(args.tokenId) - 1;
 

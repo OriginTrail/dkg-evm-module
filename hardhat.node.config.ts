@@ -5,7 +5,7 @@ import { lazyObject } from 'hardhat/plugins';
 import { HardhatRuntimeEnvironment, HardhatUserConfig } from 'hardhat/types';
 
 import { Helpers } from './utils/helpers';
-import { accounts, rpc } from './utils/network';
+import { rpc } from './utils/network';
 
 extendEnvironment((hre: HardhatRuntimeEnvironment) => {
   hre.helpers = lazyObject(() => new Helpers(hre));
@@ -21,7 +21,6 @@ const config: HardhatUserConfig = {
     localhost: {
       environment: 'development',
       url: rpc('localhost'),
-      accounts: accounts('localhost'),
       saveDeployments: false,
     },
     hardhat: {
@@ -31,6 +30,7 @@ const config: HardhatUserConfig = {
       gasMultiplier: 1,
       blockGasLimit: 30_000_000,
       hardfork: 'shanghai',
+      accounts: { count: 200 },
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       loggingEnabled: false,

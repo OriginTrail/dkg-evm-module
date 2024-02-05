@@ -54,9 +54,7 @@ contract ContentAssetStorageV2 is ContentAssetStorage, IERC4906 {
     function setBaseURI(string memory baseURI) external virtual onlyHubOwner {
         tokenBaseURI = baseURI;
 
-        if (_tokenId > 1) {
-            emit BatchMetadataUpdate(1, lastTokenId());
-        }
+        if (_tokenId > 1) emit BatchMetadataUpdate(1, lastTokenId());
     }
 
     function _baseURI() internal view virtual override returns (string memory) {

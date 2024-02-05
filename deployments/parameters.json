@@ -68,6 +68,12 @@
         }
       ]
     },
+    "LinearSum": {
+      "w1": "1",
+      "w2": "1",
+      "distanceScaleFactor": "1000000000000000000",
+      "stakeScaleFactor": "1000000000000000000"
+    },
     "Log2PLDSF": {
       "a": "1",
       "b": "0",
@@ -85,7 +91,7 @@
       "epochLength": "7776000",
       "finalizationCommitsNumber": "3",
       "maxProofWindowOffsetPerc": "75",
-      "maximumStake": "5000000000000000000000000",
+      "maximumStake": "2000000000000000000000000",
       "minProofWindowOffsetPerc": "50",
       "minimumStake": "50000000000000000000000",
       "proofWindowDurationPerc": "25",
@@ -93,9 +99,9 @@
       "r1": "8",
       "r2": "20",
       "replacementWindowDurationPerc": "0",
-      "rewardWithdrawalDelay": "300",
+      "rewardWithdrawalDelay": "60",
       "slashingFreezeDuration": "63072000",
-      "stakeWithdrawalDelay": "300",
+      "stakeWithdrawalDelay": "60",
       "updateCommitWindowDuration": "1800"
     },
     "ProofManagerV1": {
@@ -224,6 +230,12 @@
         }
       ]
     },
+    "LinearSum": {
+      "w1": "1",
+      "w2": "1",
+      "distanceScaleFactor": "1000000000000000000",
+      "stakeScaleFactor": "1000000000000000000"
+    },
     "Log2PLDSF": {
       "a": "1",
       "b": "0",
@@ -241,7 +253,7 @@
       "epochLength": "3600",
       "finalizationCommitsNumber": "3",
       "maxProofWindowOffsetPerc": "75",
-      "maximumStake": "5000000000000000000000000",
+      "maximumStake": "2000000000000000000000000",
       "minProofWindowOffsetPerc": "50",
       "minimumStake": "50000000000000000000000",
       "proofWindowDurationPerc": "25",
@@ -249,9 +261,9 @@
       "r1": "8",
       "r2": "20",
       "replacementWindowDurationPerc": "0",
-      "rewardWithdrawalDelay": "300",
+      "rewardWithdrawalDelay": "60",
       "slashingFreezeDuration": "63072000",
-      "stakeWithdrawalDelay": "300",
+      "stakeWithdrawalDelay": "60",
       "updateCommitWindowDuration": "600"
     },
     "ProofManagerV1": {
@@ -380,6 +392,12 @@
         }
       ]
     },
+    "LinearSum": {
+      "w1": "1",
+      "w2": "1",
+      "distanceScaleFactor": "1000000000000000000",
+      "stakeScaleFactor": "1000000000000000000"
+    },
     "Log2PLDSF": {
       "a": "1",
       "b": "0",
@@ -397,7 +415,7 @@
       "epochLength": "7776000",
       "finalizationCommitsNumber": "3",
       "maxProofWindowOffsetPerc": "75",
-      "maximumStake": "5000000000000000000000000",
+      "maximumStake": "2000000000000000000000000",
       "minProofWindowOffsetPerc": "50",
       "minimumStake": "50000000000000000000000",
       "proofWindowDurationPerc": "25",
@@ -405,9 +423,9 @@
       "r1": "8",
       "r2": "20",
       "replacementWindowDurationPerc": "0",
-      "rewardWithdrawalDelay": "300",
+      "rewardWithdrawalDelay": "60",
       "slashingFreezeDuration": "63072000",
-      "stakeWithdrawalDelay": "300",
+      "stakeWithdrawalDelay": "60",
       "updateCommitWindowDuration": "1800"
     },
     "ProofManagerV1": {
@@ -536,6 +554,12 @@
         }
       ]
     },
+    "LinearSum": {
+      "w1": "1",
+      "w2": "1",
+      "distanceScaleFactor": "1000000000000000000",
+      "stakeScaleFactor": "1000000000000000000"
+    },
     "Log2PLDSF": {
       "a": "1",
       "b": "0",
@@ -553,7 +577,7 @@
       "epochLength": "7776000",
       "finalizationCommitsNumber": "3",
       "maxProofWindowOffsetPerc": "75",
-      "maximumStake": "5000000000000000000000000",
+      "maximumStake": "2000000000000000000000000",
       "minProofWindowOffsetPerc": "50",
       "minimumStake": "50000000000000000000000",
       "proofWindowDurationPerc": "25",
@@ -561,9 +585,9 @@
       "r1": "8",
       "r2": "20",
       "replacementWindowDurationPerc": "0",
-      "rewardWithdrawalDelay": "300",
+      "rewardWithdrawalDelay": "2419200",
       "slashingFreezeDuration": "63072000",
-      "stakeWithdrawalDelay": "3600",
+      "stakeWithdrawalDelay": "2419200",
       "updateCommitWindowDuration": "1800"
     },
     "ProofManagerV1": {

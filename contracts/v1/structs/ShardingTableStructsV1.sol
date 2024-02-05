@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.16;
 
-library ShardingTableStructs {
+library ShardingTableStructsV1 {
     struct NodeInfo {
         bytes nodeId;
         uint72 identityId;

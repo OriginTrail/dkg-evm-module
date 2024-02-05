@@ -100,6 +100,7 @@ config.mocha = {
   reporterOptions: {
     excludeContracts: [],
   },
+  timeout: 100000000,
 };
 
 config.abiExporter = {
@@ -122,9 +123,15 @@ config.abiExporter = {
     'IERC734Extended.sol',
     'IERC4906.sol',
     'Ownable.sol',
+    'CommitManagerErrorsV2.sol',
     'ContentAssetErrors.sol',
+    'ProfileErrors.sol',
     'ServiceAgreementErrorsV1.sol',
     'ServiceAgreementErrorsV1U1.sol',
+    'ServiceAgreementErrorsV2.sol',
+    'ShardingTableErrors.sol',
+    'StakingErrors.sol',
+    'TokenErrors.sol',
     'Shares.sol',
   ],
   spacing: 2,

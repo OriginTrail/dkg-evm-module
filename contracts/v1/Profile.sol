@@ -18,12 +18,12 @@ import {UnorderedIndexableContractDynamicSetLib} from "./utils/UnorderedIndexabl
 import {ADMIN_KEY, OPERATIONAL_KEY} from "./constants/IdentityConstants.sol";
 
 contract Profile is Named, Versioned, ContractStatus, Initializable {
-    event ProfileCreated(uint72 indexed identityId, bytes nodeId);
+    event ProfileCreated(uint72 indexed identityId, bytes nodeId, address sharesContractAddress);
     event ProfileDeleted(uint72 indexed identityId);
     event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
 
     string private constant _NAME = "Profile";
-    string private constant _VERSION = "1.0.2";
+    string private constant _VERSION = "1.0.3";
 
     HashingProxy public hashingProxy;
     Identity public identityContract;
@@ -104,7 +104,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         ps.createProfile(identityId, nodeId, address(sharesContract));
         _setAvailableNodeAddresses(identityId);
 
-        emit ProfileCreated(identityId, nodeId);
+        emit ProfileCreated(identityId, nodeId, address(sharesContract));
     }
 
     function setAsk(uint72 identityId, uint96 ask) external onlyIdentityOwner(identityId) {
@@ -229,8 +229,6 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
 
     function _checkWhitelist() internal view virtual {
         WhitelistStorage ws = whitelistStorage;
-        if (ws.whitelistingEnabled()) {
-            require(ws.whitelisted(msg.sender), "Address isn't whitelisted");
-        }
+        if (ws.whitelistingEnabled()) require(ws.whitelisted(msg.sender), "Address isn't whitelisted");
     }
 }

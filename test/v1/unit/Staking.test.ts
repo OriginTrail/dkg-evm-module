@@ -131,7 +131,7 @@ describe('@v1 @unit Staking contract', function () {
   });
 
   it('Contract should be able to transferStake; expect to pass', async () => {
-    await Token.mint(StakingStorage.address, hre.ethers.utils.parseEther(`${5_000_000}`));
+    await Token.mint(StakingStorage.address, hre.ethers.utils.parseEther(`${2_000_000}`));
 
     const initialReceiverBalance = await Token.balanceOf(accounts[1].address);
     await StakingStorage.transferStake(accounts[1].address, transferAmount);
@@ -140,7 +140,7 @@ describe('@v1 @unit Staking contract', function () {
   });
 
   it('Create 1 node; expect that stake is created and correctly set', async () => {
-    await Token.increaseAllowance(Staking.address, hre.ethers.utils.parseEther(`${5_000_000}`));
+    await Token.increaseAllowance(Staking.address, hre.ethers.utils.parseEther(`${2_000_000}`));
 
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
     await Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN');
@@ -148,16 +148,16 @@ describe('@v1 @unit Staking contract', function () {
     await Staking.connect(accounts[1])['addStake(address,uint72,uint96)'](
       accounts[0].address,
       identityId1,
-      hre.ethers.utils.parseEther(`${5_000_000}`),
+      hre.ethers.utils.parseEther(`${2_000_000}`),
     );
     expect(await StakingStorage.totalStakes(identityId1)).to.equal(
-      hre.ethers.utils.parseEther(`${5_000_000}`),
+      hre.ethers.utils.parseEther(`${2_000_000}`),
       'Total amount of stake is not set',
     );
   });
 
   it('Add reward; expect that total stake is increased', async () => {
-    await Token.mint(ServiceAgreementStorageV1U1.address, hre.ethers.utils.parseEther(`${5_000_000}`));
+    await Token.mint(ServiceAgreementStorageV1U1.address, hre.ethers.utils.parseEther(`${2_000_000}`));
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
     await Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN');
 
@@ -179,9 +179,9 @@ describe('@v1 @unit Staking contract', function () {
       proofWindowOffsetPerc,
     );
 
-    await Staking.connect(accounts[1]).addReward(agreementId, identityId1, hre.ethers.utils.parseEther(`${5_000_000}`));
+    await Staking.connect(accounts[1]).addReward(agreementId, identityId1, hre.ethers.utils.parseEther(`${2_000_000}`));
     expect(await StakingStorage.totalStakes(identityId1)).to.equal(
-      hre.ethers.utils.parseEther(`${5_000_000}`),
+      hre.ethers.utils.parseEther(`${2_000_000}`),
       'Total amount of stake is not increased after adding reward',
     );
   });

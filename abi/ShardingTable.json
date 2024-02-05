@@ -87,7 +87,7 @@
             "type": "uint96"
           }
         ],
-        "internalType": "struct ShardingTableStructs.NodeInfo[]",
+        "internalType": "struct ShardingTableStructsV1.NodeInfo[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -133,7 +133,7 @@
             "type": "uint96"
           }
         ],
-        "internalType": "struct ShardingTableStructs.NodeInfo[]",
+        "internalType": "struct ShardingTableStructsV1.NodeInfo[]",
         "name": "",
         "type": "tuple[]"
       }

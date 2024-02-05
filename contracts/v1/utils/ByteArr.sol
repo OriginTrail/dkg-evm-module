@@ -5,9 +5,7 @@ pragma solidity ^0.8.16;
 library ByteArr {
     function indexOf(bytes32[] storage self, bytes32 item) internal view returns (uint index, bool isThere) {
         for (uint i; i < self.length; i++) {
-            if (self[i] == item) {
-                return (i, true);
-            }
+            if (self[i] == item) return (i, true);
         }
         return (0, false);
     }

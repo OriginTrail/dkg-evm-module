@@ -9,7 +9,7 @@ import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {Initializable} from "./interface/Initializable.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
-import {ShardingTableStructs} from "./structs/ShardingTableStructs.sol";
+import {ShardingTableStructsV1} from "./structs/ShardingTableStructsV1.sol";
 import {NULL} from "./constants/ShardingTableConstants.sol";
 
 contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
@@ -43,11 +43,11 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
     function getShardingTable(
         uint72 startingIdentityId,
         uint72 nodesNumber
-    ) external view returns (ShardingTableStructs.NodeInfo[] memory) {
+    ) external view returns (ShardingTableStructsV1.NodeInfo[] memory) {
         return _getShardingTable(startingIdentityId, nodesNumber);
     }
 
-    function getShardingTable() external view returns (ShardingTableStructs.NodeInfo[] memory) {
+    function getShardingTable() external view returns (ShardingTableStructsV1.NodeInfo[] memory) {
         ShardingTableStorage sts = shardingTableStorage;
         return _getShardingTable(sts.head(), sts.nodesCount());
     }
@@ -106,7 +106,7 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
 
         ShardingTableStorage sts = shardingTableStorage;
 
-        ShardingTableStructs.Node memory nodeToRemove = sts.getNode(identityId);
+        ShardingTableStructsV1.Node memory nodeToRemove = sts.getNode(identityId);
 
         uint72 head = sts.head();
         uint72 tail = sts.tail();
@@ -120,9 +120,7 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
         } else if (head == identityId) {
             sts.setHead(nodeToRemove.nextIdentityId);
             sts.setPrevIdentityId(head, NULL);
-        } else {
-            sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
-        }
+        } else sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
 
         sts.deleteNodeObject(identityId);
         sts.decrementNodesCount();
@@ -133,24 +131,24 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
     function _getShardingTable(
         uint72 startingIdentityId,
         uint72 nodesNumber
-    ) internal view virtual returns (ShardingTableStructs.NodeInfo[] memory) {
-        ShardingTableStructs.NodeInfo[] memory nodesPage;
+    ) internal view virtual returns (ShardingTableStructsV1.NodeInfo[] memory) {
+        ShardingTableStructsV1.NodeInfo[] memory nodesPage;
         ShardingTableStorage sts = shardingTableStorage;
 
         if ((sts.nodesCount() == 0) || (nodesNumber == 0)) {
             return nodesPage;
         }
 
-        ShardingTableStructs.Node memory startingNode = sts.getNode(startingIdentityId);
+        ShardingTableStructsV1.Node memory startingNode = sts.getNode(startingIdentityId);
 
         require((startingIdentityId == NULL) || (startingNode.identityId != NULL), "Wrong starting Identity ID");
 
-        nodesPage = new ShardingTableStructs.NodeInfo[](nodesNumber);
+        nodesPage = new ShardingTableStructsV1.NodeInfo[](nodesNumber);
 
         ProfileStorage ps = profileStorage;
         StakingStorage ss = stakingStorage;
 
-        nodesPage[0] = ShardingTableStructs.NodeInfo({
+        nodesPage[0] = ShardingTableStructsV1.NodeInfo({
             nodeId: ps.getNodeId(startingIdentityId),
             identityId: startingIdentityId,
             ask: ps.getAsk(startingNode.identityId),
@@ -162,7 +160,7 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
         while ((i < nodesNumber) && (nextIdentityId != NULL)) {
             nextIdentityId = sts.getNode(nextIdentityId).nextIdentityId;
 
-            nodesPage[i] = ShardingTableStructs.NodeInfo({
+            nodesPage[i] = ShardingTableStructsV1.NodeInfo({
                 nodeId: ps.getNodeId(nextIdentityId),
                 identityId: nextIdentityId,
                 ask: ps.getAsk(nextIdentityId),

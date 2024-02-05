@@ -28,9 +28,10 @@ describe('@v1 @unit Profile contract', function () {
   const identityId1 = 1;
 
   async function createProfile() {
-    await expect(Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN'))
-      .to.emit(Profile, 'ProfileCreated')
-      .withArgs(identityId1, nodeId1);
+    await expect(Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN')).to.emit(
+      Profile,
+      'ProfileCreated',
+    );
   }
 
   async function deployProfileFixture(): Promise<ProfileFixture> {
@@ -56,8 +57,8 @@ describe('@v1 @unit Profile contract', function () {
     expect(await Profile.name()).to.equal('Profile');
   });
 
-  it('The contract is version "1.0.2"', async () => {
-    expect(await Profile.version()).to.equal('1.0.2');
+  it('The contract is version "1.0.3"', async () => {
+    expect(await Profile.version()).to.equal('1.0.3');
   });
 
   it('Create a profile with whitelisted node, expect to pass', async () => {

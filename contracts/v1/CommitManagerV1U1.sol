@@ -21,6 +21,7 @@ import {Versioned} from "./interface/Versioned.sol";
 import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol";
 import {ContentAssetErrors} from "./errors/assets/ContentAssetErrors.sol";
 import {GeneralErrors} from "./errors/GeneralErrors.sol";
+import {ServiceAgreementErrorsV1} from "./errors/ServiceAgreementErrorsV1.sol";
 import {ServiceAgreementErrorsV1U1} from "./errors/ServiceAgreementErrorsV1U1.sol";
 
 contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
@@ -45,7 +46,9 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
     );
 
     string private constant _NAME = "CommitManagerV1U1";
-    string private constant _VERSION = "1.0.1";
+    string private constant _VERSION = "1.0.2";
+
+    uint8 private constant _LOG2PLDSF_ID = 1;
 
     bool[6] public reqs = [false, false, false, false, false, false];
 
@@ -92,7 +95,7 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         if (sasProxy.agreementV1Exists(agreementId) || !sasProxy.agreementV1U1Exists(agreementId))
-            revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
 
         uint256 startTime = sasProxy.getAgreementStartTime(agreementId);
 
@@ -100,7 +103,7 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
 
         if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
-            revert ServiceAgreementErrorsV1U1.ServiceAgreementHasBeenExpired(
+            revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
                 agreementId,
                 startTime,
                 sasProxy.getAgreementEpochsNumber(agreementId),
@@ -110,9 +113,7 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         uint256 timeNow = block.timestamp;
         uint256 commitWindowDuration = (params.commitWindowDurationPerc() * epochLength) / 100;
 
-        if (epoch == 0) {
-            return timeNow < (startTime + commitWindowDuration);
-        }
+        if (epoch == 0) return timeNow < (startTime + commitWindowDuration);
 
         return (timeNow >= (startTime + epochLength * epoch) &&
             timeNow < (startTime + epochLength * epoch + commitWindowDuration));
@@ -128,9 +129,9 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
 
         if (!sasProxy.agreementV1U1Exists(agreementId))
-            revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
         if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
-            revert ServiceAgreementErrorsV1U1.ServiceAgreementHasBeenExpired(
+            revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
                 agreementId,
                 sasProxy.getAgreementStartTime(agreementId),
                 sasProxy.getAgreementEpochsNumber(agreementId),
@@ -152,9 +153,9 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         if (sasProxy.agreementV1Exists(agreementId) || !sasProxy.agreementV1U1Exists(agreementId))
-            revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
         if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
-            revert ServiceAgreementErrorsV1U1.ServiceAgreementHasBeenExpired(
+            revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
                 agreementId,
                 sasProxy.getAgreementStartTime(agreementId),
                 sasProxy.getAgreementEpochsNumber(agreementId),
@@ -196,7 +197,15 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         );
 
         if (sasProxy.agreementV1Exists(agreementId) || !sasProxy.agreementV1U1Exists(agreementId))
-            revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+
+        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LOG2PLDSF_ID)
+            revert ServiceAgreementErrorsV1.InvalidScoreFunctionId(
+                agreementId,
+                args.epoch,
+                sasProxy.getAgreementScoreFunctionId(agreementId),
+                block.timestamp
+            );
 
         uint256 latestFinalizedStateIndex = AbstractAsset(args.assetContract).getAssertionIdsLength(args.tokenId) - 1;
 
@@ -220,7 +229,7 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         if (!reqs[1] && !shardingTableStorage.nodeExists(identityId)) {
             ProfileStorage ps = profileStorage;
 
-            revert ServiceAgreementErrorsV1U1.NodeNotInShardingTable(
+            revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
                 identityId,
                 ps.getNodeId(identityId),
                 ps.getAsk(identityId),
@@ -257,9 +266,8 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         bytes32 unfinalizedState = uss.getUnfinalizedState(args.tokenId);
         uint256 unfinalizedStateIndex = generalAssetInterface.getAssertionIdsLength(args.tokenId);
 
-        if (uss.getUnfinalizedState(args.tokenId) == bytes32(0)) {
+        if (uss.getUnfinalizedState(args.tokenId) == bytes32(0))
             revert ServiceAgreementErrorsV1U1.NoPendingUpdate(args.assetContract, args.tokenId);
-        }
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
@@ -269,7 +277,15 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         );
 
         if (!sasProxy.agreementV1U1Exists(agreementId))
-            revert ServiceAgreementErrorsV1U1.ServiceAgreementDoesntExist(agreementId);
+            revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
+
+        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LOG2PLDSF_ID)
+            revert ServiceAgreementErrorsV1.InvalidScoreFunctionId(
+                agreementId,
+                args.epoch,
+                sasProxy.getAgreementScoreFunctionId(agreementId),
+                block.timestamp
+            );
 
         if (!reqs[2] && !isUpdateCommitWindowOpen(agreementId, args.epoch, unfinalizedStateIndex)) {
             uint256 commitWindowEnd = sasProxy.getUpdateCommitsDeadline(
@@ -291,7 +307,7 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         if (!reqs[3] && !shardingTableStorage.nodeExists(identityId)) {
             ProfileStorage ps = profileStorage;
 
-            revert ServiceAgreementErrorsV1U1.NodeNotInShardingTable(
+            revert ServiceAgreementErrorsV1.NodeNotInShardingTable(
                 identityId,
                 ps.getNodeId(identityId),
                 ps.getAsk(identityId),
@@ -324,9 +340,7 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
             sasProxy.getCommitsCount(keccak256(abi.encodePacked(agreementId, args.epoch, unfinalizedStateIndex))) ==
             parametersStorage.finalizationCommitsNumber()
         ) {
-            if (sasProxy.agreementV1Exists(agreementId)) {
-                sasProxy.migrateV1ServiceAgreement(agreementId);
-            }
+            if (sasProxy.agreementV1Exists(agreementId)) sasProxy.migrateV1ServiceAgreement(agreementId);
 
             sasProxy.setAgreementTokenAmount(
                 agreementId,
@@ -409,13 +423,13 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
 
         ServiceAgreementStructsV1.CommitSubmission memory refCommit = sasProxy.getCommitSubmission(refCommitId);
 
-        if ((i == 0) && (refCommit.identityId == 0)) {
+        if ((i == 0) && (refCommit.identityId == 0))
             //  No head -> Setting new head
             sasProxy.setV1U1AgreementEpochSubmissionHead(agreementId, epoch, stateIndex, commitId);
-        } else if ((i == 0) && (score <= refCommit.score)) {
+        else if ((i == 0) && (score <= refCommit.score))
             // There is a head with higher or equal score, add new commit on the right
             _linkCommits(agreementId, epoch, stateIndex, refCommit.identityId, identityId);
-        } else if ((i == 0) && (score > refCommit.score)) {
+        else if ((i == 0) && (score > refCommit.score)) {
             // There is a head with lower score, replace the head
             sasProxy.setV1U1AgreementEpochSubmissionHead(agreementId, epoch, stateIndex, commitId);
             _linkCommits(agreementId, epoch, stateIndex, identityId, refCommit.identityId);
@@ -429,11 +443,10 @@ contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
             // [] <-> [H] <-> [X] ... [RC-] <-(NL)-> [NC] <-(NL)-> [RC] <-> [RC+] ... [C] <-> []
             _linkCommits(agreementId, epoch, stateIndex, refCommit.prevIdentityId, identityId);
             _linkCommits(agreementId, epoch, stateIndex, identityId, refCommit.identityId);
-        } else {
-            // [] <-> [H] <-> [RC] <-> []
-            // [] <-> [H] <-> [RC] <-(NL)-> [NC] <-> []
-            _linkCommits(agreementId, epoch, stateIndex, refCommit.identityId, identityId);
         }
+        // [] <-> [H] <-> [RC] <-> []
+        // [] <-> [H] <-> [RC] <-(NL)-> [NC] <-> []
+        else _linkCommits(agreementId, epoch, stateIndex, refCommit.identityId, identityId);
 
         sasProxy.incrementCommitsCount(keccak256(abi.encodePacked(agreementId, epoch, stateIndex)));
     }

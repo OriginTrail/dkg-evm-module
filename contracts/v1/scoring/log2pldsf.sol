@@ -63,10 +63,13 @@ contract Log2PLDSF is IScoreFunction, Indexable, Named, HubDependent, Initializa
     }
 
     function calculateScore(uint256 distance, uint96 stake) external view returns (uint40) {
-        uint256 mappedDistance = distance / distanceMappingCoefficient;
-        uint96 mappedStake = stake / (parametersStorage.maximumStake() / stakeRangeMax);
+        uint64 coefficient = 1e18;
+        uint96 maxStake = parametersStorage.maximumStake();
 
-        uint64 coefficient = 1 ether;
+        uint96 balancedStake = stake <= maxStake ? stake : maxStake;
+        uint96 mappedStake = balancedStake / (maxStake / stakeRangeMax);
+
+        uint256 mappedDistance = distance / distanceMappingCoefficient;
 
         return
             uint40(
