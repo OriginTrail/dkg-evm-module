@@ -237,11 +237,11 @@
       "version": "1.0.0"
     },
     "LinearSum": {
-      "evmAddress": "0x669C7e51EbBdA5C57503Ff19feb463109874C2D5",
+      "evmAddress": "0xcaC24e93241fd0e1DC9eF9381127D7c561Ba2325",
       "version": null,
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "3170df6307d65977d66d8bc22134ecaf5fef8fe5",
-      "deploymentTimestamp": 1706896932563,
+      "gitBranch": "main",
+      "gitCommitHash": "097a19771ed52e4dfa1f8117a5dbdd375baae7bf",
+      "deploymentTimestamp": 1707228917320,
       "deployed": true
     },
     "NodeOperatorFeeChangesStorage": {
