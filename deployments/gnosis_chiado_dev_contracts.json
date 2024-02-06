@@ -89,11 +89,11 @@
       "deployed": true
     },
     "LinearSum": {
-      "evmAddress": "0x5D7cb786cd1ce96C8494e51029363564e8168011",
+      "evmAddress": "0x5dA70b2fF6aAc33EE21350df19183173F72E01dF",
       "version": null,
-      "gitBranch": "main",
-      "gitCommitHash": "097a19771ed52e4dfa1f8117a5dbdd375baae7bf",
-      "deploymentTimestamp": 1707228838804,
+      "gitBranch": "chiado-contracts-redeployment",
+      "gitCommitHash": "bfc4be6d0239de8b3c1e6a2017c4e71d3c9c2e50",
+      "deploymentTimestamp": 1707235148480,
       "deployed": true
     },
     "Log2PLDSF": {
