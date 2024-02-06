@@ -38,8 +38,8 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
         uint40 score
     );
     event StateFinalized(
-        address assetContract,
-        uint256 tokenId,
+        address indexed assetContract,
+        uint256 indexed tokenId,
         bytes keyword,
         uint8 hashFunctionId,
         uint16 epoch,
