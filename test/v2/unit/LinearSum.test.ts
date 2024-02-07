@@ -138,10 +138,7 @@ describe('@v2 @unit LinearSum', function () {
     const linearSumParams = await LinearSum.getParameters();
     const [, stakeScaleFactor, , w2] = linearSumParams;
 
-    let normalizedStake = stakeScaleFactor.mul(stake.sub(minStake)).div(maxStake.sub(minStake));
-    if (normalizedStake.gt(UINT64_MAX_BN)) {
-      normalizedStake = normalizedStake.mod(UINT64_MAX_BN.add(1));
-    }
+    const normalizedStake = stakeScaleFactor.mul(stake.sub(minStake)).div(maxStake.sub(minStake));
     const stakeScore = normalizedStake.mul(w2);
 
     return stakeScore;
@@ -227,7 +224,7 @@ describe('@v2 @unit LinearSum', function () {
       BigNumber.from('1000000000000000000'),
       BigNumber.from('1000000000000000000'),
       1,
-      1,
+      100,
     ]);
   });
 
@@ -295,6 +292,7 @@ describe('@v2 @unit LinearSum', function () {
   });
 
   it('Manual verification of score function', async function () {
+    const w2 = await LinearSum.w2();
     const minStake = await ParametersStorage.minimumStake();
     const maxStake = await ParametersStorage.maximumStake();
     const peerHash = ZERO_BYTES32;
@@ -310,7 +308,7 @@ describe('@v2 @unit LinearSum', function () {
 
     const stakeScore = await calculateStakeScore(distance, stake, maxDistance, 1, 1, minStake, maxStake);
     // 50k / 1950k = 0.0256410256410256410256410256410256410256410256410256410256410256
-    expect(stakeScore).to.be.equal(BigNumber.from('25641025641025641'));
+    expect(stakeScore).to.be.equal(BigNumber.from('25641025641025641').mul(w2));
 
     const scoreBeforeScaling = await calculateScoreBeforeScaling(
       distance,
@@ -321,9 +319,9 @@ describe('@v2 @unit LinearSum', function () {
       minStake,
       maxStake,
     );
-    expect(scoreBeforeScaling).to.be.equal(BigNumber.from('525641025641025641'));
+    expect(scoreBeforeScaling).to.be.equal(BigNumber.from('3064102564102564100'));
 
     const score = await calculateScore(distance, stake, maxDistance, 1, 1, minStake, maxStake);
-    expect(score).to.be.equal(BigNumber.from('288974209863'));
+    expect(score).to.be.equal(BigNumber.from('33356597999'));
   });
 });

@@ -57,14 +57,17 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
 
         if (1e18 >= normalizedDistance) {
             return
-                ScaleDownLib.toUint40((1e18 - normalizedDistance) * w1 + normalizeStake(stake) * w2, (w1 + w2) * 1e18);
+                ScaleDownLib.toUint40(
+                    uint216(1e18 - normalizedDistance) * w1 + uint216(normalizeStake(stake)) * w2,
+                    uint216(w1 + w2) * 1e18
+                );
         } else {
-            uint64 proximityScore = (normalizedDistance - 1e18) * w1;
-            uint64 stakeScore = normalizeStake(stake) * w2;
+            uint216 proximityScore = uint216(normalizedDistance - 1e18) * w1;
+            uint216 stakeScore = uint216(normalizeStake(stake)) * w2;
             if (stakeScore <= proximityScore) {
                 return 0;
             }
-            return ScaleDownLib.toUint40(stakeScore - proximityScore, (w1 + w2) * 1e18);
+            return ScaleDownLib.toUint40(stakeScore - proximityScore, uint216(w1 + w2) * 1e18);
         }
     }
 

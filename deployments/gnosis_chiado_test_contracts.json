@@ -237,11 +237,11 @@
       "version": "1.0.0"
     },
     "LinearSum": {
-      "evmAddress": "0x669C7e51EbBdA5C57503Ff19feb463109874C2D5",
+      "evmAddress": "0xEad3f049298d483aAf2C1341EE8E84237f0853cB",
       "version": null,
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "3170df6307d65977d66d8bc22134ecaf5fef8fe5",
-      "deploymentTimestamp": 1706896932563,
+      "gitBranch": "chiado-contracts-redeployment",
+      "gitCommitHash": "bfc4be6d0239de8b3c1e6a2017c4e71d3c9c2e50",
+      "deploymentTimestamp": 1707235181232,
       "deployed": true
     },
     "NodeOperatorFeeChangesStorage": {
