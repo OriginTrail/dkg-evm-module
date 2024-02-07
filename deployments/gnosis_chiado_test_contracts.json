@@ -102,7 +102,7 @@
       "gitBranch": "release/delegations",
       "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
       "deploymentTimestamp": 1706868279119,
-      "deployed": true
+      "deployed": false
     },
     "Profile": {
       "evmAddress": "0x9e9c9c0eC92909660126d3f25d03F1991E7B8d67",
@@ -110,7 +110,7 @@
       "gitBranch": "release/delegations",
       "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
       "deploymentTimestamp": 1706868404817,
-      "deployed": true
+      "deployed": false
     },
     "ProfileStorage": {
       "evmAddress": "0xa936Bb6fF11D69e6412ABF79b29ed1eEccBD181d",
@@ -206,7 +206,7 @@
       "gitBranch": "release/delegations",
       "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
       "deploymentTimestamp": 1706868394091,
-      "deployed": true
+      "deployed": false
     },
     "StakingStorage": {
       "deployed": true,

@@ -396,6 +396,19 @@
   {
     "inputs": [
       {
+        "internalType": "uint16",
+        "name": "shardingTableSizeLimit_",
+        "type": "uint16"
+      }
+    ],
+    "name": "setShardingTableSizeLimit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint32",
         "name": "newSlashingFreezeDuration",
         "type": "uint32"
@@ -430,6 +443,19 @@
     "name": "setUpdateCommitWindowDuration",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "shardingTableSizeLimit",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
