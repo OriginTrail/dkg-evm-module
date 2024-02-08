@@ -77,9 +77,11 @@ describe('@v2 @unit StakingV2 contract', function () {
     const receipt = await (
       await OperationalProfile.createProfile(
         admin.address,
+        [],
         nodeId,
         randomBytes(5).toString('hex'),
         randomBytes(3).toString('hex'),
+        0,
       )
     ).wait();
     const identityId = Number(receipt.logs[0].topics[1]);
@@ -203,7 +205,7 @@ describe('@v2 @unit StakingV2 contract', function () {
     await Token.increaseAllowance(StakingV2.address, hre.ethers.utils.parseEther(`${2_000_000}`));
 
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
-    await Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN');
+    await Profile.createProfile(accounts[1].address, [], nodeId1, 'Token', 'TKN', 0);
 
     await StakingV2.connect(accounts[1])['addStake(address,uint72,uint96)'](
       accounts[0].address,
@@ -219,7 +221,7 @@ describe('@v2 @unit StakingV2 contract', function () {
   it('Add reward; expect that total stake is increased', async () => {
     await Token.mint(ServiceAgreementStorageV1U1.address, hre.ethers.utils.parseEther(`${2_000_000}`));
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
-    await Profile.createProfile(accounts[1].address, nodeId1, 'Token', 'TKN');
+    await Profile.createProfile(accounts[1].address, [], nodeId1, 'Token', 'TKN', 0);
 
     const agreementId = '0x' + randomBytes(32).toString('hex');
     const startTime = Math.floor(Date.now() / 1000).toString();
