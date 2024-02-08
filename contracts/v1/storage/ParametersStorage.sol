@@ -38,6 +38,8 @@ contract ParametersStorage is Named, Versioned, HubDependent {
 
     uint16 public updateCommitWindowDuration;
 
+    uint16 public hashFunctionsLimit;
+    uint16 public opWalletsLimitOnProfileCreation;
     uint16 public shardingTableSizeLimit;
 
     constructor(address hubAddress) HubDependent(hubAddress) {
@@ -74,6 +76,8 @@ contract ParametersStorage is Named, Versioned, HubDependent {
 
         updateCommitWindowDuration = 30 minutes;
 
+        hashFunctionsLimit = 20;
+        opWalletsLimitOnProfileCreation = 50;
         shardingTableSizeLimit = 500;
 
         // finalizationCommitsNumber
@@ -228,6 +232,18 @@ contract ParametersStorage is Named, Versioned, HubDependent {
         updateCommitWindowDuration = newUpdateCommitWindowDuration;
 
         emit ParameterChanged("updateCommitWindowDuration", newUpdateCommitWindowDuration);
+    }
+
+    function setHashFunctionsLimit(uint16 hashFunctionsLimit_) external onlyHubOwner {
+        hashFunctionsLimit = hashFunctionsLimit_;
+
+        emit ParameterChanged("hashFunctionsLimit", hashFunctionsLimit);
+    }
+
+    function setOpWalletsLimitOnProfileCreation(uint16 opWalletsLimitOnProfileCreation_) external onlyHubOwner {
+        opWalletsLimitOnProfileCreation = opWalletsLimitOnProfileCreation_;
+
+        emit ParameterChanged("opWalletsLimitOnProfileCreation", opWalletsLimitOnProfileCreation);
     }
 
     function setShardingTableSizeLimit(uint16 shardingTableSizeLimit_) external onlyHubOwner {

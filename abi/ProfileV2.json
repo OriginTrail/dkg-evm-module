@@ -121,6 +121,22 @@
   {
     "inputs": [
       {
+        "internalType": "uint16",
+        "name": "allowed",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "provided",
+        "type": "uint16"
+      }
+    ],
+    "name": "TooManyOperationalWallets",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "nowTimestamp",
         "type": "uint256"
@@ -219,6 +235,11 @@
         "internalType": "address",
         "name": "adminWallet",
         "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "operationalWallets",
+        "type": "address[]"
       },
       {
         "internalType": "bytes",

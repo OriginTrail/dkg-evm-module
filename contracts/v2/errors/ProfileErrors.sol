@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 
 library ProfileErrors {
     error IdentityAlreadyExists(uint72 identityId, address wallet);
+    error TooManyOperationalWallets(uint16 allowed, uint16 provided);
     error EmptyNodeId();
     error NodeIdAlreadyExists(bytes nodeId);
     error EmptySharesTokenName();

@@ -82,6 +82,7 @@ contract ProfileV2 is Named, Versioned, ContractStatus, Initializable {
 
     function createProfile(
         address adminWallet,
+        address[] calldata operationalWallets,
         bytes calldata nodeId,
         string calldata sharesTokenName,
         string calldata sharesTokenSymbol,
@@ -89,9 +90,15 @@ contract ProfileV2 is Named, Versioned, ContractStatus, Initializable {
     ) external onlyWhitelisted {
         IdentityStorage ids = identityStorage;
         ProfileStorage ps = profileStorage;
+        Identity id = identityContract;
 
         if (ids.getIdentityId(msg.sender) != 0)
             revert ProfileErrors.IdentityAlreadyExists(ids.getIdentityId(msg.sender), msg.sender);
+        if (operationalWallets.length > parametersStorage.opWalletsLimitOnProfileCreation())
+            revert ProfileErrors.TooManyOperationalWallets(
+                parametersStorage.opWalletsLimitOnProfileCreation(),
+                uint16(operationalWallets.length)
+            );
         if (nodeId.length == 0) revert ProfileErrors.EmptyNodeId();
         if (ps.nodeIdsList(nodeId)) revert ProfileErrors.NodeIdAlreadyExists(nodeId);
         if (keccak256(abi.encodePacked(sharesTokenName)) == keccak256(abi.encodePacked("")))
@@ -101,7 +108,8 @@ contract ProfileV2 is Named, Versioned, ContractStatus, Initializable {
         if (ps.sharesNames(sharesTokenName)) revert ProfileErrors.SharesTokenNameAlreadyExists(sharesTokenName);
         if (ps.sharesSymbols(sharesTokenSymbol)) revert ProfileErrors.SharesTokenSymbolAlreadyExists(sharesTokenSymbol);
 
-        uint72 identityId = identityContract.createIdentity(msg.sender, adminWallet);
+        uint72 identityId = id.createIdentity(msg.sender, adminWallet);
+        id.addOperationalWallets(identityId, operationalWallets);
 
         Shares sharesContract = new Shares(address(hub), sharesTokenName, sharesTokenSymbol);
 
@@ -130,9 +138,9 @@ contract ProfileV2 is Named, Versioned, ContractStatus, Initializable {
         bytes32 nodeAddress;
 
         UnorderedIndexableContractDynamicSetLib.Contract[] memory hashFunctions = hp.getAllHashFunctions();
-        uint256 hashFunctionsNumber = hashFunctions.length;
+        require(hashFunctions.length <= parametersStorage.hashFunctionsLimit(), "Too many hash functions!");
         uint8 hashFunctionId;
-        for (uint8 i; i < hashFunctionsNumber; ) {
+        for (uint8 i; i < hashFunctions.length; ) {
             hashFunctionId = hashFunctions[i].id;
             nodeAddress = hp.callHashFunction(hashFunctionId, nodeId);
             ps.setNodeAddress(identityId, hashFunctionId, nodeAddress);
