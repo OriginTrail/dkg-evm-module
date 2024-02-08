@@ -26,18 +26,18 @@ import {ServiceAgreementErrorsV1U1} from "./errors/ServiceAgreementErrorsV1U1.so
 
 contract CommitManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
     event CommitSubmitted(
-        address indexed assetContract,
-        uint256 indexed tokenId,
+        address assetContract,
+        uint256 tokenId,
         bytes keyword,
         uint8 hashFunctionId,
         uint16 epoch,
         uint256 stateIndex,
-        uint72 indexed identityId,
+        uint72 identityId,
         uint40 score
     );
     event StateFinalized(
-        address indexed assetContract,
-        uint256 indexed tokenId,
+        address assetContract,
+        uint256 tokenId,
         bytes keyword,
         uint8 hashFunctionId,
         uint16 epoch,

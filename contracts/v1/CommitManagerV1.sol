@@ -22,12 +22,12 @@ import {ServiceAgreementStructsV1} from "./structs/ServiceAgreementStructsV1.sol
 
 contract CommitManagerV1 is Named, Versioned, ContractStatus, Initializable {
     event CommitSubmitted(
-        address indexed assetContract,
-        uint256 indexed tokenId,
+        address assetContract,
+        uint256 tokenId,
         bytes keyword,
         uint8 hashFunctionId,
         uint16 epoch,
-        uint72 indexed identityId,
+        uint72 identityId,
         uint40 score
     );
 
