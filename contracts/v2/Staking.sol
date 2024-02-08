@@ -16,8 +16,9 @@ import {Initializable} from "../v1/interface/Initializable.sol";
 import {Named} from "../v1/interface/Named.sol";
 import {Versioned} from "../v1/interface/Versioned.sol";
 import {GeneralErrors} from "../v1/errors/GeneralErrors.sol";
-import {ProfileErrors} from "./errors/ProfileErrors.sol";
-import {StakingErrors} from "./errors/StakingErrors.sol";
+import {ProfileErrors} from "../v1/errors/ProfileErrors.sol";
+import {ShardingTableErrors} from "./errors/ShardingTableErrors.sol";
+import {StakingErrors} from "../v1/errors/StakingErrors.sol";
 import {TokenErrors} from "../v1/errors/TokenErrors.sol";
 import {ADMIN_KEY} from "../v1/constants/IdentityConstants.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -183,11 +184,10 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     function addReward(bytes32 agreementId, uint72 identityId, uint96 rewardAmount) external onlyContracts {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
         StakingStorage ss = stakingStorage;
+        ProfileStorage ps = profileStorage;
 
         uint96 operatorFee = (rewardAmount * ss.operatorFees(identityId)) / 100;
         uint96 delegatorsReward = rewardAmount - operatorFee;
-
-        ProfileStorage ps = profileStorage;
 
         uint96 oldAccumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
         uint96 oldStake = ss.totalStakes(identityId);
@@ -201,8 +201,14 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
             ss.setTotalStake(identityId, oldStake + delegatorsReward);
             sasProxy.transferAgreementTokens(agreementId, address(ss), delegatorsReward);
 
-            if (!shardingTableStorage.nodeExists(identityId) && oldStake >= parametersStorage.minimumStake())
-                shardingTableContract.insertNode(identityId);
+            ShardingTableStorageV2 sts = shardingTableStorage;
+            ParametersStorage params = parametersStorage;
+
+            if (!sts.nodeExists(identityId) && oldStake >= params.minimumStake())
+                if (sts.nodesCount() >= params.shardingTableSizeLimit())
+                    revert ShardingTableErrors.ShardingTableIsFull();
+
+            shardingTableContract.insertNode(identityId);
         }
 
         emit AccumulatedOperatorFeeIncreased(
@@ -263,6 +269,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         StakingStorage ss = stakingStorage;
         ProfileStorage ps = profileStorage;
         ParametersStorage params = parametersStorage;
+        ShardingTableStorageV2 sts = shardingTableStorage;
         IERC20 tknc = tokenContract;
 
         uint96 oldStake = ss.totalStakes(identityId);
@@ -284,8 +291,10 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         ss.setTotalStake(identityId, newStake);
         tknc.transferFrom(sender, address(ss), stakeAmount);
 
-        if (!shardingTableStorage.nodeExists(identityId) && newStake >= params.minimumStake())
-            shardingTableContract.insertNode(identityId);
+        if (!sts.nodeExists(identityId) && newStake >= params.minimumStake())
+            if (sts.nodesCount() >= params.shardingTableSizeLimit()) revert ShardingTableErrors.ShardingTableIsFull();
+
+        shardingTableContract.insertNode(identityId);
 
         emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, oldStake, newStake);
         emit SharesMinted(address(sharesContract), sender, sharesMinted, sharesContract.totalSupply());

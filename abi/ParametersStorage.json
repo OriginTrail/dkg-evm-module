@@ -70,6 +70,19 @@
   },
   {
     "inputs": [],
+    "name": "hashFunctionsLimit",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "hub",
     "outputs": [
       {
@@ -144,6 +157,19 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "opWalletsLimitOnProfileCreation",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -266,6 +292,19 @@
   {
     "inputs": [
       {
+        "internalType": "uint16",
+        "name": "hashFunctionsLimit_",
+        "type": "uint16"
+      }
+    ],
+    "name": "setHashFunctionsLimit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint8",
         "name": "newMaxProofWindowOffsetPerc",
         "type": "uint8"
@@ -311,6 +350,19 @@
       }
     ],
     "name": "setMinimumStake",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "opWalletsLimitOnProfileCreation_",
+        "type": "uint16"
+      }
+    ],
+    "name": "setOpWalletsLimitOnProfileCreation",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -396,6 +448,19 @@
   {
     "inputs": [
       {
+        "internalType": "uint16",
+        "name": "shardingTableSizeLimit_",
+        "type": "uint16"
+      }
+    ],
+    "name": "setShardingTableSizeLimit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint32",
         "name": "newSlashingFreezeDuration",
         "type": "uint32"
@@ -430,6 +495,19 @@
     "name": "setUpdateCommitWindowDuration",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "shardingTableSizeLimit",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

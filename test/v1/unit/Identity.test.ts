@@ -66,8 +66,8 @@ describe('@v1 @unit Identity contract', function () {
     expect(await Identity.name()).to.equal('Identity');
   });
 
-  it('The contract is version "1.0.1"', async () => {
-    expect(await Identity.version()).to.equal('1.0.1');
+  it('The contract is version "1.1.0"', async () => {
+    expect(await Identity.version()).to.equal('1.1.0');
   });
 
   it('Create an identity as a contract, expect to pass', async () => {
@@ -176,7 +176,7 @@ describe('@v1 @unit Identity contract', function () {
     expect(adminKeys.length).to.equal(2, 'Error: Failed to add operational key to identity!');
     await expect(
       AddKeyWithAdminWallet.addKey(getIdentityId, newOperationalKey, OPERATIONAL_KEY, ECDSA),
-    ).to.be.revertedWith('Key is already attached');
+    ).to.be.revertedWith('Operational key is taken');
   });
 
   it('Add an admin key to existing identity with operational wallet, expect to fail', async () => {
@@ -278,5 +278,40 @@ describe('@v1 @unit Identity contract', function () {
     await RemoveKeyWithNewAdminWallet.removeKey(getIdentityId, adminKeyBytes32);
 
     expect(await IdentityStorage.keyHasPurpose(getIdentityId, adminKeyBytes32, ADMIN_KEY)).to.be.false;
+  });
+
+  it('Create 2 identities, try to attach operational key of the other identity, expect to revert', async () => {
+    const identityId = await createIdentity(operationalKey, adminKey);
+    await createIdentity(accounts[3].address, accounts[4].address);
+
+    await expect(
+      Identity.connect(accounts[2]).addKey(
+        identityId,
+        ethers.utils.keccak256(ethers.utils.solidityPack(['address'], [accounts[3].address])),
+        OPERATIONAL_KEY,
+        ECDSA,
+      ),
+    ).to.be.revertedWith('Operational key is taken');
+  });
+
+  it('Create identity, try to attach multiple operational wallets with already existing key, expect to revert', async () => {
+    const identityId = await createIdentity(operationalKey, adminKey);
+
+    await expect(
+      Identity.addOperationalWallets(identityId, [accounts[1].address, accounts[3].address]),
+    ).to.be.revertedWith('Operational key is taken');
+  });
+
+  it('Create identity, try to attach multiple operational wallets with already taken key, expect to revert', async () => {
+    const identityId = await createIdentity(operationalKey, adminKey);
+    await createIdentity(accounts[3].address, accounts[4].address);
+
+    await expect(
+      Identity.addOperationalWallets(identityId, [accounts[3].address, accounts[5].address]),
+    ).to.be.revertedWith('Operational key is taken');
+
+    // We still can attach someones admin wallet as a key, but it shouldn't be a problem
+    await expect(Identity.addOperationalWallets(identityId, [accounts[4].address, accounts[5].address])).not.to.be
+      .reverted;
   });
 });

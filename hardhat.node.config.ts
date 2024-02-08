@@ -30,7 +30,7 @@ const config: HardhatUserConfig = {
       gasMultiplier: 1,
       blockGasLimit: 30_000_000,
       hardfork: 'shanghai',
-      accounts: { count: 200 },
+      accounts: { count: 1000 },
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       loggingEnabled: false,

@@ -62,9 +62,11 @@ describe('@v2 @unit ShardingTableV2 contract', function () {
     const receipt = await (
       await OperationalProfile.createProfile(
         admin.address,
+        [],
         nodeId,
         randomBytes(5).toString('hex'),
         randomBytes(3).toString('hex'),
+        0,
       )
     ).wait();
     const identityId = Number(receipt.logs[0].topics[1]);
@@ -98,11 +100,11 @@ describe('@v2 @unit ShardingTableV2 contract', function () {
     const opWallet2 = Profile.connect(accounts[2]);
     const opWallet3 = Profile.connect(accounts[3]);
     const opWallet4 = Profile.connect(accounts[4]);
-    const profile1 = await Profile.createProfile(accounts[6].address, nodeId1, 'Token', 'TKN');
-    const profile2 = await opWallet1.createProfile(accounts[7].address, nodeId2, 'Token1', 'TKN1');
-    const profile3 = await opWallet2.createProfile(accounts[8].address, nodeId3, 'Token2', 'TKN2');
-    const profile4 = await opWallet3.createProfile(accounts[9].address, nodeId4, 'Token3', 'TKN3');
-    const profile5 = await opWallet4.createProfile(accounts[10].address, nodeId5, 'Token4', 'TKN4');
+    const profile1 = await Profile.createProfile(accounts[6].address, [], nodeId1, 'Token', 'TKN', 0);
+    const profile2 = await opWallet1.createProfile(accounts[7].address, [], nodeId2, 'Token1', 'TKN1', 0);
+    const profile3 = await opWallet2.createProfile(accounts[8].address, [], nodeId3, 'Token2', 'TKN2', 0);
+    const profile4 = await opWallet3.createProfile(accounts[9].address, [], nodeId4, 'Token3', 'TKN3', 0);
+    const profile5 = await opWallet4.createProfile(accounts[10].address, [], nodeId5, 'Token4', 'TKN4', 0);
     const idsArray = [];
 
     const profileArray = [profile1, profile2, profile3, profile4, profile5];

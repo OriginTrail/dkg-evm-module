@@ -9,4 +9,5 @@ library ShardingTableErrors {
         uint256 prevHashRingPosition
     );
     error InvalidIndexWithRespectToNextNode(uint72 identityId, uint256 hashRingPosition, uint256 nextHashRingPosition);
+    error ShardingTableIsFull();
 }

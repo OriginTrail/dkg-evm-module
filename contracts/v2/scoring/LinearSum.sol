@@ -10,14 +10,13 @@ import {Initializable} from "../../v1/interface/Initializable.sol";
 import {IProximityScoreFunctionsPair} from "../interface/IProximityScoreFunctionsPair.sol";
 import {Named} from "../../v1/interface/Named.sol";
 import {ScaleDownLib} from "../utils/ScaleDownLibrary.sol";
+import {HASH_RING_SIZE} from "../constants/HashRingConstants.sol";
 
 contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDependent, Initializable {
     event ParameterChanged(string parameterName, uint256 parameterValue);
 
     uint8 private constant _ID = 2;
     string private constant _NAME = "LinearSum";
-
-    uint256 constant HASH_RING_SIZE = type(uint256).max;
 
     HashingProxy public hashingProxy;
     ParametersStorage public parametersStorage;

@@ -14,7 +14,7 @@ contract Identity is Named, Versioned, ContractStatus, Initializable {
     event IdentityDeleted(uint72 indexed identityId);
 
     string private constant _NAME = "Identity";
-    string private constant _VERSION = "1.0.1";
+    string private constant _VERSION = "1.1.0";
 
     IdentityStorage public identityStorage;
 
@@ -76,13 +76,17 @@ contract Identity is Named, Versioned, ContractStatus, Initializable {
 
         IdentityStorage ids = identityStorage;
 
+        if (keyPurpose == OPERATIONAL_KEY) {
+            require(ids.identityIds(key) == 0, "Operational key is taken");
+
+            ids.setOperationalKeyIdentityId(key, identityId);
+        }
+
         bytes32 attachedKey;
         (, , attachedKey) = ids.getKey(identityId, key);
         require(attachedKey != key, "Key is already attached");
 
         ids.addKey(identityId, key, keyPurpose, keyType);
-
-        if (keyPurpose == OPERATIONAL_KEY) ids.setOperationalKeyIdentityId(key, identityId);
     }
 
     function removeKey(uint72 identityId, bytes32 key) external onlyAdmin(identityId) {
@@ -108,6 +112,31 @@ contract Identity is Named, Versioned, ContractStatus, Initializable {
         ids.removeKey(identityId, key);
 
         if (purpose == OPERATIONAL_KEY) ids.removeOperationalKeyIdentityId(key);
+    }
+
+    function addOperationalWallets(uint72 identityId, address[] calldata operationalWallets) external onlyContracts {
+        IdentityStorage ids = identityStorage;
+
+        bytes32 operationalKey;
+        bytes32 attachedKey;
+
+        for (uint i; i < operationalWallets.length; ) {
+            operationalKey = keccak256(abi.encodePacked(operationalWallets[i]));
+
+            require(operationalKey != bytes32(0), "Key arg is empty");
+            require(ids.identityIds(operationalKey) == 0, "Operational key is taken");
+
+            ids.setOperationalKeyIdentityId(operationalKey, identityId);
+
+            (, , attachedKey) = ids.getKey(identityId, operationalKey);
+            require(attachedKey != operationalKey, "Key is already attached");
+
+            ids.addKey(identityId, operationalKey, OPERATIONAL_KEY, ECDSA);
+
+            unchecked {
+                i++;
+            }
+        }
     }
 
     function _checkAdmin(uint72 identityId) internal view virtual {

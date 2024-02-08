@@ -49,8 +49,6 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
     ShardingTableStorageV2 public shardingTableStorage;
     StakingStorage public stakingStorage;
 
-    uint256 constant HASH_RING_SIZE = type(uint256).max;
-
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
 
