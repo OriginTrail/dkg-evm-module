@@ -98,9 +98,11 @@ describe('@v1 @unit ProofManagerV1 contract', function () {
     const receipt = await (
       await OperationalProfile.createProfile(
         admin.address,
+        [],
         '0x' + randomBytes(32).toString('hex'),
         randomBytes(3).toString('hex'),
         randomBytes(2).toString('hex'),
+        0,
       )
     ).wait();
     const identityId = Number(receipt.logs[0].topics[1]);

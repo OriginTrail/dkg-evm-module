@@ -8,25 +8,30 @@ import {Shares} from "./Shares.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
+import {StakingStorage} from "./storage/StakingStorage.sol";
 import {Staking} from "./Staking.sol";
 import {WhitelistStorage} from "./storage/WhitelistStorage.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {Initializable} from "./interface/Initializable.sol";
 import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
+import {GeneralErrors} from "./errors/GeneralErrors.sol";
+import {ProfileErrors} from "./errors/ProfileErrors.sol";
+import {StakingErrors} from "./errors/StakingErrors.sol";
 import {UnorderedIndexableContractDynamicSetLib} from "./utils/UnorderedIndexableContractDynamicSet.sol";
 import {ADMIN_KEY, OPERATIONAL_KEY} from "./constants/IdentityConstants.sol";
 
 contract Profile is Named, Versioned, ContractStatus, Initializable {
-    event ProfileCreated(uint72 indexed identityId, bytes nodeId, address sharesContractAddress);
+    event ProfileCreated(uint72 indexed identityId, bytes nodeId, address adminWallet, address sharesContractAddress);
     event ProfileDeleted(uint72 indexed identityId);
     event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
 
     string private constant _NAME = "Profile";
-    string private constant _VERSION = "1.0.3";
+    string private constant _VERSION = "1.1.0";
 
     HashingProxy public hashingProxy;
     Identity public identityContract;
+    StakingStorage public stakingStorage;
     Staking public stakingContract;
     IdentityStorage public identityStorage;
     ParametersStorage public parametersStorage;
@@ -59,6 +64,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
     function initialize() public onlyHubOwner {
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         identityContract = Identity(hub.getContractAddress("Identity"));
+        stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         stakingContract = Staking(hub.getContractAddress("Staking"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
@@ -76,71 +82,54 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
 
     function createProfile(
         address adminWallet,
+        address[] calldata operationalWallets,
         bytes calldata nodeId,
         string calldata sharesTokenName,
-        string calldata sharesTokenSymbol
+        string calldata sharesTokenSymbol,
+        uint8 initialOperatorFee
     ) external onlyWhitelisted {
         IdentityStorage ids = identityStorage;
         ProfileStorage ps = profileStorage;
+        Identity id = identityContract;
 
-        require(ids.getIdentityId(msg.sender) == 0, "Identity already exists");
-        require(nodeId.length != 0, "Node ID can't be empty");
-        require(!ps.nodeIdsList(nodeId), "Node ID is already registered");
-        require(
-            keccak256(abi.encodePacked(sharesTokenName)) != keccak256(abi.encodePacked("")),
-            "Token name cannot be empty"
-        );
-        require(
-            keccak256(abi.encodePacked(sharesTokenSymbol)) != keccak256(abi.encodePacked("")),
-            "Token symbol cannot be empty"
-        );
-        require(!ps.sharesNames(sharesTokenName), "Token name is already taken");
-        require(!ps.sharesSymbols(sharesTokenSymbol), "Token symbol is already taken");
+        if (ids.getIdentityId(msg.sender) != 0)
+            revert ProfileErrors.IdentityAlreadyExists(ids.getIdentityId(msg.sender), msg.sender);
+        if (operationalWallets.length > parametersStorage.opWalletsLimitOnProfileCreation())
+            revert ProfileErrors.TooManyOperationalWallets(
+                parametersStorage.opWalletsLimitOnProfileCreation(),
+                uint16(operationalWallets.length)
+            );
+        if (nodeId.length == 0) revert ProfileErrors.EmptyNodeId();
+        if (ps.nodeIdsList(nodeId)) revert ProfileErrors.NodeIdAlreadyExists(nodeId);
+        if (keccak256(abi.encodePacked(sharesTokenName)) == keccak256(abi.encodePacked("")))
+            revert ProfileErrors.EmptySharesTokenName();
+        if (keccak256(abi.encodePacked(sharesTokenSymbol)) == keccak256(abi.encodePacked("")))
+            revert ProfileErrors.EmptySharesTokenSymbol();
+        if (ps.sharesNames(sharesTokenName)) revert ProfileErrors.SharesTokenNameAlreadyExists(sharesTokenName);
+        if (ps.sharesSymbols(sharesTokenSymbol)) revert ProfileErrors.SharesTokenSymbolAlreadyExists(sharesTokenSymbol);
 
-        uint72 identityId = identityContract.createIdentity(msg.sender, adminWallet);
+        uint72 identityId = id.createIdentity(msg.sender, adminWallet);
+        id.addOperationalWallets(identityId, operationalWallets);
 
         Shares sharesContract = new Shares(address(hub), sharesTokenName, sharesTokenSymbol);
 
         ps.createProfile(identityId, nodeId, address(sharesContract));
         _setAvailableNodeAddresses(identityId);
 
-        emit ProfileCreated(identityId, nodeId, address(sharesContract));
+        stakingStorage.setOperatorFee(identityId, initialOperatorFee);
+
+        emit ProfileCreated(identityId, nodeId, adminWallet, address(sharesContract));
     }
 
     function setAsk(uint72 identityId, uint96 ask) external onlyIdentityOwner(identityId) {
-        require(ask != 0, "Ask cannot be 0");
+        if (ask == 0) revert ProfileErrors.ZeroAsk();
+
         ProfileStorage ps = profileStorage;
         ps.setAsk(identityId, ask);
 
         emit AskUpdated(identityId, ps.getNodeId(identityId), ask);
     }
 
-    // function deleteProfile(uint72 identityId) external onlyAdmin(identityId) {
-    //     // TODO: add checks
-    //     profileStorage.deleteProfile(identityId);
-    //     identityContract.deleteIdentity(identityId);
-    //
-    //     emit ProfileDeleted(identityId);
-    // }
-
-    // function changeNodeId(uint72 identityId, bytes calldata nodeId) external onlyOperational(identityId) {
-    //     require(nodeId.length != 0, "Node ID can't be empty");
-
-    //     profileStorage.setNodeId(identityId, nodeId);
-    // }
-
-    // function addNewNodeIdHash(uint72 identityId, uint8 hashFunctionId) external onlyOperational(identityId) {
-    //     HashingProxy hp = hashingProxy;
-    //     require(hp.isHashFunction(hashFunctionId), "Hash function doesn't exist");
-
-    //     profileStorage.setNodeAddress(
-    //         identityId,
-    //         hashFunctionId,
-    //         hp.callHashFunction(hashFunctionId, profileStorage.getNodeId(identityId))
-    //     );
-    // }
-
-    // TODO: Define where it can be called, change internal modifier
     function _setAvailableNodeAddresses(uint72 identityId) internal virtual {
         ProfileStorage ps = profileStorage;
         HashingProxy hp = hashingProxy;
@@ -149,9 +138,9 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         bytes32 nodeAddress;
 
         UnorderedIndexableContractDynamicSetLib.Contract[] memory hashFunctions = hp.getAllHashFunctions();
-        uint256 hashFunctionsNumber = hashFunctions.length;
+        require(hashFunctions.length <= parametersStorage.hashFunctionsLimit(), "Too many hash functions!");
         uint8 hashFunctionId;
-        for (uint8 i; i < hashFunctionsNumber; ) {
+        for (uint8 i; i < hashFunctions.length; ) {
             hashFunctionId = hashFunctions[i].id;
             nodeAddress = hp.callHashFunction(hashFunctionId, nodeId);
             ps.setNodeAddress(identityId, hashFunctionId, nodeAddress);
@@ -165,7 +154,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         ProfileStorage ps = profileStorage;
 
         uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
-        require(accumulatedOperatorFee != 0, "You have no operator fees");
+        if (accumulatedOperatorFee == 0) revert ProfileErrors.NoOperatorFees(identityId);
 
         ps.setAccumulatedOperatorFee(identityId, 0);
         stakingContract.addStake(msg.sender, identityId, accumulatedOperatorFee);
@@ -176,7 +165,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
 
         uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
 
-        require(accumulatedOperatorFee != 0, "You have no operator fees");
+        if (accumulatedOperatorFee == 0) revert ProfileErrors.NoOperatorFees(identityId);
 
         ps.setAccumulatedOperatorFee(identityId, 0);
         ps.setAccumulatedOperatorFeeWithdrawalAmount(
@@ -194,11 +183,12 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
 
         uint96 withdrawalAmount = ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId);
 
-        require(withdrawalAmount != 0, "Withdrawal hasn't been initiated");
-        require(
-            ps.getAccumulatedOperatorFeeWithdrawalTimestamp(identityId) < block.timestamp,
-            "Withdrawal period hasn't ended"
-        );
+        if (withdrawalAmount == 0) revert StakingErrors.WithdrawalWasntInitiated();
+        if (ps.getAccumulatedOperatorFeeWithdrawalTimestamp(identityId) >= block.timestamp)
+            revert StakingErrors.WithdrawalPeriodPending(
+                block.timestamp,
+                ps.getAccumulatedOperatorFeeWithdrawalTimestamp(identityId)
+            );
 
         ps.setAccumulatedOperatorFeeWithdrawalAmount(identityId, 0);
         ps.setAccumulatedOperatorFeeWithdrawalTimestamp(identityId, 0);
@@ -206,29 +196,25 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
     }
 
     function _checkIdentityOwner(uint72 identityId) internal view virtual {
-        require(
-            identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY) ||
-                identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), OPERATIONAL_KEY),
-            "Fn can be used only by id owner"
-        );
+        if (
+            !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY) &&
+            !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), OPERATIONAL_KEY)
+        ) revert GeneralErrors.OnlyProfileAdminOrOperationalAddressesFunction(msg.sender);
     }
 
     function _checkAdmin(uint72 identityId) internal view virtual {
-        require(
-            identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY),
-            "Admin function"
-        );
+        if (!identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY))
+            revert GeneralErrors.OnlyProfileAdminFunction(msg.sender);
     }
 
     function _checkOperational(uint72 identityId) internal view virtual {
-        require(
-            identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), OPERATIONAL_KEY),
-            "Fn can be called only by oper."
-        );
+        if (!identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), OPERATIONAL_KEY))
+            revert GeneralErrors.OnlyProfileOperationalWalletFunction(msg.sender);
     }
 
     function _checkWhitelist() internal view virtual {
         WhitelistStorage ws = whitelistStorage;
-        if (ws.whitelistingEnabled()) require(ws.whitelisted(msg.sender), "Address isn't whitelisted");
+        if (ws.whitelistingEnabled() && !ws.whitelisted(msg.sender))
+            revert GeneralErrors.OnlyWhitelistedAddressesFunction(msg.sender);
     }
 }

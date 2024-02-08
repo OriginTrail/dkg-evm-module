@@ -31,7 +31,6 @@ import NodeOperatorFeeChangesStorage from './abi/NodeOperatorFeeChangesStorage.j
 import ParametersStorage from './abi/ParametersStorage.json';
 import Profile from './abi/Profile.json';
 import ProfileStorage from './abi/ProfileStorage.json';
-import ProfileV2 from './abi/ProfileV2.json';
 import ProofManagerV1 from './abi/ProofManagerV1.json';
 import ProofManagerV1U1 from './abi/ProofManagerV1U1.json';
 import ProximityScoringProxy from './abi/ProximityScoringProxy.json';
@@ -104,7 +103,6 @@ const ABIV2 = {
   CommitManagerV2,
   CommitManagerV2U1,
   LinearSum,
-  ProfileV2,
   NodeOperatorFeeChangesStorage,
   ShardingTableV2,
   ShardingTableStorageV2,
@@ -139,7 +137,6 @@ export {
   Log2PLDSF as Log2PLDSFABI,
   NodeOperatorFeeChangesStorage as NodeOperatorFeeChangesStorageABI,
   ProfileStorage as ProfileStorageABI,
-  ProfileV2 as ProfileABI,
   StakingStorage as StakingStorageABI,
   StakingV2 as StakingABI,
   UnfinalizedStateStorage as UnfinalizedStateStorageABI,
