@@ -25,7 +25,7 @@ contract NodeOperatorFeeChangesStorage is Named, Versioned, HubDependent {
     constructor(address hubAddress) HubDependent(hubAddress) {}
 
     modifier onlyOnce() {
-        require(!_delayFreePeriodSet, "Function has already been executed.");
+        require(!_delayFreePeriodSet, "Fn has already been executed");
         _;
         _delayFreePeriodSet = true;
     }
