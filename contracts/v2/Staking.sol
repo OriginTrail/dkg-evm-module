@@ -32,6 +32,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint96 newStake
     );
     event SharesMinted(
+        uint72 indexed identityId,
         address indexed sharesContractAddress,
         address indexed delegator,
         uint256 sharesMintedAmount,
@@ -54,6 +55,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     );
     event StakeWithdrawn(uint72 indexed identityId, bytes nodeId, address indexed staker, uint96 withdrawnStakeAmount);
     event SharesBurned(
+        uint72 indexed identityId,
         address indexed sharesContractAddress,
         address indexed delegator,
         uint256 sharesBurnedAmount,
@@ -157,7 +159,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
             newStake,
             withdrawalPeriodEnd
         );
-        emit SharesBurned(address(sharesContract), msg.sender, sharesToBurn, sharesContract.totalSupply());
+        emit SharesBurned(identityId, address(sharesContract), msg.sender, sharesToBurn, sharesContract.totalSupply());
     }
 
     function withdrawStake(uint72 identityId) external {
@@ -291,13 +293,14 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         ss.setTotalStake(identityId, newStake);
         tknc.transferFrom(sender, address(ss), stakeAmount);
 
-        if (!sts.nodeExists(identityId) && newStake >= params.minimumStake())
+        if (!sts.nodeExists(identityId) && newStake >= params.minimumStake()) {
             if (sts.nodesCount() >= params.shardingTableSizeLimit()) revert ShardingTableErrors.ShardingTableIsFull();
 
-        shardingTableContract.insertNode(identityId);
+            shardingTableContract.insertNode(identityId);
+        }
 
         emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, oldStake, newStake);
-        emit SharesMinted(address(sharesContract), sender, sharesMinted, sharesContract.totalSupply());
+        emit SharesMinted(identityId, address(sharesContract), sender, sharesMinted, sharesContract.totalSupply());
     }
 
     function _checkAdmin(uint72 identityId) internal view virtual {

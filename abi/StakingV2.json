@@ -256,6 +256,12 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "sharesContractAddress",
         "type": "address"
@@ -285,6 +291,12 @@
   {
     "anonymous": false,
     "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
       {
         "indexed": true,
         "internalType": "address",
