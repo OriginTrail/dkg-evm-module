@@ -69,6 +69,7 @@ contract IdentityStorage is IERC734Extended, Named, Versioned, HubDependent {
     }
 
     function removeKey(uint72 identityId, bytes32 _key) external virtual override onlyContracts {
+        // integrity checks directly in storage contract?
         Identity storage identity = identities[identityId];
 
         uint256 index;
@@ -111,10 +112,12 @@ contract IdentityStorage is IERC734Extended, Named, Versioned, HubDependent {
     }
 
     function setOperationalKeyIdentityId(bytes32 operationalKey, uint72 identityId) external virtual onlyContracts {
+        //should we check anything else here?
         identityIds[operationalKey] = identityId;
     }
 
     function removeOperationalKeyIdentityId(bytes32 operationalKey) external virtual onlyContracts {
+        // same q as above ?
         delete identityIds[operationalKey];
     }
 

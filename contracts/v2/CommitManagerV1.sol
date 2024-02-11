@@ -152,6 +152,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
 
         if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LOG2PLDSF_ID)
+            // add comment to clarify the reasoning + relation to v1 contract
             revert ServiceAgreementErrorsV1.InvalidScoreFunctionId(
                 agreementId,
                 args.epoch,

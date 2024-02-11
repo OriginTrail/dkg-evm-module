@@ -185,6 +185,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
 
         if (withdrawalAmount == 0) revert StakingErrors.WithdrawalWasntInitiated();
         if (ps.getAccumulatedOperatorFeeWithdrawalTimestamp(identityId) >= block.timestamp)
+            // add parentheses
             revert StakingErrors.WithdrawalPeriodPending(
                 block.timestamp,
                 ps.getAccumulatedOperatorFeeWithdrawalTimestamp(identityId)

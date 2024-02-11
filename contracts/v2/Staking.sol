@@ -124,6 +124,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     }
 
     function startStakeWithdrawal(uint72 identityId, uint96 sharesToBurn) external {
+        // CONFIRM!
         if (sharesToBurn == 0) revert StakingErrors.ZeroSharesAmount();
 
         ProfileStorage ps = profileStorage;
@@ -137,7 +138,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
             revert TokenErrors.TooLowBalance(address(sharesContract), sharesContract.balanceOf(msg.sender));
 
         uint96 oldStake = ss.totalStakes(identityId);
-        uint96 stakeWithdrawalAmount = uint96((uint256(oldStake) * sharesToBurn) / sharesContract.totalSupply());
+        uint96 stakeWithdrawalAmount = uint96((uint256(oldStake) * sharesToBurn) / sharesContract.totalSupply()); // covered with test? Should be ensured not to overflow, for withdrawStake
         uint96 newStake = oldStake - stakeWithdrawalAmount;
         uint96 newStakeWithdrawalAmount = ss.getWithdrawalRequestAmount(identityId, msg.sender) + stakeWithdrawalAmount;
 
@@ -149,6 +150,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         sharesContract.burnFrom(msg.sender, sharesToBurn);
 
         if (shardingTableStorage.nodeExists(identityId) && (newStake < params.minimumStake()))
+            //add parentheses
             shardingTableContract.removeNode(identityId);
 
         emit StakeWithdrawalStarted(
@@ -175,10 +177,10 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
 
         if (stakeWithdrawalAmount == 0) revert StakingErrors.WithdrawalWasntInitiated();
         if (block.timestamp < withdrawalTimestamp)
-            revert StakingErrors.WithdrawalPeriodPending(block.timestamp, withdrawalTimestamp);
+            revert StakingErrors.WithdrawalPeriodPending(block.timestamp, withdrawalTimestamp); // add parentheses
 
         ss.deleteWithdrawalRequest(identityId, msg.sender);
-        ss.transferStake(msg.sender, stakeWithdrawalAmount);
+        ss.transferStake(msg.sender, stakeWithdrawalAmount); // need to ensure stakeWithdrawalAmount value is correct (see comment in startStakeWithdrawal)
 
         emit StakeWithdrawn(identityId, ps.getNodeId(identityId), msg.sender, stakeWithdrawalAmount);
     }
@@ -208,6 +210,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
 
             if (!sts.nodeExists(identityId) && oldStake >= params.minimumStake())
                 if (sts.nodesCount() >= params.shardingTableSizeLimit())
+                    // add parentheses
                     revert ShardingTableErrors.ShardingTableIsFull();
 
             shardingTableContract.insertNode(identityId);
@@ -279,7 +282,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
 
         if (!ps.profileExists(identityId)) revert ProfileErrors.ProfileDoesntExist(identityId);
         if (stakeAmount > tknc.allowance(sender, address(this)))
-            revert TokenErrors.TooLowAllowance(address(tknc), tknc.allowance(sender, address(this)));
+            revert TokenErrors.TooLowAllowance(address(tknc), tknc.allowance(sender, address(this))); // add parentheses
         if (newStake > params.maximumStake()) revert StakingErrors.MaximumStakeExceeded(params.maximumStake());
 
         Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
