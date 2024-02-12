@@ -245,6 +245,12 @@
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "reward",
+        "type": "uint96"
       }
     ],
     "name": "ProofSubmitted",
