@@ -205,11 +205,12 @@
       "deployed": true
     },
     "CommitManagerV1": {
-      "evmAddress": "0xc936B57e7f45cbC1Dde0802037F51FCDf7E40Dab",
+      "evmAddress": "0x1869a2155c1F5f7AfE5ac2C27595c04AA250D0B7",
       "version": "2.0.0",
       "gitBranch": "main",
-      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
-      "deploymentTimestamp": 1707489017673,
+      "gitCommitHash": "4ae423f802d917c185c9ad846d6cc0f0c1af4513",
+      "deploymentBlock": 8197803,
+      "deploymentTimestamp": 1707731717431,
       "deployed": true
     },
     "CommitManagerV1U1": {
