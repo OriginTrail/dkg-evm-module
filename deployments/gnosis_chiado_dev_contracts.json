@@ -17,11 +17,12 @@
       "version": "1.0.0"
     },
     "CommitManagerV1": {
-      "evmAddress": "0xE58754A57cCDDdbA5e3e1D6FC3B71f1e56E21EE4",
+      "evmAddress": "0x9D2405e3f786E78e3C71A0eaB571b773E44f7A44",
       "version": "2.0.0",
       "gitBranch": "main",
-      "gitCommitHash": "dab8582c750eb8e189eff201a74eead1ca554fe7",
-      "deploymentTimestamp": 1707423228358,
+      "gitCommitHash": "4ae423f802d917c185c9ad846d6cc0f0c1af4513",
+      "deploymentBlock": 8197782,
+      "deploymentTimestamp": 1707731610813,
       "deployed": true
     },
     "CommitManagerV1U1": {
