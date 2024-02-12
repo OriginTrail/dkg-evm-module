@@ -60,12 +60,14 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
 
         sts.createNodeObject(identityId, NULL, NULL);
 
-        if (sts.tail() != NULL) sts.link(sts.tail(), identityId);
-
+        if (sts.tail() != NULL) {
+            sts.link(sts.tail(), identityId);
+        }
         sts.setTail(identityId);
 
-        if (sts.head() == NULL) sts.setHead(identityId);
-
+        if (sts.head() == NULL) {
+            sts.setHead(identityId);
+        }
         sts.incrementNodesCount();
 
         emit NodeAdded(
@@ -84,12 +86,14 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
 
         sts.createNodeObject(identityId, NULL, NULL);
 
-        if (sts.head() != NULL) sts.link(identityId, sts.head());
-
+        if (sts.head() != NULL) {
+            sts.link(identityId, sts.head());
+        }
         shardingTableStorage.setHead(identityId);
 
-        if (sts.tail() == NULL) sts.setTail(identityId);
-
+        if (sts.tail() == NULL) {
+            sts.setTail(identityId);
+        }
         sts.incrementNodesCount();
 
         emit NodeAdded(
@@ -120,8 +124,9 @@ contract ShardingTable is Named, Versioned, ContractStatus, Initializable {
         } else if (head == identityId) {
             sts.setHead(nodeToRemove.nextIdentityId);
             sts.setPrevIdentityId(head, NULL);
-        } else sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
-
+        } else {
+            sts.link(nodeToRemove.prevIdentityId, nodeToRemove.nextIdentityId);
+        }
         sts.deleteNodeObject(identityId);
         sts.decrementNodesCount();
 

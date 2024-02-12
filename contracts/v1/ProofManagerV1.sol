@@ -69,19 +69,19 @@ contract ProofManagerV1 is Named, Versioned, ContractStatus, Initializable {
     function isProofWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-        if (!sasProxy.agreementV1Exists(agreementId))
+        if (!sasProxy.agreementV1Exists(agreementId)) {
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
-
+        }
         uint256 startTime = sasProxy.getAgreementStartTime(agreementId);
 
-        if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
+        if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId)) {
             revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
                 agreementId,
                 startTime,
                 sasProxy.getAgreementEpochsNumber(agreementId),
                 sasProxy.getAgreementEpochLength(agreementId)
             );
-
+        }
         uint256 timeNow = block.timestamp;
         uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
         uint8 proofWindowOffsetPerc = sasProxy.getAgreementProofWindowOffsetPerc(agreementId);
@@ -119,9 +119,9 @@ contract ProofManagerV1 is Named, Versioned, ContractStatus, Initializable {
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        if (!sasProxy.agreementV1Exists(agreementId))
+        if (!sasProxy.agreementV1Exists(agreementId)) {
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
-
+        }
         if (!reqs[0] && !isProofWindowOpen(agreementId, args.epoch)) {
             uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
 
@@ -143,14 +143,14 @@ contract ProofManagerV1 is Named, Versioned, ContractStatus, Initializable {
         if (
             !reqs[1] &&
             (sasProxy.getCommitSubmissionScore(keccak256(abi.encodePacked(agreementId, args.epoch, identityId))) == 0)
-        )
+        ) {
             revert ServiceAgreementErrorsV1.NodeAlreadyRewarded(
                 agreementId,
                 args.epoch,
                 identityId,
                 profileStorage.getNodeId(identityId)
             );
-
+        }
         bytes32 nextCommitId = sasProxy.getV1AgreementEpochSubmissionHead(agreementId, args.epoch);
         uint32 r0 = parametersStorage.r0();
         uint8 i;
@@ -163,7 +163,7 @@ contract ProofManagerV1 is Named, Versioned, ContractStatus, Initializable {
             }
         }
 
-        if (!reqs[2] && (i >= r0))
+        if (!reqs[2] && (i >= r0)) {
             revert ServiceAgreementErrorsV1.NodeNotAwarded(
                 agreementId,
                 args.epoch,
@@ -171,7 +171,7 @@ contract ProofManagerV1 is Named, Versioned, ContractStatus, Initializable {
                 profileStorage.getNodeId(identityId),
                 i
             );
-
+        }
         bytes32 merkleRoot;
         uint256 challenge;
         (merkleRoot, challenge) = getChallenge(msg.sender, args.assetContract, args.tokenId, args.epoch);
@@ -179,7 +179,7 @@ contract ProofManagerV1 is Named, Versioned, ContractStatus, Initializable {
         if (
             !reqs[3] &&
             !MerkleProof.verify(args.proof, merkleRoot, keccak256(abi.encodePacked(args.chunkHash, challenge)))
-        )
+        ) {
             revert ServiceAgreementErrorsV1.WrongMerkleProof(
                 agreementId,
                 args.epoch,
@@ -190,7 +190,7 @@ contract ProofManagerV1 is Named, Versioned, ContractStatus, Initializable {
                 args.chunkHash,
                 challenge
             );
-
+        }
         emit ProofSubmitted(
             args.assetContract,
             args.tokenId,

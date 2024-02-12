@@ -80,11 +80,15 @@ contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
     function createServiceAgreement(
         ServiceAgreementStructsV1.ServiceAgreementInputArgs calldata args
     ) external onlyContracts {
-        if (args.epochsNumber == 0) revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
-        if (args.tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
-        if (!scoringProxy.isScoreFunction(args.scoreFunctionId))
+        if (args.epochsNumber == 0) {
+            revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
+        }
+        if (args.tokenAmount == 0) {
+            revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+        }
+        if (!scoringProxy.isScoreFunction(args.scoreFunctionId)) {
             revert ServiceAgreementErrorsV1.ScoreFunctionDoesntExist(args.scoreFunctionId);
-
+        }
         bytes32 agreementId = hashingProxy.callHashFunction(
             args.hashFunctionId,
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
@@ -107,11 +111,12 @@ contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
         );
 
         IERC20 tknc = tokenContract;
-        if (tknc.allowance(args.assetCreator, address(this)) < args.tokenAmount)
+        if (tknc.allowance(args.assetCreator, address(this)) < args.tokenAmount) {
             revert TokenErrors.TooLowAllowance(address(tknc), tknc.allowance(args.assetCreator, address(this)));
-        if (tknc.balanceOf(args.assetCreator) < args.tokenAmount)
+        }
+        if (tknc.balanceOf(args.assetCreator) < args.tokenAmount) {
             revert TokenErrors.TooLowBalance(address(tknc), tknc.balanceOf(args.assetCreator));
-
+        }
         tknc.transferFrom(args.assetCreator, sasProxy.agreementV1StorageAddress(), args.tokenAmount);
 
         emit ServiceAgreementV1Created(
@@ -144,17 +149,19 @@ contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
         uint16 epochsNumber,
         uint96 tokenAmount
     ) external onlyContracts {
-        if (epochsNumber == 0) revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
-
+        if (epochsNumber == 0) {
+            revert ServiceAgreementErrorsV1.ZeroEpochsNumber();
+        }
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
         sasProxy.setAgreementEpochsNumber(agreementId, sasProxy.getAgreementEpochsNumber(agreementId) + epochsNumber);
         sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
 
-        if (sasProxy.agreementV1Exists(agreementId))
+        if (sasProxy.agreementV1Exists(agreementId)) {
             _addTokens(assetOwner, sasProxy.agreementV1StorageAddress(), tokenAmount);
-        else _addTokens(assetOwner, sasProxy.agreementV1U1StorageAddress(), tokenAmount);
-
+        } else {
+            _addTokens(assetOwner, sasProxy.agreementV1U1StorageAddress(), tokenAmount);
+        }
         emit ServiceAgreementV1Extended(agreementId, epochsNumber);
     }
 
@@ -163,10 +170,11 @@ contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
 
         sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) + tokenAmount);
 
-        if (sasProxy.agreementV1Exists(agreementId))
+        if (sasProxy.agreementV1Exists(agreementId)) {
             _addTokens(assetOwner, sasProxy.agreementV1StorageAddress(), tokenAmount);
-        else _addTokens(assetOwner, sasProxy.agreementV1U1StorageAddress(), tokenAmount);
-
+        } else {
+            _addTokens(assetOwner, sasProxy.agreementV1U1StorageAddress(), tokenAmount);
+        }
         emit ServiceAgreementV1RewardRaised(agreementId, tokenAmount);
     }
 
@@ -184,18 +192,22 @@ contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
     }
 
     function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
-        if (serviceAgreementStorageProxy.agreementV1Exists(agreementId))
+        if (serviceAgreementStorageProxy.agreementV1Exists(agreementId)) {
             return commitManagerV1.isCommitWindowOpen(agreementId, epoch);
-        else return commitManagerV1U1.isCommitWindowOpen(agreementId, epoch);
+        } else {
+            return commitManagerV1U1.isCommitWindowOpen(agreementId, epoch);
+        }
     }
 
     function getTopCommitSubmissions(
         bytes32 agreementId,
         uint16 epoch
     ) external view returns (ServiceAgreementStructsV1.CommitSubmission[] memory) {
-        if (serviceAgreementStorageProxy.agreementV1Exists(agreementId))
+        if (serviceAgreementStorageProxy.agreementV1Exists(agreementId)) {
             return commitManagerV1.getTopCommitSubmissions(agreementId, epoch);
-        else return commitManagerV1U1.getTopCommitSubmissions(agreementId, epoch, 0);
+        } else {
+            return commitManagerV1U1.getTopCommitSubmissions(agreementId, epoch, 0);
+        }
     }
 
     function submitCommit(ServiceAgreementStructsV1.CommitInputArgs calldata args) external {
@@ -204,14 +216,19 @@ contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
             abi.encodePacked(args.assetContract, args.tokenId, args.keyword)
         );
 
-        if (serviceAgreementStorageProxy.agreementV1Exists(agreementId)) commitManagerV1.submitCommit(args);
-        else commitManagerV1U1.submitCommit(args);
+        if (serviceAgreementStorageProxy.agreementV1Exists(agreementId)) {
+            commitManagerV1.submitCommit(args);
+        } else {
+            commitManagerV1U1.submitCommit(args);
+        }
     }
 
     function isProofWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
-        if (serviceAgreementStorageProxy.agreementV1Exists(agreementId))
+        if (serviceAgreementStorageProxy.agreementV1Exists(agreementId)) {
             return proofManagerV1.isProofWindowOpen(agreementId, epoch);
-        else return proofManagerV1U1.isProofWindowOpen(agreementId, epoch);
+        } else {
+            return proofManagerV1U1.isProofWindowOpen(agreementId, epoch);
+        }
     }
 
     function getChallenge(
@@ -237,15 +254,17 @@ contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
     }
 
     function _addTokens(address assetOwner, address sasAddress, uint96 tokenAmount) internal virtual {
-        if (tokenAmount == 0) revert ServiceAgreementErrorsV1.ZeroTokenAmount();
-
+        if (tokenAmount == 0) {
+            revert ServiceAgreementErrorsV1.ZeroTokenAmount();
+        }
         IERC20 tknc = tokenContract;
 
-        if (tknc.allowance(assetOwner, address(this)) < tokenAmount)
+        if (tknc.allowance(assetOwner, address(this)) < tokenAmount) {
             revert TokenErrors.TooLowAllowance(address(tknc), tknc.allowance(assetOwner, address(this)));
-        if (tknc.balanceOf(assetOwner) < tokenAmount)
+        }
+        if (tknc.balanceOf(assetOwner) < tokenAmount) {
             revert TokenErrors.TooLowBalance(address(tknc), tknc.balanceOf(assetOwner));
-
+        }
         tknc.transferFrom(assetOwner, sasAddress, tokenAmount);
     }
 

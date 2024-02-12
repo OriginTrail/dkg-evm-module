@@ -124,17 +124,22 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     }
 
     function startStakeWithdrawal(uint72 identityId, uint96 sharesToBurn) external {
-        if (sharesToBurn == 0) revert StakingErrors.ZeroSharesAmount();
+        if (sharesToBurn == 0) {
+            revert StakingErrors.ZeroSharesAmount();
+        }
 
         ProfileStorage ps = profileStorage;
         StakingStorage ss = stakingStorage;
 
-        if (!ps.profileExists(identityId)) revert ProfileErrors.ProfileDoesntExist(identityId);
+        if (!ps.profileExists(identityId)) {
+            revert ProfileErrors.ProfileDoesntExist(identityId);
+        }
 
         Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
 
-        if (sharesToBurn > sharesContract.balanceOf(msg.sender))
+        if (sharesToBurn > sharesContract.balanceOf(msg.sender)) {
             revert TokenErrors.TooLowBalance(address(sharesContract), sharesContract.balanceOf(msg.sender));
+        }
 
         uint96 oldStake = ss.totalStakes(identityId);
         uint96 stakeWithdrawalAmount = uint96((uint256(oldStake) * sharesToBurn) / sharesContract.totalSupply());
@@ -148,8 +153,9 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         ss.setTotalStake(identityId, newStake);
         sharesContract.burnFrom(msg.sender, sharesToBurn);
 
-        if (shardingTableStorage.nodeExists(identityId) && (newStake < params.minimumStake()))
+        if (shardingTableStorage.nodeExists(identityId) && (newStake < params.minimumStake())) {
             shardingTableContract.removeNode(identityId);
+        }
 
         emit StakeWithdrawalStarted(
             identityId,
@@ -165,17 +171,21 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     function withdrawStake(uint72 identityId) external {
         ProfileStorage ps = profileStorage;
 
-        if (!ps.profileExists(identityId)) revert ProfileErrors.ProfileDoesntExist(identityId);
-
+        if (!ps.profileExists(identityId)) {
+            revert ProfileErrors.ProfileDoesntExist(identityId);
+        }
         StakingStorage ss = stakingStorage;
 
         uint96 stakeWithdrawalAmount;
         uint256 withdrawalTimestamp;
         (stakeWithdrawalAmount, withdrawalTimestamp) = ss.withdrawalRequests(identityId, msg.sender);
 
-        if (stakeWithdrawalAmount == 0) revert StakingErrors.WithdrawalWasntInitiated();
-        if (block.timestamp < withdrawalTimestamp)
+        if (stakeWithdrawalAmount == 0) {
+            revert StakingErrors.WithdrawalWasntInitiated();
+        }
+        if (block.timestamp < withdrawalTimestamp) {
             revert StakingErrors.WithdrawalPeriodPending(block.timestamp, withdrawalTimestamp);
+        }
 
         ss.deleteWithdrawalRequest(identityId, msg.sender);
         ss.transferStake(msg.sender, stakeWithdrawalAmount);
@@ -206,11 +216,12 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
             ShardingTableStorageV2 sts = shardingTableStorage;
             ParametersStorage params = parametersStorage;
 
-            if (!sts.nodeExists(identityId) && oldStake >= params.minimumStake())
-                if (sts.nodesCount() >= params.shardingTableSizeLimit())
+            if (!sts.nodeExists(identityId) && oldStake + delegatorsReward >= params.minimumStake()) {
+                if (sts.nodesCount() >= params.shardingTableSizeLimit()) {
                     revert ShardingTableErrors.ShardingTableIsFull();
-
-            shardingTableContract.insertNode(identityId);
+                }
+                shardingTableContract.insertNode(identityId);
+            }
         }
 
         emit AccumulatedOperatorFeeIncreased(
@@ -221,21 +232,24 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         );
 
         address sasAddress;
-        if (sasProxy.agreementV1Exists(agreementId)) sasAddress = sasProxy.agreementV1StorageAddress();
-        else sasAddress = sasProxy.agreementV1U1StorageAddress();
-
+        if (sasProxy.agreementV1Exists(agreementId)) {
+            sasAddress = sasProxy.agreementV1StorageAddress();
+        } else {
+            sasAddress = sasProxy.agreementV1U1StorageAddress();
+        }
         emit StakeIncreased(identityId, ps.getNodeId(identityId), sasAddress, oldStake, oldStake + delegatorsReward);
         emit RewardCollected(identityId, ps.getNodeId(identityId), sasAddress, operatorFee, delegatorsReward);
     }
 
     // solhint-disable-next-line no-empty-blocks
     function slash(uint72 identityId) external onlyContracts {
-        // TBD
+        // To be implemented
     }
 
     function startOperatorFeeChange(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {
-        if (newOperatorFee > 100) revert StakingErrors.InvalidOperatorFee();
-
+        if (newOperatorFee > 100) {
+            revert StakingErrors.InvalidOperatorFee();
+        }
         NodeOperatorFeeChangesStorage nofcs = nodeOperatorFeeChangesStorage;
 
         uint256 feeChangeDelayEnd = block.timestamp > nofcs.delayFreePeriodEnd()
@@ -258,8 +272,9 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint256 feeChangeDelayEnd;
         (newFee, feeChangeDelayEnd) = nofcs.operatorFeeChangeRequests(identityId);
 
-        if (block.timestamp < feeChangeDelayEnd)
+        if (block.timestamp < feeChangeDelayEnd) {
             revert StakingErrors.OperatorFeeChangeDelayPending(block.timestamp, feeChangeDelayEnd);
+        }
 
         stakingStorage.setOperatorFee(identityId, newFee);
         nofcs.deleteOperatorFeeChangeRequest(identityId);
@@ -277,34 +292,42 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint96 oldStake = ss.totalStakes(identityId);
         uint96 newStake = oldStake + stakeAmount;
 
-        if (!ps.profileExists(identityId)) revert ProfileErrors.ProfileDoesntExist(identityId);
-        if (stakeAmount > tknc.allowance(sender, address(this)))
+        if (!ps.profileExists(identityId)) {
+            revert ProfileErrors.ProfileDoesntExist(identityId);
+        }
+        if (stakeAmount > tknc.allowance(sender, address(this))) {
             revert TokenErrors.TooLowAllowance(address(tknc), tknc.allowance(sender, address(this)));
-        if (newStake > params.maximumStake()) revert StakingErrors.MaximumStakeExceeded(params.maximumStake());
+        }
+        if (newStake > params.maximumStake()) {
+            revert StakingErrors.MaximumStakeExceeded(params.maximumStake());
+        }
 
         Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
 
         uint256 sharesMinted;
-        if (sharesContract.totalSupply() == 0) sharesMinted = stakeAmount;
-        else sharesMinted = ((uint256(stakeAmount) * sharesContract.totalSupply()) / oldStake);
-
+        if (sharesContract.totalSupply() == 0) {
+            sharesMinted = stakeAmount;
+        } else {
+            sharesMinted = ((uint256(stakeAmount) * sharesContract.totalSupply()) / oldStake);
+        }
         sharesContract.mint(sender, sharesMinted);
 
         ss.setTotalStake(identityId, newStake);
         tknc.transferFrom(sender, address(ss), stakeAmount);
 
         if (!sts.nodeExists(identityId) && newStake >= params.minimumStake()) {
-            if (sts.nodesCount() >= params.shardingTableSizeLimit()) revert ShardingTableErrors.ShardingTableIsFull();
-
+            if (sts.nodesCount() >= params.shardingTableSizeLimit()) {
+                revert ShardingTableErrors.ShardingTableIsFull();
+            }
             shardingTableContract.insertNode(identityId);
         }
-
         emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, oldStake, newStake);
         emit SharesMinted(identityId, address(sharesContract), sender, sharesMinted, sharesContract.totalSupply());
     }
 
     function _checkAdmin(uint72 identityId) internal view virtual {
-        if (!identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY))
+        if (!identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY)) {
             revert GeneralErrors.OnlyProfileAdminFunction(msg.sender);
+        }
     }
 }

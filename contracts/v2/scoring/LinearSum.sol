@@ -106,8 +106,9 @@ contract LinearSum is IProximityScoreFunctionsPair, Indexable, Named, HubDepende
     }
 
     function normalizeDistance(uint256 distance, uint256 maxDistance, uint72 nodesCount) public view returns (uint64) {
-        if (distance == 0) return 0;
-
+        if (distance == 0) {
+            return 0;
+        }
         uint256 idealMaxDistance = (HASH_RING_SIZE / nodesCount) * ((parametersStorage.r2() + 1) / 2);
         uint256 divisor = (maxDistance <= idealMaxDistance) ? maxDistance : idealMaxDistance;
 

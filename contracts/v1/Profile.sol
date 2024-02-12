@@ -92,22 +92,33 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         ProfileStorage ps = profileStorage;
         Identity id = identityContract;
 
-        if (ids.getIdentityId(msg.sender) != 0)
+        if (ids.getIdentityId(msg.sender) != 0) {
             revert ProfileErrors.IdentityAlreadyExists(ids.getIdentityId(msg.sender), msg.sender);
-        if (operationalWallets.length > parametersStorage.opWalletsLimitOnProfileCreation())
+        }
+        if (operationalWallets.length > parametersStorage.opWalletsLimitOnProfileCreation()) {
             revert ProfileErrors.TooManyOperationalWallets(
                 parametersStorage.opWalletsLimitOnProfileCreation(),
                 uint16(operationalWallets.length)
             );
-        if (nodeId.length == 0) revert ProfileErrors.EmptyNodeId();
-        if (ps.nodeIdsList(nodeId)) revert ProfileErrors.NodeIdAlreadyExists(nodeId);
-        if (keccak256(abi.encodePacked(sharesTokenName)) == keccak256(abi.encodePacked("")))
+        }
+        if (nodeId.length == 0) {
+            revert ProfileErrors.EmptyNodeId();
+        }
+        if (ps.nodeIdsList(nodeId)) {
+            revert ProfileErrors.NodeIdAlreadyExists(nodeId);
+        }
+        if (keccak256(abi.encodePacked(sharesTokenName)) == keccak256(abi.encodePacked(""))) {
             revert ProfileErrors.EmptySharesTokenName();
-        if (keccak256(abi.encodePacked(sharesTokenSymbol)) == keccak256(abi.encodePacked("")))
+        }
+        if (keccak256(abi.encodePacked(sharesTokenSymbol)) == keccak256(abi.encodePacked(""))) {
             revert ProfileErrors.EmptySharesTokenSymbol();
-        if (ps.sharesNames(sharesTokenName)) revert ProfileErrors.SharesTokenNameAlreadyExists(sharesTokenName);
-        if (ps.sharesSymbols(sharesTokenSymbol)) revert ProfileErrors.SharesTokenSymbolAlreadyExists(sharesTokenSymbol);
-
+        }
+        if (ps.sharesNames(sharesTokenName)) {
+            revert ProfileErrors.SharesTokenNameAlreadyExists(sharesTokenName);
+        }
+        if (ps.sharesSymbols(sharesTokenSymbol)) {
+            revert ProfileErrors.SharesTokenSymbolAlreadyExists(sharesTokenSymbol);
+        }
         uint72 identityId = id.createIdentity(msg.sender, adminWallet);
         id.addOperationalWallets(identityId, operationalWallets);
 
@@ -122,8 +133,9 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
     }
 
     function setAsk(uint72 identityId, uint96 ask) external onlyIdentityOwner(identityId) {
-        if (ask == 0) revert ProfileErrors.ZeroAsk();
-
+        if (ask == 0) {
+            revert ProfileErrors.ZeroAsk();
+        }
         ProfileStorage ps = profileStorage;
         ps.setAsk(identityId, ask);
 
@@ -154,8 +166,9 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         ProfileStorage ps = profileStorage;
 
         uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
-        if (accumulatedOperatorFee == 0) revert ProfileErrors.NoOperatorFees(identityId);
-
+        if (accumulatedOperatorFee == 0) {
+            revert ProfileErrors.NoOperatorFees(identityId);
+        }
         ps.setAccumulatedOperatorFee(identityId, 0);
         stakingContract.addStake(msg.sender, identityId, accumulatedOperatorFee);
     }
@@ -165,8 +178,9 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
 
         uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
 
-        if (accumulatedOperatorFee == 0) revert ProfileErrors.NoOperatorFees(identityId);
-
+        if (accumulatedOperatorFee == 0) {
+            revert ProfileErrors.NoOperatorFees(identityId);
+        }
         ps.setAccumulatedOperatorFee(identityId, 0);
         ps.setAccumulatedOperatorFeeWithdrawalAmount(
             identityId,
@@ -183,13 +197,15 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
 
         uint96 withdrawalAmount = ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId);
 
-        if (withdrawalAmount == 0) revert StakingErrors.WithdrawalWasntInitiated();
-        if (ps.getAccumulatedOperatorFeeWithdrawalTimestamp(identityId) >= block.timestamp)
+        if (withdrawalAmount == 0) {
+            revert StakingErrors.WithdrawalWasntInitiated();
+        }
+        if (ps.getAccumulatedOperatorFeeWithdrawalTimestamp(identityId) >= block.timestamp) {
             revert StakingErrors.WithdrawalPeriodPending(
                 block.timestamp,
                 ps.getAccumulatedOperatorFeeWithdrawalTimestamp(identityId)
             );
-
+        }
         ps.setAccumulatedOperatorFeeWithdrawalAmount(identityId, 0);
         ps.setAccumulatedOperatorFeeWithdrawalTimestamp(identityId, 0);
         ps.transferAccumulatedOperatorFee(msg.sender, withdrawalAmount);
@@ -199,22 +215,27 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         if (
             !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY) &&
             !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), OPERATIONAL_KEY)
-        ) revert GeneralErrors.OnlyProfileAdminOrOperationalAddressesFunction(msg.sender);
+        ) {
+            revert GeneralErrors.OnlyProfileAdminOrOperationalAddressesFunction(msg.sender);
+        }
     }
 
     function _checkAdmin(uint72 identityId) internal view virtual {
-        if (!identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY))
+        if (!identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY)) {
             revert GeneralErrors.OnlyProfileAdminFunction(msg.sender);
+        }
     }
 
     function _checkOperational(uint72 identityId) internal view virtual {
-        if (!identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), OPERATIONAL_KEY))
+        if (!identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), OPERATIONAL_KEY)) {
             revert GeneralErrors.OnlyProfileOperationalWalletFunction(msg.sender);
+        }
     }
 
     function _checkWhitelist() internal view virtual {
         WhitelistStorage ws = whitelistStorage;
-        if (ws.whitelistingEnabled() && !ws.whitelisted(msg.sender))
+        if (ws.whitelistingEnabled() && !ws.whitelisted(msg.sender)) {
             revert GeneralErrors.OnlyWhitelistedAddressesFunction(msg.sender);
+        }
     }
 }

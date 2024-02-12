@@ -137,25 +137,26 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
 
             // Check that the new Node is indeed on the right from the prevNode
             // Also allows new Head insertion as prevNode.hashRingPosition will be 0 in such case
-            if (newNodeHashRingPosition < prevNodeHashRingPosition)
+            if (newNodeHashRingPosition < prevNodeHashRingPosition) {
                 revert ShardingTableErrors.InvalidIndexWithRespectToPreviousNode(
                     identityId,
                     newNodeHashRingPosition,
                     prevNodeHashRingPosition
                 );
+            }
         }
 
         ShardingTableStructsV2.Node memory nextNode = sts.getNodeByIndex(index);
 
         // Check that the new Node is indeed on the left from the nextNode
         // Check is skipped when inserting new Tail
-        if (nextNode.identityId != NULL && newNodeHashRingPosition > nextNode.hashRingPosition)
+        if (nextNode.identityId != NULL && newNodeHashRingPosition > nextNode.hashRingPosition) {
             revert ShardingTableErrors.InvalidIndexWithRespectToNextNode(
                 identityId,
                 newNodeHashRingPosition,
                 nextNode.hashRingPosition
             );
-
+        }
         // Create node object + set index pointer to new identityId + increment total nodes count
         sts.createNodeObject(newNodeHashRingPosition, ps.getNodeId(identityId), identityId, index);
         sts.setIdentityId(index, identityId);
@@ -191,8 +192,9 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         ShardingTableStructsV1.NodeInfo[] memory nodesPage;
         ShardingTableStorageV2 sts = shardingTableStorage;
 
-        if ((sts.nodesCount() == 0) || (nodesNumber == 0)) return nodesPage;
-
+        if ((sts.nodesCount() == 0) || (nodesNumber == 0)) {
+            return nodesPage;
+        }
         ShardingTableStructsV2.Node memory startingNode = sts.getNode(startingIdentityId);
 
         require((startingIdentityId == NULL) || (startingNode.identityId != NULL), "Wrong starting Identity ID");
