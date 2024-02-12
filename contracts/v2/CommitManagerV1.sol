@@ -23,12 +23,12 @@ import {ServiceAgreementErrorsV2} from "./errors/ServiceAgreementErrorsV2.sol";
 
 contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
     event CommitSubmitted(
-        address assetContract,
-        uint256 tokenId,
+        address indexed assetContract,
+        uint256 indexed tokenId,
         bytes keyword,
         uint8 hashFunctionId,
         uint16 epoch,
-        uint72 identityId,
+        uint72 indexed identityId,
         uint40 score
     );
 
