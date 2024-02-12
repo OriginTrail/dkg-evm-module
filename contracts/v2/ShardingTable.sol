@@ -132,6 +132,8 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         ShardingTableStorageV2 sts = shardingTableStorage;
         ProfileStorage ps = profileStorage;
 
+        require(!sts.nodeExists(identityId), "Node already in sharding table");
+
         if (index != 0) {
             uint256 prevNodeHashRingPosition = sts.getHashRingPositionByIndex(index - 1);
 
