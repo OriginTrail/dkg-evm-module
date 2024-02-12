@@ -219,6 +219,12 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "bytes32",
+        "name": "agreementId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
