@@ -8,6 +8,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     newContractName: 'Log2PLDSF',
   });
 
+  if (hre.network.name.startsWith('gnosis')) {
+    return;
+  }
+
   if (!isDeployed) {
     if (hre.network.config.environment === 'development') {
       const { deployer } = await hre.getNamedAccounts();
