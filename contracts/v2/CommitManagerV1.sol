@@ -470,10 +470,9 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
             // [] <-> [H] <-> [X] ... [RC-] <-(NL)-> [NC] <-(NL)-> [RC] <-> [RC+] ... [C] <-> []
             _linkCommits(agreementId, epoch, refCommit.prevIdentityId, identityId);
             _linkCommits(agreementId, epoch, identityId, refCommit.identityId);
-        }
-        // [] <-> [H] <-> [RC] <-> []
-        // [] <-> [H] <-> [RC] <-(NL)-> [NC] <-> []
-        else {
+        } else {
+            // [] <-> [H] <-> [RC] <-> []
+            // [] <-> [H] <-> [RC] <-(NL)-> [NC] <-> []
             _linkCommits(agreementId, epoch, refCommit.identityId, identityId);
         }
     }

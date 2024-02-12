@@ -115,8 +115,9 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
         ss.setTotalStake(identityId, newStake);
         sharesContract.burnFrom(msg.sender, sharesToBurn);
 
-        if (shardingTableStorage.nodeExists(identityId) && (newStake < params.minimumStake()))
+        if (shardingTableStorage.nodeExists(identityId) && (newStake < params.minimumStake())) {
             shardingTableContract.removeNode(identityId);
+        }
 
         emit StakeWithdrawalStarted(
             identityId,
@@ -169,8 +170,9 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
             ss.setTotalStake(identityId, oldStake + delegatorsReward);
             sasProxy.transferAgreementTokens(agreementId, address(ss), delegatorsReward);
 
-            if (!shardingTableStorage.nodeExists(identityId) && oldStake >= parametersStorage.minimumStake())
+            if (!shardingTableStorage.nodeExists(identityId) && oldStake >= parametersStorage.minimumStake()) {
                 shardingTableContract.pushBack(identityId);
+            }
         }
 
         emit AccumulatedOperatorFeeIncreased(
@@ -181,8 +183,11 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
         );
 
         address sasAddress;
-        if (sasProxy.agreementV1Exists(agreementId)) sasAddress = sasProxy.agreementV1StorageAddress();
-        else sasAddress = sasProxy.agreementV1U1StorageAddress();
+        if (sasProxy.agreementV1Exists(agreementId)) {
+            sasAddress = sasProxy.agreementV1StorageAddress();
+        } else {
+            sasAddress = sasProxy.agreementV1U1StorageAddress();
+        }
 
         emit StakeIncreased(identityId, ps.getNodeId(identityId), sasAddress, oldStake, oldStake + delegatorsReward);
     }
@@ -215,16 +220,20 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
         Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
 
         uint256 sharesMinted;
-        if (sharesContract.totalSupply() == 0) sharesMinted = stakeAmount;
-        else sharesMinted = ((stakeAmount * sharesContract.totalSupply()) / oldStake);
+        if (sharesContract.totalSupply() == 0) {
+            sharesMinted = stakeAmount;
+        } else {
+            sharesMinted = ((stakeAmount * sharesContract.totalSupply()) / oldStake);
+        }
 
         sharesContract.mint(sender, sharesMinted);
 
         ss.setTotalStake(identityId, newStake);
         tknc.transferFrom(sender, address(ss), stakeAmount);
 
-        if (!shardingTableStorage.nodeExists(identityId) && newStake >= params.minimumStake())
+        if (!shardingTableStorage.nodeExists(identityId) && newStake >= params.minimumStake()) {
             shardingTableContract.pushBack(identityId);
+        }
 
         emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, oldStake, newStake);
     }

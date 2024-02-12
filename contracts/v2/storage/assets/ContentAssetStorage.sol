@@ -44,7 +44,9 @@ contract ContentAssetStorageV2 is ContentAssetStorage, IERC4906 {
     }
 
     function lastTokenId() public view virtual returns (uint256) {
-        if (_tokenId == 1) revert ContentAssetErrors.NoMintedAssets();
+        if (_tokenId == 1) {
+            revert ContentAssetErrors.NoMintedAssets();
+        }
 
         unchecked {
             return _tokenId - 1;
@@ -54,7 +56,9 @@ contract ContentAssetStorageV2 is ContentAssetStorage, IERC4906 {
     function setBaseURI(string memory baseURI) external virtual onlyHubOwner {
         tokenBaseURI = baseURI;
 
-        if (_tokenId > 1) emit BatchMetadataUpdate(1, lastTokenId());
+        if (_tokenId > 1) {
+            emit BatchMetadataUpdate(1, lastTokenId());
+        }
     }
 
     function _baseURI() internal view virtual override returns (string memory) {

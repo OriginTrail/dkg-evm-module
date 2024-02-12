@@ -53,6 +53,17 @@
     "type": "error"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "NodeAlreadyInTheShardingTable",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {

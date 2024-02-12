@@ -93,14 +93,18 @@ library UnorderedNamedContractDynamicSetLib {
     }
 
     function exists(Set storage self, string calldata name) internal view returns (bool) {
-        if (size(self) == 0) return false;
+        if (size(self) == 0) {
+            return false;
+        }
         return
             keccak256(abi.encodePacked(self.contractList[self.stringIndexPointers[name]].name)) ==
             keccak256(abi.encodePacked(name));
     }
 
     function exists(Set storage self, address addr) internal view returns (bool) {
-        if (size(self) == 0) return false;
+        if (size(self) == 0) {
+            return false;
+        }
         return addr == self.contractList[self.addressIndexPointers[addr]].addr;
     }
 
