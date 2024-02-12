@@ -135,8 +135,9 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
 
         bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
 
-        if (unfinalizedState != bytes32(0))
+        if (unfinalizedState != bytes32(0)) {
             revert ContentAssetErrors.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
+        }
 
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
         ParametersStorage params = parametersStorage;
@@ -153,11 +154,13 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         );
         uint32 r0 = params.r0();
 
-        if ((timeNow < commitPhaseEnd) && (commitsCount < r0))
+        if ((timeNow < commitPhaseEnd) && (commitsCount < r0)) {
             revert ContentAssetErrors.CommitPhaseOngoing(agreementId);
-        else if ((timeNow < epochEnd) && (commitsCount >= r0))
+        } else if ((timeNow < epochEnd) && (commitsCount >= r0)) {
             revert ContentAssetErrors.CommitPhaseSucceeded(agreementId);
-        else if (timeNow > epochEnd) revert ContentAssetErrors.FirstEpochHasAlreadyEnded(agreementId);
+        } else if (timeNow > epochEnd) {
+            revert ContentAssetErrors.FirstEpochHasAlreadyEnded(agreementId);
+        }
 
         uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);
 
@@ -197,18 +200,21 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
             agreementId
         );
 
-        if (block.timestamp > startTime + epochsNumber * epochLength) revert ContentAssetErrors.AssetExpired(tokenId);
+        if (block.timestamp > startTime + epochsNumber * epochLength) {
+            revert ContentAssetErrors.AssetExpired(tokenId);
+        }
 
         bytes32 unfinalizedState = uss.getUnfinalizedState(tokenId);
 
-        if (unfinalizedState != bytes32(0))
+        if (unfinalizedState != bytes32(0)) {
             revert ContentAssetErrors.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
+        }
 
         assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
         uss.setUnfinalizedState(tokenId, assertionId);
         uss.setIssuer(tokenId, msg.sender);
 
-        if (!sasProxy.agreementV1U1Exists(agreementId))
+        if (!sasProxy.agreementV1U1Exists(agreementId)) {
             sasProxy.createV1U1ServiceAgreementObject(
                 agreementId,
                 startTime,
@@ -218,8 +224,11 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
                 scoreFunctionIdAndProofWindowOffsetPerc[0],
                 scoreFunctionIdAndProofWindowOffsetPerc[1]
             );
+        }
 
-        if (updateTokenAmount != 0) serviceAgreementV1.addUpdateTokens(msg.sender, agreementId, updateTokenAmount);
+        if (updateTokenAmount != 0) {
+            serviceAgreementV1.addUpdateTokens(msg.sender, agreementId, updateTokenAmount);
+        }
 
         uint256 unfinalizedStateIndex = cas.getAssertionIdsLength(tokenId);
         sasProxy.setUpdateCommitsDeadline(
@@ -249,26 +258,32 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         uint128 epochLength;
         (startTime, epochsNumber, epochLength, , ) = sasProxy.getAgreementData(agreementId);
 
-        if (block.timestamp > startTime + epochsNumber * epochLength) revert ContentAssetErrors.AssetExpired(tokenId);
+        if (block.timestamp > startTime + epochsNumber * epochLength) {
+            revert ContentAssetErrors.AssetExpired(tokenId);
+        }
 
         bytes32 unfinalizedState = uss.getUnfinalizedState(tokenId);
         uint256 unfinalizedStateIndex = cas.getAssertionIdsLength(tokenId);
 
-        if (unfinalizedState == bytes32(0))
+        if (unfinalizedState == bytes32(0)) {
             revert ContentAssetErrors.NoPendingUpdate(contentAssetStorageAddress, tokenId);
-        else if (
+        } else if (
             block.timestamp <=
             sasProxy.getUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)))
-        )
+        ) {
             revert ContentAssetErrors.PendingUpdateFinalization(
                 contentAssetStorageAddress,
                 tokenId,
                 unfinalizedStateIndex
             );
+        }
 
         uint96 updateTokenAmount = sasProxy.getAgreementUpdateTokenAmount(agreementId);
-        if (sasProxy.agreementV1Exists(agreementId)) sasProxy.deleteServiceAgreementV1U1Object(agreementId);
-        else sasProxy.setAgreementUpdateTokenAmount(agreementId, 0);
+        if (sasProxy.agreementV1Exists(agreementId)) {
+            sasProxy.deleteServiceAgreementV1U1Object(agreementId);
+        } else {
+            sasProxy.setAgreementUpdateTokenAmount(agreementId, 0);
+        }
 
         sasProxy.transferV1U1AgreementTokens(msg.sender, updateTokenAmount);
 
@@ -295,8 +310,9 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
 
         bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
 
-        if (unfinalizedState != bytes32(0))
+        if (unfinalizedState != bytes32(0)) {
             revert ContentAssetErrors.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
+        }
 
         bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
 
@@ -310,8 +326,9 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         uint128 epochLength;
         (startTime, oldEpochsNumber, epochLength, , ) = serviceAgreementStorageProxy.getAgreementData(agreementId);
 
-        if (block.timestamp > startTime + oldEpochsNumber * epochLength)
+        if (block.timestamp > startTime + oldEpochsNumber * epochLength) {
             revert ContentAssetErrors.AssetExpired(tokenId);
+        }
 
         sasV1.extendStoringPeriod(msg.sender, agreementId, epochsNumber, tokenAmount);
 
@@ -326,8 +343,9 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
 
         bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
 
-        if (unfinalizedState != bytes32(0))
+        if (unfinalizedState != bytes32(0)) {
             revert ContentAssetErrors.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
+        }
 
         bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
 
@@ -341,7 +359,9 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         uint128 epochLength;
         (startTime, epochsNumber, epochLength, , ) = serviceAgreementStorageProxy.getAgreementData(agreementId);
 
-        if (block.timestamp > startTime + epochsNumber * epochLength) revert ContentAssetErrors.AssetExpired(tokenId);
+        if (block.timestamp > startTime + epochsNumber * epochLength) {
+            revert ContentAssetErrors.AssetExpired(tokenId);
+        }
 
         sasV1.addTokens(msg.sender, agreementId, tokenAmount);
 
@@ -356,8 +376,9 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
 
         bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
 
-        if (unfinalizedState == bytes32(0))
+        if (unfinalizedState == bytes32(0)) {
             revert ContentAssetErrors.NoPendingUpdate(contentAssetStorageAddress, tokenId);
+        }
 
         bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
 
@@ -371,7 +392,9 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         uint128 epochLength;
         (startTime, epochsNumber, epochLength, , ) = serviceAgreementStorageProxy.getAgreementData(agreementId);
 
-        if (block.timestamp > startTime + epochsNumber * epochLength) revert ContentAssetErrors.AssetExpired(tokenId);
+        if (block.timestamp > startTime + epochsNumber * epochLength) {
+            revert ContentAssetErrors.AssetExpired(tokenId);
+        }
 
         sasV1.addUpdateTokens(msg.sender, agreementId, tokenAmount);
 

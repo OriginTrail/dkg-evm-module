@@ -111,7 +111,9 @@ contract Identity is Named, Versioned, ContractStatus, Initializable {
 
         ids.removeKey(identityId, key);
 
-        if (purpose == OPERATIONAL_KEY) ids.removeOperationalKeyIdentityId(key);
+        if (purpose == OPERATIONAL_KEY) {
+            ids.removeOperationalKeyIdentityId(key);
+        }
     }
 
     function addOperationalWallets(uint72 identityId, address[] calldata operationalWallets) external onlyContracts {

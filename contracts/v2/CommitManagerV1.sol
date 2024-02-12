@@ -76,27 +76,28 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
     function isCommitWindowOpen(bytes32 agreementId, uint16 epoch) public view returns (bool) {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-        if (!sasProxy.agreementV1Exists(agreementId))
+        if (!sasProxy.agreementV1Exists(agreementId)) {
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
-
+        }
         uint256 startTime = sasProxy.getAgreementStartTime(agreementId);
 
         ParametersStorage params = parametersStorage;
         uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
 
-        if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
+        if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId)) {
             revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
                 agreementId,
                 startTime,
                 sasProxy.getAgreementEpochsNumber(agreementId),
                 epochLength
             );
-
+        }
         uint256 timeNow = block.timestamp;
         uint256 commitWindowDuration = (params.commitWindowDurationPerc() * epochLength) / 100;
 
-        if (epoch == 0) return timeNow < (startTime + commitWindowDuration);
-
+        if (epoch == 0) {
+            return timeNow < (startTime + commitWindowDuration);
+        }
         return (timeNow >= (startTime + epochLength * epoch) &&
             timeNow < (startTime + epochLength * epoch + commitWindowDuration));
     }
@@ -107,16 +108,17 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
     ) external view returns (ServiceAgreementStructsV1.CommitSubmission[] memory) {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
-        if (!sasProxy.agreementV1Exists(agreementId))
+        if (!sasProxy.agreementV1Exists(agreementId)) {
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
-        if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId))
+        }
+        if (epoch >= sasProxy.getAgreementEpochsNumber(agreementId)) {
             revert ServiceAgreementErrorsV1.ServiceAgreementHasBeenExpired(
                 agreementId,
                 sasProxy.getAgreementStartTime(agreementId),
                 sasProxy.getAgreementEpochsNumber(agreementId),
                 sasProxy.getAgreementEpochLength(agreementId)
             );
-
+        }
         uint32 r0 = parametersStorage.r0();
 
         ServiceAgreementStructsV1.CommitSubmission[]
@@ -148,17 +150,17 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
         bytes32 agreementId = sha256(abi.encodePacked(args.assetContract, args.tokenId, args.keyword));
 
-        if (!sasProxy.agreementV1Exists(agreementId))
+        if (!sasProxy.agreementV1Exists(agreementId)) {
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
-
-        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LOG2PLDSF_ID)
+        }
+        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LOG2PLDSF_ID) {
             revert ServiceAgreementErrorsV1.InvalidScoreFunctionId(
                 agreementId,
                 args.epoch,
                 sasProxy.getAgreementScoreFunctionId(agreementId),
                 block.timestamp
             );
-
+        }
         if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {
             uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
             uint256 actualCommitWindowStart = (sasProxy.getAgreementStartTime(agreementId) + args.epoch * epochLength);
@@ -210,17 +212,17 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
         bytes32 agreementId = sha256(abi.encodePacked(args.assetContract, args.tokenId, args.keyword));
 
-        if (!sasProxy.agreementV1Exists(agreementId))
+        if (!sasProxy.agreementV1Exists(agreementId)) {
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
-
-        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LINEAR_SUM_ID)
+        }
+        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LINEAR_SUM_ID) {
             revert ServiceAgreementErrorsV2.InvalidProximityScoreFunctionsPairId(
                 agreementId,
                 args.epoch,
                 sasProxy.getAgreementScoreFunctionId(agreementId),
                 block.timestamp
             );
-
+        }
         if (!reqs[0] && !isCommitWindowOpen(agreementId, args.epoch)) {
             uint128 epochLength = sasProxy.getAgreementEpochLength(agreementId);
             uint256 actualCommitWindowStart = (sasProxy.getAgreementStartTime(agreementId) + args.epoch * epochLength);
@@ -334,7 +336,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
             );
 
         // Verify that closestNode is in smaller arc between leftNode and rightNode
-        if (!isBetween)
+        if (!isBetween) {
             revert CommitManagerErrorsV2.ClosestNodeNotInNeighborhood(
                 agreementId,
                 epoch,
@@ -343,9 +345,9 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
                 rightEdgeNodeIndex,
                 block.timestamp
             );
-
+        }
         // Verify number of nodes between leftNode and rightNode (should be R2)
-        if (neighborhoodSize != parametersStorage.r2())
+        if (neighborhoodSize != parametersStorage.r2()) {
             revert CommitManagerErrorsV2.InvalidNeighborhoodSize(
                 agreementId,
                 epoch,
@@ -356,12 +358,12 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
                 neighborhoodSize,
                 block.timestamp
             );
-
+        }
         // Verify that closestNode is indeed closest
         if (
             closestDistance > ls.calculateDistance(hashFunctionId, ps.getNodeId(closestPrevIdentityId), keyword) ||
             closestDistance > ls.calculateDistance(hashFunctionId, ps.getNodeId(closestNextIdentityId), keyword)
-        )
+        ) {
             revert CommitManagerErrorsV2.InvalidClosestNode(
                 agreementId,
                 epoch,
@@ -371,9 +373,9 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
                 ls.calculateDistance(hashFunctionId, ps.getNodeId(closestNextIdentityId), keyword),
                 block.timestamp
             );
-
+        }
         // Verify that leftNode is indeed the left edge of the Neighborhood
-        if (leftEdgeDistance > ls.calculateDistance(hashFunctionId, ps.getNodeId(rightEdgeNextIdentityId), keyword))
+        if (leftEdgeDistance > ls.calculateDistance(hashFunctionId, ps.getNodeId(rightEdgeNextIdentityId), keyword)) {
             revert CommitManagerErrorsV2.InvalidLeftEdgeNode(
                 agreementId,
                 epoch,
@@ -383,9 +385,9 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
                 ls.calculateDistance(hashFunctionId, ps.getNodeId(rightEdgeNextIdentityId), keyword),
                 block.timestamp
             );
-
+        }
         // Verify that rightNode is indeed the right edge of the Neighborhood
-        if (rightEdgeDistance > ls.calculateDistance(hashFunctionId, ps.getNodeId(leftEdgePrevIdentityId), keyword))
+        if (rightEdgeDistance > ls.calculateDistance(hashFunctionId, ps.getNodeId(leftEdgePrevIdentityId), keyword)) {
             revert CommitManagerErrorsV2.InvalidRightEdgeNode(
                 agreementId,
                 epoch,
@@ -395,7 +397,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
                 ls.calculateDistance(hashFunctionId, ps.getNodeId(leftEdgePrevIdentityId), keyword),
                 block.timestamp
             );
-
+        }
         return (nodesCount, (leftEdgeDistance > rightEdgeDistance) ? leftEdgeDistance : rightEdgeDistance);
     }
 
@@ -411,14 +413,14 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
 
         bytes32 commitId = keccak256(abi.encodePacked(agreementId, epoch, identityId));
 
-        if (!reqs[2] && sasProxy.commitSubmissionExists(commitId))
+        if (!reqs[2] && sasProxy.commitSubmissionExists(commitId)) {
             revert ServiceAgreementErrorsV1.NodeAlreadySubmittedCommit(
                 agreementId,
                 epoch,
                 identityId,
                 profileStorage.getNodeId(identityId)
             );
-
+        }
         bytes32 refCommitId = sasProxy.getV1AgreementEpochSubmissionHead(agreementId, epoch);
 
         ParametersStorage params = parametersStorage;
@@ -435,7 +437,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
             }
         }
 
-        if (!reqs[3] && (i >= r0))
+        if (!reqs[3] && (i >= r0)) {
             revert ServiceAgreementErrorsV1.NodeNotAwarded(
                 agreementId,
                 epoch,
@@ -443,18 +445,18 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
                 profileStorage.getNodeId(identityId),
                 i
             );
-
+        }
         sasProxy.createV1CommitSubmissionObject(commitId, identityId, prevIdentityId, nextIdentityId, score);
 
         ServiceAgreementStructsV1.CommitSubmission memory refCommit = sasProxy.getCommitSubmission(refCommitId);
 
-        if ((i == 0) && (refCommit.identityId == 0))
+        if ((i == 0) && (refCommit.identityId == 0)) {
             //  No head -> Setting new head
             sasProxy.setV1AgreementEpochSubmissionHead(agreementId, epoch, commitId);
-        else if ((i == 0) && (score <= refCommit.score))
+        } else if ((i == 0) && (score <= refCommit.score)) {
             // There is a head with higher or equal score, add new commit on the right
             _linkCommits(agreementId, epoch, refCommit.identityId, identityId);
-        else if ((i == 0) && (score > refCommit.score)) {
+        } else if ((i == 0) && (score > refCommit.score)) {
             // There is a head with lower score, replace the head
             sasProxy.setV1AgreementEpochSubmissionHead(agreementId, epoch, commitId);
             _linkCommits(agreementId, epoch, identityId, refCommit.identityId);
@@ -468,10 +470,11 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
             // [] <-> [H] <-> [X] ... [RC-] <-(NL)-> [NC] <-(NL)-> [RC] <-> [RC+] ... [C] <-> []
             _linkCommits(agreementId, epoch, refCommit.prevIdentityId, identityId);
             _linkCommits(agreementId, epoch, identityId, refCommit.identityId);
+        } else {
+            // [] <-> [H] <-> [RC] <-> []
+            // [] <-> [H] <-> [RC] <-(NL)-> [NC] <-> []
+            _linkCommits(agreementId, epoch, refCommit.identityId, identityId);
         }
-        // [] <-> [H] <-> [RC] <-> []
-        // [] <-> [H] <-> [RC] <-(NL)-> [NC] <-> []
-        else _linkCommits(agreementId, epoch, refCommit.identityId, identityId);
     }
 
     function _linkCommits(

@@ -93,8 +93,11 @@ contract ServiceAgreementStorageProxy is Named, Versioned, HubDependent, Initial
     }
 
     function deleteServiceAgreementObject(bytes32 agreementId) external onlyContracts {
-        if (this.agreementV1Exists(agreementId)) storageV1.deleteServiceAgreementObject(agreementId);
-        else storageV1U1.deleteServiceAgreementObject(agreementId);
+        if (this.agreementV1Exists(agreementId)) {
+            storageV1.deleteServiceAgreementObject(agreementId);
+        } else {
+            storageV1U1.deleteServiceAgreementObject(agreementId);
+        }
     }
 
     function getAgreementData(
@@ -121,47 +124,73 @@ contract ServiceAgreementStorageProxy is Named, Versioned, HubDependent, Initial
                 [tokenAmount, storageV1U1.getAgreementUpdateTokenAmount(agreementId)],
                 scoreFunctionIdAndProofWindowOffsetPerc
             );
-        } else return storageV1U1.getAgreementData(agreementId);
+        } else {
+            return storageV1U1.getAgreementData(agreementId);
+        }
     }
 
     function getAgreementStartTime(bytes32 agreementId) external view returns (uint256) {
-        if (this.agreementV1Exists(agreementId)) return storageV1.getAgreementStartTime(agreementId);
-        else return storageV1U1.getAgreementStartTime(agreementId);
+        if (this.agreementV1Exists(agreementId)) {
+            return storageV1.getAgreementStartTime(agreementId);
+        } else {
+            return storageV1U1.getAgreementStartTime(agreementId);
+        }
     }
 
     function setAgreementStartTime(bytes32 agreementId, uint256 startTime) external onlyContracts {
-        if (this.agreementV1Exists(agreementId)) storageV1.setAgreementStartTime(agreementId, startTime);
-        else storageV1U1.setAgreementStartTime(agreementId, startTime);
+        if (this.agreementV1Exists(agreementId)) {
+            storageV1.setAgreementStartTime(agreementId, startTime);
+        } else {
+            storageV1U1.setAgreementStartTime(agreementId, startTime);
+        }
     }
 
     function getAgreementEpochsNumber(bytes32 agreementId) external view returns (uint16) {
-        if (this.agreementV1Exists(agreementId)) return storageV1.getAgreementEpochsNumber(agreementId);
-        else return storageV1U1.getAgreementEpochsNumber(agreementId);
+        if (this.agreementV1Exists(agreementId)) {
+            return storageV1.getAgreementEpochsNumber(agreementId);
+        } else {
+            return storageV1U1.getAgreementEpochsNumber(agreementId);
+        }
     }
 
     function setAgreementEpochsNumber(bytes32 agreementId, uint16 epochsNumber) external onlyContracts {
-        if (this.agreementV1Exists(agreementId)) storageV1.setAgreementEpochsNumber(agreementId, epochsNumber);
-        else storageV1U1.setAgreementEpochsNumber(agreementId, epochsNumber);
+        if (this.agreementV1Exists(agreementId)) {
+            storageV1.setAgreementEpochsNumber(agreementId, epochsNumber);
+        } else {
+            storageV1U1.setAgreementEpochsNumber(agreementId, epochsNumber);
+        }
     }
 
     function getAgreementEpochLength(bytes32 agreementId) external view returns (uint128) {
-        if (this.agreementV1Exists(agreementId)) return storageV1.getAgreementEpochLength(agreementId);
-        else return storageV1U1.getAgreementEpochLength(agreementId);
+        if (this.agreementV1Exists(agreementId)) {
+            return storageV1.getAgreementEpochLength(agreementId);
+        } else {
+            return storageV1U1.getAgreementEpochLength(agreementId);
+        }
     }
 
     function setAgreementEpochLength(bytes32 agreementId, uint128 epochLength) external onlyContracts {
-        if (this.agreementV1Exists(agreementId)) storageV1.setAgreementEpochLength(agreementId, epochLength);
-        else storageV1U1.setAgreementEpochLength(agreementId, epochLength);
+        if (this.agreementV1Exists(agreementId)) {
+            storageV1.setAgreementEpochLength(agreementId, epochLength);
+        } else {
+            storageV1U1.setAgreementEpochLength(agreementId, epochLength);
+        }
     }
 
     function getAgreementTokenAmount(bytes32 agreementId) external view returns (uint96) {
-        if (this.agreementV1Exists(agreementId)) return storageV1.getAgreementTokenAmount(agreementId);
-        else return storageV1U1.getAgreementTokenAmount(agreementId);
+        if (this.agreementV1Exists(agreementId)) {
+            return storageV1.getAgreementTokenAmount(agreementId);
+        } else {
+            return storageV1U1.getAgreementTokenAmount(agreementId);
+        }
     }
 
     function setAgreementTokenAmount(bytes32 agreementId, uint96 tokenAmount) external onlyContracts {
-        if (this.agreementV1Exists(agreementId)) storageV1.setAgreementTokenAmount(agreementId, tokenAmount);
-        else storageV1U1.setAgreementTokenAmount(agreementId, tokenAmount);
+        if (this.agreementV1Exists(agreementId)) {
+            storageV1.setAgreementTokenAmount(agreementId, tokenAmount);
+        } else {
+            storageV1U1.setAgreementTokenAmount(agreementId, tokenAmount);
+        }
     }
 
     function getAgreementUpdateTokenAmount(bytes32 agreementId) external view returns (uint96) {
@@ -173,27 +202,38 @@ contract ServiceAgreementStorageProxy is Named, Versioned, HubDependent, Initial
     }
 
     function getAgreementScoreFunctionId(bytes32 agreementId) external view returns (uint8) {
-        if (this.agreementV1Exists(agreementId)) return storageV1.getAgreementScoreFunctionId(agreementId);
-        else return storageV1U1.getAgreementScoreFunctionId(agreementId);
+        if (this.agreementV1Exists(agreementId)) {
+            return storageV1.getAgreementScoreFunctionId(agreementId);
+        } else {
+            return storageV1U1.getAgreementScoreFunctionId(agreementId);
+        }
     }
 
     function setAgreementScoreFunctionId(bytes32 agreementId, uint8 newScoreFunctionId) external onlyContracts {
-        if (this.agreementV1Exists(agreementId)) storageV1.setAgreementScoreFunctionId(agreementId, newScoreFunctionId);
-        else storageV1U1.setAgreementScoreFunctionId(agreementId, newScoreFunctionId);
+        if (this.agreementV1Exists(agreementId)) {
+            storageV1.setAgreementScoreFunctionId(agreementId, newScoreFunctionId);
+        } else {
+            storageV1U1.setAgreementScoreFunctionId(agreementId, newScoreFunctionId);
+        }
     }
 
     function getAgreementProofWindowOffsetPerc(bytes32 agreementId) external view returns (uint8) {
-        if (this.agreementV1Exists(agreementId)) return storageV1.getAgreementProofWindowOffsetPerc(agreementId);
-        else return storageV1U1.getAgreementProofWindowOffsetPerc(agreementId);
+        if (this.agreementV1Exists(agreementId)) {
+            return storageV1.getAgreementProofWindowOffsetPerc(agreementId);
+        } else {
+            return storageV1U1.getAgreementProofWindowOffsetPerc(agreementId);
+        }
     }
 
     function setAgreementProofWindowOffsetPerc(
         bytes32 agreementId,
         uint8 proofWindowOffsetPerc
     ) external onlyContracts {
-        if (this.agreementV1Exists(agreementId))
+        if (this.agreementV1Exists(agreementId)) {
             storageV1.setAgreementProofWindowOffsetPerc(agreementId, proofWindowOffsetPerc);
-        else storageV1U1.setAgreementProofWindowOffsetPerc(agreementId, proofWindowOffsetPerc);
+        } else {
+            storageV1U1.setAgreementProofWindowOffsetPerc(agreementId, proofWindowOffsetPerc);
+        }
     }
 
     function getV1U1AgreementEpochSubmissionHead(
@@ -226,18 +266,27 @@ contract ServiceAgreementStorageProxy is Named, Versioned, HubDependent, Initial
     }
 
     function incrementAgreementRewardedNodesNumber(bytes32 agreementId, uint16 epoch) external onlyContracts {
-        if (this.agreementV1Exists(agreementId)) storageV1.incrementAgreementRewardedNodesNumber(agreementId, epoch);
-        else storageV1U1.incrementAgreementRewardedNodesNumber(agreementId, epoch);
+        if (this.agreementV1Exists(agreementId)) {
+            storageV1.incrementAgreementRewardedNodesNumber(agreementId, epoch);
+        } else {
+            storageV1U1.incrementAgreementRewardedNodesNumber(agreementId, epoch);
+        }
     }
 
     function decrementAgreementRewardedNodesNumber(bytes32 agreementId, uint16 epoch) external onlyContracts {
-        if (this.agreementV1Exists(agreementId)) storageV1.decrementAgreementRewardedNodesNumber(agreementId, epoch);
-        else storageV1U1.decrementAgreementRewardedNodesNumber(agreementId, epoch);
+        if (this.agreementV1Exists(agreementId)) {
+            storageV1.decrementAgreementRewardedNodesNumber(agreementId, epoch);
+        } else {
+            storageV1U1.decrementAgreementRewardedNodesNumber(agreementId, epoch);
+        }
     }
 
     function getAgreementRewardedNodesNumber(bytes32 agreementId, uint16 epoch) external view returns (uint32) {
-        if (this.agreementV1Exists(agreementId)) return storageV1.getAgreementRewardedNodesNumber(agreementId, epoch);
-        else return storageV1U1.getAgreementRewardedNodesNumber(agreementId, epoch);
+        if (this.agreementV1Exists(agreementId)) {
+            return storageV1.getAgreementRewardedNodesNumber(agreementId, epoch);
+        } else {
+            return storageV1U1.getAgreementRewardedNodesNumber(agreementId, epoch);
+        }
     }
 
     function setAgreementRewardedNodesNumber(
@@ -245,14 +294,19 @@ contract ServiceAgreementStorageProxy is Named, Versioned, HubDependent, Initial
         uint16 epoch,
         uint32 rewardedNodesNumber
     ) external onlyContracts {
-        if (this.agreementV1Exists(agreementId))
+        if (this.agreementV1Exists(agreementId)) {
             storageV1.setAgreementRewardedNodesNumber(agreementId, epoch, rewardedNodesNumber);
-        else storageV1U1.setAgreementRewardedNodesNumber(agreementId, epoch, rewardedNodesNumber);
+        } else {
+            storageV1U1.setAgreementRewardedNodesNumber(agreementId, epoch, rewardedNodesNumber);
+        }
     }
 
     function deleteAgreementRewardedNodesNumber(bytes32 agreementId, uint16 epoch) external onlyContracts {
-        if (this.agreementV1Exists(agreementId)) storageV1.setAgreementRewardedNodesNumber(agreementId, epoch, 0);
-        else storageV1U1.deleteAgreementRewardedNodesNumber(agreementId, epoch);
+        if (this.agreementV1Exists(agreementId)) {
+            storageV1.setAgreementRewardedNodesNumber(agreementId, epoch, 0);
+        } else {
+            storageV1U1.deleteAgreementRewardedNodesNumber(agreementId, epoch);
+        }
     }
 
     function createV1CommitSubmissionObject(
@@ -276,62 +330,93 @@ contract ServiceAgreementStorageProxy is Named, Versioned, HubDependent, Initial
     }
 
     function deleteCommitSubmissionsObject(bytes32 commitId) external onlyContracts {
-        if (this.commitV1U1Exists(commitId)) storageV1U1.deleteEpochStateCommitSubmissionsObject(commitId);
-        else storageV1.deleteCommitSubmissionsObject(commitId);
+        if (this.commitV1U1Exists(commitId)) {
+            storageV1U1.deleteEpochStateCommitSubmissionsObject(commitId);
+        } else {
+            storageV1.deleteCommitSubmissionsObject(commitId);
+        }
     }
 
     function getCommitSubmission(
         bytes32 commitId
     ) external view returns (ServiceAgreementStructsV1.CommitSubmission memory) {
-        if (this.commitV1U1Exists(commitId)) return storageV1U1.getEpochStateCommitSubmission(commitId);
-        else return storageV1.getCommitSubmission(commitId);
+        if (this.commitV1U1Exists(commitId)) {
+            return storageV1U1.getEpochStateCommitSubmission(commitId);
+        } else {
+            return storageV1.getCommitSubmission(commitId);
+        }
     }
 
     function getCommitSubmissionIdentityId(bytes32 commitId) external view returns (uint72) {
-        if (this.commitV1U1Exists(commitId)) return storageV1U1.getEpochStateCommitSubmissionIdentityId(commitId);
-        else return storageV1.getCommitSubmissionIdentityId(commitId);
+        if (this.commitV1U1Exists(commitId)) {
+            return storageV1U1.getEpochStateCommitSubmissionIdentityId(commitId);
+        } else {
+            return storageV1.getCommitSubmissionIdentityId(commitId);
+        }
     }
 
     function setCommitSubmissionIdentityId(bytes32 commitId, uint72 identityId) external onlyContracts {
-        if (this.commitV1U1Exists(commitId)) storageV1U1.setEpochStateCommitSubmissionIdentityId(commitId, identityId);
-        else storageV1.setCommitSubmissionIdentityId(commitId, identityId);
+        if (this.commitV1U1Exists(commitId)) {
+            storageV1U1.setEpochStateCommitSubmissionIdentityId(commitId, identityId);
+        } else {
+            storageV1.setCommitSubmissionIdentityId(commitId, identityId);
+        }
     }
 
     function getCommitSubmissionPrevIdentityId(bytes32 commitId) external view returns (uint72) {
-        if (this.commitV1U1Exists(commitId)) return storageV1U1.getEpochStateCommitSubmissionPrevIdentityId(commitId);
-        else return storageV1.getCommitSubmissionPrevIdentityId(commitId);
+        if (this.commitV1U1Exists(commitId)) {
+            return storageV1U1.getEpochStateCommitSubmissionPrevIdentityId(commitId);
+        } else {
+            return storageV1.getCommitSubmissionPrevIdentityId(commitId);
+        }
     }
 
     function setCommitSubmissionPrevIdentityId(bytes32 commitId, uint72 prevIdentityId) external onlyContracts {
-        if (this.commitV1U1Exists(commitId))
+        if (this.commitV1U1Exists(commitId)) {
             storageV1U1.setEpochStateCommitSubmissionPrevIdentityId(commitId, prevIdentityId);
-        else storageV1.setCommitSubmissionPrevIdentityId(commitId, prevIdentityId);
+        } else {
+            storageV1.setCommitSubmissionPrevIdentityId(commitId, prevIdentityId);
+        }
     }
 
     function getCommitSubmissionNextIdentityId(bytes32 commitId) external view returns (uint72) {
-        if (this.commitV1U1Exists(commitId)) return storageV1U1.getEpochStateCommitSubmissionNextIdentityId(commitId);
-        else return storageV1.getCommitSubmissionNextIdentityId(commitId);
+        if (this.commitV1U1Exists(commitId)) {
+            return storageV1U1.getEpochStateCommitSubmissionNextIdentityId(commitId);
+        } else {
+            return storageV1.getCommitSubmissionNextIdentityId(commitId);
+        }
     }
 
     function setCommitSubmissionNextIdentityId(bytes32 commitId, uint72 nextIdentityId) external onlyContracts {
-        if (this.commitV1U1Exists(commitId))
+        if (this.commitV1U1Exists(commitId)) {
             storageV1U1.setEpochStateCommitSubmissionNextIdentityId(commitId, nextIdentityId);
-        else storageV1.setCommitSubmissionNextIdentityId(commitId, nextIdentityId);
+        } else {
+            storageV1.setCommitSubmissionNextIdentityId(commitId, nextIdentityId);
+        }
     }
 
     function getCommitSubmissionScore(bytes32 commitId) external view returns (uint40) {
-        if (this.commitV1U1Exists(commitId)) return storageV1U1.getEpochStateCommitSubmissionScore(commitId);
-        else return storageV1.getCommitSubmissionScore(commitId);
+        if (this.commitV1U1Exists(commitId)) {
+            return storageV1U1.getEpochStateCommitSubmissionScore(commitId);
+        } else {
+            return storageV1.getCommitSubmissionScore(commitId);
+        }
     }
 
     function setCommitSubmissionScore(bytes32 commitId, uint40 score) external onlyContracts {
-        if (this.commitV1U1Exists(commitId)) storageV1U1.setEpochStateCommitSubmissionScore(commitId, score);
-        else storageV1.setCommitSubmissionScore(commitId, score);
+        if (this.commitV1U1Exists(commitId)) {
+            storageV1U1.setEpochStateCommitSubmissionScore(commitId, score);
+        } else {
+            storageV1.setCommitSubmissionScore(commitId, score);
+        }
     }
 
     function commitSubmissionExists(bytes32 commitId) external view returns (bool) {
-        if (this.commitV1U1Exists(commitId)) return storageV1U1.epochStateCommitSubmissionExists(commitId);
-        else return storageV1.commitSubmissionExists(commitId);
+        if (this.commitV1U1Exists(commitId)) {
+            return storageV1U1.epochStateCommitSubmissionExists(commitId);
+        } else {
+            return storageV1.commitSubmissionExists(commitId);
+        }
     }
 
     function incrementCommitsCount(bytes32 epochStateId) external onlyContracts {
@@ -367,8 +452,11 @@ contract ServiceAgreementStorageProxy is Named, Versioned, HubDependent, Initial
     }
 
     function transferAgreementTokens(bytes32 agreementId, address receiver, uint96 tokenAmount) external onlyContracts {
-        if (this.agreementV1Exists(agreementId)) storageV1.transferAgreementTokens(receiver, tokenAmount);
-        else storageV1U1.transferAgreementTokens(receiver, tokenAmount);
+        if (this.agreementV1Exists(agreementId)) {
+            storageV1.transferAgreementTokens(receiver, tokenAmount);
+        } else {
+            storageV1U1.transferAgreementTokens(receiver, tokenAmount);
+        }
     }
 
     function transferV1AgreementTokens(address receiver, uint96 tokenAmount) external onlyContracts {

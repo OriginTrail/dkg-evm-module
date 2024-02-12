@@ -60,7 +60,9 @@ library UnorderedIndexableContractDynamicSetLib {
     }
 
     function exists(Set storage self, uint8 id) internal view returns (bool) {
-        if (size(self) == 0) return false;
+        if (size(self) == 0) {
+            return false;
+        }
         return self.contractList[self.indexPointers[id]].id == id;
     }
 

@@ -3,6 +3,7 @@
 pragma solidity ^0.8.16;
 
 library ShardingTableErrors {
+    error NodeAlreadyInTheShardingTable(uint72 identityId);
     error InvalidIndexWithRespectToPreviousNode(
         uint72 identityId,
         uint256 hashRingPosition,
