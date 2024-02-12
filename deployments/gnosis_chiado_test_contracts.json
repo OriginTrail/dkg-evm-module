@@ -1,13 +1,5 @@
 {
   "contracts": {
-    "Assertion": {
-      "evmAddress": "0x4c33eEB7A07e7602461F23701E3D144587174aCA",
-      "version": "1.0.1",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868368522,
-      "deployed": true
-    },
     "AssertionStorage": {
       "deployed": true,
       "deploymentTimestamp": 1701108890140,
@@ -16,30 +8,6 @@
       "gitCommitHash": "83b739de2ea02ce8027e2fccc6e04e9d5da48814",
       "version": "1.0.0"
     },
-    "CommitManagerV1": {
-      "evmAddress": "0x49AD6Bcca1F56EF36Eb5d5EF27e45368991A8469",
-      "version": "2.0.0",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868423365,
-      "deployed": true
-    },
-    "CommitManagerV1U1": {
-      "evmAddress": "0xc9487464de31BE37fEe2DFc890115f2d6DEa6aA3",
-      "version": "2.0.0",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868435083,
-      "deployed": true
-    },
-    "ContentAsset": {
-      "evmAddress": "0xdBA79D8908DA516E2b6c5756A88CE94e36cDBB99",
-      "version": "1.0.2",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868468460,
-      "deployed": true
-    },
     "ContentAssetStorage": {
       "deployed": true,
       "deploymentTimestamp": 1702464503710,
@@ -47,14 +15,6 @@
       "gitBranch": "main",
       "gitCommitHash": "24d3e2392c0bb6a6164533219a84cd216b46a6a5",
       "version": "2.0.1"
-    },
-    "HashingProxy": {
-      "evmAddress": "0x80c36249EC7bBEc58801513Ce8eF2ef09fC48282",
-      "version": "1.0.1",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868293682,
-      "deployed": true
     },
     "Hub": {
       "deployed": true,
@@ -72,14 +32,6 @@
       "gitCommitHash": "24d3e2392c0bb6a6164533219a84cd216b46a6a5",
       "version": "1.0.1"
     },
-    "Identity": {
-      "evmAddress": "0x0bD5C48D45fC4ac5f94A045BdB3F15c98AD46912",
-      "version": "1.0.1",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868380049,
-      "deployed": true
-    },
     "IdentityStorage": {
       "evmAddress": "0xbd8fAF8bddF105d8628EFF819C08200D8E7eD4E9",
       "version": "2.0.0",
@@ -88,68 +40,12 @@
       "deploymentTimestamp": 1706868335069,
       "deployed": true
     },
-    "Log2PLDSF": {
-      "evmAddress": "0xCC8439a7B8C72792Bf0B2EcF9d674B411C262b2C",
-      "version": null,
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868313811,
-      "deployed": true
-    },
-    "ParametersStorage": {
-      "evmAddress": "0x3119010DFA3cd4db7e40f19e8511e3834Be34E5e",
-      "version": "1.1.0",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868279119,
-      "deployed": false
-    },
-    "Profile": {
-      "evmAddress": "0x9e9c9c0eC92909660126d3f25d03F1991E7B8d67",
-      "version": "1.0.2",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868404817,
-      "deployed": false
-    },
     "ProfileStorage": {
       "evmAddress": "0xa936Bb6fF11D69e6412ABF79b29ed1eEccBD181d",
       "version": "1.0.0",
       "gitBranch": "release/delegations",
       "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
       "deploymentTimestamp": 1706868361747,
-      "deployed": true
-    },
-    "ProofManagerV1": {
-      "evmAddress": "0x26AFd1107a5DFB0BFbE3db7Ea5E65F458ce5421c",
-      "version": "1.0.2",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868443207,
-      "deployed": true
-    },
-    "ProofManagerV1U1": {
-      "evmAddress": "0xF34316A774144A5f3Cd52B9f894805A7E6c44881",
-      "version": "1.0.2",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868454555,
-      "deployed": true
-    },
-    "SHA256": {
-      "evmAddress": "0x60ffA5428B4EC7c26c821E985FFaa6981F289C7b",
-      "version": null,
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868300145,
-      "deployed": true
-    },
-    "ScoringProxy": {
-      "evmAddress": "0x44F8C90103645E55640B185F52E3ef46287C10F1",
-      "version": "2.0.0",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868307300,
       "deployed": true
     },
     "ServiceAgreementStorageProxy": {
@@ -176,22 +72,6 @@
       "gitCommitHash": "83b739de2ea02ce8027e2fccc6e04e9d5da48814",
       "version": "1.0.0"
     },
-    "ServiceAgreementV1": {
-      "evmAddress": "0x15bd010E523B49d32fefA1702A82DA509DC8474A",
-      "version": "1.1.1",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868462261,
-      "deployed": true
-    },
-    "ShardingTable": {
-      "evmAddress": "0x58Aaf029Bf04644418CB16a15382109A43aBDAA2",
-      "version": "2.0.0",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868386856,
-      "deployed": true
-    },
     "ShardingTableStorage": {
       "evmAddress": "0xE3d940FE74b2071Ed849a6d405A0a3C57F699DdA",
       "version": "2.0.0",
@@ -199,14 +79,6 @@
       "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
       "deploymentTimestamp": 1706868343606,
       "deployed": true
-    },
-    "Staking": {
-      "evmAddress": "0xf65254BEb90a070898237DD8FEA212363D4ade52",
-      "version": "2.0.0",
-      "gitBranch": "release/delegations",
-      "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
-      "deploymentTimestamp": 1706868394091,
-      "deployed": false
     },
     "StakingStorage": {
       "deployed": true,
@@ -236,20 +108,148 @@
       "gitCommitHash": "83b739de2ea02ce8027e2fccc6e04e9d5da48814",
       "version": "1.0.0"
     },
-    "LinearSum": {
-      "evmAddress": "0xEad3f049298d483aAf2C1341EE8E84237f0853cB",
-      "version": null,
-      "gitBranch": "chiado-contracts-redeployment",
-      "gitCommitHash": "bfc4be6d0239de8b3c1e6a2017c4e71d3c9c2e50",
-      "deploymentTimestamp": 1707235181232,
-      "deployed": true
-    },
     "NodeOperatorFeeChangesStorage": {
       "evmAddress": "0x30d65d3fB94b645CEd19c561F60124B83ea8B891",
       "version": "2.0.0",
       "gitBranch": "release/delegations",
       "gitCommitHash": "afbe3c06bae4a20e2a9d902edd197bf8d9d1bdee",
       "deploymentTimestamp": 1706868354605,
+      "deployed": true
+    },
+    "ParametersStorage": {
+      "evmAddress": "0x3ab885f3DF70828ca3ae3880a8D19cd83F33AD16",
+      "version": "1.1.1",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707488945746,
+      "deployed": true
+    },
+    "HashingProxy": {
+      "evmAddress": "0x78d8341b24e0faD36BeC74e7d6c48798234adb2e",
+      "version": "1.0.1",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707488952899,
+      "deployed": true
+    },
+    "SHA256": {
+      "evmAddress": "0x340e0C75d2Bbb742464B33a63164277675137282",
+      "version": null,
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707488961784,
+      "deployed": true
+    },
+    "ScoringProxy": {
+      "evmAddress": "0x3Ca0cf092D0d88ad38E5A66033A7ADD66C74Bbd1",
+      "version": "2.0.0",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707488966792,
+      "deployed": true
+    },
+    "Log2PLDSF": {
+      "evmAddress": "0x64099C11750ec3ff2613c0dbdf2C1A6daa770Cd8",
+      "version": null,
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707488971930,
+      "deployed": true
+    },
+    "LinearSum": {
+      "evmAddress": "0x5F6CCAe0fC4d91f5f7fd12eF531371Bef573022D",
+      "version": null,
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707488982058,
+      "deployed": true
+    },
+    "Assertion": {
+      "evmAddress": "0x5f5D283040E946cdCfd89E81aE12486422415476",
+      "version": "1.0.1",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707488987684,
+      "deployed": true
+    },
+    "Identity": {
+      "evmAddress": "0x777a7f384C2cE5aFA54f4C7986A92781028ccd59",
+      "version": "1.1.0",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707488992727,
+      "deployed": true
+    },
+    "ShardingTable": {
+      "evmAddress": "0xC849bC199bE763D1315B127109D69d0666480E07",
+      "version": "2.0.0",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707488998047,
+      "deployed": true
+    },
+    "Staking": {
+      "evmAddress": "0xa40b960e556f955c7132a8D1dDB096F3636cF7E9",
+      "version": "2.0.0",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707489007326,
+      "deployed": true
+    },
+    "Profile": {
+      "evmAddress": "0x4482FD95d8D8c58b7902fefAbfa99Fc180fd7563",
+      "version": "1.1.0",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707489012517,
+      "deployed": true
+    },
+    "CommitManagerV1": {
+      "evmAddress": "0xc936B57e7f45cbC1Dde0802037F51FCDf7E40Dab",
+      "version": "2.0.0",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707489017673,
+      "deployed": true
+    },
+    "CommitManagerV1U1": {
+      "evmAddress": "0x4D4D436De8264f1e5c0aD5bf83C524c915a91C36",
+      "version": "2.0.0",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707489027532,
+      "deployed": true
+    },
+    "ProofManagerV1": {
+      "evmAddress": "0x3E433ab25781154D9b870441b66b29Db9D8e363c",
+      "version": "1.0.2",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707489037555,
+      "deployed": true
+    },
+    "ProofManagerV1U1": {
+      "evmAddress": "0x92e584ccC7de669da5B0B576c41D094ea425de1B",
+      "version": "1.0.2",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707489047247,
+      "deployed": true
+    },
+    "ServiceAgreementV1": {
+      "evmAddress": "0x33e4460f5d9cD05ca652c8e529Ca679984Ac2432",
+      "version": "1.1.1",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707489056909,
+      "deployed": true
+    },
+    "ContentAsset": {
+      "evmAddress": "0x2a5921633A0250d855C3B5b590234763105c8D58",
+      "version": "1.0.2",
+      "gitBranch": "main",
+      "gitCommitHash": "06afb8b08c1f5afb779d1c89157021bc70f2fe98",
+      "deploymentTimestamp": 1707489061947,
       "deployed": true
     }
   }

@@ -15,22 +15,22 @@
       "substrateAddress": "5EMjsczmtBByLwPDvM6M5C72wGLSAvv78T3sKeCQQ5vKEYR5"
     },
     "CommitManagerV1": {
-      "deployed": true,
-      "deploymentTimestamp": 1701860941877,
-      "evmAddress": "0x08425B47dE1116F7a605c84B39969bBBD778FCcE",
-      "gitBranch": "main",
-      "gitCommitHash": "b34eab2f67543ed17ca054d3fe7b79bb039a660d",
-      "substrateAddress": "5EMjsczMq7eUKqrMGVDftuNM2H4cEn72ycMRXkN7WZQ8eSbL",
-      "version": "1.0.1"
+      "evmAddress": "0x42Ad98A46c2143Dc2Bb170E9Ac6666A0dC7E19f0",
+      "substrateAddress": "5EMjsczZY3CAFLmcJZbALQPqof7MQVXUqgMvWbFxpC2XMmJB",
+      "version": "1.0.2",
+      "gitBranch": "chore/gnosis-testnet-redeployment",
+      "gitCommitHash": "92c82236385a86519dff966741b9dca15ab444b9",
+      "deploymentTimestamp": 1707499417800,
+      "deployed": true
     },
     "CommitManagerV1U1": {
-      "deployed": true,
-      "deploymentTimestamp": 1701860991241,
-      "evmAddress": "0x356A91FBC31a29fd9feB45dEaA5aA8487544A37D",
-      "gitBranch": "main",
-      "gitCommitHash": "b34eab2f67543ed17ca054d3fe7b79bb039a660d",
-      "substrateAddress": "5EMjsczWsuztU7et8hHbF9BrN4HykgW3s5JnUABwjhRNEEoF",
-      "version": "1.0.1"
+      "evmAddress": "0x665b4849d9D194350Ae3F69E15A1b242C42cf10C",
+      "substrateAddress": "5EMjsczgggS5ZnHuAJoSBYoW81Y7w8T6WmEXPSxWR6g7mDxM",
+      "version": "1.0.2",
+      "gitBranch": "chore/gnosis-testnet-redeployment",
+      "gitCommitHash": "92c82236385a86519dff966741b9dca15ab444b9",
+      "deploymentTimestamp": 1707499443483,
+      "deployed": true
     },
     "ContentAsset": {
       "deployed": true,
@@ -62,13 +62,13 @@
       "substrateAddress": "5EMjscze2RssuPD9NTzW845nJ71CrxUNPNZqL9b1JFjmmpv4"
     },
     "Identity": {
-      "deployed": true,
-      "deploymentTimestamp": 1701860836270,
-      "evmAddress": "0x5068080E9147Cf03940fd5D476C12E914c56d634",
-      "gitBranch": "main",
-      "gitCommitHash": "b34eab2f67543ed17ca054d3fe7b79bb039a660d",
-      "substrateAddress": "5EMjsczcHao5HBao3he9tSdrqiiBz4R2a7gvsKFKbGAAQtM8",
-      "version": "1.0.1"
+      "evmAddress": "0xd3F06FFb6d69053276b2Ef35E5a9b185C3544Bb8",
+      "substrateAddress": "5EMjsd14eD99Mgcyssc26iJsQznQMPHSqFknLSAxycW4up5Q",
+      "version": "1.1.0",
+      "gitBranch": "chore/gnosis-testnet-redeployment",
+      "gitCommitHash": "92c82236385a86519dff966741b9dca15ab444b9",
+      "deploymentTimestamp": 1707499371301,
+      "deployed": true
     },
     "IdentityStorage": {
       "deployed": true,
@@ -85,22 +85,22 @@
       "version": null
     },
     "ParametersStorage": {
-      "deployed": true,
-      "deploymentTimestamp": 1701860689913,
-      "evmAddress": "0x623EEFBfcAa90EBD5553443010733D6e19856BCa",
-      "gitBranch": "main",
-      "gitCommitHash": "b34eab2f67543ed17ca054d3fe7b79bb039a660d",
-      "substrateAddress": "5EMjsczfruaW1KX4zh1gudZCtKaeLYBVTftgJgugkSQr69bC",
-      "version": "1.1.0"
+      "evmAddress": "0xe0358F4B95b66516c921F25b8BF997713c1eA807",
+      "substrateAddress": "5EMjsd176ooNehXAc1qNhNgSVYzgyorjVshHEYBHmN4nkBGn",
+      "version": "1.1.1",
+      "gitBranch": "chore/gnosis-testnet-redeployment",
+      "gitCommitHash": "92c82236385a86519dff966741b9dca15ab444b9",
+      "deploymentTimestamp": 1707499341954,
+      "deployed": true
     },
     "Profile": {
-      "deployed": true,
-      "deploymentTimestamp": 1701860917518,
-      "evmAddress": "0x1Ee0De229342847A2a26ba53aBc97E2906830602",
-      "gitBranch": "main",
-      "gitCommitHash": "b34eab2f67543ed17ca054d3fe7b79bb039a660d",
-      "substrateAddress": "5EMjsczSMzDaactihe3DLdJYv3NWXidTwQsc5fg7B3yexygs",
-      "version": "1.0.2"
+      "evmAddress": "0x7D6dF8Ab299236641B807489D51F29990CCd29Dc",
+      "substrateAddress": "5EMjsczmJpuMEMzkVQ3UfEgRL1DnhkEZzXvaoiL9R2nnVG17",
+      "version": "1.1.0",
+      "gitBranch": "chore/gnosis-testnet-redeployment",
+      "gitCommitHash": "92c82236385a86519dff966741b9dca15ab444b9",
+      "deploymentTimestamp": 1707499396820,
+      "deployed": true
     },
     "ProfileStorage": {
       "deployed": true,
