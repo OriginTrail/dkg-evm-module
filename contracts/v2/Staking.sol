@@ -39,6 +39,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint256 newTotalSupply
     );
     event RewardCollected(
+        bytes32 indexed agreementId,
         uint72 indexed identityId,
         bytes nodeId,
         address serviceAgreementAddress,
@@ -225,7 +226,14 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         else sasAddress = sasProxy.agreementV1U1StorageAddress();
 
         emit StakeIncreased(identityId, ps.getNodeId(identityId), sasAddress, oldStake, oldStake + delegatorsReward);
-        emit RewardCollected(identityId, ps.getNodeId(identityId), sasAddress, operatorFee, delegatorsReward);
+        emit RewardCollected(
+            agreementId,
+            identityId,
+            ps.getNodeId(identityId),
+            sasAddress,
+            operatorFee,
+            delegatorsReward
+        );
     }
 
     // solhint-disable-next-line no-empty-blocks
