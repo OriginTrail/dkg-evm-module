@@ -27,6 +27,7 @@ type ContractDeployments = {
       version: string;
       gitBranch: string;
       gitCommitHash: string;
+      deploymentBlock: number;
       deploymentTimestamp: number;
       deployed: boolean;
     };
@@ -211,7 +212,8 @@ export class Helpers {
       this.contractsForReinitialization.push(newContract.address);
     }
 
-    await this.updateDeploymentsJson(nameInHub, newContract.address);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await this.updateDeploymentsJson(nameInHub, newContract.address, newContract.receipt!.blockNumber);
 
     return await this.hre.ethers.getContractAt(this.getAbi(newContractName), newContract.address, deployer);
   }
@@ -316,7 +318,7 @@ export class Helpers {
     this.contractDeployments = { contracts: {} };
   }
 
-  public async updateDeploymentsJson(newContractName: string, newContractAddress: string) {
+  public async updateDeploymentsJson(newContractName: string, newContractAddress: string, deploymentBlock: number) {
     const contractABI = this.getAbi(newContractName);
     const isVersionedContract = contractABI.some(
       (abiEntry) => abiEntry.type === 'function' && abiEntry.name === 'version',
@@ -337,6 +339,7 @@ export class Helpers {
       version: contractVersion,
       gitBranch: this.getCurrentGitBranch(),
       gitCommitHash: this.getCurrentGitCommitHash(),
+      deploymentBlock: deploymentBlock,
       deploymentTimestamp: Date.now(),
       deployed: true,
     };

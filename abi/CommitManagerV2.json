@@ -422,13 +422,13 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
         "name": "assetContract",
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
@@ -452,7 +452,7 @@
         "type": "uint16"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
