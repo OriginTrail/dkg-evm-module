@@ -29,11 +29,12 @@ contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
         uint8 hashFunctionId,
         uint16 epoch,
         uint256 stateIndex,
-        uint72 indexed identityId
+        uint72 indexed identityId,
+        uint96 reward
     );
 
     string private constant _NAME = "ProofManagerV1U1";
-    string private constant _VERSION = "1.0.2";
+    string private constant _VERSION = "1.0.3";
 
     bool[4] public reqs = [false, false, false, false];
 
@@ -200,6 +201,12 @@ contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
                 challenge
             );
         }
+
+        uint96 reward = sasProxy.getAgreementTokenAmount(agreementId) /
+            ((r0 - sasProxy.getAgreementRewardedNodesNumber(agreementId, args.epoch)) +
+                (sasProxy.getAgreementEpochsNumber(agreementId) - (args.epoch + 1)) *
+                r0);
+
         emit ProofSubmitted(
             args.assetContract,
             args.tokenId,
@@ -207,13 +214,9 @@ contract ProofManagerV1U1 is Named, Versioned, ContractStatus, Initializable {
             args.hashFunctionId,
             args.epoch,
             latestFinalizedStateIndex,
-            identityId
+            identityId,
+            reward
         );
-
-        uint96 reward = sasProxy.getAgreementTokenAmount(agreementId) /
-            ((r0 - sasProxy.getAgreementRewardedNodesNumber(agreementId, args.epoch)) +
-                (sasProxy.getAgreementEpochsNumber(agreementId) - (args.epoch + 1)) *
-                r0);
 
         stakingContract.addReward(agreementId, identityId, reward);
         sasProxy.setAgreementTokenAmount(agreementId, sasProxy.getAgreementTokenAmount(agreementId) - reward);

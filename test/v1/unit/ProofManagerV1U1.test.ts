@@ -258,8 +258,8 @@ describe('@v1 @unit ProofManagerV1U1 contract', function () {
     expect(await ProofManagerV1U1.name()).to.equal('ProofManagerV1U1');
   });
 
-  it('The contract is version "1.0.2"', async () => {
-    expect(await ProofManagerV1U1.version()).to.equal('1.0.2');
+  it('The contract is version "1.0.3"', async () => {
+    expect(await ProofManagerV1U1.version()).to.equal('1.0.3');
   });
 
   it('Create a new asset, update and finalize update, teleport to the proof phase and check if window is open, expect true', async () => {
