@@ -15,22 +15,24 @@
       "substrateAddress": "5EMjsczQYos6eg1jtTqPi8GQ1VcNswLPcVaBz7n522r9iF4X"
     },
     "CommitManagerV1": {
-      "deployed": true,
-      "deploymentTimestamp": 1703088416280,
-      "evmAddress": "0x110D4098b474a4f88A75859e0659e8900098d968",
-      "gitBranch": "main",
-      "gitCommitHash": "56fd79b5ed1d45284edba9f3f88fe7d14c8c2287",
-      "substrateAddress": "5EMjsczPbJKG8N6fzYRadZt9MqTbPdLe9nCHrDTfe7trhU4z",
-      "version": "1.0.1"
+      "evmAddress": "0x683b2c3DaDb048265e6e68384b70472CeCC82a23",
+      "substrateAddress": "5EMjsczh4Tzp74KsC3WVBKv4ZUim6VoXKSCiLA8a7C7BcKpX",
+      "version": "1.0.2",
+      "gitBranch": "gnosis-mainnet-delegations",
+      "gitCommitHash": "5756f47b75b5c1e9503ecbb3c905fac3ba7f75ea",
+      "deploymentBlock": 4319957,
+      "deploymentTimestamp": 1707917858791,
+      "deployed": true
     },
     "CommitManagerV1U1": {
-      "deployed": true,
-      "deploymentTimestamp": 1703088463592,
-      "evmAddress": "0x4816D8314552FD198286AaFc91d0fD71ba4d08bC",
-      "gitBranch": "main",
-      "gitCommitHash": "56fd79b5ed1d45284edba9f3f88fe7d14c8c2287",
-      "substrateAddress": "5EMjsczacvb7NQEqwvFDdiP1dK4wqpVUYML5Vs9ba32ET4UB",
-      "version": "1.0.1"
+      "evmAddress": "0x7e18a80325d4C91b8d2D964606c400E9a065dD11",
+      "substrateAddress": "5EMjsczmSaKbQCG2BFnDWH2in2QgK7hMLq66AcRXE4QPhKnT",
+      "version": "1.0.2",
+      "gitBranch": "gnosis-mainnet-delegations",
+      "gitCommitHash": "5756f47b75b5c1e9503ecbb3c905fac3ba7f75ea",
+      "deploymentBlock": 4319962,
+      "deploymentTimestamp": 1707917924369,
+      "deployed": true
     },
     "ContentAsset": {
       "deployed": true,
@@ -66,13 +68,14 @@
       "version": "1.0.2"
     },
     "Identity": {
-      "deployed": true,
-      "deploymentTimestamp": 1703088322715,
-      "evmAddress": "0xCBECb2781A40825A23C166Dbe6825f51D08db8f3",
-      "gitBranch": "main",
-      "gitCommitHash": "56fd79b5ed1d45284edba9f3f88fe7d14c8c2287",
-      "substrateAddress": "5EMjsd1334rVcvDeZ6wz5fTb6GYfLwpht8aYCyuZi8TkvpcF",
-      "version": "1.0.1"
+      "evmAddress": "0x8B5d66e363CF622E1448670F344f887C5eb2411f",
+      "substrateAddress": "5EMjsczp6n3UXMnkZq7Yb92MXqb3w5ZqztjVq1zcESNMYydq",
+      "version": "1.1.0",
+      "gitBranch": "gnosis-mainnet-delegations",
+      "gitCommitHash": "5756f47b75b5c1e9503ecbb3c905fac3ba7f75ea",
+      "deploymentBlock": 4319953,
+      "deploymentTimestamp": 1707917812243,
+      "deployed": true
     },
     "IdentityStorage": {
       "deployed": true,
@@ -89,22 +92,24 @@
       "version": null
     },
     "ParametersStorage": {
-      "deployed": true,
-      "deploymentTimestamp": 1703088171089,
-      "evmAddress": "0x8Bfe40FFAa1a204a7A2D60365640A85e48FA951e",
-      "gitBranch": "main",
-      "gitCommitHash": "56fd79b5ed1d45284edba9f3f88fe7d14c8c2287",
-      "substrateAddress": "5EMjsczpE5a5PPW2fV5BnxvaoNxNGneDyS88zUtLBbcXuTPr",
-      "version": "1.1.0"
+      "evmAddress": "0x45ca950f69663DDCD98B66D3a2d4F590cCe84bb1",
+      "substrateAddress": "5EMjsczaADgKRgqA5d5yXjY5ADoduwVUc5EihPvKyebYYC82",
+      "version": "1.1.1",
+      "gitBranch": "gnosis-mainnet-delegations",
+      "gitCommitHash": "5756f47b75b5c1e9503ecbb3c905fac3ba7f75ea",
+      "deploymentBlock": 4319951,
+      "deploymentTimestamp": 1707917780095,
+      "deployed": true
     },
     "Profile": {
-      "deployed": true,
-      "deploymentTimestamp": 1703088390972,
-      "evmAddress": "0xE2A60D19bD09E2a853F196Ff00d9b3802E0Fc989",
-      "gitBranch": "main",
-      "gitCommitHash": "56fd79b5ed1d45284edba9f3f88fe7d14c8c2287",
-      "substrateAddress": "5EMjsd17bA6vjNf88YituZXLYXWVbXbHPc9P9CrgDi1ksGYv",
-      "version": "1.0.2"
+      "evmAddress": "0x1Bb47313044B50b69b54cf4E4652B367c5614e99",
+      "substrateAddress": "5EMjsczRj76gftzPKgLtT7cJBjkFbYYrt3p815eUExwvnqqK",
+      "version": "1.1.1",
+      "gitBranch": "gnosis-mainnet-delegations",
+      "gitCommitHash": "5756f47b75b5c1e9503ecbb3c905fac3ba7f75ea",
+      "deploymentBlock": 4319955,
+      "deploymentTimestamp": 1707917833454,
+      "deployed": true
     },
     "ProfileStorage": {
       "deployed": true,

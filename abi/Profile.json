@@ -99,6 +99,17 @@
   {
     "inputs": [
       {
+        "internalType": "uint8",
+        "name": "operatorFee",
+        "type": "uint8"
+      }
+    ],
+    "name": "OperatorFeeOutOfRange",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string",
         "name": "tokenName",
         "type": "string"
@@ -211,6 +222,12 @@
         "internalType": "address",
         "name": "sharesContractAddress",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "initialOperatorFee",
+        "type": "uint8"
       }
     ],
     "name": "ProfileCreated",
