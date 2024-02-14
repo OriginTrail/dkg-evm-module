@@ -22,12 +22,18 @@ import {UnorderedIndexableContractDynamicSetLib} from "./utils/UnorderedIndexabl
 import {ADMIN_KEY, OPERATIONAL_KEY} from "./constants/IdentityConstants.sol";
 
 contract Profile is Named, Versioned, ContractStatus, Initializable {
-    event ProfileCreated(uint72 indexed identityId, bytes nodeId, address adminWallet, address sharesContractAddress);
+    event ProfileCreated(
+        uint72 indexed identityId,
+        bytes nodeId,
+        address adminWallet,
+        address sharesContractAddress,
+        uint8 initialOperatorFee
+    );
     event ProfileDeleted(uint72 indexed identityId);
     event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
 
     string private constant _NAME = "Profile";
-    string private constant _VERSION = "1.1.0";
+    string private constant _VERSION = "1.1.1";
 
     HashingProxy public hashingProxy;
     Identity public identityContract;
@@ -119,6 +125,9 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         if (ps.sharesSymbols(sharesTokenSymbol)) {
             revert ProfileErrors.SharesTokenSymbolAlreadyExists(sharesTokenSymbol);
         }
+        if (initialOperatorFee > 100) {
+            revert ProfileErrors.OperatorFeeOutOfRange(initialOperatorFee);
+        }
         uint72 identityId = id.createIdentity(msg.sender, adminWallet);
         id.addOperationalWallets(identityId, operationalWallets);
 
@@ -129,7 +138,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
 
         stakingStorage.setOperatorFee(identityId, initialOperatorFee);
 
-        emit ProfileCreated(identityId, nodeId, adminWallet, address(sharesContract));
+        emit ProfileCreated(identityId, nodeId, adminWallet, address(sharesContract), initialOperatorFee);
     }
 
     function setAsk(uint72 identityId, uint96 ask) external onlyIdentityOwner(identityId) {

@@ -11,6 +11,7 @@ library ProfileErrors {
     error EmptySharesTokenSymbol();
     error SharesTokenNameAlreadyExists(string tokenName);
     error SharesTokenSymbolAlreadyExists(string tokenSymbol);
+    error OperatorFeeOutOfRange(uint8 operatorFee);
     error ZeroAsk();
     error NoOperatorFees(uint72 identityId);
     error ProfileDoesntExist(uint72 identityId);
