@@ -10,6 +10,7 @@ import {Initializable} from "../interface/Initializable.sol";
 import {Named} from "../interface/Named.sol";
 import {Versioned} from "../interface/Versioned.sol";
 import {GeneralErrors} from "../errors/GeneralErrors.sol";
+import {ServiceAgreementErrors} from "../errors/ServiceAgreementErrors.sol";
 
 contract ServiceAgreementStorageProxy is Named, Versioned, HubDependent, Initializable {
     string private constant _NAME = "ServiceAgreementStorageProxy";
@@ -124,8 +125,10 @@ contract ServiceAgreementStorageProxy is Named, Versioned, HubDependent, Initial
                 [tokenAmount, storageV1U1.getAgreementUpdateTokenAmount(agreementId)],
                 scoreFunctionIdAndProofWindowOffsetPerc
             );
-        } else {
+        } else if (this.agreementV1U1Exists(agreementId)) {
             return storageV1U1.getAgreementData(agreementId);
+        } else {
+            revert ServiceAgreementErrors.ServiceAgreementDoesntExist(agreementId);
         }
     }
 
