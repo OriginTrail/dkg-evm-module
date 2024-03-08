@@ -71,7 +71,7 @@ Hardhat has plenty of other useful commands, extended by the installed plugins. 
 - `decode`: Decodes encoded ABI data (e.g. input data of transaction).
 - `encode_selector`: Calculates EVM function/event/error selector (sighash).
 - `encode_data`: Encodes data needed for low-level contract calls.
-- `clear_sharding_table`: Removes nodes from sharding table based on Node IDs from the given CSV file (example usage: `npx hardhat clear_sharding_table --file-path scripts/peers.csv --network otp_devnet`).
+- `clear_sharding_table`: Removes nodes from sharding table based on Node IDs from the given CSV file (example usage: `npx hardhat clear_sharding_table --file-path ./peers.csv --network otp_devnet`).
 
 These tasks can be run using the `npx hardhat <task-name>` command. For example, to decode input data, you can run:
 
