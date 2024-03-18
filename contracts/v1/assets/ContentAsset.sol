@@ -255,12 +255,15 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
 
         uint256 startTime;
         uint16 epochsNumber;
+        uint16 currentEpoch;
         uint128 epochLength;
         (startTime, epochsNumber, epochLength, , ) = sasProxy.getAgreementData(agreementId);
 
         if (block.timestamp > startTime + epochsNumber * epochLength) {
             revert ContentAssetErrors.AssetExpired(tokenId);
         }
+
+        currentEpoch = uint16((block.timestamp - startTime) / epochLength);
 
         bytes32 unfinalizedState = uss.getUnfinalizedState(tokenId);
         uint256 unfinalizedStateIndex = cas.getAssertionIdsLength(tokenId);
@@ -279,11 +282,16 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         }
 
         uint96 updateTokenAmount = sasProxy.getAgreementUpdateTokenAmount(agreementId);
+
         if (sasProxy.agreementV1Exists(agreementId)) {
             sasProxy.deleteServiceAgreementV1U1Object(agreementId);
         } else {
             sasProxy.setAgreementUpdateTokenAmount(agreementId, 0);
         }
+
+        sasProxy.deleteCommitsCount(keccak256(abi.encodePacked(agreementId, currentEpoch, unfinalizedStateIndex)));
+        sasProxy.deleteUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)));
+        sasProxy.setV1U1AgreementEpochSubmissionHead(agreementId, currentEpoch, unfinalizedStateIndex, 0);
 
         sasProxy.transferV1U1AgreementTokens(msg.sender, updateTokenAmount);
 
