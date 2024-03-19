@@ -236,6 +236,15 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
             block.timestamp + parametersStorage.updateCommitWindowDuration()
         );
 
+        uint16 currentEpoch = uint16((block.timestamp - startTime) / epochLength);
+        bytes32 epochStateId = keccak256(abi.encodePacked(agreementId, currentEpoch, unfinalizedStateIndex));
+        if (sasProxy.getCommitsCount(epochStateId) != NULL) {
+            sasProxy.deleteCommitsCount(epochStateId);
+        }
+        if (sasProxy.getV1U1AgreementEpochSubmissionHead(agreementId, currentEpoch, unfinalizedStateIndex) != NULL) {
+            sasProxy.setV1U1AgreementEpochSubmissionHead(agreementId, currentEpoch, unfinalizedStateIndex, NULL);
+        }
+
         emit AssetStateUpdated(contentAssetStorageAddress, tokenId, unfinalizedStateIndex, updateTokenAmount);
     }
 
