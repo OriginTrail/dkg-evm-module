@@ -236,15 +236,6 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
             block.timestamp + parametersStorage.updateCommitWindowDuration()
         );
 
-        uint16 currentEpoch = uint16((block.timestamp - startTime) / epochLength);
-        bytes32 epochStateId = keccak256(abi.encodePacked(agreementId, currentEpoch, unfinalizedStateIndex));
-        if (sasProxy.getCommitsCount(epochStateId) != 0) {
-            sasProxy.deleteCommitsCount(epochStateId);
-        }
-        if (sasProxy.getV1U1AgreementEpochSubmissionHead(agreementId, currentEpoch, unfinalizedStateIndex) != 0) {
-            sasProxy.setV1U1AgreementEpochSubmissionHead(agreementId, currentEpoch, unfinalizedStateIndex, 0);
-        }
-
         emit AssetStateUpdated(contentAssetStorageAddress, tokenId, unfinalizedStateIndex, updateTokenAmount);
     }
 
@@ -313,6 +304,44 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
             cas.getAssertionIdsLength(tokenId),
             updateTokenAmount
         );
+    }
+
+    function clearOldCommitsMetadata(uint256 tokenId) external onlyAssetOwner(tokenId) {
+        ContentAssetStorage cas = contentAssetStorage;
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+
+        address contentAssetStorageAddress = address(cas);
+
+        bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
+
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            HASH_FUNCTION_ID,
+            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
+        );
+
+        uint256 unfinalizedStateIndex = cas.getAssertionIdsLength(tokenId);
+
+        if (
+            block.timestamp <=
+            sasProxy.getUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)))
+        ) {
+            revert ContentAssetErrors.PendingUpdateFinalization(
+                contentAssetStorageAddress,
+                tokenId,
+                unfinalizedStateIndex
+            );
+        }
+
+        uint256 startTime;
+        uint16 currentEpoch;
+        uint128 epochLength;
+        (startTime, , epochLength, , ) = sasProxy.getAgreementData(agreementId);
+
+        currentEpoch = uint16((block.timestamp - startTime) / epochLength);
+
+        sasProxy.deleteCommitsCount(keccak256(abi.encodePacked(agreementId, currentEpoch, unfinalizedStateIndex)));
+        sasProxy.deleteUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)));
+        sasProxy.setV1U1AgreementEpochSubmissionHead(agreementId, currentEpoch, unfinalizedStateIndex, 0);
     }
 
     function extendAssetStoringPeriod(

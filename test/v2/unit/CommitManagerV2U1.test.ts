@@ -22,7 +22,7 @@ import {
 } from '../../../typechain';
 import { ContentAssetStructs } from '../../../typechain/contracts/v1/assets/ContentAsset';
 import { ServiceAgreementStructsV1 } from '../../../typechain/contracts/v1/CommitManagerV1U1';
-import { ServiceAgreementStructsV2 } from '../../../typechain/contracts/v2/CommitManagerV2U1';
+import { ServiceAgreementStructsV2 } from '../../../typechain/contracts/v2/CommitManagerV1U1.sol/CommitManagerV2U1';
 
 const UINT256_MAX_BN = BigNumber.from(2).pow(256).sub(1);
 const UINT64_MAX_BN = BigNumber.from(2).pow(64).sub(1);

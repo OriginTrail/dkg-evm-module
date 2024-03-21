@@ -340,7 +340,7 @@ describe('@v1 @unit ContentAsset contract', function () {
     const updateCommitDeadline = await ServiceAgreementStorageProxy.getUpdateCommitsDeadline(stateId);
 
     await expect(commitCount).to.be.equal(0);
-    await expect(updateCommitDeadline.toNumber()).to.be.equal(0);
+    await expect(updateCommitDeadline).to.be.equal(0);
   });
 
   it('Cancel asset state update using non-owner account, expect to be reverted', async () => {
