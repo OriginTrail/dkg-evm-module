@@ -53,6 +53,8 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
     ServiceAgreementV1 public serviceAgreementV1;
     UnfinalizedStateStorage public unfinalizedStateStorage;
 
+    bool private _isOldMetadataClearingDisabled = false;
+
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependent(hubAddress) {}
 
@@ -307,6 +309,10 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
     }
 
     function clearOldCommitsMetadata(uint256 tokenId) external onlyAssetOwner(tokenId) {
+        if (_isOldMetadataClearingDisabled) {
+            revert("Function is disabled");
+        }
+
         ContentAssetStorage cas = contentAssetStorage;
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
 
@@ -445,6 +451,10 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         sasV1.addUpdateTokens(msg.sender, agreementId, tokenAmount);
 
         emit AssetUpdatePaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
+    }
+
+    function setOldMetadataClearingFlag(bool _flag) external onlyHubOwner {
+        _isOldMetadataClearingDisabled = _flag;
     }
 
     function _createAsset(

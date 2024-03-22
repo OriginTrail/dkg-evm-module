@@ -1,0 +1,175 @@
+{
+  "contracts": {
+    "Hub": {
+      "evmAddress": "0xc9a1c15d6B5DB1DffC067CA23B68C8aa99D042C1",
+      "version": "2.0.0",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 2195,
+      "deploymentTimestamp": 1711097519019,
+      "deployed": true
+    },
+    "HubController": {
+      "evmAddress": "0xe47ED094d87828E31B5D955D089be2A44d5D9Bb9",
+      "version": "1.0.2",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 2196,
+      "deploymentTimestamp": 1711097519601,
+      "deployed": true
+    },
+    "Token": {
+      "evmAddress": "0x5Ab2232a0c296f0ae6D73140bFeFc4316970224F",
+      "version": null,
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 2198,
+      "deploymentTimestamp": 1711097519887,
+      "deployed": true
+    },
+    "ProfileStorage": {
+      "evmAddress": "0xebDCd07Bf0ee267f13C0A1e553972C0EE11d3361",
+      "version": "1.0.0",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3202,
+      "deploymentTimestamp": 1711097543655,
+      "deployed": true
+    },
+    "ShardingTableStorage": {
+      "evmAddress": "0x10672236862DB3D90A145185a0832a22F142183B",
+      "version": "2.0.0",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3205,
+      "deploymentTimestamp": 1711097544237,
+      "deployed": true
+    },
+    "StakingStorage": {
+      "evmAddress": "0x464247623b6A12D61E69Bee136a0c5E75A45Fea9",
+      "version": "1.0.0",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3207,
+      "deploymentTimestamp": 1711097544963,
+      "deployed": true
+    },
+    "ShardingTable": {
+      "evmAddress": "0x5418515e944cb8C55fbb6C875FE1d9b1B4ECC09D",
+      "version": "2.0.0",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3210,
+      "deploymentTimestamp": 1711097546425,
+      "deployed": true
+    },
+    "IdentityStorage": {
+      "evmAddress": "0x407FB1A641098BDf7a9Ef5a84e910a1F996c700f",
+      "version": "2.0.0",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3213,
+      "deploymentTimestamp": 1711097547404,
+      "deployed": true
+    },
+    "ParametersStorage": {
+      "evmAddress": "0xBa01DbbfCEe0c4577c674Ea443e14560C4a67Db4",
+      "version": "1.1.1",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3215,
+      "deploymentTimestamp": 1711097547965,
+      "deployed": true
+    },
+    "ServiceAgreementStorageV1": {
+      "evmAddress": "0xBc3Bf6C2c8f783Cd6A992941477c0aE89111cf2c",
+      "version": "1.0.0",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3220,
+      "deploymentTimestamp": 1711097548957,
+      "deployed": true
+    },
+    "ServiceAgreementStorageV1U1": {
+      "evmAddress": "0x84BE2c6E16D95511158E848FD664e65AC76029F4",
+      "version": "1.0.0",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3223,
+      "deploymentTimestamp": 1711097549539,
+      "deployed": true
+    },
+    "ServiceAgreementStorageProxy": {
+      "evmAddress": "0xB1F9Fc38c52E32468a0b025a33831b457CE97F39",
+      "version": "1.0.0",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3226,
+      "deploymentTimestamp": 1711097550182,
+      "deployed": true
+    },
+    "NodeOperatorFeeChangesStorage": {
+      "evmAddress": "0x783e40fBae3E5C427102b496cf8621Fc5dD32F80",
+      "version": "2.0.0",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3229,
+      "deploymentTimestamp": 1711097550767,
+      "deployed": true
+    },
+    "Staking": {
+      "evmAddress": "0x3b63985303D5636F6b60315B45531d176Af2c399",
+      "version": "2.0.0",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3231,
+      "deploymentTimestamp": 1711097551349,
+      "deployed": true
+    },
+    "Identity": {
+      "evmAddress": "0xa84E50408f9dC576309102da03Ed8D6A82b7869B",
+      "version": "1.1.0",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3234,
+      "deploymentTimestamp": 1711097553480,
+      "deployed": true
+    },
+    "HashingProxy": {
+      "evmAddress": "0xfa994A0DF5E4139e78bEdBA699005a21A2990e4d",
+      "version": "1.0.1",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3238,
+      "deploymentTimestamp": 1711097554089,
+      "deployed": true
+    },
+    "SHA256": {
+      "evmAddress": "0xfa4d1950831e0aE5bEc5663419B5A7Bf50F7175B",
+      "version": null,
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3240,
+      "deploymentTimestamp": 1711097554248,
+      "deployed": true
+    },
+    "WhitelistStorage": {
+      "evmAddress": "0x91416df12C887453E85267487D340f690C00f973",
+      "version": "1.0.0",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3243,
+      "deploymentTimestamp": 1711097555331,
+      "deployed": true
+    },
+    "Profile": {
+      "evmAddress": "0xC531715A0aEe9FD389e453bB364F05704EDEC0b0",
+      "version": "1.1.1",
+      "gitBranch": "fix/cancel-update",
+      "gitCommitHash": "3810c7ac6e4864d57c04a811ead4a2cfde8b21bc",
+      "deploymentBlock": 3245,
+      "deploymentTimestamp": 1711097555900,
+      "deployed": true
+    }
+  }
+}
