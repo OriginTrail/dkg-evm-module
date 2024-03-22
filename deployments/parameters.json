@@ -165,6 +165,78 @@
     }
   },
   "devnet": {
+    "overrides": {
+      "gnosis_chiado_dev": {
+        "CommitManagerV1": {
+          "reqs": [
+            {
+              "desiredValue": false,
+              "getterArgs": [0],
+              "setter": "setReq",
+              "setterArgs": [0, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [1],
+              "setter": "setReq",
+              "setterArgs": [1, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [2],
+              "setter": "setReq",
+              "setterArgs": [2, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [3],
+              "setter": "setReq",
+              "setterArgs": [3, false]
+            }
+          ]
+        },
+        "CommitManagerV1U1": {
+          "reqs": [
+            {
+              "desiredValue": false,
+              "getterArgs": [0],
+              "setter": "setReq",
+              "setterArgs": [0, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [1],
+              "setter": "setReq",
+              "setterArgs": [1, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [2],
+              "setter": "setReq",
+              "setterArgs": [2, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [3],
+              "setter": "setReq",
+              "setterArgs": [3, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [4],
+              "setter": "setReq",
+              "setterArgs": [4, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [5],
+              "setter": "setReq",
+              "setterArgs": [5, false]
+            }
+          ]
+        }
+      }
+    },
     "CommitManagerV1": {
       "reqs": [
         {
@@ -330,6 +402,78 @@
     }
   },
   "testnet": {
+    "overrides": {
+      "gnosis_chiado_test": {
+        "CommitManagerV1": {
+          "reqs": [
+            {
+              "desiredValue": false,
+              "getterArgs": [0],
+              "setter": "setReq",
+              "setterArgs": [0, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [1],
+              "setter": "setReq",
+              "setterArgs": [1, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [2],
+              "setter": "setReq",
+              "setterArgs": [2, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [3],
+              "setter": "setReq",
+              "setterArgs": [3, false]
+            }
+          ]
+        },
+        "CommitManagerV1U1": {
+          "reqs": [
+            {
+              "desiredValue": false,
+              "getterArgs": [0],
+              "setter": "setReq",
+              "setterArgs": [0, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [1],
+              "setter": "setReq",
+              "setterArgs": [1, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [2],
+              "setter": "setReq",
+              "setterArgs": [2, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [3],
+              "setter": "setReq",
+              "setterArgs": [3, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [4],
+              "setter": "setReq",
+              "setterArgs": [4, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [5],
+              "setter": "setReq",
+              "setterArgs": [5, false]
+            }
+          ]
+        }
+      }
+    },
     "CommitManagerV1": {
       "reqs": [
         {
