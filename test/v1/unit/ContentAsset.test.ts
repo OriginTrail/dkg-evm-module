@@ -313,11 +313,34 @@ describe('@v1 @unit ContentAsset contract', function () {
   it('Cancel asset state update after failed update commit phase, expect previous state to be active', async () => {
     const tokenId = await createAsset();
     await updateAsset(tokenId);
+
+    const keyword = hre.ethers.utils.solidityPack(
+      ['address', 'bytes32'],
+      [ContentAssetStorage.address, assetInputStruct.assertionId],
+    );
+
+    const agreementId = hre.ethers.utils.soliditySha256(
+      ['address', 'uint256', 'bytes'],
+      [ContentAssetStorage.address, tokenId, keyword],
+    );
+    const epochStateId = hre.ethers.utils.solidityKeccak256(['bytes32', 'uint16', 'uint256'], [agreementId, 0, 1]);
+    const ServiceAgreementStorageProxy = await hre.ethers.getContract<ServiceAgreementStorageProxy>(
+      'ServiceAgreementStorageProxy',
+    );
+
+    await ServiceAgreementStorageProxy.incrementCommitsCount(epochStateId);
+
     await time.increase(await ParametersStorage.updateCommitWindowDuration());
 
     await expect(ContentAsset.cancelAssetStateUpdate(tokenId))
       .to.emit(ContentAsset, 'AssetStateUpdateCanceled')
       .withArgs(ContentAssetStorage.address, tokenId, 1, assetUpdateArgs.tokenAmount);
+    const commitCount = await ServiceAgreementStorageProxy.getCommitsCount(epochStateId);
+    const stateId = hre.ethers.utils.soliditySha256(['bytes32', 'uint256'], [agreementId, 1]);
+    const updateCommitDeadline = await ServiceAgreementStorageProxy.getUpdateCommitsDeadline(stateId);
+
+    await expect(commitCount).to.be.equal(0);
+    await expect(updateCommitDeadline).to.be.equal(0);
   });
 
   it('Cancel asset state update using non-owner account, expect to be reverted', async () => {

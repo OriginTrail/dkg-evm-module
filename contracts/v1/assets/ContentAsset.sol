@@ -53,6 +53,8 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
     ServiceAgreementV1 public serviceAgreementV1;
     UnfinalizedStateStorage public unfinalizedStateStorage;
 
+    bool private _isOldMetadataClearingDisabled = false;
+
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependent(hubAddress) {}
 
@@ -255,12 +257,15 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
 
         uint256 startTime;
         uint16 epochsNumber;
+        uint16 currentEpoch;
         uint128 epochLength;
         (startTime, epochsNumber, epochLength, , ) = sasProxy.getAgreementData(agreementId);
 
         if (block.timestamp > startTime + epochsNumber * epochLength) {
             revert ContentAssetErrors.AssetExpired(tokenId);
         }
+
+        currentEpoch = uint16((block.timestamp - startTime) / epochLength);
 
         bytes32 unfinalizedState = uss.getUnfinalizedState(tokenId);
         uint256 unfinalizedStateIndex = cas.getAssertionIdsLength(tokenId);
@@ -279,11 +284,16 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         }
 
         uint96 updateTokenAmount = sasProxy.getAgreementUpdateTokenAmount(agreementId);
+
         if (sasProxy.agreementV1Exists(agreementId)) {
             sasProxy.deleteServiceAgreementV1U1Object(agreementId);
         } else {
             sasProxy.setAgreementUpdateTokenAmount(agreementId, 0);
         }
+
+        sasProxy.deleteCommitsCount(keccak256(abi.encodePacked(agreementId, currentEpoch, unfinalizedStateIndex)));
+        sasProxy.deleteUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)));
+        sasProxy.setV1U1AgreementEpochSubmissionHead(agreementId, currentEpoch, unfinalizedStateIndex, 0);
 
         sasProxy.transferV1U1AgreementTokens(msg.sender, updateTokenAmount);
 
@@ -296,6 +306,48 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
             cas.getAssertionIdsLength(tokenId),
             updateTokenAmount
         );
+    }
+
+    function clearOldCommitsMetadata(uint256 tokenId) external onlyAssetOwner(tokenId) {
+        if (_isOldMetadataClearingDisabled) {
+            revert("Function is disabled");
+        }
+
+        ContentAssetStorage cas = contentAssetStorage;
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+
+        address contentAssetStorageAddress = address(cas);
+
+        bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
+
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            HASH_FUNCTION_ID,
+            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
+        );
+
+        uint256 unfinalizedStateIndex = cas.getAssertionIdsLength(tokenId);
+
+        if (
+            block.timestamp <=
+            sasProxy.getUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)))
+        ) {
+            revert ContentAssetErrors.PendingUpdateFinalization(
+                contentAssetStorageAddress,
+                tokenId,
+                unfinalizedStateIndex
+            );
+        }
+
+        uint256 startTime;
+        uint16 currentEpoch;
+        uint128 epochLength;
+        (startTime, , epochLength, , ) = sasProxy.getAgreementData(agreementId);
+
+        currentEpoch = uint16((block.timestamp - startTime) / epochLength);
+
+        sasProxy.deleteCommitsCount(keccak256(abi.encodePacked(agreementId, currentEpoch, unfinalizedStateIndex)));
+        sasProxy.deleteUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)));
+        sasProxy.setV1U1AgreementEpochSubmissionHead(agreementId, currentEpoch, unfinalizedStateIndex, 0);
     }
 
     function extendAssetStoringPeriod(
@@ -399,6 +451,10 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         sasV1.addUpdateTokens(msg.sender, agreementId, tokenAmount);
 
         emit AssetUpdatePaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
+    }
+
+    function setOldMetadataClearingFlag(bool _flag) external onlyHubOwner {
+        _isOldMetadataClearingDisabled = _flag;
     }
 
     function _createAsset(

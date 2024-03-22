@@ -21,7 +21,7 @@ import {
 } from '../../../typechain';
 import { ContentAssetStructs } from '../../../typechain/contracts/v1/assets/ContentAsset';
 import { ServiceAgreementStructsV1 } from '../../../typechain/contracts/v1/CommitManagerV1';
-import { ServiceAgreementStructsV2 } from '../../../typechain/contracts/v2/CommitManagerV2';
+import { ServiceAgreementStructsV2 } from '../../../typechain/contracts/v2/CommitManagerV1.sol/CommitManagerV2';
 
 type CommitManagerV2Fixture = {
   accounts: SignerWithAddress[];
