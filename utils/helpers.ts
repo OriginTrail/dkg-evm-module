@@ -55,9 +55,19 @@ type ContractParametersConfig = {
   [parameter: string]: ContractParameter | string | ContractParameter[];
 };
 
-type EnvironmentParametersConfig = {
+type BaseEnvironmentParametersConfig = {
   [contractName: string]: ContractParametersConfig;
 };
+
+type OverridesConfig = {
+  overrides?: {
+    [network: string]: {
+      [contractName: string]: ContractParametersConfig;
+    };
+  };
+};
+
+type EnvironmentParametersConfig = BaseEnvironmentParametersConfig & OverridesConfig;
 
 type ParametersConfig = {
   [environment: string]: EnvironmentParametersConfig;
@@ -230,8 +240,13 @@ export class Helpers {
   }
 
   public async updateContractParameters(contractName: string, contract: Contract) {
-    const parameters =
-      this.parametersConfig[this.hre.network.config.environment as keyof ParametersConfig]?.[contractName];
+    let parameters = this.parametersConfig[this.hre.network.config.environment]?.[contractName];
+
+    const overrideParameters =
+      this.parametersConfig[this.hre.network.config.environment]?.overrides?.[this.hre.network.name]?.[contractName];
+
+    parameters = { ...parameters, ...overrideParameters };
+
     if (!parameters) {
       return;
     }
