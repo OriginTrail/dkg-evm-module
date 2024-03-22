@@ -498,7 +498,7 @@
     "overrides": {
       "otp_mainnet": {
         "ParametersStorage": {
-          "stakeWithdrawalDelay": "2419200",
+          "stakeWithdrawalDelay": "300",
           "updateCommitWindowDuration": "3600"
         }
       },
