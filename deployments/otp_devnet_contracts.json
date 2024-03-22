@@ -33,13 +33,14 @@
       "deployed": true
     },
     "ContentAsset": {
-      "deployed": true,
-      "deploymentTimestamp": 1701163615555,
-      "evmAddress": "0xC13016c8E8053c482F806A4AEb1e91E045036c82",
+      "evmAddress": "0xC486F2F47D42fD65eC932354c39FD37F848727c6",
+      "substrateAddress": "5EMjsd11Z6ZhxveSJkRNWMWUfRpyojNDKu66p83W8rcLNFUQ",
+      "version": "1.0.3",
       "gitBranch": "main",
-      "gitCommitHash": "7c5fb6a77323e20d2a9be46e0533c9453300db4a",
-      "substrateAddress": "5EMjsczztHhHRgmof318UvrkvZegnvBgCUyo3fMPurMC6uJB",
-      "version": "1.0.2"
+      "gitCommitHash": "a19d8d3030a292863fe2b84635f7917575952b32",
+      "deploymentBlock": 4250400,
+      "deploymentTimestamp": 1711100907997,
+      "deployed": true
     },
     "ContentAssetStorage": {
       "deployed": true,

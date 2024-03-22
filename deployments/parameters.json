@@ -495,6 +495,84 @@
     }
   },
   "mainnet": {
+    "overrides": {
+      "otp_mainnet": {
+        "ParametersStorage": {
+          "stakeWithdrawalDelay": "2419200",
+          "updateCommitWindowDuration": "3600"
+        }
+      },
+      "gnosis_mainnet": {
+        "CommitManagerV1": {
+          "reqs": [
+            {
+              "desiredValue": false,
+              "getterArgs": [0],
+              "setter": "setReq",
+              "setterArgs": [0, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [1],
+              "setter": "setReq",
+              "setterArgs": [1, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [2],
+              "setter": "setReq",
+              "setterArgs": [2, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [3],
+              "setter": "setReq",
+              "setterArgs": [3, false]
+            }
+          ]
+        },
+        "CommitManagerV1U1": {
+          "reqs": [
+            {
+              "desiredValue": false,
+              "getterArgs": [0],
+              "setter": "setReq",
+              "setterArgs": [0, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [1],
+              "setter": "setReq",
+              "setterArgs": [1, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [2],
+              "setter": "setReq",
+              "setterArgs": [2, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [3],
+              "setter": "setReq",
+              "setterArgs": [3, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [4],
+              "setter": "setReq",
+              "setterArgs": [4, false]
+            },
+            {
+              "desiredValue": false,
+              "getterArgs": [5],
+              "setter": "setReq",
+              "setterArgs": [5, false]
+            }
+          ]
+        }
+      }
+    },
     "CommitManagerV1": {
       "reqs": [
         {
