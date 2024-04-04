@@ -72,31 +72,12 @@
         "type": "bytes32"
       }
     ],
-    "name": "exists",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      }
-    ],
     "name": "getCumulativeKnowledgeValue",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint96",
         "name": "",
-        "type": "uint256"
+        "type": "uint96"
       }
     ],
     "stateMutability": "view",
@@ -116,6 +97,25 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getIncentivesPool",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -282,67 +282,6 @@
         "type": "bytes32"
       }
     ],
-    "name": "getMetadata",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "knowledgeAssetStorageContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "operator",
-            "type": "address"
-          },
-          {
-            "internalType": "enum ParanetStructs.AccessPolicy",
-            "name": "minersAccessPolicy",
-            "type": "uint8"
-          },
-          {
-            "internalType": "enum ParanetStructs.AccessPolicy",
-            "name": "knowledgeAssetsInclusionPolicy",
-            "type": "uint8"
-          },
-          {
-            "internalType": "string",
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "cumulativeKnowledgeValue",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct ParanetStructs.ParanetMetadata",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      }
-    ],
     "name": "getMinersAccessPolicy",
     "outputs": [
       {
@@ -411,6 +350,67 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getParanetMetadata",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "knowledgeAssetStorageContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "operator",
+            "type": "address"
+          },
+          {
+            "internalType": "enum ParanetStructs.AccessPolicy",
+            "name": "minersAccessPolicy",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum ParanetStructs.AccessPolicy",
+            "name": "knowledgeAssetsInclusionPolicy",
+            "type": "uint8"
+          },
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "internalType": "uint96",
+            "name": "cumulativeKnowledgeValue",
+            "type": "uint96"
+          }
+        ],
+        "internalType": "struct ParanetStructs.ParanetMetadata",
+        "name": "",
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -555,6 +555,25 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "paranetExists",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "knowledgeAssetStorageContract",
         "type": "address"
@@ -583,9 +602,14 @@
         "internalType": "string",
         "name": "paranetDescription",
         "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "incentivesPool",
+        "type": "address"
       }
     ],
-    "name": "register",
+    "name": "registerParanet",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -658,9 +682,9 @@
         "type": "bytes32"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint96",
         "name": "cumulativeKnowledgeValue",
-        "type": "uint256"
+        "type": "uint96"
       }
     ],
     "name": "setCumulativeKnowledgeValue",
@@ -682,6 +706,24 @@
       }
     ],
     "name": "setDescription",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "incentivesPool",
+        "type": "address"
+      }
+    ],
+    "name": "setIncentivesPool",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -764,32 +806,9 @@
         "internalType": "bytes32",
         "name": "paranetId",
         "type": "bytes32"
-      },
-      {
-        "internalType": "address",
-        "name": "knowledgeAssetStorageContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
       }
     ],
-    "name": "setParanetKnowledgeAssetLocator",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "unregister",
+    "name": "unregisterParanet",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

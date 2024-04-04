@@ -18,12 +18,22 @@
         "type": "bytes32"
       },
       {
-        "internalType": "bytes32",
-        "name": "knowledgeAssetId",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "knowledgeAssetStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "metadata",
+        "type": "bytes"
       }
     ],
-    "name": "addSubmittedKnowledgeAsset",
+    "name": "addKnowledgeAsset",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -32,44 +42,17 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "paranetId",
+        "name": "knowledgeAssetId",
         "type": "bytes32"
       }
     ],
-    "name": "getCumulativeTracSpent",
+    "name": "getKnowledgeAssetLocator",
     "outputs": [
       {
-        "internalType": "uint96",
+        "internalType": "address",
         "name": "",
-        "type": "uint96"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getSubmittedKnowledgeAssets",
-    "outputs": [
-      {
-        "internalType": "bytes32[]",
-        "name": "",
-        "type": "bytes32[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getTotalSubmittedKnowledgeAssetsCount",
-    "outputs": [
+        "type": "address"
+      },
       {
         "internalType": "uint256",
         "name": "",
@@ -80,13 +63,46 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getTotalTracSpent",
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getKnowledgeAssetObject",
     "outputs": [
       {
-        "internalType": "uint96",
+        "components": [
+          {
+            "internalType": "address",
+            "name": "knowledgeAssetStorageContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "minerAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "paranetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "metadata",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct ParanetStructs.KnowledgeAsset",
         "name": "",
-        "type": "uint96"
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -96,16 +112,54 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "paranetId",
+        "name": "knowledgeAssetId",
         "type": "bytes32"
       }
     ],
-    "name": "getUnrewardedTracSpent",
+    "name": "getMetadata",
     "outputs": [
       {
-        "internalType": "uint96",
+        "internalType": "bytes",
         "name": "",
-        "type": "uint96"
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getMinerAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getParanetId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -125,8 +179,14 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "knowledgeMinerExists",
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "isParanetKnowledgeAsset",
     "outputs": [
       {
         "internalType": "bool",
@@ -151,26 +211,14 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "registerKnowledgeMiner",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      },
       {
         "internalType": "bytes32",
         "name": "knowledgeAssetId",
         "type": "bytes32"
       }
     ],
-    "name": "removeSubmittedKnowledgeAsset",
+    "name": "removeKnowledgeAsset",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -179,42 +227,16 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "paranetId",
+        "name": "knowledgeAssetId",
         "type": "bytes32"
       },
       {
-        "internalType": "uint96",
-        "name": "cumulativeTracSpent",
-        "type": "uint96"
+        "internalType": "bytes",
+        "name": "metadata",
+        "type": "bytes"
       }
     ],
-    "name": "setCumulativeTracSpent",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "totalSubmittedKnowledgeAssetsCount",
-        "type": "uint256"
-      }
-    ],
-    "name": "setTotalSubmittedKnowledgeAssetsCount",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint96",
-        "name": "totalTracSpent",
-        "type": "uint96"
-      }
-    ],
-    "name": "setTotalTracSpent",
+    "name": "setMetadata",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -223,23 +245,34 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "paranetId",
+        "name": "knowledgeAssetId",
         "type": "bytes32"
       },
       {
-        "internalType": "uint96",
-        "name": "unrewardedTracSpent",
-        "type": "uint96"
+        "internalType": "address",
+        "name": "minerAddress",
+        "type": "address"
       }
     ],
-    "name": "setUnrewardedTracSpent",
+    "name": "setMinerAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "unregisterKnowledgeMiner",
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "setParanetId",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -25,7 +25,7 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
         return _VERSION;
     }
 
-    function register(
+    function registerParanet(
         address knowledgeAssetStorageContract,
         uint256 tokenId,
         ParanetStructs.AccessPolicy minersAccessPolicy,
@@ -50,15 +50,18 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
         return paranetId;
     }
 
-    function unregister(bytes32 paranetId) external onlyContracts {
+    function unregisterParanet(bytes32 paranetId) external onlyContracts {
         delete paranets[paranetId];
     }
 
-    function exists(bytes32 paranetId) external view returns (bool) {
-        return paranets[paranetId].tokenId != 0;
+    function paranetExists(bytes32 paranetId) external view returns (bool) {
+        return
+            keccak256(
+                abi.encodePacked(paranets[paranetId].knowledgeAssetStorageContract, paranets[paranetId].tokenId)
+            ) == paranetId;
     }
 
-    function getMetadata(bytes32 paranetId) external view returns (ParanetStructs.ParanetMetadata memory) {
+    function getParanetMetadata(bytes32 paranetId) external view returns (ParanetStructs.ParanetMetadata memory) {
         ParanetStructs.Paranet storage paranet = paranets[paranetId];
 
         return
@@ -78,17 +81,6 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
         ParanetStructs.Paranet storage paranet = paranets[paranetId];
 
         return (paranet.knowledgeAssetStorageContract, paranet.tokenId);
-    }
-
-    function setParanetKnowledgeAssetLocator(
-        bytes32 paranetId,
-        address knowledgeAssetStorageContract,
-        uint256 tokenId
-    ) external onlyContracts {
-        ParanetStructs.Paranet storage paranet = paranets[paranetId];
-
-        paranet.knowledgeAssetStorageContract = knowledgeAssetStorageContract;
-        paranet.tokenId = tokenId;
     }
 
     function getOperatorAddress(bytes32 paranetId) external view returns (address) {
@@ -145,11 +137,11 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
         paranets[paranetId].incentivesPool = incentivesPool;
     }
 
-    function getCumulativeKnowledgeValue(bytes32 paranetId) external view returns (uint256) {
+    function getCumulativeKnowledgeValue(bytes32 paranetId) external view returns (uint96) {
         return paranets[paranetId].cumulativeKnowledgeValue;
     }
 
-    function setCumulativeKnowledgeValue(bytes32 paranetId, uint256 cumulativeKnowledgeValue) external onlyContracts {
+    function setCumulativeKnowledgeValue(bytes32 paranetId, uint96 cumulativeKnowledgeValue) external onlyContracts {
         paranets[paranetId].cumulativeKnowledgeValue = cumulativeKnowledgeValue;
     }
 

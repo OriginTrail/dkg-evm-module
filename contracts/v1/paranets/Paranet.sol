@@ -53,13 +53,13 @@ contract Paranet is Named, Versioned, ContractStatus, Initializable {
     ) external {
         ParanetsRegistry pr = paranetsRegistry;
 
-        if (pr.exists(keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId)))) {
+        if (pr.paranetExists(keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId)))) {
             revert ParanetErrors.ParanetHasAlreadyBeenRegistered(knowledgeAssetStorageContract, tokenId);
         }
 
         ParanetIncentivesPool incentivesPool = new ParanetIncentivesPool(address(hub));
 
-        pr.register(
+        pr.registerParanet(
             knowledgeAssetStorageContract,
             tokenId,
             ParanetStructs.AccessPolicy.OPEN,
@@ -85,7 +85,7 @@ contract Paranet is Named, Versioned, ContractStatus, Initializable {
     ) external {
         ParanetsRegistry pr = paranetsRegistry;
 
-        if (!pr.exists(keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId)))) {
+        if (!pr.paranetExists(keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId)))) {
             revert ParanetErrors.ParanetDoesntExist(knowledgeAssetStorageContract, tokenId);
         }
 
@@ -99,7 +99,7 @@ contract Paranet is Named, Versioned, ContractStatus, Initializable {
     ) external {
         ParanetsRegistry pr = paranetsRegistry;
 
-        if (!pr.exists(keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId)))) {
+        if (!pr.paranetExists(keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId)))) {
             revert ParanetErrors.ParanetDoesntExist(knowledgeAssetStorageContract, tokenId);
         }
 
@@ -114,7 +114,7 @@ contract Paranet is Named, Versioned, ContractStatus, Initializable {
         ParanetsRegistry pr = paranetsRegistry;
         ContentAsset ca = contentAsset;
 
-        if (!pr.exists(keccak256(abi.encodePacked(paranetKnowledgeAssetStorageContract, paranetTokenId)))) {
+        if (!pr.paranetExists(keccak256(abi.encodePacked(paranetKnowledgeAssetStorageContract, paranetTokenId)))) {
             revert ParanetErrors.ParanetDoesntExist(paranetKnowledgeAssetStorageContract, paranetTokenId);
         }
 
@@ -145,7 +145,7 @@ contract Paranet is Named, Versioned, ContractStatus, Initializable {
     ) external {
         ParanetsRegistry pr = paranetsRegistry;
 
-        if (!pr.exists(keccak256(abi.encodePacked(knowledgeAssetStorageContract, paranetTokenId)))) {
+        if (!pr.paranetExists(keccak256(abi.encodePacked(knowledgeAssetStorageContract, paranetTokenId)))) {
             revert ParanetErrors.ParanetDoesntExist(knowledgeAssetStorageContract, paranetTokenId);
         }
 

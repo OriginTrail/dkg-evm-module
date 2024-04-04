@@ -16,7 +16,7 @@ library ParanetStructs {
         string name;
         string description;
         address incentivesPool;
-        uint256 cumulativeKnowledgeValue;
+        uint96 cumulativeKnowledgeValue;
         bytes32[] services;
         // Service ID => Index in the array
         mapping(bytes32 => uint256) implementedServicesIndexes;
@@ -36,7 +36,7 @@ library ParanetStructs {
         AccessPolicy knowledgeAssetsInclusionPolicy;
         string name;
         string description;
-        uint256 cumulativeKnowledgeValue;
+        uint96 cumulativeKnowledgeValue;
     }
 
     struct ParanetService {
@@ -51,16 +51,19 @@ library ParanetStructs {
 
     struct KnowledgeMiner {
         address addr;
-        mapping(bytes32 => KnowledgeAsset[]) submittedKnowledgeAssets;
-        mapping(bytes32 => uint256) cumulativeTracSpent;
-        mapping(bytes32 => uint256) unrewardedTracSpent;
+        uint96 totalTracSpent;
+        uint256 totalSubmittedKnowledgeAssetsCount;
+        mapping(bytes32 => bytes32[]) submittedKnowledgeAssets;
+        mapping(bytes32 => mapping(bytes32 => uint256)) submittedKnowledgeAssetsIndexes;
+        mapping(bytes32 => uint96) cumulativeTracSpent;
+        mapping(bytes32 => uint96) unrewardedTracSpent;
     }
 
     struct KnowledgeAsset {
-        KnowledgeMiner miner;
-        uint256 chainId;
         address knowledgeAssetStorageContract;
         uint256 tokenId;
+        address minerAddress;
+        bytes32 paranetId;
         bytes metadata;
     }
 }
