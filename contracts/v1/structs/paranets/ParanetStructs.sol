@@ -15,6 +15,7 @@ library ParanetStructs {
         AccessPolicy knowledgeAssetsInclusionPolicy;
         string name;
         string description;
+        address incentivesPool;
         uint256 cumulativeKnowledgeValue;
         bytes32[] services;
         // Service ID => Index in the array

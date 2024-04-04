@@ -31,7 +31,8 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
         ParanetStructs.AccessPolicy minersAccessPolicy,
         ParanetStructs.AccessPolicy knowledgeAssetsInclusionPolicy,
         string calldata paranetName,
-        string calldata paranetDescription
+        string calldata paranetDescription,
+        address incentivesPool
     ) external onlyContracts returns (bytes32) {
         bytes32 paranetId = keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId));
 
@@ -44,6 +45,7 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
         paranet.knowledgeAssetsInclusionPolicy = knowledgeAssetsInclusionPolicy;
         paranet.name = paranetName;
         paranet.description = paranetDescription;
+        paranet.incentivesPool = incentivesPool;
 
         return paranetId;
     }
@@ -133,6 +135,14 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
 
     function setDescription(bytes32 paranetId, string calldata description) external onlyContracts {
         paranets[paranetId].description = description;
+    }
+
+    function getIncentivesPool(bytes32 paranetId) external view returns (address) {
+        return paranets[paranetId].incentivesPool;
+    }
+
+    function setIncentivesPool(bytes32 paranetId, address incentivesPool) external onlyContracts {
+        paranets[paranetId].incentivesPool = incentivesPool;
     }
 
     function getCumulativeKnowledgeValue(bytes32 paranetId) external view returns (uint256) {

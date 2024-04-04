@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 
 import {ContentAsset} from "../assets/ContentAsset.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
+import {ParanetIncentivesPool} from "./ParanetIncentivesPool.sol";
 import {ContractStatus} from "../abstract/ContractStatus.sol";
 import {Initializable} from "../interface/Initializable.sol";
 import {Named} from "../interface/Named.sol";
@@ -56,13 +57,16 @@ contract Paranet is Named, Versioned, ContractStatus, Initializable {
             revert ParanetErrors.ParanetHasAlreadyBeenRegistered(knowledgeAssetStorageContract, tokenId);
         }
 
+        ParanetIncentivesPool incentivesPool = new ParanetIncentivesPool(address(hub));
+
         pr.register(
             knowledgeAssetStorageContract,
             tokenId,
             ParanetStructs.AccessPolicy.OPEN,
             ParanetStructs.AccessPolicy.OPEN,
             paranetName,
-            paranetDescription
+            paranetDescription,
+            address(incentivesPool)
         );
     }
 
