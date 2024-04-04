@@ -126,6 +126,7 @@ config.abiExporter = {
     'Ownable.sol',
     'CommitManagerErrorsV2.sol',
     'ContentAssetErrors.sol',
+    'ParanetErrors.sol',
     'ProfileErrors.sol',
     'ServiceAgreementErrorsV1.sol',
     'ServiceAgreementErrorsV1U1.sol',

@@ -43,7 +43,7 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
     event AssetUpdatePaymentIncreased(address indexed assetContract, uint256 indexed tokenId, uint96 tokenAmount);
 
     string private constant _NAME = "ContentAsset";
-    string private constant _VERSION = "1.0.3";
+    string private constant _VERSION = "1.0.4";
 
     Assertion public assertionContract;
     HashingProxy public hashingProxy;
@@ -88,17 +88,18 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         return _VERSION;
     }
 
-    function createAsset(ContentAssetStructs.AssetInputArgs calldata args) external {
-        _createAsset(
-            args.assertionId,
-            args.size,
-            args.triplesNumber,
-            args.chunksNumber,
-            args.epochsNumber,
-            args.tokenAmount,
-            args.scoreFunctionId,
-            args.immutable_
-        );
+    function createAsset(ContentAssetStructs.AssetInputArgs calldata args) external returns (uint256) {
+        return
+            _createAsset(
+                args.assertionId,
+                args.size,
+                args.triplesNumber,
+                args.chunksNumber,
+                args.epochsNumber,
+                args.tokenAmount,
+                args.scoreFunctionId,
+                args.immutable_
+            );
     }
 
     function createAssetWithVariables(
@@ -110,17 +111,18 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         uint96 tokenAmount,
         uint8 scoreFunctionId,
         bool immutable_
-    ) external {
-        _createAsset(
-            assertionId,
-            size,
-            triplesNumber,
-            chunksNumber,
-            epochsNumber,
-            tokenAmount,
-            scoreFunctionId,
-            immutable_
-        );
+    ) external returns (uint256) {
+        return
+            _createAsset(
+                assertionId,
+                size,
+                triplesNumber,
+                chunksNumber,
+                epochsNumber,
+                tokenAmount,
+                scoreFunctionId,
+                immutable_
+            );
     }
 
     function burnAsset(uint256 tokenId) external onlyAssetOwner(tokenId) {
@@ -466,7 +468,7 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         uint96 tokenAmount,
         uint8 scoreFunctionId,
         bool immutable_
-    ) internal virtual {
+    ) internal virtual returns (uint256) {
         ContentAssetStorage cas = contentAssetStorage;
 
         uint256 tokenId = cas.generateTokenId();
@@ -493,6 +495,8 @@ contract ContentAsset is Named, Versioned, HubDependent, Initializable {
         );
 
         emit AssetMinted(contentAssetStorageAddress, tokenId, assertionId);
+
+        return tokenId;
     }
 
     function _checkAssetOwner(uint256 tokenId) internal view virtual {
