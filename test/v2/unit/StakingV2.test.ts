@@ -411,10 +411,6 @@ describe('@v2 @unit StakingV2 contract', function () {
 
     await time.increaseTo(blockTimestamp + stakeWithdrawalDelay);
 
-    expect(await StakingV2.connect(accounts[1]).finishOperatorFeeChange(node.identityId))
-      .to.emit(StakingV2, 'OperatorFeeChangeFinished')
-      .withArgs(node.identityId, node.nodeId, newOperatorFee);
-
     const agreementId = '0x' + randomBytes(32).toString('hex');
     const startTime = Math.floor(Date.now() / 1000).toString();
     const epochsNumber = 5;

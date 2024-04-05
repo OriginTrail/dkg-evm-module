@@ -69,7 +69,6 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint96 newAccumulatedOperatorFee
     );
     event OperatorFeeChangeStarted(uint72 indexed identityId, bytes nodeId, uint8 operatorFee, uint256 timestamp);
-    event OperatorFeeChangeFinished(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
     string private constant _VERSION = "2.0.0";
@@ -196,28 +195,50 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
 
     function addReward(bytes32 agreementId, uint72 identityId, uint96 rewardAmount) external onlyContracts {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        NodeOperatorFeeChangesStorage nofcs = nodeOperatorFeeChangesStorage;
         StakingStorage ss = stakingStorage;
         ProfileStorage ps = profileStorage;
 
-        uint96 operatorFee = (rewardAmount * ss.operatorFees(identityId)) / 100;
-        uint96 delegatorsReward = rewardAmount - operatorFee;
+        uint256 startTime;
+        uint16 epochsNumber;
+        uint128 epochLength;
+        uint96 operatorFeeAmount;
+        (startTime, epochsNumber, epochLength, , ) = sasProxy.getAgreementData(agreementId);
 
-        uint96 oldAccumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
+        // If Operator Fee has changed after Commit Window closing, we should
+        // take previous Operator Fee for Node Operator Fee Amount calculation
+        uint256 updatedOperatorFeeActivationTimestamp = nofcs.getOperatorFeeChangeRequestTimestamp(identityId);
+        if (
+            updatedOperatorFeeActivationTimestamp != 0 &&
+            updatedOperatorFeeActivationTimestamp >
+            (startTime +
+                epochLength *
+                ((block.timestamp - startTime) / epochLength) +
+                ((epochLength * parametersStorage.commitWindowDurationPerc()) / 100)) &&
+            updatedOperatorFeeActivationTimestamp < block.timestamp
+        ) {
+            operatorFeeAmount = (rewardAmount * ss.operatorFees(identityId)) / 100;
+        } else {
+            operatorFeeAmount = (rewardAmount * nofcs.getOperatorFeeChangeRequestNewFee(identityId)) / 100;
+        }
+        uint96 delegatorsRewardAmount = rewardAmount - operatorFeeAmount;
+
+        uint96 oldAccumulatedOperatorFeeAmount = ps.getAccumulatedOperatorFee(identityId);
         uint96 oldStake = ss.totalStakes(identityId);
 
-        if (operatorFee != 0) {
-            ps.setAccumulatedOperatorFee(identityId, oldAccumulatedOperatorFee + operatorFee);
-            sasProxy.transferAgreementTokens(agreementId, address(ps), operatorFee);
+        if (operatorFeeAmount != 0) {
+            ps.setAccumulatedOperatorFee(identityId, oldAccumulatedOperatorFeeAmount + operatorFeeAmount);
+            sasProxy.transferAgreementTokens(agreementId, address(ps), operatorFeeAmount);
         }
 
-        if (delegatorsReward != 0) {
-            ss.setTotalStake(identityId, oldStake + delegatorsReward);
-            sasProxy.transferAgreementTokens(agreementId, address(ss), delegatorsReward);
+        if (delegatorsRewardAmount != 0) {
+            ss.setTotalStake(identityId, oldStake + delegatorsRewardAmount);
+            sasProxy.transferAgreementTokens(agreementId, address(ss), delegatorsRewardAmount);
 
             ShardingTableStorageV2 sts = shardingTableStorage;
             ParametersStorage params = parametersStorage;
 
-            if (!sts.nodeExists(identityId) && oldStake + delegatorsReward >= params.minimumStake()) {
+            if (!sts.nodeExists(identityId) && oldStake + delegatorsRewardAmount >= params.minimumStake()) {
                 if (sts.nodesCount() >= params.shardingTableSizeLimit()) {
                     revert ShardingTableErrors.ShardingTableIsFull();
                 }
@@ -228,8 +249,8 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         emit AccumulatedOperatorFeeIncreased(
             identityId,
             ps.getNodeId(identityId),
-            oldAccumulatedOperatorFee,
-            oldAccumulatedOperatorFee + operatorFee
+            oldAccumulatedOperatorFeeAmount,
+            oldAccumulatedOperatorFeeAmount + operatorFeeAmount
         );
 
         address sasAddress;
@@ -238,14 +259,20 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         } else {
             sasAddress = sasProxy.agreementV1U1StorageAddress();
         }
-        emit StakeIncreased(identityId, ps.getNodeId(identityId), sasAddress, oldStake, oldStake + delegatorsReward);
+        emit StakeIncreased(
+            identityId,
+            ps.getNodeId(identityId),
+            sasAddress,
+            oldStake,
+            oldStake + delegatorsRewardAmount
+        );
         emit RewardCollected(
             agreementId,
             identityId,
             ps.getNodeId(identityId),
             sasAddress,
-            operatorFee,
-            delegatorsReward
+            operatorFeeAmount,
+            delegatorsRewardAmount
         );
     }
 
@@ -260,34 +287,27 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         }
         NodeOperatorFeeChangesStorage nofcs = nodeOperatorFeeChangesStorage;
 
-        uint256 feeChangeDelayEnd = block.timestamp > nofcs.delayFreePeriodEnd()
+        uint8 updatedFee;
+        uint256 feeUpdateDelayEnd;
+        (updatedFee, feeUpdateDelayEnd) = nofcs.operatorFeeChangeRequests(identityId);
+
+        if (block.timestamp < feeUpdateDelayEnd) {
+            revert StakingErrors.OperatorFeeChangeDelayPending(block.timestamp, feeUpdateDelayEnd);
+        }
+
+        stakingStorage.setOperatorFee(identityId, updatedFee);
+
+        uint256 newFeeUpdateDelayEnd = block.timestamp > nofcs.delayFreePeriodEnd()
             ? block.timestamp + parametersStorage.stakeWithdrawalDelay()
             : block.timestamp;
-        nofcs.createOperatorFeeChangeRequest(identityId, newOperatorFee, feeChangeDelayEnd);
+        nofcs.createOperatorFeeChangeRequest(identityId, newOperatorFee, newFeeUpdateDelayEnd);
 
         emit OperatorFeeChangeStarted(
             identityId,
             profileStorage.getNodeId(identityId),
             newOperatorFee,
-            feeChangeDelayEnd
+            newFeeUpdateDelayEnd
         );
-    }
-
-    function finishOperatorFeeChange(uint72 identityId) external onlyAdmin(identityId) {
-        NodeOperatorFeeChangesStorage nofcs = nodeOperatorFeeChangesStorage;
-
-        uint8 newFee;
-        uint256 feeChangeDelayEnd;
-        (newFee, feeChangeDelayEnd) = nofcs.operatorFeeChangeRequests(identityId);
-
-        if (block.timestamp < feeChangeDelayEnd) {
-            revert StakingErrors.OperatorFeeChangeDelayPending(block.timestamp, feeChangeDelayEnd);
-        }
-
-        stakingStorage.setOperatorFee(identityId, newFee);
-        nofcs.deleteOperatorFeeChangeRequest(identityId);
-
-        emit OperatorFeeChangeFinished(identityId, profileStorage.getNodeId(identityId), newFee);
     }
 
     function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal virtual {

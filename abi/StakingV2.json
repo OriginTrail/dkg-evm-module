@@ -178,31 +178,6 @@
         "internalType": "uint8",
         "name": "operatorFee",
         "type": "uint8"
-      }
-    ],
-    "name": "OperatorFeeChangeFinished",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "nodeId",
-        "type": "bytes"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "operatorFee",
-        "type": "uint8"
       },
       {
         "indexed": false,
@@ -502,19 +477,6 @@
       }
     ],
     "name": "addStake",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      }
-    ],
-    "name": "finishOperatorFeeChange",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
