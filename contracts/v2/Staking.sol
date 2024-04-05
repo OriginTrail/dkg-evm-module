@@ -291,11 +291,9 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint256 feeUpdateDelayEnd;
         (updatedFee, feeUpdateDelayEnd) = nofcs.operatorFeeChangeRequests(identityId);
 
-        if (block.timestamp < feeUpdateDelayEnd) {
-            revert StakingErrors.OperatorFeeChangeDelayPending(block.timestamp, feeUpdateDelayEnd);
+        if (block.timestamp > feeUpdateDelayEnd) {
+            stakingStorage.setOperatorFee(identityId, updatedFee);
         }
-
-        stakingStorage.setOperatorFee(identityId, updatedFee);
 
         uint256 newFeeUpdateDelayEnd = block.timestamp > nofcs.delayFreePeriodEnd()
             ? block.timestamp + parametersStorage.stakeWithdrawalDelay()
