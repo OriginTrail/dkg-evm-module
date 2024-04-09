@@ -4,7 +4,7 @@ pragma solidity ^0.8.16;
 
 import {ProfileStorage} from "../v1/storage/ProfileStorage.sol";
 import {ShardingTableStorageV2} from "./storage/ShardingTableStorage.sol";
-import {ShardingTableStorageV1} from "./../storage/ShardingTableStorageV1.sol";
+import {ShardingTableStorage} from "../v1/storage/ShardingTableStorage.sol";
 import {StakingStorage} from "../v1/storage/StakingStorage.sol";
 import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
 import {Initializable} from "../v1/interface/Initializable.sol";
@@ -25,7 +25,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
 
     ProfileStorage public profileStorage;
     ShardingTableStorageV2 public shardingTableStorage;
-    ShardingTableStorageV1 public shardingTableStorageV1;
+    ShardingTableStorage public shardingTableStorageV1;
     StakingStorage public stakingStorage;
 
     // solhint-disable-next-line no-empty-blocks
@@ -66,7 +66,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
 
     function migrateOldShardingTable(uint72 startingIdentityId, uint72 numberOfNodes) external {
         ShardingTableStorage sts = ShardingTableStorage(shardingTableStorage);
-        ShardingTableStorageV1 stsv1 = ShardingTableStorageV1(shardingTableStorageV1);
+        ShardingTableStorage stsv1 = ShardingTableStorage(shardingTableStorageV1);
 
         ShardingTableStructsV1.Node[] memory nodes = stsv1.getMultipleNodes(startingIdentityId, numberOfNodes);
 
