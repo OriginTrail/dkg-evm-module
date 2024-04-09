@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 
 import {ProfileStorage} from "../v1/storage/ProfileStorage.sol";
 import {ShardingTableStorageV2} from "./storage/ShardingTableStorage.sol";
+import {ShardingTableStorageV1} from "./../storage/ShardingTableStorageV1.sol";
 import {StakingStorage} from "../v1/storage/StakingStorage.sol";
 import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
 import {Initializable} from "../v1/interface/Initializable.sol";
@@ -20,10 +21,11 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     event NodeRemoved(uint72 indexed identityId, bytes nodeId);
 
     string private constant _NAME = "ShardingTable";
-    string private constant _VERSION = "2.0.0";
+    string private constant _VERSION = "2.0.1";
 
     ProfileStorage public profileStorage;
     ShardingTableStorageV2 public shardingTableStorage;
+    ShardingTableStorageV1 public shardingTableStorageV1;
     StakingStorage public stakingStorage;
 
     // solhint-disable-next-line no-empty-blocks
@@ -32,6 +34,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     function initialize() public onlyHubOwner {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         shardingTableStorage = ShardingTableStorageV2(hub.getContractAddress("ShardingTableStorage"));
+        shardingTableStorageV1 = ShardingTableStorageV2(hub.getContractAddress("ShardingTableStorageV1"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
     }
 
@@ -59,6 +62,20 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         uint256 newNodeHashRingPosition = uint256(profileStorage.getNodeAddress(identityId, 1));
 
         _insertNode(_binarySearchForIndex(newNodeHashRingPosition), identityId, newNodeHashRingPosition);
+    }
+
+    function migrateOldShardingTable(uint72 startingIdentityId, uint72 numberOfNodes) external {
+        ShardingTableStorage sts = ShardingTableStorage(shardingTableStorage);
+        ShardingTableStorageV1 stsv1 = ShardingTableStorageV1(shardingTableStorageV1);
+
+        ShardingTableStructsV1.Node[] memory nodes = stsv1.getMultipleNodes(startingIdentityId, numberOfNodes);
+
+        for (uint i = 0; i < nodes.length; i++) {
+            uint72 identityId = nodes[i].identityId;
+            if (!sts.nodeExists(identityId)) {
+                insertNode(identityId);
+            }
+        }
     }
 
     function insertNode(uint72 index, uint72 identityId) external onlyContracts {
