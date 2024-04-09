@@ -34,7 +34,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     function initialize() public onlyHubOwner {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         shardingTableStorage = ShardingTableStorageV2(hub.getContractAddress("ShardingTableStorage"));
-        shardingTableStorageV1 = ShardingTableStorageV2(hub.getContractAddress("ShardingTableStorageV1"));
+        shardingTableStorageV1 = ShardingTableStorage(hub.getContractAddress("ShardingTableStorageV1"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
     }
 
@@ -64,8 +64,12 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         _insertNode(_binarySearchForIndex(newNodeHashRingPosition), identityId, newNodeHashRingPosition);
     }
 
-    function migrateOldShardingTable(uint72 startingIdentityId, uint72 numberOfNodes) external {
-        ShardingTableStorage sts = ShardingTableStorage(shardingTableStorage);
+    function insertNode(uint72 index, uint72 identityId) external onlyContracts {
+        _insertNode(index, identityId, uint256(profileStorage.getNodeAddress(identityId, 1)));
+    }
+
+    function migrateOldShardingTable(uint72 startingIdentityId, uint16 numberOfNodes) external {
+        ShardingTableStorageV2 sts = ShardingTableStorageV2(shardingTableStorage);
         ShardingTableStorage stsv1 = ShardingTableStorage(shardingTableStorageV1);
 
         ShardingTableStructsV1.Node[] memory nodes = stsv1.getMultipleNodes(startingIdentityId, numberOfNodes);
@@ -73,13 +77,10 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         for (uint i = 0; i < nodes.length; i++) {
             uint72 identityId = nodes[i].identityId;
             if (!sts.nodeExists(identityId)) {
-                insertNode(identityId);
+                uint256 newNodeHashRingPosition = uint256(profileStorage.getNodeAddress(identityId, 1));
+                _insertNode(_binarySearchForIndex(newNodeHashRingPosition), identityId, newNodeHashRingPosition);
             }
         }
-    }
-
-    function insertNode(uint72 index, uint72 identityId) external onlyContracts {
-        _insertNode(index, identityId, uint256(profileStorage.getNodeAddress(identityId, 1)));
     }
 
     function removeNode(uint72 identityId) external onlyContracts {
