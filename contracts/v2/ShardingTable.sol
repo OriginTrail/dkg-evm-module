@@ -69,7 +69,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     }
 
     function migrateOldShardingTable(uint72 startingIdentityId, uint16 numberOfNodes) external {
-        ShardingTableStorageV2 sts = ShardingTableStorageV2(shardingTableStorage);
+        ShardingTableStorageV2 stsv2 = shardingTableStorage;
         ShardingTableStorage stsv1 = ShardingTableStorage(shardingTableStorageV1);
 
         ShardingTableStructsV1.Node[] memory nodes = stsv1.getMultipleNodes(startingIdentityId, numberOfNodes);
