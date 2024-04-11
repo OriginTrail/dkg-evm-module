@@ -25,7 +25,6 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
 
     ProfileStorage public profileStorage;
     ShardingTableStorageV2 public shardingTableStorage;
-    ShardingTableStorage public shardingTableStorageV1;
     StakingStorage public stakingStorage;
 
     // solhint-disable-next-line no-empty-blocks
@@ -34,7 +33,6 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     function initialize() public onlyHubOwner {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         shardingTableStorage = ShardingTableStorageV2(hub.getContractAddress("ShardingTableStorage"));
-        shardingTableStorageV1 = ShardingTableStorage(hub.getContractAddress("ShardingTableStorageV1"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
     }
 
@@ -68,9 +66,13 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         _insertNode(index, identityId, uint256(profileStorage.getNodeAddress(identityId, 1)));
     }
 
-    function migrateOldShardingTable(uint72 startingIdentityId, uint16 numberOfNodes) external onlyHubOwner {
+    function migrateOldShardingTable(
+        uint72 startingIdentityId,
+        uint16 numberOfNodes,
+        address shardingTableStorageV1Address
+    ) external onlyHubOwner {
         ShardingTableStorageV2 stsv2 = shardingTableStorage;
-        ShardingTableStorage stsv1 = shardingTableStorageV1;
+        ShardingTableStorage stsv1 = ShardingTableStorage(shardingTableStorageV1Address);
 
         ShardingTableStructsV1.Node[] memory nodes = stsv1.getMultipleNodes(startingIdentityId, numberOfNodes);
 
