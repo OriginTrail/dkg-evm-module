@@ -77,7 +77,6 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         for (uint i = 0; i < nodes.length; i++) {
             uint72 identityId = nodes[i].identityId;
             if (!sts.nodeExists(identityId)) {
-                uint256 newNodeHashRingPosition = uint256(profileStorage.getNodeAddress(identityId, 1));
                 _insertNode(_binarySearchForIndex(newNodeHashRingPosition), identityId, newNodeHashRingPosition);
             }
         }
