@@ -75,7 +75,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         ShardingTableStructsV1.Node[] memory nodes = stsv1.getMultipleNodes(startingIdentityId, numberOfNodes);
 
         for (uint i = 0; i < nodes.length; i++) {
-            if (!sts.nodeExists(identityId)) {
+            if (!sts.nodeExists(nodes[i].identityId)) {
                 _insertNode(_binarySearchForIndex(newNodeHashRingPosition), identityId, newNodeHashRingPosition);
             }
         }
