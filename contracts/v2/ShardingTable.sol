@@ -68,7 +68,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         _insertNode(index, identityId, uint256(profileStorage.getNodeAddress(identityId, 1)));
     }
 
-    function migrateOldShardingTable(uint72 startingIdentityId, uint16 numberOfNodes) external {
+    function migrateOldShardingTable(uint72 startingIdentityId, uint16 numberOfNodes) external onlyHubOwner {
         ShardingTableStorageV2 stsv2 = shardingTableStorage;
         ShardingTableStorage stsv1 = shardingTableStorageV1;
 
