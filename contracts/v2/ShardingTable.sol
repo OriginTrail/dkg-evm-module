@@ -76,7 +76,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
 
         for (uint i = 0; i < nodes.length; i++) {
             if (!sts.nodeExists(nodes[i].identityId)) {
-                _insertNode(_binarySearchForIndex(newNodeHashRingPosition), identityId, newNodeHashRingPosition);
+                _insertNode(_binarySearchForIndex(sha256(nodes[i].nodeId)), identityId, sha256(nodes[i].nodeId));
             }
         }
     }
