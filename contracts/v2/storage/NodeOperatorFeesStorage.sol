@@ -7,6 +7,7 @@ import {Named} from "../../v1/interface/Named.sol";
 import {Versioned} from "../../v1/interface/Versioned.sol";
 import {NodeOperatorErrors} from "../errors/NodeOperatorErrors.sol";
 import {NodeOperatorStructs} from "../structs/NodeOperatorStructs.sol";
+import "hardhat/console.sol";
 
 contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
     string private constant _NAME = "NodeOperatorFeesStorage";
@@ -61,6 +62,10 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
         );
     }
 
+    function getOperatorFees(uint72 identityId) external view returns (NodeOperatorStructs.OperatorFee[] memory) {
+        return operatorFees[identityId];
+    }
+
     function deleteOperatorFees(uint72 identityId) external onlyContracts {
         delete operatorFees[identityId];
     }
@@ -70,7 +75,10 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
         uint8 feePercentage,
         uint248 effectiveDate
     ) external onlyContracts {
-        if (block.timestamp <= operatorFees[identityId][operatorFees[identityId].length - 1].effectiveDate) {
+        if (
+            operatorFees[identityId].length == 0 ||
+            block.timestamp <= operatorFees[identityId][operatorFees[identityId].length - 1].effectiveDate
+        ) {
             revert NodeOperatorErrors.NoPendingOperatorFee();
         }
 
@@ -106,7 +114,7 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
     }
 
     function getLatestOperatorFee(uint72 identityId) external view returns (NodeOperatorStructs.OperatorFee memory) {
-        return operatorFees[identityId][operatorFees[identityId].length - 1];
+        return _safeGetOperatorFee(identityId, operatorFees[identityId].length - 1);
     }
 
     function getActiveOperatorFee(uint72 identityId) external view returns (NodeOperatorStructs.OperatorFee memory) {
@@ -137,6 +145,10 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
     }
 
     function getActiveOperatorFeePercentage(uint72 identityId) external view returns (uint8) {
+        if (operatorFees[identityId].length == 0) {
+            return 0;
+        }
+
         if (block.timestamp <= operatorFees[identityId][operatorFees[identityId].length - 1].effectiveDate) {
             return operatorFees[identityId][operatorFees[identityId].length - 1].feePercentage;
         } else {
@@ -163,10 +175,14 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
     }
 
     function getLatestOperatorFeeEffectiveDate(uint72 identityId) external view returns (uint248) {
-        return operatorFees[identityId][operatorFees[identityId].length - 1].effectiveDate;
+        return _safeGetOperatorFee(identityId, operatorFees[identityId].length - 1).effectiveDate;
     }
 
     function getActiveOperatorFeeEffectiveDate(uint72 identityId) external view returns (uint248) {
+        if (operatorFees[identityId].length == 0) {
+            return 0;
+        }
+
         if (block.timestamp <= operatorFees[identityId][operatorFees[identityId].length - 1].effectiveDate) {
             return operatorFees[identityId][operatorFees[identityId].length - 1].effectiveDate;
         } else {
@@ -175,11 +191,23 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
     }
 
     function isOperatorFeeChangePending(uint72 identityId) external view returns (bool) {
-        return block.timestamp > operatorFees[identityId][operatorFees[identityId].length - 1].effectiveDate;
+        return (operatorFees[identityId].length != 0 &&
+            block.timestamp > operatorFees[identityId][operatorFees[identityId].length - 1].effectiveDate);
     }
 
     function setDelayFreePeriodEnd(uint256 timestamp) external onlyHubOwner onlyOnce {
         delayFreePeriodEnd = timestamp;
+    }
+
+    function _safeGetOperatorFee(
+        uint72 identityId,
+        uint256 index
+    ) internal view returns (NodeOperatorStructs.OperatorFee memory) {
+        if (operatorFees[identityId].length == 0) {
+            return NodeOperatorStructs.OperatorFee({feePercentage: 0, effectiveDate: 0});
+        } else {
+            return operatorFees[identityId][index];
+        }
     }
 
     function _getOperatorFeeByTimestamp(
@@ -187,20 +215,23 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
         uint256 timestamp,
         bool reverseLookup
     ) internal view returns (NodeOperatorStructs.OperatorFee memory) {
-        if (
-            operatorFees[identityId].length > 0 &&
-            timestamp > operatorFees[identityId][operatorFees[identityId].length - 1].effectiveDate
-        ) {
+        if (operatorFees[identityId].length == 0) {
+            return NodeOperatorStructs.OperatorFee({feePercentage: 0, effectiveDate: 0});
+        }
+
+        if (timestamp > operatorFees[identityId][operatorFees[identityId].length - 1].effectiveDate) {
             return operatorFees[identityId][operatorFees[identityId].length - 1];
-        } else if (operatorFees[identityId].length > 0 && timestamp < operatorFees[identityId][0].effectiveDate) {
+        } else if (timestamp < operatorFees[identityId][0].effectiveDate) {
             return operatorFees[identityId][0];
         }
 
         if (reverseLookup) {
-            for (uint i = operatorFees[identityId].length; i > 0; ) {
+            for (uint i = operatorFees[identityId].length - 1; i > 0; ) {
+                console.log("Before: ", i);
                 unchecked {
-                    i--;
+                    --i;
                 }
+                console.log("After: ", i);
 
                 if (operatorFees[identityId][i].effectiveDate <= timestamp) {
                     return operatorFees[identityId][i];

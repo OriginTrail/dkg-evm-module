@@ -467,6 +467,37 @@
         "type": "uint72"
       }
     ],
+    "name": "getOperatorFees",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint8",
+            "name": "feePercentage",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint248",
+            "name": "effectiveDate",
+            "type": "uint248"
+          }
+        ],
+        "internalType": "struct NodeOperatorStructs.OperatorFee[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
     "name": "getOperatorFeesLength",
     "outputs": [
       {

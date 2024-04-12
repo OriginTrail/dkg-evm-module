@@ -39,6 +39,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         });
       }
 
+      // TODO: Check the timestamp so that it's not smaller than current
       const pendingOperatorFee = await nofcs.operatorFeeChangeRequests(i);
 
       if (pendingOperatorFee) {
@@ -52,6 +53,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         });
       }
     }
+
+    delete hre.helpers.contractDeployments.contracts['NodeOperatorFeeChangesStorage'];
   }
 
   await hre.helpers.deploy({
