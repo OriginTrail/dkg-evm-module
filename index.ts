@@ -27,7 +27,7 @@ import LinearSum from './abi/LinearSum.json';
 import Log2PLDSF from './abi/Log2PLDSF.json';
 import MultiSigWallet from './abi/MultiSigWallet.json';
 import Named from './abi/Named.json';
-import NodeOperatorFeeChangesStorage from './abi/NodeOperatorFeeChangesStorage.json';
+import NodeOperatorFeesStorage from './abi/NodeOperatorFeesStorage.json';
 import ParametersStorage from './abi/ParametersStorage.json';
 import Profile from './abi/Profile.json';
 import ProfileStorage from './abi/ProfileStorage.json';
@@ -103,7 +103,7 @@ const ABIV2 = {
   CommitManagerV2,
   CommitManagerV2U1,
   LinearSum,
-  NodeOperatorFeeChangesStorage,
+  NodeOperatorFeesStorage,
   ShardingTableV2,
   ShardingTableStorageV2,
   StakingV2,
@@ -135,7 +135,7 @@ export {
   Identity as IdentityABI,
   LinearSum as LinearSumABI,
   Log2PLDSF as Log2PLDSFABI,
-  NodeOperatorFeeChangesStorage as NodeOperatorFeeChangesStorageABI,
+  NodeOperatorFeesStorage as NodeOperatorFeesStorageABI,
   ProfileStorage as ProfileStorageABI,
   StakingStorage as StakingStorageABI,
   StakingV2 as StakingABI,

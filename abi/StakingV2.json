@@ -513,10 +513,10 @@
   },
   {
     "inputs": [],
-    "name": "nodeOperatorFeeChangesStorage",
+    "name": "nodeOperatorFeesStorage",
     "outputs": [
       {
-        "internalType": "contract NodeOperatorFeeChangesStorage",
+        "internalType": "contract NodeOperatorFeesStorage",
         "name": "",
         "type": "address"
       }
@@ -637,7 +637,7 @@
       },
       {
         "internalType": "uint8",
-        "name": "newOperatorFee",
+        "name": "newFeePercentage",
         "type": "uint8"
       }
     ],

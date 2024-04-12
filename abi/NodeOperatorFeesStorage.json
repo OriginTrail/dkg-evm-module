@@ -1,0 +1,654 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "hubAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "migrationPeriodEnd_",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "NoPendingOperatorFee",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint8",
+        "name": "feePercentage",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint248",
+        "name": "effectiveDate",
+        "type": "uint248"
+      }
+    ],
+    "name": "addOperatorFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "delayFreePeriodEnd",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "deleteOperatorFees",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getActiveOperatorFee",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint8",
+            "name": "feePercentage",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint248",
+            "name": "effectiveDate",
+            "type": "uint248"
+          }
+        ],
+        "internalType": "struct NodeOperatorStructs.OperatorFee",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getActiveOperatorFeeEffectiveDate",
+    "outputs": [
+      {
+        "internalType": "uint248",
+        "name": "",
+        "type": "uint248"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getActiveOperatorFeePercentage",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getLatestOperatorFee",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint8",
+            "name": "feePercentage",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint248",
+            "name": "effectiveDate",
+            "type": "uint248"
+          }
+        ],
+        "internalType": "struct NodeOperatorStructs.OperatorFee",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getLatestOperatorFeeEffectiveDate",
+    "outputs": [
+      {
+        "internalType": "uint248",
+        "name": "",
+        "type": "uint248"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getLatestOperatorFeePercentage",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getOperatorFeeByIndex",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint8",
+            "name": "feePercentage",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint248",
+            "name": "effectiveDate",
+            "type": "uint248"
+          }
+        ],
+        "internalType": "struct NodeOperatorStructs.OperatorFee",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "getOperatorFeeByTimestamp",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint8",
+            "name": "feePercentage",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint248",
+            "name": "effectiveDate",
+            "type": "uint248"
+          }
+        ],
+        "internalType": "struct NodeOperatorStructs.OperatorFee",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "getOperatorFeeByTimestampReverse",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint8",
+            "name": "feePercentage",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint248",
+            "name": "effectiveDate",
+            "type": "uint248"
+          }
+        ],
+        "internalType": "struct NodeOperatorStructs.OperatorFee",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getOperatorFeeEffectiveDateByIndex",
+    "outputs": [
+      {
+        "internalType": "uint248",
+        "name": "",
+        "type": "uint248"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "getOperatorFeeEffectiveDateByTimestamp",
+    "outputs": [
+      {
+        "internalType": "uint248",
+        "name": "",
+        "type": "uint248"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "getOperatorFeeEffectiveDateByTimestampReverse",
+    "outputs": [
+      {
+        "internalType": "uint248",
+        "name": "",
+        "type": "uint248"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getOperatorFeePercentageByIndex",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "getOperatorFeePercentageByTimestamp",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "getOperatorFeePercentageByTimestampReverse",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getOperatorFeesLength",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "hub",
+    "outputs": [
+      {
+        "internalType": "contract Hub",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "isOperatorFeeChangePending",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint72",
+            "name": "identityId",
+            "type": "uint72"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint8",
+                "name": "feePercentage",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint248",
+                "name": "effectiveDate",
+                "type": "uint248"
+              }
+            ],
+            "internalType": "struct NodeOperatorStructs.OperatorFee[]",
+            "name": "fees",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct NodeOperatorStructs.OperatorFees[]",
+        "name": "legacyFees",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "migrateOldOperatorFees",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "migrationPeriodEnd",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "name",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "operatorFees",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "feePercentage",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint248",
+        "name": "effectiveDate",
+        "type": "uint248"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint8",
+        "name": "feePercentage",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint248",
+        "name": "effectiveDate",
+        "type": "uint248"
+      }
+    ],
+    "name": "replacePendingOperatorFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "setDelayFreePeriodEnd",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "version",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  }
+]

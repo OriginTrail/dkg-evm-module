@@ -5,7 +5,7 @@ pragma solidity ^0.8.16;
 import {ShardingTableV2} from "./ShardingTable.sol";
 import {Shares} from "../v1/Shares.sol";
 import {IdentityStorageV2} from "./storage/IdentityStorage.sol";
-import {NodeOperatorFeeChangesStorage} from "./storage/NodeOperatorFeeChangesStorage.sol";
+import {NodeOperatorFeesStorage} from "./storage/NodeOperatorFeesStorage.sol";
 import {ParametersStorage} from "../v1/storage/ParametersStorage.sol";
 import {ProfileStorage} from "../v1/storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "../v1/storage/ServiceAgreementStorageProxy.sol";
@@ -75,7 +75,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
 
     ShardingTableV2 public shardingTableContract;
     IdentityStorageV2 public identityStorage;
-    NodeOperatorFeeChangesStorage public nodeOperatorFeeChangesStorage;
+    NodeOperatorFeesStorage public nodeOperatorFeesStorage;
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     StakingStorage public stakingStorage;
@@ -94,9 +94,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     function initialize() public onlyHubOwner {
         shardingTableContract = ShardingTableV2(hub.getContractAddress("ShardingTable"));
         identityStorage = IdentityStorageV2(hub.getContractAddress("IdentityStorage"));
-        nodeOperatorFeeChangesStorage = NodeOperatorFeeChangesStorage(
-            hub.getContractAddress("NodeOperatorFeeChangesStorage")
-        );
+        nodeOperatorFeesStorage = NodeOperatorFeesStorage(hub.getContractAddress("NodeOperatorFeesStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
@@ -195,7 +193,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
 
     function addReward(bytes32 agreementId, uint72 identityId, uint96 rewardAmount) external onlyContracts {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
-        NodeOperatorFeeChangesStorage nofcs = nodeOperatorFeeChangesStorage;
+        NodeOperatorFeesStorage nofs = nodeOperatorFeesStorage;
         StakingStorage ss = stakingStorage;
         ProfileStorage ps = profileStorage;
 
@@ -205,22 +203,16 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint96 operatorFeeAmount;
         (startTime, epochsNumber, epochLength, , ) = sasProxy.getAgreementData(agreementId);
 
-        // If Operator Fee has changed after Commit Window closing, we should
-        // take previous Operator Fee for Node Operator Fee Amount calculation
-        uint256 updatedOperatorFeeActivationTimestamp = nofcs.getOperatorFeeChangeRequestTimestamp(identityId);
-        if (
-            updatedOperatorFeeActivationTimestamp != 0 &&
-            updatedOperatorFeeActivationTimestamp >
-            (startTime +
-                epochLength *
-                ((block.timestamp - startTime) / epochLength) +
-                ((epochLength * parametersStorage.commitWindowDurationPerc()) / 100)) &&
-            updatedOperatorFeeActivationTimestamp < block.timestamp
-        ) {
-            operatorFeeAmount = (rewardAmount * ss.operatorFees(identityId)) / 100;
-        } else {
-            operatorFeeAmount = (rewardAmount * nofcs.getOperatorFeeChangeRequestNewFee(identityId)) / 100;
-        }
+        operatorFeeAmount =
+            (rewardAmount *
+                nofs.getOperatorFeePercentageByTimestampReverse(
+                    identityId,
+                    (startTime +
+                        epochLength *
+                        ((block.timestamp - startTime) / epochLength) +
+                        ((epochLength * parametersStorage.commitWindowDurationPerc()) / 100))
+                )) /
+            100;
         uint96 delegatorsRewardAmount = rewardAmount - operatorFeeAmount;
 
         uint96 oldAccumulatedOperatorFeeAmount = ps.getAccumulatedOperatorFee(identityId);
@@ -281,30 +273,27 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         // To be implemented
     }
 
-    function startOperatorFeeChange(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {
-        if (newOperatorFee > 100) {
+    function startOperatorFeeChange(uint72 identityId, uint8 newFeePercentage) external onlyAdmin(identityId) {
+        if (newFeePercentage > 100) {
             revert StakingErrors.InvalidOperatorFee();
         }
-        NodeOperatorFeeChangesStorage nofcs = nodeOperatorFeeChangesStorage;
+        NodeOperatorFeesStorage nofs = nodeOperatorFeesStorage;
 
-        uint8 updatedFee;
-        uint256 feeUpdateDelayEnd;
-        (updatedFee, feeUpdateDelayEnd) = nofcs.operatorFeeChangeRequests(identityId);
+        uint248 newOperatorFeeEffectiveData = block.timestamp > nofs.delayFreePeriodEnd()
+            ? uint248(block.timestamp + parametersStorage.stakeWithdrawalDelay())
+            : uint248(block.timestamp);
 
-        if (block.timestamp > feeUpdateDelayEnd) {
-            stakingStorage.setOperatorFee(identityId, updatedFee);
+        if (nofs.isOperatorFeeChangePending(identityId)) {
+            nofs.replacePendingOperatorFee(identityId, newFeePercentage, newOperatorFeeEffectiveData);
+        } else {
+            nofs.addOperatorFee(identityId, newFeePercentage, newOperatorFeeEffectiveData);
         }
-
-        uint256 newFeeUpdateDelayEnd = block.timestamp > nofcs.delayFreePeriodEnd()
-            ? block.timestamp + parametersStorage.stakeWithdrawalDelay()
-            : block.timestamp;
-        nofcs.createOperatorFeeChangeRequest(identityId, newOperatorFee, newFeeUpdateDelayEnd);
 
         emit OperatorFeeChangeStarted(
             identityId,
             profileStorage.getNodeId(identityId),
-            newOperatorFee,
-            newFeeUpdateDelayEnd
+            newFeePercentage,
+            newOperatorFeeEffectiveData
         );
     }
 

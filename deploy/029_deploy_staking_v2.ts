@@ -29,5 +29,5 @@ func.dependencies = [
   'ServiceAgreementStorageProxy',
   'ShardingTableStorageV2',
   'StakingStorage',
-  'NodeOperatorFeeChangesStorage',
+  'NodeOperatorFeesStorage',
 ];

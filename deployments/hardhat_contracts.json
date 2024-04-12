@@ -1,174 +1,264 @@
 {
   "contracts": {
     "Hub": {
-      "evmAddress": "0xc9a1c15d6B5DB1DffC067CA23B68C8aa99D042C1",
+      "evmAddress": "0x0850795695318e619afd3BFAbFA3ad6b91738261",
       "version": "2.0.0",
       "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 2194,
-      "deploymentTimestamp": 1712349231096,
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 2188,
+      "deploymentTimestamp": 1712912954740,
       "deployed": true
     },
     "HubController": {
-      "evmAddress": "0xe47ED094d87828E31B5D955D089be2A44d5D9Bb9",
+      "evmAddress": "0xC5Db239B08da4edB2D9Ab8E5e1E2A8B00d8B8023",
       "version": "1.0.2",
       "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 2195,
-      "deploymentTimestamp": 1712349231478,
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 2189,
+      "deploymentTimestamp": 1712912955467,
       "deployed": true
     },
     "Token": {
-      "evmAddress": "0x5Ab2232a0c296f0ae6D73140bFeFc4316970224F",
+      "evmAddress": "0x805Edf48678447c9599C11E01F61d4fCe5Da5313",
       "version": null,
       "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 2197,
-      "deploymentTimestamp": 1712349231756,
-      "deployed": true
-    },
-    "ProfileStorage": {
-      "evmAddress": "0xebDCd07Bf0ee267f13C0A1e553972C0EE11d3361",
-      "version": "1.0.0",
-      "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3201,
-      "deploymentTimestamp": 1712349250931,
-      "deployed": true
-    },
-    "ShardingTableStorage": {
-      "evmAddress": "0x10672236862DB3D90A145185a0832a22F142183B",
-      "version": "2.0.0",
-      "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3204,
-      "deploymentTimestamp": 1712349251525,
-      "deployed": true
-    },
-    "StakingStorage": {
-      "evmAddress": "0x464247623b6A12D61E69Bee136a0c5E75A45Fea9",
-      "version": "1.0.0",
-      "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3206,
-      "deploymentTimestamp": 1712349252506,
-      "deployed": true
-    },
-    "ShardingTable": {
-      "evmAddress": "0x5418515e944cb8C55fbb6C875FE1d9b1B4ECC09D",
-      "version": "2.0.0",
-      "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3209,
-      "deploymentTimestamp": 1712349253072,
-      "deployed": true
-    },
-    "IdentityStorage": {
-      "evmAddress": "0x407FB1A641098BDf7a9Ef5a84e910a1F996c700f",
-      "version": "2.0.0",
-      "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3212,
-      "deploymentTimestamp": 1712349253551,
-      "deployed": true
-    },
-    "ParametersStorage": {
-      "evmAddress": "0xBa01DbbfCEe0c4577c674Ea443e14560C4a67Db4",
-      "version": "1.1.1",
-      "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3214,
-      "deploymentTimestamp": 1712349254753,
-      "deployed": true
-    },
-    "ServiceAgreementStorageV1": {
-      "evmAddress": "0xBc3Bf6C2c8f783Cd6A992941477c0aE89111cf2c",
-      "version": "1.0.0",
-      "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3219,
-      "deploymentTimestamp": 1712349255718,
-      "deployed": true
-    },
-    "ServiceAgreementStorageV1U1": {
-      "evmAddress": "0x84BE2c6E16D95511158E848FD664e65AC76029F4",
-      "version": "1.0.0",
-      "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3222,
-      "deploymentTimestamp": 1712349256417,
-      "deployed": true
-    },
-    "ServiceAgreementStorageProxy": {
-      "evmAddress": "0xB1F9Fc38c52E32468a0b025a33831b457CE97F39",
-      "version": "1.0.0",
-      "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3225,
-      "deploymentTimestamp": 1712349256958,
-      "deployed": true
-    },
-    "NodeOperatorFeeChangesStorage": {
-      "evmAddress": "0x783e40fBae3E5C427102b496cf8621Fc5dD32F80",
-      "version": "2.0.0",
-      "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3228,
-      "deploymentTimestamp": 1712349257450,
-      "deployed": true
-    },
-    "Staking": {
-      "evmAddress": "0x3b63985303D5636F6b60315B45531d176Af2c399",
-      "version": "2.0.0",
-      "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3230,
-      "deploymentTimestamp": 1712349257967,
-      "deployed": true
-    },
-    "Identity": {
-      "evmAddress": "0xa84E50408f9dC576309102da03Ed8D6A82b7869B",
-      "version": "1.1.0",
-      "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3233,
-      "deploymentTimestamp": 1712349258485,
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 2192,
+      "deploymentTimestamp": 1712912955796,
       "deployed": true
     },
     "HashingProxy": {
-      "evmAddress": "0xfa994A0DF5E4139e78bEdBA699005a21A2990e4d",
+      "evmAddress": "0x783e40fBae3E5C427102b496cf8621Fc5dD32F80",
       "version": "1.0.1",
       "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3237,
-      "deploymentTimestamp": 1712349259590,
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3196,
+      "deploymentTimestamp": 1712912992858,
       "deployed": true
     },
     "SHA256": {
-      "evmAddress": "0xfa4d1950831e0aE5bEc5663419B5A7Bf50F7175B",
+      "evmAddress": "0x3b63985303D5636F6b60315B45531d176Af2c399",
       "version": null,
       "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3239,
-      "deploymentTimestamp": 1712349259826,
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3198,
+      "deploymentTimestamp": 1712912993070,
       "deployed": true
     },
-    "WhitelistStorage": {
-      "evmAddress": "0x91416df12C887453E85267487D340f690C00f973",
-      "version": "1.0.0",
+    "ScoringProxy": {
+      "evmAddress": "0xa84E50408f9dC576309102da03Ed8D6A82b7869B",
+      "version": "2.0.0",
       "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3242,
-      "deploymentTimestamp": 1712349260278,
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3201,
+      "deploymentTimestamp": 1712912993551,
       "deployed": true
     },
-    "Profile": {
-      "evmAddress": "0xC531715A0aEe9FD389e453bB364F05704EDEC0b0",
+    "ParametersStorage": {
+      "evmAddress": "0x8dA4973175c2c700Cd91e9ac9A29b5431926D592",
       "version": "1.1.1",
       "gitBranch": "improvement/operator-fees-rework",
-      "gitCommitHash": "a4abee6130e81261b309e43979660890df735506",
-      "deploymentBlock": 3244,
-      "deploymentTimestamp": 1712349261188,
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3203,
+      "deploymentTimestamp": 1712912993951,
+      "deployed": true
+    },
+    "LinearSum": {
+      "evmAddress": "0x198e4b39A66b8015f622e424cc57B800a11ac80b",
+      "version": null,
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3207,
+      "deploymentTimestamp": 1712912994254,
+      "deployed": true
+    },
+    "IdentityStorage": {
+      "evmAddress": "0x005b7C8AE2ae7a5B87B4D22521d60b665EDD2A3C",
+      "version": "2.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3212,
+      "deploymentTimestamp": 1712912994742,
+      "deployed": true
+    },
+    "ShardingTableStorage": {
+      "evmAddress": "0x2C71C002D03d7B594E9e5151C9Ce4f81BA0F6e45",
+      "version": "2.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3214,
+      "deploymentTimestamp": 1712912995325,
+      "deployed": true
+    },
+    "ContentAssetStorage": {
+      "evmAddress": "0x534cDe573E92D5Aabf64d2eDb4ddFca043Ae5995",
+      "version": "2.0.1",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3216,
+      "deploymentTimestamp": 1712912995845,
+      "deployed": true
+    },
+    "ProfileStorage": {
+      "evmAddress": "0xCfa0ed6188B958b2a3fd31D5C7E61073190fc02f",
+      "version": "1.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3219,
+      "deploymentTimestamp": 1712912996737,
+      "deployed": true
+    },
+    "StakingStorage": {
+      "evmAddress": "0x510C1E0e47d4075cbBD7654Cb7753736545CAbAc",
+      "version": "1.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3222,
+      "deploymentTimestamp": 1712912998036,
+      "deployed": true
+    },
+    "ShardingTable": {
+      "evmAddress": "0xcC445E7389Ca3fe659C565239cf0DF3864fa4A21",
+      "version": "2.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3226,
+      "deploymentTimestamp": 1712912999223,
+      "deployed": true
+    },
+    "ServiceAgreementStorageV1": {
+      "evmAddress": "0x7B6D8426280381cfa7724eB0B416A02AdD838611",
+      "version": "1.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3229,
+      "deploymentTimestamp": 1712913001441,
+      "deployed": true
+    },
+    "ServiceAgreementStorageV1U1": {
+      "evmAddress": "0x00a9a7162107C8119b03C0ce2C9a2FF7bEd70C98",
+      "version": "1.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3232,
+      "deploymentTimestamp": 1712913003712,
+      "deployed": true
+    },
+    "ServiceAgreementStorageProxy": {
+      "evmAddress": "0x1CC0F57AbC6A1CC511d1AFaf7Cb6e45B6dc4EA2F",
+      "version": "1.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3236,
+      "deploymentTimestamp": 1712913004436,
+      "deployed": true
+    },
+    "NodeOperatorFeesStorage": {
+      "evmAddress": "0xF7AdF0f8bCb9e8F4Fc843974B519591dE3E48B08",
+      "version": "2.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3239,
+      "deploymentTimestamp": 1712913005839,
+      "deployed": true
+    },
+    "Staking": {
+      "evmAddress": "0x83303D67770F7e28F9F10fD5612fEE7952EfF10C",
+      "version": "2.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3241,
+      "deploymentTimestamp": 1712913007203,
+      "deployed": true
+    },
+    "Log2PLDSF": {
+      "evmAddress": "0x08FC09eC959B366E701fdb8b3600cfC5aA5F36b0",
+      "version": null,
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3245,
+      "deploymentTimestamp": 1712913009250,
+      "deployed": true
+    },
+    "CommitManagerV1": {
+      "evmAddress": "0xd26ffB5e404F5Dc3bF07d9c214957b2731E8EB9b",
+      "version": "2.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3249,
+      "deploymentTimestamp": 1712913010990,
+      "deployed": true
+    },
+    "UnfinalizedStateStorage": {
+      "evmAddress": "0xb37bD8801077aa591FB5e0dbe00F66657D2C740a",
+      "version": "1.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3252,
+      "deploymentTimestamp": 1712913011531,
+      "deployed": true
+    },
+    "CommitManagerV1U1": {
+      "evmAddress": "0xCBb7BcCe916d3f898Bed75B5bC03aF04F90A6897",
+      "version": "2.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3254,
+      "deploymentTimestamp": 1712913012062,
+      "deployed": true
+    },
+    "AssertionStorage": {
+      "evmAddress": "0x7A2Cf017076D8D0A8Fb359ADb4DB2e2c27C53CDF",
+      "version": "1.0.0",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3258,
+      "deploymentTimestamp": 1712913012656,
+      "deployed": true
+    },
+    "Assertion": {
+      "evmAddress": "0x88CD73b4B7F34052F93dB4503B51bF426c747419",
+      "version": "1.0.1",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3260,
+      "deploymentTimestamp": 1712913013189,
+      "deployed": true
+    },
+    "ProofManagerV1": {
+      "evmAddress": "0x17797da4168d0745F4214F2B3707f934a5000A11",
+      "version": "1.0.3",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3263,
+      "deploymentTimestamp": 1712913013644,
+      "deployed": true
+    },
+    "ProofManagerV1U1": {
+      "evmAddress": "0x75b1B4DFCd18C567aFD4Df48C88295b57d9009Cb",
+      "version": "1.0.3",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3266,
+      "deploymentTimestamp": 1712913013997,
+      "deployed": true
+    },
+    "ServiceAgreementV1": {
+      "evmAddress": "0x3c5344C89815549439a67b4D208DEFc15D7fD4f4",
+      "version": "1.1.1",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3269,
+      "deploymentTimestamp": 1712913014464,
+      "deployed": true
+    },
+    "ContentAsset": {
+      "evmAddress": "0x61c5326cc529f612e75bEC30cf5e56EE9AB52C59",
+      "version": "1.0.3",
+      "gitBranch": "improvement/operator-fees-rework",
+      "gitCommitHash": "589636e4ba4e45f5087a62e3d4ed82bd220f0f8d",
+      "deploymentBlock": 3272,
+      "deploymentTimestamp": 1712913015013,
       "deployed": true
     }
   }
