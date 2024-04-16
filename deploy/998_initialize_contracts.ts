@@ -44,6 +44,41 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       setParametersEncodedData,
     );
     await setAndReinitializeContractsTx.wait();
+
+    // todo only if neuro call migration
+    console.log(`Executing sharding table storage v1 to v2 migration`);
+    const shardingTableV1Address = hre.helpers.contractDeployments.contracts['ShardingTableV1'].evmAddress;
+    const shardingTableV2Address = hre.helpers.contractDeployments.contracts['ShardingTableV2'].evmAddress;
+    const shardingTableStorageV1Address = hre.helpers.contractDeployments.contracts['ShardingTableStorage'].evmAddress;
+
+    console.log(
+      `Using: shardingTableV1Address: ${shardingTableV1Address}, shardingTableV2Address: ${shardingTableV2Address}, shardingTableStorageV1Address: ${shardingTableStorageV1Address}`,
+    );
+
+    const ShardingTableV1 = await hre.ethers.getContractAt('ShardingTableV1', shardingTableV2Address, deployer);
+    const ShardingTableV2 = await hre.ethers.getContractAt('ShardingTableV2', shardingTableV2Address, deployer);
+
+    const nodes = await ShardingTableV1.getShardingTable();
+    let identityId = nodes[0]?.identityId;
+    console.log(`Found ${nodes.length} nodes in sharding table v1, starting identity id: ${identityId}`);
+
+    const numberOfNodesInBach = 10;
+    const iteration = 1;
+
+    while (identityId) {
+      identityId = nodes[iteration * numberOfNodesInBach].identityId;
+      console.log(
+        `Migrating sharding table with starting identity id: ${identityId}, number of nodes in batch: ${numberOfNodesInBach}, sharding table storage v1 address: ${shardingTableStorageV1Address}`,
+      );
+      await ShardingTableV2.migrateOldShardingTable(identityId, numberOfNodesInBach, shardingTableStorageV1Address);
+      console.log(
+        `Migration COMPLETED with starting identity id: ${identityId}, number of nodes in batch: ${numberOfNodesInBach}, sharding table storage v1 address: ${shardingTableStorageV1Address}`,
+      );
+    }
+
+    const newShardingTable = await ShardingTableV2.getShardingTable();
+    // todo add additional validation for all nodes
+    console.log(`Number of nodes in new sharding table after migration: ${newShardingTable.length}`);
   }
 };
 

@@ -246,6 +246,29 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "startingIdentityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint16",
+        "name": "numberOfNodes",
+        "type": "uint16"
+      },
+      {
+        "internalType": "address",
+        "name": "shardingTableStorageV1Address",
+        "type": "address"
+      }
+    ],
+    "name": "migrateOldShardingTable",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "name",
     "outputs": [

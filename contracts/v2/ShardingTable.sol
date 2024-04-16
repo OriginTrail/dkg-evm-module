@@ -31,14 +31,14 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     uint256 private immutable deploymentTime;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) ContractStatus(hubAddress) {}
+    constructor(address hubAddress) ContractStatus(hubAddress) {
+        deploymentTime = block.timestamp;
+    }
 
     function initialize() public onlyHubOwner {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         shardingTableStorage = ShardingTableStorageV2(hub.getContractAddress("ShardingTableStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
-
-        deploymentTime = block.timestamp;
     }
 
     modifier onlyWithinOneHourAfterDeployment() {
@@ -90,8 +90,9 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         ShardingTableStructsV1.Node[] memory nodes = stsv1.getMultipleNodes(startingIdentityId, numberOfNodes);
 
         for (uint i = 0; i < nodes.length; i++) {
-            if (!sts.nodeExists(nodes[i].identityId)) {
-                _insertNode(_binarySearchForIndex(sha256(nodes[i].nodeId)), identityId, sha256(nodes[i].nodeId));
+            if (!stsv2.nodeExists(nodes[i].identityId)) {
+                uint256 nodeHashRingPosition = uint256(profileStorage.getNodeAddress(nodes[i].identityId, 1));
+                _insertNode(_binarySearchForIndex(nodeHashRingPosition), nodes[i].identityId, nodeHashRingPosition);
             }
         }
     }
