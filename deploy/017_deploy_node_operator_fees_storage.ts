@@ -13,7 +13,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const nofcsAddress = hre.helpers.contractDeployments.contracts['NodeOperatorFeeChangesStorage']?.evmAddress;
   let nofcs = null;
   if (nofcsAddress) {
-    nofcs = await hre.ethers.getContractAt('NodeOperatorFeeChangesStorage', nofcsAddress, deployer);
+    const abi = hre.helpers.getAbi('LegacyNodeOperatorFeeChangesStorage');
+    nofcs = await hre.ethers.getContractAt(abi, nofcsAddress, deployer);
   }
 
   if (nofcs !== null) {
@@ -41,7 +42,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
       const pendingOperatorFee = await nofcs.operatorFeeChangeRequests(i);
 
-      if (pendingOperatorFee) {
+      if (!pendingOperatorFee.timestamp.eq(0)) {
         if (pendingOperatorFee.timestamp < operatorFees[0].effectiveDate) {
           operatorFees[0].effectiveDate = pendingOperatorFee.timestamp - 1;
         }
@@ -55,7 +56,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       if (operatorFees.length > 0) {
         oldOperatorFees.push({
           identityId: i,
-          operatorFees,
+          fees: operatorFees,
         });
       }
     }

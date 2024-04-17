@@ -17,6 +17,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   console.log('Deploying ShardingTable V2...');
 
+  if (isMigration) {
+    console.log('And running migration of old ShardingTable...');
+    delete hre.helpers.contractDeployments.contracts['ShardingTable'].migration;
+  }
+
   const blockTimeNow = (await hre.ethers.provider.getBlock('latest')).timestamp;
 
   await hre.helpers.deploy({
@@ -25,7 +30,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     additionalArgs: [isMigration ? blockTimeNow + 3600 : blockTimeNow],
   });
 
-  if (hre.helpers.contractDeployments.contracts['ShardingTable'].migration && hre.network.name.startsWith('otp')) {
+  if (isMigration && hre.network.name.startsWith('otp')) {
     const { deployer } = await hre.getNamedAccounts();
 
     console.log(`Executing sharding table storage v1 to v2 migration`);
@@ -37,15 +42,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     );
 
     const oldShardingTable = await hre.ethers.getContractAt('ShardingTable', oldShardingTableAddress, deployer);
-    const newShardingTable = await hre.ethers.getContractAt('ShardingTable', newShardingTableAddress, deployer);
+    const newShardingTableABI = hre.helpers.getAbi('ShardingTableV2');
+    const newShardingTable = await hre.ethers.getContractAt(newShardingTableABI, newShardingTableAddress, deployer);
 
-    const nodes = await oldShardingTable.getShardingTable();
+    const nodes = await oldShardingTable['getShardingTable()']();
     let identityId = nodes[0]?.identityId;
     console.log(`Found ${nodes.length} nodes in the old ShardingTable, starting identityId: ${identityId}`);
 
     const numberOfNodesInBatch = 10;
     let iteration = 1;
 
+    const oldShardingTableStorageAddress = await oldShardingTable.shardingTableStorage();
     const encodedDataArray = [];
 
     while (identityId) {
@@ -57,7 +64,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         newShardingTable.interface.encodeFunctionData('migrateOldShardingTable', [
           identityId,
           numberOfNodesInBatch,
-          oldShardingTableAddress,
+          oldShardingTableStorageAddress,
         ]),
       );
 
@@ -68,9 +75,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       identityId = nodes[iteration * numberOfNodesInBatch]?.identityId;
     }
 
-    for (let i = 0; i < encodedDataArray.length; i++) {
-      hre.helpers.setParametersEncodedData.push(['ShardingTable', [encodedDataArray[i]]]);
-    }
+    hre.helpers.setParametersEncodedData.push(['ShardingTable', encodedDataArray]);
   }
 };
 
