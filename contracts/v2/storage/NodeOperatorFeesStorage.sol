@@ -239,8 +239,7 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
         } else {
             for (uint i; i < operatorFees[identityId].length; ) {
                 if (operatorFees[identityId][i].effectiveDate > timestamp) {
-                    if (i == 0) revert("No previous fee applicable");
-                    return operatorFees[identityId][i - 1];
+                    return i == 0 ? operatorFees[identityId][0] : operatorFees[identityId][i - 1];
                 }
 
                 unchecked {
