@@ -63,39 +63,40 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     delete hre.helpers.contractDeployments.contracts['NodeOperatorFeeChangesStorage'];
   }
 
-  await hre.helpers.deploy({
+  const NodeOperatorFeesStorage = await hre.helpers.deploy({
     newContractName: 'NodeOperatorFeesStorage',
     additionalArgs: [timestampNow + 300],
   });
 
-  if (nofcs !== null) {
-    const chunkSize = 10;
-    const encodedDataArray: string[] = oldOperatorFees.reduce<string[]>((acc, currentValue, currentIndex, array) => {
-      if (currentIndex % chunkSize === 0) {
-        // Encode and push the function data for a slice of the array
-        acc.push(
-          nofcs.interface.encodeFunctionData('migrateOldOperatorFees', [
-            array.slice(currentIndex, currentIndex + chunkSize),
-          ]),
-        );
-      }
-      return acc;
-    }, []);
+  const chunkSize = 10;
+  const encodedDataArray: string[] = oldOperatorFees.reduce<string[]>((acc, currentValue, currentIndex, array) => {
+    if (currentIndex % chunkSize === 0) {
+      // Encode and push the function data for a slice of the array
+      acc.push(
+        NodeOperatorFeesStorage.interface.encodeFunctionData('migrateOldOperatorFees', [
+          array.slice(currentIndex, currentIndex + chunkSize),
+        ]),
+      );
+    }
+    return acc;
+  }, []);
 
-    if (hre.network.config.environment === 'development') {
-      const { deployer } = await hre.getNamedAccounts();
+  if (hre.network.config.environment === 'development') {
+    const { deployer } = await hre.getNamedAccounts();
 
-      const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
-      const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
+    const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
+    const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
 
-      for (let i = 0; i < encodedDataArray.length; i++) {
-        const migrateOldOperatorFeesTx = await HubController.forwardCall(nofcs.address, encodedDataArray[i]);
-        await migrateOldOperatorFeesTx.wait();
-      }
-    } else {
-      for (let i = 0; i < encodedDataArray.length; i++) {
-        hre.helpers.setParametersEncodedData.push(['NodeOperatorFeesStorage', [encodedDataArray[i]]]);
-      }
+    for (let i = 0; i < encodedDataArray.length; i++) {
+      const migrateOldOperatorFeesTx = await HubController.forwardCall(
+        NodeOperatorFeesStorage.address,
+        encodedDataArray[i],
+      );
+      await migrateOldOperatorFeesTx.wait();
+    }
+  } else {
+    for (let i = 0; i < encodedDataArray.length; i++) {
+      hre.helpers.setParametersEncodedData.push(['NodeOperatorFeesStorage', [encodedDataArray[i]]]);
     }
   }
 };
