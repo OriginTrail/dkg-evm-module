@@ -151,7 +151,6 @@ describe('@v2 @unit NodeOperatorFeesStorage contract', function () {
       }
     }
 
-    // TODO: Perhaps makes sense to implement the same logic as in the deployment script to automatically get legacy fees
     const operatorFees = [
       { identityId: identityIds[0], fees: [{ feePercentage: 1, effectiveDate: BigNumber.from(latestBlockTimestamp) }] },
       {

@@ -39,11 +39,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         });
       }
 
-      // TODO: Check the timestamp so that it's not smaller than current
       const pendingOperatorFee = await nofcs.operatorFeeChangeRequests(i);
 
       if (pendingOperatorFee) {
-        operatorFees.push(pendingOperatorFee);
+        if (pendingOperatorFee.timestamp < operatorFees[0].effectiveDate) {
+          operatorFees[0].effectiveDate = pendingOperatorFee.timestamp - 1;
+        }
+
+        operatorFees.push({
+          feePercentage: pendingOperatorFee.newFee,
+          effectiveDate: pendingOperatorFee.timestamp,
+        });
       }
 
       if (operatorFees.length > 0) {
