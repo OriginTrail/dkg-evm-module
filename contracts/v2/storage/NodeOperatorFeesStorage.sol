@@ -7,7 +7,6 @@ import {Named} from "../../v1/interface/Named.sol";
 import {Versioned} from "../../v1/interface/Versioned.sol";
 import {NodeOperatorErrors} from "../errors/NodeOperatorErrors.sol";
 import {NodeOperatorStructs} from "../structs/NodeOperatorStructs.sol";
-import "hardhat/console.sol";
 
 contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
     string private constant _NAME = "NodeOperatorFeesStorage";
@@ -227,11 +226,9 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
 
         if (reverseLookup) {
             for (uint i = operatorFees[identityId].length - 1; i > 0; ) {
-                console.log("Before: ", i);
                 unchecked {
                     --i;
                 }
-                console.log("After: ", i);
 
                 if (operatorFees[identityId][i].effectiveDate <= timestamp) {
                     return operatorFees[identityId][i];
