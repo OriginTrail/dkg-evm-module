@@ -27,12 +27,11 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     ShardingTableStorageV2 public shardingTableStorage;
     StakingStorage public stakingStorage;
 
-    uint256 private constant ONE_HOUR_IN_SECONDS = 3600;
-    uint256 private immutable deploymentTime;
+    uint256 public migrationPeriodEnd;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) ContractStatus(hubAddress) {
-        deploymentTime = block.timestamp;
+    constructor(address hubAddress, uint256 migrationPeriodEnd_) ContractStatus(hubAddress) {
+        migrationPeriodEnd = migrationPeriodEnd_;
     }
 
     function initialize() public onlyHubOwner {
@@ -41,11 +40,8 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
     }
 
-    modifier onlyWithinOneHourAfterDeployment() {
-        require(
-            block.timestamp <= deploymentTime + ONE_HOUR_IN_SECONDS,
-            "Function can only be called within one hour after deployment"
-        );
+    modifier timeLimited() {
+        require(block.timestamp < migrationPeriodEnd, "Migration period has ended");
         _;
     }
 
@@ -83,7 +79,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
         uint72 startingIdentityId,
         uint16 numberOfNodes,
         address shardingTableStorageV1Address
-    ) external onlyHubOwner onlyWithinOneHourAfterDeployment {
+    ) external onlyHubOwner timeLimited {
         ShardingTableStorageV2 stsv2 = shardingTableStorage;
         ShardingTableStorage stsv1 = ShardingTableStorage(shardingTableStorageV1Address);
 

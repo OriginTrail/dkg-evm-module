@@ -5,6 +5,11 @@
         "internalType": "address",
         "name": "hubAddress",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "migrationPeriodEnd_",
+        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
@@ -266,6 +271,19 @@
     "name": "migrateOldShardingTable",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "migrationPeriodEnd",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

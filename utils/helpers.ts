@@ -30,6 +30,7 @@ type ContractDeployments = {
       deploymentBlock: number;
       deploymentTimestamp: number;
       deployed: boolean;
+      migration?: boolean;
     };
   };
 };
