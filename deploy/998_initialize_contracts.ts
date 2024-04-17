@@ -62,18 +62,19 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     let identityId = nodes[0]?.identityId;
     console.log(`Found ${nodes.length} nodes in sharding table v1, starting identity id: ${identityId}`);
 
-    const numberOfNodesInBach = 10;
-    const iteration = 1;
+    const numberOfNodesInBatch = 10;
+    let iteration = 1;
 
     while (identityId) {
-      identityId = nodes[iteration * numberOfNodesInBach].identityId;
       console.log(
-        `Migrating sharding table with starting identity id: ${identityId}, number of nodes in batch: ${numberOfNodesInBach}, sharding table storage v1 address: ${shardingTableStorageV1Address}`,
+        `Migrating sharding table with starting identity id: ${identityId}, number of nodes in batch: ${numberOfNodesInBatch}, sharding table storage v1 address: ${shardingTableStorageV1Address}`,
       );
-      await ShardingTableV2.migrateOldShardingTable(identityId, numberOfNodesInBach, shardingTableStorageV1Address);
+      await ShardingTableV2.migrateOldShardingTable(identityId, numberOfNodesInBatch, shardingTableStorageV1Address);
       console.log(
-        `Migration COMPLETED with starting identity id: ${identityId}, number of nodes in batch: ${numberOfNodesInBach}, sharding table storage v1 address: ${shardingTableStorageV1Address}`,
+        `Migration COMPLETED iteration: ${iteration} with starting identity id: ${identityId}, number of nodes in batch: ${numberOfNodesInBatch}, sharding table storage v1 address: ${shardingTableStorageV1Address}`,
       );
+      iteration += 1;
+      identityId = nodes[iteration * numberOfNodesInBatch]?.identityId;
     }
 
     const newShardingTable = await ShardingTableV2.getShardingTable();
