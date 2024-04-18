@@ -1,11 +1,16 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
+import { ShardingTableStructsV1 } from '../typechain/contracts/v2/ShardingTable.sol/ShardingTableV2';
+
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const oldOperatorFees = [];
   const timestampNow = (await hre.ethers.provider.getBlock('latest')).timestamp;
 
   const { deployer } = await hre.getNamedAccounts();
+
+  const shardingTableAddress = hre.helpers.contractDeployments.contracts['ShardingTable'].evmAddress;
+  const ShardingTable = await hre.ethers.getContractAt('ShardingTable', shardingTableAddress, deployer);
 
   const stakingStorageAddress = hre.helpers.contractDeployments.contracts['StakingStorage'].evmAddress;
   const StakingStorage = await hre.ethers.getContractAt('StakingStorage', stakingStorageAddress, deployer);
@@ -17,30 +22,25 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     nofcs = await hre.ethers.getContractAt(abi, nofcsAddress, deployer);
   }
 
-  if (nofcs !== null) {
-    const currentIdentityId = parseInt(
-      (
-        await hre.ethers.provider.getStorageAt(
-          hre.helpers.contractDeployments.contracts['IdentityStorage'].evmAddress,
-          0,
-        )
-      ).slice(8, 26),
-      16,
-    );
+  const nodes: ShardingTableStructsV1.NodeInfoStructOutput[] = await ShardingTable['getShardingTable()']();
+  const identityIds = nodes.map((node) => node.identityId);
 
-    for (let i = 0; i < currentIdentityId; i++) {
-      const operatorFees = [];
+  for (const identityId of identityIds) {
+    const operatorFees = [];
 
-      const activeOperatorFeePercentage = await StakingStorage.operatorFees(i);
+    const activeOperatorFeePercentage = await StakingStorage.operatorFees(identityId);
 
-      if (activeOperatorFeePercentage !== 0) {
-        operatorFees.push({
-          feePercentage: activeOperatorFeePercentage,
-          effectiveDate: timestampNow,
-        });
-      }
+    if (!activeOperatorFeePercentage.eq(0)) {
+      operatorFees.push({
+        feePercentage: activeOperatorFeePercentage,
+        effectiveDate: timestampNow,
+      });
+    }
 
-      const pendingOperatorFee = await nofcs.operatorFeeChangeRequests(i);
+    console.log(`Identity id: ${identityId}, operator fee: ${activeOperatorFeePercentage.toString()}`);
+
+    if (nofcs !== null) {
+      const pendingOperatorFee = await nofcs.operatorFeeChangeRequests(identityId);
 
       if (!pendingOperatorFee.timestamp.eq(0)) {
         if (pendingOperatorFee.timestamp < operatorFees[0].effectiveDate) {
@@ -52,17 +52,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
           effectiveDate: pendingOperatorFee.timestamp,
         });
       }
-
-      if (operatorFees.length > 0) {
-        oldOperatorFees.push({
-          identityId: i,
-          fees: operatorFees,
-        });
-      }
     }
 
-    delete hre.helpers.contractDeployments.contracts['NodeOperatorFeeChangesStorage'];
+    if (operatorFees.length > 0) {
+      oldOperatorFees.push({
+        identityId,
+        fees: operatorFees,
+      });
+    }
   }
+
+  delete hre.helpers.contractDeployments.contracts['NodeOperatorFeeChangesStorage'];
 
   const NodeOperatorFeesStorage = await hre.helpers.deploy({
     newContractName: 'NodeOperatorFeesStorage',
