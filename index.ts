@@ -137,6 +137,7 @@ export {
   Log2PLDSF as Log2PLDSFABI,
   NodeOperatorFeesStorage as NodeOperatorFeesStorageABI,
   ProfileStorage as ProfileStorageABI,
+  Profile as ProfileABI,
   StakingStorage as StakingStorageABI,
   StakingV2 as StakingABI,
   UnfinalizedStateStorage as UnfinalizedStateStorageABI,
