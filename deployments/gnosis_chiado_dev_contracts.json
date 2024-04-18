@@ -265,12 +265,12 @@
       "deployed": true
     },
     "NodeOperatorFeesStorage": {
-      "evmAddress": "0xbb3fAbF0d691Ce3a0840d496834c7E27921CaF48",
+      "evmAddress": "0xBf75658BC1001c3E2579A7d3c0208A6BD154Ff8D",
       "version": "2.0.0",
-      "gitBranch": "release/4.2.6",
-      "gitCommitHash": "731dc92083f8c8e705050f9da8d8d9be649e7465",
-      "deploymentBlock": 9312155,
-      "deploymentTimestamp": 1713368476437,
+      "gitBranch": "deployment/4.2.6",
+      "gitCommitHash": "70460ee20705bcbc21677f2e96341103548843f9",
+      "deploymentBlock": 9328116,
+      "deploymentTimestamp": 1713448336305,
       "deployed": true
     }
   }

@@ -25,10 +25,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const nodes: ShardingTableStructsV1.NodeInfoStructOutput[] = await ShardingTable['getShardingTable()']();
   const identityIds = nodes.map((node) => node.identityId);
 
+  console.log(`Starting migration of the old operator fees...`);
   for (const identityId of identityIds) {
+    console.log(`--------------------------------------------------------`);
+    console.log(`IdentityId: ${identityId}`);
+
     const operatorFees = [];
 
     const activeOperatorFeePercentage = await StakingStorage.operatorFees(identityId);
+
+    console.log(`Active operatorFee in the StakingStorage: ${activeOperatorFeePercentage.toString()}%`);
 
     if (!activeOperatorFeePercentage.eq(0)) {
       operatorFees.push({
@@ -37,10 +43,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       });
     }
 
-    console.log(`Identity id: ${identityId}, operator fee: ${activeOperatorFeePercentage.toString()}`);
-
     if (nofcs !== null) {
       const pendingOperatorFee = await nofcs.operatorFeeChangeRequests(identityId);
+
+      console.log(`Pending operatorFee in the NodeOperatorFeeChangesStorage: ${pendingOperatorFee.newFee.toString()}%`);
 
       if (!pendingOperatorFee.timestamp.eq(0)) {
         if (pendingOperatorFee.timestamp < operatorFees[0].effectiveDate) {
@@ -53,6 +59,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         });
       }
     }
+
+    console.log(`--------------------------------------------------------`);
 
     if (operatorFees.length > 0) {
       oldOperatorFees.push({
