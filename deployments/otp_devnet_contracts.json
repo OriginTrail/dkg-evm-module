@@ -181,13 +181,13 @@
       "version": "1.1.1"
     },
     "ShardingTable": {
-      "evmAddress": "0x89822851D2A5b5256Fd19fa3b52538CAaE1f0acb",
-      "substrateAddress": "5EMjsczojCiGD9qj1tN9JPu3Q1NZzBq9e4fQmCRHarD5agFZ",
+      "evmAddress": "0xb7fCc4718CF2d0a5289714D15AeB89D5988Cd678",
+      "substrateAddress": "5EMjsczy3N53B3xEonMGeTYgYSxHT3ZyJjhFTsodgELN77fB",
       "version": "2.0.1",
-      "gitBranch": "release/4.2.6",
-      "gitCommitHash": "731dc92083f8c8e705050f9da8d8d9be649e7465",
-      "deploymentBlock": 4434349,
-      "deploymentTimestamp": 1713367726304,
+      "gitBranch": "main",
+      "gitCommitHash": "f0e94c17b8faca2ebc0ac226bf6188f14577264e",
+      "deploymentBlock": 4439322,
+      "deploymentTimestamp": 1713429610407,
       "deployed": true
     },
     "Staking": {
@@ -230,16 +230,6 @@
       "deploymentTimestamp": 1713367652683,
       "deployed": true
     },
-    "ShardingTableStorage": {
-      "evmAddress": "0xe1B302A7cAC8241620ED0e901aA0f76529C31864",
-      "substrateAddress": "5EMjsd17Q8ApLnR56hxkhH6pDpBz4u83wZLk3sB4um7jutVC",
-      "version": "2.0.0",
-      "gitBranch": "release/4.2.6",
-      "gitCommitHash": "731dc92083f8c8e705050f9da8d8d9be649e7465",
-      "deploymentBlock": 4434345,
-      "deploymentTimestamp": 1713367674764,
-      "deployed": true
-    },
     "NodeOperatorFeesStorage": {
       "evmAddress": "0x74982203A596469c252E12dE91571d3A2a65Ac73",
       "substrateAddress": "5EMjsczjY9RSBkFnCVKPrP2QvtyvKNKuCsSZ4W7S2AMVKPDr",
@@ -248,6 +238,16 @@
       "gitCommitHash": "731dc92083f8c8e705050f9da8d8d9be649e7465",
       "deploymentBlock": 4434347,
       "deploymentTimestamp": 1713367700400,
+      "deployed": true
+    },
+    "ShardingTableStorage": {
+      "evmAddress": "0x000Fa4Cfe3593D7aF43c0c88E9171367e44F501f",
+      "substrateAddress": "5EMjsczLBqgPivrGW33v4uAGTT7dRV5vihYRZ2GTLfZMG2Uq",
+      "version": "2.0.0",
+      "gitBranch": "main",
+      "gitCommitHash": "f0e94c17b8faca2ebc0ac226bf6188f14577264e",
+      "deploymentBlock": 4439320,
+      "deploymentTimestamp": 1713429584529,
       "deployed": true
     }
   },

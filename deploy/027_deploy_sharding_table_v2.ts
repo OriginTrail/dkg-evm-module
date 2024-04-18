@@ -71,8 +71,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       console.log(
         `Migration COMPLETED iteration: ${iteration} with starting identityId: ${identityId}, number of nodes in batch: ${numberOfNodesInBatch}, ShardingTableStorage: ${shardingTableStorageAddress}`,
       );
-      iteration += 1;
+
       identityId = nodes[iteration * numberOfNodesInBatch]?.identityId;
+      iteration += 1;
     }
 
     hre.helpers.setParametersEncodedData.push(['ShardingTable', encodedDataArray]);
