@@ -40,22 +40,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "nowTimestamp",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "endTimestamp",
-        "type": "uint256"
-      }
-    ],
-    "name": "OperatorFeeChangeDelayPending",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -156,31 +140,6 @@
       }
     ],
     "name": "AccumulatedOperatorFeeIncreased",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "nodeId",
-        "type": "bytes"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "operatorFee",
-        "type": "uint8"
-      }
-    ],
-    "name": "OperatorFeeChangeFinished",
     "type": "event"
   },
   {
@@ -507,19 +466,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      }
-    ],
-    "name": "finishOperatorFeeChange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "hub",
     "outputs": [
@@ -567,10 +513,10 @@
   },
   {
     "inputs": [],
-    "name": "nodeOperatorFeeChangesStorage",
+    "name": "nodeOperatorFeesStorage",
     "outputs": [
       {
-        "internalType": "contract NodeOperatorFeeChangesStorage",
+        "internalType": "contract NodeOperatorFeesStorage",
         "name": "",
         "type": "address"
       }
@@ -691,7 +637,7 @@
       },
       {
         "internalType": "uint8",
-        "name": "newOperatorFee",
+        "name": "newFeePercentage",
         "type": "uint8"
       }
     ],

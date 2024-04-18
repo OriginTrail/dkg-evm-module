@@ -2,20 +2,81 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  const isMigration = hre.helpers.contractDeployments.contracts['ShardingTable']?.migration || false;
+
   if (
     hre.helpers.isDeployed('ShardingTable') &&
     (hre.helpers.contractDeployments.contracts['ShardingTable'].version === undefined ||
-      hre.helpers.contractDeployments.contracts['ShardingTable'].version?.startsWith('1.'))
+      hre.helpers.contractDeployments.contracts['ShardingTable'].version?.startsWith('1.')) &&
+    !isMigration
   ) {
     return;
   }
 
+  const oldShardingTableAddress = hre.helpers.contractDeployments.contracts['ShardingTable']?.evmAddress;
+
   console.log('Deploying ShardingTable V2...');
+
+  if (isMigration) {
+    console.log('And running migration of old ShardingTable...');
+    delete hre.helpers.contractDeployments.contracts['ShardingTable'].migration;
+  }
+
+  const blockTimeNow = (await hre.ethers.provider.getBlock('latest')).timestamp;
 
   await hre.helpers.deploy({
     newContractName: 'ShardingTableV2',
     newContractNameInHub: 'ShardingTable',
+    additionalArgs: [isMigration ? blockTimeNow + 3600 : blockTimeNow],
   });
+
+  if (isMigration && hre.network.name.startsWith('otp')) {
+    const { deployer } = await hre.getNamedAccounts();
+
+    console.log(`Executing sharding table storage v1 to v2 migration`);
+    const newShardingTableAddress = hre.helpers.contractDeployments.contracts['ShardingTable'].evmAddress;
+    const shardingTableStorageAddress = hre.helpers.contractDeployments.contracts['ShardingTableStorage'].evmAddress;
+
+    console.log(
+      `Old ShardingTable: ${oldShardingTableAddress}, New ShardingTable: ${newShardingTableAddress}, ShardingTableStorage: ${shardingTableStorageAddress}`,
+    );
+
+    const oldShardingTable = await hre.ethers.getContractAt('ShardingTable', oldShardingTableAddress, deployer);
+    const newShardingTableABI = hre.helpers.getAbi('ShardingTableV2');
+    const newShardingTable = await hre.ethers.getContractAt(newShardingTableABI, newShardingTableAddress, deployer);
+
+    const nodes = await oldShardingTable['getShardingTable()']();
+    let identityId = nodes[0]?.identityId;
+    console.log(`Found ${nodes.length} nodes in the old ShardingTable, starting identityId: ${identityId}`);
+
+    const numberOfNodesInBatch = 10;
+    let iteration = 1;
+
+    const oldShardingTableStorageAddress = await oldShardingTable.shardingTableStorage();
+    const encodedDataArray = [];
+
+    while (identityId) {
+      console.log(
+        `Migrating sharding table with starting identityId: ${identityId}, number of nodes in batch: ${numberOfNodesInBatch}, ShardingTableStorage: ${shardingTableStorageAddress}`,
+      );
+
+      encodedDataArray.push(
+        newShardingTable.interface.encodeFunctionData('migrateOldShardingTable', [
+          identityId,
+          numberOfNodesInBatch,
+          oldShardingTableStorageAddress,
+        ]),
+      );
+
+      console.log(
+        `Migration COMPLETED iteration: ${iteration} with starting identityId: ${identityId}, number of nodes in batch: ${numberOfNodesInBatch}, ShardingTableStorage: ${shardingTableStorageAddress}`,
+      );
+      iteration += 1;
+      identityId = nodes[iteration * numberOfNodesInBatch]?.identityId;
+    }
+
+    hre.helpers.setParametersEncodedData.push(['ShardingTable', encodedDataArray]);
+  }
 };
 
 export default func;

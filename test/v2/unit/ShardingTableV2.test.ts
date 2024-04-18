@@ -148,7 +148,7 @@ describe('@v2 @unit ShardingTableV2 contract', function () {
     const version = await ShardingTable.version();
 
     expect(name).to.equal('ShardingTable');
-    expect(version).to.equal('2.0.0');
+    expect(version).to.equal('2.0.1');
   });
 
   it('Insert 5 nodes, nodes are sorted expect to pass', async () => {

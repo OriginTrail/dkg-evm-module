@@ -7,6 +7,5 @@ library StakingErrors {
     error WithdrawalWasntInitiated();
     error WithdrawalPeriodPending(uint256 nowTimestamp, uint256 endTimestamp);
     error InvalidOperatorFee();
-    error OperatorFeeChangeDelayPending(uint256 nowTimestamp, uint256 endTimestamp);
     error MaximumStakeExceeded(uint256 amount);
 }
