@@ -112,4 +112,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ['NodeOperatorFeesStorage', 'v2'];
-func.dependencies = ['HubV2'];
+func.dependencies = ['HubV2', 'StakingStorage', 'ShardingTableV2'];
