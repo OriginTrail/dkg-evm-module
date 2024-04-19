@@ -8,6 +8,7 @@ import CommitManagerV2U1 from './abi/CommitManagerV2U1.json';
 import ContentAsset from './abi/ContentAsset.json';
 import ContentAssetStorage from './abi/ContentAssetStorage.json';
 import ContentAssetStorageV2 from './abi/ContentAssetStorageV2.json';
+import ContentAssetV2 from './abi/ContentAssetV2.json';
 import ContractStatus from './abi/ContractStatus.json';
 import Guardian from './abi/Guardian.json';
 import HashingProxy from './abi/HashingProxy.json';
@@ -99,6 +100,7 @@ const ABIV1 = {
 const ABIV2 = {
   HubV2,
   ContentAssetStorageV2,
+  ContentAssetV2,
   IdentityStorageV2,
   CommitManagerV2,
   CommitManagerV2U1,
@@ -129,7 +131,7 @@ export {
   ProofManagerV1 as ProofManagerV1ABI,
   ProofManagerV1U1 as ProofManagerV1U1ABI,
   ContentAssetStorageV2 as ContentAssetStorageABI,
-  ContentAsset as ContentAssetABI,
+  ContentAssetV2 as ContentAssetABI,
   Token as TokenABI,
   IdentityStorageV2 as IdentityStorageABI,
   Identity as IdentityABI,

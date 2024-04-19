@@ -9,7 +9,7 @@ import hre from 'hardhat';
 
 import {
   CommitManagerV2,
-  ContentAsset,
+  ContentAssetV2,
   ContentAssetStorageV2,
   LinearSum,
   ParametersStorage,
@@ -55,7 +55,7 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
   let accounts: SignerWithAddress[];
   let Token: Token;
   let ServiceAgreementV1: ServiceAgreementV1;
-  let ContentAsset: ContentAsset;
+  let ContentAssetV2: ContentAssetV2;
   let ContentAssetStorageV2: ContentAssetStorageV2;
   let LinearSum: LinearSum;
   let CommitManagerV2: CommitManagerV2;
@@ -82,7 +82,7 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
     };
 
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
-    const receipt = await (await ContentAsset.createAsset(assetInputStruct)).wait();
+    const receipt = await (await ContentAssetV2.createAsset(assetInputStruct)).wait();
 
     const tokenId = Number(receipt.logs[0].topics[3]);
     const keyword = hre.ethers.utils.solidityPack(
@@ -299,12 +299,12 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
       'StakingV2',
       'CommitManagerV2',
       'CommitManagerV2U1',
-      'ContentAsset',
+      'ContentAssetV2',
       'Profile',
     ]);
     Token = await hre.ethers.getContract<Token>('Token');
     ServiceAgreementV1 = await hre.ethers.getContract<ServiceAgreementV1>('ServiceAgreementV1');
-    ContentAsset = await hre.ethers.getContract<ContentAsset>('ContentAsset');
+    ContentAssetV2 = await hre.ethers.getContract<ContentAssetV2>('ContentAsset');
     ContentAssetStorageV2 = await hre.ethers.getContract<ContentAssetStorageV2>('ContentAssetStorage');
     LinearSum = await hre.ethers.getContract<LinearSum>('LinearSum');
     CommitManagerV2 = await hre.ethers.getContract<CommitManagerV2>('CommitManagerV1');
@@ -357,7 +357,7 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
     expect(await CommitManagerV2.isCommitWindowOpen(agreementId, 1)).to.eql(true);
   });
 
-  it('Create new asset with scoreFunction 1, submit commit V1, expect CommitSubmitted event', async () => {
+  it('Create new asset with scoreFunction 1, submit commit V1, expect revert InvalidScoreFunctionId', async () => {
     await createProfile(accounts[0], accounts[1]);
 
     const { tokenId, keyword } = await createAsset();
@@ -370,10 +370,9 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
       epoch: 0,
     };
 
-    await expect(CommitManagerV2['submitCommit((address,uint256,bytes,uint8,uint16))'](commitV1InputArgs)).to.emit(
-      CommitManagerV2,
-      'CommitSubmitted',
-    );
+    await expect(
+      CommitManagerV2['submitCommit((address,uint256,bytes,uint8,uint16))'](commitV1InputArgs),
+    ).to.be.revertedWithCustomError(CommitManagerV2, 'InvalidScoreFunctionId');
   });
 
   it('Create new asset with scoreFunction 2, submit commit V2, expect CommitSubmitted event', async () => {
@@ -421,7 +420,7 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
       .withArgs(ContentAssetStorageV2.address, tokenId, keyword, 1, 0, closestNode.identityId, score);
   });
 
-  it('Create new asset with scoreFunction 1, submit R0 V1 commits, expect R0 V1 commits to be returned', async () => {
+  it('Create new asset with scoreFunction 1, submit R0 V1 commits, expect R0 V1 commits to be reverted with InvalidScoreFunctionId', async () => {
     const r0 = await ParametersStorage.r0();
 
     const identityIds = [];
@@ -430,7 +429,7 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
       identityIds.push(identityId);
     }
 
-    const { tokenId, keyword, agreementId } = await createAsset();
+    const { tokenId, keyword } = await createAsset();
 
     commitV1InputArgs = {
       assetContract: ContentAssetStorageV2.address,
@@ -443,14 +442,8 @@ describe('@v2 @unit CommitManagerV2 contract', function () {
     for (let i = 0; i < r0; i++) {
       await expect(
         CommitManagerV2.connect(accounts[i])['submitCommit((address,uint256,bytes,uint8,uint16))'](commitV1InputArgs),
-      ).to.emit(CommitManagerV2, 'CommitSubmitted');
+      ).to.be.revertedWithCustomError(CommitManagerV2, 'InvalidScoreFunctionId');
     }
-
-    const topCommits = await CommitManagerV2.getTopCommitSubmissions(agreementId, 0);
-
-    expect(topCommits.map((arr) => arr[0])).to.have.deep.members(
-      identityIds.map((identityId) => hre.ethers.BigNumber.from(identityId)),
-    );
   });
 
   it('Create new asset with scoreFunction 2, submit R0 V2 commits, expect R0 V2 commits to be returned', async () => {

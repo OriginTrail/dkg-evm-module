@@ -25,6 +25,7 @@ import {CommitManagerErrorsV2} from "./errors/CommitManagerErrorsV2.sol";
 import {ServiceAgreementErrorsV1} from "../v1/errors/ServiceAgreementErrorsV1.sol";
 import {ServiceAgreementErrorsV1U1} from "../v1/errors/ServiceAgreementErrorsV1U1.sol";
 import {ServiceAgreementErrorsV2} from "./errors/ServiceAgreementErrorsV2.sol";
+import {LOG2PLDSF_ID, LINEAR_SUM_ID} from "../v1/constants/ScoringConstants.sol";
 
 contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
     event CommitSubmitted(
@@ -49,9 +50,6 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
 
     string private constant _NAME = "CommitManagerV1U1";
     string private constant _VERSION = "2.0.0";
-
-    uint8 private constant _LOG2PLDSF_ID = 1;
-    uint8 private constant _LINEAR_SUM_ID = 2;
 
     bool[6] public reqs = [false, false, false, false, false, false];
 
@@ -202,7 +200,7 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
         if (sasProxy.agreementV1Exists(agreementId) || !sasProxy.agreementV1U1Exists(agreementId)) {
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
         }
-        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LOG2PLDSF_ID) {
+        if (sasProxy.getAgreementScoreFunctionId(agreementId) != LOG2PLDSF_ID) {
             revert ServiceAgreementErrorsV1.InvalidScoreFunctionId(
                 agreementId,
                 args.epoch,
@@ -267,7 +265,7 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
         if (sasProxy.agreementV1Exists(agreementId) || !sasProxy.agreementV1U1Exists(agreementId)) {
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
         }
-        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LINEAR_SUM_ID) {
+        if (sasProxy.getAgreementScoreFunctionId(agreementId) != LINEAR_SUM_ID) {
             revert ServiceAgreementErrorsV2.InvalidProximityScoreFunctionsPairId(
                 agreementId,
                 args.epoch,
@@ -352,7 +350,7 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
         if (!sasProxy.agreementV1U1Exists(agreementId)) {
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
         }
-        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LOG2PLDSF_ID) {
+        if (sasProxy.getAgreementScoreFunctionId(agreementId) != LOG2PLDSF_ID) {
             revert ServiceAgreementErrorsV1.InvalidScoreFunctionId(
                 agreementId,
                 args.epoch,
@@ -454,7 +452,7 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatus, Initializable {
         if (!sasProxy.agreementV1U1Exists(agreementId)) {
             revert ServiceAgreementErrorsV1.ServiceAgreementDoesntExist(agreementId);
         }
-        if (sasProxy.getAgreementScoreFunctionId(agreementId) != _LINEAR_SUM_ID) {
+        if (sasProxy.getAgreementScoreFunctionId(agreementId) != LINEAR_SUM_ID) {
             revert ServiceAgreementErrorsV2.InvalidProximityScoreFunctionsPairId(
                 agreementId,
                 args.epoch,

@@ -22,6 +22,7 @@ import {StakingErrors} from "../v1/errors/StakingErrors.sol";
 import {TokenErrors} from "../v1/errors/TokenErrors.sol";
 import {ADMIN_KEY} from "../v1/constants/IdentityConstants.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {LOG2PLDSF_ID} from "../v1/constants/ScoringConstants.sol";
 
 contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     event StakeIncreased(
@@ -69,9 +70,10 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         uint96 newAccumulatedOperatorFee
     );
     event OperatorFeeChangeStarted(uint72 indexed identityId, bytes nodeId, uint8 operatorFee, uint256 timestamp);
+    event OperatorFeeChangeFinished(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
-    string private constant _VERSION = "2.0.0";
+    string private constant _VERSION = "2.0.1";
 
     ShardingTableV2 public shardingTableContract;
     IdentityStorageV2 public identityStorage;
@@ -204,14 +206,17 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         (startTime, epochsNumber, epochLength, , ) = sasProxy.getAgreementData(agreementId);
 
         operatorFeeAmount =
-            (rewardAmount *
-                nofs.getOperatorFeePercentageByTimestampReverse(
-                    identityId,
-                    (startTime +
-                        epochLength *
-                        ((block.timestamp - startTime) / epochLength) +
-                        ((epochLength * parametersStorage.commitWindowDurationPerc()) / 100))
-                )) /
+            (
+                rewardAmount * sasProxy.getAgreementScoreFunctionId(agreementId) == LOG2PLDSF_ID
+                    ? 100
+                    : nofs.getOperatorFeePercentageByTimestampReverse(
+                        identityId,
+                        (startTime +
+                            epochLength *
+                            ((block.timestamp - startTime) / epochLength) +
+                            ((epochLength * parametersStorage.commitWindowDurationPerc()) / 100))
+                    )
+            ) /
             100;
         uint96 delegatorsRewardAmount = rewardAmount - operatorFeeAmount;
 
@@ -273,8 +278,8 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         // To be implemented
     }
 
-    function startOperatorFeeChange(uint72 identityId, uint8 newFeePercentage) external onlyAdmin(identityId) {
-        if (newFeePercentage > 100) {
+    function startOperatorFeeChange(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {
+        if (newOperatorFee > 100) {
             revert StakingErrors.InvalidOperatorFee();
         }
         NodeOperatorFeesStorage nofs = nodeOperatorFeesStorage;
@@ -284,17 +289,21 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
             : uint248(block.timestamp);
 
         if (nofs.isOperatorFeeChangePending(identityId)) {
-            nofs.replacePendingOperatorFee(identityId, newFeePercentage, newOperatorFeeEffectiveData);
+            nofs.replacePendingOperatorFee(identityId, newOperatorFee, newOperatorFeeEffectiveData);
         } else {
-            nofs.addOperatorFee(identityId, newFeePercentage, newOperatorFeeEffectiveData);
+            nofs.addOperatorFee(identityId, newOperatorFee, newOperatorFeeEffectiveData);
         }
 
         emit OperatorFeeChangeStarted(
             identityId,
             profileStorage.getNodeId(identityId),
-            newFeePercentage,
+            newOperatorFee,
             newOperatorFeeEffectiveData
         );
+    }
+
+    function finishOperatorFeeChange(uint72 identityId) external onlyAdmin(identityId) {
+        // Function signature needed for ABI backwards compatibility
     }
 
     function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal virtual {
