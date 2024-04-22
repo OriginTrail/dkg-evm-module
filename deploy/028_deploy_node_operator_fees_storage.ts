@@ -4,6 +4,12 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { ShardingTableStructsV1 } from '../typechain/contracts/v2/ShardingTable.sol/ShardingTableV2';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  const isDeployed = hre.helpers.isDeployed('NodeOperatorFeesStorage');
+
+  if (isDeployed) {
+    return;
+  }
+
   const oldOperatorFees = [];
   const timestampNow = (await hre.ethers.provider.getBlock('latest')).timestamp;
 
