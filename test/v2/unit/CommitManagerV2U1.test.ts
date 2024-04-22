@@ -10,7 +10,7 @@ import hre from 'hardhat';
 import {
   CommitManagerV2,
   CommitManagerV2U1,
-  ContentAsset,
+  ContentAssetV2,
   ContentAssetStorageV2,
   LinearSum,
   ParametersStorage,
@@ -58,7 +58,7 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
   let accounts: SignerWithAddress[];
   let Token: Token;
   let ServiceAgreementV1: ServiceAgreementV1;
-  let ContentAsset: ContentAsset;
+  let ContentAssetV2: ContentAssetV2;
   let ContentAssetStorageV2: ContentAssetStorageV2;
   let LinearSum: LinearSum;
   let CommitManagerV2: CommitManagerV2;
@@ -86,7 +86,7 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
     };
 
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
-    const receipt = await (await ContentAsset.createAsset(assetInputStruct)).wait();
+    const receipt = await (await ContentAssetV2.createAsset(assetInputStruct)).wait();
 
     const tokenId = Number(receipt.logs[0].topics[3]);
     const keyword = hre.ethers.utils.solidityPack(
@@ -111,7 +111,7 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
     };
 
     await Token.increaseAllowance(ServiceAgreementV1.address, assetUpdateArgs.tokenAmount);
-    await ContentAsset.updateAssetState(
+    await ContentAssetV2.updateAssetState(
       tokenId,
       assetUpdateArgs.assertionId,
       assetUpdateArgs.size,
@@ -119,33 +119,6 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
       assetUpdateArgs.chunksNumber,
       assetUpdateArgs.tokenAmount,
     );
-  }
-
-  async function finalizeUpdateV1(tokenId: number, keyword: BytesLike): Promise<Node[]> {
-    const finalizationRequirement = await ParametersStorage.finalizationCommitsNumber();
-
-    const nodes = [];
-    for (let i = 0; i < finalizationRequirement; i++) {
-      nodes.push(await createProfile(accounts[i], accounts[accounts.length - 1]));
-    }
-
-    commitV1InputArgs = {
-      assetContract: ContentAssetStorageV2.address,
-      tokenId: tokenId,
-      keyword: keyword,
-      hashFunctionId: 1,
-      epoch: 0,
-    };
-
-    for (let i = 0; i < finalizationRequirement; i++) {
-      await expect(
-        CommitManagerV2U1.connect(accounts[i])['submitUpdateCommit((address,uint256,bytes,uint8,uint16))'](
-          commitV1InputArgs,
-        ),
-      ).to.emit(CommitManagerV2U1, 'CommitSubmitted');
-    }
-
-    return nodes;
   }
 
   async function finalizeUpdateV2(
@@ -422,12 +395,12 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
       'StakingV2',
       'CommitManagerV2',
       'CommitManagerV2U1',
-      'ContentAsset',
+      'ContentAssetV2',
       'Profile',
     ]);
     Token = await hre.ethers.getContract<Token>('Token');
     ServiceAgreementV1 = await hre.ethers.getContract<ServiceAgreementV1>('ServiceAgreementV1');
-    ContentAsset = await hre.ethers.getContract<ContentAsset>('ContentAsset');
+    ContentAssetV2 = await hre.ethers.getContract<ContentAssetV2>('ContentAsset');
     ContentAssetStorageV2 = await hre.ethers.getContract<ContentAssetStorageV2>('ContentAssetStorage');
     LinearSum = await hre.ethers.getContract<LinearSum>('LinearSum');
     CommitManagerV2 = await hre.ethers.getContract<CommitManagerV2>('CommitManagerV1');
@@ -455,18 +428,6 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
     expect(await CommitManagerV2U1.version()).to.equal('2.0.0');
   });
 
-  it('Create new asset with proximityScoreFunctionsPair 1, update and finalize V1 update, check if commit window is open, expect to be true', async () => {
-    const { tokenId, keyword, agreementId } = await createAsset();
-    await updateAsset(tokenId);
-    await finalizeUpdateV1(tokenId, keyword);
-
-    await expect(CommitManagerV2.isCommitWindowOpen(agreementId, 0)).to.be.revertedWithCustomError(
-      CommitManagerV2,
-      'ServiceAgreementDoesntExist',
-    );
-    expect(await CommitManagerV2U1.isCommitWindowOpen(agreementId, 0)).to.eql(true);
-  });
-
   it('Create new asset with proximityScoreFunctionsPair 2, update and finalize V2 update, check if commit window is open, expect to be true', async () => {
     const { tokenId, keyword, agreementId } = await createAsset(2);
     await updateAsset(tokenId);
@@ -477,24 +438,6 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
       'ServiceAgreementDoesntExist',
     );
     expect(await CommitManagerV2U1.isCommitWindowOpen(agreementId, 0)).to.eql(true);
-  });
-
-  it('Create new asset with proximityScoreFunctionsPair 1, update and finalize V1 update, teleport to the end of commit phase and check if commit window is open, expect to be false', async () => {
-    const { tokenId, keyword, agreementId } = await createAsset();
-    await updateAsset(tokenId);
-    await finalizeUpdateV1(tokenId, keyword);
-
-    const epochLength = (await ParametersStorage.epochLength()).toNumber();
-    const commitWindowDurationPerc = await ParametersStorage.commitWindowDurationPerc();
-    const commitWindowDuration = (epochLength * commitWindowDurationPerc) / 100;
-
-    await time.increase(commitWindowDuration + 1);
-
-    await expect(CommitManagerV2.isCommitWindowOpen(agreementId, 0)).to.be.revertedWithCustomError(
-      CommitManagerV2,
-      'ServiceAgreementDoesntExist',
-    );
-    expect(await CommitManagerV2U1.isCommitWindowOpen(agreementId, 0)).to.eql(false);
   });
 
   it('Create new asset with proximityScoreFunctionsPair 2, update and finalize V2 update, teleport to the end of commit phase and check if commit window is open, expect to be false', async () => {
@@ -515,21 +458,6 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
     expect(await CommitManagerV2U1.isCommitWindowOpen(agreementId, 0)).to.eql(false);
   });
 
-  it('Create new asset with proximityScoreFunctionsPair 1, update and finalize update V1, teleport to second epoch and check if commit window is open, expect to be true', async () => {
-    const { tokenId, keyword, agreementId } = await createAsset();
-    await updateAsset(tokenId);
-    await finalizeUpdateV1(tokenId, keyword);
-
-    const epochLength = (await ParametersStorage.epochLength()).toNumber();
-    await time.increase(epochLength);
-
-    await expect(CommitManagerV2.isCommitWindowOpen(agreementId, 1)).to.be.revertedWithCustomError(
-      CommitManagerV2,
-      'ServiceAgreementDoesntExist',
-    );
-    expect(await CommitManagerV2U1.isCommitWindowOpen(agreementId, 1)).to.eql(true);
-  });
-
   it('Create new asset with proximityScoreFunctionsPair 2, update and finalize update V2, teleport to second epoch and check if commit window is open, expect to be true', async () => {
     const { tokenId, keyword, agreementId } = await createAsset(2);
     await updateAsset(tokenId);
@@ -545,28 +473,11 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
     expect(await CommitManagerV2U1.isCommitWindowOpen(agreementId, 1)).to.eql(true);
   });
 
-  it('Create new asset with proximityScoreFunctionsPair 1, update it, check if update commit window is open, expect to be true', async () => {
-    const { tokenId, agreementId } = await createAsset();
-    await updateAsset(tokenId);
-
-    expect(await CommitManagerV2U1.isUpdateCommitWindowOpen(agreementId, 0, 1)).to.eql(true);
-  });
-
   it('Create new asset with proximityScoreFunctionsPair 2, update it, check if update commit window is open, expect to be true', async () => {
     const { tokenId, agreementId } = await createAsset(2);
     await updateAsset(tokenId);
 
     expect(await CommitManagerV2U1.isUpdateCommitWindowOpen(agreementId, 0, 1)).to.eql(true);
-  });
-
-  it('Create new asset with proximityScoreFunctionsPair 1, update it, teleport to the end of update commit window and check if its open, expect to be false', async () => {
-    const { tokenId, agreementId } = await createAsset();
-    await updateAsset(tokenId);
-
-    const updateCommitWindowDuration = await ParametersStorage.updateCommitWindowDuration();
-    await time.increase(updateCommitWindowDuration);
-
-    expect(await CommitManagerV2U1.isUpdateCommitWindowOpen(agreementId, 0, 1)).to.eql(false);
   });
 
   it('Create new asset with proximityScoreFunctionsPair 2, update it, teleport to the end of update commit window and check if its open, expect to be false', async () => {
@@ -577,31 +488,6 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
     await time.increase(updateCommitWindowDuration);
 
     expect(await CommitManagerV2U1.isUpdateCommitWindowOpen(agreementId, 0, 1)).to.eql(false);
-  });
-
-  it('Create new asset with proximityScoreFunctionsPair 1, update it, finalize V1 update, teleport to the second epoch, submit commit, expect CommitSubmitted event', async () => {
-    const { tokenId, keyword } = await createAsset();
-    await updateAsset(tokenId);
-    await finalizeUpdateV1(tokenId, keyword);
-
-    const epochLength = (await ParametersStorage.epochLength()).toNumber();
-    await time.increase(epochLength);
-
-    commitV1InputArgs = {
-      assetContract: ContentAssetStorageV2.address,
-      tokenId: tokenId,
-      keyword: keyword,
-      hashFunctionId: 1,
-      epoch: 1,
-    };
-
-    await expect(
-      CommitManagerV2['submitCommit((address,uint256,bytes,uint8,uint16))'](commitV2InputArgs),
-    ).to.be.revertedWithCustomError(CommitManagerV2, 'ServiceAgreementDoesntExist');
-    await expect(CommitManagerV2U1['submitCommit((address,uint256,bytes,uint8,uint16))'](commitV1InputArgs)).to.emit(
-      CommitManagerV2U1,
-      'CommitSubmitted',
-    );
   });
 
   it('Create new asset with proximityScoreFunctionsPair 2, update it, finalize V2 update, teleport to the second epoch, submit commit, expect CommitSubmitted event', async () => {
@@ -629,45 +515,6 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
     await expect(
       CommitManagerV2U1['submitCommit((address,uint256,bytes,uint8,uint16,uint72,uint72,uint72))'](commitV2InputArgs),
     ).to.emit(CommitManagerV2U1, 'CommitSubmitted');
-  });
-
-  it('Create new asset with proximityScoreFunctionsPair 1, update it, finalize update V1, teleport to the second epoch, submit R0 commits, expect R0 commits to be returned', async () => {
-    const r0 = await ParametersStorage.r0();
-
-    const { tokenId, keyword, agreementId } = await createAsset();
-    await updateAsset(tokenId);
-    const nodes = await finalizeUpdateV1(tokenId, keyword);
-    const identityIds = nodes.map((node) => node.identityId);
-
-    const epochLength = (await ParametersStorage.epochLength()).toNumber();
-    await time.increase(epochLength);
-
-    commitV1InputArgs = {
-      assetContract: ContentAssetStorageV2.address,
-      tokenId: tokenId,
-      keyword: keyword,
-      hashFunctionId: 1,
-      epoch: 1,
-    };
-
-    for (let i = 0; i < r0; i++) {
-      await expect(
-        CommitManagerV2.connect(accounts[i])['submitCommit((address,uint256,bytes,uint8,uint16))'](commitV1InputArgs),
-      ).to.be.revertedWithCustomError(CommitManagerV2, 'ServiceAgreementDoesntExist');
-      await expect(
-        CommitManagerV2U1.connect(accounts[i])['submitCommit((address,uint256,bytes,uint8,uint16))'](commitV1InputArgs),
-      ).to.emit(CommitManagerV2U1, 'CommitSubmitted');
-    }
-
-    await expect(CommitManagerV2.getTopCommitSubmissions(agreementId, 1)).to.be.revertedWithCustomError(
-      CommitManagerV2,
-      'ServiceAgreementDoesntExist',
-    );
-    const topCommits = await CommitManagerV2U1.getTopCommitSubmissions(agreementId, 1, 1);
-
-    expect(topCommits.map((arr) => arr[0])).to.have.deep.members(
-      identityIds.map((identityId) => hre.ethers.BigNumber.from(identityId)),
-    );
   });
 
   it('Create new asset with proximityScoreFunctionsPair 2, update it, finalize update V2, teleport to the second epoch, submit R0 commits, expect R0 commits to be returned', async () => {
@@ -718,7 +565,7 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
     );
   });
 
-  it('Create new asset with proximityScoreFunctionsPair 1, update asset, submit update commit V1, expect CommitSubmitted event', async () => {
+  it('Create new asset with proximityScoreFunctionsPair 1, update asset, submit update commit V1, expect revert InvalidScoreFunctionId', async () => {
     await createProfile(accounts[0], accounts[1]);
 
     const { tokenId, keyword } = await createAsset();
@@ -734,7 +581,7 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
 
     await expect(
       CommitManagerV2U1['submitUpdateCommit((address,uint256,bytes,uint8,uint16))'](commitV1InputArgs),
-    ).to.emit(CommitManagerV2U1, 'CommitSubmitted');
+    ).to.be.revertedWithCustomError(CommitManagerV2U1, 'InvalidScoreFunctionId');
   });
 
   it('Create new asset with proximityScoreFunctionsPair 2, update asset, submit update commit V2, expect CommitSubmitted event', async () => {
@@ -769,7 +616,7 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
     ).to.emit(CommitManagerV2U1, 'CommitSubmitted');
   });
 
-  it('Create new asset with proximityScoreFunctionsPair 1, update it and submit <finalizationCommitsNumber> V1 update commits, expect StateFinalized event', async () => {
+  it('Create new asset with proximityScoreFunctionsPair 1, update it and submit <finalizationCommitsNumber> V1 update commits, expect revert InvalidScoreFunctionId', async () => {
     const finalizationRequirement = await ParametersStorage.finalizationCommitsNumber();
 
     const identityIds = [];
@@ -778,7 +625,7 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
       identityIds.push(node.identityId);
     }
 
-    const { tokenId, keyword, agreementId } = await createAsset();
+    const { tokenId, keyword } = await createAsset();
     await updateAsset(tokenId);
 
     commitV1InputArgs = {
@@ -793,17 +640,8 @@ describe('@v2 @unit CommitManagerV2U1 contract', function () {
         CommitManagerV2U1.connect(accounts[i])['submitUpdateCommit((address,uint256,bytes,uint8,uint16))'](
           commitV1InputArgs,
         ),
-      ).to.emit(CommitManagerV2U1, 'CommitSubmitted');
+      ).to.be.revertedWithCustomError(CommitManagerV2U1, 'InvalidScoreFunctionId');
     }
-    await expect(
-      CommitManagerV2U1.connect(accounts[identityIds.length - 1])[
-        'submitUpdateCommit((address,uint256,bytes,uint8,uint16))'
-      ](commitV1InputArgs),
-    ).to.emit(CommitManagerV2U1, 'StateFinalized');
-    const topCommits = await CommitManagerV2U1.getTopCommitSubmissions(agreementId, 0, 1);
-    expect(topCommits.map((arr) => arr[0])).to.include.deep.members(
-      identityIds.map((identityId) => hre.ethers.BigNumber.from(identityId)),
-    );
   });
 
   it('Create new asset with proximityScoreFunctionsPair 2, update it and submit <finalizationCommitsNumber> V2 update commits, expect StateFinalized event', async () => {

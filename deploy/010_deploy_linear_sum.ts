@@ -33,5 +33,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['LinearSum', 'v2'];
+func.tags = ['Log2PLDSF', 'LinearSum', 'v2'];
 func.dependencies = ['HubV2', 'HashingProxy', 'SHA256', 'ScoringProxy', 'ParametersStorage'];
