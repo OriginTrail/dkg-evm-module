@@ -193,13 +193,13 @@
       "deployed": true
     },
     "Log2PLDSF": {
-      "evmAddress": "0xAFBee0FB2cA3B6AC05a9f5799010B9C2004C801B",
-      "substrateAddress": "5EMjsczwPagFHQiUJksdeM4UdX3cWJXiM96PDVcjuk3cmDud",
+      "evmAddress": "0xa9DBf9Eb1c65b639DcB098c1a03686d9740670Db",
+      "substrateAddress": "5EMjsczvDAxnYdSd7ywYJepFvXc8sJjbQq1UQir1apo2e1WF",
       "version": null,
-      "gitBranch": "main",
-      "gitCommitHash": "8dec09dc2f081aba8736e42a180d8fb94a997588",
-      "deploymentBlock": 3824601,
-      "deploymentTimestamp": 1713791798577,
+      "gitBranch": "deployment/4.2.7",
+      "gitCommitHash": "e6a543a215e0738289587300f1793ada8a6f3f34",
+      "deploymentBlock": 3830957,
+      "deploymentTimestamp": 1713879038211,
       "deployed": true
     },
     "LinearSum": {
