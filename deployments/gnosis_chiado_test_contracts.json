@@ -247,12 +247,12 @@
       "deployed": true
     },
     "NodeOperatorFeesStorage": {
-      "evmAddress": "0xb9C5fFBfDE59987fF1de2D57C6CcdCF84eEbc022",
+      "evmAddress": "0x692b3CC200BccF4c6ee0969818Da6c1a88A8cBC7",
       "version": "2.0.0",
-      "gitBranch": "main",
-      "gitCommitHash": "ce3b55f823e0c2163b7e2a0b4ab227c3fd334a7b",
-      "deploymentBlock": 9327937,
-      "deploymentTimestamp": 1713447438189,
+      "gitBranch": "fix/active-node-operator-fee",
+      "gitCommitHash": "26d06f055165991b60936cad3dfb14ba3b2afe9b",
+      "deploymentBlock": 9415093,
+      "deploymentTimestamp": 1713883778621,
       "deployed": true
     },
     "Staking": {
