@@ -20,6 +20,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (isMigration) {
     console.log('And running migration of old ShardingTable...');
     delete hre.helpers.contractDeployments.contracts['ShardingTable'].migration;
+    hre.helpers.contractDeployments.contracts['OldShardingTable'] =
+      hre.helpers.contractDeployments.contracts['ShardingTable'];
   }
 
   const blockTimeNow = (await hre.ethers.provider.getBlock('latest')).timestamp;
@@ -48,6 +50,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const nodes = await oldShardingTable['getShardingTable()']();
     let identityId = nodes[0]?.identityId;
     console.log(`Found ${nodes.length} nodes in the old ShardingTable, starting identityId: ${identityId}`);
+    console.log(`Full list of migrated nodes: ${JSON.stringify(nodes)}`);
 
     const numberOfNodesInBatch = 10;
     let iteration = 1;
