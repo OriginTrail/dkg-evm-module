@@ -175,13 +175,13 @@
       "deployed": true
     },
     "NodeOperatorFeesStorage": {
-      "evmAddress": "0x15faaDfcFbbc80F8cfa996304e6bFE965e62C68f",
-      "substrateAddress": "5EMjsczQaZgq6b1ZX4J4VP9MSYeeQyCdcbqZxtsx6hftLAgQ",
+      "evmAddress": "0xC8d84aB47730D16Fe6c27125B951144a2d74EfD6",
+      "substrateAddress": "5EMjsd12RGxjpVwhRMNy4MD2SL3DkWGTahKGCLiU5csvJSkn",
       "version": "2.0.0",
-      "gitBranch": "deployment/4.2.6",
-      "gitCommitHash": "70460ee20705bcbc21677f2e96341103548843f9",
-      "deploymentBlock": 4440819,
-      "deploymentTimestamp": 1713448266610,
+      "gitBranch": "main",
+      "gitCommitHash": "26d06f055165991b60936cad3dfb14ba3b2afe9b",
+      "deploymentBlock": 4475892,
+      "deploymentTimestamp": 1713883340850,
       "deployed": true
     },
     "ScoringProxy": {
