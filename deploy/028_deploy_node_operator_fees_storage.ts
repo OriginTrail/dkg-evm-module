@@ -94,11 +94,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const NodeOperatorFeesStorage = await hre.helpers.deploy({
     newContractName: 'NodeOperatorFeesStorage',
-    additionalArgs: [timestampNow + 3600],
+    additionalArgs: [timestampNow + 86400],
   });
 
   const chunkSize = 10;
-  const encodedDataArray: string[] = oldOperatorFees.reduce<string[]>((acc, currentValue, currentIndex, array) => {
+  const encodedDataArray: string[] = oldOperatorFees.reduce<string[]>((acc, _, currentIndex, array) => {
     if (currentIndex % chunkSize === 0) {
       // Encode and push the function data for a slice of the array
       acc.push(
