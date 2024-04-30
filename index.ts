@@ -8,6 +8,7 @@ import CommitManagerV2U1 from './abi/CommitManagerV2U1.json';
 import ContentAsset from './abi/ContentAsset.json';
 import ContentAssetStorage from './abi/ContentAssetStorage.json';
 import ContentAssetStorageV2 from './abi/ContentAssetStorageV2.json';
+import ContentAssetV2 from './abi/ContentAssetV2.json';
 import ContractStatus from './abi/ContractStatus.json';
 import Guardian from './abi/Guardian.json';
 import HashingProxy from './abi/HashingProxy.json';
@@ -27,7 +28,7 @@ import LinearSum from './abi/LinearSum.json';
 import Log2PLDSF from './abi/Log2PLDSF.json';
 import MultiSigWallet from './abi/MultiSigWallet.json';
 import Named from './abi/Named.json';
-import NodeOperatorFeeChangesStorage from './abi/NodeOperatorFeeChangesStorage.json';
+import NodeOperatorFeesStorage from './abi/NodeOperatorFeesStorage.json';
 import ParametersStorage from './abi/ParametersStorage.json';
 import Profile from './abi/Profile.json';
 import ProfileStorage from './abi/ProfileStorage.json';
@@ -99,11 +100,12 @@ const ABIV1 = {
 const ABIV2 = {
   HubV2,
   ContentAssetStorageV2,
+  ContentAssetV2,
   IdentityStorageV2,
   CommitManagerV2,
   CommitManagerV2U1,
   LinearSum,
-  NodeOperatorFeeChangesStorage,
+  NodeOperatorFeesStorage,
   ShardingTableV2,
   ShardingTableStorageV2,
   StakingV2,
@@ -129,14 +131,15 @@ export {
   ProofManagerV1 as ProofManagerV1ABI,
   ProofManagerV1U1 as ProofManagerV1U1ABI,
   ContentAssetStorageV2 as ContentAssetStorageABI,
-  ContentAsset as ContentAssetABI,
+  ContentAssetV2 as ContentAssetABI,
   Token as TokenABI,
   IdentityStorageV2 as IdentityStorageABI,
   Identity as IdentityABI,
   LinearSum as LinearSumABI,
   Log2PLDSF as Log2PLDSFABI,
-  NodeOperatorFeeChangesStorage as NodeOperatorFeeChangesStorageABI,
+  NodeOperatorFeesStorage as NodeOperatorFeesStorageABI,
   ProfileStorage as ProfileStorageABI,
+  Profile as ProfileABI,
   StakingStorage as StakingStorageABI,
   StakingV2 as StakingABI,
   UnfinalizedStateStorage as UnfinalizedStateStorageABI,

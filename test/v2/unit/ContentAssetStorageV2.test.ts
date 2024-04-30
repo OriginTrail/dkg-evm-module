@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import { BytesLike } from 'ethers';
 import hre from 'hardhat';
 
-import { ContentAsset, ContentAssetStorageV2, HubController, ServiceAgreementV1, Token } from '../../../typechain';
+import { ContentAssetStorageV2, ContentAssetV2, HubController, ServiceAgreementV1, Token } from '../../../typechain';
 import { ContentAssetStructs } from '../../../typechain/contracts/v1/assets/ContentAsset';
 
 type ContentAssetStorageV2Fixture = {
@@ -14,7 +14,7 @@ type ContentAssetStorageV2Fixture = {
   HubController: HubController;
   Token: Token;
   ServiceAgreementV1: ServiceAgreementV1;
-  ContentAsset: ContentAsset;
+  ContentAssetV2: ContentAssetV2;
   ContentAssetStorageV2: ContentAssetStorageV2;
 };
 
@@ -23,7 +23,7 @@ describe('@v2 @unit ContentAssetStorageV2', function () {
   let HubController: HubController;
   let Token: Token;
   let ServiceAgreementV1: ServiceAgreementV1;
-  let ContentAsset: ContentAsset;
+  let ContentAssetV2: ContentAssetV2;
   let ContentAssetStorageV2: ContentAssetStorageV2;
 
   const assertionId = '0x' + randomBytes(32).toString('hex');
@@ -50,21 +50,21 @@ describe('@v2 @unit ContentAssetStorageV2', function () {
       'StakingV2',
       'CommitManagerV2',
       'CommitManagerV2U1',
-      'ContentAsset',
+      'ContentAssetV2',
     ]);
     HubController = await hre.ethers.getContract<HubController>('HubController');
     Token = await hre.ethers.getContract<Token>('Token');
     ServiceAgreementV1 = await hre.ethers.getContract<ServiceAgreementV1>('ServiceAgreementV1');
-    ContentAsset = await hre.ethers.getContract<ContentAsset>('ContentAsset');
+    ContentAssetV2 = await hre.ethers.getContract<ContentAssetV2>('ContentAsset');
     ContentAssetStorageV2 = await hre.ethers.getContract<ContentAssetStorageV2>('ContentAssetStorage');
     accounts = await hre.ethers.getSigners();
 
-    return { accounts, HubController, Token, ServiceAgreementV1, ContentAsset, ContentAssetStorageV2 };
+    return { accounts, HubController, Token, ServiceAgreementV1, ContentAssetV2, ContentAssetStorageV2 };
   }
 
   async function createAsset(): Promise<{ tokenId: number; keyword: BytesLike; agreementId: BytesLike }> {
     await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
-    const receipt = await (await ContentAsset.createAsset(assetInputStruct)).wait();
+    const receipt = await (await ContentAssetV2.createAsset(assetInputStruct)).wait();
     const tokenId = Number(receipt.logs[0].topics[3]);
 
     const keyword = hre.ethers.utils.solidityPack(

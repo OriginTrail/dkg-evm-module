@@ -40,22 +40,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "nowTimestamp",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "endTimestamp",
-        "type": "uint256"
-      }
-    ],
-    "name": "OperatorFeeChangeDelayPending",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -567,10 +551,10 @@
   },
   {
     "inputs": [],
-    "name": "nodeOperatorFeeChangesStorage",
+    "name": "nodeOperatorFeesStorage",
     "outputs": [
       {
-        "internalType": "contract NodeOperatorFeeChangesStorage",
+        "internalType": "contract NodeOperatorFeesStorage",
         "name": "",
         "type": "address"
       }

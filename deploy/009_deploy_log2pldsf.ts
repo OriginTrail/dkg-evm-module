@@ -2,15 +2,15 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  if (hre.network.config.environment !== 'development' && !hre.network.name.startsWith('otp')) {
+    return;
+  }
+
   const isDeployed = hre.helpers.isDeployed('Log2PLDSF');
 
   const Log2PLDSF = await hre.helpers.deploy({
     newContractName: 'Log2PLDSF',
   });
-
-  if (hre.network.name.startsWith('gnosis')) {
-    return;
-  }
 
   if (!isDeployed) {
     if (hre.network.config.environment === 'development') {

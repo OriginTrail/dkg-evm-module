@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 
 import {ProfileStorage} from "../v1/storage/ProfileStorage.sol";
 import {ShardingTableStorageV2} from "./storage/ShardingTableStorage.sol";
+import {ShardingTableStorage} from "../v1/storage/ShardingTableStorage.sol";
 import {StakingStorage} from "../v1/storage/StakingStorage.sol";
 import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
 import {Initializable} from "../v1/interface/Initializable.sol";
@@ -20,19 +21,28 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     event NodeRemoved(uint72 indexed identityId, bytes nodeId);
 
     string private constant _NAME = "ShardingTable";
-    string private constant _VERSION = "2.0.0";
+    string private constant _VERSION = "2.0.1";
 
     ProfileStorage public profileStorage;
     ShardingTableStorageV2 public shardingTableStorage;
     StakingStorage public stakingStorage;
 
+    uint256 public migrationPeriodEnd;
+
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) ContractStatus(hubAddress) {}
+    constructor(address hubAddress, uint256 migrationPeriodEnd_) ContractStatus(hubAddress) {
+        migrationPeriodEnd = migrationPeriodEnd_;
+    }
 
     function initialize() public onlyHubOwner {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         shardingTableStorage = ShardingTableStorageV2(hub.getContractAddress("ShardingTableStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
+    }
+
+    modifier timeLimited() {
+        require(block.timestamp < migrationPeriodEnd, "Migration period has ended");
+        _;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -63,6 +73,28 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
 
     function insertNode(uint72 index, uint72 identityId) external onlyContracts {
         _insertNode(index, identityId, uint256(profileStorage.getNodeAddress(identityId, 1)));
+    }
+
+    function migrateOldShardingTable(
+        uint72 startingIdentityId,
+        uint16 numberOfNodes,
+        address shardingTableStorageV1Address
+    ) external onlyHubOwner timeLimited {
+        ShardingTableStorageV2 stsv2 = shardingTableStorage;
+        ShardingTableStorage stsv1 = ShardingTableStorage(shardingTableStorageV1Address);
+
+        ShardingTableStructsV1.Node[] memory nodes = stsv1.getMultipleNodes(startingIdentityId, numberOfNodes);
+
+        for (uint i; i < nodes.length; ) {
+            if (nodes[i].identityId != 0 && !stsv2.nodeExists(nodes[i].identityId)) {
+                uint256 nodeHashRingPosition = uint256(profileStorage.getNodeAddress(nodes[i].identityId, 1));
+                _insertNode(_binarySearchForIndex(nodeHashRingPosition), nodes[i].identityId, nodeHashRingPosition);
+            }
+
+            unchecked {
+                i++;
+            }
+        }
     }
 
     function removeNode(uint72 identityId) external onlyContracts {

@@ -5,7 +5,7 @@ pragma solidity ^0.8.16;
 import {ShardingTableV2} from "./ShardingTable.sol";
 import {Shares} from "../v1/Shares.sol";
 import {IdentityStorageV2} from "./storage/IdentityStorage.sol";
-import {NodeOperatorFeeChangesStorage} from "./storage/NodeOperatorFeeChangesStorage.sol";
+import {NodeOperatorFeesStorage} from "./storage/NodeOperatorFeesStorage.sol";
 import {ParametersStorage} from "../v1/storage/ParametersStorage.sol";
 import {ProfileStorage} from "../v1/storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "../v1/storage/ServiceAgreementStorageProxy.sol";
@@ -22,6 +22,7 @@ import {StakingErrors} from "../v1/errors/StakingErrors.sol";
 import {TokenErrors} from "../v1/errors/TokenErrors.sol";
 import {ADMIN_KEY} from "../v1/constants/IdentityConstants.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {LOG2PLDSF_ID} from "../v1/constants/ScoringConstants.sol";
 
 contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     event StakeIncreased(
@@ -72,11 +73,11 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     event OperatorFeeChangeFinished(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
-    string private constant _VERSION = "2.0.0";
+    string private constant _VERSION = "2.0.1";
 
     ShardingTableV2 public shardingTableContract;
     IdentityStorageV2 public identityStorage;
-    NodeOperatorFeeChangesStorage public nodeOperatorFeeChangesStorage;
+    NodeOperatorFeesStorage public nodeOperatorFeesStorage;
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     StakingStorage public stakingStorage;
@@ -95,9 +96,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     function initialize() public onlyHubOwner {
         shardingTableContract = ShardingTableV2(hub.getContractAddress("ShardingTable"));
         identityStorage = IdentityStorageV2(hub.getContractAddress("IdentityStorage"));
-        nodeOperatorFeeChangesStorage = NodeOperatorFeeChangesStorage(
-            hub.getContractAddress("NodeOperatorFeeChangesStorage")
-        );
+        nodeOperatorFeesStorage = NodeOperatorFeesStorage(hub.getContractAddress("NodeOperatorFeesStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
@@ -196,28 +195,47 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
 
     function addReward(bytes32 agreementId, uint72 identityId, uint96 rewardAmount) external onlyContracts {
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        NodeOperatorFeesStorage nofs = nodeOperatorFeesStorage;
         StakingStorage ss = stakingStorage;
         ProfileStorage ps = profileStorage;
 
-        uint96 operatorFee = (rewardAmount * ss.operatorFees(identityId)) / 100;
-        uint96 delegatorsReward = rewardAmount - operatorFee;
+        uint256 startTime;
+        uint16 epochsNumber;
+        uint128 epochLength;
+        uint96 operatorFeeAmount;
+        (startTime, epochsNumber, epochLength, , ) = sasProxy.getAgreementData(agreementId);
 
-        uint96 oldAccumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
+        operatorFeeAmount =
+            (
+                rewardAmount * sasProxy.getAgreementScoreFunctionId(agreementId) == LOG2PLDSF_ID
+                    ? 100
+                    : nofs.getOperatorFeePercentageByTimestampReverse(
+                        identityId,
+                        (startTime +
+                            epochLength *
+                            ((block.timestamp - startTime) / epochLength) +
+                            ((epochLength * parametersStorage.commitWindowDurationPerc()) / 100))
+                    )
+            ) /
+            100;
+        uint96 delegatorsRewardAmount = rewardAmount - operatorFeeAmount;
+
+        uint96 oldAccumulatedOperatorFeeAmount = ps.getAccumulatedOperatorFee(identityId);
         uint96 oldStake = ss.totalStakes(identityId);
 
-        if (operatorFee != 0) {
-            ps.setAccumulatedOperatorFee(identityId, oldAccumulatedOperatorFee + operatorFee);
-            sasProxy.transferAgreementTokens(agreementId, address(ps), operatorFee);
+        if (operatorFeeAmount != 0) {
+            ps.setAccumulatedOperatorFee(identityId, oldAccumulatedOperatorFeeAmount + operatorFeeAmount);
+            sasProxy.transferAgreementTokens(agreementId, address(ps), operatorFeeAmount);
         }
 
-        if (delegatorsReward != 0) {
-            ss.setTotalStake(identityId, oldStake + delegatorsReward);
-            sasProxy.transferAgreementTokens(agreementId, address(ss), delegatorsReward);
+        if (delegatorsRewardAmount != 0) {
+            ss.setTotalStake(identityId, oldStake + delegatorsRewardAmount);
+            sasProxy.transferAgreementTokens(agreementId, address(ss), delegatorsRewardAmount);
 
             ShardingTableStorageV2 sts = shardingTableStorage;
             ParametersStorage params = parametersStorage;
 
-            if (!sts.nodeExists(identityId) && oldStake + delegatorsReward >= params.minimumStake()) {
+            if (!sts.nodeExists(identityId) && oldStake + delegatorsRewardAmount >= params.minimumStake()) {
                 if (sts.nodesCount() >= params.shardingTableSizeLimit()) {
                     revert ShardingTableErrors.ShardingTableIsFull();
                 }
@@ -228,8 +246,8 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         emit AccumulatedOperatorFeeIncreased(
             identityId,
             ps.getNodeId(identityId),
-            oldAccumulatedOperatorFee,
-            oldAccumulatedOperatorFee + operatorFee
+            oldAccumulatedOperatorFeeAmount,
+            oldAccumulatedOperatorFeeAmount + operatorFeeAmount
         );
 
         address sasAddress;
@@ -238,14 +256,20 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         } else {
             sasAddress = sasProxy.agreementV1U1StorageAddress();
         }
-        emit StakeIncreased(identityId, ps.getNodeId(identityId), sasAddress, oldStake, oldStake + delegatorsReward);
+        emit StakeIncreased(
+            identityId,
+            ps.getNodeId(identityId),
+            sasAddress,
+            oldStake,
+            oldStake + delegatorsRewardAmount
+        );
         emit RewardCollected(
             agreementId,
             identityId,
             ps.getNodeId(identityId),
             sasAddress,
-            operatorFee,
-            delegatorsReward
+            operatorFeeAmount,
+            delegatorsRewardAmount
         );
     }
 
@@ -258,36 +282,28 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         if (newOperatorFee > 100) {
             revert StakingErrors.InvalidOperatorFee();
         }
-        NodeOperatorFeeChangesStorage nofcs = nodeOperatorFeeChangesStorage;
+        NodeOperatorFeesStorage nofs = nodeOperatorFeesStorage;
 
-        uint256 feeChangeDelayEnd = block.timestamp > nofcs.delayFreePeriodEnd()
-            ? block.timestamp + parametersStorage.stakeWithdrawalDelay()
-            : block.timestamp;
-        nofcs.createOperatorFeeChangeRequest(identityId, newOperatorFee, feeChangeDelayEnd);
+        uint248 newOperatorFeeEffectiveData = block.timestamp > nofs.delayFreePeriodEnd()
+            ? uint248(block.timestamp + parametersStorage.stakeWithdrawalDelay())
+            : uint248(block.timestamp);
+
+        if (nofs.isOperatorFeeChangePending(identityId)) {
+            nofs.replacePendingOperatorFee(identityId, newOperatorFee, newOperatorFeeEffectiveData);
+        } else {
+            nofs.addOperatorFee(identityId, newOperatorFee, newOperatorFeeEffectiveData);
+        }
 
         emit OperatorFeeChangeStarted(
             identityId,
             profileStorage.getNodeId(identityId),
             newOperatorFee,
-            feeChangeDelayEnd
+            newOperatorFeeEffectiveData
         );
     }
 
     function finishOperatorFeeChange(uint72 identityId) external onlyAdmin(identityId) {
-        NodeOperatorFeeChangesStorage nofcs = nodeOperatorFeeChangesStorage;
-
-        uint8 newFee;
-        uint256 feeChangeDelayEnd;
-        (newFee, feeChangeDelayEnd) = nofcs.operatorFeeChangeRequests(identityId);
-
-        if (block.timestamp < feeChangeDelayEnd) {
-            revert StakingErrors.OperatorFeeChangeDelayPending(block.timestamp, feeChangeDelayEnd);
-        }
-
-        stakingStorage.setOperatorFee(identityId, newFee);
-        nofcs.deleteOperatorFeeChangeRequest(identityId);
-
-        emit OperatorFeeChangeFinished(identityId, profileStorage.getNodeId(identityId), newFee);
+        // Function signature needed for ABI backwards compatibility
     }
 
     function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal virtual {

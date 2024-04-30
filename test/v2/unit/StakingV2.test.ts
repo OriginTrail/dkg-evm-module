@@ -126,8 +126,8 @@ describe('@v2 @unit StakingV2 contract', function () {
     expect(await StakingV2.name()).to.equal('Staking');
   });
 
-  it('The contract is version "2.0.0"', async () => {
-    expect(await StakingV2.version()).to.equal('2.0.0');
+  it('The contract is version "2.0.1"', async () => {
+    expect(await StakingV2.version()).to.equal('2.0.1');
   });
 
   it('Non-Contract should not be able to setTotalStake; expect to fail', async () => {
@@ -410,10 +410,6 @@ describe('@v2 @unit StakingV2 contract', function () {
       .withArgs(node.identityId, node.nodeId, newOperatorFee, blockTimestamp + stakeWithdrawalDelay);
 
     await time.increaseTo(blockTimestamp + stakeWithdrawalDelay);
-
-    expect(await StakingV2.connect(accounts[1]).finishOperatorFeeChange(node.identityId))
-      .to.emit(StakingV2, 'OperatorFeeChangeFinished')
-      .withArgs(node.identityId, node.nodeId, newOperatorFee);
 
     const agreementId = '0x' + randomBytes(32).toString('hex');
     const startTime = Math.floor(Date.now() / 1000).toString();

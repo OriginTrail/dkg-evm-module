@@ -63,7 +63,7 @@ config.networks = {
     chainId: 2043,
     url: rpc('otp_mainnet'),
     gas: 10_000_000, // Gas limit used for deploys
-    gasPrice: 10,
+    gasPrice: 100,
     accounts: accounts('otp_mainnet'),
     saveDeployments: false,
   },

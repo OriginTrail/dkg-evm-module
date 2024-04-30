@@ -5,6 +5,11 @@
         "internalType": "address",
         "name": "hubAddress",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "migrationPeriodEnd_",
+        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
@@ -243,6 +248,42 @@
     "name": "insertNode",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "startingIdentityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint16",
+        "name": "numberOfNodes",
+        "type": "uint16"
+      },
+      {
+        "internalType": "address",
+        "name": "shardingTableStorageV1Address",
+        "type": "address"
+      }
+    ],
+    "name": "migrateOldShardingTable",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "migrationPeriodEnd",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
