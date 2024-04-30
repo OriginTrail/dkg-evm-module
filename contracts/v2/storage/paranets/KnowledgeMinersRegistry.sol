@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.16;
 
-import {HubDependent} from "../../abstract/HubDependent.sol";
-import {Named} from "../../interface/Named.sol";
-import {Versioned} from "../../interface/Versioned.sol";
+import {HubDependent} from "../../../v1/abstract/HubDependent.sol";
+import {Named} from "../../../v1/interface/Named.sol";
+import {Versioned} from "../../../v1/interface/Versioned.sol";
 import {ParanetStructs} from "../../structs/paranets/ParanetStructs.sol";
 
 contract KnowledgeMinersRegistry is Named, Versioned, HubDependent {

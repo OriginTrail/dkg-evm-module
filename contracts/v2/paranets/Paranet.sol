@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.16;
 
-import {ContentAsset} from "../assets/ContentAsset.sol";
+import {ContentAssetV2} from "../assets/ContentAsset.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {ParanetIncentivesPool} from "./ParanetIncentivesPool.sol";
-import {ContractStatus} from "../abstract/ContractStatus.sol";
-import {Initializable} from "../interface/Initializable.sol";
-import {Named} from "../interface/Named.sol";
-import {Versioned} from "../interface/Versioned.sol";
-import {ContentAssetStructs} from "../structs/assets/ContentAssetStructs.sol";
+import {ContractStatus} from "../../v1/abstract/ContractStatus.sol";
+import {Initializable} from "../../v1/interface/Initializable.sol";
+import {Named} from "../../v1/interface/Named.sol";
+import {Versioned} from "../../v1/interface/Versioned.sol";
+import {ContentAssetStructs} from "../../v1/structs/assets/ContentAssetStructs.sol";
 import {ParanetStructs} from "../structs/paranets/ParanetStructs.sol";
 import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
@@ -23,7 +23,7 @@ contract Paranet is Named, Versioned, ContractStatus, Initializable {
     bytes32 public constant KNOWLEDGE_MINER_ROLE = keccak256("KNOWLEDGE_MINER");
 
     ParanetsRegistry public paranetsRegistry;
-    ContentAsset public contentAsset;
+    ContentAssetV2 public contentAsset;
 
     address public contentAssetStorageAddress;
 
@@ -31,7 +31,7 @@ contract Paranet is Named, Versioned, ContractStatus, Initializable {
     constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function initialize() public onlyHubOwner {
-        contentAsset = ContentAsset(hub.getContractAddress("ContentAsset"));
+        contentAsset = ContentAssetV2(hub.getContractAddress("ContentAsset"));
         paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
 
         contentAssetStorageAddress = hub.getAssetStorageAddress("ContentAssetStorage");
@@ -112,7 +112,7 @@ contract Paranet is Named, Versioned, ContractStatus, Initializable {
         ContentAssetStructs.AssetInputArgs calldata knowledgeAssetArgs
     ) external {
         ParanetsRegistry pr = paranetsRegistry;
-        ContentAsset ca = contentAsset;
+        ContentAssetV2 ca = contentAsset;
 
         if (!pr.paranetExists(keccak256(abi.encodePacked(paranetKnowledgeAssetStorageContract, paranetTokenId)))) {
             revert ParanetErrors.ParanetDoesntExist(paranetKnowledgeAssetStorageContract, paranetTokenId);

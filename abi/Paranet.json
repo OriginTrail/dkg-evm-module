@@ -99,7 +99,7 @@
     "name": "contentAsset",
     "outputs": [
       {
-        "internalType": "contract ContentAsset",
+        "internalType": "contract ContentAssetV2",
         "name": "",
         "type": "address"
       }
