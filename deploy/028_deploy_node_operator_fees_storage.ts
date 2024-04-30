@@ -15,8 +15,19 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { deployer } = await hre.getNamedAccounts();
 
-  const shardingTableAddress = hre.helpers.contractDeployments.contracts['ShardingTable'].evmAddress;
-  const ShardingTable = await hre.ethers.getContractAt('ShardingTable', shardingTableAddress, deployer);
+  let shardingTableABI;
+  let shardingTableAddress;
+  if (Object.keys(hre.helpers.contractDeployments.contracts).includes('OldShardingTable')) {
+    shardingTableABI = hre.helpers.getAbi('ShardingTable');
+    shardingTableAddress = hre.helpers.contractDeployments.contracts['OldShardingTable'].evmAddress;
+    delete hre.helpers.contractDeployments.contracts['OldShardingTable'];
+    console.log(`Found V1 ShardingTable address: ${shardingTableAddress}`);
+  } else {
+    shardingTableABI = hre.helpers.getAbi('ShardingTableV2');
+    shardingTableAddress = hre.helpers.contractDeployments.contracts['ShardingTable'].evmAddress;
+    console.log(`Found V2 ShardingTable address: ${shardingTableAddress}`);
+  }
+  const ShardingTable = await hre.ethers.getContractAt(shardingTableABI, shardingTableAddress, deployer);
 
   const stakingStorageAddress = hre.helpers.contractDeployments.contracts['StakingStorage'].evmAddress;
   const StakingStorage = await hre.ethers.getContractAt('StakingStorage', stakingStorageAddress, deployer);
@@ -28,6 +39,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     nofcs = await hre.ethers.getContractAt(abi, nofcsAddress, deployer);
   }
 
+  console.log(`Getting list of nodes in Sharding Table...`);
   const nodes: ShardingTableStructsV1.NodeInfoStructOutput[] = await ShardingTable['getShardingTable()']();
   const identityIds = nodes.map((node) => node.identityId);
 
@@ -78,13 +90,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   delete hre.helpers.contractDeployments.contracts['NodeOperatorFeeChangesStorage'];
 
+  console.log(`Full list of migrated operator fees: ${JSON.stringify(oldOperatorFees)}`);
+
   const NodeOperatorFeesStorage = await hre.helpers.deploy({
     newContractName: 'NodeOperatorFeesStorage',
-    additionalArgs: [timestampNow + 300],
+    additionalArgs: [timestampNow + 86400],
   });
 
   const chunkSize = 10;
-  const encodedDataArray: string[] = oldOperatorFees.reduce<string[]>((acc, currentValue, currentIndex, array) => {
+  const encodedDataArray: string[] = oldOperatorFees.reduce<string[]>((acc, _, currentIndex, array) => {
     if (currentIndex % chunkSize === 0) {
       // Encode and push the function data for a slice of the array
       acc.push(

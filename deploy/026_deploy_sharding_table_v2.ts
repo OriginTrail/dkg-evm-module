@@ -20,34 +20,34 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (isMigration) {
     console.log('And running migration of old ShardingTable...');
     delete hre.helpers.contractDeployments.contracts['ShardingTable'].migration;
+    hre.helpers.contractDeployments.contracts['OldShardingTable'] =
+      hre.helpers.contractDeployments.contracts['ShardingTable'];
   }
 
   const blockTimeNow = (await hre.ethers.provider.getBlock('latest')).timestamp;
 
-  await hre.helpers.deploy({
+  const newShardingTable = await hre.helpers.deploy({
     newContractName: 'ShardingTableV2',
     newContractNameInHub: 'ShardingTable',
-    additionalArgs: [isMigration ? blockTimeNow + 3600 : blockTimeNow],
+    additionalArgs: [isMigration ? blockTimeNow + 86400 : blockTimeNow],
   });
 
   if (isMigration && hre.network.name.startsWith('otp')) {
     const { deployer } = await hre.getNamedAccounts();
 
     console.log(`Executing sharding table storage v1 to v2 migration`);
-    const newShardingTableAddress = hre.helpers.contractDeployments.contracts['ShardingTable'].evmAddress;
     const shardingTableStorageAddress = hre.helpers.contractDeployments.contracts['ShardingTableStorage'].evmAddress;
 
     console.log(
-      `Old ShardingTable: ${oldShardingTableAddress}, New ShardingTable: ${newShardingTableAddress}, ShardingTableStorage: ${shardingTableStorageAddress}`,
+      `Old ShardingTable: ${oldShardingTableAddress}, New ShardingTable: ${newShardingTable.address}, ShardingTableStorage: ${shardingTableStorageAddress}`,
     );
 
     const oldShardingTable = await hre.ethers.getContractAt('ShardingTable', oldShardingTableAddress, deployer);
-    const newShardingTableABI = hre.helpers.getAbi('ShardingTableV2');
-    const newShardingTable = await hre.ethers.getContractAt(newShardingTableABI, newShardingTableAddress, deployer);
 
     const nodes = await oldShardingTable['getShardingTable()']();
     let identityId = nodes[0]?.identityId;
     console.log(`Found ${nodes.length} nodes in the old ShardingTable, starting identityId: ${identityId}`);
+    console.log(`Full list of migrated nodes: ${JSON.stringify(nodes)}`);
 
     const numberOfNodesInBatch = 10;
     let iteration = 1;

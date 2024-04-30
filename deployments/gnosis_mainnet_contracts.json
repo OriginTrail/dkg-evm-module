@@ -119,15 +119,6 @@
       "deploymentTimestamp": 1707908502792,
       "deployed": true
     },
-    "NodeOperatorFeeChangesStorage": {
-      "evmAddress": "0x1DB35c492dfe89AF6e808c3c85B694983Bb372c9",
-      "version": "2.0.0",
-      "gitBranch": "main",
-      "gitCommitHash": "26881f1a79eaf41f13d1c48a2c5952d0a1d14274",
-      "deploymentBlock": 32446839,
-      "deploymentTimestamp": 1707908520006,
-      "deployed": true
-    },
     "ProfileStorage": {
       "evmAddress": "0x5b52765a7A46196f7a8c7dBec234D3Df23248BB4",
       "version": "1.0.0",
@@ -210,12 +201,12 @@
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0x34fdD017567300b0891Fa03673338E14b564C3CC",
-      "version": "2.0.0",
+      "evmAddress": "0xDF52514120baF7aD08cecd23d24e683CDbDD58a3",
+      "version": "2.0.1",
       "gitBranch": "main",
-      "gitCommitHash": "26881f1a79eaf41f13d1c48a2c5952d0a1d14274",
-      "deploymentBlock": 32446895,
-      "deploymentTimestamp": 1707908831259,
+      "gitCommitHash": "cdd09025ee035eb72c4322639cefe1848dd90ecb",
+      "deploymentBlock": 33607133,
+      "deploymentTimestamp": 1713968688686,
       "deployed": true
     },
     "Profile": {
@@ -273,12 +264,21 @@
       "deployed": true
     },
     "ContentAsset": {
-      "evmAddress": "0x9bbaf939c850289e51920736c266C60034F44b01",
-      "version": "1.0.3",
+      "evmAddress": "0x9c0A591B9909Be8d3Fc62AC32Ae7ad8b7156398e",
+      "version": "1.0.4",
       "gitBranch": "main",
-      "gitCommitHash": "b610b9bcf8dcd83d959816d290e635ba61fd83d2",
-      "deploymentBlock": 33058743,
-      "deploymentTimestamp": 1711112881483,
+      "gitCommitHash": "cdd09025ee035eb72c4322639cefe1848dd90ecb",
+      "deploymentBlock": 33607136,
+      "deploymentTimestamp": 1713968703122,
+      "deployed": true
+    },
+    "NodeOperatorFeesStorage": {
+      "evmAddress": "0x5adAC1b63407C490aC0Fb80E85CE7014101c8610",
+      "version": "2.0.0",
+      "gitBranch": "mainnet-deployment/4.2.7",
+      "gitCommitHash": "8839a0e5c92a413b06d20fa15335950bb625f890",
+      "deploymentBlock": 33619390,
+      "deploymentTimestamp": 1714031946358,
       "deployed": true
     }
   }

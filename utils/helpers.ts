@@ -366,6 +366,15 @@ export class Helpers {
   }
 
   public saveDeploymentsJson(folder: string) {
+    if (this.hre.network.config.environment !== 'development') {
+      console.log(`New or redeployed contracts: ${JSON.stringify(this.newContracts)}`);
+      console.log(`New or redeployed Asset Storage contracts: ${JSON.stringify(this.newAssetStorageContracts)}`);
+      console.log(`New or redeployed hash functions set in the proxy: ${JSON.stringify(this.newHashFunctions)}`);
+      console.log(`New or redeployed score functions set in the proxy: ${JSON.stringify(this.newScoreFunctions)}`);
+      console.log(`Initialized contracts: ${JSON.stringify(this.contractsForReinitialization)}`);
+      console.log(`Encoded data for parameters settings: ${JSON.stringify(this.setParametersEncodedData)}`);
+    }
+
     fs.writeFileSync(
       `${folder}/${this.hre.network.name}_contracts.json`,
       JSON.stringify(this.contractDeployments, null, 4),
