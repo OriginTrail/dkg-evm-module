@@ -73,7 +73,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     event OperatorFeeChangeFinished(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
-    string private constant _VERSION = "2.0.1";
+    string private constant _VERSION = "2.0.2";
 
     ShardingTableV2 public shardingTableContract;
     IdentityStorageV2 public identityStorage;
@@ -206,17 +206,18 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
         (startTime, epochsNumber, epochLength, , ) = sasProxy.getAgreementData(agreementId);
 
         operatorFeeAmount =
-            (
-                rewardAmount * sasProxy.getAgreementScoreFunctionId(agreementId) == LOG2PLDSF_ID
-                    ? 100
-                    : nofs.getOperatorFeePercentageByTimestampReverse(
-                        identityId,
-                        (startTime +
-                            epochLength *
-                            ((block.timestamp - startTime) / epochLength) +
-                            ((epochLength * parametersStorage.commitWindowDurationPerc()) / 100))
-                    )
-            ) /
+            (rewardAmount *
+                (
+                    sasProxy.getAgreementScoreFunctionId(agreementId) == LOG2PLDSF_ID
+                        ? 100
+                        : nofs.getOperatorFeePercentageByTimestampReverse(
+                            identityId,
+                            (startTime +
+                                epochLength *
+                                ((block.timestamp - startTime) / epochLength) +
+                                ((epochLength * parametersStorage.commitWindowDurationPerc()) / 100))
+                        )
+                )) /
             100;
         uint96 delegatorsRewardAmount = rewardAmount - operatorFeeAmount;
 
