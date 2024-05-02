@@ -110,8 +110,12 @@ describe('@v2 @unit StakingV2 contract', function () {
     }
   }
 
-  async function calculateEligibleTokens(heldShares: BigNumber, totalShares: BigNumber): Promise<BigNumber> {
-    const totalStake = await Token.balanceOf(StakingStorage.address);
+  async function calculateEligibleTokens(
+    identityId: number,
+    heldShares: BigNumber,
+    totalShares: BigNumber,
+  ): Promise<BigNumber> {
+    const totalStake = await StakingStorage.totalStakes(identityId);
     return heldShares.mul(totalStake).div(totalShares);
   }
 
@@ -126,8 +130,8 @@ describe('@v2 @unit StakingV2 contract', function () {
     expect(await StakingV2.name()).to.equal('Staking');
   });
 
-  it('The contract is version "2.0.1"', async () => {
-    expect(await StakingV2.version()).to.equal('2.0.1');
+  it('The contract is version "2.0.2"', async () => {
+    expect(await StakingV2.version()).to.equal('2.0.2');
   });
 
   it('Non-Contract should not be able to setTotalStake; expect to fail', async () => {
@@ -272,11 +276,11 @@ describe('@v2 @unit StakingV2 contract', function () {
 
     await Token.connect(accounts[1]).increaseAllowance(StakingV2.address, stakeAmount);
 
-    expect(await StakingV2.connect(accounts[1])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
+    await expect(StakingV2.connect(accounts[1])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
       .to.emit(StakingV2, 'StakeIncreased')
-      .withArgs(node.identityId, node.nodeId, accounts[1], oldStake, oldStake.add(stakeAmount))
+      .withArgs(node.identityId, node.nodeId, accounts[1].address, oldStake, oldStake.add(stakeAmount))
       .to.emit(StakingV2, 'SharesMinted')
-      .withArgs(sharesAddress, accounts[1].address, sharesToMint, sharesTotalSupply.add(sharesToMint));
+      .withArgs(node.identityId, sharesAddress, accounts[1].address, sharesToMint, sharesTotalSupply.add(sharesToMint));
 
     const finalBalance = await Token.balanceOf(accounts[1].address);
     const finalSharesBalance = await SharesContract.balanceOf(accounts[1].address);
@@ -305,11 +309,11 @@ describe('@v2 @unit StakingV2 contract', function () {
 
     await Token.connect(accounts[1]).increaseAllowance(StakingV2.address, stakeAmount);
 
-    expect(await StakingV2.connect(accounts[1])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
+    await expect(StakingV2.connect(accounts[1])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
       .to.emit(StakingV2, 'StakeIncreased')
-      .withArgs(node.identityId, node.nodeId, accounts[1], oldStake, oldStake.add(stakeAmount))
+      .withArgs(node.identityId, node.nodeId, accounts[1].address, oldStake, oldStake.add(stakeAmount))
       .to.emit(StakingV2, 'SharesMinted')
-      .withArgs(sharesAddress, accounts[1].address, sharesToMint, sharesTotalSupply.add(sharesToMint));
+      .withArgs(node.identityId, sharesAddress, accounts[1].address, sharesToMint, sharesTotalSupply.add(sharesToMint));
 
     let finalBalance = await Token.balanceOf(accounts[1].address);
     let finalSharesBalance = await SharesContract.balanceOf(accounts[1].address);
@@ -330,11 +334,17 @@ describe('@v2 @unit StakingV2 contract', function () {
 
       await Token.connect(accounts[i]).increaseAllowance(StakingV2.address, stakeAmount);
 
-      expect(await StakingV2.connect(accounts[i])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
+      await expect(StakingV2.connect(accounts[i])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
         .to.emit(StakingV2, 'StakeIncreased')
-        .withArgs(node.identityId, node.nodeId, accounts[1], oldStake, oldStake.add(stakeAmount))
+        .withArgs(node.identityId, node.nodeId, accounts[i].address, oldStake, oldStake.add(stakeAmount))
         .to.emit(StakingV2, 'SharesMinted')
-        .withArgs(sharesAddress, accounts[i].address, sharesToMint, sharesTotalSupply.add(sharesToMint));
+        .withArgs(
+          node.identityId,
+          sharesAddress,
+          accounts[i].address,
+          sharesToMint,
+          sharesTotalSupply.add(sharesToMint),
+        );
 
       finalBalance = await Token.balanceOf(accounts[i].address);
       finalSharesBalance = await SharesContract.balanceOf(accounts[i].address);
@@ -364,11 +374,11 @@ describe('@v2 @unit StakingV2 contract', function () {
 
     await Token.connect(accounts[1]).increaseAllowance(StakingV2.address, stakeAmount);
 
-    expect(await StakingV2.connect(accounts[1])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
+    await expect(StakingV2.connect(accounts[1])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
       .to.emit(StakingV2, 'StakeIncreased')
-      .withArgs(node.identityId, node.nodeId, accounts[1], oldStake, oldStake.add(stakeAmount))
+      .withArgs(node.identityId, node.nodeId, accounts[1].address, oldStake, oldStake.add(stakeAmount))
       .to.emit(StakingV2, 'SharesMinted')
-      .withArgs(sharesAddress, accounts[1].address, sharesToMint, sharesTotalSupply.add(sharesToMint));
+      .withArgs(node.identityId, sharesAddress, accounts[1].address, sharesToMint, sharesTotalSupply.add(sharesToMint));
 
     let finalBalance = await Token.balanceOf(accounts[1].address);
     let finalSharesBalance = await SharesContract.balanceOf(accounts[1].address);
@@ -389,11 +399,17 @@ describe('@v2 @unit StakingV2 contract', function () {
 
       await Token.connect(accounts[i]).increaseAllowance(StakingV2.address, stakeAmount);
 
-      expect(await StakingV2.connect(accounts[i])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
+      await expect(StakingV2.connect(accounts[i])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
         .to.emit(StakingV2, 'StakeIncreased')
-        .withArgs(node.identityId, node.nodeId, accounts[1].address, oldStake, oldStake.add(stakeAmount))
+        .withArgs(node.identityId, node.nodeId, accounts[i].address, oldStake, oldStake.add(stakeAmount))
         .to.emit(StakingV2, 'SharesMinted')
-        .withArgs(sharesAddress, accounts[i].address, sharesToMint, sharesTotalSupply.add(sharesToMint));
+        .withArgs(
+          node.identityId,
+          sharesAddress,
+          accounts[i].address,
+          sharesToMint,
+          sharesTotalSupply.add(sharesToMint),
+        );
 
       finalBalance = await Token.balanceOf(accounts[i].address);
       finalSharesBalance = await SharesContract.balanceOf(accounts[i].address);
@@ -404,12 +420,16 @@ describe('@v2 @unit StakingV2 contract', function () {
 
     const newOperatorFee = 50;
     const stakeWithdrawalDelay = await ParametersStorage.stakeWithdrawalDelay();
-    let blockTimestamp = (await hre.ethers.provider.getBlock('latest')).timestamp;
-    expect(await StakingV2.connect(accounts[1]).startOperatorFeeChange(node.identityId, newOperatorFee))
+    await expect(StakingV2.connect(accounts[1]).startOperatorFeeChange(node.identityId, newOperatorFee))
       .to.emit(StakingV2, 'OperatorFeeChangeStarted')
-      .withArgs(node.identityId, node.nodeId, newOperatorFee, blockTimestamp + stakeWithdrawalDelay);
+      .withArgs(
+        node.identityId,
+        node.nodeId,
+        newOperatorFee,
+        (await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay,
+      );
 
-    await time.increaseTo(blockTimestamp + stakeWithdrawalDelay);
+    await time.increaseTo((await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay);
 
     const agreementId = '0x' + randomBytes(32).toString('hex');
     const startTime = Math.floor(Date.now() / 1000).toString();
@@ -437,7 +457,7 @@ describe('@v2 @unit StakingV2 contract', function () {
     const delegatorsReward = reward.sub(accOperatorFee);
     oldStake = await StakingStorage.totalStakes(node.identityId);
 
-    expect(await StakingV2.addReward(agreementId, node.identityId, reward))
+    await expect(StakingV2.addReward(agreementId, node.identityId, reward))
       .to.emit(StakingV2, 'AccumulatedOperatorFeeIncreased')
       .withArgs(node.identityId, node.nodeId, oldAccOperatorFee, oldAccOperatorFee.add(accOperatorFee))
       .to.emit(StakingV2, 'StakeIncreased')
@@ -449,34 +469,46 @@ describe('@v2 @unit StakingV2 contract', function () {
         oldStake.add(delegatorsReward),
       )
       .to.emit(StakingV2, 'RewardCollected')
-      .withArgs(node.identityId, node.nodeId, ServiceAgreementStorageV1U1.address, accOperatorFee, delegatorsReward);
+      .withArgs(
+        agreementId,
+        node.identityId,
+        node.nodeId,
+        ServiceAgreementStorageV1U1.address,
+        accOperatorFee,
+        delegatorsReward,
+      );
 
     initialBalance = await Token.balanceOf(accounts[1].address);
     oldStake = await StakingStorage.totalStakes(node.identityId);
 
     initialSharesBalance = await SharesContract.balanceOf(accounts[1].address);
     sharesTotalSupply = await SharesContract.totalSupply();
-    let eligibleTokens = await calculateEligibleTokens(initialSharesBalance, sharesTotalSupply);
+    let eligibleTokens = await calculateEligibleTokens(node.identityId, initialSharesBalance, sharesTotalSupply);
 
     await SharesContract.connect(accounts[1]).increaseAllowance(StakingV2.address, initialSharesBalance);
 
-    blockTimestamp = (await hre.ethers.provider.getBlock('latest')).timestamp;
-    expect(await StakingV2.connect(accounts[1]).startStakeWithdrawal(node.identityId, initialSharesBalance))
+    await expect(StakingV2.connect(accounts[1]).startStakeWithdrawal(node.identityId, initialSharesBalance))
       .to.emit(StakingV2, 'StakeWithdrawalStarted')
       .withArgs(
         node.identityId,
         node.nodeId,
         accounts[1].address,
         oldStake,
-        oldStake.add(eligibleTokens),
-        blockTimestamp + stakeWithdrawalDelay,
+        oldStake.sub(eligibleTokens),
+        (await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay,
       )
       .to.emit(StakingV2, 'SharesBurned')
-      .withArgs(sharesAddress, accounts[1].address, initialSharesBalance, sharesTotalSupply.sub(initialSharesBalance));
+      .withArgs(
+        node.identityId,
+        sharesAddress,
+        accounts[1].address,
+        initialSharesBalance,
+        sharesTotalSupply.sub(initialSharesBalance),
+      );
 
-    await time.increaseTo(blockTimestamp + stakeWithdrawalDelay);
+    await time.increaseTo((await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay);
 
-    expect(await StakingV2.connect(accounts[1]).withdrawStake(node.identityId))
+    await expect(StakingV2.connect(accounts[1]).withdrawStake(node.identityId))
       .to.emit(StakingV2, 'StakeWithdrawn')
       .withArgs(node.identityId, node.nodeId, accounts[1].address, eligibleTokens);
 
@@ -492,32 +524,32 @@ describe('@v2 @unit StakingV2 contract', function () {
 
       initialSharesBalance = await SharesContract.balanceOf(accounts[i].address);
       sharesTotalSupply = await SharesContract.totalSupply();
-      eligibleTokens = await calculateEligibleTokens(initialSharesBalance, sharesTotalSupply);
+      eligibleTokens = await calculateEligibleTokens(node.identityId, initialSharesBalance, sharesTotalSupply);
 
       await SharesContract.connect(accounts[i]).increaseAllowance(StakingV2.address, initialSharesBalance);
 
-      blockTimestamp = (await hre.ethers.provider.getBlock('latest')).timestamp;
-      expect(await StakingV2.connect(accounts[i]).startStakeWithdrawal(node.identityId, initialSharesBalance))
+      await expect(StakingV2.connect(accounts[i]).startStakeWithdrawal(node.identityId, initialSharesBalance))
         .to.emit(StakingV2, 'StakeWithdrawalStarted')
         .withArgs(
           node.identityId,
           node.nodeId,
           accounts[i].address,
           oldStake,
-          oldStake.add(eligibleTokens),
-          blockTimestamp + stakeWithdrawalDelay,
+          oldStake.sub(eligibleTokens),
+          (await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay,
         )
         .to.emit(StakingV2, 'SharesBurned')
         .withArgs(
+          node.identityId,
           sharesAddress,
           accounts[i].address,
           initialSharesBalance,
           sharesTotalSupply.sub(initialSharesBalance),
         );
 
-      await time.increaseTo(blockTimestamp + stakeWithdrawalDelay);
+      await time.increaseTo((await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay);
 
-      expect(await StakingV2.connect(accounts[i]).withdrawStake(node.identityId))
+      await expect(StakingV2.connect(accounts[i]).withdrawStake(node.identityId))
         .to.emit(StakingV2, 'StakeWithdrawn')
         .withArgs(node.identityId, node.nodeId, accounts[i].address, eligibleTokens);
 
@@ -527,5 +559,35 @@ describe('@v2 @unit StakingV2 contract', function () {
       expect(finalBalance).to.be.equal(initialBalance.add(eligibleTokens));
       expect(finalSharesBalance).to.be.equal(0);
     }
+  });
+
+  it('SA created with score function 1, addReward, expect all reward to be a node operator fee', async () => {
+    await Token.mint(ServiceAgreementStorageV1U1.address, hre.ethers.utils.parseEther(`${2_000_000}`));
+    const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
+    await Profile.createProfile(accounts[1].address, [], nodeId1, 'Token', 'TKN', 50);
+
+    const agreementId = '0x' + randomBytes(32).toString('hex');
+    const startTime = Math.floor(Date.now() / 1000).toString();
+    const epochsNumber = 5;
+    const epochLength = 10;
+    const tokenAmount = hre.ethers.utils.parseEther('100');
+    const scoreFunctionId = 1;
+    const proofWindowOffsetPerc = 10;
+
+    await ServiceAgreementStorageV1U1.createServiceAgreementObject(
+      agreementId,
+      startTime,
+      epochsNumber,
+      epochLength,
+      tokenAmount,
+      scoreFunctionId,
+      proofWindowOffsetPerc,
+    );
+
+    const rewardAmount = hre.ethers.utils.parseEther(`${2_000_000}`);
+
+    await expect(StakingV2.connect(accounts[1]).addReward(agreementId, identityId1, rewardAmount))
+      .to.emit(StakingV2, 'RewardCollected')
+      .withArgs(agreementId, identityId1, nodeId1, ServiceAgreementStorageV1U1.address, rewardAmount, 0);
   });
 });
