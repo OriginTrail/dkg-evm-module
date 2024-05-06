@@ -18,6 +18,24 @@
         "type": "bytes32"
       },
       {
+        "internalType": "uint96",
+        "name": "addedKnowledgeValue",
+        "type": "uint96"
+      }
+    ],
+    "name": "addCumulativeKnowledgeValue",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
         "internalType": "bytes32",
         "name": "knowledgeAssetId",
         "type": "bytes32"
@@ -36,9 +54,9 @@
         "type": "bytes32"
       },
       {
-        "internalType": "bytes32",
-        "name": "knowledgeMinerId",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "knowledgeMinerAddress",
+        "type": "address"
       }
     ],
     "name": "addKnowledgeMiner",
@@ -60,6 +78,19 @@
       }
     ],
     "name": "addService",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "deleteParanet",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -247,9 +278,9 @@
     "name": "getKnowledgeMiners",
     "outputs": [
       {
-        "internalType": "bytes32[]",
+        "internalType": "address[]",
         "name": "",
-        "type": "bytes32[]"
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
@@ -369,12 +400,12 @@
         "components": [
           {
             "internalType": "address",
-            "name": "knowledgeAssetStorageContract",
+            "name": "paranetKAStorageContract",
             "type": "address"
           },
           {
             "internalType": "uint256",
-            "name": "tokenId",
+            "name": "paranetKATokenId",
             "type": "uint256"
           },
           {
@@ -459,7 +490,7 @@
     "name": "hub",
     "outputs": [
       {
-        "internalType": "contract Hub",
+        "internalType": "contract HubV2",
         "name": "",
         "type": "address"
       }
@@ -499,9 +530,9 @@
         "type": "bytes32"
       },
       {
-        "internalType": "bytes32",
-        "name": "knowledgeMinerId",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "knowledgeMinerAddress",
+        "type": "address"
       }
     ],
     "name": "isKnowledgeMinerRegistered",
@@ -646,9 +677,9 @@
         "type": "bytes32"
       },
       {
-        "internalType": "bytes32",
-        "name": "knowledgeMinerId",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "knowledgeMinerAddress",
+        "type": "address"
       }
     ],
     "name": "removeKnowledgeMiner",
@@ -806,9 +837,14 @@
         "internalType": "bytes32",
         "name": "paranetId",
         "type": "bytes32"
+      },
+      {
+        "internalType": "uint96",
+        "name": "subtractedKnowledgeValue",
+        "type": "uint96"
       }
     ],
-    "name": "unregisterParanet",
+    "name": "subCumulativeKnowledgeValue",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

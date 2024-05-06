@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.16;
 
-import {HubDependent} from "../../v1/abstract/HubDependent.sol";
+import {HubDependentV2} from "../abstract/HubDependent.sol";
 import {Named} from "../../v1/interface/Named.sol";
 import {Versioned} from "../../v1/interface/Versioned.sol";
 import {NodeOperatorErrors} from "../errors/NodeOperatorErrors.sol";
 import {NodeOperatorStructs} from "../structs/NodeOperatorStructs.sol";
 
-contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
+contract NodeOperatorFeesStorage is Named, Versioned, HubDependentV2 {
     string private constant _NAME = "NodeOperatorFeesStorage";
     string private constant _VERSION = "2.0.0";
 
@@ -20,7 +20,7 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
     mapping(uint72 => NodeOperatorStructs.OperatorFee[]) public operatorFees;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress, uint256 migrationPeriodEnd_) HubDependent(hubAddress) {
+    constructor(address hubAddress, uint256 migrationPeriodEnd_) HubDependentV2(hubAddress) {
         migrationPeriodEnd = migrationPeriodEnd_;
     }
 

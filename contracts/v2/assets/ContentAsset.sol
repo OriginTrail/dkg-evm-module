@@ -9,7 +9,7 @@ import {ContentAssetStorage} from "../storage/assets/ContentAssetStorage.sol";
 import {ParametersStorage} from "../../v1/storage/ParametersStorage.sol";
 import {ServiceAgreementStorageProxy} from "../../v1/storage/ServiceAgreementStorageProxy.sol";
 import {UnfinalizedStateStorage} from "../../v1/storage/UnfinalizedStateStorage.sol";
-import {HubDependent} from "../../v1/abstract/HubDependent.sol";
+import {HubDependentV2} from "../abstract/HubDependent.sol";
 import {Initializable} from "../../v1/interface/Initializable.sol";
 import {Named} from "../../v1/interface/Named.sol";
 import {Versioned} from "../../v1/interface/Versioned.sol";
@@ -19,7 +19,7 @@ import {ContentAssetErrors} from "../errors/assets/ContentAssetErrors.sol";
 import {HASH_FUNCTION_ID} from "../../v1/constants/assets/ContentAssetConstants.sol";
 import {LOG2PLDSF_ID, LINEAR_SUM_ID} from "../../v1/constants/ScoringConstants.sol";
 
-contract ContentAssetV2 is Named, Versioned, HubDependent, Initializable {
+contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
     event AssetMinted(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
     event AssetBurnt(address indexed assetContract, uint256 indexed tokenId, uint96 returnedTokenAmount);
     event AssetStateUpdated(
@@ -57,7 +57,7 @@ contract ContentAssetV2 is Named, Versioned, HubDependent, Initializable {
     bool private _isOldMetadataClearingDisabled = false;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) HubDependent(hubAddress) {}
+    constructor(address hubAddress) HubDependentV2(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));

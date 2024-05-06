@@ -2,20 +2,20 @@
 
 pragma solidity ^0.8.16;
 
-import {HubDependent} from "../../../v1/abstract/HubDependent.sol";
+import {HubDependentV2} from "../../abstract/HubDependent.sol";
 import {Named} from "../../../v1/interface/Named.sol";
 import {Versioned} from "../../../v1/interface/Versioned.sol";
 import {ParanetStructs} from "../../structs/paranets/ParanetStructs.sol";
 
-contract KnowledgeAssetsRegistry is Named, Versioned, HubDependent {
+contract KnowledgeAssetsRegistry is Named, Versioned, HubDependentV2 {
     string private constant _NAME = "KnowledgeAssetsRegistry";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "2.0.0";
 
     // Knowledge Asset ID => Knowledge Asset On Paranet
     mapping(bytes32 => ParanetStructs.KnowledgeAsset) knowledgeAssets;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) HubDependent(hubAddress) {}
+    constructor(address hubAddress) HubDependentV2(hubAddress) {}
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -30,7 +30,7 @@ contract KnowledgeAssetsRegistry is Named, Versioned, HubDependent {
         address knowledgeAssetStorageContract,
         uint256 tokenId,
         bytes calldata metadata
-    ) external onlyContracts {
+    ) external onlyContracts returns (bytes32) {
         knowledgeAssets[keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId))] = ParanetStructs
             .KnowledgeAsset({
                 knowledgeAssetStorageContract: knowledgeAssetStorageContract,
@@ -39,6 +39,8 @@ contract KnowledgeAssetsRegistry is Named, Versioned, HubDependent {
                 paranetId: paranetId,
                 metadata: metadata
             });
+
+        return keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId));
     }
 
     function removeKnowledgeAsset(bytes32 knowledgeAssetId) external onlyContracts {

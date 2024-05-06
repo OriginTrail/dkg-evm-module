@@ -11,7 +11,7 @@ import {ProfileStorage} from "../v1/storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "../v1/storage/ServiceAgreementStorageProxy.sol";
 import {ShardingTableStorageV2} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "../v1/storage/StakingStorage.sol";
-import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
+import {ContractStatusV2} from "./abstract/ContractStatus.sol";
 import {Initializable} from "../v1/interface/Initializable.sol";
 import {Named} from "../v1/interface/Named.sol";
 import {Versioned} from "../v1/interface/Versioned.sol";
@@ -24,7 +24,7 @@ import {ADMIN_KEY} from "../v1/constants/IdentityConstants.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LOG2PLDSF_ID} from "../v1/constants/ScoringConstants.sol";
 
-contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
+contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
     event StakeIncreased(
         uint72 indexed identityId,
         bytes nodeId,
@@ -86,7 +86,7 @@ contract StakingV2 is Named, Versioned, ContractStatus, Initializable {
     IERC20 public tokenContract;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) ContractStatus(hubAddress) {}
+    constructor(address hubAddress) ContractStatusV2(hubAddress) {}
 
     modifier onlyAdmin(uint72 identityId) {
         _checkAdmin(identityId);

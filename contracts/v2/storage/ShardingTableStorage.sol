@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.16;
 
-import {HubDependent} from "../../v1/abstract/HubDependent.sol";
+import {HubDependentV2} from "../abstract/HubDependent.sol";
 import {Named} from "../../v1/interface/Named.sol";
 import {Versioned} from "../../v1/interface/Versioned.sol";
 import {ShardingTableStructsV2} from "../structs/ShardingTableStructsV2.sol";
 import {NULL} from "../../v1/constants/ShardingTableConstants.sol";
 
-contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
+contract ShardingTableStorageV2 is Named, Versioned, HubDependentV2 {
     string private constant _NAME = "ShardingTableStorage";
     string private constant _VERSION = "2.0.0";
 
@@ -20,7 +20,7 @@ contract ShardingTableStorageV2 is Named, Versioned, HubDependent {
     mapping(uint72 => uint72) public indexToIdentityId;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) HubDependent(hubAddress) {}
+    constructor(address hubAddress) HubDependentV2(hubAddress) {}
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;

@@ -2,20 +2,20 @@
 
 pragma solidity ^0.8.16;
 
-import {HubDependent} from "../../../v1/abstract/HubDependent.sol";
+import {HubDependentV2} from "../../abstract/HubDependent.sol";
 import {Named} from "../../../v1/interface/Named.sol";
 import {Versioned} from "../../../v1/interface/Versioned.sol";
 import {ParanetStructs} from "../../structs/paranets/ParanetStructs.sol";
 
-contract ParanetsRegistry is Named, Versioned, HubDependent {
+contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
     string private constant _NAME = "ParanetsRegistry";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "2.0.0";
 
     // Paranet ID => Paranet Object
     mapping(bytes32 => ParanetStructs.Paranet) paranets;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) HubDependent(hubAddress) {}
+    constructor(address hubAddress) HubDependentV2(hubAddress) {}
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -34,12 +34,12 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
         string calldata paranetDescription,
         address incentivesPool
     ) external onlyContracts returns (bytes32) {
-        bytes32 paranetId = keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId));
+        ParanetStructs.Paranet storage paranet = paranets[
+            keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId))
+        ];
 
-        ParanetStructs.Paranet storage paranet = paranets[paranetId];
-
-        paranet.knowledgeAssetStorageContract = knowledgeAssetStorageContract;
-        paranet.tokenId = tokenId;
+        paranet.paranetKAStorageContract = knowledgeAssetStorageContract;
+        paranet.paranetKATokenId = tokenId;
         paranet.operator = msg.sender;
         paranet.minersAccessPolicy = minersAccessPolicy;
         paranet.knowledgeAssetsInclusionPolicy = knowledgeAssetsInclusionPolicy;
@@ -47,17 +47,17 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
         paranet.description = paranetDescription;
         paranet.incentivesPool = incentivesPool;
 
-        return paranetId;
+        return keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId));
     }
 
-    function unregisterParanet(bytes32 paranetId) external onlyContracts {
+    function deleteParanet(bytes32 paranetId) external onlyContracts {
         delete paranets[paranetId];
     }
 
     function paranetExists(bytes32 paranetId) external view returns (bool) {
         return
             keccak256(
-                abi.encodePacked(paranets[paranetId].knowledgeAssetStorageContract, paranets[paranetId].tokenId)
+                abi.encodePacked(paranets[paranetId].paranetKAStorageContract, paranets[paranetId].paranetKATokenId)
             ) == paranetId;
     }
 
@@ -66,8 +66,8 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
 
         return
             ParanetStructs.ParanetMetadata({
-                knowledgeAssetStorageContract: paranet.knowledgeAssetStorageContract,
-                tokenId: paranet.tokenId,
+                paranetKAStorageContract: paranet.paranetKAStorageContract,
+                paranetKATokenId: paranet.paranetKATokenId,
                 operator: paranet.operator,
                 minersAccessPolicy: paranet.minersAccessPolicy,
                 knowledgeAssetsInclusionPolicy: paranet.knowledgeAssetsInclusionPolicy,
@@ -80,7 +80,7 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
     function getParanetKnowledgeAssetLocator(bytes32 paranetId) external view returns (address, uint256) {
         ParanetStructs.Paranet storage paranet = paranets[paranetId];
 
-        return (paranet.knowledgeAssetStorageContract, paranet.tokenId);
+        return (paranet.paranetKAStorageContract, paranet.paranetKATokenId);
     }
 
     function getOperatorAddress(bytes32 paranetId) external view returns (address) {
@@ -145,6 +145,14 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
         paranets[paranetId].cumulativeKnowledgeValue = cumulativeKnowledgeValue;
     }
 
+    function addCumulativeKnowledgeValue(bytes32 paranetId, uint96 addedKnowledgeValue) external onlyContracts {
+        paranets[paranetId].cumulativeKnowledgeValue += addedKnowledgeValue;
+    }
+
+    function subCumulativeKnowledgeValue(bytes32 paranetId, uint96 subtractedKnowledgeValue) external onlyContracts {
+        paranets[paranetId].cumulativeKnowledgeValue -= subtractedKnowledgeValue;
+    }
+
     function addService(bytes32 paranetId, bytes32 serviceId) external onlyContracts {
         paranets[paranetId].implementedServicesIndexes[serviceId] = paranets[paranetId].services.length;
         paranets[paranetId].services.push(serviceId);
@@ -173,26 +181,26 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
         return paranets[paranetId].services[paranets[paranetId].implementedServicesIndexes[serviceId]] == serviceId;
     }
 
-    function addKnowledgeMiner(bytes32 paranetId, bytes32 knowledgeMinerId) external onlyContracts {
-        paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerId] = paranets[paranetId]
+    function addKnowledgeMiner(bytes32 paranetId, address knowledgeMinerAddress) external onlyContracts {
+        paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerAddress] = paranets[paranetId]
             .knowledgeMiners
             .length;
-        paranets[paranetId].knowledgeMiners.push(knowledgeMinerId);
+        paranets[paranetId].knowledgeMiners.push(knowledgeMinerAddress);
     }
 
-    function removeKnowledgeMiner(bytes32 paranetId, bytes32 knowledgeMinerId) external onlyContracts {
+    function removeKnowledgeMiner(bytes32 paranetId, address knowledgeMinerAddress) external onlyContracts {
         paranets[paranetId].knowledgeMiners[
-            paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerId]
+            paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerAddress]
         ] = paranets[paranetId].knowledgeMiners[paranets[paranetId].knowledgeMiners.length - 1];
         paranets[paranetId].registeredKnowledgeMinersIndexes[
             paranets[paranetId].knowledgeMiners[paranets[paranetId].knowledgeMiners.length - 1]
-        ] = paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerId];
+        ] = paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerAddress];
 
-        delete paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerId];
+        delete paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerAddress];
         paranets[paranetId].knowledgeMiners.pop();
     }
 
-    function getKnowledgeMiners(bytes32 paranetId) external view returns (bytes32[] memory) {
+    function getKnowledgeMiners(bytes32 paranetId) external view returns (address[] memory) {
         return paranets[paranetId].knowledgeMiners;
     }
 
@@ -200,11 +208,11 @@ contract ParanetsRegistry is Named, Versioned, HubDependent {
         return paranets[paranetId].knowledgeMiners.length;
     }
 
-    function isKnowledgeMinerRegistered(bytes32 paranetId, bytes32 knowledgeMinerId) external view returns (bool) {
+    function isKnowledgeMinerRegistered(bytes32 paranetId, address knowledgeMinerAddress) external view returns (bool) {
         return
             paranets[paranetId].knowledgeMiners[
-                paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerId]
-            ] == knowledgeMinerId;
+                paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerAddress]
+            ] == knowledgeMinerAddress;
     }
 
     function addKnowledgeAsset(bytes32 paranetId, bytes32 knowledgeAssetId) external onlyContracts {

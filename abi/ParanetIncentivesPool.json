@@ -3,19 +3,124 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "hubAddress",
+        "name": "paranetsRegistryAddress",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "knowledgeMinersRegistryAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tracToNeuroRatio_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tracTarget_",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint16",
+        "name": "operatorRewardPercentage_",
+        "type": "uint16"
       }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      }
+    ],
+    "name": "NoEarnedReward",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "NoOperatorRewardAvailable",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tracTarget",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tracRewarded",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tracSpent",
+        "type": "uint96"
+      }
+    ],
+    "name": "TracTargetExceeded",
+    "type": "error"
+  },
+  {
     "inputs": [],
-    "name": "hub",
+    "name": "claimedNeuro",
     "outputs": [
       {
-        "internalType": "contract Hub",
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getKnowledgeMinerReward",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getParanetOperatorReward",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "knowledgeMinersRegistry",
+    "outputs": [
+      {
+        "internalType": "contract KnowledgeMinersRegistry",
         "name": "",
         "type": "address"
       }
@@ -25,28 +130,80 @@
   },
   {
     "inputs": [],
-    "name": "name",
+    "name": "operatorRewardPercentage",
     "outputs": [
       {
-        "internalType": "string",
+        "internalType": "uint16",
         "name": "",
-        "type": "string"
+        "type": "uint16"
       }
     ],
-    "stateMutability": "pure",
+    "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "version",
+    "name": "paranetsRegistry",
     "outputs": [
       {
-        "internalType": "string",
+        "internalType": "contract ParanetsRegistry",
         "name": "",
-        "type": "string"
+        "type": "address"
       }
     ],
-    "stateMutability": "pure",
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "parentParanetId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tracRewarded",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tracTarget",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tracToNeuroRatio",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

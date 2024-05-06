@@ -518,7 +518,7 @@
     "name": "hub",
     "outputs": [
       {
-        "internalType": "contract Hub",
+        "internalType": "contract HubV2",
         "name": "",
         "type": "address"
       }

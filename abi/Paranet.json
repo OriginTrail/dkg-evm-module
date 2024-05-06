@@ -69,6 +69,38 @@
     "type": "error"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "knowledgeAssetStorageAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "ParanetServiceDoesntExist",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "knowledgeAssetStorageAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "ParanetServiceHasAlreadyBeenRegistered",
+    "type": "error"
+  },
+  {
     "inputs": [],
     "name": "KNOWLEDGE_MINER_ROLE",
     "outputs": [
@@ -95,6 +127,69 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKATokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "paranetServiceKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetServiceKATokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "addParanetService",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKATokenId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "knowledgeAssetStorageContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ParanetStructs.UniversalAssetLocator[]",
+        "name": "services",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "addParanetServices",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "contentAsset",
     "outputs": [
@@ -109,10 +204,23 @@
   },
   {
     "inputs": [],
-    "name": "contentAssetStorageAddress",
+    "name": "contentAssetStorage",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract ContentAssetStorageV2",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "hashingProxy",
+    "outputs": [
+      {
+        "internalType": "contract HashingProxy",
         "name": "",
         "type": "address"
       }
@@ -125,7 +233,7 @@
     "name": "hub",
     "outputs": [
       {
-        "internalType": "contract Hub",
+        "internalType": "contract HubV2",
         "name": "",
         "type": "address"
       }
@@ -138,6 +246,32 @@
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "knowledgeAssetsRegistry",
+    "outputs": [
+      {
+        "internalType": "contract KnowledgeAssetsRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "knowledgeMinersRegistry",
+    "outputs": [
+      {
+        "internalType": "contract KnowledgeMinersRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -220,6 +354,19 @@
   },
   {
     "inputs": [],
+    "name": "paranetServicesRegistry",
+    "outputs": [
+      {
+        "internalType": "contract ParanetServicesRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "paranetsRegistry",
     "outputs": [
       {
@@ -235,12 +382,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "knowledgeAssetStorageContract",
+        "name": "paranetKAStorageContract",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "paranetKATokenId",
         "type": "uint256"
       },
       {
@@ -252,11 +399,89 @@
         "internalType": "string",
         "name": "paranetDescription",
         "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tracToNeuroRatio",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tracTarget",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint16",
+        "name": "operatorRewardPercentage",
+        "type": "uint16"
       }
     ],
     "name": "registerParanet",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetServiceKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetServiceKATokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "paranetServiceName",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "paranetServiceDescription",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "worker",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "paranetServiceMetadata",
+        "type": "bytes"
+      }
+    ],
+    "name": "registerParanetService",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "serviceAgreementStorageProxy",
+    "outputs": [
+      {
+        "internalType": "contract ServiceAgreementStorageProxy",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -317,12 +542,58 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "knowledgeAssetStorageContract",
+        "name": "paranetKAStorageContract",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "paranetKATokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      }
+    ],
+    "name": "transferParanetOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetServiceKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetServiceKATokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      }
+    ],
+    "name": "transferParanetServiceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKATokenId",
         "type": "uint256"
       },
       {
@@ -340,12 +611,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "knowledgeAssetStorageContract",
+        "name": "paranetKAStorageContract",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "paranetKATokenId",
         "type": "uint256"
       },
       {
@@ -355,6 +626,75 @@
       }
     ],
     "name": "updateParanetName",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetServiceKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetServiceKATokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "paranetServiceDescription",
+        "type": "string"
+      }
+    ],
+    "name": "updateParanetServiceDescription",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetServiceKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetServiceKATokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "paranetServiceName",
+        "type": "string"
+      }
+    ],
+    "name": "updateParanetServiceName",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetServiceKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetServiceKATokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "worker",
+        "type": "address"
+      }
+    ],
+    "name": "updateParanetServiceWorker",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
