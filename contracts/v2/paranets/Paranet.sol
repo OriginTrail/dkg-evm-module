@@ -5,8 +5,8 @@ pragma solidity ^0.8.16;
 import {ContentAssetStorageV2} from "../storage/assets/ContentAssetStorage.sol";
 import {ContentAssetV2} from "../assets/ContentAsset.sol";
 import {HubV2} from "../Hub.sol";
-import {KnowledgeAssetsRegistry} from "../storage/paranets/KnowledgeAssetsRegistry.sol";
-import {KnowledgeMinersRegistry} from "../storage/paranets/KnowledgeMinersRegistry.sol";
+import {ParanetKnowledgeAssetsRegistry} from "../storage/paranets/ParanetKnowledgeAssetsRegistry.sol";
+import {ParanetKnowledgeMinersRegistry} from "../storage/paranets/ParanetKnowledgeMinersRegistry.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {ParanetServicesRegistry} from "../storage/paranets/ParanetServicesRegistry.sol";
 import {ParanetIncentivesPool} from "./ParanetIncentivesPool.sol";
@@ -32,8 +32,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
 
     ParanetsRegistry public paranetsRegistry;
     ParanetServicesRegistry public paranetServicesRegistry;
-    KnowledgeMinersRegistry public knowledgeMinersRegistry;
-    KnowledgeAssetsRegistry public knowledgeAssetsRegistry;
+    ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
+    ParanetKnowledgeAssetsRegistry public paranetKnowledgeAssetsRegistry;
     ContentAssetStorageV2 public contentAssetStorage;
     ContentAssetV2 public contentAsset;
     HashingProxy public hashingProxy;
@@ -57,8 +57,12 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         contentAsset = ContentAssetV2(hub.getContractAddress("ContentAsset"));
         paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
         paranetServicesRegistry = ParanetServicesRegistry(hub.getContractAddress("ParanetServicesRegistry"));
-        knowledgeMinersRegistry = KnowledgeMinersRegistry(hub.getContractAddress("KnowledgeMinersRegistry"));
-        knowledgeAssetsRegistry = KnowledgeAssetsRegistry(hub.getContractAddress("KnowledgeAssetsRegistry"));
+        paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(
+            hub.getContractAddress("ParanetKnowledgeMinersRegistry")
+        );
+        paranetKnowledgeAssetsRegistry = ParanetKnowledgeAssetsRegistry(
+            hub.getContractAddress("ParanetKnowledgeAssetsRegistry")
+        );
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
@@ -356,8 +360,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         ContentAssetStructs.AssetInputArgs calldata knowledgeAssetArgs
     ) external {
         ParanetsRegistry pr = paranetsRegistry;
-        KnowledgeMinersRegistry kmr = knowledgeMinersRegistry;
-        KnowledgeAssetsRegistry kar = knowledgeAssetsRegistry;
+        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
         ContentAssetV2 ca = contentAsset;
 
         // Check if Paranet exists
@@ -368,8 +372,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
 
         // Check if Knowledge Miner has profile
         // If not: Create a profile
-        if (!kmr.knowledgeMinerExists()) {
-            kmr.registerKnowledgeMiner(bytes(""));
+        if (!pkmr.knowledgeMinerExists()) {
+            pkmr.registerKnowledgeMiner(bytes(""));
             pr.addKnowledgeMiner(
                 keccak256(abi.encodePacked(paranetKnowledgeAssetStorageContract, paranetTokenId)),
                 msg.sender
@@ -380,7 +384,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 knowledgeAssetTokenId = ca.createAsset(knowledgeAssetArgs);
 
         // Add Knowledge Asset to the KnowledgeAssetsRegistry
-        kar.addKnowledgeAsset(
+        pkar.addKnowledgeAsset(
             keccak256(abi.encodePacked(paranetKnowledgeAssetStorageContract, paranetTokenId)),
             address(contentAssetStorage),
             knowledgeAssetTokenId,
@@ -398,20 +402,20 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         );
 
         // Add Knowledge Asset Metadata to the KnowledgeMinersRegistry
-        kmr.addSubmittedKnowledgeAsset(
+        pkmr.addSubmittedKnowledgeAsset(
             keccak256(abi.encodePacked(paranetKnowledgeAssetStorageContract, paranetTokenId)),
             keccak256(abi.encodePacked(address(contentAssetStorage), knowledgeAssetTokenId))
         );
-        kmr.addCumulativeTracSpent(
+        pkmr.addCumulativeTracSpent(
             keccak256(abi.encodePacked(paranetKnowledgeAssetStorageContract, paranetTokenId)),
             knowledgeAssetArgs.tokenAmount
         );
-        kmr.addUnrewardedTracSpent(
+        pkmr.addUnrewardedTracSpent(
             keccak256(abi.encodePacked(paranetKnowledgeAssetStorageContract, paranetTokenId)),
             knowledgeAssetArgs.tokenAmount
         );
-        kmr.incrementTotalSubmittedKnowledgeAssetsCount();
-        kmr.addTotalTracSpent(knowledgeAssetArgs.tokenAmount);
+        pkmr.incrementTotalSubmittedKnowledgeAssetsCount();
+        pkmr.addTotalTracSpent(knowledgeAssetArgs.tokenAmount);
     }
 
     function submitKnowledgeAsset(
@@ -421,8 +425,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 knowledgeAssetTokenId
     ) external {
         ParanetsRegistry pr = paranetsRegistry;
-        KnowledgeMinersRegistry kmr = knowledgeMinersRegistry;
-        KnowledgeAssetsRegistry kar = knowledgeAssetsRegistry;
+        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
 
         if (!pr.paranetExists(keccak256(abi.encodePacked(knowledgeAssetStorageContract, paranetTokenId)))) {
             revert ParanetErrors.ParanetDoesntExist(knowledgeAssetStorageContract, paranetTokenId);
@@ -453,8 +457,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
 
         // Check if Knowledge Miner has profile
         // If not: Create a profile
-        if (!kmr.knowledgeMinerExists()) {
-            kmr.registerKnowledgeMiner(bytes(""));
+        if (!pkmr.knowledgeMinerExists()) {
+            pkmr.registerKnowledgeMiner(bytes(""));
             pr.addKnowledgeMiner(
                 keccak256(abi.encodePacked(paranetKnowledgeAssetStorageContract, paranetTokenId)),
                 msg.sender
@@ -462,7 +466,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         }
 
         // Add Knowledge Asset to the KnowledgeAssetsRegistry
-        kar.addKnowledgeAsset(
+        pkar.addKnowledgeAsset(
             keccak256(abi.encodePacked(paranetKnowledgeAssetStorageContract, paranetTokenId)),
             address(contentAssetStorage),
             knowledgeAssetTokenId,
@@ -480,16 +484,16 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         );
 
         // Add Knowledge Asset Metadata to the KnowledgeMinersRegistry
-        kmr.addSubmittedKnowledgeAsset(
+        pkmr.addSubmittedKnowledgeAsset(
             keccak256(abi.encodePacked(paranetKnowledgeAssetStorageContract, paranetTokenId)),
             keccak256(abi.encodePacked(address(contentAssetStorage), knowledgeAssetTokenId))
         );
-        kmr.addCumulativeTracSpent(
+        pkmr.addCumulativeTracSpent(
             keccak256(abi.encodePacked(paranetKnowledgeAssetStorageContract, paranetTokenId)),
             remainingTokenAmount
         );
-        kmr.incrementTotalSubmittedKnowledgeAssetsCount();
-        kmr.addTotalTracSpent(remainingTokenAmount);
+        pkmr.incrementTotalSubmittedKnowledgeAssetsCount();
+        pkmr.addTotalTracSpent(remainingTokenAmount);
     }
 
     function _checkParanetOperator(bytes32 paranetId) internal view virtual {

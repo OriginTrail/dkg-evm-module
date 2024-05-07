@@ -249,32 +249,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "knowledgeAssetsRegistry",
-    "outputs": [
-      {
-        "internalType": "contract KnowledgeAssetsRegistry",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "knowledgeMinersRegistry",
-    "outputs": [
-      {
-        "internalType": "contract KnowledgeMinersRegistry",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -350,6 +324,32 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paranetKnowledgeAssetsRegistry",
+    "outputs": [
+      {
+        "internalType": "contract ParanetKnowledgeAssetsRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paranetKnowledgeMinersRegistry",
+    "outputs": [
+      {
+        "internalType": "contract ParanetKnowledgeMinersRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

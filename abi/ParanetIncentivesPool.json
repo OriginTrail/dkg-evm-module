@@ -117,12 +117,12 @@
   },
   {
     "inputs": [],
-    "name": "knowledgeMinersRegistry",
+    "name": "operatorRewardPercentage",
     "outputs": [
       {
-        "internalType": "contract KnowledgeMinersRegistry",
+        "internalType": "uint16",
         "name": "",
-        "type": "address"
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -130,12 +130,12 @@
   },
   {
     "inputs": [],
-    "name": "operatorRewardPercentage",
+    "name": "paranetKnowledgeMinersRegistry",
     "outputs": [
       {
-        "internalType": "uint16",
+        "internalType": "contract ParanetKnowledgeMinersRegistry",
         "name": "",
-        "type": "uint16"
+        "type": "address"
       }
     ],
     "stateMutability": "view",

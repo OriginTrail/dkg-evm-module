@@ -7,8 +7,8 @@ import {Named} from "../../../v1/interface/Named.sol";
 import {Versioned} from "../../../v1/interface/Versioned.sol";
 import {ParanetStructs} from "../../structs/paranets/ParanetStructs.sol";
 
-contract KnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
-    string private constant _NAME = "KnowledgeMinersRegistry";
+contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
+    string private constant _NAME = "ParanetKnowledgeMinersRegistry";
     string private constant _VERSION = "2.0.0";
 
     // Address => Knowledge Miner Profile

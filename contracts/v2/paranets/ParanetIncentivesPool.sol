@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.16;
 
-import {KnowledgeMinersRegistry} from "../storage/paranets/KnowledgeMinersRegistry.sol";
+import {ParanetKnowledgeMinersRegistry} from "../storage/paranets/ParanetKnowledgeMinersRegistry.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
 import {ParanetStructs} from "../structs/paranets/ParanetStructs.sol";
 
 contract ParanetIncentivesPool {
     ParanetsRegistry public paranetsRegistry;
-    KnowledgeMinersRegistry public knowledgeMinersRegistry;
+    ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
 
     bytes32 public parentParanetId;
 
@@ -32,7 +32,7 @@ contract ParanetIncentivesPool {
         uint16 operatorRewardPercentage_
     ) {
         paranetsRegistry = ParanetsRegistry(paranetsRegistryAddress);
-        knowledgeMinersRegistry = KnowledgeMinersRegistry(knowledgeMinersRegistryAddress);
+        paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(knowledgeMinersRegistryAddress);
 
         parentParanetId = paranetId;
         tracToNeuroRatio = tracToNeuroRatio_;
@@ -63,10 +63,10 @@ contract ParanetIncentivesPool {
     }
 
     function getKnowledgeMinerReward() external onlyParanetKnowledgeMiner {
-        KnowledgeMinersRegistry kmr = knowledgeMinersRegistry;
+        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
         bytes32 paranetId = parentParanetId;
 
-        uint96 tracSpent = knowledgeMinersRegistry.getUnrewardedTracSpent(paranetId);
+        uint96 tracSpent = pkmr.getUnrewardedTracSpent(paranetId);
 
         if (tracRewarded + tracSpent > tracTarget) {
             revert ParanetErrors.TracTargetExceeded(paranetId, tracTarget, tracRewarded, tracSpent);
@@ -82,8 +82,8 @@ contract ParanetIncentivesPool {
 
         tracRewarded += tracSpent;
         claimedNeuro += neuroReward;
-        kmr.setUnrewardedTracSpent(paranetId, 0);
-        kmr.addCumulativeAwardedNeuro(paranetId, neuroReward);
+        pkmr.setUnrewardedTracSpent(paranetId, 0);
+        pkmr.addCumulativeAwardedNeuro(paranetId, neuroReward);
 
         payable(msg.sender).transfer(neuroReward);
     }
