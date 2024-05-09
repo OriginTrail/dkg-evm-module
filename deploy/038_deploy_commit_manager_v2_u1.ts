@@ -25,6 +25,9 @@ func.tags = ['CommitManagerV2U1', 'v2'];
 func.dependencies = [
   'HubV2',
   'IdentityStorageV2',
+  'ParanetKnowledgeAssetsRegistry',
+  'ParanetKnowledgeMinersRegistry',
+  'ParanetsRegistry',
   'ProximityScoringProxy',
   'Log2PLDSF',
   'LinearSum',

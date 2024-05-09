@@ -31,6 +31,9 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
     );
     event ProfileDeleted(uint72 indexed identityId);
     event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
+    event AccumulatedOperatorFeeWithdrawalStarted(uint72 indexed identityId, uint96 amount, uint256 finishTimestamp);
+    event AccumulatedOperatorFeeWithdrawalCompleted(uint72 indexed identityId, uint96 amount);
+    event AccumulatedOperatorFeeRestaked(uint72 indexed identityId, uint96 amount);
 
     string private constant _NAME = "Profile";
     string private constant _VERSION = "1.1.1";
@@ -180,6 +183,8 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         }
         ps.setAccumulatedOperatorFee(identityId, 0);
         stakingContract.addStake(msg.sender, identityId, accumulatedOperatorFee);
+
+        emit AccumulatedOperatorFeeRestaked(identityId, accumulatedOperatorFee);
     }
 
     function startAccumulatedOperatorFeeWithdrawal(uint72 identityId) external onlyAdmin(identityId) {
@@ -197,6 +202,12 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         );
         ps.setAccumulatedOperatorFeeWithdrawalTimestamp(
             identityId,
+            block.timestamp + parametersStorage.stakeWithdrawalDelay()
+        );
+
+        emit AccumulatedOperatorFeeWithdrawalStarted(
+            identityId,
+            accumulatedOperatorFee,
             block.timestamp + parametersStorage.stakeWithdrawalDelay()
         );
     }
@@ -218,6 +229,8 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         ps.setAccumulatedOperatorFeeWithdrawalAmount(identityId, 0);
         ps.setAccumulatedOperatorFeeWithdrawalTimestamp(identityId, 0);
         ps.transferAccumulatedOperatorFee(msg.sender, withdrawalAmount);
+
+        emit AccumulatedOperatorFeeWithdrawalCompleted(identityId, withdrawalAmount);
     }
 
     function _checkIdentityOwner(uint72 identityId) internal view virtual {
