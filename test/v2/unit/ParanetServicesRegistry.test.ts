@@ -9,7 +9,6 @@ type deployParanetServicesRegistryFixture = {
   accounts: SignerWithAddress[];
   ParanetServicesRegistry: ParanetServicesRegistry;
 };
-
 describe('@v2 @unit ParanetServicesRegistry contract', function () {
   let accounts: SignerWithAddress[];
   let ParanetServicesRegistry: ParanetServicesRegistry;
@@ -37,58 +36,69 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
     expect(await ParanetServicesRegistry.version()).to.equal('2.0.0');
   });
 
-  it('should register a paranet service and return the correct paranet service ID', async () => {
-    const paranetServiceId = await createParanetService(accounts, ParanetServicesRegistry);
-
-    const expectedParanetServiceId = hre.ethers.utils.solidityKeccak256(['address', 'uint256'], [accounts[1], 1]);
-
-    expect(paranetServiceId).to.equal(expectedParanetServiceId);
-  });
-
   it('should return a paranet exist', async () => {
-    const paranetServiceId = await createParanetService(accounts, ParanetServicesRegistry);
+    await createParanetService(accounts, ParanetServicesRegistry);
 
-    const paranetServiceExistsResult = await ParanetServicesRegistry.paranetExists(paranetServiceId);
+    const paranetServiceId = hre.ethers.utils.keccak256(
+      hre.ethers.utils.solidityPack(['address', 'uint256'], [accounts[1].address, 1]),
+    );
+
+    const paranetServiceExistsResult = await ParanetServicesRegistry.paranetServiceExists(paranetServiceId);
 
     expect(paranetServiceExistsResult).to.equal(true);
   });
 
   it("should return a paranet doesn't exit", async () => {
-    const paranetServiceExistsResult = await ParanetServicesRegistry.paranetExists(123);
+    const paranetServiceId = hre.ethers.utils.keccak256(
+      hre.ethers.utils.solidityPack(['address', 'uint256'], [accounts[1].address, 1]),
+    );
+    const paranetServiceExistsResult = await ParanetServicesRegistry.paranetServiceExists(paranetServiceId);
 
     expect(paranetServiceExistsResult).to.equal(false);
   });
 
   it('should delete a paranet service', async () => {
-    const paranetServiceId = await createParanetService(accounts, ParanetServicesRegistry);
+    await createParanetService(accounts, ParanetServicesRegistry);
+
+    const paranetServiceId = hre.ethers.utils.keccak256(
+      hre.ethers.utils.solidityPack(['address', 'uint256'], [accounts[1].address, 1]),
+    );
 
     await ParanetServicesRegistry.deleteParanetService(paranetServiceId);
 
-    const paranetServiceExistsResult = await ParanetServicesRegistry.paranetExists(paranetServiceId);
+    const paranetServiceExistsResult = await ParanetServicesRegistry.paranetServiceExists(paranetServiceId);
 
     expect(paranetServiceExistsResult).to.equal(false);
   });
 
   it('should return a paranet service object', async () => {
-    const paranetServiceId = await createParanetService(accounts, ParanetServicesRegistry);
+    await createParanetService(accounts, ParanetServicesRegistry);
+
+    const paranetServiceId = hre.ethers.utils.keccak256(
+      hre.ethers.utils.solidityPack(['address', 'uint256'], [accounts[1].address, 1]),
+    );
 
     const paranetServiceObject = await ParanetServicesRegistry.getParanetServiceObject(paranetServiceId);
 
-    expect(paranetServiceObject.paranetServiceKAStorageContract).to.equal(accounts[0]);
+    expect(paranetServiceObject.paranetServiceKAStorageContract).to.equal(accounts[1].address);
     expect(paranetServiceObject.paranetServiceKATokenId).to.equal(1);
-    // expect(paranetServiceObject.operator).to.equal(false);
-    expect(paranetServiceObject.worker).to.equal(accounts[1]);
+    expect(paranetServiceObject.operator).to.equal(accounts[0].address);
+    expect(paranetServiceObject.worker).to.equal(accounts[2].address);
     expect(paranetServiceObject.name).to.equal('Test Service');
     expect(paranetServiceObject.description).to.equal('This is a test service');
     expect(paranetServiceObject.metadata).to.equal(hre.ethers.utils.formatBytes32String('Metadata'));
   });
 
   it('should get all fields successfully', async () => {
-    const paranetServiceId = await createParanetService(accounts, ParanetServicesRegistry);
+    await createParanetService(accounts, ParanetServicesRegistry);
+
+    const paranetServiceId = hre.ethers.utils.keccak256(
+      hre.ethers.utils.solidityPack(['address', 'uint256'], [accounts[1].address, 1]),
+    );
 
     const workerAddress = await ParanetServicesRegistry.getWorkerAddress(paranetServiceId);
 
-    expect(workerAddress).to.equal(accounts[1]);
+    expect(workerAddress).to.equal(accounts[2].address);
 
     const name = await ParanetServicesRegistry.getName(paranetServiceId);
 
@@ -104,17 +114,21 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
   });
 
   it('should set all fields successfully', async () => {
-    const paranetServiceId = await createParanetService(accounts, ParanetServicesRegistry);
+    await createParanetService(accounts, ParanetServicesRegistry);
 
-    await ParanetServicesRegistry.setOperatorAddress(paranetServiceId, accounts[10]);
+    const paranetServiceId = hre.ethers.utils.keccak256(
+      hre.ethers.utils.solidityPack(['address', 'uint256'], [accounts[1].address, 1]),
+    );
+
+    await ParanetServicesRegistry.setOperatorAddress(paranetServiceId, accounts[10].address);
     const newOperatorAddress = await ParanetServicesRegistry.getOperatorAddress(paranetServiceId);
 
-    expect(newOperatorAddress).to.equal(accounts[10]);
+    expect(newOperatorAddress).to.equal(accounts[10].address);
 
-    await ParanetServicesRegistry.setWorkerAddress(paranetServiceId, accounts[11]);
+    await ParanetServicesRegistry.setWorkerAddress(paranetServiceId, accounts[11].address);
     const newWorkerAddress = await ParanetServicesRegistry.getWorkerAddress(paranetServiceId);
 
-    expect(newWorkerAddress).to.equal(accounts[11]);
+    expect(newWorkerAddress).to.equal(accounts[11].address);
 
     await ParanetServicesRegistry.setName(paranetServiceId, 'New Test Service');
     const newName = await ParanetServicesRegistry.getName(paranetServiceId);
@@ -133,20 +147,22 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
   });
 
   async function createParanetService(accounts: SignerWithAddress[], ParanetServicesRegistry: ParanetServicesRegistry) {
-    const [admin, worker] = accounts;
-    const paranetServiceKAStorageContract = admin; // assuming admin address for simplicity
+    const admin = accounts[1];
+    const worker = accounts[2];
+    const paranetServiceKAStorageContract = admin;
     const paranetServiceKATokenId = 1;
     const paranetServiceName = 'Test Service';
     const paranetServiceDescription = 'This is a test service';
     const metadata = hre.ethers.utils.formatBytes32String('Metadata');
 
-    return await ParanetServicesRegistry.registerParanetService(
-      paranetServiceKAStorageContract,
+    await ParanetServicesRegistry.registerParanetService(
+      paranetServiceKAStorageContract.address,
       paranetServiceKATokenId,
       paranetServiceName,
       paranetServiceDescription,
-      worker,
+      worker.address,
       metadata,
+      { from: accounts[0].address },
     );
   }
 });

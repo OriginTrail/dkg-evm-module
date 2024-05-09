@@ -56,7 +56,7 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
         return
             keccak256(
                 abi.encodePacked(
-                    paranetServices[paranetServiceId].paranetServiceKATokenId,
+                    paranetServices[paranetServiceId].paranetServiceKAStorageContract,
                     paranetServices[paranetServiceId].paranetServiceKATokenId
                 )
             ) == paranetServiceId;
