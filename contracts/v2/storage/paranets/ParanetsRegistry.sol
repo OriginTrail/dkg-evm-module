@@ -265,6 +265,14 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         uint256 limit
     ) external view returns (bytes32[] memory) {
         if (
+            paranets[paranetId].knowledgeAssets[
+                paranets[paranetId].registeredKnowledgeAssetsIndexes[knowledgeAssetId]
+            ] != knowledgeAssetId
+        ) {
+            revert("Invalid starting KA");
+        }
+
+        if (
             paranets[paranetId].registeredKnowledgeAssetsIndexes[knowledgeAssetId] >=
             paranets[paranetId].knowledgeAssets.length
         ) {
