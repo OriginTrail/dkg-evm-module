@@ -243,6 +243,11 @@
       },
       {
         "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "worker",
         "type": "address"
       },

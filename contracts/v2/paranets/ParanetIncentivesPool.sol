@@ -66,7 +66,7 @@ contract ParanetIncentivesPool {
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
         bytes32 paranetId = parentParanetId;
 
-        uint96 tracSpent = pkmr.getUnrewardedTracSpent(paranetId);
+        uint96 tracSpent = pkmr.getUnrewardedTracSpent(msg.sender, paranetId);
 
         if (tracRewarded + tracSpent > tracTarget) {
             revert ParanetErrors.TracTargetExceeded(paranetId, tracTarget, tracRewarded, tracSpent);
@@ -82,8 +82,8 @@ contract ParanetIncentivesPool {
 
         tracRewarded += tracSpent;
         claimedNeuro += neuroReward;
-        pkmr.setUnrewardedTracSpent(paranetId, 0);
-        pkmr.addCumulativeAwardedNeuro(paranetId, neuroReward);
+        pkmr.setUnrewardedTracSpent(msg.sender, paranetId, 0);
+        pkmr.addCumulativeAwardedNeuro(msg.sender, paranetId, neuroReward);
 
         payable(msg.sender).transfer(neuroReward);
     }

@@ -30,6 +30,7 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
         uint256 paranetServiceKATokenId,
         string calldata paranetServiceName,
         string calldata paranetServiceDescription,
+        address operator,
         address worker,
         bytes calldata metadata
     ) external onlyContracts returns (bytes32) {
@@ -38,7 +39,7 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
         ] = ParanetStructs.ParanetService({
             paranetServiceKAStorageContract: paranetServiceKAStorageContract,
             paranetServiceKATokenId: paranetServiceKATokenId,
-            operator: msg.sender,
+            operator: operator,
             worker: worker,
             name: paranetServiceName,
             description: paranetServiceDescription,
