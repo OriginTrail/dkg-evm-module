@@ -28,6 +28,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      },
+      {
         "internalType": "bytes",
         "name": "metadata",
         "type": "bytes"

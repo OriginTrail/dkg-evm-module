@@ -192,13 +192,14 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
 
             // Remove Knowledge Asset Metadata from the KnowledgeMinersRegistry
             pkmr.removeSubmittedKnowledgeAsset(
+                msg.sender,
                 paranetId,
                 keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId))
             );
-            pkmr.subCumulativeTracSpent(paranetId, tokenAmount);
-            pkmr.subUnrewardedTracSpent(paranetId, tokenAmount);
-            pkmr.decrementTotalSubmittedKnowledgeAssetsCount();
-            pkmr.subTotalTracSpent(tokenAmount);
+            pkmr.subCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.subUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.decrementTotalSubmittedKnowledgeAssetsCount(msg.sender);
+            pkmr.subTotalTracSpent(msg.sender, tokenAmount);
 
             // Remove Knowledge Asset Metadata from the ParanetsRegistry
             pr.removeKnowledgeAsset(paranetId, keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)));
@@ -390,9 +391,9 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
             paranetsRegistry.addCumulativeKnowledgeValue(paranetId, tokenAmount);
 
             // Add Knowledge Asset Token Amount Metadata to the KnowledgeMinersRegistry
-            pkmr.addCumulativeTracSpent(paranetId, tokenAmount);
-            pkmr.addUnrewardedTracSpent(paranetId, tokenAmount);
-            pkmr.addTotalTracSpent(tokenAmount);
+            pkmr.addCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addTotalTracSpent(msg.sender, tokenAmount);
         }
 
         sasV1.extendStoringPeriod(msg.sender, agreementId, epochsNumber, tokenAmount);
@@ -439,9 +440,9 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
             paranetsRegistry.addCumulativeKnowledgeValue(paranetId, tokenAmount);
 
             // Add Knowledge Asset Token Amount Metadata to the KnowledgeMinersRegistry
-            pkmr.addCumulativeTracSpent(paranetId, tokenAmount);
-            pkmr.addUnrewardedTracSpent(paranetId, tokenAmount);
-            pkmr.addTotalTracSpent(tokenAmount);
+            pkmr.addCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addTotalTracSpent(msg.sender, tokenAmount);
         }
 
         sasV1.addTokens(msg.sender, agreementId, tokenAmount);

@@ -28,6 +28,7 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
     function registerParanet(
         address knowledgeAssetStorageContract,
         uint256 tokenId,
+        address operator,
         ParanetStructs.AccessPolicy minersAccessPolicy,
         ParanetStructs.AccessPolicy knowledgeAssetsInclusionPolicy,
         string calldata paranetName,
@@ -40,7 +41,7 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
 
         paranet.paranetKAStorageContract = knowledgeAssetStorageContract;
         paranet.paranetKATokenId = tokenId;
-        paranet.operator = msg.sender;
+        paranet.operator = operator;
         paranet.minersAccessPolicy = minersAccessPolicy;
         paranet.knowledgeAssetsInclusionPolicy = knowledgeAssetsInclusionPolicy;
         paranet.name = paranetName;

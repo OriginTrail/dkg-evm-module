@@ -615,6 +615,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
         "internalType": "enum ParanetStructs.AccessPolicy",
         "name": "minersAccessPolicy",
         "type": "uint8"

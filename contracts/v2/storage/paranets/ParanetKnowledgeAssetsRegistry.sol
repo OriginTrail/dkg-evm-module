@@ -29,13 +29,14 @@ contract ParanetKnowledgeAssetsRegistry is Named, Versioned, HubDependentV2 {
         bytes32 paranetId,
         address knowledgeAssetStorageContract,
         uint256 tokenId,
+        address miner,
         bytes calldata metadata
     ) external onlyContracts returns (bytes32) {
         knowledgeAssets[keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId))] = ParanetStructs
             .KnowledgeAsset({
                 knowledgeAssetStorageContract: knowledgeAssetStorageContract,
                 tokenId: tokenId,
-                minerAddress: msg.sender,
+                minerAddress: miner,
                 paranetId: paranetId,
                 metadata: metadata
             });

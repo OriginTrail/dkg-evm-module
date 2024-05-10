@@ -186,6 +186,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             pr.registerParanet(
                 paranetKAStorageContract,
                 paranetKATokenId,
+                msg.sender,
                 ParanetStructs.AccessPolicy.OPEN,
                 ParanetStructs.AccessPolicy.OPEN,
                 paranetName,
@@ -354,6 +355,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                 paranetServiceKATokenId,
                 paranetServiceName,
                 paranetServiceDescription,
+                msg.sender,
                 worker,
                 paranetServiceMetadata
             );
@@ -493,8 +495,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
 
         // Check if Knowledge Miner has profile
         // If not: Create a profile
-        if (!pkmr.knowledgeMinerExists()) {
-            pkmr.registerKnowledgeMiner(bytes(""));
+        if (!pkmr.knowledgeMinerExists(msg.sender)) {
+            pkmr.registerKnowledgeMiner(msg.sender, bytes(""));
             pr.addKnowledgeMiner(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)), msg.sender);
         }
 
@@ -506,6 +508,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             address(contentAssetStorage),
             knowledgeAssetTokenId,
+            msg.sender,
             bytes("")
         );
 
@@ -521,19 +524,22 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
 
         // Add Knowledge Asset Metadata to the KnowledgeMinersRegistry
         pkmr.addSubmittedKnowledgeAsset(
+            msg.sender,
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             keccak256(abi.encodePacked(address(contentAssetStorage), knowledgeAssetTokenId))
         );
         pkmr.addCumulativeTracSpent(
+            msg.sender,
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             knowledgeAssetArgs.tokenAmount
         );
         pkmr.addUnrewardedTracSpent(
+            msg.sender,
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             knowledgeAssetArgs.tokenAmount
         );
-        pkmr.incrementTotalSubmittedKnowledgeAssetsCount();
-        pkmr.addTotalTracSpent(knowledgeAssetArgs.tokenAmount);
+        pkmr.incrementTotalSubmittedKnowledgeAssetsCount(msg.sender);
+        pkmr.addTotalTracSpent(msg.sender, knowledgeAssetArgs.tokenAmount);
 
         emit KnowledgeAssetSubmittedToParanet(
             paranetKAStorageContract,
@@ -582,8 +588,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
 
         // Check if Knowledge Miner has profile
         // If not: Create a profile
-        if (!pkmr.knowledgeMinerExists()) {
-            pkmr.registerKnowledgeMiner(bytes(""));
+        if (!pkmr.knowledgeMinerExists(msg.sender)) {
+            pkmr.registerKnowledgeMiner(msg.sender, bytes(""));
             pr.addKnowledgeMiner(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)), msg.sender);
         }
 
@@ -592,6 +598,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             address(contentAssetStorage),
             knowledgeAssetTokenId,
+            msg.sender,
             bytes("")
         );
 
@@ -607,15 +614,17 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
 
         // Add Knowledge Asset Metadata to the KnowledgeMinersRegistry
         pkmr.addSubmittedKnowledgeAsset(
+            msg.sender,
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             keccak256(abi.encodePacked(address(contentAssetStorage), knowledgeAssetTokenId))
         );
         pkmr.addCumulativeTracSpent(
+            msg.sender,
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             remainingTokenAmount
         );
-        pkmr.incrementTotalSubmittedKnowledgeAssetsCount();
-        pkmr.addTotalTracSpent(remainingTokenAmount);
+        pkmr.incrementTotalSubmittedKnowledgeAssetsCount(msg.sender);
+        pkmr.addTotalTracSpent(msg.sender, remainingTokenAmount);
 
         emit KnowledgeAssetSubmittedToParanet(
             paranetKAStorageContract,
