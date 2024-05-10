@@ -559,8 +559,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
         ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
 
-        if (!pr.paranetExists(keccak256(abi.encodePacked(knowledgeAssetStorageContract, paranetKATokenId)))) {
-            revert ParanetErrors.ParanetDoesntExist(knowledgeAssetStorageContract, paranetKATokenId);
+        if (!pr.paranetExists(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)))) {
+            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
         }
 
         if (IERC721(knowledgeAssetStorageContract).ownerOf(knowledgeAssetTokenId) != msg.sender) {
@@ -569,6 +569,18 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                 paranetKATokenId,
                 knowledgeAssetStorageContract,
                 knowledgeAssetTokenId
+            );
+        }
+
+        if (
+            pkar.isParanetKnowledgeAsset(
+                keccak256(abi.encodePacked(knowledgeAssetStorageContract, knowledgeAssetTokenId))
+            )
+        ) {
+            revert ParanetErrors.KnowledgeAssetIsAPartOfOtherParanet(
+                knowledgeAssetStorageContract,
+                knowledgeAssetTokenId,
+                pkar.getParanetId(keccak256(abi.encodePacked(knowledgeAssetStorageContract, knowledgeAssetTokenId)))
             );
         }
 
@@ -596,7 +608,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         // Add Knowledge Asset to the KnowledgeAssetsRegistry
         pkar.addKnowledgeAsset(
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            address(contentAssetStorage),
+            knowledgeAssetStorageContract,
             knowledgeAssetTokenId,
             msg.sender,
             bytes("")
@@ -605,7 +617,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         // Add Knowledge Asset Metadata to the ParanetsRegistry
         pr.addKnowledgeAsset(
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            keccak256(abi.encodePacked(address(contentAssetStorage), knowledgeAssetTokenId))
+            keccak256(abi.encodePacked(knowledgeAssetStorageContract, knowledgeAssetTokenId))
         );
         pr.addCumulativeKnowledgeValue(
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
@@ -616,7 +628,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         pkmr.addSubmittedKnowledgeAsset(
             msg.sender,
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            keccak256(abi.encodePacked(address(contentAssetStorage), knowledgeAssetTokenId))
+            keccak256(abi.encodePacked(knowledgeAssetStorageContract, knowledgeAssetTokenId))
         );
         pkmr.addCumulativeTracSpent(
             msg.sender,
@@ -629,7 +641,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         emit KnowledgeAssetSubmittedToParanet(
             paranetKAStorageContract,
             paranetKATokenId,
-            address(contentAssetStorage),
+            knowledgeAssetStorageContract,
             knowledgeAssetTokenId
         );
     }

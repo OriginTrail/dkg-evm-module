@@ -23,6 +23,27 @@
         "type": "uint256"
       },
       {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "KnowledgeAssetIsAPartOfOtherParanet",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetKnowledgeAssetStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetTokenId",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "knowledgeAssetStorageContract",
         "type": "address"
