@@ -82,7 +82,7 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
 
     expect(paranetServiceObject.paranetServiceKAStorageContract).to.equal(accounts[1].address);
     expect(paranetServiceObject.paranetServiceKATokenId).to.equal(1);
-    expect(paranetServiceObject.operator).to.equal(accounts[0].address);
+    expect(paranetServiceObject.operator).to.equal(accounts[3].address);
     expect(paranetServiceObject.worker).to.equal(accounts[2].address);
     expect(paranetServiceObject.name).to.equal('Test Service');
     expect(paranetServiceObject.description).to.equal('This is a test service');
@@ -149,6 +149,7 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
   async function createParanetService(accounts: SignerWithAddress[], ParanetServicesRegistry: ParanetServicesRegistry) {
     const admin = accounts[1];
     const worker = accounts[2];
+    const operator = accounts[3];
     const paranetServiceKAStorageContract = admin;
     const paranetServiceKATokenId = 1;
     const paranetServiceName = 'Test Service';
@@ -160,9 +161,9 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
       paranetServiceKATokenId,
       paranetServiceName,
       paranetServiceDescription,
+      operator.address,
       worker.address,
       metadata,
-      { from: accounts[0].address },
     );
   }
 });

@@ -96,7 +96,7 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     expect(paranetMetadata.paranetKAStorageContract).to.be.equal(accounts[1].address);
     expect(paranetMetadata.paranetKATokenId).to.be.equal(123);
     //How to get message sender?
-    // expect(paranetMetadata.operator).to.be.equal();
+    expect(paranetMetadata.operator).to.be.equal(accounts[3].address);
     expect(paranetMetadata.minersAccessPolicy).to.be.equal(0);
     expect(paranetMetadata.knowledgeAssetsInclusionPolicy).to.be.equal(0);
     expect(paranetMetadata.name).to.be.equal('Test Paranet');
@@ -105,7 +105,7 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
 
     const operatorAddress = await ParanetsRegistry.getOperatorAddress(paranetId);
 
-    expect(operatorAddress).to.be.equal(accounts[0].address);
+    expect(operatorAddress).to.be.equal(accounts[3].address);
 
     const minersAccessPolicy = await ParanetsRegistry.getMinersAccessPolicy(paranetId);
 
@@ -378,13 +378,11 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     expect(knowledgeAssetsFromAssetId[1]).to.be.equal(getHashFromNumber(16));
     expect(knowledgeAssetsFromAssetId[2]).to.be.equal(getHashFromNumber(17));
 
-    knowledgeAssetsFromAssetId = await ParanetsRegistry.getKnowledgeAssetsStartingFromKnowledgeAssetId(
-      paranetId,
-      getHashFromNumber(150),
-      5,
-    );
+    await expect(
+      ParanetsRegistry.getKnowledgeAssetsStartingFromKnowledgeAssetId(paranetId, getHashFromNumber(150), 5),
+    ).to.be.revertedWith('Invalid starting KA');
 
-    expect(knowledgeAssetsFromAssetId.length).to.be.equal(0);
+    // expect(knowledgeAssetsFromAssetId.length).to.be.equal(0);
 
     const isAsset5Registrated = await ParanetsRegistry.isKnowledgeAssetRegistered(paranetId, getHashFromNumber(5));
 
@@ -413,10 +411,12 @@ async function createParanet(accounts: SignerWithAddress[], ParanetsRegistry: Pa
   const paranetName = 'Test Paranet';
   const paranetDescription = 'Description of Test Paranet';
   const incentivesPool = accounts[2];
+  const operator = accounts[3];
 
   const paranetId = await ParanetsRegistry.registerParanet(
     knowledgeAssetStorageContract.address,
     tokenId,
+    operator.address,
     minersAccessPolicy,
     knowledgeAssetsInclusionPolicy,
     paranetName,
