@@ -73,7 +73,7 @@ contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
     event OperatorFeeChangeFinished(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
-    string private constant _VERSION = "2.0.2";
+    string private constant _VERSION = "2.1.0";
 
     ShardingTableV2 public shardingTableContract;
     IdentityStorageV2 public identityStorage;
@@ -115,12 +115,90 @@ contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
         return _VERSION;
     }
 
-    function addStake(address sender, uint72 identityId, uint96 stakeAmount) external onlyContracts {
-        _addStake(sender, identityId, stakeAmount);
+    function restakeAccumulatedOperatorFees(
+        address sender,
+        uint72 identityId,
+        uint96 stakeAmount
+    ) external onlyContracts {
+        StakingStorage ss = stakingStorage;
+        ProfileStorage ps = profileStorage;
+        ParametersStorage params = parametersStorage;
+        ShardingTableStorageV2 sts = shardingTableStorage;
+
+        uint96 oldStake = ss.totalStakes(identityId);
+        uint96 newStake = oldStake + stakeAmount;
+
+        if (!ps.profileExists(identityId)) {
+            revert ProfileErrors.ProfileDoesntExist(identityId);
+        }
+        if (newStake > params.maximumStake()) {
+            revert StakingErrors.MaximumStakeExceeded(params.maximumStake());
+        }
+
+        Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
+
+        uint256 sharesMinted;
+        if (sharesContract.totalSupply() == 0) {
+            sharesMinted = stakeAmount;
+        } else {
+            sharesMinted = ((uint256(stakeAmount) * sharesContract.totalSupply()) / oldStake);
+        }
+        sharesContract.mint(sender, sharesMinted);
+
+        ss.setTotalStake(identityId, newStake);
+        ps.transferAccumulatedOperatorFee(address(ss), stakeAmount);
+
+        if (!sts.nodeExists(identityId) && newStake >= params.minimumStake()) {
+            if (sts.nodesCount() >= params.shardingTableSizeLimit()) {
+                revert ShardingTableErrors.ShardingTableIsFull();
+            }
+            shardingTableContract.insertNode(identityId);
+        }
+        emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, oldStake, newStake);
+        emit SharesMinted(identityId, address(sharesContract), sender, sharesMinted, sharesContract.totalSupply());
     }
 
     function addStake(uint72 identityId, uint96 stakeAmount) external {
-        _addStake(msg.sender, identityId, stakeAmount);
+        StakingStorage ss = stakingStorage;
+        ProfileStorage ps = profileStorage;
+        ParametersStorage params = parametersStorage;
+        ShardingTableStorageV2 sts = shardingTableStorage;
+        IERC20 tknc = tokenContract;
+
+        uint96 oldStake = ss.totalStakes(identityId);
+        uint96 newStake = oldStake + stakeAmount;
+
+        if (!ps.profileExists(identityId)) {
+            revert ProfileErrors.ProfileDoesntExist(identityId);
+        }
+        if (stakeAmount > tknc.allowance(msg.sender, address(this))) {
+            revert TokenErrors.TooLowAllowance(address(tknc), tknc.allowance(msg.sender, address(this)));
+        }
+        if (newStake > params.maximumStake()) {
+            revert StakingErrors.MaximumStakeExceeded(params.maximumStake());
+        }
+
+        Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
+
+        uint256 sharesMinted;
+        if (sharesContract.totalSupply() == 0) {
+            sharesMinted = stakeAmount;
+        } else {
+            sharesMinted = ((uint256(stakeAmount) * sharesContract.totalSupply()) / oldStake);
+        }
+        sharesContract.mint(msg.sender, sharesMinted);
+
+        ss.setTotalStake(identityId, newStake);
+        tknc.transferFrom(msg.sender, address(ss), stakeAmount);
+
+        if (!sts.nodeExists(identityId) && newStake >= params.minimumStake()) {
+            if (sts.nodesCount() >= params.shardingTableSizeLimit()) {
+                revert ShardingTableErrors.ShardingTableIsFull();
+            }
+            shardingTableContract.insertNode(identityId);
+        }
+        emit StakeIncreased(identityId, ps.getNodeId(identityId), msg.sender, oldStake, newStake);
+        emit SharesMinted(identityId, address(sharesContract), msg.sender, sharesMinted, sharesContract.totalSupply());
     }
 
     function startStakeWithdrawal(uint72 identityId, uint96 sharesToBurn) external {
@@ -305,49 +383,6 @@ contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
 
     function finishOperatorFeeChange(uint72 identityId) external onlyAdmin(identityId) {
         // Function signature needed for ABI backwards compatibility
-    }
-
-    function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal virtual {
-        StakingStorage ss = stakingStorage;
-        ProfileStorage ps = profileStorage;
-        ParametersStorage params = parametersStorage;
-        ShardingTableStorageV2 sts = shardingTableStorage;
-        IERC20 tknc = tokenContract;
-
-        uint96 oldStake = ss.totalStakes(identityId);
-        uint96 newStake = oldStake + stakeAmount;
-
-        if (!ps.profileExists(identityId)) {
-            revert ProfileErrors.ProfileDoesntExist(identityId);
-        }
-        if (stakeAmount > tknc.allowance(sender, address(this))) {
-            revert TokenErrors.TooLowAllowance(address(tknc), tknc.allowance(sender, address(this)));
-        }
-        if (newStake > params.maximumStake()) {
-            revert StakingErrors.MaximumStakeExceeded(params.maximumStake());
-        }
-
-        Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
-
-        uint256 sharesMinted;
-        if (sharesContract.totalSupply() == 0) {
-            sharesMinted = stakeAmount;
-        } else {
-            sharesMinted = ((uint256(stakeAmount) * sharesContract.totalSupply()) / oldStake);
-        }
-        sharesContract.mint(sender, sharesMinted);
-
-        ss.setTotalStake(identityId, newStake);
-        tknc.transferFrom(sender, address(ss), stakeAmount);
-
-        if (!sts.nodeExists(identityId) && newStake >= params.minimumStake()) {
-            if (sts.nodesCount() >= params.shardingTableSizeLimit()) {
-                revert ShardingTableErrors.ShardingTableIsFull();
-            }
-            shardingTableContract.insertNode(identityId);
-        }
-        emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, oldStake, newStake);
-        emit SharesMinted(identityId, address(sharesContract), sender, sharesMinted, sharesContract.totalSupply());
     }
 
     function _checkAdmin(uint72 identityId) internal view virtual {

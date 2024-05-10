@@ -130,8 +130,8 @@ describe('@v2 @unit StakingV2 contract', function () {
     expect(await StakingV2.name()).to.equal('Staking');
   });
 
-  it('The contract is version "2.0.2"', async () => {
-    expect(await StakingV2.version()).to.equal('2.0.2');
+  it('The contract is version "2.1.0"', async () => {
+    expect(await StakingV2.version()).to.equal('2.1.0');
   });
 
   it('Non-Contract should not be able to setTotalStake; expect to fail', async () => {

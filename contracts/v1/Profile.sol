@@ -36,7 +36,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
     event AccumulatedOperatorFeeRestaked(uint72 indexed identityId, uint96 amount);
 
     string private constant _NAME = "Profile";
-    string private constant _VERSION = "1.1.1";
+    string private constant _VERSION = "1.2.0";
 
     HashingProxy public hashingProxy;
     Identity public identityContract;
@@ -182,7 +182,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
             revert ProfileErrors.NoOperatorFees(identityId);
         }
         ps.setAccumulatedOperatorFee(identityId, 0);
-        stakingContract.addStake(msg.sender, identityId, accumulatedOperatorFee);
+        stakingContract.restakeAccumulatedOperatorFees(msg.sender, identityId, accumulatedOperatorFee);
 
         emit AccumulatedOperatorFeeRestaked(identityId, accumulatedOperatorFee);
     }
