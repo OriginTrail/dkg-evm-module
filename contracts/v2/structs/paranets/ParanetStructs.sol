@@ -61,8 +61,8 @@ library ParanetStructs {
         bytes metadata;
         mapping(bytes32 => bytes32[]) submittedKnowledgeAssets;
         mapping(bytes32 => mapping(bytes32 => uint256)) submittedKnowledgeAssetsIndexes;
-        mapping(bytes32 => UpdatingKnowledgeAssetState[]) updatingKnowledgeAssets;
-        mapping(bytes32 => mapping(bytes32 => uint256)) updatingKnowledgeAssetsIndexes;
+        mapping(bytes32 => UpdatingKnowledgeAssetState[]) updatingKnowledgeAssetStates;
+        mapping(bytes32 => mapping(bytes32 => uint256)) updatingKnowledgeAssetStateIndexes;
         mapping(bytes32 => uint96) cumulativeTracSpent;
         mapping(bytes32 => uint96) unrewardedTracSpent;
         mapping(bytes32 => uint256) cumulativeAwardedNeuro;
