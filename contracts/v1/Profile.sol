@@ -182,7 +182,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
             revert ProfileErrors.NoOperatorFees(identityId);
         }
         ps.setAccumulatedOperatorFee(identityId, 0);
-        stakingContract.restakeAccumulatedOperatorFees(msg.sender, identityId, accumulatedOperatorFee);
+        stakingContract.addStake(msg.sender, identityId, accumulatedOperatorFee);
 
         emit AccumulatedOperatorFeeRestaked(identityId, accumulatedOperatorFee);
     }

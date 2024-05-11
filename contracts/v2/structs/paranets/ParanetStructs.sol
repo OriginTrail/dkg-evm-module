@@ -61,6 +61,8 @@ library ParanetStructs {
         bytes metadata;
         mapping(bytes32 => bytes32[]) submittedKnowledgeAssets;
         mapping(bytes32 => mapping(bytes32 => uint256)) submittedKnowledgeAssetsIndexes;
+        mapping(bytes32 => UpdatingKnowledgeAssetState[]) updatingKnowledgeAssets;
+        mapping(bytes32 => mapping(bytes32 => uint256)) updatingKnowledgeAssetsIndexes;
         mapping(bytes32 => uint96) cumulativeTracSpent;
         mapping(bytes32 => uint96) unrewardedTracSpent;
         mapping(bytes32 => uint256) cumulativeAwardedNeuro;
@@ -79,5 +81,12 @@ library ParanetStructs {
         address minerAddress;
         bytes32 paranetId;
         bytes metadata;
+    }
+
+    struct UpdatingKnowledgeAssetState {
+        address knowledgeAssetStorageContract;
+        uint256 tokenId;
+        bytes32 assertionId;
+        uint96 updateTokenAmount;
     }
 }

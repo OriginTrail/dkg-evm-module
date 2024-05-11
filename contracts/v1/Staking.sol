@@ -83,11 +83,7 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
         return _VERSION;
     }
 
-    function restakeAccumulatedOperatorFees(
-        address sender,
-        uint72 identityId,
-        uint96 stakeAmount
-    ) external onlyContracts {
+    function addStake(address sender, uint72 identityId, uint96 stakeAmount) external onlyContracts {
         StakingStorage ss = stakingStorage;
         ProfileStorage ps = profileStorage;
         ParametersStorage params = parametersStorage;

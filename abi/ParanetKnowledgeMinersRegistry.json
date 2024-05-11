@@ -126,6 +126,72 @@
         "internalType": "address",
         "name": "miner",
         "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "knowledgeAssetStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "assertionId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint96",
+        "name": "updateTokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "addUpdatingKnowledgeAssetState",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetStateId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint96",
+        "name": "addedUpdateTokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "addUpdatingKnowledgeAssetUpdateTokenAmount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
       }
     ],
     "name": "decrementTotalSubmittedKnowledgeAssetsCount",
@@ -265,6 +331,40 @@
         "internalType": "address",
         "name": "miner",
         "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "start",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "end",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSubmittedKnowledgeAssets",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
       }
     ],
     "name": "getTotalSubmittedKnowledgeAssetsCount",
@@ -316,6 +416,108 @@
         "internalType": "uint96",
         "name": "",
         "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "start",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "end",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUpdatingKnowledgeAssetStates",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "knowledgeAssetStorageContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "assertionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint96",
+            "name": "updateTokenAmount",
+            "type": "uint96"
+          }
+        ],
+        "internalType": "struct ParanetStructs.UpdatingKnowledgeAssetState[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getUpdatingKnowledgeAssetStates",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "knowledgeAssetStorageContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "assertionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint96",
+            "name": "updateTokenAmount",
+            "type": "uint96"
+          }
+        ],
+        "internalType": "struct ParanetStructs.UpdatingKnowledgeAssetState[]",
+        "name": "",
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",
@@ -416,6 +618,29 @@
       }
     ],
     "name": "removeSubmittedKnowledgeAsset",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetStateId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "removeUpdatingKnowledgeAssetState",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -538,6 +763,34 @@
         "type": "bytes32"
       },
       {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetStateId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint96",
+        "name": "updateTokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "setUpdatingKnowledgeAssetUpdateTokenAmount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
         "internalType": "uint256",
         "name": "subtractedCumulativeAwardedNeuro",
         "type": "uint256"
@@ -608,6 +861,34 @@
       }
     ],
     "name": "subUnrewardedTracSpent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetStateId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint96",
+        "name": "subtractedUpdateTokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "subUpdatingKnowledgeAssetUpdateTokenAmount",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

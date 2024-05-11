@@ -8,9 +8,6 @@ import {ContentAssetStorage} from "../v1/storage/assets/ContentAssetStorage.sol"
 import {ContentAssetStorageV2} from "./storage/assets/ContentAssetStorage.sol";
 import {IdentityStorageV2} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "../v1/storage/ParametersStorage.sol";
-import {ParanetKnowledgeAssetsRegistry} from "./storage/paranets/ParanetKnowledgeAssetsRegistry.sol";
-import {ParanetKnowledgeMinersRegistry} from "./storage/paranets/ParanetKnowledgeMinersRegistry.sol";
-import {ParanetsRegistry} from "./storage/paranets/ParanetsRegistry.sol";
 import {ProfileStorage} from "../v1/storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "../v1/storage/ServiceAgreementStorageProxy.sol";
 import {ShardingTableStorageV2} from "./storage/ShardingTableStorage.sol";
@@ -61,9 +58,6 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatusV2, Initializable 
     ContentAssetStorageV2 public contentAssetStorage;
     IdentityStorageV2 public identityStorage;
     ParametersStorage public parametersStorage;
-    ParanetKnowledgeAssetsRegistry public paranetKnowledgeAssetsRegistry;
-    ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
-    ParanetsRegistry public paranetsRegistry;
     ProfileStorage public profileStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     ShardingTableStorageV2 public shardingTableStorage;
@@ -79,13 +73,6 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatusV2, Initializable 
         contentAssetStorage = ContentAssetStorageV2(hub.getAssetStorageAddress("ContentAssetStorage"));
         identityStorage = IdentityStorageV2(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
-        paranetKnowledgeAssetsRegistry = ParanetKnowledgeAssetsRegistry(
-            hub.getContractAddress("ParanetKnowledgeAssetsRegistry")
-        );
-        paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(
-            hub.getContractAddress("ParanetKnowledgeMinersRegistry")
-        );
-        paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
@@ -423,24 +410,6 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatusV2, Initializable 
         ) {
             if (sasProxy.agreementV1Exists(agreementId)) {
                 sasProxy.migrateV1ServiceAgreement(agreementId);
-            }
-
-            ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
-
-            if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(args.assetContract, args.tokenId)))) {
-                ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
-
-                bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(args.assetContract, args.tokenId)));
-                address miner = pkar.getMinerAddress(keccak256(abi.encodePacked(args.assetContract, args.tokenId)));
-                uint96 updateTokenAmount = sasProxy.getAgreementUpdateTokenAmount(agreementId);
-
-                // Add Knowledge Asset Token Amount Metadata to the ParanetsRegistry
-                paranetsRegistry.addCumulativeKnowledgeValue(paranetId, updateTokenAmount);
-
-                // Add Knowledge Asset Token Amount Metadata to the KnowledgeMinersRegistry
-                pkmr.addCumulativeTracSpent(miner, paranetId, updateTokenAmount);
-                pkmr.addUnrewardedTracSpent(miner, paranetId, updateTokenAmount);
-                pkmr.addTotalTracSpent(miner, updateTokenAmount);
             }
 
             sasProxy.setAgreementTokenAmount(
