@@ -405,6 +405,72 @@
         "internalType": "struct ContentAssetStructs.AssetInputArgs",
         "name": "args",
         "type": "tuple"
+      },
+      {
+        "internalType": "address",
+        "name": "knowledgeMiner",
+        "type": "address"
+      }
+    ],
+    "name": "createAsset",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "assertionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint128",
+            "name": "size",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint32",
+            "name": "triplesNumber",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint96",
+            "name": "chunksNumber",
+            "type": "uint96"
+          },
+          {
+            "internalType": "uint16",
+            "name": "epochsNumber",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint96",
+            "name": "tokenAmount",
+            "type": "uint96"
+          },
+          {
+            "internalType": "uint8",
+            "name": "scoreFunctionId",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "immutable_",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct ContentAssetStructs.AssetInputArgs",
+        "name": "args",
+        "type": "tuple"
       }
     ],
     "name": "createAsset",

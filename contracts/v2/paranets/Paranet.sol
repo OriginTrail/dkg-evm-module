@@ -477,11 +477,12 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         );
     }
 
+    // Should this return token Id?
     function mintKnowledgeAsset(
         address paranetKAStorageContract,
         uint256 paranetKATokenId,
         ContentAssetStructs.AssetInputArgs calldata knowledgeAssetArgs
-    ) external {
+    ) external returns (uint256) {
         ParanetsRegistry pr = paranetsRegistry;
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
         ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
@@ -501,7 +502,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         }
 
         // Mint Knowledge Asset
-        uint256 knowledgeAssetTokenId = ca.createAsset(knowledgeAssetArgs);
+        uint256 knowledgeAssetTokenId = ca.createAsset(knowledgeAssetArgs, msg.sender);
 
         // Add Knowledge Asset to the KnowledgeAssetsRegistry
         pkar.addKnowledgeAsset(
@@ -547,6 +548,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             address(contentAssetStorage),
             knowledgeAssetTokenId
         );
+
+        return knowledgeAssetTokenId;
     }
 
     function submitKnowledgeAsset(
