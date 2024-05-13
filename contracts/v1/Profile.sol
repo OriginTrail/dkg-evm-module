@@ -31,9 +31,20 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
     );
     event ProfileDeleted(uint72 indexed identityId);
     event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
-    event AccumulatedOperatorFeeWithdrawalStarted(uint72 indexed identityId, uint96 amount, uint256 finishTimestamp);
-    event AccumulatedOperatorFeeWithdrawalCompleted(uint72 indexed identityId, uint96 amount);
-    event AccumulatedOperatorFeeRestaked(uint72 indexed identityId, uint96 amount);
+    event AccumulatedOperatorFeeWithdrawalStarted(
+        uint72 indexed identityId,
+        bytes nodeId,
+        uint96 oldAccumulatedOperatorFee,
+        uint96 newAccumulatedOperatorFee,
+        uint256 withdrawalPeriodEnd
+    );
+    event AccumulatedOperatorFeeWithdrawn(uint72 indexed identityId, bytes nodeId, uint96 withdrawnAmount);
+    event AccumulatedOperatorFeeRestaked(
+        uint72 indexed identityId,
+        bytes nodeId,
+        uint96 oldAccumulatedOperatorFee,
+        uint96 newAccumulatedOperatorFee
+    );
 
     string private constant _NAME = "Profile";
     string private constant _VERSION = "1.2.0";
@@ -174,31 +185,42 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         }
     }
 
-    function stakeAccumulatedOperatorFee(uint72 identityId) external onlyAdmin(identityId) {
+    function stakeAccumulatedOperatorFee(uint72 identityId, uint96 restakeAmount) external onlyAdmin(identityId) {
+        require(restakeAmount != 0, "Restake amount cannot be 0");
+
         ProfileStorage ps = profileStorage;
 
-        uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
-        if (accumulatedOperatorFee == 0) {
-            revert ProfileErrors.NoOperatorFees(identityId);
-        }
-        ps.setAccumulatedOperatorFee(identityId, 0);
-        stakingContract.restakeAccumulatedOperatorFees(msg.sender, identityId, accumulatedOperatorFee);
+        uint96 oldAccumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
 
-        emit AccumulatedOperatorFeeRestaked(identityId, accumulatedOperatorFee);
+        require(restakeAmount <= oldAccumulatedOperatorFee, "Restake must be <= balance");
+
+        ps.setAccumulatedOperatorFee(identityId, oldAccumulatedOperatorFee - restakeAmount);
+        stakingContract.addStake(msg.sender, identityId, restakeAmount);
+
+        emit AccumulatedOperatorFeeRestaked(
+            identityId,
+            ps.getNodeId(identityId),
+            oldAccumulatedOperatorFee,
+            oldAccumulatedOperatorFee - restakeAmount
+        );
     }
 
-    function startAccumulatedOperatorFeeWithdrawal(uint72 identityId) external onlyAdmin(identityId) {
+    function startAccumulatedOperatorFeeWithdrawal(
+        uint72 identityId,
+        uint96 withdrawalAmount
+    ) external onlyAdmin(identityId) {
+        require(withdrawalAmount != 0, "Withdrawal amount cannot be 0");
+
         ProfileStorage ps = profileStorage;
 
-        uint96 accumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
+        uint96 oldAccumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
 
-        if (accumulatedOperatorFee == 0) {
-            revert ProfileErrors.NoOperatorFees(identityId);
-        }
-        ps.setAccumulatedOperatorFee(identityId, 0);
+        require(withdrawalAmount <= oldAccumulatedOperatorFee, "Withdrawal must be <= balance");
+
+        ps.setAccumulatedOperatorFee(identityId, oldAccumulatedOperatorFee - withdrawalAmount);
         ps.setAccumulatedOperatorFeeWithdrawalAmount(
             identityId,
-            ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId) + accumulatedOperatorFee
+            ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId) + withdrawalAmount
         );
         ps.setAccumulatedOperatorFeeWithdrawalTimestamp(
             identityId,
@@ -207,7 +229,9 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
 
         emit AccumulatedOperatorFeeWithdrawalStarted(
             identityId,
-            accumulatedOperatorFee,
+            ps.getNodeId(identityId),
+            oldAccumulatedOperatorFee,
+            oldAccumulatedOperatorFee - withdrawalAmount,
             block.timestamp + parametersStorage.stakeWithdrawalDelay()
         );
     }
@@ -230,7 +254,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         ps.setAccumulatedOperatorFeeWithdrawalTimestamp(identityId, 0);
         ps.transferAccumulatedOperatorFee(msg.sender, withdrawalAmount);
 
-        emit AccumulatedOperatorFeeWithdrawalCompleted(identityId, withdrawalAmount);
+        emit AccumulatedOperatorFeeWithdrawn(identityId, ps.getNodeId(identityId), withdrawalAmount);
     }
 
     function _checkIdentityOwner(uint72 identityId) internal view virtual {

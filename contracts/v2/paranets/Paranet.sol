@@ -646,6 +646,114 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         );
     }
 
+    function processUpdatedKnowledgeAssetStatesMetadata(
+        address paranetKAStorageContract,
+        uint256 paranetKATokenId
+    ) external {
+        _processUpdatedKnowledgeAssetStatesMetadata(
+            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+            paranetKnowledgeMinersRegistry.getUpdatingKnowledgeAssetStates(
+                msg.sender,
+                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId))
+            )
+        );
+    }
+
+    function processUpdatedKnowledgeAssetStatesMetadata(
+        address paranetKAStorageContract,
+        uint256 paranetKATokenId,
+        uint256 start,
+        uint256 end
+    ) external {
+        _processUpdatedKnowledgeAssetStatesMetadata(
+            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+            paranetKnowledgeMinersRegistry.getUpdatingKnowledgeAssetStates(
+                msg.sender,
+                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                start,
+                end
+            )
+        );
+    }
+
+    function _processUpdatedKnowledgeAssetStatesMetadata(
+        bytes32 paranetId,
+        ParanetStructs.UpdatingKnowledgeAssetState[] memory updatingKnowledgeAssetStates
+    ) internal {
+        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+        ParanetsRegistry pr = paranetsRegistry;
+        ContentAssetV2 ca = contentAsset;
+
+        for (uint i; i < updatingKnowledgeAssetStates.length; ) {
+            bool continueOuterLoop = false;
+
+            bytes32[] memory assertionIds = ContentAssetStorageV2(
+                updatingKnowledgeAssetStates[i].knowledgeAssetStorageContract
+            ).getAssertionIds(updatingKnowledgeAssetStates[i].tokenId);
+
+            for (uint j = assertionIds.length; j > 0; ) {
+                if (assertionIds[j - 1] == updatingKnowledgeAssetStates[i].assertionId) {
+                    // Add Knowledge Asset Token Amount Metadata to the ParanetsRegistry
+                    pr.addCumulativeKnowledgeValue(paranetId, updatingKnowledgeAssetStates[i].updateTokenAmount);
+
+                    // Add Knowledge Asset Token Amount Metadata to the KnowledgeMinersRegistry
+                    pkmr.addCumulativeTracSpent(
+                        msg.sender,
+                        paranetId,
+                        updatingKnowledgeAssetStates[i].updateTokenAmount
+                    );
+                    pkmr.addUnrewardedTracSpent(
+                        msg.sender,
+                        paranetId,
+                        updatingKnowledgeAssetStates[i].updateTokenAmount
+                    );
+                    pkmr.addTotalTracSpent(msg.sender, updatingKnowledgeAssetStates[i].updateTokenAmount);
+
+                    pkmr.removeUpdatingKnowledgeAssetState(
+                        msg.sender,
+                        paranetId,
+                        keccak256(
+                            abi.encodePacked(
+                                updatingKnowledgeAssetStates[i].knowledgeAssetStorageContract,
+                                updatingKnowledgeAssetStates[i].tokenId,
+                                updatingKnowledgeAssetStates[i].assertionId
+                            )
+                        )
+                    );
+
+                    continueOuterLoop = true;
+                    break;
+                }
+
+                unchecked {
+                    j--;
+                }
+            }
+
+            unchecked {
+                i++;
+            }
+
+            if (continueOuterLoop) {
+                continue;
+            }
+
+            try ca.cancelAssetStateUpdate(updatingKnowledgeAssetStates[i].tokenId) {
+                pkmr.removeUpdatingKnowledgeAssetState(
+                    msg.sender,
+                    paranetId,
+                    keccak256(
+                        abi.encodePacked(
+                            updatingKnowledgeAssetStates[i].knowledgeAssetStorageContract,
+                            updatingKnowledgeAssetStates[i].tokenId,
+                            updatingKnowledgeAssetStates[i].assertionId
+                        )
+                    )
+                );
+            } catch {}
+        }
+    }
+
     function _checkParanetOperator(bytes32 paranetId) internal view virtual {
         require(paranetsRegistry.getOperatorAddress(paranetId) == msg.sender, "Fn can only be used by operator");
     }
