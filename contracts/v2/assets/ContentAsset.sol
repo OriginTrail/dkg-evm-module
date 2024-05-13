@@ -252,6 +252,22 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
             revert ContentAssetErrors.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
         }
 
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
+
+        if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)))) {
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)));
+
+            // Add Knowledge Asset to the UpdatingKnowledgeAssets in the KnowledgeMinersRegistry
+            paranetKnowledgeMinersRegistry.addUpdatingKnowledgeAssetState(
+                msg.sender,
+                paranetId,
+                contentAssetStorageAddress,
+                tokenId,
+                assertionId,
+                updateTokenAmount
+            );
+        }
+
         assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
         uss.setUnfinalizedState(tokenId, assertionId);
         uss.setIssuer(tokenId, msg.sender);
@@ -320,6 +336,19 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
                 contentAssetStorageAddress,
                 tokenId,
                 unfinalizedStateIndex
+            );
+        }
+
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
+
+        if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)))) {
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)));
+
+            // Remove Knowledge Asset from the UpdatingKnowledgeAssets in the KnowledgeMinersRegistry
+            paranetKnowledgeMinersRegistry.removeUpdatingKnowledgeAssetState(
+                msg.sender,
+                paranetId,
+                keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId, unfinalizedState))
             );
         }
 

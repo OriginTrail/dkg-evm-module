@@ -23,6 +23,27 @@
         "type": "uint256"
       },
       {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "KnowledgeAssetIsAPartOfOtherParanet",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetKnowledgeAssetStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetTokenId",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "knowledgeAssetStorageContract",
         "type": "address"
@@ -722,6 +743,52 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKATokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "start",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "end",
+        "type": "uint256"
+      }
+    ],
+    "name": "processUpdatedKnowledgeAssetStatesMetadata",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKATokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "processUpdatedKnowledgeAssetStatesMetadata",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
