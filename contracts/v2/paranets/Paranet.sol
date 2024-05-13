@@ -162,7 +162,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
 
         ParanetIncentivesPool incentivesPool = new ParanetIncentivesPool(
             h.getContractAddress("ParanetsRegistry"),
-            h.getContractAddress("KnowledgeMinersRegistry"),
+            h.getContractAddress("ParanetKnowledgeMinersRegistry"),
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             tracToNeuroRatio,
             tracTarget,
@@ -222,7 +222,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
         }
 
-        pr.setName(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)), paranetDescription);
+        pr.setDescription(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)), paranetDescription);
 
         emit ParanetDescriptionUpdated(paranetKAStorageContract, paranetKATokenId, paranetDescription);
     }
