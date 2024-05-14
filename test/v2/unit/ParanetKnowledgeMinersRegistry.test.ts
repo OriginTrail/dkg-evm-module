@@ -3,33 +3,40 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import { HubController, ParanetKnowledgeMinersRegistry } from '../../../typechain';
+import { HubV2, HubController, ParanetKnowledgeMinersRegistry } from '../../../typechain';
 import {} from '../../helpers/constants';
 
 type deployParanetKnowledgeMinersRegistryFixture = {
   accounts: SignerWithAddress[];
+  HubV2: HubV2;
   ParanetKnowledgeMinersRegistry: ParanetKnowledgeMinersRegistry;
 };
 
 describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   let accounts: SignerWithAddress[];
   let ParanetKnowledgeMinersRegistry: ParanetKnowledgeMinersRegistry;
+  let HubV2: HubV2;
 
   async function deployParanetKnowledgeMinersRegistryFixture(): Promise<deployParanetKnowledgeMinersRegistryFixture> {
-    await hre.deployments.fixture(['ParanetKnowledgeMinersRegistry'], { keepExistingDeployments: false });
+    await hre.deployments.fixture(['ParanetKnowledgeMinersRegistry', 'HubV2', 'ContentAssetStorage'], {
+      keepExistingDeployments: false,
+    });
     ParanetKnowledgeMinersRegistry = await hre.ethers.getContract<ParanetKnowledgeMinersRegistry>(
       'ParanetKnowledgeMinersRegistry',
     );
+    HubV2 = await hre.ethers.getContract<HubV2>('Hub');
     const HubController = await hre.ethers.getContract<HubController>('HubController');
     accounts = await hre.ethers.getSigners();
     await HubController.setContractAddress('HubOwner', accounts[0].address);
 
-    return { accounts, ParanetKnowledgeMinersRegistry };
+    return { accounts, HubV2, ParanetKnowledgeMinersRegistry };
   }
 
   beforeEach(async () => {
     hre.helpers.resetDeploymentsJson();
-    ({ accounts, ParanetKnowledgeMinersRegistry } = await loadFixture(deployParanetKnowledgeMinersRegistryFixture));
+    ({ accounts, HubV2, ParanetKnowledgeMinersRegistry } = await loadFixture(
+      deployParanetKnowledgeMinersRegistryFixture,
+    ));
   });
 
   it('The contract is named "ParanetKnowledgeMinersRegistry"', async () => {
@@ -609,10 +616,9 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(3),
     );
 
-    const submittedKnowledgeAssets = await ParanetKnowledgeMinersRegistry.getSubmittedKnowledgeAssets(
-      accounts[1].address,
-      paranetId,
-    );
+    const submittedKnowledgeAssets = await ParanetKnowledgeMinersRegistry[
+      'getSubmittedKnowledgeAssets(address,bytes32)'
+    ](accounts[1].address, paranetId);
 
     expect(submittedKnowledgeAssets.length).to.equal(3);
     expect(submittedKnowledgeAssets[0]).to.equal(getHashFromNumber(1));
@@ -620,7 +626,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     expect(submittedKnowledgeAssets[2]).to.equal(getHashFromNumber(3));
   });
 
-  // it('should add submitted knowledge assets with miner walle', async () => {
+  // it('should add submitted knowledge assets with miner wallet', async () => {
   //   const paranetId = hre.ethers.utils.keccak256(
   //     hre.ethers.utils.solidityPack(
   //       ['address', 'uint256'], // Types of the variables
@@ -698,15 +704,125 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(2),
     );
 
-    const submittedKnowledgeAssets = await ParanetKnowledgeMinersRegistry.getSubmittedKnowledgeAssets(
-      accounts[1].address,
-      paranetId,
-    );
+    const submittedKnowledgeAssets = await ParanetKnowledgeMinersRegistry[
+      'getSubmittedKnowledgeAssets(address,bytes32)'
+    ](accounts[1].address, paranetId);
 
     expect(submittedKnowledgeAssets.length).to.equal(3);
     expect(submittedKnowledgeAssets[0]).to.equal(getHashFromNumber(1));
     expect(submittedKnowledgeAssets[1]).to.equal(getHashFromNumber(4));
     expect(submittedKnowledgeAssets[2]).to.equal(getHashFromNumber(3));
+  });
+
+  it('should update token amount when knowledge asset updated', async () => {
+    const paranetId = hre.ethers.utils.keccak256(
+      hre.ethers.utils.solidityPack(
+        ['address', 'uint256'], // Types of the variables
+        [accounts[100].address, 123], // Values to encode
+      ),
+    );
+
+    await ParanetKnowledgeMinersRegistry.addSubmittedKnowledgeAsset(
+      accounts[1].address,
+      paranetId,
+      getHashFromNumber(1),
+    );
+
+    const KaStorageContract = await HubV2.getAssetStorageAddress('ContentAssetStorage');
+    await ParanetKnowledgeMinersRegistry.addUpdatingKnowledgeAssetState(
+      accounts[1].address,
+      paranetId,
+      KaStorageContract,
+      getHashFromNumber(1), // token id
+      getHashFromNumber(12345), // assertion id
+      100, // update token amount
+    );
+
+    const updatingKnowledgeAssets = await ParanetKnowledgeMinersRegistry[
+      'getUpdatingKnowledgeAssetStates(address,bytes32)'
+    ](accounts[1].address, paranetId);
+
+    expect(updatingKnowledgeAssets.length).to.equal(1);
+    expect(updatingKnowledgeAssets[0][1]).to.equal(getHashFromNumber(1));
+    expect(updatingKnowledgeAssets[0][2]).to.equal(getHashFromNumber(12345));
+    expect(updatingKnowledgeAssets[0][3]).to.equal(100);
+  });
+
+  it('should update 3 KAs token amounts and get first, second and third separately', async () => {
+    const paranetId = hre.ethers.utils.keccak256(
+      hre.ethers.utils.solidityPack(
+        ['address', 'uint256'], // Types of the variables
+        [accounts[100].address, 123], // Values to encode
+      ),
+    );
+
+    // Create 3 KA and add to Paranet
+    await ParanetKnowledgeMinersRegistry.addSubmittedKnowledgeAsset(
+      accounts[1].address,
+      paranetId,
+      getHashFromNumber(1),
+    );
+    await ParanetKnowledgeMinersRegistry.addSubmittedKnowledgeAsset(
+      accounts[1].address,
+      paranetId,
+      getHashFromNumber(2),
+    );
+    await ParanetKnowledgeMinersRegistry.addSubmittedKnowledgeAsset(
+      accounts[1].address,
+      paranetId,
+      getHashFromNumber(3),
+    );
+
+    // Update Token amount for 3 KAs
+    const KaStorageContract = await HubV2.getAssetStorageAddress('ContentAssetStorage');
+    await ParanetKnowledgeMinersRegistry.addUpdatingKnowledgeAssetState(
+      accounts[1].address,
+      paranetId,
+      KaStorageContract,
+      getHashFromNumber(1),
+      getHashFromNumber(12345),
+      100,
+    );
+    await ParanetKnowledgeMinersRegistry.addUpdatingKnowledgeAssetState(
+      accounts[1].address,
+      paranetId,
+      KaStorageContract,
+      getHashFromNumber(2),
+      getHashFromNumber(12346),
+      150,
+    );
+    await ParanetKnowledgeMinersRegistry.addUpdatingKnowledgeAssetState(
+      accounts[1].address,
+      paranetId,
+      KaStorageContract,
+      getHashFromNumber(3),
+      getHashFromNumber(12347),
+      200,
+    );
+
+    let updatingKnowledgeAssets = await ParanetKnowledgeMinersRegistry[
+      'getUpdatingKnowledgeAssetStates(address,bytes32,uint256,uint256)'
+    ](accounts[1].address, paranetId, 0, 2);
+
+    expect(updatingKnowledgeAssets.length).to.equal(2);
+
+    updatingKnowledgeAssets = await ParanetKnowledgeMinersRegistry[
+      'getUpdatingKnowledgeAssetStates(address,bytes32,uint256,uint256)'
+    ](accounts[1].address, paranetId, 0, 1);
+
+    expect(updatingKnowledgeAssets.length).to.equal(1);
+
+    updatingKnowledgeAssets = await ParanetKnowledgeMinersRegistry[
+      'getUpdatingKnowledgeAssetStates(address,bytes32,uint256,uint256)'
+    ](accounts[1].address, paranetId, 1, 2);
+
+    expect(updatingKnowledgeAssets.length).to.equal(1);
+
+    updatingKnowledgeAssets = await ParanetKnowledgeMinersRegistry[
+      'getUpdatingKnowledgeAssetStates(address,bytes32,uint256,uint256)'
+    ](accounts[1].address, paranetId, 2, 3);
+
+    expect(updatingKnowledgeAssets.length).to.equal(1);
   });
 
   async function createknowledgeMiner(
