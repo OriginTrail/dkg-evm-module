@@ -574,6 +574,33 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       ),
     ).to.be.revertedWith('Fn can only be used by operator');
   });
+  it('should revert on add paranet service that was already added to paranet', async () => {
+    await registerParanet(accounts, Paranet, 3);
+    await Paranet.connect(accounts[103]).registerParanetService(
+      accounts[50].address,
+      getHashFromNumber(50),
+      'Test Paranet Servic Name',
+      'Test Paranet Servic Description',
+      accounts[51].address,
+      hre.ethers.utils.formatBytes32String('Metadata'),
+    );
+
+    Paranet.connect(accounts[103]).addParanetService(
+      accounts[3].address,
+      getHashFromNumber(3),
+      accounts[50].address,
+      getHashFromNumber(50),
+    );
+
+    await expect(
+      Paranet.connect(accounts[103]).addParanetService(
+        accounts[3].address,
+        getHashFromNumber(3),
+        accounts[50].address,
+        getHashFromNumber(50),
+      ),
+    ).to.be.revertedWithCustomError(Paranet, 'ParanetServiceHasAlreadyBeenAdded');
+  });
   it('should revert on add non existing paranet service to paranet with paranet operator wallet', async () => {
     await registerParanet(accounts, Paranet, 3);
     await expect(
@@ -655,6 +682,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     expect(services[1]).to.be.equal(paranetServiceId1);
     expect(await ParanetsRegistry.getServicesCount(paranetId)).to.be.equal(2);
   });
+
   it('should revert on add paranet services to paranet with not paranet operator wallet', async () => {
     const paranetId = await registerParanet(accounts, Paranet, 3);
     await Paranet.connect(accounts[5]).registerParanetService(
@@ -687,6 +715,49 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     await expect(
       Paranet.connect(accounts[105]).addParanetServices(accounts[3].address, getHashFromNumber(3), servicesToBeAdded),
     ).to.revertedWith('Fn can only be used by operator');
+
+    const services = await ParanetsRegistry.getServices(paranetId);
+
+    expect(services.length).to.be.equal(0);
+    expect(await ParanetsRegistry.getServicesCount(paranetId)).to.be.equal(0);
+  });
+
+  it('should revert on add paranet services that is already added to paranet', async () => {
+    const paranetId = await registerParanet(accounts, Paranet, 3);
+    await Paranet.connect(accounts[5]).registerParanetService(
+      accounts[50].address,
+      getHashFromNumber(50),
+      'Test Paranet Servic Name 0',
+      'Test Paranet Servic Description 0',
+      accounts[51].address,
+      hre.ethers.utils.formatBytes32String('Metadata 0'),
+    );
+    await Paranet.connect(accounts[6]).registerParanetService(
+      accounts[50].address,
+      getHashFromNumber(56),
+      'Test Paranet Servic Name 1',
+      'Test Paranet Servic Description 1',
+      accounts[51].address,
+      hre.ethers.utils.formatBytes32String('Metadata 1'),
+    );
+
+    const servicesToBeAdded = [
+      {
+        knowledgeAssetStorageContract: accounts[50].address,
+        tokenId: getHashFromNumber(56),
+      },
+      {
+        knowledgeAssetStorageContract: accounts[50].address,
+        tokenId: getHashFromNumber(50),
+      },
+      {
+        knowledgeAssetStorageContract: accounts[50].address,
+        tokenId: getHashFromNumber(56),
+      },
+    ];
+    await expect(
+      Paranet.connect(accounts[105]).addParanetServices(accounts[3].address, getHashFromNumber(3), servicesToBeAdded),
+    ).to.revertedWithCustomError(Paranet, 'ParanetServiceHasAlreadyBeenAdded');
 
     const services = await ParanetsRegistry.getServices(paranetId);
 
@@ -760,22 +831,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       .and.to.emit(Paranet, 'ParanetServiceAdded');
   });
 
-  // mintKnowledgeAsset
-  // - Don't create asset with same toke id
-  //  -ParanetDoesntExist
-  //  -Create a profile, dosn't create multiple profiles for same miner
-  //  -createAsset
-  //  -addKnowledgeAsset
-  //  -addCumulativeKnowledgeValue
-  //  -addSubmittedKnowledgeAsset
-  //  -addCumulativeTracSpent
-  //  -addUnrewardedTracSpent
-  //  -incrementTotalSubmittedKnowledgeAssetsCount
-  //  -addTotalTracSpent
-  //  -emit KnowledgeAssetSubmittedToParanet
-  //          emit AssetMinted(contentAssetStorageAddress, tokenId, assertionId);
-
-  it('should mint knowlidge asset & add it to paranet', async () => {
+  it('should mint knowledge asset & add it to paranet', async () => {
     await Token.connect(accounts[5]).increaseAllowance(ServiceAgreementV1.address, hre.ethers.utils.parseEther('315'));
     const paranetId0 = await registerParanet(accounts, Paranet, 3);
     const paranetId1 = await registerParanet(accounts, Paranet, 4);
@@ -830,9 +886,9 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
 
     expect(submittedKnowledgeAsset0.length).to.be.equal(2);
     expect(submittedKnowledgeAsset1.length).to.be.equal(1);
-    expect(submittedKnowledgeAsset0[0]).to.be.equal(getKnowlidgeAssetId(ContentAssetStorageV2.address, 1));
-    expect(submittedKnowledgeAsset0[1]).to.be.equal(getKnowlidgeAssetId(ContentAssetStorageV2.address, 2));
-    expect(submittedKnowledgeAsset1[0]).to.be.equal(getKnowlidgeAssetId(ContentAssetStorageV2.address, 3));
+    expect(submittedKnowledgeAsset0[0]).to.be.equal(getknowledgeAssetId(ContentAssetStorageV2.address, 1));
+    expect(submittedKnowledgeAsset0[1]).to.be.equal(getknowledgeAssetId(ContentAssetStorageV2.address, 2));
+    expect(submittedKnowledgeAsset1[0]).to.be.equal(getknowledgeAssetId(ContentAssetStorageV2.address, 3));
 
     const cumulativeTracSpent0 = await ParanetKnowledgeMinersRegistry.getCumulativeTracSpent(
       accounts[5].address,
@@ -846,7 +902,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     expect(cumulativeTracSpent0).to.be.equal(hre.ethers.utils.parseEther('210'));
     expect(cumulativeTracSpent1).to.be.equal(hre.ethers.utils.parseEther('105'));
 
-    //getUnrewardedTracSpen
     const unrewardedTracSpent0 = await ParanetKnowledgeMinersRegistry.getUnrewardedTracSpent(
       accounts[5].address,
       paranetId0,
@@ -859,14 +914,112 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     expect(unrewardedTracSpent0).to.be.equal(hre.ethers.utils.parseEther('210'));
     expect(unrewardedTracSpent1).to.be.equal(hre.ethers.utils.parseEther('105'));
 
-    // ParanetsRegistry.getKnowledgeAssets
-    // ParanetsRegistry.getCumulativeKnowledgeValue
+    const knowledgeAssets0 = await ParanetsRegistry.getKnowledgeAssets(paranetId0);
+    const knowledgeAssets1 = await ParanetsRegistry.getKnowledgeAssets(paranetId1);
 
-    // Getters on ParanetKnowledgeAssetsRegistry
+    expect(knowledgeAssets0.length).to.be.equal(2);
+    expect(knowledgeAssets1.length).to.be.equal(1);
+    expect(knowledgeAssets0[0]).to.be.equal(getknowledgeAssetId(ContentAssetStorageV2.address, 1));
+    expect(knowledgeAssets0[1]).to.be.equal(getknowledgeAssetId(ContentAssetStorageV2.address, 2));
+    expect(knowledgeAssets1[0]).to.be.equal(getknowledgeAssetId(ContentAssetStorageV2.address, 3));
 
-    //
+    const cumulativeKnowledgeValue0 = await ParanetsRegistry.getCumulativeKnowledgeValue(paranetId0);
+    const cumulativeKnowledgeValue1 = await ParanetsRegistry.getCumulativeKnowledgeValue(paranetId1);
+
+    expect(cumulativeKnowledgeValue0).to.be.equal(hre.ethers.utils.parseEther('210'));
+    expect(cumulativeKnowledgeValue1).to.be.equal(hre.ethers.utils.parseEther('105'));
+
+    const isKnowledgeAssetRegistered1 = await ParanetsRegistry.isKnowledgeAssetRegistered(
+      paranetId0,
+      getknowledgeAssetId(ContentAssetStorageV2.address, 1),
+    );
+    const isKnowledgeAssetRegistered2 = await ParanetsRegistry.isKnowledgeAssetRegistered(
+      paranetId0,
+      getknowledgeAssetId(ContentAssetStorageV2.address, 2),
+    );
+    const isKnowledgeAssetRegistered3 = await ParanetsRegistry.isKnowledgeAssetRegistered(
+      paranetId1,
+      getknowledgeAssetId(ContentAssetStorageV2.address, 3),
+    );
+
+    expect(isKnowledgeAssetRegistered1).to.be.equal(true);
+    expect(isKnowledgeAssetRegistered2).to.be.equal(true);
+    expect(isKnowledgeAssetRegistered3).to.be.equal(true);
+
+    const knowledgeAssetsCount0 = await ParanetsRegistry.getKnowledgeAssetsCount(paranetId0);
+    const knowledgeAssetsCount1 = await ParanetsRegistry.getKnowledgeAssetsCount(paranetId1);
+
+    expect(knowledgeAssetsCount0).to.be.equal(2);
+    expect(knowledgeAssetsCount1).to.be.equal(1);
+
+    const isKnowledgeMinerRegistered0 = await ParanetsRegistry.isKnowledgeMinerRegistered(
+      paranetId0,
+      accounts[5].address,
+    );
+    const isKnowledgeMinerRegistered1 = await ParanetsRegistry.isKnowledgeMinerRegistered(
+      paranetId1,
+      accounts[5].address,
+    );
+
+    expect(isKnowledgeMinerRegistered0).to.be.equal(true);
+    expect(isKnowledgeMinerRegistered1).to.be.equal(true);
+
+    expect(
+      await ParanetKnowledgeAssetsRegistry.isParanetKnowledgeAsset(
+        getknowledgeAssetId(ContentAssetStorageV2.address, 1),
+      ),
+    ).to.be.equal(true);
+    expect(
+      await ParanetKnowledgeAssetsRegistry.isParanetKnowledgeAsset(
+        getknowledgeAssetId(ContentAssetStorageV2.address, 2),
+      ),
+    ).to.be.equal(true);
+    expect(
+      await ParanetKnowledgeAssetsRegistry.isParanetKnowledgeAsset(
+        getknowledgeAssetId(ContentAssetStorageV2.address, 3),
+      ),
+    ).to.be.equal(true);
   });
-  // it("should revert mint knowlidge asset & add it to paranet in paranet doesn't exist", async () => {});
+
+  it("should revert mint knowledge asset & add it to paranet in paranet doesn't exist", async () => {
+    const assetInputArgs0 = {
+      assertionId: getHashFromNumber(500),
+      size: 3,
+      triplesNumber: 1,
+      chunksNumber: 1,
+      epochsNumber: 5,
+      tokenAmount: hre.ethers.utils.parseEther('105'),
+      scoreFunctionId: 2,
+      immutable_: false,
+    };
+
+    await expect(
+      Paranet.connect(accounts[5]).mintKnowledgeAsset(accounts[3].address, getHashFromNumber(3), assetInputArgs0),
+    ).to.be.revertedWithCustomError(Paranet, 'ParanetDoesntExist');
+  });
+
+  it('should mint knowledge asset emit event', async () => {
+    await Token.connect(accounts[5]).increaseAllowance(ServiceAgreementV1.address, hre.ethers.utils.parseEther('315'));
+    await registerParanet(accounts, Paranet, 3);
+
+    const assetInputArgs0 = {
+      assertionId: getHashFromNumber(500),
+      size: 3,
+      triplesNumber: 1,
+      chunksNumber: 1,
+      epochsNumber: 5,
+      tokenAmount: hre.ethers.utils.parseEther('105'),
+      scoreFunctionId: 2,
+      immutable_: false,
+    };
+
+    await expect(
+      Paranet.connect(accounts[5]).mintKnowledgeAsset(accounts[3].address, getHashFromNumber(3), assetInputArgs0),
+    )
+      .to.emit(Paranet, 'KnowledgeAssetSubmittedToParanet')
+      .and.to.emit(ContentAssetV2, 'AssetMinted')
+      .and.to.emit(ServiceAgreementV1, 'ServiceAgreementV1Created');
+  });
 
   async function registerParanet(accounts: SignerWithAddress[], Paranet: Paranet, number: number) {
     const paranetKAStorageContract = accounts[number].address;
@@ -904,7 +1057,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       hre.ethers.utils.solidityPack(['address', 'uint256'], [address, getHashFromNumber(number)]),
     );
   }
-  function getKnowlidgeAssetId(address: string, number: number) {
+  function getknowledgeAssetId(address: string, number: number) {
     return hre.ethers.utils.keccak256(hre.ethers.utils.solidityPack(['address', 'uint256'], [address, number]));
   }
 });

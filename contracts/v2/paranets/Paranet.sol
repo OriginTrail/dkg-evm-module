@@ -264,6 +264,18 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             revert ParanetErrors.ParanetServiceDoesntExist(paranetServiceKAStorageContract, paranetServiceKATokenId);
         }
 
+        if (
+            pr.isServiceImplemented(
+                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
+            )
+        ) {
+            revert ParanetErrors.ParanetServiceHasAlreadyBeenAdded(
+                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
+            );
+        }
+
         pr.addService(
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
@@ -298,6 +310,18 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                 revert ParanetErrors.ParanetServiceDoesntExist(
                     services[i].knowledgeAssetStorageContract,
                     services[i].tokenId
+                );
+            }
+
+            if (
+                pr.isServiceImplemented(
+                    keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                    keccak256(abi.encodePacked(services[i].knowledgeAssetStorageContract, services[i].tokenId))
+                )
+            ) {
+                revert ParanetErrors.ParanetServiceHasAlreadyBeenAdded(
+                    keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                    keccak256(abi.encodePacked(services[i].knowledgeAssetStorageContract, services[i].tokenId))
                 );
             }
 
@@ -498,6 +522,16 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         // If not: Create a profile
         if (!pkmr.knowledgeMinerExists(msg.sender)) {
             pkmr.registerKnowledgeMiner(msg.sender, bytes(""));
+        }
+
+        // Check if Knowledge Miner is registert to paranet
+        // If not: Register it
+        if (
+            !pr.isKnowledgeMinerRegistered(
+                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                msg.sender
+            )
+        ) {
             pr.addKnowledgeMiner(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)), msg.sender);
         }
 
@@ -605,6 +639,16 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         // If not: Create a profile
         if (!pkmr.knowledgeMinerExists(msg.sender)) {
             pkmr.registerKnowledgeMiner(msg.sender, bytes(""));
+        }
+
+        // Check if Knowledge Miner is registert to paranet
+        // If not: Register it
+        if (
+            !pr.isKnowledgeMinerRegistered(
+                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                msg.sender
+            )
+        ) {
             pr.addKnowledgeMiner(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)), msg.sender);
         }
 

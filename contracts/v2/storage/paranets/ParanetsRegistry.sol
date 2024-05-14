@@ -179,6 +179,10 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
     }
 
     function isServiceImplemented(bytes32 paranetId, bytes32 serviceId) external view returns (bool) {
+        if (paranets[paranetId].services.length == 0) {
+            return false;
+        }
+
         return paranets[paranetId].services[paranets[paranetId].implementedServicesIndexes[serviceId]] == serviceId;
     }
 
@@ -210,6 +214,9 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
     }
 
     function isKnowledgeMinerRegistered(bytes32 paranetId, address knowledgeMinerAddress) external view returns (bool) {
+        if (paranets[paranetId].knowledgeMiners.length == 0) {
+            return false;
+        }
         return
             paranets[paranetId].knowledgeMiners[
                 paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerAddress]
