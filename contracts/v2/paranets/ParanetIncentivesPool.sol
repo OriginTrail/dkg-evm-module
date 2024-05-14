@@ -8,7 +8,9 @@ import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
 import {ParanetStructs} from "../structs/paranets/ParanetStructs.sol";
 
 contract ParanetIncentivesPool {
-    event Deposit(address indexed sender, uint256 amount);
+    event RewardDeposit(address indexed sender, uint256 amount);
+    event KnowledgeMinerRewardClaimed(address indexed miner, uint256 amount);
+    event ParanetOperatorRewardClaimed(address indexed operator, uint256 amount);
 
     ParanetsRegistry public paranetsRegistry;
     ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
@@ -62,7 +64,7 @@ contract ParanetIncentivesPool {
     receive() external payable {
         totalNeuroReceived += msg.value;
 
-        emit Deposit(msg.sender, msg.value);
+        emit RewardDeposit(msg.sender, msg.value);
     }
 
     function getBalance() external view returns (uint256) {
@@ -80,6 +82,8 @@ contract ParanetIncentivesPool {
         operatorClaimedNeuro += operatorReward;
 
         payable(msg.sender).transfer(operatorReward);
+
+        emit ParanetOperatorRewardClaimed(msg.sender, operatorReward);
     }
 
     function getKnowledgeMinerReward() external onlyWhenPoolActive onlyParanetKnowledgeMiner {
@@ -108,6 +112,8 @@ contract ParanetIncentivesPool {
         pkmr.addCumulativeAwardedNeuro(msg.sender, parentParanetId, neuroReward);
 
         payable(msg.sender).transfer(neuroReward);
+
+        emit KnowledgeMinerRewardClaimed(msg.sender, neuroReward);
     }
 
     function _checkPoolActive() internal view virtual {
