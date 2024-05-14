@@ -48,7 +48,7 @@
         "type": "address"
       }
     ],
-    "name": "NoEarnedReward",
+    "name": "NoKnowledgeMinerRewardAvailable",
     "type": "error"
   },
   {
@@ -73,24 +73,33 @@
         "internalType": "uint96",
         "name": "tracTarget",
         "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "tracRewarded",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "tracSpent",
-        "type": "uint96"
       }
     ],
-    "name": "TracTargetExceeded",
+    "name": "TracTargetAchieved",
     "type": "error"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "Deposit",
+    "type": "event"
+  },
+  {
     "inputs": [],
-    "name": "claimedNeuro",
+    "name": "getBalance",
     "outputs": [
       {
         "internalType": "uint256",
@@ -113,6 +122,32 @@
     "name": "getParanetOperatorReward",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minersClaimedNeuro",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "operatorClaimedNeuro",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -169,6 +204,19 @@
   },
   {
     "inputs": [],
+    "name": "totalNeuroReceived",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "tracRewarded",
     "outputs": [
       {
@@ -205,5 +253,9 @@
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]

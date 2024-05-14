@@ -1,8 +1,8 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'ethers';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import { HubController, Identity, IdentityStorageV2 } from '../../../typechain';
 import { ECDSA, OPERATIONAL_KEY, ADMIN_KEY } from '../../helpers/constants';

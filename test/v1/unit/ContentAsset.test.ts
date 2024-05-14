@@ -1,9 +1,9 @@
 import { randomBytes } from 'crypto';
 
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import {
   ContentAsset,
@@ -99,8 +99,8 @@ describe('@v1 @unit ContentAsset contract', function () {
     expect(await ContentAsset.name()).to.equal('ContentAsset');
   });
 
-  it('The contract is version "1.0.3"', async () => {
-    expect(await ContentAsset.version()).to.equal('1.0.3');
+  it('The contract is version "1.0.4"', async () => {
+    expect(await ContentAsset.version()).to.equal('1.0.4');
   });
 
   it('Create an asset, send 0 assertionId, expect to fail', async () => {

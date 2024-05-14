@@ -8,16 +8,20 @@ import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
 import {ParanetStructs} from "../structs/paranets/ParanetStructs.sol";
 
 contract ParanetIncentivesPool {
+    event Deposit(address indexed sender, uint256 amount);
+
     ParanetsRegistry public paranetsRegistry;
     ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
 
     bytes32 public parentParanetId;
 
-    uint256 private _ratioPrecision = 1 ether;
-    uint256 private _percentagePrecision = 10000;
+    uint64 constant RATIO_SCALING_FACTOR = 10 ** 18;
+    uint16 constant PERCENTAGE_SCALING_FACTOR = 10 ** 4;
 
+    uint256 public totalNeuroReceived;
     uint256 public tracToNeuroRatio;
-    uint256 public claimedNeuro;
+    uint256 public minersClaimedNeuro;
+    uint256 public operatorClaimedNeuro;
     uint96 public tracTarget;
     uint96 public tracRewarded;
     uint16 public operatorRewardPercentage;
@@ -40,6 +44,11 @@ contract ParanetIncentivesPool {
         operatorRewardPercentage = operatorRewardPercentage_;
     }
 
+    modifier onlyWhenPoolActive() {
+        _checkPoolActive();
+        _;
+    }
+
     modifier onlyParanetOperator() {
         _checkParanetOperator();
         _;
@@ -50,42 +59,59 @@ contract ParanetIncentivesPool {
         _;
     }
 
-    function getParanetOperatorReward() external onlyParanetOperator {
-        uint256 operatorReward = ((tracRewarded * tracToNeuroRatio) / _ratioPrecision) - claimedNeuro;
+    receive() external payable {
+        totalNeuroReceived += msg.value;
+
+        emit Deposit(msg.sender, msg.value);
+    }
+
+    function getBalance() external view returns (uint256) {
+        return address(this).balance;
+    }
+
+    function getParanetOperatorReward() external onlyWhenPoolActive onlyParanetOperator {
+        uint256 operatorReward = ((totalNeuroReceived * tracRewarded) / tracTarget) -
+            (minersClaimedNeuro + operatorClaimedNeuro);
 
         if (operatorReward == 0) {
             revert ParanetErrors.NoOperatorRewardAvailable(parentParanetId);
         }
 
-        claimedNeuro += operatorReward;
+        operatorClaimedNeuro += operatorReward;
 
         payable(msg.sender).transfer(operatorReward);
     }
 
-    function getKnowledgeMinerReward() external onlyParanetKnowledgeMiner {
-        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
-        bytes32 paranetId = parentParanetId;
-
-        uint96 tracSpent = pkmr.getUnrewardedTracSpent(msg.sender, paranetId);
-
-        if (tracRewarded + tracSpent > tracTarget) {
-            revert ParanetErrors.TracTargetExceeded(paranetId, tracTarget, tracRewarded, tracSpent);
+    function getKnowledgeMinerReward() external onlyWhenPoolActive onlyParanetKnowledgeMiner {
+        if (tracRewarded == tracTarget) {
+            revert ParanetErrors.TracTargetAchieved(parentParanetId, tracTarget);
         }
 
-        uint256 neuroReward = ((tracToNeuroRatio * tracSpent * (_percentagePrecision - operatorRewardPercentage)) /
-            _percentagePrecision /
-            _ratioPrecision);
+        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+        uint96 tracSpent = pkmr.getUnrewardedTracSpent(msg.sender, parentParanetId);
+        uint96 tracToBeRewarded = tracRewarded + tracSpent > tracTarget ? tracTarget - tracRewarded : tracSpent;
+
+        uint256 neuroReward = ((totalNeuroReceived *
+            (tracRewarded + tracToBeRewarded) *
+            (PERCENTAGE_SCALING_FACTOR - operatorRewardPercentage)) /
+            tracTarget /
+            PERCENTAGE_SCALING_FACTOR) - minersClaimedNeuro;
 
         if (neuroReward == 0) {
-            revert ParanetErrors.NoEarnedReward(paranetId, msg.sender);
+            revert ParanetErrors.NoKnowledgeMinerRewardAvailable(parentParanetId, msg.sender);
         }
 
-        tracRewarded += tracSpent;
-        claimedNeuro += neuroReward;
-        pkmr.setUnrewardedTracSpent(msg.sender, paranetId, 0);
-        pkmr.addCumulativeAwardedNeuro(msg.sender, paranetId, neuroReward);
+        tracRewarded += tracToBeRewarded;
+        minersClaimedNeuro += neuroReward;
+        pkmr.setUnrewardedTracSpent(msg.sender, parentParanetId, 0);
+        pkmr.addCumulativeAwardedNeuro(msg.sender, parentParanetId, neuroReward);
 
         payable(msg.sender).transfer(neuroReward);
+    }
+
+    function _checkPoolActive() internal view virtual {
+        require(totalNeuroReceived >= (tracToNeuroRatio * tracTarget) / RATIO_SCALING_FACTOR, "Pool is inactive");
     }
 
     function _checkParanetOperator() internal view virtual {
