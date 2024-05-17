@@ -3,6 +3,7 @@
 pragma solidity ^0.8.16;
 
 import {HubDependent} from "../../v1/abstract/HubDependent.sol";
+import {StakingStorage} from "../../v1/storage/StakingStorage.sol";
 import {Named} from "../../v1/interface/Named.sol";
 import {Versioned} from "../../v1/interface/Versioned.sol";
 import {NodeOperatorErrors} from "../errors/NodeOperatorErrors.sol";
@@ -14,25 +15,21 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
 
     bool private _delayFreePeriodSet;
     uint256 public delayFreePeriodEnd;
-    uint256 public migrationPeriodEnd;
+
+    address public oldNOFSAddress;
 
     // identityId => OperatorFee[]
     mapping(uint72 => NodeOperatorStructs.OperatorFee[]) public operatorFees;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress, uint256 migrationPeriodEnd_) HubDependent(hubAddress) {
-        migrationPeriodEnd = migrationPeriodEnd_;
+    constructor(address hubAddress, address _oldNOFSAddress) HubDependent(hubAddress) {
+        oldNOFSAddress = _oldNOFSAddress;
     }
 
     modifier onlyOnce() {
         require(!_delayFreePeriodSet, "Fn has already been executed");
         _;
         _delayFreePeriodSet = true;
-    }
-
-    modifier timeLimited() {
-        require(block.timestamp < migrationPeriodEnd, "Migration period has ended");
-        _;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -43,12 +40,30 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
         return _VERSION;
     }
 
-    function migrateOldOperatorFees(
-        NodeOperatorStructs.OperatorFees[] memory legacyFees
-    ) external onlyHubOwner timeLimited {
-        for (uint i; i < legacyFees.length; ) {
-            operatorFees[legacyFees[i].identityId] = legacyFees[i].fees;
-
+    function operatorFeeMigration(uint72[] calldata identityIds) external {
+        NodeOperatorFeesStorage oldNOFS = NodeOperatorFeesStorage(oldNOFSAddress);
+        StakingStorage ss = StakingStorage(hub.getContractAddress("StakingStorage"));
+        for (uint72 i; i < identityIds.length; ) {
+            NodeOperatorStructs.OperatorFee[] memory oldOperatorFees = oldNOFS.getOperatorFees(identityIds[i]);
+            // If there operator fee on oldNOFS that means it was migrated
+            if (oldOperatorFees.length != 0) {
+                operatorFees[identityIds[i]] = oldOperatorFees;
+            }
+            // oldOperatorFees.lenght == 0
+            // This happens when node wasn't in sharding table or
+            // It was 0 on old contract it wasn't pushed to contract
+            //    Could there be problem if we pushe it as 0, will this be problem in logic
+            else {
+                uint96 feePercentage96 = ss.operatorFees(identityIds[i]);
+                require(feePercentage96 <= type(uint8).max, "Fee percentage exceeds uint8 range");
+                uint8 feePercentage = uint8(feePercentage96);
+                operatorFees[identityIds[i]].push(
+                    NodeOperatorStructs.OperatorFee({
+                        feePercentage: feePercentage,
+                        effectiveDate: uint248(block.timestamp)
+                    })
+                );
+            }
             unchecked {
                 i++;
             }
