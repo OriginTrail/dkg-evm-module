@@ -45,15 +45,9 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
         StakingStorage ss = StakingStorage(hub.getContractAddress("StakingStorage"));
         for (uint72 i; i < identityIds.length; ) {
             NodeOperatorStructs.OperatorFee[] memory oldOperatorFees = oldNOFS.getOperatorFees(identityIds[i]);
-            // If there operator fee on oldNOFS that means it was migrated
             if (oldOperatorFees.length != 0) {
                 operatorFees[identityIds[i]] = oldOperatorFees;
-            }
-            // oldOperatorFees.lenght == 0
-            // This happens when node wasn't in sharding table or
-            // It was 0 on old contract it wasn't pushed to contract
-            //    Could there be problem if we pushe it as 0, will this be problem in logic
-            else {
+            } else {
                 uint96 feePercentage96 = ss.operatorFees(identityIds[i]);
                 require(feePercentage96 <= type(uint8).max, "Fee percentage exceeds uint8 range");
                 uint8 feePercentage = uint8(feePercentage96);

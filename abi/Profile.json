@@ -358,6 +358,19 @@
   },
   {
     "inputs": [],
+    "name": "nodeOperatorFeesStorage",
+    "outputs": [
+      {
+        "internalType": "contract NodeOperatorFeesStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "parametersStorage",
     "outputs": [
       {

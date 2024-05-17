@@ -10,6 +10,7 @@ import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
 import {Staking} from "./Staking.sol";
+import {NodeOperatorFeesStorage} from "../v2/storage/NodeOperatorFeesStorage.sol";
 import {WhitelistStorage} from "./storage/WhitelistStorage.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {Initializable} from "./interface/Initializable.sol";
@@ -43,6 +44,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     WhitelistStorage public whitelistStorage;
+    NodeOperatorFeesStorage public nodeOperatorFeesStorage;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -76,6 +78,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         whitelistStorage = WhitelistStorage(hub.getContractAddress("WhitelistStorage"));
+        nodeOperatorFeesStorage = NodeOperatorFeesStorage(hub.getContractAddress("NodeOperatorFeesStorage"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -96,6 +99,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
     ) external onlyWhitelisted {
         IdentityStorage ids = identityStorage;
         ProfileStorage ps = profileStorage;
+        NodeOperatorFeesStorage nofs = nodeOperatorFeesStorage;
         Identity id = identityContract;
 
         if (ids.getIdentityId(msg.sender) != 0) {
@@ -136,7 +140,7 @@ contract Profile is Named, Versioned, ContractStatus, Initializable {
         ps.createProfile(identityId, nodeId, address(sharesContract));
         _setAvailableNodeAddresses(identityId);
 
-        stakingStorage.setOperatorFee(identityId, initialOperatorFee);
+        nofs.addOperatorFee(identityId, initialOperatorFee, uint248(block.timestamp));
 
         emit ProfileCreated(identityId, nodeId, adminWallet, address(sharesContract), initialOperatorFee);
     }
