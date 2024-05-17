@@ -49,7 +49,7 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
                 operatorFees[identityIds[i]] = oldOperatorFees;
             } else {
                 uint96 feePercentage96 = ss.operatorFees(identityIds[i]);
-                require(feePercentage96 <= type(uint8).max, "Fee percentage exceeds uint8 range");
+                require(feePercentage96 <= type(uint8).max, "Fee exceeds uint8 range");
                 uint8 feePercentage = uint8(feePercentage96);
                 operatorFees[identityIds[i]].push(
                     NodeOperatorStructs.OperatorFee({
