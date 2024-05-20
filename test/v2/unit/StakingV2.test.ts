@@ -1,10 +1,10 @@
 import { randomBytes } from 'crypto';
 
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber, BytesLike } from 'ethers';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import {
   Token,
@@ -211,11 +211,7 @@ describe('@v2 @unit StakingV2 contract', function () {
     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
     await Profile.createProfile(accounts[1].address, [], nodeId1, 'Token', 'TKN', 0);
 
-    await StakingV2.connect(accounts[1])['addStake(address,uint72,uint96)'](
-      accounts[0].address,
-      identityId1,
-      hre.ethers.utils.parseEther(`${2_000_000}`),
-    );
+    await StakingV2['addStake(uint72,uint96)'](identityId1, hre.ethers.utils.parseEther(`${2_000_000}`));
     expect(await StakingStorage.totalStakes(identityId1)).to.equal(
       hre.ethers.utils.parseEther(`${2_000_000}`),
       'Total amount of stake is not set',

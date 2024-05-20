@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.16;
 
+import {ParanetsRegistry} from "./ParanetsRegistry.sol";
 import {HubDependentV2} from "../../abstract/HubDependent.sol";
 import {Named} from "../../../v1/interface/Named.sol";
 import {Versioned} from "../../../v1/interface/Versioned.sol";
@@ -11,11 +12,22 @@ contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
     string private constant _NAME = "ParanetKnowledgeMinersRegistry";
     string private constant _VERSION = "2.0.0";
 
+    ParanetsRegistry public paranetsRegistry;
+
     // Address => Knowledge Miner Profile
     mapping(address => ParanetStructs.KnowledgeMiner) knowledgeMiners;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependentV2(hubAddress) {}
+
+    modifier onlyContractsOrIncentivesPool(bytes32 paranetId) {
+        _checkSender(paranetId);
+        _;
+    }
+
+    function initialize() public onlyHubOwner {
+        paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
+    }
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -318,7 +330,7 @@ contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
         address miner,
         bytes32 paranetId,
         uint96 unrewardedTracSpent
-    ) external onlyContracts {
+    ) external onlyContractsOrIncentivesPool(paranetId) {
         knowledgeMiners[miner].unrewardedTracSpent[paranetId] = unrewardedTracSpent;
     }
 
@@ -326,7 +338,7 @@ contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
         address miner,
         bytes32 paranetId,
         uint96 addedUnrewardedTracSpent
-    ) external onlyContracts {
+    ) external onlyContractsOrIncentivesPool(paranetId) {
         knowledgeMiners[miner].unrewardedTracSpent[paranetId] += addedUnrewardedTracSpent;
     }
 
@@ -334,7 +346,7 @@ contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
         address miner,
         bytes32 paranetId,
         uint96 subtractedUnrewardedTracSpent
-    ) external onlyContracts {
+    ) external onlyContractsOrIncentivesPool(paranetId) {
         knowledgeMiners[miner].unrewardedTracSpent[paranetId] -= subtractedUnrewardedTracSpent;
     }
 
@@ -346,7 +358,7 @@ contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
         address miner,
         bytes32 paranetId,
         uint256 cumulativeAwardedNeuro
-    ) external onlyContracts {
+    ) external onlyContractsOrIncentivesPool(paranetId) {
         knowledgeMiners[miner].cumulativeAwardedNeuro[paranetId] = cumulativeAwardedNeuro;
     }
 
@@ -354,7 +366,7 @@ contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
         address miner,
         bytes32 paranetId,
         uint256 addedCumulativeAwardedNeuro
-    ) external onlyContracts {
+    ) external onlyContractsOrIncentivesPool(paranetId) {
         knowledgeMiners[miner].cumulativeAwardedNeuro[paranetId] += addedCumulativeAwardedNeuro;
     }
 
@@ -362,7 +374,14 @@ contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
         address miner,
         bytes32 paranetId,
         uint256 subtractedCumulativeAwardedNeuro
-    ) external onlyContracts {
+    ) external onlyContractsOrIncentivesPool(paranetId) {
         knowledgeMiners[miner].cumulativeAwardedNeuro[paranetId] -= subtractedCumulativeAwardedNeuro;
+    }
+
+    function _checkSender(bytes32 paranetId) internal view virtual {
+        require(
+            hub.isContract(msg.sender) || paranetsRegistry.getIncentivesPoolAddress(paranetId) == msg.sender,
+            "Fn can only be called by the hub contracts or Paranet incentives pool"
+        );
     }
 }

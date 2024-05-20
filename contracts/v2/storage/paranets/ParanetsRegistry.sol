@@ -130,11 +130,11 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         paranets[paranetId].description = description;
     }
 
-    function getIncentivesPool(bytes32 paranetId) external view returns (address) {
+    function getIncentivesPoolAddress(bytes32 paranetId) external view returns (address) {
         return paranets[paranetId].incentivesPool;
     }
 
-    function setIncentivesPool(bytes32 paranetId, address incentivesPool) external onlyContracts {
+    function setIncentivesPoolAddress(bytes32 paranetId, address incentivesPool) external onlyContracts {
         paranets[paranetId].incentivesPool = incentivesPool;
     }
 
@@ -179,11 +179,8 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
     }
 
     function isServiceImplemented(bytes32 paranetId, bytes32 serviceId) external view returns (bool) {
-        if (paranets[paranetId].services.length == 0) {
-            return false;
-        }
-
-        return paranets[paranetId].services[paranets[paranetId].implementedServicesIndexes[serviceId]] == serviceId;
+        return (paranets[paranetId].services.length != 0 &&
+            paranets[paranetId].services[paranets[paranetId].implementedServicesIndexes[serviceId]] == serviceId);
     }
 
     function addKnowledgeMiner(bytes32 paranetId, address knowledgeMinerAddress) external onlyContracts {
@@ -214,13 +211,11 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
     }
 
     function isKnowledgeMinerRegistered(bytes32 paranetId, address knowledgeMinerAddress) external view returns (bool) {
-        if (paranets[paranetId].knowledgeMiners.length == 0) {
-            return false;
-        }
-        return
+        return (paranets[paranetId].knowledgeMiners.length != 0 &&
             paranets[paranetId].knowledgeMiners[
                 paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerAddress]
-            ] == knowledgeMinerAddress;
+            ] ==
+            knowledgeMinerAddress);
     }
 
     function addKnowledgeAsset(bytes32 paranetId, bytes32 knowledgeAssetId) external onlyContracts {
@@ -308,9 +303,10 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
     }
 
     function isKnowledgeAssetRegistered(bytes32 paranetId, bytes32 knowledgeAssetId) external view returns (bool) {
-        return
+        return (paranets[paranetId].knowledgeAssets.length != 0 &&
             paranets[paranetId].knowledgeAssets[
                 paranets[paranetId].registeredKnowledgeAssetsIndexes[knowledgeAssetId]
-            ] == knowledgeAssetId;
+            ] ==
+            knowledgeAssetId);
     }
 }

@@ -1,11 +1,11 @@
 import { randomBytes } from 'crypto';
 
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { calculateRoot, getMerkleProof } from 'assertion-tools';
 import { expect } from 'chai';
 import { BytesLike, BigNumber } from 'ethers';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import {
   CommitManagerV1,

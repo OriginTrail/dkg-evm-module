@@ -103,6 +103,25 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
     function createAsset(ContentAssetStructs.AssetInputArgs calldata args) external returns (uint256) {
         return
             _createAsset(
+                msg.sender,
+                args.assertionId,
+                args.size,
+                args.triplesNumber,
+                args.chunksNumber,
+                args.epochsNumber,
+                args.tokenAmount,
+                args.scoreFunctionId,
+                args.immutable_
+            );
+    }
+
+    function createAssetFromContract(
+        address originalSender,
+        ContentAssetStructs.AssetInputArgs calldata args
+    ) external onlyContracts returns (uint256) {
+        return
+            _createAsset(
+                originalSender,
                 args.assertionId,
                 args.size,
                 args.triplesNumber,
@@ -126,6 +145,7 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
     ) external returns (uint256) {
         return
             _createAsset(
+                msg.sender,
                 assertionId,
                 size,
                 triplesNumber,
@@ -531,6 +551,7 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
     }
 
     function _createAsset(
+        address originalSender,
         bytes32 assertionId,
         uint128 size,
         uint32 triplesNumber,
@@ -543,10 +564,10 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
         ContentAssetStorage cas = contentAssetStorage;
 
         uint256 tokenId = cas.generateTokenId();
-        cas.mint(msg.sender, tokenId);
+        cas.mint(originalSender, tokenId);
 
         assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
-        cas.setAssertionIssuer(tokenId, assertionId, msg.sender);
+        cas.setAssertionIssuer(tokenId, assertionId, originalSender);
         cas.setMutability(tokenId, immutable_);
         cas.pushAssertionId(tokenId, assertionId);
 
@@ -554,7 +575,7 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
 
         serviceAgreementV1.createServiceAgreement(
             ServiceAgreementStructsV1.ServiceAgreementInputArgs({
-                assetCreator: msg.sender,
+                assetCreator: originalSender,
                 assetContract: contentAssetStorageAddress,
                 tokenId: tokenId,
                 keyword: abi.encodePacked(contentAssetStorageAddress, assertionId),

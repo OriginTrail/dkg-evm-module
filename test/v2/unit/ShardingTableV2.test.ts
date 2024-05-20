@@ -1,10 +1,10 @@
 import { randomBytes } from 'crypto';
 
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BytesLike, BigNumber } from 'ethers';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import { HubController, Profile, ProfileStorage, ShardingTableStorageV2, ShardingTableV2 } from '../../../typechain';
 

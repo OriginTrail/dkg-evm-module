@@ -1,9 +1,9 @@
 import { randomBytes } from 'crypto';
 
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import { Token, ServiceAgreementStorageProxy, HubController } from '../../../typechain';
 

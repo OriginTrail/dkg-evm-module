@@ -141,7 +141,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "getIncentivesPool",
+    "name": "getIncentivesPoolAddress",
     "outputs": [
       {
         "internalType": "address",
@@ -759,7 +759,7 @@
         "type": "address"
       }
     ],
-    "name": "setIncentivesPool",
+    "name": "setIncentivesPoolAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
