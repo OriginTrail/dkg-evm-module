@@ -108,6 +108,22 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetServiceId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "ParanetServiceHasAlreadyBeenAdded",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "knowledgeAssetStorageAddress",
         "type": "address"
@@ -676,7 +692,13 @@
       }
     ],
     "name": "mintKnowledgeAsset",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },

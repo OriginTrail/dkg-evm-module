@@ -157,6 +157,24 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
             );
     }
 
+    function createAsset(
+        ContentAssetStructs.AssetInputArgs calldata args,
+        address knowledgeMiner
+    ) external returns (uint256) {
+        return
+            _createAsset(
+                args.assertionId,
+                args.size,
+                args.triplesNumber,
+                args.chunksNumber,
+                args.epochsNumber,
+                args.tokenAmount,
+                args.scoreFunctionId,
+                args.immutable_,
+                knowledgeMiner
+            );
+    }
+
     function burnAsset(uint256 tokenId) external onlyAssetOwner(tokenId) {
         ContentAssetStorage cas = contentAssetStorage;
 
@@ -565,6 +583,47 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
                 epochsNumber: epochsNumber,
                 tokenAmount: tokenAmount,
                 scoreFunctionId: scoreFunctionId == LOG2PLDSF_ID ? LINEAR_SUM_ID : scoreFunctionId
+            })
+        );
+
+        emit AssetMinted(contentAssetStorageAddress, tokenId, assertionId);
+
+        return tokenId;
+    }
+
+    function _createAsset(
+        bytes32 assertionId,
+        uint128 size,
+        uint32 triplesNumber,
+        uint96 chunksNumber,
+        uint16 epochsNumber,
+        uint96 tokenAmount,
+        uint8 scoreFunctionId,
+        bool immutable_,
+        address knowledgeMiner
+    ) internal virtual returns (uint256) {
+        ContentAssetStorage cas = contentAssetStorage;
+
+        uint256 tokenId = cas.generateTokenId();
+        cas.mint(knowledgeMiner, tokenId);
+
+        assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
+        cas.setAssertionIssuer(tokenId, assertionId, knowledgeMiner);
+        cas.setMutability(tokenId, immutable_);
+        cas.pushAssertionId(tokenId, assertionId);
+
+        address contentAssetStorageAddress = address(cas);
+
+        serviceAgreementV1.createServiceAgreement(
+            ServiceAgreementStructsV1.ServiceAgreementInputArgs({
+                assetCreator: knowledgeMiner,
+                assetContract: contentAssetStorageAddress,
+                tokenId: tokenId,
+                keyword: abi.encodePacked(contentAssetStorageAddress, assertionId),
+                hashFunctionId: HASH_FUNCTION_ID,
+                epochsNumber: epochsNumber,
+                tokenAmount: tokenAmount,
+                scoreFunctionId: scoreFunctionId
             })
         );
 
