@@ -1,7 +1,7 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import { Hub, HubController, Profile, Token } from '../../../typechain';
 import { GeneralStructs } from '../../../typechain/contracts/v1/HubController';

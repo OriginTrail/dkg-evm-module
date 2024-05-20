@@ -19,6 +19,6 @@ library ParanetErrors {
         bytes32 paranetId
     );
     error NoOperatorRewardAvailable(bytes32 paranetId);
-    error NoEarnedReward(bytes32 paranetId, address miner);
-    error TracTargetExceeded(bytes32 paranetId, uint96 tracTarget, uint96 tracRewarded, uint96 tracSpent);
+    error NoKnowledgeMinerRewardAvailable(bytes32 paranetId, address miner);
+    error TracTargetAchieved(bytes32 paranetId, uint96 tracTarget);
 }

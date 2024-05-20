@@ -1,11 +1,11 @@
 import { randomBytes } from 'crypto';
 
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { expect } from 'chai';
 import { BytesLike } from 'ethers';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import {
   CommitManagerV1,

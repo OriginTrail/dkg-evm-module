@@ -1,10 +1,10 @@
 import { randomBytes } from 'crypto';
 
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BytesLike } from 'ethers';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import { ContentAssetStorageV2, ContentAssetV2, HubController, ServiceAgreementV1, Token } from '../../../typechain';
 import { ContentAssetStructs } from '../../../typechain/contracts/v1/assets/ContentAsset';
