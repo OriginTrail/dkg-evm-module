@@ -11,7 +11,7 @@ import {NodeOperatorStructs} from "../structs/NodeOperatorStructs.sol";
 
 contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
     string private constant _NAME = "NodeOperatorFeesStorage";
-    string private constant _VERSION = "2.0.0";
+    string private constant _VERSION = "2.0.1";
 
     bool private _delayFreePeriodSet;
     uint256 public delayFreePeriodEnd;
