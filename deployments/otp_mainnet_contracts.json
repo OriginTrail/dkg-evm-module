@@ -68,13 +68,13 @@
       "deployed": true
     },
     "Profile": {
-      "evmAddress": "0x8453855ED7a42d98F0abCbEDBD61ac082c5337B5",
-      "substrateAddress": "5EMjsczngyeEYRQVCDxeLthH85Upcsiw3G663SnzQsPuNpc9",
-      "version": "1.1.1",
-      "gitBranch": "main",
-      "gitCommitHash": "cdd09025ee035eb72c4322639cefe1848dd90ecb",
-      "deploymentBlock": 4786001,
-      "deploymentTimestamp": 1713972267333,
+      "evmAddress": "0xDfB94C5021B1684A83001734c3cFd733415d9CcD",
+      "substrateAddress": "5EMjsd171Acgqe4PrafYj2BStycTBUqfSs2xX1QYGE1f3Ju6",
+      "version": "1.1.2",
+      "gitBranch": "operatorFee-fixes",
+      "gitCommitHash": "63e8ce3dfa370844af8318182890ba23976f7daf",
+      "deploymentBlock": 4973043,
+      "deploymentTimestamp": 1716277322852,
       "deployed": true
     },
     "ProfileStorage": {
