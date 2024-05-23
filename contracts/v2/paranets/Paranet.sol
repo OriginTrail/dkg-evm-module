@@ -479,7 +479,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         }
 
         // Mint Knowledge Asset
-        uint256 knowledgeAssetTokenId = ca.createAsset(knowledgeAssetArgs, msg.sender);
+        uint256 knowledgeAssetTokenId = ca.createAssetFromContract(msg.sender, knowledgeAssetArgs);
 
         // Add Knowledge Asset to the KnowledgeAssetsRegistry
         pkar.addKnowledgeAsset(

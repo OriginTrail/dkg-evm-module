@@ -157,24 +157,6 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
             );
     }
 
-    function createAsset(
-        ContentAssetStructs.AssetInputArgs calldata args,
-        address knowledgeMiner
-    ) external returns (uint256) {
-        return
-            _createAsset(
-                args.assertionId,
-                args.size,
-                args.triplesNumber,
-                args.chunksNumber,
-                args.epochsNumber,
-                args.tokenAmount,
-                args.scoreFunctionId,
-                args.immutable_,
-                knowledgeMiner
-            );
-    }
-
     function burnAsset(uint256 tokenId) external onlyAssetOwner(tokenId) {
         ContentAssetStorage cas = contentAssetStorage;
 
