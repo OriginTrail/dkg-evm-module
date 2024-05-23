@@ -151,7 +151,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   it('should register paranet will correctly intitalized incentives pool', async () => {
     const paranetId = await registerParanet(accounts, Paranet, 1);
 
-    const incentivesPoolAddress = await ParanetsRegistry.getIncentivesPool(paranetId);
+    const incentivesPoolAddress = await ParanetsRegistry.getIncentivesPoolAddress(paranetId);
     const incentivesPoolABI = hre.helpers.getAbi('ParanetIncentivesPool');
     const incentivesPool = await hre.ethers.getContractAt<ParanetIncentivesPool>(
       incentivesPoolABI,
@@ -756,7 +756,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       },
     ];
     await expect(
-      Paranet.connect(accounts[105]).addParanetServices(accounts[3].address, getHashFromNumber(3), servicesToBeAdded),
+      Paranet.connect(accounts[103]).addParanetServices(accounts[3].address, getHashFromNumber(3), servicesToBeAdded),
     ).to.revertedWithCustomError(Paranet, 'ParanetServiceHasAlreadyBeenAdded');
 
     const services = await ParanetsRegistry.getServices(paranetId);

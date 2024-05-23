@@ -123,7 +123,7 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
 
     expect(description).to.be.equal('Description of Test Paranet');
 
-    const incentivesPool = await ParanetsRegistry.getIncentivesPool(paranetId);
+    const incentivesPool = await ParanetsRegistry.getIncentivesPoolAddress(paranetId);
 
     expect(incentivesPool).to.be.equal(accounts[2].address);
 
