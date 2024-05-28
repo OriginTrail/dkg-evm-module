@@ -7,9 +7,9 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "_oldNOFSAddress",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "migrationPeriodEnd_",
+        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
@@ -542,6 +542,56 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint72",
+            "name": "identityId",
+            "type": "uint72"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint8",
+                "name": "feePercentage",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint248",
+                "name": "effectiveDate",
+                "type": "uint248"
+              }
+            ],
+            "internalType": "struct NodeOperatorStructs.OperatorFee[]",
+            "name": "fees",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct NodeOperatorStructs.OperatorFees[]",
+        "name": "legacyFees",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "migrateOldOperatorFees",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "migrationPeriodEnd",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "name",
     "outputs": [
@@ -552,32 +602,6 @@
       }
     ],
     "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "oldNOFSAddress",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72[]",
-        "name": "identityIds",
-        "type": "uint72[]"
-      }
-    ],
-    "name": "operatorFeeMigration",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
