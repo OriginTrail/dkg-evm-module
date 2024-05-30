@@ -197,15 +197,14 @@
       "deployed": true
     },
     "NodeOperatorFeesStorage": {
-      "evmAddress": "0x030d086a005F2e5AB99D7a0a73c0a7C92028640b",
-      "substrateAddress": "5EMjsczq5BcomErdwXuXbYxJ9bZd7cp7vvm3tfv81Z8531c6",
-      "version": "2.0.0",
-      "gitBranch": "operatorFee-fixes",
-      "gitCommitHash": "d54481ee9546bffcac3c9f19a4f2f6c62c56a0c4",
-      "deploymentBlock": 4946307,
-      "deploymentTimestamp": 1715951095745,
-      "deployed": false,
-      "migration": true
+      "evmAddress": "0xe761209C8598a933b0F2CE3BdA11a9850Ca320BA",
+      "substrateAddress": "5EMjsd18Y8u6kqeznzaNcWNy4XpuX6TJTqvxsPRstGK1FMJb",
+      "version": "2.0.2",
+      "gitBranch": "operatorFee-fixes-2",
+      "gitCommitHash": "38d7bc4595f2ff59bf0d3d11efd291241ecc992f",
+      "deploymentBlock": 5035511,
+      "deploymentTimestamp": 1717062664410,
+      "deployed": true
     },
     "Staking": {
       "evmAddress": "0x02706Bc98204E4652Cb003B766F8E676eEF65Af5",

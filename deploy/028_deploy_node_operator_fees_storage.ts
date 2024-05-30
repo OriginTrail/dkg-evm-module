@@ -2,8 +2,6 @@ import { BigNumberish } from 'ethers';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { NodeOperatorStructs } from '../typechain/contracts/v2/storage/NodeOperatorFeesStorage';
-
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const isDeployed = hre.helpers.isDeployed('NodeOperatorFeesStorage');
   const isMigration = hre.helpers.contractDeployments.contracts['NodeOperatorFeesStorage']?.migration || false;
@@ -72,48 +70,92 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`--------------------------------------------------------`);
     console.log(`IdentityId: ${identityId}`);
 
-    const operatorFees: NodeOperatorStructs.OperatorFeeStruct[] = [];
+    let operatorFees: { feePercentage: BigNumberish; effectiveDate: number }[] = [];
 
     const oldContractOperatorFees = await OldNodeOperatorFeesStorage.getOperatorFees(identityId);
 
     console.log(`Old operatorFees in the old NodeOperatorFeesStorage: ${JSON.stringify(oldContractOperatorFees)}`);
 
     if (oldContractOperatorFees.length != 0) {
-      oldOperatorFees.push({
-        identityId,
-        fees: oldContractOperatorFees.map((x: BigNumberish[]) => {
-          return { feePercentage: x[0], effectiveDate: x[1] };
-        }),
+      const fees = oldContractOperatorFees.map((x: BigNumberish[]) => {
+        return { feePercentage: x[0], effectiveDate: Number(x[1].toString()) };
       });
-      continue;
+
+      if (hre.network.name.startsWith('gnosis')) {
+        operatorFees = operatorFees.concat(fees);
+      } else {
+        oldOperatorFees.push({
+          identityId,
+          fees,
+        });
+        continue;
+      }
     }
 
-    const activeOperatorFeePercentage = await StakingStorage.operatorFees(identityId);
+    let stakingStorageSource = false;
+    if (operatorFees.length == 0) {
+      const activeOperatorFeePercentage = await StakingStorage.operatorFees(identityId);
 
-    console.log(`Active operatorFee in the StakingStorage: ${activeOperatorFeePercentage.toString()}%`);
+      console.log(`Active operatorFee in the StakingStorage: ${activeOperatorFeePercentage.toString()}%`);
 
-    if (!activeOperatorFeePercentage.eq(0)) {
-      operatorFees.push({
-        feePercentage: activeOperatorFeePercentage,
-        effectiveDate: timestampNow,
-      });
+      if (!activeOperatorFeePercentage.eq(0)) {
+        operatorFees.push({
+          feePercentage: activeOperatorFeePercentage,
+          effectiveDate: timestampNow,
+        });
+        stakingStorageSource = true;
+      }
     }
 
     if (nofcs !== null) {
       const pendingOperatorFee = await nofcs.operatorFeeChangeRequests(identityId);
 
+      if (Number(pendingOperatorFee.timestamp.toString() == 0)) {
+        if (operatorFees.length > 0) {
+          oldOperatorFees.push({
+            identityId,
+            fees: operatorFees,
+          });
+        } else {
+          oldOperatorFees.push({
+            identityId,
+            fees: [{ feePercentage: 0, effectiveDate: timestampNow }],
+          });
+        }
+        continue;
+      }
+
       console.log(`Pending operatorFee in the NodeOperatorFeeChangesStorage: ${pendingOperatorFee.newFee.toString()}%`);
 
-      if (!pendingOperatorFee.timestamp.eq(0)) {
-        if (operatorFees.length > 0 && pendingOperatorFee.timestamp < operatorFees[0].effectiveDate) {
-          operatorFees[0].effectiveDate = pendingOperatorFee.timestamp - 1;
-        }
+      const exists = operatorFees.some(
+        (obj) =>
+          Number(obj.feePercentage.toString()) === Number(pendingOperatorFee.newFee.toString()) &&
+          Number(obj.effectiveDate.toString()) === Number(pendingOperatorFee.timestamp.toString()),
+      );
 
-        operatorFees.push({
-          feePercentage: pendingOperatorFee.newFee,
-          effectiveDate: pendingOperatorFee.timestamp,
+      if (exists) {
+        console.log(`Pending operatorFee is already a part of the fees array from old NodeOperatorFeesStorage`);
+        oldOperatorFees.push({
+          identityId,
+          fees: operatorFees,
         });
+        continue;
       }
+
+      if (
+        (stakingStorageSource &&
+          Number(pendingOperatorFee.timestamp.toString()) < Number(operatorFees[0].effectiveDate.toString())) ||
+        (operatorFees.length == 1 && Number(operatorFees[0].effectiveDate.toString()) == 1716291685)
+      ) {
+        operatorFees[0].effectiveDate = Number(pendingOperatorFee.timestamp.toString()) - 1;
+      }
+
+      operatorFees.push({
+        feePercentage: pendingOperatorFee.newFee,
+        effectiveDate: Number(pendingOperatorFee.timestamp.toString()),
+      });
+
+      operatorFees.sort((a, b) => a.effectiveDate - b.effectiveDate);
     }
 
     console.log(`--------------------------------------------------------`);
@@ -141,35 +183,21 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 
   const chunkSize = 10;
-  const encodedDataArray: string[] = oldOperatorFees.reduce<string[]>((acc, _, currentIndex, array) => {
-    if (currentIndex % chunkSize === 0) {
-      // Encode and push the function data for a slice of the array
-      acc.push(
-        NodeOperatorFeesStorage.interface.encodeFunctionData('migrateOldOperatorFees', [
-          array.slice(currentIndex, currentIndex + chunkSize),
-        ]),
-      );
-    }
-    return acc;
-  }, []);
+  const totalChunks = Math.ceil(oldOperatorFees.length / chunkSize);
 
-  if (hre.network.config.environment === 'development') {
-    const { deployer } = await hre.getNamedAccounts();
+  console.log(`Starting migration of operator fees for ${oldOperatorFees.length} nodes...`);
+  for (let i = 0; i < oldOperatorFees.length; i += chunkSize) {
+    const chunk = oldOperatorFees.slice(i, i + chunkSize);
+    const chunkNumber = Math.floor(i / chunkSize) + 1;
+    const percentageDone = ((chunkNumber / totalChunks) * 100).toFixed(2);
+    console.log(
+      `Processing chunk ${chunkNumber} out of ${totalChunks} (starting at index ${i}):`,
+      JSON.stringify(chunk),
+    );
+    console.log(`Percentage done: ${percentageDone}%`);
 
-    const hubControllerAddress = hre.helpers.contractDeployments.contracts['HubController'].evmAddress;
-    const HubController = await hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
-
-    for (let i = 0; i < encodedDataArray.length; i++) {
-      const migrateOldOperatorFeesTx = await HubController.forwardCall(
-        NodeOperatorFeesStorage.address,
-        encodedDataArray[i],
-      );
-      await migrateOldOperatorFeesTx.wait();
-    }
-  } else {
-    for (let i = 0; i < encodedDataArray.length; i++) {
-      hre.helpers.setParametersEncodedData.push(['NodeOperatorFeesStorage', [encodedDataArray[i]]]);
-    }
+    const tx = await NodeOperatorFeesStorage.migrateOldOperatorFees(chunk);
+    await tx.wait();
   }
 };
 

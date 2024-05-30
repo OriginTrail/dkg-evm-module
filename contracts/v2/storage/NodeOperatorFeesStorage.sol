@@ -42,10 +42,10 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
         return _VERSION;
     }
 
-    function migrateOldOperatorFees(
-        NodeOperatorStructs.OperatorFees[] memory legacyFees
-    ) external onlyHubOwner timeLimited {
+    function migrateOldOperatorFees(NodeOperatorStructs.OperatorFees[] memory legacyFees) external timeLimited {
         for (uint i; i < legacyFees.length; ) {
+            require(operatorFees[legacyFees[i].identityId].length == 0);
+
             operatorFees[legacyFees[i].identityId] = legacyFees[i].fees;
             unchecked {
                 i++;
