@@ -29,16 +29,14 @@ contract ParanetKnowledgeAssetsRegistry is Named, Versioned, HubDependentV2 {
         bytes32 paranetId,
         address knowledgeAssetStorageContract,
         uint256 tokenId,
-        address miner,
-        bytes calldata metadata
+        address miner
     ) external onlyContracts returns (bytes32) {
         knowledgeAssets[keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId))] = ParanetStructs
             .KnowledgeAsset({
                 knowledgeAssetStorageContract: knowledgeAssetStorageContract,
                 tokenId: tokenId,
                 minerAddress: miner,
-                paranetId: paranetId,
-                metadata: metadata
+                paranetId: paranetId
             });
 
         return keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId));
@@ -85,13 +83,5 @@ contract ParanetKnowledgeAssetsRegistry is Named, Versioned, HubDependentV2 {
 
     function setParanetId(bytes32 knowledgeAssetId, bytes32 paranetId) external onlyContracts {
         knowledgeAssets[knowledgeAssetId].paranetId = paranetId;
-    }
-
-    function getMetadata(bytes32 knowledgeAssetId) external view returns (bytes memory) {
-        return knowledgeAssets[knowledgeAssetId].metadata;
-    }
-
-    function setMetadata(bytes32 knowledgeAssetId, bytes calldata metadata) external onlyContracts {
-        knowledgeAssets[knowledgeAssetId].metadata = metadata;
     }
 }

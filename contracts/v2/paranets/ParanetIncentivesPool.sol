@@ -20,13 +20,12 @@ contract ParanetIncentivesPool {
     uint64 constant RATIO_SCALING_FACTOR = 10 ** 18;
     uint16 constant PERCENTAGE_SCALING_FACTOR = 10 ** 4;
 
-    uint256 public totalNeuroReceived;
-    uint256 public tracToNeuroRatio;
-    uint256 public minersClaimedNeuro;
+    uint256 public tracToNeuroMinerEmissionMultiplier;
+    uint256 public tracToNeuroOperatorEmissionMultiplier;
+    uint256 public tracToNeuroVoterEmissionMultiplier;
+
     uint256 public operatorClaimedNeuro;
-    uint96 public tracTarget;
-    uint96 public tracRewarded;
-    uint16 public operatorRewardPercentage;
+    mapping(address => uint256) public votersClaimedNeuro;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(
@@ -35,7 +34,8 @@ contract ParanetIncentivesPool {
         bytes32 paranetId,
         uint256 tracToNeuroRatio_,
         uint96 tracTarget_,
-        uint16 operatorRewardPercentage_
+        uint16 operatorRewardPercentage_,
+        ParanetStructs.ParanetIncentivizationProposalVoterInput[] voters
     ) {
         paranetsRegistry = ParanetsRegistry(paranetsRegistryAddress);
         paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(knowledgeMinersRegistryAddress);
@@ -46,10 +46,18 @@ contract ParanetIncentivesPool {
         operatorRewardPercentage = operatorRewardPercentage_;
     }
 
-    modifier onlyWhenPoolActive() {
-        _checkPoolActive();
-        _;
-    }
+    // 1000 NEURO
+    // 1:1 ratio
+    // Miner submits 500 TRAC -- gets 50% of rewards
+    // Somebody sends 1000 more NEURO to the contract
+    // Total NEURO changes to 2000
+    // And it changes all the percentages
+    //
+    // MinersSpentTrac - 500 TRAC, 500 NEURO
+    // Operator (assuming 10% operator fee) can claim 50 NEURO
+    //
+    // Voters (5%)
+    // Same logic as for Operators
 
     modifier onlyParanetOperator() {
         _checkParanetOperator();
@@ -67,11 +75,11 @@ contract ParanetIncentivesPool {
         emit RewardDeposit(msg.sender, msg.value);
     }
 
-    function getBalance() external view returns (uint256) {
+    function getNeuroBalance() external view returns (uint256) {
         return address(this).balance;
     }
 
-    function getParanetOperatorReward() external onlyWhenPoolActive onlyParanetOperator {
+    function claimParanetOperatorReward() external onlyParanetOperator {
         uint256 operatorReward = ((totalNeuroReceived * tracRewarded) / tracTarget) -
             (minersClaimedNeuro + operatorClaimedNeuro);
 
@@ -86,7 +94,9 @@ contract ParanetIncentivesPool {
         emit ParanetOperatorRewardClaimed(msg.sender, operatorReward);
     }
 
-    function getKnowledgeMinerReward() external onlyWhenPoolActive onlyParanetKnowledgeMiner {
+    function claimIncentivizationVoterReward() {}
+
+    function claimKnowledgeMinerReward() external onlyParanetKnowledgeMiner {
         if (tracRewarded == tracTarget) {
             revert ParanetErrors.TracTargetAchieved(parentParanetId, tracTarget);
         }
@@ -114,10 +124,6 @@ contract ParanetIncentivesPool {
         payable(msg.sender).transfer(neuroReward);
 
         emit KnowledgeMinerRewardClaimed(msg.sender, neuroReward);
-    }
-
-    function _checkPoolActive() internal view virtual {
-        require(totalNeuroReceived >= (tracToNeuroRatio * tracTarget) / RATIO_SCALING_FACTOR, "Pool is inactive");
     }
 
     function _checkParanetOperator() internal view virtual {

@@ -288,7 +288,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
     const paranetServiceId = getId(accounts[50].address, 50);
     const paranetServiceObject = await ParanetServicesRegistry.getParanetServiceObject(paranetServiceId);
@@ -299,7 +298,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     expect(paranetServiceObject.worker).to.equal(accounts[51].address);
     expect(paranetServiceObject.name).to.equal('Test Paranet Servic Name');
     expect(paranetServiceObject.description).to.equal('Test Paranet Servic Description');
-    expect(paranetServiceObject.metadata).to.equal(hre.ethers.utils.formatBytes32String('Metadata'));
   });
 
   it('should register paranet service emit event', async () => {
@@ -310,7 +308,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
         'Test Paranet Servic Name',
         'Test Paranet Servic Description',
         accounts[51].address,
-        hre.ethers.utils.formatBytes32String('Metadata'),
       ),
     ).to.emit(Paranet, 'ParanetServiceRegistered');
   });
@@ -322,7 +319,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
 
     Paranet.connect(accounts[5]).transferParanetServiceOwnership(
@@ -344,7 +340,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
     await expect(
       Paranet.connect(accounts[5]).transferParanetServiceOwnership(
@@ -362,7 +357,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
 
     await expect(
@@ -381,7 +375,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
     await Paranet.connect(accounts[5]).updateParanetServiceName(
       accounts[50].address,
@@ -400,7 +393,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
 
     expect(
@@ -419,7 +411,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
     expect(
       await Paranet.connect(accounts[5]).updateParanetServiceName(
@@ -437,7 +428,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
     await Paranet.connect(accounts[5]).updateParanetServiceDescription(
       accounts[50].address,
@@ -457,7 +447,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
 
     expect(
@@ -476,7 +465,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
     expect(
       await Paranet.connect(accounts[5]).updateParanetServiceDescription(
@@ -494,7 +482,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
     await Paranet.connect(accounts[5]).updateParanetServiceWorker(
       accounts[50].address,
@@ -513,7 +500,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
 
     expect(
@@ -533,7 +519,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
     const paranetServiceId = getId(accounts[50].address, 50);
 
@@ -562,7 +547,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
 
     await expect(
@@ -582,7 +566,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
 
     Paranet.connect(accounts[103]).addParanetService(
@@ -620,7 +603,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata'),
     );
     await expect(
       Paranet.connect(accounts[103]).addParanetService(
@@ -640,7 +622,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name 0',
       'Test Paranet Servic Description 0',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata 0'),
     );
     await Paranet.connect(accounts[6]).registerParanetService(
       accounts[50].address,
@@ -648,7 +629,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name 1',
       'Test Paranet Servic Description 1',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata 1'),
     );
     const paranetServiceId0 = getId(accounts[50].address, 50);
     const paranetServiceId1 = getId(accounts[50].address, 56);
@@ -691,7 +671,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name 0',
       'Test Paranet Servic Description 0',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata 0'),
     );
     await Paranet.connect(accounts[6]).registerParanetService(
       accounts[50].address,
@@ -699,7 +678,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name 1',
       'Test Paranet Servic Description 1',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata 1'),
     );
 
     const servicesToBeAdded = [
@@ -730,7 +708,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name 0',
       'Test Paranet Servic Description 0',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata 0'),
     );
     await Paranet.connect(accounts[6]).registerParanetService(
       accounts[50].address,
@@ -738,7 +715,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name 1',
       'Test Paranet Servic Description 1',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata 1'),
     );
 
     const servicesToBeAdded = [
@@ -773,7 +749,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name 0',
       'Test Paranet Servic Description 0',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata 0'),
     );
 
     const servicesToBeAdded = [
@@ -803,7 +778,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name 0',
       'Test Paranet Servic Description 0',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata 0'),
     );
     await Paranet.connect(accounts[6]).registerParanetService(
       accounts[50].address,
@@ -811,7 +785,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       'Test Paranet Servic Name 1',
       'Test Paranet Servic Description 1',
       accounts[51].address,
-      hre.ethers.utils.formatBytes32String('Metadata 1'),
     );
 
     const servicesToBeAdded = [
@@ -875,7 +848,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     expect(knowledgeMinerMetadata.addr).to.be.equal(accounts[5].address);
     expect(knowledgeMinerMetadata.totalTracSpent).to.be.equal(hre.ethers.utils.parseEther('315'));
     expect(knowledgeMinerMetadata.totalSubmittedKnowledgeAssetsCount).to.be.equal(3);
-    expect(knowledgeMinerMetadata.metadata).to.be.equal('0x');
 
     const submittedKnowledgeAsset0 = await ParanetKnowledgeMinersRegistry[
       'getSubmittedKnowledgeAssets(address,bytes32)'

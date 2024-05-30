@@ -108,7 +108,6 @@ describe('@v2 @unit ParanetKnowledgeAssetsRegistry contract', function () {
         ),
       ),
     );
-    expect(knowledgeAssetObject.metadata).to.equal(hre.ethers.utils.formatBytes32String(`Metadata ${1} - ${1}`));
   });
 
   it('should get knowledge asset locator', async () => {
@@ -165,23 +164,6 @@ describe('@v2 @unit ParanetKnowledgeAssetsRegistry contract', function () {
     expect(knwoledgeAssetParanetId).to.equal(newParanetId);
   });
 
-  it('should set knowledge asset metadata', async () => {
-    await addknowledgeAsset(accounts, ParanetKnowledgeAssetsRegistry, 1, 1);
-
-    const newMetadata = hre.ethers.utils.formatBytes32String(`New Metadata 1 - 1`);
-    const assetLocation = hre.ethers.utils.keccak256(
-      hre.ethers.utils.solidityPack(
-        ['address', 'uint256'], // Types of the variables
-        [accounts[150].address, getHashFromNumber(1)], // Values to encode
-      ),
-    );
-
-    await ParanetKnowledgeAssetsRegistry.setMetadata(assetLocation, newMetadata);
-    const knwoledgeAssetMetadata = await ParanetKnowledgeAssetsRegistry.getMetadata(assetLocation);
-
-    expect(knwoledgeAssetMetadata).to.equal(newMetadata);
-  });
-
   async function addknowledgeAsset(
     accounts: SignerWithAddress[],
     ParanetKnowledgeAssetsRegistry: ParanetKnowledgeAssetsRegistry,
@@ -197,15 +179,8 @@ describe('@v2 @unit ParanetKnowledgeAssetsRegistry contract', function () {
     const tokenIdHash = getHashFromNumber(tokenId);
     const knowledgeAssetStorageContract = accounts[150].address;
     const miner = accounts[151].address;
-    const metadata = hre.ethers.utils.formatBytes32String(`Metadata ${paranetId} - ${tokenId}`);
 
-    ParanetKnowledgeAssetsRegistry.addKnowledgeAsset(
-      paranetIdHash,
-      knowledgeAssetStorageContract,
-      tokenIdHash,
-      miner,
-      metadata,
-    );
+    ParanetKnowledgeAssetsRegistry.addKnowledgeAsset(paranetIdHash, knowledgeAssetStorageContract, tokenIdHash, miner);
   }
 
   function getHashFromNumber(number: number) {

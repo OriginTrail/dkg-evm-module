@@ -82,17 +82,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   //   expect(knowledgeMinerExists).to.equal(false);
   // });
 
-  it('should get knowledge miner metadata', async () => {
-    await createknowledgeMiner(accounts, ParanetKnowledgeMinersRegistry, 1);
-
-    const knowledgeMinerMetadata = await ParanetKnowledgeMinersRegistry.getKnowledgeMinerMetadata(accounts[1].address);
-
-    expect(knowledgeMinerMetadata.addr).to.equal(accounts[1].address);
-    expect(knowledgeMinerMetadata.totalTracSpent).to.equal(0);
-    expect(knowledgeMinerMetadata.totalSubmittedKnowledgeAssetsCount).to.equal(0);
-    expect(knowledgeMinerMetadata.metadata).to.equal(hre.ethers.utils.formatBytes32String(`Metadata 1`));
-  });
-
   it('should set total trac spent', async () => {
     await createknowledgeMiner(accounts, ParanetKnowledgeMinersRegistry, 1);
 
@@ -830,9 +819,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     ParanetKnowledgeMinersRegistry: ParanetKnowledgeMinersRegistry,
     number: number,
   ) {
-    const metadata = hre.ethers.utils.formatBytes32String(`Metadata ${number}`);
-
-    await ParanetKnowledgeMinersRegistry.registerKnowledgeMiner(accounts[number].address, metadata);
+    await ParanetKnowledgeMinersRegistry.registerKnowledgeMiner(accounts[number].address);
   }
 
   function getHashFromNumber(number: number) {

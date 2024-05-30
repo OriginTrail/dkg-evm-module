@@ -37,11 +37,10 @@ contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
         return _VERSION;
     }
 
-    function registerKnowledgeMiner(address miner, bytes calldata metadata) external onlyContracts {
+    function registerKnowledgeMiner(address miner) external onlyContracts {
         ParanetStructs.KnowledgeMiner storage knowledgeMiner = knowledgeMiners[miner];
 
         knowledgeMiner.addr = miner;
-        knowledgeMiner.metadata = metadata;
     }
 
     function deleteKnowledgeMiner(address miner) external onlyContracts {
@@ -59,8 +58,7 @@ contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
             ParanetStructs.KnowledgeMinerMetadata({
                 addr: addr,
                 totalTracSpent: knowledgeMiners[addr].totalTracSpent,
-                totalSubmittedKnowledgeAssetsCount: knowledgeMiners[addr].totalSubmittedKnowledgeAssetsCount,
-                metadata: knowledgeMiners[addr].metadata
+                totalSubmittedKnowledgeAssetsCount: knowledgeMiners[addr].totalSubmittedKnowledgeAssetsCount
             });
     }
 

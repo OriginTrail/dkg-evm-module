@@ -86,7 +86,6 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
     expect(paranetServiceObject.worker).to.equal(accounts[2].address);
     expect(paranetServiceObject.name).to.equal('Test Service');
     expect(paranetServiceObject.description).to.equal('This is a test service');
-    expect(paranetServiceObject.metadata).to.equal(hre.ethers.utils.formatBytes32String('Metadata'));
   });
 
   it('should get all fields successfully', async () => {
@@ -107,10 +106,6 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
     const description = await ParanetServicesRegistry.getDescription(paranetServiceId);
 
     expect(description).to.equal('This is a test service');
-
-    const metadata = await ParanetServicesRegistry.getMetadata(paranetServiceId);
-
-    expect(metadata).to.equal(hre.ethers.utils.formatBytes32String('Metadata'));
   });
 
   it('should set all fields successfully', async () => {
@@ -139,11 +134,6 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
     const newDescription = await ParanetServicesRegistry.getDescription(paranetServiceId);
 
     expect(newDescription).to.equal('This is a new test service');
-
-    await ParanetServicesRegistry.setMetadata(paranetServiceId, hre.ethers.utils.formatBytes32String('New Metadata'));
-    const newMetadata = await ParanetServicesRegistry.getMetadata(paranetServiceId);
-
-    expect(newMetadata).to.equal(hre.ethers.utils.formatBytes32String('New Metadata'));
   });
 
   async function createParanetService(accounts: SignerWithAddress[], ParanetServicesRegistry: ParanetServicesRegistry) {
@@ -154,7 +144,6 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
     const paranetServiceKATokenId = 1;
     const paranetServiceName = 'Test Service';
     const paranetServiceDescription = 'This is a test service';
-    const metadata = hre.ethers.utils.formatBytes32String('Metadata');
 
     await ParanetServicesRegistry.registerParanetService(
       paranetServiceKAStorageContract.address,
@@ -163,7 +152,6 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
       paranetServiceDescription,
       operator.address,
       worker.address,
-      metadata,
     );
   }
 });

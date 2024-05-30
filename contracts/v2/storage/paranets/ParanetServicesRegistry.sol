@@ -31,8 +31,7 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
         string calldata paranetServiceName,
         string calldata paranetServiceDescription,
         address operator,
-        address worker,
-        bytes calldata metadata
+        address worker
     ) external onlyContracts returns (bytes32) {
         paranetServices[
             keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
@@ -42,8 +41,7 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
             operator: operator,
             worker: worker,
             name: paranetServiceName,
-            description: paranetServiceDescription,
-            metadata: metadata
+            description: paranetServiceDescription
         });
 
         return keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId));
@@ -99,13 +97,5 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
 
     function setDescription(bytes32 paranetServiceId, string calldata description_) external onlyContracts {
         paranetServices[paranetServiceId].description = description_;
-    }
-
-    function getMetadata(bytes32 paranetServiceId) external view returns (bytes memory) {
-        return paranetServices[paranetServiceId].metadata;
-    }
-
-    function setMetadata(bytes32 paranetServiceId, bytes calldata metadata) external onlyContracts {
-        paranetServices[paranetServiceId].metadata = metadata;
     }
 }

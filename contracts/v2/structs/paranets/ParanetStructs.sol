@@ -3,21 +3,15 @@
 pragma solidity ^0.8.16;
 
 library ParanetStructs {
-    enum AccessPolicy {
-        OPEN
-    }
-
     struct UniversalAssetLocator {
         address knowledgeAssetStorageContract;
         uint256 tokenId;
     }
 
     struct Paranet {
-        address paranetKAStorageContract;
+        address paranetKAStorageContract; // make sure this is compatible with ERC1155
         uint256 paranetKATokenId;
         address operator;
-        AccessPolicy minersAccessPolicy;
-        AccessPolicy knowledgeAssetsInclusionPolicy;
         string name;
         string description;
         address incentivesPool;
@@ -37,8 +31,6 @@ library ParanetStructs {
         address paranetKAStorageContract;
         uint256 paranetKATokenId;
         address operator;
-        AccessPolicy minersAccessPolicy;
-        AccessPolicy knowledgeAssetsInclusionPolicy;
         string name;
         string description;
         uint96 cumulativeKnowledgeValue;
@@ -48,17 +40,16 @@ library ParanetStructs {
         address paranetServiceKAStorageContract;
         uint256 paranetServiceKATokenId;
         address operator;
-        address worker;
+        address[] paranetServiceAddresses;
+        mapping(address => bool) paranetServiceAddressRegistered;
         string name;
         string description;
-        bytes metadata;
     }
 
     struct KnowledgeMiner {
         address addr;
         uint96 totalTracSpent;
         uint256 totalSubmittedKnowledgeAssetsCount;
-        bytes metadata;
         mapping(bytes32 => bytes32[]) submittedKnowledgeAssets;
         mapping(bytes32 => mapping(bytes32 => uint256)) submittedKnowledgeAssetsIndexes;
         mapping(bytes32 => UpdatingKnowledgeAssetState[]) updatingKnowledgeAssetStates;
@@ -72,7 +63,6 @@ library ParanetStructs {
         address addr;
         uint96 totalTracSpent;
         uint256 totalSubmittedKnowledgeAssetsCount;
-        bytes metadata;
     }
 
     struct KnowledgeAsset {
@@ -80,7 +70,6 @@ library ParanetStructs {
         uint256 tokenId;
         address minerAddress;
         bytes32 paranetId;
-        bytes metadata;
     }
 
     struct UpdatingKnowledgeAssetState {
@@ -88,5 +77,16 @@ library ParanetStructs {
         uint256 tokenId;
         bytes32 assertionId;
         uint96 updateTokenAmount;
+    }
+
+    struct ParanetIncentivizationProposalVoterInput {
+        address addr;
+        uint96 weight;
+    }
+
+    struct ParanetIncentivizationProposalVoter {
+        address addr;
+        uint96 weight;
+        uint256 claimedNeuro;
     }
 }

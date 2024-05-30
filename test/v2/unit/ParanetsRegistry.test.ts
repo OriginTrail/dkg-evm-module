@@ -97,8 +97,6 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     expect(paranetMetadata.paranetKATokenId).to.be.equal(123);
     //How to get message sender?
     expect(paranetMetadata.operator).to.be.equal(accounts[3].address);
-    expect(paranetMetadata.minersAccessPolicy).to.be.equal(0);
-    expect(paranetMetadata.knowledgeAssetsInclusionPolicy).to.be.equal(0);
     expect(paranetMetadata.name).to.be.equal('Test Paranet');
     expect(paranetMetadata.description).to.be.equal('Description of Test Paranet');
     expect(paranetMetadata.cumulativeKnowledgeValue).to.be.equal(0);
@@ -106,10 +104,6 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     const operatorAddress = await ParanetsRegistry.getOperatorAddress(paranetId);
 
     expect(operatorAddress).to.be.equal(accounts[3].address);
-
-    const minersAccessPolicy = await ParanetsRegistry.getMinersAccessPolicy(paranetId);
-
-    expect(minersAccessPolicy).to.be.equal(0);
 
     const knowledgeAssetsInclusionPolicy = await ParanetsRegistry.getKnowledgeAssetsInclusionPolicy(paranetId);
 
@@ -406,8 +400,6 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
 async function createParanet(accounts: SignerWithAddress[], ParanetsRegistry: ParanetsRegistry) {
   const knowledgeAssetStorageContract = accounts[1];
   const tokenId = 123;
-  const minersAccessPolicy = 0;
-  const knowledgeAssetsInclusionPolicy = 0;
   const paranetName = 'Test Paranet';
   const paranetDescription = 'Description of Test Paranet';
   const incentivesPool = accounts[2];
@@ -417,8 +409,6 @@ async function createParanet(accounts: SignerWithAddress[], ParanetsRegistry: Pa
     knowledgeAssetStorageContract.address,
     tokenId,
     operator.address,
-    minersAccessPolicy,
-    knowledgeAssetsInclusionPolicy,
     paranetName,
     paranetDescription,
     incentivesPool.address,

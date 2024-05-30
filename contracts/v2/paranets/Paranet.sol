@@ -27,8 +27,6 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
     event ParanetRegistered(
         address indexed paranetKAStorageContract,
         uint256 indexed paranetKATokenId,
-        ParanetStructs.AccessPolicy minersAccessPolicy,
-        ParanetStructs.AccessPolicy knowledgeAssetsInclusionPolicy,
         string paranetName,
         string paranetDescription,
         address incentivesPoolAddress,
@@ -62,8 +60,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 indexed paranetServiceKATokenId,
         string paranetServiceName,
         string paranetServiceDescription,
-        address worker,
-        bytes paranetServiceMetadata
+        address worker
     );
     event ParanetServiceNameUpdated(
         address indexed paranetServiceKAStorageContract,
@@ -172,8 +169,6 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         emit ParanetRegistered(
             paranetKAStorageContract,
             paranetKATokenId,
-            ParanetStructs.AccessPolicy.OPEN,
-            ParanetStructs.AccessPolicy.OPEN,
             paranetName,
             paranetDescription,
             address(incentivesPool),
@@ -187,8 +182,6 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                 paranetKAStorageContract,
                 paranetKATokenId,
                 msg.sender,
-                ParanetStructs.AccessPolicy.OPEN,
-                ParanetStructs.AccessPolicy.OPEN,
                 paranetName,
                 paranetDescription,
                 address(incentivesPool)
@@ -331,8 +324,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 paranetServiceKATokenId,
         string calldata paranetServiceName,
         string calldata paranetServiceDescription,
-        address worker,
-        bytes calldata paranetServiceMetadata
+        address worker
     ) external returns (bytes32) {
         ParanetServicesRegistry psr = paranetServicesRegistry;
 
@@ -352,8 +344,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             paranetServiceKATokenId,
             paranetServiceName,
             paranetServiceDescription,
-            worker,
-            paranetServiceMetadata
+            worker
         );
 
         return
@@ -363,8 +354,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                 paranetServiceName,
                 paranetServiceDescription,
                 msg.sender,
-                worker,
-                paranetServiceMetadata
+                worker
             );
     }
 
