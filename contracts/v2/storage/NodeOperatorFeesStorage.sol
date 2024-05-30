@@ -3,7 +3,6 @@
 pragma solidity ^0.8.16;
 
 import {HubDependent} from "../../v1/abstract/HubDependent.sol";
-import {StakingStorage} from "../../v1/storage/StakingStorage.sol";
 import {Named} from "../../v1/interface/Named.sol";
 import {Versioned} from "../../v1/interface/Versioned.sol";
 import {NodeOperatorErrors} from "../errors/NodeOperatorErrors.sol";
@@ -11,25 +10,28 @@ import {NodeOperatorStructs} from "../structs/NodeOperatorStructs.sol";
 
 contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
     string private constant _NAME = "NodeOperatorFeesStorage";
-    string private constant _VERSION = "2.0.1";
+    string private constant _VERSION = "2.0.2";
 
     bool private _delayFreePeriodSet;
     uint256 public delayFreePeriodEnd;
-
-    address public oldNOFSAddress;
+    uint256 public migrationPeriodEnd;
 
     // identityId => OperatorFee[]
     mapping(uint72 => NodeOperatorStructs.OperatorFee[]) public operatorFees;
 
-    // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress, address _oldNOFSAddress) HubDependent(hubAddress) {
-        oldNOFSAddress = _oldNOFSAddress;
+    constructor(address hubAddress, uint256 migrationPeriodEnd_) HubDependent(hubAddress) {
+        migrationPeriodEnd = migrationPeriodEnd_;
     }
 
     modifier onlyOnce() {
         require(!_delayFreePeriodSet, "Fn has already been executed");
         _;
         _delayFreePeriodSet = true;
+    }
+
+    modifier timeLimited() {
+        require(block.timestamp < migrationPeriodEnd, "Migration period has ended");
+        _;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -40,24 +42,11 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
         return _VERSION;
     }
 
-    function operatorFeeMigration(uint72[] calldata identityIds) external {
-        NodeOperatorFeesStorage oldNOFS = NodeOperatorFeesStorage(oldNOFSAddress);
-        StakingStorage ss = StakingStorage(hub.getContractAddress("StakingStorage"));
-        for (uint72 i; i < identityIds.length; ) {
-            NodeOperatorStructs.OperatorFee[] memory oldOperatorFees = oldNOFS.getOperatorFees(identityIds[i]);
-            if (oldOperatorFees.length != 0) {
-                operatorFees[identityIds[i]] = oldOperatorFees;
-            } else {
-                uint96 feePercentage96 = ss.operatorFees(identityIds[i]);
-                require(feePercentage96 <= type(uint8).max, "Fee exceeds uint8 range");
-                uint8 feePercentage = uint8(feePercentage96);
-                operatorFees[identityIds[i]].push(
-                    NodeOperatorStructs.OperatorFee({
-                        feePercentage: feePercentage,
-                        effectiveDate: uint248(block.timestamp)
-                    })
-                );
-            }
+    function migrateOldOperatorFees(NodeOperatorStructs.OperatorFees[] memory legacyFees) external timeLimited {
+        for (uint i; i < legacyFees.length; ) {
+            require(operatorFees[legacyFees[i].identityId].length == 0);
+
+            operatorFees[legacyFees[i].identityId] = legacyFees[i].fees;
             unchecked {
                 i++;
             }
