@@ -10,7 +10,7 @@ import {NodeOperatorStructs} from "../structs/NodeOperatorStructs.sol";
 
 contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
     string private constant _NAME = "NodeOperatorFeesStorage";
-    string private constant _VERSION = "2.0.0";
+    string private constant _VERSION = "2.0.2";
 
     bool private _delayFreePeriodSet;
     uint256 public delayFreePeriodEnd;
@@ -19,7 +19,6 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
     // identityId => OperatorFee[]
     mapping(uint72 => NodeOperatorStructs.OperatorFee[]) public operatorFees;
 
-    // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress, uint256 migrationPeriodEnd_) HubDependent(hubAddress) {
         migrationPeriodEnd = migrationPeriodEnd_;
     }
@@ -43,12 +42,11 @@ contract NodeOperatorFeesStorage is Named, Versioned, HubDependent {
         return _VERSION;
     }
 
-    function migrateOldOperatorFees(
-        NodeOperatorStructs.OperatorFees[] memory legacyFees
-    ) external onlyHubOwner timeLimited {
+    function migrateOldOperatorFees(NodeOperatorStructs.OperatorFees[] memory legacyFees) external timeLimited {
         for (uint i; i < legacyFees.length; ) {
-            operatorFees[legacyFees[i].identityId] = legacyFees[i].fees;
+            require(operatorFees[legacyFees[i].identityId].length == 0);
 
+            operatorFees[legacyFees[i].identityId] = legacyFees[i].fees;
             unchecked {
                 i++;
             }

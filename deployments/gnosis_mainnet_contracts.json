@@ -210,12 +210,12 @@
       "deployed": true
     },
     "Profile": {
-      "evmAddress": "0x5deb369B8C0930853cD192d85f1389151e009CF4",
-      "version": "1.1.1",
-      "gitBranch": "main",
-      "gitCommitHash": "26881f1a79eaf41f13d1c48a2c5952d0a1d14274",
-      "deploymentBlock": 32446897,
-      "deploymentTimestamp": 1707908838740,
+      "evmAddress": "0x5a1114614b7790849B38198A289FA8d41C42cc24",
+      "version": "1.1.2",
+      "gitBranch": "operatorFee-fixes",
+      "gitCommitHash": "63e8ce3dfa370844af8318182890ba23976f7daf",
+      "deploymentBlock": 34057405,
+      "deploymentTimestamp": 1716290847473,
       "deployed": true
     },
     "CommitManagerV1": {
@@ -273,12 +273,12 @@
       "deployed": true
     },
     "NodeOperatorFeesStorage": {
-      "evmAddress": "0x5adAC1b63407C490aC0Fb80E85CE7014101c8610",
-      "version": "2.0.0",
-      "gitBranch": "mainnet-deployment/4.2.7",
-      "gitCommitHash": "8839a0e5c92a413b06d20fa15335950bb625f890",
-      "deploymentBlock": 33619390,
-      "deploymentTimestamp": 1714031946358,
+      "evmAddress": "0x2F2031A35dE9297f2372569551F8682E818C4943",
+      "version": "2.0.2",
+      "gitBranch": "operatorFee-fixes-2",
+      "gitCommitHash": "38d7bc4595f2ff59bf0d3d11efd291241ecc992f",
+      "deploymentBlock": 34206991,
+      "deploymentTimestamp": 1717062353134,
       "deployed": true
     }
   }
