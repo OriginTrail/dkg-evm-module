@@ -4,6 +4,7 @@ pragma solidity ^0.8.16;
 
 import {ParanetKnowledgeMinersRegistry} from "../storage/paranets/ParanetKnowledgeMinersRegistry.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
+import {HubV2} from "../Hub.sol";
 import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
 import {ParanetStructs} from "../structs/paranets/ParanetStructs.sol";
 
@@ -12,55 +13,63 @@ contract ParanetIncentivesPool {
     event KnowledgeMinerRewardClaimed(address indexed miner, uint256 amount);
     event ParanetOperatorRewardClaimed(address indexed operator, uint256 amount);
 
+    uint64 constant RATIO_SCALING_FACTOR = 10 ** 18;
+    uint16 constant PERCENTAGE_SCALING_FACTOR = 10 ** 4;
+    uint16 constant VOTERS_WEIGHTS_SCALING_FACTOR = 10 ** 4;
+
+    HubV2 public hub;
     ParanetsRegistry public paranetsRegistry;
     ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
 
     bytes32 public parentParanetId;
+    uint256 public tracToNeuroEmissionMultiplier;
+    uint16 public paranetOperatorRewardPercentage;
+    uint16 public paranetIncentivizationProposalVotersRewardPercentage;
 
-    uint64 constant RATIO_SCALING_FACTOR = 10 ** 18;
-    uint16 constant PERCENTAGE_SCALING_FACTOR = 10 ** 4;
+    uint256 public totalNeuroReceived;
 
-    uint256 public tracToNeuroMinerEmissionMultiplier;
-    uint256 public tracToNeuroOperatorEmissionMultiplier;
-    uint256 public tracToNeuroVoterEmissionMultiplier;
+    uint256 public claimedMinersNeuro;
+    uint256 public claimedOperatorNeuro;
 
-    uint256 public operatorClaimedNeuro;
-    mapping(address => uint256) public votersClaimedNeuro;
+    mapping(address => ParanetStructs.ParanetIncentivizationProposalVoter) public voters;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(
+        address hubAddress,
         address paranetsRegistryAddress,
         address knowledgeMinersRegistryAddress,
         bytes32 paranetId,
-        uint256 tracToNeuroRatio_,
-        uint96 tracTarget_,
-        uint16 operatorRewardPercentage_,
-        ParanetStructs.ParanetIncentivizationProposalVoterInput[] voters
+        uint256 tracToNeuroEmissionMultiplier_,
+        uint16 paranetOperatorRewardPercentage_,
+        uint16 paranetIncentivizationProposalVotersRewardPercentage_
     ) {
+        require(
+            paranetOperatorRewardPercentage_ + paranetIncentivizationProposalVotersRewardPercentage_ <
+                PERCENTAGE_SCALING_FACTOR
+        );
+
+        hub = HubV2(hubAddress);
         paranetsRegistry = ParanetsRegistry(paranetsRegistryAddress);
         paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(knowledgeMinersRegistryAddress);
 
         parentParanetId = paranetId;
-        tracToNeuroRatio = tracToNeuroRatio_;
-        tracTarget = tracTarget_;
-        operatorRewardPercentage = operatorRewardPercentage_;
+        tracToNeuroEmissionMultiplier = tracToNeuroEmissionMultiplier_;
+        paranetOperatorRewardPercentage = paranetOperatorRewardPercentage_;
+        paranetIncentivizationProposalVotersRewardPercentage = paranetIncentivizationProposalVotersRewardPercentage_;
     }
 
-    // 1000 NEURO
-    // 1:1 ratio
-    // Miner submits 500 TRAC -- gets 50% of rewards
-    // Somebody sends 1000 more NEURO to the contract
-    // Total NEURO changes to 2000
-    // And it changes all the percentages
-    //
-    // MinersSpentTrac - 500 TRAC, 500 NEURO
-    // Operator (assuming 10% operator fee) can claim 50 NEURO
-    //
-    // Voters (5%)
-    // Same logic as for Operators
+    modifier onlyHubOwner() {
+        _checkHubOwner();
+        _;
+    }
 
     modifier onlyParanetOperator() {
         _checkParanetOperator();
+        _;
+    }
+
+    modifier onlyParanetIncentivizationProposalVoter() {
+        _checkParanetIncentivizationProposalVoter();
         _;
     }
 
@@ -79,55 +88,114 @@ contract ParanetIncentivesPool {
         return address(this).balance;
     }
 
-    function claimParanetOperatorReward() external onlyParanetOperator {
-        uint256 operatorReward = ((totalNeuroReceived * tracRewarded) / tracTarget) -
-            (minersClaimedNeuro + operatorClaimedNeuro);
+    function addVoters(
+        ParanetStructs.ParanetIncentivizationProposalVoterInput[] calldata voters_
+    ) external onlyHubOwner {
+        uint16 cumulativeWeight;
 
-        if (operatorReward == 0) {
-            revert ParanetErrors.NoOperatorRewardAvailable(parentParanetId);
+        for (uint i; i < voters_.length; ) {
+            voters[voters_[i].addr] = ParanetStructs.ParanetIncentivizationProposalVoter({
+                addr: voters_[i].addr,
+                weight: voters_[i].weight,
+                claimedNeuro: 0
+            });
+
+            cumulativeWeight += uint16(voters_[i].weight);
+
+            unchecked {
+                i++;
+            }
         }
 
-        operatorClaimedNeuro += operatorReward;
-
-        payable(msg.sender).transfer(operatorReward);
-
-        emit ParanetOperatorRewardClaimed(msg.sender, operatorReward);
+        require(cumulativeWeight == VOTERS_WEIGHTS_SCALING_FACTOR, "Invalid cumulative weight");
     }
 
-    function claimIncentivizationVoterReward() {}
-
     function claimKnowledgeMinerReward() external onlyParanetKnowledgeMiner {
-        if (tracRewarded == tracTarget) {
-            revert ParanetErrors.TracTargetAchieved(parentParanetId, tracTarget);
-        }
-
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
 
-        uint96 tracSpent = pkmr.getUnrewardedTracSpent(msg.sender, parentParanetId);
-        uint96 tracToBeRewarded = tracRewarded + tracSpent > tracTarget ? tracTarget - tracRewarded : tracSpent;
+        uint256 neuroReward = (((pkmr.getUnrewardedTracSpent(msg.sender, parentParanetId) *
+            tracToNeuroEmissionMultiplier) / RATIO_SCALING_FACTOR) *
+            (PERCENTAGE_SCALING_FACTOR -
+                paranetOperatorRewardPercentage -
+                paranetIncentivizationProposalVotersRewardPercentage)) / PERCENTAGE_SCALING_FACTOR;
+        uint256 totalMinersReward = (totalNeuroReceived *
+            (PERCENTAGE_SCALING_FACTOR -
+                paranetOperatorRewardPercentage -
+                paranetIncentivizationProposalVotersRewardPercentage)) / PERCENTAGE_SCALING_FACTOR;
+        uint256 claimableNeuroReward = claimedMinersNeuro + neuroReward <= totalMinersReward
+            ? neuroReward
+            : totalMinersReward - claimedMinersNeuro;
 
-        uint256 neuroReward = ((totalNeuroReceived *
-            (tracRewarded + tracToBeRewarded) *
-            (PERCENTAGE_SCALING_FACTOR - operatorRewardPercentage)) /
-            tracTarget /
-            PERCENTAGE_SCALING_FACTOR) - minersClaimedNeuro;
-
-        if (neuroReward == 0) {
+        if (claimableNeuroReward == 0) {
             revert ParanetErrors.NoKnowledgeMinerRewardAvailable(parentParanetId, msg.sender);
         }
 
-        tracRewarded += tracToBeRewarded;
-        minersClaimedNeuro += neuroReward;
-        pkmr.setUnrewardedTracSpent(msg.sender, parentParanetId, 0);
-        pkmr.addCumulativeAwardedNeuro(msg.sender, parentParanetId, neuroReward);
+        pkmr.setUnrewardedTracSpent(
+            msg.sender,
+            parentParanetId,
+            uint96(
+                ((((neuroReward - claimableNeuroReward) * RATIO_SCALING_FACTOR) / tracToNeuroEmissionMultiplier) *
+                    PERCENTAGE_SCALING_FACTOR) /
+                    (PERCENTAGE_SCALING_FACTOR -
+                        paranetOperatorRewardPercentage -
+                        paranetIncentivizationProposalVotersRewardPercentage)
+            )
+        );
+        pkmr.addCumulativeAwardedNeuro(msg.sender, parentParanetId, claimableNeuroReward);
 
-        payable(msg.sender).transfer(neuroReward);
+        claimedMinersNeuro += claimableNeuroReward;
 
-        emit KnowledgeMinerRewardClaimed(msg.sender, neuroReward);
+        payable(msg.sender).transfer(claimableNeuroReward);
+
+        emit KnowledgeMinerRewardClaimed(msg.sender, claimableNeuroReward);
+    }
+
+    function claimParanetOperatorReward() external onlyParanetOperator {
+        uint256 claimableNeuroReward = (((paranetsRegistry.getCumulativeKnowledgeValue(parentParanetId) *
+            tracToNeuroEmissionMultiplier) / RATIO_SCALING_FACTOR) * paranetOperatorRewardPercentage) /
+            PERCENTAGE_SCALING_FACTOR -
+            claimedOperatorNeuro;
+
+        if (claimableNeuroReward == 0) {
+            revert ParanetErrors.NoOperatorRewardAvailable(parentParanetId);
+        }
+
+        claimedOperatorNeuro += claimableNeuroReward;
+
+        payable(msg.sender).transfer(claimableNeuroReward);
+
+        emit ParanetOperatorRewardClaimed(msg.sender, claimableNeuroReward);
+    }
+
+    function claimIncentivizationProposalVoterReward() external onlyParanetIncentivizationProposalVoter {
+        uint256 claimableNeuroReward = (((((paranetsRegistry.getCumulativeKnowledgeValue(parentParanetId) *
+            tracToNeuroEmissionMultiplier) / RATIO_SCALING_FACTOR) *
+            paranetIncentivizationProposalVotersRewardPercentage) / PERCENTAGE_SCALING_FACTOR) *
+            voters[msg.sender].weight) /
+            VOTERS_WEIGHTS_SCALING_FACTOR -
+            voters[msg.sender].claimedNeuro;
+
+        if (claimableNeuroReward == 0) {
+            revert ParanetErrors.NoVotersRewardAvailable(parentParanetId);
+        }
+
+        voters[msg.sender].claimedNeuro += claimableNeuroReward;
+
+        payable(msg.sender).transfer(claimableNeuroReward);
+
+        emit ParanetOperatorRewardClaimed(msg.sender, claimableNeuroReward);
+    }
+
+    function _checkHubOwner() internal view virtual {
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
     }
 
     function _checkParanetOperator() internal view virtual {
         require(paranetsRegistry.getOperatorAddress(parentParanetId) == msg.sender, "Fn can only be used by operator");
+    }
+
+    function _checkParanetIncentivizationProposalVoter() internal view virtual {
+        require(voters[msg.sender].addr == msg.sender, "Fn can only be used by voter");
     }
 
     function _checkParanetKnowledgeMiner() internal view virtual {

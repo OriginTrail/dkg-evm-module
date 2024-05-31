@@ -9,7 +9,7 @@ library ParanetStructs {
     }
 
     struct Paranet {
-        address paranetKAStorageContract; // make sure this is compatible with ERC1155
+        address paranetKAStorageContract;
         uint256 paranetKATokenId;
         address operator;
         string name;
@@ -40,10 +40,19 @@ library ParanetStructs {
         address paranetServiceKAStorageContract;
         uint256 paranetServiceKATokenId;
         address operator;
-        address[] paranetServiceAddresses;
-        mapping(address => bool) paranetServiceAddressRegistered;
         string name;
         string description;
+        address[] paranetServiceAddresses;
+        mapping(address => bool) paranetServiceAddressRegistered;
+    }
+
+    struct ParanetServiceMetadata {
+        address paranetServiceKAStorageContract;
+        uint256 paranetServiceKATokenId;
+        address operator;
+        string name;
+        string description;
+        address[] paranetServiceAddresses;
     }
 
     struct KnowledgeMiner {

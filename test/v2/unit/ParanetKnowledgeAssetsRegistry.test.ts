@@ -1,7 +1,7 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import { HubController, ParanetKnowledgeAssetsRegistry } from '../../../typechain';
 import {} from '../../helpers/constants';
@@ -78,11 +78,12 @@ describe('@v2 @unit ParanetKnowledgeAssetsRegistry contract', function () {
       ),
     );
 
-    await ParanetKnowledgeAssetsRegistry.removeKnowledgeAsset(assetLocation);
+    const tx = await ParanetKnowledgeAssetsRegistry.removeKnowledgeAsset(assetLocation);
+    await tx.wait();
 
-    const knwoledgeAssetExist = await ParanetKnowledgeAssetsRegistry.isParanetKnowledgeAsset(assetLocation);
+    const knowledgeAssetExists = await ParanetKnowledgeAssetsRegistry.isParanetKnowledgeAsset(assetLocation);
 
-    expect(knwoledgeAssetExist).to.equal(false);
+    expect(knowledgeAssetExists).to.be.false;
   });
 
   it('should get knowledge asset object', async () => {
@@ -136,7 +137,9 @@ describe('@v2 @unit ParanetKnowledgeAssetsRegistry contract', function () {
       ),
     );
 
-    await ParanetKnowledgeAssetsRegistry.setMinerAddress(assetLocation, accounts[5].address);
+    const tx = await ParanetKnowledgeAssetsRegistry.setMinerAddress(assetLocation, accounts[5].address);
+    await tx.wait();
+
     const minerAddress = await ParanetKnowledgeAssetsRegistry.getMinerAddress(assetLocation);
 
     expect(minerAddress).to.equal(accounts[5].address);

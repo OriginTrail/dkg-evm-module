@@ -1,7 +1,7 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import {
   HubController,
@@ -159,9 +159,9 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     );
 
     expect(await incentivesPool.callStatic.parentParanetId()).to.be.equal(paranetId);
-    expect(await incentivesPool.callStatic.tracToNeuroRatio()).to.be.equal(5);
-    expect(await incentivesPool.callStatic.tracTarget()).to.be.equal(10_000);
-    expect(await incentivesPool.callStatic.operatorRewardPercentage()).to.be.equal(5);
+    expect(await incentivesPool.callStatic.tracToNeuroEmissionMultiplier()).to.be.equal(5);
+    expect(await incentivesPool.callStatic.paranetOperatorRewardPercentage()).to.be.equal(1_000);
+    expect(await incentivesPool.callStatic.paranetIncentivizationProposalVotersRewardPercentage()).to.be.equal(500);
   });
 
   it('should update paranet name with opertor wallet', async () => {
@@ -287,15 +287,15 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
     const paranetServiceId = getId(accounts[50].address, 50);
-    const paranetServiceObject = await ParanetServicesRegistry.getParanetServiceObject(paranetServiceId);
+    const paranetServiceObject = await ParanetServicesRegistry.getParanetServiceMetadata(paranetServiceId);
 
     expect(paranetServiceObject.paranetServiceKAStorageContract).to.equal(accounts[50].address);
     expect(paranetServiceObject.paranetServiceKATokenId).to.equal(getHashFromNumber(50));
     expect(paranetServiceObject.operator).to.equal(accounts[5].address);
-    expect(paranetServiceObject.worker).to.equal(accounts[51].address);
+    expect(paranetServiceObject.paranetServiceAddresses).to.deep.equal([accounts[51].address]);
     expect(paranetServiceObject.name).to.equal('Test Paranet Servic Name');
     expect(paranetServiceObject.description).to.equal('Test Paranet Servic Description');
   });
@@ -307,7 +307,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
         getHashFromNumber(50),
         'Test Paranet Servic Name',
         'Test Paranet Servic Description',
-        accounts[51].address,
+        [accounts[51].address],
       ),
     ).to.emit(Paranet, 'ParanetServiceRegistered');
   });
@@ -318,7 +318,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
 
     Paranet.connect(accounts[5]).transferParanetServiceOwnership(
@@ -339,7 +339,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
     await expect(
       Paranet.connect(accounts[5]).transferParanetServiceOwnership(
@@ -356,7 +356,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
 
     await expect(
@@ -374,7 +374,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
     await Paranet.connect(accounts[5]).updateParanetServiceName(
       accounts[50].address,
@@ -392,7 +392,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
 
     expect(
@@ -410,7 +410,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
     expect(
       await Paranet.connect(accounts[5]).updateParanetServiceName(
@@ -427,7 +427,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
     await Paranet.connect(accounts[5]).updateParanetServiceDescription(
       accounts[50].address,
@@ -446,7 +446,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
 
     expect(
@@ -464,7 +464,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
     expect(
       await Paranet.connect(accounts[5]).updateParanetServiceDescription(
@@ -481,16 +481,14 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
-    await Paranet.connect(accounts[5]).updateParanetServiceWorker(
-      accounts[50].address,
-      getHashFromNumber(50),
+    await Paranet.connect(accounts[5]).updateParanetServiceAddresses(accounts[50].address, getHashFromNumber(50), [
       accounts[49].address,
-    );
+    ]);
     const paranetServiceId = getId(accounts[50].address, 50);
-    const newParanetServiceWorker = await ParanetServicesRegistry.getWorkerAddress(paranetServiceId);
-    expect(newParanetServiceWorker).to.equal(accounts[49].address);
+    const newParanetServiceAddresses = await ParanetServicesRegistry.getParanetServiceAddresses(paranetServiceId);
+    expect(newParanetServiceAddresses).to.deep.equal([accounts[49].address]);
   });
 
   it('should update paranet service worker emit event', async () => {
@@ -499,15 +497,13 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
 
     expect(
-      await Paranet.connect(accounts[5]).updateParanetServiceWorker(
-        accounts[50].address,
-        getHashFromNumber(50),
+      await Paranet.connect(accounts[5]).updateParanetServiceAddresses(accounts[50].address, getHashFromNumber(50), [
         accounts[49].address,
-      ),
+      ]),
     ).to.revertedWith('Fn can only be used by operator');
   });
 
@@ -518,7 +514,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
     const paranetServiceId = getId(accounts[50].address, 50);
 
@@ -546,7 +542,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
 
     await expect(
@@ -565,10 +561,10 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
 
-    Paranet.connect(accounts[103]).addParanetService(
+    await Paranet.connect(accounts[103]).addParanetService(
       accounts[3].address,
       getHashFromNumber(3),
       accounts[50].address,
@@ -602,7 +598,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name',
       'Test Paranet Servic Description',
-      accounts[51].address,
+      [accounts[51].address],
     );
     await expect(
       Paranet.connect(accounts[103]).addParanetService(
@@ -621,14 +617,14 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name 0',
       'Test Paranet Servic Description 0',
-      accounts[51].address,
+      [accounts[51].address],
     );
     await Paranet.connect(accounts[6]).registerParanetService(
       accounts[50].address,
       getHashFromNumber(56),
       'Test Paranet Servic Name 1',
       'Test Paranet Servic Description 1',
-      accounts[51].address,
+      [accounts[51].address],
     );
     const paranetServiceId0 = getId(accounts[50].address, 50);
     const paranetServiceId1 = getId(accounts[50].address, 56);
@@ -670,14 +666,14 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name 0',
       'Test Paranet Servic Description 0',
-      accounts[51].address,
+      [accounts[51].address],
     );
     await Paranet.connect(accounts[6]).registerParanetService(
       accounts[50].address,
       getHashFromNumber(56),
       'Test Paranet Servic Name 1',
       'Test Paranet Servic Description 1',
-      accounts[51].address,
+      [accounts[51].address],
     );
 
     const servicesToBeAdded = [
@@ -707,14 +703,14 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name 0',
       'Test Paranet Servic Description 0',
-      accounts[51].address,
+      [accounts[51].address],
     );
     await Paranet.connect(accounts[6]).registerParanetService(
       accounts[50].address,
       getHashFromNumber(56),
       'Test Paranet Servic Name 1',
       'Test Paranet Servic Description 1',
-      accounts[51].address,
+      [accounts[51].address],
     );
 
     const servicesToBeAdded = [
@@ -748,7 +744,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name 0',
       'Test Paranet Servic Description 0',
-      accounts[51].address,
+      [accounts[51].address],
     );
 
     const servicesToBeAdded = [
@@ -777,14 +773,14 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       getHashFromNumber(50),
       'Test Paranet Servic Name 0',
       'Test Paranet Servic Description 0',
-      accounts[51].address,
+      [accounts[51].address],
     );
     await Paranet.connect(accounts[6]).registerParanetService(
       accounts[50].address,
       getHashFromNumber(56),
       'Test Paranet Servic Name 1',
       'Test Paranet Servic Description 1',
-      accounts[51].address,
+      [accounts[51].address],
     );
 
     const servicesToBeAdded = [
@@ -999,9 +995,9 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     const paranetName = 'Test paranet 1';
     const paranetDescription = 'Description of Test Paranet';
     // Make test that test different values for this
-    const tracToNeuroRatio = 5;
-    const tracTarget = 10_000;
-    const operatorRewardPercentage = 5;
+    const tracToNeuroEmissionMultiplier = 5;
+    const paranetOperatorRewardPercentage = 1_000; // 10%
+    const paranetIncentivizationProposalVotersRewardPercentage = 500; // 5%
 
     const accSignerParanet = Paranet.connect(accounts[100 + number]);
 
@@ -1010,9 +1006,9 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       paranetKATokenId,
       paranetName,
       paranetDescription,
-      tracToNeuroRatio,
-      tracTarget,
-      operatorRewardPercentage,
+      tracToNeuroEmissionMultiplier,
+      paranetOperatorRewardPercentage,
+      paranetIncentivizationProposalVotersRewardPercentage,
     );
 
     return hre.ethers.utils.keccak256(

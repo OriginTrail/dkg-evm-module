@@ -30,9 +30,9 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         string paranetName,
         string paranetDescription,
         address incentivesPoolAddress,
-        uint256 paranetTracToNeuroRewardRatio,
-        uint96 paranetBootstrapTracTarget,
-        uint16 paranetOperatorRewardPercentage
+        uint256 paranetTracToNeuroEmissionMultiplier,
+        uint16 paranetOperatorRewardPercentage,
+        uint16 paranetIncentivizationProposalVotersRewardPercentage
     );
     event ParanetNameUpdated(
         address indexed paranetKAStorageContract,
@@ -60,7 +60,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 indexed paranetServiceKATokenId,
         string paranetServiceName,
         string paranetServiceDescription,
-        address worker
+        address[] paranetServiceAddresses
     );
     event ParanetServiceNameUpdated(
         address indexed paranetServiceKAStorageContract,
@@ -72,10 +72,10 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 indexed paranetServiceKATokenId,
         string newParanetServiceDescription
     );
-    event ParanetServiceWorkerUpdated(
+    event ParanetServiceAddressesUpdated(
         address indexed paranetServiceKAStorageContract,
         uint256 indexed paranetServiceKATokenId,
-        address newParanetServiceWorker
+        address[] newParanetServiceAddresses
     );
     event ParanetServiceOwnershipTransferred(
         address indexed paranetServiceKAStorageContract,
@@ -146,9 +146,9 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 paranetKATokenId,
         string calldata paranetName,
         string calldata paranetDescription,
-        uint256 tracToNeuroRatio,
-        uint96 tracTarget,
-        uint16 operatorRewardPercentage
+        uint256 tracToNeuroEmissionMultiplier,
+        uint16 paranetOperatorRewardPercentage,
+        uint16 paranetIncentivizationProposalVotersRewardPercentage
     ) external returns (bytes32) {
         HubV2 h = hub;
         ParanetsRegistry pr = paranetsRegistry;
@@ -158,12 +158,13 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         }
 
         ParanetIncentivesPool incentivesPool = new ParanetIncentivesPool(
+            address(h),
             h.getContractAddress("ParanetsRegistry"),
             h.getContractAddress("ParanetKnowledgeMinersRegistry"),
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            tracToNeuroRatio,
-            tracTarget,
-            operatorRewardPercentage
+            tracToNeuroEmissionMultiplier,
+            paranetOperatorRewardPercentage,
+            paranetIncentivizationProposalVotersRewardPercentage
         );
 
         emit ParanetRegistered(
@@ -172,9 +173,9 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             paranetName,
             paranetDescription,
             address(incentivesPool),
-            tracToNeuroRatio,
-            tracTarget,
-            operatorRewardPercentage
+            tracToNeuroEmissionMultiplier,
+            paranetOperatorRewardPercentage,
+            paranetIncentivizationProposalVotersRewardPercentage
         );
 
         return
@@ -324,7 +325,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 paranetServiceKATokenId,
         string calldata paranetServiceName,
         string calldata paranetServiceDescription,
-        address worker
+        address[] calldata paranetServiceAddresses
     ) external returns (bytes32) {
         ParanetServicesRegistry psr = paranetServicesRegistry;
 
@@ -344,7 +345,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             paranetServiceKATokenId,
             paranetServiceName,
             paranetServiceDescription,
-            worker
+            paranetServiceAddresses
         );
 
         return
@@ -354,7 +355,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                 paranetServiceName,
                 paranetServiceDescription,
                 msg.sender,
-                worker
+                paranetServiceAddresses
             );
     }
 
@@ -376,22 +377,26 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         emit ParanetServiceOwnershipTransferred(paranetServiceKAStorageContract, paranetServiceKATokenId, operator);
     }
 
-    function updateParanetServiceWorker(
+    function updateParanetServiceAddresses(
         address paranetServiceKAStorageContract,
         uint256 paranetServiceKATokenId,
-        address worker
+        address[] calldata paranetServiceAddresses
     )
         external
         onlyParanetServiceOperator(
             keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
         )
     {
-        paranetServicesRegistry.setWorkerAddress(
+        paranetServicesRegistry.setParanetServiceAddresses(
             keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId)),
-            worker
+            paranetServiceAddresses
         );
 
-        emit ParanetServiceWorkerUpdated(paranetServiceKAStorageContract, paranetServiceKATokenId, worker);
+        emit ParanetServiceAddressesUpdated(
+            paranetServiceKAStorageContract,
+            paranetServiceKATokenId,
+            paranetServiceAddresses
+        );
     }
 
     function updateParanetServiceName(
@@ -454,7 +459,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         // Check if Knowledge Miner has profile
         // If not: Create a profile
         if (!pkmr.knowledgeMinerExists(msg.sender)) {
-            pkmr.registerKnowledgeMiner(msg.sender, bytes(""));
+            pkmr.registerKnowledgeMiner(msg.sender);
         }
 
         // Check if Knowledge Miner is registert to paranet
@@ -476,8 +481,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             address(contentAssetStorage),
             knowledgeAssetTokenId,
-            msg.sender,
-            bytes("")
+            msg.sender
         );
 
         // Add Knowledge Asset Metadata to the ParanetsRegistry
@@ -571,7 +575,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         // Check if Knowledge Miner has profile
         // If not: Create a profile
         if (!pkmr.knowledgeMinerExists(msg.sender)) {
-            pkmr.registerKnowledgeMiner(msg.sender, bytes(""));
+            pkmr.registerKnowledgeMiner(msg.sender);
         }
 
         // Check if Knowledge Miner is registert to paranet
@@ -590,8 +594,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             knowledgeAssetStorageContract,
             knowledgeAssetTokenId,
-            msg.sender,
-            bytes("")
+            msg.sender
         );
 
         // Add Knowledge Asset Metadata to the ParanetsRegistry

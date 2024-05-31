@@ -1,7 +1,7 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import { HubController, ParanetsRegistry } from '../../../typechain';
 import {} from '../../helpers/constants';
@@ -104,10 +104,6 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     const operatorAddress = await ParanetsRegistry.getOperatorAddress(paranetId);
 
     expect(operatorAddress).to.be.equal(accounts[3].address);
-
-    const knowledgeAssetsInclusionPolicy = await ParanetsRegistry.getKnowledgeAssetsInclusionPolicy(paranetId);
-
-    expect(knowledgeAssetsInclusionPolicy).to.be.equal(0);
 
     const name = await ParanetsRegistry.getName(paranetId);
 
@@ -256,9 +252,15 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
 
     expect(minerCount).to.be.equal(0);
 
-    ParanetsRegistry.addKnowledgeMiner(paranetId, accounts[10].address);
-    ParanetsRegistry.addKnowledgeMiner(paranetId, accounts[11].address);
-    ParanetsRegistry.addKnowledgeMiner(paranetId, accounts[12].address);
+    const tx1 = await ParanetsRegistry.addKnowledgeMiner(paranetId, accounts[10].address);
+    await tx1.wait();
+
+    const tx2 = await ParanetsRegistry.addKnowledgeMiner(paranetId, accounts[11].address);
+    await tx2.wait();
+
+    const tx3 = await ParanetsRegistry.addKnowledgeMiner(paranetId, accounts[12].address);
+    await tx3.wait();
+
     minerCount = await ParanetsRegistry.getKnowledgeMinersCount(paranetId);
 
     expect(minerCount).to.be.equal(3);
@@ -279,10 +281,7 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
 
     let knowledgeMiners = await ParanetsRegistry.getKnowledgeMiners(paranetId);
 
-    expect(knowledgeMiners.length).to.be.equal(3);
-    expect(knowledgeMiners[0]).to.be.equal(accounts[10].address);
-    expect(knowledgeMiners[1]).to.be.equal(accounts[11].address);
-    expect(knowledgeMiners[2]).to.be.equal(accounts[12].address);
+    expect(knowledgeMiners).to.be.deep.equal(accounts.slice(10, 13).map((x) => x.address));
 
     await ParanetsRegistry.removeKnowledgeMiner(paranetId, accounts[11].address);
     minerCount = await ParanetsRegistry.getKnowledgeMinersCount(paranetId);

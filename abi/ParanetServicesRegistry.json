@@ -50,25 +50,6 @@
         "type": "bytes32"
       }
     ],
-    "name": "getMetadata",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetServiceId",
-        "type": "bytes32"
-      }
-    ],
     "name": "getName",
     "outputs": [
       {
@@ -107,7 +88,26 @@
         "type": "bytes32"
       }
     ],
-    "name": "getParanetServiceObject",
+    "name": "getParanetServiceAddresses",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetServiceId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getParanetServiceMetadata",
     "outputs": [
       {
         "components": [
@@ -127,11 +127,6 @@
             "type": "address"
           },
           {
-            "internalType": "address",
-            "name": "worker",
-            "type": "address"
-          },
-          {
             "internalType": "string",
             "name": "name",
             "type": "string"
@@ -142,33 +137,14 @@
             "type": "string"
           },
           {
-            "internalType": "bytes",
-            "name": "metadata",
-            "type": "bytes"
+            "internalType": "address[]",
+            "name": "paranetServiceAddresses",
+            "type": "address[]"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetService",
+        "internalType": "struct ParanetStructs.ParanetServiceMetadata",
         "name": "",
         "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetServiceId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getWorkerAddress",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -182,6 +158,30 @@
         "internalType": "contract HubV2",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetServiceId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "paranetServiceAddress",
+        "type": "address"
+      }
+    ],
+    "name": "isParanetServiceAddressRegistered",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -247,14 +247,9 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "worker",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "metadata",
-        "type": "bytes"
+        "internalType": "address[]",
+        "name": "paranetServiceAddresses",
+        "type": "address[]"
       }
     ],
     "name": "registerParanetService",
@@ -294,12 +289,17 @@
         "type": "bytes32"
       },
       {
-        "internalType": "bytes",
-        "name": "metadata",
-        "type": "bytes"
+        "internalType": "address",
+        "name": "paranetServiceAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "isRegistered",
+        "type": "bool"
       }
     ],
-    "name": "setMetadata",
+    "name": "setIsParanetServiceAddressRegistered",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -348,12 +348,12 @@
         "type": "bytes32"
       },
       {
-        "internalType": "address",
-        "name": "worker",
-        "type": "address"
+        "internalType": "address[]",
+        "name": "paranetServiceAddresses",
+        "type": "address[]"
       }
     ],
-    "name": "setWorkerAddress",
+    "name": "setParanetServiceAddresses",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -102,18 +102,18 @@ describe('@v2 @integration Paranet', function () {
     paranetKATokenId: BigNumberish,
     paranetName: string,
     paranetDescription: string,
-    tracToNeuroRatio: BigNumberish,
-    tracTarget: BigNumberish,
-    operatorRewardPercentage: BigNumberish,
+    tracToNeuroEmissionMultiplier: BigNumberish,
+    paranetOperatorRewardPercentage: BigNumberish,
+    paranetIncentivizationProposalVotersRewardPercentage: BigNumberish,
   ): Promise<{ paranetId: BytesLike; paranetIncentivesPoolAddress: Address }> {
     const tx = await Paranet.connect(operator).registerParanet(
       ContentAssetStorage.address,
       paranetKATokenId,
       paranetName,
       paranetDescription,
-      tracToNeuroRatio,
-      tracTarget,
-      operatorRewardPercentage,
+      tracToNeuroEmissionMultiplier,
+      paranetOperatorRewardPercentage,
+      paranetIncentivizationProposalVotersRewardPercentage,
     );
 
     await tx.wait();
@@ -164,13 +164,13 @@ describe('@v2 @integration Paranet', function () {
       'Paranet1',
       'Test Paranet',
       hre.ethers.utils.parseEther('1'), // tracToNeuroRatio -- 1:1
-      hre.ethers.utils.parseEther('1000'), // tracTarget
-      1000, // operatorRewardPercentage -- 10%
+      1000, // paranetOperatorRewardPercentage -- 10%
+      500, // paranetIncentivizationProposalVotersRewardPercentage -- 5%
     );
 
     const ParanetIncentivesPool = await hre.ethers.getContractAt('ParanetIncentivesPool', paranetIncentivesPoolAddress);
 
-    const initialBalance = await ParanetIncentivesPool.getBalance();
+    const initialBalance = await ParanetIncentivesPool.getNeuroBalance();
 
     expect(initialBalance).to.be.equal(0);
 
@@ -181,7 +181,7 @@ describe('@v2 @integration Paranet', function () {
     });
     await tx.wait();
 
-    const finalBalance = await ParanetIncentivesPool.getBalance();
+    const finalBalance = await ParanetIncentivesPool.getNeuroBalance();
     const totalNeuroReceived = await ParanetIncentivesPool.totalNeuroReceived();
 
     expect(finalBalance).to.be.equal(totalNeuroReceived).to.be.equal(value);
@@ -205,8 +205,8 @@ describe('@v2 @integration Paranet', function () {
       'Paranet1',
       'Test Paranet',
       hre.ethers.utils.parseEther('1'), // tracToNeuroRatio - 1:1
-      hre.ethers.utils.parseEther('1000'), // tracTarget
       1000, // operatorRewardPercentage -- 10%
+      500, // paranetIncentivizationProposalVotersRewardPercentage -- 5%
     );
 
     const ParanetIncentivesPool = await hre.ethers.getContractAt('ParanetIncentivesPool', paranetIncentivesPoolAddress);
@@ -218,7 +218,7 @@ describe('@v2 @integration Paranet', function () {
     });
     await tx.wait();
 
-    await expect(ParanetIncentivesPool.connect(operator).getParanetOperatorReward()).to.be.revertedWithCustomError(
+    await expect(ParanetIncentivesPool.connect(operator).claimParanetOperatorReward()).to.be.revertedWithCustomError(
       ParanetIncentivesPool,
       'NoOperatorRewardAvailable',
     );
@@ -242,8 +242,8 @@ describe('@v2 @integration Paranet', function () {
       'Paranet1',
       'Test Paranet',
       hre.ethers.utils.parseEther('1'), // tracToNeuroRatio -- 1:1
-      hre.ethers.utils.parseEther('5000'), // tracTarget
       1000, // operatorRewardPercentage -- 10%
+      500, // paranetIncentivizationProposalVotersRewardPercentage -- 5%
     );
 
     const ParanetIncentivesPool = await hre.ethers.getContractAt('ParanetIncentivesPool', paranetIncentivesPoolAddress);
@@ -270,12 +270,12 @@ describe('@v2 @integration Paranet', function () {
     await Paranet.connect(miner).mintKnowledgeAsset(ContentAssetStorage.address, paranetTokenId, testKAStruct);
 
     const initialMinerBalance = await miner.getBalance();
-    const tx2 = await ParanetIncentivesPool.connect(miner).getKnowledgeMinerReward();
+    const tx2 = await ParanetIncentivesPool.connect(miner).claimKnowledgeMinerReward();
     const tx2Receipt = await tx2.wait();
     const tx2Details = await hre.ethers.provider.getTransaction(tx2Receipt.transactionHash);
     const finalMinerBalance = await miner.getBalance();
 
-    const expectedMinerReward = value.div(2).mul(90).div(100);
+    const expectedMinerReward = value.div(2).mul(85).div(100);
     expect(finalMinerBalance.sub(initialMinerBalance).add(tx2Receipt.gasUsed.mul(tx2Details.gasPrice))).to.equal(
       expectedMinerReward,
     );
@@ -299,8 +299,8 @@ describe('@v2 @integration Paranet', function () {
       'Paranet1',
       'Test Paranet',
       hre.ethers.utils.parseEther('1'), // tracToNeuroRatio -- 1:1
-      hre.ethers.utils.parseEther('5000'), // tracTarget
       1000, // operatorRewardPercentage -- 10%
+      500, // paranetIncentivizationProposalVotersRewardPercentage -- 5%
     );
 
     const ParanetIncentivesPool = await hre.ethers.getContractAt('ParanetIncentivesPool', paranetIncentivesPoolAddress);
@@ -327,23 +327,23 @@ describe('@v2 @integration Paranet', function () {
     await Paranet.connect(miner).mintKnowledgeAsset(ContentAssetStorage.address, paranetTokenId, testKAStruct);
 
     const initialMinerBalance = await miner.getBalance();
-    const tx2 = await ParanetIncentivesPool.connect(miner).getKnowledgeMinerReward();
+    const tx2 = await ParanetIncentivesPool.connect(miner).claimKnowledgeMinerReward();
     const tx2Receipt = await tx2.wait();
     const tx2Details = await hre.ethers.provider.getTransaction(tx2Receipt.transactionHash);
     const finalMinerBalance = await miner.getBalance();
 
-    const expectedMinerReward = value.mul(4).div(10).mul(90).div(100);
+    const expectedMinerReward = hre.ethers.utils.parseEther('2000').mul(85).div(100);
     expect(finalMinerBalance.sub(initialMinerBalance).add(tx2Receipt.gasUsed.mul(tx2Details.gasPrice))).to.equal(
       expectedMinerReward,
     );
 
     const initialOperatorBalance = await operator.getBalance();
-    const tx3 = await ParanetIncentivesPool.connect(operator).getParanetOperatorReward();
+    const tx3 = await ParanetIncentivesPool.connect(operator).claimParanetOperatorReward();
     const tx3Receipt = await tx3.wait();
     const tx3Details = await hre.ethers.provider.getTransaction(tx3Receipt.transactionHash);
     const finalOperatorBalance = await operator.getBalance();
 
-    const expectedOperatorReward = value.mul(4).div(10).mul(10).div(100);
+    const expectedOperatorReward = hre.ethers.utils.parseEther('2000').mul(10).div(100);
     expect(finalOperatorBalance.sub(initialOperatorBalance).add(tx3Receipt.gasUsed.mul(tx3Details.gasPrice))).to.equal(
       expectedOperatorReward,
     );
@@ -367,8 +367,8 @@ describe('@v2 @integration Paranet', function () {
       'Paranet1',
       'Test Paranet',
       hre.ethers.utils.parseEther('1'), // tracToNeuroRatio -- 1:1
-      hre.ethers.utils.parseEther('5000'), // tracTarget
       1000, // operatorRewardPercentage -- 10%
+      500, // paranetIncentivizationProposalVotersRewardPercentage -- 5%
     );
 
     const ParanetIncentivesPool = await hre.ethers.getContractAt('ParanetIncentivesPool', paranetIncentivesPoolAddress);
@@ -395,23 +395,23 @@ describe('@v2 @integration Paranet', function () {
     await Paranet.connect(miner).mintKnowledgeAsset(ContentAssetStorage.address, paranetTokenId, testKAStruct);
 
     const initialMinerBalance = await miner.getBalance();
-    const tx2 = await ParanetIncentivesPool.connect(miner).getKnowledgeMinerReward();
+    const tx2 = await ParanetIncentivesPool.connect(miner).claimKnowledgeMinerReward();
     const tx2Receipt = await tx2.wait();
     const tx2Details = await hre.ethers.provider.getTransaction(tx2Receipt.transactionHash);
     const finalMinerBalance = await miner.getBalance();
 
-    const expectedMinerReward = value.mul(4).div(10).mul(90).div(100);
+    const expectedMinerReward = hre.ethers.utils.parseEther('2000').mul(85).div(100);
     expect(finalMinerBalance.sub(initialMinerBalance).add(tx2Receipt.gasUsed.mul(tx2Details.gasPrice))).to.equal(
       expectedMinerReward,
     );
 
     const initialOperatorBalance = await operator.getBalance();
-    const tx3 = await ParanetIncentivesPool.connect(operator).getParanetOperatorReward();
+    const tx3 = await ParanetIncentivesPool.connect(operator).claimParanetOperatorReward();
     const tx3Receipt = await tx3.wait();
     const tx3Details = await hre.ethers.provider.getTransaction(tx3Receipt.transactionHash);
     const finalOperatorBalance = await operator.getBalance();
 
-    const expectedOperatorReward = value.mul(4).div(10).mul(10).div(100);
+    const expectedOperatorReward = hre.ethers.utils.parseEther('2000').mul(10).div(100);
     expect(finalOperatorBalance.sub(initialOperatorBalance).add(tx3Receipt.gasUsed.mul(tx3Details.gasPrice))).to.equal(
       expectedOperatorReward,
     );
@@ -440,29 +440,23 @@ describe('@v2 @integration Paranet', function () {
 
     // Claim rewards for miner and operator again
     const initialMinerBalance2 = await miner.getBalance();
-    const tx5 = await ParanetIncentivesPool.connect(miner).getKnowledgeMinerReward();
+    const tx5 = await ParanetIncentivesPool.connect(miner).claimKnowledgeMinerReward();
     const tx5Receipt = await tx5.wait();
     const tx5Details = await hre.ethers.provider.getTransaction(tx5Receipt.transactionHash);
     const finalMinerBalance2 = await miner.getBalance();
 
-    const expectedMinerReward2 = value.add(additionalValue).mul(7).div(10).mul(90).div(100).sub(expectedMinerReward);
+    const expectedMinerReward2 = hre.ethers.utils.parseEther('1500').mul(85).div(100);
     expect(finalMinerBalance2.sub(initialMinerBalance2).add(tx5Receipt.gasUsed.mul(tx5Details.gasPrice))).to.equal(
       expectedMinerReward2,
     );
 
     const initialOperatorBalance2 = await operator.getBalance();
-    const tx6 = await ParanetIncentivesPool.connect(operator).getParanetOperatorReward();
+    const tx6 = await ParanetIncentivesPool.connect(operator).claimParanetOperatorReward();
     const tx6Receipt = await tx6.wait();
     const tx6Details = await hre.ethers.provider.getTransaction(tx6Receipt.transactionHash);
     const finalOperatorBalance2 = await operator.getBalance();
 
-    const expectedOperatorReward2 = value
-      .add(additionalValue)
-      .mul(7)
-      .div(10)
-      .mul(10)
-      .div(100)
-      .sub(expectedOperatorReward);
+    const expectedOperatorReward2 = hre.ethers.utils.parseEther('1500').mul(10).div(100);
     expect(
       finalOperatorBalance2.sub(initialOperatorBalance2).add(tx6Receipt.gasUsed.mul(tx6Details.gasPrice)),
     ).to.equal(expectedOperatorReward2);
