@@ -425,7 +425,7 @@ describe('@v2 @unit StakingV2 contract', function () {
         (await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay,
       );
 
-    await time.increaseTo((await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay);
+    await time.increaseTo((await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay + 100);
 
     const agreementId = '0x' + randomBytes(32).toString('hex');
     const startTime = Math.floor(Date.now() / 1000).toString();
