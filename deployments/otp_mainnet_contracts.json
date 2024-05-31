@@ -68,13 +68,13 @@
       "deployed": true
     },
     "Profile": {
-      "evmAddress": "0x8453855ED7a42d98F0abCbEDBD61ac082c5337B5",
-      "substrateAddress": "5EMjsczngyeEYRQVCDxeLthH85Upcsiw3G663SnzQsPuNpc9",
-      "version": "1.1.1",
-      "gitBranch": "main",
-      "gitCommitHash": "cdd09025ee035eb72c4322639cefe1848dd90ecb",
-      "deploymentBlock": 4786001,
-      "deploymentTimestamp": 1713972267333,
+      "evmAddress": "0xDfB94C5021B1684A83001734c3cFd733415d9CcD",
+      "substrateAddress": "5EMjsd171Acgqe4PrafYj2BStycTBUqfSs2xX1QYGE1f3Ju6",
+      "version": "1.1.2",
+      "gitBranch": "operatorFee-fixes",
+      "gitCommitHash": "63e8ce3dfa370844af8318182890ba23976f7daf",
+      "deploymentBlock": 4973043,
+      "deploymentTimestamp": 1716277322852,
       "deployed": true
     },
     "ProfileStorage": {
@@ -197,13 +197,13 @@
       "deployed": true
     },
     "NodeOperatorFeesStorage": {
-      "evmAddress": "0x030d086a005F2e5AB99D7a0a73c0a7C92028640b",
-      "substrateAddress": "5EMjsczLnayCy2aw6rNrJh76pxZqZgtfSban41RzmYmNzfgo",
-      "version": "2.0.0",
-      "gitBranch": "main",
-      "gitCommitHash": "cdd09025ee035eb72c4322639cefe1848dd90ecb",
-      "deploymentBlock": 4785998,
-      "deploymentTimestamp": 1713972219931,
+      "evmAddress": "0xe761209C8598a933b0F2CE3BdA11a9850Ca320BA",
+      "substrateAddress": "5EMjsd18Y8u6kqeznzaNcWNy4XpuX6TJTqvxsPRstGK1FMJb",
+      "version": "2.0.2",
+      "gitBranch": "operatorFee-fixes-2",
+      "gitCommitHash": "38d7bc4595f2ff59bf0d3d11efd291241ecc992f",
+      "deploymentBlock": 5035511,
+      "deploymentTimestamp": 1717062664410,
       "deployed": true
     },
     "Staking": {
