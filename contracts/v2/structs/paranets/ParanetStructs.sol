@@ -88,6 +88,12 @@ library ParanetStructs {
         uint96 updateTokenAmount;
     }
 
+    struct NeuroEmissionMultiplier {
+        uint256 multiplier;
+        uint256 timestamp;
+        bool finalized;
+    }
+
     struct ParanetIncentivizationProposalVoterInput {
         address addr;
         uint96 weight;

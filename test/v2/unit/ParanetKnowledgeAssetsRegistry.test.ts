@@ -161,7 +161,8 @@ describe('@v2 @unit ParanetKnowledgeAssetsRegistry contract', function () {
       ),
     );
 
-    await ParanetKnowledgeAssetsRegistry.setParanetId(assetLocation, newParanetId);
+    const tx = await ParanetKnowledgeAssetsRegistry.setParanetId(assetLocation, newParanetId);
+    await tx.wait();
     const knwoledgeAssetParanetId = await ParanetKnowledgeAssetsRegistry.getParanetId(assetLocation);
 
     expect(knwoledgeAssetParanetId).to.equal(newParanetId);

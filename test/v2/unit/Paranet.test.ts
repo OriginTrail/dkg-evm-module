@@ -159,7 +159,11 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     );
 
     expect(await incentivesPool.callStatic.parentParanetId()).to.be.equal(paranetId);
-    expect(await incentivesPool.callStatic.tracToNeuroEmissionMultiplier()).to.be.equal(5);
+    expect(await incentivesPool.callStatic.neuroEmissionMultipliers(0)).to.be.deep.equal([
+      5,
+      (await hre.ethers.provider.getBlock('latest')).timestamp,
+      true,
+    ]);
     expect(await incentivesPool.callStatic.paranetOperatorRewardPercentage()).to.be.equal(1_000);
     expect(await incentivesPool.callStatic.paranetIncentivizationProposalVotersRewardPercentage()).to.be.equal(500);
   });
