@@ -31,20 +31,26 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
         string calldata paranetServiceName,
         string calldata paranetServiceDescription,
         address operator,
-        address worker,
-        bytes calldata metadata
+        address[] calldata paranetServiceAddresses
     ) external onlyContracts returns (bytes32) {
-        paranetServices[
+        ParanetStructs.ParanetService storage paranetService = paranetServices[
             keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
-        ] = ParanetStructs.ParanetService({
-            paranetServiceKAStorageContract: paranetServiceKAStorageContract,
-            paranetServiceKATokenId: paranetServiceKATokenId,
-            operator: operator,
-            worker: worker,
-            name: paranetServiceName,
-            description: paranetServiceDescription,
-            metadata: metadata
-        });
+        ];
+
+        paranetService.paranetServiceKAStorageContract = paranetServiceKAStorageContract;
+        paranetService.paranetServiceKATokenId = paranetServiceKATokenId;
+        paranetService.operator = operator;
+        paranetService.name = paranetServiceName;
+        paranetService.description = paranetServiceDescription;
+        paranetService.paranetServiceAddresses = paranetServiceAddresses;
+
+        for (uint i; i < paranetServiceAddresses.length; ) {
+            paranetService.paranetServiceAddressRegistered[paranetServiceAddresses[i]] = true;
+
+            unchecked {
+                i++;
+            }
+        }
 
         return keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId));
     }
@@ -63,10 +69,18 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
             ) == paranetServiceId;
     }
 
-    function getParanetServiceObject(
+    function getParanetServiceMetadata(
         bytes32 paranetServiceId
-    ) external view returns (ParanetStructs.ParanetService memory) {
-        return paranetServices[paranetServiceId];
+    ) external view returns (ParanetStructs.ParanetServiceMetadata memory) {
+        return
+            ParanetStructs.ParanetServiceMetadata({
+                paranetServiceKAStorageContract: paranetServices[paranetServiceId].paranetServiceKAStorageContract,
+                paranetServiceKATokenId: paranetServices[paranetServiceId].paranetServiceKATokenId,
+                operator: paranetServices[paranetServiceId].operator,
+                name: paranetServices[paranetServiceId].name,
+                description: paranetServices[paranetServiceId].description,
+                paranetServiceAddresses: paranetServices[paranetServiceId].paranetServiceAddresses
+            });
     }
 
     function getOperatorAddress(bytes32 paranetServiceId) external view returns (address) {
@@ -75,14 +89,6 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
 
     function setOperatorAddress(bytes32 paranetServiceId, address operator) external onlyContracts {
         paranetServices[paranetServiceId].operator = operator;
-    }
-
-    function getWorkerAddress(bytes32 paranetServiceId) external view returns (address) {
-        return paranetServices[paranetServiceId].worker;
-    }
-
-    function setWorkerAddress(bytes32 paranetServiceId, address worker) external onlyContracts {
-        paranetServices[paranetServiceId].worker = worker;
     }
 
     function getName(bytes32 paranetServiceId) external view returns (string memory) {
@@ -101,11 +107,29 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
         paranetServices[paranetServiceId].description = description_;
     }
 
-    function getMetadata(bytes32 paranetServiceId) external view returns (bytes memory) {
-        return paranetServices[paranetServiceId].metadata;
+    function getParanetServiceAddresses(bytes32 paranetServiceId) external view returns (address[] memory) {
+        return paranetServices[paranetServiceId].paranetServiceAddresses;
     }
 
-    function setMetadata(bytes32 paranetServiceId, bytes calldata metadata) external onlyContracts {
-        paranetServices[paranetServiceId].metadata = metadata;
+    function setParanetServiceAddresses(
+        bytes32 paranetServiceId,
+        address[] calldata paranetServiceAddresses
+    ) external onlyContracts {
+        paranetServices[paranetServiceId].paranetServiceAddresses = paranetServiceAddresses;
+    }
+
+    function isParanetServiceAddressRegistered(
+        bytes32 paranetServiceId,
+        address paranetServiceAddress
+    ) external view returns (bool) {
+        return paranetServices[paranetServiceId].paranetServiceAddressRegistered[paranetServiceAddress];
+    }
+
+    function setIsParanetServiceAddressRegistered(
+        bytes32 paranetServiceId,
+        address paranetServiceAddress,
+        bool isRegistered
+    ) external onlyContracts {
+        paranetServices[paranetServiceId].paranetServiceAddressRegistered[paranetServiceAddress] = isRegistered;
     }
 }

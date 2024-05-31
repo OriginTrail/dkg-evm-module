@@ -3,6 +3,11 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "hubAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "paranetsRegistryAddress",
         "type": "address"
       },
@@ -18,17 +23,17 @@
       },
       {
         "internalType": "uint256",
-        "name": "tracToNeuroRatio_",
+        "name": "tracToNeuroEmissionMultiplier",
         "type": "uint256"
       },
       {
-        "internalType": "uint96",
-        "name": "tracTarget_",
-        "type": "uint96"
+        "internalType": "uint16",
+        "name": "paranetOperatorRewardPercentage_",
+        "type": "uint16"
       },
       {
         "internalType": "uint16",
-        "name": "operatorRewardPercentage_",
+        "name": "paranetIncentivizationProposalVotersRewardPercentage_",
         "type": "uint16"
       }
     ],
@@ -68,14 +73,9 @@
         "internalType": "bytes32",
         "name": "paranetId",
         "type": "bytes32"
-      },
-      {
-        "internalType": "uint96",
-        "name": "tracTarget",
-        "type": "uint96"
       }
     ],
-    "name": "TracTargetAchieved",
+    "name": "NoVotersRewardAvailable",
     "type": "error"
   },
   {
@@ -95,6 +95,50 @@
       }
     ],
     "name": "KnowledgeMinerRewardClaimed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldMultiplier",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newMultiplier",
+        "type": "uint256"
+      }
+    ],
+    "name": "NeuroEmissionMultiplierUpdateFinalized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldMultiplier",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newMultiplier",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "NeuroEmissionMultiplierUpdateInitiated",
     "type": "event"
   },
   {
@@ -136,35 +180,54 @@
     "type": "event"
   },
   {
-    "inputs": [],
-    "name": "getBalance",
-    "outputs": [
+    "inputs": [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
+        "components": [
+          {
+            "internalType": "address",
+            "name": "addr",
+            "type": "address"
+          },
+          {
+            "internalType": "uint96",
+            "name": "weight",
+            "type": "uint96"
+          }
+        ],
+        "internalType": "struct ParanetStructs.ParanetIncentivizationProposalVoterInput[]",
+        "name": "voters_",
+        "type": "tuple[]"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getKnowledgeMinerReward",
+    "name": "addVoters",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "getParanetOperatorReward",
+    "name": "claimIncentivizationProposalVoterReward",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "minersClaimedNeuro",
+    "name": "claimKnowledgeMinerReward",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "claimParanetOperatorReward",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "claimedMinersNeuro",
     "outputs": [
       {
         "internalType": "uint256",
@@ -177,7 +240,7 @@
   },
   {
     "inputs": [],
-    "name": "operatorClaimedNeuro",
+    "name": "claimedOperatorNeuro",
     "outputs": [
       {
         "internalType": "uint256",
@@ -190,7 +253,114 @@
   },
   {
     "inputs": [],
-    "name": "operatorRewardPercentage",
+    "name": "finalizeNeuroEmissionMultiplierUpdate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "getEffectiveEmissionRatio",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getNeuroBalance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "hub",
+    "outputs": [
+      {
+        "internalType": "contract HubV2",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newMultiplier",
+        "type": "uint256"
+      }
+    ],
+    "name": "initiateNeuroEmissionMultiplierUpdate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "neuroEmissionMultiplierUpdateDelay",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "neuroEmissionMultipliers",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "multiplier",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "finalized",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paranetIncentivizationProposalVotersRewardPercentage",
     "outputs": [
       {
         "internalType": "uint16",
@@ -209,6 +379,19 @@
         "internalType": "contract ParanetKnowledgeMinersRegistry",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paranetOperatorRewardPercentage",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -254,39 +437,68 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "tracRewarded",
-    "outputs": [
+    "inputs": [
       {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
+        "internalType": "address",
+        "name": "newRegistrar",
+        "type": "address"
       }
     ],
-    "stateMutability": "view",
+    "name": "transferVotersRegistrarRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "tracTarget",
-    "outputs": [
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "tracToNeuroRatio",
-    "outputs": [
+    "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "newDelay",
         "type": "uint256"
+      }
+    ],
+    "name": "updateNeuroEmissionMultiplierUpdateDelay",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "voters",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "addr",
+        "type": "address"
+      },
+      {
+        "internalType": "uint96",
+        "name": "weight",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint256",
+        "name": "claimedNeuro",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "votersRegistrar",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",

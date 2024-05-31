@@ -31,11 +31,6 @@
         "internalType": "address",
         "name": "miner",
         "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "metadata",
-        "type": "bytes"
       }
     ],
     "name": "addKnowledgeAsset",
@@ -104,35 +99,11 @@
             "internalType": "bytes32",
             "name": "paranetId",
             "type": "bytes32"
-          },
-          {
-            "internalType": "bytes",
-            "name": "metadata",
-            "type": "bytes"
           }
         ],
         "internalType": "struct ParanetStructs.KnowledgeAsset",
         "name": "",
         "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "knowledgeAssetId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getMetadata",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
       }
     ],
     "stateMutability": "view",
@@ -230,24 +201,6 @@
       }
     ],
     "name": "removeKnowledgeAsset",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "knowledgeAssetId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes",
-        "name": "metadata",
-        "type": "bytes"
-      }
-    ],
-    "name": "setMetadata",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

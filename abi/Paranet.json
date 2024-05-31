@@ -285,18 +285,6 @@
       },
       {
         "indexed": false,
-        "internalType": "enum ParanetStructs.AccessPolicy",
-        "name": "minersAccessPolicy",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum ParanetStructs.AccessPolicy",
-        "name": "knowledgeAssetsInclusionPolicy",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
         "internalType": "string",
         "name": "paranetName",
         "type": "string"
@@ -316,19 +304,19 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "paranetTracToNeuroRewardRatio",
+        "name": "paranetTracToNeuroEmissionMultiplier",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint96",
-        "name": "paranetBootstrapTracTarget",
-        "type": "uint96"
       },
       {
         "indexed": false,
         "internalType": "uint16",
         "name": "paranetOperatorRewardPercentage",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "paranetIncentivizationProposalVotersRewardPercentage",
         "type": "uint16"
       }
     ],
@@ -364,6 +352,31 @@
       }
     ],
     "name": "ParanetServiceAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "paranetServiceKAStorageContract",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "paranetServiceKATokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "newParanetServiceAddresses",
+        "type": "address[]"
+      }
+    ],
+    "name": "ParanetServiceAddressesUpdated",
     "type": "event"
   },
   {
@@ -470,43 +483,12 @@
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "worker",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "paranetServiceMetadata",
-        "type": "bytes"
+        "internalType": "address[]",
+        "name": "paranetServiceAddresses",
+        "type": "address[]"
       }
     ],
     "name": "ParanetServiceRegistered",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "paranetServiceKAStorageContract",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "paranetServiceKATokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "newParanetServiceWorker",
-        "type": "address"
-      }
-    ],
-    "name": "ParanetServiceWorkerUpdated",
     "type": "event"
   },
   {
@@ -837,17 +819,17 @@
       },
       {
         "internalType": "uint256",
-        "name": "tracToNeuroRatio",
+        "name": "tracToNeuroEmissionMultiplier",
         "type": "uint256"
       },
       {
-        "internalType": "uint96",
-        "name": "tracTarget",
-        "type": "uint96"
+        "internalType": "uint16",
+        "name": "paranetOperatorRewardPercentage",
+        "type": "uint16"
       },
       {
         "internalType": "uint16",
-        "name": "operatorRewardPercentage",
+        "name": "paranetIncentivizationProposalVotersRewardPercentage",
         "type": "uint16"
       }
     ],
@@ -885,14 +867,9 @@
         "type": "string"
       },
       {
-        "internalType": "address",
-        "name": "worker",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "paranetServiceMetadata",
-        "type": "bytes"
+        "internalType": "address[]",
+        "name": "paranetServiceAddresses",
+        "type": "address[]"
       }
     ],
     "name": "registerParanetService",
@@ -1078,6 +1055,29 @@
         "type": "uint256"
       },
       {
+        "internalType": "address[]",
+        "name": "paranetServiceAddresses",
+        "type": "address[]"
+      }
+    ],
+    "name": "updateParanetServiceAddresses",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetServiceKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetServiceKATokenId",
+        "type": "uint256"
+      },
+      {
         "internalType": "string",
         "name": "paranetServiceDescription",
         "type": "string"
@@ -1107,29 +1107,6 @@
       }
     ],
     "name": "updateParanetServiceName",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "paranetServiceKAStorageContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paranetServiceKATokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "worker",
-        "type": "address"
-      }
-    ],
-    "name": "updateParanetServiceWorker",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

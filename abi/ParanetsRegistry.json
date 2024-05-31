@@ -196,25 +196,6 @@
         "internalType": "bytes32",
         "name": "paranetId",
         "type": "bytes32"
-      }
-    ],
-    "name": "getKnowledgeAssetsInclusionPolicy",
-    "outputs": [
-      {
-        "internalType": "enum ParanetStructs.AccessPolicy",
-        "name": "",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
       },
       {
         "internalType": "bytes32",
@@ -313,25 +294,6 @@
         "type": "bytes32"
       }
     ],
-    "name": "getMinersAccessPolicy",
-    "outputs": [
-      {
-        "internalType": "enum ParanetStructs.AccessPolicy",
-        "name": "",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      }
-    ],
     "name": "getName",
     "outputs": [
       {
@@ -412,16 +374,6 @@
             "internalType": "address",
             "name": "operator",
             "type": "address"
-          },
-          {
-            "internalType": "enum ParanetStructs.AccessPolicy",
-            "name": "minersAccessPolicy",
-            "type": "uint8"
-          },
-          {
-            "internalType": "enum ParanetStructs.AccessPolicy",
-            "name": "knowledgeAssetsInclusionPolicy",
-            "type": "uint8"
           },
           {
             "internalType": "string",
@@ -620,16 +572,6 @@
         "type": "address"
       },
       {
-        "internalType": "enum ParanetStructs.AccessPolicy",
-        "name": "minersAccessPolicy",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum ParanetStructs.AccessPolicy",
-        "name": "knowledgeAssetsInclusionPolicy",
-        "type": "uint8"
-      },
-      {
         "internalType": "string",
         "name": "paranetName",
         "type": "string"
@@ -760,42 +702,6 @@
       }
     ],
     "name": "setIncentivesPoolAddress",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "enum ParanetStructs.AccessPolicy",
-        "name": "knowledgeAssetsInclusionPolicy",
-        "type": "uint8"
-      }
-    ],
-    "name": "setKnowledgeAssetsInclusionPolicy",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "enum ParanetStructs.AccessPolicy",
-        "name": "minersAccessPolicy",
-        "type": "uint8"
-      }
-    ],
-    "name": "setMinersAccessPolicy",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

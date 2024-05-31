@@ -1,7 +1,7 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import { HubController, ParanetServicesRegistry } from '../../../typechain';
 
@@ -78,15 +78,14 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
       hre.ethers.utils.solidityPack(['address', 'uint256'], [accounts[1].address, 1]),
     );
 
-    const paranetServiceObject = await ParanetServicesRegistry.getParanetServiceObject(paranetServiceId);
+    const paranetServiceObject = await ParanetServicesRegistry.getParanetServiceMetadata(paranetServiceId);
 
     expect(paranetServiceObject.paranetServiceKAStorageContract).to.equal(accounts[1].address);
     expect(paranetServiceObject.paranetServiceKATokenId).to.equal(1);
     expect(paranetServiceObject.operator).to.equal(accounts[3].address);
-    expect(paranetServiceObject.worker).to.equal(accounts[2].address);
+    expect(paranetServiceObject.paranetServiceAddresses).to.deep.equal([accounts[2].address]);
     expect(paranetServiceObject.name).to.equal('Test Service');
     expect(paranetServiceObject.description).to.equal('This is a test service');
-    expect(paranetServiceObject.metadata).to.equal(hre.ethers.utils.formatBytes32String('Metadata'));
   });
 
   it('should get all fields successfully', async () => {
@@ -96,9 +95,9 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
       hre.ethers.utils.solidityPack(['address', 'uint256'], [accounts[1].address, 1]),
     );
 
-    const workerAddress = await ParanetServicesRegistry.getWorkerAddress(paranetServiceId);
+    const paranetServiceAddresses = await ParanetServicesRegistry.getParanetServiceAddresses(paranetServiceId);
 
-    expect(workerAddress).to.equal(accounts[2].address);
+    expect(paranetServiceAddresses).to.deep.equal([accounts[2].address]);
 
     const name = await ParanetServicesRegistry.getName(paranetServiceId);
 
@@ -107,10 +106,6 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
     const description = await ParanetServicesRegistry.getDescription(paranetServiceId);
 
     expect(description).to.equal('This is a test service');
-
-    const metadata = await ParanetServicesRegistry.getMetadata(paranetServiceId);
-
-    expect(metadata).to.equal(hre.ethers.utils.formatBytes32String('Metadata'));
   });
 
   it('should set all fields successfully', async () => {
@@ -125,10 +120,10 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
 
     expect(newOperatorAddress).to.equal(accounts[10].address);
 
-    await ParanetServicesRegistry.setWorkerAddress(paranetServiceId, accounts[11].address);
-    const newWorkerAddress = await ParanetServicesRegistry.getWorkerAddress(paranetServiceId);
+    await ParanetServicesRegistry.setParanetServiceAddresses(paranetServiceId, [accounts[11].address]);
+    const newParanetServiceAddresses = await ParanetServicesRegistry.getParanetServiceAddresses(paranetServiceId);
 
-    expect(newWorkerAddress).to.equal(accounts[11].address);
+    expect(newParanetServiceAddresses).to.deep.equal([accounts[11].address]);
 
     await ParanetServicesRegistry.setName(paranetServiceId, 'New Test Service');
     const newName = await ParanetServicesRegistry.getName(paranetServiceId);
@@ -139,22 +134,16 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
     const newDescription = await ParanetServicesRegistry.getDescription(paranetServiceId);
 
     expect(newDescription).to.equal('This is a new test service');
-
-    await ParanetServicesRegistry.setMetadata(paranetServiceId, hre.ethers.utils.formatBytes32String('New Metadata'));
-    const newMetadata = await ParanetServicesRegistry.getMetadata(paranetServiceId);
-
-    expect(newMetadata).to.equal(hre.ethers.utils.formatBytes32String('New Metadata'));
   });
 
   async function createParanetService(accounts: SignerWithAddress[], ParanetServicesRegistry: ParanetServicesRegistry) {
     const admin = accounts[1];
-    const worker = accounts[2];
+    const serviceAddresses = [accounts[2].address];
     const operator = accounts[3];
     const paranetServiceKAStorageContract = admin;
     const paranetServiceKATokenId = 1;
     const paranetServiceName = 'Test Service';
     const paranetServiceDescription = 'This is a test service';
-    const metadata = hre.ethers.utils.formatBytes32String('Metadata');
 
     await ParanetServicesRegistry.registerParanetService(
       paranetServiceKAStorageContract.address,
@@ -162,8 +151,7 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
       paranetServiceName,
       paranetServiceDescription,
       operator.address,
-      worker.address,
-      metadata,
+      serviceAddresses,
     );
   }
 });

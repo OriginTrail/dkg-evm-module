@@ -286,11 +286,6 @@
             "internalType": "uint256",
             "name": "totalSubmittedKnowledgeAssetsCount",
             "type": "uint256"
-          },
-          {
-            "internalType": "bytes",
-            "name": "metadata",
-            "type": "bytes"
           }
         ],
         "internalType": "struct ParanetStructs.KnowledgeMinerMetadata",
@@ -607,11 +602,6 @@
         "internalType": "address",
         "name": "miner",
         "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "metadata",
-        "type": "bytes"
       }
     ],
     "name": "registerKnowledgeMiner",

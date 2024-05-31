@@ -29,8 +29,6 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         address knowledgeAssetStorageContract,
         uint256 tokenId,
         address operator,
-        ParanetStructs.AccessPolicy minersAccessPolicy,
-        ParanetStructs.AccessPolicy knowledgeAssetsInclusionPolicy,
         string calldata paranetName,
         string calldata paranetDescription,
         address incentivesPool
@@ -42,8 +40,6 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         paranet.paranetKAStorageContract = knowledgeAssetStorageContract;
         paranet.paranetKATokenId = tokenId;
         paranet.operator = operator;
-        paranet.minersAccessPolicy = minersAccessPolicy;
-        paranet.knowledgeAssetsInclusionPolicy = knowledgeAssetsInclusionPolicy;
         paranet.name = paranetName;
         paranet.description = paranetDescription;
         paranet.incentivesPool = incentivesPool;
@@ -70,8 +66,6 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
                 paranetKAStorageContract: paranet.paranetKAStorageContract,
                 paranetKATokenId: paranet.paranetKATokenId,
                 operator: paranet.operator,
-                minersAccessPolicy: paranet.minersAccessPolicy,
-                knowledgeAssetsInclusionPolicy: paranet.knowledgeAssetsInclusionPolicy,
                 name: paranet.name,
                 description: paranet.description,
                 cumulativeKnowledgeValue: paranet.cumulativeKnowledgeValue
@@ -90,28 +84,6 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
 
     function setOperatorAddress(bytes32 paranetId, address operator) external onlyContracts {
         paranets[paranetId].operator = operator;
-    }
-
-    function getMinersAccessPolicy(bytes32 paranetId) external view returns (ParanetStructs.AccessPolicy) {
-        return paranets[paranetId].minersAccessPolicy;
-    }
-
-    function setMinersAccessPolicy(
-        bytes32 paranetId,
-        ParanetStructs.AccessPolicy minersAccessPolicy
-    ) external onlyContracts {
-        paranets[paranetId].minersAccessPolicy = minersAccessPolicy;
-    }
-
-    function getKnowledgeAssetsInclusionPolicy(bytes32 paranetId) external view returns (ParanetStructs.AccessPolicy) {
-        return paranets[paranetId].knowledgeAssetsInclusionPolicy;
-    }
-
-    function setKnowledgeAssetsInclusionPolicy(
-        bytes32 paranetId,
-        ParanetStructs.AccessPolicy knowledgeAssetsInclusionPolicy
-    ) external onlyContracts {
-        paranets[paranetId].knowledgeAssetsInclusionPolicy = knowledgeAssetsInclusionPolicy;
     }
 
     function getName(bytes32 paranetId) external view returns (string memory) {
