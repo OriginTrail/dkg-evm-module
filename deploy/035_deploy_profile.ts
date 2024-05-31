@@ -19,4 +19,5 @@ func.dependencies = [
   'SHA256',
   'Staking',
   'WhitelistStorage',
+  'NodeOperatorFeesStorage',
 ];

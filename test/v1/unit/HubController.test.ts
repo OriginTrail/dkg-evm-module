@@ -141,6 +141,10 @@ describe('@v1 @unit HubController contract', function () {
       setAssetStorageInHub: true,
     });
     const UnfinalizedStateStorage = await hre.helpers.deploy({ newContractName: 'UnfinalizedStateStorage' });
+    const NodeOperatorFeesStorage = await hre.helpers.deploy({
+      newContractName: 'NodeOperatorFeesStorage',
+      additionalArgs: [(await hre.ethers.provider.getBlock('latest')).timestamp + 86400],
+    });
     const Assertion = await hre.helpers.deploy({ newContractName: 'Assertion' });
     const Identity = await hre.helpers.deploy({ newContractName: 'Identity' });
     const ShardingTable = await hre.helpers.deploy({ newContractName: 'ShardingTable' });
@@ -170,6 +174,7 @@ describe('@v1 @unit HubController contract', function () {
       { name: 'ServiceAgreementStorageV1U1', addr: ServiceAgreementStorageV1U1.address },
       { name: 'ServiceAgreementStorageProxy', addr: ServiceAgreementStorageProxy.address },
       { name: 'UnfinalizedStateStorage', addr: UnfinalizedStateStorage.address },
+      { name: 'NodeOperatorFeesStorage', addr: NodeOperatorFeesStorage.address },
       { name: 'Assertion', addr: Assertion.address },
       { name: 'Identity', addr: Identity.address },
       { name: 'ShardingTable', addr: ShardingTable.address },

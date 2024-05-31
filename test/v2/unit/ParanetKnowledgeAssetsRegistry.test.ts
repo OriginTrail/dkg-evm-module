@@ -184,7 +184,12 @@ describe('@v2 @unit ParanetKnowledgeAssetsRegistry contract', function () {
     const knowledgeAssetStorageContract = accounts[150].address;
     const miner = accounts[151].address;
 
-    ParanetKnowledgeAssetsRegistry.addKnowledgeAsset(paranetIdHash, knowledgeAssetStorageContract, tokenIdHash, miner);
+    await ParanetKnowledgeAssetsRegistry.addKnowledgeAsset(
+      paranetIdHash,
+      knowledgeAssetStorageContract,
+      tokenIdHash,
+      miner,
+    );
   }
 
   function getHashFromNumber(number: number) {

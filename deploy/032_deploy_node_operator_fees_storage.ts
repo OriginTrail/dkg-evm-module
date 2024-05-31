@@ -16,11 +16,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
 
   const oldNodeOperatorFeesStorageAddress =
-    hre.helpers.contractDeployments.contracts['NodeOperatorFeesStorage'].evmAddress;
-  const OldNodeOperatorFeesStorage = await hre.ethers.getContractAt(
-    'NodeOperatorFeesStorage',
-    oldNodeOperatorFeesStorageAddress,
-  );
+    hre.helpers.contractDeployments.contracts['NodeOperatorFeesStorage']?.evmAddress;
+  let onofs = null;
+  if (oldNodeOperatorFeesStorageAddress) {
+    onofs = await hre.ethers.getContractAt('NodeOperatorFeesStorage', oldNodeOperatorFeesStorageAddress);
+  }
 
   const nofcsAddress = hre.helpers.contractDeployments.contracts['NodeOperatorFeeChangesStorage']?.evmAddress;
   let nofcs = null;
@@ -72,23 +72,25 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     let operatorFees: { feePercentage: BigNumberish; effectiveDate: number }[] = [];
 
-    const oldContractOperatorFees = await OldNodeOperatorFeesStorage.getOperatorFees(identityId);
+    if (onofs) {
+      const oldContractOperatorFees = await onofs.getOperatorFees(identityId);
 
-    console.log(`Old operatorFees in the old NodeOperatorFeesStorage: ${JSON.stringify(oldContractOperatorFees)}`);
+      console.log(`Old operatorFees in the old NodeOperatorFeesStorage: ${JSON.stringify(oldContractOperatorFees)}`);
 
-    if (oldContractOperatorFees.length != 0) {
-      const fees = oldContractOperatorFees.map((x: BigNumberish[]) => {
-        return { feePercentage: x[0], effectiveDate: Number(x[1].toString()) };
-      });
-
-      if (hre.network.name.startsWith('gnosis')) {
-        operatorFees = operatorFees.concat(fees);
-      } else {
-        oldOperatorFees.push({
-          identityId,
-          fees,
+      if (oldContractOperatorFees.length != 0) {
+        const fees = oldContractOperatorFees.map((x: BigNumberish[]) => {
+          return { feePercentage: x[0], effectiveDate: Number(x[1].toString()) };
         });
-        continue;
+
+        if (hre.network.name.startsWith('gnosis')) {
+          operatorFees = operatorFees.concat(fees);
+        } else {
+          oldOperatorFees.push({
+            identityId,
+            fees,
+          });
+          continue;
+        }
       }
     }
 
@@ -203,4 +205,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ['NodeOperatorFeesStorage', 'v2'];
-func.dependencies = ['HubV2', 'ContentAssetStorageV2', 'StakingStorage', 'ShardingTableV2'];
+func.dependencies = ['HubV2', 'ContentAssetStorageV2', 'StakingStorage', 'ShardingTableV2', 'IdentityStorage'];
