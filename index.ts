@@ -30,6 +30,12 @@ import MultiSigWallet from './abi/MultiSigWallet.json';
 import Named from './abi/Named.json';
 import NodeOperatorFeesStorage from './abi/NodeOperatorFeesStorage.json';
 import ParametersStorage from './abi/ParametersStorage.json';
+import Paranet from './abi/Paranet.json';
+import ParanetIncentivesPool from './abi/ParanetIncentivesPool.json';
+import ParanetKnowledgeAssetsRegistry from './abi/ParanetKnowledgeAssetsRegistry.json';
+import ParanetKnowledgeMinersRegistry from './abi/ParanetKnowledgeMinersRegistry.json';
+import ParanetServicesRegistry from './abi/ParanetServicesRegistry.json';
+import ParanetsRegistry from './abi/ParanetsRegistry.json';
 import Profile from './abi/Profile.json';
 import ProfileStorage from './abi/ProfileStorage.json';
 import ProofManagerV1 from './abi/ProofManagerV1.json';
@@ -106,6 +112,12 @@ const ABIV2 = {
   CommitManagerV2U1,
   LinearSum,
   NodeOperatorFeesStorage,
+  Paranet,
+  ParanetKnowledgeAssetsRegistry,
+  ParanetKnowledgeMinersRegistry,
+  ParanetServicesRegistry,
+  ParanetsRegistry,
+  ParanetIncentivesPool,
   ShardingTableV2,
   ShardingTableStorageV2,
   StakingV2,
@@ -138,6 +150,12 @@ export {
   LinearSum as LinearSumABI,
   Log2PLDSF as Log2PLDSFABI,
   NodeOperatorFeesStorage as NodeOperatorFeesStorageABI,
+  Paranet as ParanetABI,
+  ParanetKnowledgeAssetsRegistry as ParanetKnowledgeAssetsRegistryABI,
+  ParanetKnowledgeMinersRegistry as ParanetKnowledgeMinersRegistryABI,
+  ParanetServicesRegistry as ParanetServicesRegistryABI,
+  ParanetsRegistry as ParanetsRegistryABI,
+  ParanetIncentivesPool as ParanetIncentivesPoolABI,
   ProfileStorage as ProfileStorageABI,
   Profile as ProfileABI,
   StakingStorage as StakingStorageABI,
