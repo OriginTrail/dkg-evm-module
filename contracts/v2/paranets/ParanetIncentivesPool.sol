@@ -7,6 +7,7 @@ import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {HubV2} from "../Hub.sol";
 import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
 import {ParanetStructs} from "../structs/paranets/ParanetStructs.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ParanetIncentivesPool {
     event RewardDeposit(address indexed sender, uint256 amount);
@@ -70,7 +71,17 @@ contract ParanetIncentivesPool {
         );
         paranetOperatorRewardPercentage = paranetOperatorRewardPercentage_;
         paranetIncentivizationProposalVotersRewardPercentage = paranetIncentivizationProposalVotersRewardPercentage_;
-        votersRegistrar = hub.owner();
+
+        address hubOwner = hub.owner();
+        uint256 size;
+        assembly {
+            size := extcodesize(hubOwner)
+        }
+        if (size > 0) {
+            votersRegistrar = Ownable(hubOwner).owner();
+        } else {
+            votersRegistrar = hubOwner;
+        }
     }
 
     modifier onlyHubOwner() {
