@@ -439,7 +439,6 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         );
     }
 
-    // Should this return token Id?
     function mintKnowledgeAsset(
         address paranetKAStorageContract,
         uint256 paranetKATokenId,
