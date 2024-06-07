@@ -193,12 +193,12 @@
       "deployed": true
     },
     "Profile": {
-      "evmAddress": "0xf502F2258Da12664275dC9CD325Fc18A7D8784e1",
-      "version": "1.1.0",
-      "gitBranch": "main",
-      "gitCommitHash": "8877334d94d89edfa2fea5bff3cd7f367a8609ae",
-      "deploymentBlock": 8202481,
-      "deploymentTimestamp": 1707755133630,
+      "evmAddress": "0x55F7185eF55bf04876eCDC088c6a8F35A642c6f8",
+      "version": "1.2.0",
+      "gitBranch": "feature/paranets",
+      "gitCommitHash": "afd2acd78886641415e423de5a20ec19df88b621",
+      "deploymentBlock": 10188284,
+      "deploymentTimestamp": 1717766652633,
       "deployed": true
     },
     "CommitManagerV1": {
@@ -256,12 +256,12 @@
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0x5276fA8B46EAdA3Ba560C1434083967F74B7D0A4",
-      "version": "2.0.2",
-      "gitBranch": "main",
-      "gitCommitHash": "a9bc2568134adef0636664a535729228d92a697e",
-      "deploymentBlock": 9641927,
-      "deploymentTimestamp": 1715019204193,
+      "evmAddress": "0x792499b858292Fb800A9DDf5a0292193A87cac33",
+      "version": "2.1.0",
+      "gitBranch": "feature/paranets",
+      "gitCommitHash": "afd2acd78886641415e423de5a20ec19df88b621",
+      "deploymentBlock": 10188311,
+      "deploymentTimestamp": 1717766787118,
       "deployed": true
     },
     "ContentAsset": {
