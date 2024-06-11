@@ -9,7 +9,7 @@ import {ParanetStructs} from "../../structs/paranets/ParanetStructs.sol";
 
 contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
     string private constant _NAME = "ParanetServicesRegistry";
-    string private constant _VERSION = "2.0.0";
+    string private constant _VERSION = "2.1.0";
 
     // Paranet Service ID => Paranet Service Object
     mapping(bytes32 => ParanetStructs.ParanetService) paranetServices;
@@ -30,7 +30,6 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
         uint256 paranetServiceKATokenId,
         string calldata paranetServiceName,
         string calldata paranetServiceDescription,
-        address operator,
         address[] calldata paranetServiceAddresses
     ) external onlyContracts returns (bytes32) {
         ParanetStructs.ParanetService storage paranetService = paranetServices[
@@ -39,7 +38,6 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
 
         paranetService.paranetServiceKAStorageContract = paranetServiceKAStorageContract;
         paranetService.paranetServiceKATokenId = paranetServiceKATokenId;
-        paranetService.operator = operator;
         paranetService.name = paranetServiceName;
         paranetService.description = paranetServiceDescription;
         paranetService.paranetServiceAddresses = paranetServiceAddresses;
@@ -76,19 +74,17 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
             ParanetStructs.ParanetServiceMetadata({
                 paranetServiceKAStorageContract: paranetServices[paranetServiceId].paranetServiceKAStorageContract,
                 paranetServiceKATokenId: paranetServices[paranetServiceId].paranetServiceKATokenId,
-                operator: paranetServices[paranetServiceId].operator,
                 name: paranetServices[paranetServiceId].name,
                 description: paranetServices[paranetServiceId].description,
                 paranetServiceAddresses: paranetServices[paranetServiceId].paranetServiceAddresses
             });
     }
 
-    function getOperatorAddress(bytes32 paranetServiceId) external view returns (address) {
-        return paranetServices[paranetServiceId].operator;
-    }
-
-    function setOperatorAddress(bytes32 paranetServiceId, address operator) external onlyContracts {
-        paranetServices[paranetServiceId].operator = operator;
+    function getParanetServiceKnowledgeAssetLocator(bytes32 paranetServiceId) external view returns (address, uint256) {
+        return (
+            paranetServices[paranetServiceId].paranetServiceKAStorageContract,
+            paranetServices[paranetServiceId].paranetServiceKATokenId
+        );
     }
 
     function getName(bytes32 paranetServiceId) external view returns (string memory) {

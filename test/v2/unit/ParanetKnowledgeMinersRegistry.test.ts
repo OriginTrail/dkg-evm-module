@@ -4,7 +4,6 @@ import hre from 'hardhat';
 import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import { HubV2, HubController, ParanetKnowledgeMinersRegistry } from '../../../typechain';
-import {} from '../../helpers/constants';
 
 type deployParanetKnowledgeMinersRegistryFixture = {
   accounts: SignerWithAddress[];
@@ -43,8 +42,8 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     expect(await ParanetKnowledgeMinersRegistry.name()).to.equal('ParanetKnowledgeMinersRegistry');
   });
 
-  it('The contract is version "2.0.0"', async () => {
-    expect(await ParanetKnowledgeMinersRegistry.version()).to.equal('2.0.0');
+  it('The contract is version "2.0.1"', async () => {
+    expect(await ParanetKnowledgeMinersRegistry.version()).to.equal('2.0.1');
   });
 
   it('should create knowledge miner', async () => {

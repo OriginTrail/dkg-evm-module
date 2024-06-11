@@ -31,9 +31,9 @@ import Named from './abi/Named.json';
 import NodeOperatorFeesStorage from './abi/NodeOperatorFeesStorage.json';
 import ParametersStorage from './abi/ParametersStorage.json';
 import Paranet from './abi/Paranet.json';
-import ParanetIncentivesPool from './abi/ParanetIncentivesPool.json';
 import ParanetKnowledgeAssetsRegistry from './abi/ParanetKnowledgeAssetsRegistry.json';
 import ParanetKnowledgeMinersRegistry from './abi/ParanetKnowledgeMinersRegistry.json';
+import ParanetNeuroIncentivesPool from './abi/ParanetNeuroIncentivesPool.json';
 import ParanetServicesRegistry from './abi/ParanetServicesRegistry.json';
 import ParanetsRegistry from './abi/ParanetsRegistry.json';
 import Profile from './abi/Profile.json';
@@ -117,7 +117,7 @@ const ABIV2 = {
   ParanetKnowledgeMinersRegistry,
   ParanetServicesRegistry,
   ParanetsRegistry,
-  ParanetIncentivesPool,
+  ParanetNeuroIncentivesPool,
   ShardingTableV2,
   ShardingTableStorageV2,
   StakingV2,
@@ -155,7 +155,7 @@ export {
   ParanetKnowledgeMinersRegistry as ParanetKnowledgeMinersRegistryABI,
   ParanetServicesRegistry as ParanetServicesRegistryABI,
   ParanetsRegistry as ParanetsRegistryABI,
-  ParanetIncentivesPool as ParanetIncentivesPoolABI,
+  ParanetNeuroIncentivesPool as ParanetNeuroIncentivesPoolABI,
   ProfileStorage as ProfileStorageABI,
   Profile as ProfileABI,
   StakingStorage as StakingStorageABI,

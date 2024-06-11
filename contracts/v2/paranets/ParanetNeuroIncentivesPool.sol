@@ -7,9 +7,15 @@ import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {HubV2} from "../Hub.sol";
 import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
 import {ParanetStructs} from "../structs/paranets/ParanetStructs.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {
+    EMISSION_MULTIPLIER_SCALING_FACTOR,
+    PERCENTAGE_SCALING_FACTOR,
+    VOTERS_WEIGHTS_SCALING_FACTOR
+} from "../constants/ParanetIncentivesPoolConstants.sol";
 
-contract ParanetIncentivesPool {
+contract ParanetNeuroIncentivesPool {
     event RewardDeposit(address indexed sender, uint256 amount);
     event NeuroEmissionMultiplierUpdateInitiated(uint256 oldMultiplier, uint256 newMultiplier, uint256 timestamp);
     event NeuroEmissionMultiplierUpdateFinalized(uint256 oldMultiplier, uint256 newMultiplier);
@@ -21,17 +27,25 @@ contract ParanetIncentivesPool {
     ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
 
     bytes32 public parentParanetId;
+    // Array of Total NEURO Emission Multipliers
+    // Total NEURO Emission Multiplier = Ratio of how much NEURO is released per 1 TRAC spent
+    // Minimum: 1,000,000 wei (in TRAC)
+    //
+    //      10^12
+    //      1
+    //
     ParanetStructs.NeuroEmissionMultiplier[] public neuroEmissionMultipliers;
 
     uint256 public neuroEmissionMultiplierUpdateDelay = 7 days;
 
-    uint64 constant EMISSION_MULTIPLIER_SCALING_FACTOR = 10 ** 18;
-    uint16 constant PERCENTAGE_SCALING_FACTOR = 10 ** 4;
-    uint16 constant VOTERS_WEIGHTS_SCALING_FACTOR = 10 ** 4;
-
+    // Percentage of how much tokens from total NEURO emission goes to the Paranet Operator
+    // Minimum: 0, Maximum: 10,000 (which is 100%)
     uint16 public paranetOperatorRewardPercentage;
+    // Percentage of how much tokens from total NEURO emission goes to the Paranet Incentivization
+    // Proposal Voters. Minimum: 0, Maximum: 10,000 (which is 100%)
     uint16 public paranetIncentivizationProposalVotersRewardPercentage;
 
+    // Address which can set Voters list and update Total NEURO Emission multiplier
     address public votersRegistrar;
 
     uint256 public totalNeuroReceived;
@@ -203,15 +217,32 @@ contract ParanetIncentivesPool {
     function claimKnowledgeMinerReward() external onlyParanetKnowledgeMiner {
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
 
+        // Unrewarded TRAC Spent = how much TRAC Knowledge Miner spent for Mining and haven't got a reward for
+        // Effective Emission Ratio = Current active Multiplier for how much NEURO is released per TRAC spent
+        //
+        // Basic Formula:
+        // Reward = UnrewardedTRAC * TotalEmissionRatio * (MinersRewardPercentage / 100)
+        //
+        // Example:
+        // Let's say we have 10 unrewarded TRAC, 0.5 NEURO per TRAC Total Emission and 80% Miners Reward Percentage,
+        // 10% Operator Reward Percentage, 10% Voters Reward Percentage
+        // Reward = (((10 * 10^18) * (5 * 10^11)) / (10^18)) * (10,000 - 1,000 - 1,000) / 10,000) =
+        // = 10 * 5 * 10^11 * 8,000 / 10,000 = 8/10 * (5 * 10^12) = 80% of 5 NEURO = 4 NEURO
         uint256 neuroReward = (((pkmr.getUnrewardedTracSpent(msg.sender, parentParanetId) *
             getEffectiveEmissionRatio(block.timestamp)) / EMISSION_MULTIPLIER_SCALING_FACTOR) *
             (PERCENTAGE_SCALING_FACTOR -
                 paranetOperatorRewardPercentage -
                 paranetIncentivizationProposalVotersRewardPercentage)) / PERCENTAGE_SCALING_FACTOR;
+        // Here we should have a limit for Knowledge Miners, which is determined by the % of the Miners Reward
+        // and total NEURO received by the contract, so that Miners don't get tokens belonging to Operator/Voters
+        // Following the example from the above, if we have 100 NEURO as a total reward, Miners should never get
+        // more than 80 NEURO. totalMinersReward = 80 NEURO
         uint256 totalMinersReward = (totalNeuroReceived *
             (PERCENTAGE_SCALING_FACTOR -
                 paranetOperatorRewardPercentage -
                 paranetIncentivizationProposalVotersRewardPercentage)) / PERCENTAGE_SCALING_FACTOR;
+        // Here we have the check if SUM(CLAIMED + CLAIMING) < totalMinersReward
+        // Miner should get all the tokens up to the limit or otherwise this function will revert
         uint256 claimableNeuroReward = claimedMinersNeuro + neuroReward <= totalMinersReward
             ? neuroReward
             : totalMinersReward - claimedMinersNeuro;
@@ -220,15 +251,25 @@ contract ParanetIncentivesPool {
             revert ParanetErrors.NoKnowledgeMinerRewardAvailable(parentParanetId, msg.sender);
         }
 
+        // Updating the Unrewarded TRAC variable in the Knowledge Miner Profile
+        // If limit for reward wasn't exceeded, we set Unrewarded TRAC to 0, otherwise we need to calculate
+        // how many TRAC tokens were rewarded in this specific call and set variable to the amount that is left
+        // unrewarded
+        //
+        // Example: We have 100 NEURO total reward. 80 NEURO is for Knowledge Miners. Total NEURO Emission Rate is
+        // 0.5 NEURO per 1 TRAC. Knowledge Miner has 200 Unrewarded TRAC. 10% Operator Reward Percentage,
+        // 10% Voters Reward Percentage
+        //
+        // neuroReward = 100 NEURO = 100 * 10^12
+        // claimableNeuroReward = 80 NEURO = 80 * 10^12
+        // newUnrewardedTracSpent = (100 * 10^12 - 80 * 10^12) * 10^18) / (5 * 10^11) = (20 * 10^30) / (5 * 10^11) =
+        // = 40 * 10^18 = 40 TRAC
         pkmr.setUnrewardedTracSpent(
             msg.sender,
             parentParanetId,
             uint96(
-                ((((neuroReward - claimableNeuroReward) * EMISSION_MULTIPLIER_SCALING_FACTOR) /
-                    getEffectiveEmissionRatio(block.timestamp)) * PERCENTAGE_SCALING_FACTOR) /
-                    (PERCENTAGE_SCALING_FACTOR -
-                        paranetOperatorRewardPercentage -
-                        paranetIncentivizationProposalVotersRewardPercentage)
+                ((neuroReward - claimableNeuroReward) * EMISSION_MULTIPLIER_SCALING_FACTOR) /
+                    getEffectiveEmissionRatio(block.timestamp)
             )
         );
         pkmr.addCumulativeAwardedNeuro(msg.sender, parentParanetId, claimableNeuroReward);
@@ -286,7 +327,13 @@ contract ParanetIncentivesPool {
     }
 
     function _checkParanetOperator() internal view virtual {
-        require(paranetsRegistry.getOperatorAddress(parentParanetId) == msg.sender, "Fn can only be used by operator");
+        (address paranetKAStorageContract, uint256 paranetKATokenId) = paranetsRegistry.getParanetKnowledgeAssetLocator(
+            parentParanetId
+        );
+        require(
+            IERC721(paranetKAStorageContract).ownerOf(paranetKATokenId) == msg.sender,
+            "Caller isn't the owner of the KA"
+        );
     }
 
     function _checkParanetIncentivizationProposalVoter() internal view virtual {

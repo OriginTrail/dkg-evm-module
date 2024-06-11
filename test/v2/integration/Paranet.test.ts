@@ -19,7 +19,7 @@ import {
 } from '../../../typechain';
 import { ContentAssetStructs } from '../../../typechain/contracts/v2/assets/ContentAsset.sol/ContentAssetV2';
 
-type ParanetIncentivesPoolFixture = {
+type ParanetNeuroIncentivesPoolFixture = {
   accounts: SignerWithAddress[];
   ContentAsset: ContentAssetV2;
   ContentAssetStorage: ContentAssetStorageV2;
@@ -43,7 +43,7 @@ describe('@v2 @integration Paranet', function () {
   let ParanetsRegistry: ParanetsRegistry;
   let Paranet: Paranet;
 
-  async function deployParanetIncentivesPoolFixture(): Promise<ParanetIncentivesPoolFixture> {
+  async function deployParanetNeuroIncentivesPoolFixture(): Promise<ParanetNeuroIncentivesPoolFixture> {
     await hre.deployments.fixture([
       'Token',
       'ServiceAgreementV1',
@@ -83,8 +83,8 @@ describe('@v2 @integration Paranet', function () {
   async function createAsset(
     assetInputStruct: ContentAssetStructs.AssetInputArgsStruct,
   ): Promise<{ tokenId: number; keyword: BytesLike; agreementId: BytesLike }> {
-    await Token.increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
-    const receipt = await (await ContentAsset.createAsset(assetInputStruct)).wait();
+    await Token.connect(operator).increaseAllowance(ServiceAgreementV1.address, assetInputStruct.tokenAmount);
+    const receipt = await (await ContentAsset.connect(operator).createAsset(assetInputStruct)).wait();
     const tokenId = Number(receipt.logs[0].topics[3]);
 
     const keyword = hre.ethers.utils.solidityPack(
@@ -105,7 +105,7 @@ describe('@v2 @integration Paranet', function () {
     tracToNeuroEmissionMultiplier: BigNumberish,
     paranetOperatorRewardPercentage: BigNumberish,
     paranetIncentivizationProposalVotersRewardPercentage: BigNumberish,
-  ): Promise<{ paranetId: BytesLike; paranetIncentivesPoolAddress: Address }> {
+  ): Promise<{ paranetId: BytesLike; ParanetNeuroIncentivesPoolAddress: Address }> {
     const tx = await Paranet.connect(operator).registerParanet(
       ContentAssetStorage.address,
       paranetKATokenId,
@@ -121,11 +121,11 @@ describe('@v2 @integration Paranet', function () {
     const paranetId = hre.ethers.utils.keccak256(
       hre.ethers.utils.solidityPack(['address', 'uint256'], [ContentAssetStorage.address, paranetKATokenId]),
     );
-    const paranetIncentivesPoolAddress = await ParanetsRegistry.getIncentivesPoolAddress(paranetId);
+    const ParanetNeuroIncentivesPoolAddress = await ParanetsRegistry.getIncentivesPoolAddress(paranetId, 'Neuroweb');
 
     return {
       paranetId,
-      paranetIncentivesPoolAddress,
+      ParanetNeuroIncentivesPoolAddress,
     };
   }
 
@@ -140,7 +140,7 @@ describe('@v2 @integration Paranet', function () {
       ParanetKnowledgeMinersRegistry,
       ParanetsRegistry,
       Paranet,
-    } = await loadFixture(deployParanetIncentivesPoolFixture));
+    } = await loadFixture(deployParanetNeuroIncentivesPoolFixture));
 
     operator = accounts[1];
     miner = accounts[2];
@@ -159,7 +159,7 @@ describe('@v2 @integration Paranet', function () {
     };
     const { tokenId: paranetTokenId } = await createAsset(paranetKAStruct);
 
-    const { paranetIncentivesPoolAddress } = await registerParanet(
+    const { ParanetNeuroIncentivesPoolAddress } = await registerParanet(
       paranetTokenId,
       'Paranet1',
       'Test Paranet',
@@ -168,21 +168,24 @@ describe('@v2 @integration Paranet', function () {
       500, // paranetIncentivizationProposalVotersRewardPercentage -- 5%
     );
 
-    const ParanetIncentivesPool = await hre.ethers.getContractAt('ParanetIncentivesPool', paranetIncentivesPoolAddress);
+    const ParanetNeuroIncentivesPool = await hre.ethers.getContractAt(
+      'ParanetNeuroIncentivesPool',
+      ParanetNeuroIncentivesPoolAddress,
+    );
 
-    const initialBalance = await ParanetIncentivesPool.getNeuroBalance();
+    const initialBalance = await ParanetNeuroIncentivesPool.getNeuroBalance();
 
     expect(initialBalance).to.be.equal(0);
 
     const value = hre.ethers.utils.parseEther('100');
     const tx = await operator.sendTransaction({
-      to: ParanetIncentivesPool.address,
+      to: ParanetNeuroIncentivesPool.address,
       value,
     });
     await tx.wait();
 
-    const finalBalance = await ParanetIncentivesPool.getNeuroBalance();
-    const totalNeuroReceived = await ParanetIncentivesPool.totalNeuroReceived();
+    const finalBalance = await ParanetNeuroIncentivesPool.getNeuroBalance();
+    const totalNeuroReceived = await ParanetNeuroIncentivesPool.totalNeuroReceived();
 
     expect(finalBalance).to.be.equal(totalNeuroReceived).to.be.equal(value);
   });
@@ -200,7 +203,7 @@ describe('@v2 @integration Paranet', function () {
     };
     const { tokenId: paranetTokenId } = await createAsset(paranetKAStruct);
 
-    const { paranetIncentivesPoolAddress } = await registerParanet(
+    const { ParanetNeuroIncentivesPoolAddress } = await registerParanet(
       paranetTokenId,
       'Paranet1',
       'Test Paranet',
@@ -209,19 +212,21 @@ describe('@v2 @integration Paranet', function () {
       500, // paranetIncentivizationProposalVotersRewardPercentage -- 5%
     );
 
-    const ParanetIncentivesPool = await hre.ethers.getContractAt('ParanetIncentivesPool', paranetIncentivesPoolAddress);
+    const ParanetNeuroIncentivesPool = await hre.ethers.getContractAt(
+      'ParanetNeuroIncentivesPool',
+      ParanetNeuroIncentivesPoolAddress,
+    );
 
     const value = hre.ethers.utils.parseEther('1000');
     const tx = await operator.sendTransaction({
-      to: ParanetIncentivesPool.address,
+      to: ParanetNeuroIncentivesPool.address,
       value,
     });
     await tx.wait();
 
-    await expect(ParanetIncentivesPool.connect(operator).claimParanetOperatorReward()).to.be.revertedWithCustomError(
-      ParanetIncentivesPool,
-      'NoOperatorRewardAvailable',
-    );
+    await expect(
+      ParanetNeuroIncentivesPool.connect(operator).claimParanetOperatorReward(),
+    ).to.be.revertedWithCustomError(ParanetNeuroIncentivesPool, 'NoOperatorRewardAvailable');
   });
 
   it('Should correctly calculate miner reward', async function () {
@@ -237,7 +242,7 @@ describe('@v2 @integration Paranet', function () {
     };
     const { tokenId: paranetTokenId } = await createAsset(paranetKAStruct);
 
-    const { paranetIncentivesPoolAddress } = await registerParanet(
+    const { ParanetNeuroIncentivesPoolAddress } = await registerParanet(
       paranetTokenId,
       'Paranet1',
       'Test Paranet',
@@ -246,11 +251,14 @@ describe('@v2 @integration Paranet', function () {
       500, // paranetIncentivizationProposalVotersRewardPercentage -- 5%
     );
 
-    const ParanetIncentivesPool = await hre.ethers.getContractAt('ParanetIncentivesPool', paranetIncentivesPoolAddress);
+    const ParanetNeuroIncentivesPool = await hre.ethers.getContractAt(
+      'ParanetNeuroIncentivesPool',
+      ParanetNeuroIncentivesPoolAddress,
+    );
 
     const value = hre.ethers.utils.parseEther('5000');
     const tx1 = await operator.sendTransaction({
-      to: ParanetIncentivesPool.address,
+      to: ParanetNeuroIncentivesPool.address,
       value,
     });
     await tx1.wait();
@@ -270,7 +278,7 @@ describe('@v2 @integration Paranet', function () {
     await Paranet.connect(miner).mintKnowledgeAsset(ContentAssetStorage.address, paranetTokenId, testKAStruct);
 
     const initialMinerBalance = await miner.getBalance();
-    const tx2 = await ParanetIncentivesPool.connect(miner).claimKnowledgeMinerReward();
+    const tx2 = await ParanetNeuroIncentivesPool.connect(miner).claimKnowledgeMinerReward();
     const tx2Receipt = await tx2.wait();
     const tx2Details = await hre.ethers.provider.getTransaction(tx2Receipt.transactionHash);
     const finalMinerBalance = await miner.getBalance();
@@ -294,7 +302,7 @@ describe('@v2 @integration Paranet', function () {
     };
     const { tokenId: paranetTokenId } = await createAsset(paranetKAStruct);
 
-    const { paranetIncentivesPoolAddress } = await registerParanet(
+    const { ParanetNeuroIncentivesPoolAddress } = await registerParanet(
       paranetTokenId,
       'Paranet1',
       'Test Paranet',
@@ -303,11 +311,14 @@ describe('@v2 @integration Paranet', function () {
       500, // paranetIncentivizationProposalVotersRewardPercentage -- 5%
     );
 
-    const ParanetIncentivesPool = await hre.ethers.getContractAt('ParanetIncentivesPool', paranetIncentivesPoolAddress);
+    const ParanetNeuroIncentivesPool = await hre.ethers.getContractAt(
+      'ParanetNeuroIncentivesPool',
+      ParanetNeuroIncentivesPoolAddress,
+    );
 
     const value = hre.ethers.utils.parseEther('6783');
     const tx1 = await operator.sendTransaction({
-      to: ParanetIncentivesPool.address,
+      to: ParanetNeuroIncentivesPool.address,
       value,
     });
     await tx1.wait();
@@ -327,7 +338,7 @@ describe('@v2 @integration Paranet', function () {
     await Paranet.connect(miner).mintKnowledgeAsset(ContentAssetStorage.address, paranetTokenId, testKAStruct);
 
     const initialMinerBalance = await miner.getBalance();
-    const tx2 = await ParanetIncentivesPool.connect(miner).claimKnowledgeMinerReward();
+    const tx2 = await ParanetNeuroIncentivesPool.connect(miner).claimKnowledgeMinerReward();
     const tx2Receipt = await tx2.wait();
     const tx2Details = await hre.ethers.provider.getTransaction(tx2Receipt.transactionHash);
     const finalMinerBalance = await miner.getBalance();
@@ -338,7 +349,7 @@ describe('@v2 @integration Paranet', function () {
     );
 
     const initialOperatorBalance = await operator.getBalance();
-    const tx3 = await ParanetIncentivesPool.connect(operator).claimParanetOperatorReward();
+    const tx3 = await ParanetNeuroIncentivesPool.connect(operator).claimParanetOperatorReward();
     const tx3Receipt = await tx3.wait();
     const tx3Details = await hre.ethers.provider.getTransaction(tx3Receipt.transactionHash);
     const finalOperatorBalance = await operator.getBalance();
@@ -362,7 +373,7 @@ describe('@v2 @integration Paranet', function () {
     };
     const { tokenId: paranetTokenId } = await createAsset(paranetKAStruct);
 
-    const { paranetIncentivesPoolAddress } = await registerParanet(
+    const { ParanetNeuroIncentivesPoolAddress } = await registerParanet(
       paranetTokenId,
       'Paranet1',
       'Test Paranet',
@@ -371,11 +382,14 @@ describe('@v2 @integration Paranet', function () {
       500, // paranetIncentivizationProposalVotersRewardPercentage -- 5%
     );
 
-    const ParanetIncentivesPool = await hre.ethers.getContractAt('ParanetIncentivesPool', paranetIncentivesPoolAddress);
+    const ParanetNeuroIncentivesPool = await hre.ethers.getContractAt(
+      'ParanetNeuroIncentivesPool',
+      ParanetNeuroIncentivesPoolAddress,
+    );
 
     const value = hre.ethers.utils.parseEther('6783');
     const tx1 = await operator.sendTransaction({
-      to: ParanetIncentivesPool.address,
+      to: ParanetNeuroIncentivesPool.address,
       value,
     });
     await tx1.wait();
@@ -395,7 +409,7 @@ describe('@v2 @integration Paranet', function () {
     await Paranet.connect(miner).mintKnowledgeAsset(ContentAssetStorage.address, paranetTokenId, testKAStruct);
 
     const initialMinerBalance = await miner.getBalance();
-    const tx2 = await ParanetIncentivesPool.connect(miner).claimKnowledgeMinerReward();
+    const tx2 = await ParanetNeuroIncentivesPool.connect(miner).claimKnowledgeMinerReward();
     const tx2Receipt = await tx2.wait();
     const tx2Details = await hre.ethers.provider.getTransaction(tx2Receipt.transactionHash);
     const finalMinerBalance = await miner.getBalance();
@@ -406,7 +420,7 @@ describe('@v2 @integration Paranet', function () {
     );
 
     const initialOperatorBalance = await operator.getBalance();
-    const tx3 = await ParanetIncentivesPool.connect(operator).claimParanetOperatorReward();
+    const tx3 = await ParanetNeuroIncentivesPool.connect(operator).claimParanetOperatorReward();
     const tx3Receipt = await tx3.wait();
     const tx3Details = await hre.ethers.provider.getTransaction(tx3Receipt.transactionHash);
     const finalOperatorBalance = await operator.getBalance();
@@ -419,7 +433,7 @@ describe('@v2 @integration Paranet', function () {
     // Send additional Neuro to the contract
     const additionalValue = hre.ethers.utils.parseEther('3000');
     const tx4 = await operator.sendTransaction({
-      to: ParanetIncentivesPool.address,
+      to: ParanetNeuroIncentivesPool.address,
       value: additionalValue,
     });
     await tx4.wait();
@@ -440,7 +454,7 @@ describe('@v2 @integration Paranet', function () {
 
     // Claim rewards for miner and operator again
     const initialMinerBalance2 = await miner.getBalance();
-    const tx5 = await ParanetIncentivesPool.connect(miner).claimKnowledgeMinerReward();
+    const tx5 = await ParanetNeuroIncentivesPool.connect(miner).claimKnowledgeMinerReward();
     const tx5Receipt = await tx5.wait();
     const tx5Details = await hre.ethers.provider.getTransaction(tx5Receipt.transactionHash);
     const finalMinerBalance2 = await miner.getBalance();
@@ -451,7 +465,7 @@ describe('@v2 @integration Paranet', function () {
     );
 
     const initialOperatorBalance2 = await operator.getBalance();
-    const tx6 = await ParanetIncentivesPool.connect(operator).claimParanetOperatorReward();
+    const tx6 = await ParanetNeuroIncentivesPool.connect(operator).claimParanetOperatorReward();
     const tx6Receipt = await tx6.wait();
     const tx6Details = await hre.ethers.provider.getTransaction(tx6Receipt.transactionHash);
     const finalOperatorBalance2 = await operator.getBalance();

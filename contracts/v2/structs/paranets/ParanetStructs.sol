@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.16;
 
+import {UnorderedNamedContractDynamicSetStructs} from "../UnorderedNamedContractDynamicSetStructs.sol";
+
 library ParanetStructs {
     struct UniversalAssetLocator {
         address knowledgeAssetStorageContract;
@@ -11,11 +13,10 @@ library ParanetStructs {
     struct Paranet {
         address paranetKAStorageContract;
         uint256 paranetKATokenId;
-        address operator;
         string name;
         string description;
-        address incentivesPool;
         uint96 cumulativeKnowledgeValue;
+        UnorderedNamedContractDynamicSetStructs.Set incentivesPools;
         bytes32[] services;
         // Service ID => Index in the array
         mapping(bytes32 => uint256) implementedServicesIndexes;
@@ -30,16 +31,19 @@ library ParanetStructs {
     struct ParanetMetadata {
         address paranetKAStorageContract;
         uint256 paranetKATokenId;
-        address operator;
         string name;
         string description;
         uint96 cumulativeKnowledgeValue;
     }
 
+    struct IncentivesPool {
+        string poolType;
+        address addr;
+    }
+
     struct ParanetService {
         address paranetServiceKAStorageContract;
         uint256 paranetServiceKATokenId;
-        address operator;
         string name;
         string description;
         address[] paranetServiceAddresses;
@@ -49,7 +53,6 @@ library ParanetStructs {
     struct ParanetServiceMetadata {
         address paranetServiceKAStorageContract;
         uint256 paranetServiceKATokenId;
-        address operator;
         string name;
         string description;
         address[] paranetServiceAddresses;

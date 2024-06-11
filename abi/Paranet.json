@@ -35,32 +35,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "paranetKnowledgeAssetStorageContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paranetTokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "knowledgeAssetStorageContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "knowledgeAssetTokenId",
-        "type": "uint256"
-      }
-    ],
-    "name": "KnowledgeAssetSubmitterIsntOwner",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "knowledgeAssetStorageAddress",
         "type": "address"
       },
@@ -260,31 +234,6 @@
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "newParanetOwner",
-        "type": "address"
-      }
-    ],
-    "name": "ParanetOwnershipTransferred",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "paranetKAStorageContract",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "paranetKATokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
         "internalType": "string",
         "name": "paranetName",
         "type": "string"
@@ -294,12 +243,6 @@
         "internalType": "string",
         "name": "paranetDescription",
         "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "incentivesPoolAddress",
-        "type": "address"
       },
       {
         "indexed": false,
@@ -318,6 +261,24 @@
         "internalType": "uint16",
         "name": "paranetIncentivizationProposalVotersRewardPercentage",
         "type": "uint16"
+      },
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "poolType",
+            "type": "string"
+          },
+          {
+            "internalType": "address",
+            "name": "addr",
+            "type": "address"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct ParanetStructs.IncentivesPool[]",
+        "name": "incentivesPools",
+        "type": "tuple[]"
       }
     ],
     "name": "ParanetRegistered",
@@ -427,31 +388,6 @@
       }
     ],
     "name": "ParanetServiceNameUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "paranetServiceKAStorageContract",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "paranetServiceKATokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "newParanetServiceOwner",
-        "type": "address"
-      }
-    ],
-    "name": "ParanetServiceOwnershipTransferred",
     "type": "event"
   },
   {
@@ -946,52 +882,6 @@
       }
     ],
     "name": "submitKnowledgeAsset",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "paranetKAStorageContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paranetKATokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      }
-    ],
-    "name": "transferParanetOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "paranetServiceKAStorageContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paranetServiceKATokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      }
-    ],
-    "name": "transferParanetServiceOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

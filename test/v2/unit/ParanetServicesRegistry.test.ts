@@ -32,8 +32,8 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
     expect(await ParanetServicesRegistry.name()).to.equal('ParanetServicesRegistry');
   });
 
-  it('The contract is version "2.0.0"', async () => {
-    expect(await ParanetServicesRegistry.version()).to.equal('2.0.0');
+  it('The contract is version "2.1.0"', async () => {
+    expect(await ParanetServicesRegistry.version()).to.equal('2.1.0');
   });
 
   it('should return a paranet exist', async () => {
@@ -82,7 +82,6 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
 
     expect(paranetServiceObject.paranetServiceKAStorageContract).to.equal(accounts[1].address);
     expect(paranetServiceObject.paranetServiceKATokenId).to.equal(1);
-    expect(paranetServiceObject.operator).to.equal(accounts[3].address);
     expect(paranetServiceObject.paranetServiceAddresses).to.deep.equal([accounts[2].address]);
     expect(paranetServiceObject.name).to.equal('Test Service');
     expect(paranetServiceObject.description).to.equal('This is a test service');
@@ -115,11 +114,6 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
       hre.ethers.utils.solidityPack(['address', 'uint256'], [accounts[1].address, 1]),
     );
 
-    await ParanetServicesRegistry.setOperatorAddress(paranetServiceId, accounts[10].address);
-    const newOperatorAddress = await ParanetServicesRegistry.getOperatorAddress(paranetServiceId);
-
-    expect(newOperatorAddress).to.equal(accounts[10].address);
-
     await ParanetServicesRegistry.setParanetServiceAddresses(paranetServiceId, [accounts[11].address]);
     const newParanetServiceAddresses = await ParanetServicesRegistry.getParanetServiceAddresses(paranetServiceId);
 
@@ -139,7 +133,6 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
   async function createParanetService(accounts: SignerWithAddress[], ParanetServicesRegistry: ParanetServicesRegistry) {
     const admin = accounts[1];
     const serviceAddresses = [accounts[2].address];
-    const operator = accounts[3];
     const paranetServiceKAStorageContract = admin;
     const paranetServiceKATokenId = 1;
     const paranetServiceName = 'Test Service';
@@ -150,7 +143,6 @@ describe('@v2 @unit ParanetServicesRegistry contract', function () {
       paranetServiceKATokenId,
       paranetServiceName,
       paranetServiceDescription,
-      operator.address,
       serviceAddresses,
     );
   }
