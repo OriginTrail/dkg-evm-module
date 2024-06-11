@@ -356,7 +356,7 @@ describe('@v2 @unit StakingV2 contract', function () {
     const minStake = Number(hre.ethers.utils.formatEther(await ParametersStorage.minimumStake()));
     const maxStake = Number(hre.ethers.utils.formatEther(await ParametersStorage.maximumStake()));
     let stakeAmount = hre.ethers.utils.parseEther(
-      `${Math.floor(Math.random() * (maxStake - minStake + 1)) + minStake}`,
+      `${Math.floor((Math.random() * (maxStake - minStake + 1)) / 10) + minStake}`,
     );
 
     let initialBalance = await Token.balanceOf(accounts[1].address);
@@ -385,7 +385,7 @@ describe('@v2 @unit StakingV2 contract', function () {
     for (let i = 2; i < 7; i += 1) {
       oldStake = await StakingStorage.totalStakes(node.identityId);
       stakeAmount = hre.ethers.utils.parseEther(
-        `${Math.floor(Math.random() * (maxStake - Number(hre.ethers.utils.formatEther(oldStake))))}`,
+        `${Math.floor((Math.random() * (maxStake - Number(hre.ethers.utils.formatEther(oldStake)))) / 10)}`,
       );
       sharesTotalSupply = await SharesContract.totalSupply();
       sharesToMint = await calculateSharesToMint(stakeAmount, sharesTotalSupply);
@@ -585,5 +585,120 @@ describe('@v2 @unit StakingV2 contract', function () {
     await expect(StakingV2.connect(accounts[1]).addReward(agreementId, identityId1, rewardAmount))
       .to.emit(StakingV2, 'RewardCollected')
       .withArgs(agreementId, identityId1, nodeId1, ServiceAgreementStorageV1U1.address, rewardAmount, 0);
+  });
+
+  it('Create 1 node; add maximum stake, add reward, withdraw inactive stake, expect immediate tokens release and events emitted', async () => {
+    const maximumStake = await ParametersStorage.maximumStake();
+    await Token.increaseAllowance(StakingV2.address, maximumStake);
+
+    const node = await createProfile(accounts[0], accounts[1]);
+
+    await StakingV2.connect(accounts[0])['addStake(uint72,uint96)'](node.identityId, maximumStake);
+    expect(await StakingStorage.totalStakes(node.identityId)).to.equal(
+      maximumStake,
+      'Total amount of stake is not set',
+    );
+
+    const agreementId = '0x' + randomBytes(32).toString('hex');
+    const startTime = Math.floor(Date.now() / 1000).toString();
+    const epochsNumber = 5;
+    const epochLength = 10;
+    const tokenAmount = hre.ethers.utils.parseEther(`${1_111_111}`);
+    const scoreFunctionId = 2;
+    const proofWindowOffsetPerc = 10;
+
+    await ServiceAgreementStorageV1U1.connect(accounts[0]).createServiceAgreementObject(
+      agreementId,
+      startTime,
+      epochsNumber,
+      epochLength,
+      tokenAmount,
+      scoreFunctionId,
+      proofWindowOffsetPerc,
+    );
+
+    const rewardAmount = hre.ethers.utils.parseEther(`${1_111_111}`);
+    await Token.connect(accounts[0]).transfer(ServiceAgreementStorageV1U1.address, rewardAmount);
+    await StakingV2.addReward(agreementId, node.identityId, rewardAmount);
+
+    const sharesAddress = await ProfileStorage.getSharesContractAddress(node.identityId);
+    const SharesContract = await hre.ethers.getContractAt<Shares>('Shares', sharesAddress);
+    const sharesBalance = await SharesContract.balanceOf(accounts[0].address);
+    const sharesTotalSupply = await SharesContract.totalSupply();
+    const eligibleTokens = await calculateEligibleTokens(node.identityId, sharesBalance, sharesTotalSupply);
+
+    const sharesToBurn = sharesBalance.mul(eligibleTokens.sub(maximumStake)).div(eligibleTokens);
+
+    await SharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
+
+    const initialBalance = await Token.balanceOf(accounts[0].address);
+
+    await expect(StakingV2.connect(accounts[0]).startStakeWithdrawal(node.identityId, sharesToBurn))
+      .to.emit(StakingV2, 'StakeWithdrawn')
+      .to.emit(StakingV2, 'InactiveStakeWithdrawn');
+
+    const finalBalance = await Token.balanceOf(accounts[0].address);
+
+    expect(finalBalance.sub(initialBalance)).to.be.equal(hre.ethers.utils.parseEther(`${1_111_111}`));
+  });
+
+  it('Create 1 node; add maximum stake, add reward, withdraw inactive+active stake, expect withdrawal request to be created', async () => {
+    const maximumStake = await ParametersStorage.maximumStake();
+    await Token.increaseAllowance(StakingV2.address, maximumStake);
+
+    const node = await createProfile(accounts[0], accounts[1]);
+
+    await StakingV2.connect(accounts[0])['addStake(uint72,uint96)'](node.identityId, maximumStake);
+    expect(await StakingStorage.totalStakes(node.identityId)).to.equal(
+      maximumStake,
+      'Total amount of stake is not set',
+    );
+
+    const agreementId = '0x' + randomBytes(32).toString('hex');
+    const startTime = Math.floor(Date.now() / 1000).toString();
+    const epochsNumber = 5;
+    const epochLength = 10;
+    const tokenAmount = hre.ethers.utils.parseEther(`${1_000_000}`);
+    const scoreFunctionId = 2;
+    const proofWindowOffsetPerc = 10;
+
+    await ServiceAgreementStorageV1U1.connect(accounts[0]).createServiceAgreementObject(
+      agreementId,
+      startTime,
+      epochsNumber,
+      epochLength,
+      tokenAmount,
+      scoreFunctionId,
+      proofWindowOffsetPerc,
+    );
+
+    const rewardAmount = hre.ethers.utils.parseEther(`${1_111_111}`);
+    await Token.connect(accounts[0]).transfer(ServiceAgreementStorageV1U1.address, rewardAmount);
+
+    await StakingV2.addReward(agreementId, node.identityId, rewardAmount);
+
+    const sharesAddress = await ProfileStorage.getSharesContractAddress(node.identityId);
+    const SharesContract = await hre.ethers.getContractAt<Shares>('Shares', sharesAddress);
+    const sharesBalance = await SharesContract.balanceOf(accounts[0].address);
+    const sharesTotalSupply = await SharesContract.totalSupply();
+    const eligibleTokens = await calculateEligibleTokens(node.identityId, sharesBalance, sharesTotalSupply);
+
+    const sharesToBurn = sharesBalance
+      .mul(eligibleTokens.sub(maximumStake))
+      .div(eligibleTokens)
+      .add(hre.ethers.utils.parseEther('1'));
+
+    await SharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
+
+    const initialBalance = await Token.balanceOf(accounts[0].address);
+
+    await expect(StakingV2.connect(accounts[0]).startStakeWithdrawal(node.identityId, sharesToBurn)).to.emit(
+      StakingV2,
+      'StakeWithdrawalStarted',
+    );
+
+    const finalBalance = await Token.balanceOf(accounts[0].address);
+
+    expect(finalBalance.sub(initialBalance)).to.be.equal(0);
   });
 });
