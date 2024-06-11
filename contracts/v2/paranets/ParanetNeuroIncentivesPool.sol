@@ -29,10 +29,10 @@ contract ParanetNeuroIncentivesPool {
     bytes32 public parentParanetId;
     // Array of Total NEURO Emission Multipliers
     // Total NEURO Emission Multiplier = Ratio of how much NEURO is released per 1 TRAC spent
-    // Minimum: 1,000,000 wei (in TRAC)
     //
-    //      10^12
-    //      1
+    // Examples:
+    //      10^12 = 1 NEURO per 1 TRAC
+    //      1 = 1 NEURO wei per 1 TRAC
     //
     ParanetStructs.NeuroEmissionMultiplier[] public neuroEmissionMultipliers;
 
