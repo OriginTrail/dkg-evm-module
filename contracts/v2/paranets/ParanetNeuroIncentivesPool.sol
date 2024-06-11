@@ -5,6 +5,8 @@ pragma solidity ^0.8.16;
 import {ParanetKnowledgeMinersRegistry} from "../storage/paranets/ParanetKnowledgeMinersRegistry.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {HubV2} from "../Hub.sol";
+import {Named} from "../../v1/interface/Named.sol";
+import {Versioned} from "../../v1/interface/Versioned.sol";
 import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
 import {ParanetStructs} from "../structs/paranets/ParanetStructs.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -12,15 +14,18 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {
     EMISSION_MULTIPLIER_SCALING_FACTOR,
     PERCENTAGE_SCALING_FACTOR,
-    VOTERS_WEIGHTS_SCALING_FACTOR
+    MAX_CUMULATIVE_VOTERS_WEIGHT
 } from "../constants/ParanetIncentivesPoolConstants.sol";
 
-contract ParanetNeuroIncentivesPool {
+contract ParanetNeuroIncentivesPool is Named, Versioned {
     event RewardDeposit(address indexed sender, uint256 amount);
     event NeuroEmissionMultiplierUpdateInitiated(uint256 oldMultiplier, uint256 newMultiplier, uint256 timestamp);
     event NeuroEmissionMultiplierUpdateFinalized(uint256 oldMultiplier, uint256 newMultiplier);
     event KnowledgeMinerRewardClaimed(address indexed miner, uint256 amount);
     event ParanetOperatorRewardClaimed(address indexed operator, uint256 amount);
+
+    string private constant _NAME = "ParanetNeuroIncentivesPool";
+    string private constant _VERSION = "2.0.0";
 
     HubV2 public hub;
     ParanetsRegistry public paranetsRegistry;
@@ -45,6 +50,7 @@ contract ParanetNeuroIncentivesPool {
     // Percentage of how much tokens from total NEURO emission goes to the Paranet Incentivization
     // Proposal Voters. Minimum: 0, Maximum: 10,000 (which is 100%)
     uint16 public paranetIncentivizationProposalVotersRewardPercentage;
+    uint16 public cumulativeVotersWeight;
 
     // Address which can set Voters list and update Total NEURO Emission multiplier
     address public votersRegistrar;
@@ -54,7 +60,8 @@ contract ParanetNeuroIncentivesPool {
     uint256 public claimedMinersNeuro;
     uint256 public claimedOperatorNeuro;
 
-    mapping(address => ParanetStructs.ParanetIncentivizationProposalVoter) public voters;
+    ParanetStructs.ParanetIncentivizationProposalVoter[] public voters;
+    mapping(address => uint256) public votersIndexes;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(
@@ -66,7 +73,6 @@ contract ParanetNeuroIncentivesPool {
         uint16 paranetOperatorRewardPercentage_,
         uint16 paranetIncentivizationProposalVotersRewardPercentage_
     ) {
-        require(tracToNeuroEmissionMultiplier <= EMISSION_MULTIPLIER_SCALING_FACTOR);
         require(
             paranetOperatorRewardPercentage_ + paranetIncentivizationProposalVotersRewardPercentage_ <
                 PERCENTAGE_SCALING_FACTOR
@@ -124,6 +130,14 @@ contract ParanetNeuroIncentivesPool {
         _;
     }
 
+    function name() external pure virtual override returns (string memory) {
+        return _NAME;
+    }
+
+    function version() external pure virtual override returns (string memory) {
+        return _VERSION;
+    }
+
     receive() external payable {
         totalNeuroReceived += msg.value;
 
@@ -145,23 +159,39 @@ contract ParanetNeuroIncentivesPool {
     function addVoters(
         ParanetStructs.ParanetIncentivizationProposalVoterInput[] calldata voters_
     ) external onlyVotersRegistrar {
-        uint16 cumulativeWeight;
-
         for (uint i; i < voters_.length; ) {
-            voters[voters_[i].addr] = ParanetStructs.ParanetIncentivizationProposalVoter({
-                addr: voters_[i].addr,
-                weight: voters_[i].weight,
-                claimedNeuro: 0
-            });
+            votersIndexes[voters_[i].addr] = voters.length;
+            voters.push(
+                ParanetStructs.ParanetIncentivizationProposalVoter({
+                    addr: voters_[i].addr,
+                    weight: voters_[i].weight,
+                    claimedNeuro: 0
+                })
+            );
 
-            cumulativeWeight += uint16(voters_[i].weight);
+            cumulativeVotersWeight += uint16(voters_[i].weight);
 
             unchecked {
                 i++;
             }
         }
 
-        require(cumulativeWeight == VOTERS_WEIGHTS_SCALING_FACTOR, "Invalid cumulative weight");
+        require(cumulativeVotersWeight <= MAX_CUMULATIVE_VOTERS_WEIGHT, "Cumulative weight is too big");
+    }
+
+    function removeVoters(uint256 limit) external onlyVotersRegistrar {
+        require(voters.length >= limit, "Limit exceeds the num of voters");
+
+        for (uint256 i; i < limit; ) {
+            cumulativeVotersWeight -= uint16(voters[voters.length - 1 - i].weight);
+
+            delete votersIndexes[voters[voters.length - 1 - i].addr];
+            voters.pop();
+
+            unchecked {
+                i++;
+            }
+        }
     }
 
     function getEffectiveEmissionRatio(uint256 timestamp) public view returns (uint256) {
@@ -268,10 +298,12 @@ contract ParanetNeuroIncentivesPool {
         pkmr.setUnrewardedTracSpent(
             msg.sender,
             parentParanetId,
-            uint96(
-                ((neuroReward - claimableNeuroReward) * EMISSION_MULTIPLIER_SCALING_FACTOR) /
-                    getEffectiveEmissionRatio(block.timestamp)
-            )
+            neuroReward == claimableNeuroReward
+                ? 0
+                : uint96(
+                    ((neuroReward - claimableNeuroReward) * EMISSION_MULTIPLIER_SCALING_FACTOR) /
+                        getEffectiveEmissionRatio(block.timestamp)
+                )
         );
         pkmr.addCumulativeAwardedNeuro(msg.sender, parentParanetId, claimableNeuroReward);
 
@@ -301,18 +333,26 @@ contract ParanetNeuroIncentivesPool {
     }
 
     function claimIncentivizationProposalVoterReward() external onlyParanetIncentivizationProposalVoter {
+        if (cumulativeVotersWeight != MAX_CUMULATIVE_VOTERS_WEIGHT) {
+            revert ParanetErrors.InvalidCumulativeVotersWeight(
+                parentParanetId,
+                cumulativeVotersWeight,
+                MAX_CUMULATIVE_VOTERS_WEIGHT
+            );
+        }
+
         uint256 claimableNeuroReward = (((((paranetsRegistry.getCumulativeKnowledgeValue(parentParanetId) *
             getEffectiveEmissionRatio(block.timestamp)) / EMISSION_MULTIPLIER_SCALING_FACTOR) *
             paranetIncentivizationProposalVotersRewardPercentage) / PERCENTAGE_SCALING_FACTOR) *
-            voters[msg.sender].weight) /
-            VOTERS_WEIGHTS_SCALING_FACTOR -
-            voters[msg.sender].claimedNeuro;
+            voters[votersIndexes[msg.sender]].weight) /
+            MAX_CUMULATIVE_VOTERS_WEIGHT -
+            voters[votersIndexes[msg.sender]].claimedNeuro;
 
         if (claimableNeuroReward == 0) {
             revert ParanetErrors.NoVotersRewardAvailable(parentParanetId);
         }
 
-        voters[msg.sender].claimedNeuro += claimableNeuroReward;
+        voters[votersIndexes[msg.sender]].claimedNeuro += claimableNeuroReward;
 
         payable(msg.sender).transfer(claimableNeuroReward);
 
@@ -333,12 +373,12 @@ contract ParanetNeuroIncentivesPool {
         );
         require(
             IERC721(paranetKAStorageContract).ownerOf(paranetKATokenId) == msg.sender,
-            "Caller isn't the owner of the KA"
+            "Caller isn't the owner of the Paranet Knowledge Asset"
         );
     }
 
     function _checkParanetIncentivizationProposalVoter() internal view virtual {
-        require(voters[msg.sender].addr == msg.sender, "Fn can only be used by voter");
+        require(voters[votersIndexes[msg.sender]].addr == msg.sender, "Fn can only be used by voter");
     }
 
     function _checkParanetKnowledgeMiner() internal view virtual {

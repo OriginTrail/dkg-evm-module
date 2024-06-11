@@ -16,4 +16,9 @@ library ParanetErrors {
     error NoVotersRewardAvailable(bytes32 paranetId);
     error ParanetServiceHasAlreadyBeenAdded(bytes32 paranetId, bytes32 paranetServiceId);
     error NoKnowledgeMinerRewardAvailable(bytes32 paranetId, address miner);
+    error InvalidCumulativeVotersWeight(
+        bytes32 paranetId,
+        uint96 currentCumulativeWeight,
+        uint96 targetCumulativeWeight
+    );
 }

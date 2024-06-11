@@ -48,6 +48,27 @@
         "type": "bytes32"
       },
       {
+        "internalType": "uint96",
+        "name": "currentCumulativeWeight",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "targetCumulativeWeight",
+        "type": "uint96"
+      }
+    ],
+    "name": "InvalidCumulativeVotersWeight",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
         "internalType": "address",
         "name": "miner",
         "type": "address"
@@ -253,6 +274,19 @@
   },
   {
     "inputs": [],
+    "name": "cumulativeVotersWeight",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "finalizeNeuroEmissionMultiplierUpdate",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -314,6 +348,19 @@
     "name": "initiateNeuroEmissionMultiplierUpdate",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "name",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -424,6 +471,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "removeVoters",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "totalNeuroReceived",
     "outputs": [
@@ -463,11 +523,24 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "version",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "uint256",
         "name": "",
-        "type": "address"
+        "type": "uint256"
       }
     ],
     "name": "voters",
@@ -485,6 +558,25 @@
       {
         "internalType": "uint256",
         "name": "claimedNeuro",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "votersIndexes",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
         "type": "uint256"
       }
     ],
