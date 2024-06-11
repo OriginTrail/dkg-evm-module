@@ -29,7 +29,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       await setupMinterRoleTx.wait();
     }
 
-    const amountToMint = hre.ethers.utils.parseEther(`${5_000_000}`);
+    const amountToMint = hre.ethers.utils.parseEther(`${10_000_000}`);
     const accounts = await hre.ethers.getSigners();
 
     for (const acc of accounts) {

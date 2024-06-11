@@ -34,6 +34,12 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
         uint256 withdrawalPeriodEnd
     );
     event StakeWithdrawn(uint72 indexed identityId, bytes nodeId, address indexed staker, uint96 withdrawnStakeAmount);
+    event InactiveStakeWithdrawn(
+        uint72 indexed identityId,
+        bytes nodeId,
+        address indexed staker,
+        uint96 withdrawnStakeAmount
+    );
     event AccumulatedOperatorFeeIncreased(
         uint72 indexed identityId,
         bytes nodeId,
@@ -161,30 +167,43 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
 
         require(sharesToBurn <= sharesContract.balanceOf(msg.sender), "sharesToBurn must be <= balance");
 
-        uint96 oldStake = ss.totalStakes(identityId);
-        uint96 stakeWithdrawalAmount = uint96((uint256(oldStake) * sharesToBurn) / sharesContract.totalSupply());
-        uint96 newStake = oldStake - stakeWithdrawalAmount;
-        uint96 newStakeWithdrawalAmount = ss.getWithdrawalRequestAmount(identityId, msg.sender) + stakeWithdrawalAmount;
-
         ParametersStorage params = parametersStorage;
 
-        uint256 withdrawalPeriodEnd = block.timestamp + params.stakeWithdrawalDelay();
-        ss.createWithdrawalRequest(identityId, msg.sender, newStakeWithdrawalAmount, withdrawalPeriodEnd);
-        ss.setTotalStake(identityId, newStake);
-        sharesContract.burnFrom(msg.sender, sharesToBurn);
+        uint96 currentStake = ss.totalStakes(identityId);
+        uint96 stakeWithdrawalAmount = uint96((uint256(currentStake) * sharesToBurn) / sharesContract.totalSupply());
 
-        if (shardingTableStorage.nodeExists(identityId) && (newStake < params.minimumStake())) {
+        ss.setTotalStake(identityId, currentStake - stakeWithdrawalAmount);
+
+        if (
+            shardingTableStorage.nodeExists(identityId) &&
+            (currentStake - stakeWithdrawalAmount) < params.minimumStake()
+        ) {
             shardingTableContract.removeNode(identityId);
         }
 
-        emit StakeWithdrawalStarted(
-            identityId,
-            ps.getNodeId(identityId),
-            msg.sender,
-            oldStake,
-            newStake,
-            withdrawalPeriodEnd
-        );
+        if (currentStake > params.maximumStake() && stakeWithdrawalAmount <= (currentStake - params.maximumStake())) {
+            ss.transferStake(msg.sender, stakeWithdrawalAmount);
+
+            emit StakeWithdrawn(identityId, ps.getNodeId(identityId), msg.sender, stakeWithdrawalAmount);
+            emit InactiveStakeWithdrawn(identityId, ps.getNodeId(identityId), msg.sender, stakeWithdrawalAmount);
+        } else {
+            uint96 newStakeWithdrawalAmount = ss.getWithdrawalRequestAmount(identityId, msg.sender) +
+                stakeWithdrawalAmount;
+            uint256 withdrawalPeriodEnd = block.timestamp + params.stakeWithdrawalDelay();
+
+            ss.createWithdrawalRequest(identityId, msg.sender, newStakeWithdrawalAmount, withdrawalPeriodEnd);
+
+            emit StakeWithdrawalStarted(
+                identityId,
+                ps.getNodeId(identityId),
+                msg.sender,
+                currentStake,
+                currentStake - stakeWithdrawalAmount,
+                withdrawalPeriodEnd
+            );
+        }
+
+        sharesContract.burnFrom(msg.sender, sharesToBurn);
     }
 
     function withdrawStake(uint72 identityId) external {

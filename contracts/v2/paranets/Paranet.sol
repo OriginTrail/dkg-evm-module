@@ -695,6 +695,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         address knowledgeAssetStorageContract,
         uint256 knowledgeAssetTokenId
     ) internal view virtual {
+        require(hub.isAssetStorage(knowledgeAssetStorageContract), "Given address isn't KA Storage");
         require(
             IERC721(knowledgeAssetStorageContract).ownerOf(knowledgeAssetTokenId) == msg.sender,
             "Caller isn't the owner of the KA"
