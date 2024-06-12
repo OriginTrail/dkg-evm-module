@@ -206,13 +206,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         emit ParanetIncetivesPoolDeployed(
             paranetKAStorageContract,
             paranetKATokenId,
-            ParanetStructs.IncentivesPool({
-                poolType: "Neuroweb",
-                addr: address(incentivesPool),
-                tracToNeuroEmissionMultiplier: tracToNeuroEmissionMultiplier,
-                operatorRewardPercentage: paranetOperatorRewardPercentage,
-                incentivizationProposalVotersRewardPercentage: paranetIncentivizationProposalVotersRewardPercentage
-            })
+            ParanetStructs.IncentivesPool({poolType: "Neuroweb", addr: address(incentivesPool)})
         );
 
         return address(incentivesPool);
@@ -243,52 +237,6 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
 
         emit ParanetDescriptionUpdated(paranetKAStorageContract, paranetKATokenId, paranetDescription);
     }
-
-    // function addParanetService(
-    //     address paranetKAStorageContract,
-    //     uint256 paranetKATokenId,
-    //     address paranetServiceKAStorageContract,
-    //     uint256 paranetServiceKATokenId
-    // )
-    //     external
-    //     onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId)
-    //     onlyKnowledgeAssetOwner(paranetServiceKAStorageContract, paranetServiceKATokenId)
-    // {
-    //     ParanetServicesRegistry psr = paranetServicesRegistry;
-    //     ParanetsRegistry pr = paranetsRegistry;
-
-    //     if (
-    //         !psr.paranetServiceExists(
-    //             keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
-    //         )
-    //     ) {
-    //         revert ParanetErrors.ParanetServiceDoesntExist(paranetServiceKAStorageContract, paranetServiceKATokenId);
-    //     }
-
-    //     if (
-    //         pr.isServiceImplemented(
-    //             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-    //             keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
-    //         )
-    //     ) {
-    //         revert ParanetErrors.ParanetServiceHasAlreadyBeenAdded(
-    //             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-    //             keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
-    //         );
-    //     }
-
-    //     pr.addService(
-    //         keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-    //         keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
-    //     );
-
-    //     emit ParanetServiceAdded(
-    //         paranetKAStorageContract,
-    //         paranetKATokenId,
-    //         paranetServiceKAStorageContract,
-    //         paranetServiceKATokenId
-    //     );
-    // }
 
     function addParanetServices(
         address paranetKAStorageContract,
