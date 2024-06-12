@@ -18,6 +18,7 @@ import {
   Token,
   ServiceAgreementV1,
 } from '../../../typechain';
+import { ParanetStructs } from '../../../typechain/contracts/v2/paranets/Paranet';
 
 type deployParanetFixture = {
   accounts: SignerWithAddress[];
@@ -118,8 +119,8 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     expect(await Paranet.name()).to.equal('Paranet');
   });
 
-  it('The contract is version "2.1.0"', async () => {
-    expect(await Paranet.version()).to.equal('2.1.0');
+  it('The contract is version "2.1.1"', async () => {
+    expect(await Paranet.version()).to.equal('2.1.1');
   });
 
   it('should register paranet', async () => {
@@ -139,9 +140,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
 
     const paranetName = 'Test paranet 1';
     const paranetDescription = 'Description of Test Paranet';
-    const tracToNeuroEmissionMultiplier = 5;
-    const paranetOperatorRewardPercentage = 1_000; // 10%
-    const paranetIncentivizationProposalVotersRewardPercentage = 500; // 5%
 
     await expect(
       Paranet.connect(accounts[101]).registerParanet(
@@ -149,9 +147,6 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
         paranetKATokenId,
         paranetName,
         paranetDescription,
-        tracToNeuroEmissionMultiplier,
-        paranetOperatorRewardPercentage,
-        paranetIncentivizationProposalVotersRewardPercentage,
       ),
     ).to.be.revertedWithCustomError(Paranet, 'ParanetHasAlreadyBeenRegistered');
   });
@@ -172,8 +167,8 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
 
     expect(await incentivesPool.callStatic.parentParanetId()).to.be.equal(paranetId);
     expect(await incentivesPool.callStatic.neuroEmissionMultipliers(0)).to.be.deep.equal([
-      5,
-      (await hre.ethers.provider.getBlock('latest')).timestamp,
+      hre.ethers.BigNumber.from(5),
+      hre.ethers.BigNumber.from((await hre.ethers.provider.getBlock('latest')).timestamp),
       true,
     ]);
     expect(await incentivesPool.callStatic.paranetOperatorRewardPercentage()).to.be.equal(1_000);
@@ -413,11 +408,17 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     const { paranetServiceKAStorageContract, paranetServiceKATokenId, paranetServiceId } =
       await registerParanetService();
 
-    await Paranet.connect(accounts[103]).addParanetService(
+    const paranetServices: ParanetStructs.UniversalAssetLocatorStruct[] = [
+      {
+        knowledgeAssetStorageContract: paranetServiceKAStorageContract,
+        tokenId: paranetServiceKATokenId,
+      },
+    ];
+
+    await Paranet.connect(accounts[103]).addParanetServices(
       paranetKAStorageContract,
       paranetKATokenId,
-      paranetServiceKAStorageContract,
-      paranetServiceKATokenId,
+      paranetServices,
     );
 
     const isServiceImplemented = await ParanetsRegistry.isServiceImplemented(paranetId, paranetServiceId);
@@ -434,33 +435,36 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 3);
     const { paranetServiceKAStorageContract, paranetServiceKATokenId } = await registerParanetService();
 
+    const paranetServices: ParanetStructs.UniversalAssetLocatorStruct[] = [
+      {
+        knowledgeAssetStorageContract: paranetServiceKAStorageContract,
+        tokenId: paranetServiceKATokenId,
+      },
+    ];
+
     await expect(
-      Paranet.connect(accounts[153]).addParanetService(
-        paranetKAStorageContract,
-        paranetKATokenId,
-        paranetServiceKAStorageContract,
-        paranetServiceKATokenId,
-      ),
+      Paranet.connect(accounts[153]).addParanetServices(paranetKAStorageContract, paranetKATokenId, paranetServices),
     ).to.be.revertedWith("Caller isn't the owner of the KA");
   });
   it('should revert on add paranet service that was already added to paranet', async () => {
     const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 3);
     const { paranetServiceKAStorageContract, paranetServiceKATokenId } = await registerParanetService();
 
-    await Paranet.connect(accounts[103]).addParanetService(
+    const paranetServices: ParanetStructs.UniversalAssetLocatorStruct[] = [
+      {
+        knowledgeAssetStorageContract: paranetServiceKAStorageContract,
+        tokenId: paranetServiceKATokenId,
+      },
+    ];
+
+    await Paranet.connect(accounts[103]).addParanetServices(
       paranetKAStorageContract,
       paranetKATokenId,
-      paranetServiceKAStorageContract,
-      paranetServiceKATokenId,
+      paranetServices,
     );
 
     await expect(
-      Paranet.connect(accounts[103]).addParanetService(
-        paranetKAStorageContract,
-        paranetKATokenId,
-        paranetServiceKAStorageContract,
-        paranetServiceKATokenId,
-      ),
+      Paranet.connect(accounts[103]).addParanetServices(paranetKAStorageContract, paranetKATokenId, paranetServices),
     ).to.be.revertedWithCustomError(Paranet, 'ParanetServiceHasAlreadyBeenAdded');
   });
   it('should revert on add non existing paranet service to paranet with paranet operator wallet', async () => {
@@ -484,25 +488,30 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     const paranetServiceKAStorageContract = ContentAssetStorageV2.address;
     const paranetServiceKATokenId = Number(receipt.logs[0].topics[3]);
 
+    const paranetServices: ParanetStructs.UniversalAssetLocatorStruct[] = [
+      {
+        knowledgeAssetStorageContract: paranetServiceKAStorageContract,
+        tokenId: paranetServiceKATokenId,
+      },
+    ];
+
     await expect(
-      Paranet.connect(accounts[103]).addParanetService(
-        paranetKAStorageContract,
-        paranetKATokenId,
-        paranetServiceKAStorageContract,
-        paranetServiceKATokenId,
-      ),
+      Paranet.connect(accounts[103]).addParanetServices(paranetKAStorageContract, paranetKATokenId, paranetServices),
     ).to.be.revertedWithCustomError(Paranet, 'ParanetServiceDoesntExist');
   });
   it('should add paranet service to paranet emit event', async () => {
     const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 3);
     const { paranetServiceKAStorageContract, paranetServiceKATokenId } = await registerParanetService();
+
+    const paranetServices: ParanetStructs.UniversalAssetLocatorStruct[] = [
+      {
+        knowledgeAssetStorageContract: paranetServiceKAStorageContract,
+        tokenId: paranetServiceKATokenId,
+      },
+    ];
+
     await expect(
-      Paranet.connect(accounts[103]).addParanetService(
-        paranetKAStorageContract,
-        paranetKATokenId,
-        paranetServiceKAStorageContract,
-        paranetServiceKATokenId,
-      ),
+      Paranet.connect(accounts[103]).addParanetServices(paranetKAStorageContract, paranetKATokenId, paranetServices),
     ).to.emit(Paranet, 'ParanetServiceAdded');
   });
 
@@ -918,6 +927,10 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       paranetKATokenId,
       paranetName,
       paranetDescription,
+    );
+    await Paranet.connect(accounts[100 + number]).deployNeuroIncentivesPool(
+      paranetKAStorageContract,
+      paranetKATokenId,
       tracToNeuroEmissionMultiplier,
       paranetOperatorRewardPercentage,
       paranetIncentivizationProposalVotersRewardPercentage,

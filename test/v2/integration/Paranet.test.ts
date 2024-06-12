@@ -106,17 +106,22 @@ describe('@v2 @integration Paranet', function () {
     paranetOperatorRewardPercentage: BigNumberish,
     paranetIncentivizationProposalVotersRewardPercentage: BigNumberish,
   ): Promise<{ paranetId: BytesLike; ParanetNeuroIncentivesPoolAddress: Address }> {
-    const tx = await Paranet.connect(operator).registerParanet(
+    const tx1 = await Paranet.connect(operator).registerParanet(
       ContentAssetStorage.address,
       paranetKATokenId,
       paranetName,
       paranetDescription,
+    );
+    await tx1.wait();
+
+    const tx2 = await Paranet.connect(operator).deployNeuroIncentivesPool(
+      ContentAssetStorage.address,
+      paranetKATokenId,
       tracToNeuroEmissionMultiplier,
       paranetOperatorRewardPercentage,
       paranetIncentivizationProposalVotersRewardPercentage,
     );
-
-    await tx.wait();
+    await tx2.wait();
 
     const paranetId = hre.ethers.utils.keccak256(
       hre.ethers.utils.solidityPack(['address', 'uint256'], [ContentAssetStorage.address, paranetKATokenId]),

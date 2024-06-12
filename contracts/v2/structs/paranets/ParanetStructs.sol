@@ -39,6 +39,9 @@ library ParanetStructs {
     struct IncentivesPool {
         string poolType;
         address addr;
+        uint256 tracToNeuroEmissionMultiplier;
+        uint16 operatorRewardPercentage;
+        uint16 incentivizationProposalVotersRewardPercentage;
     }
 
     struct ParanetService {

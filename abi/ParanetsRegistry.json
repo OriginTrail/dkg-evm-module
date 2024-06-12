@@ -647,6 +647,21 @@
             "internalType": "address",
             "name": "addr",
             "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tracToNeuroEmissionMultiplier",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint16",
+            "name": "operatorRewardPercentage",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "incentivizationProposalVotersRewardPercentage",
+            "type": "uint16"
           }
         ],
         "internalType": "struct ParanetStructs.IncentivesPool[]",

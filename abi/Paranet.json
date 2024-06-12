@@ -74,6 +74,32 @@
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "poolType",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "poolAddress",
+        "type": "address"
+      }
+    ],
+    "name": "ParanetIncentivesPoolAlreadyExists",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "knowledgeAssetStorageAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
       }
     ],
     "name": "ParanetServiceDoesntExist",
@@ -208,6 +234,58 @@
         "type": "uint256"
       },
       {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "poolType",
+            "type": "string"
+          },
+          {
+            "internalType": "address",
+            "name": "addr",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tracToNeuroEmissionMultiplier",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint16",
+            "name": "operatorRewardPercentage",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "incentivizationProposalVotersRewardPercentage",
+            "type": "uint16"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct ParanetStructs.IncentivesPool",
+        "name": "incentivesPool",
+        "type": "tuple"
+      }
+    ],
+    "name": "ParanetIncetivesPoolDeployed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "paranetKAStorageContract",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "paranetKATokenId",
+        "type": "uint256"
+      },
+      {
         "indexed": false,
         "internalType": "string",
         "name": "newParanetName",
@@ -245,24 +323,6 @@
         "type": "string"
       },
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "paranetTracToNeuroEmissionMultiplier",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "paranetOperatorRewardPercentage",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "paranetIncentivizationProposalVotersRewardPercentage",
-        "type": "uint16"
-      },
-      {
         "components": [
           {
             "internalType": "string",
@@ -273,6 +333,21 @@
             "internalType": "address",
             "name": "addr",
             "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tracToNeuroEmissionMultiplier",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint16",
+            "name": "operatorRewardPercentage",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "incentivizationProposalVotersRewardPercentage",
+            "type": "uint16"
           }
         ],
         "indexed": false,
@@ -440,34 +515,6 @@
         "type": "uint256"
       },
       {
-        "internalType": "address",
-        "name": "paranetServiceKAStorageContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paranetServiceKATokenId",
-        "type": "uint256"
-      }
-    ],
-    "name": "addParanetService",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "paranetKAStorageContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paranetKATokenId",
-        "type": "uint256"
-      },
-      {
         "components": [
           {
             "internalType": "address",
@@ -514,6 +561,45 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKATokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tracToNeuroEmissionMultiplier",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "paranetOperatorRewardPercentage",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "paranetIncentivizationProposalVotersRewardPercentage",
+        "type": "uint16"
+      }
+    ],
+    "name": "deployNeuroIncentivesPool",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -752,21 +838,6 @@
         "internalType": "string",
         "name": "paranetDescription",
         "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "tracToNeuroEmissionMultiplier",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint16",
-        "name": "paranetOperatorRewardPercentage",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "paranetIncentivizationProposalVotersRewardPercentage",
-        "type": "uint16"
       }
     ],
     "name": "registerParanet",

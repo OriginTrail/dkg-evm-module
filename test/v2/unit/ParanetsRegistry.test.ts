@@ -108,10 +108,6 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
 
     expect(description).to.be.equal('Description of Test Paranet');
 
-    const incentivesPool = await ParanetsRegistry.getIncentivesPoolAddress(paranetId, 'Neuroweb');
-
-    expect(incentivesPool).to.be.equal(accounts[2].address);
-
     const [paranetKAStorageContract, paranetKATokenId] = await ParanetsRegistry.getParanetKnowledgeAssetLocator(
       paranetId,
     );
@@ -391,10 +387,7 @@ async function createParanet(accounts: SignerWithAddress[], ParanetsRegistry: Pa
   const tokenId = 123;
   const paranetName = 'Test Paranet';
   const paranetDescription = 'Description of Test Paranet';
-  const incentivesPool = accounts[2];
-  const incentivesPools: ParanetStructs.IncentivesPoolStruct[] = [
-    { poolType: 'Neuroweb', addr: incentivesPool.address },
-  ];
+  const incentivesPools: ParanetStructs.IncentivesPoolStruct[] = [];
 
   const paranetId = await ParanetsRegistry.registerParanet(
     knowledgeAssetStorageContract.address,

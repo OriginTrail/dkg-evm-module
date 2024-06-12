@@ -29,10 +29,12 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 indexed paranetKATokenId,
         string paranetName,
         string paranetDescription,
-        uint256 paranetTracToNeuroEmissionMultiplier,
-        uint16 paranetOperatorRewardPercentage,
-        uint16 paranetIncentivizationProposalVotersRewardPercentage,
         ParanetStructs.IncentivesPool[] incentivesPools
+    );
+    event ParanetIncetivesPoolDeployed(
+        address indexed paranetKAStorageContract,
+        uint256 indexed paranetKATokenId,
+        ParanetStructs.IncentivesPool incentivesPool
     );
     event ParanetNameUpdated(
         address indexed paranetKAStorageContract,
@@ -82,7 +84,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
     event AssetMinted(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
 
     string private constant _NAME = "Paranet";
-    string private constant _VERSION = "2.1.0";
+    string private constant _VERSION = "2.1.1";
 
     ParanetsRegistry public paranetsRegistry;
     ParanetServicesRegistry public paranetServicesRegistry;
@@ -130,16 +132,59 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         address paranetKAStorageContract,
         uint256 paranetKATokenId,
         string calldata paranetName,
-        string calldata paranetDescription,
-        uint256 tracToNeuroEmissionMultiplier,
-        uint16 paranetOperatorRewardPercentage,
-        uint16 paranetIncentivizationProposalVotersRewardPercentage
+        string calldata paranetDescription
     ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) returns (bytes32) {
-        HubV2 h = hub;
         ParanetsRegistry pr = paranetsRegistry;
 
         if (pr.paranetExists(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)))) {
             revert ParanetErrors.ParanetHasAlreadyBeenRegistered(paranetKAStorageContract, paranetKATokenId);
+        }
+
+        ParanetStructs.IncentivesPool[] memory incentivesPools = new ParanetStructs.IncentivesPool[](0);
+
+        emit ParanetRegistered(
+            paranetKAStorageContract,
+            paranetKATokenId,
+            paranetName,
+            paranetDescription,
+            incentivesPools
+        );
+
+        return
+            pr.registerParanet(
+                paranetKAStorageContract,
+                paranetKATokenId,
+                paranetName,
+                paranetDescription,
+                incentivesPools
+            );
+    }
+
+    function deployNeuroIncentivesPool(
+        address paranetKAStorageContract,
+        uint256 paranetKATokenId,
+        uint256 tracToNeuroEmissionMultiplier,
+        uint16 paranetOperatorRewardPercentage,
+        uint16 paranetIncentivizationProposalVotersRewardPercentage
+    ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) returns (address) {
+        HubV2 h = hub;
+        ParanetsRegistry pr = paranetsRegistry;
+
+        if (
+            pr.hasIncentivesPoolByType(
+                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                "Neuroweb"
+            )
+        ) {
+            revert ParanetErrors.ParanetIncentivesPoolAlreadyExists(
+                paranetKAStorageContract,
+                paranetKATokenId,
+                "Neuroweb",
+                pr.getIncentivesPoolAddress(
+                    keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                    "Neuroweb"
+                )
+            );
         }
 
         ParanetNeuroIncentivesPool incentivesPool = new ParanetNeuroIncentivesPool(
@@ -152,28 +197,25 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             paranetIncentivizationProposalVotersRewardPercentage
         );
 
-        ParanetStructs.IncentivesPool[] memory incentivesPools = new ParanetStructs.IncentivesPool[](1);
-        incentivesPools[0] = ParanetStructs.IncentivesPool({poolType: "Neuroweb", addr: address(incentivesPool)});
-
-        emit ParanetRegistered(
-            paranetKAStorageContract,
-            paranetKATokenId,
-            paranetName,
-            paranetDescription,
-            tracToNeuroEmissionMultiplier,
-            paranetOperatorRewardPercentage,
-            paranetIncentivizationProposalVotersRewardPercentage,
-            incentivesPools
+        pr.setIncentivesPoolAddress(
+            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+            "Neuroweb",
+            address(incentivesPool)
         );
 
-        return
-            pr.registerParanet(
-                paranetKAStorageContract,
-                paranetKATokenId,
-                paranetName,
-                paranetDescription,
-                incentivesPools
-            );
+        emit ParanetIncetivesPoolDeployed(
+            paranetKAStorageContract,
+            paranetKATokenId,
+            ParanetStructs.IncentivesPool({
+                poolType: "Neuroweb",
+                addr: address(incentivesPool),
+                tracToNeuroEmissionMultiplier: tracToNeuroEmissionMultiplier,
+                operatorRewardPercentage: paranetOperatorRewardPercentage,
+                incentivizationProposalVotersRewardPercentage: paranetIncentivizationProposalVotersRewardPercentage
+            })
+        );
+
+        return address(incentivesPool);
     }
 
     function updateParanetName(
@@ -202,51 +244,51 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         emit ParanetDescriptionUpdated(paranetKAStorageContract, paranetKATokenId, paranetDescription);
     }
 
-    function addParanetService(
-        address paranetKAStorageContract,
-        uint256 paranetKATokenId,
-        address paranetServiceKAStorageContract,
-        uint256 paranetServiceKATokenId
-    )
-        external
-        onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId)
-        onlyKnowledgeAssetOwner(paranetServiceKAStorageContract, paranetServiceKATokenId)
-    {
-        ParanetServicesRegistry psr = paranetServicesRegistry;
-        ParanetsRegistry pr = paranetsRegistry;
+    // function addParanetService(
+    //     address paranetKAStorageContract,
+    //     uint256 paranetKATokenId,
+    //     address paranetServiceKAStorageContract,
+    //     uint256 paranetServiceKATokenId
+    // )
+    //     external
+    //     onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId)
+    //     onlyKnowledgeAssetOwner(paranetServiceKAStorageContract, paranetServiceKATokenId)
+    // {
+    //     ParanetServicesRegistry psr = paranetServicesRegistry;
+    //     ParanetsRegistry pr = paranetsRegistry;
 
-        if (
-            !psr.paranetServiceExists(
-                keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
-            )
-        ) {
-            revert ParanetErrors.ParanetServiceDoesntExist(paranetServiceKAStorageContract, paranetServiceKATokenId);
-        }
+    //     if (
+    //         !psr.paranetServiceExists(
+    //             keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
+    //         )
+    //     ) {
+    //         revert ParanetErrors.ParanetServiceDoesntExist(paranetServiceKAStorageContract, paranetServiceKATokenId);
+    //     }
 
-        if (
-            pr.isServiceImplemented(
-                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-                keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
-            )
-        ) {
-            revert ParanetErrors.ParanetServiceHasAlreadyBeenAdded(
-                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-                keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
-            );
-        }
+    //     if (
+    //         pr.isServiceImplemented(
+    //             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+    //             keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
+    //         )
+    //     ) {
+    //         revert ParanetErrors.ParanetServiceHasAlreadyBeenAdded(
+    //             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+    //             keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
+    //         );
+    //     }
 
-        pr.addService(
-            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
-        );
+    //     pr.addService(
+    //         keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+    //         keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
+    //     );
 
-        emit ParanetServiceAdded(
-            paranetKAStorageContract,
-            paranetKATokenId,
-            paranetServiceKAStorageContract,
-            paranetServiceKATokenId
-        );
-    }
+    //     emit ParanetServiceAdded(
+    //         paranetKAStorageContract,
+    //         paranetKATokenId,
+    //         paranetServiceKAStorageContract,
+    //         paranetServiceKATokenId
+    //     );
+    // }
 
     function addParanetServices(
         address paranetKAStorageContract,
