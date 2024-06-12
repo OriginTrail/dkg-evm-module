@@ -191,6 +191,10 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         return voters;
     }
 
+    function getVotersCount() external view returns (uint256) {
+        return voters.length;
+    }
+
     function removeVoters(uint256 limit) external onlyVotersRegistrar {
         require(voters.length >= limit, "Limit exceeds the num of voters");
 
@@ -219,7 +223,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     }
 
     function isProposalVoter(address addr) public view returns (bool) {
-        return voters[votersIndexes[addr]].addr == addr;
+        return (voters.length != 0 && voters[votersIndexes[addr]].addr == addr);
     }
 
     function getNeuroEmissionMultipliers() external view returns (ParanetStructs.NeuroEmissionMultiplier[] memory) {
