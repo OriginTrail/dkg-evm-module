@@ -69,7 +69,7 @@
     "@openzeppelin/contracts": "^4.9.3",
     "@prb/math": "^2.5.0",
     "dotenv": "^16.0.3",
-    "hardhat": "^2.22.4",
+    "hardhat": "^2.22.5",
     "hardhat-deploy": "^0.11.25",
     "hardhat-deploy-ethers": "^0.3.0-beta.13"
   },

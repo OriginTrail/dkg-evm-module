@@ -103,6 +103,37 @@
         "type": "bytes32"
       }
     ],
+    "name": "getAllIncentivesPools",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "address",
+            "name": "addr",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct UnorderedNamedContractDynamicSetStructs.Contract[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
     "name": "getCumulativeKnowledgeValue",
     "outputs": [
       {
@@ -139,6 +170,11 @@
         "internalType": "bytes32",
         "name": "paranetId",
         "type": "bytes32"
+      },
+      {
+        "internalType": "string",
+        "name": "incentivesPoolType",
+        "type": "string"
       }
     ],
     "name": "getIncentivesPoolAddress",
@@ -313,25 +349,6 @@
         "type": "bytes32"
       }
     ],
-    "name": "getOperatorAddress",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      }
-    ],
     "name": "getParanetKnowledgeAssetLocator",
     "outputs": [
       {
@@ -369,11 +386,6 @@
             "internalType": "uint256",
             "name": "paranetKATokenId",
             "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "operator",
-            "type": "address"
           },
           {
             "internalType": "string",
@@ -432,6 +444,54 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "incentivesPoolAddress",
+        "type": "address"
+      }
+    ],
+    "name": "hasIncentivesPoolByAddress",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "string",
+        "name": "incentivesPoolType",
+        "type": "string"
+      }
+    ],
+    "name": "hasIncentivesPoolByType",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -567,11 +627,6 @@
         "type": "uint256"
       },
       {
-        "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      },
-      {
         "internalType": "string",
         "name": "paranetName",
         "type": "string"
@@ -582,9 +637,21 @@
         "type": "string"
       },
       {
-        "internalType": "address",
-        "name": "incentivesPool",
-        "type": "address"
+        "components": [
+          {
+            "internalType": "string",
+            "name": "poolType",
+            "type": "string"
+          },
+          {
+            "internalType": "address",
+            "name": "addr",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct ParanetStructs.IncentivesPool[]",
+        "name": "incentivesPools",
+        "type": "tuple[]"
       }
     ],
     "name": "registerParanet",
@@ -595,6 +662,42 @@
         "type": "bytes32"
       }
     ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "incentivesPoolAddress",
+        "type": "address"
+      }
+    ],
+    "name": "removeIncentivesPool",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "string",
+        "name": "incentivesPoolType",
+        "type": "string"
+      }
+    ],
+    "name": "removeIncentivesPool",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -696,8 +799,13 @@
         "type": "bytes32"
       },
       {
+        "internalType": "string",
+        "name": "incentivesPoolType",
+        "type": "string"
+      },
+      {
         "internalType": "address",
-        "name": "incentivesPool",
+        "name": "incentivesPoolAddress",
         "type": "address"
       }
     ],
@@ -732,12 +840,12 @@
         "type": "bytes32"
       },
       {
-        "internalType": "address",
-        "name": "operator",
-        "type": "address"
+        "internalType": "uint96",
+        "name": "subtractedKnowledgeValue",
+        "type": "uint96"
       }
     ],
-    "name": "setOperatorAddress",
+    "name": "subCumulativeKnowledgeValue",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -750,12 +858,17 @@
         "type": "bytes32"
       },
       {
-        "internalType": "uint96",
-        "name": "subtractedKnowledgeValue",
-        "type": "uint96"
+        "internalType": "string",
+        "name": "incentivesPoolType",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "incentivesPoolAddress",
+        "type": "address"
       }
     ],
-    "name": "subCumulativeKnowledgeValue",
+    "name": "updateIncentivesPoolAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

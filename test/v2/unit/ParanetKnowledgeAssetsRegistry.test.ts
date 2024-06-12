@@ -4,7 +4,6 @@ import hre from 'hardhat';
 import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import { HubController, ParanetKnowledgeAssetsRegistry } from '../../../typechain';
-import {} from '../../helpers/constants';
 
 type deployParanetKnowledgeAssetsRegistryFixture = {
   accounts: SignerWithAddress[];

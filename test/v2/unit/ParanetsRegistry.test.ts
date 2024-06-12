@@ -4,7 +4,7 @@ import hre from 'hardhat';
 import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import { HubController, ParanetsRegistry } from '../../../typechain';
-import {} from '../../helpers/constants';
+import { ParanetStructs } from '../../../typechain/contracts/v2/paranets/Paranet';
 
 type deployParanetsRegistryFixture = {
   accounts: SignerWithAddress[];
@@ -34,8 +34,8 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     expect(await ParanetsRegistry.name()).to.equal('ParanetsRegistry');
   });
 
-  it('The contract is version "2.0.0"', async () => {
-    expect(await ParanetsRegistry.version()).to.equal('2.0.0');
+  it('The contract is version "2.1.0"', async () => {
+    expect(await ParanetsRegistry.version()).to.equal('2.1.0');
   });
 
   // it('should register a paranet and return the correct paranet ID', async () => {
@@ -96,14 +96,9 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     expect(paranetMetadata.paranetKAStorageContract).to.be.equal(accounts[1].address);
     expect(paranetMetadata.paranetKATokenId).to.be.equal(123);
     //How to get message sender?
-    expect(paranetMetadata.operator).to.be.equal(accounts[3].address);
     expect(paranetMetadata.name).to.be.equal('Test Paranet');
     expect(paranetMetadata.description).to.be.equal('Description of Test Paranet');
     expect(paranetMetadata.cumulativeKnowledgeValue).to.be.equal(0);
-
-    const operatorAddress = await ParanetsRegistry.getOperatorAddress(paranetId);
-
-    expect(operatorAddress).to.be.equal(accounts[3].address);
 
     const name = await ParanetsRegistry.getName(paranetId);
 
@@ -113,7 +108,7 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
 
     expect(description).to.be.equal('Description of Test Paranet');
 
-    const incentivesPool = await ParanetsRegistry.getIncentivesPoolAddress(paranetId);
+    const incentivesPool = await ParanetsRegistry.getIncentivesPoolAddress(paranetId, 'Neuroweb');
 
     expect(incentivesPool).to.be.equal(accounts[2].address);
 
@@ -134,11 +129,6 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
         [accounts[1].address, 123], // Values to encode
       ),
     );
-
-    await ParanetsRegistry.setOperatorAddress(paranetId, accounts[5].address);
-    const operatorAddress = await ParanetsRegistry.getOperatorAddress(paranetId);
-
-    expect(operatorAddress).to.be.equal(accounts[5].address);
 
     await ParanetsRegistry.setName(paranetId, 'New Test Paranet');
     const name = await ParanetsRegistry.getName(paranetId);
@@ -402,15 +392,16 @@ async function createParanet(accounts: SignerWithAddress[], ParanetsRegistry: Pa
   const paranetName = 'Test Paranet';
   const paranetDescription = 'Description of Test Paranet';
   const incentivesPool = accounts[2];
-  const operator = accounts[3];
+  const incentivesPools: ParanetStructs.IncentivesPoolStruct[] = [
+    { poolType: 'Neuroweb', addr: incentivesPool.address },
+  ];
 
   const paranetId = await ParanetsRegistry.registerParanet(
     knowledgeAssetStorageContract.address,
     tokenId,
-    operator.address,
     paranetName,
     paranetDescription,
-    incentivesPool.address,
+    incentivesPools,
   );
   return paranetId;
 }

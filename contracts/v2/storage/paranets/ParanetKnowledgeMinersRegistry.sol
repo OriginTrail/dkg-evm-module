@@ -10,7 +10,7 @@ import {ParanetStructs} from "../../structs/paranets/ParanetStructs.sol";
 
 contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
     string private constant _NAME = "ParanetKnowledgeMinersRegistry";
-    string private constant _VERSION = "2.0.0";
+    string private constant _VERSION = "2.0.1";
 
     ParanetsRegistry public paranetsRegistry;
 
@@ -378,7 +378,7 @@ contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
 
     function _checkSender(bytes32 paranetId) internal view virtual {
         require(
-            hub.isContract(msg.sender) || paranetsRegistry.getIncentivesPoolAddress(paranetId) == msg.sender,
+            hub.isContract(msg.sender) || paranetsRegistry.hasIncentivesPoolByAddress(paranetId, msg.sender),
             "Fn can only be called by the hub contracts or Paranet incentives pool"
         );
     }

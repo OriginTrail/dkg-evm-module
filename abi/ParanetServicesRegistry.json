@@ -69,12 +69,12 @@
         "type": "bytes32"
       }
     ],
-    "name": "getOperatorAddress",
+    "name": "getParanetServiceAddresses",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "address[]",
         "name": "",
-        "type": "address"
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
@@ -88,12 +88,17 @@
         "type": "bytes32"
       }
     ],
-    "name": "getParanetServiceAddresses",
+    "name": "getParanetServiceKnowledgeAssetLocator",
     "outputs": [
       {
-        "internalType": "address[]",
+        "internalType": "address",
         "name": "",
-        "type": "address[]"
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -120,11 +125,6 @@
             "internalType": "uint256",
             "name": "paranetServiceKATokenId",
             "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "operator",
-            "type": "address"
           },
           {
             "internalType": "string",
@@ -242,11 +242,6 @@
         "type": "string"
       },
       {
-        "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      },
-      {
         "internalType": "address[]",
         "name": "paranetServiceAddresses",
         "type": "address[]"
@@ -318,24 +313,6 @@
       }
     ],
     "name": "setName",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetServiceId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      }
-    ],
-    "name": "setOperatorAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

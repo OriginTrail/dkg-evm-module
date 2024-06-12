@@ -56,6 +56,12 @@ contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
         uint256 withdrawalPeriodEnd
     );
     event StakeWithdrawn(uint72 indexed identityId, bytes nodeId, address indexed staker, uint96 withdrawnStakeAmount);
+    event InactiveStakeWithdrawn(
+        uint72 indexed identityId,
+        bytes nodeId,
+        address indexed staker,
+        uint96 withdrawnStakeAmount
+    );
     event SharesBurned(
         uint72 indexed identityId,
         address indexed sharesContractAddress,
@@ -73,7 +79,7 @@ contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
     event OperatorFeeChangeFinished(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
-    string private constant _VERSION = "2.1.0";
+    string private constant _VERSION = "2.1.1";
 
     ShardingTableV2 public shardingTableContract;
     IdentityStorageV2 public identityStorage;
@@ -215,30 +221,44 @@ contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
             revert TokenErrors.TooLowBalance(address(sharesContract), sharesContract.balanceOf(msg.sender));
         }
 
-        uint96 oldStake = ss.totalStakes(identityId);
-        uint96 stakeWithdrawalAmount = uint96((uint256(oldStake) * sharesToBurn) / sharesContract.totalSupply());
-        uint96 newStake = oldStake - stakeWithdrawalAmount;
-        uint96 newStakeWithdrawalAmount = ss.getWithdrawalRequestAmount(identityId, msg.sender) + stakeWithdrawalAmount;
-
         ParametersStorage params = parametersStorage;
 
-        uint256 withdrawalPeriodEnd = block.timestamp + params.stakeWithdrawalDelay();
-        ss.createWithdrawalRequest(identityId, msg.sender, newStakeWithdrawalAmount, withdrawalPeriodEnd);
-        ss.setTotalStake(identityId, newStake);
-        sharesContract.burnFrom(msg.sender, sharesToBurn);
+        uint96 currentStake = ss.totalStakes(identityId);
+        uint96 stakeWithdrawalAmount = uint96((uint256(currentStake) * sharesToBurn) / sharesContract.totalSupply());
 
-        if (shardingTableStorage.nodeExists(identityId) && (newStake < params.minimumStake())) {
+        ss.setTotalStake(identityId, currentStake - stakeWithdrawalAmount);
+
+        if (
+            shardingTableStorage.nodeExists(identityId) &&
+            (currentStake - stakeWithdrawalAmount) < params.minimumStake()
+        ) {
             shardingTableContract.removeNode(identityId);
         }
 
-        emit StakeWithdrawalStarted(
-            identityId,
-            ps.getNodeId(identityId),
-            msg.sender,
-            oldStake,
-            newStake,
-            withdrawalPeriodEnd
-        );
+        if (currentStake > params.maximumStake() && stakeWithdrawalAmount <= (currentStake - params.maximumStake())) {
+            ss.transferStake(msg.sender, stakeWithdrawalAmount);
+
+            emit StakeWithdrawn(identityId, ps.getNodeId(identityId), msg.sender, stakeWithdrawalAmount);
+            emit InactiveStakeWithdrawn(identityId, ps.getNodeId(identityId), msg.sender, stakeWithdrawalAmount);
+        } else {
+            uint96 newStakeWithdrawalAmount = ss.getWithdrawalRequestAmount(identityId, msg.sender) +
+                stakeWithdrawalAmount;
+            uint256 withdrawalPeriodEnd = block.timestamp + params.stakeWithdrawalDelay();
+
+            ss.createWithdrawalRequest(identityId, msg.sender, newStakeWithdrawalAmount, withdrawalPeriodEnd);
+
+            emit StakeWithdrawalStarted(
+                identityId,
+                ps.getNodeId(identityId),
+                msg.sender,
+                currentStake,
+                currentStake - stakeWithdrawalAmount,
+                withdrawalPeriodEnd
+            );
+        }
+
+        sharesContract.burnFrom(msg.sender, sharesToBurn);
+
         emit SharesBurned(identityId, address(sharesContract), msg.sender, sharesToBurn, sharesContract.totalSupply());
     }
 

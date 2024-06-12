@@ -318,83 +318,11 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
     }
 
     function cancelAssetStateUpdate(uint256 tokenId) external onlyAssetOwner(tokenId) {
-        ContentAssetStorage cas = contentAssetStorage;
-        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
-        UnfinalizedStateStorage uss = unfinalizedStateStorage;
+        _cancelAssetStateUpdate(tokenId);
+    }
 
-        address contentAssetStorageAddress = address(cas);
-
-        bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
-
-        bytes32 agreementId = hashingProxy.callHashFunction(
-            HASH_FUNCTION_ID,
-            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
-        );
-
-        uint256 startTime;
-        uint16 epochsNumber;
-        uint16 currentEpoch;
-        uint128 epochLength;
-        (startTime, epochsNumber, epochLength, , ) = sasProxy.getAgreementData(agreementId);
-
-        if (block.timestamp > startTime + epochsNumber * epochLength) {
-            revert ContentAssetErrors.AssetExpired(tokenId);
-        }
-
-        currentEpoch = uint16((block.timestamp - startTime) / epochLength);
-
-        bytes32 unfinalizedState = uss.getUnfinalizedState(tokenId);
-        uint256 unfinalizedStateIndex = cas.getAssertionIdsLength(tokenId);
-
-        if (unfinalizedState == bytes32(0)) {
-            revert ContentAssetErrors.NoPendingUpdate(contentAssetStorageAddress, tokenId);
-        } else if (
-            block.timestamp <=
-            sasProxy.getUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)))
-        ) {
-            revert ContentAssetErrors.PendingUpdateFinalization(
-                contentAssetStorageAddress,
-                tokenId,
-                unfinalizedStateIndex
-            );
-        }
-
-        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
-
-        if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)))) {
-            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)));
-
-            // Remove Knowledge Asset from the UpdatingKnowledgeAssets in the KnowledgeMinersRegistry
-            paranetKnowledgeMinersRegistry.removeUpdatingKnowledgeAssetState(
-                msg.sender,
-                paranetId,
-                keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId, unfinalizedState))
-            );
-        }
-
-        uint96 updateTokenAmount = sasProxy.getAgreementUpdateTokenAmount(agreementId);
-
-        if (sasProxy.agreementV1Exists(agreementId)) {
-            sasProxy.deleteServiceAgreementV1U1Object(agreementId);
-        } else {
-            sasProxy.setAgreementUpdateTokenAmount(agreementId, 0);
-        }
-
-        sasProxy.deleteCommitsCount(keccak256(abi.encodePacked(agreementId, currentEpoch, unfinalizedStateIndex)));
-        sasProxy.deleteUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)));
-        sasProxy.setV1U1AgreementEpochSubmissionHead(agreementId, currentEpoch, unfinalizedStateIndex, 0);
-
-        sasProxy.transferV1U1AgreementTokens(msg.sender, updateTokenAmount);
-
-        uss.deleteIssuer(tokenId);
-        uss.deleteUnfinalizedState(tokenId);
-
-        emit AssetStateUpdateCanceled(
-            contentAssetStorageAddress,
-            tokenId,
-            cas.getAssertionIdsLength(tokenId),
-            updateTokenAmount
-        );
+    function cancelAssetStateUpdateFromContract(uint256 tokenId) external onlyContracts {
+        _cancelAssetStateUpdate(tokenId);
     }
 
     function extendAssetStoringPeriod(
@@ -612,6 +540,86 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
         emit AssetMinted(contentAssetStorageAddress, tokenId, assertionId);
 
         return tokenId;
+    }
+
+    function _cancelAssetStateUpdate(uint256 tokenId) internal virtual {
+        ContentAssetStorage cas = contentAssetStorage;
+        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
+        UnfinalizedStateStorage uss = unfinalizedStateStorage;
+
+        address contentAssetStorageAddress = address(cas);
+
+        bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
+
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            HASH_FUNCTION_ID,
+            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
+        );
+
+        uint256 startTime;
+        uint16 epochsNumber;
+        uint16 currentEpoch;
+        uint128 epochLength;
+        (startTime, epochsNumber, epochLength, , ) = sasProxy.getAgreementData(agreementId);
+
+        if (block.timestamp > startTime + epochsNumber * epochLength) {
+            revert ContentAssetErrors.AssetExpired(tokenId);
+        }
+
+        currentEpoch = uint16((block.timestamp - startTime) / epochLength);
+
+        bytes32 unfinalizedState = uss.getUnfinalizedState(tokenId);
+        uint256 unfinalizedStateIndex = cas.getAssertionIdsLength(tokenId);
+
+        if (unfinalizedState == bytes32(0)) {
+            revert ContentAssetErrors.NoPendingUpdate(contentAssetStorageAddress, tokenId);
+        } else if (
+            block.timestamp <=
+            sasProxy.getUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)))
+        ) {
+            revert ContentAssetErrors.PendingUpdateFinalization(
+                contentAssetStorageAddress,
+                tokenId,
+                unfinalizedStateIndex
+            );
+        }
+
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
+
+        if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)))) {
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)));
+
+            // Remove Knowledge Asset from the UpdatingKnowledgeAssets in the KnowledgeMinersRegistry
+            paranetKnowledgeMinersRegistry.removeUpdatingKnowledgeAssetState(
+                msg.sender,
+                paranetId,
+                keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId, unfinalizedState))
+            );
+        }
+
+        uint96 updateTokenAmount = sasProxy.getAgreementUpdateTokenAmount(agreementId);
+
+        if (sasProxy.agreementV1Exists(agreementId)) {
+            sasProxy.deleteServiceAgreementV1U1Object(agreementId);
+        } else {
+            sasProxy.setAgreementUpdateTokenAmount(agreementId, 0);
+        }
+
+        sasProxy.deleteCommitsCount(keccak256(abi.encodePacked(agreementId, currentEpoch, unfinalizedStateIndex)));
+        sasProxy.deleteUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)));
+        sasProxy.setV1U1AgreementEpochSubmissionHead(agreementId, currentEpoch, unfinalizedStateIndex, 0);
+
+        sasProxy.transferV1U1AgreementTokens(msg.sender, updateTokenAmount);
+
+        uss.deleteIssuer(tokenId);
+        uss.deleteUnfinalizedState(tokenId);
+
+        emit AssetStateUpdateCanceled(
+            contentAssetStorageAddress,
+            tokenId,
+            cas.getAssertionIdsLength(tokenId),
+            updateTokenAmount
+        );
     }
 
     function _checkAssetOwner(uint256 tokenId) internal view virtual {

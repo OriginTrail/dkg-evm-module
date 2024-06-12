@@ -7,12 +7,6 @@ library ParanetErrors {
     error ParanetDoesntExist(address knowledgeAssetStorageAddress, uint256 tokenId);
     error ParanetServiceHasAlreadyBeenRegistered(address knowledgeAssetStorageAddress, uint256 tokenId);
     error ParanetServiceDoesntExist(address knowledgeAssetStorageAddress, uint256 tokenId);
-    error KnowledgeAssetSubmitterIsntOwner(
-        address paranetKnowledgeAssetStorageContract,
-        uint256 paranetTokenId,
-        address knowledgeAssetStorageContract,
-        uint256 knowledgeAssetTokenId
-    );
     error KnowledgeAssetIsAPartOfOtherParanet(
         address paranetKnowledgeAssetStorageContract,
         uint256 paranetTokenId,
@@ -22,4 +16,9 @@ library ParanetErrors {
     error NoVotersRewardAvailable(bytes32 paranetId);
     error ParanetServiceHasAlreadyBeenAdded(bytes32 paranetId, bytes32 paranetServiceId);
     error NoKnowledgeMinerRewardAvailable(bytes32 paranetId, address miner);
+    error InvalidCumulativeVotersWeight(
+        bytes32 paranetId,
+        uint96 currentCumulativeWeight,
+        uint96 targetCumulativeWeight
+    );
 }
