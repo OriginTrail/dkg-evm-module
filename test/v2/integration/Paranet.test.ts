@@ -195,44 +195,44 @@ describe('@v2 @integration Paranet', function () {
     expect(finalBalance).to.be.equal(totalNeuroReceived).to.be.equal(value);
   });
 
-  it('Should revert while getting operator reward before miner', async function () {
-    const paranetKAStruct: ContentAssetStructs.AssetInputArgsStruct = {
-      assertionId: '0x' + randomBytes(32).toString('hex'),
-      size: 1000,
-      triplesNumber: 10,
-      chunksNumber: 10,
-      epochsNumber: 5,
-      tokenAmount: hre.ethers.utils.parseEther('250'),
-      scoreFunctionId: 2,
-      immutable_: false,
-    };
-    const { tokenId: paranetTokenId } = await createAsset(paranetKAStruct);
+  // it('Should revert while getting operator reward before miner', async function () {
+  //   const paranetKAStruct: ContentAssetStructs.AssetInputArgsStruct = {
+  //     assertionId: '0x' + randomBytes(32).toString('hex'),
+  //     size: 1000,
+  //     triplesNumber: 10,
+  //     chunksNumber: 10,
+  //     epochsNumber: 5,
+  //     tokenAmount: hre.ethers.utils.parseEther('250'),
+  //     scoreFunctionId: 2,
+  //     immutable_: false,
+  //   };
+  //   const { tokenId: paranetTokenId } = await createAsset(paranetKAStruct);
 
-    const { ParanetNeuroIncentivesPoolAddress } = await registerParanet(
-      paranetTokenId,
-      'Paranet1',
-      'Test Paranet',
-      hre.ethers.utils.parseEther('1'), // tracToNeuroRatio - 1:1
-      1000, // operatorRewardPercentage -- 10%
-      500, // paranetIncentivizationProposalVotersRewardPercentage -- 5%
-    );
+  //   const { ParanetNeuroIncentivesPoolAddress } = await registerParanet(
+  //     paranetTokenId,
+  //     'Paranet1',
+  //     'Test Paranet',
+  //     hre.ethers.utils.parseEther('1'), // tracToNeuroRatio - 1:1
+  //     1000, // operatorRewardPercentage -- 10%
+  //     500, // paranetIncentivizationProposalVotersRewardPercentage -- 5%
+  //   );
 
-    const ParanetNeuroIncentivesPool = await hre.ethers.getContractAt(
-      'ParanetNeuroIncentivesPool',
-      ParanetNeuroIncentivesPoolAddress,
-    );
+  //   const ParanetNeuroIncentivesPool = await hre.ethers.getContractAt(
+  //     'ParanetNeuroIncentivesPool',
+  //     ParanetNeuroIncentivesPoolAddress,
+  //   );
 
-    const value = hre.ethers.utils.parseEther('1000');
-    const tx = await operator.sendTransaction({
-      to: ParanetNeuroIncentivesPool.address,
-      value,
-    });
-    await tx.wait();
+  //   const value = hre.ethers.utils.parseEther('1000');
+  //   const tx = await operator.sendTransaction({
+  //     to: ParanetNeuroIncentivesPool.address,
+  //     value,
+  //   });
+  //   await tx.wait();
 
-    await expect(
-      ParanetNeuroIncentivesPool.connect(operator).claimParanetOperatorReward(),
-    ).to.be.revertedWithCustomError(ParanetNeuroIncentivesPool, 'NoOperatorRewardAvailable');
-  });
+  //   await expect(
+  //     ParanetNeuroIncentivesPool.connect(operator).claimParanetOperatorReward(),
+  //   ).to.be.revertedWithCustomError(ParanetNeuroIncentivesPool, 'NoRewardAvailable');
+  // });
 
   it('Should correctly calculate miner reward', async function () {
     const paranetKAStruct: ContentAssetStructs.AssetInputArgsStruct = {

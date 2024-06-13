@@ -18,10 +18,8 @@ library ParanetErrors {
         uint256 paranetTokenId,
         bytes32 paranetId
     );
-    error NoOperatorRewardAvailable(bytes32 paranetId);
-    error NoVotersRewardAvailable(bytes32 paranetId);
+    error NoRewardAvailable(bytes32 paranetId, address claimer);
     error ParanetServiceHasAlreadyBeenAdded(bytes32 paranetId, bytes32 paranetServiceId);
-    error NoKnowledgeMinerRewardAvailable(bytes32 paranetId, address miner);
     error InvalidCumulativeVotersWeight(
         bytes32 paranetId,
         uint96 currentCumulativeWeight,
