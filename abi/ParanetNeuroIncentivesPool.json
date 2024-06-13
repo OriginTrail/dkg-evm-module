@@ -69,27 +69,6 @@
         "type": "bytes32"
       },
       {
-        "internalType": "uint256",
-        "name": "minimalAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "currentAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "MinimalRewardedTracAmountNotMet",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      },
-      {
         "internalType": "address",
         "name": "claimer",
         "type": "address"

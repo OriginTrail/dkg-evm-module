@@ -286,11 +286,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         uint96 unrewardedTracSpent = paranetKnowledgeMinersRegistry.getUnrewardedTracSpent(msg.sender, parentParanetId);
 
         if (unrewardedTracSpent < TOKENS_DIGITS_DIFF) {
-            revert ParanetErrors.MinimalRewardedTracAmountNotMet(
-                parentParanetId,
-                TOKENS_DIGITS_DIFF,
-                unrewardedTracSpent
-            );
+            return 0;
         }
 
         // Unrewarded TRAC Spent = how much TRAC Knowledge Miner spent for Mining and haven't got a reward for
@@ -384,11 +380,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         );
 
         if (cumulativeKnowledgeValueOperatorPart - rewardedTracSpentOperatorPart < TOKENS_DIGITS_DIFF) {
-            revert ParanetErrors.MinimalRewardedTracAmountNotMet(
-                parentParanetId,
-                TOKENS_DIGITS_DIFF,
-                cumulativeKnowledgeValueOperatorPart - rewardedTracSpentOperatorPart
-            );
+            return 0;
         }
 
         return
@@ -433,11 +425,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         );
 
         if (cumulativeKnowledgeValueVotersPart - rewardedTracSpentVotersPart < TOKENS_DIGITS_DIFF) {
-            revert ParanetErrors.MinimalRewardedTracAmountNotMet(
-                parentParanetId,
-                TOKENS_DIGITS_DIFF,
-                cumulativeKnowledgeValueVotersPart - rewardedTracSpentVotersPart
-            );
+            return 0;
         }
 
         return
@@ -457,11 +445,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         );
 
         if (cumulativeKnowledgeValueSingleVoterPart - rewardedTracSpentSingleVoterPart < TOKENS_DIGITS_DIFF) {
-            revert ParanetErrors.MinimalRewardedTracAmountNotMet(
-                parentParanetId,
-                TOKENS_DIGITS_DIFF,
-                cumulativeKnowledgeValueSingleVoterPart - rewardedTracSpentSingleVoterPart
-            );
+            return 0;
         }
 
         return

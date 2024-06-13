@@ -18,7 +18,6 @@ library ParanetErrors {
         uint256 paranetTokenId,
         bytes32 paranetId
     );
-    error MinimalRewardedTracAmountNotMet(bytes32 paranetId, uint256 minimalAmount, uint256 currentAmount);
     error NoRewardAvailable(bytes32 paranetId, address claimer);
     error ParanetServiceHasAlreadyBeenAdded(bytes32 paranetId, bytes32 paranetServiceId);
     error InvalidCumulativeVotersWeight(
