@@ -7,9 +7,12 @@ import {HashingProxy} from "../../v1/HashingProxy.sol";
 import {ServiceAgreementV1} from "../../v1/ServiceAgreementV1.sol";
 import {ContentAssetStorage} from "../storage/assets/ContentAssetStorage.sol";
 import {ParametersStorage} from "../../v1/storage/ParametersStorage.sol";
+import {ParanetKnowledgeAssetsRegistry} from "../storage/paranets/ParanetKnowledgeAssetsRegistry.sol";
+import {ParanetKnowledgeMinersRegistry} from "../storage/paranets/ParanetKnowledgeMinersRegistry.sol";
+import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {ServiceAgreementStorageProxy} from "../../v1/storage/ServiceAgreementStorageProxy.sol";
 import {UnfinalizedStateStorage} from "../../v1/storage/UnfinalizedStateStorage.sol";
-import {HubDependent} from "../../v1/abstract/HubDependent.sol";
+import {HubDependentV2} from "../abstract/HubDependent.sol";
 import {Initializable} from "../../v1/interface/Initializable.sol";
 import {Named} from "../../v1/interface/Named.sol";
 import {Versioned} from "../../v1/interface/Versioned.sol";
@@ -19,7 +22,7 @@ import {ContentAssetErrors} from "../errors/assets/ContentAssetErrors.sol";
 import {HASH_FUNCTION_ID} from "../../v1/constants/assets/ContentAssetConstants.sol";
 import {LOG2PLDSF_ID, LINEAR_SUM_ID} from "../../v1/constants/ScoringConstants.sol";
 
-contract ContentAssetV2 is Named, Versioned, HubDependent, Initializable {
+contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
     event AssetMinted(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
     event AssetBurnt(address indexed assetContract, uint256 indexed tokenId, uint96 returnedTokenAmount);
     event AssetStateUpdated(
@@ -44,26 +47,34 @@ contract ContentAssetV2 is Named, Versioned, HubDependent, Initializable {
     event AssetUpdatePaymentIncreased(address indexed assetContract, uint256 indexed tokenId, uint96 tokenAmount);
 
     string private constant _NAME = "ContentAsset";
-    string private constant _VERSION = "1.0.4";
+    string private constant _VERSION = "2.1.0";
 
     Assertion public assertionContract;
     HashingProxy public hashingProxy;
     ContentAssetStorage public contentAssetStorage;
     ParametersStorage public parametersStorage;
+    ParanetKnowledgeAssetsRegistry public paranetKnowledgeAssetsRegistry;
+    ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
+    ParanetsRegistry public paranetsRegistry;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     ServiceAgreementV1 public serviceAgreementV1;
     UnfinalizedStateStorage public unfinalizedStateStorage;
 
-    bool private _isOldMetadataClearingDisabled = false;
-
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) HubDependent(hubAddress) {}
+    constructor(address hubAddress) HubDependentV2(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         assertionContract = Assertion(hub.getContractAddress("Assertion"));
         hashingProxy = HashingProxy(hub.getContractAddress("HashingProxy"));
         contentAssetStorage = ContentAssetStorage(hub.getAssetStorageAddress("ContentAssetStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+        paranetKnowledgeAssetsRegistry = ParanetKnowledgeAssetsRegistry(
+            hub.getContractAddress("ParanetKnowledgeAssetsRegistry")
+        );
+        paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(
+            hub.getContractAddress("ParanetKnowledgeMinersRegistry")
+        );
+        paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
         );
@@ -89,17 +100,37 @@ contract ContentAssetV2 is Named, Versioned, HubDependent, Initializable {
         return _VERSION;
     }
 
-    function createAsset(ContentAssetStructs.AssetInputArgs calldata args) external {
-        _createAsset(
-            args.assertionId,
-            args.size,
-            args.triplesNumber,
-            args.chunksNumber,
-            args.epochsNumber,
-            args.tokenAmount,
-            args.scoreFunctionId,
-            args.immutable_
-        );
+    function createAsset(ContentAssetStructs.AssetInputArgs calldata args) external returns (uint256) {
+        return
+            _createAsset(
+                msg.sender,
+                args.assertionId,
+                args.size,
+                args.triplesNumber,
+                args.chunksNumber,
+                args.epochsNumber,
+                args.tokenAmount,
+                args.scoreFunctionId,
+                args.immutable_
+            );
+    }
+
+    function createAssetFromContract(
+        address originalSender,
+        ContentAssetStructs.AssetInputArgs calldata args
+    ) external onlyContracts returns (uint256) {
+        return
+            _createAsset(
+                originalSender,
+                args.assertionId,
+                args.size,
+                args.triplesNumber,
+                args.chunksNumber,
+                args.epochsNumber,
+                args.tokenAmount,
+                args.scoreFunctionId,
+                args.immutable_
+            );
     }
 
     function createAssetWithVariables(
@@ -111,17 +142,19 @@ contract ContentAssetV2 is Named, Versioned, HubDependent, Initializable {
         uint96 tokenAmount,
         uint8 scoreFunctionId,
         bool immutable_
-    ) external {
-        _createAsset(
-            assertionId,
-            size,
-            triplesNumber,
-            chunksNumber,
-            epochsNumber,
-            tokenAmount,
-            scoreFunctionId,
-            immutable_
-        );
+    ) external returns (uint256) {
+        return
+            _createAsset(
+                msg.sender,
+                assertionId,
+                size,
+                triplesNumber,
+                chunksNumber,
+                epochsNumber,
+                tokenAmount,
+                scoreFunctionId,
+                immutable_
+            );
     }
 
     function burnAsset(uint256 tokenId) external onlyAssetOwner(tokenId) {
@@ -165,13 +198,39 @@ contract ContentAssetV2 is Named, Versioned, HubDependent, Initializable {
             revert ContentAssetErrors.FirstEpochHasAlreadyEnded(agreementId);
         }
 
-        uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
+
+        if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)))) {
+            ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+            ParanetsRegistry pr = paranetsRegistry;
+
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)));
+            uint96 tokenAmount = sasProxy.getAgreementTokenAmount(agreementId);
+
+            // Remove Knowledge Asset from the KnowledgeAssetsRegistry
+            pkar.removeKnowledgeAsset(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)));
+
+            // Remove Knowledge Asset Metadata from the KnowledgeMinersRegistry
+            pkmr.removeSubmittedKnowledgeAsset(
+                msg.sender,
+                paranetId,
+                keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId))
+            );
+            pkmr.subCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.subUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.decrementTotalSubmittedKnowledgeAssetsCount(msg.sender);
+            pkmr.subTotalTracSpent(msg.sender, tokenAmount);
+
+            // Remove Knowledge Asset Metadata from the ParanetsRegistry
+            pr.removeKnowledgeAsset(paranetId, keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)));
+            pr.subCumulativeKnowledgeValue(paranetId, tokenAmount);
+        }
 
         cas.deleteAsset(tokenId);
         cas.burn(tokenId);
         serviceAgreementV1.terminateAgreement(msg.sender, agreementId);
 
-        emit AssetBurnt(contentAssetStorageAddress, tokenId, tokenAmount);
+        emit AssetBurnt(contentAssetStorageAddress, tokenId, sasProxy.getAgreementTokenAmount(agreementId));
     }
 
     function updateAssetState(
@@ -213,6 +272,22 @@ contract ContentAssetV2 is Named, Versioned, HubDependent, Initializable {
             revert ContentAssetErrors.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
         }
 
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
+
+        if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)))) {
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)));
+
+            // Add Knowledge Asset to the UpdatingKnowledgeAssets in the KnowledgeMinersRegistry
+            paranetKnowledgeMinersRegistry.addUpdatingKnowledgeAssetState(
+                msg.sender,
+                paranetId,
+                contentAssetStorageAddress,
+                tokenId,
+                assertionId,
+                updateTokenAmount
+            );
+        }
+
         assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
         uss.setUnfinalizedState(tokenId, assertionId);
         uss.setIssuer(tokenId, msg.sender);
@@ -243,6 +318,231 @@ contract ContentAssetV2 is Named, Versioned, HubDependent, Initializable {
     }
 
     function cancelAssetStateUpdate(uint256 tokenId) external onlyAssetOwner(tokenId) {
+        _cancelAssetStateUpdate(tokenId);
+    }
+
+    function cancelAssetStateUpdateFromContract(uint256 tokenId) external onlyContracts {
+        _cancelAssetStateUpdate(tokenId);
+    }
+
+    function extendAssetStoringPeriod(
+        uint256 tokenId,
+        uint16 epochsNumber,
+        uint96 tokenAmount
+    ) external onlyAssetOwner(tokenId) {
+        ContentAssetStorage cas = contentAssetStorage;
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+
+        address contentAssetStorageAddress = address(cas);
+
+        bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
+
+        if (unfinalizedState != bytes32(0)) {
+            revert ContentAssetErrors.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
+        }
+
+        bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
+
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            HASH_FUNCTION_ID,
+            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
+        );
+
+        uint256 startTime;
+        uint16 oldEpochsNumber;
+        uint128 epochLength;
+        (startTime, oldEpochsNumber, epochLength, , ) = serviceAgreementStorageProxy.getAgreementData(agreementId);
+
+        if (block.timestamp > startTime + oldEpochsNumber * epochLength) {
+            revert ContentAssetErrors.AssetExpired(tokenId);
+        }
+
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
+
+        if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)))) {
+            ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)));
+
+            // Add Knowledge Asset Token Amount Metadata to the ParanetsRegistry
+            paranetsRegistry.addCumulativeKnowledgeValue(paranetId, tokenAmount);
+
+            // Add Knowledge Asset Token Amount Metadata to the KnowledgeMinersRegistry
+            pkmr.addCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addTotalTracSpent(msg.sender, tokenAmount);
+        }
+
+        sasV1.extendStoringPeriod(msg.sender, agreementId, epochsNumber, tokenAmount);
+
+        emit AssetStoringPeriodExtended(contentAssetStorageAddress, tokenId, epochsNumber, tokenAmount);
+    }
+
+    function increaseAssetTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
+        ContentAssetStorage cas = contentAssetStorage;
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+
+        address contentAssetStorageAddress = address(cas);
+
+        bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
+
+        if (unfinalizedState != bytes32(0)) {
+            revert ContentAssetErrors.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
+        }
+
+        bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
+
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            HASH_FUNCTION_ID,
+            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
+        );
+
+        uint256 startTime;
+        uint16 epochsNumber;
+        uint128 epochLength;
+        (startTime, epochsNumber, epochLength, , ) = serviceAgreementStorageProxy.getAgreementData(agreementId);
+
+        if (block.timestamp > startTime + epochsNumber * epochLength) {
+            revert ContentAssetErrors.AssetExpired(tokenId);
+        }
+
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
+
+        if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)))) {
+            ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)));
+
+            // Add Knowledge Asset Token Amount Metadata to the ParanetsRegistry
+            paranetsRegistry.addCumulativeKnowledgeValue(paranetId, tokenAmount);
+
+            // Add Knowledge Asset Token Amount Metadata to the KnowledgeMinersRegistry
+            pkmr.addCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addTotalTracSpent(msg.sender, tokenAmount);
+        }
+
+        sasV1.addTokens(msg.sender, agreementId, tokenAmount);
+
+        emit AssetPaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
+    }
+
+    function increaseAssetUpdateTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
+        ContentAssetStorage cas = contentAssetStorage;
+        ServiceAgreementV1 sasV1 = serviceAgreementV1;
+
+        address contentAssetStorageAddress = address(cas);
+
+        bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
+
+        if (unfinalizedState == bytes32(0)) {
+            revert ContentAssetErrors.NoPendingUpdate(contentAssetStorageAddress, tokenId);
+        }
+
+        bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
+
+        bytes32 agreementId = hashingProxy.callHashFunction(
+            HASH_FUNCTION_ID,
+            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
+        );
+
+        uint256 startTime;
+        uint16 epochsNumber;
+        uint128 epochLength;
+        (startTime, epochsNumber, epochLength, , ) = serviceAgreementStorageProxy.getAgreementData(agreementId);
+
+        if (block.timestamp > startTime + epochsNumber * epochLength) {
+            revert ContentAssetErrors.AssetExpired(tokenId);
+        }
+
+        sasV1.addUpdateTokens(msg.sender, agreementId, tokenAmount);
+
+        emit AssetUpdatePaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
+    }
+
+    function _createAsset(
+        address originalSender,
+        bytes32 assertionId,
+        uint128 size,
+        uint32 triplesNumber,
+        uint96 chunksNumber,
+        uint16 epochsNumber,
+        uint96 tokenAmount,
+        uint8 scoreFunctionId,
+        bool immutable_
+    ) internal virtual returns (uint256) {
+        ContentAssetStorage cas = contentAssetStorage;
+
+        uint256 tokenId = cas.generateTokenId();
+        cas.mint(originalSender, tokenId);
+
+        assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
+        cas.setAssertionIssuer(tokenId, assertionId, originalSender);
+        cas.setMutability(tokenId, immutable_);
+        cas.pushAssertionId(tokenId, assertionId);
+
+        address contentAssetStorageAddress = address(cas);
+
+        serviceAgreementV1.createServiceAgreement(
+            ServiceAgreementStructsV1.ServiceAgreementInputArgs({
+                assetCreator: originalSender,
+                assetContract: contentAssetStorageAddress,
+                tokenId: tokenId,
+                keyword: abi.encodePacked(contentAssetStorageAddress, assertionId),
+                hashFunctionId: HASH_FUNCTION_ID,
+                epochsNumber: epochsNumber,
+                tokenAmount: tokenAmount,
+                scoreFunctionId: scoreFunctionId == LOG2PLDSF_ID ? LINEAR_SUM_ID : scoreFunctionId
+            })
+        );
+
+        emit AssetMinted(contentAssetStorageAddress, tokenId, assertionId);
+
+        return tokenId;
+    }
+
+    function _createAsset(
+        bytes32 assertionId,
+        uint128 size,
+        uint32 triplesNumber,
+        uint96 chunksNumber,
+        uint16 epochsNumber,
+        uint96 tokenAmount,
+        uint8 scoreFunctionId,
+        bool immutable_,
+        address knowledgeMiner
+    ) internal virtual returns (uint256) {
+        ContentAssetStorage cas = contentAssetStorage;
+
+        uint256 tokenId = cas.generateTokenId();
+        cas.mint(knowledgeMiner, tokenId);
+
+        assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
+        cas.setAssertionIssuer(tokenId, assertionId, knowledgeMiner);
+        cas.setMutability(tokenId, immutable_);
+        cas.pushAssertionId(tokenId, assertionId);
+
+        address contentAssetStorageAddress = address(cas);
+
+        serviceAgreementV1.createServiceAgreement(
+            ServiceAgreementStructsV1.ServiceAgreementInputArgs({
+                assetCreator: knowledgeMiner,
+                assetContract: contentAssetStorageAddress,
+                tokenId: tokenId,
+                keyword: abi.encodePacked(contentAssetStorageAddress, assertionId),
+                hashFunctionId: HASH_FUNCTION_ID,
+                epochsNumber: epochsNumber,
+                tokenAmount: tokenAmount,
+                scoreFunctionId: scoreFunctionId
+            })
+        );
+
+        emit AssetMinted(contentAssetStorageAddress, tokenId, assertionId);
+
+        return tokenId;
+    }
+
+    function _cancelAssetStateUpdate(uint256 tokenId) internal virtual {
         ContentAssetStorage cas = contentAssetStorage;
         ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
         UnfinalizedStateStorage uss = unfinalizedStateStorage;
@@ -284,6 +584,19 @@ contract ContentAssetV2 is Named, Versioned, HubDependent, Initializable {
             );
         }
 
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
+
+        if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)))) {
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)));
+
+            // Remove Knowledge Asset from the UpdatingKnowledgeAssets in the KnowledgeMinersRegistry
+            paranetKnowledgeMinersRegistry.removeUpdatingKnowledgeAssetState(
+                msg.sender,
+                paranetId,
+                keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId, unfinalizedState))
+            );
+        }
+
         uint96 updateTokenAmount = sasProxy.getAgreementUpdateTokenAmount(agreementId);
 
         if (sasProxy.agreementV1Exists(agreementId)) {
@@ -307,193 +620,6 @@ contract ContentAssetV2 is Named, Versioned, HubDependent, Initializable {
             cas.getAssertionIdsLength(tokenId),
             updateTokenAmount
         );
-    }
-
-    function clearOldCommitsMetadata(uint256 tokenId) external onlyAssetOwner(tokenId) {
-        if (_isOldMetadataClearingDisabled) {
-            revert("Function is disabled");
-        }
-
-        ContentAssetStorage cas = contentAssetStorage;
-        ServiceAgreementStorageProxy sasProxy = serviceAgreementStorageProxy;
-
-        address contentAssetStorageAddress = address(cas);
-
-        bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
-
-        bytes32 agreementId = hashingProxy.callHashFunction(
-            HASH_FUNCTION_ID,
-            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
-        );
-
-        uint256 unfinalizedStateIndex = cas.getAssertionIdsLength(tokenId);
-
-        if (
-            block.timestamp <=
-            sasProxy.getUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)))
-        ) {
-            revert ContentAssetErrors.PendingUpdateFinalization(
-                contentAssetStorageAddress,
-                tokenId,
-                unfinalizedStateIndex
-            );
-        }
-
-        uint256 startTime;
-        uint16 currentEpoch;
-        uint128 epochLength;
-        (startTime, , epochLength, , ) = sasProxy.getAgreementData(agreementId);
-
-        currentEpoch = uint16((block.timestamp - startTime) / epochLength);
-
-        sasProxy.deleteCommitsCount(keccak256(abi.encodePacked(agreementId, currentEpoch, unfinalizedStateIndex)));
-        sasProxy.deleteUpdateCommitsDeadline(keccak256(abi.encodePacked(agreementId, unfinalizedStateIndex)));
-        sasProxy.setV1U1AgreementEpochSubmissionHead(agreementId, currentEpoch, unfinalizedStateIndex, 0);
-    }
-
-    function extendAssetStoringPeriod(
-        uint256 tokenId,
-        uint16 epochsNumber,
-        uint96 tokenAmount
-    ) external onlyAssetOwner(tokenId) {
-        ContentAssetStorage cas = contentAssetStorage;
-        ServiceAgreementV1 sasV1 = serviceAgreementV1;
-
-        address contentAssetStorageAddress = address(cas);
-
-        bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
-
-        if (unfinalizedState != bytes32(0)) {
-            revert ContentAssetErrors.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
-        }
-
-        bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
-
-        bytes32 agreementId = hashingProxy.callHashFunction(
-            HASH_FUNCTION_ID,
-            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
-        );
-
-        uint256 startTime;
-        uint16 oldEpochsNumber;
-        uint128 epochLength;
-        (startTime, oldEpochsNumber, epochLength, , ) = serviceAgreementStorageProxy.getAgreementData(agreementId);
-
-        if (block.timestamp > startTime + oldEpochsNumber * epochLength) {
-            revert ContentAssetErrors.AssetExpired(tokenId);
-        }
-
-        sasV1.extendStoringPeriod(msg.sender, agreementId, epochsNumber, tokenAmount);
-
-        emit AssetStoringPeriodExtended(contentAssetStorageAddress, tokenId, epochsNumber, tokenAmount);
-    }
-
-    function increaseAssetTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
-        ContentAssetStorage cas = contentAssetStorage;
-        ServiceAgreementV1 sasV1 = serviceAgreementV1;
-
-        address contentAssetStorageAddress = address(cas);
-
-        bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
-
-        if (unfinalizedState != bytes32(0)) {
-            revert ContentAssetErrors.UpdateIsNotFinalized(contentAssetStorageAddress, tokenId, unfinalizedState);
-        }
-
-        bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
-
-        bytes32 agreementId = hashingProxy.callHashFunction(
-            HASH_FUNCTION_ID,
-            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
-        );
-
-        uint256 startTime;
-        uint16 epochsNumber;
-        uint128 epochLength;
-        (startTime, epochsNumber, epochLength, , ) = serviceAgreementStorageProxy.getAgreementData(agreementId);
-
-        if (block.timestamp > startTime + epochsNumber * epochLength) {
-            revert ContentAssetErrors.AssetExpired(tokenId);
-        }
-
-        sasV1.addTokens(msg.sender, agreementId, tokenAmount);
-
-        emit AssetPaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
-    }
-
-    function increaseAssetUpdateTokenAmount(uint256 tokenId, uint96 tokenAmount) external onlyAssetOwner(tokenId) {
-        ContentAssetStorage cas = contentAssetStorage;
-        ServiceAgreementV1 sasV1 = serviceAgreementV1;
-
-        address contentAssetStorageAddress = address(cas);
-
-        bytes32 unfinalizedState = unfinalizedStateStorage.getUnfinalizedState(tokenId);
-
-        if (unfinalizedState == bytes32(0)) {
-            revert ContentAssetErrors.NoPendingUpdate(contentAssetStorageAddress, tokenId);
-        }
-
-        bytes memory keyword = abi.encodePacked(contentAssetStorageAddress, cas.getAssertionIdByIndex(tokenId, 0));
-
-        bytes32 agreementId = hashingProxy.callHashFunction(
-            HASH_FUNCTION_ID,
-            abi.encodePacked(contentAssetStorageAddress, tokenId, keyword)
-        );
-
-        uint256 startTime;
-        uint16 epochsNumber;
-        uint128 epochLength;
-        (startTime, epochsNumber, epochLength, , ) = serviceAgreementStorageProxy.getAgreementData(agreementId);
-
-        if (block.timestamp > startTime + epochsNumber * epochLength) {
-            revert ContentAssetErrors.AssetExpired(tokenId);
-        }
-
-        sasV1.addUpdateTokens(msg.sender, agreementId, tokenAmount);
-
-        emit AssetUpdatePaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
-    }
-
-    function setOldMetadataClearingFlag(bool _flag) external onlyHubOwner {
-        _isOldMetadataClearingDisabled = _flag;
-    }
-
-    function _createAsset(
-        bytes32 assertionId,
-        uint128 size,
-        uint32 triplesNumber,
-        uint96 chunksNumber,
-        uint16 epochsNumber,
-        uint96 tokenAmount,
-        uint8 scoreFunctionId,
-        bool immutable_
-    ) internal virtual {
-        ContentAssetStorage cas = contentAssetStorage;
-
-        uint256 tokenId = cas.generateTokenId();
-        cas.mint(msg.sender, tokenId);
-
-        assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
-        cas.setAssertionIssuer(tokenId, assertionId, msg.sender);
-        cas.setMutability(tokenId, immutable_);
-        cas.pushAssertionId(tokenId, assertionId);
-
-        address contentAssetStorageAddress = address(cas);
-
-        serviceAgreementV1.createServiceAgreement(
-            ServiceAgreementStructsV1.ServiceAgreementInputArgs({
-                assetCreator: msg.sender,
-                assetContract: contentAssetStorageAddress,
-                tokenId: tokenId,
-                keyword: abi.encodePacked(contentAssetStorageAddress, assertionId),
-                hashFunctionId: HASH_FUNCTION_ID,
-                epochsNumber: epochsNumber,
-                tokenAmount: tokenAmount,
-                scoreFunctionId: scoreFunctionId == LOG2PLDSF_ID ? LINEAR_SUM_ID : scoreFunctionId
-            })
-        );
-
-        emit AssetMinted(contentAssetStorageAddress, tokenId, assertionId);
     }
 
     function _checkAssetOwner(uint256 tokenId) internal view virtual {

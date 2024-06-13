@@ -6,7 +6,7 @@ import {ProfileStorage} from "../v1/storage/ProfileStorage.sol";
 import {ShardingTableStorageV2} from "./storage/ShardingTableStorage.sol";
 import {ShardingTableStorage} from "../v1/storage/ShardingTableStorage.sol";
 import {StakingStorage} from "../v1/storage/StakingStorage.sol";
-import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
+import {ContractStatusV2} from "./abstract/ContractStatus.sol";
 import {Initializable} from "../v1/interface/Initializable.sol";
 import {Named} from "../v1/interface/Named.sol";
 import {Versioned} from "../v1/interface/Versioned.sol";
@@ -16,7 +16,7 @@ import {ShardingTableErrors} from "./errors/ShardingTableErrors.sol";
 
 import {NULL} from "../v1/constants/ShardingTableConstants.sol";
 
-contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
+contract ShardingTableV2 is Named, Versioned, ContractStatusV2, Initializable {
     event NodeAdded(uint72 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
     event NodeRemoved(uint72 indexed identityId, bytes nodeId);
 
@@ -30,7 +30,7 @@ contract ShardingTableV2 is Named, Versioned, ContractStatus, Initializable {
     uint256 public migrationPeriodEnd;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress, uint256 migrationPeriodEnd_) ContractStatus(hubAddress) {
+    constructor(address hubAddress, uint256 migrationPeriodEnd_) ContractStatusV2(hubAddress) {
         migrationPeriodEnd = migrationPeriodEnd_;
     }
 

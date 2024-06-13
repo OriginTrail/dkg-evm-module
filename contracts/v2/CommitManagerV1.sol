@@ -10,7 +10,7 @@ import {ProfileStorage} from "../v1/storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "../v1/storage/ServiceAgreementStorageProxy.sol";
 import {ShardingTableStorageV2} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "../v1/storage/StakingStorage.sol";
-import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
+import {ContractStatusV2} from "./abstract/ContractStatus.sol";
 import {Initializable} from "../v1/interface/Initializable.sol";
 import {Named} from "../v1/interface/Named.sol";
 import {Versioned} from "../v1/interface/Versioned.sol";
@@ -22,7 +22,7 @@ import {ServiceAgreementErrorsV1} from "../v1/errors/ServiceAgreementErrorsV1.so
 import {ServiceAgreementErrorsV2} from "./errors/ServiceAgreementErrorsV2.sol";
 import {LOG2PLDSF_ID, LINEAR_SUM_ID} from "../v1/constants/ScoringConstants.sol";
 
-contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
+contract CommitManagerV2 is Named, Versioned, ContractStatusV2, Initializable {
     event CommitSubmitted(
         address assetContract,
         uint256 tokenId,
@@ -48,7 +48,7 @@ contract CommitManagerV2 is Named, Versioned, ContractStatus, Initializable {
     StakingStorage public stakingStorage;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) ContractStatus(hubAddress) {}
+    constructor(address hubAddress) ContractStatusV2(hubAddress) {}
 
     function initialize() public onlyHubOwner {
         log2pldsf = Log2PLDSF(hub.getContractAddress("Log2PLDSF"));

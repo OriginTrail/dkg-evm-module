@@ -158,6 +158,37 @@
         "type": "bytes"
       },
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "staker",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "withdrawnStakeAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "InactiveStakeWithdrawn",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "nodeId",
+        "type": "bytes"
+      },
+      {
         "indexed": false,
         "internalType": "uint8",
         "name": "operatorFee",
@@ -508,7 +539,7 @@
     "name": "hub",
     "outputs": [
       {
-        "internalType": "contract Hub",
+        "internalType": "contract HubV2",
         "name": "",
         "type": "address"
       }

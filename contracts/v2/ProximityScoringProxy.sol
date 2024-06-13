@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.16;
 
-import {ContractStatus} from "../v1/abstract/ContractStatus.sol";
+import {ContractStatusV2} from "./abstract/ContractStatus.sol";
 import {IProximityScoreFunctionsPair} from "./interface/IProximityScoreFunctionsPair.sol";
 import {IScoreFunction} from "../v1/interface/IScoreFunction.sol";
 import {Named} from "../v1/interface/Named.sol";
 import {Versioned} from "../v1/interface/Versioned.sol";
 import {UnorderedIndexableContractDynamicSetLib} from "../v1/utils/UnorderedIndexableContractDynamicSet.sol";
 
-contract ProximityScoringProxy is Named, Versioned, ContractStatus {
+contract ProximityScoringProxy is Named, Versioned, ContractStatusV2 {
     using UnorderedIndexableContractDynamicSetLib for UnorderedIndexableContractDynamicSetLib.Set;
 
     event NewScoringFunctionContract(uint8 indexed scoreFunctionId, address newContractAddress);
@@ -21,7 +21,7 @@ contract ProximityScoringProxy is Named, Versioned, ContractStatus {
     UnorderedIndexableContractDynamicSetLib.Set internal scoreFunctionSet;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) ContractStatus(hubAddress) {}
+    constructor(address hubAddress) ContractStatusV2(hubAddress) {}
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;

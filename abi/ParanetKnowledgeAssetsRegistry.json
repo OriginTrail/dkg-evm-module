@@ -1,0 +1,257 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "hubAddress",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "knowledgeAssetStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      }
+    ],
+    "name": "addKnowledgeAsset",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getKnowledgeAssetLocator",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getKnowledgeAssetObject",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "knowledgeAssetStorageContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "minerAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "paranetId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct ParanetStructs.KnowledgeAsset",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getMinerAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getParanetId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "hub",
+    "outputs": [
+      {
+        "internalType": "contract HubV2",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "isParanetKnowledgeAsset",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "name",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "removeKnowledgeAsset",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "minerAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setMinerAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeAssetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "setParanetId",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "version",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  }
+]

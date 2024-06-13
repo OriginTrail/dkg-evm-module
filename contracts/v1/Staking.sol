@@ -34,6 +34,12 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
         uint256 withdrawalPeriodEnd
     );
     event StakeWithdrawn(uint72 indexed identityId, bytes nodeId, address indexed staker, uint96 withdrawnStakeAmount);
+    event InactiveStakeWithdrawn(
+        uint72 indexed identityId,
+        bytes nodeId,
+        address indexed staker,
+        uint96 withdrawnStakeAmount
+    );
     event AccumulatedOperatorFeeIncreased(
         uint72 indexed identityId,
         bytes nodeId,
@@ -43,7 +49,7 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
     event OperatorFeeUpdated(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
-    string private constant _VERSION = "1.0.2";
+    string private constant _VERSION = "1.1.0";
 
     ShardingTable public shardingTableContract;
     IdentityStorage public identityStorage;
@@ -84,11 +90,69 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
     }
 
     function addStake(address sender, uint72 identityId, uint96 stakeAmount) external onlyContracts {
-        _addStake(sender, identityId, stakeAmount);
+        StakingStorage ss = stakingStorage;
+        ProfileStorage ps = profileStorage;
+        ParametersStorage params = parametersStorage;
+
+        uint96 oldStake = ss.totalStakes(identityId);
+        uint96 newStake = oldStake + stakeAmount;
+
+        require(ps.profileExists(identityId), "Profile doesn't exist");
+        require(newStake <= params.maximumStake(), "Exceeded the maximum stake");
+
+        Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
+
+        uint256 sharesMinted;
+        if (sharesContract.totalSupply() == 0) {
+            sharesMinted = stakeAmount;
+        } else {
+            sharesMinted = ((stakeAmount * sharesContract.totalSupply()) / oldStake);
+        }
+
+        sharesContract.mint(sender, sharesMinted);
+
+        ss.setTotalStake(identityId, newStake);
+        ps.transferAccumulatedOperatorFee(address(ss), stakeAmount);
+
+        if (!shardingTableStorage.nodeExists(identityId) && newStake >= params.minimumStake()) {
+            shardingTableContract.pushBack(identityId);
+        }
+
+        emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, oldStake, newStake);
     }
 
     function addStake(uint72 identityId, uint96 stakeAmount) external onlyAdmin(identityId) {
-        _addStake(msg.sender, identityId, stakeAmount);
+        StakingStorage ss = stakingStorage;
+        ProfileStorage ps = profileStorage;
+        ParametersStorage params = parametersStorage;
+        IERC20 tknc = tokenContract;
+
+        uint96 oldStake = ss.totalStakes(identityId);
+        uint96 newStake = oldStake + stakeAmount;
+
+        require(ps.profileExists(identityId), "Profile doesn't exist");
+        require(tknc.allowance(msg.sender, address(this)) >= stakeAmount, "Allowance < stakeAmount");
+        require(newStake <= params.maximumStake(), "Exceeded the maximum stake");
+
+        Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
+
+        uint256 sharesMinted;
+        if (sharesContract.totalSupply() == 0) {
+            sharesMinted = stakeAmount;
+        } else {
+            sharesMinted = ((stakeAmount * sharesContract.totalSupply()) / oldStake);
+        }
+
+        sharesContract.mint(msg.sender, sharesMinted);
+
+        ss.setTotalStake(identityId, newStake);
+        tknc.transferFrom(msg.sender, address(ss), stakeAmount);
+
+        if (!shardingTableStorage.nodeExists(identityId) && newStake >= params.minimumStake()) {
+            shardingTableContract.pushBack(identityId);
+        }
+
+        emit StakeIncreased(identityId, ps.getNodeId(identityId), msg.sender, oldStake, newStake);
     }
 
     function startStakeWithdrawal(uint72 identityId, uint96 sharesToBurn) external {
@@ -103,30 +167,43 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
 
         require(sharesToBurn <= sharesContract.balanceOf(msg.sender), "sharesToBurn must be <= balance");
 
-        uint96 oldStake = ss.totalStakes(identityId);
-        uint96 stakeWithdrawalAmount = uint96((uint256(oldStake) * sharesToBurn) / sharesContract.totalSupply());
-        uint96 newStake = oldStake - stakeWithdrawalAmount;
-        uint96 newStakeWithdrawalAmount = ss.getWithdrawalRequestAmount(identityId, msg.sender) + stakeWithdrawalAmount;
-
         ParametersStorage params = parametersStorage;
 
-        uint256 withdrawalPeriodEnd = block.timestamp + params.stakeWithdrawalDelay();
-        ss.createWithdrawalRequest(identityId, msg.sender, newStakeWithdrawalAmount, withdrawalPeriodEnd);
-        ss.setTotalStake(identityId, newStake);
-        sharesContract.burnFrom(msg.sender, sharesToBurn);
+        uint96 currentStake = ss.totalStakes(identityId);
+        uint96 stakeWithdrawalAmount = uint96((uint256(currentStake) * sharesToBurn) / sharesContract.totalSupply());
 
-        if (shardingTableStorage.nodeExists(identityId) && (newStake < params.minimumStake())) {
+        ss.setTotalStake(identityId, currentStake - stakeWithdrawalAmount);
+
+        if (
+            shardingTableStorage.nodeExists(identityId) &&
+            (currentStake - stakeWithdrawalAmount) < params.minimumStake()
+        ) {
             shardingTableContract.removeNode(identityId);
         }
 
-        emit StakeWithdrawalStarted(
-            identityId,
-            ps.getNodeId(identityId),
-            msg.sender,
-            oldStake,
-            newStake,
-            withdrawalPeriodEnd
-        );
+        if (currentStake > params.maximumStake() && stakeWithdrawalAmount <= (currentStake - params.maximumStake())) {
+            ss.transferStake(msg.sender, stakeWithdrawalAmount);
+
+            emit StakeWithdrawn(identityId, ps.getNodeId(identityId), msg.sender, stakeWithdrawalAmount);
+            emit InactiveStakeWithdrawn(identityId, ps.getNodeId(identityId), msg.sender, stakeWithdrawalAmount);
+        } else {
+            uint96 newStakeWithdrawalAmount = ss.getWithdrawalRequestAmount(identityId, msg.sender) +
+                stakeWithdrawalAmount;
+            uint256 withdrawalPeriodEnd = block.timestamp + params.stakeWithdrawalDelay();
+
+            ss.createWithdrawalRequest(identityId, msg.sender, newStakeWithdrawalAmount, withdrawalPeriodEnd);
+
+            emit StakeWithdrawalStarted(
+                identityId,
+                ps.getNodeId(identityId),
+                msg.sender,
+                currentStake,
+                currentStake - stakeWithdrawalAmount,
+                withdrawalPeriodEnd
+            );
+        }
+
+        sharesContract.burnFrom(msg.sender, sharesToBurn);
     }
 
     function withdrawStake(uint72 identityId) external {
@@ -202,40 +279,6 @@ contract Staking is Named, Versioned, ContractStatus, Initializable {
         stakingStorage.setOperatorFee(identityId, operatorFee);
 
         emit OperatorFeeUpdated(identityId, profileStorage.getNodeId(identityId), operatorFee);
-    }
-
-    function _addStake(address sender, uint72 identityId, uint96 stakeAmount) internal virtual {
-        StakingStorage ss = stakingStorage;
-        ProfileStorage ps = profileStorage;
-        ParametersStorage params = parametersStorage;
-        IERC20 tknc = tokenContract;
-
-        uint96 oldStake = ss.totalStakes(identityId);
-        uint96 newStake = oldStake + stakeAmount;
-
-        require(ps.profileExists(identityId), "Profile doesn't exist");
-        require(tknc.allowance(sender, address(this)) >= stakeAmount, "Allowance < stakeAmount");
-        require(newStake <= params.maximumStake(), "Exceeded the maximum stake");
-
-        Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
-
-        uint256 sharesMinted;
-        if (sharesContract.totalSupply() == 0) {
-            sharesMinted = stakeAmount;
-        } else {
-            sharesMinted = ((stakeAmount * sharesContract.totalSupply()) / oldStake);
-        }
-
-        sharesContract.mint(sender, sharesMinted);
-
-        ss.setTotalStake(identityId, newStake);
-        tknc.transferFrom(sender, address(ss), stakeAmount);
-
-        if (!shardingTableStorage.nodeExists(identityId) && newStake >= params.minimumStake()) {
-            shardingTableContract.pushBack(identityId);
-        }
-
-        emit StakeIncreased(identityId, ps.getNodeId(identityId), sender, oldStake, newStake);
     }
 
     function _checkAdmin(uint72 identityId) internal view virtual {

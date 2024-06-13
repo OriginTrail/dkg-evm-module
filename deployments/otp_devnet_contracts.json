@@ -66,12 +66,13 @@
       "deployed": true
     },
     "Profile": {
-      "evmAddress": "0x071A9e963677814875FeCbc8726876417130c256",
-      "substrateAddress": "5EMjsczMbgxpVH36EGKUEgTDM4HekWonvLyMXU4oM4qwPLMT",
-      "version": "1.1.0",
-      "gitBranch": "main",
-      "gitCommitHash": "dab8582c750eb8e189eff201a74eead1ca554fe7",
-      "deploymentTimestamp": 1707424555108,
+      "evmAddress": "0x6Bf388daf09b47f88fddc95782fA5D918a477F70",
+      "substrateAddress": "5EMjsczhohbGTPdgLz58ng57PtZ9DVeMgw1fDbcDxJtjWe1y",
+      "version": "1.2.0",
+      "gitBranch": "feature/paranets",
+      "gitCommitHash": "1c7a1968cdb266e3beb76ae66828fa5f4f218762",
+      "deploymentBlock": 4739037,
+      "deploymentTimestamp": 1717162513584,
       "deployed": true
     },
     "ProfileStorage": {
@@ -217,13 +218,13 @@
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0x10753Dd9951f9Aa890A3Eeb0B1D760aEa036af13",
-      "substrateAddress": "5EMjsczPUQ4rnipCyNvwxsSr5yt4X17C1HwyECPCeJemaUim",
-      "version": "2.0.2",
-      "gitBranch": "main",
-      "gitCommitHash": "114fabd12eee22fe118e42e89c233d2549a7ee5b",
-      "deploymentBlock": 4537175,
-      "deploymentTimestamp": 1714639737585,
+      "evmAddress": "0x845D09B3460C70FF146542Cf7D750279C08A9Eaa",
+      "substrateAddress": "5EMjscznhQhcd1FyBdSZesdUXFSDm8RTwDDTYdQnmjVuy1Wg",
+      "version": "2.1.1",
+      "gitBranch": "improvement/paranets-multipool",
+      "gitCommitHash": "9e741344a4d2382c53bdd9da7e0f3ca84442cbab",
+      "deploymentBlock": 4807396,
+      "deploymentTimestamp": 1718108768208,
       "deployed": true
     },
     "CommitManagerV1": {
@@ -247,13 +248,63 @@
       "deployed": true
     },
     "ContentAsset": {
-      "evmAddress": "0x350Ce3c547b358D79a876C7ceB1ed6739EEE9c62",
-      "substrateAddress": "5EMjsczWofLR5kbogQdVnWv8zp1vcA4kT8hhaJTqTK1ZufNv",
-      "version": "1.0.4",
-      "gitBranch": "main",
-      "gitCommitHash": "8dec09dc2f081aba8736e42a180d8fb94a997588",
-      "deploymentBlock": 4468467,
-      "deploymentTimestamp": 1713791314553,
+      "evmAddress": "0xdC886ce9ec89E85aceE9E6C0f72395cAbA536331",
+      "substrateAddress": "5EMjsd16N5mXeyqPbnhChre5z1qexBxjiBaq5c5disgi7KuZ",
+      "version": "2.1.0",
+      "gitBranch": "improvement/paranets-multipool",
+      "gitCommitHash": "9e741344a4d2382c53bdd9da7e0f3ca84442cbab",
+      "deploymentBlock": 4807398,
+      "deploymentTimestamp": 1718108792095,
+      "deployed": true
+    },
+    "ParanetsRegistry": {
+      "evmAddress": "0xfdDCd8Ab4948E0701c88ecf894b3367a473A3f10",
+      "substrateAddress": "5EMjsd1D3RruFnvPYeZCbBKvCtiqYWjaFEtgDDsaaKphXLwL",
+      "version": "2.1.0",
+      "gitBranch": "improvement/paranet-incentives-calculation",
+      "gitCommitHash": "f52e4b5ec305ec0bc4f7652f406f081c07d6010c",
+      "deploymentBlock": 4815039,
+      "deploymentTimestamp": 1718279911725,
+      "deployed": true
+    },
+    "ParanetServicesRegistry": {
+      "evmAddress": "0xf7FeF7049d9B807342A4C2FC99f4eB5DEfF34626",
+      "substrateAddress": "5EMjsd1BsFNFGfJGGqqDYUh58yAZ9n8KC19besqibDVcY1QU",
+      "version": "2.1.0",
+      "gitBranch": "improvement/paranet-incentives-calculation",
+      "gitCommitHash": "f52e4b5ec305ec0bc4f7652f406f081c07d6010c",
+      "deploymentBlock": 4815041,
+      "deploymentTimestamp": 1718279937107,
+      "deployed": true
+    },
+    "ParanetKnowledgeAssetsRegistry": {
+      "evmAddress": "0xF3B2BCE7fCc86F3c97aeF8e43A0fDd4E6bb880Cb",
+      "substrateAddress": "5EMjsd1B1JSUPiKB8BxR3Q1SGzN9n5GFwN6JuqTL6wAt1e7D",
+      "version": "2.0.0",
+      "gitBranch": "improvement/paranet-incentives-calculation",
+      "gitCommitHash": "f52e4b5ec305ec0bc4f7652f406f081c07d6010c",
+      "deploymentBlock": 4815042,
+      "deploymentTimestamp": 1718279954489,
+      "deployed": true
+    },
+    "ParanetKnowledgeMinersRegistry": {
+      "evmAddress": "0x2FDB0E87536fBc95765e3a8BEdD2a4E48DBa7232",
+      "substrateAddress": "5EMjsczVmHrEo4VZZ3kEdUuyuPsgfPYo3QEPDzuLYQ8o3Wck",
+      "version": "2.0.1",
+      "gitBranch": "improvement/paranet-incentives-calculation",
+      "gitCommitHash": "f52e4b5ec305ec0bc4f7652f406f081c07d6010c",
+      "deploymentBlock": 4815044,
+      "deploymentTimestamp": 1718279979820,
+      "deployed": true
+    },
+    "Paranet": {
+      "evmAddress": "0xF1920c4adDC7331a539c51D982F3333ABADEbAEc",
+      "substrateAddress": "5EMjsd1AaaFrX9VpFayhKrebBj2jSyjSGBkAoSVGMc9cseAQ",
+      "version": "2.1.2",
+      "gitBranch": "improvement/paranet-incentives-calculation",
+      "gitCommitHash": "f52e4b5ec305ec0bc4f7652f406f081c07d6010c",
+      "deploymentBlock": 4815045,
+      "deploymentTimestamp": 1718280004064,
       "deployed": true
     }
   },

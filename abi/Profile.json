@@ -44,17 +44,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      }
-    ],
-    "name": "NoOperatorFees",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes",
         "name": "nodeId",
         "type": "bytes"
@@ -170,6 +159,99 @@
     "inputs": [],
     "name": "ZeroAsk",
     "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "nodeId",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "oldAccumulatedOperatorFee",
+        "type": "uint96"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "newAccumulatedOperatorFee",
+        "type": "uint96"
+      }
+    ],
+    "name": "AccumulatedOperatorFeeRestaked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "nodeId",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "oldAccumulatedOperatorFee",
+        "type": "uint96"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "newAccumulatedOperatorFee",
+        "type": "uint96"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "withdrawalPeriodEnd",
+        "type": "uint256"
+      }
+    ],
+    "name": "AccumulatedOperatorFeeWithdrawalStarted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "nodeId",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "withdrawnAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "AccumulatedOperatorFeeWithdrawn",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -432,6 +514,11 @@
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
+      },
+      {
+        "internalType": "uint96",
+        "name": "restakeAmount",
+        "type": "uint96"
       }
     ],
     "name": "stakeAccumulatedOperatorFee",
@@ -471,6 +558,11 @@
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
+      },
+      {
+        "internalType": "uint96",
+        "name": "withdrawalAmount",
+        "type": "uint96"
       }
     ],
     "name": "startAccumulatedOperatorFeeWithdrawal",

@@ -1,10 +1,10 @@
 import { randomBytes } from 'crypto';
 
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber, BytesLike } from 'ethers';
 import hre from 'hardhat';
+import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import {
   Token,
@@ -15,6 +15,7 @@ import {
   HubController,
   ProfileStorage,
 } from '../../../typechain';
+import { NodeOperatorStructs } from '../../../typechain/contracts/v2/storage/NodeOperatorFeesStorage';
 
 type NodeOperatorFeesStorageFixture = {
   accounts: SignerWithAddress[];
@@ -113,7 +114,7 @@ describe('@v2 @unit NodeOperatorFeesStorage contract', function () {
   });
 
   it('The contract is version "2.0.0"', async () => {
-    expect(await NodeOperatorFeesStorage.version()).to.equal('2.0.0');
+    expect(await NodeOperatorFeesStorage.version()).to.equal('2.0.2');
   });
 
   it('Migration of old Operator Fees should pass successfully', async () => {
@@ -171,13 +172,16 @@ describe('@v2 @unit NodeOperatorFeesStorage contract', function () {
       { identityId: identityIds[4], fees: [{ feePercentage: 5, effectiveDate: BigNumber.from(latestBlockTimestamp) }] },
     ];
 
-    await HubController.forwardCall(
-      NodeOperatorFeesStorage.address,
-      NodeOperatorFeesStorage.interface.encodeFunctionData('migrateOldOperatorFees', [operatorFees]),
-    );
+    const NewOperatorFeesStorage = await hre.helpers.deploy({
+      newContractName: 'NodeOperatorFeesStorage',
+      additionalArgs: [(await hre.ethers.provider.getBlock('latest')).timestamp + 600],
+    });
+
+    const tx = await NewOperatorFeesStorage.migrateOldOperatorFees(operatorFees);
+    await tx.wait();
 
     for (const [i, identityId] of identityIds.entries()) {
-      const fees = await NodeOperatorFeesStorage.getOperatorFees(identityId);
+      const fees: NodeOperatorStructs.OperatorFeeStruct[] = await NewOperatorFeesStorage.getOperatorFees(identityId);
       const normalizedFees = fees.map((fee) => ({
         feePercentage: fee.feePercentage,
         effectiveDate: fee.effectiveDate,
