@@ -4,6 +4,12 @@ pragma solidity ^0.8.16;
 
 library ParanetErrors {
     error ParanetHasAlreadyBeenRegistered(address knowledgeAssetStorageAddress, uint256 tokenId);
+    error ParanetIncentivesPoolAlreadyExists(
+        address knowledgeAssetStorageAddress,
+        uint256 tokenId,
+        string poolType,
+        address poolAddress
+    );
     error ParanetDoesntExist(address knowledgeAssetStorageAddress, uint256 tokenId);
     error ParanetServiceHasAlreadyBeenRegistered(address knowledgeAssetStorageAddress, uint256 tokenId);
     error ParanetServiceDoesntExist(address knowledgeAssetStorageAddress, uint256 tokenId);
