@@ -33,8 +33,7 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         address knowledgeAssetStorageContract,
         uint256 tokenId,
         string calldata paranetName,
-        string calldata paranetDescription,
-        ParanetStructs.IncentivesPool[] calldata incentivesPools
+        string calldata paranetDescription
     ) external onlyContracts returns (bytes32) {
         ParanetStructs.Paranet storage paranet = paranets[
             keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId))
@@ -44,14 +43,6 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         paranet.paranetKATokenId = tokenId;
         paranet.name = paranetName;
         paranet.description = paranetDescription;
-
-        for (uint i; i < incentivesPools.length; ) {
-            paranet.incentivesPools.append(incentivesPools[i].poolType, incentivesPools[i].addr);
-
-            unchecked {
-                i++;
-            }
-        }
 
         return keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId));
     }

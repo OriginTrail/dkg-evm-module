@@ -635,23 +635,6 @@
         "internalType": "string",
         "name": "paranetDescription",
         "type": "string"
-      },
-      {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "poolType",
-            "type": "string"
-          },
-          {
-            "internalType": "address",
-            "name": "addr",
-            "type": "address"
-          }
-        ],
-        "internalType": "struct ParanetStructs.IncentivesPool[]",
-        "name": "incentivesPools",
-        "type": "tuple[]"
       }
     ],
     "name": "registerParanet",

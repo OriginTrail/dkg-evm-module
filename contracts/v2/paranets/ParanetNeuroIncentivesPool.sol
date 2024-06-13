@@ -14,6 +14,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {
     EMISSION_MULTIPLIER_SCALING_FACTOR,
     PERCENTAGE_SCALING_FACTOR,
+    TOKENS_DIGITS_DIFF,
     MAX_CUMULATIVE_VOTERS_WEIGHT
 } from "../constants/ParanetIncentivesPoolConstants.sol";
 
@@ -26,7 +27,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     event ParanetIncentivizationProposalVoterRewardClaimed(address indexed voter, uint256 amount);
 
     string private constant _NAME = "ParanetNeuroIncentivesPool";
-    string private constant _VERSION = "2.1.0";
+    string private constant _VERSION = "2.1.1";
 
     HubV2 public hub;
     ParanetsRegistry public paranetsRegistry;
@@ -281,8 +282,16 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         );
     }
 
-    function claimKnowledgeMinerReward() external onlyParanetKnowledgeMiner {
-        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+    function getTotalKnowledgeMinerIncentiveEstimation() public view returns (uint256) {
+        uint96 unrewardedTracSpent = paranetKnowledgeMinersRegistry.getUnrewardedTracSpent(msg.sender, parentParanetId);
+
+        if (unrewardedTracSpent < TOKENS_DIGITS_DIFF) {
+            revert ParanetErrors.MinimalRewardedTracAmountNotMet(
+                parentParanetId,
+                TOKENS_DIGITS_DIFF,
+                unrewardedTracSpent
+            );
+        }
 
         // Unrewarded TRAC Spent = how much TRAC Knowledge Miner spent for Mining and haven't got a reward for
         // Effective Emission Ratio = Current active Multiplier for how much NEURO is released per TRAC spent
@@ -295,30 +304,43 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         // 10% Operator Reward Percentage, 10% Voters Reward Percentage
         // Reward = (((10 * 10^18) * (5 * 10^11)) / (10^18)) * (10,000 - 1,000 - 1,000) / 10,000) =
         // = 10 * 5 * 10^11 * 8,000 / 10,000 = 8/10 * (5 * 10^12) = 80% of 5 NEURO = 4 NEURO
-        uint256 neuroReward = (((pkmr.getUnrewardedTracSpent(msg.sender, parentParanetId) *
-            getEffectiveNeuroEmissionMultiplier(block.timestamp)) / EMISSION_MULTIPLIER_SCALING_FACTOR) *
-            (PERCENTAGE_SCALING_FACTOR -
-                paranetOperatorRewardPercentage -
-                paranetIncentivizationProposalVotersRewardPercentage)) / PERCENTAGE_SCALING_FACTOR;
+        return
+            (((unrewardedTracSpent * getEffectiveNeuroEmissionMultiplier(block.timestamp)) /
+                EMISSION_MULTIPLIER_SCALING_FACTOR) *
+                (PERCENTAGE_SCALING_FACTOR -
+                    paranetOperatorRewardPercentage -
+                    paranetIncentivizationProposalVotersRewardPercentage)) / PERCENTAGE_SCALING_FACTOR;
+    }
+
+    function getClaimableKnowledgeMinerRewardAmount() public view returns (uint256) {
+        uint256 neuroReward = getTotalKnowledgeMinerIncentiveEstimation();
+
         // Here we should have a limit for Knowledge Miners, which is determined by the % of the Miners Reward
         // and total NEURO received by the contract, so that Miners don't get tokens belonging to Operator/Voters
         // Following the example from the above, if we have 100 NEURO as a total reward, Miners should never get
-        // more than 80 NEURO. totalMinersReward = 80 NEURO
-        uint256 totalMinersReward = ((address(this).balance +
+        // more than 80 NEURO. minersRewardLimit = 80 NEURO
+        uint256 minersRewardLimit = ((address(this).balance +
             claimedMinersNeuro +
             claimedOperatorNeuro +
             claimedVotersNeuro) *
             (PERCENTAGE_SCALING_FACTOR -
                 paranetOperatorRewardPercentage -
                 paranetIncentivizationProposalVotersRewardPercentage)) / PERCENTAGE_SCALING_FACTOR;
-        // Here we have the check if SUM(CLAIMED + CLAIMING) < totalMinersReward
-        // Miner should get all the tokens up to the limit or otherwise this function will revert
-        uint256 claimableNeuroReward = claimedMinersNeuro + neuroReward <= totalMinersReward
-            ? neuroReward
-            : totalMinersReward - claimedMinersNeuro;
+
+        return
+            claimedMinersNeuro + neuroReward <= minersRewardLimit
+                ? neuroReward
+                : minersRewardLimit - claimedMinersNeuro;
+    }
+
+    function claimKnowledgeMinerReward() external onlyParanetKnowledgeMiner {
+        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+        uint256 neuroReward = getTotalKnowledgeMinerIncentiveEstimation();
+        uint256 claimableNeuroReward = getClaimableKnowledgeMinerRewardAmount();
 
         if (claimableNeuroReward == 0) {
-            revert ParanetErrors.NoKnowledgeMinerRewardAvailable(parentParanetId, msg.sender);
+            revert ParanetErrors.NoRewardAvailable(parentParanetId, msg.sender);
         }
 
         // Updating the Unrewarded TRAC variable in the Knowledge Miner Profile
@@ -353,15 +375,46 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         emit ParanetKnowledgeMinerRewardClaimed(msg.sender, claimableNeuroReward);
     }
 
+    function getTotalParanetOperatorIncentiveEstimation() public view returns (uint256) {
+        uint256 effectiveNeuroEmissionMultiplier = getEffectiveNeuroEmissionMultiplier(block.timestamp);
+        uint96 cumulativeKnowledgeValueOperatorPart = (paranetsRegistry.getCumulativeKnowledgeValue(parentParanetId) *
+            paranetOperatorRewardPercentage) / PERCENTAGE_SCALING_FACTOR;
+        uint96 rewardedTracSpentOperatorPart = uint96(
+            (claimedOperatorNeuro * EMISSION_MULTIPLIER_SCALING_FACTOR) / effectiveNeuroEmissionMultiplier
+        );
+
+        if (cumulativeKnowledgeValueOperatorPart - rewardedTracSpentOperatorPart < TOKENS_DIGITS_DIFF) {
+            revert ParanetErrors.MinimalRewardedTracAmountNotMet(
+                parentParanetId,
+                TOKENS_DIGITS_DIFF,
+                cumulativeKnowledgeValueOperatorPart - rewardedTracSpentOperatorPart
+            );
+        }
+
+        return
+            ((cumulativeKnowledgeValueOperatorPart * effectiveNeuroEmissionMultiplier) /
+                EMISSION_MULTIPLIER_SCALING_FACTOR) - claimedOperatorNeuro;
+    }
+
+    function getClaimableParanetOperatorRewardAmount() public view returns (uint256) {
+        uint256 neuroReward = getTotalParanetOperatorIncentiveEstimation();
+
+        uint256 operatorRewardLimit = ((address(this).balance +
+            claimedMinersNeuro +
+            claimedOperatorNeuro +
+            claimedVotersNeuro) * paranetOperatorRewardPercentage) / PERCENTAGE_SCALING_FACTOR;
+
+        return
+            claimedOperatorNeuro + neuroReward <= operatorRewardLimit
+                ? neuroReward
+                : operatorRewardLimit - claimedOperatorNeuro;
+    }
+
     function claimParanetOperatorReward() external onlyParanetOperator {
-        uint256 claimableNeuroReward = (((paranetsRegistry.getCumulativeKnowledgeValue(parentParanetId) *
-            getEffectiveNeuroEmissionMultiplier(block.timestamp)) / EMISSION_MULTIPLIER_SCALING_FACTOR) *
-            paranetOperatorRewardPercentage) /
-            PERCENTAGE_SCALING_FACTOR -
-            claimedOperatorNeuro;
+        uint256 claimableNeuroReward = getClaimableParanetOperatorRewardAmount();
 
         if (claimableNeuroReward == 0) {
-            revert ParanetErrors.NoOperatorRewardAvailable(parentParanetId);
+            revert ParanetErrors.NoRewardAvailable(parentParanetId, msg.sender);
         }
 
         claimedOperatorNeuro += claimableNeuroReward;
@@ -369,6 +422,80 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         payable(msg.sender).transfer(claimableNeuroReward);
 
         emit ParanetOperatorRewardClaimed(msg.sender, claimableNeuroReward);
+    }
+
+    function getTotalAllProposalVotersIncentiveEstimation() public view returns (uint256) {
+        uint256 effectiveNeuroEmissionMultiplier = getEffectiveNeuroEmissionMultiplier(block.timestamp);
+        uint96 cumulativeKnowledgeValueVotersPart = (paranetsRegistry.getCumulativeKnowledgeValue(parentParanetId) *
+            paranetIncentivizationProposalVotersRewardPercentage) / PERCENTAGE_SCALING_FACTOR;
+        uint96 rewardedTracSpentVotersPart = uint96(
+            (claimedVotersNeuro * EMISSION_MULTIPLIER_SCALING_FACTOR) / effectiveNeuroEmissionMultiplier
+        );
+
+        if (cumulativeKnowledgeValueVotersPart - rewardedTracSpentVotersPart < TOKENS_DIGITS_DIFF) {
+            revert ParanetErrors.MinimalRewardedTracAmountNotMet(
+                parentParanetId,
+                TOKENS_DIGITS_DIFF,
+                cumulativeKnowledgeValueVotersPart - rewardedTracSpentVotersPart
+            );
+        }
+
+        return
+            ((cumulativeKnowledgeValueVotersPart * effectiveNeuroEmissionMultiplier) /
+                EMISSION_MULTIPLIER_SCALING_FACTOR) - claimedVotersNeuro;
+    }
+
+    function getTotalSingleProposalVoterIncentiveEstimation() public view returns (uint256) {
+        uint256 effectiveNeuroEmissionMultiplier = getEffectiveNeuroEmissionMultiplier(block.timestamp);
+        uint96 cumulativeKnowledgeValueSingleVoterPart = (((paranetsRegistry.getCumulativeKnowledgeValue(
+            parentParanetId
+        ) * paranetIncentivizationProposalVotersRewardPercentage) / PERCENTAGE_SCALING_FACTOR) *
+            voters[votersIndexes[msg.sender]].weight) / MAX_CUMULATIVE_VOTERS_WEIGHT;
+        uint96 rewardedTracSpentSingleVoterPart = uint96(
+            (voters[votersIndexes[msg.sender]].claimedNeuro * EMISSION_MULTIPLIER_SCALING_FACTOR) /
+                effectiveNeuroEmissionMultiplier
+        );
+
+        if (cumulativeKnowledgeValueSingleVoterPart - rewardedTracSpentSingleVoterPart < TOKENS_DIGITS_DIFF) {
+            revert ParanetErrors.MinimalRewardedTracAmountNotMet(
+                parentParanetId,
+                TOKENS_DIGITS_DIFF,
+                cumulativeKnowledgeValueSingleVoterPart - rewardedTracSpentSingleVoterPart
+            );
+        }
+
+        return
+            ((cumulativeKnowledgeValueSingleVoterPart * effectiveNeuroEmissionMultiplier) /
+                EMISSION_MULTIPLIER_SCALING_FACTOR) - voters[votersIndexes[msg.sender]].claimedNeuro;
+    }
+
+    function getClaimableAllProposalVotersRewardAmount() public view returns (uint256) {
+        uint256 neuroReward = getTotalAllProposalVotersIncentiveEstimation();
+
+        uint256 votersRewardLimit = ((address(this).balance +
+            claimedMinersNeuro +
+            claimedOperatorNeuro +
+            claimedVotersNeuro) * paranetIncentivizationProposalVotersRewardPercentage) / PERCENTAGE_SCALING_FACTOR;
+
+        return
+            claimedVotersNeuro + neuroReward <= votersRewardLimit
+                ? neuroReward
+                : votersRewardLimit - claimedVotersNeuro;
+    }
+
+    function getClaimableSingleProposalVoterRewardAmount() public view returns (uint256) {
+        uint256 neuroReward = getTotalSingleProposalVoterIncentiveEstimation();
+
+        uint256 voterRewardLimit = ((((address(this).balance +
+            claimedMinersNeuro +
+            claimedOperatorNeuro +
+            claimedVotersNeuro) * paranetIncentivizationProposalVotersRewardPercentage) / PERCENTAGE_SCALING_FACTOR) *
+            voters[votersIndexes[msg.sender]].weight) / MAX_CUMULATIVE_VOTERS_WEIGHT;
+
+        return
+            voters[votersIndexes[msg.sender]].claimedNeuro + neuroReward <= voterRewardLimit
+                ? neuroReward
+                : voterRewardLimit - voters[votersIndexes[msg.sender]].claimedNeuro;
     }
 
     function claimIncentivizationProposalVoterReward() external onlyParanetIncentivizationProposalVoter {
@@ -380,15 +507,10 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
             );
         }
 
-        uint256 claimableNeuroReward = (((((paranetsRegistry.getCumulativeKnowledgeValue(parentParanetId) *
-            getEffectiveNeuroEmissionMultiplier(block.timestamp)) / EMISSION_MULTIPLIER_SCALING_FACTOR) *
-            paranetIncentivizationProposalVotersRewardPercentage) / PERCENTAGE_SCALING_FACTOR) *
-            voters[votersIndexes[msg.sender]].weight) /
-            MAX_CUMULATIVE_VOTERS_WEIGHT -
-            voters[votersIndexes[msg.sender]].claimedNeuro;
+        uint256 claimableNeuroReward = getClaimableSingleProposalVoterRewardAmount();
 
         if (claimableNeuroReward == 0) {
-            revert ParanetErrors.NoVotersRewardAvailable(parentParanetId);
+            revert ParanetErrors.NoRewardAvailable(parentParanetId, msg.sender);
         }
 
         voters[votersIndexes[msg.sender]].claimedNeuro += claimableNeuroReward;

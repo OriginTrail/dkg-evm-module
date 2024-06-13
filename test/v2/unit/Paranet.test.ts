@@ -119,8 +119,8 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     expect(await Paranet.name()).to.equal('Paranet');
   });
 
-  it('The contract is version "2.1.1"', async () => {
-    expect(await Paranet.version()).to.equal('2.1.1');
+  it('The contract is version "2.1.2"', async () => {
+    expect(await Paranet.version()).to.equal('2.1.2');
   });
 
   it('should register paranet', async () => {
@@ -178,10 +178,11 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   it('should update paranet name with opertor wallet', async () => {
     const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1);
 
-    await Paranet.connect(accounts[101]).updateParanetName(
+    await Paranet.connect(accounts[101]).updateParanetMetadata(
       paranetKAStorageContract,
       paranetKATokenId,
       'Net Test Paranet Name',
+      '',
     );
 
     const newName = await ParanetsRegistry.getName(paranetId);
@@ -193,12 +194,13 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1);
 
     expect(
-      await Paranet.connect(accounts[101]).updateParanetName(
+      await Paranet.connect(accounts[101]).updateParanetMetadata(
         paranetKAStorageContract,
         paranetKATokenId,
         'Net Test Paranet Name',
+        '',
       ),
-    ).to.emit(Paranet, 'ParanetNameUpdated');
+    ).to.emit(Paranet, 'ParanetMetadataUpdated');
 
     const newName = await ParanetsRegistry.getName(paranetId);
 
@@ -209,9 +211,10 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 1);
 
     await expect(
-      Paranet.connect(accounts[201]).updateParanetDescription(
+      Paranet.connect(accounts[201]).updateParanetMetadata(
         paranetKAStorageContract,
         paranetKATokenId,
+        '',
         'Net Test Paranet Description',
       ),
     ).to.be.revertedWith("Caller isn't the owner of the KA");
@@ -220,9 +223,10 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   it('should update paranet description with opertor wallet', async () => {
     const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1);
 
-    await Paranet.connect(accounts[101]).updateParanetDescription(
+    await Paranet.connect(accounts[101]).updateParanetMetadata(
       paranetKAStorageContract,
       paranetKATokenId,
+      '',
       'New Test Paranet Description',
     );
 
@@ -235,21 +239,23 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 1);
 
     await expect(
-      Paranet.connect(accounts[101]).updateParanetDescription(
+      Paranet.connect(accounts[101]).updateParanetMetadata(
         paranetKAStorageContract,
         paranetKATokenId,
+        '',
         'Net Test Paranet Description',
       ),
-    ).to.emit(Paranet, 'ParanetDescriptionUpdated');
+    ).to.emit(Paranet, 'ParanetMetadataUpdated');
   });
 
   it('should revert update of paranet description with non opertor wallet', async () => {
     const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 1);
 
     await expect(
-      Paranet.connect(accounts[201]).updateParanetDescription(
+      Paranet.connect(accounts[201]).updateParanetMetadata(
         paranetKAStorageContract,
         paranetKATokenId,
+        '',
         'Net Test Paranet Description',
       ),
     ).to.be.revertedWith("Caller isn't the owner of the KA");
@@ -259,9 +265,10 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 1);
 
     await expect(
-      Paranet.connect(accounts[201]).updateParanetDescription(
+      Paranet.connect(accounts[201]).updateParanetMetadata(
         paranetKAStorageContract,
         paranetKATokenId,
+        '',
         accounts[102].address,
       ),
     ).to.be.revertedWith("Caller isn't the owner of the KA");
@@ -311,10 +318,12 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   it('should update paranet service name operator wallet', async () => {
     const { paranetServiceKAStorageContract, paranetServiceKATokenId, paranetServiceId } =
       await registerParanetService();
-    await Paranet.connect(accounts[103]).updateParanetServiceName(
+    await Paranet.connect(accounts[103]).updateParanetServiceMetadata(
       paranetServiceKAStorageContract,
       paranetServiceKATokenId,
       'New Test Paranet Servic Name',
+      '',
+      [],
     );
     const newParanetServiceName = await ParanetServicesRegistry.getName(paranetServiceId);
 
@@ -324,10 +333,12 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     const { paranetServiceKAStorageContract, paranetServiceKATokenId } = await registerParanetService();
 
     await expect(
-      Paranet.connect(accounts[102]).updateParanetServiceName(
+      Paranet.connect(accounts[102]).updateParanetServiceMetadata(
         paranetServiceKAStorageContract,
         paranetServiceKATokenId,
         'New Test Paranet Servic Name',
+        '',
+        [],
       ),
     ).to.be.revertedWith("Caller isn't the owner of the KA");
   });
@@ -335,21 +346,25 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   it('should update paranet name with operator wallet emit event', async () => {
     const { paranetServiceKAStorageContract, paranetServiceKATokenId } = await registerParanetService();
     expect(
-      await Paranet.connect(accounts[103]).updateParanetServiceName(
+      await Paranet.connect(accounts[103]).updateParanetServiceMetadata(
         paranetServiceKAStorageContract,
         paranetServiceKATokenId,
         'New Test Paranet Servic Name',
+        '',
+        [],
       ),
-    ).to.emit(Paranet, 'ParanetServiceNameUpdated');
+    ).to.emit(Paranet, 'ParanetServiceMetadataUpdated');
   });
 
   it('should update paranet service description operator wallet', async () => {
     const { paranetServiceKAStorageContract, paranetServiceKATokenId, paranetServiceId } =
       await registerParanetService();
-    await Paranet.connect(accounts[103]).updateParanetServiceDescription(
+    await Paranet.connect(accounts[103]).updateParanetServiceMetadata(
       paranetServiceKAStorageContract,
       paranetServiceKATokenId,
+      '',
       'New Test Paranet Servic Description',
+      [],
     );
     const newParanetServiceDescription = await ParanetServicesRegistry.getDescription(paranetServiceId);
 
@@ -360,10 +375,12 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     const { paranetServiceKAStorageContract, paranetServiceKATokenId } = await registerParanetService();
 
     await expect(
-      Paranet.connect(accounts[102]).updateParanetServiceDescription(
+      Paranet.connect(accounts[102]).updateParanetServiceMetadata(
         paranetServiceKAStorageContract,
         paranetServiceKATokenId,
+        '',
         'New Test Paranet Servic Description',
+        [],
       ),
     ).to.be.revertedWith("Caller isn't the owner of the KA");
   });
@@ -371,20 +388,24 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   it('should update paranet description with operator wallet emit event', async () => {
     const { paranetServiceKAStorageContract, paranetServiceKATokenId } = await registerParanetService();
     expect(
-      await Paranet.connect(accounts[103]).updateParanetServiceDescription(
+      await Paranet.connect(accounts[103]).updateParanetServiceMetadata(
         paranetServiceKAStorageContract,
         paranetServiceKATokenId,
+        '',
         'New Test Paranet Servic Description',
+        [],
       ),
-    ).to.emit(Paranet, 'ParanetServiceDescriptionUpdated');
+    ).to.emit(Paranet, 'ParanetServiceMetadataUpdated');
   });
 
   it('should update paranet service addresses wallet', async () => {
     const { paranetServiceKAStorageContract, paranetServiceKATokenId, paranetServiceId } =
       await registerParanetService();
-    await Paranet.connect(accounts[103]).updateParanetServiceAddresses(
+    await Paranet.connect(accounts[103]).updateParanetServiceMetadata(
       paranetServiceKAStorageContract,
       paranetServiceKATokenId,
+      '',
+      '',
       [accounts[49].address],
     );
     const newParanetServiceAddresses = await ParanetServicesRegistry.getParanetServiceAddresses(paranetServiceId);
@@ -395,9 +416,11 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     const { paranetServiceKAStorageContract, paranetServiceKATokenId } = await registerParanetService();
 
     await expect(
-      Paranet.connect(accounts[102]).updateParanetServiceAddresses(
+      Paranet.connect(accounts[102]).updateParanetServiceMetadata(
         paranetServiceKAStorageContract,
         paranetServiceKATokenId,
+        '',
+        '',
         [accounts[49].address],
       ),
     ).to.be.revertedWith("Caller isn't the owner of the KA");

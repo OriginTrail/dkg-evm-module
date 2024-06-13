@@ -4,7 +4,6 @@ import hre from 'hardhat';
 import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import { HubController, ParanetsRegistry } from '../../../typechain';
-import { ParanetStructs } from '../../../typechain/contracts/v2/paranets/Paranet';
 
 type deployParanetsRegistryFixture = {
   accounts: SignerWithAddress[];
@@ -387,14 +386,12 @@ async function createParanet(accounts: SignerWithAddress[], ParanetsRegistry: Pa
   const tokenId = 123;
   const paranetName = 'Test Paranet';
   const paranetDescription = 'Description of Test Paranet';
-  const incentivesPools: ParanetStructs.IncentivesPoolStruct[] = [];
 
   const paranetId = await ParanetsRegistry.registerParanet(
     knowledgeAssetStorageContract.address,
     tokenId,
     paranetName,
     paranetDescription,
-    incentivesPools,
   );
   return paranetId;
 }
