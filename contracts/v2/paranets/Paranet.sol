@@ -9,7 +9,6 @@ import {ParanetKnowledgeAssetsRegistry} from "../storage/paranets/ParanetKnowled
 import {ParanetKnowledgeMinersRegistry} from "../storage/paranets/ParanetKnowledgeMinersRegistry.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {ParanetServicesRegistry} from "../storage/paranets/ParanetServicesRegistry.sol";
-import {ParanetNeuroIncentivesPool} from "./ParanetNeuroIncentivesPool.sol";
 import {ServiceAgreementStorageProxy} from "../../v1/storage/ServiceAgreementStorageProxy.sol";
 import {HashingProxy} from "../../v1/HashingProxy.sol";
 import {ContractStatusV2} from "../abstract/ContractStatus.sol";
@@ -127,58 +126,6 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         emit ParanetRegistered(paranetKAStorageContract, paranetKATokenId, paranetName, paranetDescription);
 
         return pr.registerParanet(paranetKAStorageContract, paranetKATokenId, paranetName, paranetDescription);
-    }
-
-    function deployNeuroIncentivesPool(
-        address paranetKAStorageContract,
-        uint256 paranetKATokenId,
-        uint256 tracToNeuroEmissionMultiplier,
-        uint16 paranetOperatorRewardPercentage,
-        uint16 paranetIncentivizationProposalVotersRewardPercentage
-    ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) returns (address) {
-        HubV2 h = hub;
-        ParanetsRegistry pr = paranetsRegistry;
-
-        if (
-            pr.hasIncentivesPoolByType(
-                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-                "Neuroweb"
-            )
-        ) {
-            revert ParanetErrors.ParanetIncentivesPoolAlreadyExists(
-                paranetKAStorageContract,
-                paranetKATokenId,
-                "Neuroweb",
-                pr.getIncentivesPoolAddress(
-                    keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-                    "Neuroweb"
-                )
-            );
-        }
-
-        ParanetNeuroIncentivesPool incentivesPool = new ParanetNeuroIncentivesPool(
-            address(h),
-            h.getContractAddress("ParanetsRegistry"),
-            h.getContractAddress("ParanetKnowledgeMinersRegistry"),
-            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            tracToNeuroEmissionMultiplier,
-            paranetOperatorRewardPercentage,
-            paranetIncentivizationProposalVotersRewardPercentage
-        );
-
-        pr.setIncentivesPoolAddress(
-            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            "Neuroweb",
-            address(incentivesPool)
-        );
-
-        emit ParanetIncetivesPoolDeployed(
-            paranetKAStorageContract,
-            paranetKATokenId,
-            ParanetStructs.IncentivesPool({poolType: "Neuroweb", addr: address(incentivesPool)})
-        );
-
-        return address(incentivesPool);
     }
 
     function updateParanetMetadata(

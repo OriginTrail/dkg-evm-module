@@ -16,6 +16,7 @@ import {
   ServiceAgreementV1,
   ContentAssetStorageV2,
   Token,
+  ParanetIncentivesPoolFactory,
 } from '../../../typechain';
 import { ContentAssetStructs } from '../../../typechain/contracts/v2/assets/ContentAsset.sol/ContentAssetV2';
 
@@ -28,6 +29,7 @@ type ParanetNeuroIncentivesPoolFixture = {
   ParanetKnowledgeMinersRegistry: ParanetKnowledgeMinersRegistry;
   ParanetsRegistry: ParanetsRegistry;
   Paranet: Paranet;
+  ParanetIncentivesPoolFactory: ParanetIncentivesPoolFactory;
 };
 
 describe('@v2 @integration Paranet', function () {
@@ -42,6 +44,7 @@ describe('@v2 @integration Paranet', function () {
   let ParanetKnowledgeMinersRegistry: ParanetKnowledgeMinersRegistry;
   let ParanetsRegistry: ParanetsRegistry;
   let Paranet: Paranet;
+  let ParanetIncentivesPoolFactory: ParanetIncentivesPoolFactory;
 
   async function deployParanetNeuroIncentivesPoolFixture(): Promise<ParanetNeuroIncentivesPoolFixture> {
     await hre.deployments.fixture([
@@ -50,6 +53,7 @@ describe('@v2 @integration Paranet', function () {
       'ContentAssetStorageV2',
       'ContentAssetV2',
       'Paranet',
+      'ParanetIncentivesPoolFactory',
     ]);
 
     ContentAssetStorage = await hre.ethers.getContract<ContentAssetStorageV2>('ContentAssetStorage');
@@ -62,6 +66,9 @@ describe('@v2 @integration Paranet', function () {
     );
     ParanetsRegistry = await hre.ethers.getContract<ParanetsRegistry>('ParanetsRegistry');
     Paranet = await hre.ethers.getContract<Paranet>('Paranet');
+    ParanetIncentivesPoolFactory = await hre.ethers.getContract<ParanetIncentivesPoolFactory>(
+      'ParanetIncentivesPoolFactory',
+    );
 
     accounts = await hre.ethers.getSigners();
 
@@ -77,6 +84,7 @@ describe('@v2 @integration Paranet', function () {
       ParanetKnowledgeMinersRegistry,
       ParanetsRegistry,
       Paranet,
+      ParanetIncentivesPoolFactory,
     };
   }
 
@@ -114,7 +122,7 @@ describe('@v2 @integration Paranet', function () {
     );
     await tx1.wait();
 
-    const tx2 = await Paranet.connect(operator).deployNeuroIncentivesPool(
+    const tx2 = await ParanetIncentivesPoolFactory.connect(operator).deployNeuroIncentivesPool(
       ContentAssetStorage.address,
       paranetKATokenId,
       tracToNeuroEmissionMultiplier,
@@ -145,6 +153,7 @@ describe('@v2 @integration Paranet', function () {
       ParanetKnowledgeMinersRegistry,
       ParanetsRegistry,
       Paranet,
+      ParanetIncentivesPoolFactory,
     } = await loadFixture(deployParanetNeuroIncentivesPoolFixture));
 
     operator = accounts[1];
