@@ -265,12 +265,12 @@
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0xD5c15A0a9D778B0e6B32Be9D9522324acABC3556",
-      "version": "2.1.0",
-      "gitBranch": "feature/paranets",
-      "gitCommitHash": "afd2acd78886641415e423de5a20ec19df88b621",
-      "deploymentBlock": 10188306,
-      "deploymentTimestamp": 1717766762912,
+      "evmAddress": "0x140CA29bca7e9449f50021E051c8EE3187b48e4D",
+      "version": "2.1.1",
+      "gitBranch": "deployment/4.3.0",
+      "gitCommitHash": "7bd7fcbc9d5e8bfa5eb47573d57b0958515aca00",
+      "deploymentBlock": 10291472,
+      "deploymentTimestamp": 1718285932780,
       "deployed": true
     }
   }
