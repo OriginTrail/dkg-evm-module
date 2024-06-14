@@ -19,7 +19,6 @@ import {Versioned} from "../../v1/interface/Versioned.sol";
 import {ContentAssetStructs} from "../../v1/structs/assets/ContentAssetStructs.sol";
 import {ParanetStructs} from "../structs/paranets/ParanetStructs.sol";
 import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {HASH_FUNCTION_ID} from "../../v1/constants/assets/ContentAssetConstants.sol";
 
@@ -69,7 +68,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
     );
 
     string private constant _NAME = "Paranet";
-    string private constant _VERSION = "2.1.2";
+    string private constant _VERSION = "2.1.3";
 
     ParanetsRegistry public paranetsRegistry;
     ParanetServicesRegistry public paranetServicesRegistry;
