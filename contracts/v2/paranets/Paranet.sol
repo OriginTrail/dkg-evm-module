@@ -547,6 +547,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                         )
                     )
                 );
+                // solhint-disable-next-line no-empty-blocks
             } catch {}
         }
     }

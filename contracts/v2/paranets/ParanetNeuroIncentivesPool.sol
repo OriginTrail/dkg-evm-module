@@ -82,7 +82,8 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     ) {
         require(
             paranetOperatorRewardPercentage_ + paranetIncentivizationProposalVotersRewardPercentage_ <
-                PERCENTAGE_SCALING_FACTOR
+                PERCENTAGE_SCALING_FACTOR,
+            "Invalid rewards ratio"
         );
 
         hub = HubV2(hubAddress);
@@ -298,7 +299,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     }
 
     function finalizeNeuroEmissionMultiplierUpdate() external onlyVotersRegistrar {
-        require(neuroEmissionMultipliers.length > 0, "No emission multiplier updates initiated");
+        require(neuroEmissionMultipliers.length > 0, "No emission multiplier updates");
         require(
             !neuroEmissionMultipliers[neuroEmissionMultipliers.length - 1].finalized,
             "Last update already finalized"

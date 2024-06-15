@@ -12,7 +12,7 @@ contract ParanetServicesRegistry is Named, Versioned, HubDependentV2 {
     string private constant _VERSION = "2.1.0";
 
     // Paranet Service ID => Paranet Service Object
-    mapping(bytes32 => ParanetStructs.ParanetService) paranetServices;
+    mapping(bytes32 => ParanetStructs.ParanetService) internal paranetServices;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependentV2(hubAddress) {}

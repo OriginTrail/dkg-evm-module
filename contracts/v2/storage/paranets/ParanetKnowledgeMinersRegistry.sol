@@ -15,7 +15,7 @@ contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
     ParanetsRegistry public paranetsRegistry;
 
     // Address => Knowledge Miner Profile
-    mapping(address => ParanetStructs.KnowledgeMiner) knowledgeMiners;
+    mapping(address => ParanetStructs.KnowledgeMiner) internal knowledgeMiners;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependentV2(hubAddress) {}
@@ -379,7 +379,7 @@ contract ParanetKnowledgeMinersRegistry is Named, Versioned, HubDependentV2 {
     function _checkSender(bytes32 paranetId) internal view virtual {
         require(
             hub.isContract(msg.sender) || paranetsRegistry.hasIncentivesPoolByAddress(paranetId, msg.sender),
-            "Fn can only be called by the hub contracts or Paranet incentives pool"
+            "Hub/IncentivesPool function"
         );
     }
 }

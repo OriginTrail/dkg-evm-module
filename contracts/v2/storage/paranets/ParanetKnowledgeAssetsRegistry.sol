@@ -12,7 +12,7 @@ contract ParanetKnowledgeAssetsRegistry is Named, Versioned, HubDependentV2 {
     string private constant _VERSION = "2.0.0";
 
     // Knowledge Asset ID => Knowledge Asset On Paranet
-    mapping(bytes32 => ParanetStructs.KnowledgeAsset) knowledgeAssets;
+    mapping(bytes32 => ParanetStructs.KnowledgeAsset) internal knowledgeAssets;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependentV2(hubAddress) {}
