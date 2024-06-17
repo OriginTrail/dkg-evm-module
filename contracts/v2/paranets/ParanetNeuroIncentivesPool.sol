@@ -426,7 +426,10 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         );
         pkmr.addCumulativeAwardedNeuro(msg.sender, parentParanetId, claimableNeuroReward);
 
-        if (claimedMinerRewards[claimedMinerRewardsIndexes[msg.sender]].addr != msg.sender) {
+        if (
+            claimedMinerRewards.length == 0 ||
+            claimedMinerRewards[claimedMinerRewardsIndexes[msg.sender]].addr != msg.sender
+        ) {
             claimedMinerRewardsIndexes[msg.sender] = claimedMinerRewards.length;
             claimedMinerRewards.push(
                 ParanetStructs.ParanetIncentivesPoolClaimedRewardsProfile({
@@ -469,7 +472,10 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
             revert ParanetErrors.NoRewardAvailable(parentParanetId, msg.sender);
         }
 
-        if (claimedOperatorRewards[claimedOperatorRewardsIndexes[msg.sender]].addr != msg.sender) {
+        if (
+            claimedOperatorRewards.length == 0 ||
+            claimedOperatorRewards[claimedOperatorRewardsIndexes[msg.sender]].addr != msg.sender
+        ) {
             claimedOperatorRewardsIndexes[msg.sender] = claimedOperatorRewards.length;
             claimedOperatorRewards.push(
                 ParanetStructs.ParanetIncentivesPoolClaimedRewardsProfile({
