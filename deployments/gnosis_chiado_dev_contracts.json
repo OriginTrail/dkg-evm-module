@@ -272,6 +272,60 @@
       "deploymentBlock": 10291472,
       "deploymentTimestamp": 1718285932780,
       "deployed": true
+    },
+    "ParanetsRegistry": {
+      "evmAddress": "0x92DA04556bdfd62ddFFf983Ee004e6F4a98bE671",
+      "version": "2.1.0",
+      "gitBranch": "improvement/paranet-incentives-additional-getters",
+      "gitCommitHash": "86a1d826db5485390b6fca1b13673261d0c4d89e",
+      "deploymentBlock": 10357784,
+      "deploymentTimestamp": 1718619599253,
+      "deployed": true
+    },
+    "ParanetServicesRegistry": {
+      "evmAddress": "0xD94CD8Adc95697266553bd24FcbA3E47122D4bDa",
+      "version": "2.1.0",
+      "gitBranch": "improvement/paranet-incentives-additional-getters",
+      "gitCommitHash": "86a1d826db5485390b6fca1b13673261d0c4d89e",
+      "deploymentBlock": 10357786,
+      "deploymentTimestamp": 1718619609325,
+      "deployed": true
+    },
+    "ParanetKnowledgeAssetsRegistry": {
+      "evmAddress": "0xe46CAaee3fd9556692f90181aDa517e20d9eD9cC",
+      "version": "2.0.0",
+      "gitBranch": "improvement/paranet-incentives-additional-getters",
+      "gitCommitHash": "86a1d826db5485390b6fca1b13673261d0c4d89e",
+      "deploymentBlock": 10357788,
+      "deploymentTimestamp": 1718619619120,
+      "deployed": true
+    },
+    "ParanetKnowledgeMinersRegistry": {
+      "evmAddress": "0xC1FD9aC1987652F540A4eE5b8A5e9901bE013A8c",
+      "version": "2.0.1",
+      "gitBranch": "improvement/paranet-incentives-additional-getters",
+      "gitCommitHash": "86a1d826db5485390b6fca1b13673261d0c4d89e",
+      "deploymentBlock": 10357790,
+      "deploymentTimestamp": 1718619629017,
+      "deployed": true
+    },
+    "Paranet": {
+      "evmAddress": "0x9E41D4c1338e3eACeD512c0d6CDc670c5563764f",
+      "version": "2.1.3",
+      "gitBranch": "improvement/paranet-incentives-additional-getters",
+      "gitCommitHash": "86a1d826db5485390b6fca1b13673261d0c4d89e",
+      "deploymentBlock": 10357793,
+      "deploymentTimestamp": 1718619642976,
+      "deployed": true
+    },
+    "ParanetIncentivesPoolFactory": {
+      "evmAddress": "0xEA7932aDfA759BA6D78c42bCE6De6258768F7b4e",
+      "version": "2.0.0",
+      "gitBranch": "improvement/paranet-incentives-additional-getters",
+      "gitCommitHash": "86a1d826db5485390b6fca1b13673261d0c4d89e",
+      "deploymentBlock": 10357795,
+      "deploymentTimestamp": 1718619653053,
+      "deployed": true
     }
   }
 }
