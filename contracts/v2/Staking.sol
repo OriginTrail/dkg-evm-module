@@ -397,9 +397,9 @@ contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
         );
     }
 
-    function finishOperatorFeeChange(uint72 identityId) external onlyAdmin(identityId) {
-        // Function signature needed for ABI backwards compatibility
-    }
+    // Function signature needed for ABI backwards compatibility
+    // solhint-disable-next-line no-empty-blocks
+    function finishOperatorFeeChange(uint72 identityId) external onlyAdmin(identityId) {}
 
     function _checkAdmin(uint72 identityId) internal view virtual {
         if (!identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), ADMIN_KEY)) {

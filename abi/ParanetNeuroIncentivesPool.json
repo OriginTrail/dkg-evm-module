@@ -244,8 +244,38 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "claimedMinersNeuro",
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "claimedMinerRewards",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "addr",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "claimedNeuro",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "claimedMinerRewardsIndexes",
     "outputs": [
       {
         "internalType": "uint256",
@@ -257,12 +287,23 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "claimedOperatorNeuro",
-    "outputs": [
+    "inputs": [
       {
         "internalType": "uint256",
         "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "claimedOperatorRewards",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "addr",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "claimedNeuro",
         "type": "uint256"
       }
     ],
@@ -270,8 +311,14 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "claimedVotersNeuro",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "claimedOperatorRewardsIndexes",
     "outputs": [
       {
         "internalType": "uint256",
@@ -300,6 +347,69 @@
     "name": "finalizeNeuroEmissionMultiplierUpdate",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAllRewardedMiners",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "addr",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "claimedNeuro",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ParanetStructs.ParanetIncentivesPoolClaimedRewardsProfile[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAllRewardedOperators",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "addr",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "claimedNeuro",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ParanetStructs.ParanetIncentivesPoolClaimedRewardsProfile[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getClaimableAllKnowledgeMinersRewardAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -343,7 +453,7 @@
   },
   {
     "inputs": [],
-    "name": "getClaimableSingleProposalVoterRewardAmount",
+    "name": "getClaimableProposalVoterRewardAmount",
     "outputs": [
       {
         "internalType": "uint256",
@@ -418,6 +528,19 @@
   },
   {
     "inputs": [],
+    "name": "getTotalAllKnowledgeMinersIncentiveEstimation",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getTotalAllProposalVotersIncentiveEstimation",
     "outputs": [
       {
@@ -457,7 +580,7 @@
   },
   {
     "inputs": [],
-    "name": "getTotalSingleProposalVoterIncentiveEstimation",
+    "name": "getTotalProposalVoterIncentiveEstimation",
     "outputs": [
       {
         "internalType": "uint256",
@@ -631,6 +754,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "minerAddress",
+        "type": "address"
+      }
+    ],
+    "name": "minerClaimedNeuro",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "name",
     "outputs": [
@@ -680,6 +822,25 @@
         "internalType": "bool",
         "name": "finalized",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "operatorAddress",
+        "type": "address"
+      }
+    ],
+    "name": "operatorClaimedNeuro",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -765,7 +926,46 @@
   },
   {
     "inputs": [],
+    "name": "totalMinersClaimedNeuro",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "totalNeuroReceived",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalOperatorsClaimedNeuro",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalVotersClaimedNeuro",
     "outputs": [
       {
         "internalType": "uint256",
@@ -813,6 +1013,25 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "voterAddress",
+        "type": "address"
+      }
+    ],
+    "name": "voterClaimedNeuro",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

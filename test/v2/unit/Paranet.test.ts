@@ -17,6 +17,7 @@ import {
   ParanetNeuroIncentivesPool,
   Token,
   ServiceAgreementV1,
+  ParanetIncentivesPoolFactory,
 } from '../../../typechain';
 import { ParanetStructs } from '../../../typechain/contracts/v2/paranets/Paranet';
 
@@ -30,6 +31,7 @@ type deployParanetFixture = {
   ParanetServicesRegistry: ParanetServicesRegistry;
   ParanetKnowledgeMinersRegistry: ParanetKnowledgeMinersRegistry;
   ParanetKnowledgeAssetsRegistry: ParanetKnowledgeAssetsRegistry;
+  ParanetIncentivesPoolFactory: ParanetIncentivesPoolFactory;
   HashingProxy: HashingProxy;
   ServiceAgreementStorageProxy: ServiceAgreementStorageProxy;
   Token: Token;
@@ -46,6 +48,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   let ParanetServicesRegistry: ParanetServicesRegistry;
   let ParanetKnowledgeMinersRegistry: ParanetKnowledgeMinersRegistry;
   let ParanetKnowledgeAssetsRegistry: ParanetKnowledgeAssetsRegistry;
+  let ParanetIncentivesPoolFactory: ParanetIncentivesPoolFactory;
   let HashingProxy: HashingProxy;
   let ServiceAgreementStorageProxy: ServiceAgreementStorageProxy;
   let Token: Token;
@@ -63,6 +66,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
         'ParanetServicesRegistry',
         'ParanetKnowledgeMinersRegistry',
         'ParanetKnowledgeAssetsRegistry',
+        'ParanetIncentivesPoolFactory',
         'HashingProxy',
         'ServiceAgreementStorageProxy',
         'Token',
@@ -82,6 +86,9 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     );
     ParanetKnowledgeAssetsRegistry = await hre.ethers.getContract<ParanetKnowledgeAssetsRegistry>(
       'ParanetKnowledgeAssetsRegistry',
+    );
+    ParanetIncentivesPoolFactory = await hre.ethers.getContract<ParanetIncentivesPoolFactory>(
+      'ParanetIncentivesPoolFactory',
     );
     ServiceAgreementStorageProxy = await hre.ethers.getContract<ServiceAgreementStorageProxy>(
       'ServiceAgreementStorageProxy',
@@ -103,6 +110,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       ParanetServicesRegistry,
       ParanetKnowledgeMinersRegistry,
       ParanetKnowledgeAssetsRegistry,
+      ParanetIncentivesPoolFactory,
       HashingProxy,
       ServiceAgreementStorageProxy,
       Token,
@@ -112,15 +120,15 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
 
   beforeEach(async () => {
     hre.helpers.resetDeploymentsJson();
-    ({ accounts, Paranet } = await loadFixture(deployParanetFixture));
+    ({ accounts, Paranet, ParanetIncentivesPoolFactory } = await loadFixture(deployParanetFixture));
   });
 
   it('The contract is named "Paranet"', async () => {
     expect(await Paranet.name()).to.equal('Paranet');
   });
 
-  it('The contract is version "2.1.2"', async () => {
-    expect(await Paranet.version()).to.equal('2.1.2');
+  it('The contract is version "2.1.3"', async () => {
+    expect(await Paranet.version()).to.equal('2.1.3');
   });
 
   it('should register paranet', async () => {
@@ -951,7 +959,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       paranetName,
       paranetDescription,
     );
-    await Paranet.connect(accounts[100 + number]).deployNeuroIncentivesPool(
+    await ParanetIncentivesPoolFactory.connect(accounts[100 + number]).deployNeuroIncentivesPool(
       paranetKAStorageContract,
       paranetKATokenId,
       tracToNeuroEmissionMultiplier,

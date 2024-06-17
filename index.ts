@@ -31,6 +31,7 @@ import Named from './abi/Named.json';
 import NodeOperatorFeesStorage from './abi/NodeOperatorFeesStorage.json';
 import ParametersStorage from './abi/ParametersStorage.json';
 import Paranet from './abi/Paranet.json';
+import ParanetIncentivesPoolFactory from './abi/ParanetIncentivesPoolFactory.json';
 import ParanetKnowledgeAssetsRegistry from './abi/ParanetKnowledgeAssetsRegistry.json';
 import ParanetKnowledgeMinersRegistry from './abi/ParanetKnowledgeMinersRegistry.json';
 import ParanetNeuroIncentivesPool from './abi/ParanetNeuroIncentivesPool.json';
@@ -113,6 +114,7 @@ const ABIV2 = {
   LinearSum,
   NodeOperatorFeesStorage,
   Paranet,
+  ParanetIncentivesPoolFactory,
   ParanetKnowledgeAssetsRegistry,
   ParanetKnowledgeMinersRegistry,
   ParanetServicesRegistry,
@@ -151,6 +153,7 @@ export {
   Log2PLDSF as Log2PLDSFABI,
   NodeOperatorFeesStorage as NodeOperatorFeesStorageABI,
   Paranet as ParanetABI,
+  ParanetIncentivesPoolFactory as ParanetIncentivesPoolFactoryABI,
   ParanetKnowledgeAssetsRegistry as ParanetKnowledgeAssetsRegistryABI,
   ParanetKnowledgeMinersRegistry as ParanetKnowledgeMinersRegistryABI,
   ParanetServicesRegistry as ParanetServicesRegistryABI,

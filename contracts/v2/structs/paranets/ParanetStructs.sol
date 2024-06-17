@@ -97,6 +97,11 @@ library ParanetStructs {
         bool finalized;
     }
 
+    struct ParanetIncentivesPoolClaimedRewardsProfile {
+        address addr;
+        uint256 claimedNeuro;
+    }
+
     struct ParanetIncentivizationProposalVoterInput {
         address addr;
         uint96 weight;

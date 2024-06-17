@@ -471,6 +471,9 @@
               "setterArgs": [5, false]
             }
           ]
+        },
+        "LinearSum": {
+          "w2": "50"
         }
       }
     },
