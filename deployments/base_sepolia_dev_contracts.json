@@ -1,0 +1,8 @@
+{
+  "contracts": {
+    "Token": {
+      "deployed": true,
+      "evmAddress": "0x4ead53ee0aaeB0bE5920DC2DAA7AD93F11cA5207"
+    }
+  }
+}

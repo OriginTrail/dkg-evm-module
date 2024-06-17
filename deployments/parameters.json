@@ -166,14 +166,14 @@
   },
   "devnet": {
     "overrides": {
-      "gnosis_chiado_dev": {
+      "otp_devnet": {
         "CommitManagerV1": {
           "reqs": [
             {
-              "desiredValue": false,
+              "desiredValue": true,
               "getterArgs": [0],
               "setter": "setReq",
-              "setterArgs": [0, false]
+              "setterArgs": [0, true]
             },
             {
               "desiredValue": false,
@@ -198,10 +198,10 @@
         "CommitManagerV1U1": {
           "reqs": [
             {
-              "desiredValue": false,
+              "desiredValue": true,
               "getterArgs": [0],
               "setter": "setReq",
-              "setterArgs": [0, false]
+              "setterArgs": [0, true]
             },
             {
               "desiredValue": false,
@@ -210,10 +210,10 @@
               "setterArgs": [1, false]
             },
             {
-              "desiredValue": false,
+              "desiredValue": true,
               "getterArgs": [2],
               "setter": "setReq",
-              "setterArgs": [2, false]
+              "setterArgs": [2, true]
             },
             {
               "desiredValue": false,
@@ -240,10 +240,10 @@
     "CommitManagerV1": {
       "reqs": [
         {
-          "desiredValue": true,
+          "desiredValue": false,
           "getterArgs": [0],
           "setter": "setReq",
-          "setterArgs": [0, true]
+          "setterArgs": [0, false]
         },
         {
           "desiredValue": false,
@@ -268,10 +268,10 @@
     "CommitManagerV1U1": {
       "reqs": [
         {
-          "desiredValue": true,
+          "desiredValue": false,
           "getterArgs": [0],
           "setter": "setReq",
-          "setterArgs": [0, true]
+          "setterArgs": [0, false]
         },
         {
           "desiredValue": false,
@@ -280,10 +280,10 @@
           "setterArgs": [1, false]
         },
         {
-          "desiredValue": true,
+          "desiredValue": false,
           "getterArgs": [2],
           "setter": "setReq",
-          "setterArgs": [2, true]
+          "setterArgs": [2, false]
         },
         {
           "desiredValue": false,
@@ -404,13 +404,18 @@
   "testnet": {
     "overrides": {
       "gnosis_chiado_test": {
+        "LinearSum": {
+          "w2": "50"
+        }
+      },
+      "otp_testnet": {
         "CommitManagerV1": {
           "reqs": [
             {
-              "desiredValue": false,
+              "desiredValue": true,
               "getterArgs": [0],
               "setter": "setReq",
-              "setterArgs": [0, false]
+              "setterArgs": [0, true]
             },
             {
               "desiredValue": false,
@@ -435,10 +440,10 @@
         "CommitManagerV1U1": {
           "reqs": [
             {
-              "desiredValue": false,
+              "desiredValue": true,
               "getterArgs": [0],
               "setter": "setReq",
-              "setterArgs": [0, false]
+              "setterArgs": [0, true]
             },
             {
               "desiredValue": false,
@@ -471,19 +476,16 @@
               "setterArgs": [5, false]
             }
           ]
-        },
-        "LinearSum": {
-          "w2": "50"
         }
       }
     },
     "CommitManagerV1": {
       "reqs": [
         {
-          "desiredValue": true,
+          "desiredValue": false,
           "getterArgs": [0],
           "setter": "setReq",
-          "setterArgs": [0, true]
+          "setterArgs": [0, false]
         },
         {
           "desiredValue": false,
@@ -508,10 +510,10 @@
     "CommitManagerV1U1": {
       "reqs": [
         {
-          "desiredValue": true,
+          "desiredValue": false,
           "getterArgs": [0],
           "setter": "setReq",
-          "setterArgs": [0, true]
+          "setterArgs": [0, false]
         },
         {
           "desiredValue": false,
@@ -644,19 +646,13 @@
   "mainnet": {
     "overrides": {
       "otp_mainnet": {
-        "ParametersStorage": {
-          "stakeWithdrawalDelay": "300",
-          "updateCommitWindowDuration": "3600"
-        }
-      },
-      "gnosis_mainnet": {
         "CommitManagerV1": {
           "reqs": [
             {
-              "desiredValue": false,
+              "desiredValue": true,
               "getterArgs": [0],
               "setter": "setReq",
-              "setterArgs": [0, false]
+              "setterArgs": [0, true]
             },
             {
               "desiredValue": false,
@@ -681,10 +677,10 @@
         "CommitManagerV1U1": {
           "reqs": [
             {
-              "desiredValue": false,
+              "desiredValue": true,
               "getterArgs": [0],
               "setter": "setReq",
-              "setterArgs": [0, false]
+              "setterArgs": [0, true]
             },
             {
               "desiredValue": false,
@@ -717,16 +713,20 @@
               "setterArgs": [5, false]
             }
           ]
+        },
+        "ParametersStorage": {
+          "stakeWithdrawalDelay": "300",
+          "updateCommitWindowDuration": "3600"
         }
       }
     },
     "CommitManagerV1": {
       "reqs": [
         {
-          "desiredValue": true,
+          "desiredValue": false,
           "getterArgs": [0],
           "setter": "setReq",
-          "setterArgs": [0, true]
+          "setterArgs": [0, false]
         },
         {
           "desiredValue": false,
@@ -751,10 +751,10 @@
     "CommitManagerV1U1": {
       "reqs": [
         {
-          "desiredValue": true,
+          "desiredValue": false,
           "getterArgs": [0],
           "setter": "setReq",
-          "setterArgs": [0, true]
+          "setterArgs": [0, false]
         },
         {
           "desiredValue": false,
