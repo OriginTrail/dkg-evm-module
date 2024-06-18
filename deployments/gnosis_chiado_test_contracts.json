@@ -265,12 +265,12 @@
       "deployed": true
     },
     "ContentAsset": {
-      "evmAddress": "0x3c7379a757bc16D5980424B361c6741170816211",
-      "version": "1.0.4",
+      "evmAddress": "0x20A489D9dc7d2D241AF24C650d71631722aF0Aa1",
+      "version": "2.1.0",
       "gitBranch": "main",
-      "gitCommitHash": "8dec09dc2f081aba8736e42a180d8fb94a997588",
-      "deploymentBlock": 9396771,
-      "deploymentTimestamp": 1713792119057,
+      "gitCommitHash": "7700a1a2a9389f0bdddd95a9dafb8a294e2d732d",
+      "deploymentBlock": 10372822,
+      "deploymentTimestamp": 1718695363704,
       "deployed": true
     },
     "ParanetsRegistry": {
