@@ -256,12 +256,12 @@
       "deployed": true
     },
     "ContentAsset": {
-      "evmAddress": "0xcb266F097BaED3C83Ee7aeB60D486dFE74e8e9b4",
-      "version": "1.0.4",
+      "evmAddress": "0xeef335Ed8ceb1804B36b4caB9e1980e55a93029a",
+      "version": "2.1.0",
       "gitBranch": "main",
-      "gitCommitHash": "8dec09dc2f081aba8736e42a180d8fb94a997588",
-      "deploymentBlock": 9396632,
-      "deploymentTimestamp": 1713791422094,
+      "gitCommitHash": "7700a1a2a9389f0bdddd95a9dafb8a294e2d732d",
+      "deploymentBlock": 10372760,
+      "deploymentTimestamp": 1718695053250,
       "deployed": true
     },
     "Staking": {
