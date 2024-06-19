@@ -68,7 +68,9 @@ contract CommitManagerV2U1 is Named, Versioned, ContractStatusV2, Initializable 
     constructor(address hubAddress) ContractStatusV2(hubAddress) {}
 
     function initialize() public onlyHubOwner {
-        log2pldsf = Log2PLDSF(hub.getContractAddress("Log2PLDSF"));
+        try hub.getContractAddress("Log2PLDSF") returns (address log2PLDSFAddress) {
+            log2pldsf = Log2PLDSF(log2PLDSFAddress);
+        } catch {}
         linearSum = LinearSum(hub.getContractAddress("LinearSum"));
         contentAssetStorage = ContentAssetStorageV2(hub.getAssetStorageAddress("ContentAssetStorage"));
         identityStorage = IdentityStorageV2(hub.getContractAddress("IdentityStorage"));
