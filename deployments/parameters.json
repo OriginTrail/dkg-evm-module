@@ -70,7 +70,7 @@
     },
     "LinearSum": {
       "w1": "1",
-      "w2": "100",
+      "w2": "10",
       "distanceScaleFactor": "1000000000000000000",
       "stakeScaleFactor": "1000000000000000000"
     },
@@ -307,7 +307,7 @@
     },
     "LinearSum": {
       "w1": "1",
-      "w2": "100",
+      "w2": "10",
       "distanceScaleFactor": "1000000000000000000",
       "stakeScaleFactor": "1000000000000000000"
     },
@@ -471,9 +471,6 @@
               "setterArgs": [5, false]
             }
           ]
-        },
-        "LinearSum": {
-          "w2": "50"
         }
       }
     },
@@ -547,7 +544,7 @@
     },
     "LinearSum": {
       "w1": "1",
-      "w2": "100",
+      "w2": "10",
       "distanceScaleFactor": "1000000000000000000",
       "stakeScaleFactor": "1000000000000000000"
     },
@@ -790,7 +787,7 @@
     },
     "LinearSum": {
       "w1": "1",
-      "w2": "100",
+      "w2": "10",
       "distanceScaleFactor": "1000000000000000000",
       "stakeScaleFactor": "1000000000000000000"
     },
