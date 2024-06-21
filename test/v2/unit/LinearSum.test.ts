@@ -224,7 +224,7 @@ describe('@v2 @unit LinearSum', function () {
       BigNumber.from('1000000000000000000'),
       BigNumber.from('1000000000000000000'),
       1,
-      100,
+      10,
     ]);
   });
 
@@ -319,9 +319,9 @@ describe('@v2 @unit LinearSum', function () {
       minStake,
       maxStake,
     );
-    expect(scoreBeforeScaling).to.be.equal(BigNumber.from('3064102564102564100'));
+    expect(scoreBeforeScaling).to.be.equal(BigNumber.from('756410256410256410'));
 
     const score = await calculateScore(distance, stake, maxDistance, 1, 1, minStake, maxStake);
-    expect(score).to.be.equal(BigNumber.from('33356597999'));
+    expect(score).to.be.equal(BigNumber.from('75607442935'));
   });
 });
