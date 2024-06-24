@@ -235,6 +235,11 @@
             }
           ]
         }
+      },
+      "base_sepolia_dev": {
+        "ParametersStorage": {
+          "r2": 15
+        }
       }
     },
     "CommitManagerV1": {
