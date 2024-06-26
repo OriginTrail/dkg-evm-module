@@ -27,7 +27,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     event ParanetIncentivizationProposalVoterRewardClaimed(address indexed voter, uint256 amount);
 
     string private constant _NAME = "ParanetNeuroIncentivesPool";
-    string private constant _VERSION = "2.1.2";
+    string private constant _VERSION = "2.1.3";
 
     HubV2 public hub;
     ParanetsRegistry public paranetsRegistry;
@@ -518,6 +518,10 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     }
 
     function getClaimableProposalVoterRewardAmount() public view returns (uint256) {
+        if (voters.length == 0 || voters[votersIndexes[msg.sender]].addr != msg.sender) {
+            return 0;
+        }
+
         uint256 neuroReward = getTotalProposalVoterIncentiveEstimation();
 
         uint256 voterRewardLimit = ((((address(this).balance +
