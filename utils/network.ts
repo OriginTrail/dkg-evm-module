@@ -55,3 +55,14 @@ export function accounts(networkName?: string): [string] | { mnemonic: string } 
     return { mnemonic: mnemonic(networkName) };
   }
 }
+
+export function etherscan_api_key(networkName: string): string {
+  if (networkName) {
+    const api_key = process.env['ETHERSCAN_API_KEY_' + networkName.toUpperCase()];
+    if (api_key && api_key !== '') {
+      return api_key;
+    }
+  }
+
+  return '';
+}

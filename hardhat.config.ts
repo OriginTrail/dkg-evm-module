@@ -9,6 +9,7 @@ import '@typechain/hardhat';
 import '@nomicfoundation/hardhat-chai-matchers';
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-solhint';
+import '@nomicfoundation/hardhat-verify';
 import { extendEnvironment } from 'hardhat/config';
 import { lazyObject } from 'hardhat/plugins';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
@@ -23,7 +24,7 @@ import './tasks/send_otp';
 import './utils/type-extensions';
 import config from './hardhat.node.config';
 import { Helpers } from './utils/helpers';
-import { accounts, rpc } from './utils/network';
+import { accounts, etherscan_api_key, rpc } from './utils/network';
 
 extendEnvironment((hre: HardhatRuntimeEnvironment) => {
   hre.helpers = lazyObject(() => new Helpers(hre));
@@ -174,6 +175,55 @@ config.contractSizer = {
   strict: false,
   only: [],
   except: [],
+};
+
+config.etherscan = {
+  customChains: [
+    {
+      network: 'chiado',
+      chainId: 10200,
+      urls: {
+        //Blockscout
+        apiURL: 'https://gnosis-chiado.blockscout.com/api',
+        browserURL: 'https://gnosis-chiado.blockscout.com',
+      },
+    },
+    {
+      network: 'gnosis',
+      chainId: 100,
+      urls: {
+        // Gnosisscan
+        apiURL: 'https://api.gnosisscan.io/api',
+        browserURL: 'https://gnosisscan.io/',
+        // Blockscout
+        //apiURL: "https://blockscout.com/xdai/mainnet/api",
+        //browserURL: "https://blockscout.com/xdai/mainnet",
+      },
+    },
+    {
+      network: 'base_sepolia',
+      chainId: 84532,
+      urls: {
+        apiURL: 'https://api-sepolia.basescan.org/api',
+        browserURL: 'https://sepolia.basescan.org/',
+      },
+    },
+    {
+      network: 'base',
+      chainId: 8453,
+      urls: {
+        apiURL: 'https://api.basescan.org/api',
+        browserURL: 'https://basescan.org/',
+      },
+    },
+  ],
+  apiKey: {
+    //blockscout explorer verification does not require keys
+    chiado: 'chiado',
+    gnosis: etherscan_api_key('gnosis_mainnet'),
+    base_sepolia: etherscan_api_key('base_sepolia'),
+    base: etherscan_api_key('base'),
+  },
 };
 
 export default config;
