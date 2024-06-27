@@ -90,6 +90,29 @@ config.networks = {
     accounts: accounts('gnosis_mainnet'),
     saveDeployments: false,
   },
+  base_sepolia_dev: {
+    environment: 'devnet',
+    chainId: 84532,
+    url: rpc('base_sepolia_dev'),
+    gasPrice: 1_000_000_000,
+    accounts: accounts('base_sepolia_dev'),
+    saveDeployments: false,
+  },
+  base_sepolia_test: {
+    environment: 'testnet',
+    chainId: 84532,
+    url: rpc('base_sepolia_test'),
+    gasPrice: 1_000_000_000,
+    accounts: accounts('base_sepolia_test'),
+    saveDeployments: false,
+  },
+  base_mainnet: {
+    environment: 'mainnet',
+    chainId: 8453,
+    url: rpc('base_mainnet'),
+    accounts: accounts('base_mainnet'),
+    saveDeployments: false,
+  },
 };
 
 config.typechain = {
