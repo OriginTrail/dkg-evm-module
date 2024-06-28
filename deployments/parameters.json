@@ -408,11 +408,6 @@
   },
   "testnet": {
     "overrides": {
-      "gnosis_chiado_test": {
-        "LinearSum": {
-          "w2": "50"
-        }
-      },
       "otp_testnet": {
         "CommitManagerV1": {
           "reqs": [
