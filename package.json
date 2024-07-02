@@ -71,6 +71,7 @@
     "hardhat": "^2.22.5",
     "hardhat-deploy": "^0.11.25",
     "hardhat-deploy-ethers": "^0.3.0-beta.13",
+    "solady": "^0.0.217",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.4"
   },
