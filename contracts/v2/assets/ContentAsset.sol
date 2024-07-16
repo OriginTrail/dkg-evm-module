@@ -19,6 +19,7 @@ import {Versioned} from "../../v1/interface/Versioned.sol";
 import {ContentAssetStructs} from "../../v1/structs/assets/ContentAssetStructs.sol";
 import {ServiceAgreementStructsV1} from "../../v1/structs/ServiceAgreementStructsV1.sol";
 import {ContentAssetErrors} from "../errors/assets/ContentAssetErrors.sol";
+import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
 import {HASH_FUNCTION_ID} from "../../v1/constants/assets/ContentAssetConstants.sol";
 import {LOG2PLDSF_ID, LINEAR_SUM_ID} from "../../v1/constants/ScoringConstants.sol";
 
@@ -159,6 +160,71 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
                 scoreFunctionId,
                 immutable_
             );
+    }
+
+    function transferWithMinerRights(uint256 tokenId, address newOwner) external onlyAssetOwner(tokenId) {
+        ContentAssetStorage cas = contentAssetStorage;
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
+
+        if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(cas, tokenId)))) {
+            ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+            // Check if new owner is has Knowledge Miner profile
+            // If not: Create a profile
+            if (!pkmr.knowledgeMinerExists(newOwner)) {
+                pkmr.registerKnowledgeMiner(newOwner);
+            }
+
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(address(cas), tokenId)));
+
+            // Check if new owner is registered as a Knowledge Miner in the paranet
+            // If not: Register it
+            if (!paranetsRegistry.isKnowledgeMinerRegistered(paranetId, newOwner)) {
+                paranetsRegistry.addKnowledgeMiner(paranetId, newOwner);
+            }
+
+            // Change miner address in the ParanetKnowledgeAssetsRegistry
+            paranetKnowledgeAssetsRegistry.setMinerAddress(
+                keccak256(abi.encodePacked(address(cas), tokenId)),
+                msg.sender
+            );
+
+            // Update Knowledge Asset Metadata in the KnowledgeMinersRegistry
+            pkmr.removeSubmittedKnowledgeAsset(
+                msg.sender,
+                paranetId,
+                keccak256(abi.encodePacked(address(cas), tokenId))
+            );
+            pkmr.addSubmittedKnowledgeAsset(newOwner, paranetId, keccak256(abi.encodePacked(address(cas), tokenId)));
+
+            uint96 remainingTokenAmount = serviceAgreementStorageProxy.getAgreementTokenAmount(
+                hashingProxy.callHashFunction(
+                    HASH_FUNCTION_ID,
+                    abi.encodePacked(
+                        address(cas),
+                        tokenId,
+                        abi.encodePacked(address(cas), cas.getAssertionIdByIndex(tokenId, 0))
+                    )
+                )
+            );
+
+            if (pkmr.getUnrewardedTracSpent(msg.sender, paranetId) < remainingTokenAmount) {
+                revert ParanetErrors.RewardHasBeenAlreadyClaimed(paranetId, msg.sender);
+            }
+
+            pkmr.subCumulativeTracSpent(msg.sender, paranetId, remainingTokenAmount);
+            pkmr.addCumulativeTracSpent(newOwner, paranetId, remainingTokenAmount);
+            pkmr.subUnrewardedTracSpent(msg.sender, paranetId, remainingTokenAmount);
+            pkmr.addUnrewardedTracSpent(newOwner, paranetId, remainingTokenAmount);
+
+            pkmr.decrementTotalSubmittedKnowledgeAssetsCount(msg.sender);
+            pkmr.incrementTotalSubmittedKnowledgeAssetsCount(newOwner);
+
+            pkmr.subTotalTracSpent(msg.sender, remainingTokenAmount);
+            pkmr.addTotalTracSpent(newOwner, remainingTokenAmount);
+        }
+
+        cas.safeTransferFrom(msg.sender, newOwner, tokenId);
     }
 
     function burnAsset(uint256 tokenId) external onlyAssetOwner(tokenId) {

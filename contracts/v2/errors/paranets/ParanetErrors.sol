@@ -25,4 +25,5 @@ library ParanetErrors {
         uint96 currentCumulativeWeight,
         uint96 targetCumulativeWeight
     );
+    error RewardHasBeenAlreadyClaimed(bytes32 paranetId, address claimer);
 }

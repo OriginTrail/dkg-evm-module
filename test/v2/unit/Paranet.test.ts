@@ -1011,6 +1011,82 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     ).to.be.equal(true);
   });
 
+  it('should transfer ownership of the token and update miner rights', async function () {
+    await Token.connect(accounts[0]).increaseAllowance(ServiceAgreementV1.address, hre.ethers.utils.parseEther('315'));
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 3);
+    const assetInputArgs = {
+      assertionId: getHashFromNumber(500),
+      size: 3,
+      triplesNumber: 1,
+      chunksNumber: 1,
+      epochsNumber: 5,
+      tokenAmount: hre.ethers.utils.parseEther('105'),
+      scoreFunctionId: 2,
+      immutable_: false,
+    };
+
+    const tx = await Paranet.connect(accounts[0]).mintKnowledgeAsset(
+      paranetKAStorageContract,
+      paranetKATokenId,
+      assetInputArgs,
+    );
+    const receipt = await tx.wait();
+    const tokenId = Number(receipt.logs[0].topics[3]);
+
+    // Check initial owner
+    expect(await ContentAssetStorageV2.ownerOf(tokenId)).to.equal(accounts[0].address);
+
+    // Check initial stats for the owner
+    const initialCumulativeTracSpentOwner = await ParanetKnowledgeMinersRegistry.getCumulativeTracSpent(
+      accounts[0].address,
+      paranetId,
+    );
+    const initialTotalTracSpentOwner = await ParanetKnowledgeMinersRegistry.getTotalTracSpent(accounts[0].address);
+    const initialSubmittedKnowledgeAssetsCountOwner =
+      await ParanetKnowledgeMinersRegistry.getTotalSubmittedKnowledgeAssetsCount(accounts[0].address);
+
+    await ContentAssetStorageV2.setApprovalForAll(ContentAssetV2.address, true);
+
+    // Transfer the token to the new owner
+    await ContentAssetV2.transferWithMinerRights(tokenId, accounts[1].address);
+
+    // Check new owner
+    expect(await ContentAssetStorageV2.ownerOf(tokenId)).to.equal(accounts[1].address);
+
+    // Check miner profile and registration for the new owner
+    const minerProfileExists = await ParanetKnowledgeMinersRegistry.knowledgeMinerExists(accounts[1].address);
+    expect(minerProfileExists).to.be.true;
+
+    const isMinerRegistered = await ParanetsRegistry.isKnowledgeMinerRegistered(paranetId, accounts[1].address);
+    expect(isMinerRegistered).to.be.true;
+
+    // Check stats for the new owner
+    const cumulativeTracSpentNewOwner = await ParanetKnowledgeMinersRegistry.getCumulativeTracSpent(
+      accounts[1].address,
+      paranetId,
+    );
+    const totalTracSpentNewOwner = await ParanetKnowledgeMinersRegistry.getTotalTracSpent(accounts[1].address);
+    const submittedKnowledgeAssetsCountNewOwner =
+      await ParanetKnowledgeMinersRegistry.getTotalSubmittedKnowledgeAssetsCount(accounts[1].address);
+
+    expect(cumulativeTracSpentNewOwner).to.equal(assetInputArgs.tokenAmount);
+    expect(totalTracSpentNewOwner).to.equal(assetInputArgs.tokenAmount);
+    expect(submittedKnowledgeAssetsCountNewOwner).to.equal(1);
+
+    // Check stats for the original owner
+    const finalCumulativeTracSpentOwner = await ParanetKnowledgeMinersRegistry.getCumulativeTracSpent(
+      accounts[0].address,
+      paranetId,
+    );
+    const finalTotalTracSpentOwner = await ParanetKnowledgeMinersRegistry.getTotalTracSpent(accounts[0].address);
+    const finalSubmittedKnowledgeAssetsCountOwner =
+      await ParanetKnowledgeMinersRegistry.getTotalSubmittedKnowledgeAssetsCount(accounts[0].address);
+
+    expect(finalCumulativeTracSpentOwner).to.equal(initialCumulativeTracSpentOwner.sub(assetInputArgs.tokenAmount));
+    expect(finalTotalTracSpentOwner).to.equal(initialTotalTracSpentOwner.sub(assetInputArgs.tokenAmount));
+    expect(finalSubmittedKnowledgeAssetsCountOwner).to.equal(initialSubmittedKnowledgeAssetsCountOwner.sub(1));
+  });
+
   async function registerParanet(accounts: SignerWithAddress[], Paranet: Paranet, number: number) {
     const assetInputArgs = {
       assertionId: getHashFromNumber(number),
