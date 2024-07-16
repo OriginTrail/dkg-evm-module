@@ -19,6 +19,7 @@ import {Versioned} from "../../v1/interface/Versioned.sol";
 import {ContentAssetStructs} from "../../v1/structs/assets/ContentAssetStructs.sol";
 import {ServiceAgreementStructsV1} from "../../v1/structs/ServiceAgreementStructsV1.sol";
 import {ContentAssetErrors} from "../errors/assets/ContentAssetErrors.sol";
+import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
 import {HASH_FUNCTION_ID} from "../../v1/constants/assets/ContentAssetConstants.sol";
 import {LOG2PLDSF_ID, LINEAR_SUM_ID} from "../../v1/constants/ScoringConstants.sol";
 
@@ -47,7 +48,7 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
     event AssetUpdatePaymentIncreased(address indexed assetContract, uint256 indexed tokenId, uint96 tokenAmount);
 
     string private constant _NAME = "ContentAsset";
-    string private constant _VERSION = "2.1.0";
+    string private constant _VERSION = "2.2.0";
 
     Assertion public assertionContract;
     HashingProxy public hashingProxy;
@@ -104,6 +105,7 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
         return
             _createAsset(
                 msg.sender,
+                msg.sender,
                 args.assertionId,
                 args.size,
                 args.triplesNumber,
@@ -116,12 +118,14 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
     }
 
     function createAssetFromContract(
-        address originalSender,
+        address minter,
+        address payer,
         ContentAssetStructs.AssetInputArgs calldata args
     ) external onlyContracts returns (uint256) {
         return
             _createAsset(
-                originalSender,
+                minter,
+                payer,
                 args.assertionId,
                 args.size,
                 args.triplesNumber,
@@ -145,6 +149,7 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
     ) external returns (uint256) {
         return
             _createAsset(
+                msg.sender,
                 msg.sender,
                 assertionId,
                 size,
@@ -455,13 +460,28 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
             revert ContentAssetErrors.AssetExpired(tokenId);
         }
 
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
+
+        if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)))) {
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId)));
+
+            // Add additional tokenAmount to the UpdatingKnowledgeAssets in the KnowledgeMinersRegistry
+            paranetKnowledgeMinersRegistry.addUpdatingKnowledgeAssetUpdateTokenAmount(
+                msg.sender,
+                paranetId,
+                keccak256(abi.encodePacked(contentAssetStorageAddress, tokenId, unfinalizedState)),
+                tokenAmount
+            );
+        }
+
         sasV1.addUpdateTokens(msg.sender, agreementId, tokenAmount);
 
         emit AssetUpdatePaymentIncreased(contentAssetStorageAddress, tokenId, tokenAmount);
     }
 
     function _createAsset(
-        address originalSender,
+        address minter,
+        address payer,
         bytes32 assertionId,
         uint128 size,
         uint32 triplesNumber,
@@ -474,10 +494,10 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
         ContentAssetStorage cas = contentAssetStorage;
 
         uint256 tokenId = cas.generateTokenId();
-        cas.mint(originalSender, tokenId);
+        cas.mint(minter, tokenId);
 
         assertionContract.createAssertion(assertionId, size, triplesNumber, chunksNumber);
-        cas.setAssertionIssuer(tokenId, assertionId, originalSender);
+        cas.setAssertionIssuer(tokenId, assertionId, minter);
         cas.setMutability(tokenId, immutable_);
         cas.pushAssertionId(tokenId, assertionId);
 
@@ -485,7 +505,7 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
 
         serviceAgreementV1.createServiceAgreement(
             ServiceAgreementStructsV1.ServiceAgreementInputArgs({
-                assetCreator: originalSender,
+                assetCreator: payer,
                 assetContract: contentAssetStorageAddress,
                 tokenId: tokenId,
                 keyword: abi.encodePacked(contentAssetStorageAddress, assertionId),

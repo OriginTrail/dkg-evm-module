@@ -67,7 +67,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
     );
 
     string private constant _NAME = "Paranet";
-    string private constant _VERSION = "2.1.3";
+    string private constant _VERSION = "2.2.0";
 
     ParanetsRegistry public paranetsRegistry;
     ParanetServicesRegistry public paranetServicesRegistry;
@@ -284,50 +284,16 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 paranetKATokenId,
         ContentAssetStructs.AssetInputArgs calldata knowledgeAssetArgs
     ) external returns (uint256) {
-        ParanetsRegistry pr = paranetsRegistry;
+        return _mintKnowledgeAsset(paranetKAStorageContract, paranetKATokenId, knowledgeAssetArgs, msg.sender);
+    }
 
-        // Check if Paranet exists
-        // If not: Throw an error
-        if (!pr.paranetExists(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)))) {
-            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
-        }
-
-        // Check if Knowledge Miner has profile
-        // If not: Create a profile
-        if (!paranetKnowledgeMinersRegistry.knowledgeMinerExists(msg.sender)) {
-            paranetKnowledgeMinersRegistry.registerKnowledgeMiner(msg.sender);
-        }
-
-        // Check if Knowledge Miner is registert to paranet
-        // If not: Register it
-        if (
-            !pr.isKnowledgeMinerRegistered(
-                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-                msg.sender
-            )
-        ) {
-            pr.addKnowledgeMiner(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)), msg.sender);
-        }
-
-        // Mint Knowledge Asset
-        uint256 knowledgeAssetTokenId = contentAsset.createAssetFromContract(msg.sender, knowledgeAssetArgs);
-
-        _updateSubmittedKnowledgeAssetMetadata(
-            paranetKAStorageContract,
-            paranetKATokenId,
-            address(contentAssetStorage),
-            knowledgeAssetTokenId,
-            knowledgeAssetArgs.tokenAmount
-        );
-
-        emit KnowledgeAssetSubmittedToParanet(
-            paranetKAStorageContract,
-            paranetKATokenId,
-            address(contentAssetStorage),
-            knowledgeAssetTokenId
-        );
-
-        return knowledgeAssetTokenId;
+    function mintKnowledgeAssetFor(
+        address paranetKAStorageContract,
+        uint256 paranetKATokenId,
+        ContentAssetStructs.AssetInputArgs calldata knowledgeAssetArgs,
+        address miner
+    ) external returns (uint256) {
+        return _mintKnowledgeAsset(paranetKAStorageContract, paranetKATokenId, knowledgeAssetArgs, miner);
     }
 
     function submitKnowledgeAsset(
@@ -376,7 +342,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             paranetKnowledgeMinersRegistry.registerKnowledgeMiner(msg.sender);
         }
 
-        // Check if Knowledge Miner is registert to paranet
+        // Check if Knowledge Miner is registered in the paranet
         // If not: Register it
         if (
             !pr.isKnowledgeMinerRegistered(
@@ -392,7 +358,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             paranetKATokenId,
             knowledgeAssetStorageContract,
             knowledgeAssetTokenId,
-            remainingTokenAmount
+            remainingTokenAmount,
+            msg.sender
         );
 
         emit KnowledgeAssetSubmittedToParanet(
@@ -420,12 +387,66 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         );
     }
 
+    function _mintKnowledgeAsset(
+        address paranetKAStorageContract,
+        uint256 paranetKATokenId,
+        ContentAssetStructs.AssetInputArgs calldata knowledgeAssetArgs,
+        address miner
+    ) internal returns (uint256) {
+        ParanetsRegistry pr = paranetsRegistry;
+
+        // Check if Paranet exists
+        // If not: Throw an error
+        if (!pr.paranetExists(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)))) {
+            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
+        }
+
+        // Check if Knowledge Miner has profile
+        // If not: Create a profile
+        if (!paranetKnowledgeMinersRegistry.knowledgeMinerExists(miner)) {
+            paranetKnowledgeMinersRegistry.registerKnowledgeMiner(miner);
+        }
+
+        // Check if Knowledge Miner is registered in the paranet
+        // If not: Register it
+        if (
+            !pr.isKnowledgeMinerRegistered(
+                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                miner
+            )
+        ) {
+            pr.addKnowledgeMiner(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)), miner);
+        }
+
+        // Mint Knowledge Asset
+        uint256 knowledgeAssetTokenId = contentAsset.createAssetFromContract(miner, msg.sender, knowledgeAssetArgs);
+
+        _updateSubmittedKnowledgeAssetMetadata(
+            paranetKAStorageContract,
+            paranetKATokenId,
+            address(contentAssetStorage),
+            knowledgeAssetTokenId,
+            knowledgeAssetArgs.tokenAmount,
+            miner
+        );
+
+        emit KnowledgeAssetSubmittedToParanet(
+            paranetKAStorageContract,
+            paranetKATokenId,
+            address(contentAssetStorage),
+            knowledgeAssetTokenId
+        );
+
+        return knowledgeAssetTokenId;
+    }
+
     function _updateSubmittedKnowledgeAssetMetadata(
         address paranetKAStorageContract,
         uint256 paranetKATokenId,
         address knowledgeAssetStorageContract,
         uint256 knowledgeAssetTokenId,
-        uint96 tokenAmount
+        uint96 tokenAmount,
+        address miner
     ) internal {
         ParanetsRegistry pr = paranetsRegistry;
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
@@ -435,7 +456,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             knowledgeAssetStorageContract,
             knowledgeAssetTokenId,
-            msg.sender
+            miner
         );
 
         // Add Knowledge Asset Metadata to the ParanetsRegistry
@@ -450,22 +471,22 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
 
         // Add Knowledge Asset Metadata to the KnowledgeMinersRegistry
         pkmr.addSubmittedKnowledgeAsset(
-            msg.sender,
+            miner,
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             keccak256(abi.encodePacked(knowledgeAssetStorageContract, knowledgeAssetTokenId))
         );
         pkmr.addCumulativeTracSpent(
-            msg.sender,
+            miner,
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             tokenAmount
         );
         pkmr.addUnrewardedTracSpent(
-            msg.sender,
+            miner,
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
             tokenAmount
         );
-        pkmr.incrementTotalSubmittedKnowledgeAssetsCount(msg.sender);
-        pkmr.addTotalTracSpent(msg.sender, tokenAmount);
+        pkmr.incrementTotalSubmittedKnowledgeAssetsCount(miner);
+        pkmr.addTotalTracSpent(miner, tokenAmount);
     }
 
     function _processUpdatedKnowledgeAssetStatesMetadata(
