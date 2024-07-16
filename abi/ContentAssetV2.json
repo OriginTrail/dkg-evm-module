@@ -435,7 +435,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "originalSender",
+        "name": "minter",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "payer",
         "type": "address"
       },
       {
