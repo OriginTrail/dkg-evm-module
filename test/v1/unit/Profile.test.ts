@@ -1,10 +1,18 @@
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { Interface } from 'ethers/lib/utils';
 import hre from 'hardhat';
 import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
-import { HubController, ParametersStorage, Profile, ProfileStorage, WhitelistStorage } from '../../../typechain';
+import {
+  HubController,
+  ParametersStorage,
+  Profile,
+  ProfileStorage,
+  StakingStorage,
+  Token,
+  WhitelistStorage,
+} from '../../../typechain';
 
 type ProfileFixture = {
   accounts: SignerWithAddress[];
@@ -14,6 +22,8 @@ type ProfileFixture = {
   ProfileStorage: ProfileStorage;
   WhitelistStorageInterface: Interface;
   WhitelistStorage: WhitelistStorage;
+  Token: Token;
+  StakingStorage: StakingStorage;
 };
 
 describe('@v1 @unit Profile contract', function () {
@@ -24,6 +34,8 @@ describe('@v1 @unit Profile contract', function () {
   let ProfileStorage: ProfileStorage;
   let WhitelistStorageInterface: Interface;
   let WhitelistStorage: WhitelistStorage;
+  let Token: Token;
+  let StakingStorage: StakingStorage;
 
   const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
   const nodeId2 = '0x08f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb67';
@@ -43,6 +55,8 @@ describe('@v1 @unit Profile contract', function () {
     ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
     WhitelistStorageInterface = new hre.ethers.utils.Interface(hre.helpers.getAbi('WhitelistStorage'));
     WhitelistStorage = await hre.ethers.getContract<WhitelistStorage>('WhitelistStorage');
+    Token = await hre.ethers.getContract<Token>('Token');
+    StakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
     accounts = await hre.ethers.getSigners();
     HubController = await hre.ethers.getContract<HubController>('HubController');
     await HubController.setContractAddress('HubOwner', accounts[0].address);
@@ -55,6 +69,8 @@ describe('@v1 @unit Profile contract', function () {
       ProfileStorage,
       WhitelistStorageInterface,
       WhitelistStorage,
+      Token,
+      StakingStorage,
     };
   }
 
@@ -68,6 +84,8 @@ describe('@v1 @unit Profile contract', function () {
       ProfileStorage,
       WhitelistStorageInterface,
       WhitelistStorage,
+      Token,
+      StakingStorage,
     } = await loadFixture(deployProfileFixture));
   });
 
@@ -233,5 +251,73 @@ describe('@v1 @unit Profile contract', function () {
     )
       .to.be.revertedWithCustomError(Profile, 'TooManyOperationalWallets')
       .withArgs(opWalletsLimit, opWalletsLimit + 1);
+  });
+
+  it('Create profile, add accumulated operator fees, withdraw fees, expect to succeed', async () => {
+    await createProfile();
+
+    const tokenAmount = hre.ethers.utils.parseEther('10');
+
+    await Token.transfer(ProfileStorage.address, tokenAmount);
+    await ProfileStorage.setAccumulatedOperatorFee(identityId1, tokenAmount);
+
+    const blockNumber = await hre.ethers.provider.getBlockNumber();
+    const blockTimestamp = (await hre.ethers.provider.getBlock(blockNumber)).timestamp;
+    const stakeWithdrawalDelay = await ParametersStorage.stakeWithdrawalDelay();
+    const withdrawalDelayEnd = blockTimestamp + stakeWithdrawalDelay + 1;
+
+    await expect(Profile.connect(accounts[1]).startAccumulatedOperatorFeeWithdrawal(identityId1, tokenAmount))
+      .to.emit(Profile, 'AccumulatedOperatorFeeWithdrawalStarted')
+      .withArgs(identityId1, nodeId1, tokenAmount, 0, withdrawalDelayEnd);
+
+    await time.increaseTo(withdrawalDelayEnd);
+
+    await expect(Profile.connect(accounts[1]).withdrawAccumulatedOperatorFee(identityId1))
+      .to.emit(Profile, 'AccumulatedOperatorFeeWithdrawn')
+      .withArgs(identityId1, nodeId1, tokenAmount);
+
+    expect(await ProfileStorage.getAccumulatedOperatorFee(identityId1)).to.be.equal(0);
+  });
+
+  it('Create profile, add accumulated operator fees, restake fees, expect to succeed', async () => {
+    await createProfile();
+
+    const tokenAmount = hre.ethers.utils.parseEther('10');
+
+    await Token.transfer(ProfileStorage.address, tokenAmount);
+    await ProfileStorage.setAccumulatedOperatorFee(identityId1, tokenAmount);
+
+    await expect(Profile.connect(accounts[1]).stakeAccumulatedOperatorFee(identityId1, tokenAmount))
+      .to.emit(Profile, 'AccumulatedOperatorFeeRestaked')
+      .withArgs(identityId1, nodeId1, tokenAmount, 0);
+
+    expect(await StakingStorage.totalStakes(identityId1)).to.be.eql(tokenAmount);
+  });
+
+  it('Start withdrawal with zero amount, expect to fail', async () => {
+    await createProfile();
+
+    await expect(Profile.connect(accounts[1]).startAccumulatedOperatorFeeWithdrawal(identityId1, 0)).to.be.reverted;
+  });
+
+  it('Withdraw fees before delay, expect to fail', async () => {
+    await createProfile();
+
+    const tokenAmount = hre.ethers.utils.parseEther('10');
+
+    await Token.transfer(ProfileStorage.address, tokenAmount);
+    await ProfileStorage.setAccumulatedOperatorFee(1, tokenAmount);
+
+    await Profile.connect(accounts[1]).startAccumulatedOperatorFeeWithdrawal(identityId1, tokenAmount);
+
+    await expect(
+      Profile.connect(accounts[1]).withdrawAccumulatedOperatorFee(identityId1),
+    ).to.be.revertedWithCustomError(Profile, 'WithdrawalPeriodPending');
+  });
+
+  it('Stake with zero amount, expect to fail', async () => {
+    await createProfile();
+
+    await expect(Profile.connect(accounts[1]).stakeAccumulatedOperatorFee(identityId1, 0)).to.be.reverted;
   });
 });
