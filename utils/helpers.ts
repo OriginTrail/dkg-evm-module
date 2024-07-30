@@ -385,7 +385,8 @@ export class Helpers {
     }
 
     const api = await ApiPromise.create({ provider: this.provider, noInitWarn: true });
-    const transfer = await api.tx.balances.transfer(
+
+    const transfer = api.tx.balances.transferAllowDeath(
       address,
       Number(this.hre.ethers.utils.parseUnits(`${tokenAmount}`, 12)),
     );

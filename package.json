@@ -62,7 +62,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.9.3",
-    "@polkadot/api": "^11.0.3",
+    "@polkadot/api": "^10.1.4",
     "@polkadot/keyring": "^12.6.2",
     "@polkadot/util": "^12.6.2",
     "@polkadot/util-crypto": "^12.6.2",
