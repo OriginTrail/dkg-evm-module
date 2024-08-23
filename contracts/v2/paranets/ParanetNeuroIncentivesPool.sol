@@ -9,17 +9,18 @@ import {Named} from "../../v1/interface/Named.sol";
 import {Versioned} from "../../v1/interface/Versioned.sol";
 import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
 import {ParanetStructs} from "../structs/paranets/ParanetStructs.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {
     EMISSION_MULTIPLIER_SCALING_FACTOR,
     PERCENTAGE_SCALING_FACTOR,
-    TOKENS_DIGITS_DIFF,
+    NATIVE_NEURO_DECIMALS_DIFF,
     MAX_CUMULATIVE_VOTERS_WEIGHT
 } from "../constants/ParanetIncentivesPoolConstants.sol";
 
 contract ParanetNeuroIncentivesPool is Named, Versioned {
-    event NeuroRewardDeposit(address indexed sender, uint256 amount);
+    event NativeNeuroRewardDeposit(address indexed sender, uint256 amount);
     event NeuroEmissionMultiplierUpdateInitiated(uint256 oldMultiplier, uint256 newMultiplier, uint256 timestamp);
     event NeuroEmissionMultiplierUpdateFinalized(uint256 oldMultiplier, uint256 newMultiplier);
     event ParanetKnowledgeMinerRewardClaimed(address indexed miner, uint256 amount);
@@ -27,9 +28,10 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     event ParanetIncentivizationProposalVoterRewardClaimed(address indexed voter, uint256 amount);
 
     string private constant _NAME = "ParanetNeuroIncentivesPool";
-    string private constant _VERSION = "2.1.3";
+    string private constant _VERSION = "2.2.0";
 
     HubV2 public hub;
+    IERC20 public token;
     ParanetsRegistry public paranetsRegistry;
     ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
 
@@ -73,6 +75,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     // solhint-disable-next-line no-empty-blocks
     constructor(
         address hubAddress,
+        address rewardTokenAddress,
         address paranetsRegistryAddress,
         address knowledgeMinersRegistryAddress,
         bytes32 paranetId,
@@ -87,6 +90,9 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         );
 
         hub = HubV2(hubAddress);
+        if (rewardTokenAddress != address(0)) {
+            token = IERC20(rewardTokenAddress);
+        }
         paranetsRegistry = ParanetsRegistry(paranetsRegistryAddress);
         paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(knowledgeMinersRegistryAddress);
 
@@ -147,15 +153,33 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     }
 
     receive() external payable {
-        emit NeuroRewardDeposit(msg.sender, msg.value);
+        emit NativeNeuroRewardDeposit(msg.sender, msg.value);
+    }
+
+    function isNativeNeuro() public view returns (bool) {
+        return address(token) == address(0);
     }
 
     function totalNeuroReceived() external view returns (uint256) {
-        return address(this).balance + totalMinersClaimedNeuro + totalOperatorsClaimedNeuro + totalVotersClaimedNeuro;
+        if (isNativeNeuro()) {
+            return (address(this).balance +
+                totalMinersClaimedNeuro +
+                totalOperatorsClaimedNeuro +
+                totalVotersClaimedNeuro);
+        } else {
+            return (token.balanceOf(address(this)) +
+                totalMinersClaimedNeuro +
+                totalOperatorsClaimedNeuro +
+                totalVotersClaimedNeuro);
+        }
     }
 
     function getNeuroBalance() external view returns (uint256) {
-        return address(this).balance;
+        if (isNativeNeuro()) {
+            return address(this).balance;
+        } else {
+            return token.balanceOf(address(this));
+        }
     }
 
     function updateNeuroEmissionMultiplierUpdateDelay(uint256 newDelay) external onlyHubOwner {
@@ -320,7 +344,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     function getTotalKnowledgeMinerIncentiveEstimation() public view returns (uint256) {
         uint96 unrewardedTracSpent = paranetKnowledgeMinersRegistry.getUnrewardedTracSpent(msg.sender, parentParanetId);
 
-        if (unrewardedTracSpent < TOKENS_DIGITS_DIFF) {
+        if (isNativeNeuro() && unrewardedTracSpent < NATIVE_NEURO_DECIMALS_DIFF) {
             return 0;
         }
 
@@ -442,7 +466,11 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         }
         totalMinersClaimedNeuro += claimableNeuroReward;
 
-        payable(msg.sender).transfer(claimableNeuroReward);
+        if (isNativeNeuro()) {
+            payable(msg.sender).transfer(claimableNeuroReward);
+        } else {
+            token.transfer(msg.sender, claimableNeuroReward);
+        }
 
         emit ParanetKnowledgeMinerRewardClaimed(msg.sender, claimableNeuroReward);
     }
@@ -488,7 +516,11 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         }
         totalOperatorsClaimedNeuro += claimableNeuroReward;
 
-        payable(msg.sender).transfer(claimableNeuroReward);
+        if (isNativeNeuro()) {
+            payable(msg.sender).transfer(claimableNeuroReward);
+        } else {
+            token.transfer(msg.sender, claimableNeuroReward);
+        }
 
         emit ParanetOperatorRewardClaimed(msg.sender, claimableNeuroReward);
     }
@@ -504,7 +536,10 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
                 effectiveNeuroEmissionMultiplier
         );
 
-        if (cumulativeKnowledgeValueSingleVoterPart - rewardedTracSpentSingleVoterPart < TOKENS_DIGITS_DIFF) {
+        if (
+            isNativeNeuro() &&
+            (cumulativeKnowledgeValueSingleVoterPart - rewardedTracSpentSingleVoterPart < NATIVE_NEURO_DECIMALS_DIFF)
+        ) {
             return 0;
         }
 
@@ -569,7 +604,11 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         voters[votersIndexes[msg.sender]].claimedNeuro += claimableNeuroReward;
         totalVotersClaimedNeuro += claimableNeuroReward;
 
-        payable(msg.sender).transfer(claimableNeuroReward);
+        if (isNativeNeuro()) {
+            payable(msg.sender).transfer(claimableNeuroReward);
+        } else {
+            token.transfer(msg.sender, claimableNeuroReward);
+        }
 
         emit ParanetIncentivizationProposalVoterRewardClaimed(msg.sender, claimableNeuroReward);
     }
@@ -585,7 +624,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
             (totalClaimedNeuro * EMISSION_MULTIPLIER_SCALING_FACTOR) / effectiveNeuroEmissionMultiplier
         );
 
-        if (cumulativeKnowledgeValuePart - rewardedTracSpentPart < TOKENS_DIGITS_DIFF) {
+        if (isNativeNeuro() && (cumulativeKnowledgeValuePart - rewardedTracSpentPart < NATIVE_NEURO_DECIMALS_DIFF)) {
             return 0;
         }
 
