@@ -419,6 +419,55 @@
       {
         "indexed": false,
         "internalType": "uint256",
+        "name": "sharesMintedAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newTotalSupply",
+        "type": "uint256"
+      }
+    ],
+    "name": "StakeWithdrawalCanceled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "nodeId",
+        "type": "bytes"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "staker",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "oldStake",
+        "type": "uint96"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint96",
+        "name": "newStake",
+        "type": "uint96"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
         "name": "withdrawalPeriodEnd",
         "type": "uint256"
       }
@@ -517,6 +566,19 @@
       }
     ],
     "name": "addStake",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "cancelStakeWithdrawal",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
