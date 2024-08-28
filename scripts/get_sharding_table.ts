@@ -9,14 +9,31 @@ async function main() {
     hre.helpers.getAbi('ShardingTableV2'),
     hre.helpers.contractDeployments.contracts['ShardingTable'].evmAddress,
   );
+  const ProfileStorage = await hre.ethers.getContractAt(
+    hre.helpers.getAbi('ProfileStorage'),
+    hre.helpers.contractDeployments.contracts['ProfileStorage'].evmAddress,
+  );
+
   const shardingTable = await ShardingTableContract['getShardingTable()']();
-  const shardingTableMapped = shardingTable.map((x: ShardingTableStructsV1.NodeInfoStructOutput) => ({
-    nodeId: hre.ethers.utils.toUtf8String(x.nodeId),
-    sha256: hre.ethers.utils.sha256(x.nodeId),
-    identityId: Number(x.identityId.toString()),
-    ask: hre.ethers.utils.formatEther(x.ask),
-    stake: hre.ethers.utils.formatEther(x.stake),
-  }));
+  const shardingTableMapped = await Promise.all(
+    shardingTable.map(async (x: ShardingTableStructsV1.NodeInfoStructOutput) => {
+      const identityId = Number(x.identityId.toString());
+      const sharesTokenAddress = await ProfileStorage.getSharesContractAddress(identityId);
+
+      const SharesToken = await hre.ethers.getContractAt(hre.helpers.getAbi('Token'), sharesTokenAddress);
+
+      const sharesTokenName = await SharesToken.name();
+
+      return {
+        nodeId: hre.ethers.utils.toUtf8String(x.nodeId),
+        sha256: hre.ethers.utils.sha256(x.nodeId),
+        identityId,
+        sharesTokenName,
+        ask: hre.ethers.utils.formatEther(x.ask),
+        stake: hre.ethers.utils.formatEther(x.stake),
+      };
+    }),
+  );
 
   fs.writeFileSync(`${hre.network.name}.json`, JSON.stringify(shardingTableMapped, null, 4));
 }
