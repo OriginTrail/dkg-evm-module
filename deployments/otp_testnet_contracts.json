@@ -216,13 +216,13 @@
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0xFB109Ae84be5AECBbeEb4B92259FD82E80d9Da80",
-      "substrateAddress": "5EMjsd1CUuyisawNmNnfxA9FZ4FHmvmLdivyKqjoJU9AFieG",
-      "version": "2.1.1",
-      "gitBranch": "improvement/paranet-registration-separation",
-      "gitCommitHash": "61d5b7c39b1ccd839ab7eb1067b007ab70b08227",
-      "deploymentBlock": 4092122,
-      "deploymentTimestamp": 1718192323530,
+      "evmAddress": "0x873d2Ac030ba5cb14184E6Af3152fcfF7555b432",
+      "substrateAddress": "5EMjsczoGpwyeX7YPDeYFej1RGnqi8CeW6b6Vw5xA4P6pN3k",
+      "version": "2.2.0",
+      "gitBranch": "main",
+      "gitCommitHash": "b9e7dede2a75acf193272f84b1a5ce155210e47a",
+      "deploymentBlock": 4354638,
+      "deploymentTimestamp": 1724854704943,
       "deployed": true
     },
     "CommitManagerV1": {

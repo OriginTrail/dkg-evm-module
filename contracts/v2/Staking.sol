@@ -56,6 +56,15 @@ contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
         uint256 withdrawalPeriodEnd
     );
     event StakeWithdrawn(uint72 indexed identityId, bytes nodeId, address indexed staker, uint96 withdrawnStakeAmount);
+    event StakeWithdrawalCanceled(
+        uint72 indexed identityId,
+        bytes nodeId,
+        address indexed staker,
+        uint96 oldStake,
+        uint96 newStake,
+        uint256 sharesMintedAmount,
+        uint256 newTotalSupply
+    );
     event InactiveStakeWithdrawn(
         uint72 indexed identityId,
         bytes nodeId,
@@ -79,7 +88,7 @@ contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
     event OperatorFeeChangeFinished(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
-    string private constant _VERSION = "2.1.1";
+    string private constant _VERSION = "2.2.0";
 
     ShardingTableV2 public shardingTableContract;
     IdentityStorageV2 public identityStorage;
@@ -268,6 +277,7 @@ contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
         if (!ps.profileExists(identityId)) {
             revert ProfileErrors.ProfileDoesntExist(identityId);
         }
+
         StakingStorage ss = stakingStorage;
 
         uint96 stakeWithdrawalAmount;
@@ -285,6 +295,61 @@ contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
         ss.transferStake(msg.sender, stakeWithdrawalAmount);
 
         emit StakeWithdrawn(identityId, ps.getNodeId(identityId), msg.sender, stakeWithdrawalAmount);
+    }
+
+    function cancelStakeWithdrawal(uint72 identityId) external {
+        ProfileStorage ps = profileStorage;
+
+        if (!ps.profileExists(identityId)) {
+            revert ProfileErrors.ProfileDoesntExist(identityId);
+        }
+
+        StakingStorage ss = stakingStorage;
+
+        uint96 stakeWithdrawalAmount;
+        uint256 withdrawalTimestamp;
+        (stakeWithdrawalAmount, withdrawalTimestamp) = ss.withdrawalRequests(identityId, msg.sender);
+
+        if (stakeWithdrawalAmount == 0) {
+            revert StakingErrors.WithdrawalWasntInitiated();
+        }
+
+        uint96 oldStake = ss.totalStakes(identityId);
+        uint96 newStake = oldStake + stakeWithdrawalAmount;
+
+        Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
+
+        uint256 sharesMinted;
+        if (sharesContract.totalSupply() == 0) {
+            sharesMinted = stakeWithdrawalAmount;
+        } else {
+            sharesMinted = ((uint256(stakeWithdrawalAmount) * sharesContract.totalSupply()) / oldStake);
+        }
+        sharesContract.mint(msg.sender, sharesMinted);
+
+        ss.deleteWithdrawalRequest(identityId, msg.sender);
+        ss.setTotalStake(identityId, newStake);
+
+        ShardingTableStorageV2 sts = shardingTableStorage;
+        ParametersStorage params = parametersStorage;
+
+        if (!sts.nodeExists(identityId) && newStake >= params.minimumStake()) {
+            if (sts.nodesCount() >= params.shardingTableSizeLimit()) {
+                revert ShardingTableErrors.ShardingTableIsFull();
+            }
+            shardingTableContract.insertNode(identityId);
+        }
+        emit StakeWithdrawalCanceled(
+            identityId,
+            ps.getNodeId(identityId),
+            msg.sender,
+            oldStake,
+            newStake,
+            sharesMinted,
+            sharesContract.totalSupply()
+        );
+        emit StakeIncreased(identityId, ps.getNodeId(identityId), msg.sender, oldStake, newStake);
+        emit SharesMinted(identityId, address(sharesContract), msg.sender, sharesMinted, sharesContract.totalSupply());
     }
 
     function addReward(bytes32 agreementId, uint72 identityId, uint96 rewardAmount) external onlyContracts {

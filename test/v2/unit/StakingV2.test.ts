@@ -130,8 +130,8 @@ describe('@v2 @unit StakingV2 contract', function () {
     expect(await StakingV2.name()).to.equal('Staking');
   });
 
-  it('The contract is version "2.1.1"', async () => {
-    expect(await StakingV2.version()).to.equal('2.1.1');
+  it('The contract is version "2.2.0"', async () => {
+    expect(await StakingV2.version()).to.equal('2.2.0');
   });
 
   it('Non-Contract should not be able to setTotalStake; expect to fail', async () => {
@@ -700,5 +700,101 @@ describe('@v2 @unit StakingV2 contract', function () {
     const finalBalance = await Token.balanceOf(accounts[0].address);
 
     expect(finalBalance.sub(initialBalance)).to.be.equal(0);
+  });
+
+  it('should correctly cancel a withdrawal and re-mint shares', async function () {
+    const initialStake = hre.ethers.utils.parseEther('1000');
+    const { identityId, nodeId } = await createProfile(accounts[0], accounts[1]);
+
+    await Token.approve(StakingV2.address, initialStake);
+    await StakingV2['addStake(uint72,uint96)'](identityId, initialStake);
+
+    const sharesToBurn = hre.ethers.utils.parseEther('500');
+
+    const sharesAddress = await ProfileStorage.getSharesContractAddress(identityId);
+    const SharesContract = await hre.ethers.getContractAt<Shares>('Shares', sharesAddress);
+
+    await SharesContract.increaseAllowance(StakingV2.address, sharesToBurn);
+    await StakingV2.startStakeWithdrawal(identityId, sharesToBurn);
+
+    const tx = await StakingV2.cancelStakeWithdrawal(identityId);
+    await expect(tx)
+      .to.emit(StakingV2, 'StakeWithdrawalCanceled')
+      .withArgs(
+        identityId,
+        nodeId,
+        accounts[0].address,
+        initialStake.sub(sharesToBurn),
+        initialStake,
+        sharesToBurn,
+        initialStake,
+      );
+
+    const newStake = await StakingStorage.totalStakes(identityId);
+    expect(newStake).to.equal(initialStake);
+
+    const withdrawalRequestExists = await StakingStorage.withdrawalRequestExists(identityId, accounts[0].address);
+    expect(withdrawalRequestExists).to.eql(false);
+  });
+
+  it('should revert if there is no withdrawal request', async function () {
+    const { identityId } = await createProfile(accounts[0], accounts[1]);
+
+    await expect(StakingV2.cancelStakeWithdrawal(identityId)).to.be.revertedWithCustomError(
+      StakingV2,
+      'WithdrawalWasntInitiated',
+    );
+  });
+
+  it('should handle recalculation of shares when additional reward added during a pending withdrawal', async () => {
+    const { identityId, nodeId } = await createProfile(accounts[0], accounts[1]);
+
+    const initialStakeAmount = hre.ethers.utils.parseEther('500');
+    const reward = hre.ethers.utils.parseEther('250');
+
+    await Token.approve(StakingV2.address, initialStakeAmount);
+    await StakingV2['addStake(uint72,uint96)'](identityId, initialStakeAmount);
+
+    const sharesToBurn = initialStakeAmount.div(2);
+
+    const sharesAddress = await ProfileStorage.getSharesContractAddress(identityId);
+    const SharesContract = await hre.ethers.getContractAt<Shares>('Shares', sharesAddress);
+
+    await SharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
+    await StakingV2.startStakeWithdrawal(identityId, sharesToBurn);
+
+    await Token.mint(ServiceAgreementStorageV1U1.address, hre.ethers.utils.parseEther(`${2_000_000}`));
+    const agreementId = '0x' + randomBytes(32).toString('hex');
+    const startTime = Math.floor(Date.now() / 1000).toString();
+    const epochsNumber = 5;
+    const epochLength = 10;
+    const tokenAmount = hre.ethers.utils.parseEther('100');
+    const scoreFunctionId = 0;
+    const proofWindowOffsetPerc = 10;
+
+    await ServiceAgreementStorageV1U1.createServiceAgreementObject(
+      agreementId,
+      startTime,
+      epochsNumber,
+      epochLength,
+      tokenAmount,
+      scoreFunctionId,
+      proofWindowOffsetPerc,
+    );
+
+    await StakingV2.addReward(agreementId, identityId, reward);
+
+    const tx = await StakingV2.cancelStakeWithdrawal(identityId);
+    await expect(tx)
+      .to.emit(StakingV2, 'StakeWithdrawalCanceled')
+      .withArgs(
+        identityId,
+        nodeId,
+        accounts[0].address,
+        initialStakeAmount.sub(sharesToBurn).add(reward),
+        initialStakeAmount.add(reward),
+        hre.ethers.utils.parseEther('125'),
+        hre.ethers.utils.parseEther('375'),
+      );
   });
 });
