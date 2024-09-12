@@ -4,6 +4,10 @@
       "deployed": true,
       "evmAddress": "0x4ead53ee0aaeB0bE5920DC2DAA7AD93F11cA5207"
     },
+    "NeurowebERC20": {
+      "deployed": true,
+      "evmAddress": "0x008Ea316ff593E82c592fccB6072f82d1393F1Ac"
+    },
     "Hub": {
       "evmAddress": "0x6C861Cb69300C34DfeF674F7C00E734e840C29C0",
       "version": "2.0.0",
