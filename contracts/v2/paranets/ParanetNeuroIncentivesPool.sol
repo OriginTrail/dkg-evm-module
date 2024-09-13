@@ -219,19 +219,21 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     }
 
     function addVoters(
-        ParanetStructs.ParanetIncentivizationProposalVoterInput[] calldata voters_
+        ParanetStructs.ParanetIncentivizationProposalVoterInput[] calldata newVoters
     ) external onlyVotersRegistrar {
-        for (uint i; i < voters_.length; ) {
-            votersIndexes[voters_[i].addr] = voters.length;
+        require(totalVotersClaimedNeuro == 0, "Cannot modify voters list");
+
+        for (uint i; i < newVoters.length; ) {
+            votersIndexes[newVoters[i].addr] = voters.length;
             voters.push(
                 ParanetStructs.ParanetIncentivizationProposalVoter({
-                    addr: voters_[i].addr,
-                    weight: voters_[i].weight,
+                    addr: newVoters[i].addr,
+                    weight: newVoters[i].weight,
                     claimedNeuro: 0
                 })
             );
 
-            cumulativeVotersWeight += uint16(voters_[i].weight);
+            cumulativeVotersWeight += uint16(newVoters[i].weight);
 
             unchecked {
                 i++;
@@ -258,11 +260,12 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
 
     function removeVoters(uint256 limit) external onlyVotersRegistrar {
         require(voters.length >= limit, "Limit exceeds the num of voters");
+        require(totalVotersClaimedNeuro == 0, "Cannot modify voters list");
 
         for (uint256 i; i < limit; ) {
-            cumulativeVotersWeight -= uint16(voters[voters.length - 1 - i].weight);
+            cumulativeVotersWeight -= uint16(voters[voters.length - 1].weight);
 
-            delete votersIndexes[voters[voters.length - 1 - i].addr];
+            delete votersIndexes[voters[voters.length - 1].addr];
             voters.pop();
 
             unchecked {
