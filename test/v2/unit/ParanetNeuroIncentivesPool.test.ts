@@ -298,6 +298,44 @@ describe('@v2 @unit ParanetNeuroIncentivesPool contract', function () {
     expect(await IncentivesPool.getNeuroBalance()).to.be.equal(neuroAmount);
   });
 
+  it('Get the total received Incentive Pool NEURO', async function () {
+    // create a paranet
+    const number = 1;
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, number);
+
+    // create an incentive pool
+    const incentivesPoolParams = {
+      paranetKAStorageContract,
+      paranetKATokenId,
+      tracToNeuroEmissionMultiplier: hre.ethers.utils.parseEther('1'),
+      paranetOperatorRewardPercentage: 1_000,
+      paranetIncentivizationProposalVotersRewardPercentage: 1_000,
+    };
+    const IncentivesPool = await deployERC20NeuroIncentivesPool(accounts, incentivesPoolParams, 1);
+
+    // transfer tokens to the incentives pool
+    const neuroAmount = hre.ethers.utils.parseEther('1000');
+    await NeuroERC20.transfer(IncentivesPool.address, neuroAmount);
+
+    // Simulate a knowledge miner minting a knowledge asset and claiming the reward
+    const knowledgeMiner = accounts[1];
+    const tokenAmount = '10';
+    await createParanetKnowledgeAsset(knowledgeMiner, paranetKAStorageContract, paranetKATokenId, 2, tokenAmount);
+    await IncentivesPool.connect(knowledgeMiner).claimKnowledgeMinerReward();
+
+    // Claim operator reward
+    const operator = accounts[100 + number];
+    await IncentivesPool.connect(operator).claimParanetOperatorReward();
+
+    // Add a voter and claim the reward
+    const votersRegistrar = accounts[0];
+    const voter = accounts[2];
+    await IncentivesPool.connect(votersRegistrar).addVoters([{ addr: voter.address, weight: 10000 }]);
+    await IncentivesPool.connect(voter).claimIncentivizationProposalVoterReward();
+
+    expect(await IncentivesPool.totalNeuroReceived()).to.be.equal(neuroAmount);
+  });
+
   it('Knowledge miner can claim the correct NEURO reward', async () => {
     const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1);
 
