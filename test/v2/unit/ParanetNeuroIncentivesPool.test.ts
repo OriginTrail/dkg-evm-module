@@ -237,7 +237,7 @@ describe('@v2 @unit ParanetNeuroIncentivesPool contract', function () {
     expect(currentOwner).to.be.equal(newOwner.address);
   });
 
-  it('votersRegistrar can add voters and voters data can be returned', async function () {
+  it('votersRegistrar can add voters, voters data can be returned and added voters are proposal voters', async function () {
     const number = 1;
     const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, number);
 
@@ -267,11 +267,13 @@ describe('@v2 @unit ParanetNeuroIncentivesPool contract', function () {
     expect(firstVoterData.addr).to.equal(voter1.address);
     expect(firstVoterData.weight).to.equal(500);
     expect(firstVoterData.claimedNeuro).to.equal(0);
+    expect(await IncentivesPool.isProposalVoter(voter1.address)).to.be.true;
 
     // Check voter2 data
     expect(secondVoterData.addr).to.equal(voter2.address);
     expect(secondVoterData.weight).to.equal(1000);
     expect(secondVoterData.claimedNeuro).to.equal(0);
+    expect(await IncentivesPool.isProposalVoter(voter2.address)).to.be.true;
   });
 
   it('Knowledge miner can claim the correct NEURO reward', async () => {
