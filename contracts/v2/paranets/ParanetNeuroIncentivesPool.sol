@@ -244,6 +244,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     function getVoter(
         address voterAddress
     ) external view returns (ParanetStructs.ParanetIncentivizationProposalVoter memory) {
+        require(isProposalVoter(voterAddress), "Given addr isn't a voter");
         return voters[votersIndexes[voterAddress]];
     }
 
@@ -384,7 +385,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
         // and total NEURO received by the contract, so that Miners don't get tokens belonging to Operator/Voters
         // Following the example from the above, if we have 100 NEURO as a total reward, Miners should never get
         // more than 80 NEURO. minersRewardLimit = 80 NEURO
-        uint256 minersRewardLimit = ((address(this).balance +
+        uint256 minersRewardLimit = (((isNativeNeuro() ? address(this).balance : token.balanceOf(address(this))) +
             totalMinersClaimedNeuro +
             totalOperatorsClaimedNeuro +
             totalVotersClaimedNeuro) *
@@ -401,7 +402,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     function getClaimableAllKnowledgeMinersRewardAmount() public view returns (uint256) {
         uint256 neuroReward = getTotalAllKnowledgeMinersIncentiveEstimation();
 
-        uint256 minersRewardLimit = ((address(this).balance +
+        uint256 minersRewardLimit = (((isNativeNeuro() ? address(this).balance : token.balanceOf(address(this))) +
             totalMinersClaimedNeuro +
             totalOperatorsClaimedNeuro +
             totalVotersClaimedNeuro) *
@@ -482,7 +483,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     function getClaimableParanetOperatorRewardAmount() public view returns (uint256) {
         uint256 neuroReward = getTotalParanetOperatorIncentiveEstimation();
 
-        uint256 operatorRewardLimit = ((address(this).balance +
+        uint256 operatorRewardLimit = (((isNativeNeuro() ? address(this).balance : token.balanceOf(address(this))) +
             totalMinersClaimedNeuro +
             totalOperatorsClaimedNeuro +
             totalVotersClaimedNeuro) * paranetOperatorRewardPercentage) / PERCENTAGE_SCALING_FACTOR;
@@ -559,7 +560,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
 
         uint256 neuroReward = getTotalProposalVoterIncentiveEstimation();
 
-        uint256 voterRewardLimit = ((((address(this).balance +
+        uint256 voterRewardLimit = (((((isNativeNeuro() ? address(this).balance : token.balanceOf(address(this))) +
             totalMinersClaimedNeuro +
             totalOperatorsClaimedNeuro +
             totalVotersClaimedNeuro) * paranetIncentivizationProposalVotersRewardPercentage) /
@@ -574,7 +575,7 @@ contract ParanetNeuroIncentivesPool is Named, Versioned {
     function getClaimableAllProposalVotersRewardAmount() public view returns (uint256) {
         uint256 neuroReward = getTotalAllProposalVotersIncentiveEstimation();
 
-        uint256 votersRewardLimit = ((address(this).balance +
+        uint256 votersRewardLimit = (((isNativeNeuro() ? address(this).balance : token.balanceOf(address(this))) +
             totalMinersClaimedNeuro +
             totalOperatorsClaimedNeuro +
             totalVotersClaimedNeuro) * paranetIncentivizationProposalVotersRewardPercentage) /
