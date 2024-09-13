@@ -322,6 +322,15 @@
       "deploymentBlock": 11509127,
       "deploymentTimestamp": 1718786545806,
       "deployed": true
+    },
+    "ParanetIncentivesPoolFactory": {
+      "evmAddress": "0x64769faeb5903279EFA59B5170BB6257AcCd2A71",
+      "version": "2.0.0",
+      "gitBranch": "feature/neuro-erc20-incentives",
+      "gitCommitHash": "b5e57be38cfd094ccd52819fa2c458e4b4acf854",
+      "deploymentBlock": 15227285,
+      "deploymentTimestamp": 1726222864380,
+      "deployed": true
     }
   }
 }

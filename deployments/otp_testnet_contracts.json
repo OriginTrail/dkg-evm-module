@@ -296,13 +296,13 @@
       "deployed": true
     },
     "ParanetIncentivesPoolFactory": {
-      "evmAddress": "0x043F6aBBfd8882acb4f71C49E7f4Bd71271d5FD0",
-      "substrateAddress": "5EMjsczM2VgpRxsY2B7g23uW33fR21633UMZZUxA6owKPXt6",
+      "evmAddress": "0x15CDB0bB8eb782c9b21efD99084c15D2Dc44aa92",
+      "substrateAddress": "5EMjsczQYXEGTkiEhqAEzmC6Mgz8tuVzRiJ3szZpvNiS7u8P",
       "version": "2.0.0",
-      "gitBranch": "improvement/paranet-incentives-additional-getters",
-      "gitCommitHash": "bbf78d963b46a63c4c55fd6a82fc0bbdb59c40bc",
-      "deploymentBlock": 4108247,
-      "deploymentTimestamp": 1718630808590,
+      "gitBranch": "feature/neuro-erc20-incentives",
+      "gitCommitHash": "e29d4c314acdde185e8bf1c133ea812344d15af0",
+      "deploymentBlock": 4532480,
+      "deploymentTimestamp": 1726242358520,
       "deployed": true
     }
   },

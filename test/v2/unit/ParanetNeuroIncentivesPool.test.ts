@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
-import { BigNumberish } from 'ethers';
-import hre, { ethers, hardhatArguments } from 'hardhat';
+import { BigNumberish, Event } from 'ethers';
+import hre from 'hardhat';
 import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import {
@@ -223,9 +223,18 @@ describe('@v2 @unit ParanetNeuroIncentivesPool contract', function () {
     const number = 1;
     const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, number);
 
+    const incentivesPoolParams = {
+      paranetKAStorageContract,
+      paranetKATokenId,
+      tracToNeuroEmissionMultiplier: hre.ethers.utils.parseEther('1'),
+      paranetOperatorRewardPercentage: 1_000,
+      paranetIncentivizationProposalVotersRewardPercentage: 1_000,
+    };
+    const IncentivesPool = await deployERC20NeuroIncentivesPool(accounts, incentivesPoolParams, 1);
+
     // create ERC721 contract instance
     const owner = accounts[100 + number];
-    const erc721 = (await ethers.getContractAt('IERC721', paranetKAStorageContract, owner)) as IERC721;
+    const erc721 = (await hre.ethers.getContractAt('IERC721', paranetKAStorageContract, owner)) as IERC721;
 
     // transfer to new operator
     const newOwner = accounts[200 + number];
@@ -235,6 +244,10 @@ describe('@v2 @unit ParanetNeuroIncentivesPool contract', function () {
     // check transfer
     const currentOwner = await erc721.ownerOf(paranetKATokenId);
     expect(currentOwner).to.be.equal(newOwner.address);
+
+    // check if paranet operator
+    const isParanetOperator = await IncentivesPool.isParanetOperator(newOwner.address);
+    expect(isParanetOperator).to.be.true;
   });
 
   it('votersRegistrar can add voters, voters data can be returned and added voters are proposal voters', async function () {
@@ -357,7 +370,7 @@ describe('@v2 @unit ParanetNeuroIncentivesPool contract', function () {
     const votersRegistrar = accounts[0];
     const tx = await IncentivesPool.connect(votersRegistrar).initiateNeuroEmissionMultiplierUpdate(newMultiplier);
     const receipt = await tx.wait();
-    const event = receipt.events?.find((e: any) => e.event === 'NeuroEmissionMultiplierUpdateInitiated');
+    const event = receipt.events?.find((e: Event) => e.event === 'NeuroEmissionMultiplierUpdateInitiated');
     const emittedTimestamp = event?.args?.timestamp;
 
     // jump 7 days in time
