@@ -276,6 +276,28 @@ describe('@v2 @unit ParanetNeuroIncentivesPool contract', function () {
     expect(await IncentivesPool.isProposalVoter(voter2.address)).to.be.true;
   });
 
+  it('Get a total Incentives Pool NEURO balance', async function () {
+    // create a paranet
+    const number = 1;
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, number);
+
+    // create an incentive pool
+    const incentivesPoolParams = {
+      paranetKAStorageContract,
+      paranetKATokenId,
+      tracToNeuroEmissionMultiplier: hre.ethers.utils.parseEther('1'),
+      paranetOperatorRewardPercentage: 1_000,
+      paranetIncentivizationProposalVotersRewardPercentage: 1_000,
+    };
+    const IncentivesPool = await deployERC20NeuroIncentivesPool(accounts, incentivesPoolParams, 1);
+
+    // transfer tokens to the incentives pool
+    const neuroAmount = hre.ethers.utils.parseEther('1000');
+    await NeuroERC20.transfer(IncentivesPool.address, neuroAmount);
+
+    expect(await IncentivesPool.getNeuroBalance()).to.be.equal(neuroAmount);
+  });
+
   it('Knowledge miner can claim the correct NEURO reward', async () => {
     const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1);
 
