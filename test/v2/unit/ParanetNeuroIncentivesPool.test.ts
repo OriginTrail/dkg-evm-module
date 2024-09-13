@@ -2,7 +2,7 @@
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { BigNumberish } from 'ethers';
-import hre from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import {
@@ -21,6 +21,7 @@ import {
   ParanetIncentivesPoolFactory,
   Hub,
 } from '../../../typechain';
+import { IERC721 } from '../../../typechain/@openzeppelin/contracts/token/ERC721/IERC721';
 
 type deployParanetFixture = {
   accounts: SignerWithAddress[];
@@ -201,6 +202,97 @@ describe('@v2 @unit ParanetNeuroIncentivesPool contract', function () {
     const IncentivesPool = await deployERC20NeuroIncentivesPool(accounts, incentivesPoolParams, 1);
 
     const neuroAmount = hre.ethers.utils.parseEther('100000');
+    await NeuroERC20.transfer(IncentivesPool.address, neuroAmount);
+
+    expect(await IncentivesPool.getNeuroBalance()).to.be.equal(neuroAmount);
+  });
+
+  it('Should become a Knowledge miner when creating an asset on paranet', async () => {
+    // register paranet
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1);
+
+    // create a Knowledge Asset
+    const knowledgeMiner = accounts[2];
+    await createParanetKnowledgeAsset(knowledgeMiner, paranetKAStorageContract, paranetKATokenId, 1, '10');
+
+    expect(await ParanetsRegistry.isKnowledgeMinerRegistered(paranetId, knowledgeMiner.address)).to.be.true;
+  });
+
+  it('Check paranet operator after transfer', async () => {
+    // register paranet
+    const number = 1;
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, number);
+
+    // create ERC721 contract instance
+    const owner = accounts[100 + number];
+    const erc721 = (await ethers.getContractAt('IERC721', paranetKAStorageContract, owner)) as IERC721;
+
+    // transfer to new operator
+    const newOwner = accounts[200 + number];
+    const tx = await erc721.transferFrom(owner.address, newOwner.address, paranetKATokenId);
+    await tx.wait();
+
+    // check transfer
+    const currentOwner = await erc721.ownerOf(paranetKATokenId);
+    expect(currentOwner).to.be.equal(newOwner.address);
+  });
+
+  it('votersRegistrar can add voters, voters data can be returned and added voters are proposal voters', async function () {
+    const number = 1;
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, number);
+
+    const incentivesPoolParams = {
+      paranetKAStorageContract,
+      paranetKATokenId,
+      tracToNeuroEmissionMultiplier: hre.ethers.utils.parseEther('1'),
+      paranetOperatorRewardPercentage: 1_000,
+      paranetIncentivizationProposalVotersRewardPercentage: 1_000,
+    };
+    const IncentivesPool = await deployERC20NeuroIncentivesPool(accounts, incentivesPoolParams, 1);
+
+    // Add voters (voter1 and voter2) to the contract
+    const votersRegistrar = accounts[0];
+    const voter1 = accounts[1];
+    const voter2 = accounts[2];
+    await IncentivesPool.connect(votersRegistrar).addVoters([
+      { addr: voter1.address, weight: 500 },
+      { addr: voter2.address, weight: 1000 },
+    ]);
+
+    // Retrieve the voters data
+    const firstVoterData = await IncentivesPool.getVoter(voter1.address);
+    const secondVoterData = await IncentivesPool.getVoter(voter2.address);
+
+    // Check voter1 data
+    expect(firstVoterData.addr).to.equal(voter1.address);
+    expect(firstVoterData.weight).to.equal(500);
+    expect(firstVoterData.claimedNeuro).to.equal(0);
+    expect(await IncentivesPool.isProposalVoter(voter1.address)).to.be.true;
+
+    // Check voter2 data
+    expect(secondVoterData.addr).to.equal(voter2.address);
+    expect(secondVoterData.weight).to.equal(1000);
+    expect(secondVoterData.claimedNeuro).to.equal(0);
+    expect(await IncentivesPool.isProposalVoter(voter2.address)).to.be.true;
+  });
+
+  it('Get a total Incentives Pool NEURO balance', async function () {
+    // create a paranet
+    const number = 1;
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, number);
+
+    // create an incentive pool
+    const incentivesPoolParams = {
+      paranetKAStorageContract,
+      paranetKATokenId,
+      tracToNeuroEmissionMultiplier: hre.ethers.utils.parseEther('1'),
+      paranetOperatorRewardPercentage: 1_000,
+      paranetIncentivizationProposalVotersRewardPercentage: 1_000,
+    };
+    const IncentivesPool = await deployERC20NeuroIncentivesPool(accounts, incentivesPoolParams, 1);
+
+    // transfer tokens to the incentives pool
+    const neuroAmount = hre.ethers.utils.parseEther('1000');
     await NeuroERC20.transfer(IncentivesPool.address, neuroAmount);
 
     expect(await IncentivesPool.getNeuroBalance()).to.be.equal(neuroAmount);
