@@ -215,7 +215,7 @@ describe('@v2 @unit ParanetNeuroIncentivesPool contract', function () {
     const knowledgeMiner = accounts[2];
     await createParanetKnowledgeAsset(knowledgeMiner, paranetKAStorageContract, paranetKATokenId, 1, '10');
 
-    expect(await ParanetsRegistry.isKnowledgeMinerRegistered(paranetId, knowledgeMiner.getAddress())).to.be.true;
+    expect(await ParanetsRegistry.isKnowledgeMinerRegistered(paranetId, knowledgeMiner.address)).to.be.true;
   });
 
   it('Check paranet operator and paranet operator switch', async () => {
@@ -228,18 +228,55 @@ describe('@v2 @unit ParanetNeuroIncentivesPool contract', function () {
 
     // check operator
     const owner = await erc721.ownerOf(paranetKATokenId);
-    const expectedOwner = await accounts[100 + number].getAddress();
-    expect(owner).to.be.equal(expectedOwner);
+    const expectedOwner = accounts[100 + number];
+    expect(owner).to.be.equal(expectedOwner.address);
 
     // transfer to new operator
     const erc721WithOwner = erc721.connect(accounts[100 + number]);
-    const newOwner = await accounts[200 + number].getAddress();
-    const tx = await erc721WithOwner.transferFrom(owner, newOwner, paranetKATokenId);
+    const newOwner = accounts[200 + number];
+    const tx = await erc721WithOwner.transferFrom(owner, newOwner.address, paranetKATokenId);
     await tx.wait();
 
     // check transfer
     const currentOwner = await erc721.ownerOf(paranetKATokenId);
-    expect(currentOwner).to.be.equal(newOwner);
+    expect(currentOwner).to.be.equal(newOwner.address);
+  });
+
+  it('votersRegistrar can add voters and voters data can be returned', async function () {
+    const number = 1;
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, number);
+
+    const incentivesPoolParams = {
+      paranetKAStorageContract,
+      paranetKATokenId,
+      tracToNeuroEmissionMultiplier: hre.ethers.utils.parseEther('1'),
+      paranetOperatorRewardPercentage: 1_000,
+      paranetIncentivizationProposalVotersRewardPercentage: 1_000,
+    };
+    const IncentivesPool = await deployERC20NeuroIncentivesPool(accounts, incentivesPoolParams, 1);
+
+    // Add voters (voter1 and voter2) to the contract
+    const votersRegistrar = accounts[0];
+    const voter1 = accounts[1];
+    const voter2 = accounts[2];
+    await IncentivesPool.connect(votersRegistrar).addVoters([
+      { addr: voter1.address, weight: 500 },
+      { addr: voter2.address, weight: 1000 },
+    ]);
+
+    // Retrieve the voters data
+    const firstVoterData = await IncentivesPool.getVoter(voter1.address);
+    const secondVoterData = await IncentivesPool.getVoter(voter2.address);
+
+    // Check voter1 data
+    expect(firstVoterData.addr).to.equal(voter1.address);
+    expect(firstVoterData.weight).to.equal(500);
+    expect(firstVoterData.claimedNeuro).to.equal(0);
+
+    // Check voter2 data
+    expect(secondVoterData.addr).to.equal(voter2.address);
+    expect(secondVoterData.weight).to.equal(1000);
+    expect(secondVoterData.claimedNeuro).to.equal(0);
   });
 
   it('Knowledge miner can claim the correct NEURO reward', async () => {
