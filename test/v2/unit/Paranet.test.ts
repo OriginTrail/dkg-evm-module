@@ -960,6 +960,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       paranetDescription,
     );
     await ParanetIncentivesPoolFactory.connect(accounts[100 + number]).deployNeuroIncentivesPool(
+      true,
       paranetKAStorageContract,
       paranetKATokenId,
       tracToNeuroEmissionMultiplier,

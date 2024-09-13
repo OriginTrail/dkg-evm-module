@@ -155,7 +155,7 @@ export class Helpers {
         deployer,
       );
 
-      if (this.hasFunction(nameInHub, 'initialize')) {
+      if (this.hasFunction(newContractName, 'initialize')) {
         // TODO: Reinitialize only if any dependency contract was redeployed
         this.contractsForReinitialization.push(contractInstance.address);
       }
@@ -211,9 +211,9 @@ export class Helpers {
       }
     }
 
-    if (this.hasFunction(nameInHub, 'initialize')) {
+    if (this.hasFunction(newContractName, 'initialize')) {
       if ((setContractInHub || setAssetStorageInHub) && this.hre.network.config.environment === 'development') {
-        const newContractInterface = new this.hre.ethers.utils.Interface(this.getAbi(nameInHub));
+        const newContractInterface = new this.hre.ethers.utils.Interface(this.getAbi(newContractName));
         const initializeTx = await HubController.forwardCall(
           newContract.address,
           newContractInterface.encodeFunctionData('initialize'),
@@ -224,7 +224,7 @@ export class Helpers {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    await this.updateDeploymentsJson(nameInHub, newContract.address, newContract.receipt!.blockNumber);
+    await this.updateDeploymentsJson(newContractName, nameInHub, newContract.address, newContract.receipt!.blockNumber);
 
     if (this.hre.network.config.environment !== 'development') {
       this.saveDeploymentsJson('deployments');
@@ -338,8 +338,13 @@ export class Helpers {
     this.contractDeployments = { contracts: {} };
   }
 
-  public async updateDeploymentsJson(newContractName: string, newContractAddress: string, deploymentBlock: number) {
-    const contractABI = this.getAbi(newContractName);
+  public async updateDeploymentsJson(
+    abiName: string,
+    newContractName: string,
+    newContractAddress: string,
+    deploymentBlock: number,
+  ) {
+    const contractABI = this.getAbi(abiName);
     const isVersionedContract = contractABI.some(
       (abiEntry) => abiEntry.type === 'function' && abiEntry.name === 'version',
     );
@@ -347,7 +352,7 @@ export class Helpers {
     let contractVersion;
 
     if (isVersionedContract) {
-      const VersionedContract = await this.hre.ethers.getContractAt(newContractName, newContractAddress);
+      const VersionedContract = await this.hre.ethers.getContractAt(abiName, newContractAddress);
       contractVersion = await VersionedContract.version();
     } else {
       contractVersion = null;

@@ -20,7 +20,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       const Hub = await hre.deployments.deploy('Hub', { from: deployer, log: true });
 
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      hre.helpers.updateDeploymentsJson('Hub', Hub.address, Hub.receipt!.blockNumber);
+      hre.helpers.updateDeploymentsJson('Hub', 'Hub', Hub.address, Hub.receipt!.blockNumber);
     }
   }
 

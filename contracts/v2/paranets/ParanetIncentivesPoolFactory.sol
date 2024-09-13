@@ -46,6 +46,7 @@ contract ParanetIncentivesPoolFactory is Named, Versioned, ContractStatusV2, Ini
     }
 
     function deployNeuroIncentivesPool(
+        bool isNativeReward,
         address paranetKAStorageContract,
         uint256 paranetKATokenId,
         uint256 tracToNeuroEmissionMultiplier,
@@ -54,26 +55,28 @@ contract ParanetIncentivesPoolFactory is Named, Versioned, ContractStatusV2, Ini
     ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) returns (address) {
         HubV2 h = hub;
         ParanetsRegistry pr = paranetsRegistry;
+        string memory incentivesPoolType = isNativeReward ? "Neuroweb" : "NeurowebERC20";
 
         if (
             pr.hasIncentivesPoolByType(
                 keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-                "Neuroweb"
+                incentivesPoolType
             )
         ) {
             revert ParanetErrors.ParanetIncentivesPoolAlreadyExists(
                 paranetKAStorageContract,
                 paranetKATokenId,
-                "Neuroweb",
+                incentivesPoolType,
                 pr.getIncentivesPoolAddress(
                     keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-                    "Neuroweb"
+                    incentivesPoolType
                 )
             );
         }
 
         ParanetNeuroIncentivesPool incentivesPool = new ParanetNeuroIncentivesPool(
             address(h),
+            isNativeReward ? address(0) : h.getContractAddress(incentivesPoolType),
             h.getContractAddress("ParanetsRegistry"),
             h.getContractAddress("ParanetKnowledgeMinersRegistry"),
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
@@ -84,14 +87,14 @@ contract ParanetIncentivesPoolFactory is Named, Versioned, ContractStatusV2, Ini
 
         pr.setIncentivesPoolAddress(
             keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            "Neuroweb",
+            incentivesPoolType,
             address(incentivesPool)
         );
 
         emit ParanetIncetivesPoolDeployed(
             paranetKAStorageContract,
             paranetKATokenId,
-            ParanetStructs.IncentivesPool({poolType: "Neuroweb", addr: address(incentivesPool)})
+            ParanetStructs.IncentivesPool({poolType: incentivesPoolType, addr: address(incentivesPool)})
         );
 
         return address(incentivesPool);

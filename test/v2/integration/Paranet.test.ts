@@ -123,6 +123,7 @@ describe('@v2 @integration Paranet', function () {
     await tx1.wait();
 
     const tx2 = await ParanetIncentivesPoolFactory.connect(operator).deployNeuroIncentivesPool(
+      true,
       ContentAssetStorage.address,
       paranetKATokenId,
       tracToNeuroEmissionMultiplier,

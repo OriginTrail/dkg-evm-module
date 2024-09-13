@@ -317,15 +317,6 @@
       "deploymentBlock": 10357793,
       "deploymentTimestamp": 1718619642976,
       "deployed": true
-    },
-    "ParanetIncentivesPoolFactory": {
-      "evmAddress": "0xEA7932aDfA759BA6D78c42bCE6De6258768F7b4e",
-      "version": "2.0.0",
-      "gitBranch": "improvement/paranet-incentives-additional-getters",
-      "gitCommitHash": "86a1d826db5485390b6fca1b13673261d0c4d89e",
-      "deploymentBlock": 10357795,
-      "deploymentTimestamp": 1718619653053,
-      "deployed": true
     }
   }
 }
