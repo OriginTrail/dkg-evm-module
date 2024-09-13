@@ -2,7 +2,7 @@
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { BigNumberish } from 'ethers';
-import hre from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
 import {
@@ -21,6 +21,7 @@ import {
   ParanetIncentivesPoolFactory,
   Hub,
 } from '../../../typechain';
+import { IERC721 } from '../../../typechain/@openzeppelin/contracts/token/ERC721/IERC721';
 
 type deployParanetFixture = {
   accounts: SignerWithAddress[];
@@ -204,6 +205,41 @@ describe('@v2 @unit ParanetNeuroIncentivesPool contract', function () {
     await NeuroERC20.transfer(IncentivesPool.address, neuroAmount);
 
     expect(await IncentivesPool.getNeuroBalance()).to.be.equal(neuroAmount);
+  });
+
+  it('Should become a Knowledge miner when creating an asset on paranet', async () => {
+    // register paranet
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1);
+
+    // create a Knowledge Asset
+    const knowledgeMiner = accounts[2];
+    await createParanetKnowledgeAsset(knowledgeMiner, paranetKAStorageContract, paranetKATokenId, 1, '10');
+
+    expect(await ParanetsRegistry.isKnowledgeMinerRegistered(paranetId, knowledgeMiner.getAddress())).to.be.true;
+  });
+
+  it('Check paranet operator and paranet operator switch', async () => {
+    // register paranet
+    const number = 1;
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, number);
+
+    // create ERC721 contract instance
+    const erc721 = (await ethers.getContractAt('IERC721', paranetKAStorageContract)) as IERC721;
+
+    // check operator
+    const owner = await erc721.ownerOf(paranetKATokenId);
+    const expectedOwner = await accounts[100 + number].getAddress();
+    expect(owner).to.be.equal(expectedOwner);
+
+    // transfer to new operator
+    const erc721WithOwner = erc721.connect(accounts[100 + number]);
+    const newOwner = await accounts[200 + number].getAddress();
+    const tx = await erc721WithOwner.transferFrom(owner, newOwner, paranetKATokenId);
+    await tx.wait();
+
+    // check transfer
+    const currentOwner = await erc721.ownerOf(paranetKATokenId);
+    expect(currentOwner).to.be.equal(newOwner);
   });
 
   it('Knowledge miner can claim the correct NEURO reward', async () => {
