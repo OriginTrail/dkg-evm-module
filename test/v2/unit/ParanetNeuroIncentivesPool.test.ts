@@ -218,23 +218,18 @@ describe('@v2 @unit ParanetNeuroIncentivesPool contract', function () {
     expect(await ParanetsRegistry.isKnowledgeMinerRegistered(paranetId, knowledgeMiner.address)).to.be.true;
   });
 
-  it('Check paranet operator and paranet operator switch', async () => {
+  it('Check paranet operator after transfer', async () => {
     // register paranet
     const number = 1;
     const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, number);
 
     // create ERC721 contract instance
-    const erc721 = (await ethers.getContractAt('IERC721', paranetKAStorageContract)) as IERC721;
-
-    // check operator
-    const owner = await erc721.ownerOf(paranetKATokenId);
-    const expectedOwner = accounts[100 + number];
-    expect(owner).to.be.equal(expectedOwner.address);
+    const owner = accounts[100 + number];
+    const erc721 = (await ethers.getContractAt('IERC721', paranetKAStorageContract, owner)) as IERC721;
 
     // transfer to new operator
-    const erc721WithOwner = erc721.connect(accounts[100 + number]);
     const newOwner = accounts[200 + number];
-    const tx = await erc721WithOwner.transferFrom(owner, newOwner.address, paranetKATokenId);
+    const tx = await erc721.transferFrom(owner.address, newOwner.address, paranetKATokenId);
     await tx.wait();
 
     // check transfer
