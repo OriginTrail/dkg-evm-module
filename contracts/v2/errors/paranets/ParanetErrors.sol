@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.16;
 
+import {ParanetStructs} from "../../structs/paranets/ParanetStructs.sol";
+
 library ParanetErrors {
     error ParanetHasAlreadyBeenRegistered(address knowledgeAssetStorageAddress, uint256 tokenId);
     error ParanetIncentivesPoolAlreadyExists(
@@ -27,4 +29,5 @@ library ParanetErrors {
     );
     error KnowledgeMinerDoesNotExistInCuratedParanet(bytes32 paranetId, address knowledgeMiner);
     error KnowledgeMinerAlreadyRegistered(bytes32 paranetId, address knowledgeMinerAddress);
+    error InvalidAccessPolicy(bytes32 paranetId, ParanetStructs.AccessPolicy paranetAccessPolicy);
 }
