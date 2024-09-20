@@ -10,12 +10,24 @@ library ParanetStructs {
         uint256 tokenId;
     }
 
+    enum AccessPolicy {
+        OPEN,
+        CURATED
+    }
+
+    enum ParanetKnowledgeMinerAccessRequestStatus {
+        PENDING,
+        APPROVED,
+        DENIED
+    }
+
     struct Paranet {
         address paranetKAStorageContract;
         uint256 paranetKATokenId;
         string name;
         string description;
         uint96 cumulativeKnowledgeValue;
+        AccessPolicy minersPolicy;
         UnorderedNamedContractDynamicSetStructs.Set incentivesPools;
         bytes32[] services;
         // Service ID => Index in the array
@@ -34,6 +46,7 @@ library ParanetStructs {
         string name;
         string description;
         uint96 cumulativeKnowledgeValue;
+        AccessPolicy minersPolicy;
     }
 
     struct IncentivesPool {
@@ -111,5 +124,10 @@ library ParanetStructs {
         address addr;
         uint96 weight;
         uint256 claimedNeuro;
+    }
+
+    struct ParanetKnowledgeMinerAccessRequest {
+        uint256 requestTime;
+        ParanetKnowledgeMinerAccessRequestStatus status;
     }
 }
