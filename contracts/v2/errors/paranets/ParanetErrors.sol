@@ -25,4 +25,6 @@ library ParanetErrors {
         uint96 currentCumulativeWeight,
         uint96 targetCumulativeWeight
     );
+    error KnowledgeMinerDoesNotExistInCuratedParanet(bytes32 paranetId, address knowledgeMiner);
+    error KnowledgeMinerAlreadyRegistered(bytes32 paranetId, address knowledgeMinerAddress);
 }
