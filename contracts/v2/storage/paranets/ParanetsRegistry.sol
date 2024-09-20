@@ -13,7 +13,7 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
     using UnorderedNamedContractDynamicSetLibV2 for UnorderedNamedContractDynamicSetStructs.Set;
 
     string private constant _NAME = "ParanetsRegistry";
-    string private constant _VERSION = "2.1.0";
+    string private constant _VERSION = "2.2.0";
 
     // Paranet ID => Paranet Object
     mapping(bytes32 => ParanetStructs.Paranet) internal paranets;
@@ -33,7 +33,8 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         address knowledgeAssetStorageContract,
         uint256 tokenId,
         string calldata paranetName,
-        string calldata paranetDescription
+        string calldata paranetDescription,
+        ParanetStructs.AccessPolicy paranetMinersPolicy
     ) external onlyContracts returns (bytes32) {
         ParanetStructs.Paranet storage paranet = paranets[
             keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId))
@@ -43,6 +44,7 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         paranet.paranetKATokenId = tokenId;
         paranet.name = paranetName;
         paranet.description = paranetDescription;
+        paranet.minersPolicy = paranetMinersPolicy;
 
         return keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId));
     }
@@ -67,7 +69,8 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
                 paranetKATokenId: paranet.paranetKATokenId,
                 name: paranet.name,
                 description: paranet.description,
-                cumulativeKnowledgeValue: paranet.cumulativeKnowledgeValue
+                cumulativeKnowledgeValue: paranet.cumulativeKnowledgeValue,
+                minersPolicy: paranet.minersPolicy
             });
     }
 
@@ -89,6 +92,15 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
 
     function setDescription(bytes32 paranetId, string calldata description) external onlyContracts {
         paranets[paranetId].description = description;
+    }
+
+    function getMinersPolicy(bytes32 paranetId) external view returns (ParanetStructs.AccessPolicy) {
+        return paranets[paranetId].minersPolicy;
+    }
+
+    // why onlyContracts
+    function setMinersPolicy(bytes32 paranetId, ParanetStructs.AccessPolicy minersPolicy) external onlyContracts {
+        paranets[paranetId].minersPolicy = minersPolicy;
     }
 
     function getIncentivesPoolAddress(
