@@ -13,7 +13,7 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
     using UnorderedNamedContractDynamicSetLibV2 for UnorderedNamedContractDynamicSetStructs.Set;
 
     string private constant _NAME = "ParanetsRegistry";
-    string private constant _VERSION = "2.1.0";
+    string private constant _VERSION = "2.2.0";
 
     // Paranet ID => Paranet Object
     mapping(bytes32 => ParanetStructs.Paranet) internal paranets;
@@ -33,7 +33,9 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         address knowledgeAssetStorageContract,
         uint256 tokenId,
         string calldata paranetName,
-        string calldata paranetDescription
+        string calldata paranetDescription,
+        ParanetStructs.AccessPolicy nodesAccessPolicy,
+        ParanetStructs.AccessPolicy minersAccessPolicy
     ) external onlyContracts returns (bytes32) {
         ParanetStructs.Paranet storage paranet = paranets[
             keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId))
@@ -43,6 +45,8 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         paranet.paranetKATokenId = tokenId;
         paranet.name = paranetName;
         paranet.description = paranetDescription;
+        paranet.nodesAccessPolicy = nodesAccessPolicy;
+        paranet.minersAccessPolicy = minersAccessPolicy;
 
         return keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId));
     }
@@ -67,6 +71,8 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
                 paranetKATokenId: paranet.paranetKATokenId,
                 name: paranet.name,
                 description: paranet.description,
+                nodesAccessPolicy: paranet.nodesAccessPolicy,
+                minersAccessPolicy: paranet.minersAccessPolicy,
                 cumulativeKnowledgeValue: paranet.cumulativeKnowledgeValue
             });
     }
@@ -89,6 +95,57 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
 
     function setDescription(bytes32 paranetId, string calldata description) external onlyContracts {
         paranets[paranetId].description = description;
+    }
+
+    function getNodesAccessPolicy(bytes32 paranetId) external view returns (ParanetStructs.AccessPolicy) {
+        return paranets[paranetId].nodesAccessPolicy;
+    }
+
+    function setNodesAccessPolicy(
+        bytes32 paranetId,
+        ParanetStructs.AccessPolicy nodesAccessPolicy
+    ) external onlyContracts {
+        paranets[paranetId].nodesAccessPolicy = nodesAccessPolicy;
+    }
+
+    function getMinersAccessPolicy(bytes32 paranetId) external view returns (ParanetStructs.AccessPolicy) {
+        return paranets[paranetId].minersAccessPolicy;
+    }
+
+    function setMinersAccessPolicy(
+        bytes32 paranetId,
+        ParanetStructs.AccessPolicy minersAccessPolicy
+    ) external onlyContracts {
+        paranets[paranetId].minersAccessPolicy = minersAccessPolicy;
+    }
+
+    function addCuratedNode(bytes32 paranetId, uint72 identityId) external onlyContracts {
+        paranets[paranetId].curatedNodesIndexes[identityId] = paranets[paranetId].curatedNodes.length;
+        paranets[paranetId].curatedNodes.push(identityId);
+    }
+
+    function removeCuratedNode(bytes32 paranetId, uint72 identityId) external onlyContracts {
+        paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodesIndexes[identityId]] = paranets[paranetId]
+            .curatedNodes[paranets[paranetId].curatedNodes.length - 1];
+        paranets[paranetId].curatedNodesIndexes[
+            paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodes.length - 1]
+        ] = paranets[paranetId].curatedNodesIndexes[identityId];
+
+        delete paranets[paranetId].curatedNodesIndexes[identityId];
+        paranets[paranetId].curatedNodes.pop();
+    }
+
+    function getCuratedNodes(bytes32 paranetId) external view returns (uint72[] memory) {
+        return paranets[paranetId].curatedNodes;
+    }
+
+    function getCuratedNodesCount(bytes32 paranetId) external view returns (uint256) {
+        return paranets[paranetId].curatedNodes.length;
+    }
+
+    function isCuratedNode(bytes32 paranetId, uint72 identityId) external view returns (bool) {
+        return (paranets[paranetId].curatedNodes.length != 0 &&
+            paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodesIndexes[identityId]] == identityId);
     }
 
     function getIncentivesPoolAddress(
