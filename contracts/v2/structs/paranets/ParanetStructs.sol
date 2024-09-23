@@ -16,6 +16,7 @@ library ParanetStructs {
     }
 
     enum ParanetKnowledgeMinerAccessRequestStatus {
+        NONE,
         PENDING,
         APPROVED,
         DENIED

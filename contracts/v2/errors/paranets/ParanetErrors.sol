@@ -33,7 +33,18 @@ library ParanetErrors {
         uint96 currentCumulativeWeight,
         uint96 targetCumulativeWeight
     );
+    error KnowledgeMinerDoesNotExistInParanet(bytes32 paranetId, address knowledgeMiner);
     error KnowledgeMinerDoesNotExistInCuratedParanet(bytes32 paranetId, address knowledgeMiner);
+    error ParanetKnowledgeMiningAccessRequestAlreadyExists(
+        bytes32 paranetId,
+        address knowledgeMiner,
+        ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus requestStatus
+    );
+    error ParanetKnowledgeMiningAccessRequestDoesNotExists(
+        bytes32 paranetId,
+        address knowledgeMiner,
+        ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus requestStatus
+    );
     error KnowledgeMinerAlreadyRegistered(bytes32 paranetId, address knowledgeMinerAddress);
     error InvalidAccessPolicy(bytes32 paranetId, ParanetStructs.AccessPolicy paranetAccessPolicy);
 }

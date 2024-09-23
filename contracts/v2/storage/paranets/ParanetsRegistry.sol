@@ -18,6 +18,10 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
     // Paranet ID => Paranet Object
     mapping(bytes32 => ParanetStructs.Paranet) internal paranets;
 
+    // Paranet ID => Miner's address => list of Access Requests
+    mapping(bytes32 => mapping(address => ParanetStructs.ParanetKnowledgeMinerAccessRequest[]))
+        internal paranetKnowledgeMinersAccessRequests;
+
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependentV2(hubAddress) {}
 
@@ -27,6 +31,39 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
 
     function version() external pure virtual override returns (string memory) {
         return _VERSION;
+    }
+
+    function requestParanetKnowledgeMiningAccess(bytes32 paranetId, address minerAddress) external onlyContracts {
+        paranetKnowledgeMinersAccessRequests[paranetId][minerAddress].push(
+            ParanetStructs.ParanetKnowledgeMinerAccessRequest({
+                requestTime: block.timestamp,
+                status: ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus.PENDING
+            })
+        );
+    }
+
+    function acceptParanetKnowledgeMiningAccessRequest(bytes32 paranetId, address minerAddress) external onlyContracts {
+        ParanetStructs.ParanetKnowledgeMinerAccessRequest[]
+            storage accessRequests = paranetKnowledgeMinersAccessRequests[paranetId][minerAddress];
+
+        require(accessRequests.length > 0, "Access Request array is empty");
+
+        // Change status to approved
+        accessRequests[accessRequests.length - 1].status = ParanetStructs
+            .ParanetKnowledgeMinerAccessRequestStatus
+            .APPROVED;
+    }
+
+    function denyParanetKnowledgeMiningAccessRequest(bytes32 paranetId, address minerAddress) external onlyContracts {
+        ParanetStructs.ParanetKnowledgeMinerAccessRequest[]
+            storage accessRequests = paranetKnowledgeMinersAccessRequests[paranetId][minerAddress];
+
+        require(accessRequests.length > 0, "Access Request array is empty");
+
+        // Change status to approved
+        accessRequests[accessRequests.length - 1].status = ParanetStructs
+            .ParanetKnowledgeMinerAccessRequestStatus
+            .DENIED;
     }
 
     function registerParanet(
@@ -106,6 +143,20 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         ParanetStructs.AccessPolicy nodesAccessPolicy
     ) external onlyContracts {
         paranets[paranetId].nodesAccessPolicy = nodesAccessPolicy;
+    }
+
+    function getKnowledgeMinerAccessRequestStatus(
+        bytes32 paranetId,
+        address knowledgeMinerAddress
+    ) external view returns (ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus) {
+        ParanetStructs.ParanetKnowledgeMinerAccessRequest[]
+            storage accessRequests = paranetKnowledgeMinersAccessRequests[paranetId][knowledgeMinerAddress];
+
+        if (accessRequests.length == 0) {
+            return ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus.NONE;
+        } else {
+            return accessRequests[accessRequests.length - 1].status;
+        }
     }
 
     function getMinersAccessPolicy(bytes32 paranetId) external view returns (ParanetStructs.AccessPolicy) {

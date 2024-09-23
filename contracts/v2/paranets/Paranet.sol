@@ -93,6 +93,20 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         address knowledgeMinerAddress
     );
 
+    event ParanetKnowledgeMiningAccessRequestApproved(
+        address indexed paranetServiceKAStorageContract,
+        uint256 indexed paranetServiceKATokenId,
+        address knowledgeMinerAddress,
+        ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus requestStatus
+    );
+
+    event ParanetKnowledgeMiningAccessRequestDenied(
+        address indexed paranetServiceKAStorageContract,
+        uint256 indexed paranetServiceKATokenId,
+        address knowledgeMinerAddress,
+        ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus requestStatus
+    );
+
     string private constant _NAME = "Paranet";
     string private constant _VERSION = "2.2.0";
 
@@ -435,6 +449,137 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             paranetServiceName,
             paranetServiceDescription,
             paranetServiceAddresses
+        );
+    }
+
+    function requestParanetKnowledgeMiningAccess(address paranetKAStorageContract, uint256 paranetKATokenId) external {
+        ParanetsRegistry pr = paranetsRegistry;
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
+        }
+
+        if (!pkmr.knowledgeMinerExists(msg.sender)) {
+            pkmr.registerKnowledgeMiner(msg.sender);
+        }
+
+        // revert if knowledge miner is already registered
+        if (pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
+            revert ParanetErrors.KnowledgeMinerAlreadyRegistered(paranetId, msg.sender);
+        }
+
+        // Get the latest request status
+        ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus requestStatus = pr.getKnowledgeMinerAccessRequestStatus(
+            paranetId,
+            msg.sender
+        );
+
+        if (requestStatus == ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus.PENDING) {
+            revert ParanetErrors.ParanetKnowledgeMiningAccessRequestAlreadyExists(paranetId, msg.sender, requestStatus);
+        }
+
+        // Request knowledge minibg access
+        pr.requestParanetKnowledgeMiningAccess(paranetId, msg.sender);
+
+        emit ParanetKnowledgeMiningAccessRequsted(paranetKAStorageContract, paranetKATokenId, msg.sender);
+    }
+
+    function acceptParanetKnowledgeMiningAccessRequest(
+        address paranetKAStorageContract,
+        uint256 paranetKATokenId,
+        address knowledgeMinerAddress
+    ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
+        }
+
+        // Knowledge miner should exist
+        if (!pkmr.knowledgeMinerExists(knowledgeMinerAddress)) {
+            revert ParanetErrors.KnowledgeMinerDoesNotExistInParanet(paranetId, knowledgeMinerAddress);
+        }
+
+        // Revert if knowledge miner is already registered
+        if (pr.isKnowledgeMinerRegistered(paranetId, knowledgeMinerAddress)) {
+            revert ParanetErrors.KnowledgeMinerAlreadyRegistered(paranetId, knowledgeMinerAddress);
+        }
+
+        // Get the latest request status
+        ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus requestStatus = pr.getKnowledgeMinerAccessRequestStatus(
+            paranetId,
+            msg.sender
+        );
+
+        if (requestStatus == ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus.NONE) {
+            revert ParanetErrors.ParanetKnowledgeMiningAccessRequestDoesNotExists(
+                paranetId,
+                knowledgeMinerAddress,
+                requestStatus
+            );
+        }
+
+        // Accept knowledge mining access and add knowledge miner to paranet
+        pr.acceptParanetKnowledgeMiningAccessRequest(paranetId, knowledgeMinerAddress);
+        pr.addKnowledgeMiner(paranetId, knowledgeMinerAddress);
+
+        emit ParanetKnowledgeMiningAccessRequestApproved(
+            paranetKAStorageContract,
+            paranetKATokenId,
+            knowledgeMinerAddress,
+            ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus.APPROVED
+        );
+    }
+
+    function denyParanetKnowledgeMiningAccessRequest(
+        address paranetKAStorageContract,
+        uint256 paranetKATokenId,
+        address knowledgeMinerAddress
+    ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
+        }
+
+        // Knowledge miner should exist
+        if (!pkmr.knowledgeMinerExists(knowledgeMinerAddress)) {
+            revert ParanetErrors.KnowledgeMinerDoesNotExistInParanet(paranetId, knowledgeMinerAddress);
+        }
+
+        // Revert if knowledge miner is already registered
+        if (pr.isKnowledgeMinerRegistered(paranetId, knowledgeMinerAddress)) {
+            revert ParanetErrors.KnowledgeMinerAlreadyRegistered(paranetId, knowledgeMinerAddress);
+        }
+
+        // Get the latest request status
+        ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus requestStatus = pr.getKnowledgeMinerAccessRequestStatus(
+            paranetId,
+            msg.sender
+        );
+
+        if (requestStatus == ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus.NONE) {
+            revert ParanetErrors.ParanetKnowledgeMiningAccessRequestDoesNotExists(
+                paranetId,
+                knowledgeMinerAddress,
+                requestStatus
+            );
+        }
+
+        // Deny knowledge mining access
+        pr.denyParanetKnowledgeMiningAccessRequest(paranetId, knowledgeMinerAddress);
+
+        emit ParanetKnowledgeMiningAccessRequestDenied(
+            paranetKAStorageContract,
+            paranetKATokenId,
+            knowledgeMinerAddress,
+            ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus.DENIED
         );
     }
 
