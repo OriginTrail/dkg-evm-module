@@ -7,11 +7,17 @@ import {ParanetStructs} from "../../structs/paranets/ParanetStructs.sol";
 library ParanetErrors {
     error ParanetHasAlreadyBeenRegistered(address knowledgeAssetStorageAddress, uint256 tokenId);
     error InvalidParanetNodesAccessPolicy(
-        ParanetStructs.AccessPolicy[] expectedAccessPolicies,
-        ParanetStructs.AccessPolicy actualAccessPolicy
+        ParanetStructs.NodesAccessPolicy[] expectedAccessPolicies,
+        ParanetStructs.NodesAccessPolicy actualAccessPolicy
     );
     error ParanetCuratedNodeHasAlreadyBeenAdded(bytes32 paranetId, uint72 identityId);
     error ParanetCuratedNodeDoesntExist(bytes32 paranetId, uint72 identityId);
+    error ParanetCuratedNodeJoinRequestInvalidStatus(
+        bytes32 paranetId,
+        uint72 identityId,
+        ParanetStructs.RequestStatus status
+    );
+    error ParanetCuratedNodeJoinRequestDoesntExist(bytes32 paranetId, uint72 identityId);
     error ParanetIncentivesPoolAlreadyExists(
         address knowledgeAssetStorageAddress,
         uint256 tokenId,

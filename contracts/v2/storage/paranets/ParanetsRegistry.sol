@@ -34,8 +34,9 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         uint256 tokenId,
         string calldata paranetName,
         string calldata paranetDescription,
-        ParanetStructs.AccessPolicy nodesAccessPolicy,
-        ParanetStructs.AccessPolicy minersAccessPolicy
+        ParanetStructs.NodesAccessPolicy nodesAccessPolicy,
+        ParanetStructs.MinersAccessPolicy minersAccessPolicy,
+        ParanetStructs.KnowledgeAssetsAccessPolicy knowledgeAssetsAccessPolicy
     ) external onlyContracts returns (bytes32) {
         ParanetStructs.Paranet storage paranet = paranets[
             keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId))
@@ -47,6 +48,7 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         paranet.description = paranetDescription;
         paranet.nodesAccessPolicy = nodesAccessPolicy;
         paranet.minersAccessPolicy = minersAccessPolicy;
+        paranet.knowledgeAssetsAccessPolicy = knowledgeAssetsAccessPolicy;
 
         return keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId));
     }
@@ -73,6 +75,7 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
                 description: paranet.description,
                 nodesAccessPolicy: paranet.nodesAccessPolicy,
                 minersAccessPolicy: paranet.minersAccessPolicy,
+                knowledgeAssetsAccessPolicy: paranet.knowledgeAssetsAccessPolicy,
                 cumulativeKnowledgeValue: paranet.cumulativeKnowledgeValue
             });
     }
@@ -97,26 +100,91 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         paranets[paranetId].description = description;
     }
 
-    function getNodesAccessPolicy(bytes32 paranetId) external view returns (ParanetStructs.AccessPolicy) {
+    function getNodesAccessPolicy(bytes32 paranetId) external view returns (ParanetStructs.NodesAccessPolicy) {
         return paranets[paranetId].nodesAccessPolicy;
     }
 
     function setNodesAccessPolicy(
         bytes32 paranetId,
-        ParanetStructs.AccessPolicy nodesAccessPolicy
+        ParanetStructs.NodesAccessPolicy nodesAccessPolicy
     ) external onlyContracts {
         paranets[paranetId].nodesAccessPolicy = nodesAccessPolicy;
     }
 
-    function getMinersAccessPolicy(bytes32 paranetId) external view returns (ParanetStructs.AccessPolicy) {
+    function getMinersAccessPolicy(bytes32 paranetId) external view returns (ParanetStructs.MinersAccessPolicy) {
         return paranets[paranetId].minersAccessPolicy;
     }
 
     function setMinersAccessPolicy(
         bytes32 paranetId,
-        ParanetStructs.AccessPolicy minersAccessPolicy
+        ParanetStructs.MinersAccessPolicy minersAccessPolicy
     ) external onlyContracts {
         paranets[paranetId].minersAccessPolicy = minersAccessPolicy;
+    }
+
+    function getKnowledgeAssetsAccessPolicy(
+        bytes32 paranetId
+    ) external view returns (ParanetStructs.KnowledgeAssetsAccessPolicy) {
+        return paranets[paranetId].knowledgeAssetsAccessPolicy;
+    }
+
+    function setKnowledgeAssetsAccessPolicy(
+        bytes32 paranetId,
+        ParanetStructs.KnowledgeAssetsAccessPolicy knowledgeAssetsAccessPolicy
+    ) external onlyContracts {
+        paranets[paranetId].knowledgeAssetsAccessPolicy = knowledgeAssetsAccessPolicy;
+    }
+
+    function addNodeJoinRequest(
+        bytes32 paranetId,
+        uint72 identityId,
+        ParanetStructs.RequestStatus status
+    ) external onlyContracts {
+        paranets[paranetId].paranetNodeJoinRequests[identityId].push(
+            ParanetStructs.ParanetNodeJoinRequest({identityId: identityId, status: status})
+        );
+    }
+
+    function updateNodeJoinRequestStatus(
+        bytes32 paranetId,
+        uint72 identityId,
+        uint256 index,
+        ParanetStructs.RequestStatus status
+    ) external onlyContracts {
+        paranets[paranetId].paranetNodeJoinRequests[identityId][index].status = status;
+    }
+
+    function removeNodeJoinRequest(bytes32 paranetId, uint72 identityId, uint256 index) external onlyContracts {
+        delete paranets[paranetId].paranetNodeJoinRequests[identityId][index];
+    }
+
+    function getNodeJoinRequest(
+        bytes32 paranetId,
+        uint72 identityId,
+        uint256 index
+    ) external view returns (ParanetStructs.ParanetNodeJoinRequest memory) {
+        return paranets[paranetId].paranetNodeJoinRequests[identityId][index];
+    }
+
+    function getLatestNodeJoinRequest(
+        bytes32 paranetId,
+        uint72 identityId
+    ) external view returns (ParanetStructs.ParanetNodeJoinRequest memory) {
+        return
+            paranets[paranetId].paranetNodeJoinRequests[identityId][
+                paranets[paranetId].paranetNodeJoinRequests[identityId].length - 1
+            ];
+    }
+
+    function getNodeJoinRequests(
+        bytes32 paranetId,
+        uint72 identityId
+    ) external view returns (ParanetStructs.ParanetNodeJoinRequest[] memory) {
+        return paranets[paranetId].paranetNodeJoinRequests[identityId];
+    }
+
+    function getNodeJoinRequestsCount(bytes32 paranetId, uint72 identityId) external view returns (uint256) {
+        return paranets[paranetId].paranetNodeJoinRequests[identityId].length;
     }
 
     function addCuratedNode(bytes32 paranetId, uint72 identityId) external onlyContracts {
