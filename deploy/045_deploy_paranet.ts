@@ -18,5 +18,7 @@ func.dependencies = [
   'ParanetKnowledgeMinersRegistry',
   'ParanetsRegistry',
   'ParanetServicesRegistry',
+  'ProfileStorage',
   'ServiceAgreementStorageProxy',
+  'IdentityStorage',
 ];
