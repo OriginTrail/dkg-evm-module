@@ -13,6 +13,22 @@
   {
     "inputs": [
       {
+        "internalType": "enum ParanetStructs.AccessPolicy[]",
+        "name": "expectedAccessPolicies",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "enum ParanetStructs.AccessPolicy",
+        "name": "actualAccessPolicy",
+        "type": "uint8"
+      }
+    ],
+    "name": "InvalidParanetNodesAccessPolicy",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "paranetKnowledgeAssetStorageContract",
         "type": "address"
@@ -29,6 +45,38 @@
       }
     ],
     "name": "KnowledgeAssetIsAPartOfOtherParanet",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "ParanetCuratedNodeDoesntExist",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "ParanetCuratedNodeHasAlreadyBeenAdded",
     "type": "error"
   },
   {
@@ -112,6 +160,17 @@
     "type": "error"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "ProfileDoesntExist",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -140,6 +199,56 @@
       }
     ],
     "name": "KnowledgeAssetSubmittedToParanet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "paranetKAStorageContract",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "paranetKATokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "ParanetCuratedNodeAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "paranetKAStorageContract",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "paranetKATokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "ParanetCuratedNodeRemoved",
     "type": "event"
   },
   {
@@ -236,6 +345,18 @@
         "internalType": "string",
         "name": "paranetDescription",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum ParanetStructs.AccessPolicy",
+        "name": "nodesAccessPolicy",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum ParanetStructs.AccessPolicy",
+        "name": "minersAccessPolicy",
+        "type": "uint8"
       }
     ],
     "name": "ParanetRegistered",
@@ -345,6 +466,29 @@
     ],
     "name": "ParanetServiceRegistered",
     "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKATokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72[]",
+        "name": "identityIds",
+        "type": "uint72[]"
+      }
+    ],
+    "name": "addParanetCuratedNodes",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [
@@ -605,6 +749,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "profileStorage",
+    "outputs": [
+      {
+        "internalType": "contract ProfileStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -625,6 +782,16 @@
         "internalType": "string",
         "name": "paranetDescription",
         "type": "string"
+      },
+      {
+        "internalType": "enum ParanetStructs.AccessPolicy",
+        "name": "nodesAccessPolicy",
+        "type": "uint8"
+      },
+      {
+        "internalType": "enum ParanetStructs.AccessPolicy",
+        "name": "minersAccessPolicy",
+        "type": "uint8"
       }
     ],
     "name": "registerParanet",
@@ -674,6 +841,29 @@
         "type": "bytes32"
       }
     ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetKAStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKATokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72[]",
+        "name": "identityIds",
+        "type": "uint72[]"
+      }
+    ],
+    "name": "removeParanetCuratedNodes",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
