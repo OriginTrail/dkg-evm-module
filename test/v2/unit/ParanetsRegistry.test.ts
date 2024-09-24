@@ -1,9 +1,11 @@
+import { randomBytes } from 'crypto';
+
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
 
-import { HubController, ParanetsRegistry } from '../../../typechain';
+import { HubController, ParanetsRegistry, Token, Profile, Staking } from '../../../typechain';
 
 type deployParanetsRegistryFixture = {
   accounts: SignerWithAddress[];
@@ -13,15 +15,45 @@ type deployParanetsRegistryFixture = {
 describe('@v2 @unit ParanetsRegistry contract', function () {
   let accounts: SignerWithAddress[];
   let ParanetsRegistry: ParanetsRegistry;
+  let Token: Token;
+  let Profile: Profile;
+  let Staking: Staking;
 
   async function deployParanetsRegistryFixture(): Promise<deployParanetsRegistryFixture> {
-    await hre.deployments.fixture(['ParanetsRegistry'], { keepExistingDeployments: false });
+    await hre.deployments.fixture(['ParanetsRegistry', 'Profile'], { keepExistingDeployments: false });
     ParanetsRegistry = await hre.ethers.getContract<ParanetsRegistry>('ParanetsRegistry');
     const HubController = await hre.ethers.getContract<HubController>('HubController');
+    Profile = await hre.ethers.getContract<Profile>('Profile');
     accounts = await hre.ethers.getSigners();
     await HubController.setContractAddress('HubOwner', accounts[0].address);
+    Token = await hre.ethers.getContract<Token>('Token');
+    Staking = await hre.ethers.getContract<Staking>('Staking');
 
     return { accounts, ParanetsRegistry };
+  }
+
+  async function createProfile(operational: SignerWithAddress, admin: SignerWithAddress): Promise<number> {
+    const OperationalProfile = Profile.connect(operational);
+
+    const receipt = await (
+      await OperationalProfile.createProfile(
+        admin.address,
+        [],
+        '0x' + randomBytes(32).toString('hex'),
+        randomBytes(3).toString('hex'),
+        randomBytes(2).toString('hex'),
+        0,
+      )
+    ).wait();
+    const identityId = Number(receipt.logs[0].topics[1]);
+
+    await OperationalProfile.setAsk(identityId, hre.ethers.utils.parseEther('0.25'));
+
+    const stakeAmount = hre.ethers.utils.parseEther('50000');
+    await Token.connect(admin).increaseAllowance(Staking.address, stakeAmount);
+    await Staking.connect(admin)['addStake(uint72,uint96)'](identityId, stakeAmount);
+
+    return identityId;
   }
 
   beforeEach(async () => {
@@ -33,12 +65,12 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     expect(await ParanetsRegistry.name()).to.equal('ParanetsRegistry');
   });
 
-  it('The contract is version "2.1.0"', async () => {
-    expect(await ParanetsRegistry.version()).to.equal('2.1.0');
+  it('The contract is version "2.2.0"', async () => {
+    expect(await ParanetsRegistry.version()).to.equal('2.2.0');
   });
 
   // it('should register a paranet and return the correct paranet ID', async () => {
-  //   const paranetId = await await createParanet(accounts, ParanetsRegistry);
+  //   const paranetId = await await createParanet(accounts, ParanetsRegistry, 0, 0);
 
   //   const expectedParanetId = hre.ethers.utils.solidityKeccak256(['address', 'uint256'], [accounts[1].address, 123]);
 
@@ -46,7 +78,7 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
   // });
 
   it('should show a created paranet exists', async () => {
-    await createParanet(accounts, ParanetsRegistry);
+    await createParanet(accounts, ParanetsRegistry, 0, 0);
 
     const paranetId = hre.ethers.utils.keccak256(
       hre.ethers.utils.solidityPack(
@@ -60,7 +92,7 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
   });
 
   it('should delete a paranet successfully', async () => {
-    await createParanet(accounts, ParanetsRegistry);
+    await createParanet(accounts, ParanetsRegistry, 0, 0);
 
     const paranetId = hre.ethers.utils.keccak256(
       hre.ethers.utils.solidityPack(
@@ -81,7 +113,7 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
   });
 
   it('should get all fields successfully', async () => {
-    await createParanet(accounts, ParanetsRegistry);
+    await createParanet(accounts, ParanetsRegistry, 0, 0);
 
     const paranetId = hre.ethers.utils.keccak256(
       hre.ethers.utils.solidityPack(
@@ -98,6 +130,8 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     expect(paranetMetadata.name).to.be.equal('Test Paranet');
     expect(paranetMetadata.description).to.be.equal('Description of Test Paranet');
     expect(paranetMetadata.cumulativeKnowledgeValue).to.be.equal(0);
+    expect(paranetMetadata.nodesAccessPolicy).to.be.equal(0);
+    expect(paranetMetadata.minersAccessPolicy).to.be.equal(0);
 
     const name = await ParanetsRegistry.getName(paranetId);
 
@@ -113,10 +147,16 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
 
     expect(paranetKAStorageContract).to.be.equal(accounts[1].address);
     expect(paranetKATokenId).to.be.equal(123);
+
+    const nodesAccessPolicy = await ParanetsRegistry.getNodesAccessPolicy(paranetId);
+    expect(nodesAccessPolicy).to.be.equal(0);
+
+    const minersAccessPolicy = await ParanetsRegistry.getMinersAccessPolicy(paranetId);
+    expect(minersAccessPolicy).to.be.equal(0);
   });
 
   it('should set all fields successfully', async () => {
-    await createParanet(accounts, ParanetsRegistry);
+    await createParanet(accounts, ParanetsRegistry, 0, 0);
 
     const paranetId = hre.ethers.utils.keccak256(
       hre.ethers.utils.solidityPack(
@@ -134,10 +174,20 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     const description = await ParanetsRegistry.getDescription(paranetId);
 
     expect(description).to.be.equal('New Description of Test Paranet');
+
+    await ParanetsRegistry.setNodesAccessPolicy(paranetId, 1);
+    const nodesAccessPolicy = await ParanetsRegistry.getNodesAccessPolicy(paranetId);
+
+    expect(nodesAccessPolicy).to.be.equal(1);
+
+    await ParanetsRegistry.setMinersAccessPolicy(paranetId, 1);
+    const minersAccessPolicy = await ParanetsRegistry.getMinersAccessPolicy(paranetId);
+
+    expect(minersAccessPolicy).to.be.equal(1);
   });
 
   it('should manipulate cumulative knowlededge value correctly', async () => {
-    await createParanet(accounts, ParanetsRegistry);
+    await createParanet(accounts, ParanetsRegistry, 0, 0);
 
     const paranetId = hre.ethers.utils.keccak256(
       hre.ethers.utils.solidityPack(
@@ -167,7 +217,7 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
   });
 
   it('should manipulate service arrays correctly', async () => {
-    await createParanet(accounts, ParanetsRegistry);
+    await createParanet(accounts, ParanetsRegistry, 0, 0);
 
     const paranetId = hre.ethers.utils.keccak256(
       hre.ethers.utils.solidityPack(
@@ -223,8 +273,63 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     expect(services[0]).to.be.equal(testService3Hash);
   });
 
+  it('should manipulate Curated Nodes arrays correctly', async () => {
+    await createParanet(accounts, ParanetsRegistry, 1, 1);
+
+    const paranetId = hre.ethers.utils.keccak256(
+      hre.ethers.utils.solidityPack(
+        ['address', 'uint256'], // Types of the variables
+        [accounts[1].address, 123], // Values to encode
+      ),
+    );
+
+    let nodeCount = await ParanetsRegistry.getCuratedNodesCount(paranetId);
+
+    expect(nodeCount).to.be.equal(0);
+
+    const identityId1 = await createProfile(accounts[11], accounts[1]);
+    const identityId2 = await createProfile(accounts[12], accounts[1]);
+    const identityId3 = await createProfile(accounts[13], accounts[1]);
+
+    const tx1 = await ParanetsRegistry.addCuratedNode(paranetId, identityId1);
+    await tx1.wait();
+
+    const tx2 = await ParanetsRegistry.addCuratedNode(paranetId, identityId2);
+    await tx2.wait();
+
+    const tx3 = await ParanetsRegistry.addCuratedNode(paranetId, identityId3);
+    await tx3.wait();
+
+    nodeCount = await ParanetsRegistry.getCuratedNodesCount(paranetId);
+
+    expect(nodeCount).to.be.equal(3);
+
+    const curatedNode2Registered = await ParanetsRegistry.isCuratedNode(paranetId, identityId2);
+
+    expect(curatedNode2Registered).to.be.equal(true);
+
+    const curatedNode110NotRegistered = await ParanetsRegistry.isCuratedNode(paranetId, 110);
+
+    expect(curatedNode110NotRegistered).to.be.equal(false);
+
+    await ParanetsRegistry.removeCuratedNode(paranetId, identityId2);
+    nodeCount = await ParanetsRegistry.getCuratedNodesCount(paranetId);
+
+    expect(nodeCount).to.be.equal(2);
+
+    const curatedNode2NotRegistered = await ParanetsRegistry.isCuratedNode(paranetId, identityId2);
+
+    expect(curatedNode2NotRegistered).to.be.equal(false);
+
+    const curatedNodes = await ParanetsRegistry.getCuratedNodes(paranetId);
+
+    expect(curatedNodes.length).to.be.equal(2);
+    expect(curatedNodes[0]).to.be.equal(identityId1);
+    expect(curatedNodes[1]).to.be.equal(identityId3);
+  });
+
   it('should manipulate Knowledge Miners arrays correctly', async () => {
-    await createParanet(accounts, ParanetsRegistry);
+    await createParanet(accounts, ParanetsRegistry, 0, 0);
 
     const paranetId = hre.ethers.utils.keccak256(
       hre.ethers.utils.solidityPack(
@@ -287,7 +392,7 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
   });
 
   it('should manipulate Knowledge Assets arrays correctly', async () => {
-    await createParanet(accounts, ParanetsRegistry);
+    await createParanet(accounts, ParanetsRegistry, 0, 0);
 
     const paranetId = hre.ethers.utils.keccak256(
       hre.ethers.utils.solidityPack(
@@ -381,17 +486,26 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     expect(knowledgeAssetsCount).to.be.equal(16);
   });
 });
-async function createParanet(accounts: SignerWithAddress[], ParanetsRegistry: ParanetsRegistry) {
+async function createParanet(
+  accounts: SignerWithAddress[],
+  ParanetsRegistry: ParanetsRegistry,
+  nodesAccessPolicy: number,
+  minersAccessPolicy: number,
+) {
   const knowledgeAssetStorageContract = accounts[1];
   const tokenId = 123;
   const paranetName = 'Test Paranet';
   const paranetDescription = 'Description of Test Paranet';
+  const _nodesAccessPolicy = nodesAccessPolicy;
+  const _minersAccessPolicy = minersAccessPolicy;
 
   const paranetId = await ParanetsRegistry.registerParanet(
     knowledgeAssetStorageContract.address,
     tokenId,
     paranetName,
     paranetDescription,
+    _nodesAccessPolicy,
+    _minersAccessPolicy,
   );
   return paranetId;
 }
