@@ -838,22 +838,25 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
         }
 
-        bool knowledgeMinerExists = paranetKnowledgeMinersRegistry.knowledgeMinerExists(msg.sender);
+        ParanetStructs.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
 
         // Check if paranet is curated and if knowledge miner is whitelisted
-        if (pr.getMinersAccessPolicy(paranetId) == ParanetStructs.MinersAccessPolicy.CURATED && !knowledgeMinerExists) {
+        if (
+            minersAccessPolicy == ParanetStructs.MinersAccessPolicy.CURATED &&
+            !pr.isKnowledgeMinerRegistered(paranetId, msg.sender)
+        ) {
             revert ParanetErrors.ParanetCuratedMinerDoesntExist(paranetId, msg.sender);
-        }
+        } else if (minersAccessPolicy == ParanetStructs.MinersAccessPolicy.OPEN) {
+            // Check if Knowledge Miner has profile
+            // If not: Create a profile
+            if (!paranetKnowledgeMinersRegistry.knowledgeMinerExists(msg.sender)) {
+                paranetKnowledgeMinersRegistry.registerKnowledgeMiner(msg.sender);
+            }
 
-        // Check if Knowledge Miner has profile
-        // If not: Create a profile
-        if (!knowledgeMinerExists) {
-            paranetKnowledgeMinersRegistry.registerKnowledgeMiner(msg.sender);
-        }
-
-        // Check if Knowledge Miner is registert to paranet
-        if (!pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
-            pr.addKnowledgeMiner(paranetId, msg.sender);
+            // Check if Knowledge Miner is registered on paranet
+            if (!pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
+                pr.addKnowledgeMiner(paranetId, msg.sender);
+            }
         }
 
         // Mint Knowledge Asset
@@ -890,11 +893,25 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
         }
 
-        bool knowledgeMinerExists = paranetKnowledgeMinersRegistry.knowledgeMinerExists(msg.sender);
+        ParanetStructs.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
 
         // Check if paranet is curated and if knowledge miner is whitelisted
-        if (pr.getMinersAccessPolicy(paranetId) == ParanetStructs.MinersAccessPolicy.CURATED && !knowledgeMinerExists) {
+        if (
+            minersAccessPolicy == ParanetStructs.MinersAccessPolicy.CURATED &&
+            !pr.isKnowledgeMinerRegistered(paranetId, msg.sender)
+        ) {
             revert ParanetErrors.ParanetCuratedMinerDoesntExist(paranetId, msg.sender);
+        } else if (minersAccessPolicy == ParanetStructs.MinersAccessPolicy.OPEN) {
+            // Check if Knowledge Miner has profile
+            // If not: Create a profile
+            if (!paranetKnowledgeMinersRegistry.knowledgeMinerExists(msg.sender)) {
+                paranetKnowledgeMinersRegistry.registerKnowledgeMiner(msg.sender);
+            }
+
+            // Check if Knowledge Miner is registered on paranet
+            if (!pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
+                pr.addKnowledgeMiner(paranetId, msg.sender);
+            }
         }
 
         if (paranetKnowledgeAssetsRegistry.isParanetKnowledgeAsset(paranetId)) {
@@ -920,18 +937,6 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                 )
             )
         );
-
-        // Check if Knowledge Miner has profile
-        // If not: Create a profile
-        if (!knowledgeMinerExists) {
-            paranetKnowledgeMinersRegistry.registerKnowledgeMiner(msg.sender);
-        }
-
-        // Check if Knowledge Miner is registert to paranet
-        // If not: Register it
-        if (!pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
-            pr.addKnowledgeMiner(paranetId, msg.sender);
-        }
 
         _updateSubmittedKnowledgeAssetMetadata(
             paranetKAStorageContract,
