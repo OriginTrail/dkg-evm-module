@@ -90,6 +90,52 @@
         "type": "bytes32"
       },
       {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      },
+      {
+        "internalType": "enum ParanetStructs.RequestStatus",
+        "name": "status",
+        "type": "uint8"
+      }
+    ],
+    "name": "addKnowledgeMinerAccessRequest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "enum ParanetStructs.RequestStatus",
+        "name": "status",
+        "type": "uint8"
+      }
+    ],
+    "name": "addNodeJoinRequest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
         "internalType": "bytes32",
         "name": "serviceId",
         "type": "bytes32"
@@ -271,6 +317,25 @@
         "type": "bytes32"
       }
     ],
+    "name": "getKnowledgeAssetsAccessPolicy",
+    "outputs": [
+      {
+        "internalType": "enum ParanetStructs.KnowledgeAssetsAccessPolicy",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
     "name": "getKnowledgeAssetsCount",
     "outputs": [
       {
@@ -346,6 +411,127 @@
         "internalType": "bytes32",
         "name": "paranetId",
         "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getKnowledgeMinerAccessRequest",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "updatedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "miner",
+            "type": "address"
+          },
+          {
+            "internalType": "enum ParanetStructs.RequestStatus",
+            "name": "status",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct ParanetStructs.ParanetKnowledgeMinerAccessRequest",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      }
+    ],
+    "name": "getKnowledgeMinerAccessRequests",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "updatedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "miner",
+            "type": "address"
+          },
+          {
+            "internalType": "enum ParanetStructs.RequestStatus",
+            "name": "status",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct ParanetStructs.ParanetKnowledgeMinerAccessRequest[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      }
+    ],
+    "name": "getKnowledgeMinerAccessRequestsCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
       }
     ],
     "name": "getKnowledgeMiners",
@@ -384,12 +570,104 @@
         "internalType": "bytes32",
         "name": "paranetId",
         "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      }
+    ],
+    "name": "getLatestKnowledgeMinerAccessRequest",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "updatedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "miner",
+            "type": "address"
+          },
+          {
+            "internalType": "enum ParanetStructs.RequestStatus",
+            "name": "status",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct ParanetStructs.ParanetKnowledgeMinerAccessRequest",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getLatestNodeJoinRequest",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "updatedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint72",
+            "name": "identityId",
+            "type": "uint72"
+          },
+          {
+            "internalType": "enum ParanetStructs.RequestStatus",
+            "name": "status",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct ParanetStructs.ParanetNodeJoinRequest",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
       }
     ],
     "name": "getMinersAccessPolicy",
     "outputs": [
       {
-        "internalType": "enum ParanetStructs.AccessPolicy",
+        "internalType": "enum ParanetStructs.MinersAccessPolicy",
         "name": "",
         "type": "uint8"
       }
@@ -422,12 +700,133 @@
         "internalType": "bytes32",
         "name": "paranetId",
         "type": "bytes32"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getNodeJoinRequest",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "updatedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint72",
+            "name": "identityId",
+            "type": "uint72"
+          },
+          {
+            "internalType": "enum ParanetStructs.RequestStatus",
+            "name": "status",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct ParanetStructs.ParanetNodeJoinRequest",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getNodeJoinRequests",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "updatedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint72",
+            "name": "identityId",
+            "type": "uint72"
+          },
+          {
+            "internalType": "enum ParanetStructs.RequestStatus",
+            "name": "status",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct ParanetStructs.ParanetNodeJoinRequest[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getNodeJoinRequestsCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
       }
     ],
     "name": "getNodesAccessPolicy",
     "outputs": [
       {
-        "internalType": "enum ParanetStructs.AccessPolicy",
+        "internalType": "enum ParanetStructs.NodesAccessPolicy",
         "name": "",
         "type": "uint8"
       }
@@ -492,13 +891,18 @@
             "type": "string"
           },
           {
-            "internalType": "enum ParanetStructs.AccessPolicy",
+            "internalType": "enum ParanetStructs.NodesAccessPolicy",
             "name": "nodesAccessPolicy",
             "type": "uint8"
           },
           {
-            "internalType": "enum ParanetStructs.AccessPolicy",
+            "internalType": "enum ParanetStructs.MinersAccessPolicy",
             "name": "minersAccessPolicy",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum ParanetStructs.KnowledgeAssetsAccessPolicy",
+            "name": "knowledgeAssetsAccessPolicy",
             "type": "uint8"
           },
           {
@@ -765,13 +1169,18 @@
         "type": "string"
       },
       {
-        "internalType": "enum ParanetStructs.AccessPolicy",
+        "internalType": "enum ParanetStructs.NodesAccessPolicy",
         "name": "nodesAccessPolicy",
         "type": "uint8"
       },
       {
-        "internalType": "enum ParanetStructs.AccessPolicy",
+        "internalType": "enum ParanetStructs.MinersAccessPolicy",
         "name": "minersAccessPolicy",
+        "type": "uint8"
+      },
+      {
+        "internalType": "enum ParanetStructs.KnowledgeAssetsAccessPolicy",
+        "name": "knowledgeAssetsAccessPolicy",
         "type": "uint8"
       }
     ],
@@ -884,6 +1293,52 @@
         "type": "bytes32"
       },
       {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "removeKnowledgeMinerAccessRequest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "removeNodeJoinRequest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
         "internalType": "bytes32",
         "name": "serviceId",
         "type": "bytes32"
@@ -961,7 +1416,25 @@
         "type": "bytes32"
       },
       {
-        "internalType": "enum ParanetStructs.AccessPolicy",
+        "internalType": "enum ParanetStructs.KnowledgeAssetsAccessPolicy",
+        "name": "knowledgeAssetsAccessPolicy",
+        "type": "uint8"
+      }
+    ],
+    "name": "setKnowledgeAssetsAccessPolicy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "enum ParanetStructs.MinersAccessPolicy",
         "name": "minersAccessPolicy",
         "type": "uint8"
       }
@@ -997,7 +1470,7 @@
         "type": "bytes32"
       },
       {
-        "internalType": "enum ParanetStructs.AccessPolicy",
+        "internalType": "enum ParanetStructs.NodesAccessPolicy",
         "name": "nodesAccessPolicy",
         "type": "uint8"
       }
@@ -1044,6 +1517,62 @@
       }
     ],
     "name": "updateIncentivesPoolAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum ParanetStructs.RequestStatus",
+        "name": "status",
+        "type": "uint8"
+      }
+    ],
+    "name": "updateKnowledgeMinerAccessRequestStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum ParanetStructs.RequestStatus",
+        "name": "status",
+        "type": "uint8"
+      }
+    ],
+    "name": "updateNodeJoinRequestStatus",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

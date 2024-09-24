@@ -10,16 +10,39 @@ library ParanetStructs {
         uint256 tokenId;
     }
 
-    enum AccessPolicy {
+    enum NodesAccessPolicy {
         OPEN,
         CURATED
     }
 
-    enum ParanetKnowledgeMinerAccessRequestStatus {
+    enum MinersAccessPolicy {
+        OPEN,
+        CURATED
+    }
+
+    enum KnowledgeAssetsAccessPolicy {
+        OPEN
+    }
+
+    enum RequestStatus {
         NONE,
         PENDING,
         APPROVED,
-        DENIED
+        REJECTED
+    }
+
+    struct ParanetNodeJoinRequest {
+        uint256 createdAt;
+        uint256 updatedAt;
+        uint72 identityId;
+        RequestStatus status;
+    }
+
+    struct ParanetKnowledgeMinerAccessRequest {
+        uint256 createdAt;
+        uint256 updatedAt;
+        address miner;
+        RequestStatus status;
     }
 
     struct Paranet {
@@ -27,20 +50,24 @@ library ParanetStructs {
         uint256 paranetKATokenId;
         string name;
         string description;
-        AccessPolicy nodesAccessPolicy;
-        AccessPolicy minersAccessPolicy;
+        NodesAccessPolicy nodesAccessPolicy;
+        MinersAccessPolicy minersAccessPolicy;
+        KnowledgeAssetsAccessPolicy knowledgeAssetsAccessPolicy;
         uint96 cumulativeKnowledgeValue;
-        AccessPolicy minersPolicy;
         UnorderedNamedContractDynamicSetStructs.Set incentivesPools;
-        bytes32[] services;
-        // Service ID => Index in the array
-        mapping(bytes32 => uint256) implementedServicesIndexes;
         uint72[] curatedNodes;
         // Identity ID => Index in the array
         mapping(uint72 => uint256) curatedNodesIndexes;
+        // Identity ID => Requests Array
+        mapping(uint72 => ParanetNodeJoinRequest[]) paranetNodeJoinRequests;
+        bytes32[] services;
+        // Service ID => Index in the array
+        mapping(bytes32 => uint256) implementedServicesIndexes;
         address[] knowledgeMiners;
         // Knowledge Miner address => Index in the array
         mapping(address => uint256) registeredKnowledgeMinersIndexes;
+        // Knowledge Miner address => Requests Array
+        mapping(address => ParanetKnowledgeMinerAccessRequest[]) paranetKnowledgeMinerAccessRequests;
         bytes32[] knowledgeAssets;
         // Knowledge Asset ID => Index in the array
         mapping(bytes32 => uint256) registeredKnowledgeAssetsIndexes;
@@ -51,8 +78,9 @@ library ParanetStructs {
         uint256 paranetKATokenId;
         string name;
         string description;
-        AccessPolicy nodesAccessPolicy;
-        AccessPolicy minersAccessPolicy;
+        NodesAccessPolicy nodesAccessPolicy;
+        MinersAccessPolicy minersAccessPolicy;
+        KnowledgeAssetsAccessPolicy knowledgeAssetsAccessPolicy;
         uint96 cumulativeKnowledgeValue;
     }
 
@@ -131,10 +159,5 @@ library ParanetStructs {
         address addr;
         uint96 weight;
         uint256 claimedNeuro;
-    }
-
-    struct ParanetKnowledgeMinerAccessRequest {
-        uint256 requestTime;
-        ParanetKnowledgeMinerAccessRequestStatus status;
     }
 }

@@ -11,6 +11,7 @@ import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {ParanetServicesRegistry} from "../storage/paranets/ParanetServicesRegistry.sol";
 import {ProfileStorage} from "../../v1/storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "../../v1/storage/ServiceAgreementStorageProxy.sol";
+import {IdentityStorage} from "../storage/IdentityStorage.sol";
 import {HashingProxy} from "../../v1/HashingProxy.sol";
 import {ContractStatusV2} from "../abstract/ContractStatus.sol";
 import {Initializable} from "../../v1/interface/Initializable.sol";
@@ -29,8 +30,9 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 indexed paranetKATokenId,
         string paranetName,
         string paranetDescription,
-        ParanetStructs.AccessPolicy nodesAccessPolicy,
-        ParanetStructs.AccessPolicy minersAccessPolicy
+        ParanetStructs.NodesAccessPolicy nodesAccessPolicy,
+        ParanetStructs.MinersAccessPolicy minersAccessPolicy,
+        ParanetStructs.KnowledgeAssetsAccessPolicy knowledgeAssetsAccessPolicy
     );
     event ParanetCuratedNodeAdded(
         address indexed paranetKAStorageContract,
@@ -38,6 +40,21 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint72 identityId
     );
     event ParanetCuratedNodeRemoved(
+        address indexed paranetKAStorageContract,
+        uint256 indexed paranetKATokenId,
+        uint72 identityId
+    );
+    event ParanetCuratedNodeJoinRequestCreated(
+        address indexed paranetKAStorageContract,
+        uint256 indexed paranetKATokenId,
+        uint72 identityId
+    );
+    event ParanetCuratedNodeJoinRequestAccepted(
+        address indexed paranetKAStorageContract,
+        uint256 indexed paranetKATokenId,
+        uint72 identityId
+    );
+    event ParanetCuratedNodeJoinRequestRejected(
         address indexed paranetKAStorageContract,
         uint256 indexed paranetKATokenId,
         uint72 identityId
@@ -51,8 +68,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         address indexed paranetKAStorageContract,
         uint256 indexed paranetKATokenId,
         string newParanetName,
-        string newParanetDescription,
-        ParanetStructs.AccessPolicy minersPolicy
+        string newParanetDescription
     );
     event ParanetServiceAdded(
         address indexed paranetKAStorageContract,
@@ -80,31 +96,30 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         address indexed knowledgeAssetStorageContract,
         uint256 knowledgeAssetTokenId
     );
-
-    event KnowledgeMinersWhitelisted(
-        address indexed paranetServiceKAStorageContract,
-        uint256 indexed paranetServiceKATokenId,
-        address[] knowledgeMinersAddresses
+    event ParanetCuratedMinerAdded(
+        address indexed paranetKAStorageContract,
+        uint256 indexed paranetKATokenId,
+        address minerAddress
     );
-
-    event ParanetKnowledgeMiningAccessRequsted(
-        address indexed paranetServiceKAStorageContract,
-        uint256 indexed paranetServiceKATokenId,
-        address knowledgeMinerAddress
+    event ParanetCuratedMinerRemoved(
+        address indexed paranetKAStorageContract,
+        uint256 indexed paranetKATokenId,
+        address minerAddress
     );
-
-    event ParanetKnowledgeMiningAccessRequestApproved(
-        address indexed paranetServiceKAStorageContract,
-        uint256 indexed paranetServiceKATokenId,
-        address knowledgeMinerAddress,
-        ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus requestStatus
+    event ParanetCuratedMinerAccessRequestCreated(
+        address indexed paranetKAStorageContract,
+        uint256 indexed paranetKATokenId,
+        address minerAddress
     );
-
-    event ParanetKnowledgeMiningAccessRequestDenied(
-        address indexed paranetServiceKAStorageContract,
-        uint256 indexed paranetServiceKATokenId,
-        address knowledgeMinerAddress,
-        ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus requestStatus
+    event ParanetCuratedMinerAccessRequestAccepted(
+        address indexed paranetKAStorageContract,
+        uint256 indexed paranetKATokenId,
+        address minerAddress
+    );
+    event ParanetCuratedMinerAccessRequestRejected(
+        address indexed paranetKAStorageContract,
+        uint256 indexed paranetKATokenId,
+        address minerAddress
     );
 
     string private constant _NAME = "Paranet";
@@ -115,6 +130,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
     ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
     ParanetKnowledgeAssetsRegistry public paranetKnowledgeAssetsRegistry;
     ProfileStorage public profileStorage;
+    IdentityStorage public identityStorage;
     ContentAssetStorageV2 public contentAssetStorage;
     ContentAssetV2 public contentAsset;
     HashingProxy public hashingProxy;
@@ -130,6 +146,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
 
     function initialize() public onlyHubOwner {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         contentAssetStorage = ContentAssetStorageV2(hub.getAssetStorageAddress("ContentAssetStorage"));
         contentAsset = ContentAssetV2(hub.getContractAddress("ContentAsset"));
         paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
@@ -159,12 +176,14 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 paranetKATokenId,
         string calldata paranetName,
         string calldata paranetDescription,
-        ParanetStructs.AccessPolicy nodesAccessPolicy,
-        ParanetStructs.AccessPolicy minersAccessPolicy
+        ParanetStructs.NodesAccessPolicy nodesAccessPolicy,
+        ParanetStructs.MinersAccessPolicy minersAccessPolicy
     ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) returns (bytes32) {
         ParanetsRegistry pr = paranetsRegistry;
 
-        if (pr.paranetExists(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)))) {
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+
+        if (pr.paranetExists(paranetId)) {
             revert ParanetErrors.ParanetHasAlreadyBeenRegistered(paranetKAStorageContract, paranetKATokenId);
         }
 
@@ -174,7 +193,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             paranetName,
             paranetDescription,
             nodesAccessPolicy,
-            minersAccessPolicy
+            minersAccessPolicy,
+            ParanetStructs.KnowledgeAssetsAccessPolicy.OPEN
         );
 
         return
@@ -184,7 +204,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                 paranetName,
                 paranetDescription,
                 nodesAccessPolicy,
-                minersAccessPolicy
+                minersAccessPolicy,
+                ParanetStructs.KnowledgeAssetsAccessPolicy.OPEN
             );
     }
 
@@ -192,29 +213,20 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         address paranetKAStorageContract,
         uint256 paranetKATokenId,
         string calldata paranetName,
-        string calldata paranetDescription,
-        ParanetStructs.AccessPolicy minersAccessPolicy
+        string calldata paranetDescription
     ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) {
         ParanetsRegistry pr = paranetsRegistry;
 
-        if (!pr.paranetExists(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)))) {
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+
+        if (!pr.paranetExists(paranetId)) {
             revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
         }
 
-        pr.setName(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)), paranetName);
-        pr.setDescription(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)), paranetDescription);
-        pr.setMinersAccessPolicy(
-            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            minersAccessPolicy
-        );
+        pr.setName(paranetId, paranetName);
+        pr.setDescription(paranetId, paranetDescription);
 
-        emit ParanetMetadataUpdated(
-            paranetKAStorageContract,
-            paranetKATokenId,
-            paranetName,
-            paranetDescription,
-            minersAccessPolicy
-        );
+        emit ParanetMetadataUpdated(paranetKAStorageContract, paranetKATokenId, paranetName, paranetDescription);
     }
 
     function addParanetCuratedNodes(
@@ -225,20 +237,21 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         ParanetsRegistry pr = paranetsRegistry;
         ProfileStorage ps = profileStorage;
 
-        if (!pr.paranetExists(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)))) {
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+
+        if (!pr.paranetExists(paranetId)) {
             revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
         }
 
-        if (
-            pr.getNodesAccessPolicy(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId))) !=
-            ParanetStructs.AccessPolicy.CURATED
-        ) {
-            ParanetStructs.AccessPolicy[] memory expectedAccessPolicies = new ParanetStructs.AccessPolicy[](1);
-            expectedAccessPolicies[0] = ParanetStructs.AccessPolicy.CURATED;
+        if (pr.getNodesAccessPolicy(paranetId) != ParanetStructs.NodesAccessPolicy.CURATED) {
+            ParanetStructs.NodesAccessPolicy[] memory expectedAccessPolicies = new ParanetStructs.NodesAccessPolicy[](
+                1
+            );
+            expectedAccessPolicies[0] = ParanetStructs.NodesAccessPolicy.CURATED;
 
             revert ParanetErrors.InvalidParanetNodesAccessPolicy(
                 expectedAccessPolicies,
-                pr.getNodesAccessPolicy(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)))
+                pr.getNodesAccessPolicy(paranetId)
             );
         }
 
@@ -247,19 +260,11 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                 revert ProfileErrors.ProfileDoesntExist(identityIds[i]);
             }
 
-            if (
-                pr.isCuratedNode(
-                    keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-                    identityIds[i]
-                )
-            ) {
-                revert ParanetErrors.ParanetCuratedNodeHasAlreadyBeenAdded(
-                    keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-                    identityIds[i]
-                );
+            if (pr.isCuratedNode(paranetId, identityIds[i])) {
+                revert ParanetErrors.ParanetCuratedNodeHasAlreadyBeenAdded(paranetId, identityIds[i]);
             }
 
-            pr.addCuratedNode(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)), identityIds[i]);
+            pr.addCuratedNode(paranetId, identityIds[i]);
 
             emit ParanetCuratedNodeAdded(paranetKAStorageContract, paranetKATokenId, identityIds[i]);
 
@@ -276,40 +281,30 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
     ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) {
         ParanetsRegistry pr = paranetsRegistry;
 
-        if (!pr.paranetExists(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)))) {
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+
+        if (!pr.paranetExists(paranetId)) {
             revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
         }
 
-        if (
-            pr.getNodesAccessPolicy(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId))) !=
-            ParanetStructs.AccessPolicy.CURATED
-        ) {
-            ParanetStructs.AccessPolicy[] memory expectedAccessPolicies = new ParanetStructs.AccessPolicy[](1);
-            expectedAccessPolicies[0] = ParanetStructs.AccessPolicy.CURATED;
+        if (pr.getNodesAccessPolicy(paranetId) != ParanetStructs.NodesAccessPolicy.CURATED) {
+            ParanetStructs.NodesAccessPolicy[] memory expectedAccessPolicies = new ParanetStructs.NodesAccessPolicy[](
+                1
+            );
+            expectedAccessPolicies[0] = ParanetStructs.NodesAccessPolicy.CURATED;
 
             revert ParanetErrors.InvalidParanetNodesAccessPolicy(
                 expectedAccessPolicies,
-                pr.getNodesAccessPolicy(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)))
+                pr.getNodesAccessPolicy(paranetId)
             );
         }
 
         for (uint256 i; i < identityIds.length; ) {
-            if (
-                !pr.isCuratedNode(
-                    keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-                    identityIds[i]
-                )
-            ) {
-                revert ParanetErrors.ParanetCuratedNodeDoesntExist(
-                    keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-                    identityIds[i]
-                );
+            if (!pr.isCuratedNode(paranetId, identityIds[i])) {
+                revert ParanetErrors.ParanetCuratedNodeDoesntExist(paranetId, identityIds[i]);
             }
 
-            pr.removeCuratedNode(
-                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-                identityIds[i]
-            );
+            pr.removeCuratedNode(paranetId, identityIds[i]);
 
             emit ParanetCuratedNodeRemoved(paranetKAStorageContract, paranetKATokenId, identityIds[i]);
 
@@ -317,6 +312,160 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                 i++;
             }
         }
+    }
+
+    function requestParanetCuratedNodeAccess(address paranetKAStorageContract, uint256 paranetKATokenId) external {
+        ParanetsRegistry pr = paranetsRegistry;
+
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
+        }
+
+        if (pr.getNodesAccessPolicy(paranetId) != ParanetStructs.NodesAccessPolicy.CURATED) {
+            ParanetStructs.NodesAccessPolicy[] memory expectedAccessPolicies = new ParanetStructs.NodesAccessPolicy[](
+                1
+            );
+            expectedAccessPolicies[0] = ParanetStructs.NodesAccessPolicy.CURATED;
+
+            revert ParanetErrors.InvalidParanetNodesAccessPolicy(
+                expectedAccessPolicies,
+                pr.getNodesAccessPolicy(paranetId)
+            );
+        }
+
+        uint72 identityId = identityStorage.getIdentityId(msg.sender);
+
+        if (!profileStorage.profileExists(identityId)) {
+            revert ProfileErrors.ProfileDoesntExist(identityId);
+        }
+
+        ParanetStructs.ParanetNodeJoinRequest[] memory paranetNodeJoinRequests = pr.getNodeJoinRequests(
+            paranetId,
+            identityId
+        );
+
+        if (
+            paranetNodeJoinRequests.length > 0 &&
+            paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status == ParanetStructs.RequestStatus.PENDING
+        ) {
+            revert ParanetErrors.ParanetCuratedNodeJoinRequestInvalidStatus(
+                paranetId,
+                identityId,
+                paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status
+            );
+        }
+
+        pr.addNodeJoinRequest(paranetId, identityId, ParanetStructs.RequestStatus.PENDING);
+
+        emit ParanetCuratedNodeJoinRequestCreated(paranetKAStorageContract, paranetKATokenId, identityId);
+    }
+
+    function approveCuratedNode(
+        address paranetKAStorageContract,
+        uint256 paranetKATokenId,
+        uint72 identityId
+    ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
+
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
+        }
+
+        if (pr.getNodesAccessPolicy(paranetId) != ParanetStructs.NodesAccessPolicy.CURATED) {
+            ParanetStructs.NodesAccessPolicy[] memory expectedAccessPolicies = new ParanetStructs.NodesAccessPolicy[](
+                1
+            );
+            expectedAccessPolicies[0] = ParanetStructs.NodesAccessPolicy.CURATED;
+
+            revert ParanetErrors.InvalidParanetNodesAccessPolicy(
+                expectedAccessPolicies,
+                pr.getNodesAccessPolicy(paranetId)
+            );
+        }
+
+        ParanetStructs.ParanetNodeJoinRequest[] memory paranetNodeJoinRequests = pr.getNodeJoinRequests(
+            paranetId,
+            identityId
+        );
+
+        if (paranetNodeJoinRequests.length == 0) {
+            revert ParanetErrors.ParanetCuratedNodeJoinRequestDoesntExist(paranetId, identityId);
+        } else if (
+            paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status != ParanetStructs.RequestStatus.PENDING
+        ) {
+            revert ParanetErrors.ParanetCuratedNodeJoinRequestInvalidStatus(
+                paranetId,
+                identityId,
+                paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status
+            );
+        }
+
+        pr.updateNodeJoinRequestStatus(
+            paranetId,
+            identityId,
+            paranetNodeJoinRequests.length - 1,
+            ParanetStructs.RequestStatus.APPROVED
+        );
+        pr.addCuratedNode(paranetId, identityId);
+
+        emit ParanetCuratedNodeJoinRequestAccepted(paranetKAStorageContract, paranetKATokenId, identityId);
+        emit ParanetCuratedNodeAdded(paranetKAStorageContract, paranetKATokenId, identityId);
+    }
+
+    function rejectCuratedNode(
+        address paranetKAStorageContract,
+        uint256 paranetKATokenId,
+        uint72 identityId
+    ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
+
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
+        }
+
+        if (pr.getNodesAccessPolicy(paranetId) != ParanetStructs.NodesAccessPolicy.CURATED) {
+            ParanetStructs.NodesAccessPolicy[] memory expectedAccessPolicies = new ParanetStructs.NodesAccessPolicy[](
+                1
+            );
+            expectedAccessPolicies[0] = ParanetStructs.NodesAccessPolicy.CURATED;
+
+            revert ParanetErrors.InvalidParanetNodesAccessPolicy(
+                expectedAccessPolicies,
+                pr.getNodesAccessPolicy(paranetId)
+            );
+        }
+
+        ParanetStructs.ParanetNodeJoinRequest[] memory paranetNodeJoinRequests = pr.getNodeJoinRequests(
+            paranetId,
+            identityId
+        );
+
+        if (paranetNodeJoinRequests.length == 0) {
+            revert ParanetErrors.ParanetCuratedNodeJoinRequestDoesntExist(paranetId, identityId);
+        } else if (
+            paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status != ParanetStructs.RequestStatus.PENDING
+        ) {
+            revert ParanetErrors.ParanetCuratedNodeJoinRequestInvalidStatus(
+                paranetId,
+                identityId,
+                paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status
+            );
+        }
+
+        pr.updateNodeJoinRequestStatus(
+            paranetId,
+            identityId,
+            paranetNodeJoinRequests.length - 1,
+            ParanetStructs.RequestStatus.REJECTED
+        );
+
+        emit ParanetCuratedNodeJoinRequestRejected(paranetKAStorageContract, paranetKATokenId, identityId);
     }
 
     function addParanetServices(
@@ -327,7 +476,9 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         ParanetsRegistry pr = paranetsRegistry;
         ParanetServicesRegistry psr = paranetServicesRegistry;
 
-        if (!pr.paranetExists(keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)))) {
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+
+        if (!pr.paranetExists(paranetId)) {
             revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
         }
 
@@ -347,18 +498,18 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
 
             if (
                 pr.isServiceImplemented(
-                    keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                    paranetId,
                     keccak256(abi.encodePacked(services[i].knowledgeAssetStorageContract, services[i].tokenId))
                 )
             ) {
                 revert ParanetErrors.ParanetServiceHasAlreadyBeenAdded(
-                    keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                    paranetId,
                     keccak256(abi.encodePacked(services[i].knowledgeAssetStorageContract, services[i].tokenId))
                 );
             }
 
             pr.addService(
-                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                paranetId,
                 keccak256(abi.encodePacked(services[i].knowledgeAssetStorageContract, services[i].tokenId))
             );
 
@@ -384,11 +535,11 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
     ) external onlyKnowledgeAssetOwner(paranetServiceKAStorageContract, paranetServiceKATokenId) returns (bytes32) {
         ParanetServicesRegistry psr = paranetServicesRegistry;
 
-        if (
-            psr.paranetServiceExists(
-                keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
-            )
-        ) {
+        bytes32 paranetServiceId = keccak256(
+            abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId)
+        );
+
+        if (psr.paranetServiceExists(paranetServiceId)) {
             revert ParanetErrors.ParanetServiceHasAlreadyBeenRegistered(
                 paranetServiceKAStorageContract,
                 paranetServiceKATokenId
@@ -422,26 +573,17 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
     ) external onlyKnowledgeAssetOwner(paranetServiceKAStorageContract, paranetServiceKATokenId) {
         ParanetServicesRegistry psr = paranetServicesRegistry;
 
-        if (
-            !psr.paranetServiceExists(
-                keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
-            )
-        ) {
+        bytes32 paranetServiceId = keccak256(
+            abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId)
+        );
+
+        if (!psr.paranetServiceExists(paranetServiceId)) {
             revert ParanetErrors.ParanetServiceDoesntExist(paranetServiceKAStorageContract, paranetServiceKATokenId);
         }
 
-        psr.setName(
-            keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId)),
-            paranetServiceName
-        );
-        psr.setDescription(
-            keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId)),
-            paranetServiceDescription
-        );
-        psr.setParanetServiceAddresses(
-            keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId)),
-            paranetServiceAddresses
-        );
+        psr.setName(paranetServiceId, paranetServiceName);
+        psr.setDescription(paranetServiceId, paranetServiceDescription);
+        psr.setParanetServiceAddresses(paranetServiceId, paranetServiceAddresses);
 
         emit ParanetServiceMetadataUpdated(
             paranetServiceKAStorageContract,
@@ -452,172 +594,234 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         );
     }
 
-    function requestParanetKnowledgeMiningAccess(address paranetKAStorageContract, uint256 paranetKATokenId) external {
-        ParanetsRegistry pr = paranetsRegistry;
-        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
-        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
-
-        if (!pr.paranetExists(paranetId)) {
-            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
-        }
-
-        if (!pkmr.knowledgeMinerExists(msg.sender)) {
-            pkmr.registerKnowledgeMiner(msg.sender);
-        }
-
-        // revert if knowledge miner is already registered
-        if (pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
-            revert ParanetErrors.KnowledgeMinerAlreadyRegistered(paranetId, msg.sender);
-        }
-
-        // Get the latest request status
-        ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus requestStatus = pr.getKnowledgeMinerAccessRequestStatus(
-            paranetId,
-            msg.sender
-        );
-
-        if (requestStatus == ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus.PENDING) {
-            revert ParanetErrors.ParanetKnowledgeMiningAccessRequestAlreadyExists(paranetId, msg.sender, requestStatus);
-        }
-
-        // Request knowledge minibg access
-        pr.requestParanetKnowledgeMiningAccess(paranetId, msg.sender);
-
-        emit ParanetKnowledgeMiningAccessRequsted(paranetKAStorageContract, paranetKATokenId, msg.sender);
-    }
-
-    function acceptParanetKnowledgeMiningAccessRequest(
+    function addParanetCuratedMiners(
         address paranetKAStorageContract,
         uint256 paranetKATokenId,
-        address knowledgeMinerAddress
+        address[] calldata minerAddresses
     ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) {
         ParanetsRegistry pr = paranetsRegistry;
-        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
 
         if (!pr.paranetExists(paranetId)) {
             revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
         }
 
-        // Knowledge miner should exist
-        if (!pkmr.knowledgeMinerExists(knowledgeMinerAddress)) {
-            revert ParanetErrors.KnowledgeMinerDoesNotExistInParanet(paranetId, knowledgeMinerAddress);
-        }
+        if (pr.getMinersAccessPolicy(paranetId) != ParanetStructs.MinersAccessPolicy.CURATED) {
+            ParanetStructs.MinersAccessPolicy[] memory expectedAccessPolicies = new ParanetStructs.MinersAccessPolicy[](
+                1
+            );
+            expectedAccessPolicies[0] = ParanetStructs.MinersAccessPolicy.CURATED;
 
-        // Revert if knowledge miner is already registered
-        if (pr.isKnowledgeMinerRegistered(paranetId, knowledgeMinerAddress)) {
-            revert ParanetErrors.KnowledgeMinerAlreadyRegistered(paranetId, knowledgeMinerAddress);
-        }
-
-        // Get the latest request status
-        ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus requestStatus = pr.getKnowledgeMinerAccessRequestStatus(
-            paranetId,
-            msg.sender
-        );
-
-        if (requestStatus == ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus.NONE) {
-            revert ParanetErrors.ParanetKnowledgeMiningAccessRequestDoesNotExists(
-                paranetId,
-                knowledgeMinerAddress,
-                requestStatus
+            revert ParanetErrors.InvalidParanetMinersAccessPolicy(
+                expectedAccessPolicies,
+                pr.getMinersAccessPolicy(paranetId)
             );
         }
 
-        // Accept knowledge mining access and add knowledge miner to paranet
-        pr.acceptParanetKnowledgeMiningAccessRequest(paranetId, knowledgeMinerAddress);
-        pr.addKnowledgeMiner(paranetId, knowledgeMinerAddress);
-
-        emit ParanetKnowledgeMiningAccessRequestApproved(
-            paranetKAStorageContract,
-            paranetKATokenId,
-            knowledgeMinerAddress,
-            ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus.APPROVED
-        );
-    }
-
-    function denyParanetKnowledgeMiningAccessRequest(
-        address paranetKAStorageContract,
-        uint256 paranetKATokenId,
-        address knowledgeMinerAddress
-    ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) {
-        ParanetsRegistry pr = paranetsRegistry;
-        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
-        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
-
-        if (!pr.paranetExists(paranetId)) {
-            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
-        }
-
-        // Knowledge miner should exist
-        if (!pkmr.knowledgeMinerExists(knowledgeMinerAddress)) {
-            revert ParanetErrors.KnowledgeMinerDoesNotExistInParanet(paranetId, knowledgeMinerAddress);
-        }
-
-        // Revert if knowledge miner is already registered
-        if (pr.isKnowledgeMinerRegistered(paranetId, knowledgeMinerAddress)) {
-            revert ParanetErrors.KnowledgeMinerAlreadyRegistered(paranetId, knowledgeMinerAddress);
-        }
-
-        // Get the latest request status
-        ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus requestStatus = pr.getKnowledgeMinerAccessRequestStatus(
-            paranetId,
-            msg.sender
-        );
-
-        if (requestStatus == ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus.NONE) {
-            revert ParanetErrors.ParanetKnowledgeMiningAccessRequestDoesNotExists(
-                paranetId,
-                knowledgeMinerAddress,
-                requestStatus
-            );
-        }
-
-        // Deny knowledge mining access
-        pr.denyParanetKnowledgeMiningAccessRequest(paranetId, knowledgeMinerAddress);
-
-        emit ParanetKnowledgeMiningAccessRequestDenied(
-            paranetKAStorageContract,
-            paranetKATokenId,
-            knowledgeMinerAddress,
-            ParanetStructs.ParanetKnowledgeMinerAccessRequestStatus.DENIED
-        );
-    }
-
-    function whitelistKnowledgeMiners(
-        address paranetKAStorageContract,
-        uint256 paranetKATokenId,
-        address[] calldata knowledgeMinersAddresses
-    ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) {
-        ParanetsRegistry pr = paranetsRegistry;
-        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
-        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
-
-        if (!pr.paranetExists(paranetId)) {
-            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
-        }
-
-        ParanetStructs.AccessPolicy paranetAccessPolicy = pr.getMinersAccessPolicy(paranetId);
-        if (!(paranetAccessPolicy == ParanetStructs.AccessPolicy.CURATED)) {
-            revert ParanetErrors.InvalidAccessPolicy(paranetId, paranetAccessPolicy);
-        }
-
-        for (uint256 i; i < knowledgeMinersAddresses.length; ) {
-            address knowledgeMinerAddress = knowledgeMinersAddresses[i];
-
-            if (!pkmr.knowledgeMinerExists(knowledgeMinerAddress)) {
-                pkmr.registerKnowledgeMiner(knowledgeMinerAddress);
+        for (uint256 i; i < minerAddresses.length; ) {
+            if (!pkmr.knowledgeMinerExists(minerAddresses[i])) {
+                pkmr.registerKnowledgeMiner(minerAddresses[i]);
             }
 
-            if (!pr.isKnowledgeMinerRegistered(paranetId, knowledgeMinerAddress)) {
-                pr.addKnowledgeMiner(paranetId, knowledgeMinerAddress);
+            if (pr.isKnowledgeMinerRegistered(paranetId, minerAddresses[i])) {
+                revert ParanetErrors.ParanetCuratedMinerHasAlreadyBeenAdded(paranetId, minerAddresses[i]);
             }
+
+            pr.addKnowledgeMiner(paranetId, minerAddresses[i]);
+
+            emit ParanetCuratedMinerAdded(paranetKAStorageContract, paranetKATokenId, minerAddresses[i]);
 
             unchecked {
-                ++i;
+                i++;
             }
         }
+    }
 
-        emit KnowledgeMinersWhitelisted(paranetKAStorageContract, paranetKATokenId, knowledgeMinersAddresses);
+    function removeParanetCuratedMiners(
+        address paranetKAStorageContract,
+        uint256 paranetKATokenId,
+        address[] calldata minerAddresses
+    ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
+
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
+        }
+
+        if (pr.getMinersAccessPolicy(paranetId) != ParanetStructs.MinersAccessPolicy.CURATED) {
+            ParanetStructs.MinersAccessPolicy[] memory expectedAccessPolicies = new ParanetStructs.MinersAccessPolicy[](
+                1
+            );
+            expectedAccessPolicies[0] = ParanetStructs.MinersAccessPolicy.CURATED;
+
+            revert ParanetErrors.InvalidParanetMinersAccessPolicy(
+                expectedAccessPolicies,
+                pr.getMinersAccessPolicy(paranetId)
+            );
+        }
+
+        for (uint256 i; i < minerAddresses.length; ) {
+            if (!pr.isKnowledgeMinerRegistered(paranetId, minerAddresses[i])) {
+                revert ParanetErrors.ParanetCuratedMinerDoesntExist(paranetId, minerAddresses[i]);
+            }
+
+            pr.removeKnowledgeMiner(paranetId, minerAddresses[i]);
+
+            emit ParanetCuratedMinerRemoved(paranetKAStorageContract, paranetKATokenId, minerAddresses[i]);
+
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    function requestParanetCuratedMinerAccess(address paranetKAStorageContract, uint256 paranetKATokenId) external {
+        ParanetsRegistry pr = paranetsRegistry;
+
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
+        }
+
+        if (pr.getMinersAccessPolicy(paranetId) != ParanetStructs.MinersAccessPolicy.CURATED) {
+            ParanetStructs.MinersAccessPolicy[] memory expectedAccessPolicies = new ParanetStructs.MinersAccessPolicy[](
+                1
+            );
+            expectedAccessPolicies[0] = ParanetStructs.MinersAccessPolicy.CURATED;
+
+            revert ParanetErrors.InvalidParanetMinersAccessPolicy(
+                expectedAccessPolicies,
+                pr.getMinersAccessPolicy(paranetId)
+            );
+        }
+
+        ParanetStructs.ParanetKnowledgeMinerAccessRequest[] memory paranetKnowledgeMinersAccessRequests = pr
+            .getKnowledgeMinerAccessRequests(paranetId, msg.sender);
+
+        if (
+            paranetKnowledgeMinersAccessRequests.length > 0 &&
+            paranetKnowledgeMinersAccessRequests[paranetKnowledgeMinersAccessRequests.length - 1].status ==
+            ParanetStructs.RequestStatus.PENDING
+        ) {
+            revert ParanetErrors.ParanetCuratedMinerAccessRequestInvalidStatus(
+                paranetId,
+                msg.sender,
+                paranetKnowledgeMinersAccessRequests[paranetKnowledgeMinersAccessRequests.length - 1].status
+            );
+        }
+
+        pr.addKnowledgeMinerAccessRequest(paranetId, msg.sender, ParanetStructs.RequestStatus.PENDING);
+
+        emit ParanetCuratedMinerAccessRequestCreated(paranetKAStorageContract, paranetKATokenId, msg.sender);
+    }
+
+    function approveCuratedMiner(
+        address paranetKAStorageContract,
+        uint256 paranetKATokenId,
+        address minerAddress
+    ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
+
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
+        }
+
+        if (pr.getMinersAccessPolicy(paranetId) != ParanetStructs.MinersAccessPolicy.CURATED) {
+            ParanetStructs.MinersAccessPolicy[] memory expectedAccessPolicies = new ParanetStructs.MinersAccessPolicy[](
+                1
+            );
+            expectedAccessPolicies[0] = ParanetStructs.MinersAccessPolicy.CURATED;
+
+            revert ParanetErrors.InvalidParanetMinersAccessPolicy(
+                expectedAccessPolicies,
+                pr.getMinersAccessPolicy(paranetId)
+            );
+        }
+
+        ParanetStructs.ParanetKnowledgeMinerAccessRequest[] memory paranetKnowledgeMinersAccessRequests = pr
+            .getKnowledgeMinerAccessRequests(paranetId, minerAddress);
+
+        if (paranetKnowledgeMinersAccessRequests.length == 0) {
+            revert ParanetErrors.ParanetCuratedMinerAccessRequestDoesntExist(paranetId, minerAddress);
+        } else if (
+            paranetKnowledgeMinersAccessRequests[paranetKnowledgeMinersAccessRequests.length - 1].status !=
+            ParanetStructs.RequestStatus.PENDING
+        ) {
+            revert ParanetErrors.ParanetCuratedMinerAccessRequestInvalidStatus(
+                paranetId,
+                minerAddress,
+                paranetKnowledgeMinersAccessRequests[paranetKnowledgeMinersAccessRequests.length - 1].status
+            );
+        }
+
+        pr.updateKnowledgeMinerAccessRequestStatus(
+            paranetId,
+            minerAddress,
+            paranetKnowledgeMinersAccessRequests.length - 1,
+            ParanetStructs.RequestStatus.APPROVED
+        );
+        pr.addKnowledgeMiner(paranetId, minerAddress);
+
+        emit ParanetCuratedMinerAccessRequestAccepted(paranetKAStorageContract, paranetKATokenId, minerAddress);
+        emit ParanetCuratedMinerAdded(paranetKAStorageContract, paranetKATokenId, minerAddress);
+    }
+
+    function rejectCuratedMiner(
+        address paranetKAStorageContract,
+        uint256 paranetKATokenId,
+        address minerAddress
+    ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
+
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetErrors.ParanetDoesntExist(paranetKAStorageContract, paranetKATokenId);
+        }
+
+        if (pr.getMinersAccessPolicy(paranetId) != ParanetStructs.MinersAccessPolicy.CURATED) {
+            ParanetStructs.MinersAccessPolicy[] memory expectedAccessPolicies = new ParanetStructs.MinersAccessPolicy[](
+                1
+            );
+            expectedAccessPolicies[0] = ParanetStructs.MinersAccessPolicy.CURATED;
+
+            revert ParanetErrors.InvalidParanetMinersAccessPolicy(
+                expectedAccessPolicies,
+                pr.getMinersAccessPolicy(paranetId)
+            );
+        }
+
+        ParanetStructs.ParanetKnowledgeMinerAccessRequest[] memory paranetKnowledgeMinerAccessRequests = pr
+            .getKnowledgeMinerAccessRequests(paranetId, minerAddress);
+
+        if (paranetKnowledgeMinerAccessRequests.length == 0) {
+            revert ParanetErrors.ParanetCuratedMinerAccessRequestDoesntExist(paranetId, minerAddress);
+        } else if (
+            paranetKnowledgeMinerAccessRequests[paranetKnowledgeMinerAccessRequests.length - 1].status !=
+            ParanetStructs.RequestStatus.PENDING
+        ) {
+            revert ParanetErrors.ParanetCuratedMinerAccessRequestInvalidStatus(
+                paranetId,
+                minerAddress,
+                paranetKnowledgeMinerAccessRequests[paranetKnowledgeMinerAccessRequests.length - 1].status
+            );
+        }
+
+        pr.updateKnowledgeMinerAccessRequestStatus(
+            paranetId,
+            minerAddress,
+            paranetKnowledgeMinerAccessRequests.length - 1,
+            ParanetStructs.RequestStatus.REJECTED
+        );
+
+        emit ParanetCuratedMinerAccessRequestRejected(paranetKAStorageContract, paranetKATokenId, minerAddress);
     }
 
     function mintKnowledgeAsset(
@@ -637,8 +841,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         bool knowledgeMinerExists = paranetKnowledgeMinersRegistry.knowledgeMinerExists(msg.sender);
 
         // Check if paranet is curated and if knowledge miner is whitelisted
-        if (pr.getMinersAccessPolicy(paranetId) == ParanetStructs.AccessPolicy.CURATED && !knowledgeMinerExists) {
-            revert ParanetErrors.KnowledgeMinerDoesNotExistInCuratedParanet(paranetId, msg.sender);
+        if (pr.getMinersAccessPolicy(paranetId) == ParanetStructs.MinersAccessPolicy.CURATED && !knowledgeMinerExists) {
+            revert ParanetErrors.ParanetCuratedMinerDoesntExist(paranetId, msg.sender);
         }
 
         // Check if Knowledge Miner has profile
@@ -689,8 +893,8 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         bool knowledgeMinerExists = paranetKnowledgeMinersRegistry.knowledgeMinerExists(msg.sender);
 
         // Check if paranet is curated and if knowledge miner is whitelisted
-        if (pr.getMinersAccessPolicy(paranetId) == ParanetStructs.AccessPolicy.CURATED && !knowledgeMinerExists) {
-            revert ParanetErrors.KnowledgeMinerDoesNotExistInCuratedParanet(paranetId, msg.sender);
+        if (pr.getMinersAccessPolicy(paranetId) == ParanetStructs.MinersAccessPolicy.CURATED && !knowledgeMinerExists) {
+            revert ParanetErrors.ParanetCuratedMinerDoesntExist(paranetId, msg.sender);
         }
 
         if (paranetKnowledgeAssetsRegistry.isParanetKnowledgeAsset(paranetId)) {
@@ -751,14 +955,11 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 start,
         uint256 end
     ) external {
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+
         _processUpdatedKnowledgeAssetStatesMetadata(
-            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            paranetKnowledgeMinersRegistry.getUpdatingKnowledgeAssetStates(
-                msg.sender,
-                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-                start,
-                end
-            )
+            paranetId,
+            paranetKnowledgeMinersRegistry.getUpdatingKnowledgeAssetStates(msg.sender, paranetId, start, end)
         );
     }
 
@@ -772,40 +973,25 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         ParanetsRegistry pr = paranetsRegistry;
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
 
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
+        bytes32 knowledgeAssetId = keccak256(abi.encodePacked(knowledgeAssetStorageContract, knowledgeAssetTokenId));
+
         // Add Knowledge Asset to the KnowledgeAssetsRegistry
         paranetKnowledgeAssetsRegistry.addKnowledgeAsset(
-            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+            paranetId,
             knowledgeAssetStorageContract,
             knowledgeAssetTokenId,
             msg.sender
         );
 
         // Add Knowledge Asset Metadata to the ParanetsRegistry
-        pr.addKnowledgeAsset(
-            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            keccak256(abi.encodePacked(knowledgeAssetStorageContract, knowledgeAssetTokenId))
-        );
-        pr.addCumulativeKnowledgeValue(
-            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            tokenAmount
-        );
+        pr.addKnowledgeAsset(paranetId, knowledgeAssetId);
+        pr.addCumulativeKnowledgeValue(paranetId, tokenAmount);
 
         // Add Knowledge Asset Metadata to the KnowledgeMinersRegistry
-        pkmr.addSubmittedKnowledgeAsset(
-            msg.sender,
-            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            keccak256(abi.encodePacked(knowledgeAssetStorageContract, knowledgeAssetTokenId))
-        );
-        pkmr.addCumulativeTracSpent(
-            msg.sender,
-            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            tokenAmount
-        );
-        pkmr.addUnrewardedTracSpent(
-            msg.sender,
-            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
-            tokenAmount
-        );
+        pkmr.addSubmittedKnowledgeAsset(msg.sender, paranetId, knowledgeAssetId);
+        pkmr.addCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
+        pkmr.addUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
         pkmr.incrementTotalSubmittedKnowledgeAssetsCount(msg.sender);
         pkmr.addTotalTracSpent(msg.sender, tokenAmount);
     }
