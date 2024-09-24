@@ -506,6 +506,7 @@ async function createParanet(
     paranetDescription,
     _nodesAccessPolicy,
     _minersAccessPolicy,
+    0,
   );
   return paranetId;
 }
