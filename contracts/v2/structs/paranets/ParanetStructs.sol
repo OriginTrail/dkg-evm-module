@@ -32,7 +32,16 @@ library ParanetStructs {
     }
 
     struct ParanetNodeJoinRequest {
+        uint256 createdAt;
+        uint256 updatedAt;
         uint72 identityId;
+        RequestStatus status;
+    }
+
+    struct ParanetKnowledgeMinerAccessRequest {
+        uint256 createdAt;
+        uint256 updatedAt;
+        address miner;
         RequestStatus status;
     }
 
@@ -57,6 +66,8 @@ library ParanetStructs {
         address[] knowledgeMiners;
         // Knowledge Miner address => Index in the array
         mapping(address => uint256) registeredKnowledgeMinersIndexes;
+        // Knowledge Miner address => Requests Array
+        mapping(address => ParanetKnowledgeMinerAccessRequest[]) paranetKnowledgeMinerAccessRequests;
         bytes32[] knowledgeAssets;
         // Knowledge Asset ID => Index in the array
         mapping(bytes32 => uint256) registeredKnowledgeAssetsIndexes;

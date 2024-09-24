@@ -18,6 +18,18 @@ library ParanetErrors {
         ParanetStructs.RequestStatus status
     );
     error ParanetCuratedNodeJoinRequestDoesntExist(bytes32 paranetId, uint72 identityId);
+    error InvalidParanetMinersAccessPolicy(
+        ParanetStructs.MinersAccessPolicy[] expectedAccessPolicies,
+        ParanetStructs.MinersAccessPolicy actualAccessPolicy
+    );
+    error ParanetCuratedMinerHasAlreadyBeenAdded(bytes32 paranetId, address miner);
+    error ParanetCuratedMinerDoesntExist(bytes32 paranetId, address miner);
+    error ParanetCuratedMinerAccessRequestInvalidStatus(
+        bytes32 paranetId,
+        address miner,
+        ParanetStructs.RequestStatus status
+    );
+    error ParanetCuratedMinerAccessRequestDoesntExist(bytes32 paranetId, address miner);
     error ParanetIncentivesPoolAlreadyExists(
         address knowledgeAssetStorageAddress,
         uint256 tokenId,

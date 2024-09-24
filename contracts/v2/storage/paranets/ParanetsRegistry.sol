@@ -141,7 +141,12 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         ParanetStructs.RequestStatus status
     ) external onlyContracts {
         paranets[paranetId].paranetNodeJoinRequests[identityId].push(
-            ParanetStructs.ParanetNodeJoinRequest({identityId: identityId, status: status})
+            ParanetStructs.ParanetNodeJoinRequest({
+                createdAt: block.timestamp,
+                updatedAt: block.timestamp,
+                identityId: identityId,
+                status: status
+            })
         );
     }
 
@@ -152,6 +157,7 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         ParanetStructs.RequestStatus status
     ) external onlyContracts {
         paranets[paranetId].paranetNodeJoinRequests[identityId][index].status = status;
+        paranets[paranetId].paranetNodeJoinRequests[identityId][index].updatedAt = block.timestamp;
     }
 
     function removeNodeJoinRequest(bytes32 paranetId, uint72 identityId, uint256 index) external onlyContracts {
@@ -342,6 +348,64 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
                 paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerAddress]
             ] ==
             knowledgeMinerAddress);
+    }
+
+    function addKnowledgeMinerAccessRequest(
+        bytes32 paranetId,
+        address miner,
+        ParanetStructs.RequestStatus status
+    ) external onlyContracts {
+        paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner].push(
+            ParanetStructs.ParanetKnowledgeMinerAccessRequest({
+                createdAt: block.timestamp,
+                updatedAt: block.timestamp,
+                miner: miner,
+                status: status
+            })
+        );
+    }
+
+    function updateKnowledgeMinerAccessRequestStatus(
+        bytes32 paranetId,
+        address miner,
+        uint256 index,
+        ParanetStructs.RequestStatus status
+    ) external onlyContracts {
+        paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner][index].status = status;
+        paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner][index].updatedAt = block.timestamp;
+    }
+
+    function removeKnowledgeMinerAccessRequest(bytes32 paranetId, address miner, uint256 index) external onlyContracts {
+        delete paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner][index];
+    }
+
+    function getKnowledgeMinerAccessRequest(
+        bytes32 paranetId,
+        address miner,
+        uint256 index
+    ) external view returns (ParanetStructs.ParanetKnowledgeMinerAccessRequest memory) {
+        return paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner][index];
+    }
+
+    function getLatestKnowledgeMinerAccessRequest(
+        bytes32 paranetId,
+        address miner
+    ) external view returns (ParanetStructs.ParanetKnowledgeMinerAccessRequest memory) {
+        return
+            paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner][
+                paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner].length - 1
+            ];
+    }
+
+    function getKnowledgeMinerAccessRequests(
+        bytes32 paranetId,
+        address miner
+    ) external view returns (ParanetStructs.ParanetKnowledgeMinerAccessRequest[] memory) {
+        return paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner];
+    }
+
+    function getKnowledgeMinerAccessRequestsCount(bytes32 paranetId, address miner) external view returns (uint256) {
+        return paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner].length;
     }
 
     function addKnowledgeAsset(bytes32 paranetId, bytes32 knowledgeAssetId) external onlyContracts {
