@@ -31,24 +31,6 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
 
 config.networks = {
   ...config.networks,
-  otp_alphanet: {
-    environment: 'devnet',
-    chainId: 2043,
-    url: rpc('otp_alphanet'),
-    gas: 10_000_000, // Gas limit used for deployments
-    gasPrice: 20,
-    accounts: accounts('otp_alphanet'),
-    saveDeployments: false,
-  },
-  otp_devnet: {
-    environment: 'devnet',
-    chainId: 2160,
-    url: rpc('otp_devnet'),
-    gas: 10_000_000, // Gas limit used for deployments
-    gasPrice: 1_000_000,
-    accounts: accounts('otp_devnet'),
-    saveDeployments: false,
-  },
   otp_testnet: {
     environment: 'testnet',
     chainId: 20430,
@@ -67,14 +49,6 @@ config.networks = {
     accounts: accounts('otp_mainnet'),
     saveDeployments: false,
   },
-  gnosis_chiado_dev: {
-    environment: 'devnet',
-    chainId: 10200,
-    url: rpc('gnosis_chiado_dev'),
-    gasPrice: 1_000_000_000,
-    accounts: accounts('gnosis_chiado_dev'),
-    saveDeployments: false,
-  },
   gnosis_chiado_test: {
     environment: 'testnet',
     chainId: 10200,
@@ -90,12 +64,20 @@ config.networks = {
     accounts: accounts('gnosis_mainnet'),
     saveDeployments: false,
   },
-  base_sepolia_dev: {
+  base_sepolia_v8_dev: {
     environment: 'devnet',
     chainId: 84532,
-    url: rpc('base_sepolia_dev'),
+    url: rpc('base_sepolia_v8_dev'),
     gasPrice: 1_000_000_000,
-    accounts: accounts('base_sepolia_dev'),
+    accounts: accounts('base_sepolia_v8_dev'),
+    saveDeployments: false,
+  },
+  base_sepolia_v8_stable_dev: {
+    environment: 'devnet',
+    chainId: 84532,
+    url: rpc('base_sepolia_v8_stable_dev'),
+    gasPrice: 1_000_000_000,
+    accounts: accounts('base_sepolia_v8_stable_dev'),
     saveDeployments: false,
   },
   base_sepolia_test: {
