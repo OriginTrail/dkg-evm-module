@@ -24,6 +24,11 @@ library ParanetStructs {
         OPEN
     }
 
+    struct Node {
+        uint72 identityId;
+        bytes nodeId;
+    }
+
     enum RequestStatus {
         NONE,
         PENDING,
@@ -55,7 +60,7 @@ library ParanetStructs {
         KnowledgeAssetsAccessPolicy knowledgeAssetsAccessPolicy;
         uint96 cumulativeKnowledgeValue;
         UnorderedNamedContractDynamicSetStructs.Set incentivesPools;
-        uint72[] curatedNodes;
+        Node[] curatedNodes;
         // Identity ID => Index in the array
         mapping(uint72 => uint256) curatedNodesIndexes;
         // Identity ID => Requests Array

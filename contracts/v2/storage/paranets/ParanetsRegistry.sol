@@ -193,23 +193,23 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         return paranets[paranetId].paranetNodeJoinRequests[identityId].length;
     }
 
-    function addCuratedNode(bytes32 paranetId, uint72 identityId) external onlyContracts {
+    function addCuratedNode(bytes32 paranetId, uint72 identityId, bytes calldata nodeId) external onlyContracts {
         paranets[paranetId].curatedNodesIndexes[identityId] = paranets[paranetId].curatedNodes.length;
-        paranets[paranetId].curatedNodes.push(identityId);
+        paranets[paranetId].curatedNodes.push(ParanetStructs.Node({identityId: identityId, nodeId: nodeId}));
     }
 
     function removeCuratedNode(bytes32 paranetId, uint72 identityId) external onlyContracts {
         paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodesIndexes[identityId]] = paranets[paranetId]
             .curatedNodes[paranets[paranetId].curatedNodes.length - 1];
         paranets[paranetId].curatedNodesIndexes[
-            paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodes.length - 1]
+            paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodes.length - 1].identityId
         ] = paranets[paranetId].curatedNodesIndexes[identityId];
 
         delete paranets[paranetId].curatedNodesIndexes[identityId];
         paranets[paranetId].curatedNodes.pop();
     }
 
-    function getCuratedNodes(bytes32 paranetId) external view returns (uint72[] memory) {
+    function getCuratedNodes(bytes32 paranetId) external view returns (ParanetStructs.Node[] memory) {
         return paranets[paranetId].curatedNodes;
     }
 
@@ -219,7 +219,8 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
 
     function isCuratedNode(bytes32 paranetId, uint72 identityId) external view returns (bool) {
         return (paranets[paranetId].curatedNodes.length != 0 &&
-            paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodesIndexes[identityId]] == identityId);
+            paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodesIndexes[identityId]].identityId ==
+            identityId);
     }
 
     function getIncentivesPoolAddress(

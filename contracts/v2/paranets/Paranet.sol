@@ -264,7 +264,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                 revert ParanetErrors.ParanetCuratedNodeHasAlreadyBeenAdded(paranetId, identityIds[i]);
             }
 
-            pr.addCuratedNode(paranetId, identityIds[i]);
+            pr.addCuratedNode(paranetId, identityIds[i], ps.getNodeId(identityIds[i]));
 
             emit ParanetCuratedNodeAdded(paranetKAStorageContract, paranetKATokenId, identityIds[i]);
 
@@ -410,7 +410,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             paranetNodeJoinRequests.length - 1,
             ParanetStructs.RequestStatus.APPROVED
         );
-        pr.addCuratedNode(paranetId, identityId);
+        pr.addCuratedNode(paranetId, identityId, profileStorage.getNodeId(identityId));
 
         emit ParanetCuratedNodeJoinRequestAccepted(paranetKAStorageContract, paranetKATokenId, identityId);
         emit ParanetCuratedNodeAdded(paranetKAStorageContract, paranetKATokenId, identityId);
