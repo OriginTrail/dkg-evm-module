@@ -45,8 +45,8 @@ This project utilizes a variety of NPM scripts to run various tasks and processe
 - `compile:size`: Compiles the smart contracts and analyzes the size of the compiled contracts using the hardhat-contract-sizer plugin.
 - `compile`: Compiles the smart contracts with specific configuration using `hardhat.node.config.ts`.
 - `coverage`: Generates a code coverage report for the smart contracts with specific network and coverage settings.
-- `deploy:v1:gnosis_chiado_dev`, `deploy:v1:gnosis_chiado_test`, `deploy:v1:gnosis_mainnet`, `deploy:v1:localhost`, `deploy:v1:otp_alphanet`, `deploy:v1:otp_devnet`, `deploy:v1:otp_mainnet`, `deploy:v1:otp_testnet`, and `deploy:v1`: Deploy version 1 of the smart contracts to various networks including Gnosis Chiado, Hardhat, OriginTrail Parachain Alphanet, OriginTrail Parachain Devnet, OriginTrail Parachain Testnet, and OriginTrail Parachain Mainnet.
-- `deploy:v2:gnosis_chiado_dev`, `deploy:v2:gnosis_chiado_test`, `deploy:v2:gnosis_mainnet`, `deploy:v2:localhost`, `deploy:v2:otp_alphanet`, `deploy:v2:otp_devnet`, `deploy:v2:otp_mainnet`, `deploy:v2:otp_testnet`, and `deploy:v2`: Similar to the v1 deploy scripts, these deploy version 2 of the smart contracts to the respective networks.
+- `deploy:v1:gnosis_chiado_test`, `deploy:v1:gnosis_mainnet`, `deploy:v1:localhost`,  `deploy:v1:otp_mainnet`, `deploy:v1:otp_testnet`, and `deploy:v1`: Deploy version 1 of the smart contracts to various networks including Gnosis Chiado, Hardhat, OriginTrail Parachain Alphanet, OriginTrail Parachain Devnet, OriginTrail Parachain Testnet, and OriginTrail Parachain Mainnet.
+- `deploy:v2:gnosis_chiado_test`, `deploy:v2:gnosis_mainnet`, `deploy:v2:localhost`, `deploy:v2:otp_mainnet`, `deploy:v2:otp_testnet`, and `deploy:v2`: Similar to the v1 deploy scripts, these deploy version 2 of the smart contracts to the respective networks.
 - `dev:v1`, `dev:v2`, and `dev`: Run local development nodes with Hardhat for different versions of contracts.
 - `export-abi`: Updates ABI files according to the current state of the smart contracts.
 - `format:fix`: Automatically fixes code formatting issues for JSON, JavaScript, TypeScript, and Solidity files using Prettier.
@@ -71,7 +71,7 @@ Hardhat has plenty of other useful commands, extended by the installed plugins. 
 - `decode`: Decodes encoded ABI data (e.g. input data of transaction).
 - `encode_selector`: Calculates EVM function/event/error selector (sighash).
 - `encode_data`: Encodes data needed for low-level contract calls.
-- `clear_sharding_table`: Removes nodes from sharding table based on Node IDs from the given CSV file (example usage: `npx hardhat clear_sharding_table --file-path ./peers.csv --network otp_devnet`).
+- `clear_sharding_table`: Removes nodes from sharding table based on Node IDs from the given CSV file (example usage: `npx hardhat clear_sharding_table --file-path ./peers.csv --network otp_testnet`).
 
 These tasks can be run using the `npx hardhat <task-name>` command. For example, to decode input data, you can run:
 
