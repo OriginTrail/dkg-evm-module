@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import hre from 'hardhat';
@@ -18,6 +20,8 @@ import {
   Token,
   ServiceAgreementV1,
   ParanetIncentivesPoolFactory,
+  Profile,
+  Staking,
 } from '../../../typechain';
 import { ParanetStructs } from '../../../typechain/contracts/v2/paranets/Paranet';
 
@@ -38,7 +42,7 @@ type deployParanetFixture = {
   ServiceAgreementV1: ServiceAgreementV1;
 };
 
-describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
+describe('@v2 @unit Paranet contract', function () {
   let accounts: SignerWithAddress[];
   let Paranet: Paranet;
   let HubController: HubController;
@@ -53,6 +57,8 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   let ServiceAgreementStorageProxy: ServiceAgreementStorageProxy;
   let Token: Token;
   let ServiceAgreementV1: ServiceAgreementV1;
+  let Profile: Profile;
+  let Staking: Staking;
 
   async function deployParanetFixture(): Promise<deployParanetFixture> {
     await hre.deployments.fixture(
@@ -71,6 +77,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
         'ServiceAgreementStorageProxy',
         'Token',
         'ServiceAgreementV1',
+        'Profile',
       ],
       { keepExistingDeployments: false },
     );
@@ -100,6 +107,9 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     accounts = await hre.ethers.getSigners();
     await HubController.setContractAddress('HubOwner', accounts[0].address);
 
+    Profile = await hre.ethers.getContract<Profile>('Profile');
+    Staking = await hre.ethers.getContract<Staking>('Staking');
+
     return {
       accounts,
       Paranet,
@@ -116,6 +126,30 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       Token,
       ServiceAgreementV1,
     };
+  }
+
+  async function createProfile(operational: SignerWithAddress, admin: SignerWithAddress): Promise<number> {
+    const OperationalProfile = Profile.connect(operational);
+
+    const receipt = await (
+      await OperationalProfile.createProfile(
+        admin.address,
+        [],
+        '0x' + randomBytes(32).toString('hex'),
+        randomBytes(3).toString('hex'),
+        randomBytes(2).toString('hex'),
+        0,
+      )
+    ).wait();
+    const identityId = Number(receipt.logs[0].topics[1]);
+
+    await OperationalProfile.setAsk(identityId, hre.ethers.utils.parseEther('0.25'));
+
+    const stakeAmount = hre.ethers.utils.parseEther('50000');
+    await Token.connect(admin).increaseAllowance(Staking.address, stakeAmount);
+    await Staking.connect(admin)['addStake(uint72,uint96)'](identityId, stakeAmount);
+
+    return identityId;
   }
 
   beforeEach(async () => {
@@ -925,6 +959,463 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       .to.emit(Paranet, 'KnowledgeAssetSubmittedToParanet')
       .and.to.emit(ContentAssetV2, 'AssetMinted')
       .and.to.emit(ServiceAgreementV1, 'ServiceAgreementV1Created');
+  });
+
+  it('should add and remove paranet curated nodes', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 1, 3);
+
+    const identityId1 = await createProfile(accounts[11], accounts[1]);
+    const identityId2 = await createProfile(accounts[12], accounts[1]);
+
+    await expect(
+      Paranet.connect(accounts[103]).addParanetCuratedNodes(paranetKAStorageContract, paranetKATokenId, [
+        identityId1,
+        identityId2,
+      ]),
+    )
+      .to.emit(Paranet, 'ParanetCuratedNodeAdded')
+      .withArgs(paranetKAStorageContract, paranetKATokenId, identityId1);
+
+    const curatedNodesCount = await ParanetsRegistry.getCuratedNodesCount(paranetId);
+    expect(curatedNodesCount).to.be.equal(2);
+
+    await expect(
+      Paranet.connect(accounts[103]).removeParanetCuratedNodes(paranetKAStorageContract, paranetKATokenId, [
+        identityId1,
+      ]),
+    )
+      .to.emit(Paranet, 'ParanetCuratedNodeRemoved')
+      .withArgs(paranetKAStorageContract, paranetKATokenId, identityId1);
+
+    const curatedNodes = await ParanetsRegistry.getCuratedNodes(paranetId);
+    expect(curatedNodes.length).to.be.equal(1);
+    expect(curatedNodes[0].identityId).to.be.equal(identityId2);
+  });
+
+  it('Should revert when trying to add a curated node to or remove a curated node from a paranet with OPEN nodes access policy', async () => {
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 0, 1, 3); // 0 for OPEN nodes policy
+
+    const identityId = await createProfile(accounts[1], accounts[2]);
+
+    await expect(
+      Paranet.connect(accounts[103]).addParanetCuratedNodes(paranetKAStorageContract, paranetKATokenId, [identityId]),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'InvalidParanetNodesAccessPolicy')
+      .withArgs([1], 0); // 1 for CURATED, 0 for OPEN
+
+    await expect(
+      Paranet.connect(accounts[103]).removeParanetCuratedNodes(paranetKAStorageContract, paranetKATokenId, [
+        identityId,
+      ]),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'InvalidParanetNodesAccessPolicy')
+      .withArgs([1], 0); // 1 for CURATED, 0 for OPEN
+  });
+
+  it('should revert when trying to add a curated node with a non-existent profile', async () => {
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 1, 1, 3); // 1 for CURATED nodes policy
+
+    const nonExistentIdentityId = 999999; // Assuming this ID doesn't exist
+
+    await expect(
+      Paranet.connect(accounts[103]).addParanetCuratedNodes(paranetKAStorageContract, paranetKATokenId, [
+        nonExistentIdentityId,
+      ]),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ProfileDoesntExist')
+      .withArgs(nonExistentIdentityId);
+  });
+
+  it('should revert when trying to add a curated node that has already been added', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 1, 3); // 1 for CURATED nodes policy
+
+    const identityId = await createProfile(accounts[1], accounts[2]);
+
+    // Add the node for the first time
+    await Paranet.connect(accounts[103]).addParanetCuratedNodes(paranetKAStorageContract, paranetKATokenId, [
+      identityId,
+    ]);
+
+    // Try to add the same node again
+    await expect(
+      Paranet.connect(accounts[103]).addParanetCuratedNodes(paranetKAStorageContract, paranetKATokenId, [identityId]),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedNodeHasAlreadyBeenAdded')
+      .withArgs(paranetId, identityId);
+  });
+
+  it('should revert when trying to remove a non-existent curated node', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 1, 3); // 1 for CURATED nodes policy
+
+    const nonExistentIdentityId = 999999; // Assuming this ID doesn't exist
+
+    await expect(
+      Paranet.connect(accounts[103]).removeParanetCuratedNodes(paranetKAStorageContract, paranetKATokenId, [
+        nonExistentIdentityId,
+      ]),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedNodeDoesntExist')
+      .withArgs(paranetId, nonExistentIdentityId);
+  });
+
+  it('should request curated node access, approve and reject', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 1, 3);
+
+    const identityId1 = await createProfile(accounts[11], accounts[1]);
+    const identityId2 = await createProfile(accounts[12], accounts[1]);
+
+    // node1 - request curated node access
+    await expect(
+      Paranet.connect(accounts[11]).requestParanetCuratedNodeAccess(paranetKAStorageContract, paranetKATokenId),
+    )
+      .to.emit(Paranet, 'ParanetCuratedNodeJoinRequestCreated')
+      .withArgs(paranetKAStorageContract, paranetKATokenId, identityId1);
+
+    // approve curated node request for node1
+    await expect(
+      Paranet.connect(accounts[103]).approveCuratedNode(paranetKAStorageContract, paranetKATokenId, identityId1),
+    )
+      .to.emit(Paranet, 'ParanetCuratedNodeJoinRequestAccepted')
+      .withArgs(paranetKAStorageContract, paranetKATokenId, identityId1)
+      .and.to.emit(Paranet, 'ParanetCuratedNodeAdded')
+      .withArgs(paranetKAStorageContract, paranetKATokenId, identityId1);
+
+    let curatedNodes = await ParanetsRegistry.getCuratedNodes(paranetId);
+    expect(curatedNodes.length).to.be.equal(1);
+    expect(curatedNodes[0].identityId).to.be.equal(identityId1);
+
+    // node2 - request curated node access
+    await Paranet.connect(accounts[12]).requestParanetCuratedNodeAccess(paranetKAStorageContract, paranetKATokenId);
+
+    // node2 - reject curated node request
+    await expect(
+      Paranet.connect(accounts[103]).rejectCuratedNode(paranetKAStorageContract, paranetKATokenId, identityId2),
+    )
+      .to.emit(Paranet, 'ParanetCuratedNodeJoinRequestRejected')
+      .withArgs(paranetKAStorageContract, paranetKATokenId, identityId2);
+
+    curatedNodes = await ParanetsRegistry.getCuratedNodes(paranetId);
+    expect(curatedNodes.length).to.be.equal(1);
+  });
+
+  it('should revert when requesting curated node access for a paranet with OPEN nodes policy', async () => {
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 0, 0, 3); // 0 for OPEN nodes policy
+
+    await expect(
+      Paranet.connect(accounts[1]).requestParanetCuratedNodeAccess(paranetKAStorageContract, paranetKATokenId),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'InvalidParanetNodesAccessPolicy')
+      .withArgs([1], 0); // 1 for CURATED, 0 for OPEN
+  });
+
+  it('should revert when requesting curated node access without a profile', async () => {
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 1, 0, 3); // 1 for CURATED nodes policy
+
+    await expect(
+      Paranet.connect(accounts[99]).requestParanetCuratedNodeAccess(paranetKAStorageContract, paranetKATokenId),
+    ).to.be.revertedWithCustomError(Paranet, 'ProfileDoesntExist');
+  });
+
+  it('should revert when requesting curated node access with a pending request', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 0, 3); // 1 for CURATED nodes policy
+
+    const nodeIdentityId = await createProfile(accounts[1], accounts[2]);
+
+    await Paranet.connect(accounts[1]).requestParanetCuratedNodeAccess(paranetKAStorageContract, paranetKATokenId);
+
+    await expect(
+      Paranet.connect(accounts[1]).requestParanetCuratedNodeAccess(paranetKAStorageContract, paranetKATokenId),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedNodeJoinRequestInvalidStatus')
+      .withArgs(paranetId, nodeIdentityId, 1); // 1 for PENDING status
+  });
+
+  it('should revert when approving a non-existent curated node join request', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 0, 3); // 1 for CURATED nodes policy
+
+    const nodeIdentityId = await createProfile(accounts[1], accounts[2]);
+
+    await expect(
+      Paranet.connect(accounts[103]).approveCuratedNode(paranetKAStorageContract, paranetKATokenId, nodeIdentityId),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedNodeJoinRequestDoesntExist')
+      .withArgs(paranetId, nodeIdentityId);
+  });
+
+  it('should revert when approving a curated node join request with invalid status', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 0, 3); // 1 for CURATED nodes policy
+
+    const nodeIdentityId = await createProfile(accounts[1], accounts[2]);
+
+    await Paranet.connect(accounts[1]).requestParanetCuratedNodeAccess(paranetKAStorageContract, paranetKATokenId);
+
+    await Paranet.connect(accounts[103]).approveCuratedNode(paranetKAStorageContract, paranetKATokenId, nodeIdentityId);
+
+    await expect(
+      Paranet.connect(accounts[103]).approveCuratedNode(paranetKAStorageContract, paranetKATokenId, nodeIdentityId),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedNodeJoinRequestInvalidStatus')
+      .withArgs(paranetId, nodeIdentityId, 2); // 2 for APPROVED status
+  });
+
+  it('should revert when rejecting a non-existent curated node join request', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 0, 3); // 1 for CURATED nodes policy
+
+    const nonExistentIdentityId = 999999; // Assuming this ID doesn't exist
+
+    await expect(
+      Paranet.connect(accounts[103]).rejectCuratedNode(
+        paranetKAStorageContract,
+        paranetKATokenId,
+        nonExistentIdentityId,
+      ),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedNodeJoinRequestDoesntExist')
+      .withArgs(paranetId, nonExistentIdentityId);
+  });
+
+  it('should revert when rejecting a curated node join request with invalid status', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 0, 3); // 1 for CURATED nodes policy
+
+    const nodeIdentityId = await createProfile(accounts[1], accounts[2]);
+
+    await Paranet.connect(accounts[1]).requestParanetCuratedNodeAccess(paranetKAStorageContract, paranetKATokenId);
+
+    await Paranet.connect(accounts[103]).rejectCuratedNode(paranetKAStorageContract, paranetKATokenId, nodeIdentityId);
+
+    await expect(
+      Paranet.connect(accounts[103]).rejectCuratedNode(paranetKAStorageContract, paranetKATokenId, nodeIdentityId),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedNodeJoinRequestInvalidStatus')
+      .withArgs(paranetId, nodeIdentityId, 3); // 3 for REJECTED status
+  });
+
+  it('should add and remove paranet curated miners', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 1, 3);
+
+    const miner1 = accounts[1];
+    const miner2 = accounts[2];
+
+    await Paranet.connect(accounts[103]).addParanetCuratedMiners(paranetKAStorageContract, paranetKATokenId, [
+      miner1.address,
+      miner2.address,
+    ]);
+
+    let knowledgeMiners = await ParanetsRegistry.getKnowledgeMiners(paranetId);
+    expect(knowledgeMiners.length).to.be.equal(2);
+    expect(knowledgeMiners[0]).to.be.equal(miner1.address);
+
+    await Paranet.connect(accounts[103]).removeParanetCuratedMiners(paranetKAStorageContract, paranetKATokenId, [
+      miner1.address,
+    ]);
+
+    knowledgeMiners = await ParanetsRegistry.getKnowledgeMiners(paranetId);
+    expect(knowledgeMiners.length).to.be.equal(1);
+    expect(knowledgeMiners[0]).to.be.equal(miner2.address);
+  });
+
+  it('should emit events when adding and removing a curated miner', async () => {
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 1, 1, 3); // 1 for CURATED miners policy
+
+    const minerAddress = accounts[3].address;
+
+    // Test adding a curated miner
+    await expect(
+      Paranet.connect(accounts[103]).addParanetCuratedMiners(paranetKAStorageContract, paranetKATokenId, [
+        minerAddress,
+      ]),
+    )
+      .to.emit(Paranet, 'ParanetCuratedMinerAdded')
+      .withArgs(paranetKAStorageContract, paranetKATokenId, minerAddress);
+
+    // Test removing a curated miner
+    await expect(
+      Paranet.connect(accounts[103]).removeParanetCuratedMiners(paranetKAStorageContract, paranetKATokenId, [
+        minerAddress,
+      ]),
+    )
+      .to.emit(Paranet, 'ParanetCuratedMinerRemoved')
+      .withArgs(paranetKAStorageContract, paranetKATokenId, minerAddress);
+  });
+
+  it('Should revert when trying to add a curated miner to or remove a curated miner from a paranet with OPEN miners access policy', async () => {
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 1, 0, 3); // 0 for OPEN miners policy
+
+    const minerAddress = accounts[3].address;
+
+    await expect(
+      Paranet.connect(accounts[103]).addParanetCuratedMiners(paranetKAStorageContract, paranetKATokenId, [
+        minerAddress,
+      ]),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'InvalidParanetMinersAccessPolicy')
+      .withArgs([1], 0); // 1 for CURATED, 0 for OPEN
+
+    await expect(
+      Paranet.connect(accounts[103]).removeParanetCuratedMiners(paranetKAStorageContract, paranetKATokenId, [
+        minerAddress,
+      ]),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'InvalidParanetMinersAccessPolicy')
+      .withArgs([1], 0); // 1 for CURATED, 0 for OPEN
+  });
+
+  it('should revert when trying to add a curated miner that has already been added', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 1, 3); // 1 for CURATED miners policy
+
+    const minerAddress = accounts[3].address;
+
+    // Add the miner for the first time
+    await Paranet.connect(accounts[103]).addParanetCuratedMiners(paranetKAStorageContract, paranetKATokenId, [
+      minerAddress,
+    ]);
+
+    // Try to add the same miner again
+    await expect(
+      Paranet.connect(accounts[103]).addParanetCuratedMiners(paranetKAStorageContract, paranetKATokenId, [
+        minerAddress,
+      ]),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedMinerHasAlreadyBeenAdded')
+      .withArgs(paranetId, minerAddress);
+  });
+
+  it('should revert when trying to remove a non-existent curated miner', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 1, 3); // 1 for CURATED miners policy
+
+    const nonExistentMinerAddress = accounts[99].address; // Assuming this address is not registered
+
+    await expect(
+      Paranet.connect(accounts[103]).removeParanetCuratedMiners(paranetKAStorageContract, paranetKATokenId, [
+        nonExistentMinerAddress,
+      ]),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedMinerDoesntExist')
+      .withArgs(paranetId, nonExistentMinerAddress);
+  });
+
+  it('should request curated miner access, approve and reject', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 1, 3);
+
+    const miner1 = accounts[1];
+    const miner2 = accounts[2];
+
+    await expect(Paranet.connect(miner1).requestParanetCuratedMinerAccess(paranetKAStorageContract, paranetKATokenId))
+      .to.emit(Paranet, 'ParanetCuratedMinerAccessRequestCreated')
+      .withArgs(paranetKAStorageContract, paranetKATokenId, miner1.address);
+
+    // approve curated miner request for miner1
+    await expect(
+      Paranet.connect(accounts[103]).approveCuratedMiner(paranetKAStorageContract, paranetKATokenId, miner1.address),
+    )
+      .to.emit(Paranet, 'ParanetCuratedMinerAccessRequestAccepted')
+      .withArgs(paranetKAStorageContract, paranetKATokenId, miner1.address)
+      .and.to.emit(Paranet, 'ParanetCuratedMinerAdded')
+      .withArgs(paranetKAStorageContract, paranetKATokenId, miner1.address);
+
+    let knowledgeMiners = await ParanetsRegistry.getKnowledgeMiners(paranetId);
+    expect(knowledgeMiners.length).to.be.equal(1);
+    expect(knowledgeMiners[0]).to.be.equal(miner1.address);
+
+    // miner2 - request curated miner access
+    await Paranet.connect(miner2).requestParanetCuratedMinerAccess(paranetKAStorageContract, paranetKATokenId);
+
+    // miner2 - reject curated miner request
+    await expect(
+      Paranet.connect(accounts[103]).rejectCuratedMiner(paranetKAStorageContract, paranetKATokenId, miner2.address),
+    )
+      .to.emit(Paranet, 'ParanetCuratedMinerAccessRequestRejected')
+      .withArgs(paranetKAStorageContract, paranetKATokenId, miner2.address);
+
+    knowledgeMiners = await ParanetsRegistry.getKnowledgeMiners(paranetId);
+    expect(knowledgeMiners.length).to.be.equal(1);
+  });
+
+  // HERE
+  it('should revert when requesting curated miner access for a paranet with OPEN miners policy', async () => {
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 1, 0, 3); // 0 for OPEN miners policy
+
+    await expect(
+      Paranet.connect(accounts[1]).requestParanetCuratedMinerAccess(paranetKAStorageContract, paranetKATokenId),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'InvalidParanetMinersAccessPolicy')
+      .withArgs([1], 0); // 1 for CURATED, 0 for OPEN
+  });
+
+  it('should revert when requesting curated miner access with a pending request', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 1, 3); // 1 for CURATED miners policy
+
+    const miner = accounts[1];
+
+    await Paranet.connect(miner).requestParanetCuratedMinerAccess(paranetKAStorageContract, paranetKATokenId);
+
+    await expect(Paranet.connect(miner).requestParanetCuratedMinerAccess(paranetKAStorageContract, paranetKATokenId))
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedMinerAccessRequestInvalidStatus')
+      .withArgs(paranetId, miner.address, 1); // 1 for PENDING status
+  });
+
+  it('should revert when approving a non-existent curated miner access request', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 1, 3); // 1 for CURATED miners policy
+
+    const nonExistentMiner = accounts[99];
+
+    await expect(
+      Paranet.connect(accounts[103]).approveCuratedMiner(
+        paranetKAStorageContract,
+        paranetKATokenId,
+        nonExistentMiner.address,
+      ),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedMinerAccessRequestDoesntExist')
+      .withArgs(paranetId, nonExistentMiner.address);
+  });
+
+  it('should revert when approving a curated miner access request with invalid status', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 1, 3); // 1 for CURATED miners policy
+
+    const miner = accounts[1];
+
+    await Paranet.connect(miner).requestParanetCuratedMinerAccess(paranetKAStorageContract, paranetKATokenId);
+
+    await Paranet.connect(accounts[103]).approveCuratedMiner(paranetKAStorageContract, paranetKATokenId, miner.address);
+
+    await expect(
+      Paranet.connect(accounts[103]).approveCuratedMiner(paranetKAStorageContract, paranetKATokenId, miner.address),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedMinerAccessRequestInvalidStatus')
+      .withArgs(paranetId, miner.address, 2); // 2 for APPROVED status
+  });
+
+  it('should revert when rejecting a non-existent curated miner access request', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 1, 3); // 1 for CURATED miners policy
+
+    const nonExistentMiner = accounts[99];
+
+    await expect(
+      Paranet.connect(accounts[103]).rejectCuratedMiner(
+        paranetKAStorageContract,
+        paranetKATokenId,
+        nonExistentMiner.address,
+      ),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedMinerAccessRequestDoesntExist')
+      .withArgs(paranetId, nonExistentMiner.address);
+  });
+
+  it('should revert when rejecting a curated miner access request with invalid status', async () => {
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1, 1, 3); // 1 for CURATED miners policy
+
+    const miner = accounts[1];
+
+    await Paranet.connect(miner).requestParanetCuratedMinerAccess(paranetKAStorageContract, paranetKATokenId);
+
+    await Paranet.connect(accounts[103]).rejectCuratedMiner(paranetKAStorageContract, paranetKATokenId, miner.address);
+
+    await expect(
+      Paranet.connect(accounts[103]).rejectCuratedMiner(paranetKAStorageContract, paranetKATokenId, miner.address),
+    )
+      .to.be.revertedWithCustomError(Paranet, 'ParanetCuratedMinerAccessRequestInvalidStatus')
+      .withArgs(paranetId, miner.address, 3); // 3 for REJECTED status
   });
 
   async function registerParanet(
