@@ -91,6 +91,7 @@
     "deploy:v2:base_sepolia_v8_dev": "hardhat deploy --network base_sepolia_v8_dev --tags v1,v2",
     "deploy:v2:base_sepolia_v8_stable_dev": "hardhat deploy --network base_sepolia_v8_stable_dev --tags v1,v2",
     "deploy:v2:base_sepolia_test": "hardhat deploy --network base_sepolia_test --tags v1,v2",
+    "deploy:v2:base_sepolia_v8_test": "hardhat deploy --network base_sepolia_v8_test --tags v1,v2",
     "deploy:v2:base_mainnet": "hardhat deploy --network base_mainnet --tags v1,v2",
     "deploy:v2:gnosis_chiado_test": "hardhat deploy --network gnosis_chiado_test --tags v1,v2",
     "deploy:v2:gnosis_mainnet": "hardhat deploy --network gnosis_mainnet --tags v1,v2",

@@ -80,6 +80,14 @@ config.networks = {
     accounts: accounts('base_sepolia_v8_stable_dev'),
     saveDeployments: false,
   },
+  base_sepolia_v8_test: {
+    environment: 'testnet',
+    chainId: 84532,
+    url: rpc('base_sepolia_v8_test'),
+    gasPrice: 1_000_000_000,
+    accounts: accounts('base_sepolia_v8_test'),
+    saveDeployments: false,
+  },
   base_sepolia_test: {
     environment: 'testnet',
     chainId: 84532,
