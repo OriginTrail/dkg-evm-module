@@ -332,6 +332,11 @@
   },
   "testnet": {
     "overrides": {
+      "base_sepolia_v8_test": {
+        "ParametersStorage": {
+          "minimumStake": 0
+        }
+      },
       "otp_testnet": {
         "CommitManagerV1": {
           "reqs": [
