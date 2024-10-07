@@ -13,7 +13,7 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
     using UnorderedNamedContractDynamicSetLibV2 for UnorderedNamedContractDynamicSetStructs.Set;
 
     string private constant _NAME = "ParanetsRegistry";
-    string private constant _VERSION = "2.1.0";
+    string private constant _VERSION = "2.2.0";
 
     // Paranet ID => Paranet Object
     mapping(bytes32 => ParanetStructs.Paranet) internal paranets;
@@ -33,7 +33,10 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         address knowledgeAssetStorageContract,
         uint256 tokenId,
         string calldata paranetName,
-        string calldata paranetDescription
+        string calldata paranetDescription,
+        ParanetStructs.NodesAccessPolicy nodesAccessPolicy,
+        ParanetStructs.MinersAccessPolicy minersAccessPolicy,
+        ParanetStructs.KnowledgeAssetsAccessPolicy knowledgeAssetsAccessPolicy
     ) external onlyContracts returns (bytes32) {
         ParanetStructs.Paranet storage paranet = paranets[
             keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId))
@@ -43,6 +46,9 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
         paranet.paranetKATokenId = tokenId;
         paranet.name = paranetName;
         paranet.description = paranetDescription;
+        paranet.nodesAccessPolicy = nodesAccessPolicy;
+        paranet.minersAccessPolicy = minersAccessPolicy;
+        paranet.knowledgeAssetsAccessPolicy = knowledgeAssetsAccessPolicy;
 
         return keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId));
     }
@@ -67,6 +73,9 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
                 paranetKATokenId: paranet.paranetKATokenId,
                 name: paranet.name,
                 description: paranet.description,
+                nodesAccessPolicy: paranet.nodesAccessPolicy,
+                minersAccessPolicy: paranet.minersAccessPolicy,
+                knowledgeAssetsAccessPolicy: paranet.knowledgeAssetsAccessPolicy,
                 cumulativeKnowledgeValue: paranet.cumulativeKnowledgeValue
             });
     }
@@ -89,6 +98,129 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
 
     function setDescription(bytes32 paranetId, string calldata description) external onlyContracts {
         paranets[paranetId].description = description;
+    }
+
+    function getNodesAccessPolicy(bytes32 paranetId) external view returns (ParanetStructs.NodesAccessPolicy) {
+        return paranets[paranetId].nodesAccessPolicy;
+    }
+
+    function setNodesAccessPolicy(
+        bytes32 paranetId,
+        ParanetStructs.NodesAccessPolicy nodesAccessPolicy
+    ) external onlyContracts {
+        paranets[paranetId].nodesAccessPolicy = nodesAccessPolicy;
+    }
+
+    function getMinersAccessPolicy(bytes32 paranetId) external view returns (ParanetStructs.MinersAccessPolicy) {
+        return paranets[paranetId].minersAccessPolicy;
+    }
+
+    function setMinersAccessPolicy(
+        bytes32 paranetId,
+        ParanetStructs.MinersAccessPolicy minersAccessPolicy
+    ) external onlyContracts {
+        paranets[paranetId].minersAccessPolicy = minersAccessPolicy;
+    }
+
+    function getKnowledgeAssetsAccessPolicy(
+        bytes32 paranetId
+    ) external view returns (ParanetStructs.KnowledgeAssetsAccessPolicy) {
+        return paranets[paranetId].knowledgeAssetsAccessPolicy;
+    }
+
+    function setKnowledgeAssetsAccessPolicy(
+        bytes32 paranetId,
+        ParanetStructs.KnowledgeAssetsAccessPolicy knowledgeAssetsAccessPolicy
+    ) external onlyContracts {
+        paranets[paranetId].knowledgeAssetsAccessPolicy = knowledgeAssetsAccessPolicy;
+    }
+
+    function addNodeJoinRequest(
+        bytes32 paranetId,
+        uint72 identityId,
+        ParanetStructs.RequestStatus status
+    ) external onlyContracts {
+        paranets[paranetId].paranetNodeJoinRequests[identityId].push(
+            ParanetStructs.ParanetNodeJoinRequest({
+                createdAt: block.timestamp,
+                updatedAt: block.timestamp,
+                identityId: identityId,
+                status: status
+            })
+        );
+    }
+
+    function updateNodeJoinRequestStatus(
+        bytes32 paranetId,
+        uint72 identityId,
+        uint256 index,
+        ParanetStructs.RequestStatus status
+    ) external onlyContracts {
+        paranets[paranetId].paranetNodeJoinRequests[identityId][index].status = status;
+        paranets[paranetId].paranetNodeJoinRequests[identityId][index].updatedAt = block.timestamp;
+    }
+
+    function removeNodeJoinRequest(bytes32 paranetId, uint72 identityId, uint256 index) external onlyContracts {
+        delete paranets[paranetId].paranetNodeJoinRequests[identityId][index];
+    }
+
+    function getNodeJoinRequest(
+        bytes32 paranetId,
+        uint72 identityId,
+        uint256 index
+    ) external view returns (ParanetStructs.ParanetNodeJoinRequest memory) {
+        return paranets[paranetId].paranetNodeJoinRequests[identityId][index];
+    }
+
+    function getLatestNodeJoinRequest(
+        bytes32 paranetId,
+        uint72 identityId
+    ) external view returns (ParanetStructs.ParanetNodeJoinRequest memory) {
+        return
+            paranets[paranetId].paranetNodeJoinRequests[identityId][
+                paranets[paranetId].paranetNodeJoinRequests[identityId].length - 1
+            ];
+    }
+
+    function getNodeJoinRequests(
+        bytes32 paranetId,
+        uint72 identityId
+    ) external view returns (ParanetStructs.ParanetNodeJoinRequest[] memory) {
+        return paranets[paranetId].paranetNodeJoinRequests[identityId];
+    }
+
+    function getNodeJoinRequestsCount(bytes32 paranetId, uint72 identityId) external view returns (uint256) {
+        return paranets[paranetId].paranetNodeJoinRequests[identityId].length;
+    }
+
+    function addCuratedNode(bytes32 paranetId, uint72 identityId, bytes calldata nodeId) external onlyContracts {
+        paranets[paranetId].curatedNodesIndexes[identityId] = paranets[paranetId].curatedNodes.length;
+        paranets[paranetId].curatedNodes.push(ParanetStructs.Node({identityId: identityId, nodeId: nodeId}));
+    }
+
+    function removeCuratedNode(bytes32 paranetId, uint72 identityId) external onlyContracts {
+        paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodesIndexes[identityId]] = paranets[paranetId]
+            .curatedNodes[paranets[paranetId].curatedNodes.length - 1];
+        paranets[paranetId].curatedNodesIndexes[
+            paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodes.length - 1].identityId
+        ] = paranets[paranetId].curatedNodesIndexes[identityId];
+
+        delete paranets[paranetId].curatedNodesIndexes[identityId];
+        paranets[paranetId].curatedNodes.pop();
+    }
+
+    function getCuratedNodes(bytes32 paranetId) external view returns (ParanetStructs.Node[] memory) {
+        return paranets[paranetId].curatedNodes;
+    }
+
+    function getCuratedNodesCount(bytes32 paranetId) external view returns (uint256) {
+        return paranets[paranetId].curatedNodes.length;
+    }
+
+    function isCuratedNode(bytes32 paranetId, uint72 identityId) external view returns (bool) {
+        return (paranets[paranetId].curatedNodes.length != 0 &&
+            paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodesIndexes[identityId]].identityId ==
+            identityId);
     }
 
     function getIncentivesPoolAddress(
@@ -217,6 +349,64 @@ contract ParanetsRegistry is Named, Versioned, HubDependentV2 {
                 paranets[paranetId].registeredKnowledgeMinersIndexes[knowledgeMinerAddress]
             ] ==
             knowledgeMinerAddress);
+    }
+
+    function addKnowledgeMinerAccessRequest(
+        bytes32 paranetId,
+        address miner,
+        ParanetStructs.RequestStatus status
+    ) external onlyContracts {
+        paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner].push(
+            ParanetStructs.ParanetKnowledgeMinerAccessRequest({
+                createdAt: block.timestamp,
+                updatedAt: block.timestamp,
+                miner: miner,
+                status: status
+            })
+        );
+    }
+
+    function updateKnowledgeMinerAccessRequestStatus(
+        bytes32 paranetId,
+        address miner,
+        uint256 index,
+        ParanetStructs.RequestStatus status
+    ) external onlyContracts {
+        paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner][index].status = status;
+        paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner][index].updatedAt = block.timestamp;
+    }
+
+    function removeKnowledgeMinerAccessRequest(bytes32 paranetId, address miner, uint256 index) external onlyContracts {
+        delete paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner][index];
+    }
+
+    function getKnowledgeMinerAccessRequest(
+        bytes32 paranetId,
+        address miner,
+        uint256 index
+    ) external view returns (ParanetStructs.ParanetKnowledgeMinerAccessRequest memory) {
+        return paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner][index];
+    }
+
+    function getLatestKnowledgeMinerAccessRequest(
+        bytes32 paranetId,
+        address miner
+    ) external view returns (ParanetStructs.ParanetKnowledgeMinerAccessRequest memory) {
+        return
+            paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner][
+                paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner].length - 1
+            ];
+    }
+
+    function getKnowledgeMinerAccessRequests(
+        bytes32 paranetId,
+        address miner
+    ) external view returns (ParanetStructs.ParanetKnowledgeMinerAccessRequest[] memory) {
+        return paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner];
+    }
+
+    function getKnowledgeMinerAccessRequestsCount(bytes32 paranetId, address miner) external view returns (uint256) {
+        return paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner].length;
     }
 
     function addKnowledgeAsset(bytes32 paranetId, bytes32 knowledgeAssetId) external onlyContracts {

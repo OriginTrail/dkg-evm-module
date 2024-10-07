@@ -119,6 +119,8 @@ describe('@v2 @integration Paranet', function () {
       paranetKATokenId,
       paranetName,
       paranetDescription,
+      0,
+      0,
     );
     await tx1.wait();
 

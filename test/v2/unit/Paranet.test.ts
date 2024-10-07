@@ -127,12 +127,12 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     expect(await Paranet.name()).to.equal('Paranet');
   });
 
-  it('The contract is version "2.1.3"', async () => {
-    expect(await Paranet.version()).to.equal('2.1.3');
+  it('The contract is version "2.2.0"', async () => {
+    expect(await Paranet.version()).to.equal('2.2.0');
   });
 
   it('should register paranet', async () => {
-    const { paranetId } = await registerParanet(accounts, Paranet, 1);
+    const { paranetId } = await registerParanet(accounts, Paranet, 0, 0, 1);
 
     const paranetExists = await ParanetsRegistry.paranetExists(paranetId);
 
@@ -140,7 +140,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should not register paranet that is already registered', async () => {
-    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1);
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 0, 0, 1);
 
     const paranetExists = await ParanetsRegistry.paranetExists(paranetId);
 
@@ -155,16 +155,18 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
         paranetKATokenId,
         paranetName,
         paranetDescription,
+        0,
+        0,
       ),
     ).to.be.revertedWithCustomError(Paranet, 'ParanetHasAlreadyBeenRegistered');
   });
 
   it('should register paranet emit ParanetRegistered event', async () => {
-    expect(await registerParanet(accounts, Paranet, 1)).to.emit(Paranet, 'ParanetRegistered');
+    expect(await registerParanet(accounts, Paranet, 0, 0, 1)).to.emit(Paranet, 'ParanetRegistered');
   });
 
   it('should register paranet will correctly intitalized incentives pool', async () => {
-    const { paranetId } = await registerParanet(accounts, Paranet, 1);
+    const { paranetId } = await registerParanet(accounts, Paranet, 0, 0, 1);
 
     const incentivesPoolAddress = await ParanetsRegistry.getIncentivesPoolAddress(paranetId, 'Neuroweb');
     const incentivesPoolABI = hre.helpers.getAbi('ParanetNeuroIncentivesPool');
@@ -184,7 +186,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should update paranet name with opertor wallet', async () => {
-    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1);
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 0, 0, 1);
 
     await Paranet.connect(accounts[101]).updateParanetMetadata(
       paranetKAStorageContract,
@@ -199,7 +201,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should update paranet name emit event', async () => {
-    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1);
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 0, 0, 1);
 
     expect(
       await Paranet.connect(accounts[101]).updateParanetMetadata(
@@ -216,7 +218,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should revert update of paranet name with non opertor wallet', async () => {
-    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 1);
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 0, 0, 1);
 
     await expect(
       Paranet.connect(accounts[201]).updateParanetMetadata(
@@ -229,7 +231,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should update paranet description with opertor wallet', async () => {
-    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 1);
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 0, 0, 1);
 
     await Paranet.connect(accounts[101]).updateParanetMetadata(
       paranetKAStorageContract,
@@ -244,7 +246,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should update paranet description emit event', async () => {
-    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 1);
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 0, 0, 1);
 
     await expect(
       Paranet.connect(accounts[101]).updateParanetMetadata(
@@ -257,7 +259,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should revert update of paranet description with non opertor wallet', async () => {
-    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 1);
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 0, 0, 1);
 
     await expect(
       Paranet.connect(accounts[201]).updateParanetMetadata(
@@ -270,7 +272,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should revert update of paranet description with non-operator wallet', async () => {
-    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 1);
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 0, 0, 1);
 
     await expect(
       Paranet.connect(accounts[201]).updateParanetMetadata(
@@ -435,7 +437,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should add paranet service to paranet with paranet operator wallet', async () => {
-    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 3);
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 0, 0, 3);
     const { paranetServiceKAStorageContract, paranetServiceKATokenId, paranetServiceId } =
       await registerParanetService();
 
@@ -463,7 +465,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     expect(await ParanetsRegistry.getServicesCount(paranetId)).to.be.equal(1);
   });
   it('should revert on add paranet service to paranet with not paranet operator wallet', async () => {
-    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 3);
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 0, 0, 3);
     const { paranetServiceKAStorageContract, paranetServiceKATokenId } = await registerParanetService();
 
     const paranetServices: ParanetStructs.UniversalAssetLocatorStruct[] = [
@@ -478,7 +480,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     ).to.be.revertedWith("Caller isn't the owner of the KA");
   });
   it('should revert on add paranet service that was already added to paranet', async () => {
-    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 3);
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 0, 0, 3);
     const { paranetServiceKAStorageContract, paranetServiceKATokenId } = await registerParanetService();
 
     const paranetServices: ParanetStructs.UniversalAssetLocatorStruct[] = [
@@ -499,7 +501,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     ).to.be.revertedWithCustomError(Paranet, 'ParanetServiceHasAlreadyBeenAdded');
   });
   it('should revert on add non existing paranet service to paranet with paranet operator wallet', async () => {
-    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 3);
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 0, 0, 3);
 
     const assetInputArgs = {
       assertionId: getHashFromNumber(1),
@@ -531,7 +533,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     ).to.be.revertedWithCustomError(Paranet, 'ParanetServiceDoesntExist');
   });
   it('should add paranet service to paranet emit event', async () => {
-    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 3);
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 0, 0, 3);
     const { paranetServiceKAStorageContract, paranetServiceKATokenId } = await registerParanetService();
 
     const paranetServices: ParanetStructs.UniversalAssetLocatorStruct[] = [
@@ -547,7 +549,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should add paranet services to paranet with paranet operator wallet', async () => {
-    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 3);
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 0, 0, 3);
     const {
       paranetServiceKAStorageContract: paranetServiceKAStorageContract0,
       paranetServiceKATokenId: paranetServiceKATokenId0,
@@ -590,7 +592,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should revert on add paranet services to paranet with not paranet operator wallet', async () => {
-    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 3);
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 0, 0, 3);
     const {
       paranetServiceKAStorageContract: paranetServiceKAStorageContract0,
       paranetServiceKATokenId: paranetServiceKATokenId0,
@@ -621,7 +623,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should revert on add paranet services that is already added to paranet', async () => {
-    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 3);
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 0, 0, 3);
     const {
       paranetServiceKAStorageContract: paranetServiceKAStorageContract0,
       paranetServiceKATokenId: paranetServiceKATokenId0,
@@ -656,7 +658,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should revert on add non existing paranet services to paranet with paranet operator wallet', async () => {
-    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 3);
+    const { paranetKAStorageContract, paranetKATokenId, paranetId } = await registerParanet(accounts, Paranet, 0, 0, 3);
     const {
       paranetServiceKAStorageContract: paranetServiceKAStorageContract0,
       paranetServiceKATokenId: paranetServiceKATokenId0,
@@ -682,7 +684,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     expect(await ParanetsRegistry.getServicesCount(paranetId)).to.be.equal(0);
   });
   it('should add paranet services to paranet emit event', async () => {
-    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 3);
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 0, 0, 3);
     const {
       paranetServiceKAStorageContract: paranetServiceKAStorageContract0,
       paranetServiceKATokenId: paranetServiceKATokenId0,
@@ -715,12 +717,12 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       paranetKAStorageContract: paranetKAStorageContract0,
       paranetKATokenId: paranetKATokenId0,
       paranetId: paranetId0,
-    } = await registerParanet(accounts, Paranet, 3);
+    } = await registerParanet(accounts, Paranet, 0, 0, 3);
     const {
       paranetKAStorageContract: paranetKAStorageContract1,
       paranetKATokenId: paranetKATokenId1,
       paranetId: paranetId1,
-    } = await registerParanet(accounts, Paranet, 4);
+    } = await registerParanet(accounts, Paranet, 0, 0, 4);
     const assetInputArgs0 = {
       assertionId: getHashFromNumber(500),
       size: 3,
@@ -902,7 +904,7 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
   });
 
   it('should mint knowledge asset emit event', async () => {
-    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 3);
+    const { paranetKAStorageContract, paranetKATokenId } = await registerParanet(accounts, Paranet, 0, 0, 3);
 
     const assetInputArgs0 = {
       assertionId: getHashFromNumber(500),
@@ -925,7 +927,13 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       .and.to.emit(ServiceAgreementV1, 'ServiceAgreementV1Created');
   });
 
-  async function registerParanet(accounts: SignerWithAddress[], Paranet: Paranet, number: number) {
+  async function registerParanet(
+    accounts: SignerWithAddress[],
+    Paranet: Paranet,
+    nodesPolicy: number,
+    minersPolicy: number,
+    number: number,
+  ) {
     const assetInputArgs = {
       assertionId: getHashFromNumber(number),
       size: 3,
@@ -958,6 +966,8 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
       paranetKATokenId,
       paranetName,
       paranetDescription,
+      nodesPolicy,
+      minersPolicy,
     );
     await ParanetIncentivesPoolFactory.connect(accounts[100 + number]).deployNeuroIncentivesPool(
       paranetKAStorageContract,
