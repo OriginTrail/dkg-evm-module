@@ -4,6 +4,10 @@
       "deployed": true,
       "evmAddress": "0x4ead53ee0aaeB0bE5920DC2DAA7AD93F11cA5207"
     },
+    "NeurowebERC20": {
+      "deployed": true,
+      "evmAddress": "0x008Ea316ff593E82c592fccB6072f82d1393F1Ac"
+    },
     "Hub": {
       "evmAddress": "0x6C861Cb69300C34DfeF674F7C00E734e840C29C0",
       "version": "2.0.0",
@@ -317,6 +321,15 @@
       "gitCommitHash": "49543b7f02d9543b4c744dc8b8153921cf178ad9",
       "deploymentBlock": 11509127,
       "deploymentTimestamp": 1718786545806,
+      "deployed": true
+    },
+    "ParanetIncentivesPoolFactory": {
+      "evmAddress": "0x64769faeb5903279EFA59B5170BB6257AcCd2A71",
+      "version": "2.0.0",
+      "gitBranch": "feature/neuro-erc20-incentives",
+      "gitCommitHash": "b5e57be38cfd094ccd52819fa2c458e4b4acf854",
+      "deploymentBlock": 15227285,
+      "deploymentTimestamp": 1726222864380,
       "deployed": true
     }
   }
