@@ -214,7 +214,7 @@
       "gitCommitHash": "b9e7dede2a75acf193272f84b1a5ce155210e47a",
       "deploymentBlock": 5672930,
       "deploymentTimestamp": 1724834500366,
-      "deployed": true
+      "deployed": false
     },
     "CommitManagerV1": {
       "evmAddress": "0xc80dBd1982B7ce459c274DCd414FFc24B0C3AEDa",

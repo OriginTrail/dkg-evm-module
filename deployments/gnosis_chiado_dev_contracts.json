@@ -271,7 +271,7 @@
       "gitCommitHash": "b9e7dede2a75acf193272f84b1a5ce155210e47a",
       "deploymentBlock": 11519675,
       "deploymentTimestamp": 1724854757920,
-      "deployed": true
+      "deployed": false
     },
     "ParanetsRegistry": {
       "evmAddress": "0x92DA04556bdfd62ddFFf983Ee004e6F4a98bE671",

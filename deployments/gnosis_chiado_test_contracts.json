@@ -262,7 +262,7 @@
       "gitCommitHash": "b9e7dede2a75acf193272f84b1a5ce155210e47a",
       "deploymentBlock": 11519686,
       "deploymentTimestamp": 1724854815721,
-      "deployed": true
+      "deployed": false
     },
     "ContentAsset": {
       "evmAddress": "0x20A489D9dc7d2D241AF24C650d71631722aF0Aa1",
