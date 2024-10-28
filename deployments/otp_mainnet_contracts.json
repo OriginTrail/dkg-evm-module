@@ -207,14 +207,14 @@
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0x666B604B1b32ca467a6eEF3257475D32f8ADD04b",
-      "substrateAddress": "5EMjsczghQorAAxG77BAa4V9YSAkJ8TfGRJsvaARzTNHdDgn",
-      "version": "2.2.0",
-      "gitBranch": "main",
-      "gitCommitHash": "b9e7dede2a75acf193272f84b1a5ce155210e47a",
-      "deploymentBlock": 5672930,
-      "deploymentTimestamp": 1724834500366,
-      "deployed": false
+      "evmAddress": "0x4039101dFD15AB3cDBBb44F5b46687a4fAE1893B",
+      "substrateAddress": "5EMjsczZ3WFMFrHbF7aTAa7i744NsqyoYZDbZg6s8ca2Zucc",
+      "version": "2.3.0",
+      "gitBranch": "feature/redelegation",
+      "gitCommitHash": "d72f5fcd0e6159f1cf8dccd033cbeca63595953d",
+      "deploymentBlock": 6422825,
+      "deploymentTimestamp": 1730120359479,
+      "deployed": true
     },
     "CommitManagerV1": {
       "evmAddress": "0xc80dBd1982B7ce459c274DCd414FFc24B0C3AEDa",
