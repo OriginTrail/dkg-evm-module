@@ -682,6 +682,29 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "from",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint72",
+        "name": "to",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint96",
+        "name": "sharesToBurn",
+        "type": "uint96"
+      }
+    ],
+    "name": "redelegate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "serviceAgreementStorageProxy",
     "outputs": [

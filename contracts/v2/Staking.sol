@@ -88,7 +88,7 @@ contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
     event OperatorFeeChangeFinished(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
-    string private constant _VERSION = "2.2.0";
+    string private constant _VERSION = "2.3.0";
 
     ShardingTableV2 public shardingTableContract;
     IdentityStorageV2 public identityStorage;
@@ -210,6 +210,80 @@ contract StakingV2 is Named, Versioned, ContractStatusV2, Initializable {
         }
         emit StakeIncreased(identityId, ps.getNodeId(identityId), msg.sender, oldStake, newStake);
         emit SharesMinted(identityId, address(sharesContract), msg.sender, sharesMinted, sharesContract.totalSupply());
+    }
+
+    function redelegate(uint72 from, uint72 to, uint96 sharesToBurn) external {
+        if (sharesToBurn == 0) {
+            revert StakingErrors.ZeroSharesAmount();
+        }
+
+        ProfileStorage ps = profileStorage;
+        StakingStorage ss = stakingStorage;
+        ShardingTableStorageV2 sts = shardingTableStorage;
+
+        if (!ps.profileExists(from)) {
+            revert ProfileErrors.ProfileDoesntExist(from);
+        }
+
+        if (!ps.profileExists(to)) {
+            revert ProfileErrors.ProfileDoesntExist(to);
+        }
+
+        Shares fromSharesContract = Shares(ps.getSharesContractAddress(from));
+        Shares toSharesContract = Shares(ps.getSharesContractAddress(to));
+
+        if (sharesToBurn > fromSharesContract.balanceOf(msg.sender)) {
+            revert TokenErrors.TooLowBalance(address(fromSharesContract), fromSharesContract.balanceOf(msg.sender));
+        }
+
+        ParametersStorage params = parametersStorage;
+
+        uint96 fromCurrentStake = ss.totalStakes(from);
+        uint96 toCurrentStake = ss.totalStakes(to);
+
+        uint96 redelegationAmount = uint96(
+            (uint256(fromCurrentStake) * sharesToBurn) / fromSharesContract.totalSupply()
+        );
+
+        if (toCurrentStake + redelegationAmount > params.maximumStake()) {
+            revert StakingErrors.MaximumStakeExceeded(params.maximumStake());
+        }
+
+        fromSharesContract.burnFrom(msg.sender, sharesToBurn);
+
+        uint256 sharesToMint;
+        if (toSharesContract.totalSupply() == 0) {
+            sharesToMint = redelegationAmount;
+        } else {
+            sharesToMint = ((uint256(redelegationAmount) * toSharesContract.totalSupply()) / toCurrentStake);
+        }
+        toSharesContract.mint(msg.sender, sharesToMint);
+
+        ss.setTotalStake(from, fromCurrentStake - redelegationAmount);
+
+        if (sts.nodeExists(from) && (fromCurrentStake - redelegationAmount) < params.minimumStake()) {
+            shardingTableContract.removeNode(from);
+        }
+
+        ss.setTotalStake(to, toCurrentStake + redelegationAmount);
+
+        if (!sts.nodeExists(to) && (toCurrentStake + redelegationAmount >= params.minimumStake())) {
+            if (sts.nodesCount() >= params.shardingTableSizeLimit()) {
+                revert ShardingTableErrors.ShardingTableIsFull();
+            }
+            shardingTableContract.insertNode(to);
+        }
+
+        emit SharesBurned(
+            from,
+            address(fromSharesContract),
+            msg.sender,
+            sharesToBurn,
+            fromSharesContract.totalSupply()
+        );
+        emit StakeWithdrawn(from, ps.getNodeId(from), msg.sender, redelegationAmount);
+        emit SharesMinted(to, address(toSharesContract), msg.sender, sharesToMint, toSharesContract.totalSupply());
+        emit StakeIncreased(to, ps.getNodeId(to), msg.sender, toCurrentStake, toCurrentStake + redelegationAmount);
     }
 
     function startStakeWithdrawal(uint72 identityId, uint96 sharesToBurn) external {
