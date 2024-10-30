@@ -16,6 +16,8 @@ import {
   Shares,
   ParametersStorage,
   ProfileStorage,
+  ShardingTableV2,
+  ShardingTableStorageV2,
 } from '../../../typechain';
 
 type StakingFixture = {
@@ -25,6 +27,8 @@ type StakingFixture = {
   ServiceAgreementStorageV1U1: ServiceAgreementStorageV1U1;
   StakingV2: StakingV2;
   StakingStorage: StakingStorage;
+  ShardingTableStorage: ShardingTableStorageV2;
+  ShardingTable: ShardingTableV2;
 };
 
 type Node = {
@@ -43,6 +47,8 @@ describe('@v2 @unit StakingV2 contract', function () {
   let Token: Token;
   let Profile: Profile;
   let ServiceAgreementStorageV1U1: ServiceAgreementStorageV1U1;
+  let ShardingTableStorage: ShardingTableStorageV2;
+  let ShardingTable: ShardingTableV2;
   const identityId1 = 1;
   const totalStake = hre.ethers.utils.parseEther('1000');
   const operatorFee = hre.ethers.BigNumber.from(10);
@@ -50,7 +56,7 @@ describe('@v2 @unit StakingV2 contract', function () {
   const timestamp = 1674261619;
 
   async function deployStakingFixture(): Promise<StakingFixture> {
-    await hre.deployments.fixture(['StakingV2', 'Profile']);
+    await hre.deployments.fixture(['StakingV2', 'Profile', 'ShardingTableStorageV2', 'ShardingTableV2']);
     ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
     ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
     StakingV2 = await hre.ethers.getContract<StakingV2>('Staking');
@@ -60,12 +66,23 @@ describe('@v2 @unit StakingV2 contract', function () {
     ServiceAgreementStorageV1U1 = await hre.ethers.getContract<ServiceAgreementStorageV1U1>(
       'ServiceAgreementStorageV1U1',
     );
+    ShardingTableStorage = await hre.ethers.getContract<ShardingTableStorageV2>('ShardingTableStorage');
+    ShardingTable = await hre.ethers.getContract<ShardingTableV2>('ShardingTable');
     accounts = await hre.ethers.getSigners();
     const HubController = await hre.ethers.getContract<HubController>('HubController');
     await HubController.setContractAddress('HubOwner', accounts[0].address);
     await HubController.setContractAddress('NotHubOwner', accounts[1].address);
 
-    return { accounts, Token, Profile, ServiceAgreementStorageV1U1, StakingV2, StakingStorage };
+    return {
+      accounts,
+      Token,
+      Profile,
+      ServiceAgreementStorageV1U1,
+      StakingV2,
+      StakingStorage,
+      ShardingTable,
+      ShardingTableStorage,
+    };
   }
 
   async function createProfile(operational: SignerWithAddress, admin: SignerWithAddress): Promise<Node> {
@@ -121,17 +138,24 @@ describe('@v2 @unit StakingV2 contract', function () {
 
   beforeEach(async () => {
     hre.helpers.resetDeploymentsJson();
-    ({ accounts, Token, Profile, ServiceAgreementStorageV1U1, StakingV2, StakingStorage } = await loadFixture(
-      deployStakingFixture,
-    ));
+    ({
+      accounts,
+      Token,
+      Profile,
+      ServiceAgreementStorageV1U1,
+      StakingV2,
+      StakingStorage,
+      ShardingTable,
+      ShardingTableStorage,
+    } = await loadFixture(deployStakingFixture));
   });
 
   it('The contract is named "Staking"', async () => {
     expect(await StakingV2.name()).to.equal('Staking');
   });
 
-  it('The contract is version "2.2.0"', async () => {
-    expect(await StakingV2.version()).to.equal('2.2.0');
+  it('The contract is version "2.3.0"', async () => {
+    expect(await StakingV2.version()).to.equal('2.3.0');
   });
 
   it('Non-Contract should not be able to setTotalStake; expect to fail', async () => {
@@ -706,7 +730,7 @@ describe('@v2 @unit StakingV2 contract', function () {
     const initialStake = hre.ethers.utils.parseEther('1000');
     const { identityId, nodeId } = await createProfile(accounts[0], accounts[1]);
 
-    await Token.approve(StakingV2.address, initialStake);
+    await Token.increaseAllowance(StakingV2.address, initialStake);
     await StakingV2['addStake(uint72,uint96)'](identityId, initialStake);
 
     const sharesToBurn = hre.ethers.utils.parseEther('500');
@@ -752,7 +776,7 @@ describe('@v2 @unit StakingV2 contract', function () {
     const initialStakeAmount = hre.ethers.utils.parseEther('500');
     const reward = hre.ethers.utils.parseEther('250');
 
-    await Token.approve(StakingV2.address, initialStakeAmount);
+    await Token.increaseAllowance(StakingV2.address, initialStakeAmount);
     await StakingV2['addStake(uint72,uint96)'](identityId, initialStakeAmount);
 
     const sharesToBurn = initialStakeAmount.div(2);
@@ -796,5 +820,294 @@ describe('@v2 @unit StakingV2 contract', function () {
         hre.ethers.utils.parseEther('125'),
         hre.ethers.utils.parseEther('375'),
       );
+  });
+
+  it('should correctly redelegate shares from one node to another', async function () {
+    // Create two nodes
+    const node1 = await createProfile(accounts[0], accounts[1]); // From node
+    const node2 = await createProfile(accounts[2], accounts[3]); // To node
+
+    // Stake some amount on node1
+    const initialStakeAmount = hre.ethers.utils.parseEther('1000'); // 1000 tokens
+
+    // Approve tokens and stake on node1
+    await Token.increaseAllowance(StakingV2.address, initialStakeAmount);
+    await StakingV2['addStake(uint72,uint96)'](node1.identityId, initialStakeAmount);
+
+    // Get shares contracts
+    const fromSharesAddress = await ProfileStorage.getSharesContractAddress(node1.identityId);
+    const fromSharesContract = await hre.ethers.getContractAt<Shares>('Shares', fromSharesAddress);
+
+    const toSharesAddress = await ProfileStorage.getSharesContractAddress(node2.identityId);
+    const toSharesContract = await hre.ethers.getContractAt<Shares>('Shares', toSharesAddress);
+
+    // Get initial balances and stakes
+    const fromInitialSharesBalance = await fromSharesContract.balanceOf(accounts[0].address);
+    const toInitialSharesBalance = await toSharesContract.balanceOf(accounts[0].address);
+
+    const fromCurrentStake = await StakingStorage.totalStakes(node1.identityId);
+    const toCurrentStake = await StakingStorage.totalStakes(node2.identityId);
+
+    const fromTotalShares = await fromSharesContract.totalSupply();
+    const toTotalShares = await toSharesContract.totalSupply();
+
+    // Redelegate half of the shares
+    const sharesToBurn = fromInitialSharesBalance.div(2);
+
+    // Calculate redelegationAmount
+    const redelegationAmount = fromCurrentStake.mul(sharesToBurn).div(fromTotalShares);
+
+    // Calculate sharesToMint
+    let sharesToMint: BigNumber;
+    if (toTotalShares.isZero()) {
+      sharesToMint = redelegationAmount;
+    } else {
+      sharesToMint = redelegationAmount.mul(toTotalShares).div(toCurrentStake);
+    }
+
+    // Increase allowance for fromSharesContract
+    await fromSharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
+
+    // Call redelegate
+    await expect(StakingV2.redelegate(node1.identityId, node2.identityId, sharesToBurn))
+      .to.emit(StakingV2, 'SharesBurned')
+      .withArgs(
+        node1.identityId,
+        fromSharesAddress,
+        accounts[0].address,
+        sharesToBurn,
+        fromTotalShares.sub(sharesToBurn),
+      )
+      .to.emit(StakingV2, 'StakeWithdrawn')
+      .withArgs(node1.identityId, node1.nodeId, accounts[0].address, redelegationAmount)
+      .to.emit(StakingV2, 'SharesMinted')
+      .withArgs(node2.identityId, toSharesAddress, accounts[0].address, sharesToMint, toTotalShares.add(sharesToMint))
+      .to.emit(StakingV2, 'StakeIncreased')
+      .withArgs(
+        node2.identityId,
+        node2.nodeId,
+        accounts[0].address,
+        toCurrentStake,
+        toCurrentStake.add(redelegationAmount),
+      );
+
+    // Check final balances and stakes
+    const fromFinalSharesBalance = await fromSharesContract.balanceOf(accounts[0].address);
+    const toFinalSharesBalance = await toSharesContract.balanceOf(accounts[0].address);
+
+    const fromFinalStake = await StakingStorage.totalStakes(node1.identityId);
+    const toFinalStake = await StakingStorage.totalStakes(node2.identityId);
+
+    expect(fromFinalSharesBalance).to.equal(fromInitialSharesBalance.sub(sharesToBurn));
+    expect(toFinalSharesBalance).to.equal(toInitialSharesBalance.add(sharesToMint));
+
+    expect(fromFinalStake).to.equal(fromCurrentStake.sub(redelegationAmount));
+    expect(toFinalStake).to.equal(toCurrentStake.add(redelegationAmount));
+  });
+
+  it('should revert when attempting to redelegate zero shares', async function () {
+    const node1 = await createProfile(accounts[0], accounts[1]);
+    const node2 = await createProfile(accounts[2], accounts[3]);
+
+    const initialStakeAmount = hre.ethers.utils.parseEther('1000');
+    await Token.increaseAllowance(StakingV2.address, initialStakeAmount);
+    await StakingV2['addStake(uint72,uint96)'](node1.identityId, initialStakeAmount);
+
+    await expect(StakingV2.redelegate(node1.identityId, node2.identityId, 0)).to.be.revertedWithCustomError(
+      StakingV2,
+      'ZeroSharesAmount',
+    );
+  });
+
+  it('should revert when attempting to redelegate more shares than owned', async function () {
+    const node1 = await createProfile(accounts[0], accounts[1]);
+    const node2 = await createProfile(accounts[2], accounts[3]);
+
+    const initialStakeAmount = hre.ethers.utils.parseEther('1000');
+    await Token.increaseAllowance(StakingV2.address, initialStakeAmount);
+    await StakingV2['addStake(uint72,uint96)'](node1.identityId, initialStakeAmount);
+
+    const fromSharesAddress = await ProfileStorage.getSharesContractAddress(node1.identityId);
+    const fromSharesContract = await hre.ethers.getContractAt<Shares>('Shares', fromSharesAddress);
+
+    const userSharesBalance = await fromSharesContract.balanceOf(accounts[0].address);
+    const sharesToBurn = userSharesBalance.add(1); // One more than user owns
+
+    await fromSharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
+
+    await expect(StakingV2.redelegate(node1.identityId, node2.identityId, sharesToBurn)).to.be.revertedWithCustomError(
+      StakingV2,
+      'TooLowBalance',
+    );
+  });
+
+  it('should revert when attempting to redelegate from a non-existent identity', async function () {
+    const node2 = await createProfile(accounts[0], accounts[2]);
+    const nonExistentIdentityId = 9999; // Assuming this identity doesn't exist
+
+    const sharesToBurn = hre.ethers.utils.parseEther('100');
+
+    await expect(
+      StakingV2.redelegate(nonExistentIdentityId, node2.identityId, sharesToBurn),
+    ).to.be.revertedWithCustomError(StakingV2, 'ProfileDoesntExist');
+  });
+
+  it('should revert when attempting to redelegate to a non-existent identity', async function () {
+    const node1 = await createProfile(accounts[0], accounts[1]);
+    const nonExistentIdentityId = 9999; // Assuming this identity doesn't exist
+
+    const initialStakeAmount = hre.ethers.utils.parseEther('1000');
+    await Token.increaseAllowance(StakingV2.address, initialStakeAmount);
+    await StakingV2['addStake(uint72,uint96)'](node1.identityId, initialStakeAmount);
+
+    const fromSharesAddress = await ProfileStorage.getSharesContractAddress(node1.identityId);
+    const fromSharesContract = await hre.ethers.getContractAt<Shares>('Shares', fromSharesAddress);
+
+    const sharesToBurn = hre.ethers.utils.parseEther('100');
+
+    await fromSharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
+
+    await expect(
+      StakingV2.redelegate(node1.identityId, nonExistentIdentityId, sharesToBurn),
+    ).to.be.revertedWithCustomError(StakingV2, 'ProfileDoesntExist');
+  });
+
+  it('should revert when redelegating causes "to" identity stake to exceed maximumStake', async function () {
+    const node1 = await createProfile(accounts[0], accounts[1]);
+    const node2 = await createProfile(accounts[2], accounts[3]);
+
+    const maximumStake = await ParametersStorage.maximumStake();
+
+    // Stake on node2 up to maximumStake - small amount
+    const initialStakeToNode2 = maximumStake.sub(hre.ethers.utils.parseEther('100'));
+    await Token.connect(accounts[0]).increaseAllowance(StakingV2.address, initialStakeToNode2);
+    await StakingV2['addStake(uint72,uint96)'](node2.identityId, initialStakeToNode2);
+
+    // Stake on node1
+    const initialStakeToNode1 = hre.ethers.utils.parseEther('1000');
+    await Token.connect(accounts[0]).increaseAllowance(StakingV2.address, initialStakeToNode1);
+    await StakingV2['addStake(uint72,uint96)'](node1.identityId, initialStakeToNode1);
+
+    const fromSharesAddress = await ProfileStorage.getSharesContractAddress(node1.identityId);
+    const fromSharesContract = await hre.ethers.getContractAt<Shares>('Shares', fromSharesAddress);
+
+    const sharesToBurn = await fromSharesContract.balanceOf(accounts[0].address);
+
+    await fromSharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
+
+    await expect(StakingV2.redelegate(node1.identityId, node2.identityId, sharesToBurn)).to.be.revertedWithCustomError(
+      StakingV2,
+      'MaximumStakeExceeded',
+    );
+  });
+
+  it('should update sharding table when from node stake falls below minimum and to node stake exceeds minimum after redelegation', async function () {
+    // Create two nodes
+    const node1 = await createProfile(accounts[0], accounts[1]); // From node
+    const node2 = await createProfile(accounts[2], accounts[3]); // To node
+
+    const minimumStake = await ParametersStorage.minimumStake();
+    const extraStake = hre.ethers.utils.parseEther('100');
+
+    // Stake amount for node1: Initially above minimum
+    const initialStakeNode1 = minimumStake.add(extraStake); // Above minimum
+
+    // Stake amount for node2: Initially below minimum
+    const initialStakeNode2 = minimumStake.sub(hre.ethers.utils.parseEther('1')); // Just below minimum
+
+    // Approve tokens and stake on node1
+    await Token.approve(StakingV2.address, initialStakeNode1);
+    await StakingV2['addStake(uint72,uint96)'](node1.identityId, initialStakeNode1);
+
+    // Ensure node1 is in the sharding table
+    let node1InShardingTable = await ShardingTableStorage.nodeExists(node1.identityId);
+    expect(node1InShardingTable).to.be.true;
+
+    // Approve tokens and stake on node2
+    await Token.connect(accounts[0]).approve(StakingV2.address, initialStakeNode2);
+    await StakingV2['addStake(uint72,uint96)'](node2.identityId, initialStakeNode2);
+
+    // Ensure node2 is not in the sharding table
+    let node2InShardingTable = await ShardingTableStorage.nodeExists(node2.identityId);
+    expect(node2InShardingTable).to.be.false;
+
+    // Get shares contracts
+    const fromSharesAddress = await ProfileStorage.getSharesContractAddress(node1.identityId);
+    const fromSharesContract = await hre.ethers.getContractAt<Shares>('Shares', fromSharesAddress);
+
+    const toSharesAddress = await ProfileStorage.getSharesContractAddress(node2.identityId);
+    const toSharesContract = await hre.ethers.getContractAt<Shares>('Shares', toSharesAddress);
+
+    // Redelegate amount that will cause node1's stake to fall below minimum and node2's stake to exceed minimum
+    const fromCurrentStake = await StakingStorage.totalStakes(node1.identityId);
+    const toCurrentStake = await StakingStorage.totalStakes(node2.identityId);
+
+    // Calculate amount to redelegate
+    const stakeToTransfer = fromCurrentStake.sub(minimumStake).add(hre.ethers.utils.parseEther('1')); // Enough to reduce node1 below minimum and increase node2 above minimum
+
+    // Calculate shares to burn
+    const fromTotalShares = await fromSharesContract.totalSupply();
+    const toTotalShares = await toSharesContract.totalSupply();
+
+    const sharesToBurn = fromTotalShares.mul(stakeToTransfer).div(fromCurrentStake);
+
+    // Calculate redelegationAmount
+    const redelegationAmount = fromCurrentStake.mul(sharesToBurn).div(fromTotalShares);
+
+    let sharesToMint: BigNumber;
+    if (toTotalShares.isZero()) {
+      sharesToMint = redelegationAmount;
+    } else {
+      sharesToMint = redelegationAmount.mul(toTotalShares).div(toCurrentStake);
+    }
+
+    // Increase allowance for fromSharesContract
+    await fromSharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
+
+    // Redelegate and check events
+    await expect(StakingV2.redelegate(node1.identityId, node2.identityId, sharesToBurn))
+      .to.emit(StakingV2, 'SharesBurned')
+      .withArgs(
+        node1.identityId,
+        fromSharesAddress,
+        accounts[0].address,
+        sharesToBurn,
+        fromTotalShares.sub(sharesToBurn),
+      )
+      .to.emit(StakingV2, 'StakeWithdrawn')
+      .withArgs(node1.identityId, node1.nodeId, accounts[0].address, stakeToTransfer)
+      .to.emit(StakingV2, 'SharesMinted')
+      .withArgs(node2.identityId, toSharesAddress, accounts[0].address, sharesToMint, toTotalShares.add(sharesToMint))
+      .to.emit(StakingV2, 'StakeIncreased')
+      .withArgs(
+        node2.identityId,
+        node2.nodeId,
+        accounts[0].address,
+        toCurrentStake,
+        toCurrentStake.add(stakeToTransfer),
+      )
+      .to.emit(ShardingTable, 'NodeRemoved') // Assuming NodeRemoved event is emitted
+      .to.emit(ShardingTable, 'NodeAdded'); // Assuming NodeInserted event is emitted
+
+    // After redelegation, check that node1 is no longer in sharding table
+    node1InShardingTable = await ShardingTableStorage.nodeExists(node1.identityId);
+    expect(node1InShardingTable).to.be.false;
+
+    // Check that node2 is now in sharding table
+    node2InShardingTable = await ShardingTableStorage.nodeExists(node2.identityId);
+    expect(node2InShardingTable).to.be.true;
+
+    // Verify the stakes
+    const fromFinalStake = await StakingStorage.totalStakes(node1.identityId);
+    const toFinalStake = await StakingStorage.totalStakes(node2.identityId);
+
+    expect(fromFinalStake).to.equal(fromCurrentStake.sub(stakeToTransfer));
+    expect(toFinalStake).to.equal(toCurrentStake.add(stakeToTransfer));
+
+    // Verify that node1's stake is below minimum
+    expect(fromFinalStake).to.be.lt(minimumStake);
+
+    // Verify that node2's stake is above minimum
+    expect(toFinalStake).to.be.gte(minimumStake);
   });
 });

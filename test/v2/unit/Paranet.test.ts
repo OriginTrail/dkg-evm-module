@@ -127,8 +127,8 @@ describe('@v2 @unit ParanetKnowledgeMinersRegistry contract', function () {
     expect(await Paranet.name()).to.equal('Paranet');
   });
 
-  it('The contract is version "2.2.0"', async () => {
-    expect(await Paranet.version()).to.equal('2.2.0');
+  it('The contract is version "2.2.1"', async () => {
+    expect(await Paranet.version()).to.equal('2.2.1');
   });
 
   it('should register paranet', async () => {

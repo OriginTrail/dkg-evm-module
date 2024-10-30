@@ -123,7 +123,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
     );
 
     string private constant _NAME = "Paranet";
-    string private constant _VERSION = "2.2.0";
+    string private constant _VERSION = "2.2.1";
 
     ParanetsRegistry public paranetsRegistry;
     ParanetServicesRegistry public paranetServicesRegistry;
@@ -914,7 +914,11 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             }
         }
 
-        if (paranetKnowledgeAssetsRegistry.isParanetKnowledgeAsset(paranetId)) {
+        if (
+            paranetKnowledgeAssetsRegistry.isParanetKnowledgeAsset(
+                keccak256(abi.encodePacked(knowledgeAssetStorageContract, knowledgeAssetTokenId))
+            )
+        ) {
             revert ParanetErrors.KnowledgeAssetIsAPartOfOtherParanet(
                 knowledgeAssetStorageContract,
                 knowledgeAssetTokenId,

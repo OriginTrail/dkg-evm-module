@@ -239,12 +239,12 @@
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0xa3aB2007dd4E38aEdA3c6360C04061E81d40c060",
-      "version": "2.2.0",
-      "gitBranch": "improvement/curated-paranet-nodes",
-      "gitCommitHash": "de5edfde0f044d13bcdec8a33baaec934e2b62c4",
-      "deploymentBlock": 15791621,
-      "deploymentTimestamp": 1727351537118,
+      "evmAddress": "0x7eC8B89B092249a4E4B4438BE2313B8594324Ff6",
+      "version": "2.3.0",
+      "gitBranch": "v8/develop",
+      "gitCommitHash": "6ad3e9bcea8152c4d7370a33ab5f2f3988987552",
+      "deploymentBlock": 17252454,
+      "deploymentTimestamp": 1730273200639,
       "deployed": true
     },
     "Profile": {
@@ -311,12 +311,12 @@
       "deployed": true
     },
     "Paranet": {
-      "evmAddress": "0xeEC264Cf4BDa4bD386847B26d2c6A2A36e597326",
-      "version": "2.2.0",
-      "gitBranch": "improvement/curated-paranet-nodes",
-      "gitCommitHash": "de5edfde0f044d13bcdec8a33baaec934e2b62c4",
-      "deploymentBlock": 15791659,
-      "deploymentTimestamp": 1727351609154,
+      "evmAddress": "0x0186f33f97B9D57a574aEa913d08b40fcC143D11",
+      "version": "2.2.1",
+      "gitBranch": "v8/develop",
+      "gitCommitHash": "6ad3e9bcea8152c4d7370a33ab5f2f3988987552",
+      "deploymentBlock": 17252707,
+      "deploymentTimestamp": 1730273703569,
       "deployed": true
     }
   }

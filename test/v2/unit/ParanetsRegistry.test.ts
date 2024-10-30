@@ -32,14 +32,19 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     return { accounts, ParanetsRegistry };
   }
 
-  async function createProfile(operational: SignerWithAddress, admin: SignerWithAddress): Promise<number> {
+  async function createProfile(
+    operational: SignerWithAddress,
+    admin: SignerWithAddress,
+  ): Promise<{ identityId: number; nodeId: string }> {
     const OperationalProfile = Profile.connect(operational);
+
+    const nodeId = '0x' + randomBytes(32).toString('hex');
 
     const receipt = await (
       await OperationalProfile.createProfile(
         admin.address,
         [],
-        '0x' + randomBytes(32).toString('hex'),
+        nodeId,
         randomBytes(3).toString('hex'),
         randomBytes(2).toString('hex'),
         0,
@@ -53,7 +58,7 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     await Token.connect(admin).increaseAllowance(Staking.address, stakeAmount);
     await Staking.connect(admin)['addStake(uint72,uint96)'](identityId, stakeAmount);
 
-    return identityId;
+    return { identityId, nodeId };
   }
 
   beforeEach(async () => {
@@ -287,17 +292,17 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
 
     expect(nodeCount).to.be.equal(0);
 
-    const identityId1 = await createProfile(accounts[11], accounts[1]);
-    const identityId2 = await createProfile(accounts[12], accounts[1]);
-    const identityId3 = await createProfile(accounts[13], accounts[1]);
+    const { identityId: identityId1, nodeId: nodeId1 } = await createProfile(accounts[11], accounts[1]);
+    const { identityId: identityId2, nodeId: nodeId2 } = await createProfile(accounts[12], accounts[1]);
+    const { identityId: identityId3, nodeId: nodeId3 } = await createProfile(accounts[13], accounts[1]);
 
-    const tx1 = await ParanetsRegistry.addCuratedNode(paranetId, identityId1);
+    const tx1 = await ParanetsRegistry.addCuratedNode(paranetId, identityId1, nodeId1);
     await tx1.wait();
 
-    const tx2 = await ParanetsRegistry.addCuratedNode(paranetId, identityId2);
+    const tx2 = await ParanetsRegistry.addCuratedNode(paranetId, identityId2, nodeId2);
     await tx2.wait();
 
-    const tx3 = await ParanetsRegistry.addCuratedNode(paranetId, identityId3);
+    const tx3 = await ParanetsRegistry.addCuratedNode(paranetId, identityId3, nodeId3);
     await tx3.wait();
 
     nodeCount = await ParanetsRegistry.getCuratedNodesCount(paranetId);
@@ -324,8 +329,8 @@ describe('@v2 @unit ParanetsRegistry contract', function () {
     const curatedNodes = await ParanetsRegistry.getCuratedNodes(paranetId);
 
     expect(curatedNodes.length).to.be.equal(2);
-    expect(curatedNodes[0]).to.be.equal(identityId1);
-    expect(curatedNodes[1]).to.be.equal(identityId3);
+    expect(curatedNodes[0].identityId).to.be.equal(identityId1);
+    expect(curatedNodes[1].identityId).to.be.equal(identityId3);
   });
 
   it('should manipulate Knowledge Miners arrays correctly', async () => {

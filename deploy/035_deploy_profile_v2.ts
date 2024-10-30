@@ -19,7 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['Profile', 'v2'];
+func.tags = ['ProfileV2', 'v2'];
 func.dependencies = [
   'Hub',
   'Identity',
