@@ -1,6 +1,6 @@
 {
   "name": "dkg-evm-module",
-  "version": "8.0.1-alpha.0",
+  "version": "8.0.1-alpha.1",
   "description": "Smart contracts for OriginTrail V6",
   "main": "index.ts",
   "files": [
@@ -115,7 +115,7 @@
     "lint:ts": "eslint '**/*.{js,ts}'",
     "lint": "npm run lint:sol && npm run lint:ts",
     "mint-test-tokens": "cross-env HARDHAT_DEPLOY_FIXTURE=true hardhat run scripts/mint_test_tokens.ts --network localhost",
-    "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky install && hardhat typechain; fi",
+    "prepare": "if [ \"$NODE_ENV\" == \"development\" ]; then husky install && hardhat typechain; fi",
     "slither:reentrancy": "slither . --detect reentrancy-eth,reentrancy-no-eth,reentrancy-unlimited-gas",
     "slither": "slither .",
     "test:fulltrace": "hardhat test --network hardhat --fulltrace",
