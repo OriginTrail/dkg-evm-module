@@ -30,6 +30,7 @@
     "@defi-wonderland/smock": "^2.3.5",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.5",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
+    "@nomicfoundation/hardhat-verify": "^2.0.8",
     "@nomiclabs/hardhat-solhint": "^3.0.0",
     "@openzeppelin/test-helpers": "^0.5.16",
     "@typechain/hardhat": "^6.1.5",
