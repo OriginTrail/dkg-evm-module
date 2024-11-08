@@ -72,12 +72,20 @@ config.networks = {
     accounts: accounts('base_sepolia_v8_dev'),
     saveDeployments: false,
   },
-  base_sepolia_v8_stable_dev: {
+  base_sepolia_v8_stable_dev_staging: {
     environment: 'devnet',
     chainId: 84532,
-    url: rpc('base_sepolia_v8_stable_dev'),
+    url: rpc('base_sepolia_v8_stable_dev_staging'),
     gasPrice: 1_000_000_000,
-    accounts: accounts('base_sepolia_v8_stable_dev'),
+    accounts: accounts('base_sepolia_v8_stable_dev_staging'),
+    saveDeployments: false,
+  },
+  base_sepolia_v8_stable_dev_prod: {
+    environment: 'devnet',
+    chainId: 84532,
+    url: rpc('base_sepolia_v8_stable_dev_prod'),
+    gasPrice: 1_000_000_000,
+    accounts: accounts('base_sepolia_v8_stable_dev_prod'),
     saveDeployments: false,
   },
   base_sepolia_v8_test: {
