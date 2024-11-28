@@ -157,6 +157,12 @@
         "internalType": "bytes32",
         "name": "state",
         "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "publishOperationId",
+        "type": "string"
       }
     ],
     "name": "AssetMinted",
@@ -375,6 +381,11 @@
       {
         "components": [
           {
+            "internalType": "string",
+            "name": "publishOperationId",
+            "type": "string"
+          },
+          {
             "internalType": "bytes32",
             "name": "assertionId",
             "type": "bytes32"
@@ -415,7 +426,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct ContentAssetStructs.AssetInputArgs",
+        "internalType": "struct ContentAssetStructsV2.AssetInputArgs",
         "name": "args",
         "type": "tuple"
       }
@@ -441,6 +452,11 @@
       {
         "components": [
           {
+            "internalType": "string",
+            "name": "publishOperationId",
+            "type": "string"
+          },
+          {
             "internalType": "bytes32",
             "name": "assertionId",
             "type": "bytes32"
@@ -481,7 +497,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct ContentAssetStructs.AssetInputArgs",
+        "internalType": "struct ContentAssetStructsV2.AssetInputArgs",
         "name": "args",
         "type": "tuple"
       }
@@ -499,6 +515,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "string",
+        "name": "publishOperationId",
+        "type": "string"
+      },
       {
         "internalType": "bytes32",
         "name": "assertionId",

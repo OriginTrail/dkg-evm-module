@@ -16,14 +16,19 @@ import {HubDependentV2} from "../abstract/HubDependent.sol";
 import {Initializable} from "../../v1/interface/Initializable.sol";
 import {Named} from "../../v1/interface/Named.sol";
 import {Versioned} from "../../v1/interface/Versioned.sol";
-import {ContentAssetStructs} from "../../v1/structs/assets/ContentAssetStructs.sol";
+import {ContentAssetStructsV2} from "../structs/assets/ContentAssetStructs.sol";
 import {ServiceAgreementStructsV1} from "../../v1/structs/ServiceAgreementStructsV1.sol";
 import {ContentAssetErrors} from "../errors/assets/ContentAssetErrors.sol";
 import {HASH_FUNCTION_ID} from "../../v1/constants/assets/ContentAssetConstants.sol";
 import {LOG2PLDSF_ID, LINEAR_SUM_ID} from "../../v1/constants/ScoringConstants.sol";
 
 contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
-    event AssetMinted(address indexed assetContract, uint256 indexed tokenId, bytes32 indexed state);
+    event AssetMinted(
+        address indexed assetContract,
+        uint256 indexed tokenId,
+        bytes32 indexed state,
+        string publishOperationId
+    );
     event AssetBurnt(address indexed assetContract, uint256 indexed tokenId, uint96 returnedTokenAmount);
     event AssetStateUpdated(
         address indexed assetContract,
@@ -100,10 +105,11 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
         return _VERSION;
     }
 
-    function createAsset(ContentAssetStructs.AssetInputArgs calldata args) external returns (uint256) {
+    function createAsset(ContentAssetStructsV2.AssetInputArgs calldata args) external returns (uint256) {
         return
             _createAsset(
                 msg.sender,
+                args.publishOperationId,
                 args.assertionId,
                 args.size,
                 args.triplesNumber,
@@ -117,11 +123,12 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
 
     function createAssetFromContract(
         address originalSender,
-        ContentAssetStructs.AssetInputArgs calldata args
+        ContentAssetStructsV2.AssetInputArgs calldata args
     ) external onlyContracts returns (uint256) {
         return
             _createAsset(
                 originalSender,
+                args.publishOperationId,
                 args.assertionId,
                 args.size,
                 args.triplesNumber,
@@ -134,6 +141,7 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
     }
 
     function createAssetWithVariables(
+        string memory publishOperationId,
         bytes32 assertionId,
         uint128 size,
         uint32 triplesNumber,
@@ -146,6 +154,7 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
         return
             _createAsset(
                 msg.sender,
+                publishOperationId,
                 assertionId,
                 size,
                 triplesNumber,
@@ -462,6 +471,7 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
 
     function _createAsset(
         address originalSender,
+        string memory publishOperationId,
         bytes32 assertionId,
         uint128 size,
         uint32 triplesNumber,
@@ -496,12 +506,13 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
             })
         );
 
-        emit AssetMinted(contentAssetStorageAddress, tokenId, assertionId);
+        emit AssetMinted(contentAssetStorageAddress, tokenId, assertionId, publishOperationId);
 
         return tokenId;
     }
 
     function _createAsset(
+        string memory publishOperationId,
         bytes32 assertionId,
         uint128 size,
         uint32 triplesNumber,
@@ -537,7 +548,7 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
             })
         );
 
-        emit AssetMinted(contentAssetStorageAddress, tokenId, assertionId);
+        emit AssetMinted(contentAssetStorageAddress, tokenId, assertionId, publishOperationId);
 
         return tokenId;
     }

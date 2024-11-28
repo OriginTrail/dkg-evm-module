@@ -1009,6 +1009,11 @@
       {
         "components": [
           {
+            "internalType": "string",
+            "name": "publishOperationId",
+            "type": "string"
+          },
+          {
             "internalType": "bytes32",
             "name": "assertionId",
             "type": "bytes32"
@@ -1049,7 +1054,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct ContentAssetStructs.AssetInputArgs",
+        "internalType": "struct ContentAssetStructsV2.AssetInputArgs",
         "name": "knowledgeAssetArgs",
         "type": "tuple"
       }

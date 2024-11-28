@@ -17,7 +17,7 @@ import {ContractStatusV2} from "../abstract/ContractStatus.sol";
 import {Initializable} from "../../v1/interface/Initializable.sol";
 import {Named} from "../../v1/interface/Named.sol";
 import {Versioned} from "../../v1/interface/Versioned.sol";
-import {ContentAssetStructs} from "../../v1/structs/assets/ContentAssetStructs.sol";
+import {ContentAssetStructsV2} from "../structs/assets/ContentAssetStructs.sol";
 import {ParanetStructs} from "../structs/paranets/ParanetStructs.sol";
 import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
 import {ProfileErrors} from "../../v1/errors/ProfileErrors.sol";
@@ -827,7 +827,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
     function mintKnowledgeAsset(
         address paranetKAStorageContract,
         uint256 paranetKATokenId,
-        ContentAssetStructs.AssetInputArgs calldata knowledgeAssetArgs
+        ContentAssetStructsV2.AssetInputArgs calldata knowledgeAssetArgs
     ) external returns (uint256) {
         ParanetsRegistry pr = paranetsRegistry;
         bytes32 paranetId = keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId));
