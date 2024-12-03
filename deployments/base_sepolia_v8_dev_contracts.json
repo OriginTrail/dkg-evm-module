@@ -302,12 +302,12 @@
       "deployed": true
     },
     "ContentAsset": {
-      "evmAddress": "0x9a72B9795441B205E842fB4Cf98562f56d2e2100",
-      "version": "2.1.0",
+      "evmAddress": "0x3876fB2189cB4Fe0a88269718D543aeA52E19437",
+      "version": "2.2.0",
       "gitBranch": "v8/develop",
-      "gitCommitHash": "daa616df66a715349cd9ab46221e9f8316e3dd3a",
-      "deploymentBlock": 17604643,
-      "deploymentTimestamp": 1730977580519,
+      "gitCommitHash": "3dae6c0c931db2f906cfd26ae225c695520456e4",
+      "deploymentBlock": 18729536,
+      "deploymentTimestamp": 1733227365476,
       "deployed": true
     },
     "Paranet": {

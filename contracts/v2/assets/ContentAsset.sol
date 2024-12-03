@@ -52,7 +52,7 @@ contract ContentAssetV2 is Named, Versioned, HubDependentV2, Initializable {
     event AssetUpdatePaymentIncreased(address indexed assetContract, uint256 indexed tokenId, uint96 tokenAmount);
 
     string private constant _NAME = "ContentAsset";
-    string private constant _VERSION = "2.1.0";
+    string private constant _VERSION = "2.2.0";
 
     Assertion public assertionContract;
     HashingProxy public hashingProxy;
