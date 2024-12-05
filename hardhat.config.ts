@@ -6,8 +6,8 @@ import 'hardhat-contract-sizer';
 import 'hardhat-tracer';
 import 'solidity-coverage';
 import '@typechain/hardhat';
+import '@typechain/ethers-v6';
 import '@nomicfoundation/hardhat-chai-matchers';
-import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-solhint';
 import { extendEnvironment } from 'hardhat/config';
 import { lazyObject } from 'hardhat/plugins';
@@ -115,7 +115,7 @@ config.networks = {
 
 config.typechain = {
   outDir: 'typechain',
-  target: 'ethers-v5',
+  target: 'ethers-v6',
 };
 
 config.mocha = {
@@ -132,12 +132,12 @@ config.abiExporter = {
   flat: true,
   only: [],
   except: [
+    'draft-IERC6093.sol',
     'AccessControl.sol',
     'ERC20.sol',
     'ERC20Burnable.sol',
     'ERC165.sol',
     'ERC721.sol',
-    'GeneralErrors.sol',
     'IERC20Metadata.sol',
     'IERC721.sol',
     'IERC721Metadata.sol',
@@ -148,17 +148,13 @@ config.abiExporter = {
     'IERC1155Receiver.sol',
     'IERC4906.sol',
     'Ownable.sol',
-    'CommitManagerErrorsV2.sol',
-    'ContentAssetErrors.sol',
-    'ParanetErrors.sol',
-    'ProfileErrors.sol',
-    'ServiceAgreementErrorsV1.sol',
-    'ServiceAgreementErrorsV1U1.sol',
-    'ServiceAgreementErrorsV2.sol',
-    'ShardingTableErrors.sol',
-    'StakingErrors.sol',
-    'TokenErrors.sol',
     'Shares.sol',
+    'IdentityLib.sol',
+    'ParanetLib.sol',
+    'PermissionsLib.sol',
+    'ProfileLib.sol',
+    'ShardingTableLib.sol',
+    'TokenLib.sol',
   ],
   spacing: 2,
   format: 'json',

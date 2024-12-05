@@ -65,7 +65,7 @@
           }
         ],
         "indexed": false,
-        "internalType": "struct ParanetStructs.IncentivesPool",
+        "internalType": "struct ParanetLib.IncentivesPool",
         "name": "incentivesPool",
         "type": "tuple"
       }
@@ -117,7 +117,7 @@
     "name": "hub",
     "outputs": [
       {
-        "internalType": "contract HubV2",
+        "internalType": "contract Hub",
         "name": "",
         "type": "address"
       }

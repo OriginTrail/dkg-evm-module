@@ -142,7 +142,7 @@
             "type": "address[]"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetServiceMetadata",
+        "internalType": "struct ParanetLib.ParanetServiceMetadata",
         "name": "",
         "type": "tuple"
       }
@@ -155,7 +155,7 @@
     "name": "hub",
     "outputs": [
       {
-        "internalType": "contract HubV2",
+        "internalType": "contract Hub",
         "name": "",
         "type": "address"
       }

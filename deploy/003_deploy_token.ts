@@ -1,5 +1,5 @@
-import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { DeployFunction } from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
@@ -7,13 +7,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const isDeployed = hre.helpers.isDeployed('Token');
 
   if (isDeployed) {
-    const hubAddress = hre.helpers.contractDeployments.contracts['Hub'].evmAddress;
+    const hubAddress =
+      hre.helpers.contractDeployments.contracts['Hub'].evmAddress;
     const Hub = await hre.ethers.getContractAt('Hub', hubAddress, deployer);
 
     const tokenInHub = await Hub['isContract(string)']('Token');
 
     if (!tokenInHub) {
-      hre.helpers.newContracts.push(['Token', hre.helpers.contractDeployments.contracts['Token'].evmAddress]);
+      hre.helpers.newContracts.push([
+        'Token',
+        hre.helpers.contractDeployments.contracts['Token'].evmAddress,
+      ]);
     }
   } else if (!isDeployed && hre.network.config.environment === 'development') {
     const Token = await hre.helpers.deploy({
@@ -24,8 +28,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const minterRole = await Token.MINTER_ROLE();
     if (!(await Token.hasRole(minterRole, deployer))) {
-      console.log(`Setting minter role for ${deployer}.`);
-      const setupMinterRoleTx = await Token.setupRole(deployer, { from: deployer });
+      console.log(`Granting minter role for ${deployer}.`);
+      const setupMinterRoleTx = await Token.grantRole(deployer, {
+        from: deployer,
+      });
       await setupMinterRoleTx.wait();
     }
 
@@ -33,7 +39,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const accounts = await hre.ethers.getSigners();
 
     for (const acc of accounts) {
-      const mintTx = await Token.mint(acc.address, amountToMint, { from: deployer, gasLimit: 80_000 });
+      const mintTx = await Token.mint(acc.address, amountToMint, {
+        from: deployer,
+        gasLimit: 80_000,
+      });
       await mintTx.wait();
     }
   } else {

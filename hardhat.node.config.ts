@@ -45,7 +45,7 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: '0.8.16',
+        version: '0.8.20',
         settings: {
           evmVersion: 'london',
           optimizer: {
@@ -69,11 +69,6 @@ const config: HardhatUserConfig = {
         },
       },
     ],
-    overrides: {
-      'contracts/v1/MultiSigWallet.sol': {
-        version: '0.4.15',
-      },
-    },
   },
   paths: {
     sources: './contracts',

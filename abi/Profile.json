@@ -368,19 +368,6 @@
   },
   {
     "inputs": [],
-    "name": "hashingProxy",
-    "outputs": [
-      {
-        "internalType": "contract HashingProxy",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "hub",
     "outputs": [
       {
@@ -440,19 +427,6 @@
   },
   {
     "inputs": [],
-    "name": "nodeOperatorFeesStorage",
-    "outputs": [
-      {
-        "internalType": "contract NodeOperatorFeesStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "parametersStorage",
     "outputs": [
       {
@@ -506,6 +480,19 @@
     "name": "setStatus",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "shardingTableContract",
+    "outputs": [
+      {
+        "internalType": "contract ShardingTable",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

@@ -100,7 +100,7 @@
         "type": "address"
       },
       {
-        "internalType": "enum ParanetStructs.RequestStatus",
+        "internalType": "enum ParanetLib.RequestStatus",
         "name": "status",
         "type": "uint8"
       }
@@ -123,7 +123,7 @@
         "type": "uint72"
       },
       {
-        "internalType": "enum ParanetStructs.RequestStatus",
+        "internalType": "enum ParanetLib.RequestStatus",
         "name": "status",
         "type": "uint8"
       }
@@ -187,7 +187,7 @@
             "type": "address"
           }
         ],
-        "internalType": "struct UnorderedNamedContractDynamicSetStructs.Contract[]",
+        "internalType": "struct UnorderedNamedContractDynamicSetLib.Contract[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -237,7 +237,7 @@
             "type": "bytes"
           }
         ],
-        "internalType": "struct ParanetStructs.Node[]",
+        "internalType": "struct ParanetLib.Node[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -337,7 +337,7 @@
     "name": "getKnowledgeAssetsAccessPolicy",
     "outputs": [
       {
-        "internalType": "enum ParanetStructs.KnowledgeAssetsAccessPolicy",
+        "internalType": "enum ParanetLib.KnowledgeAssetsAccessPolicy",
         "name": "",
         "type": "uint8"
       }
@@ -460,12 +460,12 @@
             "type": "address"
           },
           {
-            "internalType": "enum ParanetStructs.RequestStatus",
+            "internalType": "enum ParanetLib.RequestStatus",
             "name": "status",
             "type": "uint8"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetKnowledgeMinerAccessRequest",
+        "internalType": "struct ParanetLib.ParanetKnowledgeMinerAccessRequest",
         "name": "",
         "type": "tuple"
       }
@@ -506,12 +506,12 @@
             "type": "address"
           },
           {
-            "internalType": "enum ParanetStructs.RequestStatus",
+            "internalType": "enum ParanetLib.RequestStatus",
             "name": "status",
             "type": "uint8"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetKnowledgeMinerAccessRequest[]",
+        "internalType": "struct ParanetLib.ParanetKnowledgeMinerAccessRequest[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -614,12 +614,12 @@
             "type": "address"
           },
           {
-            "internalType": "enum ParanetStructs.RequestStatus",
+            "internalType": "enum ParanetLib.RequestStatus",
             "name": "status",
             "type": "uint8"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetKnowledgeMinerAccessRequest",
+        "internalType": "struct ParanetLib.ParanetKnowledgeMinerAccessRequest",
         "name": "",
         "type": "tuple"
       }
@@ -660,12 +660,12 @@
             "type": "uint72"
           },
           {
-            "internalType": "enum ParanetStructs.RequestStatus",
+            "internalType": "enum ParanetLib.RequestStatus",
             "name": "status",
             "type": "uint8"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetNodeJoinRequest",
+        "internalType": "struct ParanetLib.ParanetNodeJoinRequest",
         "name": "",
         "type": "tuple"
       }
@@ -684,7 +684,7 @@
     "name": "getMinersAccessPolicy",
     "outputs": [
       {
-        "internalType": "enum ParanetStructs.MinersAccessPolicy",
+        "internalType": "enum ParanetLib.MinersAccessPolicy",
         "name": "",
         "type": "uint8"
       }
@@ -749,12 +749,12 @@
             "type": "uint72"
           },
           {
-            "internalType": "enum ParanetStructs.RequestStatus",
+            "internalType": "enum ParanetLib.RequestStatus",
             "name": "status",
             "type": "uint8"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetNodeJoinRequest",
+        "internalType": "struct ParanetLib.ParanetNodeJoinRequest",
         "name": "",
         "type": "tuple"
       }
@@ -795,12 +795,12 @@
             "type": "uint72"
           },
           {
-            "internalType": "enum ParanetStructs.RequestStatus",
+            "internalType": "enum ParanetLib.RequestStatus",
             "name": "status",
             "type": "uint8"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetNodeJoinRequest[]",
+        "internalType": "struct ParanetLib.ParanetNodeJoinRequest[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -843,7 +843,7 @@
     "name": "getNodesAccessPolicy",
     "outputs": [
       {
-        "internalType": "enum ParanetStructs.NodesAccessPolicy",
+        "internalType": "enum ParanetLib.NodesAccessPolicy",
         "name": "",
         "type": "uint8"
       }
@@ -908,17 +908,17 @@
             "type": "string"
           },
           {
-            "internalType": "enum ParanetStructs.NodesAccessPolicy",
+            "internalType": "enum ParanetLib.NodesAccessPolicy",
             "name": "nodesAccessPolicy",
             "type": "uint8"
           },
           {
-            "internalType": "enum ParanetStructs.MinersAccessPolicy",
+            "internalType": "enum ParanetLib.MinersAccessPolicy",
             "name": "minersAccessPolicy",
             "type": "uint8"
           },
           {
-            "internalType": "enum ParanetStructs.KnowledgeAssetsAccessPolicy",
+            "internalType": "enum ParanetLib.KnowledgeAssetsAccessPolicy",
             "name": "knowledgeAssetsAccessPolicy",
             "type": "uint8"
           },
@@ -928,7 +928,7 @@
             "type": "uint96"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetMetadata",
+        "internalType": "struct ParanetLib.ParanetMetadata",
         "name": "",
         "type": "tuple"
       }
@@ -1027,7 +1027,7 @@
     "name": "hub",
     "outputs": [
       {
-        "internalType": "contract HubV2",
+        "internalType": "contract Hub",
         "name": "",
         "type": "address"
       }
@@ -1186,17 +1186,17 @@
         "type": "string"
       },
       {
-        "internalType": "enum ParanetStructs.NodesAccessPolicy",
+        "internalType": "enum ParanetLib.NodesAccessPolicy",
         "name": "nodesAccessPolicy",
         "type": "uint8"
       },
       {
-        "internalType": "enum ParanetStructs.MinersAccessPolicy",
+        "internalType": "enum ParanetLib.MinersAccessPolicy",
         "name": "minersAccessPolicy",
         "type": "uint8"
       },
       {
-        "internalType": "enum ParanetStructs.KnowledgeAssetsAccessPolicy",
+        "internalType": "enum ParanetLib.KnowledgeAssetsAccessPolicy",
         "name": "knowledgeAssetsAccessPolicy",
         "type": "uint8"
       }
@@ -1433,7 +1433,7 @@
         "type": "bytes32"
       },
       {
-        "internalType": "enum ParanetStructs.KnowledgeAssetsAccessPolicy",
+        "internalType": "enum ParanetLib.KnowledgeAssetsAccessPolicy",
         "name": "knowledgeAssetsAccessPolicy",
         "type": "uint8"
       }
@@ -1451,7 +1451,7 @@
         "type": "bytes32"
       },
       {
-        "internalType": "enum ParanetStructs.MinersAccessPolicy",
+        "internalType": "enum ParanetLib.MinersAccessPolicy",
         "name": "minersAccessPolicy",
         "type": "uint8"
       }
@@ -1487,7 +1487,7 @@
         "type": "bytes32"
       },
       {
-        "internalType": "enum ParanetStructs.NodesAccessPolicy",
+        "internalType": "enum ParanetLib.NodesAccessPolicy",
         "name": "nodesAccessPolicy",
         "type": "uint8"
       }
@@ -1556,7 +1556,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ParanetStructs.RequestStatus",
+        "internalType": "enum ParanetLib.RequestStatus",
         "name": "status",
         "type": "uint8"
       }
@@ -1584,7 +1584,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ParanetStructs.RequestStatus",
+        "internalType": "enum ParanetLib.RequestStatus",
         "name": "status",
         "type": "uint8"
       }

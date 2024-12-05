@@ -5,7 +5,7 @@
   "*.{js,ts}": [
     "eslint --fix"
   ],
-  "*.sol,!contracts/{utils/*.sol,Guardian.sol,MultiSigWallet.sol}": [
+  "*.sol,!contracts/{libraries/*.sol,Guardian.sol}": [
     "solhint --write"
   ]
 }

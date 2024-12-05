@@ -101,7 +101,7 @@
             "type": "bytes32"
           }
         ],
-        "internalType": "struct ParanetStructs.KnowledgeAsset",
+        "internalType": "struct ParanetLib.KnowledgeAsset",
         "name": "",
         "type": "tuple"
       }
@@ -152,7 +152,7 @@
     "name": "hub",
     "outputs": [
       {
-        "internalType": "contract HubV2",
+        "internalType": "contract Hub",
         "name": "",
         "type": "address"
       }

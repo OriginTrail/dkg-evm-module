@@ -13,12 +13,12 @@
   {
     "inputs": [
       {
-        "internalType": "enum ParanetStructs.MinersAccessPolicy[]",
+        "internalType": "enum ParanetLib.MinersAccessPolicy[]",
         "name": "expectedAccessPolicies",
         "type": "uint8[]"
       },
       {
-        "internalType": "enum ParanetStructs.MinersAccessPolicy",
+        "internalType": "enum ParanetLib.MinersAccessPolicy",
         "name": "actualAccessPolicy",
         "type": "uint8"
       }
@@ -29,38 +29,17 @@
   {
     "inputs": [
       {
-        "internalType": "enum ParanetStructs.NodesAccessPolicy[]",
+        "internalType": "enum ParanetLib.NodesAccessPolicy[]",
         "name": "expectedAccessPolicies",
         "type": "uint8[]"
       },
       {
-        "internalType": "enum ParanetStructs.NodesAccessPolicy",
+        "internalType": "enum ParanetLib.NodesAccessPolicy",
         "name": "actualAccessPolicy",
         "type": "uint8"
       }
     ],
     "name": "InvalidParanetNodesAccessPolicy",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "paranetKnowledgeAssetStorageContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paranetTokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "KnowledgeAssetIsAPartOfOtherParanet",
     "type": "error"
   },
   {
@@ -92,7 +71,7 @@
         "type": "address"
       },
       {
-        "internalType": "enum ParanetStructs.RequestStatus",
+        "internalType": "enum ParanetLib.RequestStatus",
         "name": "status",
         "type": "uint8"
       }
@@ -193,7 +172,7 @@
         "type": "uint72"
       },
       {
-        "internalType": "enum ParanetStructs.RequestStatus",
+        "internalType": "enum ParanetLib.RequestStatus",
         "name": "status",
         "type": "uint8"
       }
@@ -602,7 +581,7 @@
           }
         ],
         "indexed": false,
-        "internalType": "struct ParanetStructs.IncentivesPool",
+        "internalType": "struct ParanetLib.IncentivesPool",
         "name": "incentivesPool",
         "type": "tuple"
       }
@@ -670,19 +649,19 @@
       },
       {
         "indexed": false,
-        "internalType": "enum ParanetStructs.NodesAccessPolicy",
+        "internalType": "enum ParanetLib.NodesAccessPolicy",
         "name": "nodesAccessPolicy",
         "type": "uint8"
       },
       {
         "indexed": false,
-        "internalType": "enum ParanetStructs.MinersAccessPolicy",
+        "internalType": "enum ParanetLib.MinersAccessPolicy",
         "name": "minersAccessPolicy",
         "type": "uint8"
       },
       {
         "indexed": false,
-        "internalType": "enum ParanetStructs.KnowledgeAssetsAccessPolicy",
+        "internalType": "enum ParanetLib.KnowledgeAssetsAccessPolicy",
         "name": "knowledgeAssetsAccessPolicy",
         "type": "uint8"
       }
@@ -866,7 +845,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ParanetStructs.UniversalAssetLocator[]",
+        "internalType": "struct ParanetLib.UniversalAssetLocator[]",
         "name": "services",
         "type": "tuple[]"
       }
@@ -924,49 +903,10 @@
   },
   {
     "inputs": [],
-    "name": "contentAsset",
-    "outputs": [
-      {
-        "internalType": "contract ContentAssetV2",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "contentAssetStorage",
-    "outputs": [
-      {
-        "internalType": "contract ContentAssetStorageV2",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "hashingProxy",
-    "outputs": [
-      {
-        "internalType": "contract HashingProxy",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "hub",
     "outputs": [
       {
-        "internalType": "contract HubV2",
+        "internalType": "contract Hub",
         "name": "",
         "type": "address"
       }
@@ -991,82 +931,6 @@
     "inputs": [],
     "name": "initialize",
     "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "paranetKAStorageContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paranetKATokenId",
-        "type": "uint256"
-      },
-      {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "publishOperationId",
-            "type": "string"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "assertionId",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint128",
-            "name": "size",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint32",
-            "name": "triplesNumber",
-            "type": "uint32"
-          },
-          {
-            "internalType": "uint96",
-            "name": "chunksNumber",
-            "type": "uint96"
-          },
-          {
-            "internalType": "uint16",
-            "name": "epochsNumber",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint96",
-            "name": "tokenAmount",
-            "type": "uint96"
-          },
-          {
-            "internalType": "uint8",
-            "name": "scoreFunctionId",
-            "type": "uint8"
-          },
-          {
-            "internalType": "bool",
-            "name": "immutable_",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct ContentAssetStructsV2.AssetInputArgs",
-        "name": "knowledgeAssetArgs",
-        "type": "tuple"
-      }
-    ],
-    "name": "mintKnowledgeAsset",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -1136,34 +1000,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "paranetKAStorageContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paranetKATokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "start",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "end",
-        "type": "uint256"
-      }
-    ],
-    "name": "processUpdatedKnowledgeAssetStatesMetadata",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "profileStorage",
     "outputs": [
@@ -1199,12 +1035,12 @@
         "type": "string"
       },
       {
-        "internalType": "enum ParanetStructs.NodesAccessPolicy",
+        "internalType": "enum ParanetLib.NodesAccessPolicy",
         "name": "nodesAccessPolicy",
         "type": "uint8"
       },
       {
-        "internalType": "enum ParanetStructs.MinersAccessPolicy",
+        "internalType": "enum ParanetLib.MinersAccessPolicy",
         "name": "minersAccessPolicy",
         "type": "uint8"
       }
@@ -1388,19 +1224,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "serviceAgreementStorageProxy",
-    "outputs": [
-      {
-        "internalType": "contract ServiceAgreementStorageProxy",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "bool",
@@ -1424,34 +1247,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "paranetKAStorageContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paranetKATokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "knowledgeAssetStorageContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "knowledgeAssetTokenId",
-        "type": "uint256"
-      }
-    ],
-    "name": "submitKnowledgeAsset",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

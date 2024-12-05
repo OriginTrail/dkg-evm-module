@@ -212,7 +212,7 @@
             "type": "uint96"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetIncentivizationProposalVoterInput[]",
+        "internalType": "struct ParanetLib.ParanetIncentivizationProposalVoterInput[]",
         "name": "voters_",
         "type": "tuple[]"
       }
@@ -366,7 +366,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetIncentivesPoolClaimedRewardsProfile[]",
+        "internalType": "struct ParanetLib.ParanetIncentivesPoolClaimedRewardsProfile[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -391,7 +391,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetIncentivesPoolClaimedRewardsProfile[]",
+        "internalType": "struct ParanetLib.ParanetIncentivesPoolClaimedRewardsProfile[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -518,7 +518,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct ParanetStructs.NeuroEmissionMultiplier[]",
+        "internalType": "struct ParanetLib.NeuroEmissionMultiplier[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -619,7 +619,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetIncentivizationProposalVoter",
+        "internalType": "struct ParanetLib.ParanetIncentivizationProposalVoter",
         "name": "",
         "type": "tuple"
       }
@@ -649,7 +649,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ParanetStructs.ParanetIncentivizationProposalVoter[]",
+        "internalType": "struct ParanetLib.ParanetIncentivizationProposalVoter[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -675,7 +675,7 @@
     "name": "hub",
     "outputs": [
       {
-        "internalType": "contract HubV2",
+        "internalType": "contract Hub",
         "name": "",
         "type": "address"
       }

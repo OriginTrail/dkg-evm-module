@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/github/license/OriginTrail/dkg-evm-module)
 ![GitHub Actions Status](https://img.shields.io/github/actions/workflow/status/OriginTrail/dkg-evm-module/checks.yml)
-![solidity - v0.8.16](https://img.shields.io/badge/solidity-v0.8.16-07a7930e?logo=solidity)
+![solidity - v0.8.20](https://img.shields.io/badge/solidity-v0.8.20-07a7930e?logo=solidity)
 [![NPM Package](https://img.shields.io/npm/v/dkg-evm-module)](https://www.npmjs.com/package/dkg-evm-module)
 
 This repository contains the smart contracts for OriginTrail V6, which serves as the core module for the Decentralized Knowledge Graph (DKG). The module handles various aspects, such as DKG Node profile management, Knowledge Asset ownership, consensus mechanisms, and others, in order to ensure the secure and efficient operation of the network. The contracts are written in Solidity and can be deployed on Ethereum and compatible networks.
