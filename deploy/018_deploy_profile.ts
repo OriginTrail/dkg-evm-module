@@ -15,6 +15,7 @@ func.dependencies = [
   'IdentityStorage',
   'ParametersStorage',
   'ProfileStorage',
+  'ShardingTableStorage',
   'ShardingTable',
   'Staking',
   'WhitelistStorage',

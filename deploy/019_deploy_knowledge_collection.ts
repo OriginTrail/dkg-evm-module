@@ -12,6 +12,7 @@ func.tags = ['KnowledgeCollection'];
 func.dependencies = [
   'Hub',
   'Chronos',
+  'ShardingTableStorage',
   'KnowledgeCollectionStorage',
   'ParametersStorage',
   'IdentityStorage',
