@@ -57,7 +57,6 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         address[] calldata signers,
         bytes[] calldata signatures
     ) external {
-        IERC20 token = tokenContract;
         Chronos chron = chronos;
 
         bool validSignatures = _verifySignatures(
@@ -88,23 +87,43 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
             tokenAmount
         );
 
-        uint256 stakeWeightedAverageAsk = shardingTableStorage.getStakeWeightedAverageAsk();
-        uint256 totalStorageTime = (epochs * 1e18) + (chron.timeUntilNextEpoch() * 1e18) / chron.epochLength();
-        uint96 expectedTokenAmount = uint96((stakeWeightedAverageAsk * byteSize * totalStorageTime) / 1e18);
+        _validateTokenAmount(byteSize, epochs, tokenAmount, true);
+        _addTokens(tokenAmount);
+    }
 
-        if (tokenAmount < expectedTokenAmount) {
-            revert KnowledgeCollectionLib.InvalidTokenAmount(expectedTokenAmount, tokenAmount);
+    function extendKnowledgeCollectionLifetime(uint256 id, uint16 epochs, uint96 tokenAmount) external {
+        KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
+
+        uint256 byteSize;
+        uint256 endEpoch;
+        uint96 oldTokenAmount;
+        (, , , , byteSize, , , endEpoch, oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
+
+        if (chronos.getCurrentEpoch() > endEpoch) {
+            revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, chronos.getCurrentEpoch(), endEpoch);
         }
 
-        if (token.allowance(msg.sender, address(this)) < tokenAmount) {
-            revert TokenLib.TooLowAllowance(address(token), token.allowance(msg.sender, address(this)), tokenAmount);
+        kcs.setEndEpoch(id, endEpoch + epochs);
+        kcs.setTokenAmount(id, oldTokenAmount + tokenAmount);
+
+        _validateTokenAmount(byteSize, epochs, tokenAmount, false);
+        _addTokens(tokenAmount);
+    }
+
+    function increaseKnowledgeCollectionTokenAmount(uint256 id, uint96 tokenAmount) external {
+        KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
+
+        uint256 endEpoch;
+        uint96 oldTokenAmount;
+        (, , , , , , , endEpoch, oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
+
+        if (chronos.getCurrentEpoch() > endEpoch) {
+            revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, chronos.getCurrentEpoch(), endEpoch);
         }
 
-        if (token.balanceOf(msg.sender) < tokenAmount) {
-            revert TokenLib.TooLowBalance(address(token), token.balanceOf(msg.sender), tokenAmount);
-        }
+        kcs.setTokenAmount(id, oldTokenAmount + tokenAmount);
 
-        token.transferFrom(msg.sender, address(this), tokenAmount);
+        _addTokens(tokenAmount);
     }
 
     function _verifySignatures(
@@ -143,5 +162,41 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         }
 
         return true;
+    }
+
+    function _validateTokenAmount(
+        uint256 byteSize,
+        uint256 epochs,
+        uint96 tokenAmount,
+        bool includeCurrentEpoch
+    ) internal view {
+        Chronos chron = chronos;
+
+        uint256 stakeWeightedAverageAsk = shardingTableStorage.getStakeWeightedAverageAsk();
+        uint96 expectedTokenAmount;
+        if (includeCurrentEpoch) {
+            uint256 totalStorageTime = (epochs * 1e18) + (chron.timeUntilNextEpoch() * 1e18) / chron.epochLength();
+            expectedTokenAmount = uint96((stakeWeightedAverageAsk * byteSize * totalStorageTime) / 1e18);
+        } else {
+            expectedTokenAmount = uint96(stakeWeightedAverageAsk * byteSize * epochs);
+        }
+
+        if (tokenAmount < expectedTokenAmount) {
+            revert KnowledgeCollectionLib.InvalidTokenAmount(expectedTokenAmount, tokenAmount);
+        }
+    }
+
+    function _addTokens(uint96 tokenAmount) internal {
+        IERC20 token = tokenContract;
+
+        if (token.allowance(msg.sender, address(this)) < tokenAmount) {
+            revert TokenLib.TooLowAllowance(address(token), token.allowance(msg.sender, address(this)), tokenAmount);
+        }
+
+        if (token.balanceOf(msg.sender) < tokenAmount) {
+            revert TokenLib.TooLowBalance(address(token), token.balanceOf(msg.sender), tokenAmount);
+        }
+
+        token.transferFrom(msg.sender, address(this), tokenAmount);
     }
 }

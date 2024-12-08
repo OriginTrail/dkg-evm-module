@@ -77,14 +77,32 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
         return knowledgeCollections[id];
     }
 
-    function mintTokens(uint256 id, address to, uint256 amount) external onlyContracts {
-        KnowledgeCollectionLib.KnowledgeCollection storage c = knowledgeCollections[id];
-        require(c.minted + amount <= knowledgeCollectionMaxSize, "Max size exceeded");
+    function getKnowledgeCollectionMetadata(
+        uint256 id
+    ) external view returns (address, bytes32, uint256, uint256[] memory, uint256, uint256, uint256, uint256, uint96) {
+        KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
 
-        uint256 startTokenId = (id - 1) * knowledgeCollectionMaxSize + _startTokenId() + c.minted;
+        return (
+            kc.publisher,
+            kc.merkleRoot,
+            kc.minted,
+            kc.burned,
+            kc.byteSize,
+            kc.chunksAmount,
+            kc.startEpoch,
+            kc.endEpoch,
+            kc.tokenAmount
+        );
+    }
+
+    function mintTokens(uint256 id, address to, uint256 amount) external onlyContracts {
+        KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[id];
+        require(kc.minted + amount <= knowledgeCollectionMaxSize, "Max size exceeded");
+
+        uint256 startTokenId = (id - 1) * knowledgeCollectionMaxSize + _startTokenId() + kc.minted;
         _setCurrentIndex(startTokenId);
 
-        c.minted += amount;
+        kc.minted += amount;
 
         _totalMintedKnowledgeAssetsCounter += amount;
 
@@ -171,6 +189,10 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
         knowledgeCollections[id].endEpoch = _endEpoch;
     }
 
+    function getLatestKnowledgeCollectionId() external view returns (uint256) {
+        return _knowledgeCollectionsCounter;
+    }
+
     function currentTotalSupply() external view returns (uint256) {
         return _totalMintedKnowledgeAssetsCounter - _totalBurnedKnowledgeAssetsCounter;
     }
@@ -201,17 +223,17 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
     }
 
     function getKnowledgeAssetsRange(uint256 id) external view returns (uint256, uint256, uint256[] memory) {
-        KnowledgeCollectionLib.KnowledgeCollection memory c = knowledgeCollections[id];
+        KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
         uint256 startTokenId = (id - 1) * knowledgeCollectionMaxSize + _startTokenId();
-        uint256 endTokenId = startTokenId + c.minted - 1;
-        return (startTokenId, endTokenId, c.burned);
+        uint256 endTokenId = startTokenId + kc.minted - 1;
+        return (startTokenId, endTokenId, kc.burned);
     }
 
     function getKnowledgeAssetsAmount(uint256 id) external view returns (uint256) {
-        KnowledgeCollectionLib.KnowledgeCollection memory c = knowledgeCollections[id];
+        KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
         uint256 startTokenId = (id - 1) * knowledgeCollectionMaxSize + _startTokenId();
-        uint256 endTokenId = startTokenId + c.minted - 1;
-        return startTokenId + endTokenId - c.burned.length;
+        uint256 endTokenId = startTokenId + kc.minted - 1;
+        return startTokenId + endTokenId - kc.burned.length;
     }
 
     function setURI(string memory baseURI) external onlyHub {
@@ -234,7 +256,7 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
         unchecked {
             for (uint256 i = 0; i < ids.length; i++) {
                 uint256 id = ids[i];
-                KnowledgeCollectionLib.KnowledgeCollection storage c = knowledgeCollections[id];
+                KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[id];
 
                 uint256 startTokenId = (id - 1) * knowledgeCollectionMaxSize + _startTokenId();
 
@@ -245,7 +267,7 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
                 for (uint256 j = 0; j < tokenIds[i].length; j++) {
                     uint256 tokenId = tokenIds[i][j];
 
-                    if (startTokenId <= tokenId && tokenId < startTokenId + c.minted) {
+                    if (startTokenId <= tokenId && tokenId < startTokenId + kc.minted) {
                         revert KnowledgeCollectionLib.NotPartOfKnowledgeCollection(id, tokenId);
                     }
 
@@ -255,7 +277,7 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
                     }
                     _owned[from].unset(tokenId);
 
-                    c.burned.push(tokenId);
+                    kc.burned.push(tokenId);
                 }
 
                 _totalBurnedKnowledgeAssetsCounter += tokenIds[i].length;
