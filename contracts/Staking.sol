@@ -17,7 +17,7 @@ import {ProfileLib} from "./libraries/ProfileLib.sol";
 import {ShardingTableLib} from "./libraries/ShardingTableLib.sol";
 import {TokenLib} from "./libraries/TokenLib.sol";
 import {IdentityLib} from "./libraries/IdentityLib.sol";
-import {PermissionsLib} from "./libraries/PermissionsLib.sol";
+import {Permissions} from "./libraries/Permissions.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
@@ -86,12 +86,12 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Staking";
     string private constant _VERSION = "2.3.0";
 
+    ShardingTableStorage public shardingTableStorage;
     ShardingTable public shardingTableContract;
     IdentityStorage public identityStorage;
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     StakingStorage public stakingStorage;
-    ShardingTableStorage public shardingTableStorage;
     IERC20 public tokenContract;
 
     // solhint-disable-next-line no-empty-blocks
@@ -102,13 +102,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         _;
     }
 
-    function initialize() public onlyHubOwner {
+    function initialize() public onlyHub {
+        shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
-        shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
@@ -164,7 +164,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ProfileStorage ps = profileStorage;
         ParametersStorage params = parametersStorage;
         ShardingTableStorage sts = shardingTableStorage;
-        IERC20 tknc = tokenContract;
+        IERC20 token = tokenContract;
 
         uint96 oldStake = ss.totalStakes(identityId);
         uint96 newStake = oldStake + stakeAmount;
@@ -172,8 +172,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         if (!ps.profileExists(identityId)) {
             revert ProfileLib.ProfileDoesntExist(identityId);
         }
-        if (stakeAmount > tknc.allowance(msg.sender, address(this))) {
-            revert TokenLib.TooLowAllowance(address(tknc), tknc.allowance(msg.sender, address(this)));
+        if (token.allowance(msg.sender, address(this)) < stakeAmount) {
+            revert TokenLib.TooLowAllowance(address(token), token.allowance(msg.sender, address(this)), stakeAmount);
         }
         if (newStake > params.maximumStake()) {
             revert IdentityLib.MaximumStakeExceeded(params.maximumStake());
@@ -190,7 +190,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         sharesContract.mint(msg.sender, sharesMinted);
 
         ss.setTotalStake(identityId, newStake);
-        tknc.transferFrom(msg.sender, address(ss), stakeAmount);
+        sts.onStakeChanged(oldStake, newStake, ps.getAsk(identityId));
+        token.transferFrom(msg.sender, address(ss), stakeAmount);
 
         if (!sts.nodeExists(identityId) && newStake >= params.minimumStake()) {
             if (sts.nodesCount() >= params.shardingTableSizeLimit()) {
@@ -222,8 +223,12 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         Shares fromSharesContract = Shares(ps.getSharesContractAddress(from));
         Shares toSharesContract = Shares(ps.getSharesContractAddress(to));
 
-        if (sharesToBurn > fromSharesContract.balanceOf(msg.sender)) {
-            revert TokenLib.TooLowBalance(address(fromSharesContract), fromSharesContract.balanceOf(msg.sender));
+        if (fromSharesContract.balanceOf(msg.sender) < sharesToBurn) {
+            revert TokenLib.TooLowBalance(
+                address(fromSharesContract),
+                fromSharesContract.balanceOf(msg.sender),
+                sharesToBurn
+            );
         }
 
         ParametersStorage params = parametersStorage;
@@ -250,12 +255,14 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         toSharesContract.mint(msg.sender, sharesToMint);
 
         ss.setTotalStake(from, fromCurrentStake - redelegationAmount);
+        sts.onStakeChanged(fromCurrentStake, fromCurrentStake - redelegationAmount, ps.getAsk(from));
 
         if (sts.nodeExists(from) && (fromCurrentStake - redelegationAmount) < params.minimumStake()) {
             shardingTableContract.removeNode(from);
         }
 
         ss.setTotalStake(to, toCurrentStake + redelegationAmount);
+        sts.onStakeChanged(toCurrentStake, toCurrentStake + redelegationAmount, ps.getAsk(to));
 
         if (!sts.nodeExists(to) && (toCurrentStake + redelegationAmount >= params.minimumStake())) {
             if (sts.nodesCount() >= params.shardingTableSizeLimit()) {
@@ -290,21 +297,20 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
 
-        if (sharesToBurn > sharesContract.balanceOf(msg.sender)) {
-            revert TokenLib.TooLowBalance(address(sharesContract), sharesContract.balanceOf(msg.sender));
+        if (sharesContract.balanceOf(msg.sender) < sharesToBurn) {
+            revert TokenLib.TooLowBalance(address(sharesContract), sharesContract.balanceOf(msg.sender), sharesToBurn);
         }
 
         ParametersStorage params = parametersStorage;
+        ShardingTableStorage sts = shardingTableStorage;
 
         uint96 currentStake = ss.totalStakes(identityId);
         uint96 stakeWithdrawalAmount = uint96((uint256(currentStake) * sharesToBurn) / sharesContract.totalSupply());
 
         ss.setTotalStake(identityId, currentStake - stakeWithdrawalAmount);
+        sts.onStakeChanged(currentStake, currentStake - stakeWithdrawalAmount, ps.getAsk(identityId));
 
-        if (
-            shardingTableStorage.nodeExists(identityId) &&
-            (currentStake - stakeWithdrawalAmount) < params.minimumStake()
-        ) {
+        if (sts.nodeExists(identityId) && (currentStake - stakeWithdrawalAmount) < params.minimumStake()) {
             shardingTableContract.removeNode(identityId);
         }
 
@@ -382,6 +388,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint96 newStake = oldStake + stakeWithdrawalAmount;
 
         Shares sharesContract = Shares(ps.getSharesContractAddress(identityId));
+        ShardingTableStorage sts = shardingTableStorage;
 
         uint256 sharesMinted;
         if (sharesContract.totalSupply() == 0) {
@@ -393,8 +400,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         ss.deleteWithdrawalRequest(identityId, msg.sender);
         ss.setTotalStake(identityId, newStake);
+        sts.onStakeChanged(oldStake, newStake, ps.getAsk(identityId));
 
-        ShardingTableStorage sts = shardingTableStorage;
         ParametersStorage params = parametersStorage;
 
         if (!sts.nodeExists(identityId) && newStake >= params.minimumStake()) {
@@ -497,7 +504,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
     // solhint-disable-next-line no-empty-blocks
     function slash(uint72 identityId) external onlyContracts {
-        // To be implemented
+        // TODO: Implement
     }
 
     function startOperatorFeeChange(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {
@@ -523,15 +530,11 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         );
     }
 
-    // Function signature needed for ABI backwards compatibility
-    // solhint-disable-next-line no-empty-blocks
-    function finishOperatorFeeChange(uint72 identityId) external onlyAdmin(identityId) {}
-
     function _checkAdmin(uint72 identityId) internal view virtual {
         if (
             !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), IdentityLib.ADMIN_KEY)
         ) {
-            revert PermissionsLib.OnlyProfileAdminFunction(msg.sender);
+            revert Permissions.OnlyProfileAdminFunction(msg.sender);
         }
     }
 }

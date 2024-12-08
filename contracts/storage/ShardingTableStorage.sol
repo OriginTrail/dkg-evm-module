@@ -12,6 +12,8 @@ contract ShardingTableStorage is INamed, IVersioned, HubDependent {
     string private constant _VERSION = "1.0.0";
 
     uint72 public nodesCount;
+    uint96 public totalStake;
+    uint256 public weightedAskSum;
 
     // identityId => Node
     mapping(uint72 => ShardingTableLib.Node) internal nodes;
@@ -35,6 +37,27 @@ contract ShardingTableStorage is INamed, IVersioned, HubDependent {
 
     function decrementNodesCount() external onlyContracts {
         nodesCount--;
+    }
+
+    function getStakeWeightedAverageAsk() external view returns (uint256) {
+        return totalStake > 0 ? weightedAskSum / totalStake : 0;
+    }
+
+    function setTotalStake(uint96 _totalStake) external onlyContracts {
+        totalStake = _totalStake;
+    }
+
+    function setWeightedAskSum(uint256 _weightedAskSum) external onlyContracts {
+        weightedAskSum = _weightedAskSum;
+    }
+
+    function onStakeChanged(uint96 oldStake, uint96 newStake, uint96 ask) external onlyContracts {
+        weightedAskSum = weightedAskSum - (ask * oldStake) + (ask * newStake);
+        totalStake = totalStake - oldStake + newStake;
+    }
+
+    function onAskChanged(uint96 oldAsk, uint96 newAsk, uint96 stake) external onlyContracts {
+        weightedAskSum = weightedAskSum - (oldAsk * stake) + (newAsk * stake);
     }
 
     function createNodeObject(

@@ -36,16 +36,17 @@ contract ProfileStorage is INamed, IVersioned, Guardian {
     function createProfile(
         uint72 identityId,
         bytes calldata nodeId,
+        uint96 initialAsk,
         address sharesContractAddress,
         uint8 initialOperatorFee
     ) external onlyContracts {
         ProfileLib.ProfileDefinition storage profile = profiles[identityId];
         profile.nodeId = nodeId;
+        profile.ask = initialAsk;
+        profile.sharesContractAddress = sharesContractAddress;
         profile.operatorFees.push(
             ProfileLib.OperatorFee({feePercentage: initialOperatorFee, effectiveDate: uint248(block.timestamp)})
         );
-        profile.sharesContractAddress = sharesContractAddress;
-
         nodeIdsList[nodeId] = true;
 
         Shares sharesContract = Shares(sharesContractAddress);

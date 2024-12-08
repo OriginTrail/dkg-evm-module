@@ -8,6 +8,7 @@ import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ShardingTable} from "./ShardingTable.sol";
+import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
 import {Staking} from "./Staking.sol";
 import {WhitelistStorage} from "./storage/WhitelistStorage.sol";
@@ -17,7 +18,7 @@ import {INamed} from "./interfaces/INamed.sol";
 import {IVersioned} from "./interfaces/IVersioned.sol";
 import {ProfileLib} from "./libraries/ProfileLib.sol";
 import {IdentityLib} from "./libraries/IdentityLib.sol";
-import {PermissionsLib} from "./libraries/PermissionsLib.sol";
+import {Permissions} from "./libraries/Permissions.sol";
 
 contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     event ProfileCreated(
@@ -48,6 +49,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _VERSION = "2.0.0";
 
     Identity public identityContract;
+    ShardingTableStorage public shardingTableStorage;
     ShardingTable public shardingTableContract;
     StakingStorage public stakingStorage;
     Staking public stakingContract;
@@ -79,8 +81,9 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         _;
     }
 
-    function initialize() public onlyHubOwner {
+    function initialize() public onlyHub {
         identityContract = Identity(hub.getContractAddress("Identity"));
+        shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         stakingContract = Staking(hub.getContractAddress("Staking"));
@@ -102,6 +105,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         address adminWallet,
         address[] calldata operationalWallets,
         bytes calldata nodeId,
+        uint96 initialAsk,
         string calldata sharesTokenName,
         string calldata sharesTokenSymbol,
         uint8 initialOperatorFee
@@ -118,6 +122,9 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
                 parametersStorage.opWalletsLimitOnProfileCreation(),
                 uint16(operationalWallets.length)
             );
+        }
+        if (initialAsk == 0) {
+            revert ProfileLib.ZeroAsk();
         }
         if (nodeId.length == 0) {
             revert ProfileLib.EmptyNodeId();
@@ -145,7 +152,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
 
         Shares sharesContract = new Shares(address(hub), sharesTokenName, sharesTokenSymbol);
 
-        ps.createProfile(identityId, nodeId, address(sharesContract), initialOperatorFee);
+        ps.createProfile(identityId, nodeId, initialAsk, address(sharesContract), initialOperatorFee);
 
         shardingTableContract.insertNode(identityId);
 
@@ -157,7 +164,9 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
             revert ProfileLib.ZeroAsk();
         }
         ProfileStorage ps = profileStorage;
+        uint96 oldAsk = ps.getAsk(identityId);
         ps.setAsk(identityId, ask);
+        shardingTableStorage.onAskChanged(oldAsk, ask, stakingStorage.totalStakes(identityId));
 
         emit AskUpdated(identityId, ps.getNodeId(identityId), ask);
     }
@@ -247,7 +256,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
                 IdentityLib.OPERATIONAL_KEY
             )
         ) {
-            revert PermissionsLib.OnlyProfileAdminOrOperationalAddressesFunction(msg.sender);
+            revert Permissions.OnlyProfileAdminOrOperationalAddressesFunction(msg.sender);
         }
     }
 
@@ -255,7 +264,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         if (
             !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), IdentityLib.ADMIN_KEY)
         ) {
-            revert PermissionsLib.OnlyProfileAdminFunction(msg.sender);
+            revert Permissions.OnlyProfileAdminFunction(msg.sender);
         }
     }
 
@@ -267,14 +276,14 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
                 IdentityLib.OPERATIONAL_KEY
             )
         ) {
-            revert PermissionsLib.OnlyProfileOperationalWalletFunction(msg.sender);
+            revert Permissions.OnlyProfileOperationalWalletFunction(msg.sender);
         }
     }
 
     function _checkWhitelist() internal view virtual {
         WhitelistStorage ws = whitelistStorage;
         if (ws.whitelistingEnabled() && !ws.whitelisted(msg.sender)) {
-            revert PermissionsLib.OnlyWhitelistedAddressesFunction(msg.sender);
+            revert Permissions.OnlyWhitelistedAddressesFunction(msg.sender);
         }
     }
 }
