@@ -16,11 +16,11 @@ contract Guardian is HubDependent {
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependent(hubAddress) {}
 
-    function initialize() public onlyHubOwner {
+    function initialize() public onlyHub {
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
-    function transferTokens(address payable custodian) external onlyHubOwner {
+    function transferTokens(address payable custodian) external onlyHub {
         require(custodian != address(0x0), "Custodian cannot be a zero address");
         uint contractSize;
         assembly {
@@ -43,7 +43,7 @@ contract Guardian is HubDependent {
         emit TokenTransferred(custodian, balanceTransferred);
     }
 
-    function withdrawMisplacedOTP() external onlyHubOwner {
+    function withdrawMisplacedOTP() external onlyHub {
         uint256 balance = address(this).balance;
         if (balance > 0) {
             (bool success, ) = msg.sender.call{value: balance}("");
@@ -52,7 +52,7 @@ contract Guardian is HubDependent {
         emit MisplacedOTPWithdrawn(msg.sender, balance);
     }
 
-    function withdrawMisplacedTokens(address tokenContractAddress) external onlyHubOwner {
+    function withdrawMisplacedTokens(address tokenContractAddress) external onlyHub {
         require(tokenContractAddress != address(tokenContract), "Cannot use this function with the TRAC contract");
         IERC20 misplacedTokensContract = IERC20(tokenContractAddress);
 

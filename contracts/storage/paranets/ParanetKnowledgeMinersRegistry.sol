@@ -25,7 +25,7 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
         _;
     }
 
-    function initialize() public onlyHubOwner {
+    function initialize() public onlyHub {
         paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
     }
 

@@ -3,6 +3,6 @@
 pragma solidity ^0.8.20;
 
 library TokenLib {
-    error TooLowAllowance(address tokenAddress, uint256 amount);
-    error TooLowBalance(address tokenAddress, uint256 amount);
+    error TooLowAllowance(address tokenAddress, uint256 allowance, uint256 expected);
+    error TooLowBalance(address tokenAddress, uint256 balance, uint256 expected);
 }

@@ -29,7 +29,7 @@ contract ShardingTable is INamed, IVersioned, ContractStatus, IInitializable {
         migrationPeriodEnd = migrationPeriodEnd_;
     }
 
-    function initialize() public onlyHubOwner {
+    function initialize() public onlyHub {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));

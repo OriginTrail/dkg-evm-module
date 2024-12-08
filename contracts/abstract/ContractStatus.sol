@@ -10,7 +10,7 @@ abstract contract ContractStatus is HubDependent {
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependent(hubAddress) {}
 
-    function setStatus(bool _status) external onlyHubOwner {
+    function setStatus(bool _status) external onlyHub {
         status = _status;
     }
 }

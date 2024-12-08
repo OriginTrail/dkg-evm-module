@@ -26,19 +26,19 @@ contract WhitelistStorage is INamed, IVersioned, HubDependent {
         return _VERSION;
     }
 
-    function whitelistAddress(address addr) external onlyHubOwner {
+    function whitelistAddress(address addr) external onlyHub {
         whitelisted[addr] = true;
     }
 
-    function blacklistAddress(address addr) external onlyHubOwner {
+    function blacklistAddress(address addr) external onlyHub {
         whitelisted[addr] = false;
     }
 
-    function enableWhitelist() external onlyHubOwner {
+    function enableWhitelist() external onlyHub {
         whitelistingEnabled = true;
     }
 
-    function disableWhitelist() external onlyHubOwner {
+    function disableWhitelist() external onlyHub {
         whitelistingEnabled = false;
     }
 }

@@ -9,15 +9,23 @@ type TestTokenDeploymentParameters = {
 task('deploy_test_token', 'Deploy Test Trace Token')
   .addParam<string>('tokenName', 'Token Name')
   .addParam<string>('tokenSymbol', 'Token Symbol')
-  .setAction(async (taskArgs: TestTokenDeploymentParameters, hre: HardhatRuntimeEnvironment) => {
-    const { tokenName, tokenSymbol } = taskArgs;
+  .setAction(
+    async (
+      taskArgs: TestTokenDeploymentParameters,
+      hre: HardhatRuntimeEnvironment,
+    ) => {
+      const { tokenName, tokenSymbol } = taskArgs;
 
-    const TokenFactory = await hre.ethers.getContractFactory('Token');
-    const Token = await TokenFactory.deploy(tokenName, tokenSymbol);
+      const TokenFactory = await hre.ethers.getContractFactory('Token');
+      const deployment = await TokenFactory.deploy(tokenName, tokenSymbol);
+      const Token = await deployment.waitForDeployment();
 
-    await Token.deployed();
+      const tokenAddress = await Token.getAddress();
 
-    console.log(
-      `${tokenName} ($${tokenSymbol}) token has been deployed to: ${Token.address} on the ${hre.network.name} blockchain!`,
-    );
-  });
+      console.log(
+        `${tokenName} ($${tokenSymbol}) token has been deployed to: ${
+          tokenAddress
+        } on the ${hre.network.name} blockchain!`,
+      );
+    },
+  );

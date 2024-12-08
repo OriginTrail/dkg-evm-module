@@ -13,21 +13,21 @@ abstract contract HubDependent {
         hub = Hub(hubAddress);
     }
 
-    modifier onlyHubOwner() {
-        _checkHubOwner();
-        _;
-    }
-
-    modifier onlyContracts() {
+    modifier onlyHub() {
         _checkHub();
         _;
     }
 
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+    modifier onlyContracts() {
+        _checkHubContract();
+        _;
     }
 
     function _checkHub() internal view virtual {
+        require(msg.sender == address(hub), "Fn can only be used by hub owner");
+    }
+
+    function _checkHubContract() internal view virtual {
         require(hub.isContract(msg.sender), "Fn can only be called by the hub");
     }
 }

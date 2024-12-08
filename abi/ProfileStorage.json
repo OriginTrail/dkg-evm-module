@@ -114,6 +114,11 @@
         "type": "bytes"
       },
       {
+        "internalType": "uint96",
+        "name": "initialAsk",
+        "type": "uint96"
+      },
+      {
         "internalType": "address",
         "name": "sharesContractAddress",
         "type": "address"

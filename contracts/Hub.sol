@@ -8,11 +8,11 @@ import {IInitializable} from "./interfaces/IInitializable.sol";
 import {INamed} from "./interfaces/INamed.sol";
 import {IVersioned} from "./interfaces/IVersioned.sol";
 import {HubLib} from "./libraries/HubLib.sol";
-import {UnorderedNamedContractDynamicSetLib} from "./libraries/UnorderedNamedContractDynamicSetLib.sol";
+import {UnorderedNamedContractDynamicSet} from "./libraries/UnorderedNamedContractDynamicSet.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Hub is INamed, IVersioned, Ownable {
-    using UnorderedNamedContractDynamicSetLib for UnorderedNamedContractDynamicSetLib.Set;
+    using UnorderedNamedContractDynamicSet for UnorderedNamedContractDynamicSet.Set;
 
     event NewContract(string contractName, address newContractAddress);
     event ContractChanged(string contractName, address newContractAddress);
@@ -22,8 +22,8 @@ contract Hub is INamed, IVersioned, Ownable {
     string private constant _NAME = "Hub";
     string private constant _VERSION = "2.0.0";
 
-    UnorderedNamedContractDynamicSetLib.Set internal contractSet;
-    UnorderedNamedContractDynamicSetLib.Set internal assetStorageSet;
+    UnorderedNamedContractDynamicSet.Set internal contractSet;
+    UnorderedNamedContractDynamicSet.Set internal assetStorageSet;
 
     constructor() Ownable(msg.sender) {}
 
@@ -60,11 +60,11 @@ contract Hub is INamed, IVersioned, Ownable {
         return assetStorageSet.get(assetStorageName).addr;
     }
 
-    function getAllContracts() external view returns (UnorderedNamedContractDynamicSetLib.Contract[] memory) {
+    function getAllContracts() external view returns (UnorderedNamedContractDynamicSet.Contract[] memory) {
         return contractSet.getAll();
     }
 
-    function getAllAssetStorages() external view returns (UnorderedNamedContractDynamicSetLib.Contract[] memory) {
+    function getAllAssetStorages() external view returns (UnorderedNamedContractDynamicSet.Contract[] memory) {
         return assetStorageSet.getAll();
     }
 

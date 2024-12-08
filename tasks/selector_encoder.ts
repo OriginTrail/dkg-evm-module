@@ -7,12 +7,14 @@ type EncoderParameters = {
 
 task('encode_selector', 'Calculates EVM function/error selector (sighash)')
   .addParam<string>('signature')
-  .setAction(async (taskArgs: EncoderParameters, hre: HardhatRuntimeEnvironment) => {
-    const sighash = hre.ethers.utils.hexDataSlice(
-      hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes(taskArgs.signature)),
-      0,
-      4,
-    );
+  .setAction(
+    async (taskArgs: EncoderParameters, hre: HardhatRuntimeEnvironment) => {
+      const sighash = hre.ethers.dataSlice(
+        hre.ethers.keccak256(hre.ethers.toUtf8Bytes(taskArgs.signature)),
+        0,
+        4,
+      );
 
-    console.log(`Selector (sighash) for ${taskArgs.signature}: ${sighash}`);
-  });
+      console.log(`Selector (sighash) for ${taskArgs.signature}: ${sighash}`);
+    },
+  );

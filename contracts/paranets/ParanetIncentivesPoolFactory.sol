@@ -32,7 +32,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         _;
     }
 
-    function initialize() public onlyHubOwner {
+    function initialize() public onlyHub {
         paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
     }
 

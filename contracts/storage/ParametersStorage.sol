@@ -42,6 +42,8 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
     uint16 public opWalletsLimitOnProfileCreation;
     uint16 public shardingTableSizeLimit;
 
+    uint256 public minimumRequiredSignatures;
+
     constructor(address hubAddress) HubDependent(hubAddress) {
         // minimumStake
         args3[0] = 50_000 ether;
@@ -82,6 +84,8 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
 
         // finalizationCommitsNumber
         args1[5] = 3;
+
+        minimumRequiredSignatures = 3;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -92,11 +96,17 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         return _VERSION;
     }
 
+    function setMinimumRequiredSignatures(uint256 _minimumRequiredSignatures) external onlyHub {
+        minimumRequiredSignatures = _minimumRequiredSignatures;
+
+        emit ParameterChanged("minimumRequiredSignatures", _minimumRequiredSignatures);
+    }
+
     function minimumStake() external view returns (uint96) {
         return args3[0];
     }
 
-    function setMinimumStake(uint96 newMinimumStake) external onlyHubOwner {
+    function setMinimumStake(uint96 newMinimumStake) external onlyHub {
         args3[0] = newMinimumStake;
 
         emit ParameterChanged("minimumStake", newMinimumStake);
@@ -106,13 +116,13 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         return args3[1];
     }
 
-    function setMaximumStake(uint96 newMaximumStake) external onlyHubOwner {
+    function setMaximumStake(uint96 newMaximumStake) external onlyHub {
         args3[1] = newMaximumStake;
 
         emit ParameterChanged("maximumStake", newMaximumStake);
     }
 
-    function setR2(uint48 newR2) external onlyHubOwner {
+    function setR2(uint48 newR2) external onlyHub {
         r2 = newR2;
 
         emit ParameterChanged("r2", newR2);
@@ -122,7 +132,7 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         return args2[1];
     }
 
-    function setR1(uint32 newR1) external onlyHubOwner {
+    function setR1(uint32 newR1) external onlyHub {
         require(newR1 >= (2 * args2[0] - 1), "R1 should be >= 2*R0-1");
 
         args2[1] = newR1;
@@ -134,7 +144,7 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         return args2[0];
     }
 
-    function setR0(uint32 newR0) external onlyHubOwner {
+    function setR0(uint32 newR0) external onlyHub {
         require(newR0 <= ((args2[1] + 1) / 2), "R0 should be <= (R1+1)/2");
 
         args2[0] = newR0;
@@ -146,7 +156,7 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         return args1[0];
     }
 
-    function setMinProofWindowOffsetPerc(uint8 newMinProofWindowOffsetPerc) external onlyHubOwner {
+    function setMinProofWindowOffsetPerc(uint8 newMinProofWindowOffsetPerc) external onlyHub {
         args1[0] = newMinProofWindowOffsetPerc;
 
         emit ParameterChanged("minProofWindowOffsetPerc", newMinProofWindowOffsetPerc);
@@ -156,7 +166,7 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         return args1[1];
     }
 
-    function setMaxProofWindowOffsetPerc(uint8 newMaxProofWindowOffsetPerc) external onlyHubOwner {
+    function setMaxProofWindowOffsetPerc(uint8 newMaxProofWindowOffsetPerc) external onlyHub {
         args1[1] = newMaxProofWindowOffsetPerc;
 
         emit ParameterChanged("maxProofWindowOffsetPerc", newMaxProofWindowOffsetPerc);
@@ -166,7 +176,7 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         return args1[2];
     }
 
-    function setCommitWindowDurationPerc(uint8 newCommitWindowDurationPerc) external onlyHubOwner {
+    function setCommitWindowDurationPerc(uint8 newCommitWindowDurationPerc) external onlyHub {
         args1[2] = newCommitWindowDurationPerc;
 
         emit ParameterChanged("commitWindowDurationPerc", newCommitWindowDurationPerc);
@@ -176,7 +186,7 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         return args1[3];
     }
 
-    function setProofWindowDurationPerc(uint8 newProofWindowDurationPerc) external onlyHubOwner {
+    function setProofWindowDurationPerc(uint8 newProofWindowDurationPerc) external onlyHub {
         args1[3] = newProofWindowDurationPerc;
 
         emit ParameterChanged("proofWindowDurationPerc", newProofWindowDurationPerc);
@@ -186,13 +196,13 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         return args1[4];
     }
 
-    function setReplacementWindowDurationPerc(uint8 newReplacementWindowDurationPerc) external onlyHubOwner {
+    function setReplacementWindowDurationPerc(uint8 newReplacementWindowDurationPerc) external onlyHub {
         args1[4] = newReplacementWindowDurationPerc;
 
         emit ParameterChanged("replacementWindowDurationPerc", newReplacementWindowDurationPerc);
     }
 
-    function setEpochLength(uint128 newEpochLength) external onlyHubOwner {
+    function setEpochLength(uint128 newEpochLength) external onlyHub {
         epochLength = newEpochLength;
 
         emit ParameterChanged("epochLength", newEpochLength);
@@ -202,7 +212,7 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         return args4[0];
     }
 
-    function setStakeWithdrawalDelay(uint24 newStakeWithdrawalDelay) external onlyHubOwner {
+    function setStakeWithdrawalDelay(uint24 newStakeWithdrawalDelay) external onlyHub {
         args4[0] = newStakeWithdrawalDelay;
 
         emit ParameterChanged("stakeWithdrawalDelay", newStakeWithdrawalDelay);
@@ -212,7 +222,7 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         return args4[1];
     }
 
-    function setRewardWithdrawalDelay(uint24 newRewardWithdrawalDelay) external onlyHubOwner {
+    function setRewardWithdrawalDelay(uint24 newRewardWithdrawalDelay) external onlyHub {
         args4[1] = newRewardWithdrawalDelay;
 
         emit ParameterChanged("rewardWithdrawalDelay", newRewardWithdrawalDelay);
@@ -222,31 +232,31 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         return args2[2];
     }
 
-    function setSlashingFreezeDuration(uint32 newSlashingFreezeDuration) external onlyHubOwner {
+    function setSlashingFreezeDuration(uint32 newSlashingFreezeDuration) external onlyHub {
         args2[2] = newSlashingFreezeDuration;
 
         emit ParameterChanged("slashingFreezeDuration", newSlashingFreezeDuration);
     }
 
-    function setUpdateCommitWindowDuration(uint16 newUpdateCommitWindowDuration) external onlyHubOwner {
+    function setUpdateCommitWindowDuration(uint16 newUpdateCommitWindowDuration) external onlyHub {
         updateCommitWindowDuration = newUpdateCommitWindowDuration;
 
         emit ParameterChanged("updateCommitWindowDuration", newUpdateCommitWindowDuration);
     }
 
-    function setHashFunctionsLimit(uint16 hashFunctionsLimit_) external onlyHubOwner {
+    function setHashFunctionsLimit(uint16 hashFunctionsLimit_) external onlyHub {
         hashFunctionsLimit = hashFunctionsLimit_;
 
         emit ParameterChanged("hashFunctionsLimit", hashFunctionsLimit);
     }
 
-    function setOpWalletsLimitOnProfileCreation(uint16 opWalletsLimitOnProfileCreation_) external onlyHubOwner {
+    function setOpWalletsLimitOnProfileCreation(uint16 opWalletsLimitOnProfileCreation_) external onlyHub {
         opWalletsLimitOnProfileCreation = opWalletsLimitOnProfileCreation_;
 
         emit ParameterChanged("opWalletsLimitOnProfileCreation", opWalletsLimitOnProfileCreation);
     }
 
-    function setShardingTableSizeLimit(uint16 shardingTableSizeLimit_) external onlyHubOwner {
+    function setShardingTableSizeLimit(uint16 shardingTableSizeLimit_) external onlyHub {
         shardingTableSizeLimit = shardingTableSizeLimit_;
 
         emit ParameterChanged("shardingTableSizeLimit", shardingTableSizeLimit);
@@ -256,7 +266,7 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         return args1[5];
     }
 
-    function setFinalizationCommitsNumber(uint8 newFinalizationCommitsNumber) external onlyHubOwner {
+    function setFinalizationCommitsNumber(uint8 newFinalizationCommitsNumber) external onlyHub {
         args1[5] = newFinalizationCommitsNumber;
 
         emit ParameterChanged("finalizationCommitsNumber", newFinalizationCommitsNumber);

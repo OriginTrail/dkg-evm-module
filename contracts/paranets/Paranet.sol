@@ -132,7 +132,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         _;
     }
 
-    function initialize() public onlyHubOwner {
+    function initialize() public onlyHub {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));

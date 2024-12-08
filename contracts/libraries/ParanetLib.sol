@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {UnorderedNamedContractDynamicSetLib} from "./UnorderedNamedContractDynamicSetLib.sol";
+import {UnorderedNamedContractDynamicSet} from "./UnorderedNamedContractDynamicSet.sol";
 
 library ParanetLib {
     uint24 constant TOKENS_DIGITS_DIFF = 10 ** 6;
@@ -64,7 +64,7 @@ library ParanetLib {
         MinersAccessPolicy minersAccessPolicy;
         KnowledgeAssetsAccessPolicy knowledgeAssetsAccessPolicy;
         uint96 cumulativeKnowledgeValue;
-        UnorderedNamedContractDynamicSetLib.Set incentivesPools;
+        UnorderedNamedContractDynamicSet.Set incentivesPools;
         Node[] curatedNodes;
         // Identity ID => Index in the array
         mapping(uint72 => uint256) curatedNodesIndexes;

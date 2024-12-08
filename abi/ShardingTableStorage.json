@@ -368,6 +368,19 @@
   },
   {
     "inputs": [],
+    "name": "getStakeWeightedAverageAsk",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "head",
     "outputs": [
       {
@@ -498,6 +511,52 @@
   {
     "inputs": [
       {
+        "internalType": "uint96",
+        "name": "oldAsk",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "newAsk",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "stake",
+        "type": "uint96"
+      }
+    ],
+    "name": "onAskChanged",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint96",
+        "name": "oldStake",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "newStake",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "ask",
+        "type": "uint96"
+      }
+    ],
+    "name": "onStakeChanged",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint72",
         "name": "index",
         "type": "uint72"
@@ -514,6 +573,45 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint96",
+        "name": "_totalStake",
+        "type": "uint96"
+      }
+    ],
+    "name": "setTotalStake",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_weightedAskSum",
+        "type": "uint256"
+      }
+    ],
+    "name": "setWeightedAskSum",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalStake",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "version",
     "outputs": [
@@ -524,6 +622,19 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "weightedAskSum",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

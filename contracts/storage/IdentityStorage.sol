@@ -6,12 +6,12 @@ import {HubDependent} from "../abstract/HubDependent.sol";
 import {IERC734Extended} from "../interfaces/IERC734Extended.sol";
 import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
-import {ByteArrLib} from "../libraries/ByteArrLib.sol";
+import {ByteArr} from "../libraries/ByteArr.sol";
 import {IdentityLib} from "../libraries/IdentityLib.sol";
 import {IdentityStorage} from "../storage/IdentityStorage.sol";
 
 contract IdentityStorage is IERC734Extended, INamed, IVersioned, HubDependent {
-    using ByteArrLib for bytes32[];
+    using ByteArr for bytes32[];
 
     string private constant _NAME = "IdentityStorage";
     string private constant _VERSION = "1.0.0";

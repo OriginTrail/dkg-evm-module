@@ -1,6 +1,8 @@
 import { task } from 'hardhat/config';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
+import { Token } from '../typechain/contracts/Token';
+
 type TestTokenDeploymentParameters = {
   tokenAddress: string;
   receiver: string;
@@ -19,16 +21,19 @@ task('mint_test_tokens', 'Mint Test Trace Tokens')
       const { tokenAddress, receiver, amount } = taskArgs;
       const { minter } = await hre.getNamedAccounts();
 
-      const Token = await hre.ethers.getContractAt('Token', tokenAddress);
+      const Token: Token = await hre.ethers.getContractAt(
+        'Token',
+        tokenAddress,
+      );
 
       const minterRole = await Token.MINTER_ROLE();
       if (!(await Token.hasRole(minterRole, minter))) {
         console.log(`Granting minter role for ${minter}.`);
-        const setupMinterTx = await Token.grantRole(minter);
+        const setupMinterTx = await Token['grantRole(address)'](minter);
         await setupMinterTx.wait();
       }
 
-      const amountToMint = hre.ethers.utils.parseEther(amount);
+      const amountToMint = hre.ethers.parseEther(amount);
 
       const mintTx = await Token.mint(receiver, amountToMint, { from: minter });
       await mintTx.wait();

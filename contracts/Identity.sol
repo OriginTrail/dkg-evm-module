@@ -26,7 +26,7 @@ contract Identity is INamed, IVersioned, ContractStatus, IInitializable {
         _;
     }
 
-    function initialize() public onlyHubOwner {
+    function initialize() public onlyHub {
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
     }
 

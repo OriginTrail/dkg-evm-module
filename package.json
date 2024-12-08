@@ -30,7 +30,6 @@
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.12",
     "@nomiclabs/hardhat-solhint": "^4.0.1",
-    "@openzeppelin/test-helpers": "^0.5.16",
     "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",
     "@types/chai": "^4.3.20",
@@ -70,8 +69,9 @@
     "@prb/math": "^4.1.0",
     "dotenv": "^16.4.7",
     "hardhat": "^2.22.17",
-    "hardhat-deploy": "^0.12.0",
+    "hardhat-deploy": "^0.12.4",
     "hardhat-deploy-ethers": "^0.4.2",
+    "solady": "^0.0.278",
     "ts-node": "^10.9.1",
     "typescript": "^5.7.2"
   },

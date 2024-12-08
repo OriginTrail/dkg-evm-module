@@ -346,6 +346,11 @@
         "type": "bytes"
       },
       {
+        "internalType": "uint96",
+        "name": "initialAsk",
+        "type": "uint96"
+      },
+      {
         "internalType": "string",
         "name": "sharesTokenName",
         "type": "string"
@@ -488,6 +493,19 @@
     "outputs": [
       {
         "internalType": "contract ShardingTable",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "shardingTableStorage",
+    "outputs": [
+      {
+        "internalType": "contract ShardingTableStorage",
         "name": "",
         "type": "address"
       }

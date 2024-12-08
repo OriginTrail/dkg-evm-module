@@ -8,6 +8,7 @@ import 'solidity-coverage';
 import '@typechain/hardhat';
 import '@typechain/ethers-v6';
 import '@nomicfoundation/hardhat-chai-matchers';
+import '@nomicfoundation/hardhat-ethers';
 import '@nomiclabs/hardhat-solhint';
 import { extendEnvironment } from 'hardhat/config';
 import { lazyObject } from 'hardhat/plugins';
@@ -146,15 +147,17 @@ config.abiExporter = {
     'IERC1155.sol',
     'IERC1155MetadataURI.sol',
     'IERC1155Receiver.sol',
+    'IERC1155Delta.sol',
     'IERC4906.sol',
     'Ownable.sol',
     'Shares.sol',
     'IdentityLib.sol',
     'ParanetLib.sol',
-    'PermissionsLib.sol',
+    'Permissions.sol',
     'ProfileLib.sol',
     'ShardingTableLib.sol',
     'TokenLib.sol',
+    'KnowledgeCollectionLib.sol',
   ],
   spacing: 2,
   format: 'json',

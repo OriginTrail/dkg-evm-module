@@ -46,7 +46,9 @@ export function mnemonic(networkName?: string): string {
   return mnemonic;
 }
 
-export function accounts(networkName?: string): [string] | { mnemonic: string } {
+export function accounts(
+  networkName?: string,
+): [string] | { mnemonic: string } {
   const privKey = privateKey(networkName);
 
   if (privKey) {

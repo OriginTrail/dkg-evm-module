@@ -68,7 +68,8 @@ type OverridesConfig = {
   };
 };
 
-type EnvironmentParametersConfig = BaseEnvironmentParametersConfig & OverridesConfig;
+type EnvironmentParametersConfig = BaseEnvironmentParametersConfig &
+  OverridesConfig;
 
 type ParametersConfig = {
   [environment: string]: EnvironmentParametersConfig;
@@ -109,7 +110,9 @@ export class Helpers {
     const deploymentsConfig = `./deployments/${this.hre.network.name}_contracts.json`;
 
     if (fs.existsSync(deploymentsConfig)) {
-      this.contractDeployments = JSON.parse(fs.readFileSync(deploymentsConfig).toString());
+      this.contractDeployments = JSON.parse(
+        fs.readFileSync(deploymentsConfig).toString(),
+      );
     } else {
       this.contractDeployments = { contracts: {} };
     }
@@ -117,7 +120,9 @@ export class Helpers {
     const parametersConfig = './deployments/parameters.json';
 
     if (fs.existsSync(parametersConfig)) {
-      this.parametersConfig = JSON.parse(fs.readFileSync(parametersConfig).toString());
+      this.parametersConfig = JSON.parse(
+        fs.readFileSync(parametersConfig).toString(),
+      );
     } else {
       this.parametersConfig = {
         development: {},
@@ -146,18 +151,21 @@ export class Helpers {
   }: DeploymentParameters): Promise<Contract> {
     const { deployer } = await this.hre.getNamedAccounts();
 
-    const nameInHub = newContractNameInHub ? newContractNameInHub : newContractName;
+    const nameInHub = newContractNameInHub
+      ? newContractNameInHub
+      : newContractName;
 
     if (this.isDeployed(nameInHub)) {
       const contractInstance = await this.hre.ethers.getContractAt(
         this.getAbi(newContractName),
         this.contractDeployments.contracts[nameInHub].evmAddress,
-        deployer,
       );
 
       if (this.hasFunction(nameInHub, 'initialize')) {
         // TODO: Reinitialize only if any dependency contract was redeployed
-        this.contractsForReinitialization.push(contractInstance.address);
+        this.contractsForReinitialization.push(
+          await contractInstance.getAddress(),
+        );
       }
 
       return contractInstance;
@@ -175,7 +183,9 @@ export class Helpers {
       newContract = await this.hre.deployments.deploy(nameInHub, {
         contract: newContractName,
         from: deployer,
-        args: passHubInConstructor ? [hubAddress, ...additionalArgs] : additionalArgs,
+        args: passHubInConstructor
+          ? [hubAddress, ...additionalArgs]
+          : additionalArgs,
         deterministicDeployment,
         log: true,
       });
@@ -190,21 +200,19 @@ export class Helpers {
       throw Error(message);
     }
 
-    const Hub = await this.hre.ethers.getContractAt('Hub', hubAddress, deployer);
-    const hubControllerAddress = await Hub.owner();
-    const HubController = await this.hre.ethers.getContractAt('HubController', hubControllerAddress, deployer);
+    const Hub = await this.hre.ethers.getContractAt('Hub', hubAddress);
 
     let tx;
     if (setContractInHub) {
       if (this.hre.network.config.environment === 'development') {
-        tx = await HubController.setContractAddress(nameInHub, newContract.address);
+        tx = await Hub.setContractAddress(nameInHub, newContract.address);
         await tx.wait();
       } else {
         this.newContracts.push([nameInHub, newContract.address]);
       }
     } else if (setAssetStorageInHub) {
       if (this.hre.network.config.environment === 'development') {
-        tx = await HubController.setAssetStorageAddress(nameInHub, newContract.address);
+        tx = await Hub.setAssetStorageAddress(nameInHub, newContract.address);
         await tx.wait();
       } else {
         this.newAssetStorageContracts.push([nameInHub, newContract.address]);
@@ -212,9 +220,14 @@ export class Helpers {
     }
 
     if (this.hasFunction(nameInHub, 'initialize')) {
-      if ((setContractInHub || setAssetStorageInHub) && this.hre.network.config.environment === 'development') {
-        const newContractInterface = new this.hre.ethers.utils.Interface(this.getAbi(nameInHub));
-        const initializeTx = await HubController.forwardCall(
+      if (
+        (setContractInHub || setAssetStorageInHub) &&
+        this.hre.network.config.environment === 'development'
+      ) {
+        const newContractInterface = new this.hre.ethers.Interface(
+          this.getAbi(nameInHub),
+        );
+        const initializeTx = await Hub.forwardCall(
           newContract.address,
           newContractInterface.encodeFunctionData('initialize'),
         );
@@ -224,20 +237,35 @@ export class Helpers {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    await this.updateDeploymentsJson(nameInHub, newContract.address, newContract.receipt!.blockNumber);
+    await this.updateDeploymentsJson(
+      nameInHub,
+      newContract.address,
+      newContract.receipt!.blockNumber,
+    );
 
     if (this.hre.network.config.environment !== 'development') {
       this.saveDeploymentsJson('deployments');
     }
 
-    return await this.hre.ethers.getContractAt(this.getAbi(newContractName), newContract.address, deployer);
+    return this.hre.ethers.getContractAt(
+      this.getAbi(newContractName),
+      newContract.address,
+    );
   }
 
-  public async updateContractParameters(contractName: string, contract: Contract) {
-    let parameters = this.parametersConfig[this.hre.network.config.environment]?.[contractName];
+  public async updateContractParameters(
+    contractName: string,
+    contract: Contract,
+  ) {
+    let parameters =
+      this.parametersConfig[this.hre.network.config.environment]?.[
+        contractName
+      ];
 
     const overrideParameters =
-      this.parametersConfig[this.hre.network.config.environment]?.overrides?.[this.hre.network.name]?.[contractName];
+      this.parametersConfig[this.hre.network.config.environment]?.overrides?.[
+        this.hre.network.name
+      ]?.[contractName];
 
     parameters = { ...parameters, ...overrideParameters };
 
@@ -257,8 +285,13 @@ export class Helpers {
 
         if (value instanceof Object) {
           getterArgs = value.getterArgs ? value.getterArgs : [];
-          desiredValue = value.setterArgs.length === 1 ? value.setterArgs[0] : value.desiredValue;
-          setterName = value.setter ? value.setter : `set${getterName.charAt(0).toUpperCase() + getterName.slice(1)}`;
+          desiredValue =
+            value.setterArgs.length === 1
+              ? value.setterArgs[0]
+              : value.desiredValue;
+          setterName = value.setter
+            ? value.setter
+            : `set${getterName.charAt(0).toUpperCase() + getterName.slice(1)}`;
           setterArgs = value.setterArgs;
         } else {
           desiredValue = value;
@@ -266,44 +299,55 @@ export class Helpers {
           setterArgs = [value];
         }
 
-        if (getterName in contract.functions) {
+        if (contract.interface.hasFunction(getterName)) {
           const currentValue = await contract[getterName](...getterArgs);
 
           if (currentValue.toString() !== desiredValue.toString()) {
             console.log(
               `Parameter '${getterName}' for ${contractName} in the contract isn't the same as define in config. Blockchain: ${currentValue}. Config: ${desiredValue}.`,
             );
-            if (setterName in contract.functions) {
-              const encodedFunctionData = contract.interface.encodeFunctionData(setterName, setterArgs);
+            if (contract.interface.hasFunction(setterName)) {
+              const encodedFunctionData = contract.interface.encodeFunctionData(
+                setterName,
+                setterArgs,
+              );
 
               if (this.hre.network.config.environment === 'development') {
-                console.log(`[${contractName}] Setting parameter '${getterName}' value to be ${desiredValue}.`);
-
-                const { deployer } = await this.hre.getNamedAccounts();
-
-                const targetContractAddress = this.contractDeployments.contracts[contractName].evmAddress;
-                const hubControllerAddress = this.contractDeployments.contracts['HubController'].evmAddress;
-                const HubController = await this.hre.ethers.getContractAt(
-                  'HubController',
-                  hubControllerAddress,
-                  deployer,
+                console.log(
+                  `[${contractName}] Setting parameter '${getterName}' value to be ${desiredValue}.`,
                 );
 
-                const tx = await HubController.forwardCall(targetContractAddress, encodedFunctionData);
+                const targetContractAddress =
+                  this.contractDeployments.contracts[contractName].evmAddress;
+                const hubAddress =
+                  this.contractDeployments.contracts['Hub'].evmAddress;
+                const Hub = await this.hre.ethers.getContractAt(
+                  'Hub',
+                  hubAddress,
+                );
+
+                const tx = await Hub.forwardCall(
+                  targetContractAddress,
+                  encodedFunctionData,
+                );
                 await tx.wait();
               } else {
                 console.log(
-                  `[${contractName}] Adding parameter '${getterName}' value to be set to ${desiredValue} using HubController.`,
+                  `[${contractName}] Adding parameter '${getterName}' value to be set to ${desiredValue} using Hub.`,
                 );
 
                 encodedData[1].push(encodedFunctionData);
               }
             } else {
-              throw Error(`Setter '${setterName}' doesn't exist in the contract '${contractName}'.`);
+              throw Error(
+                `Setter '${setterName}' doesn't exist in the contract '${contractName}'.`,
+              );
             }
           }
         } else {
-          throw Error(`Parameter '${getterName}' doesn't exist in the contract '${contractName}'.`);
+          throw Error(
+            `Parameter '${getterName}' doesn't exist in the contract '${contractName}'.`,
+          );
         }
       }
     }
@@ -327,7 +371,9 @@ export class Helpers {
 
   public hasFunction(contractName: string, functionName: string): boolean {
     const contractAbi = this.getAbi(contractName);
-    return contractAbi.some((entry) => entry.type === 'function' && entry.name === functionName);
+    return contractAbi.some(
+      (entry) => entry.type === 'function' && entry.name === functionName,
+    );
   }
 
   public getAbi(contractName: string): AbiEntry[] {
@@ -338,7 +384,11 @@ export class Helpers {
     this.contractDeployments = { contracts: {} };
   }
 
-  public async updateDeploymentsJson(newContractName: string, newContractAddress: string, deploymentBlock: number) {
+  public async updateDeploymentsJson(
+    newContractName: string,
+    newContractAddress: string,
+    deploymentBlock: number,
+  ) {
     const contractABI = this.getAbi(newContractName);
     const isVersionedContract = contractABI.some(
       (abiEntry) => abiEntry.type === 'function' && abiEntry.name === 'version',
@@ -347,7 +397,10 @@ export class Helpers {
     let contractVersion;
 
     if (isVersionedContract) {
-      const VersionedContract = await this.hre.ethers.getContractAt(newContractName, newContractAddress);
+      const VersionedContract = await this.hre.ethers.getContractAt(
+        newContractName,
+        newContractAddress,
+      );
       contractVersion = await VersionedContract.version();
     } else {
       contractVersion = null;
@@ -355,7 +408,9 @@ export class Helpers {
 
     this.contractDeployments.contracts[newContractName] = {
       evmAddress: newContractAddress,
-      substrateAddress: this.hre.network.name.startsWith('otp') ? this.convertEvmWallet(newContractAddress) : undefined,
+      substrateAddress: this.hre.network.name.startsWith('otp')
+        ? this.convertEvmWallet(newContractAddress)
+        : undefined,
       version: contractVersion,
       gitBranch: this.getCurrentGitBranch(),
       gitCommitHash: this.getCurrentGitCommitHash(),
@@ -366,12 +421,24 @@ export class Helpers {
   }
 
   public saveDeploymentsJson(folder: string) {
-    console.log(`New or redeployed contracts: ${JSON.stringify(this.newContracts)}`);
-    console.log(`New or redeployed Asset Storage contracts: ${JSON.stringify(this.newAssetStorageContracts)}`);
-    console.log(`New or redeployed hash functions set in the proxy: ${JSON.stringify(this.newHashFunctions)}`);
-    console.log(`New or redeployed score functions set in the proxy: ${JSON.stringify(this.newScoreFunctions)}`);
-    console.log(`Initialized contracts: ${JSON.stringify(this.contractsForReinitialization)}`);
-    console.log(`Encoded data for parameters settings: ${JSON.stringify(this.setParametersEncodedData)}`);
+    console.log(
+      `New or redeployed contracts: ${JSON.stringify(this.newContracts)}`,
+    );
+    console.log(
+      `New or redeployed Asset Storage contracts: ${JSON.stringify(this.newAssetStorageContracts)}`,
+    );
+    console.log(
+      `New or redeployed hash functions set in the proxy: ${JSON.stringify(this.newHashFunctions)}`,
+    );
+    console.log(
+      `New or redeployed score functions set in the proxy: ${JSON.stringify(this.newScoreFunctions)}`,
+    );
+    console.log(
+      `Initialized contracts: ${JSON.stringify(this.contractsForReinitialization)}`,
+    );
+    console.log(
+      `Encoded data for parameters settings: ${JSON.stringify(this.setParametersEncodedData)}`,
+    );
 
     fs.writeFileSync(
       `${folder}/${this.hre.network.name}_contracts.json`,
@@ -384,21 +451,29 @@ export class Helpers {
       throw Error('Address cannot be undefined!');
     }
 
-    const api = await ApiPromise.create({ provider: this.provider, noInitWarn: true });
+    const api = await ApiPromise.create({
+      provider: this.provider,
+      noInitWarn: true,
+    });
     const transfer = await api.tx.balances.transfer(
       address,
-      Number(this.hre.ethers.utils.parseUnits(`${tokenAmount}`, 12)),
+      Number(this.hre.ethers.parseUnits(`${tokenAmount}`, 12)),
     );
 
     const keyring = new Keyring({ type: 'sr25519' });
-    const accountUri = process.env[`ACCOUNT_WITH_OTP_URI_${this.hre.network.name.toUpperCase()}`];
+    const accountUri =
+      process.env[
+        `ACCOUNT_WITH_OTP_URI_${this.hre.network.name.toUpperCase()}`
+      ];
     if (!accountUri) {
       throw Error('URI for account with OTP is required!');
     }
     const account = keyring.createFromUri(accountUri);
 
     const txHash = await transfer.signAndSend(account, { nonce: -1 });
-    console.log(`2 OTPs sent to contract at address ${address}. Transaction hash: ${txHash.toHuman()}`);
+    console.log(
+      `2 OTPs sent to contract at address ${address}. Transaction hash: ${txHash.toHuman()}`,
+    );
     await this._delay(40000);
   }
 
@@ -407,12 +482,15 @@ export class Helpers {
 
     return {
       address: wallet.address,
-      mnemonic: wallet.mnemonic.phrase,
+      mnemonic: wallet.mnemonic!.phrase,
       privateKey: wallet.privateKey,
     };
   }
 
-  public async generateSubstrateWallet(type: KeypairType = 'sr25519', ss58Prefix = 101): Promise<SubstrateWallet> {
+  public async generateSubstrateWallet(
+    type: KeypairType = 'sr25519',
+    ss58Prefix = 101,
+  ): Promise<SubstrateWallet> {
     await polkadotCryptoUtils.cryptoWaitReady();
     const keyring = new Keyring({ type: type, ss58Format: ss58Prefix });
 
@@ -429,7 +507,9 @@ export class Helpers {
   }
 
   public convertEvmWallet(evmAddress: string): string {
-    const address = evmAddress.startsWith('0x') ? evmAddress.slice(2) : evmAddress;
+    const address = evmAddress.startsWith('0x')
+      ? evmAddress.slice(2)
+      : evmAddress;
 
     const substrateAddress = execSync(
       `utils/converters/${process.platform}-evm-contract-into-substrate-address ${address}`,

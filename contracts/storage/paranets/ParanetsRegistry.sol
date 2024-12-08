@@ -6,10 +6,10 @@ import {HubDependent} from "../../abstract/HubDependent.sol";
 import {INamed} from "../../interfaces/INamed.sol";
 import {IVersioned} from "../../interfaces/IVersioned.sol";
 import {ParanetLib} from "../../libraries/ParanetLib.sol";
-import {UnorderedNamedContractDynamicSetLib} from "../../libraries/UnorderedNamedContractDynamicSetLib.sol";
+import {UnorderedNamedContractDynamicSet} from "../../libraries/UnorderedNamedContractDynamicSet.sol";
 
 contract ParanetsRegistry is INamed, IVersioned, HubDependent {
-    using UnorderedNamedContractDynamicSetLib for UnorderedNamedContractDynamicSetLib.Set;
+    using UnorderedNamedContractDynamicSet for UnorderedNamedContractDynamicSet.Set;
 
     string private constant _NAME = "ParanetsRegistry";
     string private constant _VERSION = "1.0.0";
@@ -255,7 +255,7 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
 
     function getAllIncentivesPools(
         bytes32 paranetId
-    ) external view returns (UnorderedNamedContractDynamicSetLib.Contract[] memory) {
+    ) external view returns (UnorderedNamedContractDynamicSet.Contract[] memory) {
         return paranets[paranetId].incentivesPools.getAll();
     }
 
