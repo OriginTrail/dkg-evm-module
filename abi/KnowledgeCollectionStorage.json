@@ -336,22 +336,22 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "from",
         "type": "address"
       },
       {
         "internalType": "uint256[]",
-        "name": "ids",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[][]",
         "name": "tokenIds",
-        "type": "uint256[][]"
+        "type": "uint256[]"
       }
     ],
-    "name": "burnTokens",
+    "name": "burnKnowledgeAssetsTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1009,7 +1009,7 @@
         "type": "uint256"
       }
     ],
-    "name": "mintTokens",
+    "name": "mintKnowledgeAssetsTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1353,6 +1353,39 @@
       }
     ],
     "name": "transferTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "merkleRoot",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "byteSize",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chunksAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      }
+    ],
+    "name": "updateKnowledgeCollection",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

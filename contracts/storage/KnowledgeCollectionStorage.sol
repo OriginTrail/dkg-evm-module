@@ -77,6 +77,21 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
         return knowledgeCollections[id];
     }
 
+    function updateKnowledgeCollection(
+        uint256 id,
+        bytes32 merkleRoot,
+        uint256 byteSize,
+        uint256 chunksAmount,
+        uint96 tokenAmount
+    ) external onlyContracts {
+        KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[id];
+
+        kc.merkleRoot = merkleRoot;
+        kc.byteSize = byteSize;
+        kc.chunksAmount = chunksAmount;
+        kc.tokenAmount = tokenAmount;
+    }
+
     function getKnowledgeCollectionMetadata(
         uint256 id
     ) external view returns (address, bytes32, uint256, uint256[] memory, uint256, uint256, uint256, uint256, uint96) {
@@ -95,7 +110,7 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
         );
     }
 
-    function mintTokens(uint256 id, address to, uint256 amount) external onlyContracts {
+    function mintKnowledgeAssetsTokens(uint256 id, address to, uint256 amount) external onlyContracts {
         KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[id];
         require(kc.minted + amount <= knowledgeCollectionMaxSize, "Max size exceeded");
 
@@ -109,8 +124,8 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
         _mint(to, amount);
     }
 
-    function burnTokens(address from, uint256[] memory ids, uint256[][] memory tokenIds) external onlyContracts {
-        _burnBatch(from, ids, tokenIds);
+    function burnKnowledgeAssetsTokens(uint256 id, address from, uint256[] calldata tokenIds) external onlyContracts {
+        _burnBatch(id, from, tokenIds);
     }
 
     function getPublisher(uint256 id) external view returns (address) {
@@ -246,46 +261,43 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
         _currentIndex = index;
     }
 
-    function _burnBatch(address from, uint256[] memory ids, uint256[][] memory tokenIds) internal virtual {
+    function _burnBatch(uint256 id, address from, uint256[] calldata tokenIds) internal virtual {
         if (from == address(0)) {
             revert BurnFromZeroAddress();
         }
 
         address operator = _msgSender();
 
+        KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[id];
+
+        uint256 startTokenId = (id - 1) * knowledgeCollectionMaxSize + _startTokenId();
+
+        _beforeTokenTransfer(operator, from, address(0), tokenIds);
+
+        uint256[] memory amounts = new uint256[](tokenIds.length);
+
         unchecked {
-            for (uint256 i = 0; i < ids.length; i++) {
-                uint256 id = ids[i];
-                KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[id];
+            for (uint256 i = 0; i < tokenIds.length; i++) {
+                uint256 tokenId = tokenIds[i];
 
-                uint256 startTokenId = (id - 1) * knowledgeCollectionMaxSize + _startTokenId();
-
-                _beforeTokenTransfer(operator, from, address(0), tokenIds[i]);
-
-                uint256[] memory amounts = new uint256[](tokenIds[i].length);
-
-                for (uint256 j = 0; j < tokenIds[i].length; j++) {
-                    uint256 tokenId = tokenIds[i][j];
-
-                    if (startTokenId <= tokenId && tokenId < startTokenId + kc.minted) {
-                        revert KnowledgeCollectionLib.NotPartOfKnowledgeCollection(id, tokenId);
-                    }
-
-                    amounts[j] = 1;
-                    if (!_owned[from].get(tokenId)) {
-                        revert BurnFromNonOnwerAddress();
-                    }
-                    _owned[from].unset(tokenId);
-
-                    kc.burned.push(tokenId);
+                if (startTokenId <= tokenId && tokenId < startTokenId + kc.minted) {
+                    revert KnowledgeCollectionLib.NotPartOfKnowledgeCollection(id, tokenId);
                 }
 
-                _totalBurnedKnowledgeAssetsCounter += tokenIds[i].length;
+                amounts[i] = 1;
+                if (!_owned[from].get(tokenId)) {
+                    revert BurnFromNonOnwerAddress();
+                }
+                _owned[from].unset(tokenId);
 
-                emit TransferBatch(operator, from, address(0), tokenIds[i], amounts);
-
-                _afterTokenTransfer(operator, from, address(0), tokenIds[i]);
+                kc.burned.push(tokenId);
             }
+
+            _totalBurnedKnowledgeAssetsCounter += tokenIds.length;
         }
+
+        emit TransferBatch(operator, from, address(0), tokenIds, amounts);
+
+        _afterTokenTransfer(operator, from, address(0), tokenIds);
     }
 }
