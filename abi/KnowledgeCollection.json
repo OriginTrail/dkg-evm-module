@@ -358,6 +358,19 @@
   },
   {
     "inputs": [],
+    "name": "paymasterManager",
+    "outputs": [
+      {
+        "internalType": "contract PaymasterManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "shardingTableStorage",
     "outputs": [
       {

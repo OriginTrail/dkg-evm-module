@@ -4,8 +4,6 @@ pragma solidity ^0.8.20;
 
 import {Hub} from "./Hub.sol";
 import {TokenLib} from "./libraries/TokenLib.sol";
-import {INamed} from "./interfaces/INamed.sol";
-import {IVersioned} from "./interfaces/IVersioned.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -53,18 +51,26 @@ contract Paymaster is Ownable(msg.sender) {
         }
     }
 
-    function coverCost(uint256 amount) external onlyAllowed {
-        IERC20 token = tokenContract;
+    function withdraw(address recipient, uint256 amount) external onlyAllowed {
+        _transferTokens(recipient, amount);
+    }
 
+    function coverCost(uint256 amount) external onlyAllowed {
+        _transferTokens(hub.getContractAddress("KnowledgeCollection"), amount);
+    }
+
+    function _transferTokens(address to, uint256 amount) internal {
         if (amount == 0) {
             revert TokenLib.ZeroTokenAmount();
         }
+
+        IERC20 token = tokenContract;
 
         if (token.balanceOf(address(this)) < amount) {
             revert TokenLib.TooLowBalance(address(token), token.balanceOf(address(this)), amount);
         }
 
-        if (!token.transfer(hub.getContractAddress("KnowledgeCollection"), amount)) {
+        if (!token.transfer(to, amount)) {
             revert TokenLib.TransferFailed();
         }
     }

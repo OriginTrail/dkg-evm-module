@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.20;
 
+import {PaymasterManager} from "./PaymasterManager.sol";
 import {Chronos} from "./storage/Chronos.sol";
 import {KnowledgeCollectionStorage} from "./storage/KnowledgeCollectionStorage.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
@@ -21,6 +22,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
     string private constant _NAME = "KnowledgeCollection";
     string private constant _VERSION = "1.0.0";
 
+    PaymasterManager public paymasterManager;
     KnowledgeCollectionStorage public knowledgeCollectionStorage;
     Chronos public chronos;
     ShardingTableStorage public shardingTableStorage;
@@ -31,6 +33,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
     constructor(address hubAddress) HubDependent(hubAddress) {}
 
     function initialize() public onlyHub {
+        paymasterManager = PaymasterManager(hub.getContractAddress("PaymasterManager"));
         knowledgeCollectionStorage = KnowledgeCollectionStorage(hub.getContractAddress("KnowledgeCollectionStorage"));
         chronos = Chronos(hub.getContractAddress("Chronos"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
@@ -256,7 +259,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
     function _addTokens(uint96 tokenAmount, address paymaster) internal {
         IERC20 token = tokenContract;
 
-        if (paymaster != address(0)) {
+        if (paymasterManager.validPaymasters(paymaster)) {
             IPaymaster(paymaster).coverCost(tokenAmount);
         } else {
             if (token.allowance(msg.sender, address(this)) < tokenAmount) {
