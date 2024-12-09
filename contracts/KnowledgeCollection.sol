@@ -11,6 +11,7 @@ import {KnowledgeCollectionLib} from "./libraries/KnowledgeCollectionLib.sol";
 import {TokenLib} from "./libraries/TokenLib.sol";
 import {IdentityLib} from "./libraries/IdentityLib.sol";
 import {INamed} from "./interfaces/INamed.sol";
+import {IPaymaster} from "./interfaces/IPaymaster.sol";
 import {IVersioned} from "./interfaces/IVersioned.sol";
 import {HubDependent} from "./abstract/HubDependent.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -53,6 +54,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         uint256 chunksAmount,
         uint256 epochs,
         uint96 tokenAmount,
+        address paymaster,
         uint72[] calldata identityIds,
         address[] calldata signers,
         bytes[] calldata signatures
@@ -88,7 +90,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         kcs.mintKnowledgeAssetsTokens(id, msg.sender, knowledgeAssetsAmount);
 
         _validateTokenAmount(byteSize, epochs, tokenAmount, true);
-        _addTokens(tokenAmount);
+        _addTokens(tokenAmount, paymaster);
     }
 
     function updateKnowledgeCollection(
@@ -99,6 +101,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         uint256 byteSize,
         uint256 chunksAmount,
         uint96 tokenAmount,
+        address paymaster,
         uint72[] calldata identityIds,
         address[] calldata signers,
         bytes[] calldata signatures
@@ -143,10 +146,15 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         kcs.mintKnowledgeAssetsTokens(id, msg.sender, mintKnowledgeAssetsAmount);
 
         _validateTokenAmount(byteSize, currentEpoch - endEpoch, tokenAmount, true);
-        _addTokens(tokenAmount);
+        _addTokens(tokenAmount, paymaster);
     }
 
-    function extendKnowledgeCollectionLifetime(uint256 id, uint16 epochs, uint96 tokenAmount) external {
+    function extendKnowledgeCollectionLifetime(
+        uint256 id,
+        uint16 epochs,
+        uint96 tokenAmount,
+        address paymaster
+    ) external {
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
         uint256 byteSize;
@@ -162,10 +170,14 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         kcs.setTokenAmount(id, oldTokenAmount + tokenAmount);
 
         _validateTokenAmount(byteSize, epochs, tokenAmount, false);
-        _addTokens(tokenAmount);
+        _addTokens(tokenAmount, paymaster);
     }
 
-    function increaseKnowledgeCollectionTokenAmount(uint256 id, uint96 tokenAmount) external {
+    function increaseKnowledgeCollectionTokenAmount(uint256 id, uint96 tokenAmount, address paymaster) external {
+        if (tokenAmount == 0) {
+            revert TokenLib.ZeroTokenAmount();
+        }
+
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
         uint256 endEpoch;
@@ -178,7 +190,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
 
         kcs.setTokenAmount(id, oldTokenAmount + tokenAmount);
 
-        _addTokens(tokenAmount);
+        _addTokens(tokenAmount, paymaster);
     }
 
     function _verifySignatures(
@@ -241,17 +253,27 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         }
     }
 
-    function _addTokens(uint96 tokenAmount) internal {
+    function _addTokens(uint96 tokenAmount, address paymaster) internal {
         IERC20 token = tokenContract;
 
-        if (token.allowance(msg.sender, address(this)) < tokenAmount) {
-            revert TokenLib.TooLowAllowance(address(token), token.allowance(msg.sender, address(this)), tokenAmount);
-        }
+        if (paymaster != address(0)) {
+            IPaymaster(paymaster).coverCost(tokenAmount);
+        } else {
+            if (token.allowance(msg.sender, address(this)) < tokenAmount) {
+                revert TokenLib.TooLowAllowance(
+                    address(token),
+                    token.allowance(msg.sender, address(this)),
+                    tokenAmount
+                );
+            }
 
-        if (token.balanceOf(msg.sender) < tokenAmount) {
-            revert TokenLib.TooLowBalance(address(token), token.balanceOf(msg.sender), tokenAmount);
-        }
+            if (token.balanceOf(msg.sender) < tokenAmount) {
+                revert TokenLib.TooLowBalance(address(token), token.balanceOf(msg.sender), tokenAmount);
+            }
 
-        token.transferFrom(msg.sender, address(this), tokenAmount);
+            if (!token.transferFrom(msg.sender, address(this), tokenAmount)) {
+                revert TokenLib.TransferFailed();
+            }
+        }
     }
 }
