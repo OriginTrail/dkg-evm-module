@@ -20,7 +20,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
     );
 
     string private constant _NAME = "ParanetIncentivesPoolFactory";
-    string private constant _VERSION = "2.0.0";
+    string private constant _VERSION = "1.0.0";
 
     ParanetsRegistry public paranetsRegistry;
 

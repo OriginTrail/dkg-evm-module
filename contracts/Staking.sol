@@ -84,7 +84,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     event OperatorFeeChangeFinished(uint72 indexed identityId, bytes nodeId, uint8 operatorFee);
 
     string private constant _NAME = "Staking";
-    string private constant _VERSION = "2.3.0";
+    string private constant _VERSION = "1.0.0";
 
     ShardingTableStorage public shardingTableStorage;
     ShardingTable public shardingTableContract;

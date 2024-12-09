@@ -23,6 +23,10 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
 
     uint256 private _totalMintedKnowledgeAssetsCounter;
     uint256 private _totalBurnedKnowledgeAssetsCounter;
+    uint256 private _totalByteSize;
+    uint256 private _totalTriplesCounter;
+    uint256 private _totalChunksCounter;
+    uint96 private _totalTokenAmount;
 
     uint96 private _cumulativeKnowledgeValue;
 
@@ -49,6 +53,7 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
         bytes32 merkleRoot,
         uint256 knowledgeAssetsAmount,
         uint256 byteSize,
+        uint256 triplesAmount,
         uint256 chunksAmount,
         uint256 startEpoch,
         uint256 endEpoch,
@@ -58,15 +63,22 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
 
         knowledgeCollections[knowledgeCollectionId] = KnowledgeCollectionLib.KnowledgeCollection({
             publisher: msg.sender,
+            publishingTime: block.timestamp,
             merkleRoot: merkleRoot,
             minted: knowledgeAssetsAmount,
             burned: new uint256[](0),
             byteSize: byteSize,
+            triplesAmount: triplesAmount,
             chunksAmount: chunksAmount,
             startEpoch: startEpoch,
             endEpoch: endEpoch,
             tokenAmount: tokenAmount
         });
+
+        _totalByteSize += byteSize;
+        _totalTriplesCounter += triplesAmount;
+        _totalChunksCounter += chunksAmount;
+        _totalTokenAmount += tokenAmount;
 
         return knowledgeCollectionId;
     }
@@ -81,28 +93,53 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
         uint256 id,
         bytes32 merkleRoot,
         uint256 byteSize,
+        uint256 triplesAmount,
         uint256 chunksAmount,
         uint96 tokenAmount
     ) external onlyContracts {
         KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[id];
 
+        _totalByteSize = _totalByteSize - kc.byteSize + byteSize;
+        _totalTriplesCounter = _totalTriplesCounter - kc.triplesAmount + triplesAmount;
+        _totalChunksCounter = _totalChunksCounter - kc.chunksAmount + chunksAmount;
+        _totalTokenAmount = _totalTokenAmount - kc.tokenAmount + tokenAmount;
+
         kc.merkleRoot = merkleRoot;
         kc.byteSize = byteSize;
+        kc.triplesAmount = triplesAmount;
         kc.chunksAmount = chunksAmount;
         kc.tokenAmount = tokenAmount;
     }
 
     function getKnowledgeCollectionMetadata(
         uint256 id
-    ) external view returns (address, bytes32, uint256, uint256[] memory, uint256, uint256, uint256, uint256, uint96) {
+    )
+        external
+        view
+        returns (
+            address,
+            uint256,
+            bytes32,
+            uint256,
+            uint256[] memory,
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint96
+        )
+    {
         KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
 
         return (
             kc.publisher,
+            kc.publishingTime,
             kc.merkleRoot,
             kc.minted,
             kc.burned,
             kc.byteSize,
+            kc.triplesAmount,
             kc.chunksAmount,
             kc.startEpoch,
             kc.endEpoch,
@@ -134,6 +171,14 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
 
     function setPublisher(uint256 id, address _publisher) external onlyContracts {
         knowledgeCollections[id].publisher = _publisher;
+    }
+
+    function getPublishingTime(uint256 id) external view returns (uint256) {
+        return knowledgeCollections[id].publishingTime;
+    }
+
+    function setPublishingTime(uint256 id, uint256 _publishingTime) external onlyContracts {
+        knowledgeCollections[id].publishingTime = _publishingTime;
     }
 
     function getMerkleRoot(uint256 id) external view returns (bytes32) {
@@ -169,7 +214,17 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
     }
 
     function setByteSize(uint256 id, uint256 _byteSize) external onlyContracts {
+        _totalByteSize = _totalByteSize - knowledgeCollections[id].byteSize + _byteSize;
         knowledgeCollections[id].byteSize = _byteSize;
+    }
+
+    function getTriplesAmount(uint256 id) external view returns (uint256) {
+        return knowledgeCollections[id].triplesAmount;
+    }
+
+    function setTriplesAmount(uint256 id, uint256 _triplesAmount) external onlyContracts {
+        _totalTriplesCounter = _totalTriplesCounter - knowledgeCollections[id].triplesAmount + _triplesAmount;
+        knowledgeCollections[id].triplesAmount = _triplesAmount;
     }
 
     function getChunksAmount(uint256 id) external view returns (uint256) {
@@ -177,6 +232,7 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
     }
 
     function setChunksAmount(uint256 id, uint256 _chunksAmount) external onlyContracts {
+        _totalChunksCounter = _totalChunksCounter - knowledgeCollections[id].chunksAmount + _chunksAmount;
         knowledgeCollections[id].chunksAmount = _chunksAmount;
     }
 
@@ -185,6 +241,7 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
     }
 
     function setTokenAmount(uint256 id, uint96 _tokenAmount) external onlyContracts {
+        _totalTokenAmount = _totalTokenAmount - knowledgeCollections[id].tokenAmount + _tokenAmount;
         knowledgeCollections[id].tokenAmount = _tokenAmount;
     }
 
@@ -218,6 +275,22 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
 
     function totalBurned() external view returns (uint256) {
         return _totalBurnedKnowledgeAssetsCounter;
+    }
+
+    function getTotalByteSize() external view returns (uint256) {
+        return _totalByteSize;
+    }
+
+    function getTotalTriplesAmount() external view returns (uint256) {
+        return _totalTriplesCounter;
+    }
+
+    function getTotalChunksAmount() external view returns (uint256) {
+        return _totalChunksCounter;
+    }
+
+    function getTotalTokenAmount() external view returns (uint96) {
+        return _totalTokenAmount;
     }
 
     function isPartOfKnowledgeCollection(uint256 id, uint256 tokenId) external view returns (bool) {

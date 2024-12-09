@@ -20,7 +20,7 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     event ParanetIncentivizationProposalVoterRewardClaimed(address indexed voter, uint256 amount);
 
     string private constant _NAME = "ParanetNeuroIncentivesPool";
-    string private constant _VERSION = "2.1.3";
+    string private constant _VERSION = "1.0.0";
 
     Hub public hub;
     ParanetsRegistry public paranetsRegistry;

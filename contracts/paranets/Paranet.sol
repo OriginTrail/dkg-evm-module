@@ -115,7 +115,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     );
 
     string private constant _NAME = "Paranet";
-    string private constant _VERSION = "2.2.1";
+    string private constant _VERSION = "1.0.0";
 
     ParanetsRegistry public paranetsRegistry;
     ParanetServicesRegistry public paranetServicesRegistry;

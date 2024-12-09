@@ -20,7 +20,7 @@ contract Hub is INamed, IVersioned, Ownable {
     event AssetStorageChanged(string contractName, address newContractAddress);
 
     string private constant _NAME = "Hub";
-    string private constant _VERSION = "2.0.0";
+    string private constant _VERSION = "1.0.0";
 
     UnorderedNamedContractDynamicSet.Set internal contractSet;
     UnorderedNamedContractDynamicSet.Set internal assetStorageSet;
