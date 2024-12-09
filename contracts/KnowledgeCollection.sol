@@ -50,15 +50,13 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         bytes32 merkleRoot,
         uint256 knowledgeAssetsAmount,
         uint256 byteSize,
-        uint256 chunksNumber,
+        uint256 chunksAmount,
         uint256 epochs,
         uint96 tokenAmount,
         uint72[] calldata identityIds,
         address[] calldata signers,
         bytes[] calldata signatures
     ) external {
-        Chronos chron = chronos;
-
         bool validSignatures = _verifySignatures(
             identityIds,
             signers,
@@ -75,19 +73,76 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
             );
         }
 
-        uint256 currentEpoch = chron.getCurrentEpoch();
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
-        knowledgeCollectionStorage.createKnowledgeCollection(
+        uint256 id = kcs.createKnowledgeCollection(
             merkleRoot,
-            knowledgeAssetsAmount,
+            0,
             byteSize,
-            chunksNumber,
+            chunksAmount,
             currentEpoch + 1,
-            currentEpoch + 1 + epochs,
+            currentEpoch + epochs + 1,
             tokenAmount
         );
+        kcs.mintKnowledgeAssetsTokens(id, msg.sender, knowledgeAssetsAmount);
 
         _validateTokenAmount(byteSize, epochs, tokenAmount, true);
+        _addTokens(tokenAmount);
+    }
+
+    function updateKnowledgeCollection(
+        uint256 id,
+        bytes32 merkleRoot,
+        uint256 mintKnowledgeAssetsAmount,
+        uint256[] calldata knowledgeAssetsToBurn,
+        uint256 byteSize,
+        uint256 chunksAmount,
+        uint96 tokenAmount,
+        uint72[] calldata identityIds,
+        address[] calldata signers,
+        bytes[] calldata signatures
+    ) external {
+        bool validSignatures = _verifySignatures(
+            identityIds,
+            signers,
+            signatures,
+            keccak256(abi.encodePacked(merkleRoot))
+        );
+
+        if (!validSignatures) {
+            revert KnowledgeCollectionLib.InvalidSignatures(
+                identityIds,
+                signers,
+                signatures,
+                keccak256(abi.encodePacked(merkleRoot))
+            );
+        }
+
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
+
+        uint256 oldByteSize;
+        uint256 oldChunksAmount;
+        uint256 endEpoch;
+        uint96 oldTokenAmount;
+        (, , , , oldByteSize, oldChunksAmount, , endEpoch, oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
+
+        if (currentEpoch > endEpoch) {
+            revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, currentEpoch, endEpoch);
+        }
+
+        kcs.updateKnowledgeCollection(
+            id,
+            merkleRoot,
+            byteSize,
+            oldChunksAmount + chunksAmount,
+            oldTokenAmount + tokenAmount
+        );
+        kcs.burnKnowledgeAssetsTokens(id, msg.sender, knowledgeAssetsToBurn);
+        kcs.mintKnowledgeAssetsTokens(id, msg.sender, mintKnowledgeAssetsAmount);
+
+        _validateTokenAmount(byteSize, currentEpoch - endEpoch, tokenAmount, true);
         _addTokens(tokenAmount);
     }
 

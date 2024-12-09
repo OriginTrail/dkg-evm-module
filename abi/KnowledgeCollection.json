@@ -184,7 +184,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "chunksNumber",
+        "name": "chunksAmount",
         "type": "uint256"
       },
       {
@@ -355,6 +355,64 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "merkleRoot",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "mintKnowledgeAssetsAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "knowledgeAssetsToBurn",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "byteSize",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chunksAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint72[]",
+        "name": "identityIds",
+        "type": "uint72[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "signers",
+        "type": "address[]"
+      },
+      {
+        "internalType": "bytes[]",
+        "name": "signatures",
+        "type": "bytes[]"
+      }
+    ],
+    "name": "updateKnowledgeCollection",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
