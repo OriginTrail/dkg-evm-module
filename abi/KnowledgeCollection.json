@@ -13,6 +13,32 @@
   {
     "inputs": [
       {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "address",
+        "name": "signer",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "message",
+        "type": "bytes32"
+      }
+    ],
+    "name": "InvalidPublisherNodeSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint72[]",
         "name": "identityIds",
         "type": "uint72[]"
@@ -33,7 +59,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "InvalidSignatures",
+    "name": "InvalidReplicationSignatures",
     "type": "error"
   },
   {
@@ -194,6 +220,11 @@
       },
       {
         "internalType": "uint256",
+        "name": "triplesAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "chunksAmount",
         "type": "uint256"
       },
@@ -211,6 +242,21 @@
         "internalType": "address",
         "name": "paymaster",
         "type": "address"
+      },
+      {
+        "internalType": "uint72",
+        "name": "publisherNodeIdentityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "address",
+        "name": "publisherNodeSigner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "publisherNodeSignature",
+        "type": "bytes"
       },
       {
         "internalType": "uint72[]",
@@ -424,6 +470,11 @@
       },
       {
         "internalType": "uint256",
+        "name": "triplesAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "chunksAmount",
         "type": "uint256"
       },
@@ -436,6 +487,21 @@
         "internalType": "address",
         "name": "paymaster",
         "type": "address"
+      },
+      {
+        "internalType": "uint72",
+        "name": "publisherNodeIdentityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "address",
+        "name": "publisherNodeSigner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "publisherNodeSignature",
+        "type": "bytes"
       },
       {
         "internalType": "uint72[]",

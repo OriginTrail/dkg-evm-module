@@ -10,7 +10,6 @@ import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ShardingTable} from "./ShardingTable.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
-import {Staking} from "./Staking.sol";
 import {WhitelistStorage} from "./storage/WhitelistStorage.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IInitializable} from "./interfaces/IInitializable.sol";
@@ -28,7 +27,6 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         address sharesContractAddress,
         uint8 initialOperatorFee
     );
-    event ProfileDeleted(uint72 indexed identityId);
     event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
     event AccumulatedOperatorFeeWithdrawalStarted(
         uint72 indexed identityId,
@@ -52,7 +50,6 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     ShardingTableStorage public shardingTableStorage;
     ShardingTable public shardingTableContract;
     StakingStorage public stakingStorage;
-    Staking public stakingContract;
     IdentityStorage public identityStorage;
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
@@ -86,7 +83,6 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
-        stakingContract = Staking(hub.getContractAddress("Staking"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
@@ -166,81 +162,25 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         ProfileStorage ps = profileStorage;
         uint96 oldAsk = ps.getAsk(identityId);
         ps.setAsk(identityId, ask);
-        shardingTableStorage.onAskChanged(oldAsk, ask, stakingStorage.totalStakes(identityId));
+        shardingTableStorage.onAskChanged(oldAsk, ask, stakingStorage.getNodeStake(identityId));
 
         emit AskUpdated(identityId, ps.getNodeId(identityId), ask);
     }
 
-    function stakeAccumulatedOperatorFee(uint72 identityId, uint96 restakeAmount) external onlyAdmin(identityId) {
-        require(restakeAmount != 0, "Restake amount cannot be 0");
-
-        ProfileStorage ps = profileStorage;
-
-        uint96 oldAccumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
-
-        require(restakeAmount <= oldAccumulatedOperatorFee, "Restake must be <= balance");
-
-        ps.setAccumulatedOperatorFee(identityId, oldAccumulatedOperatorFee - restakeAmount);
-        stakingContract.addStake(msg.sender, identityId, restakeAmount);
-
-        emit AccumulatedOperatorFeeRestaked(
-            identityId,
-            ps.getNodeId(identityId),
-            oldAccumulatedOperatorFee,
-            oldAccumulatedOperatorFee - restakeAmount
-        );
-    }
-
-    function startAccumulatedOperatorFeeWithdrawal(
-        uint72 identityId,
-        uint96 withdrawalAmount
-    ) external onlyAdmin(identityId) {
-        require(withdrawalAmount != 0, "Withdrawal amount cannot be 0");
-
-        ProfileStorage ps = profileStorage;
-
-        uint96 oldAccumulatedOperatorFee = ps.getAccumulatedOperatorFee(identityId);
-
-        require(withdrawalAmount <= oldAccumulatedOperatorFee, "Withdrawal must be <= balance");
-
-        ps.setAccumulatedOperatorFee(identityId, oldAccumulatedOperatorFee - withdrawalAmount);
-        ps.setAccumulatedOperatorFeeWithdrawalAmount(
-            identityId,
-            ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId) + withdrawalAmount
-        );
-        ps.setAccumulatedOperatorFeeWithdrawalTimestamp(
-            identityId,
-            block.timestamp + parametersStorage.stakeWithdrawalDelay()
-        );
-
-        emit AccumulatedOperatorFeeWithdrawalStarted(
-            identityId,
-            ps.getNodeId(identityId),
-            oldAccumulatedOperatorFee,
-            oldAccumulatedOperatorFee - withdrawalAmount,
-            block.timestamp + parametersStorage.stakeWithdrawalDelay()
-        );
-    }
-
-    function withdrawAccumulatedOperatorFee(uint72 identityId) external onlyAdmin(identityId) {
-        ProfileStorage ps = profileStorage;
-
-        uint96 withdrawalAmount = ps.getAccumulatedOperatorFeeWithdrawalAmount(identityId);
-
-        if (withdrawalAmount == 0) {
-            revert IdentityLib.WithdrawalWasntInitiated();
+    function changeOperatorFee(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {
+        if (newOperatorFee > 100) {
+            revert IdentityLib.InvalidOperatorFee();
         }
-        if (ps.getAccumulatedOperatorFeeWithdrawalTimestamp(identityId) >= block.timestamp) {
-            revert IdentityLib.WithdrawalPeriodPending(
-                block.timestamp,
-                ps.getAccumulatedOperatorFeeWithdrawalTimestamp(identityId)
-            );
-        }
-        ps.setAccumulatedOperatorFeeWithdrawalAmount(identityId, 0);
-        ps.setAccumulatedOperatorFeeWithdrawalTimestamp(identityId, 0);
-        ps.transferAccumulatedOperatorFee(msg.sender, withdrawalAmount);
 
-        emit AccumulatedOperatorFeeWithdrawn(identityId, ps.getNodeId(identityId), withdrawalAmount);
+        ProfileStorage ps = profileStorage;
+
+        uint248 newOperatorFeeEffectiveData = uint248(block.timestamp + parametersStorage.stakeWithdrawalDelay());
+
+        if (ps.isOperatorFeeChangePending(identityId)) {
+            ps.replacePendingOperatorFee(identityId, newOperatorFee, newOperatorFeeEffectiveData);
+        } else {
+            ps.addOperatorFee(identityId, newOperatorFee, newOperatorFeeEffectiveData);
+        }
     }
 
     function _checkIdentityOwner(uint72 identityId) internal view virtual {

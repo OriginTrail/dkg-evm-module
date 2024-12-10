@@ -190,7 +190,7 @@ contract ShardingTable is INamed, IVersioned, ContractStatus, IInitializable {
             identityId,
             ps.getNodeId(identityId),
             ps.getAsk(identityId),
-            stakingStorage.totalStakes(identityId)
+            stakingStorage.getNodeStake(identityId)
         );
     }
 
@@ -223,7 +223,7 @@ contract ShardingTable is INamed, IVersioned, ContractStatus, IInitializable {
                 nodeId: ps.getNodeId(nextIdentityId),
                 identityId: nextIdentityId,
                 ask: ps.getAsk(nextIdentityId),
-                stake: ss.totalStakes(nextIdentityId)
+                stake: ss.getNodeStake(nextIdentityId)
             });
 
             unchecked {
