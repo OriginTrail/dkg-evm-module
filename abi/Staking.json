@@ -357,7 +357,7 @@
       },
       {
         "internalType": "uint96",
-        "name": "amount",
+        "name": "withdrawalAmount",
         "type": "uint96"
       }
     ],
@@ -375,7 +375,7 @@
       },
       {
         "internalType": "uint96",
-        "name": "amount",
+        "name": "removedStake",
         "type": "uint96"
       }
     ],
@@ -393,7 +393,7 @@
       },
       {
         "internalType": "uint96",
-        "name": "amount",
+        "name": "addedStake",
         "type": "uint96"
       }
     ],
@@ -484,7 +484,7 @@
       },
       {
         "internalType": "uint96",
-        "name": "amount",
+        "name": "addedStake",
         "type": "uint96"
       }
     ],
