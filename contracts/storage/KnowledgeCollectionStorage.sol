@@ -5,13 +5,21 @@ pragma solidity ^0.8.20;
 import {Guardian} from "../Guardian.sol";
 import {ERC1155Delta} from "../tokens/ERC1155Delta.sol";
 import {KnowledgeCollectionLib} from "../libraries/KnowledgeCollectionLib.sol";
+import {IERC1155DeltaQueryable} from "../interfaces/IERC1155DeltaQueryable.sol";
 import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
 import {HubDependent} from "../abstract/HubDependent.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibBitmap} from "solady/src/utils/LibBitmap.sol";
 
-contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155Delta, Guardian {
+contract KnowledgeCollectionStorage is
+    INamed,
+    IVersioned,
+    HubDependent,
+    IERC1155DeltaQueryable,
+    ERC1155Delta,
+    Guardian
+{
     using LibBitmap for LibBitmap.Bitmap;
 
     string private constant _NAME = "KnowledgeCollectionStorage";
@@ -59,7 +67,7 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
         uint256 endEpoch,
         uint96 tokenAmount
     ) external onlyContracts returns (uint256) {
-        uint256 knowledgeCollectionId = ++_knowledgeCollectionsCounter;
+        uint256 knowledgeCollectionId = _knowledgeCollectionsCounter++;
 
         knowledgeCollections[knowledgeCollectionId] = KnowledgeCollectionLib.KnowledgeCollection({
             publisher: msg.sender,
@@ -324,10 +332,75 @@ contract KnowledgeCollectionStorage is INamed, IVersioned, HubDependent, ERC1155
         return startTokenId + endTokenId - kc.burned.length;
     }
 
+    function balanceOf(address owner) external view virtual override returns (uint256) {
+        uint256 latestTokenId = _latestTokenId();
+        if (latestTokenId == 0) {
+            return 0;
+        }
+        return balanceOf(owner, _startTokenId(), latestTokenId);
+    }
+
+    function balanceOf(address owner, uint256 start, uint256 stop) public view virtual override returns (uint256) {
+        return _owned[owner].popCount(start, stop - start);
+    }
+
+    function tokensOfOwnerIn(address owner, uint256 start, uint256 stop) public view returns (uint256[] memory) {
+        unchecked {
+            if (start >= stop) revert InvalidQueryRange();
+
+            // Set `start = max(start, _startTokenId())`.
+            if (start < _startTokenId()) {
+                start = _startTokenId();
+            }
+
+            // Set `stop = min(stop, stopLimit)`.
+            uint256 stopLimit = _latestTokenId();
+            if (stop > stopLimit) {
+                stop = stopLimit;
+            }
+
+            uint256 tokenIdsLength;
+            if (start < stop) {
+                tokenIdsLength = balanceOf(owner, start, stop);
+            } else {
+                tokenIdsLength = 0;
+            }
+
+            uint256[] memory tokenIds = new uint256[](tokenIdsLength);
+
+            LibBitmap.Bitmap storage bmap = _owned[owner];
+
+            for ((uint256 i, uint256 tokenIdsIdx) = (start, 0); tokenIdsIdx != tokenIdsLength; ++i) {
+                if (bmap.get(i)) {
+                    tokenIds[tokenIdsIdx++] = i;
+                }
+            }
+            return tokenIds;
+        }
+    }
+
+    function tokensOfOwner(address owner) external view virtual override returns (uint256[] memory) {
+        if (_totalMintedKnowledgeAssetsCounter == 0) {
+            return new uint256[](0);
+        }
+        return tokensOfOwnerIn(owner, _startTokenId(), _latestTokenId());
+    }
+
     function setURI(string memory baseURI) external onlyHub {
         _setURI(baseURI);
 
         emit KnowledgeCollectionLib.URIUpdate(baseURI);
+    }
+
+    function _latestTokenId() internal view returns (uint256) {
+        if (_knowledgeCollectionsCounter == 0) {
+            return 0;
+        } else {
+            return
+                (_knowledgeCollectionsCounter - 1) *
+                knowledgeCollectionMaxSize +
+                knowledgeCollections[_knowledgeCollectionsCounter].minted;
+        }
     }
 
     function _setCurrentIndex(uint256 index) internal virtual {
