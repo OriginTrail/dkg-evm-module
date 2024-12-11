@@ -46,7 +46,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     );
 
     string private constant _NAME = "Profile";
-    string private constant _VERSION = "2.0.0";
+    string private constant _VERSION = "1.0.0";
 
     Identity public identityContract;
     ShardingTableStorage public shardingTableStorage;

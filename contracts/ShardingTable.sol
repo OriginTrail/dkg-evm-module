@@ -16,7 +16,7 @@ contract ShardingTable is INamed, IVersioned, ContractStatus, IInitializable {
     event NodeRemoved(uint72 indexed identityId, bytes nodeId);
 
     string private constant _NAME = "ShardingTable";
-    string private constant _VERSION = "2.0.1";
+    string private constant _VERSION = "1.0.0";
 
     ProfileStorage public profileStorage;
     ShardingTableStorage public shardingTableStorage;

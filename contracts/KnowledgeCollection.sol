@@ -54,23 +54,43 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         bytes32 merkleRoot,
         uint256 knowledgeAssetsAmount,
         uint256 byteSize,
+        uint256 triplesAmount,
         uint256 chunksAmount,
         uint256 epochs,
         uint96 tokenAmount,
         address paymaster,
+        uint72 publisherNodeIdentityId,
+        address publisherNodeSigner,
+        bytes calldata publisherNodeSignature,
         uint72[] calldata identityIds,
         address[] calldata signers,
         bytes[] calldata signatures
     ) external {
-        bool validSignatures = _verifySignatures(
+        bool validPublisherNodeSignature = _verifySignature(
+            publisherNodeIdentityId,
+            publisherNodeSigner,
+            publisherNodeSignature,
+            keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))
+        );
+
+        if (!validPublisherNodeSignature) {
+            revert KnowledgeCollectionLib.InvalidPublisherNodeSignature(
+                publisherNodeIdentityId,
+                publisherNodeSigner,
+                publisherNodeSignature,
+                keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))
+            );
+        }
+
+        bool validReplicationSignatures = _verifySignatures(
             identityIds,
             signers,
             signatures,
             keccak256(abi.encodePacked(merkleRoot))
         );
 
-        if (!validSignatures) {
-            revert KnowledgeCollectionLib.InvalidSignatures(
+        if (!validReplicationSignatures) {
+            revert KnowledgeCollectionLib.InvalidReplicationSignatures(
                 identityIds,
                 signers,
                 signatures,
@@ -85,12 +105,15 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
             merkleRoot,
             0,
             byteSize,
+            triplesAmount,
             chunksAmount,
             currentEpoch + 1,
             currentEpoch + epochs + 1,
             tokenAmount
         );
         kcs.mintKnowledgeAssetsTokens(id, msg.sender, knowledgeAssetsAmount);
+
+        // TODO: Update publisher node's epochs knowledge value
 
         _validateTokenAmount(byteSize, epochs, tokenAmount, true);
         _addTokens(tokenAmount, paymaster);
@@ -102,13 +125,33 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         uint256 mintKnowledgeAssetsAmount,
         uint256[] calldata knowledgeAssetsToBurn,
         uint256 byteSize,
+        uint256 triplesAmount,
         uint256 chunksAmount,
         uint96 tokenAmount,
         address paymaster,
+        uint72 publisherNodeIdentityId,
+        address publisherNodeSigner,
+        bytes calldata publisherNodeSignature,
         uint72[] calldata identityIds,
         address[] calldata signers,
         bytes[] calldata signatures
     ) external {
+        bool validPublisherNodeSignature = _verifySignature(
+            publisherNodeIdentityId,
+            publisherNodeSigner,
+            publisherNodeSignature,
+            keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))
+        );
+
+        if (!validPublisherNodeSignature) {
+            revert KnowledgeCollectionLib.InvalidPublisherNodeSignature(
+                publisherNodeIdentityId,
+                publisherNodeSigner,
+                publisherNodeSignature,
+                keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))
+            );
+        }
+
         bool validSignatures = _verifySignatures(
             identityIds,
             signers,
@@ -117,7 +160,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         );
 
         if (!validSignatures) {
-            revert KnowledgeCollectionLib.InvalidSignatures(
+            revert KnowledgeCollectionLib.InvalidReplicationSignatures(
                 identityIds,
                 signers,
                 signatures,
@@ -129,10 +172,12 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
         uint256 oldByteSize;
+        uint256 oldTriplesAmount;
         uint256 oldChunksAmount;
         uint256 endEpoch;
         uint96 oldTokenAmount;
-        (, , , , oldByteSize, oldChunksAmount, , endEpoch, oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
+        (, , , , , oldByteSize, oldTriplesAmount, oldChunksAmount, , endEpoch, oldTokenAmount) = kcs
+            .getKnowledgeCollectionMetadata(id);
 
         if (currentEpoch > endEpoch) {
             revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, currentEpoch, endEpoch);
@@ -142,6 +187,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
             id,
             merkleRoot,
             byteSize,
+            oldTriplesAmount + triplesAmount,
             oldChunksAmount + chunksAmount,
             oldTokenAmount + tokenAmount
         );
@@ -163,7 +209,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         uint256 byteSize;
         uint256 endEpoch;
         uint96 oldTokenAmount;
-        (, , , , byteSize, , , endEpoch, oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
+        (, , , , , byteSize, , , , endEpoch, oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
 
         if (chronos.getCurrentEpoch() > endEpoch) {
             revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, chronos.getCurrentEpoch(), endEpoch);
@@ -185,7 +231,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
 
         uint256 endEpoch;
         uint96 oldTokenAmount;
-        (, , , , , , , endEpoch, oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
+        (, , , , , , , , , endEpoch, oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
 
         if (chronos.getCurrentEpoch() > endEpoch) {
             revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, chronos.getCurrentEpoch(), endEpoch);
@@ -217,18 +263,31 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
             );
         }
 
-        IdentityStorage ids = identityStorage;
-
         for (uint256 i; i < identityIds.length; i++) {
-            if (
-                !ids.keyHasPurpose(identityIds[i], keccak256(abi.encodePacked(signers[i])), IdentityLib.OPERATIONAL_KEY)
-            ) {
-                return false;
-            }
+            bool isValid = _verifySignature(identityIds[i], signers[i], signatures[i], message);
 
-            if (!SignatureCheckerLib.isValidSignatureNowCalldata(signers[i], message, signatures[i])) {
+            if (!isValid) {
                 return false;
             }
+        }
+
+        return true;
+    }
+
+    function _verifySignature(
+        uint72 identityId,
+        address signer,
+        bytes calldata signature,
+        bytes32 message
+    ) internal view returns (bool) {
+        if (
+            !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(signer)), IdentityLib.OPERATIONAL_KEY)
+        ) {
+            return false;
+        }
+
+        if (!SignatureCheckerLib.isValidSignatureNowCalldata(signer, message, signature)) {
+            return false;
         }
 
         return true;
