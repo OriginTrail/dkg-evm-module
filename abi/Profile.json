@@ -42,6 +42,11 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "InvalidOperatorFee",
+    "type": "error"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes",
@@ -132,27 +137,6 @@
       }
     ],
     "name": "TooManyOperationalWallets",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "nowTimestamp",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "endTimestamp",
-        "type": "uint256"
-      }
-    ],
-    "name": "WithdrawalPeriodPending",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "WithdrawalWasntInitiated",
     "type": "error"
   },
   {
@@ -316,17 +300,22 @@
     "type": "event"
   },
   {
-    "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
+      },
+      {
+        "internalType": "uint8",
+        "name": "newOperatorFee",
+        "type": "uint8"
       }
     ],
-    "name": "ProfileDeleted",
-    "type": "event"
+    "name": "changeOperatorFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [
@@ -514,37 +503,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "uint96",
-        "name": "restakeAmount",
-        "type": "uint96"
-      }
-    ],
-    "name": "stakeAccumulatedOperatorFee",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "stakingContract",
-    "outputs": [
-      {
-        "internalType": "contract Staking",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "stakingStorage",
     "outputs": [
@@ -555,24 +513,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "uint96",
-        "name": "withdrawalAmount",
-        "type": "uint96"
-      }
-    ],
-    "name": "startAccumulatedOperatorFeeWithdrawal",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -612,19 +552,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      }
-    ],
-    "name": "withdrawAccumulatedOperatorFee",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]

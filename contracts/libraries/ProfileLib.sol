@@ -13,12 +13,9 @@ library ProfileLib {
         OperatorFee[] fees;
     }
 
-    struct ProfileDefinition {
+    struct ProfileInfo {
         bytes nodeId;
         uint96 ask;
-        uint96 accumulatedOperatorFee;
-        uint96 accumulatedOperatorFeeWithdrawalAmount;
-        uint256 operatorFeeWithdrawalTimestamp;
         address sharesContractAddress;
         OperatorFee[] operatorFees;
     }
