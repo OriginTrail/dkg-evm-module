@@ -23,13 +23,18 @@
         "type": "address"
       },
       {
-        "internalType": "bytes",
-        "name": "signature",
-        "type": "bytes"
+        "internalType": "bytes32",
+        "name": "messageHash",
+        "type": "bytes32"
       },
       {
         "internalType": "bytes32",
-        "name": "message",
+        "name": "r",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "vs",
         "type": "bytes32"
       }
     ],
@@ -49,14 +54,19 @@
         "type": "address[]"
       },
       {
-        "internalType": "bytes[]",
-        "name": "signatures",
-        "type": "bytes[]"
+        "internalType": "bytes32",
+        "name": "messageHash",
+        "type": "bytes32"
       },
       {
-        "internalType": "bytes32",
-        "name": "message",
-        "type": "bytes32"
+        "internalType": "bytes32[]",
+        "name": "r",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "vs",
+        "type": "bytes32[]"
       }
     ],
     "name": "InvalidReplicationSignatures",
@@ -119,7 +129,12 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "signaturesAmount",
+        "name": "rAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "vsAmount",
         "type": "uint256"
       },
       {
@@ -254,9 +269,14 @@
         "type": "address"
       },
       {
-        "internalType": "bytes",
-        "name": "publisherNodeSignature",
-        "type": "bytes"
+        "internalType": "bytes32",
+        "name": "publisherNodeR",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "publisherNodeVS",
+        "type": "bytes32"
       },
       {
         "internalType": "uint72[]",
@@ -269,9 +289,14 @@
         "type": "address[]"
       },
       {
-        "internalType": "bytes[]",
-        "name": "signatures",
-        "type": "bytes[]"
+        "internalType": "bytes32[]",
+        "name": "r",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "vs",
+        "type": "bytes32[]"
       }
     ],
     "name": "createKnowledgeCollection",
@@ -499,9 +524,14 @@
         "type": "address"
       },
       {
-        "internalType": "bytes",
-        "name": "publisherNodeSignature",
-        "type": "bytes"
+        "internalType": "bytes32",
+        "name": "publisherNodeR",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "publisherNodeVS",
+        "type": "bytes32"
       },
       {
         "internalType": "uint72[]",
@@ -514,9 +544,14 @@
         "type": "address[]"
       },
       {
-        "internalType": "bytes[]",
-        "name": "signatures",
-        "type": "bytes[]"
+        "internalType": "bytes32[]",
+        "name": "r",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "vs",
+        "type": "bytes32[]"
       }
     ],
     "name": "updateKnowledgeCollection",

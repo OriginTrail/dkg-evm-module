@@ -61,40 +61,46 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         address paymaster,
         uint72 publisherNodeIdentityId,
         address publisherNodeSigner,
-        bytes calldata publisherNodeSignature,
+        bytes32 publisherNodeR,
+        bytes32 publisherNodeVS,
         uint72[] calldata identityIds,
         address[] calldata signers,
-        bytes[] calldata signatures
+        bytes32[] calldata r,
+        bytes32[] calldata vs
     ) external {
         bool validPublisherNodeSignature = _verifySignature(
             publisherNodeIdentityId,
             publisherNodeSigner,
-            publisherNodeSignature,
-            keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))
+            keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot)),
+            publisherNodeR,
+            publisherNodeVS
         );
 
         if (!validPublisherNodeSignature) {
             revert KnowledgeCollectionLib.InvalidPublisherNodeSignature(
                 publisherNodeIdentityId,
                 publisherNodeSigner,
-                publisherNodeSignature,
-                keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))
+                keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot)),
+                publisherNodeR,
+                publisherNodeVS
             );
         }
 
         bool validReplicationSignatures = _verifySignatures(
             identityIds,
             signers,
-            signatures,
-            keccak256(abi.encodePacked(merkleRoot))
+            keccak256(abi.encodePacked(merkleRoot)),
+            r,
+            vs
         );
 
         if (!validReplicationSignatures) {
             revert KnowledgeCollectionLib.InvalidReplicationSignatures(
                 identityIds,
                 signers,
-                signatures,
-                keccak256(abi.encodePacked(merkleRoot))
+                keccak256(abi.encodePacked(merkleRoot)),
+                r,
+                vs
             );
         }
 
@@ -131,40 +137,40 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         address paymaster,
         uint72 publisherNodeIdentityId,
         address publisherNodeSigner,
-        bytes calldata publisherNodeSignature,
+        bytes32 publisherNodeR,
+        bytes32 publisherNodeVS,
         uint72[] calldata identityIds,
         address[] calldata signers,
-        bytes[] calldata signatures
+        bytes32[] calldata r,
+        bytes32[] calldata vs
     ) external {
         bool validPublisherNodeSignature = _verifySignature(
             publisherNodeIdentityId,
             publisherNodeSigner,
-            publisherNodeSignature,
-            keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))
+            keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot)),
+            publisherNodeR,
+            publisherNodeVS
         );
 
         if (!validPublisherNodeSignature) {
             revert KnowledgeCollectionLib.InvalidPublisherNodeSignature(
                 publisherNodeIdentityId,
                 publisherNodeSigner,
-                publisherNodeSignature,
-                keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))
+                keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot)),
+                publisherNodeR,
+                publisherNodeVS
             );
         }
 
-        bool validSignatures = _verifySignatures(
-            identityIds,
-            signers,
-            signatures,
-            keccak256(abi.encodePacked(merkleRoot))
-        );
+        bool validSignatures = _verifySignatures(identityIds, signers, keccak256(abi.encodePacked(merkleRoot)), r, vs);
 
         if (!validSignatures) {
             revert KnowledgeCollectionLib.InvalidReplicationSignatures(
                 identityIds,
                 signers,
-                signatures,
-                keccak256(abi.encodePacked(merkleRoot))
+                keccak256(abi.encodePacked(merkleRoot)),
+                r,
+                vs
             );
         }
 
@@ -247,26 +253,28 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
     function _verifySignatures(
         uint72[] calldata identityIds,
         address[] calldata signers,
-        bytes[] calldata signatures,
-        bytes32 message
+        bytes32 messageHash,
+        bytes32[] calldata r,
+        bytes32[] calldata vs
     ) internal view returns (bool) {
-        if (signatures.length != identityIds.length || signatures.length != signers.length) {
+        if (r.length != identityIds.length || r.length != signers.length || r.length != vs.length) {
             revert KnowledgeCollectionLib.SignaturesSignersMismatch(
-                signatures.length,
+                r.length,
+                vs.length,
                 identityIds.length,
                 signers.length
             );
         }
 
-        if (signatures.length < parametersStorage.minimumRequiredSignatures()) {
+        if (r.length < parametersStorage.minimumRequiredSignatures()) {
             revert KnowledgeCollectionLib.MinSignaturesRequirementNotMet(
                 parametersStorage.minimumRequiredSignatures(),
-                signatures.length
+                r.length
             );
         }
 
         for (uint256 i; i < identityIds.length; i++) {
-            bool isValid = _verifySignature(identityIds[i], signers[i], signatures[i], message);
+            bool isValid = _verifySignature(identityIds[i], signers[i], messageHash, r[i], vs[i]);
 
             if (!isValid) {
                 return false;
@@ -279,8 +287,9 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
     function _verifySignature(
         uint72 identityId,
         address signer,
-        bytes calldata signature,
-        bytes32 message
+        bytes32 r,
+        bytes32 vs,
+        bytes32 messageHash
     ) internal view returns (bool) {
         if (
             !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(signer)), IdentityLib.OPERATIONAL_KEY)
@@ -288,7 +297,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
             return false;
         }
 
-        if (!SignatureCheckerLib.isValidSignatureNowCalldata(signer, message, signature)) {
+        if (!SignatureCheckerLib.isValidSignatureNow(signer, messageHash, r, vs)) {
             return false;
         }
 
