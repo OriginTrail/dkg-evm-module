@@ -19,6 +19,7 @@ library KnowledgeCollectionLib {
 
     event KnowledgeCollectionCreated(
         uint256 indexed id,
+        string publishOperationId,
         address indexed publisher,
         uint256 publishingTime,
         bytes32 merkleRoot,
@@ -32,6 +33,7 @@ library KnowledgeCollectionLib {
     );
     event KnowledgeCollectionUpdated(
         uint256 indexed id,
+        string updateOperationId,
         bytes32 merkleRoot,
         uint256 byteSize,
         uint256 triplesAmount,

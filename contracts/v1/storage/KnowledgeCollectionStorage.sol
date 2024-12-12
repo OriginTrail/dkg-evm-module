@@ -47,6 +47,7 @@ contract KnowledgeCollectionStorage is Named, Versioned, HubDependent, IERC1155D
     }
 
     function createKnowledgeCollection(
+        string calldata publishOperationId,
         bytes32 merkleRoot,
         uint256 knowledgeAssetsAmount,
         uint256 byteSize,
@@ -78,6 +79,7 @@ contract KnowledgeCollectionStorage is Named, Versioned, HubDependent, IERC1155D
 
         emit KnowledgeCollectionLib.KnowledgeCollectionCreated(
             knowledgeCollectionId,
+            publishOperationId,
             msg.sender,
             block.timestamp,
             merkleRoot,
@@ -101,6 +103,7 @@ contract KnowledgeCollectionStorage is Named, Versioned, HubDependent, IERC1155D
 
     function updateKnowledgeCollection(
         uint256 id,
+        string calldata updateOperationId,
         bytes32 merkleRoot,
         uint256 byteSize,
         uint256 triplesAmount,
@@ -122,6 +125,7 @@ contract KnowledgeCollectionStorage is Named, Versioned, HubDependent, IERC1155D
 
         emit KnowledgeCollectionLib.KnowledgeCollectionUpdated(
             id,
+            updateOperationId,
             merkleRoot,
             byteSize,
             triplesAmount,
