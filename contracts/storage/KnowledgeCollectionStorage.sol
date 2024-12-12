@@ -58,6 +58,7 @@ contract KnowledgeCollectionStorage is
     }
 
     function createKnowledgeCollection(
+        string calldata publishOperationId,
         bytes32 merkleRoot,
         uint256 knowledgeAssetsAmount,
         uint256 byteSize,
@@ -89,6 +90,7 @@ contract KnowledgeCollectionStorage is
 
         emit KnowledgeCollectionLib.KnowledgeCollectionCreated(
             knowledgeCollectionId,
+            publishOperationId,
             msg.sender,
             block.timestamp,
             merkleRoot,
@@ -112,6 +114,7 @@ contract KnowledgeCollectionStorage is
 
     function updateKnowledgeCollection(
         uint256 id,
+        string calldata updateOperationId,
         bytes32 merkleRoot,
         uint256 byteSize,
         uint256 triplesAmount,
@@ -133,6 +136,7 @@ contract KnowledgeCollectionStorage is
 
         emit KnowledgeCollectionLib.KnowledgeCollectionUpdated(
             id,
+            updateOperationId,
             merkleRoot,
             byteSize,
             triplesAmount,

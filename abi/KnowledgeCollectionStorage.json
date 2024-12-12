@@ -244,6 +244,12 @@
         "type": "uint256"
       },
       {
+        "indexed": false,
+        "internalType": "string",
+        "name": "publishOperationId",
+        "type": "string"
+      },
+      {
         "indexed": true,
         "internalType": "address",
         "name": "publisher",
@@ -505,6 +511,12 @@
         "internalType": "uint256",
         "name": "id",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "updateOperationId",
+        "type": "string"
       },
       {
         "indexed": false,
@@ -830,6 +842,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "string",
+        "name": "publishOperationId",
+        "type": "string"
+      },
       {
         "internalType": "bytes32",
         "name": "merkleRoot",
@@ -2113,6 +2130,11 @@
         "internalType": "uint256",
         "name": "id",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "updateOperationId",
+        "type": "string"
       },
       {
         "internalType": "bytes32",

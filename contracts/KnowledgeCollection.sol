@@ -51,6 +51,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
     }
 
     function createKnowledgeCollection(
+        string calldata publishOperationId,
         bytes32 merkleRoot,
         uint256 knowledgeAssetsAmount,
         uint256 byteSize,
@@ -108,6 +109,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
         uint256 id = kcs.createKnowledgeCollection(
+            publishOperationId,
             merkleRoot,
             0,
             byteSize,
@@ -127,6 +129,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
 
     function updateKnowledgeCollection(
         uint256 id,
+        string calldata updateOperationId,
         bytes32 merkleRoot,
         uint256 mintKnowledgeAssetsAmount,
         uint256[] calldata knowledgeAssetsToBurn,
@@ -197,6 +200,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
 
         kcs.updateKnowledgeCollection(
             id,
+            updateOperationId,
             merkleRoot,
             oldByteSize + byteSize,
             oldTriplesAmount + triplesAmount,
