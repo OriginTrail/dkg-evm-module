@@ -42,6 +42,8 @@ contract ParametersStorage is Named, Versioned, HubDependent {
     uint16 public opWalletsLimitOnProfileCreation;
     uint16 public shardingTableSizeLimit;
 
+    uint256 public minimumRequiredSignatures;
+
     constructor(address hubAddress) HubDependent(hubAddress) {
         // minimumStake
         args3[0] = 50_000 ether;
@@ -82,6 +84,8 @@ contract ParametersStorage is Named, Versioned, HubDependent {
 
         // finalizationCommitsNumber
         args1[5] = 3;
+
+        minimumRequiredSignatures = 3;
     }
 
     function name() external pure virtual override returns (string memory) {
