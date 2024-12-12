@@ -619,9 +619,9 @@
             "type": "uint256"
           },
           {
-            "internalType": "bytes32",
-            "name": "merkleRoot",
-            "type": "bytes32"
+            "internalType": "bytes32[]",
+            "name": "merkleRoots",
+            "type": "bytes32[]"
           },
           {
             "internalType": "uint256",
@@ -712,9 +712,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "bytes32",
+        "internalType": "bytes32[]",
         "name": "",
-        "type": "bytes32"
+        "type": "bytes32[]"
       },
       {
         "internalType": "uint256",
@@ -781,12 +781,55 @@
         "type": "uint256"
       }
     ],
-    "name": "getMerkleRoot",
+    "name": "getLatestMerkleRoot",
     "outputs": [
       {
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMerkleRootByIndex",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMerkleRoots",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
       }
     ],
     "stateMutability": "view",
@@ -1103,11 +1146,6 @@
         "type": "uint256"
       },
       {
-        "internalType": "bytes32",
-        "name": "merkleRoot",
-        "type": "bytes32"
-      },
-      {
         "internalType": "uint256",
         "name": "minted",
         "type": "uint256"
@@ -1180,6 +1218,37 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "popMerkleRoot",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "merkleRoot",
+        "type": "bytes32"
+      }
+    ],
+    "name": "pushMerkleRoot",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1346,12 +1415,12 @@
         "type": "uint256"
       },
       {
-        "internalType": "bytes32",
-        "name": "_merkleRoot",
-        "type": "bytes32"
+        "internalType": "bytes32[]",
+        "name": "_merkleRoots",
+        "type": "bytes32[]"
       }
     ],
-    "name": "setMerkleRoot",
+    "name": "setMerkleRoots",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
