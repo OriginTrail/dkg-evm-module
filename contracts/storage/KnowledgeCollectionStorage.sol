@@ -239,7 +239,7 @@ contract KnowledgeCollectionStorage is
     }
 
     function pushMerkleRoot(uint256 id, bytes32 merkleRoot) external onlyContracts {
-        return knowledgeCollections[id].merkleRoots.push(merkleRoot);
+        knowledgeCollections[id].merkleRoots.push(merkleRoot);
 
         emit KnowledgeCollectionLib.KnowledgeCollectionMerkleRootAdded(id, merkleRoot);
     }
