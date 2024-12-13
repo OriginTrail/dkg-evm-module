@@ -318,6 +318,33 @@
       "deploymentBlock": 17604648,
       "deploymentTimestamp": 1730977590849,
       "deployed": true
+    },
+    "Chronos": {
+      "evmAddress": "0xbf100055604Dd32051A896D14206C86a80853a45",
+      "version": null,
+      "gitBranch": "test/knowledge-collections",
+      "gitCommitHash": "b3f2d62dc446f05858a5aff212ffbe01a6b7ba58",
+      "deploymentBlock": 19168114,
+      "deploymentTimestamp": 1734104520862,
+      "deployed": true
+    },
+    "KnowledgeCollectionStorage": {
+      "evmAddress": "0x063F3a137DCAEF02518c06ceE1Ba6651de6c4fDE",
+      "version": "1.0.0",
+      "gitBranch": "test/knowledge-collections",
+      "gitCommitHash": "b3f2d62dc446f05858a5aff212ffbe01a6b7ba58",
+      "deploymentBlock": 19168117,
+      "deploymentTimestamp": 1734104528267,
+      "deployed": true
+    },
+    "KnowledgeCollection": {
+      "evmAddress": "0x1AADcc4236Bf13a583D9Ba19086369f70d35b9f3",
+      "version": "1.0.0",
+      "gitBranch": "test/knowledge-collections",
+      "gitCommitHash": "b3f2d62dc446f05858a5aff212ffbe01a6b7ba58",
+      "deploymentBlock": 19168121,
+      "deploymentTimestamp": 1734104535230,
+      "deployed": true
     }
   }
 }
