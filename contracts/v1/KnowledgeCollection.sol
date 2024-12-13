@@ -14,7 +14,7 @@ import {Named} from "./interface/Named.sol";
 import {Versioned} from "./interface/Versioned.sol";
 import {HubDependent} from "./abstract/HubDependent.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SignatureCheckerLib} from "solady/src/utils/SignatureCheckerLib.sol";
+import {ECDSA} from "solady/src/utils/ECDSA.sol";
 
 contract KnowledgeCollection is Named, Versioned, HubDependent {
     string private constant _NAME = "KnowledgeCollection";
@@ -59,49 +59,20 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
         uint96 tokenAmount,
         address paymaster,
         uint72 publisherNodeIdentityId,
-        address publisherNodeSigner,
         bytes32 publisherNodeR,
         bytes32 publisherNodeVS,
         uint72[] calldata identityIds,
-        address[] calldata signers,
         bytes32[] calldata r,
         bytes32[] calldata vs
     ) external {
-        bool validPublisherNodeSignature = _verifySignature(
+        _verifySignature(
             publisherNodeIdentityId,
-            publisherNodeSigner,
-            keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot)),
+            ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))),
             publisherNodeR,
             publisherNodeVS
         );
 
-        if (!validPublisherNodeSignature) {
-            revert KnowledgeCollectionLib.InvalidPublisherNodeSignature(
-                publisherNodeIdentityId,
-                publisherNodeSigner,
-                keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot)),
-                publisherNodeR,
-                publisherNodeVS
-            );
-        }
-
-        bool validReplicationSignatures = _verifySignatures(
-            identityIds,
-            signers,
-            keccak256(abi.encodePacked(merkleRoot)),
-            r,
-            vs
-        );
-
-        if (!validReplicationSignatures) {
-            revert KnowledgeCollectionLib.InvalidReplicationSignatures(
-                identityIds,
-                signers,
-                keccak256(abi.encodePacked(merkleRoot)),
-                r,
-                vs
-            );
-        }
+        _verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
 
         uint256 currentEpoch = chronos.getCurrentEpoch();
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
@@ -137,43 +108,20 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
         uint96 tokenAmount,
         address paymaster,
         uint72 publisherNodeIdentityId,
-        address publisherNodeSigner,
         bytes32 publisherNodeR,
         bytes32 publisherNodeVS,
         uint72[] calldata identityIds,
-        address[] calldata signers,
         bytes32[] calldata r,
         bytes32[] calldata vs
     ) external {
-        bool validPublisherNodeSignature = _verifySignature(
+        _verifySignature(
             publisherNodeIdentityId,
-            publisherNodeSigner,
-            keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot)),
+            ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))),
             publisherNodeR,
             publisherNodeVS
         );
 
-        if (!validPublisherNodeSignature) {
-            revert KnowledgeCollectionLib.InvalidPublisherNodeSignature(
-                publisherNodeIdentityId,
-                publisherNodeSigner,
-                keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot)),
-                publisherNodeR,
-                publisherNodeVS
-            );
-        }
-
-        bool validSignatures = _verifySignatures(identityIds, signers, keccak256(abi.encodePacked(merkleRoot)), r, vs);
-
-        if (!validSignatures) {
-            revert KnowledgeCollectionLib.InvalidReplicationSignatures(
-                identityIds,
-                signers,
-                keccak256(abi.encodePacked(merkleRoot)),
-                r,
-                vs
-            );
-        }
+        _verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
 
         uint256 currentEpoch = chronos.getCurrentEpoch();
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
@@ -254,18 +202,12 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
 
     function _verifySignatures(
         uint72[] calldata identityIds,
-        address[] calldata signers,
         bytes32 messageHash,
         bytes32[] calldata r,
         bytes32[] calldata vs
-    ) internal view returns (bool) {
-        if (r.length != identityIds.length || r.length != signers.length || r.length != vs.length) {
-            revert KnowledgeCollectionLib.SignaturesSignersMismatch(
-                r.length,
-                vs.length,
-                identityIds.length,
-                signers.length
-            );
+    ) internal {
+        if (r.length != identityIds.length || r.length != vs.length) {
+            revert KnowledgeCollectionLib.SignaturesSignersMismatch(r.length, vs.length, identityIds.length);
         }
 
         if (r.length < parametersStorage.minimumRequiredSignatures()) {
@@ -276,34 +218,22 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
         }
 
         for (uint256 i; i < identityIds.length; i++) {
-            bool isValid = _verifySignature(identityIds[i], signers[i], messageHash, r[i], vs[i]);
-
-            if (!isValid) {
-                return false;
-            }
+            _verifySignature(identityIds[i], messageHash, r[i], vs[i]);
         }
-
-        return true;
     }
 
-    function _verifySignature(
-        uint72 identityId,
-        address signer,
-        bytes32 r,
-        bytes32 vs,
-        bytes32 messageHash
-    ) internal view returns (bool) {
+    function _verifySignature(uint72 identityId, bytes32 messageHash, bytes32 r, bytes32 vs) internal {
+        address signer = ECDSA.tryRecover(messageHash, r, vs);
+
+        if (signer == address(0)) {
+            revert KnowledgeCollectionLib.InvalidSignature(identityId, messageHash, r, vs);
+        }
+
         if (
             !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(signer)), IdentityLib.OPERATIONAL_KEY)
         ) {
-            return false;
+            revert KnowledgeCollectionLib.SignerIsNotNodeOperator(identityId, signer);
         }
-
-        if (!SignatureCheckerLib.isValidSignatureNow(signer, messageHash, r, vs)) {
-            return false;
-        }
-
-        return true;
     }
 
     function _validateTokenAmount(

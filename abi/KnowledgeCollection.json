@@ -18,11 +18,6 @@
         "type": "uint72"
       },
       {
-        "internalType": "address",
-        "name": "signer",
-        "type": "address"
-      },
-      {
         "internalType": "bytes32",
         "name": "messageHash",
         "type": "bytes32"
@@ -38,38 +33,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "InvalidPublisherNodeSignature",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72[]",
-        "name": "identityIds",
-        "type": "uint72[]"
-      },
-      {
-        "internalType": "address[]",
-        "name": "signers",
-        "type": "address[]"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "messageHash",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32[]",
-        "name": "r",
-        "type": "bytes32[]"
-      },
-      {
-        "internalType": "bytes32[]",
-        "name": "vs",
-        "type": "bytes32[]"
-      }
-    ],
-    "name": "InvalidReplicationSignatures",
+    "name": "InvalidSignature",
     "type": "error"
   },
   {
@@ -141,14 +105,25 @@
         "internalType": "uint256",
         "name": "identityIdsAmount",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "signersAmount",
-        "type": "uint256"
       }
     ],
     "name": "SignaturesSignersMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "address",
+        "name": "signer",
+        "type": "address"
+      }
+    ],
+    "name": "SignerIsNotNodeOperator",
     "type": "error"
   },
   {
@@ -269,11 +244,6 @@
         "type": "uint72"
       },
       {
-        "internalType": "address",
-        "name": "publisherNodeSigner",
-        "type": "address"
-      },
-      {
         "internalType": "bytes32",
         "name": "publisherNodeR",
         "type": "bytes32"
@@ -287,11 +257,6 @@
         "internalType": "uint72[]",
         "name": "identityIds",
         "type": "uint72[]"
-      },
-      {
-        "internalType": "address[]",
-        "name": "signers",
-        "type": "address[]"
       },
       {
         "internalType": "bytes32[]",
@@ -516,11 +481,6 @@
         "type": "uint72"
       },
       {
-        "internalType": "address",
-        "name": "publisherNodeSigner",
-        "type": "address"
-      },
-      {
         "internalType": "bytes32",
         "name": "publisherNodeR",
         "type": "bytes32"
@@ -534,11 +494,6 @@
         "internalType": "uint72[]",
         "name": "identityIds",
         "type": "uint72[]"
-      },
-      {
-        "internalType": "address[]",
-        "name": "signers",
-        "type": "address[]"
       },
       {
         "internalType": "bytes32[]",
