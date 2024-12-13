@@ -8,5 +8,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['KnowledgeCollection'];
+func.tags = ['KnowledgeCollection', 'v1', 'v2'];
 func.dependencies = [];

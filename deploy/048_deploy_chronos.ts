@@ -9,5 +9,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['Chronos'];
+func.tags = ['Chronos', 'v1', 'v2'];
 func.dependencies = [];

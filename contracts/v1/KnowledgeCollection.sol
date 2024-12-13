@@ -30,7 +30,9 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
     constructor(address hubAddress) HubDependent(hubAddress) {}
 
     function initialize() public onlyHubOwner {
-        knowledgeCollectionStorage = KnowledgeCollectionStorage(hub.getContractAddress("KnowledgeCollectionStorage"));
+        knowledgeCollectionStorage = KnowledgeCollectionStorage(
+            hub.getAssetStorageAddress("KnowledgeCollectionStorage")
+        );
         chronos = Chronos(hub.getContractAddress("Chronos"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
