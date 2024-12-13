@@ -280,12 +280,6 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "knowledgeAssetsAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
         "name": "byteSize",
         "type": "uint256"
       },

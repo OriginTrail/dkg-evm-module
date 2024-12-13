@@ -80,7 +80,6 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
         uint256 id = kcs.createKnowledgeCollection(
             publishOperationId,
             merkleRoot,
-            knowledgeAssetsAmount,
             byteSize,
             triplesAmount,
             chunksAmount,

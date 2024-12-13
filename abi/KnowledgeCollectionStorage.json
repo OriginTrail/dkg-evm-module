@@ -400,11 +400,6 @@
       },
       {
         "internalType": "uint256",
-        "name": "knowledgeAssetsAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "byteSize",
         "type": "uint256"
       },
