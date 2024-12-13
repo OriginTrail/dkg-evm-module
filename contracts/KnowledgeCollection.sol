@@ -34,7 +34,9 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
 
     function initialize() public onlyHub {
         paymasterManager = PaymasterManager(hub.getContractAddress("PaymasterManager"));
-        knowledgeCollectionStorage = KnowledgeCollectionStorage(hub.getContractAddress("KnowledgeCollectionStorage"));
+        knowledgeCollectionStorage = KnowledgeCollectionStorage(
+            hub.getAssetStorageAddress("KnowledgeCollectionStorage")
+        );
         chronos = Chronos(hub.getContractAddress("Chronos"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
