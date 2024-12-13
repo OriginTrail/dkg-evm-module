@@ -270,12 +270,6 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "knowledgeAssetsAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
         "name": "byteSize",
         "type": "uint256"
       },
@@ -851,11 +845,6 @@
         "internalType": "bytes32",
         "name": "merkleRoot",
         "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "knowledgeAssetsAmount",
-        "type": "uint256"
       },
       {
         "internalType": "uint256",

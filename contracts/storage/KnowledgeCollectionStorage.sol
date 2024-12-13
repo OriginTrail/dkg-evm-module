@@ -60,7 +60,6 @@ contract KnowledgeCollectionStorage is
     function createKnowledgeCollection(
         string calldata publishOperationId,
         bytes32 merkleRoot,
-        uint256 knowledgeAssetsAmount,
         uint256 byteSize,
         uint256 triplesAmount,
         uint256 chunksAmount,
@@ -75,7 +74,6 @@ contract KnowledgeCollectionStorage is
         kc.publisher = msg.sender;
         kc.publishingTime = block.timestamp;
         kc.merkleRoots.push(merkleRoot);
-        kc.minted = knowledgeAssetsAmount;
         kc.byteSize = byteSize;
         kc.triplesAmount = triplesAmount;
         kc.chunksAmount = chunksAmount;
@@ -94,7 +92,6 @@ contract KnowledgeCollectionStorage is
             msg.sender,
             block.timestamp,
             merkleRoot,
-            knowledgeAssetsAmount,
             byteSize,
             triplesAmount,
             chunksAmount,

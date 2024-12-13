@@ -23,7 +23,6 @@ library KnowledgeCollectionLib {
         address indexed publisher,
         uint256 publishingTime,
         bytes32 merkleRoot,
-        uint256 knowledgeAssetsAmount,
         uint256 byteSize,
         uint256 triplesAmount,
         uint256 chunksAmount,
