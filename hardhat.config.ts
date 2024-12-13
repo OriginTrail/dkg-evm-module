@@ -158,6 +158,7 @@ config.abiExporter = {
     'ShardingTableLib.sol',
     'TokenLib.sol',
     'KnowledgeCollectionLib.sol',
+    'StakingLib.sol',
   ],
   spacing: 2,
   format: 'json',
