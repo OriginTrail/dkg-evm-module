@@ -84,7 +84,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         uint256 id = kcs.createKnowledgeCollection(
             publishOperationId,
             merkleRoot,
-            0,
+            knowledgeAssetsAmount,
             byteSize,
             triplesAmount,
             chunksAmount,
@@ -209,7 +209,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         bytes32 messageHash,
         bytes32[] calldata r,
         bytes32[] calldata vs
-    ) internal {
+    ) internal view {
         if (r.length != identityIds.length || r.length != vs.length) {
             revert KnowledgeCollectionLib.SignaturesSignersMismatch(r.length, vs.length, identityIds.length);
         }
@@ -226,7 +226,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         }
     }
 
-    function _verifySignature(uint72 identityId, bytes32 messageHash, bytes32 r, bytes32 vs) internal {
+    function _verifySignature(uint72 identityId, bytes32 messageHash, bytes32 r, bytes32 vs) internal view {
         address signer = ECDSA.tryRecover(messageHash, r, vs);
 
         if (signer == address(0)) {

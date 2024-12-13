@@ -68,7 +68,7 @@ contract KnowledgeCollectionStorage is
         uint256 endEpoch,
         uint96 tokenAmount
     ) external onlyContracts returns (uint256) {
-        uint256 knowledgeCollectionId = _knowledgeCollectionsCounter++;
+        uint256 knowledgeCollectionId = ++_knowledgeCollectionsCounter;
 
         KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[knowledgeCollectionId];
 
