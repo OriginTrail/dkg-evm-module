@@ -1,6 +1,6 @@
 {
   "name": "dkg-evm-module",
-  "version": "8.0.3-gamma.4",
+  "version": "8.0.3-gamma.5",
   "description": "Smart contracts for OriginTrail V8",
   "main": "index.ts",
   "files": [

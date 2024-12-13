@@ -57,7 +57,7 @@ contract KnowledgeCollectionStorage is Named, Versioned, HubDependent, IERC1155D
         uint256 endEpoch,
         uint96 tokenAmount
     ) external onlyContracts returns (uint256) {
-        uint256 knowledgeCollectionId = _knowledgeCollectionsCounter++;
+        uint256 knowledgeCollectionId = ++_knowledgeCollectionsCounter;
 
         KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[knowledgeCollectionId];
 
