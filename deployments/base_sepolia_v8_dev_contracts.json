@@ -23,12 +23,12 @@
       "deployed": true
     },
     "ParametersStorage": {
-      "evmAddress": "0x76B31Fbc1b2c9196d9E7d167c8689D8F3ecc95AA",
+      "evmAddress": "0x98f1B9152B67B66c6Cd179a279284A3F96626244",
       "version": "1.1.1",
-      "gitBranch": "v8/develop",
-      "gitCommitHash": "daa616df66a715349cd9ab46221e9f8316e3dd3a",
-      "deploymentBlock": 17604488,
-      "deploymentTimestamp": 1730977270982,
+      "gitBranch": "test/knowledge-collections",
+      "gitCommitHash": "619b2cdd3d6ad29a324c17c49610ae29b686a151",
+      "deploymentBlock": 19248930,
+      "deploymentTimestamp": 1734266152125,
       "deployed": true
     },
     "WhitelistStorage": {
@@ -338,12 +338,12 @@
       "deployed": true
     },
     "KnowledgeCollection": {
-      "evmAddress": "0x7Fa4338bf9A627AA339435175C14Dd1a89D4F002",
+      "evmAddress": "0x377873D926DC31fda8bC227cEF00BCb52c529f9A",
       "version": "1.0.0",
       "gitBranch": "test/knowledge-collections",
-      "gitCommitHash": "ce9e6c7a804a5df6ea0a8bcd3b3ea994f5799726",
-      "deploymentBlock": 19247727,
-      "deploymentTimestamp": 1734263747152,
+      "gitCommitHash": "619b2cdd3d6ad29a324c17c49610ae29b686a151",
+      "deploymentBlock": 19248940,
+      "deploymentTimestamp": 1734266171826,
       "deployed": true
     }
   }
