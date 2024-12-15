@@ -48,116 +48,116 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
         return _VERSION;
     }
 
-    function createKnowledgeCollection(
-        string calldata publishOperationId,
-        bytes32 merkleRoot,
-        uint256 knowledgeAssetsAmount,
-        uint256 byteSize,
-        uint256 triplesAmount,
-        uint256 chunksAmount,
-        uint256 epochs,
-        uint96 tokenAmount,
-        address paymaster,
-        uint72 publisherNodeIdentityId,
-        bytes32 publisherNodeR,
-        bytes32 publisherNodeVS,
-        uint72[] calldata identityIds,
-        bytes32[] calldata r,
-        bytes32[] calldata vs
-    ) external {
-        verifySignature(
-            publisherNodeIdentityId,
-            ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))),
-            publisherNodeR,
-            publisherNodeVS
-        );
+    // function createKnowledgeCollection(
+    //     string calldata publishOperationId,
+    //     bytes32 merkleRoot,
+    //     uint256 knowledgeAssetsAmount,
+    //     uint256 byteSize,
+    //     uint256 triplesAmount,
+    //     uint256 chunksAmount,
+    //     uint256 epochs,
+    //     uint96 tokenAmount,
+    //     address paymaster,
+    //     uint72 publisherNodeIdentityId,
+    //     bytes32 publisherNodeR,
+    //     bytes32 publisherNodeVS,
+    //     uint72[] calldata identityIds,
+    //     bytes32[] calldata r,
+    //     bytes32[] calldata vs
+    // ) external {
+    //     verifySignature(
+    //         publisherNodeIdentityId,
+    //         ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))),
+    //         publisherNodeR,
+    //         publisherNodeVS
+    //     );
 
-        verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
+    //     verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
 
-        uint256 currentEpoch = chronos.getCurrentEpoch();
-        KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
+    //     uint256 currentEpoch = chronos.getCurrentEpoch();
+    //     KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
-        uint256 id = kcs.createKnowledgeCollection(
-            publishOperationId,
-            merkleRoot,
-            byteSize,
-            triplesAmount,
-            chunksAmount,
-            currentEpoch + 1,
-            currentEpoch + epochs + 1,
-            tokenAmount
-        );
-        kcs.mintKnowledgeAssetsTokens(id, msg.sender, knowledgeAssetsAmount);
+    //     uint256 id = kcs.createKnowledgeCollection(
+    //         publishOperationId,
+    //         merkleRoot,
+    //         byteSize,
+    //         triplesAmount,
+    //         chunksAmount,
+    //         currentEpoch + 1,
+    //         currentEpoch + epochs + 1,
+    //         tokenAmount
+    //     );
+    //     kcs.mintKnowledgeAssetsTokens(id, msg.sender, knowledgeAssetsAmount);
 
-        // TODO: Update publisher node's epochs knowledge value
+    //     // TODO: Update publisher node's epochs knowledge value
 
-        _validateTokenAmount(byteSize, epochs, tokenAmount, true);
-        _addTokens(tokenAmount, paymaster);
-    }
+    //     _validateTokenAmount(byteSize, epochs, tokenAmount, true);
+    //     _addTokens(tokenAmount, paymaster);
+    // }
 
-    function updateKnowledgeCollection(
-        uint256 id,
-        string calldata updateOperationId,
-        bytes32 merkleRoot,
-        uint256 mintKnowledgeAssetsAmount,
-        uint256[] calldata knowledgeAssetsToBurn,
-        uint256 byteSize,
-        uint256 triplesAmount,
-        uint256 chunksAmount,
-        uint96 tokenAmount,
-        address paymaster,
-        uint72 publisherNodeIdentityId,
-        bytes32 publisherNodeR,
-        bytes32 publisherNodeVS,
-        uint72[] calldata identityIds,
-        bytes32[] calldata r,
-        bytes32[] calldata vs
-    ) external {
-        verifySignature(
-            publisherNodeIdentityId,
-            ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))),
-            publisherNodeR,
-            publisherNodeVS
-        );
+    // function updateKnowledgeCollection(
+    //     uint256 id,
+    //     string calldata updateOperationId,
+    //     bytes32 merkleRoot,
+    //     uint256 mintKnowledgeAssetsAmount,
+    //     uint256[] calldata knowledgeAssetsToBurn,
+    //     uint256 byteSize,
+    //     uint256 triplesAmount,
+    //     uint256 chunksAmount,
+    //     uint96 tokenAmount,
+    //     address paymaster,
+    //     uint72 publisherNodeIdentityId,
+    //     bytes32 publisherNodeR,
+    //     bytes32 publisherNodeVS,
+    //     uint72[] calldata identityIds,
+    //     bytes32[] calldata r,
+    //     bytes32[] calldata vs
+    // ) external {
+    //     verifySignature(
+    //         publisherNodeIdentityId,
+    //         ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))),
+    //         publisherNodeR,
+    //         publisherNodeVS
+    //     );
 
-        verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
+    //     verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
 
-        uint256 currentEpoch = chronos.getCurrentEpoch();
-        KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
+    //     uint256 currentEpoch = chronos.getCurrentEpoch();
+    //     KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
-        (
-            ,
-            ,
-            ,
-            ,
-            ,
-            uint256 oldByteSize,
-            uint256 oldTriplesAmount,
-            uint256 oldChunksAmount,
-            ,
-            uint256 endEpoch,
-            uint96 oldTokenAmount
-        ) = kcs.getKnowledgeCollectionMetadata(id);
+    //     (
+    //         ,
+    //         ,
+    //         ,
+    //         ,
+    //         ,
+    //         uint256 oldByteSize,
+    //         uint256 oldTriplesAmount,
+    //         uint256 oldChunksAmount,
+    //         ,
+    //         uint256 endEpoch,
+    //         uint96 oldTokenAmount
+    //     ) = kcs.getKnowledgeCollectionMetadata(id);
 
-        if (currentEpoch > endEpoch) {
-            revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, currentEpoch, endEpoch);
-        }
+    //     if (currentEpoch > endEpoch) {
+    //         revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, currentEpoch, endEpoch);
+    //     }
 
-        kcs.updateKnowledgeCollection(
-            id,
-            updateOperationId,
-            merkleRoot,
-            oldByteSize + byteSize,
-            oldTriplesAmount + triplesAmount,
-            oldChunksAmount + chunksAmount,
-            oldTokenAmount + tokenAmount
-        );
-        kcs.burnKnowledgeAssetsTokens(id, msg.sender, knowledgeAssetsToBurn);
-        kcs.mintKnowledgeAssetsTokens(id, msg.sender, mintKnowledgeAssetsAmount);
+    //     kcs.updateKnowledgeCollection(
+    //         id,
+    //         updateOperationId,
+    //         merkleRoot,
+    //         oldByteSize + byteSize,
+    //         oldTriplesAmount + triplesAmount,
+    //         oldChunksAmount + chunksAmount,
+    //         oldTokenAmount + tokenAmount
+    //     );
+    //     kcs.burnKnowledgeAssetsTokens(id, msg.sender, knowledgeAssetsToBurn);
+    //     kcs.mintKnowledgeAssetsTokens(id, msg.sender, mintKnowledgeAssetsAmount);
 
-        _validateTokenAmount(byteSize, currentEpoch - endEpoch, tokenAmount, true);
-        _addTokens(tokenAmount, paymaster);
-    }
+    //     _validateTokenAmount(byteSize, currentEpoch - endEpoch, tokenAmount, true);
+    //     _addTokens(tokenAmount, paymaster);
+    // }
 
     function extendKnowledgeCollectionLifetime(
         uint256 id,
@@ -200,15 +200,10 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
     }
 
     function verifySignatures(
-        uint72[] calldata identityIds,
-        bytes32 messageHash,
+        bytes32 message,
         bytes32[] calldata r,
         bytes32[] calldata vs
     ) public view returns (address[] memory) {
-        if (r.length != identityIds.length || r.length != vs.length) {
-            revert KnowledgeCollectionLib.SignaturesSignersMismatch(r.length, vs.length, identityIds.length);
-        }
-
         if (r.length < parametersStorage.minimumRequiredSignatures()) {
             revert KnowledgeCollectionLib.MinSignaturesRequirementNotMet(
                 parametersStorage.minimumRequiredSignatures(),
@@ -216,25 +211,20 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
             );
         }
 
-        address[] memory signers = new address[](identityIds.length);
-        for (uint256 i; i < identityIds.length; i++) {
-            address signer = verifySignature(identityIds[i], messageHash, r[i], vs[i]);
+        address[] memory signers = new address[](r.length);
+        for (uint256 i; i < r.length; i++) {
+            address signer = verifySignature(message, r[i], vs[i]);
             signers[i] = signer;
         }
         return signers;
     }
 
-    function verifySignature(
-        uint72 identityId,
-        bytes32 messageHash,
-        bytes32 r,
-        bytes32 vs
-    ) public view returns (address) {
-        address signer = ECDSA.tryRecover(messageHash, r, vs);
+    function verifySignature(bytes32 message, bytes32 r, bytes32 vs) public view returns (address) {
+        address signer = ECDSA.tryRecover(ECDSA.toEthSignedMessageHash(message), r, vs);
 
-        if (signer == address(0)) {
-            revert KnowledgeCollectionLib.InvalidSignature(identityId, messageHash, r, vs);
-        }
+        // if (signer == address(0)) {
+        //     revert KnowledgeCollectionLib.InvalidSignature(identityId, ECDSA.toEthSignedMessageHash(message), r, vs);
+        // }
 
         return signer;
 

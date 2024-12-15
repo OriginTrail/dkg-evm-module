@@ -338,12 +338,12 @@
       "deployed": true
     },
     "KnowledgeCollection": {
-      "evmAddress": "0xA102C6777722d62d136B9b22ca4FB4A953CAbd71",
+      "evmAddress": "0x7Fa4338bf9A627AA339435175C14Dd1a89D4F002",
       "version": "1.0.0",
       "gitBranch": "test/knowledge-collections",
-      "gitCommitHash": "b0de79c011c4167d5ce1f68ae79590f9647c1d37",
-      "deploymentBlock": 19246902,
-      "deploymentTimestamp": 1734262095944,
+      "gitCommitHash": "ce9e6c7a804a5df6ea0a8bcd3b3ea994f5799726",
+      "deploymentBlock": 19247727,
+      "deploymentTimestamp": 1734263747152,
       "deployed": true
     }
   }
