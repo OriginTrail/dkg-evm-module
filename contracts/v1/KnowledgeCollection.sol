@@ -65,14 +65,14 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
         bytes32[] calldata r,
         bytes32[] calldata vs
     ) external {
-        _verifySignature(
+        verifySignature(
             publisherNodeIdentityId,
             ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))),
             publisherNodeR,
             publisherNodeVS
         );
 
-        _verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
+        verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
 
         uint256 currentEpoch = chronos.getCurrentEpoch();
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
@@ -113,14 +113,14 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
         bytes32[] calldata r,
         bytes32[] calldata vs
     ) external {
-        _verifySignature(
+        verifySignature(
             publisherNodeIdentityId,
             ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))),
             publisherNodeR,
             publisherNodeVS
         );
 
-        _verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
+        verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
 
         uint256 currentEpoch = chronos.getCurrentEpoch();
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
@@ -199,12 +199,12 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
         _addTokens(tokenAmount, paymaster);
     }
 
-    function _verifySignatures(
+    function verifySignatures(
         uint72[] calldata identityIds,
         bytes32 messageHash,
         bytes32[] calldata r,
         bytes32[] calldata vs
-    ) internal view {
+    ) public view returns (address[] memory) {
         if (r.length != identityIds.length || r.length != vs.length) {
             revert KnowledgeCollectionLib.SignaturesSignersMismatch(r.length, vs.length, identityIds.length);
         }
@@ -216,23 +216,33 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
             );
         }
 
+        address[] memory signers = new address[](identityIds.length);
         for (uint256 i; i < identityIds.length; i++) {
-            _verifySignature(identityIds[i], messageHash, r[i], vs[i]);
+            address signer = verifySignature(identityIds[i], messageHash, r[i], vs[i]);
+            signers[i] = signer;
         }
+        return signers;
     }
 
-    function _verifySignature(uint72 identityId, bytes32 messageHash, bytes32 r, bytes32 vs) internal view {
+    function verifySignature(
+        uint72 identityId,
+        bytes32 messageHash,
+        bytes32 r,
+        bytes32 vs
+    ) public view returns (address) {
         address signer = ECDSA.tryRecover(messageHash, r, vs);
 
         if (signer == address(0)) {
             revert KnowledgeCollectionLib.InvalidSignature(identityId, messageHash, r, vs);
         }
 
-        if (
-            !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(signer)), IdentityLib.OPERATIONAL_KEY)
-        ) {
-            revert KnowledgeCollectionLib.SignerIsNotNodeOperator(identityId, signer);
-        }
+        return signer;
+
+        // if (
+        //     !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(signer)), IdentityLib.OPERATIONAL_KEY)
+        // ) {
+        //     revert KnowledgeCollectionLib.SignerIsNotNodeOperator(identityId, signer);
+        // }
     }
 
     function _validateTokenAmount(
