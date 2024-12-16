@@ -15,6 +15,7 @@ import {IVersioned} from "../interfaces/IVersioned.sol";
 import {ParanetLib} from "../libraries/ParanetLib.sol";
 import {ProfileLib} from "../libraries/ProfileLib.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {ERC1155Delta} from "../tokens/ERC1155Delta.sol";
 
 contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     event ParanetRegistered(
@@ -1069,9 +1070,17 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 knowledgeAssetTokenId
     ) internal view virtual {
         require(hub.isAssetStorage(knowledgeAssetStorageContract), "Given address isn't KA Storage");
-        require(
-            IERC721(knowledgeAssetStorageContract).ownerOf(knowledgeAssetTokenId) == msg.sender,
-            "Caller isn't the owner of the KA"
-        );
+        try ERC1155Delta(knowledgeAssetStorageContract).isOwnerOf(msg.sender, knowledgeAssetTokenId) returns (
+            bool isOwner
+        ) {
+            require(isOwner, "Caller isn't the owner of the KA");
+            // TODO: Check for each KA in KC
+        } catch {
+            try IERC721(knowledgeAssetStorageContract).ownerOf(knowledgeAssetTokenId) returns (address owner) {
+                require(owner == msg.sender, "Caller isn't the owner of the KA");
+            } catch {
+                revert("Caller isn't the owner of the KA");
+            }
+        }
     }
 }
