@@ -7,6 +7,9 @@ import {KnowledgeCollectionStorage} from "./storage/KnowledgeCollectionStorage.s
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
+import {ParanetKnowledgeAssetsRegistry} from "./storage/paranets/ParanetKnowledgeAssetsRegistry.sol";
+import {ParanetKnowledgeMinersRegistry} from "./storage/paranets/ParanetKnowledgeMinersRegistry.sol";
+import {ParanetsRegistry} from "./storage/paranets/ParanetsRegistry.sol";
 import {KnowledgeCollectionLib} from "./libraries/KnowledgeCollectionLib.sol";
 import {TokenLib} from "./libraries/TokenLib.sol";
 import {IdentityLib} from "./libraries/IdentityLib.sol";
@@ -26,6 +29,9 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
     IERC20 public tokenContract;
     ParametersStorage public parametersStorage;
     IdentityStorage public identityStorage;
+    ParanetKnowledgeAssetsRegistry public paranetKnowledgeAssetsRegistry;
+    ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
+    ParaneRegistry public paraneRegistry;
 
     constructor(address hubAddress) HubDependent(hubAddress) {}
 
@@ -38,6 +44,13 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
         tokenContract = IERC20(hub.getContractAddress("Token"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+        paranetKnowledgeAssetsRegistry = ParanetKnowledgeAssetsRegistry(
+            hub.getContractAddress("ParanetKnowledgeAssetsRegistry")
+        );
+        paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(
+            hub.getContractAddress("ParanetKnowledgeMinersRegistry")
+        );
+        paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
     }
 
     function name() public pure virtual returns (string memory) {
@@ -95,6 +108,7 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
         _addTokens(tokenAmount, paymaster);
     }
 
+    //TODO: If KC part of paranet update
     function updateKnowledgeCollection(
         uint256 id,
         string calldata updateOperationId,
@@ -179,6 +193,22 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
 
         _validateTokenAmount(byteSize, epochs, tokenAmount, false);
         _addTokens(tokenAmount, paymaster);
+
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
+        knowledgeCollectionStorageAddress = address(kcs);
+        if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(knowledgeCollectionStorageAddress, id)))) {
+            ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(knowledgeCollectionStorageAddress, id)));
+
+            // Add Knowledge Asset Token Amount Metadata to the ParanetsRegistry
+            paranetsRegistry.addCumulativeKnowledgeValue(paranetId, tokenAmount);
+
+            // Add Knowledge Asset Token Amount Metadata to the KnowledgeMinersRegistry
+            pkmr.addCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addTotalTracSpent(msg.sender, tokenAmount);
+        }
     }
 
     function increaseKnowledgeCollectionTokenAmount(uint256 id, uint96 tokenAmount, address paymaster) external {
@@ -197,6 +227,23 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
         kcs.setTokenAmount(id, oldTokenAmount + tokenAmount);
 
         _addTokens(tokenAmount, paymaster);
+
+        ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
+        knowledgeCollectionStorageAddress = address(kcs);
+        if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(knowledgeCollectionStorageAddress, id)))) {
+            ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(knowledgeCollectionStorageAddress, id)));
+
+            // Add Knowledge Asset Token Amount Metadata to the ParanetsRegistry
+            paranetsRegistry.addCumulativeKnowledgeValue(paranetId, tokenAmount);
+
+            // Add Knowledge Asset Token Amount Metadata to the KnowledgeMinersRegistry
+            // Question is there some problem when paymaster is used ???
+            pkmr.addCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addTotalTracSpent(msg.sender, tokenAmount);
+        }
     }
 
     function _verifySignatures(
