@@ -11,6 +11,7 @@ import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {ParanetServicesRegistry} from "../storage/paranets/ParanetServicesRegistry.sol";
 import {ProfileStorage} from "../../v1/storage/ProfileStorage.sol";
 import {ServiceAgreementStorageProxy} from "../../v1/storage/ServiceAgreementStorageProxy.sol";
+import {KnowledgeCollectionStorage} from "../../v1/storage/KnowledgeCollectionStorage.sol";
 import {IdentityStorage} from "../storage/IdentityStorage.sol";
 import {HashingProxy} from "../../v1/HashingProxy.sol";
 import {ContractStatusV2} from "../abstract/ContractStatus.sol";
@@ -22,6 +23,7 @@ import {ParanetStructs} from "../structs/paranets/ParanetStructs.sol";
 import {ParanetErrors} from "../errors/paranets/ParanetErrors.sol";
 import {ProfileErrors} from "../../v1/errors/ProfileErrors.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {ERC1155Delta} from "../../v1/tokens/ERC1155Delta.sol";
 import {HASH_FUNCTION_ID} from "../../v1/constants/assets/ContentAssetConstants.sol";
 
 contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
@@ -123,7 +125,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
     );
 
     string private constant _NAME = "Paranet";
-    string private constant _VERSION = "2.2.1";
+    string private constant _VERSION = "2.3.0";
 
     ParanetsRegistry public paranetsRegistry;
     ParanetServicesRegistry public paranetServicesRegistry;
@@ -135,6 +137,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
     ContentAssetV2 public contentAsset;
     HashingProxy public hashingProxy;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
+    KnowledgeCollectionStorage public knowledgeCollectionStorage;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatusV2(hubAddress) {}
@@ -161,6 +164,7 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
         );
+        knowledgeCollectionStorage = KnowledgeCollectionStorage(hub.getContractAddress("KnowledgeCollectionStorage"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -927,20 +931,28 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                 )
             );
         }
-
-        uint96 remainingTokenAmount = serviceAgreementStorageProxy.getAgreementTokenAmount(
-            hashingProxy.callHashFunction(
-                HASH_FUNCTION_ID,
-                abi.encodePacked(
-                    address(contentAssetStorage),
-                    knowledgeAssetTokenId,
+        // This needs to have separet logiic for new and old assets
+        uint96 remainingTokenAmount = 0;
+        try ERC1155Delta(knowledgeAssetStorageContract).isOwnerOf(msg.sender, knowledgeAssetTokenId) returns (
+            bool isOwner
+        ) {
+            KnowledgeCollectionStorage kcs = KnowledgeCollectionStorage(knowledgeAssetStorageContract);
+            remainingTokenAmount = kcs.getTokenAmount(knowledgeAssetTokenId);
+        } catch {
+            remainingTokenAmount = serviceAgreementStorageProxy.getAgreementTokenAmount(
+                hashingProxy.callHashFunction(
+                    HASH_FUNCTION_ID,
                     abi.encodePacked(
                         address(contentAssetStorage),
-                        contentAssetStorage.getAssertionIdByIndex(knowledgeAssetTokenId, 0)
+                        knowledgeAssetTokenId,
+                        abi.encodePacked(
+                            address(contentAssetStorage),
+                            contentAssetStorage.getAssertionIdByIndex(knowledgeAssetTokenId, 0)
+                        )
                     )
                 )
-            )
-        );
+            );
+        }
 
         _updateSubmittedKnowledgeAssetMetadata(
             paranetKAStorageContract,
