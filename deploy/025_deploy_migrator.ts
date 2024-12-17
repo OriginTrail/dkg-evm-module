@@ -2,18 +2,20 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  if (hre.network.config.environment === 'development') {
+    return;
+  }
+
   await hre.helpers.deploy({
-    newContractName: 'KnowledgeCollection',
+    newContractName: 'Migrator',
   });
 };
 
 export default func;
-func.tags = ['KnowledgeCollection'];
+func.tags = ['Migrator'];
 func.dependencies = [
   'Hub',
-  'Chronos',
-  'ShardingTableStorage',
-  'KnowledgeCollectionStorage',
-  'ParametersStorage',
   'IdentityStorage',
+  'ProfileStorage',
+  'StakingStorage',
 ];

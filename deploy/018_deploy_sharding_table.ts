@@ -79,10 +79,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       iteration += 1;
     }
 
-    hre.helpers.setParametersEncodedData.push([
-      'ShardingTable',
-      encodedDataArray,
-    ]);
+    hre.helpers.setParametersEncodedData.push({
+      contractName: 'ShardingTable',
+      encodedData: encodedDataArray,
+    });
   }
 };
 

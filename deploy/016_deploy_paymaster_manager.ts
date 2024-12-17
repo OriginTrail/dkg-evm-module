@@ -3,10 +3,10 @@ import { DeployFunction } from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await hre.helpers.deploy({
-    newContractName: 'ProfileStorage',
+    newContractName: 'PaymasterManager',
   });
 };
 
 export default func;
-func.tags = ['ProfileStorage'];
-func.dependencies = ['Hub', 'Token'];
+func.tags = ['PaymasterManager'];
+func.dependencies = ['Hub'];

@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 import {Ask} from "./Ask.sol";
 import {EpochStorage} from "./storage/EpochStorage.sol";
-import {PaymasterManager} from "./PaymasterManager.sol";
+import {PaymasterManager} from "./storage/PaymasterManager.sol";
 import {Chronos} from "./storage/Chronos.sol";
 import {KnowledgeCollectionStorage} from "./storage/KnowledgeCollectionStorage.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
@@ -39,7 +39,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
 
     function initialize() public onlyHub {
         ask = Ask(hub.getContractAddress("Ask"));
-        epochStorage = EpochStorage(hub.getContractAddress("EpochStorage"));
+        epochStorage = EpochStorage(hub.getContractAddress("EpochStorageV8"));
         paymasterManager = PaymasterManager(hub.getContractAddress("PaymasterManager"));
         knowledgeCollectionStorage = KnowledgeCollectionStorage(
             hub.getAssetStorageAddress("KnowledgeCollectionStorage")
