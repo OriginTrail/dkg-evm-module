@@ -1121,9 +1121,17 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 knowledgeAssetTokenId
     ) internal view virtual {
         require(hub.isAssetStorage(knowledgeAssetStorageContract), "Given address isn't KA Storage");
-        require(
-            IERC721(knowledgeAssetStorageContract).ownerOf(knowledgeAssetTokenId) == msg.sender,
-            "Caller isn't the owner of the KA"
-        );
-    }
+        
+        try ERC1155Delta(knowledgeAssetStorageContract).isOwnerOf(msg.sender, knowledgeAssetTokenId) returns (
+            bool isOwner
+        ) {
+            require(isOwner, "Caller isn't the owner of the KA");
+            // TODO: Check for each KA in KC
+        } catch {
+            try IERC721(knowledgeAssetStorageContract).ownerOf(knowledgeAssetTokenId) returns (address owner) {
+                require(owner == msg.sender, "Caller isn't the owner of the KA");
+            } catch {
+                revert("Caller isn't the owner of the KA");
+            }
+        }
 }
