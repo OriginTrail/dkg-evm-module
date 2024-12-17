@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.20;
 
+import {Ask} from "./Ask.sol";
+import {EpochStorage} from "./storage/EpochStorage.sol";
 import {PaymasterManager} from "./PaymasterManager.sol";
 import {Chronos} from "./storage/Chronos.sol";
 import {KnowledgeCollectionStorage} from "./storage/KnowledgeCollectionStorage.sol";
@@ -14,14 +16,17 @@ import {IdentityLib} from "./libraries/IdentityLib.sol";
 import {INamed} from "./interfaces/INamed.sol";
 import {IPaymaster} from "./interfaces/IPaymaster.sol";
 import {IVersioned} from "./interfaces/IVersioned.sol";
-import {HubDependent} from "./abstract/HubDependent.sol";
+import {IInitializable} from "./interfaces/IInitializable.sol";
+import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ECDSA} from "solady/src/utils/ECDSA.sol";
 
-contract KnowledgeCollection is INamed, IVersioned, HubDependent {
+contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "KnowledgeCollection";
     string private constant _VERSION = "1.0.0";
 
+    Ask public ask;
+    EpochStorage public epochStorage;
     PaymasterManager public paymasterManager;
     KnowledgeCollectionStorage public knowledgeCollectionStorage;
     Chronos public chronos;
@@ -30,9 +35,11 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
     ParametersStorage public parametersStorage;
     IdentityStorage public identityStorage;
 
-    constructor(address hubAddress) HubDependent(hubAddress) {}
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function initialize() public onlyHub {
+        ask = Ask(hub.getContractAddress("Ask"));
+        epochStorage = EpochStorage(hub.getContractAddress("EpochStorage"));
         paymasterManager = PaymasterManager(hub.getContractAddress("PaymasterManager"));
         knowledgeCollectionStorage = KnowledgeCollectionStorage(
             hub.getAssetStorageAddress("KnowledgeCollectionStorage")
@@ -77,8 +84,8 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
 
         _verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
 
-        uint256 currentEpoch = chronos.getCurrentEpoch();
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
+        uint256 currentEpoch = chronos.getCurrentEpoch();
 
         uint256 id = kcs.createKnowledgeCollection(
             publishOperationId,
@@ -91,9 +98,11 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
             tokenAmount
         );
 
+        _validateTokenAmount(byteSize, epochs, tokenAmount, true);
+
+        epochStorage.addTokensToEpochRange(1, currentEpoch, currentEpoch + epochs + 1, tokenAmount);
         // TODO: Update publisher node's epochs knowledge value
 
-        _validateTokenAmount(byteSize, epochs, tokenAmount, true);
         _addTokens(tokenAmount, paymaster);
 
         return id;
@@ -125,12 +134,12 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
 
         _verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
 
-        uint256 currentEpoch = chronos.getCurrentEpoch();
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
         (, , , , uint256 oldByteSize, uint256 oldChunksAmount, , uint256 endEpoch, uint96 oldTokenAmount) = kcs
             .getKnowledgeCollectionMetadata(id);
 
+        uint256 currentEpoch = chronos.getCurrentEpoch();
         if (currentEpoch > endEpoch) {
             revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, currentEpoch, endEpoch);
         }
@@ -147,6 +156,9 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         );
 
         _validateTokenAmount(byteSize - oldByteSize, endEpoch - currentEpoch, tokenAmount, true);
+
+        epochStorage.addTokensToEpochRange(1, currentEpoch, endEpoch, tokenAmount);
+
         _addTokens(tokenAmount, paymaster);
     }
 
@@ -162,14 +174,18 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
             id
         );
 
-        if (chronos.getCurrentEpoch() > endEpoch) {
-            revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, chronos.getCurrentEpoch(), endEpoch);
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        if (currentEpoch > endEpoch) {
+            revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, currentEpoch, endEpoch);
         }
 
         kcs.setEndEpoch(id, endEpoch + epochs);
         kcs.setTokenAmount(id, oldTokenAmount + tokenAmount);
 
         _validateTokenAmount(byteSize, epochs, tokenAmount, false);
+
+        epochStorage.addTokensToEpochRange(1, currentEpoch, endEpoch + epochs, tokenAmount);
+
         _addTokens(tokenAmount, paymaster);
     }
 
@@ -182,11 +198,14 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
 
         (, , , , , , , uint256 endEpoch, uint96 oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
 
-        if (chronos.getCurrentEpoch() > endEpoch) {
-            revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, chronos.getCurrentEpoch(), endEpoch);
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        if (currentEpoch > endEpoch) {
+            revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, currentEpoch, endEpoch);
         }
 
         kcs.setTokenAmount(id, oldTokenAmount + tokenAmount);
+
+        epochStorage.addTokensToEpochRange(1, currentEpoch, endEpoch, tokenAmount);
 
         _addTokens(tokenAmount, paymaster);
     }
@@ -235,7 +254,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
     ) internal view {
         Chronos chron = chronos;
 
-        uint256 stakeWeightedAverageAsk = shardingTableStorage.getStakeWeightedAverageAsk();
+        uint256 stakeWeightedAverageAsk = ask.getStakeWeightedAverageAsk();
         uint96 expectedTokenAmount;
         if (includeCurrentEpoch) {
             uint256 totalStorageTime = (epochs * 1e18) + (chron.timeUntilNextEpoch() * 1e18) / chron.epochLength();

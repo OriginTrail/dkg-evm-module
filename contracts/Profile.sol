@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.20;
 
+import {Ask} from "./Ask.sol";
 import {Identity} from "./Identity.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
@@ -39,6 +40,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Profile";
     string private constant _VERSION = "1.0.0";
 
+    Ask public askContract;
     Identity public identityContract;
     ShardingTableStorage public shardingTableStorage;
     ShardingTable public shardingTableContract;
@@ -72,6 +74,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function initialize() public onlyHub {
+        askContract = Ask(hub.getContractAddress("Ask"));
         identityContract = Identity(hub.getContractAddress("Identity"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
@@ -127,8 +130,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         id.addOperationalWallets(identityId, operationalWallets);
 
         ps.createProfile(identityId, nodeName, nodeId, initialAsk, initialOperatorFee);
-
-        shardingTableContract.insertNode(identityId);
+        askContract.onAskChanged(identityId, initialAsk);
 
         emit ProfileCreated(identityId, nodeId, adminWallet, initialOperatorFee);
     }
@@ -138,9 +140,8 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
             revert ProfileLib.ZeroAsk();
         }
         ProfileStorage ps = profileStorage;
-        uint96 oldAsk = ps.getAsk(identityId);
         ps.setAsk(identityId, ask);
-        shardingTableStorage.onAskChanged(oldAsk, ask, stakingStorage.getNodeStake(identityId));
+        askContract.onAskChanged(identityId, ask);
 
         emit AskUpdated(identityId, ps.getNodeId(identityId), ask);
     }

@@ -58,7 +58,7 @@ contract KnowledgeCollectionStorage is
     string private constant _NAME = "KnowledgeCollectionStorage";
     string private constant _VERSION = "1.0.0";
 
-    uint256 public immutable knowledgeCollectionMaxSize;
+    uint256 public immutable KNOWLEDGE_COLLECTION_MAX_SIZE;
 
     uint256 private _knowledgeCollectionsCounter;
     uint256 private _totalMintedKnowledgeAssetsCounter;
@@ -74,7 +74,7 @@ contract KnowledgeCollectionStorage is
         uint256 _knowledgeCollectionMaxSize,
         string memory uri
     ) ERC1155Delta(uri) Guardian(hubAddress) {
-        knowledgeCollectionMaxSize = _knowledgeCollectionMaxSize;
+        KNOWLEDGE_COLLECTION_MAX_SIZE = _knowledgeCollectionMaxSize;
     }
 
     function name() public pure virtual returns (string memory) {
@@ -83,6 +83,10 @@ contract KnowledgeCollectionStorage is
 
     function version() external pure virtual returns (string memory) {
         return _VERSION;
+    }
+
+    function knowledgeCollectionMaxSize() external view returns (uint256) {
+        return KNOWLEDGE_COLLECTION_MAX_SIZE;
     }
 
     function createKnowledgeCollection(
@@ -185,9 +189,9 @@ contract KnowledgeCollectionStorage is
 
     function mintKnowledgeAssetsTokens(uint256 id, address to, uint256 amount) public onlyContracts {
         KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[id];
-        require(kc.minted + amount <= knowledgeCollectionMaxSize, "Max size exceeded");
+        require(kc.minted + amount <= KNOWLEDGE_COLLECTION_MAX_SIZE, "Max size exceeded");
 
-        uint256 startTokenId = (id - 1) * knowledgeCollectionMaxSize + _startTokenId() + kc.minted;
+        uint256 startTokenId = (id - 1) * KNOWLEDGE_COLLECTION_MAX_SIZE + _startTokenId() + kc.minted;
         _setCurrentIndex(startTokenId);
 
         kc.minted += amount;
@@ -344,7 +348,7 @@ contract KnowledgeCollectionStorage is
     }
 
     function isPartOfKnowledgeCollection(uint256 id, uint256 tokenId) external view returns (bool) {
-        uint256 startTokenId = (id - 1) * knowledgeCollectionMaxSize + _startTokenId();
+        uint256 startTokenId = (id - 1) * KNOWLEDGE_COLLECTION_MAX_SIZE + _startTokenId();
         return (!isKnowledgeAssetBurned[tokenId] &&
             startTokenId <= tokenId &&
             tokenId < startTokenId + knowledgeCollections[id].minted);
@@ -357,21 +361,37 @@ contract KnowledgeCollectionStorage is
             return 0;
         }
 
-        return ((tokenId - _startTokenId()) / knowledgeCollectionMaxSize) + 1;
+        return ((tokenId - _startTokenId()) / KNOWLEDGE_COLLECTION_MAX_SIZE) + 1;
     }
 
     function getKnowledgeAssetsRange(uint256 id) external view returns (uint256, uint256, uint256[] memory) {
         KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
-        uint256 startTokenId = (id - 1) * knowledgeCollectionMaxSize + _startTokenId();
+        uint256 startTokenId = (id - 1) * KNOWLEDGE_COLLECTION_MAX_SIZE + _startTokenId();
         uint256 endTokenId = startTokenId + kc.minted - 1;
         return (startTokenId, endTokenId, kc.burned);
     }
 
     function getKnowledgeAssetsAmount(uint256 id) external view returns (uint256) {
         KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
-        uint256 startTokenId = (id - 1) * knowledgeCollectionMaxSize + _startTokenId();
-        uint256 endTokenId = startTokenId + kc.minted - 1;
-        return startTokenId + endTokenId - kc.burned.length;
+        return kc.minted - kc.burned.length;
+    }
+
+    function isKnowledgeCollectionOwner(address owner, uint256 id) external view returns (bool) {
+        uint256 startTokenId = (id - 1) * KNOWLEDGE_COLLECTION_MAX_SIZE + _startTokenId();
+        uint256 endTokenId = startTokenId + knowledgeCollections[id].minted;
+        for (uint256 i = startTokenId; i < endTokenId; i++) {
+            if (isKnowledgeAssetBurned[i]) {
+                continue;
+            }
+
+            bool isOwner = isOwnerOf(owner, i);
+
+            if (!isOwner) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     function balanceOf(address owner) external view virtual override returns (uint256) {
@@ -440,7 +460,7 @@ contract KnowledgeCollectionStorage is
         } else {
             return
                 (_knowledgeCollectionsCounter - 1) *
-                knowledgeCollectionMaxSize +
+                KNOWLEDGE_COLLECTION_MAX_SIZE +
                 knowledgeCollections[_knowledgeCollectionsCounter].minted;
         }
     }
@@ -458,7 +478,7 @@ contract KnowledgeCollectionStorage is
 
         KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[id];
 
-        uint256 startTokenId = (id - 1) * knowledgeCollectionMaxSize + _startTokenId();
+        uint256 startTokenId = (id - 1) * KNOWLEDGE_COLLECTION_MAX_SIZE + _startTokenId();
 
         _beforeTokenTransfer(operator, from, address(0), tokenIds);
 

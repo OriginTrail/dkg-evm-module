@@ -11,14 +11,21 @@ contract ShardingTableStorage is INamed, IVersioned, HubDependent {
     string private constant _NAME = "ShardingTableStorage";
     string private constant _VERSION = "1.0.0";
 
+    uint256 public constant UPPER_BOUND_FACTOR = 1467000000000000000;
+    uint256 public constant LOWER_BOUND_FACTOR = 533000000000000000;
+
     uint72 public nodesCount;
     uint96 public totalStake;
-    uint256 public weightedAskSum;
+
+    uint256 public prevWeightedActiveAskSum;
+    uint256 public weightedActiveAskSum;
 
     // identityId => Node
     mapping(uint72 => ShardingTableLib.Node) internal nodes;
     // index => identityId
     mapping(uint72 => uint72) public indexToIdentityId;
+
+    mapping(uint72 => uint256) public nodeWeightedActiveAsk;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependent(hubAddress) {}
@@ -39,25 +46,8 @@ contract ShardingTableStorage is INamed, IVersioned, HubDependent {
         nodesCount--;
     }
 
-    function getStakeWeightedAverageAsk() external view returns (uint256) {
-        return totalStake > 0 ? weightedAskSum / totalStake : 0;
-    }
-
     function setTotalStake(uint96 _totalStake) external onlyContracts {
         totalStake = _totalStake;
-    }
-
-    function setWeightedAskSum(uint256 _weightedAskSum) external onlyContracts {
-        weightedAskSum = _weightedAskSum;
-    }
-
-    function onStakeChanged(uint96 oldStake, uint96 newStake, uint96 ask) external onlyContracts {
-        weightedAskSum = weightedAskSum - (ask * oldStake) + (ask * newStake);
-        totalStake = totalStake - oldStake + newStake;
-    }
-
-    function onAskChanged(uint96 oldAsk, uint96 newAsk, uint96 stake) external onlyContracts {
-        weightedAskSum = weightedAskSum - (oldAsk * stake) + (newAsk * stake);
     }
 
     function createNodeObject(

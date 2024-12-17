@@ -11,6 +11,32 @@
     "type": "constructor"
   },
   {
+    "inputs": [],
+    "name": "LOWER_BOUND_FACTOR",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "UPPER_BOUND_FACTOR",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -368,19 +394,6 @@
   },
   {
     "inputs": [],
-    "name": "getStakeWeightedAverageAsk",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "head",
     "outputs": [
       {
@@ -496,6 +509,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "",
+        "type": "uint72"
+      }
+    ],
+    "name": "nodeWeightedActiveAsk",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "nodesCount",
     "outputs": [
@@ -509,49 +541,16 @@
     "type": "function"
   },
   {
-    "inputs": [
+    "inputs": [],
+    "name": "prevWeightedActiveAskSum",
+    "outputs": [
       {
-        "internalType": "uint96",
-        "name": "oldAsk",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "newAsk",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "stake",
-        "type": "uint96"
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
-    "name": "onAskChanged",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint96",
-        "name": "oldStake",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "newStake",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "ask",
-        "type": "uint96"
-      }
-    ],
-    "name": "onStakeChanged",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -586,19 +585,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_weightedAskSum",
-        "type": "uint256"
-      }
-    ],
-    "name": "setWeightedAskSum",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "totalStake",
     "outputs": [
@@ -626,7 +612,7 @@
   },
   {
     "inputs": [],
-    "name": "weightedAskSum",
+    "name": "weightedActiveAskSum",
     "outputs": [
       {
         "internalType": "uint256",
