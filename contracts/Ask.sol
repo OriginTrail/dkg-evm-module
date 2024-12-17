@@ -26,6 +26,8 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
     uint256 public prevWeightedActiveAskSum;
     uint256 public weightedActiveAskSum;
 
+    uint96 public totalActiveStake;
+
     // index => identityId
     mapping(uint72 => uint72) public indexToIdentityId;
 
@@ -50,8 +52,7 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function getStakeWeightedAverageAsk() external view returns (uint256) {
-        uint96 totalStake = shardingTableStorage.totalStake();
-        return totalStake > 0 ? weightedActiveAskSum / totalStake : 0;
+        return totalActiveStake > 0 ? weightedActiveAskSum / totalActiveStake : 0;
     }
 
     function setWeightedAskSum(uint256 _weightedActiveAskSum) external onlyContracts {
@@ -61,6 +62,7 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
     function onStakeChanged(uint72 identityId, uint96 newStake) external onlyContracts {
         ParametersStorage ps = parametersStorage;
         ShardingTableStorage sts = shardingTableStorage;
+        StakingStorage ss = stakingStorage;
 
         if (newStake < ps.minimumStake()) {
             return;
@@ -74,7 +76,7 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
 
         uint256 newWeightedAsk = profileStorage.getAsk(identityId) * stake;
         bool isActive = false;
-        if (newWeightedAsk <= oldUpperBound && newWeightedAsk >= oldLowerBound) {
+        if (newWeightedAsk * 1e18 <= oldUpperBound && newWeightedAsk * 1e18 >= oldLowerBound) {
             prevWeightedActiveAskSum = weightedActiveAskSum;
             nodeWeightedActiveAsk[identityId] = newWeightedAsk;
             isActive = true;
@@ -84,6 +86,7 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
 
         if (isActive) {
             weightedActiveAskSum = 0;
+            totalActiveStake = 0;
             uint256 newUpperBound = prevWeightedActiveAskSum * UPPER_BOUND_FACTOR;
             uint256 newLowerBound = prevWeightedActiveAskSum * LOWER_BOUND_FACTOR;
 
@@ -92,8 +95,9 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
                 uint72 nextIdentityId = indexToIdentityId[i];
                 uint256 weightedActiveAsk = nodeWeightedActiveAsk[nextIdentityId];
 
-                if (weightedActiveAsk <= newUpperBound && weightedActiveAsk >= newLowerBound) {
+                if (weightedActiveAsk * 1e18 <= newUpperBound && weightedActiveAsk * 1e18 >= newLowerBound) {
                     weightedActiveAskSum += weightedActiveAsk;
+                    totalActiveStake += ss.getNodeStake(nextIdentityId);
                 } else {
                     nodeWeightedActiveAsk[nextIdentityId] = 0;
                 }
@@ -102,6 +106,8 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function onAskChanged(uint72 identityId, uint96 newAsk) external onlyContracts {
+        StakingStorage ss = stakingStorage;
+
         uint96 currentStake = stakingStorage.getNodeStake(identityId);
 
         if (currentStake < parametersStorage.minimumStake()) {
@@ -113,7 +119,7 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
 
         uint256 newWeightedAsk = currentStake * newAsk;
         bool isActive = false;
-        if (newWeightedAsk <= oldUpperBound && newWeightedAsk >= oldLowerBound) {
+        if (newWeightedAsk * 1e18 <= oldUpperBound && newWeightedAsk * 1e18 >= oldLowerBound) {
             prevWeightedActiveAskSum = weightedActiveAskSum;
             nodeWeightedActiveAsk[identityId] = newWeightedAsk;
             isActive = true;
@@ -123,6 +129,7 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
 
         if (isActive) {
             weightedActiveAskSum = 0;
+            totalActiveStake = 0;
             uint256 newUpperBound = prevWeightedActiveAskSum * UPPER_BOUND_FACTOR;
             uint256 newLowerBound = prevWeightedActiveAskSum * LOWER_BOUND_FACTOR;
 
@@ -131,8 +138,9 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
                 uint72 nextIdentityId = indexToIdentityId[i];
                 uint256 weightedActiveAsk = nodeWeightedActiveAsk[nextIdentityId];
 
-                if (weightedActiveAsk <= newUpperBound && weightedActiveAsk >= newLowerBound) {
+                if (weightedActiveAsk * 1e18 <= newUpperBound && weightedActiveAsk * 1e18 >= newLowerBound) {
                     weightedActiveAskSum += weightedActiveAsk;
+                    totalActiveStake += ss.getNodeStake(nextIdentityId);
                 } else {
                     nodeWeightedActiveAsk[nextIdentityId] = 0;
                 }
