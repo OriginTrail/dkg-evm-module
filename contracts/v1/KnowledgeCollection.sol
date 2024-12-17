@@ -7,9 +7,9 @@ import {KnowledgeCollectionStorage} from "./storage/KnowledgeCollectionStorage.s
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
-import {ParanetKnowledgeAssetsRegistry} from "./storage/paranets/ParanetKnowledgeAssetsRegistry.sol";
-import {ParanetKnowledgeMinersRegistry} from "./storage/paranets/ParanetKnowledgeMinersRegistry.sol";
-import {ParanetsRegistry} from "./storage/paranets/ParanetsRegistry.sol";
+import {ParanetKnowledgeAssetsRegistry} from "../v2/storage/paranets/ParanetKnowledgeAssetsRegistry.sol";
+import {ParanetKnowledgeMinersRegistry} from "../v2/storage/paranets/ParanetKnowledgeMinersRegistry.sol";
+import {ParanetsRegistry} from "../v2/storage/paranets/ParanetsRegistry.sol";
 import {KnowledgeCollectionLib} from "./libraries/KnowledgeCollectionLib.sol";
 import {TokenLib} from "./libraries/TokenLib.sol";
 import {IdentityLib} from "./libraries/IdentityLib.sol";
@@ -31,7 +31,7 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
     IdentityStorage public identityStorage;
     ParanetKnowledgeAssetsRegistry public paranetKnowledgeAssetsRegistry;
     ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
-    ParaneRegistry public paraneRegistry;
+    ParanetsRegistry public paranetsRegistry;
 
     constructor(address hubAddress) HubDependent(hubAddress) {}
 
@@ -195,7 +195,7 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
         _addTokens(tokenAmount, paymaster);
 
         ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
-        knowledgeCollectionStorageAddress = address(kcs);
+        address knowledgeCollectionStorageAddress = address(kcs);
         if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(knowledgeCollectionStorageAddress, id)))) {
             ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
 
@@ -229,7 +229,7 @@ contract KnowledgeCollection is Named, Versioned, HubDependent {
         _addTokens(tokenAmount, paymaster);
 
         ParanetKnowledgeAssetsRegistry pkar = paranetKnowledgeAssetsRegistry;
-        knowledgeCollectionStorageAddress = address(kcs);
+        address knowledgeCollectionStorageAddress = address(kcs);
         if (pkar.isParanetKnowledgeAsset(keccak256(abi.encodePacked(knowledgeCollectionStorageAddress, id)))) {
             ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
 
