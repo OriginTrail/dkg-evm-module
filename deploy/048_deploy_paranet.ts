@@ -21,4 +21,5 @@ func.dependencies = [
   'ProfileStorage',
   'ServiceAgreementStorageProxy',
   'IdentityStorage',
+  'KnowledgeCollectionStorage',
 ];

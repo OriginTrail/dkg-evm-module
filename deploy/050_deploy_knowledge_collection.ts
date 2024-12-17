@@ -9,4 +9,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ['KnowledgeCollection', 'v1', 'v2'];
-func.dependencies = [];
+func.dependencies = [
+  'Hub',
+  'KnowledgeCollectionStorage',
+  'Chronos',
+  'ShardingTableStorage',
+  'Token',
+  'ParametersStorage',
+  'IdentityStorage',
+  'ParanetKnowledgeAssetsRegistry',
+  'ParanetKnowledgeMinersRegistry',
+  'ParanetsRegistry',
+];

@@ -164,7 +164,9 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         serviceAgreementStorageProxy = ServiceAgreementStorageProxy(
             hub.getContractAddress("ServiceAgreementStorageProxy")
         );
-        knowledgeCollectionStorage = KnowledgeCollectionStorage(hub.getContractAddress("KnowledgeCollectionStorage"));
+        knowledgeCollectionStorage = KnowledgeCollectionStorage(
+            hub.getAssetStorageAddress("KnowledgeCollectionStorage")
+        );
     }
 
     function name() external pure virtual override returns (string memory) {
