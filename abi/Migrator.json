@@ -67,19 +67,6 @@
   },
   {
     "inputs": [],
-    "name": "identityStorage",
-    "outputs": [
-      {
-        "internalType": "contract IdentityStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "initializeNewContracts",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -178,6 +165,58 @@
         "internalType": "uint96",
         "name": "",
         "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "newIdentityStorage",
+    "outputs": [
+      {
+        "internalType": "contract IdentityStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "newParametersStorage",
+    "outputs": [
+      {
+        "internalType": "contract ParametersStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "newProfileStorage",
+    "outputs": [
+      {
+        "internalType": "contract ProfileStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "newShardingTable",
+    "outputs": [
+      {
+        "internalType": "contract ShardingTable",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -326,19 +365,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "profileStorage",
-    "outputs": [
-      {
-        "internalType": "contract ProfileStorage",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",

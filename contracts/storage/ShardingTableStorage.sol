@@ -11,21 +11,13 @@ contract ShardingTableStorage is INamed, IVersioned, HubDependent {
     string private constant _NAME = "ShardingTableStorage";
     string private constant _VERSION = "1.0.0";
 
-    uint256 public constant UPPER_BOUND_FACTOR = 1467000000000000000;
-    uint256 public constant LOWER_BOUND_FACTOR = 533000000000000000;
-
     uint72 public nodesCount;
     uint96 public totalStake;
-
-    uint256 public prevWeightedActiveAskSum;
-    uint256 public weightedActiveAskSum;
 
     // identityId => Node
     mapping(uint72 => ShardingTableLib.Node) internal nodes;
     // index => identityId
     mapping(uint72 => uint72) public indexToIdentityId;
-
-    mapping(uint72 => uint256) public nodeWeightedActiveAsk;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependent(hubAddress) {}
