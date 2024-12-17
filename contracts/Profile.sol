@@ -3,7 +3,6 @@
 pragma solidity ^0.8.20;
 
 import {Identity} from "./Identity.sol";
-import {Shares} from "./Shares.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
@@ -20,13 +19,7 @@ import {IdentityLib} from "./libraries/IdentityLib.sol";
 import {Permissions} from "./libraries/Permissions.sol";
 
 contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
-    event ProfileCreated(
-        uint72 indexed identityId,
-        bytes nodeId,
-        address adminWallet,
-        address sharesContractAddress,
-        uint8 initialOperatorFee
-    );
+    event ProfileCreated(uint72 indexed identityId, bytes nodeId, address adminWallet, uint8 initialOperatorFee);
     event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
     event AccumulatedOperatorFeeWithdrawalStarted(
         uint72 indexed identityId,
@@ -100,10 +93,9 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     function createProfile(
         address adminWallet,
         address[] calldata operationalWallets,
+        string calldata nodeName,
         bytes calldata nodeId,
         uint96 initialAsk,
-        string calldata sharesTokenName,
-        string calldata sharesTokenSymbol,
         uint8 initialOperatorFee
     ) external onlyWhitelisted {
         IdentityStorage ids = identityStorage;
@@ -128,31 +120,17 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         if (ps.nodeIdsList(nodeId)) {
             revert ProfileLib.NodeIdAlreadyExists(nodeId);
         }
-        if (keccak256(abi.encodePacked(sharesTokenName)) == keccak256(abi.encodePacked(""))) {
-            revert ProfileLib.EmptySharesTokenName();
-        }
-        if (keccak256(abi.encodePacked(sharesTokenSymbol)) == keccak256(abi.encodePacked(""))) {
-            revert ProfileLib.EmptySharesTokenSymbol();
-        }
-        if (ps.sharesNames(sharesTokenName)) {
-            revert ProfileLib.SharesTokenNameAlreadyExists(sharesTokenName);
-        }
-        if (ps.sharesSymbols(sharesTokenSymbol)) {
-            revert ProfileLib.SharesTokenSymbolAlreadyExists(sharesTokenSymbol);
-        }
         if (initialOperatorFee > 100) {
             revert ProfileLib.OperatorFeeOutOfRange(initialOperatorFee);
         }
         uint72 identityId = id.createIdentity(msg.sender, adminWallet);
         id.addOperationalWallets(identityId, operationalWallets);
 
-        Shares sharesContract = new Shares(address(hub), sharesTokenName, sharesTokenSymbol);
-
-        ps.createProfile(identityId, nodeId, initialAsk, address(sharesContract), initialOperatorFee);
+        ps.createProfile(identityId, nodeName, nodeId, initialAsk, initialOperatorFee);
 
         shardingTableContract.insertNode(identityId);
 
-        emit ProfileCreated(identityId, nodeId, adminWallet, address(sharesContract), initialOperatorFee);
+        emit ProfileCreated(identityId, nodeId, adminWallet, initialOperatorFee);
     }
 
     function setAsk(uint72 identityId, uint96 ask) external onlyIdentityOwner(identityId) {

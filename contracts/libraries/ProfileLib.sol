@@ -14,9 +14,9 @@ library ProfileLib {
     }
 
     struct ProfileInfo {
+        string name;
         bytes nodeId;
         uint96 ask;
-        address sharesContractAddress;
         OperatorFee[] operatorFees;
     }
 
@@ -24,10 +24,6 @@ library ProfileLib {
     error TooManyOperationalWallets(uint16 allowed, uint16 provided);
     error EmptyNodeId();
     error NodeIdAlreadyExists(bytes nodeId);
-    error EmptySharesTokenName();
-    error EmptySharesTokenSymbol();
-    error SharesTokenNameAlreadyExists(string tokenName);
-    error SharesTokenSymbolAlreadyExists(string tokenSymbol);
     error OperatorFeeOutOfRange(uint8 operatorFee);
     error ZeroAsk();
     error NoOperatorFees(uint72 identityId);

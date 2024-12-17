@@ -26,10 +26,8 @@ contract KnowledgeCollectionStorage is
         uint256 indexed id,
         string publishOperationId,
         address indexed publisher,
-        uint256 publishingTime,
         bytes32 merkleRoot,
         uint256 byteSize,
-        uint256 triplesAmount,
         uint256 chunksAmount,
         uint256 startEpoch,
         uint256 endEpoch,
@@ -40,21 +38,18 @@ contract KnowledgeCollectionStorage is
         string updateOperationId,
         bytes32 merkleRoot,
         uint256 byteSize,
-        uint256 triplesAmount,
         uint256 chunksAmount,
         uint96 tokenAmount
     );
     event KnowledgeAssetsMinted(uint256 indexed id, address indexed to, uint256 startId, uint256 endId);
     event KnowledgeAssetsBurned(uint256 indexed id, address indexed from, uint256[] tokenIds);
     event KnowledgeCollectionPublisherUpdated(uint256 indexed id, address publisher);
-    event KnowledgeCollectionPublishingTimeUpdated(uint256 indexed id, uint256 publishingTime);
     event KnowledgeCollectionMerkleRootsUpdated(uint256 indexed id, bytes32[] merkleRoots);
     event KnowledgeCollectionMerkleRootAdded(uint256 indexed id, bytes32 merkleRoot);
     event KnowledgeCollectionMerkleRootRemoved(uint256 indexed id, bytes32 merkleRoot);
     event KnowledgeCollectionMintedUpdated(uint256 indexed id, uint256 minted);
     event KnowledgeCollectionBurnedUpdated(uint256 indexed id, uint256[] burned);
     event KnowledgeCollectionByteSizeUpdated(uint256 indexed id, uint256 byteSize);
-    event KnowledgeCollectionTriplesAmountUpdated(uint256 indexed id, uint256 triplesAmount);
     event KnowledgeCollectionChunksAmountUpdated(uint256 indexed id, uint256 chunksAmount);
     event KnowledgeCollectionTokenAmountUpdated(uint256 indexed id, uint256 tokenAmount);
     event KnowledgeCollectionStartEpochUpdated(uint256 indexed id, uint256 startEpoch);
@@ -67,15 +62,10 @@ contract KnowledgeCollectionStorage is
     uint256 public immutable knowledgeCollectionMaxSize;
 
     uint256 private _knowledgeCollectionsCounter;
-
     uint256 private _totalMintedKnowledgeAssetsCounter;
     uint256 private _totalBurnedKnowledgeAssetsCounter;
-    uint256 private _totalByteSize;
-    uint256 private _totalTriplesCounter;
-    uint256 private _totalChunksCounter;
-    uint96 private _totalTokenAmount;
 
-    uint96 private _cumulativeKnowledgeValue;
+    uint96 private _totalTokenAmount;
 
     mapping(uint256 => KnowledgeCollectionLib.KnowledgeCollection) public knowledgeCollections;
     mapping(uint256 => bool) public isKnowledgeAssetBurned;
@@ -99,8 +89,8 @@ contract KnowledgeCollectionStorage is
     function createKnowledgeCollection(
         string calldata publishOperationId,
         bytes32 merkleRoot,
+        uint256 knowledgeAssetsAmount,
         uint256 byteSize,
-        uint256 triplesAmount,
         uint256 chunksAmount,
         uint256 startEpoch,
         uint256 endEpoch,
@@ -111,28 +101,25 @@ contract KnowledgeCollectionStorage is
         KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[knowledgeCollectionId];
 
         kc.publisher = msg.sender;
-        kc.publishingTime = block.timestamp;
         kc.merkleRoots.push(merkleRoot);
         kc.byteSize = byteSize;
-        kc.triplesAmount = triplesAmount;
         kc.chunksAmount = chunksAmount;
         kc.startEpoch = startEpoch;
         kc.endEpoch = endEpoch;
         kc.tokenAmount = tokenAmount;
 
-        _totalByteSize += byteSize;
-        _totalTriplesCounter += triplesAmount;
-        _totalChunksCounter += chunksAmount;
-        _totalTokenAmount += tokenAmount;
+        unchecked {
+            _totalTokenAmount += tokenAmount;
+        }
+
+        mintKnowledgeAssetsTokens(knowledgeCollectionId, msg.sender, knowledgeAssetsAmount);
 
         emit KnowledgeCollectionCreated(
             knowledgeCollectionId,
             publishOperationId,
             msg.sender,
-            block.timestamp,
             merkleRoot,
             byteSize,
-            triplesAmount,
             chunksAmount,
             startEpoch,
             endEpoch,
@@ -152,33 +139,27 @@ contract KnowledgeCollectionStorage is
         uint256 id,
         string calldata updateOperationId,
         bytes32 merkleRoot,
+        uint256 mintKnowledgeAssetsAmount,
+        uint256[] calldata knowledgeAssetsToBurn,
         uint256 byteSize,
-        uint256 triplesAmount,
         uint256 chunksAmount,
         uint96 tokenAmount
     ) external onlyContracts {
         KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[id];
 
-        _totalByteSize = _totalByteSize - kc.byteSize + byteSize;
-        _totalTriplesCounter = _totalTriplesCounter - kc.triplesAmount + triplesAmount;
-        _totalChunksCounter = _totalChunksCounter - kc.chunksAmount + chunksAmount;
-        _totalTokenAmount = _totalTokenAmount - kc.tokenAmount + tokenAmount;
+        unchecked {
+            _totalTokenAmount = _totalTokenAmount - kc.tokenAmount + tokenAmount;
+        }
 
         kc.merkleRoots.push(merkleRoot);
         kc.byteSize = byteSize;
-        kc.triplesAmount = triplesAmount;
         kc.chunksAmount = chunksAmount;
         kc.tokenAmount = tokenAmount;
 
-        emit KnowledgeCollectionUpdated(
-            id,
-            updateOperationId,
-            merkleRoot,
-            byteSize,
-            triplesAmount,
-            chunksAmount,
-            tokenAmount
-        );
+        burnKnowledgeAssetsTokens(id, msg.sender, knowledgeAssetsToBurn);
+        mintKnowledgeAssetsTokens(id, msg.sender, mintKnowledgeAssetsAmount);
+
+        emit KnowledgeCollectionUpdated(id, updateOperationId, merkleRoot, byteSize, chunksAmount, tokenAmount);
     }
 
     function getKnowledgeCollectionMetadata(
@@ -186,30 +167,16 @@ contract KnowledgeCollectionStorage is
     )
         external
         view
-        returns (
-            address,
-            uint256,
-            bytes32[] memory,
-            uint256,
-            uint256[] memory,
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint96
-        )
+        returns (address, bytes32[] memory, uint256, uint256[] memory, uint256, uint256, uint256, uint256, uint96)
     {
         KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
 
         return (
             kc.publisher,
-            kc.publishingTime,
             kc.merkleRoots,
             kc.minted,
             kc.burned,
             kc.byteSize,
-            kc.triplesAmount,
             kc.chunksAmount,
             kc.startEpoch,
             kc.endEpoch,
@@ -217,7 +184,7 @@ contract KnowledgeCollectionStorage is
         );
     }
 
-    function mintKnowledgeAssetsTokens(uint256 id, address to, uint256 amount) external onlyContracts {
+    function mintKnowledgeAssetsTokens(uint256 id, address to, uint256 amount) public onlyContracts {
         KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[id];
         require(kc.minted + amount <= knowledgeCollectionMaxSize, "Max size exceeded");
 
@@ -233,7 +200,7 @@ contract KnowledgeCollectionStorage is
         emit KnowledgeAssetsMinted(id, to, startTokenId, startTokenId + amount);
     }
 
-    function burnKnowledgeAssetsTokens(uint256 id, address from, uint256[] calldata tokenIds) external onlyContracts {
+    function burnKnowledgeAssetsTokens(uint256 id, address from, uint256[] calldata tokenIds) public onlyContracts {
         _burnBatch(id, from, tokenIds);
 
         emit KnowledgeAssetsBurned(id, from, tokenIds);
@@ -247,16 +214,6 @@ contract KnowledgeCollectionStorage is
         knowledgeCollections[id].publisher = _publisher;
 
         emit KnowledgeCollectionPublisherUpdated(id, _publisher);
-    }
-
-    function getPublishingTime(uint256 id) external view returns (uint256) {
-        return knowledgeCollections[id].publishingTime;
-    }
-
-    function setPublishingTime(uint256 id, uint256 _publishingTime) external onlyContracts {
-        knowledgeCollections[id].publishingTime = _publishingTime;
-
-        emit KnowledgeCollectionPublishingTimeUpdated(id, _publishingTime);
     }
 
     function getMerkleRoots(uint256 id) external view returns (bytes32[] memory) {
@@ -321,21 +278,9 @@ contract KnowledgeCollectionStorage is
     }
 
     function setByteSize(uint256 id, uint256 _byteSize) external onlyContracts {
-        _totalByteSize = _totalByteSize - knowledgeCollections[id].byteSize + _byteSize;
         knowledgeCollections[id].byteSize = _byteSize;
 
         emit KnowledgeCollectionByteSizeUpdated(id, _byteSize);
-    }
-
-    function getTriplesAmount(uint256 id) external view returns (uint256) {
-        return knowledgeCollections[id].triplesAmount;
-    }
-
-    function setTriplesAmount(uint256 id, uint256 _triplesAmount) external onlyContracts {
-        _totalTriplesCounter = _totalTriplesCounter - knowledgeCollections[id].triplesAmount + _triplesAmount;
-        knowledgeCollections[id].triplesAmount = _triplesAmount;
-
-        emit KnowledgeCollectionTriplesAmountUpdated(id, _triplesAmount);
     }
 
     function getChunksAmount(uint256 id) external view returns (uint256) {
@@ -343,7 +288,6 @@ contract KnowledgeCollectionStorage is
     }
 
     function setChunksAmount(uint256 id, uint256 _chunksAmount) external onlyContracts {
-        _totalChunksCounter = _totalChunksCounter - knowledgeCollections[id].chunksAmount + _chunksAmount;
         knowledgeCollections[id].chunksAmount = _chunksAmount;
 
         emit KnowledgeCollectionChunksAmountUpdated(id, _chunksAmount);
@@ -394,18 +338,6 @@ contract KnowledgeCollectionStorage is
 
     function totalBurned() external view returns (uint256) {
         return _totalBurnedKnowledgeAssetsCounter;
-    }
-
-    function getTotalByteSize() external view returns (uint256) {
-        return _totalByteSize;
-    }
-
-    function getTotalTriplesAmount() external view returns (uint256) {
-        return _totalTriplesCounter;
-    }
-
-    function getTotalChunksAmount() external view returns (uint256) {
-        return _totalChunksCounter;
     }
 
     function getTotalTokenAmount() external view returns (uint96) {

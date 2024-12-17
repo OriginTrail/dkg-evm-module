@@ -5,12 +5,10 @@ pragma solidity ^0.8.20;
 library KnowledgeCollectionLib {
     struct KnowledgeCollection {
         address publisher;
-        uint256 publishingTime;
         bytes32[] merkleRoots;
         uint256 minted;
         uint256[] burned;
         uint256 byteSize;
-        uint256 triplesAmount;
         uint256 chunksAmount;
         uint256 startEpoch;
         uint256 endEpoch;

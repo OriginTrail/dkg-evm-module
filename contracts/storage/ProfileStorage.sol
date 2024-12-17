@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.20;
 
-import {Shares} from "../Shares.sol";
 import {HubDependent} from "../abstract/HubDependent.sol";
 import {ProfileLib} from "../libraries/ProfileLib.sol";
 import {INamed} from "../interfaces/INamed.sol";
@@ -17,11 +16,6 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
     // identityId => Profile
     mapping(uint72 => ProfileLib.ProfileInfo) internal profiles;
 
-    // shares token name => isTaken?
-    mapping(string => bool) public sharesNames;
-    // shares token ID => isTaken?
-    mapping(string => bool) public sharesSymbols;
-
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependent(hubAddress) {}
 
@@ -35,28 +29,26 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
 
     function createProfile(
         uint72 identityId,
+        string calldata nodeName,
         bytes calldata nodeId,
         uint96 initialAsk,
-        address sharesContractAddress,
         uint8 initialOperatorFee
     ) external onlyContracts {
         ProfileLib.ProfileInfo storage profile = profiles[identityId];
+        profile.name = nodeName;
         profile.nodeId = nodeId;
         profile.ask = initialAsk;
-        profile.sharesContractAddress = sharesContractAddress;
         profile.operatorFees.push(
             ProfileLib.OperatorFee({feePercentage: initialOperatorFee, effectiveDate: uint248(block.timestamp)})
         );
         nodeIdsList[nodeId] = true;
-
-        Shares sharesContract = Shares(sharesContractAddress);
-        sharesNames[sharesContract.name()] = true;
-        sharesSymbols[sharesContract.symbol()] = true;
     }
 
-    function getProfile(uint72 identityId) external view returns (bytes memory, uint96, address) {
+    function getProfile(
+        uint72 identityId
+    ) external view returns (string memory, bytes memory, uint96, ProfileLib.OperatorFee[] memory) {
         ProfileLib.ProfileInfo storage profile = profiles[identityId];
-        return (profile.nodeId, profile.ask, profile.sharesContractAddress);
+        return (profile.name, profile.nodeId, profile.ask, profile.operatorFees);
     }
 
     function deleteProfile(uint72 identityId) external onlyContracts {
@@ -82,14 +74,6 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
 
     function setAsk(uint72 identityId, uint96 ask) external onlyContracts {
         profiles[identityId].ask = ask;
-    }
-
-    function getSharesContractAddress(uint72 identityId) external view returns (address) {
-        return profiles[identityId].sharesContractAddress;
-    }
-
-    function setSharesContractAddress(uint72 identityId, address sharesContractAddress) external onlyContracts {
-        profiles[identityId].sharesContractAddress = sharesContractAddress;
     }
 
     function addOperatorFee(uint72 identityId, uint8 feePercentage, uint248 effectiveDate) external onlyContracts {

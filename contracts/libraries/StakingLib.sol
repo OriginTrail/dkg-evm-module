@@ -9,6 +9,7 @@ library StakingLib {
         uint96 operatorFeeBalance;
         uint96 operatorFeeCumulativeEarnedRewards;
         uint96 operatorFeeCumulativePaidOutRewards;
+        uint256 delegatorCount;
     }
 
     struct DelegatorData {
@@ -22,11 +23,6 @@ library StakingLib {
     struct StakeWithdrawalRequest {
         uint96 amount;
         uint96 indexedOutAmount;
-        uint256 timestamp;
-    }
-
-    struct OperatorFeeWithdrawalRequest {
-        uint96 amount;
         uint256 timestamp;
     }
 

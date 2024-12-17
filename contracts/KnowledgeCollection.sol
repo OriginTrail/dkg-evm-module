@@ -57,7 +57,6 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         bytes32 merkleRoot,
         uint256 knowledgeAssetsAmount,
         uint256 byteSize,
-        uint256 triplesAmount,
         uint256 chunksAmount,
         uint256 epochs,
         uint96 tokenAmount,
@@ -68,7 +67,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         uint72[] calldata identityIds,
         bytes32[] calldata r,
         bytes32[] calldata vs
-    ) external {
+    ) external returns (uint256) {
         _verifySignature(
             publisherNodeIdentityId,
             ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))),
@@ -84,19 +83,20 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         uint256 id = kcs.createKnowledgeCollection(
             publishOperationId,
             merkleRoot,
+            knowledgeAssetsAmount,
             byteSize,
-            triplesAmount,
             chunksAmount,
             currentEpoch + 1,
             currentEpoch + epochs + 1,
             tokenAmount
         );
-        kcs.mintKnowledgeAssetsTokens(id, msg.sender, knowledgeAssetsAmount);
 
         // TODO: Update publisher node's epochs knowledge value
 
         _validateTokenAmount(byteSize, epochs, tokenAmount, true);
         _addTokens(tokenAmount, paymaster);
+
+        return id;
     }
 
     function updateKnowledgeCollection(
@@ -106,7 +106,6 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         uint256 mintKnowledgeAssetsAmount,
         uint256[] calldata knowledgeAssetsToBurn,
         uint256 byteSize,
-        uint256 triplesAmount,
         uint256 chunksAmount,
         uint96 tokenAmount,
         address paymaster,
@@ -129,19 +128,8 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
         uint256 currentEpoch = chronos.getCurrentEpoch();
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
-        (
-            ,
-            ,
-            ,
-            ,
-            ,
-            uint256 oldByteSize,
-            uint256 oldTriplesAmount,
-            uint256 oldChunksAmount,
-            ,
-            uint256 endEpoch,
-            uint96 oldTokenAmount
-        ) = kcs.getKnowledgeCollectionMetadata(id);
+        (, , , , uint256 oldByteSize, uint256 oldChunksAmount, , uint256 endEpoch, uint96 oldTokenAmount) = kcs
+            .getKnowledgeCollectionMetadata(id);
 
         if (currentEpoch > endEpoch) {
             revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, currentEpoch, endEpoch);
@@ -151,15 +139,14 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
             id,
             updateOperationId,
             merkleRoot,
+            mintKnowledgeAssetsAmount,
+            knowledgeAssetsToBurn,
             oldByteSize + byteSize,
-            oldTriplesAmount + triplesAmount,
             oldChunksAmount + chunksAmount,
             oldTokenAmount + tokenAmount
         );
-        kcs.burnKnowledgeAssetsTokens(id, msg.sender, knowledgeAssetsToBurn);
-        kcs.mintKnowledgeAssetsTokens(id, msg.sender, mintKnowledgeAssetsAmount);
 
-        _validateTokenAmount(byteSize, currentEpoch - endEpoch, tokenAmount, true);
+        _validateTokenAmount(byteSize - oldByteSize, endEpoch - currentEpoch, tokenAmount, true);
         _addTokens(tokenAmount, paymaster);
     }
 
@@ -171,8 +158,9 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
     ) external {
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
-        (, , , , , uint256 byteSize, , , , uint256 endEpoch, uint96 oldTokenAmount) = kcs
-            .getKnowledgeCollectionMetadata(id);
+        (, , , , uint256 byteSize, , , uint256 endEpoch, uint96 oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(
+            id
+        );
 
         if (chronos.getCurrentEpoch() > endEpoch) {
             revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, chronos.getCurrentEpoch(), endEpoch);
@@ -192,7 +180,7 @@ contract KnowledgeCollection is INamed, IVersioned, HubDependent {
 
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
-        (, , , , , , , , , uint256 endEpoch, uint96 oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
+        (, , , , , , , uint256 endEpoch, uint96 oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
 
         if (chronos.getCurrentEpoch() > endEpoch) {
             revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, chronos.getCurrentEpoch(), endEpoch);

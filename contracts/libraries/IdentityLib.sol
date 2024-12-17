@@ -8,7 +8,6 @@ library IdentityLib {
     uint256 constant ECDSA = 1;
     uint256 constant RSA = 2;
 
-    error ZeroSharesAmount();
     error WithdrawalWasntInitiated();
     error WithdrawalPeriodPending(uint256 nowTimestamp, uint256 endTimestamp);
     error InvalidOperatorFee();
