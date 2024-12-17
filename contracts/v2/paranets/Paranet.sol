@@ -1121,7 +1121,6 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
         uint256 knowledgeAssetTokenId
     ) internal view virtual {
         require(hub.isAssetStorage(knowledgeAssetStorageContract), "Given address isn't KA Storage");
-        
         try ERC1155Delta(knowledgeAssetStorageContract).isOwnerOf(msg.sender, knowledgeAssetTokenId) returns (
             bool isOwner
         ) {
@@ -1134,4 +1133,5 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
                 revert("Caller isn't the owner of the KA");
             }
         }
+    }
 }
