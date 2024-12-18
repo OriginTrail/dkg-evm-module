@@ -9,7 +9,6 @@ import {IERC1155DeltaQueryable} from "../interfaces/IERC1155DeltaQueryable.sol";
 import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
 import {HubDependent} from "../abstract/HubDependent.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibBitmap} from "solady/src/utils/LibBitmap.sol";
 
 contract KnowledgeCollectionStorage is

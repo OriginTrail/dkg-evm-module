@@ -3,65 +3,73 @@
 pragma solidity ^0.8.20;
 
 contract Chronos {
-    uint256 public immutable startTime;
-    uint256 public immutable epochLength;
+    uint256 public immutable START_TIME;
+    uint256 public immutable EPOCH_LENGTH;
 
     constructor(uint256 _startTime, uint256 _epochLength) {
         require(_startTime > 0, "Invalid start time");
         require(_epochLength > 0, "Epoch length must be > 0");
 
-        startTime = _startTime;
-        epochLength = _epochLength;
+        START_TIME = _startTime;
+        EPOCH_LENGTH = _epochLength;
+    }
+
+    function startTime() external view returns (uint256) {
+        return START_TIME;
+    }
+
+    function epochLength() external view returns (uint256) {
+        return EPOCH_LENGTH;
     }
 
     function getCurrentEpoch() external view returns (uint256) {
-        if (block.timestamp < startTime) {
+        if (block.timestamp < START_TIME) {
             return 0;
         }
-        return ((block.timestamp - startTime) / epochLength) + 1;
+        return ((block.timestamp - START_TIME) / EPOCH_LENGTH) + 1;
     }
 
     function epochAtTimestamp(uint256 timestamp) external view returns (uint256) {
-        if (timestamp < startTime) {
+        if (timestamp < START_TIME) {
             return 0;
         }
-        return ((timestamp - startTime) / epochLength) + 1;
+        return ((timestamp - START_TIME) / EPOCH_LENGTH) + 1;
     }
 
     function timeUntilNextEpoch() external view returns (uint256) {
-        if (block.timestamp < startTime) {
-            return startTime - block.timestamp;
+        if (block.timestamp < START_TIME) {
+            return START_TIME - block.timestamp;
         }
-        uint256 elapsed = (block.timestamp - startTime) % epochLength;
-        return epochLength - elapsed;
+        uint256 elapsed = (block.timestamp - START_TIME) % EPOCH_LENGTH;
+        return EPOCH_LENGTH - elapsed;
     }
 
     function hasEpochElapsed(uint256 epochNumber) external view returns (bool) {
-        return block.timestamp >= (startTime + (epochNumber - 1) * epochLength);
+        return block.timestamp >= (START_TIME + (epochNumber - 1) * EPOCH_LENGTH);
     }
 
     function timestampForEpoch(uint256 epochNumber) external view returns (uint256) {
         if (epochNumber == 0) {
-            return startTime;
+            return START_TIME;
         }
-        return startTime + (epochNumber - 1) * epochLength;
+        return START_TIME + (epochNumber - 1) * EPOCH_LENGTH;
     }
 
     function elapsedTimeInCurrentEpoch() external view returns (uint256) {
-        if (block.timestamp < startTime) {
+        if (block.timestamp < START_TIME) {
             return 0;
         }
-        return (block.timestamp - startTime) % epochLength;
+        return (block.timestamp - START_TIME) % EPOCH_LENGTH;
     }
 
     function totalElapsedTime() external view returns (uint256) {
-        if (block.timestamp < startTime) {
+        if (block.timestamp < START_TIME) {
             return 0;
         }
-        return block.timestamp - startTime;
+        return block.timestamp - START_TIME;
     }
 
     function isChronosActive() external view returns (bool) {
-        return block.timestamp >= startTime;
+        return block.timestamp >= START_TIME;
     }
 }
