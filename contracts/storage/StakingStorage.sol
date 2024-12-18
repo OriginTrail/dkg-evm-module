@@ -219,12 +219,6 @@ contract StakingStorage is INamed, IVersioned, Guardian {
 
         bool isActive = (stakeBase > 0 || stakeRewardIndexed > 0);
 
-        if (stakeBase > 0 || stakeRewardIndexed > 0) {
-            delegatorNodes[delegatorKey].add(identityId);
-        } else {
-            delegatorNodes[delegatorKey].remove(identityId);
-        }
-
         _updateDelegatorActivity(identityId, delegatorKey, wasActive, isActive);
     }
 

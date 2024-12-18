@@ -54,6 +54,19 @@
   },
   {
     "inputs": [],
+    "name": "epochStorageV6",
+    "outputs": [
+      {
+        "internalType": "contract EpochStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "hub",
     "outputs": [
       {
@@ -143,9 +156,9 @@
     "name": "migratedStake",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint96",
         "name": "",
-        "type": "uint256"
+        "type": "uint96"
       }
     ],
     "stateMutability": "view",
@@ -314,10 +327,49 @@
   },
   {
     "inputs": [],
+    "name": "oldOperatorFees",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "oldProfileStorage",
     "outputs": [
       {
         "internalType": "contract IOldProfileStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "oldServiceAgreementStorageV1",
+    "outputs": [
+      {
+        "internalType": "contract IOldServiceAgreementStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "oldServiceAgreementStorageV1U1",
+    "outputs": [
+      {
+        "internalType": "contract IOldServiceAgreementStorage",
         "name": "",
         "type": "address"
       }
@@ -343,9 +395,22 @@
     "name": "oldTotalStake",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint96",
         "name": "",
-        "type": "uint256"
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "oldTotalUnpaidRewards",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
       }
     ],
     "stateMutability": "view",
@@ -397,13 +462,20 @@
     "type": "function"
   },
   {
-    "inputs": [
+    "inputs": [],
+    "name": "token",
+    "outputs": [
       {
-        "internalType": "uint96",
-        "name": "amount",
-        "type": "uint96"
+        "internalType": "contract Token",
+        "name": "",
+        "type": "address"
       }
     ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "transferOperatorFees",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -418,6 +490,13 @@
       }
     ],
     "name": "transferStake",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "transferUnpaidRewards",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -2,10 +2,12 @@
 
 pragma solidity ^0.8.20;
 
+import {ShardingTable} from "./ShardingTable.sol";
+import {Token} from "./Token.sol";
+import {EpochStorage} from "./storage/EpochStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
-import {ShardingTable} from "./ShardingTable.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IdentityLib} from "./libraries/IdentityLib.sol";
@@ -16,14 +18,14 @@ interface IOldHub {
 }
 
 interface IOldStakingStorage {
-    function transferStake(address, uint256) external;
+    function transferStake(address, uint96) external;
     function totalStakes(uint72) external returns (uint96);
     function getWithdrawalRequestAmount(uint72, address) external returns (uint96);
     function getWithdrawalRequestTimestamp(uint72, address) external returns (uint256);
 }
 
 interface IOldProfileStorage {
-    function transferAccumulatedOperatorFee(address, uint256) external;
+    function transferAccumulatedOperatorFee(address, uint96) external;
     function getAccumulatedOperatorFee(uint72) external returns (uint96);
     function getSharesContractAddress(uint72) external returns (address);
     function getAccumulatedOperatorFeeWithdrawalAmount(uint72) external returns (uint96);
@@ -36,23 +38,33 @@ interface IOldNodeOperatorFeesStorage {
     function getLatestOperatorFeePercentage(uint72) external returns (uint8);
 }
 
+interface IOldServiceAgreementStorage {
+    function transferAgreementTokens(address, uint96) external;
+}
+
 contract Migrator is ContractStatus {
     IOldHub public oldHub;
     IOldStakingStorage public oldStakingStorage;
     IOldProfileStorage public oldProfileStorage;
     IOldNodeOperatorFeesStorage public oldNodeOperatorFeesStorage;
+    IOldServiceAgreementStorage public oldServiceAgreementStorageV1;
+    IOldServiceAgreementStorage public oldServiceAgreementStorageV1U1;
 
+    EpochStorage public epochStorageV6;
     ParametersStorage public newParametersStorage;
     ProfileStorage public newProfileStorage;
     ShardingTable public newShardingTable;
     StakingStorage public newStakingStorage;
     IdentityStorage public newIdentityStorage;
+    Token public token;
 
     uint256 public oldNodesCount;
     uint256 public migratedNodes;
 
-    uint256 public oldTotalStake;
-    uint256 public migratedStake;
+    uint96 public oldTotalStake;
+    uint96 public oldOperatorFees;
+    uint96 public oldTotalUnpaidRewards;
+    uint96 public migratedStake;
 
     bool public delegatorsMigrationInitiated;
 
@@ -71,22 +83,44 @@ contract Migrator is ContractStatus {
         oldStakingStorage = IOldStakingStorage(oldHub.getContractAddress("StakingStorage"));
         oldProfileStorage = IOldProfileStorage(oldHub.getContractAddress("ProfileStorage"));
         oldNodeOperatorFeesStorage = IOldNodeOperatorFeesStorage(oldHub.getContractAddress("NodeOpeartorFeesStorage"));
+        oldServiceAgreementStorageV1 = IOldServiceAgreementStorage(
+            oldHub.getContractAddress("ServiceAgreementStorageV1")
+        );
+        oldServiceAgreementStorageV1U1 = IOldServiceAgreementStorage(
+            oldHub.getContractAddress("ServiceAgreementStorageV1U1")
+        );
     }
 
     function initializeNewContracts() external onlyHubOwner {
+        epochStorageV6 = EpochStorage(hub.getContractAddress("EpochStorageV6"));
         newParametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         newProfileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         newShardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
         newStakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         newIdentityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+        token = Token(hub.getContractAddress("Token"));
     }
 
     function transferStake(uint96 amount) external onlyHubOwner {
         oldStakingStorage.transferStake(address(newStakingStorage), amount);
     }
 
-    function transferOperatorFees(uint96 amount) external onlyHubOwner {
-        oldProfileStorage.transferAccumulatedOperatorFee(address(newStakingStorage), amount);
+    function transferOperatorFees() external onlyHubOwner {
+        uint96 totalOperatorFees = uint96(token.balanceOf(address(oldProfileStorage)));
+        oldProfileStorage.transferAccumulatedOperatorFee(address(newStakingStorage), totalOperatorFees);
+    }
+
+    function transferUnpaidRewards() external onlyHubOwner {
+        uint96 saV1Balance = uint96(token.balanceOf(address(oldServiceAgreementStorageV1)));
+        uint96 saV1U1Balance = uint96(token.balanceOf(address(oldServiceAgreementStorageV1U1)));
+
+        oldTotalUnpaidRewards += saV1Balance;
+        oldTotalUnpaidRewards += saV1U1Balance;
+
+        epochStorageV6.addTokensToEpochRange(1, 1, 12, oldTotalUnpaidRewards);
+
+        oldServiceAgreementStorageV1.transferAgreementTokens(address(newStakingStorage), saV1Balance);
+        oldServiceAgreementStorageV1U1.transferAgreementTokens(address(newStakingStorage), saV1U1Balance);
     }
 
     function initiateDelegatorsMigration() external onlyHubOwner {
@@ -173,6 +207,8 @@ contract Migrator is ContractStatus {
         ) {
             uint96 operatorAccumulatedOperatorFee = oldProfileStorage.getAccumulatedOperatorFee(identityId);
             newStakingStorage.setOperatorFeeBalance(identityId, operatorAccumulatedOperatorFee);
+
+            oldOperatorFees += operatorAccumulatedOperatorFee;
 
             uint96 feeWithdrawalAmount = oldProfileStorage.getAccumulatedOperatorFeeWithdrawalAmount(identityId);
             if (feeWithdrawalAmount > 0) {
