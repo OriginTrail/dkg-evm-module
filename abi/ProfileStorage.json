@@ -56,11 +56,6 @@
         "type": "bytes"
       },
       {
-        "internalType": "uint96",
-        "name": "initialAsk",
-        "type": "uint96"
-      },
-      {
         "internalType": "uint8",
         "name": "initialOperatorFee",
         "type": "uint8"

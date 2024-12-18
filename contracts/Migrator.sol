@@ -115,7 +115,8 @@ contract Migrator is ContractStatus {
         // We take the latest operator fee percentage even if the change is pending?
         uint8 initialOperatorFee = oldNodeOperatorFeesStorage.getLatestOperatorFeePercentage(identityId);
 
-        newProfileStorage.createProfile(identityId, nodeName, nodeId, initialAsk, initialOperatorFee);
+        newProfileStorage.createProfile(identityId, nodeName, nodeId, initialOperatorFee);
+        newProfileStorage.setAsk(identityId, initialAsk);
 
         if (nodeStake > newParametersStorage.minimumStake()) {
             newShardingTable.insertNode(identityId);

@@ -465,7 +465,7 @@ export class Helpers {
       provider: this.provider,
       noInitWarn: true,
     });
-    const transfer = await api.tx.balances.transfer(
+    const transfer = api.tx.balances.transferKeepAlive(
       address,
       Number(this.hre.ethers.parseUnits(`${tokenAmount}`, 12)),
     );

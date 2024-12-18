@@ -31,13 +31,11 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         uint72 identityId,
         string calldata nodeName,
         bytes calldata nodeId,
-        uint96 initialAsk,
         uint8 initialOperatorFee
     ) external onlyContracts {
         ProfileLib.ProfileInfo storage profile = profiles[identityId];
         profile.name = nodeName;
         profile.nodeId = nodeId;
-        profile.ask = initialAsk;
         profile.operatorFees.push(
             ProfileLib.OperatorFee({feePercentage: initialOperatorFee, effectiveDate: uint248(block.timestamp)})
         );

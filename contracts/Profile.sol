@@ -81,7 +81,6 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         address[] calldata operationalWallets,
         string calldata nodeName,
         bytes calldata nodeId,
-        uint96 initialAsk,
         uint8 initialOperatorFee
     ) external onlyWhitelisted {
         IdentityStorage ids = identityStorage;
@@ -97,9 +96,6 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
                 uint16(operationalWallets.length)
             );
         }
-        if (initialAsk == 0) {
-            revert ProfileLib.ZeroAsk();
-        }
         if (nodeId.length == 0) {
             revert ProfileLib.EmptyNodeId();
         }
@@ -112,8 +108,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         uint72 identityId = id.createIdentity(msg.sender, adminWallet);
         id.addOperationalWallets(identityId, operationalWallets);
 
-        ps.createProfile(identityId, nodeName, nodeId, initialAsk, initialOperatorFee);
-        askContract.onAskChanged(identityId, initialAsk);
+        ps.createProfile(identityId, nodeName, nodeId, initialOperatorFee);
     }
 
     function setAsk(uint72 identityId, uint96 ask) external onlyIdentityOwner(identityId) {

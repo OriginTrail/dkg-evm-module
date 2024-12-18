@@ -140,9 +140,11 @@ contract Hub is INamed, IVersioned, Ownable {
             }
 
             emit ContractChanged(contractName, newContractAddress);
-        }
+        } else {
+            contractSet.append(contractName, newContractAddress);
 
-        contractSet.append(contractName, newContractAddress);
+            emit NewContract(contractName, newContractAddress);
+        }
 
         if (_isContract(newContractAddress)) {
             // solhint-disable-next-line no-empty-blocks
