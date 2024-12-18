@@ -3,7 +3,9 @@
 pragma solidity ^0.8.20;
 
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
+import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
+import {ShardingTable} from "./ShardingTable.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IdentityLib} from "./libraries/IdentityLib.sol";
@@ -40,9 +42,11 @@ contract Migrator is ContractStatus {
     IOldProfileStorage public oldProfileStorage;
     IOldNodeOperatorFeesStorage public oldNodeOperatorFeesStorage;
 
-    IdentityStorage public identityStorage;
-    ProfileStorage public profileStorage;
+    ParametersStorage public newParametersStorage;
+    ProfileStorage public newProfileStorage;
+    ShardingTable public newShardingTable;
     StakingStorage public newStakingStorage;
+    IdentityStorage public newIdentityStorage;
 
     uint256 public oldNodesCount;
     uint256 public migratedNodes;
@@ -70,9 +74,11 @@ contract Migrator is ContractStatus {
     }
 
     function initializeNewContracts() external onlyHubOwner {
-        identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-        profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        newParametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+        newProfileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
+        newShardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
         newStakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
+        newIdentityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
     }
 
     function transferStake(uint96 amount) external onlyHubOwner {
@@ -109,7 +115,11 @@ contract Migrator is ContractStatus {
         // We take the latest operator fee percentage even if the change is pending?
         uint8 initialOperatorFee = oldNodeOperatorFeesStorage.getLatestOperatorFeePercentage(identityId);
 
-        profileStorage.createProfile(identityId, nodeName, nodeId, initialAsk, initialOperatorFee);
+        newProfileStorage.createProfile(identityId, nodeName, nodeId, initialAsk, initialOperatorFee);
+
+        if (nodeStake > newParametersStorage.minimumStake()) {
+            newShardingTable.insertNode(identityId);
+        }
     }
 
     function migrateDelegatorData(uint72 identityId) external {
@@ -158,7 +168,7 @@ contract Migrator is ContractStatus {
         // Node operator fees and withdrawal migration
         if (
             !operatorMigrated[identityId] &&
-            identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), IdentityLib.ADMIN_KEY)
+            newIdentityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), IdentityLib.ADMIN_KEY)
         ) {
             uint96 operatorAccumulatedOperatorFee = oldProfileStorage.getAccumulatedOperatorFee(identityId);
             newStakingStorage.setOperatorFeeBalance(identityId, operatorAccumulatedOperatorFee);
