@@ -7,9 +7,6 @@ import {Identity} from "./Identity.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
-import {ShardingTable} from "./ShardingTable.sol";
-import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
-import {StakingStorage} from "./storage/StakingStorage.sol";
 import {WhitelistStorage} from "./storage/WhitelistStorage.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IInitializable} from "./interfaces/IInitializable.sol";
@@ -25,9 +22,6 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
 
     Ask public askContract;
     Identity public identityContract;
-    ShardingTableStorage public shardingTableStorage;
-    ShardingTable public shardingTableContract;
-    StakingStorage public stakingStorage;
     IdentityStorage public identityStorage;
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
@@ -59,9 +53,6 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     function initialize() public onlyHub {
         askContract = Ask(hub.getContractAddress("Ask"));
         identityContract = Identity(hub.getContractAddress("Identity"));
-        shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
-        shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
-        stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));

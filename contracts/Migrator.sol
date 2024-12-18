@@ -19,18 +19,27 @@ interface IOldHub {
 
 interface IOldStakingStorage {
     function transferStake(address, uint96) external;
+
     function totalStakes(uint72) external returns (uint96);
+
     function getWithdrawalRequestAmount(uint72, address) external returns (uint96);
+
     function getWithdrawalRequestTimestamp(uint72, address) external returns (uint256);
 }
 
 interface IOldProfileStorage {
     function transferAccumulatedOperatorFee(address, uint96) external;
+
     function getAccumulatedOperatorFee(uint72) external returns (uint96);
+
     function getSharesContractAddress(uint72) external returns (address);
+
     function getAccumulatedOperatorFeeWithdrawalAmount(uint72) external returns (uint96);
+
     function getAccumulatedOperatorFeeWithdrawalTimestamp(uint72) external returns (uint256);
+
     function getNodeId(uint72) external returns (bytes memory);
+
     function getAsk(uint72) external returns (uint96);
 }
 
@@ -107,7 +116,9 @@ contract Migrator is ContractStatus {
 
     function transferOperatorFees() external onlyHubOwner {
         uint96 totalOperatorFees = uint96(token.balanceOf(address(oldProfileStorage)));
-        oldProfileStorage.transferAccumulatedOperatorFee(address(newStakingStorage), totalOperatorFees);
+        if (totalOperatorFees > 0) {
+            oldProfileStorage.transferAccumulatedOperatorFee(address(newStakingStorage), totalOperatorFees);
+        }
     }
 
     function transferUnpaidRewards() external onlyHubOwner {
@@ -117,10 +128,16 @@ contract Migrator is ContractStatus {
         oldTotalUnpaidRewards += saV1Balance;
         oldTotalUnpaidRewards += saV1U1Balance;
 
-        epochStorageV6.addTokensToEpochRange(1, 1, 12, oldTotalUnpaidRewards);
+        if (oldTotalUnpaidRewards > 0) {
+            epochStorageV6.addTokensToEpochRange(1, 1, 12, oldTotalUnpaidRewards);
+        }
 
-        oldServiceAgreementStorageV1.transferAgreementTokens(address(newStakingStorage), saV1Balance);
-        oldServiceAgreementStorageV1U1.transferAgreementTokens(address(newStakingStorage), saV1U1Balance);
+        if (saV1Balance > 0) {
+            oldServiceAgreementStorageV1.transferAgreementTokens(address(newStakingStorage), saV1Balance);
+        }
+        if (saV1U1Balance > 0) {
+            oldServiceAgreementStorageV1U1.transferAgreementTokens(address(newStakingStorage), saV1U1Balance);
+        }
     }
 
     function initiateDelegatorsMigration() external onlyHubOwner {

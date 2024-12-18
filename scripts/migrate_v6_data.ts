@@ -35,17 +35,19 @@ async function main() {
 
   console.log(`Total old stake: ${oldTotalStake} TRAC`);
 
-  console.log('Calling migrateGlobalData');
-  tx = await Migrator.migrateGlobalData(oldTotalStake, {
-    gasLimit: 2_000_000,
-  });
-  await tx.wait();
+  if (oldTotalStake > 0) {
+    console.log('Calling migrateGlobalData');
+    tx = await Migrator.migrateGlobalData(oldTotalStake, {
+      gasLimit: 2_000_000,
+    });
+    await tx.wait();
 
-  console.log('Calling transferStake');
-  tx = await Migrator.transferStake(oldTotalStake, {
-    gasLimit: 2_000_000,
-  });
-  await tx.wait();
+    console.log('Calling transferStake');
+    tx = await Migrator.transferStake(oldTotalStake, {
+      gasLimit: 2_000_000,
+    });
+    await tx.wait();
+  }
 
   console.log('Calling transferOperatorFees');
   tx = await Migrator.transferOperatorFees({
