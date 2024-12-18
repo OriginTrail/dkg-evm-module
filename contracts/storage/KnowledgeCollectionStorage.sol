@@ -24,7 +24,6 @@ contract KnowledgeCollectionStorage is
     event KnowledgeCollectionCreated(
         uint256 indexed id,
         string publishOperationId,
-        address indexed publisher,
         bytes32 merkleRoot,
         uint256 byteSize,
         uint256 chunksAmount,
@@ -43,7 +42,7 @@ contract KnowledgeCollectionStorage is
     event KnowledgeAssetsMinted(uint256 indexed id, address indexed to, uint256 startId, uint256 endId);
     event KnowledgeAssetsBurned(uint256 indexed id, address indexed from, uint256[] tokenIds);
     event KnowledgeCollectionPublisherUpdated(uint256 indexed id, address publisher);
-    event KnowledgeCollectionMerkleRootsUpdated(uint256 indexed id, bytes32[] merkleRoots);
+    event KnowledgeCollectionMerkleRootsUpdated(uint256 indexed id, KnowledgeCollectionLib.MerkleRoot[] merkleRoots);
     event KnowledgeCollectionMerkleRootAdded(uint256 indexed id, bytes32 merkleRoot);
     event KnowledgeCollectionMerkleRootRemoved(uint256 indexed id, bytes32 merkleRoot);
     event KnowledgeCollectionMintedUpdated(uint256 indexed id, uint256 minted);
@@ -103,8 +102,7 @@ contract KnowledgeCollectionStorage is
 
         KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[knowledgeCollectionId];
 
-        kc.publisher = msg.sender;
-        kc.merkleRoots.push(merkleRoot);
+        kc.merkleRoots.push(KnowledgeCollectionLib.MerkleRoot(msg.sender, merkleRoot, block.timestamp));
         kc.byteSize = byteSize;
         kc.chunksAmount = chunksAmount;
         kc.startEpoch = startEpoch;
@@ -120,7 +118,6 @@ contract KnowledgeCollectionStorage is
         emit KnowledgeCollectionCreated(
             knowledgeCollectionId,
             publishOperationId,
-            msg.sender,
             merkleRoot,
             byteSize,
             chunksAmount,
@@ -154,7 +151,7 @@ contract KnowledgeCollectionStorage is
             _totalTokenAmount = _totalTokenAmount - kc.tokenAmount + tokenAmount;
         }
 
-        kc.merkleRoots.push(merkleRoot);
+        kc.merkleRoots.push(KnowledgeCollectionLib.MerkleRoot(msg.sender, merkleRoot, block.timestamp));
         kc.byteSize = byteSize;
         kc.chunksAmount = chunksAmount;
         kc.tokenAmount = tokenAmount;
@@ -170,12 +167,20 @@ contract KnowledgeCollectionStorage is
     )
         external
         view
-        returns (address, bytes32[] memory, uint256, uint256[] memory, uint256, uint256, uint256, uint256, uint96)
+        returns (
+            KnowledgeCollectionLib.MerkleRoot[] memory,
+            uint256,
+            uint256[] memory,
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint96
+        )
     {
         KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
 
         return (
-            kc.publisher,
             kc.merkleRoots,
             kc.minted,
             kc.burned,
@@ -209,44 +214,39 @@ contract KnowledgeCollectionStorage is
         emit KnowledgeAssetsBurned(id, from, tokenIds);
     }
 
-    function getPublisher(uint256 id) external view returns (address) {
-        return knowledgeCollections[id].publisher;
-    }
-
-    function setPublisher(uint256 id, address _publisher) external onlyContracts {
-        knowledgeCollections[id].publisher = _publisher;
-
-        emit KnowledgeCollectionPublisherUpdated(id, _publisher);
-    }
-
-    function getMerkleRoots(uint256 id) external view returns (bytes32[] memory) {
+    function getMerkleRoots(uint256 id) external view returns (KnowledgeCollectionLib.MerkleRoot[] memory) {
         return knowledgeCollections[id].merkleRoots;
     }
 
-    function setMerkleRoots(uint256 id, bytes32[] memory _merkleRoots) external onlyContracts {
+    function setMerkleRoots(
+        uint256 id,
+        KnowledgeCollectionLib.MerkleRoot[] memory _merkleRoots
+    ) external onlyContracts {
         knowledgeCollections[id].merkleRoots = _merkleRoots;
 
         emit KnowledgeCollectionMerkleRootsUpdated(id, _merkleRoots);
     }
 
     function getMerkleRootByIndex(uint256 id, uint256 index) external view returns (bytes32) {
-        return knowledgeCollections[id].merkleRoots[index];
+        return knowledgeCollections[id].merkleRoots[index].merkleRoot;
     }
 
     function getLatestMerkleRoot(uint256 id) external view returns (bytes32) {
         KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
-        return kc.merkleRoots[kc.merkleRoots.length - 1];
+        return kc.merkleRoots[kc.merkleRoots.length - 1].merkleRoot;
     }
 
     function pushMerkleRoot(uint256 id, bytes32 merkleRoot) external onlyContracts {
-        knowledgeCollections[id].merkleRoots.push(merkleRoot);
+        knowledgeCollections[id].merkleRoots.push(
+            KnowledgeCollectionLib.MerkleRoot(msg.sender, merkleRoot, block.timestamp)
+        );
 
         emit KnowledgeCollectionMerkleRootAdded(id, merkleRoot);
     }
 
     function popMerkleRoot(uint256 id) external onlyContracts {
         KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
-        bytes32 latestMerkleRoot = kc.merkleRoots[kc.merkleRoots.length - 1];
+        bytes32 latestMerkleRoot = kc.merkleRoots[kc.merkleRoots.length - 1].merkleRoot;
         knowledgeCollections[id].merkleRoots.pop();
 
         emit KnowledgeCollectionMerkleRootRemoved(id, latestMerkleRoot);

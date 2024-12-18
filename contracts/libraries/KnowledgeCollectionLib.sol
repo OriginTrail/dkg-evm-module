@@ -3,9 +3,14 @@
 pragma solidity ^0.8.20;
 
 library KnowledgeCollectionLib {
-    struct KnowledgeCollection {
+    struct MerkleRoot {
         address publisher;
-        bytes32[] merkleRoots;
+        bytes32 merkleRoot;
+        uint256 timestamp;
+    }
+
+    struct KnowledgeCollection {
+        MerkleRoot[] merkleRoots;
         uint256 minted;
         uint256[] burned;
         uint256 byteSize;

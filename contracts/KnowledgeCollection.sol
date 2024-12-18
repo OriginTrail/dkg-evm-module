@@ -136,7 +136,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
 
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
-        (, , , , uint256 oldByteSize, uint256 oldChunksAmount, , uint256 endEpoch, uint96 oldTokenAmount) = kcs
+        (, , , uint256 oldByteSize, uint256 oldChunksAmount, , uint256 endEpoch, uint96 oldTokenAmount) = kcs
             .getKnowledgeCollectionMetadata(id);
 
         uint256 currentEpoch = chronos.getCurrentEpoch();
@@ -170,9 +170,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
     ) external {
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
-        (, , , , uint256 byteSize, , , uint256 endEpoch, uint96 oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(
-            id
-        );
+        (, , , uint256 byteSize, , , uint256 endEpoch, uint96 oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
 
         uint256 currentEpoch = chronos.getCurrentEpoch();
         if (currentEpoch > endEpoch) {
@@ -196,7 +194,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
 
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
-        (, , , , , , , uint256 endEpoch, uint96 oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
+        (, , , , , , uint256 endEpoch, uint96 oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
 
         uint256 currentEpoch = chronos.getCurrentEpoch();
         if (currentEpoch > endEpoch) {

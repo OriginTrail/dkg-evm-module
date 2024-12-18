@@ -250,12 +250,6 @@
         "type": "string"
       },
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "publisher",
-        "type": "address"
-      },
-      {
         "indexed": false,
         "internalType": "bytes32",
         "name": "merkleRoot",
@@ -362,10 +356,27 @@
         "type": "uint256"
       },
       {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "publisher",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "merkleRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          }
+        ],
         "indexed": false,
-        "internalType": "bytes32[]",
+        "internalType": "struct KnowledgeCollectionLib.MerkleRoot[]",
         "name": "merkleRoots",
-        "type": "bytes32[]"
+        "type": "tuple[]"
       }
     ],
     "name": "KnowledgeCollectionMerkleRootsUpdated",
@@ -1014,14 +1025,26 @@
       {
         "components": [
           {
-            "internalType": "address",
-            "name": "publisher",
-            "type": "address"
-          },
-          {
-            "internalType": "bytes32[]",
+            "components": [
+              {
+                "internalType": "address",
+                "name": "publisher",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "merkleRoot",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint256",
+                "name": "timestamp",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct KnowledgeCollectionLib.MerkleRoot[]",
             "name": "merkleRoots",
-            "type": "bytes32[]"
+            "type": "tuple[]"
           },
           {
             "internalType": "uint256",
@@ -1097,14 +1120,26 @@
     "name": "getKnowledgeCollectionMetadata",
     "outputs": [
       {
-        "internalType": "address",
+        "components": [
+          {
+            "internalType": "address",
+            "name": "publisher",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "merkleRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct KnowledgeCollectionLib.MerkleRoot[]",
         "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes32[]",
-        "name": "",
-        "type": "bytes32[]"
+        "type": "tuple[]"
       },
       {
         "internalType": "uint256",
@@ -1212,9 +1247,26 @@
     "name": "getMerkleRoots",
     "outputs": [
       {
-        "internalType": "bytes32[]",
+        "components": [
+          {
+            "internalType": "address",
+            "name": "publisher",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "merkleRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct KnowledgeCollectionLib.MerkleRoot[]",
         "name": "",
-        "type": "bytes32[]"
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",
@@ -1234,25 +1286,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "getPublisher",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1467,11 +1500,6 @@
     ],
     "name": "knowledgeCollections",
     "outputs": [
-      {
-        "internalType": "address",
-        "name": "publisher",
-        "type": "address"
-      },
       {
         "internalType": "uint256",
         "name": "minted",
@@ -1737,9 +1765,26 @@
         "type": "uint256"
       },
       {
-        "internalType": "bytes32[]",
+        "components": [
+          {
+            "internalType": "address",
+            "name": "publisher",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "merkleRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct KnowledgeCollectionLib.MerkleRoot[]",
         "name": "_merkleRoots",
-        "type": "bytes32[]"
+        "type": "tuple[]"
       }
     ],
     "name": "setMerkleRoots",
@@ -1761,24 +1806,6 @@
       }
     ],
     "name": "setMinted",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_publisher",
-        "type": "address"
-      }
-    ],
-    "name": "setPublisher",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

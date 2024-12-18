@@ -101,13 +101,13 @@
       "deployed": true
     },
     "KnowledgeCollectionStorage": {
-      "evmAddress": "0x7FCCD219D2330c126a0A76A9c02D39979484E093",
-      "substrateAddress": "5EMjsczmnNkgXttQXXHDC7FGDxxPEq5m5AcdiVpQPGHff7NB",
+      "evmAddress": "0x8dD9c71d9dF7AB52eF47059c9D98158568F78e79",
+      "substrateAddress": "5EMjsczpbfdyFJE1x4wdbLoQXZGjjYkGiQTTyCJe6zYYBXwj",
       "version": "1.0.0",
-      "gitBranch": "v8/unit-test-fixes",
-      "gitCommitHash": "44ca0f2247df826d2e6076b48b56f816bc5864a4",
-      "deploymentBlock": 5610828,
-      "deploymentTimestamp": 1734529545486,
+      "gitBranch": "v8/knowledge-collections",
+      "gitCommitHash": "202b04c40dbe2603cb682556a8ce1e627a7ee5f3",
+      "deploymentBlock": 5611329,
+      "deploymentTimestamp": 1734532726144,
       "deployed": true
     },
     "ParanetsRegistry": {
@@ -181,13 +181,13 @@
       "deployed": true
     },
     "Ask": {
-      "evmAddress": "0xDaE05AcDC177258d63303728DD85Bf7Cff2A0a42",
-      "substrateAddress": "5EMjsd162qBLCHTrULqdRmLBvYbAWapgUAXqURCGKQoZJVhX",
+      "evmAddress": "0x9A5b8e19142D1d962531C9fd472774dD8e7b60d6",
+      "substrateAddress": "5EMjsczs7219x7gx4c5bD1QuGwQQjg7QmZNz2CqiRX7qNe57",
       "version": "1.0.0",
-      "gitBranch": "v8/unit-test-fixes",
-      "gitCommitHash": "44ca0f2247df826d2e6076b48b56f816bc5864a4",
-      "deploymentBlock": 5610840,
-      "deploymentTimestamp": 1734529615563,
+      "gitBranch": "v8/knowledge-collections",
+      "gitCommitHash": "202b04c40dbe2603cb682556a8ce1e627a7ee5f3",
+      "deploymentBlock": 5611330,
+      "deploymentTimestamp": 1734532731436,
       "deployed": true
     },
     "Staking": {
@@ -211,13 +211,13 @@
       "deployed": true
     },
     "KnowledgeCollection": {
-      "evmAddress": "0x42e14bA84023C04f12C90FEe9Ad2869699ca07c8",
-      "substrateAddress": "5EMjsczZaPKShaTcuQpg488J7MPqHFenQYHEsupJULBgyrzd",
+      "evmAddress": "0xf5ed458aDF19d7354E2a3FA26dB9Df205B83F0E6",
+      "substrateAddress": "5EMjsd1BTCfr7QEQhqDQHt6TUwDywjxmEJPf6iJ7K4Nc4BMK",
       "version": "1.0.0",
-      "gitBranch": "v8/unit-test-fixes",
-      "gitCommitHash": "44ca0f2247df826d2e6076b48b56f816bc5864a4",
-      "deploymentBlock": 5610843,
-      "deploymentTimestamp": 1734529639949,
+      "gitBranch": "v8/knowledge-collections",
+      "gitCommitHash": "202b04c40dbe2603cb682556a8ce1e627a7ee5f3",
+      "deploymentBlock": 5611331,
+      "deploymentTimestamp": 1734532736823,
       "deployed": true
     },
     "Paranet": {

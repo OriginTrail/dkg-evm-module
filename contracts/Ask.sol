@@ -68,13 +68,21 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
             return;
         }
 
+        uint96 maximumStake = ps.maximumStake();
+        uint96 stake = newStake <= maximumStake ? newStake : maximumStake;
+        uint256 newWeightedAsk = profileStorage.getAsk(identityId) * stake;
+
+        if (weightedActiveAskSum == 0) {
+            weightedActiveAskSum = newWeightedAsk;
+            prevWeightedActiveAskSum = newWeightedAsk;
+            nodeWeightedActiveAsk[identityId] = newWeightedAsk;
+            totalActiveStake += stake;
+            return;
+        }
+
         uint256 oldUpperBound = prevWeightedActiveAskSum * UPPER_BOUND_FACTOR;
         uint256 oldLowerBound = prevWeightedActiveAskSum * LOWER_BOUND_FACTOR;
 
-        uint96 maximumStake = ps.maximumStake();
-        uint96 stake = newStake <= maximumStake ? newStake : maximumStake;
-
-        uint256 newWeightedAsk = profileStorage.getAsk(identityId) * stake;
         bool isActive = false;
         if (newWeightedAsk * 1e18 <= oldUpperBound && newWeightedAsk * 1e18 >= oldLowerBound) {
             prevWeightedActiveAskSum = weightedActiveAskSum;
@@ -107,17 +115,29 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
 
     function onAskChanged(uint72 identityId, uint96 newAsk) external onlyContracts {
         StakingStorage ss = stakingStorage;
+        ParametersStorage ps = parametersStorage;
 
         uint96 currentStake = stakingStorage.getNodeStake(identityId);
 
-        if (currentStake < parametersStorage.minimumStake()) {
+        if (currentStake < ps.minimumStake()) {
+            return;
+        }
+
+        uint96 maximumStake = ps.maximumStake();
+        uint96 stake = currentStake <= maximumStake ? currentStake : maximumStake;
+        uint256 newWeightedAsk = stake * newAsk;
+
+        if (weightedActiveAskSum == 0) {
+            weightedActiveAskSum = newWeightedAsk;
+            prevWeightedActiveAskSum = newWeightedAsk;
+            nodeWeightedActiveAsk[identityId] = newWeightedAsk;
+            totalActiveStake += stake;
             return;
         }
 
         uint256 oldUpperBound = prevWeightedActiveAskSum * UPPER_BOUND_FACTOR;
         uint256 oldLowerBound = prevWeightedActiveAskSum * LOWER_BOUND_FACTOR;
 
-        uint256 newWeightedAsk = currentStake * newAsk;
         bool isActive = false;
         if (newWeightedAsk * 1e18 <= oldUpperBound && newWeightedAsk * 1e18 >= oldLowerBound) {
             prevWeightedActiveAskSum = weightedActiveAskSum;
