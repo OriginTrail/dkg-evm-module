@@ -229,13 +229,43 @@ contract KnowledgeCollectionStorage is
         emit KnowledgeCollectionMerkleRootsUpdated(id, _merkleRoots);
     }
 
+    function getMerkleRootObjectByIndex(
+        uint256 id,
+        uint256 index
+    ) external view returns (KnowledgeCollectionLib.MerkleRoot memory) {
+        return knowledgeCollections[id].merkleRoots[index];
+    }
+
     function getMerkleRootByIndex(uint256 id, uint256 index) external view returns (bytes32) {
         return knowledgeCollections[id].merkleRoots[index].merkleRoot;
+    }
+
+    function getMerkleRootPublisherByIndex(uint256 id, uint256 index) external view returns (address) {
+        return knowledgeCollections[id].merkleRoots[index].publisher;
+    }
+
+    function getMerkleRootTimestampByIndex(uint256 id, uint256 index) external view returns (uint256) {
+        return knowledgeCollections[id].merkleRoots[index].timestamp;
+    }
+
+    function getLatestMerkleRootObject(uint256 id) external view returns (KnowledgeCollectionLib.MerkleRoot memory) {
+        KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
+        return kc.merkleRoots[kc.merkleRoots.length - 1];
     }
 
     function getLatestMerkleRoot(uint256 id) external view returns (bytes32) {
         KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
         return kc.merkleRoots[kc.merkleRoots.length - 1].merkleRoot;
+    }
+
+    function getLatestMerkleRootPublisher(uint256 id) external view returns (address) {
+        KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
+        return kc.merkleRoots[kc.merkleRoots.length - 1].publisher;
+    }
+
+    function getLatestMerkleRootTimestamp(uint256 id) external view returns (uint256) {
+        KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
+        return kc.merkleRoots[kc.merkleRoots.length - 1].timestamp;
     }
 
     function pushMerkleRoot(address publisher, uint256 id, bytes32 merkleRoot) external onlyContracts {
