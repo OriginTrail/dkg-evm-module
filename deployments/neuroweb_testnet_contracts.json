@@ -241,13 +241,13 @@
       "deployed": true
     },
     "Migrator": {
-      "evmAddress": "0xacfe681A1FCe542eCfF3B06a01De5F4E8eB744B0",
-      "substrateAddress": "5EMjsczvqbnPV5j6sr5n5H3fzxSAb3JJHLKtusHq5sX9gWbS",
+      "evmAddress": "0xf385Ca41004709116945a85372140fe08B188eCc",
+      "substrateAddress": "5EMjsd1AyG6EdJhZaZWG4foqB72yjrCdqmEukSxqKKVRXUiJ",
       "version": null,
       "gitBranch": "v8/knowledge-collections",
-      "gitCommitHash": "5f0f0ed021c918339555cf04cc7c155dd83243dc",
-      "deploymentBlock": 5614541,
-      "deploymentTimestamp": 1734553748698,
+      "gitCommitHash": "da407e7cfe3ea4169035699e82a14d4669e04748",
+      "deploymentBlock": 5614909,
+      "deploymentTimestamp": 1734556066653,
       "deployed": true
     }
   }

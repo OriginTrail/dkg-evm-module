@@ -14,37 +14,38 @@ import {IdentityLib} from "./libraries/IdentityLib.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 interface IOldHub {
-    function getContractAddress(string memory) external returns (address);
+    function getContractAddress(string memory) external view returns (address);
 }
 
 interface IOldStakingStorage {
     function transferStake(address, uint96) external;
 
-    function totalStakes(uint72) external returns (uint96);
+    function totalStakes(uint72) external view returns (uint96);
 
-    function getWithdrawalRequestAmount(uint72, address) external returns (uint96);
+    function getWithdrawalRequestAmount(uint72, address) external view returns (uint96);
 
-    function getWithdrawalRequestTimestamp(uint72, address) external returns (uint256);
+    function getWithdrawalRequestTimestamp(uint72, address) external view returns (uint256);
 }
 
 interface IOldProfileStorage {
     function transferAccumulatedOperatorFee(address, uint96) external;
 
-    function getAccumulatedOperatorFee(uint72) external returns (uint96);
+    function getAccumulatedOperatorFee(uint72) external view returns (uint96);
 
-    function getSharesContractAddress(uint72) external returns (address);
+    function getSharesContractAddress(uint72) external view returns (address);
 
-    function getAccumulatedOperatorFeeWithdrawalAmount(uint72) external returns (uint96);
+    function getAccumulatedOperatorFeeWithdrawalAmount(uint72) external view returns (uint96);
 
-    function getAccumulatedOperatorFeeWithdrawalTimestamp(uint72) external returns (uint256);
+    function getAccumulatedOperatorFeeWithdrawalTimestamp(uint72) external view returns (uint256);
 
-    function getNodeId(uint72) external returns (bytes memory);
+    function getNodeId(uint72) external view returns (bytes memory);
 
-    function getAsk(uint72) external returns (uint96);
+    function getAsk(uint72) external view returns (uint96);
 }
 
 interface IOldNodeOperatorFeesStorage {
-    function getLatestOperatorFeePercentage(uint72) external returns (uint8);
+    function getOperatorFeesLength(uint72) external view returns (uint256);
+    function getLatestOperatorFeePercentage(uint72) external view returns (uint8);
 }
 
 interface IOldServiceAgreementStorage {
@@ -164,7 +165,13 @@ contract Migrator is ContractStatus {
         bytes memory nodeId = oldProfileStorage.getNodeId(identityId);
         uint96 initialAsk = oldProfileStorage.getAsk(identityId);
         // We take the latest operator fee percentage even if the change is pending?
-        uint8 initialOperatorFee = oldNodeOperatorFeesStorage.getLatestOperatorFeePercentage(identityId);
+        uint8 initialOperatorFee;
+        uint256 operatorFeesArrayLength = oldNodeOperatorFeesStorage.getOperatorFeesLength(identityId);
+        if (operatorFeesArrayLength == 0) {
+            initialOperatorFee = 0;
+        } else {
+            initialOperatorFee = oldNodeOperatorFeesStorage.getLatestOperatorFeePercentage(identityId);
+        }
 
         newProfileStorage.createProfile(identityId, nodeName, nodeId, initialOperatorFee);
         newProfileStorage.setAsk(identityId, initialAsk);
