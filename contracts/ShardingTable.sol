@@ -12,9 +12,6 @@ import {IVersioned} from "./interfaces/IVersioned.sol";
 import {ShardingTableLib} from "./libraries/ShardingTableLib.sol";
 
 contract ShardingTable is INamed, IVersioned, ContractStatus, IInitializable {
-    event NodeAdded(uint72 indexed identityId, bytes nodeId, uint96 ask, uint96 stake);
-    event NodeRemoved(uint72 indexed identityId, bytes nodeId);
-
     string private constant _NAME = "ShardingTable";
     string private constant _VERSION = "1.0.0";
 
@@ -33,11 +30,6 @@ contract ShardingTable is INamed, IVersioned, ContractStatus, IInitializable {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
-    }
-
-    modifier timeLimited() {
-        require(block.timestamp < migrationPeriodEnd, "Migration period has ended");
-        _;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -93,8 +85,6 @@ contract ShardingTable is INamed, IVersioned, ContractStatus, IInitializable {
         sts.deleteNodeObject(identityId);
         sts.setIdentityId(index, ShardingTableLib.NULL);
         sts.decrementNodesCount();
-
-        emit NodeRemoved(identityId, profileStorage.getNodeId(identityId));
     }
 
     function _binarySearchForIndex(uint256 hashRingPosition) internal virtual returns (uint72) {
@@ -185,13 +175,6 @@ contract ShardingTable is INamed, IVersioned, ContractStatus, IInitializable {
             sts.incrementNodeIndex(currentIdentityId);
             sts.setIdentityId(index, currentIdentityId);
         }
-
-        emit NodeAdded(
-            identityId,
-            ps.getNodeId(identityId),
-            ps.getAsk(identityId),
-            stakingStorage.getNodeStake(identityId)
-        );
     }
 
     function _getShardingTable(

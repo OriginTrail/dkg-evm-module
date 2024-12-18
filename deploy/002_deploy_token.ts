@@ -14,10 +14,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const tokenInHub = await Hub['isContract(string)']('Token');
 
     if (!tokenInHub) {
-      hre.helpers.newContracts.push([
-        'Token',
-        hre.helpers.contractDeployments.contracts['Token'].evmAddress,
-      ]);
+      hre.helpers.newContracts.push({
+        name: 'Token',
+        addr: hre.helpers.contractDeployments.contracts['Token'].evmAddress,
+      });
     }
   } else if (!isDeployed && hre.network.config.environment === 'development') {
     const Token = await hre.helpers.deploy({

@@ -20,23 +20,6 @@ import {IdentityLib} from "./libraries/IdentityLib.sol";
 import {Permissions} from "./libraries/Permissions.sol";
 
 contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
-    event ProfileCreated(uint72 indexed identityId, bytes nodeId, address adminWallet, uint8 initialOperatorFee);
-    event AskUpdated(uint72 indexed identityId, bytes nodeId, uint96 ask);
-    event AccumulatedOperatorFeeWithdrawalStarted(
-        uint72 indexed identityId,
-        bytes nodeId,
-        uint96 oldAccumulatedOperatorFee,
-        uint96 newAccumulatedOperatorFee,
-        uint256 withdrawalPeriodEnd
-    );
-    event AccumulatedOperatorFeeWithdrawn(uint72 indexed identityId, bytes nodeId, uint96 withdrawnAmount);
-    event AccumulatedOperatorFeeRestaked(
-        uint72 indexed identityId,
-        bytes nodeId,
-        uint96 oldAccumulatedOperatorFee,
-        uint96 newAccumulatedOperatorFee
-    );
-
     string private constant _NAME = "Profile";
     string private constant _VERSION = "1.0.0";
 
@@ -131,8 +114,6 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
 
         ps.createProfile(identityId, nodeName, nodeId, initialAsk, initialOperatorFee);
         askContract.onAskChanged(identityId, initialAsk);
-
-        emit ProfileCreated(identityId, nodeId, adminWallet, initialOperatorFee);
     }
 
     function setAsk(uint72 identityId, uint96 ask) external onlyIdentityOwner(identityId) {
@@ -142,8 +123,6 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         ProfileStorage ps = profileStorage;
         ps.setAsk(identityId, ask);
         askContract.onAskChanged(identityId, ask);
-
-        emit AskUpdated(identityId, ps.getNodeId(identityId), ask);
     }
 
     function changeOperatorFee(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {

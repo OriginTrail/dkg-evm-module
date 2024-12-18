@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {Hub} from "../Hub.sol";
+import {Hub} from "../storage/Hub.sol";
 
 abstract contract HubDependent {
     Hub public hub;

@@ -47,8 +47,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const setAndReinitializeContractsTx = await Hub.setAndReinitializeContracts(
       newContracts,
       newAssetStorageContracts,
-      newHashFunctions,
-      newScoreFunctions,
       contractsForReinitialization,
       setParametersEncodedData,
     );
