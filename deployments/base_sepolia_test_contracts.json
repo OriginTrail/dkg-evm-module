@@ -90,13 +90,13 @@
       "deployed": true
     },
     "KnowledgeCollectionStorage": {
-      "evmAddress": "0x8621EEDa81d05944Ea37Ecd56C17cDd4D8692276",
+      "evmAddress": "0x4E8Ebfce9a0F4bE374709F1Ef2791e8ca6371eCB",
       "version": "1.0.0",
       "gitBranch": "v8/knowledge-collections",
-      "gitCommitHash": "202b04c40dbe2603cb682556a8ce1e627a7ee5f3",
-      "deploymentBlock": 19382114,
-      "deploymentTimestamp": 1734532519652,
-      "deployed": false
+      "gitCommitHash": "31cf2c123a0d60362dadc0f6966fe36198fbff8f",
+      "deploymentBlock": 19388088,
+      "deploymentTimestamp": 1734544469122,
+      "deployed": true
     },
     "ParanetsRegistry": {
       "evmAddress": "0xDD105e2Ab14a392e1DEE49D604aEE3833091AE55",
@@ -162,13 +162,13 @@
       "deployed": true
     },
     "Ask": {
-      "evmAddress": "0xD1D61a3C64C3AfA92826332b7e8613889D208798",
+      "evmAddress": "0x85c392f79Bfe55d86dbD5E1c4a0E3c194A819543",
       "version": "1.0.0",
       "gitBranch": "v8/knowledge-collections",
-      "gitCommitHash": "202b04c40dbe2603cb682556a8ce1e627a7ee5f3",
-      "deploymentBlock": 19382117,
-      "deploymentTimestamp": 1734532526743,
-      "deployed": false
+      "gitCommitHash": "31cf2c123a0d60362dadc0f6966fe36198fbff8f",
+      "deploymentBlock": 19388092,
+      "deploymentTimestamp": 1734544475976,
+      "deployed": true
     },
     "Staking": {
       "evmAddress": "0xe56108458F5172A6d9e2B6577A96a79515b9E841",
@@ -189,13 +189,13 @@
       "deployed": true
     },
     "KnowledgeCollection": {
-      "evmAddress": "0x2387025601474Ea165303C8d55BaC6DD68da56C7",
+      "evmAddress": "0x693AE63B7Ff878f3258c7B04560ADD23Bd8629a6",
       "version": "1.0.0",
       "gitBranch": "v8/knowledge-collections",
-      "gitCommitHash": "202b04c40dbe2603cb682556a8ce1e627a7ee5f3",
-      "deploymentBlock": 19382120,
-      "deploymentTimestamp": 1734532533042,
-      "deployed": false
+      "gitCommitHash": "31cf2c123a0d60362dadc0f6966fe36198fbff8f",
+      "deploymentBlock": 19388095,
+      "deploymentTimestamp": 1734544482468,
+      "deployed": true
     },
     "Paranet": {
       "evmAddress": "0xf03Bc93ce145338A05B5dd567c078ea30d46D409",
@@ -207,13 +207,13 @@
       "deployed": true
     },
     "Migrator": {
-      "evmAddress": "0x2917884e59538C6073E1785510e2C12313269725",
+      "evmAddress": "0xc25e8cA9CEA98d4679Ac0d83a62Cd38Ffc654866",
       "version": null,
-      "gitBranch": "v8/unit-test-fixes",
-      "gitCommitHash": "44ca0f2247df826d2e6076b48b56f816bc5864a4",
-      "deploymentBlock": 19380242,
-      "deploymentTimestamp": 1734528775502,
-      "deployed": false
+      "gitBranch": "v8/knowledge-collections",
+      "gitCommitHash": "31cf2c123a0d60362dadc0f6966fe36198fbff8f",
+      "deploymentBlock": 19388506,
+      "deploymentTimestamp": 1734545303263,
+      "deployed": true
     }
   }
 }

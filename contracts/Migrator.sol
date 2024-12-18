@@ -79,10 +79,10 @@ contract Migrator is ContractStatus {
         oldHub = IOldHub(oldHubAddress);
     }
 
-    function initializeOldContracts() external onlyHubOwner {
+    function initializeOldContracts() external onlyHub {
         oldStakingStorage = IOldStakingStorage(oldHub.getContractAddress("StakingStorage"));
         oldProfileStorage = IOldProfileStorage(oldHub.getContractAddress("ProfileStorage"));
-        oldNodeOperatorFeesStorage = IOldNodeOperatorFeesStorage(oldHub.getContractAddress("NodeOpeartorFeesStorage"));
+        oldNodeOperatorFeesStorage = IOldNodeOperatorFeesStorage(oldHub.getContractAddress("NodeOperatorFeesStorage"));
         oldServiceAgreementStorageV1 = IOldServiceAgreementStorage(
             oldHub.getContractAddress("ServiceAgreementStorageV1")
         );
@@ -91,7 +91,7 @@ contract Migrator is ContractStatus {
         );
     }
 
-    function initializeNewContracts() external onlyHubOwner {
+    function initializeNewContracts() external onlyHub {
         epochStorageV6 = EpochStorage(hub.getContractAddress("EpochStorageV6"));
         newParametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         newProfileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
