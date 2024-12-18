@@ -152,7 +152,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ss.increaseDelegatorStakeRewardIndexed(
             toIdentityId,
             delegatorKey,
-            (newDelegatorStakeIndexed - delegatorStakeIndexed)
+            (delegatorStakeIndexed - newDelegatorStakeIndexed)
         );
         ss.setNodeStake(toIdentityId, totalToNodeStakeAfter);
         askContract.onStakeChanged(toIdentityId, totalToNodeStakeAfter);
@@ -226,6 +226,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         ss.deleteDelegatorWithdrawalRequest(identityId, delegatorKey);
         ss.addDelegatorCumulativePaidOutRewards(identityId, delegatorKey, delegatorIndexedOutRewardAmount);
+        ss.addNodeCumulativePaidOutRewards(identityId, delegatorIndexedOutRewardAmount);
         ss.transferStake(msg.sender, delegatorWithdrawalAmount);
     }
 
@@ -433,6 +434,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         return (totalSimBase + totalSimIndexed, totalEarned - totalPaidOut, totalUnrealized);
     }
 
+    function getNodeStats(uint72 identityId) external view returns (uint96, uint96, uint96) {
+        return stakingStorage.getNodeRewardsInfo(identityId);
+    }
+
     function getOperatorFeeStats(uint72 identityId) external view returns (uint96, uint96, uint96) {
         return stakingStorage.getNodeOperatorFeesInfo(identityId);
     }
@@ -463,6 +468,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             delegatorStakeIndexed += additional;
             ss.setDelegatorStakeInfo(identityId, delegatorKey, delegatorStakeBase, delegatorStakeIndexed);
             ss.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, additional);
+            ss.addNodeCumulativeEarnedRewards(identityId, additional);
         }
     }
 

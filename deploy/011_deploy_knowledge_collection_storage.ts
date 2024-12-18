@@ -6,7 +6,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     newContractName: 'KnowledgeCollectionStorage',
     setContractInHub: false,
     setAssetStorageInHub: true,
-    additionalArgs: [1000, 'did:dkg'], // TODO: Update
+    additionalArgs: [1_000_000, 'did:dkg'], // TODO: Update
   });
 };
 

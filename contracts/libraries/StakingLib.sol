@@ -6,6 +6,8 @@ library StakingLib {
     struct NodeData {
         uint96 stake;
         uint256 rewardIndex;
+        uint96 cumulativeEarnedRewards;
+        uint96 cumulativePaidOutRewards;
         uint96 operatorFeeBalance;
         uint96 operatorFeeCumulativeEarnedRewards;
         uint96 operatorFeeCumulativePaidOutRewards;

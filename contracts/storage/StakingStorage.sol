@@ -65,11 +65,15 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         node.rewardIndex = rewardIndex;
     }
 
-    function getNodeData(uint72 identityId) external view returns (uint96, uint256, uint96, uint96, uint96, uint256) {
+    function getNodeData(
+        uint72 identityId
+    ) external view returns (uint96, uint256, uint96, uint96, uint96, uint96, uint96, uint256) {
         StakingLib.NodeData memory node = nodes[identityId];
         return (
             node.stake,
             node.rewardIndex,
+            node.cumulativeEarnedRewards,
+            node.cumulativePaidOutRewards,
             node.operatorFeeBalance,
             node.operatorFeeCumulativeEarnedRewards,
             node.operatorFeeCumulativePaidOutRewards,
@@ -80,6 +84,11 @@ contract StakingStorage is INamed, IVersioned, Guardian {
     function getNodeStakeInfo(uint72 identityId) external view returns (uint96, uint256) {
         StakingLib.NodeData memory node = nodes[identityId];
         return (node.stake, node.rewardIndex);
+    }
+
+    function getNodeRewardsInfo(uint72 identityId) external view returns (uint96, uint96, uint96) {
+        StakingLib.NodeData memory node = nodes[identityId];
+        return (node.stake, node.cumulativeEarnedRewards, node.cumulativePaidOutRewards);
     }
 
     function getNodeOperatorFeesInfo(uint72 identityId) external view returns (uint96, uint96, uint96) {
@@ -117,6 +126,30 @@ contract StakingStorage is INamed, IVersioned, Guardian {
 
     function getNodeRewardIndex(uint72 identityId) external view returns (uint256) {
         return nodes[identityId].rewardIndex;
+    }
+
+    function getNodeCumulativeEarnedRewards(uint72 identityId) external view returns (uint96) {
+        return nodes[identityId].cumulativeEarnedRewards;
+    }
+
+    function setNodeCumulativeEarnedRewards(uint72 identityId, uint96 newEarnedRewards) external onlyContracts {
+        nodes[identityId].cumulativeEarnedRewards = newEarnedRewards;
+    }
+
+    function addNodeCumulativeEarnedRewards(uint72 identityId, uint96 addedRewards) external onlyContracts {
+        nodes[identityId].cumulativeEarnedRewards += addedRewards;
+    }
+
+    function getNodeCumulativePaidOutRewards(uint72 identityId) external view returns (uint96) {
+        return nodes[identityId].cumulativePaidOutRewards;
+    }
+
+    function setNodeCumulativePaidOutRewards(uint72 identityId, uint96 newPaidOutRewards) external onlyContracts {
+        nodes[identityId].cumulativePaidOutRewards = newPaidOutRewards;
+    }
+
+    function addNodeCumulativePaidOutRewards(uint72 identityId, uint96 addedRewards) external onlyContracts {
+        nodes[identityId].cumulativePaidOutRewards += addedRewards;
     }
 
     function setOperatorFeeBalance(uint72 identityId, uint96 newBalance) external onlyContracts {

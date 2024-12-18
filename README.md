@@ -5,7 +5,7 @@
 ![solidity - v0.8.20](https://img.shields.io/badge/solidity-v0.8.20-07a7930e?logo=solidity)
 [![NPM Package](https://img.shields.io/npm/v/dkg-evm-module)](https://www.npmjs.com/package/dkg-evm-module)
 
-This repository contains the smart contracts for OriginTrail V6, which serves as the core module for the Decentralized Knowledge Graph (DKG). The module handles various aspects, such as DKG Node profile management, Knowledge Asset ownership, consensus mechanisms, and others, in order to ensure the secure and efficient operation of the network. The contracts are written in Solidity and can be deployed on Ethereum and compatible networks.
+This repository contains the smart contracts for OriginTrail V8, which serves as the core module for the Decentralized Knowledge Graph (DKG). The module handles various aspects, such as DKG Node profile management, Knowledge Assets ownership, consensus mechanisms, and others, in order to ensure the secure and efficient operation of the network. The contracts are written in Solidity and can be deployed on Ethereum and compatible networks.
 
 ## Repository Structure
 
@@ -14,7 +14,7 @@ This repository contains the following main components:
 - `abi`: Stores the generated ABI files for the smart contracts.
 - `contracts`: Contains the Solidity source files for the smart contracts.
 - `deploy`: Contains deployment scripts for all contracts with additional helpers for automatic deployment on OriginTrail Parachain.
-- `deployments`: Contains JSON files with addresses of the latest deployed contracts on OTP (Alphanet / Devnet / Testnet / Mainnet)
+- `deployments`: Contains JSON files with addresses of the latest deployed contracts.
 - `scripts`: Includes Hardhat scripts that can be run using the Hardhat CLI for specific purposes, such as deploying contracts, generating accounts, or interacting with the blockchain.
 - `tasks`: Contains Hardhat tasks that can be executed through the Hardhat CLI to automate various actions and processes related to the project. These tasks can be helpful for interacting with smart contracts, managing deployments, or running custom scripts as needed.
 - `test`: Includes the test files for the smart contracts.
@@ -24,7 +24,7 @@ This repository contains the following main components:
 
 Before running the commands, make sure you have the following prerequisites installed:
 
-- [Node.js](https://nodejs.org/) (version 14.x or higher)
+- [Node.js](https://nodejs.org/) (version 20.x or higher)
 - [npm](https://www.npmjs.com/)
 - [slither](https://github.com/crytic/slither) (Optional, needed for static Solidity code analysis)
 
@@ -45,18 +45,17 @@ This project utilizes a variety of NPM scripts to run various tasks and processe
 - `compile:size`: Compiles the smart contracts and analyzes the size of the compiled contracts using the hardhat-contract-sizer plugin.
 - `compile`: Compiles the smart contracts with specific configuration using `hardhat.node.config.ts`.
 - `coverage`: Generates a code coverage report for the smart contracts with specific network and coverage settings.
-- `deploy:v1:gnosis_chiado_test`, `deploy:v1:gnosis_mainnet`, `deploy:v1:localhost`,  `deploy:v1:otp_mainnet`, `deploy:v1:otp_testnet`, and `deploy:v1`: Deploy version 1 of the smart contracts to various networks including Gnosis Chiado, Hardhat, OriginTrail Parachain Alphanet, OriginTrail Parachain Devnet, OriginTrail Parachain Testnet, and OriginTrail Parachain Mainnet.
-- `deploy:v2:gnosis_chiado_test`, `deploy:v2:gnosis_mainnet`, `deploy:v2:localhost`, `deploy:v2:otp_mainnet`, `deploy:v2:otp_testnet`, and `deploy:v2`: Similar to the v1 deploy scripts, these deploy version 2 of the smart contracts to the respective networks.
-- `dev:v1`, `dev:v2`, and `dev`: Run local development nodes with Hardhat for different versions of contracts.
+- `deploy:gnosis_chiado_test`, `deploy:gnosis_mainnet`, `deploy:base_sepolia_test`, `deploy:base_mainnet`, `deploy:neuroweb_testnet`, `deploy:neuroweb_mainnet`, `deploy:localhost` and `deploy`: Deploy smart contracts to various networks including Gnosis Chiado, Gnosis Mainnet, Base Sepolia Testnet, Base Mainnet, Neuroweb Testnet, Neuroweb Mainnet and Hardhat.
+- `dev`: Run local development nodes with Hardhat.
 - `export-abi`: Updates ABI files according to the current state of the smart contracts.
 - `format:fix`: Automatically fixes code formatting issues for JSON, JavaScript, TypeScript, and Solidity files using Prettier.
 - `format`: Checks code formatting for the same file types.
-- `generate-evm-account` and `generate-otp-account`: Generate new Ethereum and OriginTrail accounts, respectively.
+- `generate-evm-account` and `generate-neuroweb-account`: Generate new Ethereum and OriginTrail accounts, respectively.
 - `lint:fix`, `lint:sol:fix`, `lint:ts:fix`, `lint:sol`, `lint:ts`, and `lint`: Provide various linting functionalities for Solidity and TypeScript files, including fixing issues.
 - `mint-test-tokens`: Mints test tokens on the local development network.
 - `prepare`: Sets up Husky Git hooks and generates TypeChain typings for the smart contracts.
 - `slither:reentrancy` and `slither`: Run Slither static analysis with a focus on reentrancy vulnerabilities, and a general analysis, respectively.
-- `test:fulltrace`, `test:gas:fulltrace`, `test:gas:trace`, `test:gas`, `test:integration`, `test:trace`, `test:unit`, `test:v1:integration`, `test:v1:unit`, `test:v1`, `test:v2:integration`, `test:v2:unit`, `test:v2`, and `test`: A comprehensive suite of test scripts for different scenarios, including full trace, gas usage, integration, and unit tests for different versions.
+- `test:fulltrace`, `test:gas:fulltrace`, `test:gas:trace`, `test:gas`, `test:integration`, `test:trace`, `test:unit` and `test`: A comprehensive suite of test scripts for different scenarios, including full trace, gas usage, integration, and unit tests.
 - `typechain`: Generates TypeChain typings for the smart contracts.
 
 These scripts can be run using the `npm run <script-name>` command. For example, to compile the smart contracts, you can run:
@@ -87,77 +86,53 @@ Alternatively, encoded data can be produced from Remix by copying prepared calld
 
 ## Contracts deployment on parachains
 
-Update environment use OTP_DEVNET/OTP_TESTNET/OTP_MAINNET
+Update environment use NEUROWEB_DEVNET/NEUROWEB_TESTNET/NEUROWEB_MAINNET
 ```dotenv
-RPC_OTP_DEVNET='<https_endpoint>'
-EVM_PRIVATE_KEY_OTP_DEVNET='<0x_ethereum_private_key>'
-ACCOUNT_WITH_OTP_URI_OTP_DEVNET='<substrate_account_uri>'
+RPC_NEUROWEB_DEVNET='<https_endpoint>'
+EVM_PRIVATE_KEY_NEUROWEB_DEVNET='<0x_ethereum_private_key>'
+ACCOUNT_WITH_NEURO_URI_NEUROWEB_DEVNET='<substrate_account_uri>'
 ```
 
 <br/>
 
-OriginTrail Parachain Devnet (v1 contracts)
+OriginTrail Parachain Devnet
 ```sh
-npm run deploy:v1:otp_devnet
-```
-or (v2 contracts)
-```sh
-npm run deploy:v2:otp_devnet
+npm run deploy:neuroweb_devnet
 ```
 
 <br/>
 
-OriginTrail Parachain Testnet (v1 contracts)
+OriginTrail Parachain Testnet
 ```sh
-npm run deploy:v1:otp_testnet
-```
-or (v2 contracts)
-```sh
-npm run deploy:v2:otp_testnet
+npm run deploy:neuroweb_testnet
 ```
 
 <br/>
 
-OriginTrail Parachain Mainnet (v1 contracts)
+OriginTrail Parachain Mainnet
 ```sh
-npm run deploy:v1:otp_mainnet
-```
-or (v2 contracts)
-```sh
-npm run deploy:v2:otp_mainnet
+npm run deploy:neuroweb_mainnet
 ```
 
 <br/>
 
-Gnosis Chiado Dev (v1 contracts)
+Gnosis Chiado Dev
 ```sh
-npm run deploy:v1:gnosis_chiado_dev
-```
-or (v2 contracts)
-```sh
-npm run deploy:v2:gnosis_chiado_dev
+npm run deploy:gnosis_chiado_dev
 ```
 
 <br/>
 
-Gnosis Chiado Test (v1 contracts)
+Gnosis Chiado Test
 ```sh
-npm run deploy:v1:gnosis_chiado_test
-```
-or (v2 contracts)
-```sh
-npm run deploy:v2:gnosis_chiado_test
+npm run deploy:gnosis_chiado_test
 ```
 
 <br/>
 
-Gnosis Mainnet (v1 contracts)
+Gnosis Mainnet
 ```sh
-npm run deploy:v1:gnosis_mainnet
-```
-or (v2 contracts)
-```sh
-npm run deploy:v2:gnosis_mainnet
+npm run deploy:gnosis_mainnet
 ```
 
 <br/>

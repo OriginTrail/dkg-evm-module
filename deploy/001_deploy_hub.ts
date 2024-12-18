@@ -17,7 +17,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    hre.helpers.updateDeploymentsJson(
+    await hre.helpers.updateDeploymentsJson(
       'Hub',
       Hub.address,
       Hub.receipt!.blockNumber,

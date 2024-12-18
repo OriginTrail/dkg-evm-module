@@ -418,7 +418,7 @@ export class Helpers {
 
     this.contractDeployments.contracts[newContractName] = {
       evmAddress: newContractAddress,
-      substrateAddress: this.hre.network.name.startsWith('otp')
+      substrateAddress: this.hre.network.name.startsWith('neuro')
         ? this.convertEvmWallet(newContractAddress)
         : undefined,
       version: contractVersion,
@@ -456,7 +456,7 @@ export class Helpers {
     );
   }
 
-  public async sendOTP(address: string | undefined, tokenAmount = 2) {
+  public async sendNeuro(address: string | undefined, tokenAmount = 2) {
     if (address === undefined) {
       throw Error('Address cannot be undefined!');
     }
@@ -473,16 +473,16 @@ export class Helpers {
     const keyring = new Keyring({ type: 'sr25519' });
     const accountUri =
       process.env[
-        `ACCOUNT_WITH_OTP_URI_${this.hre.network.name.toUpperCase()}`
+        `ACCOUNT_WITH_NEURO_URI_${this.hre.network.name.toUpperCase()}`
       ];
     if (!accountUri) {
-      throw Error('URI for account with OTP is required!');
+      throw Error('URI for account with Neuro is required!');
     }
     const account = keyring.createFromUri(accountUri);
 
     const txHash = await transfer.signAndSend(account, { nonce: -1 });
     console.log(
-      `2 OTPs sent to contract at address ${address}. Transaction hash: ${txHash.toHuman()}`,
+      `2 Neuro sent to contract at address ${address}. Transaction hash: ${txHash.toHuman()}`,
     );
     await this._delay(40000);
   }
