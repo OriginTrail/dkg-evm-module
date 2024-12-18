@@ -51,7 +51,7 @@ contract Paymaster is Ownable(msg.sender) {
         }
     }
 
-    function withdraw(address recipient, uint256 amount) external onlyAllowed {
+    function withdraw(address recipient, uint256 amount) external onlyOwner {
         _transferTokens(recipient, amount);
     }
 

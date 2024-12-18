@@ -126,7 +126,7 @@ contract Hub is INamed, IVersioned, Ownable {
         _setContracts(newContracts);
         _setAssetStorageContracts(newAssetStorageContracts);
         _reinitializeContracts(contractsToReinitialize);
-        // _forwardCalls(forwardCallsData);
+        _forwardCalls(forwardCallsData);
     }
 
     function _setContractAddress(string calldata contractName, address newContractAddress) internal {
@@ -191,32 +191,32 @@ contract Hub is INamed, IVersioned, Ownable {
         }
     }
 
-    // function _forwardCalls(HubLib.ForwardCallInputArgs[] calldata forwardCallsData) internal {
-    //     for (uint i; i < forwardCallsData.length; ) {
-    //         address contractAddress;
+    function _forwardCalls(HubLib.ForwardCallInputArgs[] calldata forwardCallsData) internal {
+        for (uint i; i < forwardCallsData.length; ) {
+            address contractAddress;
 
-    //         // Try to get the contract address using getContractAddress
-    //         try contractSet.get(forwardCallsData[i].contractName).addr returns (address addr) {
-    //             contractAddress = addr;
-    //         } catch {
-    //             // If getContractAddress fails, try getAssetStorageAddress
-    //             try this.getAssetStorageAddress(forwardCallsData[i].contractName) returns (address addr) {
-    //                 contractAddress = addr;
-    //             } catch {
-    //                 revert("Failed to get contract address");
-    //             }
-    //         }
-    //         for (uint j; j < forwardCallsData[i].encodedData.length; ) {
-    //             forwardCall(contractAddress, forwardCallsData[i].encodedData[j]);
-    //             unchecked {
-    //                 j++;
-    //             }
-    //         }
-    //         unchecked {
-    //             i++;
-    //         }
-    //     }
-    // }
+            // Try to get the contract address using getContractAddress
+            try this.getContractAddress(forwardCallsData[i].contractName) returns (address addr) {
+                contractAddress = addr;
+            } catch {
+                // If getContractAddress fails, try getAssetStorageAddress
+                try this.getAssetStorageAddress(forwardCallsData[i].contractName) returns (address addr) {
+                    contractAddress = addr;
+                } catch {
+                    revert("Failed to get contract address");
+                }
+            }
+            for (uint j; j < forwardCallsData[i].encodedData.length; ) {
+                forwardCall(contractAddress, forwardCallsData[i].encodedData[j]);
+                unchecked {
+                    j++;
+                }
+            }
+            unchecked {
+                i++;
+            }
+        }
+    }
 
     function _isContract(address addr) internal view returns (bool) {
         uint256 size;

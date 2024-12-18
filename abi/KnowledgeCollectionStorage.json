@@ -257,12 +257,6 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "publishingTime",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
         "internalType": "bytes32",
         "name": "merkleRoot",
         "type": "bytes32"
@@ -271,12 +265,6 @@
         "indexed": false,
         "internalType": "uint256",
         "name": "byteSize",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "triplesAmount",
         "type": "uint256"
       },
       {
@@ -433,25 +421,6 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "publishingTime",
-        "type": "uint256"
-      }
-    ],
-    "name": "KnowledgeCollectionPublishingTimeUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
         "name": "startEpoch",
         "type": "uint256"
       }
@@ -489,25 +458,6 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "triplesAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "KnowledgeCollectionTriplesAmountUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
         "internalType": "string",
         "name": "updateOperationId",
         "type": "string"
@@ -522,12 +472,6 @@
         "indexed": false,
         "internalType": "uint256",
         "name": "byteSize",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "triplesAmount",
         "type": "uint256"
       },
       {
@@ -848,12 +792,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "byteSize",
+        "name": "knowledgeAssetsAmount",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "triplesAmount",
+        "name": "byteSize",
         "type": "uint256"
       },
       {
@@ -1062,11 +1006,6 @@
             "type": "address"
           },
           {
-            "internalType": "uint256",
-            "name": "publishingTime",
-            "type": "uint256"
-          },
-          {
             "internalType": "bytes32[]",
             "name": "merkleRoots",
             "type": "bytes32[]"
@@ -1084,11 +1023,6 @@
           {
             "internalType": "uint256",
             "name": "byteSize",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "triplesAmount",
             "type": "uint256"
           },
           {
@@ -1155,11 +1089,6 @@
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
         "internalType": "bytes32[]",
         "name": "",
         "type": "bytes32[]"
@@ -1173,11 +1102,6 @@
         "internalType": "uint256[]",
         "name": "",
         "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       },
       {
         "internalType": "uint256",
@@ -1329,25 +1253,6 @@
         "type": "uint256"
       }
     ],
-    "name": "getPublishingTime",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
     "name": "getStartEpoch",
     "outputs": [
       {
@@ -1380,70 +1285,12 @@
   },
   {
     "inputs": [],
-    "name": "getTotalByteSize",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getTotalChunksAmount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "getTotalTokenAmount",
     "outputs": [
       {
         "internalType": "uint96",
         "name": "",
         "type": "uint96"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getTotalTriplesAmount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "getTriplesAmount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1590,22 +1437,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "publishingTime",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "minted",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
         "name": "byteSize",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "triplesAmount",
         "type": "uint256"
       },
       {
@@ -1918,24 +1755,6 @@
       },
       {
         "internalType": "uint256",
-        "name": "_publishingTime",
-        "type": "uint256"
-      }
-    ],
-    "name": "setPublishingTime",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "_startEpoch",
         "type": "uint256"
       }
@@ -1959,24 +1778,6 @@
       }
     ],
     "name": "setTokenAmount",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_triplesAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "setTriplesAmount",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -2132,12 +1933,17 @@
       },
       {
         "internalType": "uint256",
-        "name": "byteSize",
+        "name": "mintKnowledgeAssetsAmount",
         "type": "uint256"
       },
       {
+        "internalType": "uint256[]",
+        "name": "knowledgeAssetsToBurn",
+        "type": "uint256[]"
+      },
+      {
         "internalType": "uint256",
-        "name": "triplesAmount",
+        "name": "byteSize",
         "type": "uint256"
       },
       {

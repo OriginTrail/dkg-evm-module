@@ -16,16 +16,6 @@
     "type": "error"
   },
   {
-    "inputs": [],
-    "name": "EmptySharesTokenName",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "EmptySharesTokenSymbol",
-    "type": "error"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint72",
@@ -99,28 +89,6 @@
       }
     ],
     "name": "OperatorFeeOutOfRange",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "tokenName",
-        "type": "string"
-      }
-    ],
-    "name": "SharesTokenNameAlreadyExists",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "tokenSymbol",
-        "type": "string"
-      }
-    ],
-    "name": "SharesTokenSymbolAlreadyExists",
     "type": "error"
   },
   {
@@ -285,12 +253,6 @@
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "sharesContractAddress",
-        "type": "address"
-      },
-      {
-        "indexed": false,
         "internalType": "uint8",
         "name": "initialOperatorFee",
         "type": "uint8"
@@ -330,6 +292,11 @@
         "type": "address[]"
       },
       {
+        "internalType": "string",
+        "name": "nodeName",
+        "type": "string"
+      },
+      {
         "internalType": "bytes",
         "name": "nodeId",
         "type": "bytes"
@@ -338,16 +305,6 @@
         "internalType": "uint96",
         "name": "initialAsk",
         "type": "uint96"
-      },
-      {
-        "internalType": "string",
-        "name": "sharesTokenName",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "sharesTokenSymbol",
-        "type": "string"
       },
       {
         "internalType": "uint8",

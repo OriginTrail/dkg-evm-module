@@ -215,11 +215,6 @@
       },
       {
         "internalType": "uint256",
-        "name": "triplesAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "chunksAmount",
         "type": "uint256"
       },
@@ -270,7 +265,13 @@
       }
     ],
     "name": "createKnowledgeCollection",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -466,11 +467,6 @@
       {
         "internalType": "uint256",
         "name": "byteSize",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "triplesAmount",
         "type": "uint256"
       },
       {

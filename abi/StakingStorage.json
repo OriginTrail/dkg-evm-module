@@ -11,6 +11,11 @@
     "type": "constructor"
   },
   {
+    "inputs": [],
+    "name": "IndexOutOfBounds",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -201,12 +206,81 @@
         "type": "uint96"
       },
       {
+        "internalType": "uint96",
+        "name": "indexedOutAmount",
+        "type": "uint96"
+      },
+      {
         "internalType": "uint256",
         "name": "timestamp",
         "type": "uint256"
       }
     ],
     "name": "createOperatorFeeWithdrawalRequest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint96",
+        "name": "removedStake",
+        "type": "uint96"
+      }
+    ],
+    "name": "decreaseDelegatorStakeBase",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint96",
+        "name": "removedStakeReward",
+        "type": "uint96"
+      }
+    ],
+    "name": "decreaseDelegatorStakeRewardIndexed",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint96",
+        "name": "removedNodeStake",
+        "type": "uint96"
+      }
+    ],
+    "name": "decreaseNodeStake",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -347,6 +421,25 @@
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
+      }
+    ],
+    "name": "getDelegatorCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
       },
       {
         "internalType": "bytes32",
@@ -460,6 +553,54 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getDelegatorNodes",
+    "outputs": [
+      {
+        "internalType": "uint72[]",
+        "name": "",
+        "type": "uint72[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "start",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "end",
+        "type": "uint256"
+      }
+    ],
+    "name": "getDelegatorNodesIn",
+    "outputs": [
+      {
+        "internalType": "uint72[]",
+        "name": "",
+        "type": "uint72[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -558,6 +699,30 @@
       }
     ],
     "name": "getDelegatorStakeRewardIndexed",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getDelegatorTotalStake",
     "outputs": [
       {
         "internalType": "uint96",
@@ -708,6 +873,11 @@
         "internalType": "uint96",
         "name": "",
         "type": "uint96"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -877,6 +1047,11 @@
         "type": "uint96"
       },
       {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      },
+      {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
@@ -894,6 +1069,25 @@
       }
     ],
     "name": "getOperatorFeeWithdrawalRequestAmount",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getOperatorFeeWithdrawalRequestIndexedOutAmount",
     "outputs": [
       {
         "internalType": "uint96",
@@ -957,6 +1151,88 @@
         "type": "uint72"
       },
       {
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint96",
+        "name": "addedStake",
+        "type": "uint96"
+      }
+    ],
+    "name": "increaseDelegatorStakeBase",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint96",
+        "name": "addedStakeReward",
+        "type": "uint96"
+      }
+    ],
+    "name": "increaseDelegatorStakeRewardIndexed",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "addedIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "increaseNodeRewardIndex",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint96",
+        "name": "addedNodeStake",
+        "type": "uint96"
+      }
+    ],
+    "name": "increaseNodeStake",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
         "internalType": "uint96",
         "name": "addedFee",
         "type": "uint96"
@@ -985,6 +1261,30 @@
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
+      }
+    ],
+    "name": "isDelegatingToNode",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1034,6 +1334,11 @@
         "internalType": "uint96",
         "name": "operatorFeeCumulativePaidOutRewards",
         "type": "uint96"
+      },
+      {
+        "internalType": "uint256",
+        "name": "delegatorCount",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1074,12 +1379,35 @@
         "type": "uint96"
       },
       {
+        "internalType": "uint96",
+        "name": "indexedOutAmount",
+        "type": "uint96"
+      },
+      {
         "internalType": "uint256",
         "name": "timestamp",
         "type": "uint256"
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "delegatorCount",
+        "type": "uint256"
+      }
+    ],
+    "name": "setDelegatorCount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1252,6 +1580,42 @@
       }
     ],
     "name": "setOperatorFeeBalance",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint96",
+        "name": "amount",
+        "type": "uint96"
+      }
+    ],
+    "name": "setOperatorFeeCumulativeEarnedReward",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint96",
+        "name": "amount",
+        "type": "uint96"
+      }
+    ],
+    "name": "setOperatorFeeCumulativePaidOutReward",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
