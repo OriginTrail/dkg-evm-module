@@ -155,6 +155,7 @@ config.abiExporter = {
     'IOldNodeOperatorFeesStorage',
     'IOldProfileStorage',
     'IOldStakingStorage',
+    'IOldServiceAgreementStorage',
   ],
   spacing: 2,
   format: 'json',

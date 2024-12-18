@@ -96,7 +96,7 @@
       "gitCommitHash": "202b04c40dbe2603cb682556a8ce1e627a7ee5f3",
       "deploymentBlock": 19382114,
       "deploymentTimestamp": 1734532519652,
-      "deployed": true
+      "deployed": false
     },
     "ParanetsRegistry": {
       "evmAddress": "0xDD105e2Ab14a392e1DEE49D604aEE3833091AE55",
@@ -168,7 +168,7 @@
       "gitCommitHash": "202b04c40dbe2603cb682556a8ce1e627a7ee5f3",
       "deploymentBlock": 19382117,
       "deploymentTimestamp": 1734532526743,
-      "deployed": true
+      "deployed": false
     },
     "Staking": {
       "evmAddress": "0xe56108458F5172A6d9e2B6577A96a79515b9E841",
@@ -195,7 +195,7 @@
       "gitCommitHash": "202b04c40dbe2603cb682556a8ce1e627a7ee5f3",
       "deploymentBlock": 19382120,
       "deploymentTimestamp": 1734532533042,
-      "deployed": true
+      "deployed": false
     },
     "Paranet": {
       "evmAddress": "0xf03Bc93ce145338A05B5dd567c078ea30d46D409",
@@ -213,7 +213,7 @@
       "gitCommitHash": "44ca0f2247df826d2e6076b48b56f816bc5864a4",
       "deploymentBlock": 19380242,
       "deploymentTimestamp": 1734528775502,
-      "deployed": true
+      "deployed": false
     }
   }
 }
