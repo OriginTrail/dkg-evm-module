@@ -250,21 +250,33 @@ contract KnowledgeCollectionStorage is
 
     function getLatestMerkleRootObject(uint256 id) external view returns (KnowledgeCollectionLib.MerkleRoot memory) {
         KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
+        if (kc.merkleRoots.length == 0) {
+            return KnowledgeCollectionLib.MerkleRoot(address(0), bytes32(0), 0);
+        }
         return kc.merkleRoots[kc.merkleRoots.length - 1];
     }
 
     function getLatestMerkleRoot(uint256 id) external view returns (bytes32) {
         KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
+        if (kc.merkleRoots.length == 0) {
+            return bytes32(0);
+        }
         return kc.merkleRoots[kc.merkleRoots.length - 1].merkleRoot;
     }
 
     function getLatestMerkleRootPublisher(uint256 id) external view returns (address) {
         KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
+        if (kc.merkleRoots.length == 0) {
+            return address(0);
+        }
         return kc.merkleRoots[kc.merkleRoots.length - 1].publisher;
     }
 
     function getLatestMerkleRootTimestamp(uint256 id) external view returns (uint256) {
         KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
+        if (kc.merkleRoots.length == 0) {
+            return 0;
+        }
         return kc.merkleRoots[kc.merkleRoots.length - 1].timestamp;
     }
 
