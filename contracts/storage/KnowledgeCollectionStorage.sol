@@ -89,6 +89,7 @@ contract KnowledgeCollectionStorage is
     }
 
     function createKnowledgeCollection(
+        address publisher,
         string calldata publishOperationId,
         bytes32 merkleRoot,
         uint256 knowledgeAssetsAmount,
@@ -102,7 +103,7 @@ contract KnowledgeCollectionStorage is
 
         KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[knowledgeCollectionId];
 
-        kc.merkleRoots.push(KnowledgeCollectionLib.MerkleRoot(msg.sender, merkleRoot, block.timestamp));
+        kc.merkleRoots.push(KnowledgeCollectionLib.MerkleRoot(publisher, merkleRoot, block.timestamp));
         kc.byteSize = byteSize;
         kc.chunksAmount = chunksAmount;
         kc.startEpoch = startEpoch;
@@ -113,7 +114,7 @@ contract KnowledgeCollectionStorage is
             _totalTokenAmount += tokenAmount;
         }
 
-        mintKnowledgeAssetsTokens(knowledgeCollectionId, msg.sender, knowledgeAssetsAmount);
+        mintKnowledgeAssetsTokens(knowledgeCollectionId, publisher, knowledgeAssetsAmount);
 
         emit KnowledgeCollectionCreated(
             knowledgeCollectionId,
@@ -136,6 +137,7 @@ contract KnowledgeCollectionStorage is
     }
 
     function updateKnowledgeCollection(
+        address publisher,
         uint256 id,
         string calldata updateOperationId,
         bytes32 merkleRoot,
@@ -151,13 +153,13 @@ contract KnowledgeCollectionStorage is
             _totalTokenAmount = _totalTokenAmount - kc.tokenAmount + tokenAmount;
         }
 
-        kc.merkleRoots.push(KnowledgeCollectionLib.MerkleRoot(msg.sender, merkleRoot, block.timestamp));
+        kc.merkleRoots.push(KnowledgeCollectionLib.MerkleRoot(publisher, merkleRoot, block.timestamp));
         kc.byteSize = byteSize;
         kc.chunksAmount = chunksAmount;
         kc.tokenAmount = tokenAmount;
 
-        burnKnowledgeAssetsTokens(id, msg.sender, knowledgeAssetsToBurn);
-        mintKnowledgeAssetsTokens(id, msg.sender, mintKnowledgeAssetsAmount);
+        burnKnowledgeAssetsTokens(id, publisher, knowledgeAssetsToBurn);
+        mintKnowledgeAssetsTokens(id, publisher, mintKnowledgeAssetsAmount);
 
         emit KnowledgeCollectionUpdated(id, updateOperationId, merkleRoot, byteSize, chunksAmount, tokenAmount);
     }
@@ -236,9 +238,9 @@ contract KnowledgeCollectionStorage is
         return kc.merkleRoots[kc.merkleRoots.length - 1].merkleRoot;
     }
 
-    function pushMerkleRoot(uint256 id, bytes32 merkleRoot) external onlyContracts {
+    function pushMerkleRoot(address publisher, uint256 id, bytes32 merkleRoot) external onlyContracts {
         knowledgeCollections[id].merkleRoots.push(
-            KnowledgeCollectionLib.MerkleRoot(msg.sender, merkleRoot, block.timestamp)
+            KnowledgeCollectionLib.MerkleRoot(publisher, merkleRoot, block.timestamp)
         );
 
         emit KnowledgeCollectionMerkleRootAdded(id, merkleRoot);

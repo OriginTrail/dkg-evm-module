@@ -88,6 +88,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         uint256 currentEpoch = chronos.getCurrentEpoch();
 
         uint256 id = kcs.createKnowledgeCollection(
+            msg.sender,
             publishOperationId,
             merkleRoot,
             knowledgeAssetsAmount,
@@ -145,6 +146,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         }
 
         kcs.updateKnowledgeCollection(
+            msg.sender,
             id,
             updateOperationId,
             merkleRoot,
@@ -284,7 +286,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
                 revert TokenLib.TooLowBalance(address(token), token.balanceOf(msg.sender), tokenAmount);
             }
 
-            if (!token.transferFrom(msg.sender, address(this), tokenAmount)) {
+            if (!token.transferFrom(msg.sender, address(hub.getContractAddress("StakingStorage")), tokenAmount)) {
                 revert TokenLib.TransferFailed();
             }
         }

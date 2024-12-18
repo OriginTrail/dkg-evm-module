@@ -805,6 +805,11 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "publisher",
+        "type": "address"
+      },
+      {
         "internalType": "string",
         "name": "publishOperationId",
         "type": "string"
@@ -1586,6 +1591,11 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "publisher",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "id",
         "type": "uint256"
@@ -1980,6 +1990,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "publisher",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
         "name": "id",
