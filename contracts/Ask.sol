@@ -70,7 +70,7 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
 
         uint96 maximumStake = ps.maximumStake();
         uint96 stake = newStake <= maximumStake ? newStake : maximumStake;
-        uint256 newWeightedAsk = profileStorage.getAsk(identityId) * stake;
+        uint256 newWeightedAsk = uint256(profileStorage.getAsk(identityId)) * stake;
 
         if (weightedActiveAskSum == 0) {
             weightedActiveAskSum = newWeightedAsk;
@@ -125,7 +125,7 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
 
         uint96 maximumStake = ps.maximumStake();
         uint96 stake = currentStake <= maximumStake ? currentStake : maximumStake;
-        uint256 newWeightedAsk = stake * newAsk;
+        uint256 newWeightedAsk = uint256(stake) * newAsk;
 
         if (weightedActiveAskSum == 0) {
             weightedActiveAskSum = newWeightedAsk;
