@@ -21,12 +21,18 @@
       },
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "tokenContract",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       }
     ],
-    "name": "MisplacedOTPWithdrawn",
+    "name": "MisplacedERC20Withdrawn",
     "type": "event"
   },
   {
@@ -40,18 +46,12 @@
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "tokenContract",
-        "type": "address"
-      },
-      {
-        "indexed": false,
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       }
     ],
-    "name": "MisplacedTokensWithdrawn",
+    "name": "MisplacedEtherWithdrawn",
     "type": "event"
   },
   {
@@ -121,7 +121,7 @@
   },
   {
     "inputs": [],
-    "name": "withdrawMisplacedOTP",
+    "name": "withdrawMisplacedEther",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

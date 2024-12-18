@@ -1,0 +1,224 @@
+{
+  "contracts": {
+    "Token": {
+      "deployed": true,
+      "evmAddress": "0x4ead53ee0aaeB0bE5920DC2DAA7AD93F11cA5207"
+    },
+    "Hub": {
+      "evmAddress": "0x376558532f395B54f3D88a16117C55B84D600972",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375774,
+      "deploymentTimestamp": 1734519841197,
+      "deployed": true
+    },
+    "ParametersStorage": {
+      "evmAddress": "0xCaa13D1368eD84839CE941bBec200F1698d1b3A7",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375778,
+      "deploymentTimestamp": 1734519848078,
+      "deployed": true
+    },
+    "WhitelistStorage": {
+      "evmAddress": "0xAB325587563388712b44e89dB29C161ed8267869",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375781,
+      "deploymentTimestamp": 1734519850872,
+      "deployed": true
+    },
+    "IdentityStorage": {
+      "evmAddress": "0x04557556196DAEF2c8C93B3b2712BC51dc6032A1",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375782,
+      "deploymentTimestamp": 1734519856870,
+      "deployed": true
+    },
+    "ShardingTableStorage": {
+      "evmAddress": "0xd7040aCEfcEf91BE09A633dfF83A9ec978381542",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375785,
+      "deploymentTimestamp": 1734519863429,
+      "deployed": true
+    },
+    "StakingStorage": {
+      "evmAddress": "0x4A0282e756ba0682495d36Ae150C99b4382342ef",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375789,
+      "deploymentTimestamp": 1734519869803,
+      "deployed": true
+    },
+    "ProfileStorage": {
+      "evmAddress": "0x052ea6eb6B3e40d6Ba6ae50725BB0B29c43AE676",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375792,
+      "deploymentTimestamp": 1734519876576,
+      "deployed": true
+    },
+    "Chronos": {
+      "evmAddress": "0x2F93DaD39F839425327CD16159F38D5d84796F48",
+      "version": null,
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375795,
+      "deploymentTimestamp": 1734519883180,
+      "deployed": true
+    },
+    "EpochStorageV6": {
+      "evmAddress": "0xD972EACEC5E9888C4263f818ece2D03ad1dFB960",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375799,
+      "deploymentTimestamp": 1734519889768,
+      "deployed": true
+    },
+    "EpochStorageV8": {
+      "evmAddress": "0x3d453b3F4f8dc26a6Dbb6786cD4e6a18DE0F49d1",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375802,
+      "deploymentTimestamp": 1734519896124,
+      "deployed": true
+    },
+    "KnowledgeCollectionStorage": {
+      "evmAddress": "0xEd37Be8FBD2843514ee3C9e592e408e1aCa1B705",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375805,
+      "deploymentTimestamp": 1734519903027,
+      "deployed": true
+    },
+    "ParanetsRegistry": {
+      "evmAddress": "0xD30953E32B70693f22F6b9fFd21312Cce01de5CE",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375808,
+      "deploymentTimestamp": 1734519909431,
+      "deployed": true
+    },
+    "ParanetServicesRegistry": {
+      "evmAddress": "0x6Aa2bB0131C1ee107a0D43602702c5733c717037",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375812,
+      "deploymentTimestamp": 1734519915723,
+      "deployed": true
+    },
+    "ParanetKnowledgeAssetsRegistry": {
+      "evmAddress": "0x5fEeA6b2B82E17bA36B423dE3684Eefd3066D5c7",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375815,
+      "deploymentTimestamp": 1734519921979,
+      "deployed": true
+    },
+    "ParanetKnowledgeMinersRegistry": {
+      "evmAddress": "0x8D271E7F6dC41dcFb70492858a2e951852B36d28",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375818,
+      "deploymentTimestamp": 1734519928434,
+      "deployed": true
+    },
+    "PaymasterManager": {
+      "evmAddress": "0x6c16Cb36749958F049A4D00B2d474282aE183B77",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375821,
+      "deploymentTimestamp": 1734519935288,
+      "deployed": true
+    },
+    "Identity": {
+      "evmAddress": "0xaFb2267bd0C6764e3e719E4961C7F7858e0478C4",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375825,
+      "deploymentTimestamp": 1734519941578,
+      "deployed": true
+    },
+    "ShardingTable": {
+      "evmAddress": "0x8120Bf352f014C896de525d0C1A07aAD01BdB29f",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375828,
+      "deploymentTimestamp": 1734519948219,
+      "deployed": true
+    },
+    "Ask": {
+      "evmAddress": "0x03e9a04cF56cE91DCB7F678d8ADaf1C4CF5d1eF2",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375831,
+      "deploymentTimestamp": 1734519954947,
+      "deployed": true
+    },
+    "Staking": {
+      "evmAddress": "0xF305303f00358d0fCf942778dE71e1776D0f5A1c",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375834,
+      "deploymentTimestamp": 1734519957385,
+      "deployed": true
+    },
+    "Profile": {
+      "evmAddress": "0x08E6196281914581768217f5A41EB7eD20AdBF49",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375836,
+      "deploymentTimestamp": 1734519963967,
+      "deployed": true
+    },
+    "KnowledgeCollection": {
+      "evmAddress": "0x8F8c763a8766F42B672d6B1A25eCb912fd7A7c5F",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375839,
+      "deploymentTimestamp": 1734519970468,
+      "deployed": true
+    },
+    "Paranet": {
+      "evmAddress": "0x0F63B9C06F1b909498Ec4Ae71a74d8ae65861e10",
+      "version": "1.0.0",
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375842,
+      "deploymentTimestamp": 1734519976733,
+      "deployed": true
+    },
+    "Migrator": {
+      "evmAddress": "0x91C4a75469D832455cbC515B6315360c7045f0e8",
+      "version": null,
+      "gitBranch": "v8/migrator-improvements",
+      "gitCommitHash": "d6c59c4595f4ae7331ad13aeee7c9e46ae3dbc1c",
+      "deploymentBlock": 19375845,
+      "deploymentTimestamp": 1734519983062,
+      "deployed": true
+    }
+  }
+}

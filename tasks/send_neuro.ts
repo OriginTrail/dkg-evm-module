@@ -2,18 +2,18 @@ import { task } from 'hardhat/config';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 type SenderParameters = {
-  otp_address: string;
+  neuro_address: string;
   amount: number;
 };
 
 task(
-  'send_otp',
-  'Sends OTP from account with tokens to the specified (Substrate) address',
+  'send_neuro',
+  'Sends Neuro from account with tokens to the specified (Substrate) address',
 )
-  .addParam<string>('otpAddress', 'Substrate OTP address')
+  .addParam<string>('neuroAddress', 'Substrate Neuroweb address')
   .addParam<number>('amount', 'Amount of tokens to send')
   .setAction(
     async (taskArgs: SenderParameters, hre: HardhatRuntimeEnvironment) => {
-      hre.helpers.sendOTP(taskArgs.otp_address, taskArgs.amount);
+      hre.helpers.sendNeuro(taskArgs.neuro_address, taskArgs.amount);
     },
   );

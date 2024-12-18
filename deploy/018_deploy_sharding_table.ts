@@ -24,7 +24,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     additionalArgs: [isMigration ? blockTimeNow + 86400 : blockTimeNow],
   });
 
-  if (isMigration && hre.network.name.startsWith('otp')) {
+  if (isMigration && hre.network.name.startsWith('neuroweb')) {
     console.log(`Executing sharding table storage migration`);
     const shardingTableStorageAddress =
       hre.helpers.contractDeployments.contracts['ShardingTableStorage']

@@ -26,12 +26,18 @@
       },
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "tokenContract",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       }
     ],
-    "name": "MisplacedOTPWithdrawn",
+    "name": "MisplacedERC20Withdrawn",
     "type": "event"
   },
   {
@@ -45,18 +51,12 @@
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "tokenContract",
-        "type": "address"
-      },
-      {
-        "indexed": false,
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       }
     ],
-    "name": "MisplacedTokensWithdrawn",
+    "name": "MisplacedEtherWithdrawn",
     "type": "event"
   },
   {
@@ -120,6 +120,42 @@
       }
     ],
     "name": "addDelegatorCumulativePaidOutRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint96",
+        "name": "addedRewards",
+        "type": "uint96"
+      }
+    ],
+    "name": "addNodeCumulativeEarnedRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint96",
+        "name": "addedRewards",
+        "type": "uint96"
+      }
+    ],
+    "name": "addNodeCumulativePaidOutRewards",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -847,6 +883,44 @@
         "type": "uint72"
       }
     ],
+    "name": "getNodeCumulativeEarnedRewards",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getNodeCumulativePaidOutRewards",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
     "name": "getNodeData",
     "outputs": [
       {
@@ -858,6 +932,16 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
       },
       {
         "internalType": "uint96",
@@ -926,6 +1010,35 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getNodeRewardsInfo",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
       }
     ],
     "stateMutability": "view",
@@ -1322,6 +1435,16 @@
       },
       {
         "internalType": "uint96",
+        "name": "cumulativeEarnedRewards",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "cumulativePaidOutRewards",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
         "name": "operatorFeeBalance",
         "type": "uint96"
       },
@@ -1515,6 +1638,42 @@
         "type": "uint72"
       },
       {
+        "internalType": "uint96",
+        "name": "newEarnedRewards",
+        "type": "uint96"
+      }
+    ],
+    "name": "setNodeCumulativeEarnedRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint96",
+        "name": "newPaidOutRewards",
+        "type": "uint96"
+      }
+    ],
+    "name": "setNodeCumulativePaidOutRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
         "internalType": "uint256",
         "name": "newIndex",
         "type": "uint256"
@@ -1692,7 +1851,7 @@
   },
   {
     "inputs": [],
-    "name": "withdrawMisplacedOTP",
+    "name": "withdrawMisplacedEther",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
