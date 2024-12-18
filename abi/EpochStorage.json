@@ -11,7 +11,13 @@
     "type": "constructor"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "name": "accumulatedRemainder",
     "outputs": [
       {
@@ -25,6 +31,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "shardId",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "startEpoch",
@@ -65,6 +76,11 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "name": "cumulative",
@@ -80,6 +96,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "",
@@ -103,6 +124,11 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "name": "distributed",
@@ -118,6 +144,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "shardId",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "epoch",
@@ -139,6 +170,11 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "shardId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "epoch",
         "type": "uint256"
       }
@@ -156,6 +192,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "shardId",
+        "type": "uint256"
+      },
       {
         "internalType": "uint72",
         "name": "identityId",
@@ -181,6 +222,11 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "shardId",
+        "type": "uint256"
+      },
+      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -198,7 +244,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "shardId",
+        "type": "uint256"
+      }
+    ],
     "name": "getPreviousEpochDistributedPool",
     "outputs": [
       {
@@ -211,7 +263,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "shardId",
+        "type": "uint256"
+      }
+    ],
     "name": "getPreviousEpochPool",
     "outputs": [
       {
@@ -244,7 +302,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "name": "lastFinalizedEpoch",
     "outputs": [
       {
@@ -280,6 +344,11 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "name": "nodesPaidOut",
@@ -295,6 +364,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "shardId",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "epoch",

@@ -5,7 +5,7 @@ pragma solidity ^0.8.20;
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
-import {HubDependent} from "./abstract/HubDependent.sol";
+import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IdentityLib} from "./libraries/IdentityLib.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -34,7 +34,7 @@ interface IOldNodeOperatorFeesStorage {
     function getLatestOperatorFeePercentage(uint72) external returns (uint8);
 }
 
-contract Migrator is HubDependent {
+contract Migrator is ContractStatus {
     IOldHub public oldHub;
     IOldStakingStorage public oldStakingStorage;
     IOldProfileStorage public oldProfileStorage;
@@ -59,7 +59,7 @@ contract Migrator is HubDependent {
     mapping(uint72 => mapping(address => bool)) public delegatorMigrated;
     mapping(uint72 => bool) public operatorMigrated;
 
-    constructor(address hubAddress, address oldHubAddress) HubDependent(hubAddress) {
+    constructor(address hubAddress, address oldHubAddress) ContractStatus(hubAddress) {
         oldHub = IOldHub(oldHubAddress);
     }
 

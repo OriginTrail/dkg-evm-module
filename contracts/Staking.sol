@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.20;
 
+import {Ask} from "./Ask.sol";
 import {ShardingTable} from "./ShardingTable.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
@@ -24,6 +25,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Staking";
     string private constant _VERSION = "1.0.0";
 
+    Ask public askContract;
     ShardingTableStorage public shardingTableStorage;
     ShardingTable public shardingTableContract;
     IdentityStorage public identityStorage;
@@ -46,6 +48,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function initialize() public onlyHub {
+        askContract = Ask(hub.getContractAddress("Ask"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
@@ -90,6 +93,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ss.setDelegatorStakeInfo(identityId, delegatorKey, delegatorStakeBase + addedStake, delegatorStakeIndexed);
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.increaseTotalStake(addedStake);
+        askContract.onStakeChanged(identityId, ss.getNodeStake(identityId));
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
 
@@ -139,6 +143,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         ss.setDelegatorStakeInfo(fromIdentityId, delegatorKey, newDelegatorStakeBase, newDelegatorStakeIndexed);
         ss.setNodeStake(fromIdentityId, totalFromNodeStakeAfter);
+        askContract.onStakeChanged(fromIdentityId, totalFromNodeStakeAfter);
         _removeNodeFromShardingTable(fromIdentityId, totalFromNodeStakeAfter);
 
         if (stakeAmount > delegatorStakeIndexed) {
@@ -150,6 +155,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             (newDelegatorStakeIndexed - delegatorStakeIndexed)
         );
         ss.setNodeStake(toIdentityId, totalToNodeStakeAfter);
+        askContract.onStakeChanged(toIdentityId, totalToNodeStakeAfter);
         _addNodeToShardingTable(toIdentityId, totalToNodeStakeAfter);
     }
 
@@ -193,6 +199,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         if (totalNodeStakeAfter >= parametersStorage.maximumStake()) {
             ss.transferStake(msg.sender, removedStake);
         } else {
+            askContract.onStakeChanged(identityId, totalNodeStakeAfter);
             ss.createDelegatorWithdrawalRequest(
                 identityId,
                 delegatorKey,
@@ -251,6 +258,9 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         );
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.increaseTotalStake(delegatorWithdrawalAmount);
+        if (totalNodeStakeAfter - delegatorWithdrawalAmount < parametersStorage.maximumStake()) {
+            askContract.onStakeChanged(identityId, totalNodeStakeAfter);
+        }
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
     }
@@ -289,6 +299,9 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ss.setNodeRewardIndex(identityId, nodeRewardIndex + nodeRewardIndexIncrement);
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.increaseTotalStake(delegatorsReward);
+        if (totalNodeStakeBefore < parametersStorage.maximumStake()) {
+            askContract.onStakeChanged(identityId, totalNodeStakeAfter);
+        }
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
     }
@@ -323,6 +336,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.addOperatorFeeCumulativePaidOutRewards(identityId, addedStake);
         ss.increaseTotalStake(addedStake);
+        askContract.onStakeChanged(identityId, totalNodeStakeAfter);
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
     }
