@@ -11,6 +11,14 @@ contract Guardian is HubDependent {
     event MisplacedEtherWithdrawn(address indexed custodian, uint256 amount);
     event MisplacedERC20Withdrawn(address indexed custodian, address tokenContract, uint256 amount);
 
+    error ZeroAddressCustodian();
+    error CustodianNotAContract(address custodian);
+    error CustodianWithoutOwnersFunction(address custodian);
+    error CustodianHasNoOwners(address custodian);
+    error TokenTransferFailed();
+    error EtherTransferFailed();
+    error InvalidTokenContract(address tokenContractAddress);
+
     IERC20 public tokenContract;
 
     // solhint-disable-next-line no-empty-blocks
@@ -21,24 +29,36 @@ contract Guardian is HubDependent {
     }
 
     function transferTokens(address payable custodian) external onlyHub {
-        require(custodian != address(0x0), "Custodian cannot be a zero address");
-        uint contractSize;
+        if (custodian == address(0)) {
+            revert ZeroAddressCustodian();
+        }
+
+        uint256 contractSize;
         assembly {
             contractSize := extcodesize(custodian)
         }
-        require(contractSize > 0, "Cannot transfer tokens to custodian that is not a contract!");
+        if (contractSize == 0) {
+            revert CustodianNotAContract(custodian);
+        }
 
         ICustodian custodianContract = ICustodian(custodian);
         bool hasOwnersFunction = false;
         try custodianContract.getOwners() returns (address[] memory owners) {
             hasOwnersFunction = true;
-            require(owners.length > 0, "Cannot transfer tokens to custodian without owners defined!");
+            if (owners.length == 0) {
+                revert CustodianHasNoOwners(custodian);
+            }
         } catch {}
-        require(hasOwnersFunction, "Cannot transfer tokens to custodian without getOwners function!");
+        if (!hasOwnersFunction) {
+            revert CustodianWithoutOwnersFunction(custodian);
+        }
 
         uint256 balanceTransferred = tokenContract.balanceOf(address(this));
         bool transactionResult = tokenContract.transfer(custodian, balanceTransferred);
-        require(transactionResult, "Token transaction execution failed!");
+
+        if (!transactionResult) {
+            revert TokenTransferFailed();
+        }
 
         emit TokenTransferred(custodian, balanceTransferred);
     }
@@ -47,19 +67,25 @@ contract Guardian is HubDependent {
         uint256 balance = address(this).balance;
         if (balance > 0) {
             (bool success, ) = msg.sender.call{value: balance}("");
-            require(success, "Transfer failed.");
+            if (!success) {
+                revert EtherTransferFailed();
+            }
         }
         emit MisplacedEtherWithdrawn(msg.sender, balance);
     }
 
     function withdrawMisplacedTokens(address tokenContractAddress) external onlyHub {
-        require(tokenContractAddress != address(tokenContract), "Cannot use this function with the TRAC contract");
+        if (tokenContractAddress == address(tokenContract)) {
+            revert InvalidTokenContract(tokenContractAddress);
+        }
         IERC20 misplacedTokensContract = IERC20(tokenContractAddress);
 
         uint256 balance = misplacedTokensContract.balanceOf(address(this));
         if (balance > 0) {
             bool transactionResult = misplacedTokensContract.transfer(msg.sender, balance);
-            require(transactionResult, "Token transaction execution failed");
+            if (!transactionResult) {
+                revert TokenTransferFailed();
+            }
         }
         emit MisplacedERC20Withdrawn(msg.sender, tokenContractAddress, balance);
     }

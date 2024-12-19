@@ -8,8 +8,14 @@ library IdentityLib {
     uint256 public constant ECDSA = 1;
     uint256 public constant RSA = 2;
 
-    error WithdrawalWasntInitiated();
-    error WithdrawalPeriodPending(uint256 nowTimestamp, uint256 endTimestamp);
-    error InvalidOperatorFee();
-    error MaximumStakeExceeded(uint256 amount);
+    error OperationalAddressZero();
+    error AdminAddressZero();
+    error AdminEqualsOperational();
+    error KeyIsEmpty();
+    error OperationalKeyTaken(bytes32 key);
+    error KeyAlreadyAttached(bytes32 key);
+    error KeyNotAttached(bytes32 key);
+    error CannotDeleteOnlyAdminKey(uint72 identityId);
+    error CannotDeleteOnlyOperationalKey(uint72 identityId);
+    error AdminFunctionOnly(uint72 identityId, address sender);
 }

@@ -20,6 +20,10 @@ library KnowledgeCollectionLib {
         uint96 tokenAmount;
     }
 
+    error ExceededKnowledgeCollectionMaxSize(uint256 id, uint256 minted, uint256 requested, uint256 maxSize);
+    error InvalidTokenId(uint256 tokenId, uint256 startTokenId, uint256 endTokenId);
+    error BurnFromZeroAddress();
+    error BurnFromNonOwnerAddress();
     error InvalidTokenAmount(uint96 expectedTokenAMount, uint96 tokenAmount);
     error InvalidSignature(uint72 identityId, bytes32 messageHash, bytes32 r, bytes32 vs);
     error SignerIsNotNodeOperator(uint72 identityId, address signer);

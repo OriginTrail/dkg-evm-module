@@ -88,6 +88,27 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "tokenAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "balance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "expected",
+        "type": "uint256"
+      }
+    ],
+    "name": "TooLowBalance",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint96",
         "name": "stake",
         "type": "uint96"
@@ -129,10 +150,10 @@
   },
   {
     "inputs": [],
-    "name": "askContract",
+    "name": "askStorage",
     "outputs": [
       {
-        "internalType": "contract Ask",
+        "internalType": "contract AskStorage",
         "name": "",
         "type": "address"
       }

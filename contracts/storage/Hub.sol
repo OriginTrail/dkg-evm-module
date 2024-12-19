@@ -93,7 +93,9 @@ contract Hub is INamed, IVersioned, Ownable {
      */
     function forwardCall(address target, bytes calldata data) public onlyOwnerOrMultiSigOwner returns (bytes memory) {
         // Check if the target contract is registered in the Hub
-        require(contractSet.exists(target) || assetStorageSet.exists(target), "Target contract isn't in the Hub");
+        if (!contractSet.exists(target) && !assetStorageSet.exists(target)) {
+            revert HubLib.InvalidTargetContract(target);
+        }
 
         // Perform the function call to the target contract with the specified calldata
         (bool success, bytes memory result) = target.call{value: 0}(data);
@@ -205,7 +207,7 @@ contract Hub is INamed, IVersioned, Ownable {
                 try this.getAssetStorageAddress(forwardCallsData[i].contractName) returns (address addr) {
                     contractAddress = addr;
                 } catch {
-                    revert("Failed to get contract address");
+                    revert HubLib.ContractNotRegistered(forwardCallsData[i].contractName);
                 }
             }
             for (uint256 j; j < forwardCallsData[i].encodedData.length; ) {
@@ -242,9 +244,8 @@ contract Hub is INamed, IVersioned, Ownable {
 
     function _checkOwnerOrMultiSigOwner() internal view virtual {
         address hubControllerOwner = owner();
-        require(
-            (msg.sender == hubControllerOwner) || _isMultiSigOwner(hubControllerOwner),
-            "Owner / MultiSig owner function!"
-        );
+        if (msg.sender != hubControllerOwner && !_isMultiSigOwner(hubControllerOwner)) {
+            revert HubLib.UnauthorizedAccess();
+        }
     }
 }

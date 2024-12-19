@@ -11,8 +11,15 @@ contract ShardingTableStorage is INamed, IVersioned, HubDependent {
     string private constant _NAME = "ShardingTableStorage";
     string private constant _VERSION = "1.0.0";
 
+    event NodesCountIncremented(uint72 newCount);
+    event NodesCountDecremented(uint72 newCount);
+    event NodeObjectCreated(uint72 indexed identityId, bytes nodeId, uint256 hashRingPosition, uint72 index);
+    event NodeObjectDeleted(uint72 indexed identityId);
+    event NodeIndexIncremented(uint72 indexed identityId, uint72 newIndex);
+    event NodeIndexDecremented(uint72 indexed identityId, uint72 newIndex);
+    event IdentityIdIndexSet(uint72 indexed identityId, uint72 index);
+
     uint72 public nodesCount;
-    uint96 public totalStake;
 
     // identityId => Node
     mapping(uint72 => ShardingTableLib.Node) internal nodes;
@@ -32,14 +39,14 @@ contract ShardingTableStorage is INamed, IVersioned, HubDependent {
 
     function incrementNodesCount() external onlyContracts {
         nodesCount++;
+
+        emit NodesCountIncremented(nodesCount);
     }
 
     function decrementNodesCount() external onlyContracts {
         nodesCount--;
-    }
 
-    function setTotalStake(uint96 _totalStake) external onlyContracts {
-        totalStake = _totalStake;
+        emit NodesCountDecremented(nodesCount);
     }
 
     function createNodeObject(
@@ -54,6 +61,8 @@ contract ShardingTableStorage is INamed, IVersioned, HubDependent {
             nodeId: nodeId,
             identityId: identityId
         });
+
+        emit NodeObjectCreated(identityId, nodeId, hashRingPosition, index);
     }
 
     function getNode(uint72 identityId) external view returns (ShardingTableLib.Node memory) {
@@ -62,6 +71,8 @@ contract ShardingTableStorage is INamed, IVersioned, HubDependent {
 
     function deleteNodeObject(uint72 identityId) external onlyContracts {
         delete nodes[identityId];
+
+        emit NodeObjectDeleted(identityId);
     }
 
     function nodeExists(uint72 identityId) external view returns (bool) {
@@ -78,14 +89,20 @@ contract ShardingTableStorage is INamed, IVersioned, HubDependent {
 
     function incrementNodeIndex(uint72 identityId) external onlyContracts {
         nodes[identityId].index += 1;
+
+        emit NodeIndexIncremented(identityId, nodes[identityId].index);
     }
 
     function decrementNodeIndex(uint72 identityId) external onlyContracts {
         nodes[identityId].index -= 1;
+
+        emit NodeIndexDecremented(identityId, nodes[identityId].index);
     }
 
     function setIdentityId(uint72 index, uint72 identityId) external onlyContracts {
         indexToIdentityId[index] = identityId;
+
+        emit IdentityIdIndexSet(identityId, index);
     }
 
     function getNodeByIndex(uint72 index) external view returns (ShardingTableLib.Node memory) {

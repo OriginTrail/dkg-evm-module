@@ -11,6 +11,25 @@
     "type": "constructor"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "deployer",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "paymasterAddress",
+        "type": "address"
+      }
+    ],
+    "name": "PaymasterDeployed",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "deployPaymaster",
     "outputs": [],

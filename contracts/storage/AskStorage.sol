@@ -2,16 +2,16 @@
 
 pragma solidity ^0.8.20;
 
-import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
-import {ParametersStorage} from "./storage/ParametersStorage.sol";
-import {ProfileStorage} from "./storage/ProfileStorage.sol";
-import {StakingStorage} from "./storage/StakingStorage.sol";
-import {INamed} from "./interfaces/INamed.sol";
-import {IVersioned} from "./interfaces/IVersioned.sol";
-import {IInitializable} from "./interfaces/IInitializable.sol";
-import {ContractStatus} from "./abstract/ContractStatus.sol";
+import {ShardingTableStorage} from "./ShardingTableStorage.sol";
+import {ParametersStorage} from "./ParametersStorage.sol";
+import {ProfileStorage} from "./ProfileStorage.sol";
+import {StakingStorage} from "./StakingStorage.sol";
+import {INamed} from "../interfaces/INamed.sol";
+import {IVersioned} from "../interfaces/IVersioned.sol";
+import {IInitializable} from "../interfaces/IInitializable.sol";
+import {ContractStatus} from "../abstract/ContractStatus.sol";
 
-contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
+contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Ask";
     string private constant _VERSION = "1.0.0";
 

@@ -14,6 +14,45 @@ contract StakingStorage is INamed, IVersioned, Guardian {
     string private constant _NAME = "StakingStorage";
     string private constant _VERSION = "1.0.0";
 
+    event TotalStakeUpdated(uint96 totalStake);
+    event NodeStakeUpdated(uint72 indexed identityId, uint96 stake);
+    event NodeRewardIndexUpdated(uint72 indexed identityId, uint256 rewardIndex);
+    event NodeCumulativeEarnedRewardsUpdated(uint72 indexed identityId, uint96 cumulativeEarnedRewards);
+    event NodeCumulativePaidOutRewardsUpdated(uint72 indexed identityId, uint96 cumulativePaidOutRewards);
+    event DelegatorCountUpdated(uint72 indexed identityId, uint256 delegatorsCount);
+    event OperatorFeeBalanceUpdated(uint72 indexed identityId, uint96 feeBalance);
+    event OperatorFeeCumulativeEarnedRewardsUpdated(uint72 indexed identityId, uint96 cumulativeFeeEarnedRewards);
+    event OperatorFeeCumulativePaidOutRewardsUpdated(uint72 indexed identityId, uint96 cumulativeFeePaidOutRewards);
+    event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase);
+    event DelegatorIndexedStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeIndexed);
+    event DelegatorLastRewardIndexUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint256 lastIndex);
+    event DelegatorCumulativeEarnedRewardsUpdated(
+        uint72 indexed identityId,
+        bytes32 indexed delegatorKey,
+        uint96 cumulativeEarnedRewards
+    );
+    event DelegatorCumulativePaidOutRewardsUpdated(
+        uint72 indexed identityId,
+        bytes32 indexed delegatorKey,
+        uint96 cumulativePaidOutRewards
+    );
+    event DelegatorWithdrawalRequestCreated(
+        uint72 indexed identityId,
+        bytes32 indexed delegatorKey,
+        uint96 amount,
+        uint96 indexedOutAmount,
+        uint256 timestamp
+    );
+    event DelegatorWithdrawalRequestDeleted(uint72 indexed identityId, bytes32 indexed delegatorKey);
+    event OperatorFeeWithdrawalRequestCreated(
+        uint72 indexed identityId,
+        uint96 amount,
+        uint96 indexedOutAmount,
+        uint256 timestamp
+    );
+    event OperatorFeeWithdrawalRequestDeleted(uint72 indexed identityId);
+    event StakedTokensTransferred(address indexed receiver, uint96 amount);
+
     uint96 private _totalStake;
 
     mapping(uint72 => StakingLib.NodeData) public nodes;
@@ -44,14 +83,20 @@ contract StakingStorage is INamed, IVersioned, Guardian {
 
     function setTotalStake(uint96 newTotalStake) external onlyContracts {
         _totalStake = newTotalStake;
+
+        emit TotalStakeUpdated(newTotalStake);
     }
 
     function increaseTotalStake(uint96 addedStake) external onlyContracts {
         _totalStake += addedStake;
+
+        emit TotalStakeUpdated(_totalStake);
     }
 
     function decreaseTotalStake(uint96 removedStake) external onlyContracts {
         _totalStake -= removedStake;
+
+        emit TotalStakeUpdated(_totalStake);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -63,6 +108,9 @@ contract StakingStorage is INamed, IVersioned, Guardian {
 
         node.stake = stake;
         node.rewardIndex = rewardIndex;
+
+        emit NodeStakeUpdated(identityId, stake);
+        emit NodeRewardIndexUpdated(identityId, rewardIndex);
     }
 
     function getNodeData(
@@ -102,14 +150,20 @@ contract StakingStorage is INamed, IVersioned, Guardian {
 
     function setNodeStake(uint72 identityId, uint96 newNodeStake) external onlyContracts {
         nodes[identityId].stake = newNodeStake;
+
+        emit NodeStakeUpdated(identityId, newNodeStake);
     }
 
     function increaseNodeStake(uint72 identityId, uint96 addedNodeStake) external onlyContracts {
         nodes[identityId].stake += addedNodeStake;
+
+        emit NodeStakeUpdated(identityId, nodes[identityId].stake);
     }
 
     function decreaseNodeStake(uint72 identityId, uint96 removedNodeStake) external onlyContracts {
         nodes[identityId].stake -= removedNodeStake;
+
+        emit NodeStakeUpdated(identityId, nodes[identityId].stake);
     }
 
     function getNodeStake(uint72 identityId) external view returns (uint96) {
@@ -118,10 +172,14 @@ contract StakingStorage is INamed, IVersioned, Guardian {
 
     function setNodeRewardIndex(uint72 identityId, uint256 newIndex) external onlyContracts {
         nodes[identityId].rewardIndex = newIndex;
+
+        emit NodeRewardIndexUpdated(identityId, newIndex);
     }
 
     function increaseNodeRewardIndex(uint72 identityId, uint256 addedIndex) external onlyContracts {
         nodes[identityId].rewardIndex += addedIndex;
+
+        emit NodeRewardIndexUpdated(identityId, nodes[identityId].rewardIndex);
     }
 
     function getNodeRewardIndex(uint72 identityId) external view returns (uint256) {
@@ -134,10 +192,14 @@ contract StakingStorage is INamed, IVersioned, Guardian {
 
     function setNodeCumulativeEarnedRewards(uint72 identityId, uint96 newEarnedRewards) external onlyContracts {
         nodes[identityId].cumulativeEarnedRewards = newEarnedRewards;
+
+        emit NodeCumulativeEarnedRewardsUpdated(identityId, newEarnedRewards);
     }
 
     function addNodeCumulativeEarnedRewards(uint72 identityId, uint96 addedRewards) external onlyContracts {
         nodes[identityId].cumulativeEarnedRewards += addedRewards;
+
+        emit NodeCumulativeEarnedRewardsUpdated(identityId, nodes[identityId].cumulativeEarnedRewards);
     }
 
     function getNodeCumulativePaidOutRewards(uint72 identityId) external view returns (uint96) {
@@ -146,46 +208,70 @@ contract StakingStorage is INamed, IVersioned, Guardian {
 
     function setNodeCumulativePaidOutRewards(uint72 identityId, uint96 newPaidOutRewards) external onlyContracts {
         nodes[identityId].cumulativePaidOutRewards = newPaidOutRewards;
+
+        emit NodeCumulativePaidOutRewardsUpdated(identityId, newPaidOutRewards);
     }
 
     function addNodeCumulativePaidOutRewards(uint72 identityId, uint96 addedRewards) external onlyContracts {
         nodes[identityId].cumulativePaidOutRewards += addedRewards;
+
+        emit NodeCumulativePaidOutRewardsUpdated(identityId, nodes[identityId].cumulativePaidOutRewards);
     }
 
     function setOperatorFeeBalance(uint72 identityId, uint96 newBalance) external onlyContracts {
         nodes[identityId].operatorFeeBalance = newBalance;
+
+        emit OperatorFeeBalanceUpdated(identityId, newBalance);
     }
 
     function increaseOperatorFeeBalance(uint72 identityId, uint96 addedFee) external onlyContracts {
         nodes[identityId].operatorFeeBalance += addedFee;
+
+        emit OperatorFeeBalanceUpdated(identityId, nodes[identityId].operatorFeeBalance);
     }
 
     function decreaseOperatorFeeBalance(uint72 identityId, uint96 removedFee) external onlyContracts {
         nodes[identityId].operatorFeeBalance -= removedFee;
+
+        emit OperatorFeeBalanceUpdated(identityId, nodes[identityId].operatorFeeBalance);
     }
 
     function getOperatorFeeBalance(uint72 identityId) external view returns (uint96) {
         return nodes[identityId].operatorFeeBalance;
     }
 
-    function addOperatorFeeCumulativeEarnedRewards(uint72 identityId, uint96 amount) external onlyContracts {
-        nodes[identityId].operatorFeeCumulativeEarnedRewards += amount;
+    function setOperatorFeeCumulativeEarnedRewards(uint72 identityId, uint96 amount) external onlyContracts {
+        nodes[identityId].operatorFeeCumulativeEarnedRewards = amount;
+
+        emit OperatorFeeCumulativeEarnedRewardsUpdated(identityId, amount);
     }
 
-    function setOperatorFeeCumulativeEarnedReward(uint72 identityId, uint96 amount) external onlyContracts {
-        nodes[identityId].operatorFeeCumulativeEarnedRewards = amount;
+    function addOperatorFeeCumulativeEarnedRewards(uint72 identityId, uint96 amount) external onlyContracts {
+        nodes[identityId].operatorFeeCumulativeEarnedRewards += amount;
+
+        emit OperatorFeeCumulativeEarnedRewardsUpdated(
+            identityId,
+            nodes[identityId].operatorFeeCumulativeEarnedRewards
+        );
     }
 
     function getOperatorFeeCumulativeEarnedRewards(uint72 identityId) external view returns (uint96) {
         return nodes[identityId].operatorFeeCumulativeEarnedRewards;
     }
 
-    function addOperatorFeeCumulativePaidOutRewards(uint72 identityId, uint96 amount) external onlyContracts {
-        nodes[identityId].operatorFeeCumulativePaidOutRewards += amount;
+    function setOperatorFeeCumulativePaidOutRewards(uint72 identityId, uint96 amount) external onlyContracts {
+        nodes[identityId].operatorFeeCumulativePaidOutRewards = amount;
+
+        emit OperatorFeeCumulativePaidOutRewardsUpdated(identityId, amount);
     }
 
-    function setOperatorFeeCumulativePaidOutReward(uint72 identityId, uint96 amount) external onlyContracts {
-        nodes[identityId].operatorFeeCumulativePaidOutRewards = amount;
+    function addOperatorFeeCumulativePaidOutRewards(uint72 identityId, uint96 amount) external onlyContracts {
+        nodes[identityId].operatorFeeCumulativePaidOutRewards += amount;
+
+        emit OperatorFeeCumulativePaidOutRewardsUpdated(
+            identityId,
+            nodes[identityId].operatorFeeCumulativePaidOutRewards
+        );
     }
 
     function getOperatorFeeCumulativePaidOutRewards(uint72 identityId) external view returns (uint96) {
@@ -194,6 +280,8 @@ contract StakingStorage is INamed, IVersioned, Guardian {
 
     function setDelegatorCount(uint72 identityId, uint256 delegatorCount) external onlyContracts {
         nodes[identityId].delegatorCount = delegatorCount;
+
+        emit DelegatorCountUpdated(identityId, delegatorCount);
     }
 
     function getDelegatorCount(uint72 identityId) external view returns (uint256) {
@@ -220,6 +308,9 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         bool isActive = (stakeBase > 0 || stakeRewardIndexed > 0);
 
         _updateDelegatorActivity(identityId, delegatorKey, wasActive, isActive);
+
+        emit DelegatorBaseStakeUpdated(identityId, delegatorKey, stakeBase);
+        emit DelegatorIndexedStakeUpdated(identityId, delegatorKey, stakeRewardIndexed);
     }
 
     function getDelegatorData(
@@ -259,6 +350,8 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         bool isActive = (delegator.stakeBase > 0 || delegator.stakeRewardIndexed > 0);
 
         _updateDelegatorActivity(identityId, delegatorKey, wasActive, isActive);
+
+        emit DelegatorBaseStakeUpdated(identityId, delegatorKey, stakeBase);
     }
 
     function increaseDelegatorStakeBase(
@@ -275,6 +368,8 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         bool isActive = (delegator.stakeBase > 0 || delegator.stakeRewardIndexed > 0);
 
         _updateDelegatorActivity(identityId, delegatorKey, wasActive, isActive);
+
+        emit DelegatorBaseStakeUpdated(identityId, delegatorKey, delegator.stakeBase);
     }
 
     function decreaseDelegatorStakeBase(
@@ -291,6 +386,8 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         bool isActive = (delegator.stakeBase > 0 || delegator.stakeRewardIndexed > 0);
 
         _updateDelegatorActivity(identityId, delegatorKey, wasActive, isActive);
+
+        emit DelegatorBaseStakeUpdated(identityId, delegatorKey, delegator.stakeBase);
     }
 
     function getDelegatorStakeBase(uint72 identityId, bytes32 delegatorKey) external view returns (uint96) {
@@ -311,6 +408,8 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         bool isActive = (delegator.stakeBase > 0 || delegator.stakeRewardIndexed > 0);
 
         _updateDelegatorActivity(identityId, delegatorKey, wasActive, isActive);
+
+        emit DelegatorIndexedStakeUpdated(identityId, delegatorKey, stakeRewardIndexed);
     }
 
     function increaseDelegatorStakeRewardIndexed(
@@ -327,6 +426,8 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         bool isActive = (delegator.stakeBase > 0 || delegator.stakeRewardIndexed > 0);
 
         _updateDelegatorActivity(identityId, delegatorKey, wasActive, isActive);
+
+        emit DelegatorIndexedStakeUpdated(identityId, delegatorKey, delegator.stakeRewardIndexed);
     }
 
     function decreaseDelegatorStakeRewardIndexed(
@@ -343,6 +444,8 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         bool isActive = (delegator.stakeBase > 0 || delegator.stakeRewardIndexed > 0);
 
         _updateDelegatorActivity(identityId, delegatorKey, wasActive, isActive);
+
+        emit DelegatorIndexedStakeUpdated(identityId, delegatorKey, delegator.stakeRewardIndexed);
     }
 
     function getDelegatorStakeRewardIndexed(uint72 identityId, bytes32 delegatorKey) external view returns (uint96) {
@@ -360,6 +463,8 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         uint256 lastRewardIndex
     ) external onlyContracts {
         delegators[identityId][delegatorKey].lastRewardIndex = lastRewardIndex;
+
+        emit DelegatorLastRewardIndexUpdated(identityId, delegatorKey, lastRewardIndex);
     }
 
     function getDelegatorLastRewardIndex(uint72 identityId, bytes32 delegatorKey) external view returns (uint256) {
@@ -377,15 +482,16 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         return nodeList;
     }
 
+    function getDelegatorNodesCount(bytes32 delegatorKey) external view returns (uint256) {
+        return delegatorNodes[delegatorKey].length();
+    }
+
     function getDelegatorNodesIn(
         bytes32 delegatorKey,
         uint256 start,
         uint256 end
     ) external view returns (uint72[] memory) {
         EnumerableSetLib.Uint256Set storage nodesSet = delegatorNodes[delegatorKey];
-
-        require(start < end, "StakingStorage: start must be less than end");
-        require(end <= nodesSet.length(), "StakingStorage: end exceeds total nodes");
 
         uint72[] memory nodeList = new uint72[](end - start);
         for (uint256 i = start; i < end; i++) {
@@ -404,6 +510,12 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         uint96 amount
     ) external onlyContracts {
         delegators[identityId][delegatorKey].cumulativeEarnedRewards += amount;
+
+        emit DelegatorCumulativeEarnedRewardsUpdated(
+            identityId,
+            delegatorKey,
+            delegators[identityId][delegatorKey].cumulativeEarnedRewards
+        );
     }
 
     function getDelegatorCumulativeEarnedRewards(
@@ -419,6 +531,12 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         uint96 amount
     ) external onlyContracts {
         delegators[identityId][delegatorKey].cumulativePaidOutRewards += amount;
+
+        emit DelegatorCumulativePaidOutRewardsUpdated(
+            identityId,
+            delegatorKey,
+            delegators[identityId][delegatorKey].cumulativePaidOutRewards
+        );
     }
 
     function getDelegatorCumulativePaidOutRewards(
@@ -440,6 +558,8 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         uint256 timestamp
     ) external onlyContracts {
         withdrawals[identityId][delegatorKey] = StakingLib.StakeWithdrawalRequest(amount, indexedOutAmount, timestamp);
+
+        emit DelegatorWithdrawalRequestCreated(identityId, delegatorKey, amount, indexedOutAmount, timestamp);
     }
 
     function getDelegatorWithdrawalRequest(
@@ -452,6 +572,8 @@ contract StakingStorage is INamed, IVersioned, Guardian {
 
     function deleteDelegatorWithdrawalRequest(uint72 identityId, bytes32 delegatorKey) external onlyContracts {
         delete withdrawals[identityId][delegatorKey];
+
+        emit DelegatorWithdrawalRequestDeleted(identityId, delegatorKey);
     }
 
     function getDelegatorWithdrawalRequestAmount(
@@ -490,10 +612,14 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         uint256 timestamp
     ) external onlyContracts {
         operatorFeeWithdrawals[identityId] = StakingLib.StakeWithdrawalRequest(amount, indexedOutAmount, timestamp);
+
+        emit OperatorFeeWithdrawalRequestCreated(identityId, amount, indexedOutAmount, timestamp);
     }
 
     function deleteOperatorFeeWithdrawalRequest(uint72 identityId) external onlyContracts {
         delete operatorFeeWithdrawals[identityId];
+
+        emit OperatorFeeWithdrawalRequestDeleted(identityId);
     }
 
     function getOperatorFeeWithdrawalRequest(uint72 identityId) external view returns (uint96, uint96, uint256) {
@@ -523,6 +649,8 @@ contract StakingStorage is INamed, IVersioned, Guardian {
 
     function transferStake(address receiver, uint96 stakeAmount) external onlyContracts {
         tokenContract.transfer(receiver, stakeAmount);
+
+        emit StakedTokensTransferred(receiver, stakeAmount);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -533,9 +661,13 @@ contract StakingStorage is INamed, IVersioned, Guardian {
         if (!wasActive && isActive) {
             delegatorNodes[delegatorKey].add(identityId);
             nodes[identityId].delegatorCount += 1;
+
+            emit DelegatorCountUpdated(identityId, nodes[identityId].delegatorCount);
         } else if (wasActive && !isActive) {
             delegatorNodes[delegatorKey].remove(identityId);
             nodes[identityId].delegatorCount -= 1;
+
+            emit DelegatorCountUpdated(identityId, nodes[identityId].delegatorCount);
         }
     }
 }

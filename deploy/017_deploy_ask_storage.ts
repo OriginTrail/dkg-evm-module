@@ -3,12 +3,12 @@ import { DeployFunction } from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await hre.helpers.deploy({
-    newContractName: 'Ask',
+    newContractName: 'AskStorage',
   });
 };
 
 export default func;
-func.tags = ['Ask'];
+func.tags = ['AskStorage'];
 func.dependencies = [
   'Hub',
   'ShardingTableStorage',

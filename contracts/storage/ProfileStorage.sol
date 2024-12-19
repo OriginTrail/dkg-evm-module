@@ -11,6 +11,19 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
     string private constant _NAME = "ProfileStorage";
     string private constant _VERSION = "1.0.0";
 
+    event ProfileCreated(uint72 indexed identityId, string nodeName, bytes nodeId, uint8 initialOperatorFee);
+    event ProfileDeleted(uint72 indexed identityId, bytes nodeId);
+    event NodeNameUpdated(uint72 indexed identityId, string newName);
+    event NodeIdUpdated(uint72 indexed identityId, bytes oldNodeId, bytes newNodeId);
+    event NodeAskUpdated(uint72 indexed identityId, uint96 oldAsk, uint96 newAsk);
+    event OperatorFeeAdded(uint72 indexed identityId, uint8 feePercentage, uint248 effectiveDate);
+    event OperatorFeesReplaced(
+        uint72 indexed identityId,
+        uint8 oldFeePercentage,
+        uint8 newFeePercentage,
+        uint248 effectiveDate
+    );
+
     // nodeId => isRegistered?
     mapping(bytes => bool) public nodeIdsList;
     // identityId => Profile
@@ -40,6 +53,8 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
             ProfileLib.OperatorFee({feePercentage: initialOperatorFee, effectiveDate: uint248(block.timestamp)})
         );
         nodeIdsList[nodeId] = true;
+
+        emit ProfileCreated(identityId, nodeName, nodeId, initialOperatorFee);
     }
 
     function getProfile(
@@ -50,8 +65,21 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
     }
 
     function deleteProfile(uint72 identityId) external onlyContracts {
-        nodeIdsList[profiles[identityId].nodeId] = false;
+        bytes memory nodeId = profiles[identityId].nodeId;
+        nodeIdsList[nodeId] = false;
         delete profiles[identityId];
+
+        emit ProfileDeleted(identityId, nodeId);
+    }
+
+    function getName(uint72 identityId) external view returns (string memory) {
+        return profiles[identityId].name;
+    }
+
+    function setName(uint72 identityId, string memory _name) external onlyContracts {
+        profiles[identityId].name = _name;
+
+        emit NodeNameUpdated(identityId, _name);
     }
 
     function getNodeId(uint72 identityId) external view returns (bytes memory) {
@@ -60,10 +88,13 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
 
     function setNodeId(uint72 identityId, bytes calldata nodeId) external onlyContracts {
         ProfileLib.ProfileInfo storage profile = profiles[identityId];
+        bytes memory oldNodeId = profile.nodeId;
 
-        nodeIdsList[profile.nodeId] = false;
+        nodeIdsList[oldNodeId] = false;
         profile.nodeId = nodeId;
         nodeIdsList[nodeId] = true;
+
+        emit NodeIdUpdated(identityId, oldNodeId, nodeId);
     }
 
     function getAsk(uint72 identityId) external view returns (uint96) {
@@ -71,13 +102,18 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
     }
 
     function setAsk(uint72 identityId, uint96 ask) external onlyContracts {
+        uint96 oldAsk = profiles[identityId].ask;
         profiles[identityId].ask = ask;
+
+        emit NodeAskUpdated(identityId, oldAsk, ask);
     }
 
     function addOperatorFee(uint72 identityId, uint8 feePercentage, uint248 effectiveDate) external onlyContracts {
         profiles[identityId].operatorFees.push(
             ProfileLib.OperatorFee({feePercentage: feePercentage, effectiveDate: effectiveDate})
         );
+
+        emit OperatorFeeAdded(identityId, feePercentage, effectiveDate);
     }
 
     function getOperatorFees(uint72 identityId) external view returns (ProfileLib.OperatorFee[] memory) {
@@ -101,10 +137,15 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
             revert ProfileLib.NoPendingOperatorFee();
         }
 
+        uint8 oldFeePercentage = profiles[identityId]
+            .operatorFees[profiles[identityId].operatorFees.length - 1]
+            .feePercentage;
         profiles[identityId].operatorFees[profiles[identityId].operatorFees.length - 1] = ProfileLib.OperatorFee({
             feePercentage: feePercentage,
             effectiveDate: effectiveDate
         });
+
+        emit OperatorFeesReplaced(identityId, oldFeePercentage, feePercentage, effectiveDate);
     }
 
     function getOperatorFeesLength(uint72 identityId) external view returns (uint256) {
@@ -133,7 +174,7 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
     }
 
     function getLatestOperatorFee(uint72 identityId) external view returns (ProfileLib.OperatorFee memory) {
-        return _safeGetOperatorFee(identityId, profiles[identityId].operatorFees.length - 1);
+        return _safeGetLatestOperatorFee(identityId);
     }
 
     function getActiveOperatorFee(uint72 identityId) external view returns (ProfileLib.OperatorFee memory) {
@@ -163,7 +204,7 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
     }
 
     function getLatestOperatorFeePercentage(uint72 identityId) external view returns (uint8) {
-        return profiles[identityId].operatorFees[profiles[identityId].operatorFees.length - 1].feePercentage;
+        return _safeGetLatestOperatorFee(identityId).feePercentage;
     }
 
     function getActiveOperatorFeePercentage(uint72 identityId) external view returns (uint8) {
@@ -200,7 +241,7 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
     }
 
     function getLatestOperatorFeeEffectiveDate(uint72 identityId) external view returns (uint248) {
-        return _safeGetOperatorFee(identityId, profiles[identityId].operatorFees.length - 1).effectiveDate;
+        return _safeGetLatestOperatorFee(identityId).effectiveDate;
     }
 
     function getActiveOperatorFeeEffectiveDate(uint72 identityId) external view returns (uint248) {
@@ -228,14 +269,11 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         return keccak256(profiles[identityId].nodeId) != keccak256(bytes(""));
     }
 
-    function _safeGetOperatorFee(
-        uint72 identityId,
-        uint256 index
-    ) internal view returns (ProfileLib.OperatorFee memory) {
+    function _safeGetLatestOperatorFee(uint72 identityId) internal view returns (ProfileLib.OperatorFee memory) {
         if (profiles[identityId].operatorFees.length == 0) {
             return ProfileLib.OperatorFee({feePercentage: 0, effectiveDate: 0});
         } else {
-            return profiles[identityId].operatorFees[index];
+            return profiles[identityId].operatorFees[profiles[identityId].operatorFees.length - 1];
         }
     }
 
@@ -278,6 +316,6 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
             }
         }
 
-        revert("No fees set");
+        return ProfileLib.OperatorFee({feePercentage: 0, effectiveDate: 0});
     }
 }

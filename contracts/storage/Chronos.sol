@@ -6,9 +6,16 @@ contract Chronos {
     uint256 public immutable START_TIME;
     uint256 public immutable EPOCH_LENGTH;
 
+    error InvalidStartTime();
+    error InvalidEpochLength();
+
     constructor(uint256 _startTime, uint256 _epochLength) {
-        require(_startTime > 0, "Invalid start time");
-        require(_epochLength > 0, "Epoch length must be > 0");
+        if (_startTime <= 0) {
+            revert InvalidStartTime();
+        }
+        if (_epochLength <= 0) {
+            revert InvalidEpochLength();
+        }
 
         START_TIME = _startTime;
         EPOCH_LENGTH = _epochLength;
