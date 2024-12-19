@@ -11,6 +11,97 @@
     "type": "constructor"
   },
   {
+    "inputs": [],
+    "name": "AdminAddressZero",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "AdminEqualsOperational",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "AdminFunctionOnly",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "CannotDeleteOnlyAdminKey",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "CannotDeleteOnlyOperationalKey",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "KeyAlreadyAttached",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "KeyIsEmpty",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "KeyNotAttached",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OperationalAddressZero",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "OperationalKeyTaken",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {

@@ -180,10 +180,10 @@
   },
   {
     "inputs": [],
-    "name": "ask",
+    "name": "askStorage",
     "outputs": [
       {
-        "internalType": "contract Ask",
+        "internalType": "contract AskStorage",
         "name": "",
         "type": "address"
       }

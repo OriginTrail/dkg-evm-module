@@ -114,10 +114,10 @@
   },
   {
     "inputs": [],
-    "name": "askContract",
+    "name": "askStorage",
     "outputs": [
       {
-        "internalType": "contract Ask",
+        "internalType": "contract AskStorage",
         "name": "",
         "type": "address"
       }

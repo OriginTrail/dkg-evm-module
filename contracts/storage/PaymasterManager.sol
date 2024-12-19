@@ -11,6 +11,8 @@ contract PaymasterManager is INamed, IVersioned, ContractStatus {
     string private constant _NAME = "PaymasterManager";
     string private constant _VERSION = "1.0.0";
 
+    event PaymasterDeployed(address indexed deployer, address indexed paymasterAddress);
+
     mapping(address => bool) public validPaymasters;
     mapping(address => address[]) public deployedPaymasters;
 
@@ -29,5 +31,7 @@ contract PaymasterManager is INamed, IVersioned, ContractStatus {
 
         validPaymasters[paymasterAddress] = true;
         deployedPaymasters[msg.sender].push(paymasterAddress);
+
+        emit PaymasterDeployed(msg.sender, paymasterAddress);
     }
 }

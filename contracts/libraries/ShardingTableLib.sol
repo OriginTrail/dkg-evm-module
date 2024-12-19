@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 library ShardingTableLib {
-    uint72 constant NULL = 0;
+    uint72 public constant NULL = 0;
 
     struct Node {
         uint256 hashRingPosition;
@@ -26,5 +26,6 @@ library ShardingTableLib {
         uint256 prevHashRingPosition
     );
     error InvalidIndexWithRespectToNextNode(uint72 identityId, uint256 hashRingPosition, uint256 nextHashRingPosition);
+    error InvalidStartingIdentityId(uint72 identityId);
     error ShardingTableIsFull();
 }

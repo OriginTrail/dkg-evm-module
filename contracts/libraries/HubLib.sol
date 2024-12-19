@@ -12,4 +12,8 @@ library HubLib {
         string contractName;
         bytes[] encodedData;
     }
+
+    error UnauthorizedAccess();
+    error InvalidTargetContract(address addr);
+    error ContractNotRegistered(string contractName);
 }

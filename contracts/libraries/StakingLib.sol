@@ -28,6 +28,9 @@ library StakingLib {
         uint256 timestamp;
     }
 
+    error WithdrawalWasntInitiated();
+    error WithdrawalPeriodPending(uint256 nowTimestamp, uint256 endTimestamp);
+    error MaximumStakeExceeded(uint256 amount);
     error WithdrawalExceedsStake(uint96 stake, uint96 amount);
     error AmountExceedsOperatorFeeBalance(uint96 feeBalance, uint96 amount);
 }

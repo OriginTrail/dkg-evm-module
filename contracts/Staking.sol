@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.20;
 
-import {Ask} from "./Ask.sol";
 import {ShardingTable} from "./ShardingTable.sol";
+import {AskStorage} from "./storage/AskStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
@@ -25,7 +25,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Staking";
     string private constant _VERSION = "1.0.0";
 
-    Ask public askContract;
+    AskStorage public askStorage;
     ShardingTableStorage public shardingTableStorage;
     ShardingTable public shardingTableContract;
     IdentityStorage public identityStorage;
@@ -48,7 +48,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function initialize() public onlyHub {
-        askContract = Ask(hub.getContractAddress("Ask"));
+        askStorage = AskStorage(hub.getContractAddress("AskStorage"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
@@ -76,6 +76,9 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         if (token.allowance(msg.sender, address(this)) < addedStake) {
             revert TokenLib.TooLowAllowance(address(token), token.allowance(msg.sender, address(this)), addedStake);
         }
+        if (token.balanceOf(msg.sender) < addedStake) {
+            revert TokenLib.TooLowBalance(address(token), token.balanceOf(msg.sender), addedStake);
+        }
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
         _updateStakeInfo(identityId, delegatorKey);
@@ -87,13 +90,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         uint96 totalNodeStakeAfter = ss.getNodeStake(identityId) + addedStake;
         if (totalNodeStakeAfter > parametersStorage.maximumStake()) {
-            revert IdentityLib.MaximumStakeExceeded(parametersStorage.maximumStake());
+            revert StakingLib.MaximumStakeExceeded(parametersStorage.maximumStake());
         }
 
         ss.setDelegatorStakeInfo(identityId, delegatorKey, delegatorStakeBase + addedStake, delegatorStakeIndexed);
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.increaseTotalStake(addedStake);
-        askContract.onStakeChanged(identityId, ss.getNodeStake(identityId));
+        askStorage.onStakeChanged(identityId, ss.getNodeStake(identityId));
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
 
@@ -106,6 +109,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint96 stakeAmount
     ) external profileExists(fromIdentityId) profileExists(toIdentityId) {
         StakingStorage ss = stakingStorage;
+        AskStorage ass = askStorage;
 
         if (stakeAmount == 0) {
             revert TokenLib.ZeroTokenAmount();
@@ -125,7 +129,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         if (ss.getNodeStake(toIdentityId) + stakeAmount > parametersStorage.maximumStake()) {
-            revert IdentityLib.MaximumStakeExceeded(parametersStorage.maximumStake());
+            revert StakingLib.MaximumStakeExceeded(parametersStorage.maximumStake());
         }
 
         uint96 newDelegatorStakeBase = delegatorStakeBase;
@@ -143,7 +147,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         ss.setDelegatorStakeInfo(fromIdentityId, delegatorKey, newDelegatorStakeBase, newDelegatorStakeIndexed);
         ss.setNodeStake(fromIdentityId, totalFromNodeStakeAfter);
-        askContract.onStakeChanged(fromIdentityId, totalFromNodeStakeAfter);
+        ass.onStakeChanged(fromIdentityId, totalFromNodeStakeAfter);
         _removeNodeFromShardingTable(fromIdentityId, totalFromNodeStakeAfter);
 
         if (stakeAmount > delegatorStakeIndexed) {
@@ -155,7 +159,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             (delegatorStakeIndexed - newDelegatorStakeIndexed)
         );
         ss.setNodeStake(toIdentityId, totalToNodeStakeAfter);
-        askContract.onStakeChanged(toIdentityId, totalToNodeStakeAfter);
+        ass.onStakeChanged(toIdentityId, totalToNodeStakeAfter);
         _addNodeToShardingTable(toIdentityId, totalToNodeStakeAfter);
     }
 
@@ -199,7 +203,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         if (totalNodeStakeAfter >= parametersStorage.maximumStake()) {
             ss.transferStake(msg.sender, removedStake);
         } else {
-            askContract.onStakeChanged(identityId, totalNodeStakeAfter);
+            askStorage.onStakeChanged(identityId, totalNodeStakeAfter);
             ss.createDelegatorWithdrawalRequest(
                 identityId,
                 delegatorKey,
@@ -214,14 +218,17 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         StakingStorage ss = stakingStorage;
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
-        (uint96 delegatorWithdrawalAmount, uint96 delegatorIndexedOutRewardAmount, uint256 timestamp) = ss
-            .getDelegatorWithdrawalRequest(identityId, delegatorKey);
+        (
+            uint96 delegatorWithdrawalAmount,
+            uint96 delegatorIndexedOutRewardAmount,
+            uint256 delegatorWithdrawalTimestamp
+        ) = ss.getDelegatorWithdrawalRequest(identityId, delegatorKey);
 
         if (delegatorWithdrawalAmount == 0) {
-            revert IdentityLib.WithdrawalWasntInitiated();
+            revert StakingLib.WithdrawalWasntInitiated();
         }
-        if (block.timestamp < timestamp) {
-            revert IdentityLib.WithdrawalPeriodPending(block.timestamp, timestamp);
+        if (block.timestamp < delegatorWithdrawalTimestamp) {
+            revert StakingLib.WithdrawalPeriodPending(block.timestamp, delegatorWithdrawalTimestamp);
         }
 
         ss.deleteDelegatorWithdrawalRequest(identityId, delegatorKey);
@@ -234,12 +241,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         StakingStorage ss = stakingStorage;
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
-        (uint96 delegatorWithdrawalAmount, uint96 delegatorIndexedOutRewardAmount, ) = ss.getDelegatorWithdrawalRequest(
-            identityId,
-            delegatorKey
-        );
+        (
+            uint96 delegatorWithdrawalAmount,
+            uint96 delegatorIndexedOutRewardAmount,
+            uint256 delegatorWithdrawalTimestamp
+        ) = ss.getDelegatorWithdrawalRequest(identityId, delegatorKey);
         if (delegatorWithdrawalAmount == 0) {
-            revert IdentityLib.WithdrawalWasntInitiated();
+            revert StakingLib.WithdrawalWasntInitiated();
         }
 
         _updateStakeInfo(identityId, delegatorKey);
@@ -248,19 +256,40 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             delegatorKey
         );
 
-        uint96 totalNodeStakeAfter = ss.getNodeStake(identityId) + delegatorWithdrawalAmount;
+        uint96 returnableStakeAmount;
+        uint96 returnableIndexedOutReward;
+        uint96 totalNodeStakeBefore = ss.getNodeStake(identityId);
+        uint96 maximumStake = parametersStorage.maximumStake();
+        if (totalNodeStakeBefore + delegatorWithdrawalAmount > maximumStake) {
+            returnableStakeAmount = maximumStake - totalNodeStakeBefore;
+            returnableIndexedOutReward = returnableStakeAmount < delegatorIndexedOutRewardAmount
+                ? delegatorIndexedOutRewardAmount - returnableStakeAmount
+                : delegatorIndexedOutRewardAmount;
 
-        ss.deleteDelegatorWithdrawalRequest(identityId, delegatorKey);
+            ss.createDelegatorWithdrawalRequest(
+                identityId,
+                delegatorKey,
+                delegatorWithdrawalAmount - returnableStakeAmount,
+                delegatorIndexedOutRewardAmount - returnableIndexedOutReward,
+                delegatorWithdrawalTimestamp
+            );
+        } else {
+            returnableStakeAmount = delegatorWithdrawalAmount;
+            returnableIndexedOutReward = delegatorIndexedOutRewardAmount;
+            ss.deleteDelegatorWithdrawalRequest(identityId, delegatorKey);
+        }
+        uint96 totalNodeStakeAfter = ss.getNodeStake(identityId) + returnableStakeAmount;
+
         ss.setDelegatorStakeInfo(
             identityId,
             delegatorKey,
-            delegatorStakeBase + (delegatorWithdrawalAmount - delegatorIndexedOutRewardAmount),
-            delegatorStakeIndexed + delegatorIndexedOutRewardAmount
+            delegatorStakeBase + returnableStakeAmount,
+            delegatorStakeIndexed + returnableIndexedOutReward
         );
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.increaseTotalStake(delegatorWithdrawalAmount);
         if (totalNodeStakeAfter - delegatorWithdrawalAmount < parametersStorage.maximumStake()) {
-            askContract.onStakeChanged(identityId, totalNodeStakeAfter);
+            askStorage.onStakeChanged(identityId, totalNodeStakeAfter);
         }
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
@@ -301,7 +330,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.increaseTotalStake(delegatorsReward);
         if (totalNodeStakeBefore < parametersStorage.maximumStake()) {
-            askContract.onStakeChanged(identityId, totalNodeStakeAfter);
+            askStorage.onStakeChanged(identityId, totalNodeStakeAfter);
         }
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
@@ -330,14 +359,14 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint96 totalNodeStakeAfter = totalNodeStakeBefore + addedStake;
 
         if (totalNodeStakeAfter > parametersStorage.maximumStake()) {
-            revert IdentityLib.MaximumStakeExceeded(parametersStorage.maximumStake());
+            revert StakingLib.MaximumStakeExceeded(parametersStorage.maximumStake());
         }
 
         ss.setDelegatorStakeInfo(identityId, operatorKey, delegatorStakeBase + addedStake, delegatorStakeIndexed);
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.addOperatorFeeCumulativePaidOutRewards(identityId, addedStake);
         ss.increaseTotalStake(addedStake);
-        askContract.onStakeChanged(identityId, totalNodeStakeAfter);
+        askStorage.onStakeChanged(identityId, totalNodeStakeAfter);
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
     }
@@ -366,10 +395,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         (uint96 operatorFeeWithdrawalAmount, uint96 operatorFeeIndexedOutAmount, uint256 timestamp) = ss
             .getOperatorFeeWithdrawalRequest(identityId);
         if (operatorFeeWithdrawalAmount == 0) {
-            revert IdentityLib.WithdrawalWasntInitiated();
+            revert StakingLib.WithdrawalWasntInitiated();
         }
         if (block.timestamp < timestamp) {
-            revert IdentityLib.WithdrawalPeriodPending(block.timestamp, timestamp);
+            revert StakingLib.WithdrawalPeriodPending(block.timestamp, timestamp);
         }
 
         ss.deleteOperatorFeeWithdrawalRequest(identityId);
@@ -382,7 +411,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         uint96 operatorFeeWithdrawalAmount = ss.getOperatorFeeWithdrawalRequestAmount(identityId);
         if (operatorFeeWithdrawalAmount == 0) {
-            revert IdentityLib.WithdrawalWasntInitiated();
+            revert StakingLib.WithdrawalWasntInitiated();
         }
 
         ss.deleteOperatorFeeWithdrawalRequest(identityId);

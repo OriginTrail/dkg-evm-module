@@ -29,4 +29,5 @@ library ProfileLib {
     error NoOperatorFees(uint72 identityId);
     error ProfileDoesntExist(uint72 identityId);
     error NoPendingOperatorFee();
+    error InvalidOperatorFee();
 }

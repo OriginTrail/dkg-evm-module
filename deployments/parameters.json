@@ -6,6 +6,13 @@
       "stakeWithdrawalDelay": "60",
       "opWalletsLimitOnProfileCreation": "50",
       "shardingTableSizeLimit": "500"
+    },
+    "Chronos": {
+      "epochLength": "3600"
+    },
+    "KnowledgeCollectionStorage": {
+      "knowledgeCollectionSize": "1000000",
+      "uriBase": "did:dkg"
     }
   },
   "devnet": {
@@ -16,6 +23,13 @@
       "stakeWithdrawalDelay": "60",
       "opWalletsLimitOnProfileCreation": "50",
       "shardingTableSizeLimit": "500"
+    },
+    "Chronos": {
+      "epochLength": "3600"
+    },
+    "KnowledgeCollectionStorage": {
+      "knowledgeCollectionSize": "1000000",
+      "uriBase": "did:dkg"
     }
   },
   "testnet": {
@@ -26,6 +40,13 @@
       "stakeWithdrawalDelay": "60",
       "opWalletsLimitOnProfileCreation": "50",
       "shardingTableSizeLimit": "500"
+    },
+    "Chronos": {
+      "epochLength": "86400"
+    },
+    "KnowledgeCollectionStorage": {
+      "knowledgeCollectionSize": "1000000",
+      "uriBase": "did:dkg"
     }
   },
   "mainnet": {
@@ -36,6 +57,13 @@
       "stakeWithdrawalDelay": "2419200",
       "opWalletsLimitOnProfileCreation": "50",
       "shardingTableSizeLimit": "500"
+    },
+    "Chronos": {
+      "epochLength": "2592000"
+    },
+    "KnowledgeCollectionStorage": {
+      "knowledgeCollectionSize": "1000000",
+      "uriBase": "did:dkg"
     }
   }
 }

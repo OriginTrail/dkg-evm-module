@@ -189,10 +189,9 @@ contract ShardingTable is INamed, IVersioned, ContractStatus, IInitializable {
         }
         ShardingTableLib.Node memory startingNode = sts.getNode(startingIdentityId);
 
-        require(
-            (startingIdentityId == ShardingTableLib.NULL) || (startingNode.identityId != ShardingTableLib.NULL),
-            "Wrong starting Identity ID"
-        );
+        if (startingIdentityId == ShardingTableLib.NULL || startingNode.identityId == ShardingTableLib.NULL) {
+            revert ShardingTableLib.InvalidStartingIdentityId(startingIdentityId);
+        }
 
         nodesPage = new ShardingTableLib.NodeInfo[](nodesNumber);
 

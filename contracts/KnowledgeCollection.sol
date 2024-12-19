@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {Ask} from "./Ask.sol";
+import {AskStorage} from "./storage/AskStorage.sol";
 import {EpochStorage} from "./storage/EpochStorage.sol";
 import {PaymasterManager} from "./storage/PaymasterManager.sol";
 import {Chronos} from "./storage/Chronos.sol";
@@ -25,7 +25,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
     string private constant _NAME = "KnowledgeCollection";
     string private constant _VERSION = "1.0.0";
 
-    Ask public ask;
+    AskStorage public askStorage;
     EpochStorage public epochStorage;
     PaymasterManager public paymasterManager;
     KnowledgeCollectionStorage public knowledgeCollectionStorage;
@@ -38,7 +38,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
     constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     function initialize() public onlyHub {
-        ask = Ask(hub.getContractAddress("Ask"));
+        askStorage = AskStorage(hub.getContractAddress("AskStorage"));
         epochStorage = EpochStorage(hub.getContractAddress("EpochStorageV8"));
         paymasterManager = PaymasterManager(hub.getContractAddress("PaymasterManager"));
         knowledgeCollectionStorage = KnowledgeCollectionStorage(
@@ -85,6 +85,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         _verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
 
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
+        EpochStorage es = epochStorage;
         uint256 currentEpoch = chronos.getCurrentEpoch();
 
         uint256 id = kcs.createKnowledgeCollection(
@@ -101,8 +102,8 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
 
         _validateTokenAmount(byteSize, epochs, tokenAmount, true);
 
-        epochStorage.addTokensToEpochRange(1, currentEpoch, currentEpoch + epochs + 1, tokenAmount);
-        // TODO: Update publisher node's epochs knowledge value
+        es.addTokensToEpochRange(1, currentEpoch, currentEpoch + epochs + 1, tokenAmount);
+        es.addEpochProducedKnowledgeValue(publisherNodeIdentityId, currentEpoch, tokenAmount);
 
         _addTokens(tokenAmount, paymaster);
 
@@ -136,6 +137,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         _verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
 
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
+        EpochStorage es = epochStorage;
 
         (, , , uint256 oldByteSize, uint256 oldChunksAmount, , uint256 endEpoch, uint96 oldTokenAmount) = kcs
             .getKnowledgeCollectionMetadata(id);
@@ -159,7 +161,8 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
 
         _validateTokenAmount(byteSize - oldByteSize, endEpoch - currentEpoch, tokenAmount, true);
 
-        epochStorage.addTokensToEpochRange(1, currentEpoch, endEpoch, tokenAmount);
+        es.addTokensToEpochRange(1, currentEpoch, endEpoch, tokenAmount);
+        es.addEpochProducedKnowledgeValue(publisherNodeIdentityId, currentEpoch, tokenAmount);
 
         _addTokens(tokenAmount, paymaster);
     }
@@ -184,7 +187,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
 
         _validateTokenAmount(byteSize, epochs, tokenAmount, false);
 
-        epochStorage.addTokensToEpochRange(1, currentEpoch, endEpoch + epochs, tokenAmount);
+        epochStorage.addTokensToEpochRange(1, endEpoch, endEpoch + epochs, tokenAmount);
 
         _addTokens(tokenAmount, paymaster);
     }
@@ -254,7 +257,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
     ) internal view {
         Chronos chron = chronos;
 
-        uint256 stakeWeightedAverageAsk = ask.getStakeWeightedAverageAsk();
+        uint256 stakeWeightedAverageAsk = askStorage.getStakeWeightedAverageAsk();
         uint96 expectedTokenAmount;
         if (includeCurrentEpoch) {
             uint256 totalStorageTime = (epochs * 1e18) + (chron.timeUntilNextEpoch() * 1e18) / chron.epochLength();

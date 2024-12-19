@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.20;
 
-import {Ask} from "./Ask.sol";
 import {Identity} from "./Identity.sol";
+import {AskStorage} from "./storage/AskStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
@@ -20,7 +20,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Profile";
     string private constant _VERSION = "1.0.0";
 
-    Ask public askContract;
+    AskStorage public askStorage;
     Identity public identityContract;
     IdentityStorage public identityStorage;
     ParametersStorage public parametersStorage;
@@ -51,7 +51,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function initialize() public onlyHub {
-        askContract = Ask(hub.getContractAddress("Ask"));
+        askStorage = AskStorage(hub.getContractAddress("AskStorage"));
         identityContract = Identity(hub.getContractAddress("Identity"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
@@ -108,12 +108,12 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         }
         ProfileStorage ps = profileStorage;
         ps.setAsk(identityId, ask);
-        askContract.onAskChanged(identityId, ask);
+        askStorage.onAskChanged(identityId, ask);
     }
 
     function changeOperatorFee(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {
         if (newOperatorFee > 100) {
-            revert IdentityLib.InvalidOperatorFee();
+            revert ProfileLib.InvalidOperatorFee();
         }
 
         ProfileStorage ps = profileStorage;

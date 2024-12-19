@@ -3,11 +3,13 @@ import { DeployFunction } from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const block = await hre.ethers.provider.getBlock('latest');
+  const chronosParametersConfig =
+    hre.helpers.parametersConfig[hre.network.config.environment].Chronos;
 
   await hre.helpers.deploy({
     newContractName: 'Chronos',
     passHubInConstructor: false,
-    additionalArgs: [block!.timestamp, 1 * 30 * 24 * 60 * 60], // TODO: Update
+    additionalArgs: [block!.timestamp, chronosParametersConfig.epochLength],
   });
 };
 

@@ -10,6 +10,11 @@ contract WhitelistStorage is INamed, IVersioned, HubDependent {
     string private constant _NAME = "WhitelistStorage";
     string private constant _VERSION = "1.0.0";
 
+    event AddressWhitelisted(address indexed addr);
+    event AddressBlacklisted(address indexed addr);
+    event WhitelistEnabled();
+    event WhitelistDisabled();
+
     bool public whitelistingEnabled;
 
     mapping(address => bool) public whitelisted;
@@ -28,17 +33,25 @@ contract WhitelistStorage is INamed, IVersioned, HubDependent {
 
     function whitelistAddress(address addr) external onlyHub {
         whitelisted[addr] = true;
+
+        emit AddressWhitelisted(addr);
     }
 
     function blacklistAddress(address addr) external onlyHub {
         whitelisted[addr] = false;
+
+        emit AddressBlacklisted(addr);
     }
 
     function enableWhitelist() external onlyHub {
         whitelistingEnabled = true;
+
+        emit WhitelistEnabled();
     }
 
     function disableWhitelist() external onlyHub {
         whitelistingEnabled = false;
+
+        emit WhitelistDisabled();
     }
 }

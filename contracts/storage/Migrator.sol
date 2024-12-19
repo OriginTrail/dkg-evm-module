@@ -2,15 +2,15 @@
 
 pragma solidity ^0.8.20;
 
-import {ShardingTable} from "./ShardingTable.sol";
-import {Token} from "./Token.sol";
-import {EpochStorage} from "./storage/EpochStorage.sol";
-import {IdentityStorage} from "./storage/IdentityStorage.sol";
-import {ParametersStorage} from "./storage/ParametersStorage.sol";
-import {ProfileStorage} from "./storage/ProfileStorage.sol";
-import {StakingStorage} from "./storage/StakingStorage.sol";
-import {ContractStatus} from "./abstract/ContractStatus.sol";
-import {IdentityLib} from "./libraries/IdentityLib.sol";
+import {ShardingTable} from "../ShardingTable.sol";
+import {Token} from "../Token.sol";
+import {EpochStorage} from "../storage/EpochStorage.sol";
+import {IdentityStorage} from "../storage/IdentityStorage.sol";
+import {ParametersStorage} from "../storage/ParametersStorage.sol";
+import {ProfileStorage} from "../storage/ProfileStorage.sol";
+import {StakingStorage} from "../storage/StakingStorage.sol";
+import {ContractStatus} from "../abstract/ContractStatus.sol";
+import {IdentityLib} from "../libraries/IdentityLib.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 interface IOldHub {
@@ -19,27 +19,18 @@ interface IOldHub {
 
 interface IOldStakingStorage {
     function transferStake(address, uint96) external;
-
     function totalStakes(uint72) external view returns (uint96);
-
     function getWithdrawalRequestAmount(uint72, address) external view returns (uint96);
-
     function getWithdrawalRequestTimestamp(uint72, address) external view returns (uint256);
 }
 
 interface IOldProfileStorage {
     function transferAccumulatedOperatorFee(address, uint96) external;
-
     function getAccumulatedOperatorFee(uint72) external view returns (uint96);
-
     function getSharesContractAddress(uint72) external view returns (address);
-
     function getAccumulatedOperatorFeeWithdrawalAmount(uint72) external view returns (uint96);
-
     function getAccumulatedOperatorFeeWithdrawalTimestamp(uint72) external view returns (uint256);
-
     function getNodeId(uint72) external view returns (bytes memory);
-
     function getAsk(uint72) external view returns (uint96);
 }
 
@@ -53,6 +44,9 @@ interface IOldServiceAgreementStorage {
 }
 
 contract Migrator is ContractStatus {
+    error DelegatorsMigrationNotInitiated();
+    error DelegatorAlreadyMigrated(uint72 identityId, address delegator);
+
     IOldHub public oldHub;
     IOldStakingStorage public oldStakingStorage;
     IOldProfileStorage public oldProfileStorage;
@@ -164,7 +158,7 @@ contract Migrator is ContractStatus {
         string memory nodeName = shares.name();
         bytes memory nodeId = oldProfileStorage.getNodeId(identityId);
         uint96 initialAsk = oldProfileStorage.getAsk(identityId);
-        // We take the latest operator fee percentage even if the change is pending?
+
         uint8 initialOperatorFee;
         uint256 operatorFeesArrayLength = oldNodeOperatorFeesStorage.getOperatorFeesLength(identityId);
         if (operatorFeesArrayLength == 0) {
@@ -182,8 +176,12 @@ contract Migrator is ContractStatus {
     }
 
     function migrateDelegatorData(uint72 identityId) external {
-        require(delegatorsMigrationInitiated, "Delegators migration hasn't been initiated!");
-        require(!delegatorMigrated[identityId][msg.sender], "Delegator has already been migrated.");
+        if (!delegatorsMigrationInitiated) {
+            revert DelegatorsMigrationNotInitiated();
+        }
+        if (delegatorMigrated[identityId][msg.sender]) {
+            revert DelegatorAlreadyMigrated(identityId, msg.sender);
+        }
 
         // Stake migration
         IERC20Metadata shares = IERC20Metadata(oldProfileStorage.getSharesContractAddress(identityId));
@@ -240,8 +238,6 @@ contract Migrator is ContractStatus {
                     identityId
                 );
 
-                // If request is cancelled, next withdrawal will trigger increase
-                // of paid out rewards
                 newStakingStorage.createOperatorFeeWithdrawalRequest(
                     identityId,
                     feeWithdrawalAmount,

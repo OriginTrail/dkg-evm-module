@@ -39,9 +39,15 @@ contract Identity is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function createIdentity(address operational, address admin) external onlyContracts returns (uint72) {
-        require(operational != address(0), "Operational address can't be 0x0");
-        require(admin != address(0), "Admin address can't be 0x0");
-        require(admin != operational, "Admin should != Operational");
+        if (operational == address(0)) {
+            revert IdentityLib.OperationalAddressZero();
+        }
+        if (admin == address(0)) {
+            revert IdentityLib.AdminAddressZero();
+        }
+        if (admin == operational) {
+            revert IdentityLib.AdminEqualsOperational();
+        }
 
         IdentityStorage ids = identityStorage;
 
@@ -72,43 +78,55 @@ contract Identity is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 keyPurpose,
         uint256 keyType
     ) external onlyAdmin(identityId) {
-        require(key != bytes32(0), "Key arg is empty");
+        if (key == bytes32(0)) {
+            revert IdentityLib.KeyIsEmpty();
+        }
 
         IdentityStorage ids = identityStorage;
 
         if (keyPurpose == IdentityLib.OPERATIONAL_KEY) {
-            require(ids.identityIds(key) == 0, "Operational key is taken");
-
+            if (ids.identityIds(key) != 0) {
+                revert IdentityLib.OperationalKeyTaken(key);
+            }
             ids.setOperationalKeyIdentityId(key, identityId);
         }
 
         bytes32 attachedKey;
         (, , attachedKey) = ids.getKey(identityId, key);
-        require(attachedKey != key, "Key is already attached");
+        if (attachedKey == key) {
+            revert IdentityLib.KeyAlreadyAttached(key);
+        }
 
         ids.addKey(identityId, key, keyPurpose, keyType);
     }
 
     function removeKey(uint72 identityId, bytes32 key) external onlyAdmin(identityId) {
-        require(key != bytes32(0), "Key arg is empty");
+        if (key == bytes32(0)) {
+            revert IdentityLib.KeyIsEmpty();
+        }
 
         IdentityStorage ids = identityStorage;
 
         uint256 purpose;
         bytes32 attachedKey;
         (purpose, , attachedKey) = ids.getKey(identityId, key);
-        require(attachedKey == key, "Key isn't attached");
+        if (attachedKey != key) {
+            revert IdentityLib.KeyNotAttached(key);
+        }
 
-        require(
-            !(ids.getKeysByPurpose(identityId, IdentityLib.ADMIN_KEY).length == 1 &&
-                ids.keyHasPurpose(identityId, key, IdentityLib.ADMIN_KEY)),
-            "Cannot delete the only admin key"
-        );
-        require(
-            !(ids.getKeysByPurpose(identityId, IdentityLib.OPERATIONAL_KEY).length == 1 &&
-                ids.keyHasPurpose(identityId, key, IdentityLib.OPERATIONAL_KEY)),
-            "Cannot delete the only oper. key"
-        );
+        if (
+            ids.getKeysByPurpose(identityId, IdentityLib.ADMIN_KEY).length == 1 &&
+            ids.keyHasPurpose(identityId, key, IdentityLib.ADMIN_KEY)
+        ) {
+            revert IdentityLib.CannotDeleteOnlyAdminKey(identityId);
+        }
+
+        if (
+            ids.getKeysByPurpose(identityId, IdentityLib.OPERATIONAL_KEY).length == 1 &&
+            ids.keyHasPurpose(identityId, key, IdentityLib.OPERATIONAL_KEY)
+        ) {
+            revert IdentityLib.CannotDeleteOnlyOperationalKey(identityId);
+        }
 
         ids.removeKey(identityId, key);
 
@@ -126,13 +144,19 @@ contract Identity is INamed, IVersioned, ContractStatus, IInitializable {
         for (uint256 i; i < operationalWallets.length; ) {
             operationalKey = keccak256(abi.encodePacked(operationalWallets[i]));
 
-            require(operationalKey != bytes32(0), "Key arg is empty");
-            require(ids.identityIds(operationalKey) == 0, "Operational key is taken");
+            if (operationalKey == bytes32(0)) {
+                revert IdentityLib.KeyIsEmpty();
+            }
+            if (ids.identityIds(operationalKey) != 0) {
+                revert IdentityLib.OperationalKeyTaken(operationalKey);
+            }
 
             ids.setOperationalKeyIdentityId(operationalKey, identityId);
 
             (, , attachedKey) = ids.getKey(identityId, operationalKey);
-            require(attachedKey != operationalKey, "Key is already attached");
+            if (attachedKey == operationalKey) {
+                revert IdentityLib.KeyAlreadyAttached(operationalKey);
+            }
 
             ids.addKey(identityId, operationalKey, IdentityLib.OPERATIONAL_KEY, IdentityLib.ECDSA);
 
@@ -143,9 +167,10 @@ contract Identity is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function _checkAdmin(uint72 identityId) internal view virtual {
-        require(
-            identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), IdentityLib.ADMIN_KEY),
-            "Admin function"
-        );
+        if (
+            !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), IdentityLib.ADMIN_KEY)
+        ) {
+            revert IdentityLib.AdminFunctionOnly(identityId, msg.sender);
+        }
     }
 }

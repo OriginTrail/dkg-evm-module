@@ -11,6 +11,17 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
     string private constant _NAME = "EpochStorage";
     string private constant _VERSION = "1.0.0";
 
+    event EpochProducedKnowledgeValueAdded(uint72 indexed identityId, uint256 indexed epoch, uint96 knowledgeValue);
+    event TokensAddedToEpochRange(
+        uint256 indexed shardId,
+        uint256 startEpoch,
+        uint256 endEpoch,
+        uint96 tokenAmount,
+        uint96 remainder
+    );
+    event EpochTokensPaidOut(uint256 indexed shardId, uint256 indexed epoch, uint72 indexed identityId, uint96 amount);
+    event EpochsFinalized(uint256 indexed shardId, uint256 startEpoch, uint256 endEpoch);
+
     Chronos public chronos;
 
     mapping(uint256 => uint256) public lastFinalizedEpoch;
@@ -19,6 +30,8 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
     mapping(uint256 => mapping(uint256 => int96)) public diff;
     mapping(uint256 => mapping(uint256 => uint96)) public cumulative;
     mapping(uint256 => mapping(uint256 => uint96)) public distributed;
+
+    mapping(uint72 => mapping(uint256 => uint96)) public nodesEpochProducedKnowledgeValue;
     mapping(uint72 => mapping(uint256 => mapping(uint256 => uint96))) public nodesPaidOut;
 
     constructor(address hubAddress) HubDependent(hubAddress) {}
@@ -33,6 +46,32 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
 
     function version() external pure virtual override returns (string memory) {
         return _VERSION;
+    }
+
+    function addEpochProducedKnowledgeValue(
+        uint72 identityId,
+        uint256 epoch,
+        uint96 knowledgeValue
+    ) external onlyContracts {
+        nodesEpochProducedKnowledgeValue[identityId][epoch] += knowledgeValue;
+
+        emit EpochProducedKnowledgeValueAdded(identityId, epoch, knowledgeValue);
+    }
+
+    function getEpochProducedKnowledgeValue(uint72 identityId, uint256 epoch) public view returns (uint96) {
+        return nodesEpochProducedKnowledgeValue[identityId][epoch];
+    }
+
+    function getCurrentEpochProducedKnowledgeValue(uint72 identityId) external view returns (uint96) {
+        return nodesEpochProducedKnowledgeValue[identityId][chronos.getCurrentEpoch()];
+    }
+
+    function getPreviousEpochProducedKnowledgeValue(uint72 identityId) external view returns (uint96) {
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        if (currentEpoch <= 1) {
+            return 0;
+        }
+        return nodesEpochProducedKnowledgeValue[identityId][currentEpoch - 1];
     }
 
     function addTokensToEpochRange(
@@ -58,6 +97,8 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
         if (currentEpoch > 1) {
             _finalizeEpochsUpTo(shardId, currentEpoch - 1);
         }
+
+        emit TokensAddedToEpochRange(shardId, startEpoch, endEpoch, tokenAmount, remainder);
     }
 
     function payOutEpochTokens(
@@ -73,6 +114,8 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
 
         distributed[shardId][epoch] += amount;
         nodesPaidOut[identityId][shardId][epoch] += amount;
+
+        emit EpochTokensPaidOut(shardId, epoch, identityId, amount);
     }
 
     function getEpochPool(uint256 shardId, uint256 epoch) public view returns (uint96) {
@@ -83,12 +126,37 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
         }
     }
 
+    function getCurrentEpochPool(uint256 shardId) public view returns (uint96) {
+        return getEpochPool(shardId, chronos.getCurrentEpoch());
+    }
+
     function getPreviousEpochPool(uint256 shardId) external view returns (uint96) {
         uint256 currentEpoch = chronos.getCurrentEpoch();
         if (currentEpoch <= 1) {
             return 0;
         }
         return getEpochPool(shardId, currentEpoch - 1);
+    }
+
+    function getEpochRangePool(uint256 shardId, uint256 startEpoch, uint256 endEpoch) external view returns (uint96) {
+        uint256 lastFinalized = lastFinalizedEpoch[shardId];
+        uint96 totalPool = 0;
+
+        if (startEpoch <= lastFinalized) {
+            for (uint256 epoch = startEpoch; epoch <= lastFinalized && epoch <= endEpoch; epoch++) {
+                totalPool += cumulative[shardId][epoch];
+            }
+        }
+
+        uint96 simulatedCumulative = lastFinalized > 0 ? cumulative[shardId][lastFinalized] : 0;
+        for (uint256 epoch = lastFinalized + 1; epoch <= endEpoch; epoch++) {
+            simulatedCumulative += uint96(diff[shardId][epoch]);
+            if (epoch >= startEpoch) {
+                totalPool += simulatedCumulative;
+            }
+        }
+
+        return totalPool;
     }
 
     function getEpochDistributedPool(uint256 shardId, uint256 epoch) external view returns (uint96) {
@@ -116,7 +184,8 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
     }
 
     function _finalizeEpochsUpTo(uint256 shardId, uint256 epoch) internal {
-        for (uint256 e = lastFinalizedEpoch[shardId] + 1; e <= epoch; e++) {
+        uint256 startEpoch = lastFinalizedEpoch[shardId] + 1;
+        for (uint256 e = startEpoch; e <= epoch; e++) {
             int96 prev = 0;
             if (e > 1) {
                 prev = int96(cumulative[shardId][e - 1]);
@@ -124,6 +193,8 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
             cumulative[shardId][e] = uint96(prev + diff[shardId][e]);
         }
         lastFinalizedEpoch[shardId] = epoch;
+
+        emit EpochsFinalized(shardId, startEpoch, epoch);
     }
 
     function _simulateEpochFinalization(uint256 shardId, uint256 epoch) internal view returns (uint96) {

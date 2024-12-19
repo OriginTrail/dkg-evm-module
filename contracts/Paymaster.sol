@@ -8,13 +8,17 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Paymaster is Ownable(msg.sender) {
+    error NotAllowed();
+
     Hub public hub;
     IERC20 public tokenContract;
 
     mapping(address => bool) public allowedAddresses;
 
     modifier onlyAllowed() {
-        require(allowedAddresses[msg.sender], "Not allowed");
+        if (!allowedAddresses[msg.sender]) {
+            revert NotAllowed();
+        }
         _;
     }
 

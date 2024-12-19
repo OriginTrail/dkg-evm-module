@@ -196,7 +196,15 @@ contract KnowledgeCollectionStorage is
 
     function mintKnowledgeAssetsTokens(uint256 id, address to, uint256 amount) public onlyContracts {
         KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[id];
-        require(kc.minted + amount <= KNOWLEDGE_COLLECTION_MAX_SIZE, "Max size exceeded");
+
+        if (kc.minted + amount > KNOWLEDGE_COLLECTION_MAX_SIZE) {
+            revert KnowledgeCollectionLib.ExceededKnowledgeCollectionMaxSize(
+                id,
+                kc.minted,
+                amount,
+                KNOWLEDGE_COLLECTION_MAX_SIZE
+            );
+        }
 
         uint256 startTokenId = (id - 1) * KNOWLEDGE_COLLECTION_MAX_SIZE + _startTokenId() + kc.minted;
         _setCurrentIndex(startTokenId);
@@ -249,35 +257,19 @@ contract KnowledgeCollectionStorage is
     }
 
     function getLatestMerkleRootObject(uint256 id) external view returns (KnowledgeCollectionLib.MerkleRoot memory) {
-        KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
-        if (kc.merkleRoots.length == 0) {
-            return KnowledgeCollectionLib.MerkleRoot(address(0), bytes32(0), 0);
-        }
-        return kc.merkleRoots[kc.merkleRoots.length - 1];
+        return _safeGetLatestMerkleRootObject(id);
     }
 
     function getLatestMerkleRoot(uint256 id) external view returns (bytes32) {
-        KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
-        if (kc.merkleRoots.length == 0) {
-            return bytes32(0);
-        }
-        return kc.merkleRoots[kc.merkleRoots.length - 1].merkleRoot;
+        return _safeGetLatestMerkleRootObject(id).merkleRoot;
     }
 
     function getLatestMerkleRootPublisher(uint256 id) external view returns (address) {
-        KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
-        if (kc.merkleRoots.length == 0) {
-            return address(0);
-        }
-        return kc.merkleRoots[kc.merkleRoots.length - 1].publisher;
+        return _safeGetLatestMerkleRootObject(id).publisher;
     }
 
     function getLatestMerkleRootTimestamp(uint256 id) external view returns (uint256) {
-        KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
-        if (kc.merkleRoots.length == 0) {
-            return 0;
-        }
-        return kc.merkleRoots[kc.merkleRoots.length - 1].timestamp;
+        return _safeGetLatestMerkleRootObject(id).timestamp;
     }
 
     function pushMerkleRoot(address publisher, uint256 id, bytes32 merkleRoot) external onlyContracts {
@@ -289,8 +281,7 @@ contract KnowledgeCollectionStorage is
     }
 
     function popMerkleRoot(uint256 id) external onlyContracts {
-        KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
-        bytes32 latestMerkleRoot = kc.merkleRoots[kc.merkleRoots.length - 1].merkleRoot;
+        bytes32 latestMerkleRoot = _safeGetLatestMerkleRootObject(id).merkleRoot;
         knowledgeCollections[id].merkleRoots.pop();
 
         emit KnowledgeCollectionMerkleRootRemoved(id, latestMerkleRoot);
@@ -399,9 +390,7 @@ contract KnowledgeCollectionStorage is
     }
 
     function getKnowledgeCollectionId(uint256 tokenId) external view returns (uint256) {
-        require(tokenId >= _startTokenId(), "Invalid tokenId: Below start token ID");
-
-        if (isKnowledgeAssetBurned[tokenId]) {
+        if (tokenId < _startTokenId() || isKnowledgeAssetBurned[tokenId]) {
             return 0;
         }
 
@@ -511,6 +500,16 @@ contract KnowledgeCollectionStorage is
 
     function _setCurrentIndex(uint256 index) internal virtual {
         _currentIndex = index;
+    }
+
+    function _safeGetLatestMerkleRootObject(
+        uint256 id
+    ) internal view returns (KnowledgeCollectionLib.MerkleRoot memory) {
+        KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
+        if (kc.merkleRoots.length == 0) {
+            return KnowledgeCollectionLib.MerkleRoot(address(0), bytes32(0), 0);
+        }
+        return kc.merkleRoots[kc.merkleRoots.length - 1];
     }
 
     function _burnBatch(uint256 id, address from, uint256[] calldata tokenIds) internal virtual {

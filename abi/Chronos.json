@@ -17,6 +17,16 @@
   },
   {
     "inputs": [],
+    "name": "InvalidEpochLength",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidStartTime",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "EPOCH_LENGTH",
     "outputs": [
       {
