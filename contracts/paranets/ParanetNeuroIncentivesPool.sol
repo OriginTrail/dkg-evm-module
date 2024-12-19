@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 import {ParanetKnowledgeMinersRegistry} from "../storage/paranets/ParanetKnowledgeMinersRegistry.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
-import {Hub} from "../Hub.sol";
+import {Hub} from "../storage/Hub.sol";
 import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
 import {ParanetLib} from "../libraries/ParanetLib.sol";
@@ -20,7 +20,7 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     event ParanetIncentivizationProposalVoterRewardClaimed(address indexed voter, uint256 amount);
 
     string private constant _NAME = "ParanetNeuroIncentivesPool";
-    string private constant _VERSION = "2.1.3";
+    string private constant _VERSION = "1.0.0";
 
     Hub public hub;
     ParanetsRegistry public paranetsRegistry;

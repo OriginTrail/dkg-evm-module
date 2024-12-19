@@ -12,6 +12,7 @@ contract ShardingTableStorage is INamed, IVersioned, HubDependent {
     string private constant _VERSION = "1.0.0";
 
     uint72 public nodesCount;
+    uint96 public totalStake;
 
     // identityId => Node
     mapping(uint72 => ShardingTableLib.Node) internal nodes;
@@ -35,6 +36,10 @@ contract ShardingTableStorage is INamed, IVersioned, HubDependent {
 
     function decrementNodesCount() external onlyContracts {
         nodesCount--;
+    }
+
+    function setTotalStake(uint96 _totalStake) external onlyContracts {
+        totalStake = _totalStake;
     }
 
     function createNodeObject(

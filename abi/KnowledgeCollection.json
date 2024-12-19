@@ -13,27 +13,27 @@
   {
     "inputs": [
       {
-        "internalType": "uint72[]",
-        "name": "identityIds",
-        "type": "uint72[]"
-      },
-      {
-        "internalType": "address[]",
-        "name": "signers",
-        "type": "address[]"
-      },
-      {
-        "internalType": "bytes[]",
-        "name": "signatures",
-        "type": "bytes[]"
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
       },
       {
         "internalType": "bytes32",
-        "name": "message",
+        "name": "messageHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "r",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "vs",
         "type": "bytes32"
       }
     ],
-    "name": "InvalidSignatures",
+    "name": "InvalidSignature",
     "type": "error"
   },
   {
@@ -56,6 +56,27 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentEpoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endEpoch",
+        "type": "uint256"
+      }
+    ],
+    "name": "KnowledgeCollectionExpired",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "requiredSignatures",
         "type": "uint256"
       },
@@ -72,21 +93,37 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "signaturesAmount",
+        "name": "rAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "vsAmount",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
         "name": "identityIdsAmount",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "signersAmount",
-        "type": "uint256"
       }
     ],
     "name": "SignaturesSignersMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "address",
+        "name": "signer",
+        "type": "address"
+      }
+    ],
+    "name": "SignerIsNotNodeOperator",
     "type": "error"
   },
   {
@@ -133,6 +170,29 @@
   },
   {
     "inputs": [],
+    "name": "TransferFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroTokenAmount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ask",
+    "outputs": [
+      {
+        "internalType": "contract Ask",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "chronos",
     "outputs": [
       {
@@ -146,6 +206,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "string",
+        "name": "publishOperationId",
+        "type": "string"
+      },
       {
         "internalType": "bytes32",
         "name": "merkleRoot",
@@ -163,7 +228,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "chunksNumber",
+        "name": "chunksAmount",
         "type": "uint256"
       },
       {
@@ -177,22 +242,89 @@
         "type": "uint96"
       },
       {
+        "internalType": "address",
+        "name": "paymaster",
+        "type": "address"
+      },
+      {
+        "internalType": "uint72",
+        "name": "publisherNodeIdentityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "publisherNodeR",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "publisherNodeVS",
+        "type": "bytes32"
+      },
+      {
         "internalType": "uint72[]",
         "name": "identityIds",
         "type": "uint72[]"
       },
       {
-        "internalType": "address[]",
-        "name": "signers",
-        "type": "address[]"
+        "internalType": "bytes32[]",
+        "name": "r",
+        "type": "bytes32[]"
       },
       {
-        "internalType": "bytes[]",
-        "name": "signatures",
-        "type": "bytes[]"
+        "internalType": "bytes32[]",
+        "name": "vs",
+        "type": "bytes32[]"
       }
     ],
     "name": "createKnowledgeCollection",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "epochStorage",
+    "outputs": [
+      {
+        "internalType": "contract EpochStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "epochs",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      },
+      {
+        "internalType": "address",
+        "name": "paymaster",
+        "type": "address"
+      }
+    ],
+    "name": "extendKnowledgeCollectionLifetime",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -221,6 +353,29 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      },
+      {
+        "internalType": "address",
+        "name": "paymaster",
+        "type": "address"
+      }
+    ],
+    "name": "increaseKnowledgeCollectionTokenAmount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -271,12 +426,51 @@
   },
   {
     "inputs": [],
+    "name": "paymasterManager",
+    "outputs": [
+      {
+        "internalType": "contract PaymasterManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "_status",
+        "type": "bool"
+      }
+    ],
+    "name": "setStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "shardingTableStorage",
     "outputs": [
       {
         "internalType": "contract ShardingTableStorage",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "status",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -293,6 +487,89 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "updateOperationId",
+        "type": "string"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "merkleRoot",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "mintKnowledgeAssetsAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "knowledgeAssetsToBurn",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "byteSize",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chunksAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "tokenAmount",
+        "type": "uint96"
+      },
+      {
+        "internalType": "address",
+        "name": "paymaster",
+        "type": "address"
+      },
+      {
+        "internalType": "uint72",
+        "name": "publisherNodeIdentityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "publisherNodeR",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "publisherNodeVS",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint72[]",
+        "name": "identityIds",
+        "type": "uint72[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "r",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "vs",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "updateKnowledgeCollection",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

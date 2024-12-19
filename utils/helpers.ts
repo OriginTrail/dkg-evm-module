@@ -8,8 +8,10 @@ import { Keyring } from '@polkadot/keyring';
 import { u8aToHex } from '@polkadot/util';
 import * as polkadotCryptoUtils from '@polkadot/util-crypto';
 import { KeypairType } from '@polkadot/util-crypto/types';
-import { Contract } from 'ethers';
+import { AddressLike, Contract } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
+
+import { HubLib } from '../typechain/contracts/storage/Hub';
 
 type AbiEntry = {
   inputs?: Array<{ internalType: string; name: string; type: string }>;
@@ -93,10 +95,10 @@ export class Helpers {
   repositoryPath: string;
   contractDeployments: ContractDeployments;
   parametersConfig: ParametersConfig;
-  newContracts: Array<Array<string>>;
-  newAssetStorageContracts: Array<Array<string>>;
-  contractsForReinitialization: Array<string>;
-  setParametersEncodedData: Array<[string, Array<string>]>;
+  newContracts: HubLib.ContractStruct[];
+  newAssetStorageContracts: HubLib.ContractStruct[];
+  contractsForReinitialization: AddressLike[];
+  setParametersEncodedData: HubLib.ForwardCallInputArgsStruct[];
   newHashFunctions: Array<string>;
   newScoreFunctions: Array<string>;
 
@@ -161,7 +163,7 @@ export class Helpers {
         this.contractDeployments.contracts[nameInHub].evmAddress,
       );
 
-      if (this.hasFunction(nameInHub, 'initialize')) {
+      if (this.hasFunction(newContractName, 'initialize')) {
         // TODO: Reinitialize only if any dependency contract was redeployed
         this.contractsForReinitialization.push(
           await contractInstance.getAddress(),
@@ -208,24 +210,27 @@ export class Helpers {
         tx = await Hub.setContractAddress(nameInHub, newContract.address);
         await tx.wait();
       } else {
-        this.newContracts.push([nameInHub, newContract.address]);
+        this.newContracts.push({ name: nameInHub, addr: newContract.address });
       }
     } else if (setAssetStorageInHub) {
       if (this.hre.network.config.environment === 'development') {
         tx = await Hub.setAssetStorageAddress(nameInHub, newContract.address);
         await tx.wait();
       } else {
-        this.newAssetStorageContracts.push([nameInHub, newContract.address]);
+        this.newAssetStorageContracts.push({
+          name: nameInHub,
+          addr: newContract.address,
+        });
       }
     }
 
-    if (this.hasFunction(nameInHub, 'initialize')) {
+    if (this.hasFunction(newContractName, 'initialize')) {
       if (
         (setContractInHub || setAssetStorageInHub) &&
         this.hre.network.config.environment === 'development'
       ) {
         const newContractInterface = new this.hre.ethers.Interface(
-          this.getAbi(nameInHub),
+          this.getAbi(newContractName),
         );
         const initializeTx = await Hub.forwardCall(
           newContract.address,
@@ -241,6 +246,7 @@ export class Helpers {
       nameInHub,
       newContract.address,
       newContract.receipt!.blockNumber,
+      newContractName,
     );
 
     if (this.hre.network.config.environment !== 'development') {
@@ -273,7 +279,10 @@ export class Helpers {
       return;
     }
 
-    const encodedData: [string, string[]] = [contractName, []];
+    const forwardCall: HubLib.ForwardCallInputArgsStruct = {
+      contractName,
+      encodedData: [],
+    };
     for (const [getterName, paramValue] of Object.entries(parameters)) {
       const values = Array.isArray(paramValue) ? paramValue : [paramValue];
 
@@ -336,7 +345,7 @@ export class Helpers {
                   `[${contractName}] Adding parameter '${getterName}' value to be set to ${desiredValue} using Hub.`,
                 );
 
-                encodedData[1].push(encodedFunctionData);
+                forwardCall.encodedData.push(encodedFunctionData);
               }
             } else {
               throw Error(
@@ -352,8 +361,8 @@ export class Helpers {
       }
     }
 
-    if (encodedData[1].length !== 0) {
-      this.setParametersEncodedData.push(encodedData);
+    if (forwardCall.encodedData.length !== 0) {
+      this.setParametersEncodedData.push(forwardCall);
     }
   }
 
@@ -388,8 +397,9 @@ export class Helpers {
     newContractName: string,
     newContractAddress: string,
     deploymentBlock: number,
+    originalContractName: string | null = null,
   ) {
-    const contractABI = this.getAbi(newContractName);
+    const contractABI = this.getAbi(originalContractName ?? newContractName);
     const isVersionedContract = contractABI.some(
       (abiEntry) => abiEntry.type === 'function' && abiEntry.name === 'version',
     );
@@ -398,7 +408,7 @@ export class Helpers {
 
     if (isVersionedContract) {
       const VersionedContract = await this.hre.ethers.getContractAt(
-        newContractName,
+        originalContractName ?? newContractName,
         newContractAddress,
       );
       contractVersion = await VersionedContract.version();
@@ -408,7 +418,7 @@ export class Helpers {
 
     this.contractDeployments.contracts[newContractName] = {
       evmAddress: newContractAddress,
-      substrateAddress: this.hre.network.name.startsWith('otp')
+      substrateAddress: this.hre.network.name.startsWith('neuro')
         ? this.convertEvmWallet(newContractAddress)
         : undefined,
       version: contractVersion,
@@ -446,7 +456,7 @@ export class Helpers {
     );
   }
 
-  public async sendOTP(address: string | undefined, tokenAmount = 2) {
+  public async sendNeuro(address: string | undefined, tokenAmount = 2) {
     if (address === undefined) {
       throw Error('Address cannot be undefined!');
     }
@@ -455,7 +465,7 @@ export class Helpers {
       provider: this.provider,
       noInitWarn: true,
     });
-    const transfer = await api.tx.balances.transfer(
+    const transfer = api.tx.balances.transferKeepAlive(
       address,
       Number(this.hre.ethers.parseUnits(`${tokenAmount}`, 12)),
     );
@@ -463,16 +473,16 @@ export class Helpers {
     const keyring = new Keyring({ type: 'sr25519' });
     const accountUri =
       process.env[
-        `ACCOUNT_WITH_OTP_URI_${this.hre.network.name.toUpperCase()}`
+        `ACCOUNT_WITH_NEURO_URI_${this.hre.network.name.toUpperCase()}`
       ];
     if (!accountUri) {
-      throw Error('URI for account with OTP is required!');
+      throw Error('URI for account with Neuro is required!');
     }
     const account = keyring.createFromUri(accountUri);
 
     const txHash = await transfer.signAndSend(account, { nonce: -1 });
     console.log(
-      `2 OTPs sent to contract at address ${address}. Transaction hash: ${txHash.toHuman()}`,
+      `2 Neuro sent to contract at address ${address}. Transaction hash: ${txHash.toHuman()}`,
     );
     await this._delay(40000);
   }

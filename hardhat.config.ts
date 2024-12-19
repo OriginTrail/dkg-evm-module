@@ -20,7 +20,7 @@ import './tasks/deploy_test_token';
 import './tasks/low_level_call_data_encoder';
 import './tasks/mint_test_tokens';
 import './tasks/selector_encoder';
-import './tasks/send_otp';
+import './tasks/send_neuro';
 import './utils/type-extensions';
 import config from './hardhat.node.config';
 import { Helpers } from './utils/helpers';
@@ -32,22 +32,22 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
 
 config.networks = {
   ...config.networks,
-  otp_testnet: {
+  neuroweb_testnet: {
     environment: 'testnet',
     chainId: 20430,
-    url: rpc('otp_testnet'),
+    url: rpc('neuroweb_testnet'),
     gas: 10_000_000, // Gas limit used for deploys
     gasPrice: 20,
-    accounts: accounts('otp_testnet'),
+    accounts: accounts('neuroweb_testnet'),
     saveDeployments: false,
   },
-  otp_mainnet: {
+  neuroweb_mainnet: {
     environment: 'mainnet',
     chainId: 2043,
-    url: rpc('otp_mainnet'),
+    url: rpc('neuroweb_mainnet'),
     gas: 10_000_000, // Gas limit used for deploys
     gasPrice: 100,
-    accounts: accounts('otp_mainnet'),
+    accounts: accounts('neuroweb_mainnet'),
     saveDeployments: false,
   },
   gnosis_chiado_test: {
@@ -65,36 +65,28 @@ config.networks = {
     accounts: accounts('gnosis_mainnet'),
     saveDeployments: false,
   },
-  base_sepolia_v8_dev: {
+  base_sepolia_dev: {
     environment: 'devnet',
     chainId: 84532,
-    url: rpc('base_sepolia_v8_dev'),
+    url: rpc('base_sepolia_dev'),
     gasPrice: 1_000_000_000,
-    accounts: accounts('base_sepolia_v8_dev'),
+    accounts: accounts('base_sepolia_dev'),
     saveDeployments: false,
   },
-  base_sepolia_v8_stable_dev_staging: {
+  base_sepolia_stable_dev_staging: {
     environment: 'devnet',
     chainId: 84532,
-    url: rpc('base_sepolia_v8_stable_dev_staging'),
+    url: rpc('base_sepolia_stable_dev_staging'),
     gasPrice: 1_000_000_000,
-    accounts: accounts('base_sepolia_v8_stable_dev_staging'),
+    accounts: accounts('base_sepolia_stable_dev_staging'),
     saveDeployments: false,
   },
-  base_sepolia_v8_stable_dev_prod: {
+  base_sepolia_stable_dev_prod: {
     environment: 'devnet',
     chainId: 84532,
-    url: rpc('base_sepolia_v8_stable_dev_prod'),
+    url: rpc('base_sepolia_stable_dev_prod'),
     gasPrice: 1_000_000_000,
-    accounts: accounts('base_sepolia_v8_stable_dev_prod'),
-    saveDeployments: false,
-  },
-  base_sepolia_v8_test: {
-    environment: 'testnet',
-    chainId: 84532,
-    url: rpc('base_sepolia_v8_test'),
-    gasPrice: 1_000_000_000,
-    accounts: accounts('base_sepolia_v8_test'),
+    accounts: accounts('base_sepolia_stable_dev_prod'),
     saveDeployments: false,
   },
   base_sepolia_test: {
@@ -135,6 +127,7 @@ config.abiExporter = {
   except: [
     'draft-IERC6093.sol',
     'AccessControl.sol',
+    'EnumerableSetLib.sol',
     'ERC20.sol',
     'ERC20Burnable.sol',
     'ERC165.sol',
@@ -150,7 +143,6 @@ config.abiExporter = {
     'IERC1155Delta.sol',
     'IERC4906.sol',
     'Ownable.sol',
-    'Shares.sol',
     'IdentityLib.sol',
     'ParanetLib.sol',
     'Permissions.sol',
@@ -158,6 +150,12 @@ config.abiExporter = {
     'ShardingTableLib.sol',
     'TokenLib.sol',
     'KnowledgeCollectionLib.sol',
+    'StakingLib.sol',
+    'IOldHub',
+    'IOldNodeOperatorFeesStorage',
+    'IOldProfileStorage',
+    'IOldStakingStorage',
+    'IOldServiceAgreementStorage',
   ],
   spacing: 2,
   format: 'json',

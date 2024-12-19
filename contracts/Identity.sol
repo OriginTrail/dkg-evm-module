@@ -14,7 +14,7 @@ contract Identity is INamed, IVersioned, ContractStatus, IInitializable {
     event IdentityDeleted(uint72 indexed identityId);
 
     string private constant _NAME = "Identity";
-    string private constant _VERSION = "1.1.0";
+    string private constant _VERSION = "1.0.0";
 
     IdentityStorage public identityStorage;
 

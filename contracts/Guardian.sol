@@ -8,8 +8,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Guardian is HubDependent {
     event TokenTransferred(address indexed custodian, uint256 amount);
-    event MisplacedOTPWithdrawn(address indexed custodian, uint256 amount);
-    event MisplacedTokensWithdrawn(address indexed custodian, address tokenContract, uint256 amount);
+    event MisplacedEtherWithdrawn(address indexed custodian, uint256 amount);
+    event MisplacedERC20Withdrawn(address indexed custodian, address tokenContract, uint256 amount);
 
     IERC20 public tokenContract;
 
@@ -43,13 +43,13 @@ contract Guardian is HubDependent {
         emit TokenTransferred(custodian, balanceTransferred);
     }
 
-    function withdrawMisplacedOTP() external onlyHub {
+    function withdrawMisplacedEther() external onlyHub {
         uint256 balance = address(this).balance;
         if (balance > 0) {
             (bool success, ) = msg.sender.call{value: balance}("");
             require(success, "Transfer failed.");
         }
-        emit MisplacedOTPWithdrawn(msg.sender, balance);
+        emit MisplacedEtherWithdrawn(msg.sender, balance);
     }
 
     function withdrawMisplacedTokens(address tokenContractAddress) external onlyHub {
@@ -61,6 +61,6 @@ contract Guardian is HubDependent {
             bool transactionResult = misplacedTokensContract.transfer(msg.sender, balance);
             require(transactionResult, "Token transaction execution failed");
         }
-        emit MisplacedTokensWithdrawn(msg.sender, tokenContractAddress, balance);
+        emit MisplacedERC20Withdrawn(msg.sender, tokenContractAddress, balance);
     }
 }

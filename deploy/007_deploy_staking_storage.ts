@@ -8,11 +8,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     newContractName: 'StakingStorage',
   });
 
-  if (!isDeployed && hre.network.name.startsWith('otp')) {
+  if (!isDeployed && hre.network.name.startsWith('neuroweb')) {
     const substrateAddress =
       hre.helpers.contractDeployments.contracts['StakingStorage']
         .substrateAddress;
-    await hre.helpers.sendOTP(substrateAddress, 2);
+    await hre.helpers.sendNeuro(substrateAddress, 2);
   }
 };
 
