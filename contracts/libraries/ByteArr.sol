@@ -3,7 +3,9 @@
 pragma solidity ^0.8.20;
 
 library ByteArr {
-    function indexOf(bytes32[] storage self, bytes32 item) internal view returns (uint index, bool isThere) {
+    error IndexOutOfBounds(uint256 index, uint256 length);
+
+    function indexOf(bytes32[] storage self, bytes32 item) internal view returns (uint256 index, bool isThere) {
         for (uint256 i; i < self.length; i++) {
             if (self[i] == item) {
                 return (i, true);
@@ -13,7 +15,9 @@ library ByteArr {
     }
 
     function removeByIndex(bytes32[] storage self, uint256 index) internal returns (bytes32[] memory) {
-        require(index < self.length, "Index is out of array length");
+        if (index >= self.length) {
+            revert IndexOutOfBounds(index, self.length);
+        }
 
         self[index] = self[self.length - 1];
         self.pop();

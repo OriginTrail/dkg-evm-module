@@ -13,7 +13,8 @@ library HubLib {
         bytes[] encodedData;
     }
 
-    error UnauthorizedAccess();
+    error ZeroAddressHub();
+    error UnauthorizedAccess(string msg);
     error InvalidTargetContract(address addr);
     error ContractNotRegistered(string contractName);
 }

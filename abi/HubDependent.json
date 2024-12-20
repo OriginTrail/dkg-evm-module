@@ -1,6 +1,11 @@
 [
   {
     "inputs": [],
+    "name": "ZeroAddressHub",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "hub",
     "outputs": [
       {

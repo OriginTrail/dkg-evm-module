@@ -19,5 +19,5 @@ func.dependencies = [
   'ShardingTableStorage',
   'StakingStorage',
   'NodeOperatorFeesStorage',
-  'Ask',
+  'AskStorage',
 ];

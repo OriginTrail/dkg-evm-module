@@ -14,38 +14,39 @@ library UnorderedNamedContractDynamicSet {
         Contract[] contractList;
     }
 
+    error EmptyName();
+    error ZeroAddress();
+    error ContractAlreadyExists(string name);
+    error AddressAlreadyInSet(address addr);
+    error ContractDoesNotExist(string name);
+    error AddressDoesNotExist(address addr);
+
     function append(UnorderedNamedContractDynamicSet.Set storage self, string calldata name, address addr) internal {
-        require(
-            keccak256(abi.encodePacked(name)) != keccak256(abi.encodePacked("")),
-            "NamedContractSet: Name cannot be empty"
-        );
-        require(addr != address(0), "NamedContractSet: Address cannot be 0x0");
-        require(!exists(self, name), "NamedContractSet: Contract with given name already exists");
-        require(
-            (self.contractList.length == 0) ||
-                ((self.addressIndexPointers[addr] == 0) && (self.contractList[0].addr != addr)),
-            "NamedContractSet: Address already in the set"
-        );
+        if (keccak256(abi.encodePacked(name)) == keccak256(abi.encodePacked(""))) revert EmptyName();
+        if (addr == address(0)) revert ZeroAddress();
+        if (exists(self, name)) revert ContractAlreadyExists(name);
+        if (self.contractList.length > 0 && (self.addressIndexPointers[addr] != 0 || self.contractList[0].addr == addr))
+            revert AddressAlreadyInSet(addr);
+
         self.stringIndexPointers[name] = size(self);
         self.addressIndexPointers[addr] = size(self);
         self.contractList.push(UnorderedNamedContractDynamicSet.Contract(name, addr));
     }
 
     function update(UnorderedNamedContractDynamicSet.Set storage self, string calldata name, address addr) internal {
-        require(addr != address(0), "NamedContractSet: Address cannot be 0x0");
-        require(exists(self, name), "NamedContractSet: Contract with given name doesn't exists");
-        require(
-            (self.contractList.length == 0) ||
-                ((self.addressIndexPointers[addr] == 0) && (self.contractList[0].addr != addr)),
-            "NamedContractSet: Address already in the set"
-        );
+        if (addr == address(0)) revert ZeroAddress();
+        if (!exists(self, name)) revert ContractDoesNotExist(name);
+        if (self.contractList.length > 0 && (self.addressIndexPointers[addr] != 0 || self.contractList[0].addr == addr))
+            revert AddressAlreadyInSet(addr);
+
         delete self.addressIndexPointers[self.contractList[self.stringIndexPointers[name]].addr];
         self.addressIndexPointers[addr] = self.stringIndexPointers[name];
         self.contractList[self.stringIndexPointers[name]].addr = addr;
     }
 
     function remove(UnorderedNamedContractDynamicSet.Set storage self, string calldata name) internal {
-        require(exists(self, name), "NamedContractSet: Contract with given name doesn't exist");
+        if (!exists(self, name)) revert ContractDoesNotExist(name);
+
         uint256 contractToRemoveIndex = self.stringIndexPointers[name];
 
         delete self.addressIndexPointers[self.contractList[contractToRemoveIndex].addr];
@@ -61,7 +62,8 @@ library UnorderedNamedContractDynamicSet {
     }
 
     function remove(UnorderedNamedContractDynamicSet.Set storage self, address addr) internal {
-        require(exists(self, addr), "NamedContractSet: Contract with given address doesn't exist");
+        if (!exists(self, addr)) revert AddressDoesNotExist(addr);
+
         uint256 contractToRemoveIndex = self.addressIndexPointers[addr];
 
         delete self.stringIndexPointers[self.contractList[contractToRemoveIndex].name];
@@ -80,7 +82,8 @@ library UnorderedNamedContractDynamicSet {
         UnorderedNamedContractDynamicSet.Set storage self,
         string calldata name
     ) internal view returns (UnorderedNamedContractDynamicSet.Contract memory) {
-        require(exists(self, name), "NamedContractSet: Contract with given name doesn't exist");
+        if (!exists(self, name)) revert ContractDoesNotExist(name);
+
         return self.contractList[self.stringIndexPointers[name]];
     }
 
@@ -88,7 +91,8 @@ library UnorderedNamedContractDynamicSet {
         UnorderedNamedContractDynamicSet.Set storage self,
         address addr
     ) internal view returns (UnorderedNamedContractDynamicSet.Contract memory) {
-        require(exists(self, addr), "NamedContractSet: Contract with given address doesn't exist");
+        if (!exists(self, addr)) revert AddressDoesNotExist(addr);
+
         return self.contractList[self.addressIndexPointers[addr]];
     }
 

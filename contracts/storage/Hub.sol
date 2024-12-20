@@ -243,9 +243,9 @@ contract Hub is INamed, IVersioned, Ownable {
     }
 
     function _checkOwnerOrMultiSigOwner() internal view virtual {
-        address hubControllerOwner = owner();
-        if (msg.sender != hubControllerOwner && !_isMultiSigOwner(hubControllerOwner)) {
-            revert HubLib.UnauthorizedAccess();
+        address hubOwner = owner();
+        if (msg.sender != hubOwner && !_isMultiSigOwner(hubOwner)) {
+            revert HubLib.UnauthorizedAccess("Only Hub Owner or Multisig Owner");
         }
     }
 }

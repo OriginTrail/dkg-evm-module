@@ -15,22 +15,30 @@ library UnorderedIndexableContractDynamicSet {
         Contract[] contractList;
     }
 
+    error ZeroId();
+    error ZeroAddress();
+    error ContractAlreadyExists(uint8 id);
+    error ContractDoesNotExist(uint8 id);
+
     function append(Set storage self, uint8 id, address addr) internal {
-        require(id != 0, "IndexableContractSet: ID canot be 0");
-        require(addr != address(0), "IndexableContractSet: Address cannot be 0x0");
-        require(!exists(self, id), "IndexableContractSet: Contract with given ID already exists");
+        if (id == 0) revert ZeroId();
+        if (addr == address(0)) revert ZeroAddress();
+        if (exists(self, id)) revert ContractAlreadyExists(id);
+
         self.indexPointers[id] = size(self);
         self.contractList.push(Contract(id, addr));
     }
 
     function update(Set storage self, uint8 id, address addr) internal {
-        require(addr != address(0), "IndexableContractSet: Address cannot be 0x0");
-        require(exists(self, id), "IndexableContractSet: Contract with given ID doesn't exists");
+        if (addr == address(0)) revert ZeroAddress();
+        if (!exists(self, id)) revert ContractDoesNotExist(id);
+
         self.contractList[self.indexPointers[id]].addr = addr;
     }
 
     function remove(Set storage self, uint8 id) internal {
-        require(exists(self, id), "IndexableContractSet: Contract with given ID doesn't exists");
+        if (!exists(self, id)) revert ContractDoesNotExist(id);
+
         uint256 contractToRemoveIndex = self.indexPointers[id];
         Contract memory contractToMove = self.contractList[size(self) - 1];
         uint8 contractToMoveId = IIndexable(contractToMove.addr).id();
@@ -43,7 +51,8 @@ library UnorderedIndexableContractDynamicSet {
     }
 
     function get(Set storage self, uint8 id) internal view returns (Contract memory) {
-        require(exists(self, id), "IndexableContractSet: Contract with given ID doesn't exists");
+        if (!exists(self, id)) revert ContractDoesNotExist(id);
+
         return self.contractList[self.indexPointers[id]];
     }
 

@@ -3,12 +3,15 @@
 pragma solidity ^0.8.20;
 
 import {Hub} from "../storage/Hub.sol";
+import {HubLib} from "../libraries/HubLib.sol";
 
 abstract contract HubDependent {
     Hub public hub;
 
     constructor(address hubAddress) {
-        require(hubAddress != address(0), "Hub Address cannot be 0x0");
+        if (hubAddress == address(0)) {
+            revert HubLib.ZeroAddressHub();
+        }
 
         hub = Hub(hubAddress);
     }
@@ -29,14 +32,20 @@ abstract contract HubDependent {
     }
 
     function _checkHub() internal view virtual {
-        require(msg.sender == address(hub), "Fn can only be used by hub");
+        if (msg.sender != address(hub)) {
+            revert HubLib.UnauthorizedAccess("Only Hub");
+        }
     }
 
     function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+        if (msg.sender != hub.owner()) {
+            revert HubLib.UnauthorizedAccess("Only Hub Owner");
+        }
     }
 
     function _checkHubContract() internal view virtual {
-        require(hub.isContract(msg.sender), "Fn can only be called by the hub contracts");
+        if (!hub.isContract(msg.sender)) {
+            revert HubLib.UnauthorizedAccess("Only Contracts in Hub");
+        }
     }
 }

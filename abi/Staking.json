@@ -109,6 +109,17 @@
   {
     "inputs": [
       {
+        "internalType": "string",
+        "name": "msg",
+        "type": "string"
+      }
+    ],
+    "name": "UnauthorizedAccess",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint96",
         "name": "stake",
         "type": "uint96"
@@ -141,6 +152,11 @@
   {
     "inputs": [],
     "name": "WithdrawalWasntInitiated",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroAddressHub",
     "type": "error"
   },
   {
