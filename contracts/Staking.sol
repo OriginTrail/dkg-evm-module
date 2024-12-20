@@ -151,7 +151,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         _removeNodeFromShardingTable(fromIdentityId, totalFromNodeStakeAfter);
 
         if (stakeAmount > delegatorStakeIndexed) {
-            ss.increaseDelegatorStakeBase(toIdentityId, delegatorKey, (newDelegatorStakeBase - delegatorStakeBase));
+            ss.increaseDelegatorStakeBase(toIdentityId, delegatorKey, (delegatorStakeBase - newDelegatorStakeBase));
         }
         ss.increaseDelegatorStakeRewardIndexed(
             toIdentityId,
@@ -201,14 +201,24 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         _removeNodeFromShardingTable(identityId, totalNodeStakeAfter);
 
         if (totalNodeStakeAfter >= parametersStorage.maximumStake()) {
+            ss.addDelegatorCumulativePaidOutRewards(
+                identityId,
+                delegatorKey,
+                delegatorStakeIndexed - newDelegatorStakeIndexed
+            );
+            ss.addNodeCumulativePaidOutRewards(identityId, delegatorStakeIndexed - newDelegatorStakeIndexed);
             ss.transferStake(msg.sender, removedStake);
         } else {
             askStorage.onStakeChanged(identityId, totalNodeStakeAfter);
+
+            (uint96 prevDelegatorWithdrawalAmount, uint96 prevDelegatorIndexedOutRewardAmount, ) = ss
+                .getDelegatorWithdrawalRequest(identityId, delegatorKey);
+
             ss.createDelegatorWithdrawalRequest(
                 identityId,
                 delegatorKey,
-                removedStake,
-                delegatorStakeIndexed - newDelegatorStakeIndexed,
+                removedStake + prevDelegatorWithdrawalAmount,
+                delegatorStakeIndexed - newDelegatorStakeIndexed + prevDelegatorIndexedOutRewardAmount,
                 block.timestamp + parametersStorage.stakeWithdrawalDelay()
             );
         }
