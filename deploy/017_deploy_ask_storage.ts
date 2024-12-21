@@ -14,4 +14,5 @@ func.dependencies = [
   'ShardingTableStorage',
   'ParametersStorage',
   'StakingStorage',
+  'ProfileStorage',
 ];

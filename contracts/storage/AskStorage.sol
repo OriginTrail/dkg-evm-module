@@ -12,7 +12,7 @@ import {IInitializable} from "../interfaces/IInitializable.sol";
 import {ContractStatus} from "../abstract/ContractStatus.sol";
 
 contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
-    string private constant _NAME = "Ask";
+    string private constant _NAME = "AskStorage";
     string private constant _VERSION = "1.0.0";
 
     uint256 public constant UPPER_BOUND_FACTOR = 1467000000000000000;
@@ -27,9 +27,6 @@ contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
     uint256 public weightedActiveAskSum;
 
     uint96 public totalActiveStake;
-
-    // index => identityId
-    mapping(uint72 => uint72) public indexToIdentityId;
 
     mapping(uint72 => uint256) public nodeWeightedActiveAsk;
 
@@ -65,6 +62,7 @@ contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
         StakingStorage ss = stakingStorage;
 
         if (newStake < ps.minimumStake()) {
+            nodeWeightedActiveAsk[identityId] = 0;
             return;
         }
 
@@ -76,7 +74,7 @@ contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
             weightedActiveAskSum = newWeightedAsk;
             prevWeightedActiveAskSum = newWeightedAsk;
             nodeWeightedActiveAsk[identityId] = newWeightedAsk;
-            totalActiveStake += stake;
+            totalActiveStake = stake;
             return;
         }
 
@@ -100,7 +98,7 @@ contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
 
             uint72 nodesCount = sts.nodesCount();
             for (uint72 i; i < nodesCount; i++) {
-                uint72 nextIdentityId = indexToIdentityId[i];
+                uint72 nextIdentityId = sts.indexToIdentityId(i);
                 uint256 weightedActiveAsk = nodeWeightedActiveAsk[nextIdentityId];
 
                 if (weightedActiveAsk * 1e18 <= newUpperBound && weightedActiveAsk * 1e18 >= newLowerBound) {
@@ -116,6 +114,7 @@ contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
     function onAskChanged(uint72 identityId, uint96 newAsk) external onlyContracts {
         StakingStorage ss = stakingStorage;
         ParametersStorage ps = parametersStorage;
+        ShardingTableStorage sts = shardingTableStorage;
 
         uint96 currentStake = stakingStorage.getNodeStake(identityId);
 
@@ -155,7 +154,7 @@ contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
 
             uint72 nodesCount = shardingTableStorage.nodesCount();
             for (uint72 i; i < nodesCount; i++) {
-                uint72 nextIdentityId = indexToIdentityId[i];
+                uint72 nextIdentityId = sts.indexToIdentityId(i);
                 uint256 weightedActiveAsk = nodeWeightedActiveAsk[nextIdentityId];
 
                 if (weightedActiveAsk * 1e18 <= newUpperBound && weightedActiveAsk * 1e18 >= newLowerBound) {

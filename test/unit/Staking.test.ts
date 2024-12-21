@@ -432,10 +432,31 @@ describe('Staking contract', function () {
     const op1 = accounts[1];
     const admin2 = accounts[2];
     const op2 = accounts[3];
+
+    console.log('Creating Node A with operator fee = 20%');
+    const NodeA = await createProfile(admin1, op1, 20n);
+    console.log(`NodeA ID: ${NodeA.identityId}, operator fee: 20%`);
+
+    console.log('Creating Node B with operator fee = 50%');
+    const NodeB = await createProfile(admin2, op2, 50n);
+    console.log(`NodeB ID: ${NodeB.identityId}, operator fee: 50%`);
+
+    const nodes = {
+      [NodeA.identityId]: 'A',
+      [NodeB.identityId]: 'B',
+    };
+
     const d1 = accounts[4];
     const d2 = accounts[5];
     const d3 = accounts[6];
     const d4 = accounts[7];
+
+    const delegators = {
+      [d1.address]: 'd1',
+      [d2.address]: 'd2',
+      [d3.address]: 'd3',
+      [d4.address]: 'd4',
+    };
 
     const delay = await ParametersStorage.stakeWithdrawalDelay();
     const minStake = await ParametersStorage.minimumStake();
@@ -454,7 +475,7 @@ describe('Staking contract', function () {
         dCount,
       ] = await StakingStorage.getNodeData(identityId);
       console.log('----------------------------------------------------------');
-      console.log(`Node ${identityId} Data:
+      console.log(`Node${nodes[identityId]} Data:
         Stake: ${toEth(BigInt(stake))} ETH,
         RewardIndex: ${rewardIndex},
         CumulativeEarnedRewards: ${toEth(BigInt(cEarned))} ETH,
@@ -476,7 +497,7 @@ describe('Staking contract', function () {
       const [dBase, dIndexed, dLastIndex, dEarned, dPaid] =
         await StakingStorage.getDelegatorData(identityId, dKey);
       console.log('----------------------------------------------------------');
-      console.log(`Delegator ${delegator.address} on Node ${identityId}:
+      console.log(`Delegator ${delegators[delegator.address]} on Node${nodes[identityId]}:
         BaseStake: ${toEth(BigInt(dBase))} ETH,
         IndexedStake: ${toEth(BigInt(dIndexed))} ETH,
         LastRewardIndex: ${dLastIndex},
@@ -488,14 +509,6 @@ describe('Staking contract', function () {
     console.log(
       `Minimum stake: ${toEth(minStake)} ETH, Maximum stake: ${toEth(maxStake)} ETH, Delay: ${delay}s`,
     );
-
-    console.log('Creating Node A with operator fee = 20%');
-    const NodeA = await createProfile(admin1, op1, 20n);
-    console.log(`NodeA ID: ${NodeA.identityId}, operator fee: 20%`);
-
-    console.log('Creating Node B with operator fee = 50%');
-    const NodeB = await createProfile(admin2, op2, 50n);
-    console.log(`NodeB ID: ${NodeB.identityId}, operator fee: 50%`);
 
     const stakeA = minStake * 2n;
     console.log(`Minting ${toEth(stakeA)} ETH to d1 and staking on NodeA`);
@@ -760,9 +773,25 @@ describe('Staking contract', function () {
     const admin2 = accounts[2];
     const op2 = accounts[3];
 
+    const NodeA = await createProfile(admin1, op1, 10n);
+    console.log(`NodeA ID: ${NodeA.identityId}, fee: 10%`);
+    const NodeB = await createProfile(admin2, op2, 90n);
+    console.log(`NodeB ID: ${NodeB.identityId}, fee: 90%`);
+
+    const nodes = {
+      [NodeA.identityId]: 'A',
+      [NodeB.identityId]: 'B',
+    };
+
     const d1 = accounts[4];
     const d2 = accounts[5];
     const d3 = accounts[6];
+
+    const delegators = {
+      [d1.address]: 'd1',
+      [d2.address]: 'd2',
+      [d3.address]: 'd3',
+    };
 
     const delay = await ParametersStorage.stakeWithdrawalDelay();
     const minStake = await ParametersStorage.minimumStake();
@@ -781,7 +810,7 @@ describe('Staking contract', function () {
         dCount,
       ] = await StakingStorage.getNodeData(identityId);
       console.log('----------------------------------------------------------');
-      console.log(`Node ${identityId} Data:
+      console.log(`Node${nodes[identityId]} Data:
         Stake: ${toEth(BigInt(stake))} ETH,
         RewardIndex: ${rewardIndex},
         CumulativeEarnedRewards: ${toEth(BigInt(cEarned))} ETH,
@@ -803,7 +832,7 @@ describe('Staking contract', function () {
       const [dBase, dIndexed, dLastIndex, dEarned, dPaid] =
         await StakingStorage.getDelegatorData(identityId, dKey);
       console.log('----------------------------------------------------------');
-      console.log(`Delegator ${delegator.address} on Node ${identityId}:
+      console.log(`Delegator ${delegators[delegator.address]} on Node${nodes[identityId]}:
         BaseStake: ${toEth(BigInt(dBase))} ETH,
         IndexedStake: ${toEth(BigInt(dIndexed))} ETH,
         LastRewardIndex: ${dLastIndex},
@@ -815,11 +844,6 @@ describe('Staking contract', function () {
     console.log(
       `MinStake: ${toEth(minStake)} ETH, MaxStake: ${toEth(maxStake)} ETH, Delay: ${delay}s`,
     );
-
-    const NodeA = await createProfile(admin1, op1, 10n);
-    console.log(`NodeA ID: ${NodeA.identityId}, fee: 10%`);
-    const NodeB = await createProfile(admin2, op2, 90n);
-    console.log(`NodeB ID: ${NodeB.identityId}, fee: 90%`);
 
     const mintAmountD1 = maxStake * 2n;
     await Token.mint(d1.address, mintAmountD1);
@@ -1003,9 +1027,9 @@ describe('Staking contract', function () {
     console.log('No stake withdrawal reverted as expected');
 
     const halfD2StakeB =
-      (await StakingStorage.getNodeStake(NodeB.identityId)) / 2n;
+      (await StakingStorage.getNodeStake(NodeB.identityId)) / 5n;
     console.log(
-      `d2 requests half stake withdrawal on NodeB: ${toEth(halfD2StakeB)} ETH`,
+      `d2 requests 20% stake withdrawal on NodeB: ${toEth(halfD2StakeB)} ETH`,
     );
     await Staking.connect(d2).requestWithdrawal(NodeB.identityId, halfD2StakeB);
     await time.increase(Number(delay));

@@ -96,9 +96,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ss.setDelegatorStakeInfo(identityId, delegatorKey, delegatorStakeBase + addedStake, delegatorStakeIndexed);
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.increaseTotalStake(addedStake);
-        askStorage.onStakeChanged(identityId, ss.getNodeStake(identityId));
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
+
+        askStorage.onStakeChanged(identityId, ss.getNodeStake(identityId));
 
         token.transferFrom(msg.sender, address(ss), addedStake);
     }
@@ -147,8 +148,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         ss.setDelegatorStakeInfo(fromIdentityId, delegatorKey, newDelegatorStakeBase, newDelegatorStakeIndexed);
         ss.setNodeStake(fromIdentityId, totalFromNodeStakeAfter);
-        ass.onStakeChanged(fromIdentityId, totalFromNodeStakeAfter);
+
         _removeNodeFromShardingTable(fromIdentityId, totalFromNodeStakeAfter);
+
+        ass.onStakeChanged(fromIdentityId, totalFromNodeStakeAfter);
 
         if (stakeAmount > delegatorStakeIndexed) {
             ss.increaseDelegatorStakeBase(toIdentityId, delegatorKey, (delegatorStakeBase - newDelegatorStakeBase));
@@ -159,8 +162,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             (delegatorStakeIndexed - newDelegatorStakeIndexed)
         );
         ss.setNodeStake(toIdentityId, totalToNodeStakeAfter);
-        ass.onStakeChanged(toIdentityId, totalToNodeStakeAfter);
+
         _addNodeToShardingTable(toIdentityId, totalToNodeStakeAfter);
+
+        ass.onStakeChanged(toIdentityId, totalToNodeStakeAfter);
     }
 
     function requestWithdrawal(uint72 identityId, uint96 removedStake) external profileExists(identityId) {
@@ -298,11 +303,12 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         );
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.increaseTotalStake(delegatorWithdrawalAmount);
+
+        _addNodeToShardingTable(identityId, totalNodeStakeAfter);
+
         if (totalNodeStakeAfter - delegatorWithdrawalAmount < parametersStorage.maximumStake()) {
             askStorage.onStakeChanged(identityId, totalNodeStakeAfter);
         }
-
-        _addNodeToShardingTable(identityId, totalNodeStakeAfter);
     }
 
     function distributeRewards(
@@ -339,11 +345,12 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ss.setNodeRewardIndex(identityId, nodeRewardIndex + nodeRewardIndexIncrement);
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.increaseTotalStake(delegatorsReward);
+
+        _addNodeToShardingTable(identityId, totalNodeStakeAfter);
+
         if (totalNodeStakeBefore < parametersStorage.maximumStake()) {
             askStorage.onStakeChanged(identityId, totalNodeStakeAfter);
         }
-
-        _addNodeToShardingTable(identityId, totalNodeStakeAfter);
     }
 
     function restakeOperatorFee(uint72 identityId, uint96 addedStake) external onlyAdmin(identityId) {
@@ -376,9 +383,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.addOperatorFeeCumulativePaidOutRewards(identityId, addedStake);
         ss.increaseTotalStake(addedStake);
-        askStorage.onStakeChanged(identityId, totalNodeStakeAfter);
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
+
+        askStorage.onStakeChanged(identityId, totalNodeStakeAfter);
     }
 
     function requestOperatorFeeWithdrawal(uint72 identityId, uint96 withdrawalAmount) external onlyAdmin(identityId) {
@@ -501,13 +509,20 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 nodeRewardIndex = ss.getNodeRewardIndex(identityId);
 
         if (nodeRewardIndex > delegatorLastRewardIndex) {
-            uint256 diff = nodeRewardIndex - delegatorLastRewardIndex;
             uint256 currentStake = uint256(delegatorStakeBase) + uint256(delegatorStakeIndexed);
-            uint96 additional = uint96((currentStake * diff) / 1e18);
-            delegatorStakeIndexed += additional;
-            ss.setDelegatorStakeInfo(identityId, delegatorKey, delegatorStakeBase, delegatorStakeIndexed);
-            ss.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, additional);
-            ss.addNodeCumulativeEarnedRewards(identityId, additional);
+            if (currentStake == 0) {
+                ss.setDelegatorLastRewardIndex(identityId, delegatorKey, nodeRewardIndex);
+            } else {
+                uint256 diff = nodeRewardIndex - delegatorLastRewardIndex;
+                uint96 additional = uint96((currentStake * diff) / 1e18);
+                delegatorStakeIndexed += additional;
+
+                ss.setDelegatorStakeInfo(identityId, delegatorKey, delegatorStakeBase, delegatorStakeIndexed);
+                ss.setDelegatorLastRewardIndex(identityId, delegatorKey, nodeRewardIndex);
+
+                ss.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, additional);
+                ss.addNodeCumulativeEarnedRewards(identityId, additional);
+            }
         }
     }
 

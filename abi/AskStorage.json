@@ -79,25 +79,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "",
-        "type": "uint72"
-      }
-    ],
-    "name": "indexToIdentityId",
-    "outputs": [
-      {
-        "internalType": "uint72",
-        "name": "",
-        "type": "uint72"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "initialize",
     "outputs": [],
