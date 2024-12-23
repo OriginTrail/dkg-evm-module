@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 
 import {ShardingTable} from "../ShardingTable.sol";
 import {Token} from "../Token.sol";
+import {AskStorage} from "../storage/AskStorage.sol";
 import {EpochStorage} from "../storage/EpochStorage.sol";
 import {IdentityStorage} from "../storage/IdentityStorage.sol";
 import {ParametersStorage} from "../storage/ParametersStorage.sol";
@@ -60,6 +61,7 @@ contract Migrator is ContractStatus {
     ShardingTable public newShardingTable;
     StakingStorage public newStakingStorage;
     IdentityStorage public newIdentityStorage;
+    AskStorage public askStorage;
     Token public token;
 
     uint256 public oldNodesCount;
@@ -102,6 +104,7 @@ contract Migrator is ContractStatus {
         newShardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
         newStakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         newIdentityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
+        askStorage = AskStorage(hub.getContractAddress("AskStorage"));
         token = Token(hub.getContractAddress("Token"));
     }
 
@@ -174,6 +177,7 @@ contract Migrator is ContractStatus {
         }
 
         newProfileStorage.setAsk(identityId, initialAsk);
+        askStorage.onAskChanged(identityId, initialAsk);
     }
 
     function migrateDelegatorData(uint72 identityId) external {

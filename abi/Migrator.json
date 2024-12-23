@@ -53,6 +53,19 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "askStorage",
+    "outputs": [
+      {
+        "internalType": "contract AskStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint72",
