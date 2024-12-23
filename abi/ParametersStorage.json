@@ -112,12 +112,38 @@
   },
   {
     "inputs": [],
+    "name": "nodeAskUpdateDelay",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "opWalletsLimitOnProfileCreation",
     "outputs": [
       {
         "internalType": "uint16",
         "name": "",
         "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "operatorFeeUpdateDelay",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -165,12 +191,38 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "newNodeAskUpdateDelay",
+        "type": "uint256"
+      }
+    ],
+    "name": "setNodeAskUpdateDelay",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint16",
         "name": "opWalletsLimitOnProfileCreation_",
         "type": "uint16"
       }
     ],
     "name": "setOpWalletsLimitOnProfileCreation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newOperatorFeeUpdateDelay",
+        "type": "uint256"
+      }
+    ],
+    "name": "setOperatorFeeUpdateDelay",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -191,9 +243,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint24",
+        "internalType": "uint256",
         "name": "newStakeWithdrawalDelay",
-        "type": "uint24"
+        "type": "uint256"
       }
     ],
     "name": "setStakeWithdrawalDelay",
@@ -219,9 +271,9 @@
     "name": "stakeWithdrawalDelay",
     "outputs": [
       {
-        "internalType": "uint24",
+        "internalType": "uint256",
         "name": "",
-        "type": "uint24"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

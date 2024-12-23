@@ -13,30 +13,29 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
 
     event ProfileCreated(uint72 indexed identityId, string nodeName, bytes nodeId, uint8 initialOperatorFee);
     event ProfileDeleted(uint72 indexed identityId, bytes nodeId);
-    event NodeNameUpdated(uint72 indexed identityId, string newName);
+    event NodeNameUpdated(uint72 indexed identityId, string oldName, string newName);
     event NodeIdUpdated(uint72 indexed identityId, bytes oldNodeId, bytes newNodeId);
     event NodeAskUpdated(uint72 indexed identityId, uint96 oldAsk, uint96 newAsk);
-    event OperatorFeeAdded(uint72 indexed identityId, uint8 feePercentage, uint248 effectiveDate);
+    event OperatorFeeAdded(uint72 indexed identityId, uint8 feePercentage, uint256 effectiveDate);
     event OperatorFeesReplaced(
         uint72 indexed identityId,
         uint8 oldFeePercentage,
         uint8 newFeePercentage,
-        uint248 effectiveDate
+        uint256 effectiveDate
     );
+    event OperatorFeesUpdated(uint72 indexed identityId, ProfileLib.OperatorFee[] operatorFees);
 
-    // nodeId => isRegistered?
+    mapping(uint72 => ProfileLib.ProfileInfo) public profiles;
     mapping(bytes => bool) public nodeIdsList;
-    // identityId => Profile
-    mapping(uint72 => ProfileLib.ProfileInfo) internal profiles;
+    mapping(uint72 => uint256) public askUpdateCooldown;
 
-    // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependent(hubAddress) {}
 
-    function name() external pure virtual override returns (string memory) {
+    function name() external pure override returns (string memory) {
         return _NAME;
     }
 
-    function version() external pure virtual override returns (string memory) {
+    function version() external pure override returns (string memory) {
         return _VERSION;
     }
 
@@ -49,11 +48,8 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         ProfileLib.ProfileInfo storage profile = profiles[identityId];
         profile.name = nodeName;
         profile.nodeId = nodeId;
-        profile.operatorFees.push(
-            ProfileLib.OperatorFee({feePercentage: initialOperatorFee, effectiveDate: uint248(block.timestamp)})
-        );
+        profile.operatorFees.push(ProfileLib.OperatorFee(initialOperatorFee, block.timestamp));
         nodeIdsList[nodeId] = true;
-
         emit ProfileCreated(identityId, nodeName, nodeId, initialOperatorFee);
     }
 
@@ -68,7 +64,6 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         bytes memory nodeId = profiles[identityId].nodeId;
         nodeIdsList[nodeId] = false;
         delete profiles[identityId];
-
         emit ProfileDeleted(identityId, nodeId);
     }
 
@@ -77,9 +72,12 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
     }
 
     function setName(uint72 identityId, string memory _name) external onlyContracts {
-        profiles[identityId].name = _name;
+        ProfileLib.ProfileInfo storage profile = profiles[identityId];
+        string memory oldName = profile.name;
 
-        emit NodeNameUpdated(identityId, _name);
+        profile.name = _name;
+
+        emit NodeNameUpdated(identityId, oldName, _name);
     }
 
     function getNodeId(uint72 identityId) external view returns (bytes memory) {
@@ -97,23 +95,30 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         emit NodeIdUpdated(identityId, oldNodeId, nodeId);
     }
 
-    function getAsk(uint72 identityId) external view returns (uint96) {
-        return profiles[identityId].ask;
-    }
-
     function setAsk(uint72 identityId, uint96 ask) external onlyContracts {
-        uint96 oldAsk = profiles[identityId].ask;
-        profiles[identityId].ask = ask;
+        ProfileLib.ProfileInfo storage profile = profiles[identityId];
+        uint96 oldAsk = profile.ask;
+
+        profile.ask = ask;
 
         emit NodeAskUpdated(identityId, oldAsk, ask);
     }
 
-    function addOperatorFee(uint72 identityId, uint8 feePercentage, uint248 effectiveDate) external onlyContracts {
-        profiles[identityId].operatorFees.push(
-            ProfileLib.OperatorFee({feePercentage: feePercentage, effectiveDate: effectiveDate})
-        );
+    function setAskUpdateCooldown(uint72 identityId, uint256 cooldownEnd) external onlyContracts {
+        askUpdateCooldown[identityId] = cooldownEnd;
+    }
 
+    function getAsk(uint72 identityId) external view returns (uint96) {
+        return profiles[identityId].ask;
+    }
+
+    function addOperatorFee(uint72 identityId, uint8 feePercentage, uint256 effectiveDate) external onlyContracts {
+        profiles[identityId].operatorFees.push(ProfileLib.OperatorFee(feePercentage, effectiveDate));
         emit OperatorFeeAdded(identityId, feePercentage, effectiveDate);
+    }
+
+    function getOperatorFee(uint72 identityId) external view returns (uint8) {
+        return getActiveOperatorFeePercentage(identityId);
     }
 
     function getOperatorFees(uint72 identityId) external view returns (ProfileLib.OperatorFee[] memory) {
@@ -122,12 +127,13 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
 
     function setOperatorFees(uint72 identityId, ProfileLib.OperatorFee[] memory operatorFees) external onlyContracts {
         profiles[identityId].operatorFees = operatorFees;
+        emit OperatorFeesUpdated(identityId, operatorFees);
     }
 
     function replacePendingOperatorFee(
         uint72 identityId,
         uint8 feePercentage,
-        uint248 effectiveDate
+        uint256 effectiveDate
     ) external onlyContracts {
         if (
             profiles[identityId].operatorFees.length == 0 ||
@@ -207,7 +213,7 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         return _safeGetLatestOperatorFee(identityId).feePercentage;
     }
 
-    function getActiveOperatorFeePercentage(uint72 identityId) external view returns (uint8) {
+    function getActiveOperatorFeePercentage(uint72 identityId) public view returns (uint8) {
         if (profiles[identityId].operatorFees.length == 0) {
             return 0;
         }
@@ -222,29 +228,29 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         }
     }
 
-    function getOperatorFeeEffectiveDateByIndex(uint72 identityId, uint256 index) external view returns (uint248) {
+    function getOperatorFeeEffectiveDateByIndex(uint72 identityId, uint256 index) external view returns (uint256) {
         return profiles[identityId].operatorFees[index].effectiveDate;
     }
 
     function getOperatorFeeEffectiveDateByTimestamp(
         uint72 identityId,
         uint256 timestamp
-    ) external view returns (uint248) {
+    ) external view returns (uint256) {
         return _getOperatorFeeByTimestamp(identityId, timestamp, false).effectiveDate;
     }
 
     function getOperatorFeeEffectiveDateByTimestampReverse(
         uint72 identityId,
         uint256 timestamp
-    ) external view returns (uint248) {
+    ) external view returns (uint256) {
         return _getOperatorFeeByTimestamp(identityId, timestamp, true).effectiveDate;
     }
 
-    function getLatestOperatorFeeEffectiveDate(uint72 identityId) external view returns (uint248) {
+    function getLatestOperatorFeeEffectiveDate(uint72 identityId) external view returns (uint256) {
         return _safeGetLatestOperatorFee(identityId).effectiveDate;
     }
 
-    function getActiveOperatorFeeEffectiveDate(uint72 identityId) external view returns (uint248) {
+    function getActiveOperatorFeeEffectiveDate(uint72 identityId) external view returns (uint256) {
         if (profiles[identityId].operatorFees.length == 0) {
             return 0;
         }
@@ -282,40 +288,37 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         uint256 timestamp,
         bool reverseLookup
     ) internal view returns (ProfileLib.OperatorFee memory) {
-        if (profiles[identityId].operatorFees.length == 0) {
+        ProfileLib.OperatorFee[] storage fees = profiles[identityId].operatorFees;
+
+        if (fees.length == 0) {
             return ProfileLib.OperatorFee({feePercentage: 0, effectiveDate: 0});
         }
-
-        if (timestamp > profiles[identityId].operatorFees[profiles[identityId].operatorFees.length - 1].effectiveDate) {
-            return profiles[identityId].operatorFees[profiles[identityId].operatorFees.length - 1];
-        } else if (timestamp < profiles[identityId].operatorFees[0].effectiveDate) {
-            return profiles[identityId].operatorFees[0];
+        if (timestamp > fees[fees.length - 1].effectiveDate) {
+            return fees[fees.length - 1];
         }
-
+        if (timestamp < fees[0].effectiveDate) {
+            return fees[0];
+        }
         if (reverseLookup) {
-            for (uint256 i = profiles[identityId].operatorFees.length - 1; i > 0; ) {
+            for (uint256 i = fees.length - 1; i > 0; ) {
                 unchecked {
                     --i;
                 }
-
-                if (profiles[identityId].operatorFees[i].effectiveDate <= timestamp) {
-                    return profiles[identityId].operatorFees[i];
+                if (fees[i].effectiveDate <= timestamp) {
+                    return fees[i];
                 }
             }
-
-            return profiles[identityId].operatorFees[0];
+            return fees[0];
         } else {
-            for (uint256 i; i < profiles[identityId].operatorFees.length; ) {
-                if (profiles[identityId].operatorFees[i].effectiveDate > timestamp) {
-                    return i == 0 ? profiles[identityId].operatorFees[0] : profiles[identityId].operatorFees[i - 1];
+            for (uint256 i; i < fees.length; ) {
+                if (fees[i].effectiveDate > timestamp) {
+                    return i == 0 ? fees[0] : fees[i - 1];
                 }
-
                 unchecked {
-                    i++;
+                    ++i;
                 }
             }
         }
-
         return ProfileLib.OperatorFee({feePercentage: 0, effectiveDate: 0});
     }
 }

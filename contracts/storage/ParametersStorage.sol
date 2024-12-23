@@ -15,7 +15,9 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
     uint96 public minimumStake;
     uint96 public maximumStake;
 
-    uint24 public stakeWithdrawalDelay;
+    uint256 public stakeWithdrawalDelay;
+    uint256 public nodeAskUpdateDelay;
+    uint256 public operatorFeeUpdateDelay;
 
     uint16 public opWalletsLimitOnProfileCreation;
     uint16 public shardingTableSizeLimit;
@@ -27,6 +29,8 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         maximumStake = 2_000_000 ether;
 
         stakeWithdrawalDelay = 28 days;
+        nodeAskUpdateDelay = 1 days;
+        operatorFeeUpdateDelay = 28 days;
 
         opWalletsLimitOnProfileCreation = 50;
         shardingTableSizeLimit = 500;
@@ -60,10 +64,22 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         emit ParameterChanged("maximumStake", newMaximumStake);
     }
 
-    function setStakeWithdrawalDelay(uint24 newStakeWithdrawalDelay) external onlyHub {
+    function setStakeWithdrawalDelay(uint256 newStakeWithdrawalDelay) external onlyHub {
         stakeWithdrawalDelay = newStakeWithdrawalDelay;
 
         emit ParameterChanged("stakeWithdrawalDelay", newStakeWithdrawalDelay);
+    }
+
+    function setNodeAskUpdateDelay(uint256 newNodeAskUpdateDelay) external onlyHub {
+        nodeAskUpdateDelay = newNodeAskUpdateDelay;
+
+        emit ParameterChanged("nodeAskUpdateDelay", newNodeAskUpdateDelay);
+    }
+
+    function setOperatorFeeUpdateDelay(uint256 newOperatorFeeUpdateDelay) external onlyHub {
+        operatorFeeUpdateDelay = newOperatorFeeUpdateDelay;
+
+        emit ParameterChanged("operatorFeeUpdateDelay", newOperatorFeeUpdateDelay);
     }
 
     function setOpWalletsLimitOnProfileCreation(uint16 opWalletsLimitOnProfileCreation_) external onlyHub {

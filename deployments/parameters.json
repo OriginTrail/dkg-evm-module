@@ -4,6 +4,8 @@
       "maximumStake": "2000000000000000000000000",
       "minimumStake": "50000000000000000000000",
       "stakeWithdrawalDelay": "60",
+      "nodeAskUpdateDelay": "60",
+      "operatorFeeUpdateDelay": "60",
       "opWalletsLimitOnProfileCreation": "50",
       "shardingTableSizeLimit": "500"
     },
@@ -21,6 +23,8 @@
       "maximumStake": "2000000000000000000000000",
       "minimumStake": "50000000000000000000000",
       "stakeWithdrawalDelay": "60",
+      "nodeAskUpdateDelay": "60",
+      "operatorFeeUpdateDelay": "60",
       "opWalletsLimitOnProfileCreation": "50",
       "shardingTableSizeLimit": "500"
     },
@@ -38,6 +42,8 @@
       "maximumStake": "2000000000000000000000000",
       "minimumStake": "50000000000000000000000",
       "stakeWithdrawalDelay": "60",
+      "nodeAskUpdateDelay": "60",
+      "operatorFeeUpdateDelay": "60",
       "opWalletsLimitOnProfileCreation": "50",
       "shardingTableSizeLimit": "500"
     },
@@ -55,6 +61,8 @@
       "maximumStake": "2000000000000000000000000",
       "minimumStake": "50000000000000000000000",
       "stakeWithdrawalDelay": "2419200",
+      "nodeAskUpdateDelay": "86400",
+      "operatorFeeUpdateDelay": "2419200",
       "opWalletsLimitOnProfileCreation": "50",
       "shardingTableSizeLimit": "500"
     },

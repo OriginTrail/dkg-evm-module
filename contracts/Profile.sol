@@ -102,28 +102,37 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         ps.createProfile(identityId, nodeName, nodeId, initialOperatorFee);
     }
 
-    function setAsk(uint72 identityId, uint96 ask) external onlyIdentityOwner(identityId) {
+    function updateAsk(uint72 identityId, uint96 ask) external onlyIdentityOwner(identityId) {
         if (ask == 0) {
             revert ProfileLib.ZeroAsk();
         }
+
         ProfileStorage ps = profileStorage;
+
+        if (block.timestamp > ps.askUpdateCooldown(identityId)) {
+            revert ProfileLib.AskUpdateOnCooldown(identityId, ps.askUpdateCooldown(identityId));
+        }
+
         ps.setAsk(identityId, ask);
+        ps.setAskUpdateCooldown(identityId, block.timestamp + parametersStorage.nodeAskUpdateDelay());
         askStorage.onAskChanged(identityId, ask);
     }
 
-    function changeOperatorFee(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {
+    function updateOperatorFee(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {
         if (newOperatorFee > 100) {
             revert ProfileLib.InvalidOperatorFee();
         }
 
         ProfileStorage ps = profileStorage;
 
-        uint248 newOperatorFeeEffectiveData = uint248(block.timestamp + parametersStorage.stakeWithdrawalDelay());
-
         if (ps.isOperatorFeeChangePending(identityId)) {
-            ps.replacePendingOperatorFee(identityId, newOperatorFee, newOperatorFeeEffectiveData);
+            ps.replacePendingOperatorFee(
+                identityId,
+                newOperatorFee,
+                block.timestamp + parametersStorage.operatorFeeUpdateDelay()
+            );
         } else {
-            ps.addOperatorFee(identityId, newOperatorFee, newOperatorFeeEffectiveData);
+            ps.addOperatorFee(identityId, newOperatorFee, block.timestamp + parametersStorage.operatorFeeUpdateDelay());
         }
     }
 

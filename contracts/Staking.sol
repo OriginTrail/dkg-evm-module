@@ -436,26 +436,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ss.increaseOperatorFeeBalance(identityId, operatorFeeWithdrawalAmount);
     }
 
-    function simulateStakeInfoUpdate(
-        uint72 identityId,
-        bytes32 delegatorKey
-    ) public view returns (uint96, uint96, uint96) {
-        uint256 nodeRewardIndex = stakingStorage.getNodeRewardIndex(identityId);
-
-        (uint96 delegatorStakeBase, uint96 delegatorStakeIndexed, uint256 delegatorLastRewardIndex) = stakingStorage
-            .getDelegatorStakeInfo(identityId, delegatorKey);
-
-        if (nodeRewardIndex <= delegatorLastRewardIndex) {
-            return (delegatorStakeBase, delegatorStakeIndexed, 0);
-        }
-
-        uint256 diff = nodeRewardIndex - delegatorLastRewardIndex;
-        uint256 currentStake = uint256(delegatorStakeBase) + uint256(delegatorStakeIndexed);
-        uint96 additionalReward = uint96((currentStake * diff) / 1e18);
-
-        return (delegatorStakeBase, delegatorStakeIndexed + additionalReward, additionalReward);
-    }
-
     function getOperatorStats(uint72 identityId) external view returns (uint96, uint96, uint96) {
         StakingStorage ss = stakingStorage;
 
@@ -499,6 +479,26 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         );
 
         return (simBase + simIndexed, delegatorEarned - delegatorPaidOut, unrealized);
+    }
+
+    function simulateStakeInfoUpdate(
+        uint72 identityId,
+        bytes32 delegatorKey
+    ) public view returns (uint96, uint96, uint96) {
+        uint256 nodeRewardIndex = stakingStorage.getNodeRewardIndex(identityId);
+
+        (uint96 delegatorStakeBase, uint96 delegatorStakeIndexed, uint256 delegatorLastRewardIndex) = stakingStorage
+            .getDelegatorStakeInfo(identityId, delegatorKey);
+
+        if (nodeRewardIndex <= delegatorLastRewardIndex) {
+            return (delegatorStakeBase, delegatorStakeIndexed, 0);
+        }
+
+        uint256 diff = nodeRewardIndex - delegatorLastRewardIndex;
+        uint256 currentStake = uint256(delegatorStakeBase) + uint256(delegatorStakeIndexed);
+        uint96 additionalReward = uint96((currentStake * diff) / 1e18);
+
+        return (delegatorStakeBase, delegatorStakeIndexed + additionalReward, additionalReward);
     }
 
     function _updateStakeInfo(uint72 identityId, bytes32 delegatorKey) internal {
