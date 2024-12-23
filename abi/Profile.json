@@ -32,6 +32,11 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "EmptyNodeName",
+    "type": "error"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint72",
@@ -61,6 +66,17 @@
       }
     ],
     "name": "NodeIdAlreadyExists",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "nodeName",
+        "type": "string"
+      }
+    ],
+    "name": "NodeNameAlreadyExists",
     "type": "error"
   },
   {

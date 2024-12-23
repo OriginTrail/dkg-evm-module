@@ -26,6 +26,7 @@ contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
     uint256 public prevWeightedActiveAskSum;
     uint256 public weightedActiveAskSum;
 
+    uint96 public prevTotalActiveStake;
     uint96 public totalActiveStake;
 
     mapping(uint72 => uint256) public nodeWeightedActiveAsk;
@@ -56,17 +57,37 @@ contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
         weightedActiveAskSum = _weightedActiveAskSum;
     }
 
-    function onStakeChanged(uint72 identityId, uint96 newStake) external onlyContracts {
-        ParametersStorage ps = parametersStorage;
-        ShardingTableStorage sts = shardingTableStorage;
-        StakingStorage ss = stakingStorage;
+    function setPrevWeightedActiveAskSum(uint256 _prevWeightedActiveAskSum) external onlyContracts {
+        prevWeightedActiveAskSum = _prevWeightedActiveAskSum;
+    }
 
-        if (newStake < ps.minimumStake()) {
-            nodeWeightedActiveAsk[identityId] = 0;
+    function setTotalActiveStake(uint96 _totalActiveStake) external onlyContracts {
+        totalActiveStake = _totalActiveStake;
+    }
+
+    function setPrevTotalActiveStake(uint96 _prevTotalActiveStake) external onlyContracts {
+        prevTotalActiveStake = _prevTotalActiveStake;
+    }
+
+    function onStakeChanged(uint72 identityId, uint96 oldStake, uint96 newStake) external onlyContracts {
+        ParametersStorage params = parametersStorage;
+
+        if (newStake < params.minimumStake()) {
+            if (nodeWeightedActiveAsk[identityId] != 0) {
+                weightedActiveAskSum -= nodeWeightedActiveAsk[identityId];
+                prevTotalActiveStake = totalActiveStake;
+                totalActiveStake -= oldStake;
+                nodeWeightedActiveAsk[identityId] = 0;
+            }
             return;
         }
 
-        uint96 maximumStake = ps.maximumStake();
+        uint96 maximumStake = params.maximumStake();
+
+        if (oldStake >= maximumStake && newStake >= maximumStake) {
+            return;
+        }
+
         uint96 stake = newStake <= maximumStake ? newStake : maximumStake;
         uint256 newWeightedAsk = uint256(profileStorage.getAsk(identityId)) * stake;
 
@@ -74,55 +95,36 @@ contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
             weightedActiveAskSum = newWeightedAsk;
             prevWeightedActiveAskSum = newWeightedAsk;
             nodeWeightedActiveAsk[identityId] = newWeightedAsk;
+            prevTotalActiveStake = stake;
             totalActiveStake = stake;
             return;
         }
 
-        uint256 oldUpperBound = prevWeightedActiveAskSum * UPPER_BOUND_FACTOR;
-        uint256 oldLowerBound = prevWeightedActiveAskSum * LOWER_BOUND_FACTOR;
-
-        bool isActive = false;
-        if (newWeightedAsk * 1e18 <= oldUpperBound && newWeightedAsk * 1e18 >= oldLowerBound) {
-            prevWeightedActiveAskSum = weightedActiveAskSum;
-            nodeWeightedActiveAsk[identityId] = newWeightedAsk;
-            isActive = true;
-        } else {
-            nodeWeightedActiveAsk[identityId] = 0;
+        bool wasActive = nodeWeightedActiveAsk[identityId] != 0;
+        prevTotalActiveStake = totalActiveStake;
+        prevWeightedActiveAskSum = weightedActiveAskSum;
+        if (wasActive) {
+            totalActiveStake -= oldStake;
+            weightedActiveAskSum -= nodeWeightedActiveAsk[identityId];
         }
-
-        if (isActive) {
-            weightedActiveAskSum = 0;
-            totalActiveStake = 0;
-            uint256 newUpperBound = prevWeightedActiveAskSum * UPPER_BOUND_FACTOR;
-            uint256 newLowerBound = prevWeightedActiveAskSum * LOWER_BOUND_FACTOR;
-
-            uint72 nodesCount = sts.nodesCount();
-            for (uint72 i; i < nodesCount; i++) {
-                uint72 nextIdentityId = sts.indexToIdentityId(i);
-                uint256 weightedActiveAsk = nodeWeightedActiveAsk[nextIdentityId];
-
-                if (weightedActiveAsk * 1e18 <= newUpperBound && weightedActiveAsk * 1e18 >= newLowerBound) {
-                    weightedActiveAskSum += weightedActiveAsk;
-                    totalActiveStake += ss.getNodeStake(nextIdentityId);
-                } else {
-                    nodeWeightedActiveAsk[nextIdentityId] = 0;
-                }
-            }
-        }
+        totalActiveStake += newStake;
+        weightedActiveAskSum += newWeightedAsk;
+        nodeWeightedActiveAsk[identityId] = newWeightedAsk;
     }
 
     function onAskChanged(uint72 identityId, uint96 newAsk) external onlyContracts {
         StakingStorage ss = stakingStorage;
-        ParametersStorage ps = parametersStorage;
+        ParametersStorage params = parametersStorage;
         ShardingTableStorage sts = shardingTableStorage;
+        ProfileStorage ps = profileStorage;
 
         uint96 currentStake = stakingStorage.getNodeStake(identityId);
 
-        if (currentStake < ps.minimumStake()) {
+        if (currentStake < params.minimumStake()) {
             return;
         }
 
-        uint96 maximumStake = ps.maximumStake();
+        uint96 maximumStake = params.maximumStake();
         uint96 stake = currentStake <= maximumStake ? currentStake : maximumStake;
         uint256 newWeightedAsk = uint256(stake) * newAsk;
 
@@ -130,35 +132,41 @@ contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
             weightedActiveAskSum = newWeightedAsk;
             prevWeightedActiveAskSum = newWeightedAsk;
             nodeWeightedActiveAsk[identityId] = newWeightedAsk;
-            totalActiveStake += stake;
+            prevTotalActiveStake = stake;
+            totalActiveStake = stake;
             return;
         }
 
-        uint256 oldUpperBound = prevWeightedActiveAskSum * UPPER_BOUND_FACTOR;
-        uint256 oldLowerBound = prevWeightedActiveAskSum * LOWER_BOUND_FACTOR;
+        uint256 oldUpperBound = (prevWeightedActiveAskSum * UPPER_BOUND_FACTOR) / prevTotalActiveStake;
+        uint256 oldLowerBound = (prevWeightedActiveAskSum * LOWER_BOUND_FACTOR) / prevTotalActiveStake;
 
         bool isActive = false;
-        if (newWeightedAsk * 1e18 <= oldUpperBound && newWeightedAsk * 1e18 >= oldLowerBound) {
+        if (newAsk * 1e18 <= oldUpperBound && newAsk * 1e18 >= oldLowerBound) {
             prevWeightedActiveAskSum = weightedActiveAskSum;
             nodeWeightedActiveAsk[identityId] = newWeightedAsk;
             isActive = true;
-        } else {
+        } else if (nodeWeightedActiveAsk[identityId] != 0) {
+            prevTotalActiveStake = totalActiveStake;
+            prevWeightedActiveAskSum = weightedActiveAskSum;
+            totalActiveStake -= stake;
+            weightedActiveAskSum -= nodeWeightedActiveAsk[identityId];
             nodeWeightedActiveAsk[identityId] = 0;
         }
 
         if (isActive) {
             weightedActiveAskSum = 0;
+            prevTotalActiveStake = totalActiveStake;
             totalActiveStake = 0;
-            uint256 newUpperBound = prevWeightedActiveAskSum * UPPER_BOUND_FACTOR;
-            uint256 newLowerBound = prevWeightedActiveAskSum * LOWER_BOUND_FACTOR;
+            uint256 newUpperBound = (prevWeightedActiveAskSum * UPPER_BOUND_FACTOR) / prevTotalActiveStake;
+            uint256 newLowerBound = (prevWeightedActiveAskSum * LOWER_BOUND_FACTOR) / prevTotalActiveStake;
 
             uint72 nodesCount = shardingTableStorage.nodesCount();
             for (uint72 i; i < nodesCount; i++) {
                 uint72 nextIdentityId = sts.indexToIdentityId(i);
-                uint256 weightedActiveAsk = nodeWeightedActiveAsk[nextIdentityId];
+                uint96 nodeAsk = ps.getAsk(nextIdentityId);
 
-                if (weightedActiveAsk * 1e18 <= newUpperBound && weightedActiveAsk * 1e18 >= newLowerBound) {
-                    weightedActiveAskSum += weightedActiveAsk;
+                if (nodeAsk * 1e18 <= newUpperBound && nodeAsk * 1e18 >= newLowerBound) {
+                    weightedActiveAskSum += nodeWeightedActiveAsk[nextIdentityId];
                     totalActiveStake += ss.getNodeStake(nextIdentityId);
                 } else {
                     nodeWeightedActiveAsk[nextIdentityId] = 0;

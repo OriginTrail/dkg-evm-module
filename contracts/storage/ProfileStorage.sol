@@ -26,6 +26,7 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
     event OperatorFeesUpdated(uint72 indexed identityId, ProfileLib.OperatorFee[] operatorFees);
 
     mapping(uint72 => ProfileLib.ProfileInfo) public profiles;
+    mapping(string => bool) public isNameTaken;
     mapping(bytes => bool) public nodeIdsList;
     mapping(uint72 => uint256) public askUpdateCooldown;
 
@@ -50,6 +51,7 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         profile.nodeId = nodeId;
         profile.operatorFees.push(ProfileLib.OperatorFee(initialOperatorFee, block.timestamp));
         nodeIdsList[nodeId] = true;
+
         emit ProfileCreated(identityId, nodeName, nodeId, initialOperatorFee);
     }
 
@@ -57,6 +59,7 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         uint72 identityId
     ) external view returns (string memory, bytes memory, uint96, ProfileLib.OperatorFee[] memory) {
         ProfileLib.ProfileInfo storage profile = profiles[identityId];
+
         return (profile.name, profile.nodeId, profile.ask, profile.operatorFees);
     }
 
@@ -64,6 +67,7 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         bytes memory nodeId = profiles[identityId].nodeId;
         nodeIdsList[nodeId] = false;
         delete profiles[identityId];
+
         emit ProfileDeleted(identityId, nodeId);
     }
 
@@ -114,6 +118,7 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
 
     function addOperatorFee(uint72 identityId, uint8 feePercentage, uint256 effectiveDate) external onlyContracts {
         profiles[identityId].operatorFees.push(ProfileLib.OperatorFee(feePercentage, effectiveDate));
+
         emit OperatorFeeAdded(identityId, feePercentage, effectiveDate);
     }
 
@@ -127,6 +132,7 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
 
     function setOperatorFees(uint72 identityId, ProfileLib.OperatorFee[] memory operatorFees) external onlyContracts {
         profiles[identityId].operatorFees = operatorFees;
+
         emit OperatorFeesUpdated(identityId, operatorFees);
     }
 

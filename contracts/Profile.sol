@@ -87,6 +87,12 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
                 uint16(operationalWallets.length)
             );
         }
+        if (bytes(nodeName).length == 0) {
+            revert ProfileLib.EmptyNodeName();
+        }
+        if (ps.isNameTaken(nodeName)) {
+            revert ProfileLib.NodeNameAlreadyExists(nodeName);
+        }
         if (nodeId.length == 0) {
             revert ProfileLib.EmptyNodeId();
         }
@@ -109,7 +115,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
 
         ProfileStorage ps = profileStorage;
 
-        if (block.timestamp > ps.askUpdateCooldown(identityId)) {
+        if (block.timestamp < ps.askUpdateCooldown(identityId)) {
             revert ProfileLib.AskUpdateOnCooldown(identityId, ps.askUpdateCooldown(identityId));
         }
 

@@ -1,0 +1,55 @@
+{
+  "contracts": {
+    "OldHub": {
+      "evmAddress": "0xaBfcf2ad1718828E7D3ec20435b0d0b5EAfbDf2c"
+    },
+    "Token": {
+      "deployed": true,
+      "evmAddress": "0xa81a52b4dda010896cdd386c7fbdc5cdc835ba23"
+    },
+    "NeurowebERC20": {
+      "deployed": true,
+      "evmAddress": "0x2548c27A04e49B412DD887b08d062D34C72ad2B6"
+    },
+    "IdentityStorage": {
+      "deployed": true,
+      "evmAddress": "0xD40c74f5D1Ee382deb63Fa92d7ff5bC65415bBEE"
+    },
+    "ParanetsRegistry": {
+      "evmAddress": "0x4382835340c91811800a54B4e3Af2878c7968A24",
+      "version": "2.1.0",
+      "gitBranch": "feature/base",
+      "gitCommitHash": "d3eab3d1a0fde48db522b16b49654558eed07dc3",
+      "deploymentBlock": 16310699,
+      "deploymentTimestamp": 1719410748480,
+      "deployed": true
+    },
+    "ParanetServicesRegistry": {
+      "evmAddress": "0x3f3AD359f79B8987Ac0f642e309B2c195D458199",
+      "version": "2.1.0",
+      "gitBranch": "feature/base",
+      "gitCommitHash": "d3eab3d1a0fde48db522b16b49654558eed07dc3",
+      "deploymentBlock": 16310702,
+      "deploymentTimestamp": 1719410755220,
+      "deployed": true
+    },
+    "ParanetKnowledgeAssetsRegistry": {
+      "evmAddress": "0xA85cb8367dca370F2E26b28E3597c67427F37ee3",
+      "version": "2.0.0",
+      "gitBranch": "feature/base",
+      "gitCommitHash": "d3eab3d1a0fde48db522b16b49654558eed07dc3",
+      "deploymentBlock": 16310705,
+      "deploymentTimestamp": 1719410761987,
+      "deployed": true
+    },
+    "ParanetKnowledgeMinersRegistry": {
+      "evmAddress": "0xB0b91AD1E1f6646Ee503D7750552A656e12eAE04",
+      "version": "2.0.1",
+      "gitBranch": "feature/base",
+      "gitCommitHash": "d3eab3d1a0fde48db522b16b49654558eed07dc3",
+      "deploymentBlock": 16310709,
+      "deploymentTimestamp": 1719410768720,
+      "deployed": true
+    }
+  }
+}

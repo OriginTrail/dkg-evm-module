@@ -86,7 +86,7 @@ describe('Staking contract', function () {
     const tx = await Profile.connect(operational ?? accounts[1]).createProfile(
       admin ? admin.address : accounts[0],
       [],
-      'Node',
+      `Node ${Math.floor(Math.random() * 1000)}`,
       node,
       initialOperatorFee ?? 0,
     );

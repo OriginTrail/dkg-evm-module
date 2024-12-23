@@ -358,33 +358,33 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "uint88",
         "name": "byteSize",
-        "type": "uint256"
+        "type": "uint88"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "chunksAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
+        "internalType": "uint40",
         "name": "startEpoch",
-        "type": "uint256"
+        "type": "uint40"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "uint40",
         "name": "endEpoch",
-        "type": "uint256"
+        "type": "uint40"
       },
       {
         "indexed": false,
         "internalType": "uint96",
         "name": "tokenAmount",
         "type": "uint96"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isImmutable",
+        "type": "bool"
       }
     ],
     "name": "KnowledgeCollectionCreated",
@@ -584,12 +584,6 @@
         "indexed": false,
         "internalType": "uint256",
         "name": "byteSize",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "chunksAmount",
         "type": "uint256"
       },
       {
@@ -926,29 +920,29 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint88",
         "name": "byteSize",
-        "type": "uint256"
+        "type": "uint88"
       },
       {
-        "internalType": "uint256",
-        "name": "chunksAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
+        "internalType": "uint40",
         "name": "startEpoch",
-        "type": "uint256"
+        "type": "uint40"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint40",
         "name": "endEpoch",
-        "type": "uint256"
+        "type": "uint40"
       },
       {
         "internalType": "uint96",
         "name": "tokenAmount",
         "type": "uint96"
+      },
+      {
+        "internalType": "bool",
+        "name": "isImmutable",
+        "type": "bool"
       }
     ],
     "name": "createKnowledgeCollection",
@@ -1024,28 +1018,9 @@
     "name": "getByteSize",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint88",
         "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "getChunksAmount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
+        "type": "uint88"
       }
     ],
     "stateMutability": "view",
@@ -1062,9 +1037,9 @@
     "name": "getEndEpoch",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint40",
         "name": "",
-        "type": "uint256"
+        "type": "uint40"
       }
     ],
     "stateMutability": "view",
@@ -1153,39 +1128,39 @@
             "type": "tuple[]"
           },
           {
-            "internalType": "uint256",
-            "name": "minted",
-            "type": "uint256"
-          },
-          {
             "internalType": "uint256[]",
             "name": "burned",
             "type": "uint256[]"
           },
           {
             "internalType": "uint256",
+            "name": "minted",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint88",
             "name": "byteSize",
-            "type": "uint256"
+            "type": "uint88"
           },
           {
-            "internalType": "uint256",
-            "name": "chunksAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
+            "internalType": "uint40",
             "name": "startEpoch",
-            "type": "uint256"
+            "type": "uint40"
           },
           {
-            "internalType": "uint256",
+            "internalType": "uint40",
             "name": "endEpoch",
-            "type": "uint256"
+            "type": "uint40"
           },
           {
             "internalType": "uint96",
             "name": "tokenAmount",
             "type": "uint96"
+          },
+          {
+            "internalType": "bool",
+            "name": "isImmutable",
+            "type": "bool"
           }
         ],
         "internalType": "struct KnowledgeCollectionLib.KnowledgeCollection",
@@ -1248,11 +1223,6 @@
         "type": "tuple[]"
       },
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
         "internalType": "uint256[]",
         "name": "",
         "type": "uint256[]"
@@ -1263,24 +1233,29 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint88",
         "name": "",
-        "type": "uint256"
+        "type": "uint88"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint40",
         "name": "",
-        "type": "uint256"
+        "type": "uint40"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint40",
         "name": "",
-        "type": "uint256"
+        "type": "uint40"
       },
       {
         "internalType": "uint96",
         "name": "",
         "type": "uint96"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -1571,9 +1546,9 @@
     "name": "getStartEpoch",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint40",
         "name": "",
-        "type": "uint256"
+        "type": "uint40"
       }
     ],
     "stateMutability": "view",
@@ -1775,29 +1750,29 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint88",
         "name": "byteSize",
-        "type": "uint256"
+        "type": "uint88"
       },
       {
-        "internalType": "uint256",
-        "name": "chunksAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
+        "internalType": "uint40",
         "name": "startEpoch",
-        "type": "uint256"
+        "type": "uint40"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint40",
         "name": "endEpoch",
-        "type": "uint256"
+        "type": "uint40"
       },
       {
         "internalType": "uint96",
         "name": "tokenAmount",
         "type": "uint96"
+      },
+      {
+        "internalType": "bool",
+        "name": "isImmutable",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -1985,9 +1960,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint88",
         "name": "_byteSize",
-        "type": "uint256"
+        "type": "uint88"
       }
     ],
     "name": "setByteSize",
@@ -2003,27 +1978,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "_chunksAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "setChunksAmount",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
+        "internalType": "uint40",
         "name": "_endEpoch",
-        "type": "uint256"
+        "type": "uint40"
       }
     ],
     "name": "setEndEpoch",
@@ -2092,9 +2049,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint40",
         "name": "_startEpoch",
-        "type": "uint256"
+        "type": "uint40"
       }
     ],
     "name": "setStartEpoch",
@@ -2285,14 +2242,9 @@
         "type": "uint256[]"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint88",
         "name": "byteSize",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chunksAmount",
-        "type": "uint256"
+        "type": "uint88"
       },
       {
         "internalType": "uint96",

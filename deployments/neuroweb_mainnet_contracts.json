@@ -1,0 +1,57 @@
+{
+  "contracts": {
+    "OldHub": {
+      "evmAddress": "0x5fA7916c48Fe6D5F1738d12Ad234b78c90B4cAdA"
+    },
+    "Token": {
+      "deployed": true,
+      "evmAddress": "0xFfFFFFff00000000000000000000000000000001",
+      "substrateAddress": "5EMjsd1DUGXmZiLinvCzc3vG9GVfE5dE1TMBYKR5LMVDrVvU"
+    },
+    "IdentityStorage": {
+      "deployed": true,
+      "evmAddress": "0x2C81a650A2E9C8eB88d941A8ab50E1F3eEEe08Ac",
+      "substrateAddress": "5EMjsczV6NGqodVLdCx9TKsqkYend2geBAuKMajx8RzG6EBL"
+    },
+    "ParanetsRegistry": {
+      "evmAddress": "0x9fB1f78A1fC627FEF61C88bF464F24Df52a78912",
+      "substrateAddress": "5EMjscztB3oVxfFhfgLRi5LDQR969k1vH9HroQoSYJhgrrsh",
+      "version": "2.1.0",
+      "gitBranch": "deployment/4.3.0",
+      "gitCommitHash": "7bd7fcbc9d5e8bfa5eb47573d57b0958515aca00",
+      "deploymentBlock": 5134290,
+      "deploymentTimestamp": 1718285361116,
+      "deployed": true
+    },
+    "ParanetServicesRegistry": {
+      "evmAddress": "0x1aAaB7a4024B7208A40c8D13A05B685015f4581f",
+      "substrateAddress": "5EMjsczRX3RFW5iQovQuGjCS1HR1rmbsjrWp7YmZQpRzq6xg",
+      "version": "2.1.0",
+      "gitBranch": "deployment/4.3.0",
+      "gitCommitHash": "7bd7fcbc9d5e8bfa5eb47573d57b0958515aca00",
+      "deploymentBlock": 5134292,
+      "deploymentTimestamp": 1718285386068,
+      "deployed": true
+    },
+    "ParanetKnowledgeAssetsRegistry": {
+      "evmAddress": "0x5bDA3b6220eE7aC0E5A4bA6D79B0a8d0C7145c67",
+      "substrateAddress": "5EMjsczeac6G6cR4UWqm6FqQKSa2TWfjYnanfYXe6pffvjpy",
+      "version": "2.0.0",
+      "gitBranch": "deployment/4.3.0",
+      "gitCommitHash": "7bd7fcbc9d5e8bfa5eb47573d57b0958515aca00",
+      "deploymentBlock": 5134294,
+      "deploymentTimestamp": 1718285410925,
+      "deployed": true
+    },
+    "ParanetKnowledgeMinersRegistry": {
+      "evmAddress": "0xC766c36675913460EB0E6a09dbf5Dd515Ef3a0E3",
+      "substrateAddress": "5EMjsd128Vyz5bJS6jc7tbzviRosjdbcWAQ1jfy6cAuwsUuS",
+      "version": "2.0.1",
+      "gitBranch": "deployment/4.3.0",
+      "gitCommitHash": "7bd7fcbc9d5e8bfa5eb47573d57b0958515aca00",
+      "deploymentBlock": 5134296,
+      "deploymentTimestamp": 1718285432004,
+      "deployed": true
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "contracts": {
+    "OldHub": {
+      "evmAddress": "0xbEF14fc04F870c2dD65c13Df4faB6ba01A9c746b"
+    },
+    "Token": {
+      "deployed": true,
+      "evmAddress": "0xEddd81E0792E764501AaE206EB432399a0268DB5"
+    },
+    "IdentityStorage": {
+      "deployed": true,
+      "evmAddress": "0xe369328795B24853C53132186DE45757105f79e4"
+    },
+    "ParanetsRegistry": {
+      "evmAddress": "0xe0Be6F5a415eF20CE763e9927d901145c00f8aB4",
+      "version": "2.1.0",
+      "gitBranch": "improvement/paranet-incentives-additional-getters",
+      "gitCommitHash": "4cef06a0b27b03e64d68215f5b3df091b73e31e2",
+      "deploymentBlock": 34510987,
+      "deploymentTimestamp": 1718631494369,
+      "deployed": true
+    },
+    "ParanetServicesRegistry": {
+      "evmAddress": "0xe8cF6A3b5Ae913F280A27F94461eEb0F2a8969b9",
+      "version": "2.1.0",
+      "gitBranch": "improvement/paranet-incentives-additional-getters",
+      "gitCommitHash": "4cef06a0b27b03e64d68215f5b3df091b73e31e2",
+      "deploymentBlock": 34510989,
+      "deploymentTimestamp": 1718631509049,
+      "deployed": true
+    },
+    "ParanetKnowledgeAssetsRegistry": {
+      "evmAddress": "0x1f7ce865a32928E202346136f5f73EB1757067dD",
+      "version": "2.0.0",
+      "gitBranch": "improvement/paranet-incentives-additional-getters",
+      "gitCommitHash": "4cef06a0b27b03e64d68215f5b3df091b73e31e2",
+      "deploymentBlock": 34510991,
+      "deploymentTimestamp": 1718631518947,
+      "deployed": true
+    },
+    "ParanetKnowledgeMinersRegistry": {
+      "evmAddress": "0x7c9ea1bCa803F02B2985C84038e6233c51213930",
+      "version": "2.0.1",
+      "gitBranch": "improvement/paranet-incentives-additional-getters",
+      "gitCommitHash": "4cef06a0b27b03e64d68215f5b3df091b73e31e2",
+      "deploymentBlock": 34510993,
+      "deploymentTimestamp": 1718631529879,
+      "deployed": true
+    }
+  }
+}

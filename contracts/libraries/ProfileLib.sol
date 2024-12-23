@@ -17,7 +17,9 @@ library ProfileLib {
 
     error IdentityAlreadyExists(uint72 identityId, address wallet);
     error TooManyOperationalWallets(uint16 allowed, uint16 provided);
+    error EmptyNodeName();
     error EmptyNodeId();
+    error NodeNameAlreadyExists(string nodeName);
     error NodeIdAlreadyExists(bytes nodeId);
     error OperatorFeeOutOfRange(uint8 operatorFee);
     error ZeroAsk();
