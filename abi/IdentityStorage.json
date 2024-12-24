@@ -298,6 +298,19 @@
   },
   {
     "inputs": [],
+    "name": "lastIdentityId",
+    "outputs": [
+      {
+        "internalType": "uint72",
+        "name": "",
+        "type": "uint72"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "name",
     "outputs": [
       {
@@ -336,6 +349,19 @@
       }
     ],
     "name": "removeOperationalKeyIdentityId",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "setLastIdentityId",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 import {ShardingTable} from "./ShardingTable.sol";
-import {AskStorage} from "./storage/AskStorage.sol";
+import {Ask} from "./Ask.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
@@ -25,7 +25,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Staking";
     string private constant _VERSION = "1.0.0";
 
-    AskStorage public askStorage;
+    Ask public askContract;
     ShardingTableStorage public shardingTableStorage;
     ShardingTable public shardingTableContract;
     IdentityStorage public identityStorage;
@@ -48,7 +48,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function initialize() public onlyHub {
-        askStorage = AskStorage(hub.getContractAddress("AskStorage"));
+        askContract = Ask(hub.getContractAddress("Ask"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
@@ -100,7 +100,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
 
-        askStorage.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
+        askContract.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
 
         token.transferFrom(msg.sender, address(ss), addedStake);
     }
@@ -111,7 +111,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint96 stakeAmount
     ) external profileExists(fromIdentityId) profileExists(toIdentityId) {
         StakingStorage ss = stakingStorage;
-        AskStorage ass = askStorage;
+        Ask ask = askContract;
 
         if (stakeAmount == 0) {
             revert TokenLib.ZeroTokenAmount();
@@ -155,7 +155,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _removeNodeFromShardingTable(fromIdentityId, totalFromNodeStakeAfter);
 
-        ass.onStakeChanged(fromIdentityId, totalFromNodeStakeBefore, totalFromNodeStakeAfter);
+        ask.onStakeChanged(fromIdentityId, totalFromNodeStakeBefore, totalFromNodeStakeAfter);
 
         if (stakeAmount > delegatorStakeIndexed) {
             ss.increaseDelegatorStakeBase(toIdentityId, delegatorKey, (delegatorStakeBase - newDelegatorStakeBase));
@@ -169,7 +169,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _addNodeToShardingTable(toIdentityId, totalToNodeStakeAfter);
 
-        ass.onStakeChanged(toIdentityId, totalToNodeStakeBefore, totalToNodeStakeAfter);
+        ask.onStakeChanged(toIdentityId, totalToNodeStakeBefore, totalToNodeStakeAfter);
     }
 
     function requestWithdrawal(uint72 identityId, uint96 removedStake) external profileExists(identityId) {
@@ -210,7 +210,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _removeNodeFromShardingTable(identityId, totalNodeStakeAfter);
 
-        askStorage.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
+        askContract.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
 
         if (totalNodeStakeAfter >= parametersStorage.maximumStake()) {
             ss.addDelegatorCumulativePaidOutRewards(
@@ -312,7 +312,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
 
-        askStorage.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
+        askContract.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
     }
 
     function distributeRewards(
@@ -329,7 +329,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         uint96 delegatorsReward = rewardAmount;
         if (operatorFee.feePercentage != 0) {
-            uint96 operatorFeeAmount = uint96((uint256(rewardAmount) * operatorFee.feePercentage) / 100);
+            uint96 operatorFeeAmount = uint96((uint256(rewardAmount) * operatorFee.feePercentage) / 10000);
             delegatorsReward -= operatorFeeAmount;
 
             ss.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
@@ -352,7 +352,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
 
-        askStorage.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
+        askContract.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
     }
 
     function restakeOperatorFee(uint72 identityId, uint96 addedStake) external onlyAdmin(identityId) {
@@ -389,7 +389,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
 
-        askStorage.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
+        askContract.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
     }
 
     function requestOperatorFeeWithdrawal(uint72 identityId, uint96 withdrawalAmount) external onlyAdmin(identityId) {

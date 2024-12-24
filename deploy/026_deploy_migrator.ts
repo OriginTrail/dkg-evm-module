@@ -32,4 +32,5 @@ func.dependencies = [
   'IdentityStorage',
   'ProfileStorage',
   'StakingStorage',
+  'Ask',
 ];

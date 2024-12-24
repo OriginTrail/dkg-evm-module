@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 import {ShardingTable} from "../ShardingTable.sol";
 import {Token} from "../Token.sol";
-import {AskStorage} from "../storage/AskStorage.sol";
+import {Ask} from "../Ask.sol";
 import {EpochStorage} from "../storage/EpochStorage.sol";
 import {IdentityStorage} from "../storage/IdentityStorage.sol";
 import {ParametersStorage} from "../storage/ParametersStorage.sol";
@@ -49,6 +49,7 @@ contract Migrator is ContractStatus {
     error DelegatorAlreadyMigrated(uint72 identityId, address delegator);
 
     IOldHub public oldHub;
+    IdentityStorage public oldIdentityStorage;
     IOldStakingStorage public oldStakingStorage;
     IOldProfileStorage public oldProfileStorage;
     IOldNodeOperatorFeesStorage public oldNodeOperatorFeesStorage;
@@ -61,15 +62,18 @@ contract Migrator is ContractStatus {
     ShardingTable public newShardingTable;
     StakingStorage public newStakingStorage;
     IdentityStorage public newIdentityStorage;
-    AskStorage public askStorage;
+    Ask public askContract;
     Token public token;
 
-    uint256 public oldNodesCount;
-    uint256 public migratedNodes;
+    uint72 public oldNodesCount;
+    uint72 public migratedNodes;
 
-    uint96 public oldTotalStake;
+    uint96 public oldStakingStorageBalance;
     uint96 public oldOperatorFees;
     uint96 public oldTotalUnpaidRewards;
+
+    uint96 public oldTotalStake;
+    uint96 public oldMigratedOperatorFees;
     uint96 public migratedStake;
 
     bool public delegatorsMigrationInitiated;
@@ -86,6 +90,7 @@ contract Migrator is ContractStatus {
     }
 
     function initializeOldContracts() external onlyHub {
+        oldIdentityStorage = IdentityStorage(oldHub.getContractAddress("IdentityStorage"));
         oldStakingStorage = IOldStakingStorage(oldHub.getContractAddress("StakingStorage"));
         oldProfileStorage = IOldProfileStorage(oldHub.getContractAddress("ProfileStorage"));
         oldNodeOperatorFeesStorage = IOldNodeOperatorFeesStorage(oldHub.getContractAddress("NodeOperatorFeesStorage"));
@@ -104,18 +109,21 @@ contract Migrator is ContractStatus {
         newShardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
         newStakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         newIdentityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-        askStorage = AskStorage(hub.getContractAddress("AskStorage"));
+        askContract = Ask(hub.getContractAddress("Ask"));
         token = Token(hub.getContractAddress("Token"));
     }
 
-    function transferStake(uint96 amount) external onlyHubOwner {
-        oldStakingStorage.transferStake(address(newStakingStorage), amount);
+    function transferStake() external onlyHubOwner {
+        oldStakingStorageBalance = uint96(token.balanceOf(address(oldStakingStorage)));
+        if (oldStakingStorageBalance > 0) {
+            oldStakingStorage.transferStake(address(newStakingStorage), oldStakingStorageBalance);
+        }
     }
 
     function transferOperatorFees() external onlyHubOwner {
-        uint96 totalOperatorFees = uint96(token.balanceOf(address(oldProfileStorage)));
-        if (totalOperatorFees > 0) {
-            oldProfileStorage.transferAccumulatedOperatorFee(address(newStakingStorage), totalOperatorFees);
+        oldOperatorFees = uint96(token.balanceOf(address(oldProfileStorage)));
+        if (oldOperatorFees > 0) {
+            oldProfileStorage.transferAccumulatedOperatorFee(address(newStakingStorage), oldOperatorFees);
         }
     }
 
@@ -143,10 +151,24 @@ contract Migrator is ContractStatus {
     }
 
     function migrateGlobalData(uint96 stake) external onlyHubOwner {
+        newIdentityStorage.setLastIdentityId(oldNodesCount);
         newStakingStorage.setTotalStake(stake);
     }
 
     function migrateNodeData(uint72 identityId) external onlyHubOwner {
+        bytes32[] memory adminKeys = oldIdentityStorage.getKeysByPurpose(identityId, IdentityLib.ADMIN_KEY);
+        for (uint256 i; i < adminKeys.length; i++) {
+            (uint256 purpose, uint256 keyType, bytes32 key) = oldIdentityStorage.getKey(identityId, adminKeys[i]);
+            newIdentityStorage.addKey(identityId, key, purpose, keyType);
+        }
+
+        bytes32[] memory operationalKeys = oldIdentityStorage.getKeysByPurpose(identityId, IdentityLib.OPERATIONAL_KEY);
+        for (uint256 i; i < operationalKeys.length; i++) {
+            (uint256 purpose, uint256 keyType, bytes32 key) = oldIdentityStorage.getKey(identityId, operationalKeys[i]);
+            newIdentityStorage.addKey(identityId, key, purpose, keyType);
+            newIdentityStorage.setOperationalKeyIdentityId(key, identityId);
+        }
+
         uint96 nodeStake = oldStakingStorage.totalStakes(identityId);
 
         newStakingStorage.setNodeStake(identityId, nodeStake);
@@ -162,12 +184,12 @@ contract Migrator is ContractStatus {
         bytes memory nodeId = oldProfileStorage.getNodeId(identityId);
         uint96 initialAsk = oldProfileStorage.getAsk(identityId);
 
-        uint8 initialOperatorFee;
+        uint16 initialOperatorFee;
         uint256 operatorFeesArrayLength = oldNodeOperatorFeesStorage.getOperatorFeesLength(identityId);
         if (operatorFeesArrayLength == 0) {
             initialOperatorFee = 0;
         } else {
-            initialOperatorFee = oldNodeOperatorFeesStorage.getLatestOperatorFeePercentage(identityId);
+            initialOperatorFee = uint16(oldNodeOperatorFeesStorage.getLatestOperatorFeePercentage(identityId)) * 100;
         }
 
         newProfileStorage.createProfile(identityId, nodeName, nodeId, initialOperatorFee);
@@ -177,7 +199,7 @@ contract Migrator is ContractStatus {
         }
 
         newProfileStorage.setAsk(identityId, initialAsk);
-        askStorage.onAskChanged(identityId, initialAsk);
+        askContract.onAskChanged(identityId, initialAsk);
     }
 
     function migrateDelegatorData(uint72 identityId) external {
@@ -235,7 +257,7 @@ contract Migrator is ContractStatus {
             uint96 operatorAccumulatedOperatorFee = oldProfileStorage.getAccumulatedOperatorFee(identityId);
             newStakingStorage.setOperatorFeeBalance(identityId, operatorAccumulatedOperatorFee);
 
-            oldOperatorFees += operatorAccumulatedOperatorFee;
+            oldMigratedOperatorFees += operatorAccumulatedOperatorFee;
 
             uint96 feeWithdrawalAmount = oldProfileStorage.getAccumulatedOperatorFeeWithdrawalAmount(identityId);
             if (feeWithdrawalAmount > 0) {

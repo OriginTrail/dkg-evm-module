@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 library ProfileLib {
     struct OperatorFee {
-        uint8 feePercentage;
+        uint16 feePercentage;
         uint256 effectiveDate;
     }
 
@@ -21,7 +21,7 @@ library ProfileLib {
     error EmptyNodeId();
     error NodeNameAlreadyExists(string nodeName);
     error NodeIdAlreadyExists(bytes nodeId);
-    error OperatorFeeOutOfRange(uint8 operatorFee);
+    error OperatorFeeOutOfRange(uint16 operatorFee);
     error ZeroAsk();
     error AskUpdateOnCooldown(uint72 identityId, uint256 cooldownEnd);
     error NoOperatorFees(uint72 identityId);

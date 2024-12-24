@@ -18,6 +18,8 @@ contract Hub is INamed, IVersioned, Ownable {
     event ContractChanged(string contractName, address newContractAddress);
     event NewAssetStorage(string contractName, address newContractAddress);
     event AssetStorageChanged(string contractName, address newContractAddress);
+    event ContractRemoved(string contractName, address contractAddress);
+    event AssetStorageRemoved(string contractName, address contractAddress);
 
     string private constant _NAME = "Hub";
     string private constant _VERSION = "1.0.0";
@@ -50,6 +52,46 @@ contract Hub is INamed, IVersioned, Ownable {
 
     function setAssetStorageAddress(string calldata assetStorageName, address assetStorageAddress) external onlyOwner {
         _setAssetStorageAddress(assetStorageName, assetStorageAddress);
+    }
+
+    function removeContractByName(string calldata contractName) external onlyOwner {
+        if (contractSet.exists(contractName)) {
+            address contractAddress = contractSet.get(contractName).addr;
+
+            contractSet.remove(contractName);
+
+            emit ContractRemoved(contractName, contractAddress);
+        }
+    }
+
+    function removeContractByAddress(address contractAddress) external onlyOwner {
+        if (contractSet.exists(contractAddress)) {
+            string memory contractName = contractSet.get(contractAddress).name;
+
+            contractSet.remove(contractAddress);
+
+            emit ContractRemoved(contractName, contractAddress);
+        }
+    }
+
+    function removeAssetStorageByName(string calldata assetStorageName) external onlyOwner {
+        if (assetStorageSet.exists(assetStorageName)) {
+            address assetStorageAddress = assetStorageSet.get(assetStorageName).addr;
+
+            assetStorageSet.remove(assetStorageName);
+
+            emit AssetStorageRemoved(assetStorageName, assetStorageAddress);
+        }
+    }
+
+    function removeAssetStorageByAddress(address assetStorageAddress) external onlyOwner {
+        if (assetStorageSet.exists(assetStorageAddress)) {
+            string memory assetStorageName = assetStorageSet.get(assetStorageAddress).name;
+
+            assetStorageSet.remove(assetStorageAddress);
+
+            emit AssetStorageRemoved(assetStorageName, assetStorageAddress);
+        }
     }
 
     function getContractAddress(string calldata contractName) external view returns (address) {

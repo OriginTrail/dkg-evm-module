@@ -117,9 +117,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "feePercentage",
-        "type": "uint8"
+        "type": "uint16"
       },
       {
         "indexed": false,
@@ -142,15 +142,15 @@
       },
       {
         "indexed": false,
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "oldFeePercentage",
-        "type": "uint8"
+        "type": "uint16"
       },
       {
         "indexed": false,
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "newFeePercentage",
-        "type": "uint8"
+        "type": "uint16"
       },
       {
         "indexed": false,
@@ -174,9 +174,9 @@
       {
         "components": [
           {
-            "internalType": "uint8",
+            "internalType": "uint16",
             "name": "feePercentage",
-            "type": "uint8"
+            "type": "uint16"
           },
           {
             "internalType": "uint256",
@@ -216,9 +216,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "initialOperatorFee",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "name": "ProfileCreated",
@@ -251,9 +251,9 @@
         "type": "uint72"
       },
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "feePercentage",
-        "type": "uint8"
+        "type": "uint16"
       },
       {
         "internalType": "uint256",
@@ -303,9 +303,9 @@
         "type": "bytes"
       },
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "initialOperatorFee",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "name": "createProfile",
@@ -339,9 +339,9 @@
       {
         "components": [
           {
-            "internalType": "uint8",
+            "internalType": "uint16",
             "name": "feePercentage",
-            "type": "uint8"
+            "type": "uint16"
           },
           {
             "internalType": "uint256",
@@ -387,9 +387,9 @@
     "name": "getActiveOperatorFeePercentage",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -427,9 +427,9 @@
       {
         "components": [
           {
-            "internalType": "uint8",
+            "internalType": "uint16",
             "name": "feePercentage",
-            "type": "uint8"
+            "type": "uint16"
           },
           {
             "internalType": "uint256",
@@ -475,9 +475,9 @@
     "name": "getLatestOperatorFeePercentage",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -532,9 +532,9 @@
     "name": "getOperatorFee",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -558,9 +558,9 @@
       {
         "components": [
           {
-            "internalType": "uint8",
+            "internalType": "uint16",
             "name": "feePercentage",
-            "type": "uint8"
+            "type": "uint16"
           },
           {
             "internalType": "uint256",
@@ -594,9 +594,9 @@
       {
         "components": [
           {
-            "internalType": "uint8",
+            "internalType": "uint16",
             "name": "feePercentage",
-            "type": "uint8"
+            "type": "uint16"
           },
           {
             "internalType": "uint256",
@@ -630,9 +630,9 @@
       {
         "components": [
           {
-            "internalType": "uint8",
+            "internalType": "uint16",
             "name": "feePercentage",
-            "type": "uint8"
+            "type": "uint16"
           },
           {
             "internalType": "uint256",
@@ -736,9 +736,9 @@
     "name": "getOperatorFeePercentageByIndex",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -760,9 +760,9 @@
     "name": "getOperatorFeePercentageByTimestamp",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -784,9 +784,9 @@
     "name": "getOperatorFeePercentageByTimestampReverse",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -805,9 +805,9 @@
       {
         "components": [
           {
-            "internalType": "uint8",
+            "internalType": "uint16",
             "name": "feePercentage",
-            "type": "uint8"
+            "type": "uint16"
           },
           {
             "internalType": "uint256",
@@ -870,9 +870,9 @@
       {
         "components": [
           {
-            "internalType": "uint8",
+            "internalType": "uint16",
             "name": "feePercentage",
-            "type": "uint8"
+            "type": "uint16"
           },
           {
             "internalType": "uint256",
@@ -1027,9 +1027,9 @@
         "type": "uint72"
       },
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "feePercentage",
-        "type": "uint8"
+        "type": "uint16"
       },
       {
         "internalType": "uint256",
@@ -1124,9 +1124,9 @@
       {
         "components": [
           {
-            "internalType": "uint8",
+            "internalType": "uint16",
             "name": "feePercentage",
-            "type": "uint8"
+            "type": "uint16"
           },
           {
             "internalType": "uint256",
