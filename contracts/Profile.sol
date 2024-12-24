@@ -125,7 +125,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         askContract.onAskChanged(identityId, oldAsk, ask);
     }
 
-    function updateOperatorFee(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {
+    function updateOperatorFee(uint72 identityId, uint16 newOperatorFee) external onlyAdmin(identityId) {
         if (newOperatorFee > 10000) {
             revert ProfileLib.InvalidOperatorFee();
         }

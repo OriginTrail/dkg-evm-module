@@ -164,12 +164,12 @@
       "deployed": true
     },
     "Profile": {
-      "evmAddress": "0x095ebACeFab224217F319aC21693F49E0145538c",
+      "evmAddress": "0x3A8a1adC1B209276031B91c571F21257BE9a525F",
       "version": "1.0.0",
       "gitBranch": "v8-contracts",
-      "gitCommitHash": "63903960086b888d8600a4c654706363ef9e4f58",
-      "deploymentBlock": 13480402,
-      "deploymentTimestamp": 1735064317526,
+      "gitCommitHash": "f643a97cba8fed191b1b9a65fe8364a0dd7f7c72",
+      "deploymentBlock": 13481668,
+      "deploymentTimestamp": 1735071033201,
       "deployed": true
     },
     "KnowledgeCollection": {

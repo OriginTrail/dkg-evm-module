@@ -343,9 +343,9 @@
         "type": "uint72"
       },
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "newOperatorFee",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "name": "updateOperatorFee",
