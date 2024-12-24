@@ -119,9 +119,10 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
             revert ProfileLib.AskUpdateOnCooldown(identityId, ps.askUpdateCooldown(identityId));
         }
 
+        uint96 oldAsk = ps.getAsk(identityId);
         ps.setAsk(identityId, ask);
         ps.setAskUpdateCooldown(identityId, block.timestamp + parametersStorage.nodeAskUpdateDelay());
-        askContract.onAskChanged(identityId, ask);
+        askContract.onAskChanged(identityId, oldAsk, ask);
     }
 
     function updateOperatorFee(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {

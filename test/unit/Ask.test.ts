@@ -100,10 +100,7 @@ describe('@unit Ask', () => {
     const totalActiveStake = await AskStorage.totalActiveStake();
     expect(totalActiveStake).to.be.equal(stakeAmount);
 
-    const nodeWeightedActiveAsk = await AskStorage.nodeWeightedAsk(identityId);
     const expectedWeighted = stakeAmount * newAsk;
-    expect(nodeWeightedActiveAsk).to.equal(expectedWeighted);
-
     const weightedSum = await AskStorage.weightedActiveAskSum();
     expect(weightedSum).to.equal(expectedWeighted);
 
@@ -190,9 +187,6 @@ describe('@unit Ask', () => {
     const finalNodeStake = await StakingStorage.getNodeStake(identityId);
 
     expect(finalNodeStake).to.be.gte(stake70k);
-
-    const nodeWeightedActiveAsk = await AskStorage.nodeWeightedAsk(identityId);
-    expect(nodeWeightedActiveAsk).to.be.gte(0n);
   });
 
   it('Repeated random stake/withdraw/updateAsk cycles to see if sums remain correct', async () => {

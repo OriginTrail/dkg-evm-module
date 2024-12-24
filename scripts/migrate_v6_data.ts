@@ -24,9 +24,21 @@ async function main() {
   let tx;
   for (let identityId = 1; identityId < nextIdentityId; identityId += 1) {
     console.log(`Migrating node with identity id: ${identityId}`);
-    tx = await Migrator.migrateNodeData(identityId, {
-      gasLimit: 2_000_000,
-    });
+
+    console.log('Calling migrateIdentity');
+    tx = await Migrator.migrateIdentity(identityId);
+    await tx.wait();
+
+    console.log('Calling migrateNodeData');
+    tx = await Migrator.migrateNodeData(identityId);
+    await tx.wait();
+
+    console.log('Calling insertNodeInShardingTable');
+    tx = await Migrator.insertNodeInShardingTable(identityId);
+    await tx.wait();
+
+    console.log('Calling weightedAskUpdate');
+    tx = await Migrator.weightedAskUpdate(identityId);
     await tx.wait();
   }
 
@@ -37,37 +49,27 @@ async function main() {
 
   if (oldTotalStake > 0) {
     console.log('Calling migrateGlobalData');
-    tx = await Migrator.migrateGlobalData(oldTotalStake, {
-      gasLimit: 2_000_000,
-    });
+    tx = await Migrator.migrateGlobalData(oldTotalStake);
     await tx.wait();
-
-    // console.log('Calling transferStake');
-    // tx = await Migrator.transferStake(oldTotalStake, {
-    //   gasLimit: 2_000_000,
-    // });
-    // await tx.wait();
   }
 
+  // console.log('Calling transferStake');
+  // tx = await Migrator.transferStake();
+  // await tx.wait();
+
   // console.log('Calling transferOperatorFees');
-  // tx = await Migrator.transferOperatorFees({
-  //   gasLimit: 2_000_000,
-  // });
+  // tx = await Migrator.transferOperatorFees();
   // await tx.wait();
 
   // console.log('Calling transferUnpaidRewards');
-  // tx = await Migrator.transferUnpaidRewards({
-  //   gasLimit: 2_000_000,
-  // });
+  // tx = await Migrator.transferUnpaidRewards();
   // await tx.wait();
 
   const oldTotalUnpaidRewards = await Migrator.oldTotalUnpaidRewards();
   console.log(`Old total unpaid rewards: ${oldTotalUnpaidRewards} TRAC`);
 
   console.log('Calling initiateDelegatorsMigration');
-  tx = await Migrator.initiateDelegatorsMigration({
-    gasLimit: 2_000_000,
-  });
+  tx = await Migrator.initiateDelegatorsMigration();
   await tx.wait();
 }
 

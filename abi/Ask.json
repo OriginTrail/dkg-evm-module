@@ -81,6 +81,11 @@
       },
       {
         "internalType": "uint96",
+        "name": "oldAsk",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
         "name": "newAsk",
         "type": "uint96"
       }

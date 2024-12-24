@@ -20,8 +20,6 @@ contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
     uint96 public prevTotalActiveStake;
     uint96 public totalActiveStake;
 
-    mapping(uint72 => uint256) public nodeWeightedAsk;
-
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
 
@@ -100,9 +98,5 @@ contract AskStorage is INamed, IVersioned, ContractStatus, IInitializable {
 
     function setPrevTotalActiveStake(uint96 _prevTotalActiveStake) external onlyContracts {
         prevTotalActiveStake = _prevTotalActiveStake;
-    }
-
-    function setNodeWeightedAsk(uint72 identityId, uint256 weightedAsk) external onlyContracts {
-        nodeWeightedAsk[identityId] = weightedAsk;
     }
 }

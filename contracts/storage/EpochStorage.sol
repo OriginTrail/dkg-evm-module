@@ -148,9 +148,10 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
             }
         }
 
-        uint96 simulatedCumulative = lastFinalized > 0 ? cumulative[shardId][lastFinalized] : 0;
+        uint96 simulatedCumulative = lastFinalized > 0 ? cumulative[shardId][lastFinalized] : cumulative[shardId][1];
         for (uint256 epoch = lastFinalized + 1; epoch <= endEpoch; epoch++) {
-            simulatedCumulative += uint96(diff[shardId][epoch]);
+            int96 tmp = int96(simulatedCumulative) + diff[shardId][epoch];
+            simulatedCumulative = uint96(tmp);
             if (epoch >= startEpoch) {
                 totalPool += simulatedCumulative;
             }

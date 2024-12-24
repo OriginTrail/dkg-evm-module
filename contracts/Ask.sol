@@ -45,51 +45,50 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
         ParametersStorage params = parametersStorage;
         AskStorage ass = askStorage;
 
-        uint256 nodeWeightedAsk = ass.nodeWeightedAsk(identityId);
-        bool wasActive = nodeWeightedAsk != 0;
+        uint96 nodeAsk = profileStorage.getAsk(identityId);
 
-        if (newStake < params.minimumStake()) {
-            if (wasActive) {
-                ass.decreaseWeightedActiveAskSum(ass.nodeWeightedAsk(identityId));
-                ass.setPrevTotalActiveStake(ass.totalActiveStake());
-                ass.decreaseTotalActiveStake(oldStake);
-                ass.setNodeWeightedAsk(identityId, 0);
-            }
+        uint96 minimumStake = params.minimumStake();
+        uint96 maximumStake = params.maximumStake();
+
+        uint96 oldStakeAdj = oldStake <= maximumStake ? oldStake : maximumStake;
+        uint96 newStakeAdj = newStake <= maximumStake ? newStake : maximumStake;
+
+        uint256 oldWeightedAsk = uint256(nodeAsk) * oldStakeAdj;
+        uint256 newWeightedAsk = uint256(nodeAsk) * newStakeAdj;
+
+        bool wasInShardingTable = oldStake >= minimumStake;
+
+        if (wasInShardingTable && newStake < minimumStake) {
+            ass.decreaseWeightedActiveAskSum(oldWeightedAsk);
+            ass.setPrevTotalActiveStake(ass.totalActiveStake());
+            ass.decreaseTotalActiveStake(oldStake);
             return;
         }
-
-        uint96 maximumStake = params.maximumStake();
 
         if (oldStake >= maximumStake && newStake >= maximumStake) {
             return;
         }
 
-        uint96 stake = newStake <= maximumStake ? newStake : maximumStake;
-        uint256 newWeightedAsk = uint256(profileStorage.getAsk(identityId)) * stake;
-
         uint256 weightedActiveAskSum = ass.weightedActiveAskSum();
         if (weightedActiveAskSum == 0) {
-            ass.setWeightedActiveAskSum(newWeightedAsk);
             ass.setPrevWeightedActiveAskSum(newWeightedAsk);
-            ass.setNodeWeightedAsk(identityId, newWeightedAsk);
-            ass.setPrevTotalActiveStake(stake);
-            ass.setTotalActiveStake(stake);
+            ass.setPrevTotalActiveStake(newStakeAdj);
+            ass.setTotalActiveStake(newStakeAdj);
+            ass.setWeightedActiveAskSum(newWeightedAsk);
             return;
         }
 
-        ass.setPrevTotalActiveStake(stake);
+        ass.setPrevTotalActiveStake(newStakeAdj);
         ass.setPrevWeightedActiveAskSum(weightedActiveAskSum);
-        if (wasActive) {
+        if (wasInShardingTable) {
             ass.decreaseTotalActiveStake(oldStake);
-            ass.decreaseWeightedActiveAskSum(nodeWeightedAsk);
+            ass.decreaseWeightedActiveAskSum(oldWeightedAsk);
         }
-
         ass.increaseTotalActiveStake(newStake);
         ass.increaseWeightedActiveAskSum(newWeightedAsk);
-        ass.setNodeWeightedAsk(identityId, newWeightedAsk);
     }
 
-    function onAskChanged(uint72 identityId, uint96 newAsk) external onlyContracts {
+    function onAskChanged(uint72 identityId, uint96 oldAsk, uint96 newAsk) external onlyContracts {
         StakingStorage ss = stakingStorage;
         ParametersStorage params = parametersStorage;
         ShardingTableStorage sts = shardingTableStorage;
@@ -110,7 +109,6 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
         if (weightedActiveAskSum == 0) {
             ass.setWeightedActiveAskSum(newWeightedAsk);
             ass.setPrevWeightedActiveAskSum(newWeightedAsk);
-            ass.setNodeWeightedAsk(identityId, newWeightedAsk);
             ass.setPrevTotalActiveStake(stake);
             ass.setTotalActiveStake(stake);
             return;
@@ -119,16 +117,14 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
         (uint256 oldLowerBound, uint256 oldUpperBound) = ass.getAskBounds();
 
         bool isActive = false;
-        if (newAsk * 1e18 <= oldUpperBound && newAsk * 1e18 >= oldLowerBound) {
+        if (uint256(newAsk) * 1e18 <= oldUpperBound && uint256(newAsk) * 1e18 >= oldLowerBound) {
             ass.setPrevWeightedActiveAskSum(weightedActiveAskSum);
-            ass.setNodeWeightedAsk(identityId, newWeightedAsk);
             isActive = true;
-        } else if (ass.nodeWeightedAsk(identityId) != 0) {
+        } else if (uint256(oldAsk) * 1e18 <= oldUpperBound && uint256(oldAsk) * 1e18 >= oldLowerBound) {
             ass.setPrevTotalActiveStake(stake);
             ass.setPrevWeightedActiveAskSum(weightedActiveAskSum);
             ass.decreaseTotalActiveStake(stake);
-            ass.decreaseWeightedActiveAskSum(ass.nodeWeightedAsk(identityId));
-            ass.setNodeWeightedAsk(identityId, 0);
+            ass.decreaseWeightedActiveAskSum(uint256(oldAsk) * stake);
         }
 
         if (isActive) {
@@ -142,13 +138,12 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
             uint72 nodesCount = shardingTableStorage.nodesCount();
             for (uint72 i; i < nodesCount; i++) {
                 uint72 nextIdentityId = sts.indexToIdentityId(i);
-                uint96 nodeAsk = ps.getAsk(nextIdentityId);
+                uint256 nodeAsk = uint256(ps.getAsk(nextIdentityId));
 
                 if (nodeAsk * 1e18 <= newUpperBound && nodeAsk * 1e18 >= newLowerBound) {
-                    newWeightedActiveAskSum += ass.nodeWeightedAsk(nextIdentityId);
-                    newTotalActiveStake += ss.getNodeStake(nextIdentityId);
-                } else {
-                    ass.setNodeWeightedAsk(identityId, 0);
+                    uint96 nodeStake = ss.getNodeStake(nextIdentityId);
+                    newWeightedActiveAskSum += (nodeAsk * nodeStake);
+                    newTotalActiveStake += nodeStake;
                 }
             }
 

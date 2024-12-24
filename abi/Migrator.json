@@ -157,6 +157,19 @@
         "type": "uint72"
       }
     ],
+    "name": "insertNodeInShardingTable",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
     "name": "migrateDelegatorData",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -183,8 +196,32 @@
         "type": "uint72"
       }
     ],
-    "name": "migrateNodeData",
+    "name": "migrateIdentity",
     "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "migrateNodeData",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -580,6 +617,19 @@
   {
     "inputs": [],
     "name": "transferUnpaidRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "weightedAskUpdate",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

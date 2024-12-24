@@ -208,25 +208,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "",
-        "type": "uint72"
-      }
-    ],
-    "name": "nodeWeightedAsk",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "parametersStorage",
     "outputs": [
@@ -263,24 +244,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "uint256",
-        "name": "weightedAsk",
-        "type": "uint256"
-      }
-    ],
-    "name": "setNodeWeightedAsk",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
