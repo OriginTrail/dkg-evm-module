@@ -42,24 +42,24 @@ async function main() {
     });
     await tx.wait();
 
-    console.log('Calling transferStake');
-    tx = await Migrator.transferStake(oldTotalStake, {
-      gasLimit: 2_000_000,
-    });
-    await tx.wait();
+    // console.log('Calling transferStake');
+    // tx = await Migrator.transferStake(oldTotalStake, {
+    //   gasLimit: 2_000_000,
+    // });
+    // await tx.wait();
   }
 
-  console.log('Calling transferOperatorFees');
-  tx = await Migrator.transferOperatorFees({
-    gasLimit: 2_000_000,
-  });
-  await tx.wait();
+  // console.log('Calling transferOperatorFees');
+  // tx = await Migrator.transferOperatorFees({
+  //   gasLimit: 2_000_000,
+  // });
+  // await tx.wait();
 
-  console.log('Calling transferUnpaidRewards');
-  tx = await Migrator.transferUnpaidRewards({
-    gasLimit: 2_000_000,
-  });
-  await tx.wait();
+  // console.log('Calling transferUnpaidRewards');
+  // tx = await Migrator.transferUnpaidRewards({
+  //   gasLimit: 2_000_000,
+  // });
+  // await tx.wait();
 
   const oldTotalUnpaidRewards = await Migrator.oldTotalUnpaidRewards();
   console.log(`Old total unpaid rewards: ${oldTotalUnpaidRewards} TRAC`);

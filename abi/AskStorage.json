@@ -79,25 +79,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "",
-        "type": "uint72"
-      }
-    ],
-    "name": "indexToIdentityId",
-    "outputs": [
-      {
-        "internalType": "uint72",
-        "name": "",
-        "type": "uint72"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "initialize",
     "outputs": [],
@@ -163,6 +144,11 @@
       },
       {
         "internalType": "uint96",
+        "name": "oldStake",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
         "name": "newStake",
         "type": "uint96"
       }
@@ -180,6 +166,19 @@
         "internalType": "contract ParametersStorage",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "prevTotalActiveStake",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
       }
     ],
     "stateMutability": "view",
@@ -214,12 +213,51 @@
   {
     "inputs": [
       {
+        "internalType": "uint96",
+        "name": "_prevTotalActiveStake",
+        "type": "uint96"
+      }
+    ],
+    "name": "setPrevTotalActiveStake",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_prevWeightedActiveAskSum",
+        "type": "uint256"
+      }
+    ],
+    "name": "setPrevWeightedActiveAskSum",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bool",
         "name": "_status",
         "type": "bool"
       }
     ],
     "name": "setStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint96",
+        "name": "_totalActiveStake",
+        "type": "uint96"
+      }
+    ],
+    "name": "setTotalActiveStake",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

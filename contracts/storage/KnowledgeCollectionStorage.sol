@@ -25,18 +25,17 @@ contract KnowledgeCollectionStorage is
         uint256 indexed id,
         string publishOperationId,
         bytes32 merkleRoot,
-        uint256 byteSize,
-        uint256 chunksAmount,
-        uint256 startEpoch,
-        uint256 endEpoch,
-        uint96 tokenAmount
+        uint88 byteSize,
+        uint40 startEpoch,
+        uint40 endEpoch,
+        uint96 tokenAmount,
+        bool isImmutable
     );
     event KnowledgeCollectionUpdated(
         uint256 indexed id,
         string updateOperationId,
         bytes32 merkleRoot,
         uint256 byteSize,
-        uint256 chunksAmount,
         uint96 tokenAmount
     );
     event KnowledgeAssetsMinted(uint256 indexed id, address indexed to, uint256 startId, uint256 endId);
@@ -93,11 +92,11 @@ contract KnowledgeCollectionStorage is
         string calldata publishOperationId,
         bytes32 merkleRoot,
         uint256 knowledgeAssetsAmount,
-        uint256 byteSize,
-        uint256 chunksAmount,
-        uint256 startEpoch,
-        uint256 endEpoch,
-        uint96 tokenAmount
+        uint88 byteSize,
+        uint40 startEpoch,
+        uint40 endEpoch,
+        uint96 tokenAmount,
+        bool isImmutable
     ) external onlyContracts returns (uint256) {
         uint256 knowledgeCollectionId = ++_knowledgeCollectionsCounter;
 
@@ -105,10 +104,10 @@ contract KnowledgeCollectionStorage is
 
         kc.merkleRoots.push(KnowledgeCollectionLib.MerkleRoot(publisher, merkleRoot, block.timestamp));
         kc.byteSize = byteSize;
-        kc.chunksAmount = chunksAmount;
         kc.startEpoch = startEpoch;
         kc.endEpoch = endEpoch;
         kc.tokenAmount = tokenAmount;
+        kc.isImmutable = isImmutable;
 
         unchecked {
             _totalTokenAmount += tokenAmount;
@@ -121,10 +120,10 @@ contract KnowledgeCollectionStorage is
             publishOperationId,
             merkleRoot,
             byteSize,
-            chunksAmount,
             startEpoch,
             endEpoch,
-            tokenAmount
+            tokenAmount,
+            isImmutable
         );
 
         return knowledgeCollectionId;
@@ -143,8 +142,7 @@ contract KnowledgeCollectionStorage is
         bytes32 merkleRoot,
         uint256 mintKnowledgeAssetsAmount,
         uint256[] calldata knowledgeAssetsToBurn,
-        uint256 byteSize,
-        uint256 chunksAmount,
+        uint88 byteSize,
         uint96 tokenAmount
     ) external onlyContracts {
         KnowledgeCollectionLib.KnowledgeCollection storage kc = knowledgeCollections[id];
@@ -155,13 +153,12 @@ contract KnowledgeCollectionStorage is
 
         kc.merkleRoots.push(KnowledgeCollectionLib.MerkleRoot(publisher, merkleRoot, block.timestamp));
         kc.byteSize = byteSize;
-        kc.chunksAmount = chunksAmount;
         kc.tokenAmount = tokenAmount;
 
         burnKnowledgeAssetsTokens(id, publisher, knowledgeAssetsToBurn);
         mintKnowledgeAssetsTokens(id, publisher, mintKnowledgeAssetsAmount);
 
-        emit KnowledgeCollectionUpdated(id, updateOperationId, merkleRoot, byteSize, chunksAmount, tokenAmount);
+        emit KnowledgeCollectionUpdated(id, updateOperationId, merkleRoot, byteSize, tokenAmount);
     }
 
     function getKnowledgeCollectionMetadata(
@@ -171,26 +168,26 @@ contract KnowledgeCollectionStorage is
         view
         returns (
             KnowledgeCollectionLib.MerkleRoot[] memory,
-            uint256,
             uint256[] memory,
             uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint96
+            uint88,
+            uint40,
+            uint40,
+            uint96,
+            bool
         )
     {
         KnowledgeCollectionLib.KnowledgeCollection memory kc = knowledgeCollections[id];
 
         return (
             kc.merkleRoots,
-            kc.minted,
             kc.burned,
+            kc.minted,
             kc.byteSize,
-            kc.chunksAmount,
             kc.startEpoch,
             kc.endEpoch,
-            kc.tokenAmount
+            kc.tokenAmount,
+            kc.isImmutable
         );
     }
 
@@ -311,24 +308,14 @@ contract KnowledgeCollectionStorage is
         emit KnowledgeCollectionBurnedUpdated(id, _burned);
     }
 
-    function getByteSize(uint256 id) external view returns (uint256) {
+    function getByteSize(uint256 id) external view returns (uint88) {
         return knowledgeCollections[id].byteSize;
     }
 
-    function setByteSize(uint256 id, uint256 _byteSize) external onlyContracts {
+    function setByteSize(uint256 id, uint88 _byteSize) external onlyContracts {
         knowledgeCollections[id].byteSize = _byteSize;
 
         emit KnowledgeCollectionByteSizeUpdated(id, _byteSize);
-    }
-
-    function getChunksAmount(uint256 id) external view returns (uint256) {
-        return knowledgeCollections[id].chunksAmount;
-    }
-
-    function setChunksAmount(uint256 id, uint256 _chunksAmount) external onlyContracts {
-        knowledgeCollections[id].chunksAmount = _chunksAmount;
-
-        emit KnowledgeCollectionChunksAmountUpdated(id, _chunksAmount);
     }
 
     function getTokenAmount(uint256 id) external view returns (uint96) {
@@ -342,21 +329,21 @@ contract KnowledgeCollectionStorage is
         emit KnowledgeCollectionTokenAmountUpdated(id, _tokenAmount);
     }
 
-    function getStartEpoch(uint256 id) external view returns (uint256) {
+    function getStartEpoch(uint256 id) external view returns (uint40) {
         return knowledgeCollections[id].startEpoch;
     }
 
-    function setStartEpoch(uint256 id, uint256 _startEpoch) external onlyContracts {
+    function setStartEpoch(uint256 id, uint40 _startEpoch) external onlyContracts {
         knowledgeCollections[id].startEpoch = _startEpoch;
 
         emit KnowledgeCollectionStartEpochUpdated(id, _startEpoch);
     }
 
-    function getEndEpoch(uint256 id) external view returns (uint256) {
+    function getEndEpoch(uint256 id) external view returns (uint40) {
         return knowledgeCollections[id].endEpoch;
     }
 
-    function setEndEpoch(uint256 id, uint256 _endEpoch) external onlyContracts {
+    function setEndEpoch(uint256 id, uint40 _endEpoch) external onlyContracts {
         knowledgeCollections[id].endEpoch = _endEpoch;
 
         emit KnowledgeCollectionEndEpochUpdated(id, _endEpoch);

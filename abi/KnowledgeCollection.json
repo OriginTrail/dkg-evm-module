@@ -13,6 +13,17 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "CannotUpdateImmutableKnowledgeCollection",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -238,24 +249,24 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint88",
         "name": "byteSize",
-        "type": "uint256"
+        "type": "uint88"
       },
       {
-        "internalType": "uint256",
-        "name": "chunksAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
+        "internalType": "uint40",
         "name": "epochs",
-        "type": "uint256"
+        "type": "uint40"
       },
       {
         "internalType": "uint96",
         "name": "tokenAmount",
         "type": "uint96"
+      },
+      {
+        "internalType": "bool",
+        "name": "isImmutable",
+        "type": "bool"
       },
       {
         "internalType": "address",
@@ -325,9 +336,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint40",
         "name": "epochs",
-        "type": "uint16"
+        "type": "uint40"
       },
       {
         "internalType": "uint96",
@@ -533,14 +544,9 @@
         "type": "uint256[]"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint88",
         "name": "byteSize",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chunksAmount",
-        "type": "uint256"
+        "type": "uint88"
       },
       {
         "internalType": "uint96",

@@ -63,10 +63,10 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         string calldata publishOperationId,
         bytes32 merkleRoot,
         uint256 knowledgeAssetsAmount,
-        uint256 byteSize,
-        uint256 chunksAmount,
-        uint256 epochs,
+        uint88 byteSize,
+        uint40 epochs,
         uint96 tokenAmount,
+        bool isImmutable,
         address paymaster,
         uint72 publisherNodeIdentityId,
         bytes32 publisherNodeR,
@@ -86,7 +86,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
 
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
         EpochStorage es = epochStorage;
-        uint256 currentEpoch = chronos.getCurrentEpoch();
+        uint40 currentEpoch = uint40(chronos.getCurrentEpoch());
 
         uint256 id = kcs.createKnowledgeCollection(
             msg.sender,
@@ -94,10 +94,10 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
             merkleRoot,
             knowledgeAssetsAmount,
             byteSize,
-            chunksAmount,
             currentEpoch + 1,
             currentEpoch + epochs + 1,
-            tokenAmount
+            tokenAmount,
+            isImmutable
         );
 
         _validateTokenAmount(byteSize, epochs, tokenAmount, true);
@@ -116,8 +116,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         bytes32 merkleRoot,
         uint256 mintKnowledgeAssetsAmount,
         uint256[] calldata knowledgeAssetsToBurn,
-        uint256 byteSize,
-        uint256 chunksAmount,
+        uint88 byteSize,
         uint96 tokenAmount,
         address paymaster,
         uint72 publisherNodeIdentityId,
@@ -127,6 +126,16 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         bytes32[] calldata r,
         bytes32[] calldata vs
     ) external {
+        KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
+        EpochStorage es = epochStorage;
+
+        (, , , uint88 oldByteSize, , uint40 endEpoch, uint96 oldTokenAmount, bool isImmutable) = kcs
+            .getKnowledgeCollectionMetadata(id);
+
+        if (isImmutable) {
+            revert KnowledgeCollectionLib.CannotUpdateImmutableKnowledgeCollection(id);
+        }
+
         _verifySignature(
             publisherNodeIdentityId,
             ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))),
@@ -135,12 +144,6 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         );
 
         _verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
-
-        KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
-        EpochStorage es = epochStorage;
-
-        (, , , uint256 oldByteSize, uint256 oldChunksAmount, , uint256 endEpoch, uint96 oldTokenAmount) = kcs
-            .getKnowledgeCollectionMetadata(id);
 
         uint256 currentEpoch = chronos.getCurrentEpoch();
         if (currentEpoch > endEpoch) {
@@ -155,7 +158,6 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
             mintKnowledgeAssetsAmount,
             knowledgeAssetsToBurn,
             oldByteSize + byteSize,
-            oldChunksAmount + chunksAmount,
             oldTokenAmount + tokenAmount
         );
 
@@ -169,13 +171,13 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
 
     function extendKnowledgeCollectionLifetime(
         uint256 id,
-        uint16 epochs,
+        uint40 epochs,
         uint96 tokenAmount,
         address paymaster
     ) external {
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
-        (, , , uint256 byteSize, , , uint256 endEpoch, uint96 oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
+        (, , , uint88 byteSize, , uint40 endEpoch, uint96 oldTokenAmount, ) = kcs.getKnowledgeCollectionMetadata(id);
 
         uint256 currentEpoch = chronos.getCurrentEpoch();
         if (currentEpoch > endEpoch) {
@@ -199,7 +201,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
 
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
 
-        (, , , , , , uint256 endEpoch, uint96 oldTokenAmount) = kcs.getKnowledgeCollectionMetadata(id);
+        (, , , , , uint40 endEpoch, uint96 oldTokenAmount, ) = kcs.getKnowledgeCollectionMetadata(id);
 
         uint256 currentEpoch = chronos.getCurrentEpoch();
         if (currentEpoch > endEpoch) {

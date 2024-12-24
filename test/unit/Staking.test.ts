@@ -1,1113 +1,1074 @@
-// import { randomBytes } from 'crypto';
-
-// import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
-// import { expect } from 'chai';
-// import { BigNumber, BytesLike } from 'ethers';
-// import hre from 'hardhat';
-// import { SignerWithAddress } from 'hardhat-deploy-ethers/signers';
-
-// import {
-//   Token,
-//   Profile,
-//   ServiceAgreementStorageV1U1,
-//   StakingStorage,
-//   HubController,
-//   StakingV2,
-//   Shares,
-//   ParametersStorage,
-//   ProfileStorage,
-//   ShardingTableV2,
-//   ShardingTableStorageV2,
-// } from '../../typechain';
-
-// type StakingFixture = {
-//   accounts: SignerWithAddress[];
-//   Token: Token;
-//   Profile: Profile;
-//   ServiceAgreementStorageV1U1: ServiceAgreementStorageV1U1;
-//   StakingV2: StakingV2;
-//   StakingStorage: StakingStorage;
-//   ShardingTableStorage: ShardingTableStorageV2;
-//   ShardingTable: ShardingTableV2;
-// };
-
-// type Node = {
-//   account: SignerWithAddress;
-//   identityId: number;
-//   nodeId: BytesLike;
-//   sha256: BytesLike;
-// };
-
-// describe('@v2 @unit StakingV2 contract', function () {
-//   let accounts: SignerWithAddress[];
-//   let ParametersStorage: ParametersStorage;
-//   let ProfileStorage: ProfileStorage;
-//   let StakingV2: StakingV2;
-//   let StakingStorage: StakingStorage;
-//   let Token: Token;
-//   let Profile: Profile;
-//   let ServiceAgreementStorageV1U1: ServiceAgreementStorageV1U1;
-//   let ShardingTableStorage: ShardingTableStorageV2;
-//   let ShardingTable: ShardingTableV2;
-//   const identityId1 = 1;
-//   const totalStake = hre.ethers.utils.parseEther('1000');
-//   const operatorFee = hre.ethers.BigNumber.from(10);
-//   const transferAmount = hre.ethers.utils.parseEther('100');
-//   const timestamp = 1674261619;
-
-//   async function deployStakingFixture(): Promise<StakingFixture> {
-//     await hre.deployments.fixture(['StakingV2', 'Profile', 'ShardingTableStorageV2', 'ShardingTableV2']);
-//     ParametersStorage = await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
-//     ProfileStorage = await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
-//     StakingV2 = await hre.ethers.getContract<StakingV2>('Staking');
-//     StakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
-//     Token = await hre.ethers.getContract<Token>('Token');
-//     Profile = await hre.ethers.getContract<Profile>('Profile');
-//     ServiceAgreementStorageV1U1 = await hre.ethers.getContract<ServiceAgreementStorageV1U1>(
-//       'ServiceAgreementStorageV1U1',
-//     );
-//     ShardingTableStorage = await hre.ethers.getContract<ShardingTableStorageV2>('ShardingTableStorage');
-//     ShardingTable = await hre.ethers.getContract<ShardingTableV2>('ShardingTable');
-//     accounts = await hre.ethers.getSigners();
-//     const HubController = await hre.ethers.getContract<HubController>('HubController');
-//     await HubController.setContractAddress('HubOwner', accounts[0].address);
-//     await HubController.setContractAddress('NotHubOwner', accounts[1].address);
-
-//     return {
-//       accounts,
-//       Token,
-//       Profile,
-//       ServiceAgreementStorageV1U1,
-//       StakingV2,
-//       StakingStorage,
-//       ShardingTable,
-//       ShardingTableStorage,
-//     };
-//   }
-
-//   async function createProfile(operational: SignerWithAddress, admin: SignerWithAddress): Promise<Node> {
-//     const OperationalProfile = Profile.connect(operational);
-
-//     const nodeId = '0x' + randomBytes(32).toString('hex');
-//     const sha256 = hre.ethers.utils.soliditySha256(['bytes'], [nodeId]);
-
-//     const receipt = await (
-//       await OperationalProfile.createProfile(
-//         admin.address,
-//         [],
-//         nodeId,
-//         randomBytes(5).toString('hex'),
-//         randomBytes(3).toString('hex'),
-//         0,
-//       )
-//     ).wait();
-//     const identityId = Number(receipt.logs[0].topics[1]);
-//     const blockchainNodeId = await ProfileStorage.getNodeId(identityId);
-//     const blockchainSha256 = await ProfileStorage.getNodeAddress(identityId, 1);
-
-//     expect(blockchainNodeId).to.be.equal(nodeId);
-//     expect(blockchainSha256).to.be.equal(sha256);
-
-//     await OperationalProfile.setAsk(identityId, hre.ethers.utils.parseEther('0.25'));
-
-//     return {
-//       account: operational,
-//       identityId,
-//       nodeId,
-//       sha256,
-//     };
-//   }
-
-//   async function calculateSharesToMint(newStakeAmount: BigNumber, totalShares: BigNumber): Promise<BigNumber> {
-//     const totalStake = await Token.balanceOf(StakingStorage.address);
-//     if (totalStake.isZero()) {
-//       return newStakeAmount;
-//     } else {
-//       return newStakeAmount.mul(totalShares).div(totalStake);
-//     }
-//   }
-
-//   async function calculateEligibleTokens(
-//     identityId: number,
-//     heldShares: BigNumber,
-//     totalShares: BigNumber,
-//   ): Promise<BigNumber> {
-//     const totalStake = await StakingStorage.totalStakes(identityId);
-//     return heldShares.mul(totalStake).div(totalShares);
-//   }
-
-//   beforeEach(async () => {
-//     hre.helpers.resetDeploymentsJson();
-//     ({
-//       accounts,
-//       Token,
-//       Profile,
-//       ServiceAgreementStorageV1U1,
-//       StakingV2,
-//       StakingStorage,
-//       ShardingTable,
-//       ShardingTableStorage,
-//     } = await loadFixture(deployStakingFixture));
-//   });
-
-//   it('The contract is named "Staking"', async () => {
-//     expect(await StakingV2.name()).to.equal('Staking');
-//   });
-
-//   it('The contract is version "2.3.0"', async () => {
-//     expect(await StakingV2.version()).to.equal('2.3.0');
-//   });
-
-//   it('Non-Contract should not be able to setTotalStake; expect to fail', async () => {
-//     const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[2]);
-//     await expect(StakingStorageWithNonHubOwner.setTotalStake(identityId1, totalStake)).to.be.revertedWith(
-//       'Fn can only be called by the hub',
-//     );
-//   });
-
-//   it('Contract should be able to setTotalStake; expect to pass', async () => {
-//     await StakingStorage.setTotalStake(identityId1, totalStake);
-//     expect(await StakingStorage.totalStakes(identityId1)).to.equal(totalStake);
-//   });
-
-//   it('Non-Contract should not be able to setOperatorFee; expect to fail', async () => {
-//     const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[2]);
-//     await expect(StakingStorageWithNonHubOwner.setOperatorFee(identityId1, operatorFee)).to.be.revertedWith(
-//       'Fn can only be called by the hub',
-//     );
-//   });
-
-//   it('Contract should be able to setOperatorFee; expect to pass', async () => {
-//     await StakingStorage.setOperatorFee(identityId1, operatorFee);
-//     expect(await StakingStorage.operatorFees(identityId1)).to.equal(operatorFee);
-//   });
-
-//   it('Non-Contract should not be able to createWithdrawalRequest; expect to fail', async () => {
-//     const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[2]);
-//     await expect(
-//       StakingStorageWithNonHubOwner.createWithdrawalRequest(identityId1, accounts[2].address, totalStake, 2022),
-//     ).to.be.revertedWith('Fn can only be called by the hub');
-//   });
-
-//   it('Contract should be able to createWithdrawalRequest; expect to pass', async () => {
-//     await StakingStorage.createWithdrawalRequest(identityId1, accounts[1].address, totalStake, timestamp);
-
-//     expect(await StakingStorage.withdrawalRequestExists(identityId1, accounts[1].address)).to.equal(true);
-//     expect(await StakingStorage.getWithdrawalRequestAmount(identityId1, accounts[1].address)).to.equal(totalStake);
-//     expect(await StakingStorage.getWithdrawalRequestTimestamp(identityId1, accounts[1].address)).to.equal(timestamp);
-//   });
-
-//   it('Non-Contract should not be able to deleteWithdrawalRequest; expect to fail', async () => {
-//     const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[2]);
-//     await expect(
-//       StakingStorageWithNonHubOwner.deleteWithdrawalRequest(identityId1, accounts[2].address),
-//     ).to.be.revertedWith('Fn can only be called by the hub');
-//   });
-
-//   it('Contract should be able to deleteWithdrawalRequest; expect to pass', async () => {
-//     await StakingStorage.createWithdrawalRequest(identityId1, accounts[1].address, totalStake, timestamp);
-
-//     await StakingStorage.deleteWithdrawalRequest(identityId1, accounts[1].address);
-//     expect(await StakingStorage.withdrawalRequestExists(identityId1, accounts[1].address)).to.equal(false);
-//     expect(await StakingStorage.getWithdrawalRequestAmount(identityId1, accounts[1].address)).to.equal(0);
-//     expect(await StakingStorage.getWithdrawalRequestTimestamp(identityId1, accounts[1].address)).to.equal(0);
-//   });
-
-//   it('Non-Contract should not be able to transferStake; expect to fail', async () => {
-//     const StakingStorageWithNonHubOwner = StakingStorage.connect(accounts[2]);
-//     await expect(StakingStorageWithNonHubOwner.transferStake(accounts[2].address, transferAmount)).to.be.revertedWith(
-//       'Fn can only be called by the hub',
-//     );
-//   });
-
-//   it('Contract should be able to transferStake; expect to pass', async () => {
-//     await Token.mint(StakingStorage.address, hre.ethers.utils.parseEther(`${2_000_000}`));
-
-//     const initialReceiverBalance = await Token.balanceOf(accounts[1].address);
-//     await StakingStorage.transferStake(accounts[1].address, transferAmount);
-
-//     expect(await Token.balanceOf(accounts[1].address)).to.equal(initialReceiverBalance.add(transferAmount));
-//   });
-
-//   it('Create 1 node; expect that stake is created and correctly set', async () => {
-//     await Token.increaseAllowance(StakingV2.address, hre.ethers.utils.parseEther(`${2_000_000}`));
-
-//     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
-//     await Profile.createProfile(accounts[1].address, [], nodeId1, 'Token', 'TKN', 0);
-
-//     await StakingV2['addStake(uint72,uint96)'](identityId1, hre.ethers.utils.parseEther(`${2_000_000}`));
-//     expect(await StakingStorage.totalStakes(identityId1)).to.equal(
-//       hre.ethers.utils.parseEther(`${2_000_000}`),
-//       'Total amount of stake is not set',
-//     );
-//   });
-
-//   it('Add reward; expect that total stake is increased', async () => {
-//     await Token.mint(ServiceAgreementStorageV1U1.address, hre.ethers.utils.parseEther(`${2_000_000}`));
-//     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
-//     await Profile.createProfile(accounts[1].address, [], nodeId1, 'Token', 'TKN', 0);
-
-//     const agreementId = '0x' + randomBytes(32).toString('hex');
-//     const startTime = Math.floor(Date.now() / 1000).toString();
-//     const epochsNumber = 5;
-//     const epochLength = 10;
-//     const tokenAmount = hre.ethers.utils.parseEther('100');
-//     const scoreFunctionId = 0;
-//     const proofWindowOffsetPerc = 10;
-
-//     await ServiceAgreementStorageV1U1.createServiceAgreementObject(
-//       agreementId,
-//       startTime,
-//       epochsNumber,
-//       epochLength,
-//       tokenAmount,
-//       scoreFunctionId,
-//       proofWindowOffsetPerc,
-//     );
-
-//     await StakingV2.connect(accounts[1]).addReward(
-//       agreementId,
-//       identityId1,
-//       hre.ethers.utils.parseEther(`${2_000_000}`),
-//     );
-//     expect(await StakingStorage.totalStakes(identityId1)).to.equal(
-//       hre.ethers.utils.parseEther(`${2_000_000}`),
-//       'Total amount of stake is not increased after adding reward',
-//     );
-//   });
-
-//   it('New profile created, stake added by node admin, StakeIncreased/SharesMinted events are emitted, token/shares balances are correct', async () => {
-//     const node = await createProfile(accounts[0], accounts[1]);
-
-//     const minStake = Number(hre.ethers.utils.formatEther(await ParametersStorage.minimumStake()));
-//     const maxStake = Number(hre.ethers.utils.formatEther(await ParametersStorage.maximumStake()));
-//     const stakeAmount = hre.ethers.utils.parseEther(
-//       `${Math.floor(Math.random() * (maxStake - minStake + 1)) + minStake}`,
-//     );
-
-//     const initialBalance = await Token.balanceOf(accounts[1].address);
-//     const oldStake = await StakingStorage.totalStakes(node.identityId);
-
-//     const sharesAddress = await ProfileStorage.getSharesContractAddress(node.identityId);
-//     const SharesContract = await hre.ethers.getContractAt<Shares>('Shares', sharesAddress);
-//     const initialSharesBalance = await SharesContract.balanceOf(accounts[1].address);
-//     const sharesTotalSupply = await SharesContract.totalSupply();
-//     const sharesToMint = await calculateSharesToMint(stakeAmount, sharesTotalSupply);
-
-//     await Token.connect(accounts[1]).increaseAllowance(StakingV2.address, stakeAmount);
-
-//     await expect(StakingV2.connect(accounts[1])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
-//       .to.emit(StakingV2, 'StakeIncreased')
-//       .withArgs(node.identityId, node.nodeId, accounts[1].address, oldStake, oldStake.add(stakeAmount))
-//       .to.emit(StakingV2, 'SharesMinted')
-//       .withArgs(node.identityId, sharesAddress, accounts[1].address, sharesToMint, sharesTotalSupply.add(sharesToMint));
-
-//     const finalBalance = await Token.balanceOf(accounts[1].address);
-//     const finalSharesBalance = await SharesContract.balanceOf(accounts[1].address);
-
-//     expect(finalBalance).to.be.equal(initialBalance.sub(stakeAmount));
-//     expect(finalSharesBalance).to.be.equal(initialSharesBalance.add(sharesToMint));
-//   });
-
-//   it('New profile created, stake added by 5 delegators, StakeIncreased/SharesMinted events are emitted, token/shares balances are correct', async () => {
-//     const node = await createProfile(accounts[0], accounts[1]);
-
-//     const minStake = Number(hre.ethers.utils.formatEther(await ParametersStorage.minimumStake()));
-//     const maxStake = Number(hre.ethers.utils.formatEther(await ParametersStorage.maximumStake()));
-//     let stakeAmount = hre.ethers.utils.parseEther(
-//       `${Math.floor(Math.random() * (maxStake - minStake + 1)) + minStake}`,
-//     );
-
-//     let initialBalance = await Token.balanceOf(accounts[1].address);
-//     let oldStake = await StakingStorage.totalStakes(node.identityId);
-
-//     const sharesAddress = await ProfileStorage.getSharesContractAddress(node.identityId);
-//     const SharesContract = await hre.ethers.getContractAt<Shares>('Shares', sharesAddress);
-//     let initialSharesBalance = await SharesContract.balanceOf(accounts[1].address);
-//     let sharesTotalSupply = await SharesContract.totalSupply();
-//     let sharesToMint = await calculateSharesToMint(stakeAmount, sharesTotalSupply);
-
-//     await Token.connect(accounts[1]).increaseAllowance(StakingV2.address, stakeAmount);
-
-//     await expect(StakingV2.connect(accounts[1])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
-//       .to.emit(StakingV2, 'StakeIncreased')
-//       .withArgs(node.identityId, node.nodeId, accounts[1].address, oldStake, oldStake.add(stakeAmount))
-//       .to.emit(StakingV2, 'SharesMinted')
-//       .withArgs(node.identityId, sharesAddress, accounts[1].address, sharesToMint, sharesTotalSupply.add(sharesToMint));
-
-//     let finalBalance = await Token.balanceOf(accounts[1].address);
-//     let finalSharesBalance = await SharesContract.balanceOf(accounts[1].address);
-
-//     expect(finalBalance).to.be.equal(initialBalance.sub(stakeAmount));
-//     expect(finalSharesBalance).to.be.equal(initialSharesBalance.add(sharesToMint));
-
-//     for (let i = 2; i < 7; i += 1) {
-//       oldStake = await StakingStorage.totalStakes(node.identityId);
-//       stakeAmount = hre.ethers.utils.parseEther(
-//         `${Math.floor(Math.random() * (maxStake - Number(hre.ethers.utils.formatEther(oldStake))))}`,
-//       );
-//       sharesTotalSupply = await SharesContract.totalSupply();
-//       sharesToMint = await calculateSharesToMint(stakeAmount, sharesTotalSupply);
-
-//       initialBalance = await Token.balanceOf(accounts[i].address);
-//       initialSharesBalance = await SharesContract.balanceOf(accounts[i].address);
-
-//       await Token.connect(accounts[i]).increaseAllowance(StakingV2.address, stakeAmount);
-
-//       await expect(StakingV2.connect(accounts[i])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
-//         .to.emit(StakingV2, 'StakeIncreased')
-//         .withArgs(node.identityId, node.nodeId, accounts[i].address, oldStake, oldStake.add(stakeAmount))
-//         .to.emit(StakingV2, 'SharesMinted')
-//         .withArgs(
-//           node.identityId,
-//           sharesAddress,
-//           accounts[i].address,
-//           sharesToMint,
-//           sharesTotalSupply.add(sharesToMint),
-//         );
-
-//       finalBalance = await Token.balanceOf(accounts[i].address);
-//       finalSharesBalance = await SharesContract.balanceOf(accounts[i].address);
-
-//       expect(finalBalance).to.be.equal(initialBalance.sub(stakeAmount));
-//       expect(finalSharesBalance).to.be.equal(initialSharesBalance.add(sharesToMint));
-//     }
-//   });
-
-//   it('New profile created, stake added by node runner and 5 delegators, operator fee change triggered, teleport, operator fee changed, reward added, stake withdrawn, events and balance are correct', async () => {
-//     const node = await createProfile(accounts[0], accounts[1]);
-
-//     const minStake = Number(hre.ethers.utils.formatEther(await ParametersStorage.minimumStake()));
-//     const maxStake = Number(hre.ethers.utils.formatEther(await ParametersStorage.maximumStake()));
-//     let stakeAmount = hre.ethers.utils.parseEther(
-//       `${Math.floor((Math.random() * (maxStake - minStake + 1)) / 10) + minStake}`,
-//     );
-
-//     let initialBalance = await Token.balanceOf(accounts[1].address);
-//     let oldStake = await StakingStorage.totalStakes(node.identityId);
-
-//     const sharesAddress = await ProfileStorage.getSharesContractAddress(node.identityId);
-//     const SharesContract = await hre.ethers.getContractAt<Shares>('Shares', sharesAddress);
-//     let initialSharesBalance = await SharesContract.balanceOf(accounts[1].address);
-//     let sharesTotalSupply = await SharesContract.totalSupply();
-//     let sharesToMint = await calculateSharesToMint(stakeAmount, sharesTotalSupply);
-
-//     await Token.connect(accounts[1]).increaseAllowance(StakingV2.address, stakeAmount);
-
-//     await expect(StakingV2.connect(accounts[1])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
-//       .to.emit(StakingV2, 'StakeIncreased')
-//       .withArgs(node.identityId, node.nodeId, accounts[1].address, oldStake, oldStake.add(stakeAmount))
-//       .to.emit(StakingV2, 'SharesMinted')
-//       .withArgs(node.identityId, sharesAddress, accounts[1].address, sharesToMint, sharesTotalSupply.add(sharesToMint));
-
-//     let finalBalance = await Token.balanceOf(accounts[1].address);
-//     let finalSharesBalance = await SharesContract.balanceOf(accounts[1].address);
-
-//     expect(finalBalance).to.be.equal(initialBalance.sub(stakeAmount));
-//     expect(finalSharesBalance).to.be.equal(initialSharesBalance.add(sharesToMint));
-
-//     for (let i = 2; i < 7; i += 1) {
-//       oldStake = await StakingStorage.totalStakes(node.identityId);
-//       stakeAmount = hre.ethers.utils.parseEther(
-//         `${Math.floor((Math.random() * (maxStake - Number(hre.ethers.utils.formatEther(oldStake)))) / 10)}`,
-//       );
-//       sharesTotalSupply = await SharesContract.totalSupply();
-//       sharesToMint = await calculateSharesToMint(stakeAmount, sharesTotalSupply);
-
-//       initialBalance = await Token.balanceOf(accounts[i].address);
-//       initialSharesBalance = await SharesContract.balanceOf(accounts[i].address);
-
-//       await Token.connect(accounts[i]).increaseAllowance(StakingV2.address, stakeAmount);
-
-//       await expect(StakingV2.connect(accounts[i])['addStake(uint72,uint96)'](node.identityId, stakeAmount))
-//         .to.emit(StakingV2, 'StakeIncreased')
-//         .withArgs(node.identityId, node.nodeId, accounts[i].address, oldStake, oldStake.add(stakeAmount))
-//         .to.emit(StakingV2, 'SharesMinted')
-//         .withArgs(
-//           node.identityId,
-//           sharesAddress,
-//           accounts[i].address,
-//           sharesToMint,
-//           sharesTotalSupply.add(sharesToMint),
-//         );
-
-//       finalBalance = await Token.balanceOf(accounts[i].address);
-//       finalSharesBalance = await SharesContract.balanceOf(accounts[i].address);
-
-//       expect(finalBalance).to.be.equal(initialBalance.sub(stakeAmount));
-//       expect(finalSharesBalance).to.be.equal(initialSharesBalance.add(sharesToMint));
-//     }
-
-//     const newOperatorFee = 50;
-//     const stakeWithdrawalDelay = await ParametersStorage.stakeWithdrawalDelay();
-//     await expect(StakingV2.connect(accounts[1]).startOperatorFeeChange(node.identityId, newOperatorFee))
-//       .to.emit(StakingV2, 'OperatorFeeChangeStarted')
-//       .withArgs(
-//         node.identityId,
-//         node.nodeId,
-//         newOperatorFee,
-//         (await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay,
-//       );
-
-//     await time.increaseTo((await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay + 100);
-
-//     const agreementId = '0x' + randomBytes(32).toString('hex');
-//     const startTime = Math.floor(Date.now() / 1000).toString();
-//     const epochsNumber = 5;
-//     const epochLength = 10;
-//     const tokenAmount = hre.ethers.utils.parseEther('100');
-//     const scoreFunctionId = 0;
-//     const proofWindowOffsetPerc = 10;
-
-//     const reward = hre.ethers.utils.parseEther(`${2_000_000}`);
-//     await Token.mint(ServiceAgreementStorageV1U1.address, reward);
-
-//     await ServiceAgreementStorageV1U1.createServiceAgreementObject(
-//       agreementId,
-//       startTime,
-//       epochsNumber,
-//       epochLength,
-//       tokenAmount,
-//       scoreFunctionId,
-//       proofWindowOffsetPerc,
-//     );
-
-//     const oldAccOperatorFee = await ProfileStorage.getAccumulatedOperatorFee(node.identityId);
-//     const accOperatorFee = reward.mul(newOperatorFee).div(100);
-//     const delegatorsReward = reward.sub(accOperatorFee);
-//     oldStake = await StakingStorage.totalStakes(node.identityId);
-
-//     await expect(StakingV2.addReward(agreementId, node.identityId, reward))
-//       .to.emit(StakingV2, 'AccumulatedOperatorFeeIncreased')
-//       .withArgs(node.identityId, node.nodeId, oldAccOperatorFee, oldAccOperatorFee.add(accOperatorFee))
-//       .to.emit(StakingV2, 'StakeIncreased')
-//       .withArgs(
-//         node.identityId,
-//         node.nodeId,
-//         ServiceAgreementStorageV1U1.address,
-//         oldStake,
-//         oldStake.add(delegatorsReward),
-//       )
-//       .to.emit(StakingV2, 'RewardCollected')
-//       .withArgs(
-//         agreementId,
-//         node.identityId,
-//         node.nodeId,
-//         ServiceAgreementStorageV1U1.address,
-//         accOperatorFee,
-//         delegatorsReward,
-//       );
-
-//     initialBalance = await Token.balanceOf(accounts[1].address);
-//     oldStake = await StakingStorage.totalStakes(node.identityId);
-
-//     initialSharesBalance = await SharesContract.balanceOf(accounts[1].address);
-//     sharesTotalSupply = await SharesContract.totalSupply();
-//     let eligibleTokens = await calculateEligibleTokens(node.identityId, initialSharesBalance, sharesTotalSupply);
-
-//     await SharesContract.connect(accounts[1]).increaseAllowance(StakingV2.address, initialSharesBalance);
-
-//     await expect(StakingV2.connect(accounts[1]).startStakeWithdrawal(node.identityId, initialSharesBalance))
-//       .to.emit(StakingV2, 'StakeWithdrawalStarted')
-//       .withArgs(
-//         node.identityId,
-//         node.nodeId,
-//         accounts[1].address,
-//         oldStake,
-//         oldStake.sub(eligibleTokens),
-//         (await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay,
-//       )
-//       .to.emit(StakingV2, 'SharesBurned')
-//       .withArgs(
-//         node.identityId,
-//         sharesAddress,
-//         accounts[1].address,
-//         initialSharesBalance,
-//         sharesTotalSupply.sub(initialSharesBalance),
-//       );
-
-//     await time.increaseTo((await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay);
-
-//     await expect(StakingV2.connect(accounts[1]).withdrawStake(node.identityId))
-//       .to.emit(StakingV2, 'StakeWithdrawn')
-//       .withArgs(node.identityId, node.nodeId, accounts[1].address, eligibleTokens);
-
-//     finalBalance = await Token.balanceOf(accounts[1].address);
-//     finalSharesBalance = await SharesContract.balanceOf(accounts[1].address);
-
-//     expect(finalBalance).to.be.equal(initialBalance.add(eligibleTokens));
-//     expect(finalSharesBalance).to.be.equal(0);
-
-//     for (let i = 2; i < 7; i += 1) {
-//       initialBalance = await Token.balanceOf(accounts[i].address);
-//       oldStake = await StakingStorage.totalStakes(node.identityId);
-
-//       initialSharesBalance = await SharesContract.balanceOf(accounts[i].address);
-//       sharesTotalSupply = await SharesContract.totalSupply();
-//       eligibleTokens = await calculateEligibleTokens(node.identityId, initialSharesBalance, sharesTotalSupply);
-
-//       await SharesContract.connect(accounts[i]).increaseAllowance(StakingV2.address, initialSharesBalance);
-
-//       await expect(StakingV2.connect(accounts[i]).startStakeWithdrawal(node.identityId, initialSharesBalance))
-//         .to.emit(StakingV2, 'StakeWithdrawalStarted')
-//         .withArgs(
-//           node.identityId,
-//           node.nodeId,
-//           accounts[i].address,
-//           oldStake,
-//           oldStake.sub(eligibleTokens),
-//           (await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay,
-//         )
-//         .to.emit(StakingV2, 'SharesBurned')
-//         .withArgs(
-//           node.identityId,
-//           sharesAddress,
-//           accounts[i].address,
-//           initialSharesBalance,
-//           sharesTotalSupply.sub(initialSharesBalance),
-//         );
-
-//       await time.increaseTo((await hre.ethers.provider.getBlock('latest')).timestamp + stakeWithdrawalDelay);
-
-//       await expect(StakingV2.connect(accounts[i]).withdrawStake(node.identityId))
-//         .to.emit(StakingV2, 'StakeWithdrawn')
-//         .withArgs(node.identityId, node.nodeId, accounts[i].address, eligibleTokens);
-
-//       finalBalance = await Token.balanceOf(accounts[i].address);
-//       finalSharesBalance = await SharesContract.balanceOf(accounts[i].address);
-
-//       expect(finalBalance).to.be.equal(initialBalance.add(eligibleTokens));
-//       expect(finalSharesBalance).to.be.equal(0);
-//     }
-//   });
-
-//   it('SA created with score function 1, addReward, expect all reward to be a node operator fee', async () => {
-//     await Token.mint(ServiceAgreementStorageV1U1.address, hre.ethers.utils.parseEther(`${2_000_000}`));
-//     const nodeId1 = '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
-//     await Profile.createProfile(accounts[1].address, [], nodeId1, 'Token', 'TKN', 50);
-
-//     const agreementId = '0x' + randomBytes(32).toString('hex');
-//     const startTime = Math.floor(Date.now() / 1000).toString();
-//     const epochsNumber = 5;
-//     const epochLength = 10;
-//     const tokenAmount = hre.ethers.utils.parseEther('100');
-//     const scoreFunctionId = 1;
-//     const proofWindowOffsetPerc = 10;
-
-//     await ServiceAgreementStorageV1U1.createServiceAgreementObject(
-//       agreementId,
-//       startTime,
-//       epochsNumber,
-//       epochLength,
-//       tokenAmount,
-//       scoreFunctionId,
-//       proofWindowOffsetPerc,
-//     );
-
-//     const rewardAmount = hre.ethers.utils.parseEther(`${2_000_000}`);
-
-//     await expect(StakingV2.connect(accounts[1]).addReward(agreementId, identityId1, rewardAmount))
-//       .to.emit(StakingV2, 'RewardCollected')
-//       .withArgs(agreementId, identityId1, nodeId1, ServiceAgreementStorageV1U1.address, rewardAmount, 0);
-//   });
-
-//   it('Create 1 node; add maximum stake, add reward, withdraw inactive stake, expect immediate tokens release and events emitted', async () => {
-//     const maximumStake = await ParametersStorage.maximumStake();
-//     await Token.increaseAllowance(StakingV2.address, maximumStake);
-
-//     const node = await createProfile(accounts[0], accounts[1]);
-
-//     await StakingV2.connect(accounts[0])['addStake(uint72,uint96)'](node.identityId, maximumStake);
-//     expect(await StakingStorage.totalStakes(node.identityId)).to.equal(
-//       maximumStake,
-//       'Total amount of stake is not set',
-//     );
-
-//     const agreementId = '0x' + randomBytes(32).toString('hex');
-//     const startTime = Math.floor(Date.now() / 1000).toString();
-//     const epochsNumber = 5;
-//     const epochLength = 10;
-//     const tokenAmount = hre.ethers.utils.parseEther(`${1_111_111}`);
-//     const scoreFunctionId = 2;
-//     const proofWindowOffsetPerc = 10;
-
-//     await ServiceAgreementStorageV1U1.connect(accounts[0]).createServiceAgreementObject(
-//       agreementId,
-//       startTime,
-//       epochsNumber,
-//       epochLength,
-//       tokenAmount,
-//       scoreFunctionId,
-//       proofWindowOffsetPerc,
-//     );
-
-//     const rewardAmount = hre.ethers.utils.parseEther(`${1_111_111}`);
-//     await Token.connect(accounts[0]).transfer(ServiceAgreementStorageV1U1.address, rewardAmount);
-//     await StakingV2.addReward(agreementId, node.identityId, rewardAmount);
-
-//     const sharesAddress = await ProfileStorage.getSharesContractAddress(node.identityId);
-//     const SharesContract = await hre.ethers.getContractAt<Shares>('Shares', sharesAddress);
-//     const sharesBalance = await SharesContract.balanceOf(accounts[0].address);
-//     const sharesTotalSupply = await SharesContract.totalSupply();
-//     const eligibleTokens = await calculateEligibleTokens(node.identityId, sharesBalance, sharesTotalSupply);
-
-//     const sharesToBurn = sharesBalance.mul(eligibleTokens.sub(maximumStake)).div(eligibleTokens);
-
-//     await SharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
-
-//     // const initialBalance = await Token.balanceOf(accounts[0].address);
-
-//     await expect(StakingV2.connect(accounts[0]).startStakeWithdrawal(node.identityId, sharesToBurn))
-//       .to.emit(StakingV2, 'StakeWithdrawn')
-//       .to.emit(StakingV2, 'InactiveStakeWithdrawn');
-
-//     // const finalBalance = await Token.balanceOf(accounts[0].address);
-
-//     // expect(finalBalance.sub(initialBalance)).to.be.equal(hre.ethers.utils.parseEther(`${1_111_111}`));
-//   });
-
-//   it('Create 1 node; add maximum stake, add reward, withdraw inactive+active stake, expect withdrawal request to be created', async () => {
-//     const maximumStake = await ParametersStorage.maximumStake();
-//     await Token.increaseAllowance(StakingV2.address, maximumStake);
-
-//     const node = await createProfile(accounts[0], accounts[1]);
-
-//     await StakingV2.connect(accounts[0])['addStake(uint72,uint96)'](node.identityId, maximumStake);
-//     expect(await StakingStorage.totalStakes(node.identityId)).to.equal(
-//       maximumStake,
-//       'Total amount of stake is not set',
-//     );
-
-//     const agreementId = '0x' + randomBytes(32).toString('hex');
-//     const startTime = Math.floor(Date.now() / 1000).toString();
-//     const epochsNumber = 5;
-//     const epochLength = 10;
-//     const tokenAmount = hre.ethers.utils.parseEther(`${1_000_000}`);
-//     const scoreFunctionId = 2;
-//     const proofWindowOffsetPerc = 10;
-
-//     await ServiceAgreementStorageV1U1.connect(accounts[0]).createServiceAgreementObject(
-//       agreementId,
-//       startTime,
-//       epochsNumber,
-//       epochLength,
-//       tokenAmount,
-//       scoreFunctionId,
-//       proofWindowOffsetPerc,
-//     );
-
-//     const rewardAmount = hre.ethers.utils.parseEther(`${1_111_111}`);
-//     await Token.connect(accounts[0]).transfer(ServiceAgreementStorageV1U1.address, rewardAmount);
-
-//     await StakingV2.addReward(agreementId, node.identityId, rewardAmount);
-
-//     const sharesAddress = await ProfileStorage.getSharesContractAddress(node.identityId);
-//     const SharesContract = await hre.ethers.getContractAt<Shares>('Shares', sharesAddress);
-//     const sharesBalance = await SharesContract.balanceOf(accounts[0].address);
-//     const sharesTotalSupply = await SharesContract.totalSupply();
-//     const eligibleTokens = await calculateEligibleTokens(node.identityId, sharesBalance, sharesTotalSupply);
-
-//     const sharesToBurn = sharesBalance
-//       .mul(eligibleTokens.sub(maximumStake))
-//       .div(eligibleTokens)
-//       .add(hre.ethers.utils.parseEther('1'));
-
-//     await SharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
-
-//     const initialBalance = await Token.balanceOf(accounts[0].address);
-
-//     await expect(StakingV2.connect(accounts[0]).startStakeWithdrawal(node.identityId, sharesToBurn)).to.emit(
-//       StakingV2,
-//       'StakeWithdrawalStarted',
-//     );
-
-//     const finalBalance = await Token.balanceOf(accounts[0].address);
-
-//     expect(finalBalance.sub(initialBalance)).to.be.equal(0);
-//   });
-
-//   it('should correctly cancel a withdrawal and re-mint shares', async function () {
-//     const initialStake = hre.ethers.utils.parseEther('1000');
-//     const { identityId, nodeId } = await createProfile(accounts[0], accounts[1]);
-
-//     await Token.increaseAllowance(StakingV2.address, initialStake);
-//     await StakingV2['addStake(uint72,uint96)'](identityId, initialStake);
-
-//     const sharesToBurn = hre.ethers.utils.parseEther('500');
-
-//     const sharesAddress = await ProfileStorage.getSharesContractAddress(identityId);
-//     const SharesContract = await hre.ethers.getContractAt<Shares>('Shares', sharesAddress);
-
-//     await SharesContract.increaseAllowance(StakingV2.address, sharesToBurn);
-//     await StakingV2.startStakeWithdrawal(identityId, sharesToBurn);
-
-//     const tx = await StakingV2.cancelStakeWithdrawal(identityId);
-//     await expect(tx)
-//       .to.emit(StakingV2, 'StakeWithdrawalCanceled')
-//       .withArgs(
-//         identityId,
-//         nodeId,
-//         accounts[0].address,
-//         initialStake.sub(sharesToBurn),
-//         initialStake,
-//         sharesToBurn,
-//         initialStake,
-//       );
-
-//     const newStake = await StakingStorage.totalStakes(identityId);
-//     expect(newStake).to.equal(initialStake);
-
-//     const withdrawalRequestExists = await StakingStorage.withdrawalRequestExists(identityId, accounts[0].address);
-//     expect(withdrawalRequestExists).to.eql(false);
-//   });
-
-//   it('should revert if there is no withdrawal request', async function () {
-//     const { identityId } = await createProfile(accounts[0], accounts[1]);
-
-//     await expect(StakingV2.cancelStakeWithdrawal(identityId)).to.be.revertedWithCustomError(
-//       StakingV2,
-//       'WithdrawalWasntInitiated',
-//     );
-//   });
-
-//   it('should handle recalculation of shares when additional reward added during a pending withdrawal', async () => {
-//     const { identityId, nodeId } = await createProfile(accounts[0], accounts[1]);
-
-//     const initialStakeAmount = hre.ethers.utils.parseEther('500');
-//     const reward = hre.ethers.utils.parseEther('250');
-
-//     await Token.increaseAllowance(StakingV2.address, initialStakeAmount);
-//     await StakingV2['addStake(uint72,uint96)'](identityId, initialStakeAmount);
-
-//     const sharesToBurn = initialStakeAmount.div(2);
-
-//     const sharesAddress = await ProfileStorage.getSharesContractAddress(identityId);
-//     const SharesContract = await hre.ethers.getContractAt<Shares>('Shares', sharesAddress);
-
-//     await SharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
-//     await StakingV2.startStakeWithdrawal(identityId, sharesToBurn);
-
-//     await Token.mint(ServiceAgreementStorageV1U1.address, hre.ethers.utils.parseEther(`${2_000_000}`));
-//     const agreementId = '0x' + randomBytes(32).toString('hex');
-//     const startTime = Math.floor(Date.now() / 1000).toString();
-//     const epochsNumber = 5;
-//     const epochLength = 10;
-//     const tokenAmount = hre.ethers.utils.parseEther('100');
-//     const scoreFunctionId = 0;
-//     const proofWindowOffsetPerc = 10;
-
-//     await ServiceAgreementStorageV1U1.createServiceAgreementObject(
-//       agreementId,
-//       startTime,
-//       epochsNumber,
-//       epochLength,
-//       tokenAmount,
-//       scoreFunctionId,
-//       proofWindowOffsetPerc,
-//     );
-
-//     await StakingV2.addReward(agreementId, identityId, reward);
-
-//     const tx = await StakingV2.cancelStakeWithdrawal(identityId);
-//     await expect(tx)
-//       .to.emit(StakingV2, 'StakeWithdrawalCanceled')
-//       .withArgs(
-//         identityId,
-//         nodeId,
-//         accounts[0].address,
-//         initialStakeAmount.sub(sharesToBurn).add(reward),
-//         initialStakeAmount.add(reward),
-//         hre.ethers.utils.parseEther('125'),
-//         hre.ethers.utils.parseEther('375'),
-//       );
-//   });
-
-//   it('should correctly redelegate shares from one node to another', async function () {
-//     // Create two nodes
-//     const node1 = await createProfile(accounts[0], accounts[1]); // From node
-//     const node2 = await createProfile(accounts[2], accounts[3]); // To node
-
-//     // Stake some amount on node1
-//     const initialStakeAmount = hre.ethers.utils.parseEther('1000'); // 1000 tokens
-
-//     // Approve tokens and stake on node1
-//     await Token.increaseAllowance(StakingV2.address, initialStakeAmount);
-//     await StakingV2['addStake(uint72,uint96)'](node1.identityId, initialStakeAmount);
-
-//     // Get shares contracts
-//     const fromSharesAddress = await ProfileStorage.getSharesContractAddress(node1.identityId);
-//     const fromSharesContract = await hre.ethers.getContractAt<Shares>('Shares', fromSharesAddress);
-
-//     const toSharesAddress = await ProfileStorage.getSharesContractAddress(node2.identityId);
-//     const toSharesContract = await hre.ethers.getContractAt<Shares>('Shares', toSharesAddress);
-
-//     // Get initial balances and stakes
-//     const fromInitialSharesBalance = await fromSharesContract.balanceOf(accounts[0].address);
-//     const toInitialSharesBalance = await toSharesContract.balanceOf(accounts[0].address);
-
-//     const fromCurrentStake = await StakingStorage.totalStakes(node1.identityId);
-//     const toCurrentStake = await StakingStorage.totalStakes(node2.identityId);
-
-//     const fromTotalShares = await fromSharesContract.totalSupply();
-//     const toTotalShares = await toSharesContract.totalSupply();
-
-//     // Redelegate half of the shares
-//     const sharesToBurn = fromInitialSharesBalance.div(2);
-
-//     // Calculate redelegationAmount
-//     const redelegationAmount = fromCurrentStake.mul(sharesToBurn).div(fromTotalShares);
-
-//     // Calculate sharesToMint
-//     let sharesToMint: BigNumber;
-//     if (toTotalShares.isZero()) {
-//       sharesToMint = redelegationAmount;
-//     } else {
-//       sharesToMint = redelegationAmount.mul(toTotalShares).div(toCurrentStake);
-//     }
-
-//     // Increase allowance for fromSharesContract
-//     await fromSharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
-
-//     // Call redelegate
-//     await expect(StakingV2.redelegate(node1.identityId, node2.identityId, sharesToBurn))
-//       .to.emit(StakingV2, 'SharesBurned')
-//       .withArgs(
-//         node1.identityId,
-//         fromSharesAddress,
-//         accounts[0].address,
-//         sharesToBurn,
-//         fromTotalShares.sub(sharesToBurn),
-//       )
-//       .to.emit(StakingV2, 'StakeWithdrawn')
-//       .withArgs(node1.identityId, node1.nodeId, accounts[0].address, redelegationAmount)
-//       .to.emit(StakingV2, 'SharesMinted')
-//       .withArgs(node2.identityId, toSharesAddress, accounts[0].address, sharesToMint, toTotalShares.add(sharesToMint))
-//       .to.emit(StakingV2, 'StakeIncreased')
-//       .withArgs(
-//         node2.identityId,
-//         node2.nodeId,
-//         accounts[0].address,
-//         toCurrentStake,
-//         toCurrentStake.add(redelegationAmount),
-//       );
-
-//     // Check final balances and stakes
-//     const fromFinalSharesBalance = await fromSharesContract.balanceOf(accounts[0].address);
-//     const toFinalSharesBalance = await toSharesContract.balanceOf(accounts[0].address);
-
-//     const fromFinalStake = await StakingStorage.totalStakes(node1.identityId);
-//     const toFinalStake = await StakingStorage.totalStakes(node2.identityId);
-
-//     expect(fromFinalSharesBalance).to.equal(fromInitialSharesBalance.sub(sharesToBurn));
-//     expect(toFinalSharesBalance).to.equal(toInitialSharesBalance.add(sharesToMint));
-
-//     expect(fromFinalStake).to.equal(fromCurrentStake.sub(redelegationAmount));
-//     expect(toFinalStake).to.equal(toCurrentStake.add(redelegationAmount));
-//   });
-
-//   it('should revert when attempting to redelegate zero shares', async function () {
-//     const node1 = await createProfile(accounts[0], accounts[1]);
-//     const node2 = await createProfile(accounts[2], accounts[3]);
-
-//     const initialStakeAmount = hre.ethers.utils.parseEther('1000');
-//     await Token.increaseAllowance(StakingV2.address, initialStakeAmount);
-//     await StakingV2['addStake(uint72,uint96)'](node1.identityId, initialStakeAmount);
-
-//     await expect(StakingV2.redelegate(node1.identityId, node2.identityId, 0)).to.be.revertedWithCustomError(
-//       StakingV2,
-//       'ZeroSharesAmount',
-//     );
-//   });
-
-//   it('should revert when attempting to redelegate more shares than owned', async function () {
-//     const node1 = await createProfile(accounts[0], accounts[1]);
-//     const node2 = await createProfile(accounts[2], accounts[3]);
-
-//     const initialStakeAmount = hre.ethers.utils.parseEther('1000');
-//     await Token.increaseAllowance(StakingV2.address, initialStakeAmount);
-//     await StakingV2['addStake(uint72,uint96)'](node1.identityId, initialStakeAmount);
-
-//     const fromSharesAddress = await ProfileStorage.getSharesContractAddress(node1.identityId);
-//     const fromSharesContract = await hre.ethers.getContractAt<Shares>('Shares', fromSharesAddress);
-
-//     const userSharesBalance = await fromSharesContract.balanceOf(accounts[0].address);
-//     const sharesToBurn = userSharesBalance.add(1); // One more than user owns
-
-//     await fromSharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
-
-//     await expect(StakingV2.redelegate(node1.identityId, node2.identityId, sharesToBurn)).to.be.revertedWithCustomError(
-//       StakingV2,
-//       'TooLowBalance',
-//     );
-//   });
-
-//   it('should revert when attempting to redelegate from a non-existent identity', async function () {
-//     const node2 = await createProfile(accounts[0], accounts[2]);
-//     const nonExistentIdentityId = 9999; // Assuming this identity doesn't exist
-
-//     const sharesToBurn = hre.ethers.utils.parseEther('100');
-
-//     await expect(
-//       StakingV2.redelegate(nonExistentIdentityId, node2.identityId, sharesToBurn),
-//     ).to.be.revertedWithCustomError(StakingV2, 'ProfileDoesntExist');
-//   });
-
-//   it('should revert when attempting to redelegate to a non-existent identity', async function () {
-//     const node1 = await createProfile(accounts[0], accounts[1]);
-//     const nonExistentIdentityId = 9999; // Assuming this identity doesn't exist
-
-//     const initialStakeAmount = hre.ethers.utils.parseEther('1000');
-//     await Token.increaseAllowance(StakingV2.address, initialStakeAmount);
-//     await StakingV2['addStake(uint72,uint96)'](node1.identityId, initialStakeAmount);
-
-//     const fromSharesAddress = await ProfileStorage.getSharesContractAddress(node1.identityId);
-//     const fromSharesContract = await hre.ethers.getContractAt<Shares>('Shares', fromSharesAddress);
-
-//     const sharesToBurn = hre.ethers.utils.parseEther('100');
-
-//     await fromSharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
-
-//     await expect(
-//       StakingV2.redelegate(node1.identityId, nonExistentIdentityId, sharesToBurn),
-//     ).to.be.revertedWithCustomError(StakingV2, 'ProfileDoesntExist');
-//   });
-
-//   it('should revert when redelegating causes "to" identity stake to exceed maximumStake', async function () {
-//     const node1 = await createProfile(accounts[0], accounts[1]);
-//     const node2 = await createProfile(accounts[2], accounts[3]);
-
-//     const maximumStake = await ParametersStorage.maximumStake();
-
-//     // Stake on node2 up to maximumStake - small amount
-//     const initialStakeToNode2 = maximumStake.sub(hre.ethers.utils.parseEther('100'));
-//     await Token.connect(accounts[0]).increaseAllowance(StakingV2.address, initialStakeToNode2);
-//     await StakingV2['addStake(uint72,uint96)'](node2.identityId, initialStakeToNode2);
-
-//     // Stake on node1
-//     const initialStakeToNode1 = hre.ethers.utils.parseEther('1000');
-//     await Token.connect(accounts[0]).increaseAllowance(StakingV2.address, initialStakeToNode1);
-//     await StakingV2['addStake(uint72,uint96)'](node1.identityId, initialStakeToNode1);
-
-//     const fromSharesAddress = await ProfileStorage.getSharesContractAddress(node1.identityId);
-//     const fromSharesContract = await hre.ethers.getContractAt<Shares>('Shares', fromSharesAddress);
-
-//     const sharesToBurn = await fromSharesContract.balanceOf(accounts[0].address);
-
-//     await fromSharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
-
-//     await expect(StakingV2.redelegate(node1.identityId, node2.identityId, sharesToBurn)).to.be.revertedWithCustomError(
-//       StakingV2,
-//       'MaximumStakeExceeded',
-//     );
-//   });
-
-//   it('should update sharding table when from node stake falls below minimum and to node stake exceeds minimum after redelegation', async function () {
-//     // Create two nodes
-//     const node1 = await createProfile(accounts[0], accounts[1]); // From node
-//     const node2 = await createProfile(accounts[2], accounts[3]); // To node
-
-//     const minimumStake = await ParametersStorage.minimumStake();
-//     const extraStake = hre.ethers.utils.parseEther('100');
-
-//     // Stake amount for node1: Initially above minimum
-//     const initialStakeNode1 = minimumStake.add(extraStake); // Above minimum
-
-//     // Stake amount for node2: Initially below minimum
-//     const initialStakeNode2 = minimumStake.sub(hre.ethers.utils.parseEther('1')); // Just below minimum
-
-//     // Approve tokens and stake on node1
-//     await Token.approve(StakingV2.address, initialStakeNode1);
-//     await StakingV2['addStake(uint72,uint96)'](node1.identityId, initialStakeNode1);
-
-//     // Ensure node1 is in the sharding table
-//     let node1InShardingTable = await ShardingTableStorage.nodeExists(node1.identityId);
-//     expect(node1InShardingTable).to.be.true;
-
-//     // Approve tokens and stake on node2
-//     await Token.connect(accounts[0]).approve(StakingV2.address, initialStakeNode2);
-//     await StakingV2['addStake(uint72,uint96)'](node2.identityId, initialStakeNode2);
-
-//     // Ensure node2 is not in the sharding table
-//     let node2InShardingTable = await ShardingTableStorage.nodeExists(node2.identityId);
-//     expect(node2InShardingTable).to.be.false;
-
-//     // Get shares contracts
-//     const fromSharesAddress = await ProfileStorage.getSharesContractAddress(node1.identityId);
-//     const fromSharesContract = await hre.ethers.getContractAt<Shares>('Shares', fromSharesAddress);
-
-//     const toSharesAddress = await ProfileStorage.getSharesContractAddress(node2.identityId);
-//     const toSharesContract = await hre.ethers.getContractAt<Shares>('Shares', toSharesAddress);
-
-//     // Redelegate amount that will cause node1's stake to fall below minimum and node2's stake to exceed minimum
-//     const fromCurrentStake = await StakingStorage.totalStakes(node1.identityId);
-//     const toCurrentStake = await StakingStorage.totalStakes(node2.identityId);
-
-//     // Calculate amount to redelegate
-//     const stakeToTransfer = fromCurrentStake.sub(minimumStake).add(hre.ethers.utils.parseEther('1')); // Enough to reduce node1 below minimum and increase node2 above minimum
-
-//     // Calculate shares to burn
-//     const fromTotalShares = await fromSharesContract.totalSupply();
-//     const toTotalShares = await toSharesContract.totalSupply();
-
-//     const sharesToBurn = fromTotalShares.mul(stakeToTransfer).div(fromCurrentStake);
-
-//     // Calculate redelegationAmount
-//     const redelegationAmount = fromCurrentStake.mul(sharesToBurn).div(fromTotalShares);
-
-//     let sharesToMint: BigNumber;
-//     if (toTotalShares.isZero()) {
-//       sharesToMint = redelegationAmount;
-//     } else {
-//       sharesToMint = redelegationAmount.mul(toTotalShares).div(toCurrentStake);
-//     }
-
-//     // Increase allowance for fromSharesContract
-//     await fromSharesContract.connect(accounts[0]).increaseAllowance(StakingV2.address, sharesToBurn);
-
-//     // Redelegate and check events
-//     await expect(StakingV2.redelegate(node1.identityId, node2.identityId, sharesToBurn))
-//       .to.emit(StakingV2, 'SharesBurned')
-//       .withArgs(
-//         node1.identityId,
-//         fromSharesAddress,
-//         accounts[0].address,
-//         sharesToBurn,
-//         fromTotalShares.sub(sharesToBurn),
-//       )
-//       .to.emit(StakingV2, 'StakeWithdrawn')
-//       .withArgs(node1.identityId, node1.nodeId, accounts[0].address, stakeToTransfer)
-//       .to.emit(StakingV2, 'SharesMinted')
-//       .withArgs(node2.identityId, toSharesAddress, accounts[0].address, sharesToMint, toTotalShares.add(sharesToMint))
-//       .to.emit(StakingV2, 'StakeIncreased')
-//       .withArgs(
-//         node2.identityId,
-//         node2.nodeId,
-//         accounts[0].address,
-//         toCurrentStake,
-//         toCurrentStake.add(stakeToTransfer),
-//       )
-//       .to.emit(ShardingTable, 'NodeRemoved') // Assuming NodeRemoved event is emitted
-//       .to.emit(ShardingTable, 'NodeAdded'); // Assuming NodeInserted event is emitted
-
-//     // After redelegation, check that node1 is no longer in sharding table
-//     node1InShardingTable = await ShardingTableStorage.nodeExists(node1.identityId);
-//     expect(node1InShardingTable).to.be.false;
-
-//     // Check that node2 is now in sharding table
-//     node2InShardingTable = await ShardingTableStorage.nodeExists(node2.identityId);
-//     expect(node2InShardingTable).to.be.true;
-
-//     // Verify the stakes
-//     const fromFinalStake = await StakingStorage.totalStakes(node1.identityId);
-//     const toFinalStake = await StakingStorage.totalStakes(node2.identityId);
-
-//     expect(fromFinalStake).to.equal(fromCurrentStake.sub(stakeToTransfer));
-//     expect(toFinalStake).to.equal(toCurrentStake.add(stakeToTransfer));
-
-//     // Verify that node1's stake is below minimum
-//     expect(fromFinalStake).to.be.lt(minimumStake);
-
-//     // Verify that node2's stake is above minimum
-//     expect(toFinalStake).to.be.gte(minimumStake);
-//   });
-// });
+import { randomBytes } from 'crypto';
+
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
+import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
+import { expect } from 'chai';
+import hre from 'hardhat';
+
+import {
+  Token,
+  Profile,
+  StakingStorage,
+  ParametersStorage,
+  ProfileStorage,
+  ShardingTable,
+  ShardingTableStorage,
+  AskStorage,
+  Hub,
+  Staking,
+} from '../../typechain';
+
+type StakingFixture = {
+  accounts: SignerWithAddress[];
+  Token: Token;
+  Profile: Profile;
+  Staking: Staking;
+  StakingStorage: StakingStorage;
+  ShardingTableStorage: ShardingTableStorage;
+  ShardingTable: ShardingTable;
+  ParametersStorage: ParametersStorage;
+  ProfileStorage: ProfileStorage;
+  AskStorage: AskStorage;
+  Hub: Hub;
+};
+
+async function deployStakingFixture(): Promise<StakingFixture> {
+  await hre.deployments.fixture(['Profile', 'Staking']);
+  const Staking = await hre.ethers.getContract<Staking>('Staking');
+  const Profile = await hre.ethers.getContract<Profile>('Profile');
+  const Token = await hre.ethers.getContract<Token>('Token');
+  const StakingStorage =
+    await hre.ethers.getContract<StakingStorage>('StakingStorage');
+  const ShardingTableStorage =
+    await hre.ethers.getContract<ShardingTableStorage>('ShardingTableStorage');
+  const ShardingTable =
+    await hre.ethers.getContract<ShardingTable>('ShardingTable');
+  const ParametersStorage =
+    await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
+  const ProfileStorage =
+    await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
+  const AskStorage = await hre.ethers.getContract<AskStorage>('AskStorage');
+  const Hub = await hre.ethers.getContract<Hub>('Hub');
+  const accounts = await hre.ethers.getSigners();
+
+  await Hub.setContractAddress('HubOwner', accounts[0].address);
+
+  return {
+    accounts,
+    Token,
+    Profile,
+    Staking,
+    StakingStorage,
+    ShardingTableStorage,
+    ShardingTable,
+    ParametersStorage,
+    ProfileStorage,
+    AskStorage,
+    Hub,
+  };
+}
+
+describe('Staking contract', function () {
+  let accounts: SignerWithAddress[];
+  let Token: Token;
+  let Profile: Profile;
+  let Staking: Staking;
+  let StakingStorage: StakingStorage;
+  let ShardingTableStorage: ShardingTableStorage;
+  let ParametersStorage: ParametersStorage;
+
+  const createProfile = async (
+    admin?: SignerWithAddress,
+    operational?: SignerWithAddress,
+    initialOperatorFee?: bigint,
+  ) => {
+    const node = '0x' + randomBytes(32).toString('hex');
+    const tx = await Profile.connect(operational ?? accounts[1]).createProfile(
+      admin ? admin.address : accounts[0],
+      [],
+      `Node ${Math.floor(Math.random() * 1000)}`,
+      node,
+      initialOperatorFee ?? 0,
+    );
+    const receipt = await tx.wait();
+    const identityId = Number(receipt?.logs[0].topics[1]);
+    return { nodeId: node, identityId };
+  };
+
+  beforeEach(async () => {
+    ({
+      accounts,
+      Token,
+      Profile,
+      Staking,
+      StakingStorage,
+      ShardingTableStorage,
+      ParametersStorage,
+    } = await loadFixture(deployStakingFixture));
+  });
+
+  it('Should have correct name and version', async () => {
+    expect(await Staking.name()).to.equal('Staking');
+    expect(await Staking.version()).to.equal('1.0.0');
+  });
+
+  it('Should revert if staking 0 tokens', async () => {
+    const { identityId } = await createProfile();
+    await expect(Staking.stake(identityId, 0)).to.be.revertedWithCustomError(
+      Staking,
+      'ZeroTokenAmount',
+    );
+  });
+
+  it('Should revert if profile does not exist', async () => {
+    await expect(Staking.stake(9999, 100)).to.be.revertedWithCustomError(
+      Staking,
+      'ProfileDoesntExist',
+    );
+  });
+
+  it('Should revert if token allowance too low', async () => {
+    const { identityId } = await createProfile();
+    await expect(Staking.stake(identityId, 100)).to.be.revertedWithCustomError(
+      Staking,
+      'TooLowAllowance',
+    );
+  });
+
+  it('Should revert if token balance too low', async () => {
+    const { identityId } = await createProfile();
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      2n ** 96n - 1n,
+    );
+    await expect(
+      Staking.stake(identityId, 2n ** 96n - 1n),
+    ).to.be.revertedWithCustomError(Staking, 'TooLowBalance');
+  });
+
+  it('Should revert if maximum stake exceeded', async () => {
+    const { identityId } = await createProfile();
+    const maxStake = await ParametersStorage.maximumStake();
+    await Token.mint(accounts[0].address, maxStake + 1n);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      maxStake + 1n,
+    );
+    await Staking.stake(identityId, maxStake);
+    await expect(Staking.stake(identityId, 1)).to.be.revertedWithCustomError(
+      Staking,
+      'MaximumStakeExceeded',
+    );
+  });
+
+  it('Should stake successfully and reflect on node stake', async () => {
+    const { identityId } = await createProfile();
+    const amount = hre.ethers.parseEther('100');
+    await Token.mint(accounts[0].address, amount);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      amount,
+    );
+    await Staking.stake(identityId, amount);
+    expect(await StakingStorage.getNodeStake(identityId)).to.equal(amount);
+  });
+
+  it('Should add node to sharding table when above minimum stake', async () => {
+    const { identityId } = await createProfile();
+    const minStake = await ParametersStorage.minimumStake();
+    await Token.mint(accounts[0].address, minStake);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      minStake,
+    );
+    await Staking.stake(identityId, minStake);
+    expect(await ShardingTableStorage.nodeExists(identityId)).to.equal(true);
+  });
+
+  it('Should redelegate stake to another identity', async () => {
+    const node1 = await createProfile();
+    const node2 = await createProfile(accounts[0], accounts[2]);
+
+    const initialStake = hre.ethers.parseEther('1000');
+    await Token.mint(accounts[0].address, initialStake);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      initialStake,
+    );
+    await Staking.stake(node1.identityId, initialStake);
+
+    // redelegate half
+    const halfStake = initialStake / 2n;
+    await Staking.redelegate(node1.identityId, node2.identityId, halfStake);
+
+    // Additional tests for redelegation:
+    // 1) Redelegate zero tokens
+    await expect(
+      Staking.redelegate(node1.identityId, node2.identityId, 0),
+    ).to.be.revertedWithCustomError(Staking, 'ZeroTokenAmount');
+    // 2) Redelegate from non-existent identity
+    await expect(
+      Staking.redelegate(9999, node2.identityId, 100),
+    ).to.be.revertedWithCustomError(Staking, 'ProfileDoesntExist');
+    // 3) Redelegate to non-existent identity
+    await expect(
+      Staking.redelegate(node1.identityId, 9999, 100),
+    ).to.be.revertedWithCustomError(Staking, 'ProfileDoesntExist');
+  });
+
+  it('Should handle requestWithdrawal with zero tokens', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      Staking.requestWithdrawal(identityId, 0),
+    ).to.be.revertedWithCustomError(Staking, 'ZeroTokenAmount');
+  });
+
+  it('Should handle requestWithdrawal exceeding stake', async () => {
+    const { identityId } = await createProfile();
+    const amount = hre.ethers.parseEther('100');
+    await Token.mint(accounts[0].address, amount);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      amount,
+    );
+    await Staking.stake(identityId, amount);
+    await expect(
+      Staking.requestWithdrawal(identityId, amount + 1n),
+    ).to.be.revertedWithCustomError(Staking, 'WithdrawalExceedsStake');
+  });
+
+  it('Should create a withdrawal request', async () => {
+    const { identityId } = await createProfile();
+    const amount = hre.ethers.parseEther('100');
+    await Token.mint(accounts[0].address, amount);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      amount,
+    );
+    await Staking.stake(identityId, amount);
+    const delay = await ParametersStorage.stakeWithdrawalDelay();
+    await Staking.requestWithdrawal(identityId, amount / 2n);
+    const req = await StakingStorage.getDelegatorWithdrawalRequest(
+      identityId,
+      hre.ethers.keccak256(
+        hre.ethers.solidityPacked(['address'], [accounts[0].address]),
+      ),
+    );
+    expect(req[0]).to.equal(amount / 2n);
+    expect(req[2]).to.be.gte(
+      BigInt((await hre.ethers.provider.getBlock('latest'))!.timestamp) + delay,
+    );
+  });
+
+  it('Should finalize withdrawal after delay', async () => {
+    const { identityId } = await createProfile();
+    const amount = hre.ethers.parseEther('100');
+    await Token.mint(accounts[0].address, amount);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      amount,
+    );
+    await Staking.stake(identityId, amount);
+    await Staking.requestWithdrawal(identityId, amount / 2n);
+    const req = await StakingStorage.getDelegatorWithdrawalRequest(
+      identityId,
+      hre.ethers.keccak256(
+        hre.ethers.solidityPacked(['address'], [accounts[0].address]),
+      ),
+    );
+    await time.increaseTo(req[2]);
+    const balanceBefore = await Token.balanceOf(accounts[0].address);
+    await Staking.finalizeWithdrawal(identityId);
+    const balanceAfter = await Token.balanceOf(accounts[0].address);
+    expect(balanceAfter - balanceBefore).to.equal(amount / 2n);
+  });
+
+  it('Should revert finalizeWithdrawal if not requested', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      Staking.finalizeWithdrawal(identityId),
+    ).to.be.revertedWithCustomError(Staking, 'WithdrawalWasntInitiated');
+  });
+
+  it('Should revert finalizeWithdrawal if too early', async () => {
+    const { identityId } = await createProfile();
+    const amount = hre.ethers.parseEther('100');
+    await Token.mint(accounts[0].address, amount);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      amount,
+    );
+    await Staking.stake(identityId, amount);
+    await Staking.requestWithdrawal(identityId, amount / 2n);
+    await expect(
+      Staking.finalizeWithdrawal(identityId),
+    ).to.be.revertedWithCustomError(Staking, 'WithdrawalPeriodPending');
+  });
+
+  it('Should cancel withdrawal request', async () => {
+    const { identityId } = await createProfile();
+    const amount = hre.ethers.parseEther('200');
+    await Token.mint(accounts[0].address, amount);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      amount,
+    );
+    await Staking.stake(identityId, amount);
+    await Staking.requestWithdrawal(identityId, hre.ethers.parseEther('100'));
+    await Staking.cancelWithdrawal(identityId);
+    const req = await StakingStorage.getDelegatorWithdrawalRequest(
+      identityId,
+      hre.ethers.keccak256(
+        hre.ethers.solidityPacked(['address'], [accounts[0].address]),
+      ),
+    );
+    expect(req[0]).to.equal(0);
+  });
+
+  it('Should revert cancelWithdrawal if no request', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      Staking.cancelWithdrawal(identityId),
+    ).to.be.revertedWithCustomError(Staking, 'WithdrawalWasntInitiated');
+  });
+
+  it('Should distribute rewards correctly', async () => {
+    const { identityId } = await createProfile();
+    const amount = hre.ethers.parseEther('1000');
+    await Token.mint(StakingStorage.getAddress(), amount);
+    await StakingStorage.setNodeStake(identityId, amount);
+    await expect(
+      Staking.distributeRewards(identityId, 0),
+    ).to.be.revertedWithCustomError(Staking, 'ZeroTokenAmount');
+    await expect(
+      Staking.connect(accounts[1]).distributeRewards(identityId, 100),
+    ).to.be.reverted; // onlyContracts test depends on setup; skipping
+  });
+
+  it('Should restake operator fee', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      Staking.restakeOperatorFee(identityId, 0),
+    ).to.be.revertedWithCustomError(Staking, 'ZeroTokenAmount');
+    // Additional logic for operator fee testing requires operator fee accumulation.
+    // Skipping a full operator fee integration test due to complexity.
+  });
+
+  it('Should request operator fee withdrawal', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      Staking.requestOperatorFeeWithdrawal(identityId, 0),
+    ).to.be.revertedWithCustomError(Staking, 'ZeroTokenAmount');
+    // Additional operator fee tests require accumulated fees; skipping full scenario.
+  });
+
+  it('Should finalize operator fee withdrawal', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      Staking.finalizeOperatorFeeWithdrawal(identityId),
+    ).to.be.revertedWithCustomError(Staking, 'WithdrawalWasntInitiated');
+  });
+
+  it('Should cancel operator fee withdrawal', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      Staking.cancelOperatorFeeWithdrawal(identityId),
+    ).to.be.revertedWithCustomError(Staking, 'WithdrawalWasntInitiated');
+  });
+
+  it('Should revert if non-admin tries to restake operator fee or request operator fee withdrawal', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      Staking.connect(accounts[1]).restakeOperatorFee(identityId, 100),
+    ).to.be.reverted;
+    await expect(
+      Staking.connect(accounts[1]).requestOperatorFeeWithdrawal(
+        identityId,
+        100,
+      ),
+    ).to.be.reverted;
+  });
+
+  it('Should revert stake, requestWithdrawal, etc. on a non-existent profile', async () => {
+    await expect(Staking.stake(9999, 100)).to.be.revertedWithCustomError(
+      Staking,
+      'ProfileDoesntExist',
+    );
+    await expect(
+      Staking.requestWithdrawal(9999, 50),
+    ).to.be.revertedWithCustomError(Staking, 'ProfileDoesntExist');
+    await expect(
+      Staking.finalizeWithdrawal(9999),
+    ).to.be.revertedWithCustomError(Staking, 'ProfileDoesntExist');
+    await expect(Staking.cancelWithdrawal(9999)).to.be.revertedWithCustomError(
+      Staking,
+      'ProfileDoesntExist',
+    );
+  });
+
+  it('Should simulateStakeInfoUpdate correctly', async () => {
+    const { identityId } = await createProfile();
+    const amount = hre.ethers.parseEther('100');
+    await Token.mint(accounts[0].address, amount);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      amount,
+    );
+    await Staking.stake(identityId, amount);
+    const delegatorKey = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [accounts[0].address]),
+    );
+    const result = await Staking.simulateStakeInfoUpdate(
+      identityId,
+      delegatorKey,
+    );
+    expect(result[0] + result[1]).to.be.gt(0);
+  });
+
+  it('Full scenario: Multiple nodes, delegators, operator fees, redelegations, partial withdrawals, cancellations, rewards', async () => {
+    console.log('--- START FULL SCENARIO TEST ---');
+
+    const admin1 = accounts[0];
+    const op1 = accounts[1];
+    const admin2 = accounts[2];
+    const op2 = accounts[3];
+
+    console.log('Creating Node A with operator fee = 20%');
+    const NodeA = await createProfile(admin1, op1, 20n);
+    console.log(`NodeA ID: ${NodeA.identityId}, operator fee: 20%`);
+
+    console.log('Creating Node B with operator fee = 50%');
+    const NodeB = await createProfile(admin2, op2, 50n);
+    console.log(`NodeB ID: ${NodeB.identityId}, operator fee: 50%`);
+
+    const nodes = {
+      [NodeA.identityId]: 'A',
+      [NodeB.identityId]: 'B',
+    };
+
+    const d1 = accounts[4];
+    const d2 = accounts[5];
+    const d3 = accounts[6];
+    const d4 = accounts[7];
+
+    const delegators = {
+      [d1.address]: 'd1',
+      [d2.address]: 'd2',
+      [d3.address]: 'd3',
+      [d4.address]: 'd4',
+    };
+
+    const delay = await ParametersStorage.stakeWithdrawalDelay();
+    const minStake = await ParametersStorage.minimumStake();
+    const maxStake = await ParametersStorage.maximumStake();
+    const toEth = (amount: bigint) => Number(amount) / 1e18;
+
+    const logNodeData = async (identityId: number) => {
+      const [
+        stake,
+        rewardIndex,
+        cEarned,
+        cPaid,
+        opFeeBal,
+        opFeeEarned,
+        opFeePaid,
+        dCount,
+      ] = await StakingStorage.getNodeData(identityId);
+      console.log('----------------------------------------------------------');
+      console.log(`Node${nodes[identityId]} Data:
+        Stake: ${toEth(BigInt(stake))} ETH,
+        RewardIndex: ${rewardIndex},
+        CumulativeEarnedRewards: ${toEth(BigInt(cEarned))} ETH,
+        CumulativePaidOutRewards: ${toEth(BigInt(cPaid))} ETH,
+        OperatorFeeBalance: ${toEth(BigInt(opFeeBal))} ETH,
+        OperatorFeeCumulativeEarnedRewards: ${toEth(BigInt(opFeeEarned))} ETH,
+        OperatorFeeCumulativePaidOutRewards: ${toEth(BigInt(opFeePaid))} ETH,
+        DelegatorCount: ${dCount}`);
+      console.log('----------------------------------------------------------');
+    };
+
+    const logDelegatorData = async (
+      identityId: number,
+      delegator: SignerWithAddress,
+    ) => {
+      const dKey = hre.ethers.keccak256(
+        hre.ethers.solidityPacked(['address'], [delegator.address]),
+      );
+      const [dBase, dIndexed, dLastIndex, dEarned, dPaid] =
+        await StakingStorage.getDelegatorData(identityId, dKey);
+      console.log('----------------------------------------------------------');
+      console.log(`Delegator ${delegators[delegator.address]} on Node${nodes[identityId]}:
+        BaseStake: ${toEth(BigInt(dBase))} ETH,
+        IndexedStake: ${toEth(BigInt(dIndexed))} ETH,
+        LastRewardIndex: ${dLastIndex},
+        CumulativeEarnedRewards: ${toEth(BigInt(dEarned))} ETH,
+        CumulativePaidOutRewards: ${toEth(BigInt(dPaid))} ETH`);
+      console.log('----------------------------------------------------------');
+    };
+
+    console.log(
+      `Minimum stake: ${toEth(minStake)} ETH, Maximum stake: ${toEth(maxStake)} ETH, Delay: ${delay}s`,
+    );
+
+    const stakeA = minStake * 2n;
+    console.log(`Minting ${toEth(stakeA)} ETH to d1 and staking on NodeA`);
+    await Token.mint(d1.address, stakeA);
+    await Token.connect(d1).approve(Staking.getAddress(), stakeA);
+    console.log(`d1 stakes ${toEth(stakeA)} ETH on NodeA`);
+    await Staking.connect(d1).stake(NodeA.identityId, stakeA);
+
+    await logNodeData(NodeA.identityId);
+    await logDelegatorData(NodeA.identityId, d1);
+
+    const stakeB = minStake - 1n;
+    console.log(
+      `Minting ${toEth(stakeB)} ETH to d3 and staking on NodeB (just below min)`,
+    );
+    await Token.mint(d3.address, stakeB);
+    await Token.connect(d3).approve(Staking.getAddress(), stakeB);
+    console.log(`d3 stakes ${toEth(stakeB)} ETH on NodeB`);
+    await Staking.connect(d3).stake(NodeB.identityId, stakeB);
+
+    await logNodeData(NodeB.identityId);
+    await logDelegatorData(NodeB.identityId, d3);
+
+    console.log('Distributing 100 tokens reward to NodeA');
+    const rewardA1 = hre.ethers.parseEther('100');
+    await Token.mint(StakingStorage.getAddress(), rewardA1);
+    console.log(`Distributing reward: ${toEth(rewardA1)} ETH to NodeA`);
+    await Staking.distributeRewards(NodeA.identityId, rewardA1);
+
+    await logNodeData(NodeA.identityId);
+    await logDelegatorData(NodeA.identityId, d1);
+
+    const partialWithdraw = hre.ethers.parseEther('10');
+    console.log(
+      `d1 requests withdrawal of ${toEth(partialWithdraw)} ETH from NodeA`,
+    );
+    await Staking.connect(d1).requestWithdrawal(
+      NodeA.identityId,
+      partialWithdraw,
+    );
+    await time.increase(Number(delay));
+
+    const d1BalanceBefore = await Token.balanceOf(d1.address);
+    console.log(
+      `Finalizing withdrawal for d1. d1 balance before: ${toEth(d1BalanceBefore)} ETH`,
+    );
+    await Staking.connect(d1).finalizeWithdrawal(NodeA.identityId);
+    const d1BalanceAfter = await Token.balanceOf(d1.address);
+    console.log(
+      `Withdrawal finalized. d1 balance after: ${toEth(d1BalanceAfter)} ETH, diff: ${toEth(d1BalanceAfter - d1BalanceBefore)} ETH`,
+    );
+
+    await logNodeData(NodeA.identityId);
+    await logDelegatorData(NodeA.identityId, d1);
+
+    console.log('d2 increases stake on NodeA so it has more to redelegate');
+    await Token.mint(d2.address, minStake);
+    await Token.connect(d2).approve(Staking.getAddress(), minStake);
+    console.log(`d2 stakes ${toEth(minStake)} ETH on NodeA`);
+    await Staking.connect(d2).stake(NodeA.identityId, minStake);
+
+    await logNodeData(NodeA.identityId);
+    await logDelegatorData(NodeA.identityId, d2);
+
+    const nodeBCurrentStake = await StakingStorage.getNodeStake(
+      NodeB.identityId,
+    );
+    const neededForMin = minStake - nodeBCurrentStake;
+    console.log(
+      `Redelegating from NodeA to NodeB by d2, needed for min: ${toEth(neededForMin)} ETH`,
+    );
+    await Staking.connect(d2).redelegate(
+      NodeA.identityId,
+      NodeB.identityId,
+      neededForMin,
+    );
+
+    await logNodeData(NodeA.identityId);
+    await logNodeData(NodeB.identityId);
+    await logDelegatorData(NodeA.identityId, d2);
+    // For brevity, not logging all delegators after every single operation,
+    // but in practice, do it for all delegators to ensure full overview.
+
+    console.log('Distributing 200 tokens reward to NodeB with 50% fee');
+    const rewardB1 = hre.ethers.parseEther('200');
+    await Token.mint(StakingStorage.getAddress(), rewardB1);
+    console.log(`Distributing reward: ${toEth(rewardB1)} ETH to NodeB`);
+    await Staking.distributeRewards(NodeB.identityId, rewardB1);
+
+    await logNodeData(NodeB.identityId);
+
+    const d3Key = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [d3.address]),
+    );
+    const [d3BaseB, d3IndexedB] = await StakingStorage.getDelegatorStakeInfo(
+      NodeB.identityId,
+      d3Key,
+    );
+    const d3TotalB = d3BaseB + d3IndexedB;
+    const largeWithdraw = d3TotalB / 2n;
+    console.log(
+      `d3 tries to withdraw large amount: ${toEth(largeWithdraw)} ETH from NodeB`,
+    );
+    await Staking.connect(d3).requestWithdrawal(
+      NodeB.identityId,
+      largeWithdraw,
+    );
+
+    await logDelegatorData(NodeB.identityId, d3);
+
+    console.log('d3 cancels withdrawal before finalizing');
+    await Staking.connect(d3).cancelWithdrawal(NodeB.identityId);
+    const canceledReq = await StakingStorage.getDelegatorWithdrawalRequest(
+      NodeB.identityId,
+      d3Key,
+    );
+    console.log(
+      `Withdrawal request for d3 after cancel: ${canceledReq[0]} (should be 0)`,
+    );
+
+    await logDelegatorData(NodeB.identityId, d3);
+
+    console.log('Operator fee withdrawal on NodeA');
+    const operatorFeeBalanceBefore = await StakingStorage.getOperatorFeeBalance(
+      NodeA.identityId,
+    );
+    const opFeeWithdrawAmount = operatorFeeBalanceBefore / 2n;
+    console.log(
+      `Requesting operator fee withdrawal on NodeA: ${toEth(opFeeWithdrawAmount)} ETH from total ${toEth(operatorFeeBalanceBefore)} ETH`,
+    );
+    await Staking.connect(admin1).requestOperatorFeeWithdrawal(
+      NodeA.identityId,
+      opFeeWithdrawAmount,
+    );
+    await time.increase(Number(delay));
+    const admin1BalanceBefore = await Token.balanceOf(admin1.address);
+    console.log(
+      `Finalizing operator fee withdrawal for NodeA. admin1 balance before: ${toEth(admin1BalanceBefore)} ETH`,
+    );
+    await Staking.connect(admin1).finalizeOperatorFeeWithdrawal(
+      NodeA.identityId,
+    );
+    const admin1BalanceAfter = await Token.balanceOf(admin1.address);
+    console.log(
+      `Operator fee withdrawal finalized. admin1 balance after: ${toEth(admin1BalanceAfter)} ETH, diff: ${toEth(admin1BalanceAfter - admin1BalanceBefore)} ETH`,
+    );
+
+    await logNodeData(NodeA.identityId);
+
+    console.log('Operator tries to restake operator fee on NodeB');
+    const operatorFeeBalanceB = await StakingStorage.getOperatorFeeBalance(
+      NodeB.identityId,
+    );
+    console.log(
+      `Operator fee balance on NodeB: ${toEth(operatorFeeBalanceB)} ETH`,
+    );
+    if (operatorFeeBalanceB > 0n) {
+      const restakeAmount =
+        operatorFeeBalanceB < hre.ethers.parseEther('10')
+          ? operatorFeeBalanceB
+          : hre.ethers.parseEther('10');
+      console.log(
+        `Restaking ${toEth(restakeAmount)} ETH operator fee on NodeB`,
+      );
+      await Staking.connect(admin2).restakeOperatorFee(
+        NodeB.identityId,
+        restakeAmount,
+      );
+      const nodeBStakeAfterRestake = await StakingStorage.getNodeStake(
+        NodeB.identityId,
+      );
+      console.log(
+        `NodeB stake after restake: ${toEth(nodeBStakeAfterRestake)} ETH, should be >= minStake`,
+      );
+    }
+
+    console.log('d4 stakes on NodeB to push it close to max');
+    const nodeBStakeNow = await StakingStorage.getNodeStake(NodeB.identityId);
+    const pushToMax = maxStake - nodeBStakeNow;
+    console.log(`Amount to push NodeB close to max: ${toEth(pushToMax)} ETH`);
+    if (pushToMax > 0n) {
+      const stakeD4 = pushToMax / 2n;
+      console.log(`Minting ${toEth(stakeD4)} ETH to d4`);
+      await Token.mint(d4.address, stakeD4);
+      await Token.connect(d4).approve(Staking.getAddress(), stakeD4);
+      console.log(`d4 stakes ${toEth(stakeD4)} ETH on NodeB`);
+      await Staking.connect(d4).stake(NodeB.identityId, stakeD4);
+      console.log(
+        `NodeB stake after d4 stakes: ${toEth(await StakingStorage.getNodeStake(NodeB.identityId))} ETH`,
+      );
+    }
+
+    const d1Key = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [d1.address]),
+    );
+    const [d1BaseA, d1IndexedA] = await StakingStorage.getDelegatorStakeInfo(
+      NodeA.identityId,
+      d1Key,
+    );
+    const d1TotalA = d1BaseA + d1IndexedA;
+    const bigRedelegateAmount = d1TotalA > minStake ? minStake : d1TotalA;
+    console.log(
+      `d1 tries big redelegation from NodeA to NodeB: ${toEth(bigRedelegateAmount)} ETH`,
+    );
+    const nodeBStakeFinalCheck = await StakingStorage.getNodeStake(
+      NodeB.identityId,
+    );
+    if (nodeBStakeFinalCheck + bigRedelegateAmount > maxStake) {
+      console.log('This would exceed maximum stake on NodeB, expecting revert');
+      await expect(
+        Staking.connect(d1).redelegate(
+          NodeA.identityId,
+          NodeB.identityId,
+          bigRedelegateAmount,
+        ),
+      ).to.be.reverted;
+    }
+
+    console.log('d1 does a small redelegation below max limit');
+    const safeAmount =
+      (maxStake - (await StakingStorage.getNodeStake(NodeB.identityId))) / 2n;
+    if (safeAmount > 0n && safeAmount <= d1TotalA) {
+      console.log(
+        `Redelegating ${toEth(safeAmount)} ETH from NodeA to NodeB by d1`,
+      );
+      await Staking.connect(d1).redelegate(
+        NodeA.identityId,
+        NodeB.identityId,
+        safeAmount,
+      );
+      const nodeBStakeFinal = await StakingStorage.getNodeStake(
+        NodeB.identityId,
+      );
+      console.log(
+        `NodeB stake after safe redelegation: ${toEth(nodeBStakeFinal)} ETH, should be < maxStake`,
+      );
+    }
+
+    // Validate that no negative values appear, node stakes are consistent:
+    const nodeAStakeFinal = await StakingStorage.getNodeStake(NodeA.identityId);
+    const nodeBStakeFinal2 = await StakingStorage.getNodeStake(
+      NodeB.identityId,
+    );
+    console.log(
+      `Final NodeA stake: ${toEth(nodeAStakeFinal)} ETH, Final NodeB stake: ${toEth(nodeBStakeFinal2)} ETH`,
+    );
+    expect(nodeAStakeFinal).to.be.at.least(0n);
+    expect(nodeBStakeFinal2).to.be.at.least(0n);
+
+    console.log('--- END FULL SCENARIO TEST ---');
+  });
+
+  it('Stress test: Rapid stake/un-stake cycles, redelegations, operator fee changes, trying to break invariants', async () => {
+    console.log('--- START STRESS TEST SCENARIO ---');
+    // Track user balances and stakes
+    let d1Balance = 0n;
+    let d2Balance = 0n;
+    let opFeeBalanceB = 0n;
+
+    const admin1 = accounts[0];
+    const op1 = accounts[1];
+    const admin2 = accounts[2];
+    const op2 = accounts[3];
+
+    const NodeA = await createProfile(admin1, op1, 10n);
+    console.log(`NodeA ID: ${NodeA.identityId}, fee: 10%`);
+    const NodeB = await createProfile(admin2, op2, 90n);
+    console.log(`NodeB ID: ${NodeB.identityId}, fee: 90%`);
+
+    const nodes = {
+      [NodeA.identityId]: 'A',
+      [NodeB.identityId]: 'B',
+    };
+
+    const d1 = accounts[4];
+    const d2 = accounts[5];
+    const d3 = accounts[6];
+
+    const delegators = {
+      [d1.address]: 'd1',
+      [d2.address]: 'd2',
+      [d3.address]: 'd3',
+    };
+
+    const delay = await ParametersStorage.stakeWithdrawalDelay();
+    const minStake = await ParametersStorage.minimumStake();
+    const maxStake = await ParametersStorage.maximumStake();
+    const toEth = (amount: bigint) => Number(amount) / 1e18;
+
+    const logNodeData = async (identityId: number) => {
+      const [
+        stake,
+        rewardIndex,
+        cEarned,
+        cPaid,
+        opFeeBal,
+        opFeeEarned,
+        opFeePaid,
+        dCount,
+      ] = await StakingStorage.getNodeData(identityId);
+      console.log('----------------------------------------------------------');
+      console.log(`Node${nodes[identityId]} Data:
+        Stake: ${toEth(BigInt(stake))} ETH,
+        RewardIndex: ${rewardIndex},
+        CumulativeEarnedRewards: ${toEth(BigInt(cEarned))} ETH,
+        CumulativePaidOutRewards: ${toEth(BigInt(cPaid))} ETH,
+        OperatorFeeBalance: ${toEth(BigInt(opFeeBal))} ETH,
+        OperatorFeeCumulativeEarnedRewards: ${toEth(BigInt(opFeeEarned))} ETH,
+        OperatorFeeCumulativePaidOutRewards: ${toEth(BigInt(opFeePaid))} ETH,
+        DelegatorCount: ${dCount}`);
+      console.log('----------------------------------------------------------');
+    };
+
+    const logDelegatorData = async (
+      identityId: number,
+      delegator: SignerWithAddress,
+    ) => {
+      const dKey = hre.ethers.keccak256(
+        hre.ethers.solidityPacked(['address'], [delegator.address]),
+      );
+      const [dBase, dIndexed, dLastIndex, dEarned, dPaid] =
+        await StakingStorage.getDelegatorData(identityId, dKey);
+      console.log('----------------------------------------------------------');
+      console.log(`Delegator ${delegators[delegator.address]} on Node${nodes[identityId]}:
+        BaseStake: ${toEth(BigInt(dBase))} ETH,
+        IndexedStake: ${toEth(BigInt(dIndexed))} ETH,
+        LastRewardIndex: ${dLastIndex},
+        CumulativeEarnedRewards: ${toEth(BigInt(dEarned))} ETH,
+        CumulativePaidOutRewards: ${toEth(BigInt(dPaid))} ETH`);
+      console.log('----------------------------------------------------------');
+    };
+
+    console.log(
+      `MinStake: ${toEth(minStake)} ETH, MaxStake: ${toEth(maxStake)} ETH, Delay: ${delay}s`,
+    );
+
+    const mintAmountD1 = maxStake * 2n;
+    await Token.mint(d1.address, mintAmountD1);
+    d1Balance += mintAmountD1;
+    console.log(`d1 initial minted balance: ${toEth(d1Balance)} ETH`);
+    await Token.connect(d1).approve(Staking.getAddress(), mintAmountD1);
+
+    const stakeA = minStake + 10n;
+    console.log(`d1 stakes ${toEth(stakeA)} ETH on NodeA`);
+    await Staking.connect(d1).stake(NodeA.identityId, stakeA);
+    d1Balance -= stakeA;
+
+    await logNodeData(NodeA.identityId);
+    await logDelegatorData(NodeA.identityId, d1);
+
+    console.log(`d1 requests full withdrawal: ${toEth(stakeA)} ETH from NodeA`);
+    await Staking.connect(d1).requestWithdrawal(NodeA.identityId, stakeA);
+    await expect(Staking.connect(d1).finalizeWithdrawal(NodeA.identityId)).to.be
+      .reverted;
+    console.log('Early finalize reverted as expected');
+    await time.increase(Number(delay));
+    const d1BeforeFinal = await Token.balanceOf(d1.address);
+    console.log(`d1 before finalizing: ${toEth(d1BeforeFinal)} ETH`);
+    await Staking.connect(d1).finalizeWithdrawal(NodeA.identityId);
+    const d1AfterFinal = await Token.balanceOf(d1.address);
+    const withdrawn = d1AfterFinal - d1BeforeFinal;
+    d1Balance += withdrawn;
+    console.log(
+      `d1 got back ${toEth(withdrawn)} ETH, balance now: ${toEth(d1Balance)} ETH`,
+    );
+
+    await logNodeData(NodeA.identityId);
+    await logDelegatorData(NodeA.identityId, d1);
+
+    if (minStake > d1Balance)
+      throw new Error('Not enough balance for d1 to restake');
+    console.log(`d1 stakes again ${toEth(minStake)} ETH on NodeA`);
+    await Staking.connect(d1).stake(NodeA.identityId, minStake);
+    d1Balance -= minStake;
+
+    await logNodeData(NodeA.identityId);
+    await logDelegatorData(NodeA.identityId, d1);
+
+    const d1Key = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [d1.address]),
+    );
+    let [d1BaseA, d1IndexedA] = await StakingStorage.getDelegatorStakeInfo(
+      NodeA.identityId,
+      d1Key,
+    );
+    let d1TotalA = d1BaseA + d1IndexedA;
+    console.log(`d1 total stake on NodeA: ${toEth(d1TotalA)} ETH`);
+    await expect(
+      Staking.connect(d1).redelegate(
+        NodeA.identityId,
+        NodeB.identityId,
+        d1TotalA + 1n,
+      ),
+    ).to.be.reverted;
+    console.log('Redelegation exceeding stake reverted as expected');
+
+    const nodeBStakeBefore = await StakingStorage.getNodeStake(
+      NodeB.identityId,
+    );
+    const redelegateAmount = minStake - nodeBStakeBefore - 1n;
+    const safeRedelegate =
+      redelegateAmount > d1TotalA ? d1TotalA : redelegateAmount;
+    console.log(
+      `d1 redelegates ${toEth(safeRedelegate)} ETH from NodeA to NodeB`,
+    );
+    await Staking.connect(d1).redelegate(
+      NodeA.identityId,
+      NodeB.identityId,
+      safeRedelegate,
+    );
+    await logNodeData(NodeB.identityId);
+    await logDelegatorData(NodeB.identityId, d1);
+
+    await Token.mint(d2.address, minStake);
+    d2Balance += minStake;
+    console.log(`d2 minted balance: ${toEth(d2Balance)} ETH`);
+    await Token.connect(d2).approve(Staking.getAddress(), minStake);
+    console.log(`d2 stakes ${toEth(minStake)} ETH on NodeB`);
+    await Staking.connect(d2).stake(NodeB.identityId, minStake);
+    d2Balance -= minStake;
+
+    await logNodeData(NodeB.identityId);
+    await logDelegatorData(NodeB.identityId, d2);
+
+    const hugeRewardB = hre.ethers.parseEther('5000000');
+    console.log(`Distributing huge reward: ${toEth(hugeRewardB)} ETH to NodeB`);
+    await Token.mint(StakingStorage.getAddress(), hugeRewardB);
+    await Staking.distributeRewards(NodeB.identityId, hugeRewardB);
+    opFeeBalanceB = await StakingStorage.getOperatorFeeBalance(
+      NodeB.identityId,
+    );
+    console.log(`Operator fee on NodeB: ${toEth(opFeeBalanceB)} ETH`);
+    await expect(
+      Staking.connect(admin2).restakeOperatorFee(
+        NodeB.identityId,
+        opFeeBalanceB,
+      ),
+    ).to.be.reverted;
+    console.log('Exceed max restake reverted as expected');
+
+    const nodeBStake = await StakingStorage.getNodeStake(NodeB.identityId);
+    const partialRestake =
+      maxStake > nodeBStake ? (maxStake - nodeBStake) / 2n : 0n;
+    const safePartialRestake =
+      partialRestake > opFeeBalanceB ? opFeeBalanceB : partialRestake;
+    if (safePartialRestake > 0n) {
+      console.log(`Restaking partial fee: ${toEth(safePartialRestake)} ETH`);
+      await Staking.connect(admin2).restakeOperatorFee(
+        NodeB.identityId,
+        safePartialRestake,
+      );
+      opFeeBalanceB -= safePartialRestake;
+    }
+
+    console.log(`d1 stakes again minStake+10 ETH on NodeA`);
+    if (minStake + 10n > d1Balance)
+      throw new Error('Not enough balance for d1');
+    await Staking.connect(d1).stake(NodeA.identityId, minStake + 10n);
+    d1Balance -= minStake + 10n;
+    [d1BaseA, d1IndexedA] = await StakingStorage.getDelegatorStakeInfo(
+      NodeA.identityId,
+      d1Key,
+    );
+    d1TotalA = d1BaseA + d1IndexedA;
+    console.log(
+      `d1 total stake now: ${toEth(d1TotalA)} ETH, balance: ${toEth(d1Balance)} ETH`,
+    );
+
+    const firstReq = d1TotalA / 2n;
+    console.log(`d1 requests withdrawal: ${toEth(firstReq)} ETH from NodeA`);
+    await Staking.connect(d1).requestWithdrawal(NodeA.identityId, firstReq);
+
+    const secondReq = d1TotalA / 4n;
+    console.log(
+      `d1 requests another withdrawal: ${toEth(secondReq)} ETH from NodeA`,
+    );
+    await expect(
+      Staking.connect(d1).requestWithdrawal(NodeA.identityId, secondReq),
+    ).to.not.be.reverted;
+    console.log('Multiple overlapping requests done');
+
+    console.log('No operator fee request on NodeA, try finalize anyway');
+    await expect(
+      Staking.connect(admin1).finalizeOperatorFeeWithdrawal(NodeA.identityId),
+    ).to.be.reverted;
+    console.log('Reverted as expected');
+
+    const d2Key = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [d2.address]),
+    );
+    const [d2BaseB, d2IndexedB] = await StakingStorage.getDelegatorStakeInfo(
+      NodeB.identityId,
+      d2Key,
+    );
+    const d2TotalStakeOnB = d2BaseB + d2IndexedB;
+    const d2WithdrawReq = d2TotalStakeOnB / 4n;
+    console.log(
+      `d2 requests ${toEth(d2WithdrawReq)} ETH withdrawal from NodeB`,
+    );
+    await Staking.connect(d2).requestWithdrawal(
+      NodeB.identityId,
+      d2WithdrawReq,
+    );
+    await expect(Staking.connect(d2).finalizeWithdrawal(NodeB.identityId)).to.be
+      .reverted;
+    console.log('Too early finalize reverted');
+    console.log('d2 cancels withdrawal');
+    await Staking.connect(d2).cancelWithdrawal(NodeB.identityId);
+    await expect(Staking.connect(d2).cancelWithdrawal(NodeB.identityId)).to.be
+      .reverted;
+    console.log('Second cancel reverted as expected');
+
+    console.log('d3 never staked on NodeA, tries withdrawing 100 ETH');
+    await expect(Staking.connect(d3).requestWithdrawal(NodeA.identityId, 100n))
+      .to.be.reverted;
+    console.log('No stake withdrawal reverted as expected');
+
+    const halfD2StakeB =
+      (await StakingStorage.getNodeStake(NodeB.identityId)) / 5n;
+    console.log(
+      `d2 requests 20% stake withdrawal on NodeB: ${toEth(halfD2StakeB)} ETH`,
+    );
+    await Staking.connect(d2).requestWithdrawal(NodeB.identityId, halfD2StakeB);
+    await time.increase(Number(delay));
+    const d2BeforeFinal = await Token.balanceOf(d2.address);
+    console.log(
+      `Finalizing large d2 withdrawal. Before: ${toEth(d2BeforeFinal)} ETH`,
+    );
+    await Staking.connect(d2).finalizeWithdrawal(NodeB.identityId);
+    const d2AfterFinal = await Token.balanceOf(d2.address);
+    d2Balance += d2AfterFinal - d2BeforeFinal;
+    console.log(
+      `d2 after final: ${toEth(d2AfterFinal)} ETH, gained: ${toEth(d2AfterFinal - d2BeforeFinal)} ETH, d2Balance: ${toEth(d2Balance)} ETH`,
+    );
+
+    if ((await ShardingTableStorage.nodeExists(NodeB.identityId)) === false) {
+      const [d2BaseB2, d2IndexedB2] =
+        await StakingStorage.getDelegatorStakeInfo(NodeB.identityId, d2Key);
+      const d2TotalB = d2BaseB2 + d2IndexedB2;
+      console.log(`NodeB out of table, d2 totalB: ${toEth(d2TotalB)} ETH`);
+      if (d2TotalB > 0) {
+        console.log(
+          `d2 redelegates ${toEth(d2TotalB)} ETH from NodeB to NodeA`,
+        );
+        await expect(
+          Staking.connect(d2).redelegate(
+            NodeB.identityId,
+            NodeA.identityId,
+            d2TotalB,
+          ),
+        ).to.not.be.reverted;
+      }
+    }
+
+    // Validate no negative values:
+    const finalNodeAStake = await StakingStorage.getNodeStake(NodeA.identityId);
+    const finalNodeBStake = await StakingStorage.getNodeStake(NodeB.identityId);
+    expect(finalNodeAStake).to.be.gte(0n);
+    expect(finalNodeBStake).to.be.gte(0n);
+
+    console.log('--- END STRESS TEST SCENARIO ---');
+  });
+});

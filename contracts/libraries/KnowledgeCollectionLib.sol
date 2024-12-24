@@ -11,13 +11,13 @@ library KnowledgeCollectionLib {
 
     struct KnowledgeCollection {
         MerkleRoot[] merkleRoots;
-        uint256 minted;
         uint256[] burned;
-        uint256 byteSize;
-        uint256 chunksAmount;
-        uint256 startEpoch;
-        uint256 endEpoch;
+        uint256 minted;
+        uint88 byteSize;
+        uint40 startEpoch;
+        uint40 endEpoch;
         uint96 tokenAmount;
+        bool isImmutable;
     }
 
     error ExceededKnowledgeCollectionMaxSize(uint256 id, uint256 minted, uint256 requested, uint256 maxSize);
@@ -31,4 +31,5 @@ library KnowledgeCollectionLib {
     error NotPartOfKnowledgeCollection(uint256 id, uint256 tokenId);
     error SignaturesSignersMismatch(uint256 rAmount, uint256 vsAmount, uint256 identityIdsAmount);
     error MinSignaturesRequirementNotMet(uint256 requiredSignatures, uint256 receivedSignatures);
+    error CannotUpdateImmutableKnowledgeCollection(uint256 id);
 }
