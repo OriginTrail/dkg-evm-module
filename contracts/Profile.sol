@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 import {Identity} from "./Identity.sol";
-import {AskStorage} from "./storage/AskStorage.sol";
+import {Ask} from "./Ask.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
@@ -20,7 +20,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Profile";
     string private constant _VERSION = "1.0.0";
 
-    AskStorage public askStorage;
+    Ask public askContract;
     Identity public identityContract;
     IdentityStorage public identityStorage;
     ParametersStorage public parametersStorage;
@@ -51,7 +51,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function initialize() public onlyHub {
-        askStorage = AskStorage(hub.getContractAddress("AskStorage"));
+        askContract = Ask(hub.getContractAddress("Ask"));
         identityContract = Identity(hub.getContractAddress("Identity"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
@@ -72,7 +72,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         address[] calldata operationalWallets,
         string calldata nodeName,
         bytes calldata nodeId,
-        uint8 initialOperatorFee
+        uint16 initialOperatorFee
     ) external onlyWhitelisted {
         IdentityStorage ids = identityStorage;
         ProfileStorage ps = profileStorage;
@@ -99,7 +99,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         if (ps.nodeIdsList(nodeId)) {
             revert ProfileLib.NodeIdAlreadyExists(nodeId);
         }
-        if (initialOperatorFee > 100) {
+        if (initialOperatorFee > 10000) {
             revert ProfileLib.OperatorFeeOutOfRange(initialOperatorFee);
         }
         uint72 identityId = id.createIdentity(msg.sender, adminWallet);
@@ -121,11 +121,11 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
 
         ps.setAsk(identityId, ask);
         ps.setAskUpdateCooldown(identityId, block.timestamp + parametersStorage.nodeAskUpdateDelay());
-        askStorage.onAskChanged(identityId, ask);
+        askContract.onAskChanged(identityId, ask);
     }
 
     function updateOperatorFee(uint72 identityId, uint8 newOperatorFee) external onlyAdmin(identityId) {
-        if (newOperatorFee > 100) {
+        if (newOperatorFee > 10000) {
             revert ProfileLib.InvalidOperatorFee();
         }
 

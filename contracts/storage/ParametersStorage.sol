@@ -24,6 +24,9 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
 
     uint256 public minimumRequiredSignatures;
 
+    uint256 public askUpperBoundFactor;
+    uint256 public askLowerBoundFactor;
+
     constructor(address hubAddress) HubDependent(hubAddress) {
         minimumStake = 50_000 ether;
         maximumStake = 2_000_000 ether;
@@ -36,6 +39,9 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         shardingTableSizeLimit = 500;
 
         minimumRequiredSignatures = 3;
+
+        askUpperBoundFactor = 1467000000000000000;
+        askLowerBoundFactor = 533000000000000000;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -44,6 +50,14 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
 
     function version() external pure virtual override returns (string memory) {
         return _VERSION;
+    }
+
+    function setAskUpperBoundFactor(uint256 _askUpperBoundFactor) external onlyHub {
+        askUpperBoundFactor = _askUpperBoundFactor;
+    }
+
+    function setAskLowerBoundFactor(uint256 _askLowerBoundFactor) external onlyHub {
+        askLowerBoundFactor = _askLowerBoundFactor;
     }
 
     function setMinimumRequiredSignatures(uint256 _minimumRequiredSignatures) external onlyHub {

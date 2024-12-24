@@ -115,9 +115,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "operatorFee",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "name": "OperatorFeeOutOfRange",
@@ -162,10 +162,10 @@
   },
   {
     "inputs": [],
-    "name": "askStorage",
+    "name": "askContract",
     "outputs": [
       {
-        "internalType": "contract AskStorage",
+        "internalType": "contract Ask",
         "name": "",
         "type": "address"
       }
@@ -196,9 +196,9 @@
         "type": "bytes"
       },
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "initialOperatorFee",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "name": "createProfile",

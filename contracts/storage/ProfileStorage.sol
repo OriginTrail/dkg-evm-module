@@ -11,16 +11,16 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
     string private constant _NAME = "ProfileStorage";
     string private constant _VERSION = "1.0.0";
 
-    event ProfileCreated(uint72 indexed identityId, string nodeName, bytes nodeId, uint8 initialOperatorFee);
+    event ProfileCreated(uint72 indexed identityId, string nodeName, bytes nodeId, uint16 initialOperatorFee);
     event ProfileDeleted(uint72 indexed identityId, bytes nodeId);
     event NodeNameUpdated(uint72 indexed identityId, string oldName, string newName);
     event NodeIdUpdated(uint72 indexed identityId, bytes oldNodeId, bytes newNodeId);
     event NodeAskUpdated(uint72 indexed identityId, uint96 oldAsk, uint96 newAsk);
-    event OperatorFeeAdded(uint72 indexed identityId, uint8 feePercentage, uint256 effectiveDate);
+    event OperatorFeeAdded(uint72 indexed identityId, uint16 feePercentage, uint256 effectiveDate);
     event OperatorFeesReplaced(
         uint72 indexed identityId,
-        uint8 oldFeePercentage,
-        uint8 newFeePercentage,
+        uint16 oldFeePercentage,
+        uint16 newFeePercentage,
         uint256 effectiveDate
     );
     event OperatorFeesUpdated(uint72 indexed identityId, ProfileLib.OperatorFee[] operatorFees);
@@ -44,7 +44,7 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         uint72 identityId,
         string calldata nodeName,
         bytes calldata nodeId,
-        uint8 initialOperatorFee
+        uint16 initialOperatorFee
     ) external onlyContracts {
         ProfileLib.ProfileInfo storage profile = profiles[identityId];
         profile.name = nodeName;
@@ -116,13 +116,13 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         return profiles[identityId].ask;
     }
 
-    function addOperatorFee(uint72 identityId, uint8 feePercentage, uint256 effectiveDate) external onlyContracts {
+    function addOperatorFee(uint72 identityId, uint16 feePercentage, uint256 effectiveDate) external onlyContracts {
         profiles[identityId].operatorFees.push(ProfileLib.OperatorFee(feePercentage, effectiveDate));
 
         emit OperatorFeeAdded(identityId, feePercentage, effectiveDate);
     }
 
-    function getOperatorFee(uint72 identityId) external view returns (uint8) {
+    function getOperatorFee(uint72 identityId) external view returns (uint16) {
         return getActiveOperatorFeePercentage(identityId);
     }
 
@@ -138,7 +138,7 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
 
     function replacePendingOperatorFee(
         uint72 identityId,
-        uint8 feePercentage,
+        uint16 feePercentage,
         uint256 effectiveDate
     ) external onlyContracts {
         if (
@@ -149,7 +149,7 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
             revert ProfileLib.NoPendingOperatorFee();
         }
 
-        uint8 oldFeePercentage = profiles[identityId]
+        uint16 oldFeePercentage = profiles[identityId]
             .operatorFees[profiles[identityId].operatorFees.length - 1]
             .feePercentage;
         profiles[identityId].operatorFees[profiles[identityId].operatorFees.length - 1] = ProfileLib.OperatorFee({
@@ -200,26 +200,26 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
         }
     }
 
-    function getOperatorFeePercentageByIndex(uint72 identityId, uint256 index) external view returns (uint8) {
+    function getOperatorFeePercentageByIndex(uint72 identityId, uint256 index) external view returns (uint16) {
         return profiles[identityId].operatorFees[index].feePercentage;
     }
 
-    function getOperatorFeePercentageByTimestamp(uint72 identityId, uint256 timestamp) external view returns (uint8) {
+    function getOperatorFeePercentageByTimestamp(uint72 identityId, uint256 timestamp) external view returns (uint16) {
         return _getOperatorFeeByTimestamp(identityId, timestamp, false).feePercentage;
     }
 
     function getOperatorFeePercentageByTimestampReverse(
         uint72 identityId,
         uint256 timestamp
-    ) external view returns (uint8) {
+    ) external view returns (uint16) {
         return _getOperatorFeeByTimestamp(identityId, timestamp, true).feePercentage;
     }
 
-    function getLatestOperatorFeePercentage(uint72 identityId) external view returns (uint8) {
+    function getLatestOperatorFeePercentage(uint72 identityId) external view returns (uint16) {
         return _safeGetLatestOperatorFee(identityId).feePercentage;
     }
 
-    function getActiveOperatorFeePercentage(uint72 identityId) public view returns (uint8) {
+    function getActiveOperatorFeePercentage(uint72 identityId) public view returns (uint16) {
         if (profiles[identityId].operatorFees.length == 0) {
             return 0;
         }

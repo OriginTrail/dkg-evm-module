@@ -7,7 +7,9 @@
       "nodeAskUpdateDelay": "60",
       "operatorFeeUpdateDelay": "60",
       "opWalletsLimitOnProfileCreation": "50",
-      "shardingTableSizeLimit": "500"
+      "shardingTableSizeLimit": "500",
+      "askUpperBoundFactor": "1467000000000000000",
+      "askLowerBoundFactor": "533000000000000000"
     },
     "Chronos": {
       "epochLength": "3600"
@@ -26,7 +28,9 @@
       "nodeAskUpdateDelay": "60",
       "operatorFeeUpdateDelay": "60",
       "opWalletsLimitOnProfileCreation": "50",
-      "shardingTableSizeLimit": "500"
+      "shardingTableSizeLimit": "500",
+      "askUpperBoundFactor": "1467000000000000000",
+      "askLowerBoundFactor": "533000000000000000"
     },
     "Chronos": {
       "epochLength": "3600"
@@ -45,7 +49,9 @@
       "nodeAskUpdateDelay": "60",
       "operatorFeeUpdateDelay": "60",
       "opWalletsLimitOnProfileCreation": "50",
-      "shardingTableSizeLimit": "500"
+      "shardingTableSizeLimit": "500",
+      "askUpperBoundFactor": "1467000000000000000",
+      "askLowerBoundFactor": "533000000000000000"
     },
     "Chronos": {
       "epochLength": "86400"
@@ -64,7 +70,9 @@
       "nodeAskUpdateDelay": "86400",
       "operatorFeeUpdateDelay": "2419200",
       "opWalletsLimitOnProfileCreation": "50",
-      "shardingTableSizeLimit": "500"
+      "shardingTableSizeLimit": "500",
+      "askUpperBoundFactor": "1467000000000000000",
+      "askLowerBoundFactor": "533000000000000000"
     },
     "Chronos": {
       "epochLength": "2592000"

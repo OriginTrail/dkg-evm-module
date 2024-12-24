@@ -16,7 +16,7 @@ contract IdentityStorage is IERC734Extended, INamed, IVersioned, HubDependent {
     string private constant _NAME = "IdentityStorage";
     string private constant _VERSION = "1.0.0";
 
-    uint72 private _identityId;
+    uint72 public lastIdentityId;
 
     struct Identity {
         mapping(bytes32 => Key) keys;
@@ -28,9 +28,7 @@ contract IdentityStorage is IERC734Extended, INamed, IVersioned, HubDependent {
     // identityId => Identity
     mapping(uint72 => Identity) internal identities;
 
-    constructor(address hubAddress) HubDependent(hubAddress) {
-        _identityId = 1;
-    }
+    constructor(address hubAddress) HubDependent(hubAddress) {}
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -119,9 +117,13 @@ contract IdentityStorage is IERC734Extended, INamed, IVersioned, HubDependent {
         delete identityIds[operationalKey];
     }
 
+    function setLastIdentityId(uint72 identityId) external virtual onlyContracts {
+        lastIdentityId = identityId;
+    }
+
     function generateIdentityId() external virtual onlyContracts returns (uint72) {
         unchecked {
-            return _identityId++;
+            return ++lastIdentityId;
         }
     }
 }

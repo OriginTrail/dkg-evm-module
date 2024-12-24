@@ -54,10 +54,10 @@
   },
   {
     "inputs": [],
-    "name": "askStorage",
+    "name": "askContract",
     "outputs": [
       {
-        "internalType": "contract AskStorage",
+        "internalType": "contract Ask",
         "name": "",
         "type": "address"
       }
@@ -193,9 +193,9 @@
     "name": "migratedNodes",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint72",
         "name": "",
-        "type": "uint256"
+        "type": "uint72"
       }
     ],
     "stateMutability": "view",
@@ -332,6 +332,32 @@
   },
   {
     "inputs": [],
+    "name": "oldIdentityStorage",
+    "outputs": [
+      {
+        "internalType": "contract IdentityStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "oldMigratedOperatorFees",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "oldNodeOperatorFeesStorage",
     "outputs": [
       {
@@ -367,9 +393,9 @@
     "name": "oldNodesCount",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint72",
         "name": "",
-        "type": "uint256"
+        "type": "uint72"
       }
     ],
     "stateMutability": "view",
@@ -435,6 +461,19 @@
         "internalType": "contract IOldStakingStorage",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "oldStakingStorageBalance",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
       }
     ],
     "stateMutability": "view",
@@ -532,13 +571,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint96",
-        "name": "amount",
-        "type": "uint96"
-      }
-    ],
+    "inputs": [],
     "name": "transferStake",
     "outputs": [],
     "stateMutability": "nonpayable",

@@ -47,6 +47,32 @@
   },
   {
     "inputs": [],
+    "name": "askLowerBoundFactor",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "askUpperBoundFactor",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "hub",
     "outputs": [
       {
@@ -147,6 +173,32 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_askLowerBoundFactor",
+        "type": "uint256"
+      }
+    ],
+    "name": "setAskLowerBoundFactor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_askUpperBoundFactor",
+        "type": "uint256"
+      }
+    ],
+    "name": "setAskUpperBoundFactor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
