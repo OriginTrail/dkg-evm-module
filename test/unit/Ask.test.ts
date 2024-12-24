@@ -8,6 +8,7 @@ import hre from 'hardhat';
 import {
   Profile,
   AskStorage,
+  Ask,
   Staking,
   Hub,
   Token,
@@ -18,29 +19,27 @@ type FullIntegrationFixture = {
   accounts: SignerWithAddress[];
   Profile: Profile;
   AskStorage: AskStorage;
+  Ask: Ask;
   Staking: Staking;
   StakingStorage: StakingStorage;
   Token: Token;
 };
 
-describe('@unit AskStorage', () => {
+describe('@unit Ask', () => {
   let accounts: SignerWithAddress[];
   let Profile: Profile;
   let AskStorage: AskStorage;
+  let Ask: Ask;
   let Staking: Staking;
   let StakingStorage: StakingStorage;
   let Token: Token;
 
   async function deployAll(): Promise<FullIntegrationFixture> {
-    await hre.deployments.fixture([
-      'Profile',
-      'AskStorage',
-      'Staking',
-      'Token',
-    ]);
+    await hre.deployments.fixture(['Profile', 'Ask', 'Staking', 'Token']);
 
     Profile = await hre.ethers.getContract<Profile>('Profile');
     AskStorage = await hre.ethers.getContract<AskStorage>('AskStorage');
+    Ask = await hre.ethers.getContract<Ask>('Ask');
     Staking = await hre.ethers.getContract<Staking>('Staking');
     StakingStorage =
       await hre.ethers.getContract<StakingStorage>('StakingStorage');
@@ -55,6 +54,7 @@ describe('@unit AskStorage', () => {
       accounts,
       Profile,
       AskStorage,
+      Ask,
       Staking,
       StakingStorage,
       Token,
@@ -63,8 +63,7 @@ describe('@unit AskStorage', () => {
 
   beforeEach(async () => {
     hre.helpers.resetDeploymentsJson();
-    ({ accounts, Profile, AskStorage, Staking, Token } =
-      await loadFixture(deployAll));
+    ({ accounts, Profile, Ask, Staking, Token } = await loadFixture(deployAll));
   });
 
   const createProfile = async (
@@ -79,14 +78,14 @@ describe('@unit AskStorage', () => {
       [],
       `Node ${Math.floor(Math.random() * 1000)}`,
       nodeId,
-      operatorFee,
+      operatorFee * 100,
     );
     const receipt = await tx.wait();
     const identityId = Number(receipt!.logs[0].topics[1]);
     return { nodeId, identityId };
   };
 
-  it('Full flow: create profile, set ask, stake, check AskStorage & Staking', async () => {
+  it('Full flow: create profile, set ask, stake, check Ask & Staking', async () => {
     const { identityId } = await createProfile(accounts[0], accounts[1], 10);
     expect(identityId).to.be.gt(0);
 
@@ -101,8 +100,7 @@ describe('@unit AskStorage', () => {
     const totalActiveStake = await AskStorage.totalActiveStake();
     expect(totalActiveStake).to.be.equal(stakeAmount);
 
-    const nodeWeightedActiveAsk =
-      await AskStorage.nodeWeightedActiveAsk(identityId);
+    const nodeWeightedActiveAsk = await AskStorage.nodeWeightedAsk(identityId);
     const expectedWeighted = stakeAmount * newAsk;
     expect(nodeWeightedActiveAsk).to.equal(expectedWeighted);
 
@@ -193,8 +191,7 @@ describe('@unit AskStorage', () => {
 
     expect(finalNodeStake).to.be.gte(stake70k);
 
-    const nodeWeightedActiveAsk =
-      await AskStorage.nodeWeightedActiveAsk(identityId);
+    const nodeWeightedActiveAsk = await AskStorage.nodeWeightedAsk(identityId);
     expect(nodeWeightedActiveAsk).to.be.gte(0n);
   });
 
@@ -269,7 +266,7 @@ describe('@unit AskStorage', () => {
     expect(await AskStorage.totalActiveStake()).to.be.gte(0n);
   });
 
-  it('Repeated distributing rewards, then partial withdraw that puts node below min stake, verifying AskStorage excludes node', async () => {
+  it('Repeated distributing rewards, then partial withdraw that puts node below min stake, verifying Ask excludes node', async () => {
     const { identityId } = await createProfile(accounts[0], accounts[1], 30);
     await Profile.connect(accounts[0]).updateAsk(identityId, 1000n);
     const stakeVal = hre.ethers.parseUnits('50001', 18);

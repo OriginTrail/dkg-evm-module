@@ -11,6 +11,7 @@ export default func;
 func.tags = ['Ask'];
 func.dependencies = [
   'Hub',
+  'AskStorage',
   'ShardingTableStorage',
   'ParametersStorage',
   'StakingStorage',

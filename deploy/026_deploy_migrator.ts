@@ -9,8 +9,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     return;
   }
 
-  delete hre.helpers.contractDeployments.contracts['OldHub'];
-
   const migrator = await hre.helpers.deploy({
     newContractName: 'Migrator',
     additionalArgs: [oldHubAddress],

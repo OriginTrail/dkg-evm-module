@@ -88,7 +88,7 @@ describe('Staking contract', function () {
       [],
       `Node ${Math.floor(Math.random() * 1000)}`,
       node,
-      initialOperatorFee ?? 0,
+      (initialOperatorFee ?? 0n) * 100n,
     );
     const receipt = await tx.wait();
     const identityId = Number(receipt?.logs[0].topics[1]);
@@ -1012,13 +1012,15 @@ describe('Staking contract', function () {
       NodeB.identityId,
       d2WithdrawReq,
     );
-    await expect(Staking.connect(d2).finalizeWithdrawal(NodeB.identityId)).to.be
-      .reverted;
+    await expect(
+      Staking.connect(d2).finalizeWithdrawal(NodeB.identityId),
+    ).to.be.revertedWithCustomError(Staking, 'WithdrawalPeriodPending');
     console.log('Too early finalize reverted');
     console.log('d2 cancels withdrawal');
     await Staking.connect(d2).cancelWithdrawal(NodeB.identityId);
-    await expect(Staking.connect(d2).cancelWithdrawal(NodeB.identityId)).to.be
-      .reverted;
+    await expect(
+      Staking.connect(d2).cancelWithdrawal(NodeB.identityId),
+    ).to.be.revertedWithCustomError(Staking, 'WithdrawalWasntInitiated');
     console.log('Second cancel reverted as expected');
 
     console.log('d3 never staked on NodeA, tries withdrawing 100 ETH');

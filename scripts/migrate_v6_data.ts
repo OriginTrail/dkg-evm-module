@@ -9,7 +9,7 @@ async function main() {
   // Nodes migration
   console.log('Getting current next identityId from IdentityStorage...');
   const storageSlot = await hre.ethers.provider.getStorage(
-    hre.helpers.contractDeployments.contracts['IdentityStorage'].evmAddress,
+    hre.helpers.contractDeployments.contracts['OldIdentityStorage'].evmAddress,
     0,
   );
   const variableSlot = storageSlot.slice(

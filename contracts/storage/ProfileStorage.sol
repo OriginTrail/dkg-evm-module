@@ -190,6 +190,10 @@ contract ProfileStorage is INamed, IVersioned, HubDependent {
     }
 
     function getActiveOperatorFee(uint72 identityId) external view returns (ProfileLib.OperatorFee memory) {
+        if (profiles[identityId].operatorFees.length == 0) {
+            return ProfileLib.OperatorFee({feePercentage: 0, effectiveDate: 0});
+        }
+
         if (
             block.timestamp >
             profiles[identityId].operatorFees[profiles[identityId].operatorFees.length - 1].effectiveDate
