@@ -1,6 +1,6 @@
 {
   "name": "dkg-evm-module",
-  "version": "8.0.0-sigma.2",
+  "version": "8.0.0-sigma.3",
   "description": "Smart contracts for OriginTrail V8",
   "main": "index.ts",
   "files": [
@@ -10,6 +10,7 @@
     "/contracts/**/*.sol",
     "/utils/*",
     "/deploy/*.ts",
+    "/deployments/parameters.json",
     "/abi/*.json"
   ],
   "repository": {
