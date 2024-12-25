@@ -136,14 +136,18 @@ contract StakingStorage is INamed, IVersioned, Guardian {
 
     function getNodeRewardsInfo(uint72 identityId) external view returns (uint96, uint96, uint96) {
         StakingLib.NodeData memory node = nodes[identityId];
-        return (node.stake, node.cumulativeEarnedRewards, node.cumulativePaidOutRewards);
+        return (
+            node.stake,
+            node.cumulativeEarnedRewards - node.cumulativePaidOutRewards,
+            node.cumulativePaidOutRewards
+        );
     }
 
     function getNodeOperatorFeesInfo(uint72 identityId) external view returns (uint96, uint96, uint96) {
         StakingLib.NodeData memory node = nodes[identityId];
         return (
             node.operatorFeeBalance,
-            node.operatorFeeCumulativeEarnedRewards,
+            node.operatorFeeCumulativeEarnedRewards - node.operatorFeeCumulativePaidOutRewards,
             node.operatorFeeCumulativePaidOutRewards
         );
     }

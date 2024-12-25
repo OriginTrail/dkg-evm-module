@@ -348,6 +348,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         ss.setNodeRewardIndex(identityId, nodeRewardIndex + nodeRewardIndexIncrement);
         ss.setNodeStake(identityId, totalNodeStakeAfter);
+        ss.addNodeCumulativeEarnedRewards(identityId, delegatorsReward);
         ss.increaseTotalStake(delegatorsReward);
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
@@ -446,22 +447,25 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         uint96 totalSimBase;
         uint96 totalSimIndexed;
-        uint96 totalUnrealized;
+        uint96 totalSimUnrealized;
         uint96 totalEarned;
         uint96 totalPaidOut;
         for (uint256 i; i < adminKeys.length; i++) {
-            (uint96 simBase, uint96 simIndexed, uint96 unrealized) = simulateStakeInfoUpdate(identityId, adminKeys[i]);
+            (uint96 simBase, uint96 simIndexed, uint96 simUnrealized) = simulateStakeInfoUpdate(
+                identityId,
+                adminKeys[i]
+            );
 
             (uint96 operatorEarned, uint96 operatorPaidOut) = ss.getDelegatorRewardsInfo(identityId, adminKeys[i]);
 
             totalSimBase += simBase;
             totalSimIndexed += simIndexed;
-            totalUnrealized += unrealized;
+            totalSimUnrealized += simUnrealized;
             totalEarned += operatorEarned;
             totalPaidOut += operatorPaidOut;
         }
 
-        return (totalSimBase + totalSimIndexed, totalEarned - totalPaidOut, totalUnrealized);
+        return (totalSimBase + totalSimIndexed, totalEarned + totalSimUnrealized - totalPaidOut, totalPaidOut);
     }
 
     function getNodeStats(uint72 identityId) external view returns (uint96, uint96, uint96) {
@@ -474,14 +478,14 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
     function getDelegatorStats(uint72 identityId, address delegator) external view returns (uint96, uint96, uint96) {
         bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
-        (uint96 simBase, uint96 simIndexed, uint96 unrealized) = simulateStakeInfoUpdate(identityId, delegatorKey);
+        (uint96 simBase, uint96 simIndexed, uint96 simUnrealized) = simulateStakeInfoUpdate(identityId, delegatorKey);
 
         (uint96 delegatorEarned, uint96 delegatorPaidOut) = stakingStorage.getDelegatorRewardsInfo(
             identityId,
             delegatorKey
         );
 
-        return (simBase + simIndexed, delegatorEarned - delegatorPaidOut, unrealized);
+        return (simBase + simIndexed, delegatorEarned + simUnrealized - delegatorPaidOut, delegatorPaidOut);
     }
 
     function simulateStakeInfoUpdate(
@@ -524,7 +528,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
                 ss.setDelegatorLastRewardIndex(identityId, delegatorKey, nodeRewardIndex);
 
                 ss.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, additional);
-                ss.addNodeCumulativeEarnedRewards(identityId, additional);
             }
         }
     }

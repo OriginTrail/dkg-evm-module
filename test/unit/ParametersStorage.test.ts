@@ -64,7 +64,9 @@ describe('@unit ParametersStorage contract', function () {
     minimumStake = await ParametersStorage.minimumStake();
 
     await expect(
-      ParametersStorage.setMinimumStake(minimumStake.toString()),
+      ParametersStorage.connect(accounts[1]).setMinimumStake(
+        minimumStake.toString(),
+      ),
     ).to.be.revertedWithCustomError(ParametersStorage, 'UnauthorizedAccess');
   });
 
@@ -92,7 +94,7 @@ describe('@unit ParametersStorage contract', function () {
     stakeWithdrawalDelay = await ParametersStorage.stakeWithdrawalDelay();
 
     await expect(
-      ParametersStorage.setStakeWithdrawalDelay(
+      ParametersStorage.connect(accounts[1]).setStakeWithdrawalDelay(
         stakeWithdrawalDelay.toString(),
       ),
     ).to.be.revertedWithCustomError(ParametersStorage, 'UnauthorizedAccess');

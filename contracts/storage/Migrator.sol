@@ -155,7 +155,7 @@ contract Migrator is ContractStatus {
         newStakingStorage.setTotalStake(stake);
     }
 
-    function migrateIdentity(uint72 identityId) external onlyHubOwner {
+    function migrateNodeData(uint72 identityId) external onlyHubOwner {
         bytes32[] memory adminKeys = oldIdentityStorage.getKeysByPurpose(identityId, IdentityLib.ADMIN_KEY);
         for (uint256 i; i < adminKeys.length; i++) {
             (uint256 purpose, uint256 keyType, bytes32 key) = oldIdentityStorage.getKey(identityId, adminKeys[i]);
@@ -168,9 +168,7 @@ contract Migrator is ContractStatus {
             newIdentityStorage.addKey(identityId, key, purpose, keyType);
             newIdentityStorage.setOperationalKeyIdentityId(key, identityId);
         }
-    }
 
-    function migrateNodeData(uint72 identityId) external onlyHubOwner returns (uint96, uint96) {
         uint96 nodeStake = oldStakingStorage.totalStakes(identityId);
 
         newStakingStorage.setNodeStake(identityId, nodeStake);
@@ -184,7 +182,7 @@ contract Migrator is ContractStatus {
 
         string memory nodeName = shares.name();
         bytes memory nodeId = oldProfileStorage.getNodeId(identityId);
-        uint96 initialAsk = oldProfileStorage.getAsk(identityId);
+        uint96 initialAsk = oldProfileStorage.getAsk(identityId) / 3;
 
         uint16 initialOperatorFee;
         uint256 operatorFeesArrayLength = oldNodeOperatorFeesStorage.getOperatorFeesLength(identityId);
@@ -196,20 +194,15 @@ contract Migrator is ContractStatus {
 
         newProfileStorage.createProfile(identityId, nodeName, nodeId, initialOperatorFee);
         newProfileStorage.setAsk(identityId, initialAsk);
-
-        return (initialAsk, nodeStake);
     }
 
     function insertNodeInShardingTable(uint72 identityId) external onlyHubOwner {
         uint96 nodeStake = oldStakingStorage.totalStakes(identityId);
+        uint96 ask = oldProfileStorage.getAsk(identityId) / 3;
 
         if (nodeStake > newParametersStorage.minimumStake()) {
             newShardingTable.insertNode(identityId);
         }
-    }
-
-    function weightedAskUpdate(uint72 identityId) external onlyHubOwner {
-        uint96 ask = oldProfileStorage.getAsk(identityId);
 
         askContract.onAskChanged(identityId, 0, ask);
     }

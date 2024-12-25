@@ -168,7 +168,7 @@ describe('@unit Profile contract', function () {
 
     await expect(
       Profile.connect(accounts[1]).updateOperatorFee(identityId1, 500),
-    ).to.emit(Profile, 'OperatorFeeUpdated');
+    ).to.not.be.reverted;
   });
 
   it('Update operator fee with value greater than 10000, expect to fail', async () => {

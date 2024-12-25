@@ -9,7 +9,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     return;
   }
 
-  const migrator = await hre.helpers.deploy({
+  const Migrator = await hre.helpers.deploy({
     newContractName: 'Migrator',
     additionalArgs: [oldHubAddress],
   });
@@ -17,8 +17,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   hre.helpers.setParametersEncodedData.push({
     contractName: 'Migrator',
     encodedData: [
-      migrator.interface.encodeFunctionData('initializeOldContracts', []),
-      migrator.interface.encodeFunctionData('initializeNewContracts', []),
+      Migrator.interface.encodeFunctionData('initializeOldContracts', []),
+      Migrator.interface.encodeFunctionData('initializeNewContracts', []),
     ],
   });
 };
