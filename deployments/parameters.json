@@ -54,6 +54,7 @@
       "askLowerBoundFactor": "533000000000000000"
     },
     "Chronos": {
+      "startTime": "1736812800",
       "epochLength": "86400"
     },
     "KnowledgeCollectionStorage": {
@@ -75,6 +76,7 @@
       "askLowerBoundFactor": "533000000000000000"
     },
     "Chronos": {
+      "startTime": "1736812800",
       "epochLength": "2592000"
     },
     "KnowledgeCollectionStorage": {

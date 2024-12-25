@@ -31,21 +31,21 @@ contract Chronos {
 
     function getCurrentEpoch() external view returns (uint256) {
         if (block.timestamp < START_TIME) {
-            return 0;
+            return 1;
         }
         return ((block.timestamp - START_TIME) / EPOCH_LENGTH) + 1;
     }
 
     function epochAtTimestamp(uint256 timestamp) external view returns (uint256) {
         if (timestamp < START_TIME) {
-            return 0;
+            return 1;
         }
         return ((timestamp - START_TIME) / EPOCH_LENGTH) + 1;
     }
 
     function timeUntilNextEpoch() external view returns (uint256) {
         if (block.timestamp < START_TIME) {
-            return START_TIME - block.timestamp;
+            return START_TIME + EPOCH_LENGTH - block.timestamp;
         }
         uint256 elapsed = (block.timestamp - START_TIME) % EPOCH_LENGTH;
         return EPOCH_LENGTH - elapsed;
@@ -57,7 +57,7 @@ contract Chronos {
 
     function timestampForEpoch(uint256 epochNumber) external view returns (uint256) {
         if (epochNumber == 0) {
-            return START_TIME;
+            return 0;
         }
         return START_TIME + (epochNumber - 1) * EPOCH_LENGTH;
     }

@@ -9,7 +9,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await hre.helpers.deploy({
     newContractName: 'Chronos',
     passHubInConstructor: false,
-    additionalArgs: [block!.timestamp, chronosParametersConfig.epochLength],
+    additionalArgs: [
+      chronosParametersConfig.startTime ?? block!.timestamp,
+      chronosParametersConfig.epochLength,
+    ],
   });
 };
 
