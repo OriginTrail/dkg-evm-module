@@ -118,19 +118,28 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
         uint72 identityId,
         uint256 epoch
     ) external view returns (uint256) {
+        if (epochProducedKnowledgeValue[epoch] == 0) {
+            return 0;
+        }
+
         return
             (uint256(nodesEpochProducedKnowledgeValue[identityId][epoch]) * 1e18) / epochProducedKnowledgeValue[epoch];
     }
 
     function getNodeCurrentEpochProducedKnowledgeValuePercentage(uint72 identityId) external view returns (uint256) {
         uint256 currentEpoch = chronos.getCurrentEpoch();
+
+        if (epochProducedKnowledgeValue[currentEpoch] == 0) {
+            return 0;
+        }
+
         return ((uint256(nodesEpochProducedKnowledgeValue[identityId][currentEpoch]) * 1e18) /
             epochProducedKnowledgeValue[currentEpoch]);
     }
 
     function getNodePreviousEpochProducedKnowledgeValuePercentage(uint72 identityId) external view returns (uint256) {
         uint256 currentEpoch = chronos.getCurrentEpoch();
-        if (currentEpoch <= 1) {
+        if (currentEpoch <= 1 || epochProducedKnowledgeValue[currentEpoch - 1] == 0) {
             return 0;
         }
         return ((uint256(nodesEpochProducedKnowledgeValue[identityId][currentEpoch - 1]) * 1e18) /

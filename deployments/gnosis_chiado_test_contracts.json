@@ -92,12 +92,12 @@
       "deployed": true
     },
     "EpochStorageV8": {
-      "evmAddress": "0xC67cdf8A3179506669275C2ce574888d9FCE3Fc7",
+      "evmAddress": "0x4b88F7F87a962E893CfEC8dC8186b6987D94E9eb",
       "version": "1.0.0",
       "gitBranch": "v8-contracts",
-      "gitCommitHash": "fcb4e48f921a05f344f0723762da08f81009aa37",
-      "deploymentBlock": 13496852,
-      "deploymentTimestamp": 1735151564107,
+      "gitCommitHash": "75b677833363da0f750028024d40b3a0a3c9c474",
+      "deploymentBlock": 13497076,
+      "deploymentTimestamp": 1735152748349,
       "deployed": true
     },
     "KnowledgeCollectionStorage": {
