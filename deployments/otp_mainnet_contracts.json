@@ -134,7 +134,7 @@
       "gitCommitHash": "cdd09025ee035eb72c4322639cefe1848dd90ecb",
       "deploymentBlock": 4786023,
       "deploymentTimestamp": 1713972578993,
-      "deployed": true
+      "deployed": false
     },
     "ShardingTable": {
       "evmAddress": "0xF1932C7f8282C750A46Db5F8c9BA49D7d869732e",
@@ -244,7 +244,7 @@
       "gitCommitHash": "7bd7fcbc9d5e8bfa5eb47573d57b0958515aca00",
       "deploymentBlock": 5134302,
       "deploymentTimestamp": 1718285506531,
-      "deployed": true
+      "deployed": false
     },
     "ShardingTableStorage": {
       "evmAddress": "0x729D2061Ce1c3B4ee5E5346f2FBd591c869e08Da",

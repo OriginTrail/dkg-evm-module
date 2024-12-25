@@ -1,0 +1,560 @@
+Migrating node with identity id: 1
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 1 migration -------
+Node Stake: 50005.59091796875
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 50005.59091796875
+Total Active Stake: 50005.59091796875
+-------------------------------------------------------
+Migrating node with identity id: 2
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 2 migration -------
+Node Stake: 50000.58
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 50005.59091796875
+Total Active Stake: 100006.17091796875
+-------------------------------------------------------
+Migrating node with identity id: 3
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 3 migration -------
+Node Stake: 51442.101696289064
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 100006.17091796875
+Total Active Stake: 151448.2726142578
+-------------------------------------------------------
+Migrating node with identity id: 4
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 4 migration -------
+Node Stake: 51707.71098626563
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 151448.2726142578
+Total Active Stake: 203155.9836005234
+-------------------------------------------------------
+Migrating node with identity id: 5
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 5 migration -------
+Node Stake: 50203.965937500005
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 203155.9836005234
+Total Active Stake: 253359.94953802344
+-------------------------------------------------------
+Migrating node with identity id: 6
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 6 migration -------
+Node Stake: 0
+Node Ask: 0
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: false
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 203155.9836005234
+Total Active Stake: 253359.94953802344
+-------------------------------------------------------
+Migrating node with identity id: 7
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 7 migration -------
+Node Stake: 2000002.8801172578
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 253359.94953802344
+Total Active Stake: 2253362.8296552813
+-------------------------------------------------------
+Migrating node with identity id: 8
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 8 migration -------
+Node Stake: 500498.82263671875
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 2253362.8296552813
+Total Active Stake: 2753861.6522919997
+-------------------------------------------------------
+Migrating node with identity id: 9
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 9 migration -------
+Node Stake: 500270.23511748045
+Node Ask: 0.016666666666666666
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: false
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 2253362.8296552813
+Total Active Stake: 2753861.6522919997
+-------------------------------------------------------
+Migrating node with identity id: 10
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 10 migration -------
+Node Stake: 2013442.7867074069
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 2753861.6522919997
+Total Active Stake: 4767304.438999407
+-------------------------------------------------------
+Migrating node with identity id: 11
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 11 migration -------
+Node Stake: 50101.7659375
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 4767304.438999407
+Total Active Stake: 4817406.204936908
+-------------------------------------------------------
+Migrating node with identity id: 12
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 12 migration -------
+Node Stake: 50011.27547851562
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 4817406.204936908
+Total Active Stake: 4867417.4804154225
+-------------------------------------------------------
+Migrating node with identity id: 13
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 13 migration -------
+Node Stake: 1900000.3599999999
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 4867417.4804154225
+Total Active Stake: 6767417.840415423
+-------------------------------------------------------
+Migrating node with identity id: 14
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 14 migration -------
+Node Stake: 0
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 4867417.4804154225
+Total Active Stake: 6767417.840415423
+-------------------------------------------------------
+Migrating node with identity id: 15
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 15 migration -------
+Node Stake: 1920000.3699999999
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 6767417.840415423
+Total Active Stake: 8687418.210415423
+-------------------------------------------------------
+Migrating node with identity id: 16
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 16 migration -------
+Node Stake: 1990002.3359667968
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 8687418.210415423
+Total Active Stake: 10677420.546382219
+-------------------------------------------------------
+Migrating node with identity id: 17
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 17 migration -------
+Node Stake: 500179.65094965626
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 10677420.546382219
+Total Active Stake: 11177600.197331877
+-------------------------------------------------------
+Migrating node with identity id: 18
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 18 migration -------
+Node Stake: 2000006.8103261292
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 11177600.197331877
+Total Active Stake: 13177607.007658007
+-------------------------------------------------------
+Migrating node with identity id: 19
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 19 migration -------
+Node Stake: 151040.97694335936
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 13177607.007658007
+Total Active Stake: 13328647.984601365
+-------------------------------------------------------
+Migrating node with identity id: 20
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 20 migration -------
+Node Stake: 2032083.3603432546
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 13328647.984601365
+Total Active Stake: 15360731.344944619
+-------------------------------------------------------
+Migrating node with identity id: 21
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 21 migration -------
+Node Stake: 2033104.1259251775
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 15360731.344944619
+Total Active Stake: 17393835.470869794
+-------------------------------------------------------
+Migrating node with identity id: 22
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 22 migration -------
+Node Stake: 1950000.0399999998
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 17393835.470869794
+Total Active Stake: 19343835.510869797
+-------------------------------------------------------
+Migrating node with identity id: 23
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 23 migration -------
+Node Stake: 0
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 17393835.470869794
+Total Active Stake: 19343835.510869797
+-------------------------------------------------------
+Migrating node with identity id: 24
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 24 migration -------
+Node Stake: 1024377.1673853543
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 19343835.510869797
+Total Active Stake: 20368212.678255152
+-------------------------------------------------------
+Migrating node with identity id: 25
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 25 migration -------
+Node Stake: 1940000.15
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 20368212.678255152
+Total Active Stake: 22308212.82825515
+-------------------------------------------------------
+Migrating node with identity id: 26
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 26 migration -------
+Node Stake: 50011.72700195312
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22308212.82825515
+Total Active Stake: 22358224.555257104
+-------------------------------------------------------
+Migrating node with identity id: 27
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 27 migration -------
+Node Stake: 50005.658759765625
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22358224.555257104
+Total Active Stake: 22408230.214016873
+-------------------------------------------------------
+Migrating node with identity id: 28
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 28 migration -------
+Node Stake: 50001.71290039062
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22408230.214016873
+Total Active Stake: 22458231.92691726
+-------------------------------------------------------
+Migrating node with identity id: 29
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 29 migration -------
+Node Stake: 50000.939999999995
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22458231.92691726
+Total Active Stake: 22508232.86691726
+-------------------------------------------------------
+Migrating node with identity id: 30
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 30 migration -------
+Node Stake: 50005.00094726563
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22508232.86691726
+Total Active Stake: 22558237.867864523
+-------------------------------------------------------
+Migrating node with identity id: 31
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 31 migration -------
+Node Stake: 50019.282421875
+Node Ask: 0.003333333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: true
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22558237.867864523
+Total Active Stake: 22608257.1502864
+-------------------------------------------------------
+Migrating node with identity id: 32
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 32 migration -------
+Node Stake: 0
+Node Ask: 0
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: false
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22558237.867864523
+Total Active Stake: 22608257.1502864
+-------------------------------------------------------
+Migrating node with identity id: 33
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 33 migration -------
+Node Stake: 0
+Node Ask: 0
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: false
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22558237.867864523
+Total Active Stake: 22608257.1502864
+-------------------------------------------------------
+Migrating node with identity id: 34
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 34 migration -------
+Node Stake: 0
+Node Ask: 0
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: false
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22558237.867864523
+Total Active Stake: 22608257.1502864
+-------------------------------------------------------
+Migrating node with identity id: 35
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 35 migration -------
+Node Stake: 0
+Node Ask: 0
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: false
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22558237.867864523
+Total Active Stake: 22608257.1502864
+-------------------------------------------------------
+Migrating node with identity id: 36
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 36 migration -------
+Node Stake: 10000
+Node Ask: 0
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: false
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22558237.867864523
+Total Active Stake: 22608257.1502864
+-------------------------------------------------------
+Migrating node with identity id: 37
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 37 migration -------
+Node Stake: 0
+Node Ask: 0
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: false
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22558237.867864523
+Total Active Stake: 22608257.1502864
+-------------------------------------------------------
+Migrating node with identity id: 38
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 38 migration -------
+Node Stake: 49999.99999999999
+Node Ask: 0.000003333333333333
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: false
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22558237.867864523
+Total Active Stake: 22608257.1502864
+-------------------------------------------------------
+Migrating node with identity id: 39
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 39 migration -------
+Node Stake: 0
+Node Ask: 0
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: false
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22558237.867864523
+Total Active Stake: 22608257.1502864
+-------------------------------------------------------
+Migrating node with identity id: 40
+Calling migrateNodeData
+Calling insertNodeInShardingTable
+------- AskStorage state after Node 40 migration -------
+Node Stake: 0
+Node Ask: 0
+Ask Lower Bound: 0.0017766666666666664
+Ask Upper Bound: 0.004889999999999999
+Is node within bounds: false
+Previous Price: 0.003333333333333333
+Price: 0.003333333333333333
+Previous Total Active Stake: 22558237.867864523
+Total Active Stake: 22608257.1502864
+-------------------------------------------------------

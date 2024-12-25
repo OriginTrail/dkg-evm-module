@@ -534,21 +534,6 @@ contract Paranet is Named, Versioned, ContractStatusV2, Initializable {
             if (continueOuterLoop) {
                 continue;
             }
-
-            try ca.cancelAssetStateUpdateFromContract(updatingKnowledgeAssetStates[i].tokenId) {
-                pkmr.removeUpdatingKnowledgeAssetState(
-                    msg.sender,
-                    paranetId,
-                    keccak256(
-                        abi.encodePacked(
-                            updatingKnowledgeAssetStates[i].knowledgeAssetStorageContract,
-                            updatingKnowledgeAssetStates[i].tokenId,
-                            updatingKnowledgeAssetStates[i].assertionId
-                        )
-                    )
-                );
-                // solhint-disable-next-line no-empty-blocks
-            } catch {}
         }
     }
 

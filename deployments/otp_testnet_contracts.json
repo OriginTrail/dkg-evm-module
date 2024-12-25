@@ -1,5 +1,8 @@
 {
   "contracts": {
+    "NewHub": {
+      "evmAddress": "0xd7d073b560412c6A7F33dD670d323D01061E5DEb"
+    },
     "Assertion": {
       "deployed": true,
       "deploymentTimestamp": 1701860811955,
@@ -22,7 +25,7 @@
       "gitCommitHash": "2844cf44e6a69c17a8e2a60b42167386373ee0c2",
       "deploymentBlock": 4060910,
       "deploymentTimestamp": 1717577677145,
-      "deployed": true
+      "deployed": false
     },
     "ContentAssetStorage": {
       "deployed": true,
@@ -131,7 +134,7 @@
       "substrateAddress": "5EMjsczc13MR43nqy41bJhHyPQFRFCFjmyDAYJq755TsWsSG"
     },
     "ServiceAgreementV1": {
-      "deployed": true,
+      "deployed": false,
       "evmAddress": "0x082AC991000F6e8aF99679f5A2F46cB2Be4E101B",
       "substrateAddress": "5EMjsczMp3b67s4P5JcMTZ4h4osrTNMQLG4LsbCNsiEJ5CPn"
     },

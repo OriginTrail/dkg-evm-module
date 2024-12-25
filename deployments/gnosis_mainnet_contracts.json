@@ -261,7 +261,7 @@
       "gitCommitHash": "26881f1a79eaf41f13d1c48a2c5952d0a1d14274",
       "deploymentBlock": 32446912,
       "deploymentTimestamp": 1707908922271,
-      "deployed": true
+      "deployed": false
     },
     "ContentAsset": {
       "evmAddress": "0x1985439E09719EfdC8bcd753936D5059E8E98df4",
@@ -270,7 +270,7 @@
       "gitCommitHash": "7700a1a2a9389f0bdddd95a9dafb8a294e2d732d",
       "deploymentBlock": 34523434,
       "deploymentTimestamp": 1718695496879,
-      "deployed": true
+      "deployed": false
     },
     "NodeOperatorFeesStorage": {
       "evmAddress": "0x2F2031A35dE9297f2372569551F8682E818C4943",

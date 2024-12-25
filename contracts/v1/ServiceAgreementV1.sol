@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.16;
 
+import {Hub} from "./Hub.sol";
 import {CommitManagerV1} from "./CommitManagerV1.sol";
 import {CommitManagerV1U1} from "./CommitManagerV1U1.sol";
 import {HashingProxy} from "./HashingProxy.sol";
@@ -20,6 +21,14 @@ import {TokenErrors} from "./errors/TokenErrors.sol";
 import {ServiceAgreementErrorsV1} from "./errors/ServiceAgreementErrorsV1.sol";
 import {ServiceAgreementErrorsV1U1} from "./errors/ServiceAgreementErrorsV1U1.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+interface IChronos {
+    function getCurrentEpoch() external view returns (uint256);
+}
+
+interface IEpochStorage {
+    function addTokensToEpochRange(uint256, uint40, uint40, uint96) external;
+}
 
 contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
     event ServiceAgreementV1Created(
@@ -49,11 +58,14 @@ contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
     ParametersStorage public parametersStorage;
     ServiceAgreementStorageProxy public serviceAgreementStorageProxy;
     IERC20 public tokenContract;
+    Hub public newHub;
 
     error ScoreError();
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress) ContractStatus(hubAddress) {}
+    constructor(address hubAddress, address newHubAddress) ContractStatus(hubAddress) {
+        newHub = Hub(newHubAddress);
+    }
 
     function initialize() public onlyHubOwner {
         commitManagerV1 = CommitManagerV1(hub.getContractAddress("CommitManagerV1"));
@@ -117,7 +129,15 @@ contract ServiceAgreementV1 is Named, Versioned, ContractStatus, Initializable {
         if (tknc.balanceOf(args.assetCreator) < args.tokenAmount) {
             revert TokenErrors.TooLowBalance(address(tknc), tknc.balanceOf(args.assetCreator));
         }
-        tknc.transferFrom(args.assetCreator, sasProxy.agreementV1StorageAddress(), args.tokenAmount);
+        tknc.transferFrom(args.assetCreator, newHub.getContractAddress("StakingStorage"), args.tokenAmount);
+
+        uint40 currentEpoch = uint40(IChronos(newHub.getContractAddress("Chronos")).getCurrentEpoch());
+        IEpochStorage(newHub.getContractAddress("EpochStorageV6")).addTokensToEpochRange(
+            1,
+            currentEpoch,
+            currentEpoch + args.epochsNumber + 1,
+            args.tokenAmount
+        );
 
         emit ServiceAgreementV1Created(
             args.assetContract,

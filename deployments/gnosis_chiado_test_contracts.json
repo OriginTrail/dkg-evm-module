@@ -1,5 +1,8 @@
 {
   "contracts": {
+    "NewHub": {
+      "evmAddress": "0x2c08AC4B630c009F709521e56Ac385A6af70650f"
+    },
     "AssertionStorage": {
       "deployed": true,
       "deploymentTimestamp": 1701108890140,
@@ -244,7 +247,7 @@
       "gitCommitHash": "8877334d94d89edfa2fea5bff3cd7f367a8609ae",
       "deploymentBlock": 8202491,
       "deploymentTimestamp": 1707755184879,
-      "deployed": true
+      "deployed": false
     },
     "NodeOperatorFeesStorage": {
       "evmAddress": "0x692b3CC200BccF4c6ee0969818Da6c1a88A8cBC7",
@@ -271,7 +274,7 @@
       "gitCommitHash": "7700a1a2a9389f0bdddd95a9dafb8a294e2d732d",
       "deploymentBlock": 10372822,
       "deploymentTimestamp": 1718695363704,
-      "deployed": true
+      "deployed": false
     },
     "ParanetsRegistry": {
       "evmAddress": "0x3Dd6e2baEd8e28fB8bB20a6C7d520eB111c7b85A",

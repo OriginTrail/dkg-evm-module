@@ -303,7 +303,7 @@
       "gitCommitHash": "d3eab3d1a0fde48db522b16b49654558eed07dc3",
       "deploymentBlock": 16310749,
       "deploymentTimestamp": 1719410849698,
-      "deployed": true
+      "deployed": false
     },
     "ContentAsset": {
       "evmAddress": "0xFAC3F90a2b3719bF39058a98b6cc58Aabddc611a",
@@ -312,7 +312,7 @@
       "gitCommitHash": "d3eab3d1a0fde48db522b16b49654558eed07dc3",
       "deploymentBlock": 16310753,
       "deploymentTimestamp": 1719410856427,
-      "deployed": true
+      "deployed": false
     },
     "Paranet": {
       "evmAddress": "0x78b4173d25e30C0B52A855FE522EF2B3FB95c8C7",
