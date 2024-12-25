@@ -82,7 +82,7 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
         return epochProducedKnowledgeValue[currentEpoch - 1];
     }
 
-    function getNodeEpochProducedKnowledgeValue(uint72 identityId, uint256 epoch) public view returns (uint96) {
+    function getNodeEpochProducedKnowledgeValue(uint72 identityId, uint256 epoch) external view returns (uint96) {
         return nodesEpochProducedKnowledgeValue[identityId][epoch];
     }
 
@@ -198,8 +198,20 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
         }
     }
 
-    function getCurrentEpochPool(uint256 shardId) public view returns (uint96) {
+    function getEpochRemainingPool(uint256 shardId, uint256 epoch) public view returns (uint96) {
+        if (epoch <= lastFinalizedEpoch[shardId]) {
+            return cumulative[shardId][epoch] - distributed[shardId][epoch];
+        } else {
+            return _simulateEpochFinalization(shardId, epoch) - distributed[shardId][epoch];
+        }
+    }
+
+    function getCurrentEpochPool(uint256 shardId) external view returns (uint96) {
         return getEpochPool(shardId, chronos.getCurrentEpoch());
+    }
+
+    function getCurrentEpochRemainingPool(uint256 shardId) external view returns (uint96) {
+        return getEpochRemainingPool(shardId, chronos.getCurrentEpoch());
     }
 
     function getPreviousEpochPool(uint256 shardId) external view returns (uint96) {
@@ -208,6 +220,14 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
             return 0;
         }
         return getEpochPool(shardId, currentEpoch - 1);
+    }
+
+    function getPreviousEpochRemainingPool(uint256 shardId) external view returns (uint96) {
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        if (currentEpoch <= 1) {
+            return 0;
+        }
+        return getEpochRemainingPool(shardId, currentEpoch - 1);
     }
 
     function getEpochRangePool(uint256 shardId, uint256 startEpoch, uint256 endEpoch) external view returns (uint96) {

@@ -175,8 +175,10 @@ describe('@unit EpochStorage', () => {
     await EpochStorage.payOutEpochTokens(shardId, 3, 99, 500);
     const dist3 = await EpochStorage.getEpochDistributedPool(shardId, 3);
     const pool3 = await EpochStorage.getEpochPool(shardId, 3);
+    const remainingPool3 = await EpochStorage.getEpochRemainingPool(shardId, 3);
     expect(dist3).to.equal(500);
-    expect(pool3).to.be.gte(dist3); // pool should be >= distributed
+    expect(pool3).to.be.equal(2000); // Still the same as we don't automatically decrement paid out
+    expect(remainingPool3).to.be.equal(1500);
 
     // Check next epoch is still unaffected
     const newPool4 = await EpochStorage.getEpochPool(shardId, 4);
