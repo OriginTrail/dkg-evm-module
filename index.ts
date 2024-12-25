@@ -1,3 +1,4 @@
+import Ask from './abi/Ask.json';
 import AskStorage from './abi/AskStorage.json';
 import Chronos from './abi/Chronos.json';
 import ContractStatus from './abi/ContractStatus.json';
@@ -58,6 +59,7 @@ export {
   StakingStorage as StakingStorageABI,
   Staking as StakingABI,
   WhitelistStorage as WhitelistStorageABI,
+  Ask as AskABI,
   AskStorage as AskStorageABI,
   Chronos as ChronosABI,
   EpochStorage as EpochStorageABI,

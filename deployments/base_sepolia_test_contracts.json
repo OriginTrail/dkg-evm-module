@@ -74,12 +74,12 @@
       "deployed": true
     },
     "Chronos": {
-      "evmAddress": "0x20aB290C978A9Ed891495eA7323E25d45f70A49D",
+      "evmAddress": "0x4059670fd276Eed58801A8f71412C3247B5652B2",
       "version": null,
       "gitBranch": "v8-contracts",
-      "gitCommitHash": "ddb3f9e1ef7c2f9f7ca8554b19fae7d521a5507f",
-      "deploymentBlock": 19684767,
-      "deploymentTimestamp": 1735137823331,
+      "gitCommitHash": "fcb4e48f921a05f344f0723762da08f81009aa37",
+      "deploymentBlock": 19691607,
+      "deploymentTimestamp": 1735151503321,
       "deployed": true
     },
     "EpochStorageV6": {
@@ -92,12 +92,12 @@
       "deployed": true
     },
     "EpochStorageV8": {
-      "evmAddress": "0xfb75159F9711Dd9035460162CFF88615Fc8dB858",
+      "evmAddress": "0xB435bc956dC0F8AD5A66143bedf69CAB02f0896a",
       "version": "1.0.0",
       "gitBranch": "v8-contracts",
-      "gitCommitHash": "ddb3f9e1ef7c2f9f7ca8554b19fae7d521a5507f",
-      "deploymentBlock": 19684773,
-      "deploymentTimestamp": 1735137835988,
+      "gitCommitHash": "fcb4e48f921a05f344f0723762da08f81009aa37",
+      "deploymentBlock": 19691609,
+      "deploymentTimestamp": 1735151512769,
       "deployed": true
     },
     "KnowledgeCollectionStorage": {
