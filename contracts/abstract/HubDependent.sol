@@ -32,7 +32,7 @@ abstract contract HubDependent {
     }
 
     function _checkHub() internal view virtual {
-        if (msg.sender != address(hub)) {
+        if (msg.sender != address(hub) && msg.sender != hub.owner()) {
             revert HubLib.UnauthorizedAccess("Only Hub");
         }
     }
@@ -44,7 +44,7 @@ abstract contract HubDependent {
     }
 
     function _checkHubContract() internal view virtual {
-        if (!hub.isContract(msg.sender)) {
+        if (!hub.isContract(msg.sender) && msg.sender != hub.owner()) {
             revert HubLib.UnauthorizedAccess("Only Contracts in Hub");
         }
     }

@@ -263,9 +263,9 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         uint96 expectedTokenAmount;
         if (includeCurrentEpoch) {
             uint256 totalStorageTime = (epochs * 1e18) + (chron.timeUntilNextEpoch() * 1e18) / chron.epochLength();
-            expectedTokenAmount = uint96((stakeWeightedAverageAsk * byteSize * totalStorageTime) / 1e18);
+            expectedTokenAmount = uint96((stakeWeightedAverageAsk * byteSize * totalStorageTime) / 1024 / 1e18);
         } else {
-            expectedTokenAmount = uint96(stakeWeightedAverageAsk * byteSize * epochs);
+            expectedTokenAmount = uint96((stakeWeightedAverageAsk * byteSize * epochs) / 1024);
         }
 
         if (tokenAmount < expectedTokenAmount) {

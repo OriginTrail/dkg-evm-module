@@ -10,7 +10,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       console.log('Hardhat deployments config reset.');
     }
 
-    const Hub = await hre.deployments.deploy('Hub', {
+    const hubDeploymentResult = await hre.deployments.deploy('Hub', {
       contract: 'Hub',
       from: deployer,
       log: true,
@@ -19,9 +19,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await hre.helpers.updateDeploymentsJson(
       'Hub',
-      Hub.address,
-      Hub.receipt!.blockNumber,
+      hubDeploymentResult.address,
+      hubDeploymentResult.receipt!.blockNumber,
     );
+
+    if (hre.network.config.environment === 'development') {
+      const Hub = await hre.ethers.getContractAt(
+        'Hub',
+        hubDeploymentResult.address,
+      );
+      await Hub.setUpdatePeriod(true);
+    }
   }
 };
 
