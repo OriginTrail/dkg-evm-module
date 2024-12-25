@@ -47,9 +47,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const Hub = await hre.ethers.getContractAt('Hub', hubAddress);
 
-    let updatePeriodSetTx = await Hub.setUpdatePeriod(true);
-    await updatePeriodSetTx.wait();
-
     const setAndReinitializeContractsTx = await Hub.setAndReinitializeContracts(
       newContracts,
       newAssetStorageContracts,
@@ -57,9 +54,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       setParametersEncodedData,
     );
     await setAndReinitializeContractsTx.wait();
-
-    updatePeriodSetTx = await Hub.setUpdatePeriod(false);
-    await updatePeriodSetTx.wait();
   }
 };
 

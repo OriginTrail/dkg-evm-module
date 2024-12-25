@@ -73,9 +73,6 @@ describe('@unit EpochStorage', () => {
 
   it('Add tokens to epoch range, check pool and remainder', async () => {
     await EpochStorage.addTokensToEpochRange(1, 5, 9, 1000);
-    // No direct finalization until a call triggers it, so simulate with calls that finalize up to current epoch
-    await time.increase(1);
-    await EpochStorage.addTokensToEpochRange(1, 10, 10, 500);
     expect(await EpochStorage.accumulatedRemainder(1)).to.be.lte(100); // some remainder left
     expect(await EpochStorage.getEpochPool(1, 5)).to.be.gt(0);
     expect(await EpochStorage.getEpochPool(1, 9)).to.be.gt(0);
@@ -93,16 +90,13 @@ describe('@unit EpochStorage', () => {
 
   it('Add tokens to multiple epochs, finalize, then check correct cumulative values', async () => {
     await EpochStorage.addTokensToEpochRange(3, 2, 5, 5000);
-    await time.increase(1);
-    await EpochStorage.addTokensToEpochRange(3, 3, 6, 3000);
     expect(await EpochStorage.getEpochPool(3, 2)).to.be.gt(0);
-    expect(await EpochStorage.getEpochPool(3, 6)).to.be.gt(0);
+    expect(await EpochStorage.getEpochPool(3, 6)).to.be.equal(0);
     expect(await EpochStorage.getEpochDistributedPool(3, 4)).to.equal(0);
   });
 
   it('Simulate paying out across epochs and nodes, random checks', async () => {
     await EpochStorage.addTokensToEpochRange(4, 5, 5, 6000);
-    await time.increase(1);
     await EpochStorage.payOutEpochTokens(4, 5, 111, 200);
     await EpochStorage.payOutEpochTokens(4, 5, 222, 300);
     expect(await EpochStorage.getEpochDistributedPool(4, 5)).to.equal(500);
@@ -112,9 +106,8 @@ describe('@unit EpochStorage', () => {
 
   it('Add large range tokens, partial remainders, finalize, verify pools', async () => {
     await EpochStorage.addTokensToEpochRange(5, 1, 10, 9999);
-    await time.increase(1);
     await EpochStorage.addTokensToEpochRange(5, 1, 5, 555);
-    expect(await EpochStorage.getEpochPool(5, 10)).to.be.gt(0);
+    expect(await EpochStorage.getEpochPool(5, 10)).to.be.closeTo(1000, 1);
     expect(await EpochStorage.accumulatedRemainder(5)).to.be.gt(0);
   });
 
@@ -140,7 +133,7 @@ describe('@unit EpochStorage', () => {
     );
     const epochNum = await currentEpoch.getCurrentEpoch();
     await EpochStorage.addTokensToEpochRange(shardId, epochNum, epochNum, 2000);
-    expect(await EpochStorage.getCurrentEpochPool(shardId)).to.be.gt(0);
+    expect(await EpochStorage.getCurrentEpochPool(shardId)).to.be.equal(2000);
   });
 
   it('Check getEpochRangePool for partially overlapping epochs, ensuring correct totals', async () => {
@@ -163,22 +156,20 @@ describe('@unit EpochStorage', () => {
     await EpochStorage.addTokensToEpochRange(shardId, 2, 5, 4000);
     await EpochStorage.addTokensToEpochRange(shardId, 4, 6, 3000);
 
-    // Finalize by triggering a call that would push current epoch forward
-    await time.increase(1);
-    await EpochStorage.addTokensToEpochRange(shardId, 10, 10, 100);
-
     const epoch4Pool = await EpochStorage.getEpochPool(shardId, 4);
     const epoch5Pool = await EpochStorage.getEpochPool(shardId, 5);
     const epoch6Pool = await EpochStorage.getEpochPool(shardId, 6);
-    expect(epoch4Pool).to.be.gte(800); // tokens from first + second range
-    expect(epoch5Pool).to.be.gte(800);
-    expect(epoch6Pool).to.be.gte(300);
+    expect(epoch4Pool).to.be.equal(2000);
+    expect(epoch5Pool).to.be.equal(2000);
+    expect(epoch6Pool).to.be.equal(1000);
   });
 
   it('Add tokens to multiple ranges, then partially pay out tokens, check getEpochPool remains correct', async () => {
     const shardId = 12;
     await EpochStorage.addTokensToEpochRange(shardId, 3, 3, 1000);
     await EpochStorage.addTokensToEpochRange(shardId, 3, 4, 2000);
+
+    const oldPool4 = await EpochStorage.getEpochPool(shardId, 4);
 
     // Pay out some tokens in epoch 3
     await EpochStorage.payOutEpochTokens(shardId, 3, 99, 500);
@@ -188,8 +179,8 @@ describe('@unit EpochStorage', () => {
     expect(pool3).to.be.gte(dist3); // pool should be >= distributed
 
     // Check next epoch is still unaffected
-    const pool4 = await EpochStorage.getEpochPool(shardId, 4);
-    expect(pool4).to.be.gt(0);
+    const newPool4 = await EpochStorage.getEpochPool(shardId, 4);
+    expect(newPool4).to.be.equal(oldPool4);
   });
 
   it('Add tokens across multiple ranges, verify getEpochRangePool sums up properly', async () => {
@@ -197,9 +188,9 @@ describe('@unit EpochStorage', () => {
     await EpochStorage.addTokensToEpochRange(shardId, 5, 7, 2100);
     await EpochStorage.addTokensToEpochRange(shardId, 6, 8, 1800);
     const fullRangePool = await EpochStorage.getEpochRangePool(shardId, 5, 8);
-    expect(fullRangePool).to.be.gte(3000);
-    expect(await EpochStorage.getEpochRangePool(shardId, 6, 7)).to.be.lte(
-      fullRangePool,
+    expect(fullRangePool).to.be.equal(3900);
+    expect(await EpochStorage.getEpochRangePool(shardId, 6, 7)).to.be.equal(
+      2600,
     );
   });
 
@@ -217,10 +208,6 @@ describe('@unit EpochStorage', () => {
     // Add two overlapping ranges: epochs 10-20 => 50000 tokens, epochs 15-25 => 60000 tokens
     await EpochStorage.addTokensToEpochRange(shardId, 10, 20, 50000);
     await EpochStorage.addTokensToEpochRange(shardId, 15, 25, 60000);
-
-    // Force epoch finalization by adding a tiny range that triggers finalize
-    await time.increase(1);
-    await EpochStorage.addTokensToEpochRange(shardId, 1, 1, 1);
 
     // Check pools for a few key epochs in the overlapping region
     const pool15 = await EpochStorage.getEpochPool(shardId, 15);
@@ -250,10 +237,6 @@ describe('@unit EpochStorage', () => {
 
     // Add a large range: 5-15 => 30000 tokens
     await EpochStorage.addTokensToEpochRange(shardId, 5, 15, 30000);
-    await time.increase(1);
-
-    // Force finalization
-    await EpochStorage.addTokensToEpochRange(shardId, 1, 1, 1);
 
     // Pick a sub-range [7..10] and compare direct pool sums with getEpochRangePool
     let sumSubRange = 0;
@@ -307,12 +290,12 @@ describe('@unit EpochStorage', () => {
     const p9 = await EpochStorage.getEpochPool(shardId, 9);
     const p10 = await EpochStorage.getEpochPool(shardId, 10);
 
-    expect(p5).to.be.gt(0);
-    expect(p6).to.be.gt(0);
-    expect(p7).to.be.gt(0);
-    expect(p8).to.be.gt(0);
-    expect(p9).to.be.gt(0);
-    expect(p10).to.be.gt(0);
+    expect(p5).to.be.equal(500);
+    expect(p6).to.be.equal(500);
+    expect(p7).to.be.equal(1000);
+    expect(p8).to.be.equal(1000);
+    expect(p9).to.be.equal(1500);
+    expect(p10).to.be.equal(1500);
 
     // Compare getEpochRangePool(5,10) with sum of individual getEpochPool(5..10)
     const totalInd =

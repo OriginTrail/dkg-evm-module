@@ -27,12 +27,11 @@ contract Hub is INamed, IVersioned, Ownable {
     UnorderedNamedContractDynamicSet.Set internal contractSet;
     UnorderedNamedContractDynamicSet.Set internal assetStorageSet;
 
-    bool internal _updatePeriodActive;
-
     constructor() Ownable(msg.sender) {}
 
-    modifier onlyOwnerUpdatePeriod() {
-        _checkCaller();
+    // @dev Only transactions by HubController owner or one of the owners of the MultiSig Wallet
+    modifier onlyOwnerOrMultiSigOwner() {
+        _checkOwnerOrMultiSigOwner();
         _;
     }
 
@@ -44,11 +43,10 @@ contract Hub is INamed, IVersioned, Ownable {
         return _VERSION;
     }
 
-    function setUpdatePeriod(bool isActive) external onlyOwner {
-        _updatePeriodActive = isActive;
-    }
-
-    function setContractAddress(string calldata contractName, address newContractAddress) external onlyOwner {
+    function setContractAddress(
+        string calldata contractName,
+        address newContractAddress
+    ) external onlyOwnerOrMultiSigOwner {
         _setContractAddress(contractName, newContractAddress);
     }
 
@@ -135,7 +133,7 @@ contract Hub is INamed, IVersioned, Ownable {
      * @param data The calldata containing the function signature and arguments for the target contract's function.
      * @return result The return data of the target contract's function call.
      */
-    function forwardCall(address target, bytes calldata data) public onlyOwnerUpdatePeriod returns (bytes memory) {
+    function forwardCall(address target, bytes calldata data) public onlyOwnerOrMultiSigOwner returns (bytes memory) {
         // Check if the target contract is registered in the Hub
         if (!contractSet.exists(target) && !assetStorageSet.exists(target)) {
             revert HubLib.InvalidTargetContract(target);
@@ -168,7 +166,7 @@ contract Hub is INamed, IVersioned, Ownable {
         HubLib.Contract[] calldata newAssetStorageContracts,
         address[] calldata contractsToReinitialize,
         HubLib.ForwardCallInputArgs[] calldata forwardCallsData
-    ) external onlyOwnerUpdatePeriod {
+    ) external onlyOwnerOrMultiSigOwner {
         _setContracts(newContracts);
         _setAssetStorageContracts(newAssetStorageContracts);
         _reinitializeContracts(contractsToReinitialize);
@@ -274,7 +272,7 @@ contract Hub is INamed, IVersioned, Ownable {
         return size > 0;
     }
 
-    function _isCallerMultisigOwner(address multiSigAddress) internal view returns (bool) {
+    function _isMultiSigOwner(address multiSigAddress) internal view returns (bool) {
         try ICustodian(multiSigAddress).getOwners() returns (address[] memory multiSigOwners) {
             for (uint256 i = 0; i < multiSigOwners.length; i++) {
                 if (msg.sender == multiSigOwners[i]) {
@@ -286,14 +284,10 @@ contract Hub is INamed, IVersioned, Ownable {
         return false;
     }
 
-    function _checkCaller() internal view virtual {
-        if (!_updatePeriodActive) {
-            revert HubLib.UnauthorizedAccess("Update period is not active");
-        }
-
+    function _checkOwnerOrMultiSigOwner() internal view virtual {
         address hubOwner = owner();
-        if (msg.sender != hubOwner && !_isCallerMultisigOwner(hubOwner)) {
-            revert HubLib.UnauthorizedAccess("Only Hub Owner or Multisig Owner can call");
+        if (msg.sender != hubOwner && !_isMultiSigOwner(hubOwner)) {
+            revert HubLib.UnauthorizedAccess("Only Hub Owner or Multisig Owner");
         }
     }
 }
