@@ -16,7 +16,7 @@ async function main() {
   await tx.wait();
 
   console.log('Calling transferUnpaidRewards');
-  tx = await Migrator.transferUnpaidRewards(2, 13);
+  tx = await Migrator.transferUnpaidRewards(1, 12);
   await tx.wait();
 
   const [
