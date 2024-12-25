@@ -22,14 +22,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       hubDeploymentResult.address,
       hubDeploymentResult.receipt!.blockNumber,
     );
-
-    if (hre.network.config.environment === 'development') {
-      const Hub = await hre.ethers.getContractAt(
-        'Hub',
-        hubDeploymentResult.address,
-      );
-      await Hub.setUpdatePeriod(true);
-    }
   }
 };
 

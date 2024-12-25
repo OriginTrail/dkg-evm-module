@@ -388,6 +388,25 @@
         "internalType": "uint256",
         "name": "shardId",
         "type": "uint256"
+      }
+    ],
+    "name": "getCurrentEpochRemainingPool",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "shardId",
+        "type": "uint256"
       },
       {
         "internalType": "uint256",
@@ -487,6 +506,30 @@
       }
     ],
     "name": "getEpochRangePool",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "shardId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      }
+    ],
+    "name": "getEpochRemainingPool",
     "outputs": [
       {
         "internalType": "uint96",
@@ -728,6 +771,25 @@
   {
     "inputs": [],
     "name": "getPreviousEpochProducedKnowledgeValue",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "shardId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getPreviousEpochRemainingPool",
     "outputs": [
       {
         "internalType": "uint96",
