@@ -196,7 +196,7 @@ contract Migrator is ContractStatus {
         newProfileStorage.createProfile(identityId, nodeName, nodeId, initialOperatorFee);
         newProfileStorage.setAsk(identityId, initialAsk);
 
-        if (nodeStake > newParametersStorage.minimumStake()) {
+        if (nodeStake >= newParametersStorage.minimumStake()) {
             newShardingTable.insertNode(identityId);
         }
     }
