@@ -89,27 +89,6 @@ async function main() {
     tx = await Migrator.migrateGlobalData(oldTotalStake);
     await tx.wait();
   }
-
-  // console.log('Calling transferStake');
-  // tx = await Migrator.transferStake();
-  // await tx.wait();
-
-  // console.log('Calling transferOperatorFees');
-  // tx = await Migrator.transferOperatorFees();
-  // await tx.wait();
-
-  // console.log('Calling transferUnpaidRewards');
-  // tx = await Migrator.transferUnpaidRewards();
-  // await tx.wait();
-
-  const oldTotalUnpaidRewards = await Migrator.oldTotalUnpaidRewards();
-  console.log(
-    `Old total unpaid rewards: ${Number(oldTotalUnpaidRewards) / 1e18} TRAC`,
-  );
-
-  console.log('Calling initiateDelegatorsMigration');
-  tx = await Migrator.initiateDelegatorsMigration();
-  await tx.wait();
 }
 
 main()
