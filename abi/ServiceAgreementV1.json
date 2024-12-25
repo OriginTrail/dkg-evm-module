@@ -5,6 +5,11 @@
         "internalType": "address",
         "name": "hubAddress",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "newHubAddress",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -525,6 +530,19 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "newHub",
+    "outputs": [
+      {
+        "internalType": "contract Hub",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

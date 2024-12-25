@@ -4,6 +4,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await hre.helpers.deploy({
     newContractName: 'ServiceAgreementV1',
+    additionalArgs: [hre.helpers.contractDeployments.contracts['NewHub'].evmAddress],
   });
 };
 

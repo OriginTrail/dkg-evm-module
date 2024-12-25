@@ -1,5 +1,8 @@
 {
   "contracts": {
+    "NewHub": {
+      "evmAddress": "0xf21CE8f8b01548D97DCFb36869f1ccB0814a4e05"
+    },
     "Token": {
       "deployed": true,
       "evmAddress": "0x9b17032749aa066a2DeA40b746AA6aa09CdE67d9"
@@ -303,7 +306,7 @@
       "gitCommitHash": "49543b7f02d9543b4c744dc8b8153921cf178ad9",
       "deploymentBlock": 11510561,
       "deploymentTimestamp": 1718789413895,
-      "deployed": true
+      "deployed": false
     },
     "ContentAsset": {
       "evmAddress": "0xA02DB908723f4306c1FF2eD4984192325785ad0D",
@@ -312,7 +315,7 @@
       "gitCommitHash": "49543b7f02d9543b4c744dc8b8153921cf178ad9",
       "deploymentBlock": 11510564,
       "deploymentTimestamp": 1718789420271,
-      "deployed": true
+      "deployed": false
     },
     "Paranet": {
       "evmAddress": "0x994E07810bD8a312531D00E7B0E733517C571bCa",
