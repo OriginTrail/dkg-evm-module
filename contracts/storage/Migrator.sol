@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 import {ShardingTable} from "../ShardingTable.sol";
 import {Token} from "../Token.sol";
-import {Ask} from "../Ask.sol";
+import {AskStorage} from "../storage/AskStorage.sol";
 import {EpochStorage} from "../storage/EpochStorage.sol";
 import {IdentityStorage} from "../storage/IdentityStorage.sol";
 import {ParametersStorage} from "../storage/ParametersStorage.sol";
@@ -47,6 +47,7 @@ interface IOldServiceAgreementStorage {
 contract Migrator is ContractStatus {
     error DelegatorsMigrationNotInitiated();
     error DelegatorAlreadyMigrated(uint72 identityId, address delegator);
+    error InvalidTotalStake(uint96 expected, uint96 received);
 
     IOldHub public oldHub;
     IdentityStorage public oldIdentityStorage;
@@ -62,7 +63,7 @@ contract Migrator is ContractStatus {
     ShardingTable public newShardingTable;
     StakingStorage public newStakingStorage;
     IdentityStorage public newIdentityStorage;
-    Ask public askContract;
+    AskStorage public askStorage;
     Token public token;
 
     uint72 public oldNodesCount;
@@ -109,7 +110,7 @@ contract Migrator is ContractStatus {
         newShardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
         newStakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         newIdentityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-        askContract = Ask(hub.getContractAddress("Ask"));
+        askStorage = AskStorage(hub.getContractAddress("AskStorage"));
         token = Token(hub.getContractAddress("Token"));
     }
 
@@ -127,7 +128,7 @@ contract Migrator is ContractStatus {
         }
     }
 
-    function transferUnpaidRewards() external onlyHubOwner {
+    function transferUnpaidRewards(uint256 startEpoch, uint256 endEpoch) external onlyHubOwner {
         uint96 saV1Balance = uint96(token.balanceOf(address(oldServiceAgreementStorageV1)));
         uint96 saV1U1Balance = uint96(token.balanceOf(address(oldServiceAgreementStorageV1U1)));
 
@@ -135,7 +136,7 @@ contract Migrator is ContractStatus {
         oldTotalUnpaidRewards += saV1U1Balance;
 
         if (oldTotalUnpaidRewards > 0) {
-            epochStorageV6.addTokensToEpochRange(1, 1, 12, oldTotalUnpaidRewards);
+            epochStorageV6.addTokensToEpochRange(1, startEpoch, endEpoch, oldTotalUnpaidRewards);
         }
 
         if (saV1Balance > 0) {
@@ -194,17 +195,24 @@ contract Migrator is ContractStatus {
 
         newProfileStorage.createProfile(identityId, nodeName, nodeId, initialOperatorFee);
         newProfileStorage.setAsk(identityId, initialAsk);
-    }
-
-    function insertNodeInShardingTable(uint72 identityId) external onlyHubOwner {
-        uint96 nodeStake = oldStakingStorage.totalStakes(identityId);
-        uint96 ask = oldProfileStorage.getAsk(identityId) / 3;
 
         if (nodeStake > newParametersStorage.minimumStake()) {
             newShardingTable.insertNode(identityId);
         }
+    }
 
-        askContract.onAskChanged(identityId, 0, ask);
+    function updateAskStorage(uint256 weightedAskSum, uint96 totalStake) external onlyHubOwner {
+        if (totalStake != oldTotalStake) {
+            revert InvalidTotalStake(oldTotalStake, totalStake);
+        }
+
+        AskStorage ass = askStorage;
+
+        ass.setPrevWeightedActiveAskSum(weightedAskSum);
+        ass.setWeightedActiveAskSum(weightedAskSum);
+
+        ass.setPrevTotalActiveStake(totalStake);
+        ass.setTotalActiveStake(totalStake);
     }
 
     function migrateDelegatorData(uint72 identityId) external {

@@ -13,10 +13,6 @@ async function main() {
     hre.helpers.getAbi('StakingStorage'),
     hre.helpers.contractDeployments.contracts['StakingStorage'].evmAddress,
   );
-  const AskStorage = await hre.ethers.getContractAt(
-    hre.helpers.getAbi('AskStorage'),
-    hre.helpers.contractDeployments.contracts['AskStorage'].evmAddress,
-  );
 
   // Nodes migration
   console.log('Getting current next identityId from IdentityStorage...');
@@ -40,50 +36,50 @@ async function main() {
     console.log('Calling migrateNodeData');
     tx = await Migrator.migrateNodeData(identityId);
     await tx.wait();
-
-    console.log('Calling insertNodeInShardingTable');
-    tx = await Migrator.insertNodeInShardingTable(identityId);
-    await tx.wait();
-
-    console.log(
-      `------- AskStorage state after Node ${identityId} migration -------`,
-    );
-    const [
-      nodeStake,
-      nodeAsk,
-      prevTotalActiveStake,
-      totalActiveStake,
-      prevPricePerKbEpoch,
-      pricePerKbEpoch,
-      bounds,
-    ] = await Promise.all([
-      StakingStorage.getNodeStake(identityId),
-      ProfileStorage.getAsk(identityId),
-      AskStorage.prevTotalActiveStake(),
-      AskStorage.totalActiveStake(),
-      AskStorage.getPrevPricePerKbEpoch(),
-      AskStorage.getPricePerKbEpoch(),
-      AskStorage.getAskBounds(),
-    ]);
-
-    const isWithinBounds =
-      nodeAsk * BigInt(1e18) > bounds[0] && nodeAsk * BigInt(1e18) < bounds[1];
-
-    console.log(`Node Stake: ${Number(nodeStake) / 1e18}`);
-    console.log(`Node Ask: ${Number(nodeAsk) / 1e18}`);
-    console.log(`Ask Lower Bound: ${Number(bounds[0]) / 1e36}`);
-    console.log(`Ask Upper Bound: ${Number(bounds[1]) / 1e36}`);
-    console.log(`Is node within bounds: ${isWithinBounds}`);
-    console.log(`Previous Price: ${Number(prevPricePerKbEpoch) / 1e18}`);
-    console.log(`Price: ${Number(pricePerKbEpoch) / 1e18}`);
-    console.log(
-      `Previous Total Active Stake: ${Number(prevTotalActiveStake) / 1e18}`,
-    );
-    console.log(`Total Active Stake: ${Number(totalActiveStake) / 1e18}`);
-    console.log(`-------------------------------------------------------`);
   }
 
   // Global data migration
+  const batchSize = 50;
+  const nodeAskStakes = [];
+
+  for (let i = 0; i < Math.ceil((nextIdentityId - 1) / batchSize); i++) {
+    const batch = Array.from(
+      { length: Math.min(batchSize, nextIdentityId - 1 - i * batchSize) },
+      (_, j) => i * batchSize + j + 1,
+    );
+
+    console.log(`Getting Ask-Stake for batch: ${batch}`);
+
+    const batchResults = await Promise.all(
+      batch.map(async (identityId) => {
+        const [ask, stake] = await Promise.all([
+          ProfileStorage.getAsk(identityId),
+          StakingStorage.getNodeStake(identityId),
+        ]);
+        return { ask: BigInt(ask), stake: BigInt(stake) };
+      }),
+    );
+
+    nodeAskStakes.push(...batchResults);
+  }
+  const totalStake = nodeAskStakes.reduce((sum, { stake }) => sum + stake, 0n);
+  const weightedAverageAskSum = nodeAskStakes.reduce(
+    (sum, { ask, stake }) => sum + ask * stake,
+    0n,
+  );
+
+  console.log(
+    `Stake-weighted Average Ask Sum: ${Number(weightedAverageAskSum) / 1e18}`,
+  );
+  console.log(`Total Stake: ${Number(totalStake) / 1e18}`);
+  console.log(
+    `Initial Price per KB/epoch: ${Number(weightedAverageAskSum / totalStake) / 1e18}`,
+  );
+
+  console.log('Calling updateAskStorage');
+  tx = await Migrator.updateAskStorage(weightedAverageAskSum, totalStake);
+  await tx.wait();
+
   const oldTotalStake = await Migrator.oldTotalStake();
 
   console.log(`Total old stake: ${Number(oldTotalStake) / 1e18} TRAC`);

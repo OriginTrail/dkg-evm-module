@@ -39,6 +39,22 @@
   {
     "inputs": [
       {
+        "internalType": "uint96",
+        "name": "expected",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint96",
+        "name": "received",
+        "type": "uint96"
+      }
+    ],
+    "name": "InvalidTotalStake",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string",
         "name": "msg",
         "type": "string"
@@ -54,10 +70,10 @@
   },
   {
     "inputs": [],
-    "name": "askContract",
+    "name": "askStorage",
     "outputs": [
       {
-        "internalType": "contract Ask",
+        "internalType": "contract AskStorage",
         "name": "",
         "type": "address"
       }
@@ -145,19 +161,6 @@
   {
     "inputs": [],
     "name": "initiateDelegatorsMigration",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      }
-    ],
-    "name": "insertNodeInShardingTable",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -593,6 +596,24 @@
   {
     "inputs": [],
     "name": "transferUnpaidRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "weightedAskSum",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint96",
+        "name": "totalStake",
+        "type": "uint96"
+      }
+    ],
+    "name": "updateAskStorage",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
