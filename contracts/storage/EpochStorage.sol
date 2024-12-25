@@ -32,6 +32,9 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
     mapping(uint256 => mapping(uint256 => uint96)) public distributed;
 
     mapping(uint72 => mapping(uint256 => uint96)) public nodesEpochProducedKnowledgeValue;
+    mapping(uint256 => uint96) public epochProducedKnowledgeValue;
+    mapping(uint256 => uint96) public epochNodeMaxProducedKnowledgeValue;
+
     mapping(uint72 => mapping(uint256 => mapping(uint256 => uint96))) public nodesPaidOut;
 
     constructor(address hubAddress) HubDependent(hubAddress) {}
@@ -54,24 +57,84 @@ contract EpochStorage is INamed, IVersioned, HubDependent {
         uint96 knowledgeValue
     ) external onlyContracts {
         nodesEpochProducedKnowledgeValue[identityId][epoch] += knowledgeValue;
+        epochProducedKnowledgeValue[epoch] += knowledgeValue;
+
+        if (nodesEpochProducedKnowledgeValue[identityId][epoch] > epochNodeMaxProducedKnowledgeValue[epoch]) {
+            epochNodeMaxProducedKnowledgeValue[epoch] = nodesEpochProducedKnowledgeValue[identityId][epoch];
+        }
 
         emit EpochProducedKnowledgeValueAdded(identityId, epoch, knowledgeValue);
     }
 
-    function getEpochProducedKnowledgeValue(uint72 identityId, uint256 epoch) public view returns (uint96) {
+    function getEpochProducedKnowledgeValue(uint256 epoch) external view returns (uint96) {
+        return epochProducedKnowledgeValue[epoch];
+    }
+
+    function getCurrentEpochProducedKnowledgeValue() external view returns (uint96) {
+        return epochProducedKnowledgeValue[chronos.getCurrentEpoch()];
+    }
+
+    function getPreviousEpochProducedKnowledgeValue() external view returns (uint96) {
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        if (currentEpoch <= 1) {
+            return 0;
+        }
+        return epochProducedKnowledgeValue[currentEpoch - 1];
+    }
+
+    function getNodeEpochProducedKnowledgeValue(uint72 identityId, uint256 epoch) public view returns (uint96) {
         return nodesEpochProducedKnowledgeValue[identityId][epoch];
     }
 
-    function getCurrentEpochProducedKnowledgeValue(uint72 identityId) external view returns (uint96) {
+    function getNodeCurrentEpochProducedKnowledgeValue(uint72 identityId) external view returns (uint96) {
         return nodesEpochProducedKnowledgeValue[identityId][chronos.getCurrentEpoch()];
     }
 
-    function getPreviousEpochProducedKnowledgeValue(uint72 identityId) external view returns (uint96) {
+    function getNodePreviousEpochProducedKnowledgeValue(uint72 identityId) external view returns (uint96) {
         uint256 currentEpoch = chronos.getCurrentEpoch();
         if (currentEpoch <= 1) {
             return 0;
         }
         return nodesEpochProducedKnowledgeValue[identityId][currentEpoch - 1];
+    }
+
+    function getEpochNodeMaxProducedKnowledgeValue(uint256 epoch) external view returns (uint96) {
+        return epochNodeMaxProducedKnowledgeValue[epoch];
+    }
+
+    function getCurrentEpochNodeMaxProducedKnowledgeValue() external view returns (uint96) {
+        return epochNodeMaxProducedKnowledgeValue[chronos.getCurrentEpoch()];
+    }
+
+    function getPreviousEpochNodeMaxProducedKnowledgeValue() external view returns (uint96) {
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        if (currentEpoch <= 1) {
+            return 0;
+        }
+        return epochNodeMaxProducedKnowledgeValue[currentEpoch - 1];
+    }
+
+    function getNodeEpochProducedKnowledgeValuePercentage(
+        uint72 identityId,
+        uint256 epoch
+    ) external view returns (uint256) {
+        return
+            (uint256(nodesEpochProducedKnowledgeValue[identityId][epoch]) * 1e18) / epochProducedKnowledgeValue[epoch];
+    }
+
+    function getNodeCurrentEpochProducedKnowledgeValuePercentage(uint72 identityId) external view returns (uint256) {
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        return ((uint256(nodesEpochProducedKnowledgeValue[identityId][currentEpoch]) * 1e18) /
+            epochProducedKnowledgeValue[currentEpoch]);
+    }
+
+    function getNodePreviousEpochProducedKnowledgeValuePercentage(uint72 identityId) external view returns (uint256) {
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        if (currentEpoch <= 1) {
+            return 0;
+        }
+        return ((uint256(nodesEpochProducedKnowledgeValue[identityId][currentEpoch - 1]) * 1e18) /
+            epochProducedKnowledgeValue[currentEpoch - 1]);
     }
 
     function addTokensToEpochRange(
