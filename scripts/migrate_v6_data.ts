@@ -30,7 +30,7 @@ async function main() {
   console.log(`Latest identityId: ${nextIdentityId - 1}`);
 
   let tx;
-  for (let identityId = 1; identityId < nextIdentityId; identityId += 1) {
+  for (let identityId = 85; identityId < nextIdentityId; identityId += 1) {
     console.log(`Migrating node with identity id: ${identityId}`);
 
     console.log('Calling migrateNodeData');
@@ -62,8 +62,14 @@ async function main() {
 
     nodeAskStakes.push(...batchResults);
   }
-  const totalStake = nodeAskStakes.reduce((sum, { stake }) => sum + stake, 0n);
-  const weightedAverageAskSum = nodeAskStakes.reduce(
+  const filteredNodeAskStakes = nodeAskStakes.filter(
+    ({ stake }) => stake >= 50000n,
+  );
+  const totalStake = filteredNodeAskStakes.reduce(
+    (sum, { stake }) => sum + stake,
+    0n,
+  );
+  const weightedAverageAskSum = filteredNodeAskStakes.reduce(
     (sum, { ask, stake }) => sum + ask * stake,
     0n,
   );

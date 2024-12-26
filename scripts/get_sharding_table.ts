@@ -6,33 +6,19 @@ import { ShardingTableLib } from '../typechain/contracts/ShardingTable';
 
 async function main() {
   const ShardingTableContract = await hre.ethers.getContractAt(
-    hre.helpers.getAbi('ShardingTableV2'),
+    hre.helpers.getAbi('ShardingTable'),
     hre.helpers.contractDeployments.contracts['ShardingTable'].evmAddress,
-  );
-  const ProfileStorage = await hre.ethers.getContractAt(
-    hre.helpers.getAbi('ProfileStorage'),
-    hre.helpers.contractDeployments.contracts['ProfileStorage'].evmAddress,
   );
 
   const shardingTable = await ShardingTableContract['getShardingTable()']();
   const shardingTableMapped = await Promise.all(
     shardingTable.map(async (x: ShardingTableLib.NodeInfoStructOutput) => {
       const identityId = Number(x.identityId.toString());
-      const sharesTokenAddress =
-        await ProfileStorage.getSharesContractAddress(identityId);
-
-      const SharesToken = await hre.ethers.getContractAt(
-        hre.helpers.getAbi('Token'),
-        sharesTokenAddress,
-      );
-
-      const sharesTokenName = await SharesToken.name();
 
       return {
         nodeId: hre.ethers.toUtf8String(x.nodeId),
         sha256: hre.ethers.sha256(x.nodeId),
         identityId,
-        sharesTokenName,
         ask: hre.ethers.formatEther(x.ask),
         stake: hre.ethers.formatEther(x.stake),
       };

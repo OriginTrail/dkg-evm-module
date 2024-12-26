@@ -202,10 +202,6 @@ contract Migrator is ContractStatus {
     }
 
     function updateAskStorage(uint256 weightedAskSum, uint96 totalStake) external onlyHubOwner {
-        if (totalStake != oldTotalStake) {
-            revert InvalidTotalStake(oldTotalStake, totalStake);
-        }
-
         AskStorage ass = askStorage;
 
         ass.setPrevWeightedActiveAskSum(weightedAskSum);
