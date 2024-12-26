@@ -100,7 +100,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
 
-        askContract.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
+        askContract.recalculateActiveSet();
 
         token.transferFrom(msg.sender, address(ss), addedStake);
     }
@@ -155,7 +155,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _removeNodeFromShardingTable(fromIdentityId, totalFromNodeStakeAfter);
 
-        ask.onStakeChanged(fromIdentityId, totalFromNodeStakeBefore, totalFromNodeStakeAfter);
+        ask.recalculateActiveSet();
 
         if (stakeAmount > delegatorStakeIndexed) {
             ss.increaseDelegatorStakeBase(toIdentityId, delegatorKey, (delegatorStakeBase - newDelegatorStakeBase));
@@ -169,7 +169,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _addNodeToShardingTable(toIdentityId, totalToNodeStakeAfter);
 
-        ask.onStakeChanged(toIdentityId, totalToNodeStakeBefore, totalToNodeStakeAfter);
+        ask.recalculateActiveSet();
     }
 
     function requestWithdrawal(uint72 identityId, uint96 removedStake) external profileExists(identityId) {
@@ -210,7 +210,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _removeNodeFromShardingTable(identityId, totalNodeStakeAfter);
 
-        askContract.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
+        askContract.recalculateActiveSet();
 
         if (totalNodeStakeAfter >= parametersStorage.maximumStake()) {
             ss.addDelegatorCumulativePaidOutRewards(
@@ -312,7 +312,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
 
-        askContract.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
+        askContract.recalculateActiveSet();
     }
 
     function distributeRewards(
@@ -353,7 +353,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
 
-        askContract.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
+        askContract.recalculateActiveSet();
     }
 
     function restakeOperatorFee(uint72 identityId, uint96 addedStake) external onlyAdmin(identityId) {
@@ -390,7 +390,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
 
-        askContract.onStakeChanged(identityId, totalNodeStakeBefore, totalNodeStakeAfter);
+        askContract.recalculateActiveSet();
     }
 
     function requestOperatorFeeWithdrawal(uint72 identityId, uint96 withdrawalAmount) external onlyAdmin(identityId) {
