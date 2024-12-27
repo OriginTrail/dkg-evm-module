@@ -20,6 +20,7 @@ import './tasks/deploy_test_token';
 import './tasks/low_level_call_data_encoder';
 import './tasks/mint_test_tokens';
 import './tasks/selector_encoder';
+import './tasks/send_forward_call';
 import './tasks/send_neuro';
 import './utils/type-extensions';
 import config from './hardhat.node.config';
