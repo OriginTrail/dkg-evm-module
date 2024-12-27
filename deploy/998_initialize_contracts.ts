@@ -38,7 +38,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   if (
     !noChangesWereMade &&
-    !['development', 'mainnet'].includes(hre.network.config.environment)
+    !['development'].includes(hre.network.config.environment)
   ) {
     const hubAddress =
       hre.helpers.contractDeployments.contracts['Hub'].evmAddress;

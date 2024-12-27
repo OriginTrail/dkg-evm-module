@@ -1,2 +1,4 @@
 contracts/libraries/*.sol
+contracts/tokens/*.sol
 contracts/Guardian.sol
+contracts/Token.sol
