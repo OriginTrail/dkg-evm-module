@@ -224,21 +224,30 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         return voters.length;
     }
 
-    function removeVoters(uint256 limit) external onlyVotersRegistrar {
-        require(voters.length >= limit, "Limit exceeds the num of voters");
+function removeVoters(uint256 limit) external onlyVotersRegistrar {
+    require(voters.length >= limit, "Limit exceeds the num of voters");
 
-        for (uint256 i; i < limit; ) {
-            cumulativeVotersWeight -= uint16(voters[voters.length - 1 - i].weight);
+    for (uint256 i; i < limit; ) {
+        uint256 lastIndex = voters.length - 1 - i;
+        address voterToRemove = voters[lastIndex].addr;
 
-            delete votersIndexes[voters[voters.length - 1 - i].addr];
-            voters.pop();
+        cumulativeVotersWeight -= uint16(voters[lastIndex].weight);
 
-            unchecked {
-                i++;
-            }
+        // If the voter to remove is not the last one, swap it with the last one
+        if (lastIndex != voters.length - 1) {
+            voters[lastIndex] = voters[voters.length - 1];
+            votersIndexes[voters[lastIndex].addr] = lastIndex;
+        }
+
+        // Remove the last voter
+        voters.pop();
+        delete votersIndexes[voterToRemove];
+
+        unchecked {
+            i++;
         }
     }
-
+}
     function isKnowledgeMiner(address addr) public view returns (bool) {
         return paranetsRegistry.isKnowledgeMinerRegistered(parentParanetId, addr);
     }
