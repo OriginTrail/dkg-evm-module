@@ -277,28 +277,36 @@ function removeVoters(uint256 limit) external onlyVotersRegistrar {
         return neuroEmissionMultipliers[0].multiplier;
     }
 
-    function initiateNeuroEmissionMultiplierUpdate(uint256 newMultiplier) external onlyVotersRegistrar {
-        if (!neuroEmissionMultipliers[neuroEmissionMultipliers.length - 1].finalized) {
-            neuroEmissionMultipliers[neuroEmissionMultipliers.length - 1].multiplier = newMultiplier;
-            neuroEmissionMultipliers[neuroEmissionMultipliers.length - 1].timestamp =
-                block.timestamp +
-                neuroEmissionMultiplierUpdateDelay;
-        } else {
-            neuroEmissionMultipliers.push(
-                ParanetLib.NeuroEmissionMultiplier({
-                    multiplier: newMultiplier,
-                    timestamp: block.timestamp + neuroEmissionMultiplierUpdateDelay,
-                    finalized: false
-                })
-            );
-        }
+   function initiateNeuroEmissionMultiplierUpdate(uint256 newMultiplier) external onlyVotersRegistrar {
+    // Define reasonable bounds for the multiplier
+    uint256 MIN_MULTIPLIER = 1; // Example minimum value
+    uint256 MAX_MULTIPLIER = 10**18; // Example maximum value, adjust as needed
 
-        emit NeuroEmissionMultiplierUpdateInitiated(
-            neuroEmissionMultipliers[neuroEmissionMultipliers.length - 2].multiplier,
-            newMultiplier,
-            block.timestamp + neuroEmissionMultiplierUpdateDelay
+    // Validate the new multiplier
+    require(newMultiplier >= MIN_MULTIPLIER, "Multiplier must be greater than or equal to minimum value");
+    require(newMultiplier <= MAX_MULTIPLIER, "Multiplier exceeds maximum allowed value");
+
+    if (!neuroEmissionMultipliers[neuroEmissionMultipliers.length - 1].finalized) {
+        neuroEmissionMultipliers[neuroEmissionMultipliers.length - 1].multiplier = newMultiplier;
+        neuroEmissionMultipliers[neuroEmissionMultipliers.length - 1].timestamp =
+            block.timestamp +
+            neuroEmissionMultiplierUpdateDelay;
+    } else {
+        neuroEmissionMultipliers.push(
+            ParanetLib.NeuroEmissionMultiplier({
+                multiplier: newMultiplier,
+                timestamp: block.timestamp + neuroEmissionMultiplierUpdateDelay,
+                finalized: false
+            })
         );
     }
+
+    emit NeuroEmissionMultiplierUpdateInitiated(
+        neuroEmissionMultipliers[neuroEmissionMultipliers.length - 2].multiplier,
+        newMultiplier,
+        block.timestamp + neuroEmissionMultiplierUpdateDelay
+    );
+}
 
     function finalizeNeuroEmissionMultiplierUpdate() external onlyVotersRegistrar {
         require(neuroEmissionMultipliers.length > 0, "No emission multiplier updates");
