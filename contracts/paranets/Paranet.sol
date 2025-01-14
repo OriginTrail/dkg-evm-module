@@ -129,7 +129,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     modifier onlyKnowledgeAssetOwner(address knowledgeAssetStorageContract, uint256 knowledgeAssetTokenId) {
-        _checkKnowledgeAssetOwner(knowledgeAssetStorageContract, knowledgeAssetTokenId);
+        _checkKnowledgeCollectionOwner(knowledgeAssetStorageContract, knowledgeAssetTokenId);
         _;
     }
 
@@ -467,7 +467,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
                 );
             }
 
-            _checkKnowledgeAssetOwner(services[i].knowledgeAssetStorageContract, services[i].tokenId);
+            _checkKnowledgeCollectionOwner(services[i].knowledgeAssetStorageContract, services[i].tokenId);
 
             if (
                 pr.isServiceImplemented(
@@ -1056,42 +1056,40 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         (address paranetKAStorageContract, uint256 paranetKATokenId) = paranetsRegistry.getParanetKnowledgeAssetLocator(
             paranetId
         );
-        _checkKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId);
+        _checkKnowledgeCollectionOwner(paranetKAStorageContract, paranetKATokenId);
     }
 
     function _checkParanetServiceOperator(bytes32 paranetServiceId) internal view virtual {
         (address paranetServiceKAStorageContract, uint256 paranetServiceKATokenId) = paranetServicesRegistry
             .getParanetServiceKnowledgeAssetLocator(paranetServiceId);
-        _checkKnowledgeAssetOwner(paranetServiceKAStorageContract, paranetServiceKATokenId);
+        _checkKnowledgeCollectionOwner(paranetServiceKAStorageContract, paranetServiceKATokenId);
     }
 
-    function _checkKnowledgeAssetOwner(
+    function _checkKnowledgeCollectionOwner(
         address knowledgeCollectionStorageContractAddress,
         uint256 knowledgeCollectionId
     ) internal view virtual {
-        // Validate the provided address is a Knowledge Asset Storage contract
         require(hub.isAssetStorage(knowledgeCollectionStorageContractAddress), "Given address isn't KA Storage");
 
-        // Create a KnowledgeCollectionStorage instance
         KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(
             knowledgeCollectionStorageContractAddress
         );
 
-        // Determine the range of token IDs in the knowledge collection
+        uint256 minted = knowledgeCollectionStorage.knowledgeCollections[collectionId].minted;
+        uint256 burnedCount = knowledgeCollectionStorage.knowledgeCollections[collectionId].burned.length;
+        uint256 activeCount = minted - burnedCount;
+        require(activeCount != 0, "No KAs in collection");
+
         uint256 startTokenId = (knowledgeCollectionId - 1) *
             knowledgeCollectionStorage.knowledgeCollectionMaxSize() +
             1; // _startTokenId()
-        uint256 endTokenId = startTokenId +
-            knowledgeCollectionStorage.knowledgeCollections(knowledgeCollectionId).minted;
 
-        for (uint256 tokenId = startTokenId; tokenId < endTokenId; tokenId++) {
-            // Skip burned tokens
-            if (knowledgeCollectionStorage.isKnowledgeAssetBurned(tokenId)) {
-                continue;
-            }
+        uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(
+            msg.sender,
+            startTokenId,
+            minted + burnedCount
+        );
 
-            // Ensure the caller owns all active tokens
-            require(knowledgeCollectionStorage.isOwnerOf(msg.sender, tokenId), "Caller isn't the owner of the KC");
-        }
+        require(ownedCountInRange == activeCount, "Caller isn't the owner of the KC");
     }
 }
