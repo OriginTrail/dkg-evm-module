@@ -8,6 +8,7 @@ import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {ParanetServicesRegistry} from "../storage/paranets/ParanetServicesRegistry.sol";
 import {ProfileStorage} from "../storage/ProfileStorage.sol";
 import {IdentityStorage} from "../storage/IdentityStorage.sol";
+import {KnowledgeCollectionStorage} from "../storage/KnowledgeCollectionStorage.sol";
 import {ContractStatus} from "../abstract/ContractStatus.sol";
 import {IInitializable} from "../interfaces/IInitializable.sol";
 import {INamed} from "../interfaces/INamed.sol";
@@ -1065,13 +1066,32 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function _checkKnowledgeAssetOwner(
-        address knowledgeAssetStorageContract,
-        uint256 knowledgeAssetTokenId
+        address knowledgeCollectionStorageContractAddress,
+        uint256 knowledgeCollectionId
     ) internal view virtual {
-        require(hub.isAssetStorage(knowledgeAssetStorageContract), "Given address isn't KA Storage");
-        require(
-            IERC721(knowledgeAssetStorageContract).ownerOf(knowledgeAssetTokenId) == msg.sender,
-            "Caller isn't the owner of the KA"
+        // Validate the provided address is a Knowledge Asset Storage contract
+        require(hub.isAssetStorage(knowledgeCollectionStorageContractAddress), "Given address isn't KA Storage");
+
+        // Create a KnowledgeCollectionStorage instance
+        KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(
+            knowledgeCollectionStorageContractAddress
         );
+
+        // Determine the range of token IDs in the knowledge collection
+        uint256 startTokenId = (knowledgeCollectionId - 1) *
+            knowledgeCollectionStorage.knowledgeCollectionMaxSize() +
+            1; // _startTokenId()
+        uint256 endTokenId = startTokenId +
+            knowledgeCollectionStorage.knowledgeCollections(knowledgeCollectionId).minted;
+
+        for (uint256 tokenId = startTokenId; tokenId < endTokenId; tokenId++) {
+            // Skip burned tokens
+            if (knowledgeCollectionStorage.isKnowledgeAssetBurned(tokenId)) {
+                continue;
+            }
+
+            // Ensure the caller owns all active tokens
+            require(knowledgeCollectionStorage.isOwnerOf(msg.sender, tokenId), "Caller isn't the owner of the KC");
+        }
     }
 }
