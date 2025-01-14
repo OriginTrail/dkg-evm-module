@@ -1069,8 +1069,8 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             knowledgeCollectionStorageContractAddress
         );
 
-        uint256 minted = knowledgeCollectionStorage.knowledgeCollections[knowledgeCollectionId].minted;
-        uint256 burnedCount = knowledgeCollectionStorage.knowledgeCollections[knowledgeCollectionId].burned.length;
+        uint256 minted = knowledgeCollectionStorage.getMinted(knowledgeCollectionId);
+        uint256 burnedCount = knowledgeCollectionStorage.getBurnedAmount(knowledgeCollectionId);
         uint256 activeCount = minted - burnedCount;
         require(activeCount != 0, "No KAs in collection");
 
