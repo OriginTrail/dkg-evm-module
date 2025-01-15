@@ -882,7 +882,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         if (
-            paranetKnowledgeAssetsRegistry.isParanetKnowledgeAsset(
+            -paranetKnowledgeAssetsRegistry.isParanetKnowledgeAsset(
                 keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionId))
             )
         ) {
@@ -1072,7 +1072,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 minted = knowledgeCollectionStorage.getMinted(knowledgeCollectionId);
         uint256 burnedCount = knowledgeCollectionStorage.getBurnedAmount(knowledgeCollectionId);
         uint256 activeCount = minted - burnedCount;
-        require(activeCount != 0, "No KAs in collection");
+        require(activeCount != 0, "No KAs in Collection");
 
         uint256 startTokenId = (knowledgeCollectionId - 1) *
             knowledgeCollectionStorage.knowledgeCollectionMaxSize() +
