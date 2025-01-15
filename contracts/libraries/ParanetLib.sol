@@ -11,8 +11,8 @@ library ParanetLib {
     uint16 constant MAX_CUMULATIVE_VOTERS_WEIGHT = 10 ** 4;
 
     struct UniversalAssetLocator {
-        address knowledgeAssetStorageContract;
-        uint256 tokenId;
+        address knowledgeCollectionStorageContract;
+        uint256 knolwedgeCollectionTokenId;
     }
 
     enum NodesAccessPolicy {
@@ -25,7 +25,7 @@ library ParanetLib {
         CURATED
     }
 
-    enum KnowledgeAssetsAccessPolicy {
+    enum KnowledgeCollectionsAccessPolicy {
         OPEN
     }
 
@@ -56,13 +56,13 @@ library ParanetLib {
     }
 
     struct Paranet {
-        address paranetKAStorageContract;
-        uint256 paranetKATokenId;
+        address paranetKCStorageContract;
+        uint256 paranetKCTokenId;
         string name;
         string description;
         NodesAccessPolicy nodesAccessPolicy;
         MinersAccessPolicy minersAccessPolicy;
-        KnowledgeAssetsAccessPolicy knowledgeAssetsAccessPolicy;
+        KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy;
         uint96 cumulativeKnowledgeValue;
         UnorderedNamedContractDynamicSet.Set incentivesPools;
         Node[] curatedNodes;
@@ -84,13 +84,13 @@ library ParanetLib {
     }
 
     struct ParanetMetadata {
-        address paranetKAStorageContract;
-        uint256 paranetKATokenId;
+        address paranetKCStorageContract;
+        uint256 paranetKCTokenId;
         string name;
         string description;
         NodesAccessPolicy nodesAccessPolicy;
         MinersAccessPolicy minersAccessPolicy;
-        KnowledgeAssetsAccessPolicy knowledgeAssetsAccessPolicy;
+        KnowledgeCollectionsAccessPolicy knowledgeCollectonsAccessPolicy;
         uint96 cumulativeKnowledgeValue;
     }
 
@@ -100,8 +100,8 @@ library ParanetLib {
     }
 
     struct ParanetService {
-        address paranetServiceKAStorageContract;
-        uint256 paranetServiceKATokenId;
+        address paranetServiceKCStorageContract;
+        uint256 paranetServiceKCTokenId;
         string name;
         string description;
         address[] paranetServiceAddresses;
@@ -109,8 +109,8 @@ library ParanetLib {
     }
 
     struct ParanetServiceMetadata {
-        address paranetServiceKAStorageContract;
-        uint256 paranetServiceKATokenId;
+        address paranetServiceKCStorageContract;
+        uint256 paranetServiceKCTokenId;
         string name;
         string description;
         address[] paranetServiceAddresses;
@@ -119,11 +119,11 @@ library ParanetLib {
     struct KnowledgeMiner {
         address addr;
         uint96 totalTracSpent;
-        uint256 totalSubmittedKnowledgeAssetsCount;
-        mapping(bytes32 => bytes32[]) submittedKnowledgeAssets;
-        mapping(bytes32 => mapping(bytes32 => uint256)) submittedKnowledgeAssetsIndexes;
-        mapping(bytes32 => UpdatingKnowledgeAssetState[]) updatingKnowledgeAssetStates;
-        mapping(bytes32 => mapping(bytes32 => uint256)) updatingKnowledgeAssetStateIndexes;
+        uint256 totalSubmittedKnowledgeCollectionCount;
+        mapping(bytes32 => bytes32[]) submittedKnowledgeCollections;
+        mapping(bytes32 => mapping(bytes32 => uint256)) submittedKnowledgeACollectionIndexes;
+        mapping(bytes32 => UpdatingKnowledgeCollectionState[]) updatingKnowledgeCollectionStates;
+        mapping(bytes32 => mapping(bytes32 => uint256)) updatingKnowledgeCollectionStateIndexes;
         mapping(bytes32 => uint96) cumulativeTracSpent;
         mapping(bytes32 => uint96) unrewardedTracSpent;
         mapping(bytes32 => uint256) cumulativeAwardedNeuro;
@@ -132,7 +132,7 @@ library ParanetLib {
     struct KnowledgeMinerMetadata {
         address addr;
         uint96 totalTracSpent;
-        uint256 totalSubmittedKnowledgeAssetsCount;
+        uint256 totalSubmittedKnowledgeCollectionsCount;
     }
 
     struct KnolwedgeCollection {
@@ -142,8 +142,8 @@ library ParanetLib {
         bytes32 paranetId;
     }
 
-    struct UpdatingKnowledgeAssetState {
-        address knowledgeAssetStorageContract;
+    struct UpdatingKnowledgeCollectionState {
+        address knowledgeCollectionStorageContract;
         uint256 tokenId;
         bytes32 assertionId;
         uint96 updateTokenAmount;
@@ -171,7 +171,10 @@ library ParanetLib {
         uint256 claimedNeuro;
     }
 
-    error ParanetHasAlreadyBeenRegistered(address knowledgeAssetStorageAddress, uint256 tokenId);
+    error ParanetHasAlreadyBeenRegistered(
+        address knowledgeCollectionStorageAddress,
+        uint256 knowledgeCollectionTokenId
+    );
     error InvalidParanetNodesAccessPolicy(
         ParanetLib.NodesAccessPolicy[] expectedAccessPolicies,
         ParanetLib.NodesAccessPolicy actualAccessPolicy
@@ -197,17 +200,20 @@ library ParanetLib {
     );
     error ParanetCuratedMinerAccessRequestDoesntExist(bytes32 paranetId, address miner);
     error ParanetIncentivesPoolAlreadyExists(
-        address knowledgeAssetStorageAddress,
-        uint256 tokenId,
+        address knowledgeCollectionStorageAddress,
+        uint256 knowledgeCollectionTokenId,
         string poolType,
         address poolAddress
     );
-    error ParanetDoesntExist(address knowledgeAssetStorageAddress, uint256 tokenId);
-    error ParanetServiceHasAlreadyBeenRegistered(address knowledgeAssetStorageAddress, uint256 tokenId);
-    error ParanetServiceDoesntExist(address knowledgeAssetStorageAddress, uint256 tokenId);
-    error KnowledgeAssetIsAPartOfOtherParanet(
-        address paranetKnowledgeAssetStorageContract,
-        uint256 paranetTokenId,
+    error ParanetDoesntExist(address knowledgeCollectionStorageAddress, uint256 knowledgeCollectionTokenId);
+    error ParanetServiceHasAlreadyBeenRegistered(
+        address knowledgeCollectionStorageAddress,
+        uint256 knowledgeCollectionTokenId
+    );
+    error ParanetServiceDoesntExist(address knowledgeCollectionStorageAddress, uint256 knowledgeCollectionTokenId);
+    error KnowledgeCollectionIsAPartOfOtherParanet(
+        address paranetKnowledgeCollectionStorageAddress,
+        uint256 paranetKnowledgeCollectionTokenId,
         bytes32 paranetId
     );
     error NoRewardAvailable(bytes32 paranetId, address claimer);

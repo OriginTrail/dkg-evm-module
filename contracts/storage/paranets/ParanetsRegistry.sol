@@ -29,27 +29,27 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
     }
 
     function registerParanet(
-        address knowledgeAssetStorageContract,
-        uint256 tokenId,
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId,
         string calldata paranetName,
         string calldata paranetDescription,
         ParanetLib.NodesAccessPolicy nodesAccessPolicy,
         ParanetLib.MinersAccessPolicy minersAccessPolicy,
-        ParanetLib.KnowledgeAssetsAccessPolicy knowledgeAssetsAccessPolicy
+        ParanetLib.KnowledgeCollectionsAccessPolicy knowledgeColletionsAccessPolicy
     ) external onlyContracts returns (bytes32) {
         ParanetLib.Paranet storage paranet = paranets[
-            keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId))
+            keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
         ];
 
-        paranet.paranetKAStorageContract = knowledgeAssetStorageContract;
-        paranet.paranetKATokenId = tokenId;
+        paranet.paranetKCStorageContract = knowledgeCollectionStorageContract;
+        paranet.paranetKCTokenId = knowledgeCollectionTokenId;
         paranet.name = paranetName;
         paranet.description = paranetDescription;
         paranet.nodesAccessPolicy = nodesAccessPolicy;
         paranet.minersAccessPolicy = minersAccessPolicy;
-        paranet.knowledgeAssetsAccessPolicy = knowledgeAssetsAccessPolicy;
+        paranet.knowledgeCollectionsAccessPolicy = knowledgeColletionsAccessPolicy;
 
-        return keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId));
+        return keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId));
     }
 
     function deleteParanet(bytes32 paranetId) external onlyContracts {
@@ -59,7 +59,7 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
     function paranetExists(bytes32 paranetId) external view returns (bool) {
         return
             keccak256(
-                abi.encodePacked(paranets[paranetId].paranetKAStorageContract, paranets[paranetId].paranetKATokenId)
+                abi.encodePacked(paranets[paranetId].paranetKCStorageContract, paranets[paranetId].paranetKCTokenId)
             ) == paranetId;
     }
 
@@ -68,19 +68,19 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
 
         return
             ParanetLib.ParanetMetadata({
-                paranetKAStorageContract: paranet.paranetKAStorageContract,
-                paranetKATokenId: paranet.paranetKATokenId,
+                paranetKCStorageContract: paranet.paranetKCStorageContract,
+                paranetKCTokenId: paranet.paranetKCTokenId,
                 name: paranet.name,
                 description: paranet.description,
                 nodesAccessPolicy: paranet.nodesAccessPolicy,
                 minersAccessPolicy: paranet.minersAccessPolicy,
-                knowledgeAssetsAccessPolicy: paranet.knowledgeAssetsAccessPolicy,
+                knowledgeCollectionsAccessPolicy: paranet.knowledgeCollectionsAccessPolicy,
                 cumulativeKnowledgeValue: paranet.cumulativeKnowledgeValue
             });
     }
 
-    function getParanetKnowledgeAssetLocator(bytes32 paranetId) external view returns (address, uint256) {
-        return (paranets[paranetId].paranetKAStorageContract, paranets[paranetId].paranetKATokenId);
+    function getParanetKnowledgeCollectionLocator(bytes32 paranetId) external view returns (address, uint256) {
+        return (paranets[paranetId].paranetKCStorageContract, paranets[paranetId].paranetKCTokenId);
     }
 
     function getName(bytes32 paranetId) external view returns (string memory) {
@@ -121,17 +121,17 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         paranets[paranetId].minersAccessPolicy = minersAccessPolicy;
     }
 
-    function getKnowledgeAssetsAccessPolicy(
+    function getKnowledgeCollectionsAccessPolicy(
         bytes32 paranetId
-    ) external view returns (ParanetLib.KnowledgeAssetsAccessPolicy) {
-        return paranets[paranetId].knowledgeAssetsAccessPolicy;
+    ) external view returns (ParanetLib.KnowledgeCollectionsAccessPolicy) {
+        return paranets[paranetId].getKnowledgeCollectionsAccessPolicy;
     }
 
-    function setKnowledgeAssetsAccessPolicy(
+    function setKnowledgeCollectionsAccessPolicy(
         bytes32 paranetId,
-        ParanetLib.KnowledgeAssetsAccessPolicy knowledgeAssetsAccessPolicy
+        ParanetLib.KnowledgeCollectionAccessPolicy knowledgeCollectionAccessPolicy
     ) external onlyContracts {
-        paranets[paranetId].knowledgeAssetsAccessPolicy = knowledgeAssetsAccessPolicy;
+        paranets[paranetId].knowledgeCollectionAccessPolicy = knowledgeCollectionAccessPolicy;
     }
 
     function addNodeJoinRequest(
@@ -408,95 +408,98 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         return paranets[paranetId].paranetKnowledgeMinerAccessRequests[miner].length;
     }
 
-    function addKnowledgeAsset(bytes32 paranetId, bytes32 knowledgeAssetId) external onlyContracts {
-        paranets[paranetId].registeredKnowledgeAssetsIndexes[knowledgeAssetId] = paranets[paranetId]
-            .knowledgeAssets
+    function addKnowledgeCollecton(bytes32 paranetId, bytes32 knowledgeCollectionId) external onlyContracts {
+        paranets[paranetId].registeredKnowledgeCollectionsIndexes[knowledgeCollectionId] = paranets[paranetId]
+            .knowledgeCollections
             .length;
-        paranets[paranetId].knowledgeAssets.push(knowledgeAssetId);
+        paranets[paranetId].knowledgeCollections.push(knowledgeCollectionId);
     }
 
-    function removeKnowledgeAsset(bytes32 paranetId, bytes32 knowledgeAssetId) external onlyContracts {
-        paranets[paranetId].knowledgeAssets[
-            paranets[paranetId].registeredKnowledgeAssetsIndexes[knowledgeAssetId]
-        ] = paranets[paranetId].knowledgeAssets[paranets[paranetId].knowledgeAssets.length - 1];
-        paranets[paranetId].registeredKnowledgeAssetsIndexes[
-            paranets[paranetId].knowledgeAssets[paranets[paranetId].knowledgeAssets.length - 1]
-        ] = paranets[paranetId].registeredKnowledgeAssetsIndexes[knowledgeAssetId];
+    function removeKnowledgeCollection(bytes32 paranetId, bytes32 knowledgeCollectionId) external onlyContracts {
+        paranets[paranetId].knowledgeCollections[
+            paranets[paranetId].registeredKnowledgeCollectionsIndexes[knowledgeCollectionId]
+        ] = paranets[paranetId].knowledgeCollections[paranets[paranetId].knowledgeCollections.length - 1];
+        paranets[paranetId].registeredKnowledgeCollectionsIndexes[
+            paranets[paranetId].knowledgeCollections[paranets[paranetId].knowledgeCollections.length - 1]
+        ] = paranets[paranetId].registeredKnowledgeCollectionsIndexes[knowledgeCollectionId];
 
-        delete paranets[paranetId].registeredKnowledgeAssetsIndexes[knowledgeAssetId];
-        paranets[paranetId].knowledgeAssets.pop();
+        delete paranets[paranetId].registeredKnowledgeCollectionsIndexes[knowledgeCollectionId];
+        paranets[paranetId].knowledgeCollections.pop();
     }
 
-    function getKnowledgeAssets(bytes32 paranetId) external view returns (bytes32[] memory) {
-        return paranets[paranetId].knowledgeAssets;
+    function getKnowledgeCollections(bytes32 paranetId) external view returns (bytes32[] memory) {
+        return paranets[paranetId].knowledgeCollections;
     }
 
-    function getKnowledgeAssetsWithPagination(
+    function getKnowledgeCollectionsWithPagination(
         bytes32 paranetId,
         uint256 offset,
         uint256 limit
     ) external view returns (bytes32[] memory) {
-        if (offset >= paranets[paranetId].knowledgeAssets.length) {
+        if (offset >= paranets[paranetId].knowledgeCollections.length) {
             return new bytes32[](0);
         }
 
-        uint256 fetchCount = (offset + limit > paranets[paranetId].knowledgeAssets.length)
-            ? paranets[paranetId].knowledgeAssets.length - offset
+        uint256 fetchCount = (offset + limit > paranets[paranetId].knowledgeCollections.length)
+            ? paranets[paranetId].knowledgeCollections.length - offset
             : limit;
-        bytes32[] memory knowledgeAssets = new bytes32[](fetchCount);
+        bytes32[] memory knowledgeCollections = new bytes32[](fetchCount);
 
         for (uint256 i = 0; i < fetchCount; i++) {
-            knowledgeAssets[i] = paranets[paranetId].knowledgeAssets[offset + i];
+            knowledgeCollections[i] = paranets[paranetId].knowledgeCollections[offset + i];
         }
 
-        return knowledgeAssets;
+        return knowledgeCollections;
     }
 
-    function getKnowledgeAssetsStartingFromKnowledgeAssetId(
+    function getKnowledgeCollectionsStartingFromKnowlCollectionId(
         bytes32 paranetId,
-        bytes32 knowledgeAssetId,
+        bytes32 knowledgeCollectionId,
         uint256 limit
     ) external view returns (bytes32[] memory) {
         if (
-            paranets[paranetId].knowledgeAssets[
-                paranets[paranetId].registeredKnowledgeAssetsIndexes[knowledgeAssetId]
-            ] != knowledgeAssetId
+            paranets[paranetId].knowledgeCollections[
+                paranets[paranetId].registeredKnowledgeCollectionsIndexes[knowledgeCollectionId]
+            ] != knowledgeCollectionId
         ) {
-            revert("Invalid starting KA");
+            revert("Invalid starting KC");
         }
 
         if (
-            paranets[paranetId].registeredKnowledgeAssetsIndexes[knowledgeAssetId] >=
-            paranets[paranetId].knowledgeAssets.length
+            paranets[paranetId].registeredKnowledgeCollectionsIndexes[knowledgeCollectionId] >=
+            paranets[paranetId].knowledgeCollections.length
         ) {
             return new bytes32[](0);
         }
 
-        uint256 fetchCount = (paranets[paranetId].registeredKnowledgeAssetsIndexes[knowledgeAssetId] + limit >
-            paranets[paranetId].knowledgeAssets.length)
-            ? paranets[paranetId].knowledgeAssets.length -
-                paranets[paranetId].registeredKnowledgeAssetsIndexes[knowledgeAssetId]
+        uint256 fetchCount = (paranets[paranetId].registeredKnowledgeCollectionsIndexes[knowledgeCollectionId] + limit >
+            paranets[paranetId].knowledgCollections.length)
+            ? paranets[paranetId].knowledgCollections.length -
+                paranets[paranetId].registeredKnowledgeCollectionsIndexes[knowledgeCollectionId]
             : limit;
-        bytes32[] memory knowledgeAssets = new bytes32[](fetchCount);
+        bytes32[] memory knowledgeCollections = new bytes32[](fetchCount);
 
         for (uint256 i = 0; i < fetchCount; i++) {
-            knowledgeAssets[i] = paranets[paranetId].knowledgeAssets[
-                paranets[paranetId].registeredKnowledgeAssetsIndexes[knowledgeAssetId] + i
+            knowledgeCollections[i] = paranets[paranetId].knowledgeCollections[
+                paranets[paranetId].registeredKnowledgeCollectionsIndexes[knowledgeCollectionId] + i
             ];
         }
 
-        return knowledgeAssets;
+        return knowledgeCollections;
     }
 
-    function getKnowledgeAssetsCount(bytes32 paranetId) external view returns (uint256) {
-        return paranets[paranetId].knowledgeAssets.length;
+    function getKnowledgeCollectionsCount(bytes32 paranetId) external view returns (uint256) {
+        return paranets[paranetId].knowledgeCollections.length;
     }
 
-    function isKnowledgeAssetRegistered(bytes32 paranetId, bytes32 knowledgeAssetId) external view returns (bool) {
-        return (paranets[paranetId].knowledgeAssets.length != 0 &&
-            paranets[paranetId].knowledgeAssets[
-                paranets[paranetId].registeredKnowledgeAssetsIndexes[knowledgeAssetId]
+    function isKnowledgeCollectionRegistered(
+        bytes32 paranetId,
+        bytes32 knowledgeCollectionId
+    ) external view returns (bool) {
+        return (paranets[paranetId].knowledgeCollections.length != 0 &&
+            paranets[paranetId].knowledgeCollections[
+                paranets[paranetId].registeredKnowledgeCollectionsIndexes[knowledgeCollectionId]
             ] ==
-            knowledgeAssetId);
+            knowledgeCollectionId);
     }
 }

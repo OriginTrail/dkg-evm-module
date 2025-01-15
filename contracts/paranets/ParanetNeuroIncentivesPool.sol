@@ -244,11 +244,10 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     }
 
     function isParanetOperator(address addr) public view returns (bool) {
-        (address paranetKAStorageContract, uint256 paranetKATokenId) = paranetsRegistry.getParanetKnowledgeAssetLocator(
-            parentParanetId
-        );
+        (address paranetKCStorageContract, uint256 paranetKCTokenId) = paranetsRegistry
+            .getParanetKnowledgeCollectionLocator(parentParanetId);
 
-        return IERC721(paranetKAStorageContract).ownerOf(paranetKATokenId) == addr;
+        return IERC721(paranetKCStorageContract).ownerOf(paranetKCTokenId) == addr;
     }
 
     function isProposalVoter(address addr) public view returns (bool) {

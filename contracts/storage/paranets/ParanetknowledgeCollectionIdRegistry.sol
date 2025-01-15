@@ -11,7 +11,7 @@ contract ParanetknowledgeCollectionIdRegistry is INamed, IVersioned, HubDependen
     string private constant _NAME = "ParanetknowledgeCollectionIdRegistry";
     string private constant _VERSION = "1.0.1";
 
-    // Knowledge Asset ID => Knowledge Asset On Paranet
+    // Knowledge Collection ID => Knowledge Collection On Paranet
     mapping(bytes32 => ParanetLib.KnolwedgeCollection) internal knolwedgeCollections;
 
     // solhint-disable-next-line no-empty-blocks

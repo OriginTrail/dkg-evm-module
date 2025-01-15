@@ -14,8 +14,8 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IInitializable {
     event ParanetIncetivesPoolDeployed(
-        address indexed paranetKAStorageContract,
-        uint256 indexed paranetKATokenId,
+        address indexed paranetKCStorageContract,
+        uint256 indexed paranetKCTokenId,
         ParanetLib.IncentivesPool incentivesPool
     );
 
@@ -27,8 +27,11 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
 
-    modifier onlyKnowledgeAssetOwner(address knowledgeAssetStorageContract, uint256 knowledgeAssetTokenId) {
-        _checkKnowledgeAssetOwner(knowledgeAssetStorageContract, knowledgeAssetTokenId);
+    modifier onlyKnowledgeCollectionOwner(
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId
+    ) {
+        _checkKnowledgeCollectionOwner(knowledgeCollectionStorageContract, knowledgeCollectionTokenId);
         _;
     }
 
@@ -45,27 +48,27 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
     }
 
     function deployNeuroIncentivesPool(
-        address paranetKAStorageContract,
-        uint256 paranetKATokenId,
+        address paranetKCStorageContract,
+        uint256 paranetKCTokenId,
         uint256 tracToNeuroEmissionMultiplier,
         uint16 paranetOperatorRewardPercentage,
         uint16 paranetIncentivizationProposalVotersRewardPercentage
-    ) external onlyKnowledgeAssetOwner(paranetKAStorageContract, paranetKATokenId) returns (address) {
+    ) external onlyKnowledgeCollectionOwner(paranetKCStorageContract, paranetKCTokenId) returns (address) {
         Hub h = hub;
         ParanetsRegistry pr = paranetsRegistry;
 
         if (
             pr.hasIncentivesPoolByType(
-                keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId)),
                 "Neuroweb"
             )
         ) {
             revert ParanetLib.ParanetIncentivesPoolAlreadyExists(
-                paranetKAStorageContract,
-                paranetKATokenId,
+                paranetKCStorageContract,
+                paranetKCTokenId,
                 "Neuroweb",
                 pr.getIncentivesPoolAddress(
-                    keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+                    keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId)),
                     "Neuroweb"
                 )
             );
@@ -75,35 +78,35 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
             address(h),
             h.getContractAddress("ParanetsRegistry"),
             h.getContractAddress("ParanetKnowledgeMinersRegistry"),
-            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+            keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId)),
             tracToNeuroEmissionMultiplier,
             paranetOperatorRewardPercentage,
             paranetIncentivizationProposalVotersRewardPercentage
         );
 
         pr.setIncentivesPoolAddress(
-            keccak256(abi.encodePacked(paranetKAStorageContract, paranetKATokenId)),
+            keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId)),
             "Neuroweb",
             address(incentivesPool)
         );
 
         emit ParanetIncetivesPoolDeployed(
-            paranetKAStorageContract,
-            paranetKATokenId,
+            paranetKCStorageContract,
+            paranetKCTokenId,
             ParanetLib.IncentivesPool({poolType: "Neuroweb", addr: address(incentivesPool)})
         );
 
         return address(incentivesPool);
     }
 
-    function _checkKnowledgeAssetOwner(
-        address knowledgeAssetStorageContract,
-        uint256 knowledgeAssetTokenId
+    function _checkKnowledgeCollectionOwner(
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId
     ) internal view virtual {
-        require(hub.isAssetStorage(knowledgeAssetStorageContract), "Given address isn't KA Storage");
+        require(hub.isCollectionStorage(knowledgeCollectionStorageContract), "Given address isn't KC Storage");
         require(
-            IERC721(knowledgeAssetStorageContract).ownerOf(knowledgeAssetTokenId) == msg.sender,
-            "Caller isn't the owner of the KA"
+            IERC721(knowledgeCollectionStorageContract).ownerOf(knowledgeCollectionTokenId) == msg.sender,
+            "Caller isn't the owner of the KC"
         );
     }
 }

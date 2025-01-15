@@ -26,18 +26,18 @@ contract ParanetServicesRegistry is INamed, IVersioned, HubDependent {
     }
 
     function registerParanetService(
-        address paranetServiceKAStorageContract,
-        uint256 paranetServiceKATokenId,
+        address paranetServiceKCStorageContract,
+        uint256 paranetServiceKCTokenId,
         string calldata paranetServiceName,
         string calldata paranetServiceDescription,
         address[] calldata paranetServiceAddresses
     ) external onlyContracts returns (bytes32) {
         ParanetLib.ParanetService storage paranetService = paranetServices[
-            keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId))
+            keccak256(abi.encodePacked(paranetServiceKCStorageContract, paranetServiceKCTokenId))
         ];
 
-        paranetService.paranetServiceKAStorageContract = paranetServiceKAStorageContract;
-        paranetService.paranetServiceKATokenId = paranetServiceKATokenId;
+        paranetService.paranetServiceKCStorageContract = paranetServiceKCStorageContract;
+        paranetService.paranetServiceKCTokenId = paranetServiceKCTokenId;
         paranetService.name = paranetServiceName;
         paranetService.description = paranetServiceDescription;
         paranetService.paranetServiceAddresses = paranetServiceAddresses;
@@ -50,7 +50,7 @@ contract ParanetServicesRegistry is INamed, IVersioned, HubDependent {
             }
         }
 
-        return keccak256(abi.encodePacked(paranetServiceKAStorageContract, paranetServiceKATokenId));
+        return keccak256(abi.encodePacked(paranetServiceKCStorageContract, paranetServiceKCTokenId));
     }
 
     function deleteParanetService(bytes32 paranetServiceId) external onlyContracts {
@@ -61,8 +61,8 @@ contract ParanetServicesRegistry is INamed, IVersioned, HubDependent {
         return
             keccak256(
                 abi.encodePacked(
-                    paranetServices[paranetServiceId].paranetServiceKAStorageContract,
-                    paranetServices[paranetServiceId].paranetServiceKATokenId
+                    paranetServices[paranetServiceId].paranetServiceKCStorageContract,
+                    paranetServices[paranetServiceId].paranetServiceKCTokenId
                 )
             ) == paranetServiceId;
     }
@@ -72,18 +72,20 @@ contract ParanetServicesRegistry is INamed, IVersioned, HubDependent {
     ) external view returns (ParanetLib.ParanetServiceMetadata memory) {
         return
             ParanetLib.ParanetServiceMetadata({
-                paranetServiceKAStorageContract: paranetServices[paranetServiceId].paranetServiceKAStorageContract,
-                paranetServiceKATokenId: paranetServices[paranetServiceId].paranetServiceKATokenId,
+                paranetServiceKCStorageContract: paranetServices[paranetServiceId].paranetServiceKCStorageContract,
+                paranetServiceKCTokenId: paranetServices[paranetServiceId].paranetServiceKCTokenId,
                 name: paranetServices[paranetServiceId].name,
                 description: paranetServices[paranetServiceId].description,
                 paranetServiceAddresses: paranetServices[paranetServiceId].paranetServiceAddresses
             });
     }
 
-    function getParanetServiceKnowledgeAssetLocator(bytes32 paranetServiceId) external view returns (address, uint256) {
+    function getParanetServiceKnowledgeCollectionLocator(
+        bytes32 paranetServiceId
+    ) external view returns (address, uint256) {
         return (
-            paranetServices[paranetServiceId].paranetServiceKAStorageContract,
-            paranetServices[paranetServiceId].paranetServiceKATokenId
+            paranetServices[paranetServiceId].paranetServiceKCStorageContract,
+            paranetServices[paranetServiceId].paranetServiceKCTokenId
         );
     }
 

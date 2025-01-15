@@ -56,7 +56,7 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
             ParanetLib.KnowledgeMinerMetadata({
                 addr: addr,
                 totalTracSpent: knowledgeMiners[addr].totalTracSpent,
-                totalSubmittedKnowledgeAssetsCount: knowledgeMiners[addr].totalSubmittedKnowledgeAssetsCount
+                totalSubmittedKnowledgeCollectionsCount: knowledgeMiners[addr].totalSubmittedKnowledgeCollectionsCount
             });
     }
 
@@ -76,71 +76,74 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
         knowledgeMiners[miner].totalTracSpent -= subtractedTracSpent;
     }
 
-    function getTotalSubmittedKnowledgeAssetsCount(address miner) external view returns (uint256) {
-        return knowledgeMiners[miner].totalSubmittedKnowledgeAssetsCount;
+    function getTotalSubmittedKnowledgeCollectionsCount(address miner) external view returns (uint256) {
+        return knowledgeMiners[miner].totalSubmittedKnowledgeCollectionsCount;
     }
 
-    function setTotalSubmittedKnowledgeAssetsCount(
+    function setTotalSubmittedKnowledgeCollectionsCount(
         address miner,
-        uint256 totalSubmittedKnowledgeAssetsCount
+        uint256 totalSubmittedKnowledgeCollectionsCount
     ) external onlyContracts {
-        knowledgeMiners[miner].totalSubmittedKnowledgeAssetsCount = totalSubmittedKnowledgeAssetsCount;
+        knowledgeMiners[miner].totalSubmittedKnowledgeCollectionsCount = totalSubmittedKnowledgeCollectionsCount;
     }
 
-    function incrementTotalSubmittedKnowledgeAssetsCount(address miner) external onlyContracts {
+    function incrementTotalSubmittedKnowledgeCollectionsCount(address miner) external onlyContracts {
         unchecked {
-            knowledgeMiners[miner].totalSubmittedKnowledgeAssetsCount++;
+            knowledgeMiners[miner].totalSubmittedKnowledgeCollectionsCount++;
         }
     }
 
-    function decrementTotalSubmittedKnowledgeAssetsCount(address miner) external onlyContracts {
+    function decrementTotalSubmittedKnowledgeCollectionsCount(address miner) external onlyContracts {
         unchecked {
-            knowledgeMiners[miner].totalSubmittedKnowledgeAssetsCount--;
+            knowledgeMiners[miner].totalSubmittedKnowledgeCollectionsCount--;
         }
     }
 
-    function addSubmittedKnowledgeAsset(
+    function addSubmittedKnowledgeCollection(
         address miner,
         bytes32 paranetId,
-        bytes32 knowledgeAssetId
+        bytes32 knowledgeCollectionId
     ) external onlyContracts {
-        knowledgeMiners[miner].submittedKnowledgeAssetsIndexes[paranetId][knowledgeAssetId] = knowledgeMiners[miner]
-            .submittedKnowledgeAssets[paranetId]
-            .length;
-        knowledgeMiners[miner].submittedKnowledgeAssets[paranetId].push(knowledgeAssetId);
+        knowledgeMiners[miner].submittedKnowledgeCollectionsIndexes[paranetId][knowledgeCollectionId] = knowledgeMiners[
+            miner
+        ].submittedKnowledgeCollections[paranetId].length;
+        knowledgeMiners[miner].submittedKnowledgeCollections[paranetId].push(knowledgeCollectionId);
     }
 
-    function removeSubmittedKnowledgeAsset(
+    function removeSubmittedKnowledgeCollection(
         address miner,
         bytes32 paranetId,
-        bytes32 knowledgeAssetId
+        bytes32 knowledgeCollectionId
     ) external onlyContracts {
         // 1. Move the last element to the slot of the element to remove
-        knowledgeMiners[miner].submittedKnowledgeAssets[paranetId][
-            knowledgeMiners[miner].submittedKnowledgeAssetsIndexes[paranetId][knowledgeAssetId]
-        ] = knowledgeMiners[miner].submittedKnowledgeAssets[paranetId][
-            knowledgeMiners[miner].submittedKnowledgeAssets[paranetId].length - 1
+        knowledgeMiners[miner].submittedKnowlCollections[paranetId][
+            knowledgeMiners[miner].submittedKnowledgeCollectionsIndexes[paranetId][knowledgeCollectionId]
+        ] = knowledgeMiners[miner].submittedKnowledgeCollections[paranetId][
+            knowledgeMiners[miner].submittedKnowledgeCollections[paranetId].length - 1
         ];
 
         // 2. Update the index of the moved element
-        knowledgeMiners[miner].submittedKnowledgeAssetsIndexes[paranetId][
-            knowledgeMiners[miner].submittedKnowledgeAssets[paranetId][
-                knowledgeMiners[miner].submittedKnowledgeAssets[paranetId].length - 1
+        knowledgeMiners[miner].submittedKnowledgeACollectionIndexes[paranetId][
+            knowledgeMiners[miner].submittedKnowledgeCollections[paranetId][
+                knowledgeMiners[miner].submittedKnowledgeCollections[paranetId].length - 1
             ]
-        ] = knowledgeMiners[miner].submittedKnowledgeAssetsIndexes[paranetId][knowledgeAssetId];
+        ] = knowledgeMiners[miner].submittedKnowledgeCollectionsIndexes[paranetId][knowledgeCollectionId];
 
         // 3. Remove the last element from the array
-        knowledgeMiners[miner].submittedKnowledgeAssets[paranetId].pop();
+        knowledgeMiners[miner].submittedKnowledgeCollections[paranetId].pop();
 
         // 4. Delete the index of the removed element
-        delete knowledgeMiners[miner].submittedKnowledgeAssetsIndexes[paranetId][knowledgeAssetId];
+        delete knowledgeMiners[miner].submittedKnowledgeCollectionsIndexes[paranetId][knowledgeCollectionId];
     }
 
-    function getSubmittedKnowledgeAssets(address miner, bytes32 paranetId) external view returns (bytes32[] memory) {
-        return knowledgeMiners[miner].submittedKnowledgeAssets[paranetId];
+    function getSubmittedKnowledgeCollections(
+        address miner,
+        bytes32 paranetId
+    ) external view returns (bytes32[] memory) {
+        return knowledgeMiners[miner].submittedKnowledgeCollections[paranetId];
     }
 
-    function getSubmittedKnowledgeAssets(
+    function getSubmittedKnowledgeCollections(
         address miner,
         bytes32 paranetId,
         uint256 start,
@@ -148,13 +151,13 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
     ) external view returns (bytes32[] memory) {
         require(start <= end, "Start should be <= End");
         require(
-            end <= knowledgeMiners[miner].submittedKnowledgeAssets[paranetId].length,
+            end <= knowledgeMiners[miner].submittedKnowledgeCollections[paranetId].length,
             "End should be <= length of Array"
         );
 
         bytes32[] memory slice = new bytes32[](end - start);
         for (uint256 i; i < slice.length; ) {
-            slice[i] = knowledgeMiners[miner].submittedKnowledgeAssets[paranetId][i];
+            slice[i] = knowledgeMiners[miner].submittedKnowledgeCollections[paranetId][i];
 
             unchecked {
                 i++;
@@ -164,91 +167,92 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
         return slice;
     }
 
-    function addUpdatingKnowledgeAssetState(
+    function addUpdatingKnowledgeCollectionState(
         address miner,
         bytes32 paranetId,
-        address knowledgeAssetStorageContract,
-        uint256 tokenId,
-        bytes32 assertionId,
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId,
+        bytes32 assertionId, // Should this be renamed
         uint96 updateTokenAmount
     ) external onlyContracts {
-        knowledgeMiners[miner].updatingKnowledgeAssetStateIndexes[paranetId][
-            keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId, assertionId))
-        ] = knowledgeMiners[miner].updatingKnowledgeAssetStates[paranetId].length;
+        knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][
+            keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId, assertionId))
+        ] = knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length;
 
-        knowledgeMiners[miner].updatingKnowledgeAssetStates[paranetId].push(
-            ParanetLib.UpdatingKnowledgeAssetState({
-                knowledgeAssetStorageContract: knowledgeAssetStorageContract,
-                tokenId: tokenId,
+        knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].push(
+            ParanetLib.UpdatingKnowledgeCollectionState({
+                knowledgeCollectionStorageContract: knowledgeCollectionStorageContract,
+                knowledgeCollectionTokenId: knowledgeCollectionTokenId,
                 assertionId: assertionId,
                 updateTokenAmount: updateTokenAmount
             })
         );
     }
 
-    function removeUpdatingKnowledgeAssetState(
+    // What to do with updating this has to be reworked
+    function removeUpdatingKnowledgeCollectionState(
         address miner,
         bytes32 paranetId,
-        bytes32 knowledgeAssetStateId
+        bytes32 knowledgeCollectionStateId
     ) external onlyContracts {
         // 1. Move the last element to the slot of the element to remove
-        knowledgeMiners[miner].updatingKnowledgeAssetStates[paranetId][
-            knowledgeMiners[miner].updatingKnowledgeAssetStateIndexes[paranetId][knowledgeAssetStateId]
-        ] = knowledgeMiners[miner].updatingKnowledgeAssetStates[paranetId][
-            knowledgeMiners[miner].updatingKnowledgeAssetStates[paranetId].length - 1
+        knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId][
+            knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId]
+        ] = knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId][
+            knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length - 1
         ];
 
         // 2. Update the index of the moved element
-        knowledgeMiners[miner].updatingKnowledgeAssetStateIndexes[paranetId][
+        knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][
             keccak256(
                 abi.encodePacked(
                     knowledgeMiners[miner]
-                    .updatingKnowledgeAssetStates[paranetId][
-                        knowledgeMiners[miner].updatingKnowledgeAssetStates[paranetId].length - 1
-                    ].knowledgeAssetStorageContract,
+                    .updatingKnowledgeCollectionStates[paranetId][
+                        knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length - 1
+                    ].knowledgeCollectionStorageContract,
                     knowledgeMiners[miner]
-                    .updatingKnowledgeAssetStates[paranetId][
-                        knowledgeMiners[miner].updatingKnowledgeAssetStates[paranetId].length - 1
+                    .updatingKnowledgeCollectionStates[paranetId][
+                        knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length - 1
                     ].tokenId,
                     knowledgeMiners[miner]
-                    .updatingKnowledgeAssetStates[paranetId][
-                        knowledgeMiners[miner].updatingKnowledgeAssetStates[paranetId].length - 1
+                    .updatingKnowledgeCollectionStates[paranetId][
+                        knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length - 1
                     ].assertionId
                 )
             )
-        ] = knowledgeMiners[miner].updatingKnowledgeAssetStateIndexes[paranetId][knowledgeAssetStateId];
+        ] = knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId];
 
         // 3. Remove the last element from the array
-        knowledgeMiners[miner].updatingKnowledgeAssetStates[paranetId].pop();
+        knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].pop();
 
         // 4. Delete the index of the removed element
-        delete knowledgeMiners[miner].updatingKnowledgeAssetStateIndexes[paranetId][knowledgeAssetStateId];
+        delete knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId];
     }
 
-    function getUpdatingKnowledgeAssetStates(
+    function getUpdatingKnowledgeCollectionStates(
         address miner,
         bytes32 paranetId
-    ) external view returns (ParanetLib.UpdatingKnowledgeAssetState[] memory) {
-        return knowledgeMiners[miner].updatingKnowledgeAssetStates[paranetId];
+    ) external view returns (ParanetLib.UpdatingKnowledgeCollectionState[] memory) {
+        return knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId];
     }
 
-    function getUpdatingKnowledgeAssetStates(
+    function getUpdatingKnowledgeCollectionStates(
         address miner,
         bytes32 paranetId,
         uint256 start,
         uint256 end
-    ) external view returns (ParanetLib.UpdatingKnowledgeAssetState[] memory) {
+    ) external view returns (ParanetLib.UpdatingKnowledgeCollectionState[] memory) {
         require(start <= end, "Start should be <= End");
         require(
-            end <= knowledgeMiners[miner].updatingKnowledgeAssetStates[paranetId].length,
+            end <= knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length,
             "End should be <= length of Array"
         );
 
-        ParanetLib.UpdatingKnowledgeAssetState[] memory slice = new ParanetLib.UpdatingKnowledgeAssetState[](
+        ParanetLib.UpdatingKnowledgeCollectionState[] memory slice = new ParanetLib.UpdatingKnowledgeCollectionState[](
             end - start
         );
         for (uint256 i; i < slice.length; ) {
-            slice[i] = knowledgeMiners[miner].updatingKnowledgeAssetStates[paranetId][i];
+            slice[i] = knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId][i];
 
             unchecked {
                 i++;
@@ -258,39 +262,39 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
         return slice;
     }
 
-    function setUpdatingKnowledgeAssetUpdateTokenAmount(
+    function setUpdatingKnowledgeCollectionUpdateTokenAmount(
         address miner,
         bytes32 paranetId,
-        bytes32 knowledgeAssetStateId,
+        bytes32 knowledgeCollectionStateId,
         uint96 updateTokenAmount
     ) external onlyContracts {
         knowledgeMiners[miner]
-        .updatingKnowledgeAssetStates[paranetId][
-            knowledgeMiners[miner].updatingKnowledgeAssetStateIndexes[paranetId][knowledgeAssetStateId]
+        .updatingKnowledgeCollectionStates[paranetId][
+            knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId]
         ].updateTokenAmount = updateTokenAmount;
     }
 
-    function addUpdatingKnowledgeAssetUpdateTokenAmount(
+    function addUpdatingKnowledgeCollectionUpdateTokenAmount(
         address miner,
         bytes32 paranetId,
-        bytes32 knowledgeAssetStateId,
+        bytes32 knowledgeCollectionStateId,
         uint96 addedUpdateTokenAmount
     ) external onlyContracts {
         knowledgeMiners[miner]
-        .updatingKnowledgeAssetStates[paranetId][
-            knowledgeMiners[miner].updatingKnowledgeAssetStateIndexes[paranetId][knowledgeAssetStateId]
+        .updatingKnowledgeCollectionStates[paranetId][
+            knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId]
         ].updateTokenAmount += addedUpdateTokenAmount;
     }
 
-    function subUpdatingKnowledgeAssetUpdateTokenAmount(
+    function subUpdatingKnowledgeCollectionUpdateTokenAmount(
         address miner,
         bytes32 paranetId,
-        bytes32 knowledgeAssetStateId,
+        bytes32 knowledgeCollectionStateId,
         uint96 subtractedUpdateTokenAmount
     ) external onlyContracts {
         knowledgeMiners[miner]
-        .updatingKnowledgeAssetStates[paranetId][
-            knowledgeMiners[miner].updatingKnowledgeAssetStateIndexes[paranetId][knowledgeAssetStateId]
+        .updatingKnowledgeCollectionStates[paranetId][
+            knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId]
         ].updateTokenAmount -= subtractedUpdateTokenAmount;
     }
 
