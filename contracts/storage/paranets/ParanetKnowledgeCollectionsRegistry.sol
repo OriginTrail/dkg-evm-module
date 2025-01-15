@@ -7,7 +7,7 @@ import {INamed} from "../../interfaces/INamed.sol";
 import {IVersioned} from "../../interfaces/IVersioned.sol";
 import {ParanetLib} from "../../libraries/ParanetLib.sol";
 
-contract ParanetknowledgeCollectionIdRegistry is INamed, IVersioned, HubDependent {
+contract ParanetKnowledgeCollectionsRegistry is INamed, IVersioned, HubDependent {
     string private constant _NAME = "ParanetknowledgeCollectionIdRegistry";
     string private constant _VERSION = "1.0.1";
 

@@ -65,7 +65,6 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
 
     function getParanetMetadata(bytes32 paranetId) external view returns (ParanetLib.ParanetMetadata memory) {
         ParanetLib.Paranet storage paranet = paranets[paranetId];
-
         return
             ParanetLib.ParanetMetadata({
                 paranetKCStorageContract: paranet.paranetKCStorageContract,
@@ -124,14 +123,14 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
     function getKnowledgeCollectionsAccessPolicy(
         bytes32 paranetId
     ) external view returns (ParanetLib.KnowledgeCollectionsAccessPolicy) {
-        return paranets[paranetId].getKnowledgeCollectionsAccessPolicy;
+        return paranets[paranetId].knowledgeCollectionsAccessPolicy;
     }
 
     function setKnowledgeCollectionsAccessPolicy(
         bytes32 paranetId,
-        ParanetLib.KnowledgeCollectionAccessPolicy knowledgeCollectionAccessPolicy
+        ParanetLib.KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy
     ) external onlyContracts {
-        paranets[paranetId].knowledgeCollectionAccessPolicy = knowledgeCollectionAccessPolicy;
+        paranets[paranetId].knowledgeCollectionsAccessPolicy = knowledgeCollectionsAccessPolicy;
     }
 
     function addNodeJoinRequest(
@@ -473,8 +472,8 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         }
 
         uint256 fetchCount = (paranets[paranetId].registeredKnowledgeCollectionsIndexes[knowledgeCollectionId] + limit >
-            paranets[paranetId].knowledgCollections.length)
-            ? paranets[paranetId].knowledgCollections.length -
+            paranets[paranetId].knowledgeCollections.length)
+            ? paranets[paranetId].knowledgeCollections.length -
                 paranets[paranetId].registeredKnowledgeCollectionsIndexes[knowledgeCollectionId]
             : limit;
         bytes32[] memory knowledgeCollections = new bytes32[](fetchCount);

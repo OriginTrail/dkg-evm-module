@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {ParanetKnowledgeCollectionsRegistry} from "../storage/paranets/ParanetKnowledgeCollectionRegistry.sol";
+import {ParanetKnowledgeCollectionsRegistry} from "../storage/paranets/ParanetKnowledgeCollectionsRegistry.sol";
 import {ParanetKnowledgeMinersRegistry} from "../storage/paranets/ParanetKnowledgeMinersRegistry.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {ParanetServicesRegistry} from "../storage/paranets/ParanetServicesRegistry.sol";

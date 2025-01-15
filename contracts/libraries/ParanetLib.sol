@@ -10,7 +10,7 @@ library ParanetLib {
     uint16 constant PERCENTAGE_SCALING_FACTOR = 10 ** 4;
     uint16 constant MAX_CUMULATIVE_VOTERS_WEIGHT = 10 ** 4;
 
-    struct UniversalAssetLocator {
+    struct UniversalCollectionLocator {
         address knowledgeCollectionStorageContract;
         uint256 knolwedgeCollectionTokenId;
     }
@@ -78,9 +78,9 @@ library ParanetLib {
         mapping(address => uint256) registeredKnowledgeMinersIndexes;
         // Knowledge Miner address => Requests Array
         mapping(address => ParanetKnowledgeMinerAccessRequest[]) paranetKnowledgeMinerAccessRequests;
-        bytes32[] knowledgeAssets;
-        // Knowledge Asset ID => Index in the array
-        mapping(bytes32 => uint256) registeredKnowledgeAssetsIndexes;
+        bytes32[] knowledgeCollections;
+        // Knowledge Collection ID => Index in the array
+        mapping(bytes32 => uint256) registeredKnowledgeCollectionsIndexes;
     }
 
     struct ParanetMetadata {
@@ -90,7 +90,7 @@ library ParanetLib {
         string description;
         NodesAccessPolicy nodesAccessPolicy;
         MinersAccessPolicy minersAccessPolicy;
-        KnowledgeCollectionsAccessPolicy knowledgeCollectonsAccessPolicy;
+        KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy;
         uint96 cumulativeKnowledgeValue;
     }
 
