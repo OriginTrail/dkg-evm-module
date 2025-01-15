@@ -68,7 +68,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "getKnowledgeAssetLocator",
+    "name": "getKnowledgeCollectionLocator",
     "outputs": [
       {
         "internalType": "address",

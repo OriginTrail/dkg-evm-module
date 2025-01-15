@@ -135,9 +135,9 @@ library ParanetLib {
         uint256 totalSubmittedKnowledgeAssetsCount;
     }
 
-    struct KnowledgeAsset {
-        address knowledgeAssetStorageContract;
-        uint256 tokenId;
+    struct KnolwedgeCollection {
+        address knowledgeCollectionStorageContract;
+        uint256 knowledgeCollectionTokenId;
         address minerAddress;
         bytes32 paranetId;
     }

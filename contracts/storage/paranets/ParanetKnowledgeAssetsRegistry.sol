@@ -7,12 +7,12 @@ import {INamed} from "../../interfaces/INamed.sol";
 import {IVersioned} from "../../interfaces/IVersioned.sol";
 import {ParanetLib} from "../../libraries/ParanetLib.sol";
 
-contract ParanetKnowledgeAssetsRegistry is INamed, IVersioned, HubDependent {
-    string private constant _NAME = "ParanetKnowledgeAssetsRegistry";
-    string private constant _VERSION = "1.0.0";
+contract ParanetknowledgeCollectionIdRegistry is INamed, IVersioned, HubDependent {
+    string private constant _NAME = "ParanetknowledgeCollectionIdRegistry";
+    string private constant _VERSION = "1.0.1";
 
     // Knowledge Asset ID => Knowledge Asset On Paranet
-    mapping(bytes32 => ParanetLib.KnowledgeAsset) internal knowledgeAssets;
+    mapping(bytes32 => ParanetLib.KnolwedgeCollection) internal knolwedgeCollections;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependent(hubAddress) {}
@@ -25,63 +25,64 @@ contract ParanetKnowledgeAssetsRegistry is INamed, IVersioned, HubDependent {
         return _VERSION;
     }
 
-    function addKnowledgeAsset(
+    function addKnowledgeCollection(
         bytes32 paranetId,
-        address knowledgeAssetStorageContract,
-        uint256 tokenId,
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId,
         address miner
     ) external onlyContracts returns (bytes32) {
-        knowledgeAssets[keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId))] = ParanetLib
-            .KnowledgeAsset({
-                knowledgeAssetStorageContract: knowledgeAssetStorageContract,
-                tokenId: tokenId,
-                minerAddress: miner,
-                paranetId: paranetId
-            });
+        knolwedgeCollections[
+            keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
+        ] = ParanetLib.KnolwedgeCollection({
+            knowledgeCollectionStorageContract: knowledgeCollectionStorageContract,
+            knowledgeCollectionTokenId: knowledgeCollectionTokenId,
+            minerAddress: miner,
+            paranetId: paranetId
+        });
 
-        return keccak256(abi.encodePacked(knowledgeAssetStorageContract, tokenId));
+        return keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId));
     }
 
-    function removeKnowledgeAsset(bytes32 knowledgeAssetId) external onlyContracts {
-        delete knowledgeAssets[knowledgeAssetId];
+    function removeKnowledgeCollection(bytes32 knowledgeCollectionId) external onlyContracts {
+        delete knolwedgeCollections[knowledgeCollectionId];
     }
 
-    function isParanetKnowledgeAsset(bytes32 knowledgeAssetId) external view returns (bool) {
+    function isParanetKnowledgeCollection(bytes32 knolwedgeCollectionId) external view returns (bool) {
         return
             keccak256(
                 abi.encodePacked(
-                    knowledgeAssets[knowledgeAssetId].knowledgeAssetStorageContract,
-                    knowledgeAssets[knowledgeAssetId].tokenId
+                    knolwedgeCollections[knolwedgeCollectionId].knowledgeCollectionStorageContract,
+                    knolwedgeCollections[knolwedgeCollectionId].knowledgeCollectionTokenId
                 )
-            ) == knowledgeAssetId;
+            ) == knolwedgeCollectionId;
     }
 
-    function getKnowledgeAssetObject(
-        bytes32 knowledgeAssetId
-    ) external view returns (ParanetLib.KnowledgeAsset memory) {
-        return knowledgeAssets[knowledgeAssetId];
+    function getKnowledgeCollectionObject(
+        bytes32 knolwedgeCollectionId
+    ) external view returns (ParanetLib.KnolwedgeCollection memory) {
+        return knolwedgeCollections[knolwedgeCollectionId];
     }
 
-    function getKnowledgeAssetLocator(bytes32 knowledgeAssetId) external view returns (address, uint256) {
+    function getKnowledgeCollectionLocator(bytes32 knowledgeCollectionId) external view returns (address, uint256) {
         return (
-            knowledgeAssets[knowledgeAssetId].knowledgeAssetStorageContract,
-            knowledgeAssets[knowledgeAssetId].tokenId
+            knolwedgeCollections[knowledgeCollectionId].knowledgeCollectionStorageContract,
+            knolwedgeCollections[knowledgeCollectionId].knowledgeCollectionTokenId
         );
     }
 
-    function getMinerAddress(bytes32 knowledgeAssetId) external view returns (address) {
-        return knowledgeAssets[knowledgeAssetId].minerAddress;
+    function getMinerAddress(bytes32 knowledgeCollectionId) external view returns (address) {
+        return knolwedgeCollections[knowledgeCollectionId].minerAddress;
     }
 
-    function setMinerAddress(bytes32 knowledgeAssetId, address minerAddress) external onlyContracts {
-        knowledgeAssets[knowledgeAssetId].minerAddress = minerAddress;
+    function setMinerAddress(bytes32 knowledgeCollectionId, address minerAddress) external onlyContracts {
+        knolwedgeCollections[knowledgeCollectionId].minerAddress = minerAddress;
     }
 
-    function getParanetId(bytes32 knowledgeAssetId) external view returns (bytes32) {
-        return knowledgeAssets[knowledgeAssetId].paranetId;
+    function getParanetId(bytes32 knowledgeCollectionId) external view returns (bytes32) {
+        return knolwedgeCollections[knowledgeCollectionId].paranetId;
     }
 
-    function setParanetId(bytes32 knowledgeAssetId, bytes32 paranetId) external onlyContracts {
-        knowledgeAssets[knowledgeAssetId].paranetId = paranetId;
+    function setParanetId(bytes32 knowledgeCollectionId, bytes32 paranetId) external onlyContracts {
+        knolwedgeCollections[knowledgeCollectionId].paranetId = paranetId;
     }
 }
