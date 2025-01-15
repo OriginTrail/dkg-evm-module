@@ -882,7 +882,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         if (
-            -paranetKnowledgeAssetsRegistry.isParanetKnowledgeAsset(
+            paranetKnowledgeAssetsRegistry.isParanetKnowledgeAsset(
                 keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionId))
             )
         ) {
