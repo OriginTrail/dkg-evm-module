@@ -119,11 +119,11 @@ library ParanetLib {
     struct KnowledgeMiner {
         address addr;
         uint96 totalTracSpent;
-        uint256 totalSubmittedKnowledgeCollectionCount;
+        uint256 totalSubmittedKnowledgeCollectionsCount;
         mapping(bytes32 => bytes32[]) submittedKnowledgeCollections;
-        mapping(bytes32 => mapping(bytes32 => uint256)) submittedKnowledgeACollectionIndexes;
-        mapping(bytes32 => UpdatingKnowledgeCollectionState[]) updatingKnowledgeCollectionStates;
-        mapping(bytes32 => mapping(bytes32 => uint256)) updatingKnowledgeCollectionStateIndexes;
+        mapping(bytes32 => mapping(bytes32 => uint256)) submittedKnowledgeCollectionsIndexes;
+        mapping(bytes32 => UpdatingKnowledgeCollectionState[]) updatingKnowledgeCollectionsStates;
+        mapping(bytes32 => mapping(bytes32 => uint256)) updatingKnowledgeCollectionsStateIndexes;
         mapping(bytes32 => uint96) cumulativeTracSpent;
         mapping(bytes32 => uint96) unrewardedTracSpent;
         mapping(bytes32 => uint256) cumulativeAwardedNeuro;
@@ -144,7 +144,7 @@ library ParanetLib {
 
     struct UpdatingKnowledgeCollectionState {
         address knowledgeCollectionStorageContract;
-        uint256 tokenId;
+        uint256 knowledgeCollectionTokenId;
         bytes32 assertionId;
         uint96 updateTokenAmount;
     }

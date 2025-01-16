@@ -1067,7 +1067,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         address knowledgeCollectionStorageContractAddress,
         uint256 knowledgeCollectionId
     ) internal view virtual {
-        require(hub.isCollectionStorage(knowledgeCollectionStorageContractAddress), "Given address isn't KC Storage");
+        require(hub.isAssetStorage(knowledgeCollectionStorageContractAddress), "Given address isn't KC Storage");
 
         KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(
             knowledgeCollectionStorageContractAddress

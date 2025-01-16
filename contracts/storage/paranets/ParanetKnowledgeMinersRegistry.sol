@@ -116,14 +116,14 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
         bytes32 knowledgeCollectionId
     ) external onlyContracts {
         // 1. Move the last element to the slot of the element to remove
-        knowledgeMiners[miner].submittedKnowlCollections[paranetId][
+        knowledgeMiners[miner].submittedKnowledgeCollections[paranetId][
             knowledgeMiners[miner].submittedKnowledgeCollectionsIndexes[paranetId][knowledgeCollectionId]
         ] = knowledgeMiners[miner].submittedKnowledgeCollections[paranetId][
             knowledgeMiners[miner].submittedKnowledgeCollections[paranetId].length - 1
         ];
 
         // 2. Update the index of the moved element
-        knowledgeMiners[miner].submittedKnowledgeACollectionIndexes[paranetId][
+        knowledgeMiners[miner].submittedKnowledgeCollectionsIndexes[paranetId][
             knowledgeMiners[miner].submittedKnowledgeCollections[paranetId][
                 knowledgeMiners[miner].submittedKnowledgeCollections[paranetId].length - 1
             ]
@@ -175,11 +175,11 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
         bytes32 assertionId, // Should this be renamed
         uint96 updateTokenAmount
     ) external onlyContracts {
-        knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][
+        knowledgeMiners[miner].updatingKnowledgeCollectionsStateIndexes[paranetId][
             keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId, assertionId))
-        ] = knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length;
+        ] = knowledgeMiners[miner].updatingKnowledgeCollectionsStates[paranetId].length;
 
-        knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].push(
+        knowledgeMiners[miner].updatingKnowledgeCollectionsStates[paranetId].push(
             ParanetLib.UpdatingKnowledgeCollectionState({
                 knowledgeCollectionStorageContract: knowledgeCollectionStorageContract,
                 knowledgeCollectionTokenId: knowledgeCollectionTokenId,
@@ -190,50 +190,50 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
     }
 
     // What to do with updating this has to be reworked
-    function removeUpdatingKnowledgeCollectionState(
-        address miner,
-        bytes32 paranetId,
-        bytes32 knowledgeCollectionStateId
-    ) external onlyContracts {
-        // 1. Move the last element to the slot of the element to remove
-        knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId][
-            knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId]
-        ] = knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId][
-            knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length - 1
-        ];
+    // function removeUpdatingKnowledgeCollectionState(
+    //     address miner,
+    //     bytes32 paranetId,
+    //     bytes32 knowledgeCollectionStateId
+    // ) external onlyContracts {
+    //     // 1. Move the last element to the slot of the element to remove
+    //     knowledgeMiners[miner].updatingKnowledgeCollectionsStates[paranetId][
+    //         knowledgeMiners[miner].updatingKnowledgeCollectionsStates[paranetId][knowledgeCollectionStateId]
+    //     ] = knowledgeMiners[miner].updatingKnowledgeCollectionsStates[paranetId][
+    //         knowledgeMiners[miner].updatingKnowledgeCollectionsStates[paranetId].length - 1
+    //     ];
 
-        // 2. Update the index of the moved element
-        knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][
-            keccak256(
-                abi.encodePacked(
-                    knowledgeMiners[miner]
-                    .updatingKnowledgeCollectionStates[paranetId][
-                        knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length - 1
-                    ].knowledgeCollectionStorageContract,
-                    knowledgeMiners[miner]
-                    .updatingKnowledgeCollectionStates[paranetId][
-                        knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length - 1
-                    ].tokenId,
-                    knowledgeMiners[miner]
-                    .updatingKnowledgeCollectionStates[paranetId][
-                        knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length - 1
-                    ].assertionId
-                )
-            )
-        ] = knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId];
+    //     // 2. Update the index of the moved element
+    //     knowledgeMiners[miner].updatingKnowledgeCollectionsStateIndexes[paranetId][
+    //         keccak256(
+    //             abi.encodePacked(
+    //                 knowledgeMiners[miner]
+    //                 .updatingKnowledgeCollectionStates[paranetId][
+    //                     knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length - 1
+    //                 ].knowledgeCollectionStorageContract,
+    //                 knowledgeMiners[miner]
+    //                 .updatingKnowledgeCollectionStates[paranetId][
+    //                     knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length - 1
+    //                 ].tokenId,
+    //                 knowledgeMiners[miner]
+    //                 .updatingKnowledgeCollectionStates[paranetId][
+    //                     knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length - 1
+    //                 ].assertionId
+    //             )
+    //         )
+    //     ] = knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId];
 
-        // 3. Remove the last element from the array
-        knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].pop();
+    //     // 3. Remove the last element from the array
+    //     knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].pop();
 
-        // 4. Delete the index of the removed element
-        delete knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId];
-    }
+    //     // 4. Delete the index of the removed element
+    //     delete knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId];
+    // }
 
     function getUpdatingKnowledgeCollectionStates(
         address miner,
         bytes32 paranetId
     ) external view returns (ParanetLib.UpdatingKnowledgeCollectionState[] memory) {
-        return knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId];
+        return knowledgeMiners[miner].updatingKnowledgeCollectionsStates[paranetId];
     }
 
     function getUpdatingKnowledgeCollectionStates(
@@ -244,7 +244,7 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
     ) external view returns (ParanetLib.UpdatingKnowledgeCollectionState[] memory) {
         require(start <= end, "Start should be <= End");
         require(
-            end <= knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length,
+            end <= knowledgeMiners[miner].updatingKnowledgeCollectionsStates[paranetId].length,
             "End should be <= length of Array"
         );
 
@@ -252,7 +252,7 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
             end - start
         );
         for (uint256 i; i < slice.length; ) {
-            slice[i] = knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId][i];
+            slice[i] = knowledgeMiners[miner].updatingKnowledgeCollectionsStates[paranetId][i];
 
             unchecked {
                 i++;
@@ -262,29 +262,29 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
         return slice;
     }
 
-    function setUpdatingKnowledgeCollectionUpdateTokenAmount(
-        address miner,
-        bytes32 paranetId,
-        bytes32 knowledgeCollectionStateId,
-        uint96 updateTokenAmount
-    ) external onlyContracts {
-        knowledgeMiners[miner]
-        .updatingKnowledgeCollectionStates[paranetId][
-            knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId]
-        ].updateTokenAmount = updateTokenAmount;
-    }
+    // function setUpdatingKnowledgeCollectionUpdateTokenAmount(
+    //     address miner,
+    //     bytes32 paranetId,
+    //     bytes32 knowledgeCollectionStateId,
+    //     uint96 updateTokenAmount
+    // ) external onlyContracts {
+    //     knowledgeMiners[miner]
+    //     .updatingKnowledgeCollectionsStates[paranetId][
+    //         knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId]
+    //     ].updateTokenAmount = updateTokenAmount;
+    // }
 
-    function addUpdatingKnowledgeCollectionUpdateTokenAmount(
-        address miner,
-        bytes32 paranetId,
-        bytes32 knowledgeCollectionStateId,
-        uint96 addedUpdateTokenAmount
-    ) external onlyContracts {
-        knowledgeMiners[miner]
-        .updatingKnowledgeCollectionStates[paranetId][
-            knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId]
-        ].updateTokenAmount += addedUpdateTokenAmount;
-    }
+    // function addUpdatingKnowledgeCollectionUpdateTokenAmount(
+    //     address miner,
+    //     bytes32 paranetId,
+    //     bytes32 knowledgeCollectionStateId,
+    //     uint96 addedUpdateTokenAmount
+    // ) external onlyContracts {
+    //     knowledgeMiners[miner]
+    //     .updatingKnowledgeCollectionsStates[paranetId][
+    //         knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId]
+    //     ].updateTokenAmount += addedUpdateTokenAmount;
+    // }
 
     function subUpdatingKnowledgeCollectionUpdateTokenAmount(
         address miner,
@@ -293,8 +293,8 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
         uint96 subtractedUpdateTokenAmount
     ) external onlyContracts {
         knowledgeMiners[miner]
-        .updatingKnowledgeCollectionStates[paranetId][
-            knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId]
+        .updatingKnowledgeCollectionsStates[paranetId][
+            knowledgeMiners[miner].updatingKnowledgeCollectionsStateIndexes[paranetId][knowledgeCollectionStateId]
         ].updateTokenAmount -= subtractedUpdateTokenAmount;
     }
 
