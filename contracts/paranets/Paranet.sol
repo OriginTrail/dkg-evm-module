@@ -461,39 +461,62 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         for (uint256 i; i < services.length; ) {
             if (
                 !psr.paranetServiceExists(
-                    keccak256(abi.encodePacked(services[i].knowledgeCollectionStorageContract, services[i].tokenId))
+                    keccak256(
+                        abi.encodePacked(
+                            services[i].knowledgeCollectionStorageContract,
+                            services[i].knowledgeCollectionTokenId
+                        )
+                    )
                 )
             ) {
                 revert ParanetLib.ParanetServiceDoesntExist(
                     services[i].knowledgeCollectionStorageContract,
-                    services[i].tokenId
+                    services[i].knowledgeCollectionTokenId
                 );
             }
 
-            _checkKnowledgeCollectionOwner(services[i].knowledgeCollectionStorageContract, services[i].tokenId);
+            _checkKnowledgeCollectionOwner(
+                services[i].knowledgeCollectionStorageContract,
+                services[i].knowledgeCollectionTokenId
+            );
 
             if (
                 pr.isServiceImplemented(
                     paranetId,
-                    keccak256(abi.encodePacked(services[i].knowledgeCollectionStorageContract, services[i].tokenId))
+                    keccak256(
+                        abi.encodePacked(
+                            services[i].knowledgeCollectionStorageContract,
+                            services[i].knowledgeCollectionTokenId
+                        )
+                    )
                 )
             ) {
                 revert ParanetLib.ParanetServiceHasAlreadyBeenAdded(
                     paranetId,
-                    keccak256(abi.encodePacked(services[i].knowledgeCollectionStorageContract, services[i].tokenId))
+                    keccak256(
+                        abi.encodePacked(
+                            services[i].knowledgeCollectionStorageContract,
+                            services[i].knowledgeCollectionTokenId
+                        )
+                    )
                 );
             }
 
             pr.addService(
                 paranetId,
-                keccak256(abi.encodePacked(services[i].knowledgeCollectionStorageContract, services[i].tokenId))
+                keccak256(
+                    abi.encodePacked(
+                        services[i].knowledgeCollectionStorageContract,
+                        services[i].knowledgeCollectionTokenId
+                    )
+                )
             );
 
             emit ParanetServiceAdded(
                 paranetKCStorageContract,
                 paranetKCTokenId,
                 services[i].knowledgeCollectionStorageContract,
-                services[i].tokenId
+                services[i].knowledgeCollectionTokenId
             );
 
             unchecked {
@@ -956,7 +979,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         );
 
         // Add Knowledge Collection Metadata to the ParanetsRegistry
-        pr.addKnowledgeCollection(paranetId, knowledgeCollectionId);
+        pr.addKnowledgeCollection(paranetId, knowledgeCollectionId); // ???
         pr.addCumulativeKnowledgeValue(paranetId, tokenAmount);
 
         // Add Knowledge Collection Metadata to the KnowledgeMinersRegistry

@@ -12,7 +12,7 @@ library ParanetLib {
 
     struct UniversalCollectionLocator {
         address knowledgeCollectionStorageContract;
-        uint256 knolwedgeCollectionTokenId;
+        uint256 knowledgeCollectionTokenId;
     }
 
     enum NodesAccessPolicy {
