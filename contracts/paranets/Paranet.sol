@@ -979,7 +979,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         );
 
         // Add Knowledge Collection Metadata to the ParanetsRegistry
-        pr.addKnowledgeCollection(paranetId, knowledgeCollectionId); // ???
+        pr.addKnowledgeCollecton(paranetId, knowledgeCollectionId);
         pr.addCumulativeKnowledgeValue(paranetId, tokenAmount);
 
         // Add Knowledge Collection Metadata to the KnowledgeMinersRegistry
