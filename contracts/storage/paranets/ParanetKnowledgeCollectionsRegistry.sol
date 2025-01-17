@@ -12,7 +12,7 @@ contract ParanetKnowledgeCollectionsRegistry is INamed, IVersioned, HubDependent
     string private constant _VERSION = "1.0.1";
 
     // Knowledge Collection ID => Knowledge Collection On Paranet
-    mapping(bytes32 => ParanetLib.KnolwedgeCollection) internal knolwedgeCollections;
+    mapping(bytes32 => ParanetLib.knowledgeCollection) internal knowledgeCollections;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependent(hubAddress) {}
@@ -31,42 +31,41 @@ contract ParanetKnowledgeCollectionsRegistry is INamed, IVersioned, HubDependent
         uint256 knowledgeCollectionTokenId,
         address miner
     ) external onlyContracts returns (bytes32) {
-        knolwedgeCollections[
-            keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
-        ] = ParanetLib.KnolwedgeCollection({
+        bytes32 kcId = keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId));
+        knowledgeCollections[kcId] = ParanetLib.knowledgeCollection({
             knowledgeCollectionStorageContract: knowledgeCollectionStorageContract,
             knowledgeCollectionTokenId: knowledgeCollectionTokenId,
             minerAddress: miner,
             paranetId: paranetId
         });
 
-        return keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId));
+        return kcId;
     }
 
     function removeKnowledgeCollection(bytes32 knowledgeCollectionId) external onlyContracts {
-        delete knolwedgeCollections[knowledgeCollectionId];
+        delete knowledgeCollections[knowledgeCollectionId];
     }
 
-    function isParanetKnowledgeCollection(bytes32 knolwedgeCollectionId) external view returns (bool) {
+    function isParanetKnowledgeCollection(bytes32 knowledgeCollectionId) external view returns (bool) {
         return
             keccak256(
                 abi.encodePacked(
-                    knolwedgeCollections[knolwedgeCollectionId].knowledgeCollectionStorageContract,
-                    knolwedgeCollections[knolwedgeCollectionId].knowledgeCollectionTokenId
+                    knowledgeCollections[knowledgeCollectionId].knowledgeCollectionStorageContract,
+                    knowledgeCollections[knowledgeCollectionId].knowledgeCollectionTokenId
                 )
-            ) == knolwedgeCollectionId;
+            ) == knowledgeCollectionId;
     }
 
     function getKnowledgeCollectionObject(
-        bytes32 knolwedgeCollectionId
-    ) external view returns (ParanetLib.KnolwedgeCollection memory) {
-        return knolwedgeCollections[knolwedgeCollectionId];
+        bytes32 knowledgeCollectionId
+    ) external view returns (ParanetLib.knowledgeCollection memory) {
+        return knowledgeCollections[knowledgeCollectionId];
     }
 
     function getKnowledgeCollectionLocator(bytes32 knowledgeCollectionId) external view returns (address, uint256) {
         return (
-            knolwedgeCollections[knowledgeCollectionId].knowledgeCollectionStorageContract,
-            knolwedgeCollections[knowledgeCollectionId].knowledgeCollectionTokenId
+            knowledgeCollections[knowledgeCollectionId].knowledgeCollectionStorageContract,
+            knowledgeCollections[knowledgeCollectionId].knowledgeCollectionTokenId
         );
     }
 
@@ -81,8 +80,8 @@ contract ParanetKnowledgeCollectionsRegistry is INamed, IVersioned, HubDependent
             bytes32 id = knowledgeCollectionIds[i];
 
             locators[i] = ParanetLib.UniversalCollectionLocator({
-                knowledgeCollectionStorageContract: knolwedgeCollections[id].knowledgeCollectionStorageContract,
-                knowledgeCollectionTokenId: knolwedgeCollections[id].knowledgeCollectionTokenId
+                knowledgeCollectionStorageContract: knowledgeCollections[id].knowledgeCollectionStorageContract,
+                knowledgeCollectionTokenId: knowledgeCollections[id].knowledgeCollectionTokenId
             });
         }
 
@@ -90,18 +89,18 @@ contract ParanetKnowledgeCollectionsRegistry is INamed, IVersioned, HubDependent
     }
 
     function getMinerAddress(bytes32 knowledgeCollectionId) external view returns (address) {
-        return knolwedgeCollections[knowledgeCollectionId].minerAddress;
+        return knowledgeCollections[knowledgeCollectionId].minerAddress;
     }
 
     function setMinerAddress(bytes32 knowledgeCollectionId, address minerAddress) external onlyContracts {
-        knolwedgeCollections[knowledgeCollectionId].minerAddress = minerAddress;
+        knowledgeCollections[knowledgeCollectionId].minerAddress = minerAddress;
     }
 
     function getParanetId(bytes32 knowledgeCollectionId) external view returns (bytes32) {
-        return knolwedgeCollections[knowledgeCollectionId].paranetId;
+        return knowledgeCollections[knowledgeCollectionId].paranetId;
     }
 
     function setParanetId(bytes32 knowledgeCollectionId, bytes32 paranetId) external onlyContracts {
-        knolwedgeCollections[knowledgeCollectionId].paranetId = paranetId;
+        knowledgeCollections[knowledgeCollectionId].paranetId = paranetId;
     }
 }

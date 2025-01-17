@@ -55,7 +55,7 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         paranetIds.push(paranetId);
         paranetIdsMapping[paranetId] = paranetIds.length - 1;
 
-        return keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId));
+        return paranetId;
     }
 
     function deleteParanet(bytes32 paranetId) external onlyContracts {

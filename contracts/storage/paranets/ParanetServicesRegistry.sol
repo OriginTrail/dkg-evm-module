@@ -32,9 +32,10 @@ contract ParanetServicesRegistry is INamed, IVersioned, HubDependent {
         string calldata paranetServiceDescription,
         address[] calldata paranetServiceAddresses
     ) external onlyContracts returns (bytes32) {
-        ParanetLib.ParanetService storage paranetService = paranetServices[
-            keccak256(abi.encodePacked(paranetServiceKCStorageContract, paranetServiceKCTokenId))
-        ];
+        bytes32 paranetServiceId = keccak256(
+            abi.encodePacked(paranetServiceKCStorageContract, paranetServiceKCTokenId)
+        );
+        ParanetLib.ParanetService storage paranetService = paranetServices[paranetServiceId];
 
         paranetService.paranetServiceKCStorageContract = paranetServiceKCStorageContract;
         paranetService.paranetServiceKCTokenId = paranetServiceKCTokenId;
@@ -50,7 +51,7 @@ contract ParanetServicesRegistry is INamed, IVersioned, HubDependent {
             }
         }
 
-        return keccak256(abi.encodePacked(paranetServiceKCStorageContract, paranetServiceKCTokenId));
+        return paranetServiceId;
     }
 
     function deleteParanetService(bytes32 paranetServiceId) external onlyContracts {
