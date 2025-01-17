@@ -10,6 +10,9 @@ import {KnowledgeCollectionStorage} from "./storage/KnowledgeCollectionStorage.s
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
+import {ParanetKnowledgeCollectionsRegistry} from "./storage/paranets/ParanetKnowledgeCollectionsRegistry.sol";
+import {ParanetKnowledgeMinersRegistry} from "./storage/paranets/ParanetKnowledgeMinersRegistry.sol";
+import {ParanetsRegistry} from "./storage/paranets/ParanetsRegistry.sol";
 import {KnowledgeCollectionLib} from "./libraries/KnowledgeCollectionLib.sol";
 import {TokenLib} from "./libraries/TokenLib.sol";
 import {IdentityLib} from "./libraries/IdentityLib.sol";
@@ -28,6 +31,9 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
     AskStorage public askStorage;
     EpochStorage public epochStorage;
     PaymasterManager public paymasterManager;
+    ParanetKnowledgeCollectionsRegistry public paranetKnowledgeCollectionsRegistry;
+    ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
+    ParanetsRegistry public paranetsRegistry;
     KnowledgeCollectionStorage public knowledgeCollectionStorage;
     Chronos public chronos;
     ShardingTableStorage public shardingTableStorage;
@@ -41,6 +47,13 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         askStorage = AskStorage(hub.getContractAddress("AskStorage"));
         epochStorage = EpochStorage(hub.getContractAddress("EpochStorageV8"));
         paymasterManager = PaymasterManager(hub.getContractAddress("PaymasterManager"));
+        paranetKnowledgeCollectionsRegistry = ParanetKnowledgeCollectionsRegistry(
+            hub.getContractAddress("paranetKnowledgeCollectionsRegistry")
+        );
+        paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(
+            hub.getContractAddress("ParanetKnowledgeMinersRegistry")
+        );
+        paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
         knowledgeCollectionStorage = KnowledgeCollectionStorage(
             hub.getAssetStorageAddress("KnowledgeCollectionStorage")
         );
@@ -167,6 +180,22 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         es.addEpochProducedKnowledgeValue(publisherNodeIdentityId, currentEpoch, tokenAmount);
 
         _addTokens(tokenAmount, paymaster);
+
+        ParanetKnowledgeCollectionsRegistry pkar = paranetKnowledgeCollectionsRegistry;
+
+        if (pkar.isParanetKnowledgeCollection(keccak256(abi.encodePacked(address(kcs), id)))) {
+            ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(address(kcs), id)));
+
+            // Add Knowledge Asset Token Amount Metadata to the ParanetsRegistry
+            paranetsRegistry.addCumulativeKnowledgeValue(paranetId, tokenAmount);
+
+            // Add Knowledge Asset Token Amount Metadata to the KnowledgeMinersRegistry
+            pkmr.addCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addTotalTracSpent(msg.sender, tokenAmount);
+        }
     }
 
     function extendKnowledgeCollectionLifetime(
@@ -192,6 +221,22 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         epochStorage.addTokensToEpochRange(1, endEpoch, endEpoch + epochs, tokenAmount);
 
         _addTokens(tokenAmount, paymaster);
+
+        ParanetKnowledgeCollectionsRegistry pkar = paranetKnowledgeCollectionsRegistry;
+
+        if (pkar.isParanetKnowledgeCollection(keccak256(abi.encodePacked(address(kcs), id)))) {
+            ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(address(kcs), id)));
+
+            // Add Knowledge Asset Token Amount Metadata to the ParanetsRegistry
+            paranetsRegistry.addCumulativeKnowledgeValue(paranetId, tokenAmount);
+
+            // Add Knowledge Asset Token Amount Metadata to the KnowledgeMinersRegistry
+            pkmr.addCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addTotalTracSpent(msg.sender, tokenAmount);
+        }
     }
 
     function increaseKnowledgeCollectionTokenAmount(uint256 id, uint96 tokenAmount, address paymaster) external {
@@ -213,6 +258,22 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         epochStorage.addTokensToEpochRange(1, currentEpoch, endEpoch, tokenAmount);
 
         _addTokens(tokenAmount, paymaster);
+
+        ParanetKnowledgeCollectionsRegistry pkar = paranetKnowledgeCollectionsRegistry;
+
+        if (pkar.isParanetKnowledgeCollection(keccak256(abi.encodePacked(address(kcs), id)))) {
+            ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+
+            bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(address(kcs), id)));
+
+            // Add Knowledge Asset Token Amount Metadata to the ParanetsRegistry
+            paranetsRegistry.addCumulativeKnowledgeValue(paranetId, tokenAmount);
+
+            // Add Knowledge Asset Token Amount Metadata to the KnowledgeMinersRegistry
+            pkmr.addCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
+            pkmr.addTotalTracSpent(msg.sender, tokenAmount);
+        }
     }
 
     function _verifySignatures(
