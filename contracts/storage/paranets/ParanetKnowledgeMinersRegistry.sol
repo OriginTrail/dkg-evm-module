@@ -167,6 +167,7 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
         return slice;
     }
 
+    // This should be called on update from KC
     function addUpdatingKnowledgeCollectionState(
         address miner,
         bytes32 paranetId,

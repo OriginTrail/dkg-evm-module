@@ -887,6 +887,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     //     return knowledgeCollectionTokenId;
     // }
 
+    // If asset has been updated there should be logic to update paranet kc states metadata with info about previouse state if posible
     function submitKnowledgeCollection(
         address paranetKCStorageContract,
         uint256 paranetKnowledgeCollectionId,
@@ -1005,6 +1006,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         pkmr.addTotalTracSpent(msg.sender, tokenAmount);
     }
 
+    // When is this used ???
     function _processUpdatedKnowledgeCollectionStatesMetadata(
         bytes32 paranetId,
         ParanetLib.UpdatingKnowledgeCollectionState[] memory updatingKnowledgeCollectionStates
