@@ -70,6 +70,25 @@ contract ParanetKnowledgeCollectionsRegistry is INamed, IVersioned, HubDependent
         );
     }
 
+    function getKnowledgeCollectionLocators(
+        bytes32[] calldata knowledgeCollectionIds
+    ) external view returns (ParanetLib.UniversalCollectionLocator[] memory) {
+        uint256 length = knowledgeCollectionIds.length;
+
+        ParanetLib.UniversalCollectionLocator[] memory locators = new ParanetLib.UniversalCollectionLocator[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            bytes32 id = knowledgeCollectionIds[i];
+
+            locators[i] = ParanetLib.UniversalCollectionLocator({
+                knowledgeCollectionStorageContract: knolwedgeCollections[id].knowledgeCollectionStorageContract,
+                knowledgeCollectionTokenId: knolwedgeCollections[id].knowledgeCollectionTokenId
+            });
+        }
+
+        return locators;
+    }
+
     function getMinerAddress(bytes32 knowledgeCollectionId) external view returns (address) {
         return knolwedgeCollections[knowledgeCollectionId].minerAddress;
     }
