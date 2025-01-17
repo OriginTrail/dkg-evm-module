@@ -817,6 +817,20 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         emit ParanetCuratedMinerAccessRequestRejected(paranetKCStorageContract, paranetKCTokenId, minerAddress);
     }
 
+    function getKnowledgeCollectionLocatorsWithPagination(
+        bytes32 paranetId,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (ParanetLib.UniversalCollectionLocator[] memory) {
+        ParanetsRegistry pr = paranetsRegistry;
+
+        bytes32[] memory knowledgeCollections = pr.getKnowledgeCollectionsWithPagination(paranetId, offset, limit);
+
+        ParanetKnowledgeCollectionsRegistry pkcr = paranetKnowledgeCollectionsRegistry;
+
+        return pkcr.getKnowledgeCollectionLocators(knowledgeCollections);
+    }
+
     // function mintKnowledgeCollection(
     //     address paranetKCStorageContract,
     //     uint256 paranetKCTokenId,
