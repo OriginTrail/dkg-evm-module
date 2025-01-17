@@ -908,6 +908,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             !pr.isKnowledgeMinerRegistered(paranetId, msg.sender)
         ) {
             revert ParanetLib.ParanetCuratedMinerDoesntExist(paranetId, msg.sender);
+            // Should this be done in both cases why would OPEN have separeted logic ???
         } else if (minersAccessPolicy == ParanetLib.MinersAccessPolicy.OPEN) {
             // Check if Knowledge Miner has profile
             // If not: Create a profile
@@ -934,7 +935,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
                 )
             );
         }
-        // Is this correct way to do this
+        // Is this correct way to do this ???
         uint96 remainingTokenAmount = KnowledgeCollectionStorage(knowledgeCollectionStorageContract).getTokenAmount(
             knowledgeCollectionId
         );
@@ -955,19 +956,19 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         );
     }
 
-    // function processUpdatedKnowledgeCollectionStatesMetadata(
-    //     address paranetKCStorageContract,
-    //     uint256 paranetKCTokenId,
-    //     uint256 start,
-    //     uint256 end
-    // ) external {
-    //     bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId));
+    function processUpdatedKnowledgeCollectionStatesMetadata(
+        address paranetKCStorageContract,
+        uint256 paranetKCTokenId,
+        uint256 start,
+        uint256 end
+    ) external {
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId));
 
-    //     _processUpdatedKnowledgeCollectionStatesMetadata(
-    //         paranetId,
-    //         paranetKnowledgeMinersRegistry.getUpdatingKnowledgeCollectionStates(msg.sender, paranetId, start, end)
-    //     );
-    // }
+        _processUpdatedKnowledgeCollectionStatesMetadata(
+            paranetId,
+            paranetKnowledgeMinersRegistry.getUpdatingKnowledgeCollectionStates(msg.sender, paranetId, start, end)
+        );
+    }
 
     function _updateSubmittedKnowledgeCollectionMetadata(
         address paranetKCStorageContract,
@@ -1004,89 +1005,89 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         pkmr.addTotalTracSpent(msg.sender, tokenAmount);
     }
 
-    // function _processUpdatedKnowledgeCollectionStatesMetadata(
-    //     bytes32 paranetId,
-    //     ParanetLib.UpdatingKnowledgeCollectionState[] memory updatingKnowledgeCollectionStates
-    // ) internal {
-    //     ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
-    //     ParanetsRegistry pr = paranetsRegistry;
-    //     ContentCollection ca = contentCollection;
+    function _processUpdatedKnowledgeCollectionStatesMetadata(
+        bytes32 paranetId,
+        ParanetLib.UpdatingKnowledgeCollectionState[] memory updatingKnowledgeCollectionStates
+    ) internal {
+        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+        ParanetsRegistry pr = paranetsRegistry;
+        ContentCollection ca = contentCollection;
 
-    //     for (uint i; i < updatingKnowledgeCollectionStates.length; ) {
-    //         _checkKnowledgeCollectionOwner(
-    //             updatingKnowledgeCollectionStates[i].knowledgeCollectionStorageContract,
-    //             updatingKnowledgeCollectionStates[i].tokenId
-    //         );
+        for (uint i; i < updatingKnowledgeCollectionStates.length; ) {
+            _checkKnowledgeCollectionOwner(
+                updatingKnowledgeCollectionStates[i].knowledgeCollectionStorageContract,
+                updatingKnowledgeCollectionStates[i].tokenId
+            );
 
-    //         bool continueOuterLoop = false;
+            bool continueOuterLoop = false;
 
-    //         bytes32[] memory assertionIds = ContentCollectionStorage(
-    //             updatingKnowledgeCollectionStates[i].knowledgeCollectionStorageContract
-    //         ).getAssertionIds(updatingKnowledgeCollectionStates[i].tokenId);
+            bytes32[] memory assertionIds = ContentCollectionStorage(
+                updatingKnowledgeCollectionStates[i].knowledgeCollectionStorageContract
+            ).getAssertionIds(updatingKnowledgeCollectionStates[i].tokenId);
 
-    //         for (uint j = assertionIds.length; j > 0; ) {
-    //             if (assertionIds[j - 1] == updatingKnowledgeCollectionStates[i].assertionId) {
-    //                 // Add Knowledge Collection Token Amount Metadata to the ParanetsRegistry
-    //                 pr.addCumulativeKnowledgeValue(paranetId, updatingKnowledgeCollectionStates[i].updateTokenAmount);
+            for (uint j = assertionIds.length; j > 0; ) {
+                if (assertionIds[j - 1] == updatingKnowledgeCollectionStates[i].assertionId) {
+                    // Add Knowledge Collection Token Amount Metadata to the ParanetsRegistry
+                    pr.addCumulativeKnowledgeValue(paranetId, updatingKnowledgeCollectionStates[i].updateTokenAmount);
 
-    //                 // Add Knowledge Collection Token Amount Metadata to the KnowledgeMinersRegistry
-    //                 pkmr.addCumulativeTracSpent(
-    //                     msg.sender,
-    //                     paranetId,
-    //                     updatingKnowledgeCollectionStates[i].updateTokenAmount
-    //                 );
-    //                 pkmr.addUnrewardedTracSpent(
-    //                     msg.sender,
-    //                     paranetId,
-    //                     updatingKnowledgeCollectionStates[i].updateTokenAmount
-    //                 );
-    //                 pkmr.addTotalTracSpent(msg.sender, updatingKnowledgeCollectionStates[i].updateTokenAmount);
+                    // Add Knowledge Collection Token Amount Metadata to the KnowledgeMinersRegistry
+                    pkmr.addCumulativeTracSpent(
+                        msg.sender,
+                        paranetId,
+                        updatingKnowledgeCollectionStates[i].updateTokenAmount
+                    );
+                    pkmr.addUnrewardedTracSpent(
+                        msg.sender,
+                        paranetId,
+                        updatingKnowledgeCollectionStates[i].updateTokenAmount
+                    );
+                    pkmr.addTotalTracSpent(msg.sender, updatingKnowledgeCollectionStates[i].updateTokenAmount);
 
-    //                 pkmr.removeUpdatingKnowledgeCollectionState(
-    //                     msg.sender,
-    //                     paranetId,
-    //                     keccak256(
-    //                         abi.encodePacked(
-    //                             updatingKnowledgeCollectionStates[i].knowledgeCollectionStorageContract,
-    //                             updatingKnowledgeCollectionStates[i].tokenId,
-    //                             updatingKnowledgeCollectionStates[i].assertionId
-    //                         )
-    //                     )
-    //                 );
+                    pkmr.removeUpdatingKnowledgeCollectionState(
+                        msg.sender,
+                        paranetId,
+                        keccak256(
+                            abi.encodePacked(
+                                updatingKnowledgeCollectionStates[i].knowledgeCollectionStorageContract,
+                                updatingKnowledgeCollectionStates[i].tokenId,
+                                updatingKnowledgeCollectionStates[i].assertionId
+                            )
+                        )
+                    );
 
-    //                 continueOuterLoop = true;
-    //                 break;
-    //             }
+                    continueOuterLoop = true;
+                    break;
+                }
 
-    //             unchecked {
-    //                 j--;
-    //             }
-    //         }
+                unchecked {
+                    j--;
+                }
+            }
 
-    //         unchecked {
-    //             i++;
-    //         }
+            unchecked {
+                i++;
+            }
 
-    //         if (continueOuterLoop) {
-    //             continue;
-    //         }
+            if (continueOuterLoop) {
+                continue;
+            }
 
-    //         try ca.cancelCollectionStateUpdateFromContract(updatingKnowledgeCollectionStates[i].tokenId) {
-    //             pkmr.removeUpdatingKnowledgeCollectionState(
-    //                 msg.sender,
-    //                 paranetId,
-    //                 keccak256(
-    //                     abi.encodePacked(
-    //                         updatingKnowledgeCollectionStates[i].knowledgeCollectionStorageContract,
-    //                         updatingKnowledgeCollectionStates[i].tokenId,
-    //                         updatingKnowledgeCollectionStates[i].assertionId
-    //                     )
-    //                 )
-    //             );
-    //             // solhint-disable-next-line no-empty-blocks
-    //         } catch {}
-    //     }
-    // }
+            try ca.cancelCollectionStateUpdateFromContract(updatingKnowledgeCollectionStates[i].tokenId) {
+                pkmr.removeUpdatingKnowledgeCollectionState(
+                    msg.sender,
+                    paranetId,
+                    keccak256(
+                        abi.encodePacked(
+                            updatingKnowledgeCollectionStates[i].knowledgeCollectionStorageContract,
+                            updatingKnowledgeCollectionStates[i].tokenId,
+                            updatingKnowledgeCollectionStates[i].assertionId
+                        )
+                    )
+                );
+                // solhint-disable-next-line no-empty-blocks
+            } catch {}
+        }
+    }
 
     function _checkParanetOperator(bytes32 paranetId) internal view virtual {
         (address paranetKCStorageContract, uint256 paranetKCTokenId) = paranetsRegistry

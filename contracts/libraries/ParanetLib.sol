@@ -144,8 +144,8 @@ library ParanetLib {
 
     struct UpdatingKnowledgeCollectionState {
         address knowledgeCollectionStorageContract;
-        uint256 knowledgeCollectionTokenId;
-        bytes32 assertionId;
+        uint256 knowledgeCollectionId;
+        bytes32 merkleRoot; // Do we need this ?
         uint96 updateTokenAmount;
     }
 

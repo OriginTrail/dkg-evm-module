@@ -171,25 +171,25 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
         address miner,
         bytes32 paranetId,
         address knowledgeCollectionStorageContract,
-        uint256 knowledgeCollectionTokenId,
-        bytes32 assertionId, // Should this be renamed
+        uint256 knowledgeCollectionId,
+        bytes32 merkleRoot,
         uint96 updateTokenAmount
     ) external onlyContracts {
         knowledgeMiners[miner].updatingKnowledgeCollectionsStateIndexes[paranetId][
-            keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId, assertionId))
+            keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionId, merkleRoot))
         ] = knowledgeMiners[miner].updatingKnowledgeCollectionsStates[paranetId].length;
 
         knowledgeMiners[miner].updatingKnowledgeCollectionsStates[paranetId].push(
             ParanetLib.UpdatingKnowledgeCollectionState({
                 knowledgeCollectionStorageContract: knowledgeCollectionStorageContract,
-                knowledgeCollectionTokenId: knowledgeCollectionTokenId,
-                assertionId: assertionId,
+                knowledgeCollectionId: knowledgeCollectionId,
+                merkleRoot: merkleRoot,
                 updateTokenAmount: updateTokenAmount
             })
         );
     }
 
-    // What to do with updating this has to be reworked
+    // If we do this on update
     // function removeUpdatingKnowledgeCollectionState(
     //     address miner,
     //     bytes32 paranetId,
@@ -217,7 +217,7 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
     //                 knowledgeMiners[miner]
     //                 .updatingKnowledgeCollectionStates[paranetId][
     //                     knowledgeMiners[miner].updatingKnowledgeCollectionStates[paranetId].length - 1
-    //                 ].assertionId
+    //                 ].merkleRoot
     //             )
     //         )
     //     ] = knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId];
