@@ -4,11 +4,12 @@ pragma solidity ^0.8.20;
 
 import {ParanetKnowledgeMinersRegistry} from "../storage/paranets/ParanetKnowledgeMinersRegistry.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
+import {KnowledgeCollectionStorage} from "../storage/KnowledgeCollectionStorage.sol";
 import {Hub} from "../storage/Hub.sol";
 import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
 import {ParanetLib} from "../libraries/ParanetLib.sol";
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ParanetNeuroIncentivesPool is INamed, IVersioned {
@@ -23,6 +24,7 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     string private constant _VERSION = "1.0.0";
 
     Hub public hub;
+    IERC20 public token;
     ParanetsRegistry public paranetsRegistry;
     ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
 
@@ -66,6 +68,7 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     // solhint-disable-next-line no-empty-blocks
     constructor(
         address hubAddress,
+        address rewardTokenAddress,
         address paranetsRegistryAddress,
         address knowledgeMinersRegistryAddress,
         bytes32 paranetId,
@@ -80,6 +83,9 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         );
 
         hub = Hub(hubAddress);
+        if (rewardTokenAddress != address(0)) {
+            token = IERC20(rewardTokenAddress);
+        }
         paranetsRegistry = ParanetsRegistry(paranetsRegistryAddress);
         paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(knowledgeMinersRegistryAddress);
 
@@ -247,7 +253,20 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         (address paranetKCStorageContract, uint256 paranetKCTokenId) = paranetsRegistry
             .getParanetKnowledgeCollectionLocator(parentParanetId);
 
-        return IERC721(paranetKCStorageContract).ownerOf(paranetKCTokenId) == addr;
+        KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(paranetKCStorageContract);
+
+        uint256 minted = knowledgeCollectionStorage.getMinted(paranetKCTokenId);
+        uint256 burnedCount = knowledgeCollectionStorage.getBurnedAmount(paranetKCTokenId);
+        uint256 activeCount = minted - burnedCount;
+        if (activeCount == 0) {
+            return false;
+        }
+
+        uint256 startTokenId = (paranetKCTokenId - 1) * knowledgeCollectionStorage.knowledgeCollectionMaxSize() + 1; // _startTokenId()
+
+        uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(addr, startTokenId, minted + burnedCount);
+
+        return ownedCountInRange == activeCount;
     }
 
     function isProposalVoter(address addr) public view returns (bool) {
