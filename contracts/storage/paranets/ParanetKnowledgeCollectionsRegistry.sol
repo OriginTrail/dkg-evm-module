@@ -12,7 +12,7 @@ contract ParanetKnowledgeCollectionsRegistry is INamed, IVersioned, HubDependent
     string private constant _VERSION = "1.0.1";
 
     // Knowledge Collection ID => Knowledge Collection On Paranet
-    mapping(bytes32 => ParanetLib.knowledgeCollection) internal knowledgeCollections;
+    mapping(bytes32 => ParanetLib.KnowledgeCollection) internal knowledgeCollections;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) HubDependent(hubAddress) {}
@@ -32,7 +32,7 @@ contract ParanetKnowledgeCollectionsRegistry is INamed, IVersioned, HubDependent
         address miner
     ) external onlyContracts returns (bytes32) {
         bytes32 kcId = keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId));
-        knowledgeCollections[kcId] = ParanetLib.knowledgeCollection({
+        knowledgeCollections[kcId] = ParanetLib.KnowledgeCollection({
             knowledgeCollectionStorageContract: knowledgeCollectionStorageContract,
             knowledgeCollectionTokenId: knowledgeCollectionTokenId,
             minerAddress: miner,
@@ -58,7 +58,7 @@ contract ParanetKnowledgeCollectionsRegistry is INamed, IVersioned, HubDependent
 
     function getKnowledgeCollectionObject(
         bytes32 knowledgeCollectionId
-    ) external view returns (ParanetLib.knowledgeCollection memory) {
+    ) external view returns (ParanetLib.KnowledgeCollection memory) {
         return knowledgeCollections[knowledgeCollectionId];
     }
 
