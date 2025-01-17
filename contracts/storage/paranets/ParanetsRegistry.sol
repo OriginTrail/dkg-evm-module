@@ -12,8 +12,11 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
     using UnorderedNamedContractDynamicSet for UnorderedNamedContractDynamicSet.Set;
 
     string private constant _NAME = "ParanetsRegistry";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "1.0.1";
 
+    bytes32[] private paranetIds;
+
+    mapping(bytes32 => uint256) internal paranetIdsMapping;
     // Paranet ID => Paranet Object
     mapping(bytes32 => ParanetLib.Paranet) internal paranets;
 
@@ -37,9 +40,9 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         ParanetLib.MinersAccessPolicy minersAccessPolicy,
         ParanetLib.KnowledgeCollectionsAccessPolicy knowledgeColletionsAccessPolicy
     ) external onlyContracts returns (bytes32) {
-        ParanetLib.Paranet storage paranet = paranets[
-            keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
-        ];
+        bytes32 paranetId = keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId));
+
+        ParanetLib.Paranet storage paranet = paranets[paranetId];
 
         paranet.paranetKCStorageContract = knowledgeCollectionStorageContract;
         paranet.paranetKCTokenId = knowledgeCollectionTokenId;
@@ -49,11 +52,25 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         paranet.minersAccessPolicy = minersAccessPolicy;
         paranet.knowledgeCollectionsAccessPolicy = knowledgeColletionsAccessPolicy;
 
+        paranetIds.push(paranetId);
+        paranetIdsMapping[paranetId] = paranetIds.length - 1;
+
         return keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId));
     }
 
     function deleteParanet(bytes32 paranetId) external onlyContracts {
         delete paranets[paranetId];
+        uint256 indexToRemove = paranetIdsMapping[paranetId];
+        uint256 lastIndex = paranetIds.length - 1;
+        if (indexToRemove != lastIndex) {
+            bytes32 lastParanetId = paranetIds[lastIndex];
+
+            paranetIds[indexToRemove] = lastParanetId;
+            paranetIdsMapping[lastParanetId] = indexToRemove;
+        }
+
+        paranetIds.pop();
+        delete paranetIdsMapping[paranetId];
     }
 
     function paranetExists(bytes32 paranetId) external view returns (bool) {
@@ -500,5 +517,49 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
                 paranets[paranetId].registeredKnowledgeCollectionsIndexes[knowledgeCollectionId]
             ] ==
             knowledgeCollectionId);
+    }
+
+    function getParanetsCount() external view returns (uint256) {
+        return paranetIds.length;
+    }
+
+    function getParanetIdAtIndex(uint256 index) external view returns (bytes32) {
+        require(index < paranetIds.length, "Index out of range");
+        return paranetIds[index];
+    }
+
+    function getAllParanetIds() external view returns (bytes32[] memory) {
+        return paranetIds;
+    }
+
+    function getParanetIds(uint256 offset, uint256 limit) external view returns (bytes32[] memory) {
+        // If offset is past the end of the array, return an empty array
+        if (offset >= paranetIds.length) {
+            return new bytes32[](0);
+        }
+
+        uint256 end = offset + limit;
+        if (end > paranetIds.length) {
+            end = paranetIds.length;
+        }
+
+        bytes32[] memory ids = new bytes32[](end - offset);
+
+        for (uint256 i = offset; i < end; i++) {
+            ids[i - offset] = paranetIds[i];
+        }
+
+        return ids;
+    }
+
+    function getParanetIdsMapping(bytes32 paranetId) external view returns (uint256) {
+        require(
+            keccak256(
+                abi.encodePacked(paranets[paranetId].paranetKCStorageContract, paranets[paranetId].paranetKCTokenId)
+            ) == paranetId,
+            "Paranet not found"
+        );
+
+        return paranetIdsMapping[paranetId];
     }
 }
