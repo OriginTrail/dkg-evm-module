@@ -941,10 +941,10 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         // Is this correct way to do this ???
         KnowledgeCollectionStorage kcs = KnowledgeCollectionStorage(knowledgeCollectionStorageContract);
         uint96 remainingTokenAmount = kcs.getTokenAmount(knowledgeCollectionTokenId);
-        KnowledgeCollectionLib.MerkleRoot[] calldata merkleRoots = kcs.getMerkleRoots(knowledgeCollectionTokenId);
+        KnowledgeCollectionLib.MerkleRoot[] memory merkleRoots = kcs.getMerkleRoots(knowledgeCollectionTokenId);
 
+        // Update KnowledgeMiner metadata
         _updateSubmittedKnowledgeCollectionMetadata(
-            // Update KnowledgeMiner metadata
             paranetKCStorageContract,
             paranetKnowledgeCollectionId,
             knowledgeCollectionStorageContract,
@@ -981,7 +981,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         address knowledgeCollectionStorageContract,
         uint256 knowledgeCollectionTokenId,
         uint96 tokenAmount,
-        KnowledgeCollectionLib.MerkleRoot[] calldata merkleRoots
+        KnowledgeCollectionLib.MerkleRoot[] memory merkleRoots
     ) internal {
         ParanetsRegistry pr = paranetsRegistry;
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
