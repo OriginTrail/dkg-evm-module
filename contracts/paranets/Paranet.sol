@@ -16,7 +16,6 @@ import {IVersioned} from "../interfaces/IVersioned.sol";
 import {ParanetLib} from "../libraries/ParanetLib.sol";
 import {ProfileLib} from "../libraries/ProfileLib.sol";
 import {KnowledgeCollectionLib} from "../libraries/KnowledgeCollectionLib.sol";
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     event ParanetRegistered(
