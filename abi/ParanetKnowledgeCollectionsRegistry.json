@@ -35,12 +35,12 @@
       },
       {
         "internalType": "address",
-        "name": "knowledgeAssetStorageContract",
+        "name": "knowledgeCollectionStorageContract",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "knowledgeCollectionTokenId",
         "type": "uint256"
       },
       {
@@ -49,7 +49,7 @@
         "type": "address"
       }
     ],
-    "name": "addKnowledgeAsset",
+    "name": "addKnowledgeCollection",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -64,7 +64,7 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "knowledgeAssetId",
+        "name": "knowledgeCollectionId",
         "type": "bytes32"
       }
     ],
@@ -87,23 +87,54 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "knowledgeAssetId",
-        "type": "bytes32"
+        "internalType": "bytes32[]",
+        "name": "knowledgeCollectionIds",
+        "type": "bytes32[]"
       }
     ],
-    "name": "getKnowledgeAssetObject",
+    "name": "getKnowledgeCollectionLocators",
     "outputs": [
       {
         "components": [
           {
             "internalType": "address",
-            "name": "knowledgeAssetStorageContract",
+            "name": "knowledgeCollectionStorageContract",
             "type": "address"
           },
           {
             "internalType": "uint256",
-            "name": "tokenId",
+            "name": "knowledgeCollectionTokenId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ParanetLib.UniversalCollectionLocator[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "knowledgeCollectionId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getKnowledgeCollectionObject",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "knowledgeCollectionStorageContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "knowledgeCollectionTokenId",
             "type": "uint256"
           },
           {
@@ -117,7 +148,7 @@
             "type": "bytes32"
           }
         ],
-        "internalType": "struct ParanetLib.KnowledgeAsset",
+        "internalType": "struct ParanetLib.KnowledgeCollection",
         "name": "",
         "type": "tuple"
       }
@@ -129,7 +160,7 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "knowledgeAssetId",
+        "name": "knowledgeCollectionId",
         "type": "bytes32"
       }
     ],
@@ -148,7 +179,7 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "knowledgeAssetId",
+        "name": "knowledgeCollectionId",
         "type": "bytes32"
       }
     ],
@@ -180,11 +211,11 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "knowledgeAssetId",
+        "name": "knowledgeCollectionId",
         "type": "bytes32"
       }
     ],
-    "name": "isParanetKnowledgeAsset",
+    "name": "isParanetKnowledgeCollection",
     "outputs": [
       {
         "internalType": "bool",
@@ -212,11 +243,11 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "knowledgeAssetId",
+        "name": "knowledgeCollectionId",
         "type": "bytes32"
       }
     ],
-    "name": "removeKnowledgeAsset",
+    "name": "removeKnowledgeCollection",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -225,7 +256,7 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "knowledgeAssetId",
+        "name": "knowledgeCollectionId",
         "type": "bytes32"
       },
       {
@@ -243,7 +274,7 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "knowledgeAssetId",
+        "name": "knowledgeCollectionId",
         "type": "bytes32"
       },
       {
