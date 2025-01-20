@@ -263,29 +263,29 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
         return slice;
     }
 
-    // function setUpdatingKnowledgeCollectionUpdateTokenAmount(
-    //     address miner,
-    //     bytes32 paranetId,
-    //     bytes32 knowledgeCollectionStateId,
-    //     uint96 updateTokenAmount
-    // ) external onlyContracts {
-    //     knowledgeMiners[miner]
-    //     .updatingKnowledgeCollectionsStates[paranetId][
-    //         knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId]
-    //     ].updateTokenAmount = updateTokenAmount;
-    // }
+    function setUpdatingKnowledgeCollectionUpdateTokenAmount(
+        address miner,
+        bytes32 paranetId,
+        bytes32 knowledgeCollectionStateId,
+        uint96 updateTokenAmount
+    ) external onlyContracts {
+        knowledgeMiners[miner]
+        .updatingKnowledgeCollectionsStates[paranetId][
+            knowledgeMiners[miner].updatingKnowledgeCollectionsStateIndexes[paranetId][knowledgeCollectionStateId]
+        ].updateTokenAmount = updateTokenAmount;
+    }
 
-    // function addUpdatingKnowledgeCollectionUpdateTokenAmount(
-    //     address miner,
-    //     bytes32 paranetId,
-    //     bytes32 knowledgeCollectionStateId,
-    //     uint96 addedUpdateTokenAmount
-    // ) external onlyContracts {
-    //     knowledgeMiners[miner]
-    //     .updatingKnowledgeCollectionsStates[paranetId][
-    //         knowledgeMiners[miner].updatingKnowledgeCollectionStateIndexes[paranetId][knowledgeCollectionStateId]
-    //     ].updateTokenAmount += addedUpdateTokenAmount;
-    // }
+    function addUpdatingKnowledgeCollectionUpdateTokenAmount(
+        address miner,
+        bytes32 paranetId,
+        bytes32 knowledgeCollectionStateId,
+        uint96 addedUpdateTokenAmount
+    ) external onlyContracts {
+        knowledgeMiners[miner]
+        .updatingKnowledgeCollectionsStates[paranetId][
+            knowledgeMiners[miner].updatingKnowledgeCollectionsStateIndexes[paranetId][knowledgeCollectionStateId]
+        ].updateTokenAmount += addedUpdateTokenAmount;
+    }
 
     function subUpdatingKnowledgeCollectionUpdateTokenAmount(
         address miner,

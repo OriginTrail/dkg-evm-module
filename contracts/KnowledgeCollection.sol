@@ -183,9 +183,10 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
 
         ParanetKnowledgeCollectionsRegistry pkar = paranetKnowledgeCollectionsRegistry;
 
-        bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(address(kcs), id)));
-        if (pkar.isParanetKnowledgeCollection(paranetId)) {
+        bytes32 knowledgeCollectionId = pkar.getParanetId(keccak256(abi.encodePacked(address(kcs), id)));
+        if (pkar.isParanetKnowledgeCollection(knowledgeCollectionId)) {
             ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+            bytes32 paranetId = paranetKnowledgeCollectionsRegistry.getParanetId(knowledgeCollectionId);
 
             // Add Knowledge Asset Token Amount Metadata to the ParanetsRegistry
             paranetsRegistry.addCumulativeKnowledgeValue(paranetId, tokenAmount);
@@ -194,6 +195,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
             pkmr.addCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
             pkmr.addUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
             pkmr.addTotalTracSpent(msg.sender, tokenAmount);
+            pkmr.addUpdatingKnowledgeCollectionState(msg.sender, paranetId, address(kcs), id, merkleRoot, tokenAmount);
         }
     }
 
@@ -223,9 +225,10 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
 
         ParanetKnowledgeCollectionsRegistry pkar = paranetKnowledgeCollectionsRegistry;
 
-        bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(address(kcs), id)));
-        if (pkar.isParanetKnowledgeCollection(paranetId)) {
+        bytes32 knowledgeCollectionId = pkar.getParanetId(keccak256(abi.encodePacked(address(kcs), id)));
+        if (pkar.isParanetKnowledgeCollection(knowledgeCollectionId)) {
             ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+            bytes32 paranetId = paranetKnowledgeCollectionsRegistry.getParanetId(knowledgeCollectionId);
 
             // Add Knowledge Asset Token Amount Metadata to the ParanetsRegistry
             paranetsRegistry.addCumulativeKnowledgeValue(paranetId, tokenAmount);
@@ -259,9 +262,10 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
 
         ParanetKnowledgeCollectionsRegistry pkar = paranetKnowledgeCollectionsRegistry;
 
-        bytes32 paranetId = pkar.getParanetId(keccak256(abi.encodePacked(address(kcs), id)));
-        if (pkar.isParanetKnowledgeCollection(paranetId)) {
+        bytes32 knowledgeCollectionId = pkar.getParanetId(keccak256(abi.encodePacked(address(kcs), id)));
+        if (pkar.isParanetKnowledgeCollection(knowledgeCollectionId)) {
             ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+            bytes32 paranetId = paranetKnowledgeCollectionsRegistry.getParanetId(knowledgeCollectionId);
 
             // Add Knowledge Asset Token Amount Metadata to the ParanetsRegistry
             paranetsRegistry.addCumulativeKnowledgeValue(paranetId, tokenAmount);
