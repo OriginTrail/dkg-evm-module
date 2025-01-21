@@ -16,6 +16,7 @@ import {IVersioned} from "../interfaces/IVersioned.sol";
 import {ParanetLib} from "../libraries/ParanetLib.sol";
 import {ProfileLib} from "../libraries/ProfileLib.sol";
 import {KnowledgeCollectionLib} from "../libraries/KnowledgeCollectionLib.sol";
+import "hardhat/console.sol";
 
 contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     event ParanetRegistered(
@@ -1150,7 +1151,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             minted + burnedCount
         );
 
-        emit DebugOwner(minted, burnedCount, activeCount, ownedCountInRange);
+        console.log(minted, burnedCount, activeCount, ownedCountInRange);
 
         require(ownedCountInRange == activeCount, "Caller isn't the owner of the KC");
     }
