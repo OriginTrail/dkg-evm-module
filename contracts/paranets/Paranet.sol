@@ -1113,13 +1113,13 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     //     }
     // }
 
-    function _checkParanetOperator(bytes32 paranetId) internal view virtual {
+    function _checkParanetOperator(bytes32 paranetId) internal virtual {
         (address paranetKCStorageContract, uint256 paranetKCTokenId) = paranetsRegistry
             .getParanetKnowledgeCollectionLocator(paranetId);
         _checkKnowledgeCollectionOwner(paranetKCStorageContract, paranetKCTokenId);
     }
 
-    function _checkParanetServiceOperator(bytes32 paranetServiceId) internal view virtual {
+    function _checkParanetServiceOperator(bytes32 paranetServiceId) internal virtual {
         (address paranetServiceKCStorageContract, uint256 paranetServiceKCTokenId) = paranetServicesRegistry
             .getParanetServiceKnowledgeCollectionLocator(paranetServiceId);
         _checkKnowledgeCollectionOwner(paranetServiceKCStorageContract, paranetServiceKCTokenId);
@@ -1128,7 +1128,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     function _checkKnowledgeCollectionOwner(
         address knowledgeCollectionStorageContractAddress,
         uint256 knowledgeCollectionId
-    ) internal view virtual {
+    ) internal virtual {
         require(hub.isAssetStorage(knowledgeCollectionStorageContractAddress), "Given address isn't KC Storage");
 
         KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(
@@ -1149,6 +1149,8 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             startTokenId,
             minted + burnedCount
         );
+
+        emit DebugOwner(minted, burnedCount, activeCount, ownedCountInRange);
 
         require(ownedCountInRange == activeCount, "Caller isn't the owner of the KC");
     }
