@@ -114,6 +114,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 indexed paranetKCTokenId,
         address minerAddress
     );
+    event DebugOwner(uint256 minted, uint256 burnedCount, uint256 activeCount, uint256 ownedCountInRange);
 
     string private constant _NAME = "Paranet";
     string private constant _VERSION = "1.0.0";
