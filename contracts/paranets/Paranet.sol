@@ -823,7 +823,6 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 limit
     ) external view returns (ParanetLib.UniversalCollectionLocator[] memory) {
         ParanetsRegistry pr = paranetsRegistry;
-
         bytes32[] memory knowledgeCollections = pr.getKnowledgeCollectionsWithPagination(paranetId, offset, limit);
 
         ParanetKnowledgeCollectionsRegistry pkcr = paranetKnowledgeCollectionsRegistry;
@@ -1136,7 +1135,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 minted = knowledgeCollectionStorage.getMinted(knowledgeCollectionId);
         uint256 burnedCount = knowledgeCollectionStorage.getBurnedAmount(knowledgeCollectionId);
         uint256 activeCount = minted - burnedCount;
-        require(activeCount != 0, "No KCs in Collection");
+        require(activeCount != 0, "No KAs in Collection");
 
         uint256 startTokenId = (knowledgeCollectionId - 1) *
             knowledgeCollectionStorage.knowledgeCollectionMaxSize() +
