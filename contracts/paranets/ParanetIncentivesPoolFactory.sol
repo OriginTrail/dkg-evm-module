@@ -105,13 +105,12 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
     function _checkKnowledgeCollectionOwner(
         address knowledgeCollectionStorageContractAddress,
         uint256 knowledgeCollectionId
-    ) internal view virtual {
+    ) internal virtual {
         require(hub.isAssetStorage(knowledgeCollectionStorageContractAddress), "Given address isn't KC Storage");
 
         KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(
             knowledgeCollectionStorageContractAddress
         );
-
         uint256 minted = knowledgeCollectionStorage.getMinted(knowledgeCollectionId);
         uint256 burnedCount = knowledgeCollectionStorage.getBurnedAmount(knowledgeCollectionId);
         uint256 activeCount = minted - burnedCount;
@@ -124,7 +123,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(
             msg.sender,
             startTokenId,
-            minted + burnedCount
+            startTokenId + minted + burnedCount
         );
 
         require(ownedCountInRange == activeCount, "Caller isn't the owner of the KC");
