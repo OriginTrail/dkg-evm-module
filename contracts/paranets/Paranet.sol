@@ -16,7 +16,6 @@ import {IVersioned} from "../interfaces/IVersioned.sol";
 import {ParanetLib} from "../libraries/ParanetLib.sol";
 import {ProfileLib} from "../libraries/ProfileLib.sol";
 import {KnowledgeCollectionLib} from "../libraries/KnowledgeCollectionLib.sol";
-import "hardhat/console.sol";
 
 contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     event ParanetRegistered(
@@ -115,7 +114,6 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 indexed paranetKCTokenId,
         address minerAddress
     );
-    event DebugOwner(uint256 minted, uint256 burnedCount, uint256 activeCount, uint256 ownedCountInRange);
 
     string private constant _NAME = "Paranet";
     string private constant _VERSION = "1.0.0";
@@ -1135,7 +1133,6 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(
             knowledgeCollectionStorageContractAddress
         );
-
         uint256 minted = knowledgeCollectionStorage.getMinted(knowledgeCollectionId);
         uint256 burnedCount = knowledgeCollectionStorage.getBurnedAmount(knowledgeCollectionId);
         uint256 activeCount = minted - burnedCount;
@@ -1148,10 +1145,8 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(
             msg.sender,
             startTokenId,
-            minted + burnedCount
+            startTokenId + minted + burnedCount
         );
-
-        console.log(minted, burnedCount, activeCount, ownedCountInRange);
 
         require(ownedCountInRange == activeCount, "Caller isn't the owner of the KC");
     }
