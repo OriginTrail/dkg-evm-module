@@ -264,7 +264,11 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
 
         uint256 startTokenId = (paranetKCTokenId - 1) * knowledgeCollectionStorage.knowledgeCollectionMaxSize() + 1; // _startTokenId()
 
-        uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(addr, startTokenId, minted + burnedCount);
+        uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(
+            addr,
+            startTokenId,
+            startTokenId + minted + burnedCount
+        );
 
         return ownedCountInRange == activeCount;
     }
