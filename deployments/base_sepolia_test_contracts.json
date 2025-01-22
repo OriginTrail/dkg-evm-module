@@ -173,12 +173,12 @@
       "deployed": true
     },
     "KnowledgeCollection": {
-      "evmAddress": "0x46121121F78f8351DA4526813FbfBffD044dec6c",
+      "evmAddress": "0xA85c3117fA62176830ADA98A6d429c0D0947cEFb",
       "version": "1.0.0",
-      "gitBranch": "v8-contracts",
-      "gitCommitHash": "ddb3f9e1ef7c2f9f7ca8554b19fae7d521a5507f",
-      "deploymentBlock": 19684808,
-      "deploymentTimestamp": 1735137910837,
+      "gitBranch": "v8-paranet-update",
+      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
+      "deploymentBlock": 20892002,
+      "deploymentTimestamp": 1737552295950,
       "deployed": true
     },
     "Migrator": {
@@ -188,6 +188,51 @@
       "gitCommitHash": "ddb3f9e1ef7c2f9f7ca8554b19fae7d521a5507f",
       "deploymentBlock": 19684813,
       "deploymentTimestamp": 1735137919078,
+      "deployed": true
+    },
+    "ParanetsRegistry": {
+      "evmAddress": "0x5960930cC6A47A4606fa05Fe26ca9A6Eb2250097",
+      "version": "1.0.1",
+      "gitBranch": "v8-paranet-update",
+      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
+      "deploymentBlock": 20891862,
+      "deploymentTimestamp": 1737552017110,
+      "deployed": true
+    },
+    "ParanetServicesRegistry": {
+      "evmAddress": "0x6e1E82955f00CF8Bf062e8B35608B0fFE3FC4Df6",
+      "version": "1.0.0",
+      "gitBranch": "v8-paranet-update",
+      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
+      "deploymentBlock": 20891866,
+      "deploymentTimestamp": 1737552023350,
+      "deployed": true
+    },
+    "ParanetKnowledgeCollectionsRegistry": {
+      "evmAddress": "0xB7f43dc2f4863a3a771F7E7e2BF08adc1de68fC7",
+      "version": "1.0.1",
+      "gitBranch": "v8-paranet-update",
+      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
+      "deploymentBlock": 20891869,
+      "deploymentTimestamp": 1737552029843,
+      "deployed": true
+    },
+    "ParanetKnowledgeMinersRegistry": {
+      "evmAddress": "0x91EF627b8581D41658611b1b376FF31b9a3884ea",
+      "version": "1.0.0",
+      "gitBranch": "v8-paranet-update",
+      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
+      "deploymentBlock": 20891872,
+      "deploymentTimestamp": 1737552036245,
+      "deployed": true
+    },
+    "Paranet": {
+      "evmAddress": "0x8DBfBe94a5E24d8Bd4ea3e933C77C054128F29b5",
+      "version": "1.0.0",
+      "gitBranch": "v8-paranet-update",
+      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
+      "deploymentBlock": 20891875,
+      "deploymentTimestamp": 1737552043122,
       "deployed": true
     }
   }
