@@ -31,43 +31,51 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     event ParanetCuratedNodeAdded(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
         uint72 identityId
     );
     event ParanetCuratedNodeRemoved(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
         uint72 identityId
     );
     event ParanetCuratedNodeJoinRequestCreated(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
         uint72 identityId
     );
     event ParanetCuratedNodeJoinRequestAccepted(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
         uint72 identityId
     );
     event ParanetCuratedNodeJoinRequestRejected(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
         uint72 identityId
     );
     event ParanetIncetivesPoolDeployed(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
         ParanetLib.IncentivesPool incentivesPool
     );
     event ParanetMetadataUpdated(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
         string newParanetName,
         string newParanetDescription
     );
     event ParanetServiceAdded(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
-        address indexed paranetServiceKCStorageContract,
+        uint256 indexed paranetKATokenId,
+        address paranetServiceKCStorageContract,
         uint256 paranetServiceKCTokenId
     );
     event ParanetServiceRegistered(
@@ -87,32 +95,38 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     event KnowledgeCollectionSubmittedToParanet(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
-        address indexed knowledgeCollectionStorageContract,
+        uint256 indexed paranetKATokenId,
+        address knowledgeCollectionStorageContract,
         uint256 knowledgeCollectionId
     );
     event ParanetCuratedMinerAdded(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
         address minerAddress
     );
     event ParanetCuratedMinerRemoved(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
         address minerAddress
     );
     event ParanetCuratedMinerAccessRequestCreated(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
         address minerAddress
     );
     event ParanetCuratedMinerAccessRequestAccepted(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
         address minerAddress
     );
     event ParanetCuratedMinerAccessRequestRejected(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
         address minerAddress
     );
 
@@ -134,6 +148,19 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 knowledgeCollectionTokenId
     ) {
         _checkKnowledgeCollectionOwner(knowledgeCollectionStorageContract, knowledgeCollectionTokenId);
+        _;
+    }
+
+    modifier onlyKnowledgeAssetOwner(
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId
+    ) {
+        _checkKnowledgeAssetOwner(
+            knowledgeCollectionStorageContract,
+            knowledgeCollectionTokenId,
+            knowledgeAssetTokenId
+        );
         _;
     }
 
@@ -235,7 +262,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 paranetKCTokenId,
         uint256 paranetKATokenId,
         uint72[] calldata identityIds
-    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, onlyKnowledgeAssetOwner) {
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
         ParanetsRegistry pr = paranetsRegistry;
         ProfileStorage ps = profileStorage;
 
@@ -266,7 +293,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
 
             pr.addCuratedNode(paranetId, identityIds[i], ps.getNodeId(identityIds[i]));
 
-            emit ParanetCuratedNodeAdded(paranetKCStorageContract, paranetKCTokenId, identityIds[i]);
+            emit ParanetCuratedNodeAdded(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId, identityIds[i]);
 
             unchecked {
                 i++;
@@ -378,7 +405,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 paranetKCTokenId,
         uint256 paranetKATokenId,
         uint72 identityId
-    ) external onlyKnowledgeCollectionOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
         ParanetsRegistry pr = paranetsRegistry;
 
         bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId));
@@ -743,10 +770,10 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     ) external {
         ParanetsRegistry pr = paranetsRegistry;
 
-        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId));
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId));
 
         if (!pr.paranetExists(paranetId)) {
-            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId);
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         }
 
         if (pr.getMinersAccessPolicy(paranetId) != ParanetLib.MinersAccessPolicy.CURATED) {
@@ -776,20 +803,26 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
 
         pr.addKnowledgeMinerAccessRequest(paranetId, msg.sender, ParanetLib.RequestStatus.PENDING);
 
-        emit ParanetCuratedMinerAccessRequestCreated(paranetKCStorageContract, paranetKCTokenId, msg.sender);
+        emit ParanetCuratedMinerAccessRequestCreated(
+            paranetKCStorageContract,
+            paranetKCTokenId,
+            paranetKATokenId,
+            msg.sender
+        );
     }
 
     function approveCuratedMiner(
         address paranetKCStorageContract,
         uint256 paranetKCTokenId,
+        uint256 paranetKATokenId,
         address minerAddress
-    ) external onlyKnowledgeCollectionOwner(paranetKCStorageContract, paranetKCTokenId) {
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
         ParanetsRegistry pr = paranetsRegistry;
 
-        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId));
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId));
 
         if (!pr.paranetExists(paranetId)) {
-            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId);
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         }
 
         if (pr.getMinersAccessPolicy(paranetId) != ParanetLib.MinersAccessPolicy.CURATED) {
@@ -826,21 +859,27 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         );
         pr.addKnowledgeMiner(paranetId, minerAddress);
 
-        emit ParanetCuratedMinerAccessRequestAccepted(paranetKCStorageContract, paranetKCTokenId, minerAddress);
-        emit ParanetCuratedMinerAdded(paranetKCStorageContract, paranetKCTokenId, minerAddress);
+        emit ParanetCuratedMinerAccessRequestAccepted(
+            paranetKCStorageContract,
+            paranetKCTokenId,
+            paranetKATokenId,
+            minerAddress
+        );
+        emit ParanetCuratedMinerAdded(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId, minerAddress);
     }
 
     function rejectCuratedMiner(
         address paranetKCStorageContract,
         uint256 paranetKCTokenId,
+        uint256 paranetKATokenId,
         address minerAddress
-    ) external onlyKnowledgeCollectionOwner(paranetKCStorageContract, paranetKCTokenId) {
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
         ParanetsRegistry pr = paranetsRegistry;
 
-        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId));
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId));
 
         if (!pr.paranetExists(paranetId)) {
-            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId);
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         }
 
         if (pr.getMinersAccessPolicy(paranetId) != ParanetLib.MinersAccessPolicy.CURATED) {
@@ -876,7 +915,12 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             ParanetLib.RequestStatus.REJECTED
         );
 
-        emit ParanetCuratedMinerAccessRequestRejected(paranetKCStorageContract, paranetKCTokenId, minerAddress);
+        emit ParanetCuratedMinerAccessRequestRejected(
+            paranetKCStorageContract,
+            paranetKCTokenId,
+            paranetKATokenId,
+            minerAddress
+        );
     }
 
     function getKnowledgeCollectionLocatorsWithPagination(
@@ -953,14 +997,28 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     function submitKnowledgeCollection(
         address paranetKCStorageContract,
         uint256 paranetKnowledgeCollectionId,
+        uint256 paranetKnowledgeAssetTokenId,
         address knowledgeCollectionStorageContract,
         uint256 knowledgeCollectionTokenId
-    ) external onlyKnowledgeCollectionOwner(knowledgeCollectionStorageContract, knowledgeCollectionTokenId) {
+    )
+        external
+        onlyKnowledgeAssetOwner(
+            knowledgeCollectionStorageContract,
+            knowledgeCollectionTokenId,
+            paranetKnowledgeAssetTokenId
+        )
+    {
         ParanetsRegistry pr = paranetsRegistry;
-        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKnowledgeCollectionId));
+        bytes32 paranetId = keccak256(
+            abi.encodePacked(paranetKCStorageContract, paranetKnowledgeCollectionId, paranetKnowledgeAssetTokenId)
+        );
 
         if (!pr.paranetExists(paranetId)) {
-            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKnowledgeCollectionId);
+            revert ParanetLib.ParanetDoesntExist(
+                paranetKCStorageContract,
+                paranetKnowledgeCollectionId,
+                paranetKnowledgeAssetTokenId
+            );
         }
 
         ParanetLib.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
@@ -1007,6 +1065,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         _updateSubmittedKnowledgeCollectionMetadata(
             paranetKCStorageContract,
             paranetKnowledgeCollectionId,
+            paranetKnowledgeAssetTokenId,
             knowledgeCollectionStorageContract,
             knowledgeCollectionTokenId,
             remainingTokenAmount,
@@ -1016,6 +1075,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         emit KnowledgeCollectionSubmittedToParanet(
             paranetKCStorageContract,
             paranetKnowledgeCollectionId,
+            paranetKnowledgeAssetTokenId,
             knowledgeCollectionStorageContract,
             knowledgeCollectionTokenId
         );
@@ -1038,6 +1098,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     function _updateSubmittedKnowledgeCollectionMetadata(
         address paranetKCStorageContract,
         uint256 paranetKCTokenId,
+        uint256 paranetKATokenId,
         address knowledgeCollectionStorageContract,
         uint256 knowledgeCollectionTokenId,
         uint96 tokenAmount,
@@ -1046,9 +1107,9 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         ParanetsRegistry pr = paranetsRegistry;
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
 
-        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId));
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId));
         bytes32 knowledgeCollectionId = keccak256(
-            abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId)
+            abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId, paranetKATokenId)
         );
 
         // Add Knowledge Collection to the KnowledgeCollectionsRegistry
@@ -1174,9 +1235,9 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     // }
 
     function _checkParanetOperator(bytes32 paranetId) internal virtual {
-        (address paranetKCStorageContract, uint256 paranetKCTokenId) = paranetsRegistry
-            .getParanetKnowledgeCollectionLocator(paranetId);
-        _checkKnowledgeCollectionOwner(paranetKCStorageContract, paranetKCTokenId);
+        (address paranetKCStorageContract, uint256 paranetKCTokenId, uint256 paranetKATokenId) = paranetsRegistry
+            .getParanetKnowledgeAssetLocator(paranetId);
+        _checkKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
     }
 
     function _checkParanetServiceOperator(bytes32 paranetServiceId) internal virtual {
@@ -1210,5 +1271,24 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         );
 
         require(ownedCountInRange == activeCount, "Caller isn't the owner of the KC");
+    }
+
+    function _checkKnowledgeAssetOwner(
+        address knowledgeCollectionStorageContractAddress,
+        uint256 knowledgeCollectionId,
+        uint256 knowledgeAssetId
+    ) internal virtual {
+        require(hub.isAssetStorage(knowledgeCollectionStorageContractAddress), "Given address isn't KC Storage");
+
+        KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(
+            knowledgeCollectionStorageContractAddress
+        );
+
+        uint256 startTokenId = (knowledgeCollectionId - 1) *
+            knowledgeCollectionStorage.knowledgeCollectionMaxSize() +
+            knowledgeAssetId;
+
+        uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(msg.sender, startTokenId, startTokenId + 1);
+        require(ownedCountInRange == 1, "Caller isn't the owner of the KA");
     }
 }

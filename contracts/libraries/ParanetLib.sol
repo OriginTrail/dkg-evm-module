@@ -205,6 +205,7 @@ library ParanetLib {
     error ParanetIncentivesPoolAlreadyExists(
         address knowledgeCollectionStorageAddress,
         uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId,
         string poolType,
         address poolAddress
     );

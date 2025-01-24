@@ -27,11 +27,16 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
 
-    modifier onlyKnowledgeCollectionOwner(
+    modifier onlyKnowledgeAssetOwner(
         address knowledgeCollectionStorageContract,
-        uint256 knowledgeCollectionTokenId
+        uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId
     ) {
-        _checkKnowledgeCollectionOwner(knowledgeCollectionStorageContract, knowledgeCollectionTokenId);
+        _checkKnowledgeAssetOwner(
+            knowledgeCollectionStorageContract,
+            knowledgeCollectionTokenId,
+            knowledgeAssetTokenId
+        );
         _;
     }
 
@@ -51,26 +56,28 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         bool isNativeReward,
         address paranetKCStorageContract,
         uint256 paranetKCTokenId,
+        uint256 paranetKATokenId,
         uint256 tracToNeuroEmissionMultiplier,
         uint16 paranetOperatorRewardPercentage,
         uint16 paranetIncentivizationProposalVotersRewardPercentage
-    ) external onlyKnowledgeCollectionOwner(paranetKCStorageContract, paranetKCTokenId) returns (address) {
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) returns (address) {
         Hub h = hub;
         ParanetsRegistry pr = paranetsRegistry;
         string memory incentivesPoolType = isNativeReward ? "Neuroweb" : "NeurowebERC20";
 
         if (
             pr.hasIncentivesPoolByType(
-                keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId)),
+                keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId)),
                 incentivesPoolType
             )
         ) {
             revert ParanetLib.ParanetIncentivesPoolAlreadyExists(
                 paranetKCStorageContract,
                 paranetKCTokenId,
+                paranetKATokenId,
                 incentivesPoolType,
                 pr.getIncentivesPoolAddress(
-                    keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId)),
+                    keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId)),
                     incentivesPoolType
                 )
             );
@@ -81,14 +88,14 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
             isNativeReward ? address(0) : h.getContractAddress(incentivesPoolType),
             h.getContractAddress("ParanetsRegistry"),
             h.getContractAddress("ParanetKnowledgeMinersRegistry"),
-            keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId)),
+            keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId)),
             tracToNeuroEmissionMultiplier,
             paranetOperatorRewardPercentage,
             paranetIncentivizationProposalVotersRewardPercentage
         );
 
         pr.setIncentivesPoolAddress(
-            keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId)),
+            keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKCTokenId)),
             incentivesPoolType,
             address(incentivesPool)
         );
@@ -102,30 +109,22 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         return address(incentivesPool);
     }
 
-    function _checkKnowledgeCollectionOwner(
+    function _checkKnowledgeAssetOwner(
         address knowledgeCollectionStorageContractAddress,
-        uint256 knowledgeCollectionId
+        uint256 knowledgeCollectionId,
+        uint256 knowledgeAssetId
     ) internal virtual {
         require(hub.isAssetStorage(knowledgeCollectionStorageContractAddress), "Given address isn't KC Storage");
 
         KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(
             knowledgeCollectionStorageContractAddress
         );
-        uint256 minted = knowledgeCollectionStorage.getMinted(knowledgeCollectionId);
-        uint256 burnedCount = knowledgeCollectionStorage.getBurnedAmount(knowledgeCollectionId);
-        uint256 activeCount = minted - burnedCount;
-        require(activeCount != 0, "No KAs in Collection");
 
         uint256 startTokenId = (knowledgeCollectionId - 1) *
             knowledgeCollectionStorage.knowledgeCollectionMaxSize() +
-            1; // _startTokenId()
+            knowledgeAssetId;
 
-        uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(
-            msg.sender,
-            startTokenId,
-            startTokenId + minted + burnedCount
-        );
-
-        require(ownedCountInRange == activeCount, "Caller isn't the owner of the KC");
+        uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(msg.sender, startTokenId, startTokenId + 1);
+        require(ownedCountInRange == 1, "Caller isn't the owner of the KA");
     }
 }
