@@ -172,15 +172,6 @@
       "deploymentTimestamp": 1735137901423,
       "deployed": true
     },
-    "KnowledgeCollection": {
-      "evmAddress": "0x46121121F78f8351DA4526813FbfBffD044dec6c",
-      "version": "1.0.0",
-      "gitBranch": "v8-contracts",
-      "gitCommitHash": "ddb3f9e1ef7c2f9f7ca8554b19fae7d521a5507f",
-      "deploymentBlock": 19684808,
-      "deploymentTimestamp": 1735137910837,
-      "deployed": true
-    },
     "Migrator": {
       "evmAddress": "0x974892b18A62AE61D21a14F9db005f4f6DD2e52A",
       "version": null,
@@ -188,6 +179,15 @@
       "gitCommitHash": "ddb3f9e1ef7c2f9f7ca8554b19fae7d521a5507f",
       "deploymentBlock": 19684813,
       "deploymentTimestamp": 1735137919078,
+      "deployed": true
+    },
+    "KnowledgeCollection": {
+      "evmAddress": "0xAF09267e228E5D529732497BF20d652d10278a6e",
+      "version": "1.0.0",
+      "gitBranch": "fix/remove-kc-update",
+      "gitCommitHash": "59a62815b3d8c5deffdf8da44dd5ace4655052ed",
+      "deploymentBlock": 20972223,
+      "deploymentTimestamp": 1737712739031,
       "deployed": true
     }
   }
