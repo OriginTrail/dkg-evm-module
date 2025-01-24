@@ -15,6 +15,12 @@ library ParanetLib {
         uint256 knowledgeCollectionTokenId;
     }
 
+    struct UniversalAssetLocator {
+        address knowledgeCollectionStorageContract;
+        uint256 knowledgeCollectionTokenId;
+        uint256 knowledgeAssetTokenId;
+    }
+
     enum NodesAccessPolicy {
         OPEN,
         CURATED
@@ -104,6 +110,7 @@ library ParanetLib {
     struct ParanetService {
         address paranetServiceKCStorageContract;
         uint256 paranetServiceKCTokenId;
+        uint256 paranetServiceKATokenId;
         string name;
         string description;
         address[] paranetServiceAddresses;
@@ -113,6 +120,7 @@ library ParanetLib {
     struct ParanetServiceMetadata {
         address paranetServiceKCStorageContract;
         uint256 paranetServiceKCTokenId;
+        uint256 paranetServiceKATokenId;
         string name;
         string description;
         address[] paranetServiceAddresses;
@@ -216,9 +224,14 @@ library ParanetLib {
     );
     error ParanetServiceHasAlreadyBeenRegistered(
         address knowledgeCollectionStorageAddress,
-        uint256 knowledgeCollectionTokenId
+        uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId
     );
-    error ParanetServiceDoesntExist(address knowledgeCollectionStorageAddress, uint256 knowledgeCollectionTokenId);
+    error ParanetServiceDoesntExist(
+        address knowledgeCollectionStorageAddress,
+        uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId
+    );
     error KnowledgeCollectionIsAPartOfOtherParanet(
         address paranetKnowledgeCollectionStorageAddress,
         uint256 paranetKnowledgeCollectionTokenId,

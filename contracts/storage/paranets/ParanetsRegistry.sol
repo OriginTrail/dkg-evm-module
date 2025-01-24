@@ -80,7 +80,11 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
     function paranetExists(bytes32 paranetId) external view returns (bool) {
         return
             keccak256(
-                abi.encodePacked(paranets[paranetId].paranetKCStorageContract, paranets[paranetId].paranetKCTokenId)
+                abi.encodePacked(
+                    paranets[paranetId].paranetKCStorageContract,
+                    paranets[paranetId].paranetKCTokenId,
+                    paranets[paranetId].paranetKATokenId
+                )
             ) == paranetId;
     }
 
@@ -564,7 +568,11 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
     function getParanetIdsMapping(bytes32 paranetId) external view returns (uint256) {
         require(
             keccak256(
-                abi.encodePacked(paranets[paranetId].paranetKCStorageContract, paranets[paranetId].paranetKCTokenId)
+                abi.encodePacked(
+                    paranets[paranetId].paranetKCStorageContract,
+                    paranets[paranetId].paranetKCTokenId,
+                    paranets[paranetId].paranetKATokenId
+                )
             ) == paranetId,
             "Paranet not found"
         );
