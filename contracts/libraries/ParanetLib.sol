@@ -58,6 +58,7 @@ library ParanetLib {
     struct Paranet {
         address paranetKCStorageContract;
         uint256 paranetKCTokenId;
+        uint256 paranetKATokenId;
         string name;
         string description;
         NodesAccessPolicy nodesAccessPolicy;
@@ -86,6 +87,7 @@ library ParanetLib {
     struct ParanetMetadata {
         address paranetKCStorageContract;
         uint256 paranetKCTokenId;
+        uint256 paranetKATokenId;
         string name;
         string description;
         NodesAccessPolicy nodesAccessPolicy;
@@ -173,7 +175,8 @@ library ParanetLib {
 
     error ParanetHasAlreadyBeenRegistered(
         address knowledgeCollectionStorageAddress,
-        uint256 knowledgeCollectionTokenId
+        uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId
     );
     error InvalidParanetNodesAccessPolicy(
         ParanetLib.NodesAccessPolicy[] expectedAccessPolicies,
@@ -205,7 +208,11 @@ library ParanetLib {
         string poolType,
         address poolAddress
     );
-    error ParanetDoesntExist(address knowledgeCollectionStorageAddress, uint256 knowledgeCollectionTokenId);
+    error ParanetDoesntExist(
+        address knowledgeCollectionStorageAddress,
+        uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId
+    );
     error ParanetServiceHasAlreadyBeenRegistered(
         address knowledgeCollectionStorageAddress,
         uint256 knowledgeCollectionTokenId
