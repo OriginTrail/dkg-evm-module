@@ -110,64 +110,64 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         return id;
     }
 
-    function updateKnowledgeCollection(
-        uint256 id,
-        string calldata updateOperationId,
-        bytes32 merkleRoot,
-        uint256 mintKnowledgeAssetsAmount,
-        uint256[] calldata knowledgeAssetsToBurn,
-        uint88 byteSize,
-        uint96 tokenAmount,
-        address paymaster,
-        uint72 publisherNodeIdentityId,
-        bytes32 publisherNodeR,
-        bytes32 publisherNodeVS,
-        uint72[] calldata identityIds,
-        bytes32[] calldata r,
-        bytes32[] calldata vs
-    ) external {
-        KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
-        EpochStorage es = epochStorage;
+    // function updateKnowledgeCollection(
+    //     uint256 id,
+    //     string calldata updateOperationId,
+    //     bytes32 merkleRoot,
+    //     uint256 mintKnowledgeAssetsAmount,
+    //     uint256[] calldata knowledgeAssetsToBurn,
+    //     uint88 byteSize,
+    //     uint96 tokenAmount,
+    //     address paymaster,
+    //     uint72 publisherNodeIdentityId,
+    //     bytes32 publisherNodeR,
+    //     bytes32 publisherNodeVS,
+    //     uint72[] calldata identityIds,
+    //     bytes32[] calldata r,
+    //     bytes32[] calldata vs
+    // ) external {
+    //     KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
+    //     EpochStorage es = epochStorage;
 
-        (, , , uint88 oldByteSize, , uint40 endEpoch, uint96 oldTokenAmount, bool isImmutable) = kcs
-            .getKnowledgeCollectionMetadata(id);
+    //     (, , , uint88 oldByteSize, , uint40 endEpoch, uint96 oldTokenAmount, bool isImmutable) = kcs
+    //         .getKnowledgeCollectionMetadata(id);
 
-        if (isImmutable) {
-            revert KnowledgeCollectionLib.CannotUpdateImmutableKnowledgeCollection(id);
-        }
+    //     if (isImmutable) {
+    //         revert KnowledgeCollectionLib.CannotUpdateImmutableKnowledgeCollection(id);
+    //     }
 
-        _verifySignature(
-            publisherNodeIdentityId,
-            ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))),
-            publisherNodeR,
-            publisherNodeVS
-        );
+    //     _verifySignature(
+    //         publisherNodeIdentityId,
+    //         ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(publisherNodeIdentityId, merkleRoot))),
+    //         publisherNodeR,
+    //         publisherNodeVS
+    //     );
 
-        _verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
+    //     _verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
 
-        uint256 currentEpoch = chronos.getCurrentEpoch();
-        if (currentEpoch > endEpoch) {
-            revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, currentEpoch, endEpoch);
-        }
+    //     uint256 currentEpoch = chronos.getCurrentEpoch();
+    //     if (currentEpoch > endEpoch) {
+    //         revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, currentEpoch, endEpoch);
+    //     }
 
-        kcs.updateKnowledgeCollection(
-            msg.sender,
-            id,
-            updateOperationId,
-            merkleRoot,
-            mintKnowledgeAssetsAmount,
-            knowledgeAssetsToBurn,
-            oldByteSize + byteSize,
-            oldTokenAmount + tokenAmount
-        );
+    //     kcs.updateKnowledgeCollection(
+    //         msg.sender,
+    //         id,
+    //         updateOperationId,
+    //         merkleRoot,
+    //         mintKnowledgeAssetsAmount,
+    //         knowledgeAssetsToBurn,
+    //         oldByteSize + byteSize,
+    //         oldTokenAmount + tokenAmount
+    //     );
 
-        _validateTokenAmount(byteSize - oldByteSize, endEpoch - currentEpoch, tokenAmount, true);
+    //     _validateTokenAmount(byteSize - oldByteSize, endEpoch - currentEpoch, tokenAmount, true);
 
-        es.addTokensToEpochRange(1, currentEpoch, endEpoch, tokenAmount);
-        es.addEpochProducedKnowledgeValue(publisherNodeIdentityId, currentEpoch, tokenAmount);
+    //     es.addTokensToEpochRange(1, currentEpoch, endEpoch, tokenAmount);
+    //     es.addEpochProducedKnowledgeValue(publisherNodeIdentityId, currentEpoch, tokenAmount);
 
-        _addTokens(tokenAmount, paymaster);
-    }
+    //     _addTokens(tokenAmount, paymaster);
+    // }
 
     function extendKnowledgeCollectionLifetime(
         uint256 id,
