@@ -95,7 +95,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         );
 
         pr.setIncentivesPoolAddress(
-            keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKCTokenId)),
+            keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId)),
             incentivesPoolType,
             address(incentivesPool)
         );
