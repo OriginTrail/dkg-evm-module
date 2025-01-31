@@ -234,9 +234,9 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         require(voters.length >= limit, "Limit exceeds the num of voters");
 
         for (uint256 i; i < limit; ) {
-            cumulativeVotersWeight -= uint16(voters[voters.length - 1 - i].weight);
+            cumulativeVotersWeight -= uint16(voters[voters.length - 1].weight);
 
-            delete votersIndexes[voters[voters.length - 1 - i].addr];
+            delete votersIndexes[voters[voters.length - 1].addr];
             voters.pop();
 
             unchecked {
