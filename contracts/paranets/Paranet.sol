@@ -159,6 +159,14 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         _;
     }
 
+    modifier onlyKnowledgeCollectionOwner(
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId
+    ) {
+        _checkKnowledgeCollectionOwner(knowledgeCollectionStorageContract, knowledgeCollectionTokenId);
+        _;
+    }
+
     function initialize() public onlyHub {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
@@ -1014,14 +1022,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 paranetKnowledgeAssetTokenId,
         address knowledgeCollectionStorageContract,
         uint256 knowledgeCollectionTokenId
-    )
-        external
-        onlyKnowledgeAssetOwner(
-            knowledgeCollectionStorageContract,
-            knowledgeCollectionTokenId,
-            paranetKnowledgeAssetTokenId
-        )
-    {
+    ) external onlyKnowledgeCollectionOwner(knowledgeCollectionStorageContract, knowledgeCollectionTokenId) {
         ParanetsRegistry pr = paranetsRegistry;
         bytes32 paranetId = keccak256(
             abi.encodePacked(paranetKCStorageContract, paranetKnowledgeCollectionTokenId, paranetKnowledgeAssetTokenId)
@@ -1070,7 +1071,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
                 )
             );
         }
-        // Is this correct way to do this ???
+
         KnowledgeCollectionStorage kcs = KnowledgeCollectionStorage(knowledgeCollectionStorageContract);
         uint96 remainingTokenAmount = kcs.getTokenAmount(knowledgeCollectionTokenId);
         KnowledgeCollectionLib.MerkleRoot[] memory merkleRoots = kcs.getMerkleRoots(knowledgeCollectionTokenId);
@@ -1123,7 +1124,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
 
         bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId));
         bytes32 knowledgeCollectionId = keccak256(
-            abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId, paranetKATokenId)
+            abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId)
         );
 
         // Add Knowledge Collection to the KnowledgeCollectionsRegistry
@@ -1265,5 +1266,32 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
 
         uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(msg.sender, startTokenId, startTokenId + 1);
         require(ownedCountInRange == 1, "Caller isn't the owner of the KA");
+    }
+
+    function _checkKnowledgeCollectionOwner(
+        address knowledgeCollectionStorageContractAddress,
+        uint256 knowledgeCollectionId
+    ) internal virtual {
+        require(hub.isAssetStorage(knowledgeCollectionStorageContractAddress), "Given address isn't KC Storage");
+
+        KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(
+            knowledgeCollectionStorageContractAddress
+        );
+        uint256 minted = knowledgeCollectionStorage.getMinted(knowledgeCollectionId);
+        uint256 burnedCount = knowledgeCollectionStorage.getBurnedAmount(knowledgeCollectionId);
+        uint256 activeCount = minted - burnedCount;
+        require(activeCount != 0, "No KAs in Collection");
+
+        uint256 startTokenId = (knowledgeCollectionId - 1) *
+            knowledgeCollectionStorage.knowledgeCollectionMaxSize() +
+            1; // _startTokenId()
+
+        uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(
+            msg.sender,
+            startTokenId,
+            startTokenId + minted + burnedCount
+        );
+
+        require(ownedCountInRange == activeCount, "Caller isn't the owner of the KC");
     }
 }
