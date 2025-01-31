@@ -1004,12 +1004,17 @@
         "type": "bytes32"
       }
     ],
-    "name": "getParanetKnowledgeCollectionLocator",
+    "name": "getParanetKnowledgeAssetLocator",
     "outputs": [
       {
         "internalType": "address",
         "name": "",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       },
       {
         "internalType": "uint256",
@@ -1040,6 +1045,11 @@
           {
             "internalType": "uint256",
             "name": "paranetKCTokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "paranetKATokenId",
             "type": "uint256"
           },
           {
@@ -1331,6 +1341,11 @@
       {
         "internalType": "uint256",
         "name": "knowledgeCollectionTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "knowledgeAssetTokenId",
         "type": "uint256"
       },
       {

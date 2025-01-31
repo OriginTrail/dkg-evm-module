@@ -115,6 +115,11 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -140,6 +145,11 @@
           {
             "internalType": "uint256",
             "name": "paranetServiceKCTokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "paranetServiceKATokenId",
             "type": "uint256"
           },
           {
@@ -245,6 +255,11 @@
       {
         "internalType": "uint256",
         "name": "paranetServiceKCTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetServiceKATokenId",
         "type": "uint256"
       },
       {

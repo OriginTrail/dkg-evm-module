@@ -28,17 +28,19 @@ contract ParanetServicesRegistry is INamed, IVersioned, HubDependent {
     function registerParanetService(
         address paranetServiceKCStorageContract,
         uint256 paranetServiceKCTokenId,
+        uint256 paranetServiceKATokenId,
         string calldata paranetServiceName,
         string calldata paranetServiceDescription,
         address[] calldata paranetServiceAddresses
     ) external onlyContracts returns (bytes32) {
         bytes32 paranetServiceId = keccak256(
-            abi.encodePacked(paranetServiceKCStorageContract, paranetServiceKCTokenId)
+            abi.encodePacked(paranetServiceKCStorageContract, paranetServiceKCTokenId, paranetServiceKATokenId)
         );
         ParanetLib.ParanetService storage paranetService = paranetServices[paranetServiceId];
 
         paranetService.paranetServiceKCStorageContract = paranetServiceKCStorageContract;
         paranetService.paranetServiceKCTokenId = paranetServiceKCTokenId;
+        paranetService.paranetServiceKATokenId = paranetServiceKATokenId;
         paranetService.name = paranetServiceName;
         paranetService.description = paranetServiceDescription;
         paranetService.paranetServiceAddresses = paranetServiceAddresses;
@@ -63,7 +65,8 @@ contract ParanetServicesRegistry is INamed, IVersioned, HubDependent {
             keccak256(
                 abi.encodePacked(
                     paranetServices[paranetServiceId].paranetServiceKCStorageContract,
-                    paranetServices[paranetServiceId].paranetServiceKCTokenId
+                    paranetServices[paranetServiceId].paranetServiceKCTokenId,
+                    paranetServices[paranetServiceId].paranetServiceKATokenId
                 )
             ) == paranetServiceId;
     }
@@ -75,6 +78,7 @@ contract ParanetServicesRegistry is INamed, IVersioned, HubDependent {
             ParanetLib.ParanetServiceMetadata({
                 paranetServiceKCStorageContract: paranetServices[paranetServiceId].paranetServiceKCStorageContract,
                 paranetServiceKCTokenId: paranetServices[paranetServiceId].paranetServiceKCTokenId,
+                paranetServiceKATokenId: paranetServices[paranetServiceId].paranetServiceKATokenId,
                 name: paranetServices[paranetServiceId].name,
                 description: paranetServices[paranetServiceId].description,
                 paranetServiceAddresses: paranetServices[paranetServiceId].paranetServiceAddresses
@@ -83,10 +87,11 @@ contract ParanetServicesRegistry is INamed, IVersioned, HubDependent {
 
     function getParanetServiceKnowledgeCollectionLocator(
         bytes32 paranetServiceId
-    ) external view returns (address, uint256) {
+    ) external view returns (address, uint256, uint256) {
         return (
             paranetServices[paranetServiceId].paranetServiceKCStorageContract,
-            paranetServices[paranetServiceId].paranetServiceKCTokenId
+            paranetServices[paranetServiceId].paranetServiceKCTokenId,
+            paranetServices[paranetServiceId].paranetServiceKATokenId
         );
     }
 

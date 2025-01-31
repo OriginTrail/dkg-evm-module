@@ -15,6 +15,12 @@ library ParanetLib {
         uint256 knowledgeCollectionTokenId;
     }
 
+    struct UniversalAssetLocator {
+        address knowledgeCollectionStorageContract;
+        uint256 knowledgeCollectionTokenId;
+        uint256 knowledgeAssetTokenId;
+    }
+
     enum NodesAccessPolicy {
         OPEN,
         CURATED
@@ -58,6 +64,7 @@ library ParanetLib {
     struct Paranet {
         address paranetKCStorageContract;
         uint256 paranetKCTokenId;
+        uint256 paranetKATokenId;
         string name;
         string description;
         NodesAccessPolicy nodesAccessPolicy;
@@ -86,6 +93,7 @@ library ParanetLib {
     struct ParanetMetadata {
         address paranetKCStorageContract;
         uint256 paranetKCTokenId;
+        uint256 paranetKATokenId;
         string name;
         string description;
         NodesAccessPolicy nodesAccessPolicy;
@@ -102,6 +110,7 @@ library ParanetLib {
     struct ParanetService {
         address paranetServiceKCStorageContract;
         uint256 paranetServiceKCTokenId;
+        uint256 paranetServiceKATokenId;
         string name;
         string description;
         address[] paranetServiceAddresses;
@@ -111,6 +120,7 @@ library ParanetLib {
     struct ParanetServiceMetadata {
         address paranetServiceKCStorageContract;
         uint256 paranetServiceKCTokenId;
+        uint256 paranetServiceKATokenId;
         string name;
         string description;
         address[] paranetServiceAddresses;
@@ -173,7 +183,8 @@ library ParanetLib {
 
     error ParanetHasAlreadyBeenRegistered(
         address knowledgeCollectionStorageAddress,
-        uint256 knowledgeCollectionTokenId
+        uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId
     );
     error InvalidParanetNodesAccessPolicy(
         ParanetLib.NodesAccessPolicy[] expectedAccessPolicies,
@@ -202,15 +213,25 @@ library ParanetLib {
     error ParanetIncentivesPoolAlreadyExists(
         address knowledgeCollectionStorageAddress,
         uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId,
         string poolType,
         address poolAddress
     );
-    error ParanetDoesntExist(address knowledgeCollectionStorageAddress, uint256 knowledgeCollectionTokenId);
+    error ParanetDoesntExist(
+        address knowledgeCollectionStorageAddress,
+        uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId
+    );
     error ParanetServiceHasAlreadyBeenRegistered(
         address knowledgeCollectionStorageAddress,
-        uint256 knowledgeCollectionTokenId
+        uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId
     );
-    error ParanetServiceDoesntExist(address knowledgeCollectionStorageAddress, uint256 knowledgeCollectionTokenId);
+    error ParanetServiceDoesntExist(
+        address knowledgeCollectionStorageAddress,
+        uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId
+    );
     error KnowledgeCollectionIsAPartOfOtherParanet(
         address paranetKnowledgeCollectionStorageAddress,
         uint256 paranetKnowledgeCollectionTokenId,

@@ -234,9 +234,9 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         require(voters.length >= limit, "Limit exceeds the num of voters");
 
         for (uint256 i; i < limit; ) {
-            cumulativeVotersWeight -= uint16(voters[voters.length - 1 - i].weight);
+            cumulativeVotersWeight -= uint16(voters[voters.length - 1].weight);
 
-            delete votersIndexes[voters[voters.length - 1 - i].addr];
+            delete votersIndexes[voters[voters.length - 1].addr];
             voters.pop();
 
             unchecked {
@@ -250,27 +250,18 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     }
 
     function isParanetOperator(address addr) public view returns (bool) {
-        (address paranetKCStorageContract, uint256 paranetKCTokenId) = paranetsRegistry
-            .getParanetKnowledgeCollectionLocator(parentParanetId);
+        (address paranetKCStorageContract, uint256 paranetKCTokenId, uint256 paranetKATokenId) = paranetsRegistry
+            .getParanetKnowledgeAssetLocator(parentParanetId);
 
         KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(paranetKCStorageContract);
 
-        uint256 minted = knowledgeCollectionStorage.getMinted(paranetKCTokenId);
-        uint256 burnedCount = knowledgeCollectionStorage.getBurnedAmount(paranetKCTokenId);
-        uint256 activeCount = minted - burnedCount;
-        if (activeCount == 0) {
-            return false;
-        }
+        uint256 startTokenId = (paranetKCTokenId - 1) *
+            knowledgeCollectionStorage.knowledgeCollectionMaxSize() +
+            paranetKATokenId;
 
-        uint256 startTokenId = (paranetKCTokenId - 1) * knowledgeCollectionStorage.knowledgeCollectionMaxSize() + 1; // _startTokenId()
+        uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(addr, startTokenId, startTokenId + 1);
 
-        uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(
-            addr,
-            startTokenId,
-            startTokenId + minted + burnedCount
-        );
-
-        return ownedCountInRange == activeCount;
+        return ownedCountInRange == 1;
     }
 
     function isProposalVoter(address addr) public view returns (bool) {

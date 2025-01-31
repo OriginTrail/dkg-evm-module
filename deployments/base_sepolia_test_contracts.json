@@ -172,15 +172,6 @@
       "deploymentTimestamp": 1735137901423,
       "deployed": true
     },
-    "KnowledgeCollection": {
-      "evmAddress": "0xA85c3117fA62176830ADA98A6d429c0D0947cEFb",
-      "version": "1.0.0",
-      "gitBranch": "v8-paranet-update",
-      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
-      "deploymentBlock": 20892002,
-      "deploymentTimestamp": 1737552295950,
-      "deployed": true
-    },
     "Migrator": {
       "evmAddress": "0x974892b18A62AE61D21a14F9db005f4f6DD2e52A",
       "version": null,
@@ -190,49 +181,13 @@
       "deploymentTimestamp": 1735137919078,
       "deployed": true
     },
-    "ParanetsRegistry": {
-      "evmAddress": "0x5960930cC6A47A4606fa05Fe26ca9A6Eb2250097",
-      "version": "1.0.1",
-      "gitBranch": "v8-paranet-update",
-      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
-      "deploymentBlock": 20891862,
-      "deploymentTimestamp": 1737552017110,
-      "deployed": true
-    },
-    "ParanetServicesRegistry": {
-      "evmAddress": "0x6e1E82955f00CF8Bf062e8B35608B0fFE3FC4Df6",
+    "KnowledgeCollection": {
+      "evmAddress": "0xAF09267e228E5D529732497BF20d652d10278a6e",
       "version": "1.0.0",
-      "gitBranch": "v8-paranet-update",
-      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
-      "deploymentBlock": 20891866,
-      "deploymentTimestamp": 1737552023350,
-      "deployed": true
-    },
-    "ParanetKnowledgeCollectionsRegistry": {
-      "evmAddress": "0xB7f43dc2f4863a3a771F7E7e2BF08adc1de68fC7",
-      "version": "1.0.1",
-      "gitBranch": "v8-paranet-update",
-      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
-      "deploymentBlock": 20891869,
-      "deploymentTimestamp": 1737552029843,
-      "deployed": true
-    },
-    "ParanetKnowledgeMinersRegistry": {
-      "evmAddress": "0x91EF627b8581D41658611b1b376FF31b9a3884ea",
-      "version": "1.0.0",
-      "gitBranch": "v8-paranet-update",
-      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
-      "deploymentBlock": 20891872,
-      "deploymentTimestamp": 1737552036245,
-      "deployed": true
-    },
-    "Paranet": {
-      "evmAddress": "0x8DBfBe94a5E24d8Bd4ea3e933C77C054128F29b5",
-      "version": "1.0.0",
-      "gitBranch": "v8-paranet-update",
-      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
-      "deploymentBlock": 20891875,
-      "deploymentTimestamp": 1737552043122,
+      "gitBranch": "fix/remove-kc-update",
+      "gitCommitHash": "59a62815b3d8c5deffdf8da44dd5ace4655052ed",
+      "deploymentBlock": 20972223,
+      "deploymentTimestamp": 1737712739031,
       "deployed": true
     }
   }

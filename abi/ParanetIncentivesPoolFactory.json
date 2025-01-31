@@ -23,6 +23,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "uint256",
+        "name": "knowledgeAssetTokenId",
+        "type": "uint256"
+      },
+      {
         "internalType": "string",
         "name": "poolType",
         "type": "string"
@@ -104,6 +109,11 @@
       {
         "internalType": "uint256",
         "name": "paranetKCTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKATokenId",
         "type": "uint256"
       },
       {

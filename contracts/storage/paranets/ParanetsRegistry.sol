@@ -34,18 +34,22 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
     function registerParanet(
         address knowledgeCollectionStorageContract,
         uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId,
         string calldata paranetName,
         string calldata paranetDescription,
         ParanetLib.NodesAccessPolicy nodesAccessPolicy,
         ParanetLib.MinersAccessPolicy minersAccessPolicy,
         ParanetLib.KnowledgeCollectionsAccessPolicy knowledgeColletionsAccessPolicy
     ) external onlyContracts returns (bytes32) {
-        bytes32 paranetId = keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId));
+        bytes32 paranetId = keccak256(
+            abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId, knowledgeAssetTokenId)
+        );
 
         ParanetLib.Paranet storage paranet = paranets[paranetId];
 
         paranet.paranetKCStorageContract = knowledgeCollectionStorageContract;
         paranet.paranetKCTokenId = knowledgeCollectionTokenId;
+        paranet.paranetKATokenId = knowledgeAssetTokenId;
         paranet.name = paranetName;
         paranet.description = paranetDescription;
         paranet.nodesAccessPolicy = nodesAccessPolicy;
@@ -76,7 +80,11 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
     function paranetExists(bytes32 paranetId) external view returns (bool) {
         return
             keccak256(
-                abi.encodePacked(paranets[paranetId].paranetKCStorageContract, paranets[paranetId].paranetKCTokenId)
+                abi.encodePacked(
+                    paranets[paranetId].paranetKCStorageContract,
+                    paranets[paranetId].paranetKCTokenId,
+                    paranets[paranetId].paranetKATokenId
+                )
             ) == paranetId;
     }
 
@@ -86,6 +94,7 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
             ParanetLib.ParanetMetadata({
                 paranetKCStorageContract: paranet.paranetKCStorageContract,
                 paranetKCTokenId: paranet.paranetKCTokenId,
+                paranetKATokenId: paranet.paranetKATokenId,
                 name: paranet.name,
                 description: paranet.description,
                 nodesAccessPolicy: paranet.nodesAccessPolicy,
@@ -95,8 +104,12 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
             });
     }
 
-    function getParanetKnowledgeCollectionLocator(bytes32 paranetId) external view returns (address, uint256) {
-        return (paranets[paranetId].paranetKCStorageContract, paranets[paranetId].paranetKCTokenId);
+    function getParanetKnowledgeAssetLocator(bytes32 paranetId) external view returns (address, uint256, uint256) {
+        return (
+            paranets[paranetId].paranetKCStorageContract,
+            paranets[paranetId].paranetKCTokenId,
+            paranets[paranetId].paranetKATokenId
+        );
     }
 
     function getName(bytes32 paranetId) external view returns (string memory) {
@@ -555,7 +568,11 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
     function getParanetIdsMapping(bytes32 paranetId) external view returns (uint256) {
         require(
             keccak256(
-                abi.encodePacked(paranets[paranetId].paranetKCStorageContract, paranets[paranetId].paranetKCTokenId)
+                abi.encodePacked(
+                    paranets[paranetId].paranetKCStorageContract,
+                    paranets[paranetId].paranetKCTokenId,
+                    paranets[paranetId].paranetKATokenId
+                )
             ) == paranetId,
             "Paranet not found"
         );
