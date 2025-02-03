@@ -242,43 +242,6 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         }
     }
 
-    function increaseKnowledgeCollectionTokenAmount(uint256 id, uint96 tokenAmount, address paymaster) external {
-        if (tokenAmount == 0) {
-            revert TokenLib.ZeroTokenAmount();
-        }
-
-        KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
-
-        (, , , , , uint40 endEpoch, uint96 oldTokenAmount, ) = kcs.getKnowledgeCollectionMetadata(id);
-
-        uint256 currentEpoch = chronos.getCurrentEpoch();
-        if (currentEpoch > endEpoch) {
-            revert KnowledgeCollectionLib.KnowledgeCollectionExpired(id, currentEpoch, endEpoch);
-        }
-
-        kcs.setTokenAmount(id, oldTokenAmount + tokenAmount);
-
-        epochStorage.addTokensToEpochRange(1, currentEpoch, endEpoch, tokenAmount);
-
-        _addTokens(tokenAmount, paymaster);
-
-        ParanetKnowledgeCollectionsRegistry pkar = paranetKnowledgeCollectionsRegistry;
-
-        bytes32 knowledgeCollectionId = pkar.getParanetId(keccak256(abi.encodePacked(address(kcs), id)));
-        if (pkar.isParanetKnowledgeCollection(knowledgeCollectionId)) {
-            ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
-            bytes32 paranetId = paranetKnowledgeCollectionsRegistry.getParanetId(knowledgeCollectionId);
-
-            // Add Knowledge Asset Token Amount Metadata to the ParanetsRegistry
-            paranetsRegistry.addCumulativeKnowledgeValue(paranetId, tokenAmount);
-
-            // Add Knowledge Asset Token Amount Metadata to the KnowledgeMinersRegistry
-            pkmr.addCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
-            pkmr.addUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
-            pkmr.addTotalTracSpent(msg.sender, tokenAmount);
-        }
-    }
-
     function _verifySignatures(
         uint72[] calldata identityIds,
         bytes32 messageHash,
