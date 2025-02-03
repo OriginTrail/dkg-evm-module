@@ -244,4 +244,8 @@ library ParanetLib {
         uint96 currentCumulativeWeight,
         uint96 targetCumulativeWeight
     );
+    error KnowledgeCollectionNotInFirstEpoch(
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId
+    );
 }
