@@ -153,8 +153,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         bool isNativeReward,
         address paranetKCStorageContract,
         uint256 paranetKCTokenId,
-        uint256 paranetKATokenId,
-        uint256 tracToNeuroEmissionMultiplier
+        uint256 paranetKATokenId
     )
         external
         onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId)
@@ -178,6 +177,10 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         // Verify storage contract is active
         ParanetNeuroIncentivesPoolStorage storage_ = ParanetNeuroIncentivesPoolStorage(payable(storageAddress));
         require(storage_.paranetId() == paranetId, "Storage paranet ID mismatch");
+
+        address oldLogicContract = storage_.paranetNeuroIncentivesPoolAddress();
+        ParanetNeuroIncentivesPool oldPool = ParanetNeuroIncentivesPool(oldLogicContract);
+        uint256 tracToNeuroEmissionMultiplier = oldPool.getEffectiveNeuroEmissionMultiplier(block.timestamp);
 
         // Deploy new pool contract
         ParanetNeuroIncentivesPool newPool = new ParanetNeuroIncentivesPool(
