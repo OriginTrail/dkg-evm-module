@@ -10,8 +10,6 @@ import {Hub} from "../storage/Hub.sol";
 import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
 import {ParanetLib} from "../libraries/ParanetLib.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     event NeuroRewardDeposit(address indexed sender, uint256 amount);
@@ -42,12 +40,7 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     uint256 public neuroEmissionMultiplierUpdateDelay = 7 days;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(
-        address hubAddress,
-        address knowledgeMinersRegistryAddress,
-        address neuroEmissionMultipliersAddress,
-        uint256 tracToNeuroEmissionMultiplier
-    ) {
+    constructor(address hubAddress, address knowledgeMinersRegistryAddress, uint256 tracToNeuroEmissionMultiplier) {
         hub = Hub(hubAddress);
         paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(knowledgeMinersRegistryAddress);
         paranetNeuroIncentivesPoolStorage = ParanetNeuroIncentivesPoolStorage(paranetNeuroIncentivesPoolStorage);
@@ -59,8 +52,6 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
                 finalized: true
             })
         );
-
-        address hubOwner = hub.owner();
     }
 
     modifier onlyHubOwner() {
@@ -116,12 +107,12 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     }
 
     function isKnowledgeMiner(address addr) public view returns (bool) {
-        return paranetsRegistry.isKnowledgeMinerRegistered(paranetNeuroIncentivesPoolStorage.getParanetId(), addr);
+        return paranetsRegistry.isKnowledgeMinerRegistered(paranetNeuroIncentivesPoolStorage.paranetId(), addr);
     }
 
     function isParanetOperator(address addr) public view returns (bool) {
         (address paranetKCStorageContract, uint256 paranetKCTokenId, uint256 paranetKATokenId) = paranetsRegistry
-            .getParanetKnowledgeAssetLocator(paranetNeuroIncentivesPoolStorage.getParanetId());
+            .getParanetKnowledgeAssetLocator(paranetNeuroIncentivesPoolStorage.paranetId());
 
         KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(paranetKCStorageContract);
 
@@ -155,6 +146,7 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         return neuroEmissionMultipliers[0].multiplier;
     }
 
+    // TODO:Should there be some check of this value?
     function initiateNeuroEmissionMultiplierUpdate(uint256 newMultiplier) external onlyVotersRegistrar {
         if (!neuroEmissionMultipliers[neuroEmissionMultipliers.length - 1].finalized) {
             neuroEmissionMultipliers[neuroEmissionMultipliers.length - 1].multiplier = newMultiplier;
@@ -201,7 +193,7 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     function getTotalKnowledgeMinerIncentiveEstimation() public view returns (uint256) {
         uint96 unrewardedTracSpent = paranetKnowledgeMinersRegistry.getUnrewardedTracSpent(
             msg.sender,
-            paranetNeuroIncentivesPoolStorage.getParanetId()
+            paranetNeuroIncentivesPoolStorage.paranetId()
         );
 
         if (unrewardedTracSpent < ParanetLib.TOKENS_DIGITS_DIFF) {
@@ -239,7 +231,6 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
             );
     }
 
-    // TODO: Rework it should interact with storage
     function getClaimableKnowledgeMinerRewardAmount() public view returns (uint256) {
         uint256 neuroReward = getTotalKnowledgeMinerIncentiveEstimation();
 
@@ -247,8 +238,9 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         // and total NEURO received by the contract, so that Miners don't get tokens belonging to Operator/Voters
         // Following the example from the above, if we have 100 NEURO as a total reward, Miners should never get
         // more than 80 NEURO. minersRewardLimit = 80 NEURO
+        uint256 totalMinersClaimedNeuro = paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro();
         uint256 minersRewardLimit = ((paranetNeuroIncentivesPoolStorage.getBalance() +
-            paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro() +
+            totalMinersClaimedNeuro +
             paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro() +
             paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro()) *
             (ParanetLib.PERCENTAGE_SCALING_FACTOR -
@@ -257,9 +249,9 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
             ParanetLib.PERCENTAGE_SCALING_FACTOR;
 
         return
-            paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro() + neuroReward <= minersRewardLimit
+            totalMinersClaimedNeuro + neuroReward <= minersRewardLimit
                 ? neuroReward
-                : minersRewardLimit - paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro();
+                : minersRewardLimit - totalMinersClaimedNeuro;
     }
 
     // TODO: Rework it should interact with storage
@@ -281,15 +273,15 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
                 : minersRewardLimit - paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro();
     }
 
-    // TODO: Rework it should interact with storage
     function claimKnowledgeMinerReward() external onlyParanetKnowledgeMiner {
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
 
         uint256 neuroReward = getTotalKnowledgeMinerIncentiveEstimation();
         uint256 claimableNeuroReward = getClaimableKnowledgeMinerRewardAmount();
 
+        // Use require here
         if (claimableNeuroReward == 0) {
-            revert ParanetLib.NoRewardAvailable(paranetNeuroIncentivesPoolStorage.getParanetId(), msg.sender);
+            revert ParanetLib.NoRewardAvailable(paranetNeuroIncentivesPoolStorage.paranetId(), msg.sender);
         }
 
         // Updating the Unrewarded TRAC variable in the Knowledge Miner Profile
@@ -307,7 +299,7 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         // = 40 * 10^18 = 40 TRAC
         pkmr.setUnrewardedTracSpent(
             msg.sender,
-            paranetNeuroIncentivesPoolStorage.getParanetId(),
+            paranetNeuroIncentivesPoolStorage.paranetId(),
             neuroReward == claimableNeuroReward
                 ? 0
                 : uint96(
@@ -315,34 +307,20 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
                         getEffectiveNeuroEmissionMultiplier(block.timestamp)
                 )
         );
-        pkmr.addCumulativeAwardedNeuro(
-            msg.sender,
-            paranetNeuroIncentivesPoolStorage.getParanetId(),
-            claimableNeuroReward
-        );
+        pkmr.addCumulativeAwardedNeuro(msg.sender, paranetNeuroIncentivesPoolStorage.paranetId(), claimableNeuroReward);
 
         if (
             paranetNeuroIncentivesPoolStorage.getClaimedMinerRewardsLength() == 0 ||
             paranetNeuroIncentivesPoolStorage
-                .claimedMinerRewards(paranetNeuroIncentivesPoolStorage.claimedMinerRewardsIndexes(msg.sender))
+                .getClaimedMinerRewardsAtIndex(paranetNeuroIncentivesPoolStorage.claimedMinerRewardsIndexes(msg.sender))
                 .addr !=
             msg.sender
         ) {
-            paranetNeuroIncentivesPoolStorage.claimedMinerRewardsIndexes[msg.sender] = paranetNeuroIncentivesPoolStorage
-                .claimedMinerRewards
-                .length;
-            paranetNeuroIncentivesPoolStorage.claimedMinerRewards.push(
-                ParanetLib.ParanetIncentivesPoolClaimedRewardsProfile({
-                    addr: msg.sender,
-                    claimedNeuro: claimableNeuroReward
-                })
-            );
+            paranetNeuroIncentivesPoolStorage.addMinerClaimedRewardProfile(msg.sender, claimableNeuroReward);
         } else {
-            paranetNeuroIncentivesPoolStorage
-                .claimedMinerRewards[paranetNeuroIncentivesPoolStorage.claimedMinerRewardsIndexes[msg.sender]]
-                .claimedNeuro += claimableNeuroReward;
+            paranetNeuroIncentivesPoolStorage.addMinerClaimedReward(msg.sender, claimableNeuroReward);
         }
-        paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro += claimableNeuroReward;
+        paranetNeuroIncentivesPoolStorage.addTotalMinersClaimedNeuro(claimableNeuroReward);
 
         paranetNeuroIncentivesPoolStorage.transferReward(msg.sender, claimableNeuroReward);
 
@@ -353,8 +331,8 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     function getTotalParanetOperatorIncentiveEstimation() public view returns (uint256) {
         return
             _getIncentiveEstimation(
-                paranetNeuroIncentivesPoolStorage.paranetOperatorRewardPercentage,
-                paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro
+                paranetNeuroIncentivesPoolStorage.paranetOperatorRewardPercentage(),
+                paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro()
             );
     }
 
@@ -363,47 +341,38 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         uint256 neuroReward = getTotalParanetOperatorIncentiveEstimation();
 
         uint256 operatorRewardLimit = ((address(this).balance +
-            paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro +
-            paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro +
-            paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro) *
-            paranetNeuroIncentivesPoolStorage.paranetOperatorRewardPercentage) / ParanetLib.PERCENTAGE_SCALING_FACTOR;
+            paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro() +
+            paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro() +
+            paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro()) *
+            paranetNeuroIncentivesPoolStorage.paranetOperatorRewardPercentage()) / ParanetLib.PERCENTAGE_SCALING_FACTOR;
 
         return
-            paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro + neuroReward <= operatorRewardLimit
+            paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro() + neuroReward <= operatorRewardLimit
                 ? neuroReward
-                : operatorRewardLimit - paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro;
+                : operatorRewardLimit - paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro();
     }
 
-    // TODO: Rework it should interact with storage
     function claimParanetOperatorReward() external onlyParanetOperator {
         uint256 claimableNeuroReward = getClaimableParanetOperatorRewardAmount();
 
         if (claimableNeuroReward == 0) {
-            revert ParanetLib.NoRewardAvailable(paranetNeuroIncentivesPoolStorage.getParanetId(), msg.sender);
+            revert ParanetLib.NoRewardAvailable(paranetNeuroIncentivesPoolStorage.paranetId(), msg.sender);
         }
 
         if (
-            paranetNeuroIncentivesPoolStorage.claimedOperatorRewards.length == 0 ||
+            paranetNeuroIncentivesPoolStorage.getClaimedOperatorRewardsLength() == 0 ||
             paranetNeuroIncentivesPoolStorage
-                .claimedOperatorRewards[paranetNeuroIncentivesPoolStorage.claimedOperatorRewardsIndexes[msg.sender]]
+                .getClaimedOperatorRewardsAtIndex(
+                    paranetNeuroIncentivesPoolStorage.claimedOperatorRewardsIndexes(msg.sender)
+                )
                 .addr !=
             msg.sender
         ) {
-            paranetNeuroIncentivesPoolStorage.claimedOperatorRewardsIndexes[
-                msg.sender
-            ] = paranetNeuroIncentivesPoolStorage.claimedOperatorRewards.length;
-            paranetNeuroIncentivesPoolStorage.claimedOperatorRewards.push(
-                ParanetLib.ParanetIncentivesPoolClaimedRewardsProfile({
-                    addr: msg.sender,
-                    claimedNeuro: claimableNeuroReward
-                })
-            );
+            paranetNeuroIncentivesPoolStorage.addOperatorClaimedRewardsProfile(msg.sender, claimableNeuroReward);
         } else {
-            paranetNeuroIncentivesPoolStorage
-                .claimedOperatorRewards[paranetNeuroIncentivesPoolStorage.claimedOperatorRewardsIndexes[msg.sender]]
-                .claimedNeuro += claimableNeuroReward;
+            paranetNeuroIncentivesPoolStorage.addClaimedOperatorReward(msg.sender, claimableNeuroReward);
         }
-        paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro += claimableNeuroReward;
+        paranetNeuroIncentivesPoolStorage.addTotalOperatorsClaimedNeuro(claimableNeuroReward);
 
         paranetNeuroIncentivesPoolStorage.transferReward(msg.sender, claimableNeuroReward);
 
@@ -414,15 +383,15 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     function getTotalProposalVoterIncentiveEstimation() public view returns (uint256) {
         uint256 effectiveNeuroEmissionMultiplier = getEffectiveNeuroEmissionMultiplier(block.timestamp);
         uint96 cumulativeKnowledgeValueSingleVoterPart = (((paranetsRegistry.getCumulativeKnowledgeValue(
-            paranetNeuroIncentivesPoolStorage.getParanet()
-        ) * paranetNeuroIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage) /
+            paranetNeuroIncentivesPoolStorage.paranetId()
+        ) * paranetNeuroIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage()) /
             ParanetLib.PERCENTAGE_SCALING_FACTOR) *
             paranetNeuroIncentivesPoolStorage
-                .voters[paranetNeuroIncentivesPoolStorage.votersIndexes[msg.sender]]
+                .getVoterAtIndex(paranetNeuroIncentivesPoolStorage.votersIndexes(msg.sender))
                 .weight) / ParanetLib.MAX_CUMULATIVE_VOTERS_WEIGHT;
         uint96 rewardedTracSpentSingleVoterPart = uint96(
             (paranetNeuroIncentivesPoolStorage
-                .voters[paranetNeuroIncentivesPoolStorage.votersIndexes[msg.sender]]
+                .getVoterAtIndex(paranetNeuroIncentivesPoolStorage.votersIndexes(msg.sender))
                 .claimedNeuro * ParanetLib.EMISSION_MULTIPLIER_SCALING_FACTOR) / effectiveNeuroEmissionMultiplier
         );
 
@@ -436,7 +405,7 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
             ((cumulativeKnowledgeValueSingleVoterPart * effectiveNeuroEmissionMultiplier) /
                 ParanetLib.EMISSION_MULTIPLIER_SCALING_FACTOR) -
             paranetNeuroIncentivesPoolStorage
-                .voters[paranetNeuroIncentivesPoolStorage.votersIndexes[msg.sender]]
+                .getVoterAtIndex(paranetNeuroIncentivesPoolStorage.votersIndexes(msg.sender))
                 .claimedNeuro;
     }
 
@@ -444,17 +413,17 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     function getTotalAllProposalVotersIncentiveEstimation() public view returns (uint256) {
         return
             _getIncentiveEstimation(
-                paranetNeuroIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage,
-                paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro
+                paranetNeuroIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage(),
+                paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro()
             );
     }
 
     // TODO: Rework it should interact with storage
     function getClaimableProposalVoterRewardAmount() public view returns (uint256) {
         if (
-            paranetNeuroIncentivesPoolStorage.voters.length == 0 ||
+            paranetNeuroIncentivesPoolStorage.getVotersCount() == 0 ||
             paranetNeuroIncentivesPoolStorage
-                .voters[paranetNeuroIncentivesPoolStorage.votersIndexes[msg.sender]]
+                .getVoterAtIndex(paranetNeuroIncentivesPoolStorage.votersIndexes(msg.sender))
                 .addr !=
             msg.sender
         ) {
@@ -463,26 +432,26 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
 
         uint256 neuroReward = getTotalProposalVoterIncentiveEstimation();
 
-        uint256 voterRewardLimit = ((((address(this).balance +
-            paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro +
-            paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro +
-            paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro) *
-            paranetNeuroIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage) /
+        uint256 voterRewardLimit = ((((paranetNeuroIncentivesPoolStorage.getBalance() +
+            paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro() +
+            paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro() +
+            paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro()) *
+            paranetNeuroIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage()) /
             ParanetLib.PERCENTAGE_SCALING_FACTOR) *
             paranetNeuroIncentivesPoolStorage
-                .voters[paranetNeuroIncentivesPoolStorage.votersIndexes[msg.sender]]
+                .getVoterAtIndex(paranetNeuroIncentivesPoolStorage.votersIndexes(msg.sender))
                 .weight) / ParanetLib.MAX_CUMULATIVE_VOTERS_WEIGHT;
 
         return
             paranetNeuroIncentivesPoolStorage
-                .voters[paranetNeuroIncentivesPoolStorage.votersIndexes[msg.sender]]
+                .getVoterAtIndex(paranetNeuroIncentivesPoolStorage.votersIndexes(msg.sender))
                 .claimedNeuro +
                 neuroReward <=
                 voterRewardLimit
                 ? neuroReward
                 : voterRewardLimit -
                     paranetNeuroIncentivesPoolStorage
-                        .voters[paranetNeuroIncentivesPoolStorage.votersIndexes[msg.sender]]
+                        .getVoterAtIndex(paranetNeuroIncentivesPoolStorage.votersIndexes(msg.sender))
                         .claimedNeuro;
     }
 
@@ -491,24 +460,24 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         uint256 neuroReward = getTotalAllProposalVotersIncentiveEstimation();
 
         uint256 votersRewardLimit = ((address(this).balance +
-            paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro +
-            paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro +
-            paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro) *
-            paranetNeuroIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage) /
+            paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro() +
+            paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro() +
+            paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro()) *
+            paranetNeuroIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage()) /
             ParanetLib.PERCENTAGE_SCALING_FACTOR;
 
         return
-            paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro + neuroReward <= votersRewardLimit
+            paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro() + neuroReward <= votersRewardLimit
                 ? neuroReward
-                : votersRewardLimit - paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro;
+                : votersRewardLimit - paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro();
     }
 
     // TODO: Rework it should interact with storage
     function claimIncentivizationProposalVoterReward() external onlyParanetIncentivizationProposalVoter {
-        if (paranetNeuroIncentivesPoolStorage.cumulativeVotersWeight != ParanetLib.MAX_CUMULATIVE_VOTERS_WEIGHT) {
+        if (paranetNeuroIncentivesPoolStorage.cumulativeVotersWeight() != ParanetLib.MAX_CUMULATIVE_VOTERS_WEIGHT) {
             revert ParanetLib.InvalidCumulativeVotersWeight(
-                paranetNeuroIncentivesPoolStorage.parentParanetId,
-                paranetNeuroIncentivesPoolStorage.cumulativeVotersWeight,
+                paranetNeuroIncentivesPoolStorage.paranetId(),
+                paranetNeuroIncentivesPoolStorage.cumulativeVotersWeight(),
                 ParanetLib.MAX_CUMULATIVE_VOTERS_WEIGHT
             );
         }
@@ -516,13 +485,13 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         uint256 claimableNeuroReward = getClaimableProposalVoterRewardAmount();
 
         if (claimableNeuroReward == 0) {
-            revert ParanetLib.NoRewardAvailable(paranetNeuroIncentivesPoolStorage.parentParanetId, msg.sender);
+            revert ParanetLib.NoRewardAvailable(paranetNeuroIncentivesPoolStorage.paranetId(), msg.sender);
         }
 
         paranetNeuroIncentivesPoolStorage
-            .voters[paranetNeuroIncentivesPoolStorage.votersIndexes[msg.sender]]
+            .getVoterAtIndex(paranetNeuroIncentivesPoolStorage.votersIndexes(msg.sender))
             .claimedNeuro += claimableNeuroReward;
-        paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro += claimableNeuroReward;
+        paranetNeuroIncentivesPoolStorage.addTotalVotersClaimedNeuro(claimableNeuroReward);
 
         paranetNeuroIncentivesPoolStorage.transferReward(msg.sender, claimableNeuroReward);
 
@@ -536,7 +505,7 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     ) internal view returns (uint256) {
         uint256 effectiveNeuroEmissionMultiplier = getEffectiveNeuroEmissionMultiplier(block.timestamp);
         uint96 cumulativeKnowledgeValuePart = (paranetsRegistry.getCumulativeKnowledgeValue(
-            paranetNeuroIncentivesPoolStorage.parentParanetId
+            paranetNeuroIncentivesPoolStorage.paranetId()
         ) * rewardPercentage) / ParanetLib.PERCENTAGE_SCALING_FACTOR;
         uint96 rewardedTracSpentPart = uint96(
             (totalClaimedNeuro * ParanetLib.EMISSION_MULTIPLIER_SCALING_FACTOR) / effectiveNeuroEmissionMultiplier
@@ -556,7 +525,7 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     }
 
     function _checkVotersRegistrar() internal view virtual {
-        require(msg.sender == paranetNeuroIncentivesPoolStorage.votersRegistrar, "Fn can only be used by registrar");
+        require(msg.sender == paranetNeuroIncentivesPoolStorage.votersRegistrar(), "Fn can only be used by registrar");
     }
 
     function _checkParanetOperator() internal view virtual {
