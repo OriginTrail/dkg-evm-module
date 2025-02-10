@@ -35,9 +35,11 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
 
     // Percentage of how much tokens from total NEURO emission goes to the Paranet Operator
     // Minimum: 0, Maximum: 10,000 (which is 100%)
+    // TODO: Check if this is correct type
     uint16 public paranetOperatorRewardPercentage;
     // Percentage of how much tokens from total NEURO emission goes to the Paranet Incentivization
     // Proposal Voters. Minimum: 0, Maximum: 10,000 (which is 100%)
+    // TODO: Check if this is correct type
     uint16 public paranetIncentivizationProposalVotersRewardPercentage;
 
     // Address which can set Voters list and update Total NEURO Emission multiplier
@@ -54,7 +56,7 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
     mapping(address => uint256) public claimedOperatorRewardsIndexes;
 
     // Is this good type ?
-    uint256 public cumulativeVotersWeight;
+    uint96 public cumulativeVotersWeight;
     ParanetLib.ParanetIncentivizationProposalVoter[] public voters;
     mapping(address => uint256) public votersIndexes;
 
@@ -74,7 +76,6 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
         if (rewardTokenAddress != address(0)) {
             token = IERC20(rewardTokenAddress);
         }
-        paranetsRegistry = ParanetsRegistry(paranetsRegistryAddress);
 
         require(paranetsRegistry.paranetExists(paranetId_), "Non existent paranet");
         paranetId = paranetId_;
@@ -239,7 +240,7 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
         ParanetLib.ParanetIncentivizationProposalVoter memory voterToRemove = voters[index];
         require(voterToRemove.addr == voterAddress, "Voter not found");
 
-        uint16 removedWeight = voterToRemove.weight;
+        uint96 removedWeight = voterToRemove.weight;
         require(cumulativeVotersWeight >= removedWeight, "Weight underflow");
 
         // Move last element to deleted position
@@ -253,8 +254,6 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
         voters.pop();
         delete votersIndexes[voterAddress];
         cumulativeVotersWeight -= removedWeight;
-
-        emit VoterRemoved(voterAddress, removedWeight);
     }
 
     function getVotersCount() external view returns (uint256) {

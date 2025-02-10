@@ -40,10 +40,17 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     uint256 public neuroEmissionMultiplierUpdateDelay = 7 days;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(address hubAddress, address knowledgeMinersRegistryAddress, uint256 tracToNeuroEmissionMultiplier) {
+    constructor(
+        address hubAddress,
+        address knowledgeMinersRegistryAddress,
+        address paranetNeuroIncentivesPoolStorageAddress,
+        uint256 tracToNeuroEmissionMultiplier
+    ) {
         hub = Hub(hubAddress);
         paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(knowledgeMinersRegistryAddress);
-        paranetNeuroIncentivesPoolStorage = ParanetNeuroIncentivesPoolStorage(paranetNeuroIncentivesPoolStorage);
+        paranetNeuroIncentivesPoolStorage = ParanetNeuroIncentivesPoolStorage(
+            payable(paranetNeuroIncentivesPoolStorageAddress)
+        );
 
         neuroEmissionMultipliers.push(
             ParanetLib.NeuroEmissionMultiplier({
