@@ -275,14 +275,10 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
     function getVoter(
         address voterAddress
     ) external view returns (ParanetLib.ParanetIncentivizationProposalVoter memory) {
-        if (voters.length == 0) {
-            return ParanetLib.ParanetIncentivizationProposalVoter({addr: address(0), weight: 0, claimedNeuro: 0});
-        }
+        require(voters.length > 0, "Address is not a registered voter");
 
         uint256 index = votersIndexes[voterAddress];
-        if (index >= voters.length || voters[index].addr != voterAddress) {
-            return ParanetLib.ParanetIncentivizationProposalVoter({addr: address(0), weight: 0, claimedNeuro: 0});
-        }
+        require(index >= voters.length || voters[index].addr != voterAddress, "Address is not a registered voter");
 
         return voters[index];
     }
