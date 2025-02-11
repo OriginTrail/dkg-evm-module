@@ -286,6 +286,7 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
     function getVoterAtIndex(
         uint256 index
     ) external view returns (ParanetLib.ParanetIncentivizationProposalVoter memory) {
+        require(index >= voters.length, "Index is out of bounds");
         return voters[index];
     }
 
@@ -311,6 +312,7 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
     function getClaimedMinerRewardsAtIndex(
         uint256 index
     ) external view returns (ParanetLib.ParanetIncentivesPoolClaimedRewardsProfile memory) {
+        require(index >= claimedMinerRewards.length, "Index is out of bounds");
         return claimedMinerRewards[index];
     }
 
@@ -321,6 +323,7 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
     function getClaimedOperatorRewardsAtIndex(
         uint256 index
     ) external view returns (ParanetLib.ParanetIncentivesPoolClaimedRewardsProfile memory) {
+        require(index >= claimedOperatorRewards.length, "Index is out of bounds");
         return claimedOperatorRewards[index];
     }
 
