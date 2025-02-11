@@ -12,12 +12,8 @@ import {IVersioned} from "../interfaces/IVersioned.sol";
 import {ParanetLib} from "../libraries/ParanetLib.sol";
 
 contract ParanetNeuroIncentivesPool is INamed, IVersioned {
-    event NeuroRewardDeposit(address indexed sender, uint256 amount);
     event NeuroEmissionMultiplierUpdateInitiated(uint256 oldMultiplier, uint256 newMultiplier, uint256 timestamp);
     event NeuroEmissionMultiplierUpdateFinalized(uint256 oldMultiplier, uint256 newMultiplier);
-    event ParanetKnowledgeMinerRewardClaimed(address indexed miner, uint256 amount);
-    event ParanetOperatorRewardClaimed(address indexed operator, uint256 amount);
-    event ParanetIncentivizationProposalVoterRewardClaimed(address indexed voter, uint256 amount);
 
     string private constant _NAME = "ParanetNeuroIncentivesPool";
     string private constant _VERSION = "1.0.0";
@@ -196,7 +192,6 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         );
     }
 
-    // TODO: Rework it should interact with storage
     function getTotalKnowledgeMinerIncentiveEstimation() public view returns (uint256) {
         uint96 unrewardedTracSpent = paranetKnowledgeMinersRegistry.getUnrewardedTracSpent(
             msg.sender,
@@ -227,7 +222,6 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
             ParanetLib.PERCENTAGE_SCALING_FACTOR;
     }
 
-    // TODO: Rework it should interact with storage
     function getTotalAllKnowledgeMinersIncentiveEstimation() public view returns (uint256) {
         return
             _getIncentiveEstimation(
@@ -261,7 +255,6 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
                 : minersRewardLimit - totalMinersClaimedNeuro;
     }
 
-    // TODO: Rework it should interact with storage
     function getClaimableAllKnowledgeMinersRewardAmount() public view returns (uint256) {
         uint256 neuroReward = getTotalAllKnowledgeMinersIncentiveEstimation();
 
@@ -330,11 +323,8 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         paranetNeuroIncentivesPoolStorage.addTotalMinersClaimedNeuro(claimableNeuroReward);
 
         paranetNeuroIncentivesPoolStorage.transferReward(msg.sender, claimableNeuroReward);
-
-        emit ParanetKnowledgeMinerRewardClaimed(msg.sender, claimableNeuroReward);
     }
 
-    // TODO: Rework it should interact with storage
     function getTotalParanetOperatorIncentiveEstimation() public view returns (uint256) {
         return
             _getIncentiveEstimation(
@@ -343,7 +333,6 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
             );
     }
 
-    // TODO: Rework it should interact with storage
     function getClaimableParanetOperatorRewardAmount() public view returns (uint256) {
         uint256 neuroReward = getTotalParanetOperatorIncentiveEstimation();
 
@@ -382,11 +371,8 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         paranetNeuroIncentivesPoolStorage.addTotalOperatorsClaimedNeuro(claimableNeuroReward);
 
         paranetNeuroIncentivesPoolStorage.transferReward(msg.sender, claimableNeuroReward);
-
-        emit ParanetOperatorRewardClaimed(msg.sender, claimableNeuroReward);
     }
 
-    // TODO: Rework it should interact with storage
     function getTotalProposalVoterIncentiveEstimation() public view returns (uint256) {
         uint256 effectiveNeuroEmissionMultiplier = getEffectiveNeuroEmissionMultiplier(block.timestamp);
         uint96 cumulativeKnowledgeValueSingleVoterPart = (((paranetsRegistry.getCumulativeKnowledgeValue(
@@ -416,7 +402,6 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
                 .claimedNeuro;
     }
 
-    // TODO: Rework it should interact with storage
     function getTotalAllProposalVotersIncentiveEstimation() public view returns (uint256) {
         return
             _getIncentiveEstimation(
@@ -425,7 +410,6 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
             );
     }
 
-    // TODO: Rework it should interact with storage
     function getClaimableProposalVoterRewardAmount() public view returns (uint256) {
         if (
             paranetNeuroIncentivesPoolStorage.getVotersCount() == 0 ||
@@ -462,7 +446,6 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
                         .claimedNeuro;
     }
 
-    // TODO: Rework it should interact with storage
     function getClaimableAllProposalVotersRewardAmount() public view returns (uint256) {
         uint256 neuroReward = getTotalAllProposalVotersIncentiveEstimation();
 
@@ -479,7 +462,6 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
                 : votersRewardLimit - paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro();
     }
 
-    // TODO: Rework it should interact with storage
     function claimIncentivizationProposalVoterReward() external onlyParanetIncentivizationProposalVoter {
         if (paranetNeuroIncentivesPoolStorage.cumulativeVotersWeight() != ParanetLib.MAX_CUMULATIVE_VOTERS_WEIGHT) {
             revert ParanetLib.InvalidCumulativeVotersWeight(
@@ -501,11 +483,8 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
         paranetNeuroIncentivesPoolStorage.addTotalVotersClaimedNeuro(claimableNeuroReward);
 
         paranetNeuroIncentivesPoolStorage.transferReward(msg.sender, claimableNeuroReward);
-
-        emit ParanetIncentivizationProposalVoterRewardClaimed(msg.sender, claimableNeuroReward);
     }
 
-    // TODO: Rework it should interact with storage
     function _getIncentiveEstimation(
         uint16 rewardPercentage,
         uint256 totalClaimedNeuro
