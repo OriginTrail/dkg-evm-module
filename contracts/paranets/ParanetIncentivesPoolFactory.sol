@@ -65,6 +65,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         return _VERSION;
     }
 
+    // TODO: Should we allow to deploy both types of pools at once?
     function deployNeuroIncentivesPool(
         bool isNativeReward,
         address paranetKCStorageContract,
