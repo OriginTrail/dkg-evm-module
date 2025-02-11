@@ -83,7 +83,8 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
             token = IERC20(rewardTokenAddress);
         }
 
-        require(paranetsRegistry.paranetExists(paranetId_), "Non existent paranet");
+        ParanetsRegistry pr = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
+        require(pr.paranetExists(paranetId_), "Non existent paranet");
         paranetId = paranetId_;
 
         paranetOperatorRewardPercentage = paranetOperatorRewardPercentage_;

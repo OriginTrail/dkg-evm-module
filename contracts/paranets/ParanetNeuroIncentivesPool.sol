@@ -336,7 +336,7 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     function getClaimableParanetOperatorRewardAmount() public view returns (uint256) {
         uint256 neuroReward = getTotalParanetOperatorIncentiveEstimation();
 
-        uint256 operatorRewardLimit = ((address(this).balance +
+        uint256 operatorRewardLimit = ((paranetNeuroIncentivesPoolStorage.getBalance() +
             paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro() +
             paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro() +
             paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro()) *
@@ -449,7 +449,7 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
     function getClaimableAllProposalVotersRewardAmount() public view returns (uint256) {
         uint256 neuroReward = getTotalAllProposalVotersIncentiveEstimation();
 
-        uint256 votersRewardLimit = ((address(this).balance +
+        uint256 votersRewardLimit = ((paranetNeuroIncentivesPoolStorage.getBalance() +
             paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro() +
             paranetNeuroIncentivesPoolStorage.totalOperatorsClaimedNeuro() +
             paranetNeuroIncentivesPoolStorage.totalVotersClaimedNeuro()) *
