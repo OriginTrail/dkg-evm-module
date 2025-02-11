@@ -194,7 +194,7 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
             uint16 weight = uint16(voters_[i].weight);
 
             uint256 existingIndex = votersIndexes[voterAddr];
-            if (existingIndex < voters.length) {
+            if (existingIndex < voters.length && voters[existingIndex].addr == voterAddr) {
                 revert("Voter already exists");
             }
 
