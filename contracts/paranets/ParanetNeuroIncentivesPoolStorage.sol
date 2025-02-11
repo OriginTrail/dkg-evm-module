@@ -11,9 +11,6 @@ import {IVersioned} from "../interfaces/IVersioned.sol";
 import {IInitializable} from "../interfaces/IInitializable.sol";
 import {ParanetLib} from "../libraries/ParanetLib.sol";
 
-// TODO: When working with arrays check if it's empty
-// TODO: Add getter for length, at index, reverse look up for arrays
-
 contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInitializable {
     event NeuroRewardDeposit(address sender, uint256 amount);
     event VoterWeightUpdated(address indexed voter, uint96 oldWeight, uint96 newWeight);
@@ -23,6 +20,17 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
     event TotalMinersClaimedNeuroDecremented(uint256 amount, uint256 newTotal);
     event TotalOperatorsClaimedNeuroDecremented(uint256 amount, uint256 newTotal);
     event TotalVotersClaimedNeuroDecremented(uint256 amount, uint256 newTotal);
+    event VotersRegistrarTransferred(address indexed previousRegistrar, address indexed newRegistrar);
+    event MinerRewardProfileAdded(address indexed miner, uint256 amount);
+    event MinerRewardIncreased(address indexed miner, uint256 additionalAmount, uint256 newTotal);
+    event OperatorRewardProfileAdded(address indexed operator, uint256 amount);
+    event OperatorRewardIncreased(address indexed operator, uint256 additionalAmount, uint256 newTotal);
+    event VoterAdded(address indexed voter, uint16 weight);
+    event VoterRemoved(address indexed voter, uint96 weight);
+    event VotersRemoved(uint256 count);
+    event VoterRewardClaimed(address indexed voter, uint256 amount);
+    event IncentivesPoolAddressSet(address indexed oldAddress, address indexed newAddress);
+    event RewardTransferred(address indexed recipient, uint256 amount);
 
     string private constant _NAME = "ParanetNeuroIncentivesPoolStorage";
     string private constant _VERSION = "1.0.0";
@@ -35,11 +43,9 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
 
     // Percentage of how much tokens from total NEURO emission goes to the Paranet Operator
     // Minimum: 0, Maximum: 10,000 (which is 100%)
-    // TODO: Check if this is correct type
     uint16 public paranetOperatorRewardPercentage;
     // Percentage of how much tokens from total NEURO emission goes to the Paranet Incentivization
     // Proposal Voters. Minimum: 0, Maximum: 10,000 (which is 100%)
-    // TODO: Check if this is correct type
     uint16 public paranetIncentivizationProposalVotersRewardPercentage;
 
     // Address which can set Voters list and update Total NEURO Emission multiplier
@@ -95,8 +101,7 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
         }
     }
 
-    // TODO: It shouldn't be onlyHub, but onlyParanetOperator probably
-    function initialize() public onlyHub {
+    function initialize() public onlyContracts {
         paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
     }
 
@@ -117,7 +122,9 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
     }
 
     function transferVotersRegistrarRole(address newRegistrar) external onlyVotersRegistrar {
+        address oldRegistrar = votersRegistrar;
         votersRegistrar = newRegistrar;
+        emit VotersRegistrarTransferred(oldRegistrar, newRegistrar);
     }
 
     function getAllRewardedMiners()
@@ -137,32 +144,36 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
     }
 
     function addMinerClaimedRewardProfile(address addr, uint256 claimableNeuroReward) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to add claim");
-        claimedMinerRewardsIndexes[addr] = claimedMinerRewards.length;
-        claimedMinerRewards.push(
-            ParanetLib.ParanetIncentivesPoolClaimedRewardsProfile({
-                addr: msg.sender,
-                claimedNeuro: claimableNeuroReward
-            })
-        );
-    }
-
-    function addMinerClaimedReward(address addr, uint256 claimableNeuroReward) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to add claim");
-        claimedMinerRewards[claimedMinerRewardsIndexes[addr]].claimedNeuro += claimableNeuroReward;
-    }
-
-    function addClaimedOperatorReward(address addr, uint256 claimableNeuroReward) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to add claim");
-        claimedOperatorRewards[claimedOperatorRewardsIndexes[addr]].claimedNeuro += claimableNeuroReward;
-    }
-
-    function addOperatorClaimedRewardsProfile(address addr, uint256 claimableNeuroReward) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to add claim");
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
         claimedMinerRewardsIndexes[addr] = claimedMinerRewards.length;
         claimedMinerRewards.push(
             ParanetLib.ParanetIncentivesPoolClaimedRewardsProfile({addr: addr, claimedNeuro: claimableNeuroReward})
         );
+        emit MinerRewardProfileAdded(addr, claimableNeuroReward);
+    }
+
+    function addMinerClaimedReward(address addr, uint256 claimableNeuroReward) external {
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
+        uint256 newTotal = claimedMinerRewards[claimedMinerRewardsIndexes[addr]].claimedNeuro + claimableNeuroReward;
+        claimedMinerRewards[claimedMinerRewardsIndexes[addr]].claimedNeuro = newTotal;
+        emit MinerRewardIncreased(addr, claimableNeuroReward, newTotal);
+    }
+
+    function addOperatorClaimedRewardsProfile(address addr, uint256 claimableNeuroReward) external {
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
+        claimedOperatorRewardsIndexes[addr] = claimedOperatorRewards.length;
+        claimedOperatorRewards.push(
+            ParanetLib.ParanetIncentivesPoolClaimedRewardsProfile({addr: addr, claimedNeuro: claimableNeuroReward})
+        );
+        emit OperatorRewardProfileAdded(addr, claimableNeuroReward);
+    }
+
+    function addClaimedOperatorReward(address addr, uint256 claimableNeuroReward) external {
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
+        uint256 newTotal = claimedOperatorRewards[claimedOperatorRewardsIndexes[addr]].claimedNeuro +
+            claimableNeuroReward;
+        claimedOperatorRewards[claimedOperatorRewardsIndexes[addr]].claimedNeuro = newTotal;
+        emit OperatorRewardIncreased(addr, claimableNeuroReward, newTotal);
     }
 
     function getAllRewardedOperators()
@@ -173,12 +184,6 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
         return claimedOperatorRewards;
     }
 
-    modifier onlyVotersRegistrar() {
-        require(msg.sender == votersRegistrar, "Fn can only be used by registrar");
-        _;
-    }
-
-    // TODO: Limit size of voters_ array
     function addVoters(
         ParanetLib.ParanetIncentivizationProposalVoterInput[] calldata voters_
     ) external onlyVotersRegistrar {
@@ -186,8 +191,6 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
         for (uint256 i; i < voters_.length; ) {
             address voterAddr = voters_[i].addr;
             uint16 weight = uint16(voters_[i].weight);
-
-            require(voterAddr != address(0), "Zero address is not valid voter");
 
             uint256 existingIndex = votersIndexes[voterAddr];
             if (existingIndex < voters.length) {
@@ -201,6 +204,8 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
 
             cumulativeVotersWeight += weight;
 
+            emit VoterAdded(voterAddr, weight);
+
             unchecked {
                 i++;
             }
@@ -209,9 +214,6 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
         require(cumulativeVotersWeight <= ParanetLib.MAX_CUMULATIVE_VOTERS_WEIGHT, "Cumulative weight is too big");
     }
 
-    /**
-     * @notice Remove the last `limit` voters from the array.
-     */
     function removeVoters(uint256 limit) external onlyVotersRegistrar {
         require(voters.length >= limit, "Limit exceeds number of voters");
 
@@ -226,14 +228,17 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
             // Remove last element
             voters.pop();
 
+            emit VoterRemoved(voter.addr, voter.weight);
+
             unchecked {
                 i++;
             }
         }
+
+        emit VotersRemoved(limit);
     }
 
     function removeVoter(address voterAddress) external onlyVotersRegistrar {
-        require(voterAddress != address(0), "Zero address");
         uint256 index = votersIndexes[voterAddress];
         require(index < voters.length, "Invalid voter index");
 
@@ -254,6 +259,8 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
         voters.pop();
         delete votersIndexes[voterAddress];
         cumulativeVotersWeight -= removedWeight;
+
+        emit VoterRemoved(voterAddress, removedWeight);
     }
 
     function getVotersCount() external view returns (uint256) {
@@ -272,7 +279,7 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
         }
 
         uint256 index = votersIndexes[voterAddress];
-        if (index > voters.length || voters[index].addr != voterAddress) {
+        if (index >= voters.length || voters[index].addr != voterAddress) {
             return ParanetLib.ParanetIncentivizationProposalVoter({addr: address(0), weight: 0, claimedNeuro: 0});
         }
 
@@ -288,15 +295,15 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
     function isProposalVoter(address addr) external view returns (bool) {
         if (voters.length == 0) return false;
         uint256 idx = votersIndexes[addr];
-        return (idx < voters.length && voters[idx].addr == addr);
+        return (idx <= voters.length && voters[idx].addr == addr);
     }
 
     function addVoterClaimedNeuro(address voter, uint256 amount) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to add claim");
-
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
         uint256 idx = votersIndexes[voter];
         if (idx < voters.length && voters[idx].addr == voter) {
             voters[idx].claimedNeuro += amount;
+            emit VoterRewardClaimed(voter, amount);
         }
     }
 
@@ -321,22 +328,24 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
     }
 
     function addTotalMinersClaimedNeuro(uint256 amount) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to add claim");
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalMinersClaimedNeuro += amount;
     }
 
     function addTotalOperatorsClaimedNeuro(uint256 amount) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to add claim");
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalOperatorsClaimedNeuro += amount;
     }
 
     function addTotalVotersClaimedNeuro(uint256 amount) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to add claim");
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalVotersClaimedNeuro += amount;
     }
 
     function setParanetNeuroIncentivesPool(address _paranetNeuroIncentivesPoolAddress) external onlyContracts {
+        address oldAddress = paranetNeuroIncentivesPoolAddress;
         paranetNeuroIncentivesPoolAddress = _paranetNeuroIncentivesPoolAddress;
+        emit IncentivesPoolAddressSet(oldAddress, _paranetNeuroIncentivesPoolAddress);
     }
 
     function getBalance() public view returns (uint256) {
@@ -348,45 +357,42 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
     }
 
     function transferReward(address rewardAddress, uint256 amount) public {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to transfer reward");
-
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
         if (address(token) == address(0)) {
             payable(rewardAddress).transfer(amount);
         } else {
             token.transfer(rewardAddress, amount);
         }
+        emit RewardTransferred(rewardAddress, amount);
     }
 
     function setTotalMinersClaimedNeuro(uint256 amount) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to set claim");
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalMinersClaimedNeuro = amount;
     }
 
     function setTotalOperatorsClaimedNeuro(uint256 amount) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to set claim");
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalOperatorsClaimedNeuro = amount;
     }
 
     function setTotalVotersClaimedNeuro(uint256 amount) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to set claim");
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalVotersClaimedNeuro = amount;
     }
 
     function decrementTotalMinersClaimedNeuro(uint256 amount) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to decrement claim");
-        require(amount <= totalMinersClaimedNeuro, "Amount exceeds total claimed");
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalMinersClaimedNeuro -= amount;
     }
 
     function decrementTotalOperatorsClaimedNeuro(uint256 amount) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to decrement claim");
-        require(amount <= totalOperatorsClaimedNeuro, "Amount exceeds total claimed");
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalOperatorsClaimedNeuro -= amount;
     }
 
     function decrementTotalVotersClaimedNeuro(uint256 amount) external {
-        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Not authorized to decrement claim");
-        require(amount <= totalVotersClaimedNeuro, "Amount exceeds total claimed");
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalVotersClaimedNeuro -= amount;
     }
 
@@ -458,7 +464,7 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
 
     function updateVoterWeight(address voter, uint96 newWeight) external onlyVotersRegistrar {
         uint256 index = votersIndexes[voter];
-        require(index < voters.length && voters[index].addr == voter, "Voter not found");
+        require(index <= voters.length && voters[index].addr == voter, "Voter not found");
 
         uint96 oldWeight = voters[index].weight;
         require(
@@ -470,5 +476,10 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
         voters[index].weight = newWeight;
 
         emit VoterWeightUpdated(voter, oldWeight, newWeight);
+    }
+
+    modifier onlyVotersRegistrar() {
+        require(msg.sender == votersRegistrar, "Fn can only be used by registrar");
+        _;
     }
 }
