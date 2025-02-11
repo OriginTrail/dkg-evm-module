@@ -169,17 +169,21 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         address oldPoolAddress = pr.getIncentivesPoolAddress(paranetId, incentivesPoolType);
         require(oldPoolAddress != address(0), "Invalid existing pool");
 
-        // Get storage address from existing pool
-        ParanetNeuroIncentivesPool existingPool = ParanetNeuroIncentivesPool(oldPoolAddress);
-        storageAddress = address(existingPool.paranetNeuroIncentivesPoolStorage());
+        ParanetNeuroIncentivesPool oldPool = ParanetNeuroIncentivesPool(oldPoolAddress);
+
+        storageAddress = address(oldPool.paranetNeuroIncentivesPoolStorage());
         require(storageAddress != address(0), "Invalid storage address");
 
         // Verify storage contract is active
         ParanetNeuroIncentivesPoolStorage storage_ = ParanetNeuroIncentivesPoolStorage(payable(storageAddress));
         require(storage_.paranetId() == paranetId, "Storage paranet ID mismatch");
+        address tokenrAddress = address(storage_.token());
+        if (isNativeReward) {
+            require(tokenrAddress == address(0), "Native reward pool must have no token");
+        } else {
+            require(tokenrAddress != address(0), "ERC20 reward pool must have a token");
+        }
 
-        address oldLogicContract = storage_.paranetNeuroIncentivesPoolAddress();
-        ParanetNeuroIncentivesPool oldPool = ParanetNeuroIncentivesPool(oldLogicContract);
         uint256 tracToNeuroEmissionMultiplier = oldPool.getEffectiveNeuroEmissionMultiplier(block.timestamp);
 
         // Deploy new pool contract
