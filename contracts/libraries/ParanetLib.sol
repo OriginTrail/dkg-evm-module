@@ -232,7 +232,7 @@ library ParanetLib {
         uint256 knowledgeCollectionTokenId,
         uint256 knowledgeAssetTokenId
     );
-    error KnowledgeCollectionIsAPartOfOtherParanet(
+    error KnowledgeCollectionIsAPartOfAParanet(
         address paranetKnowledgeCollectionStorageAddress,
         uint256 paranetKnowledgeCollectionTokenId,
         bytes32 paranetId

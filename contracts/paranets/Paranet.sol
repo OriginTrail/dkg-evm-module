@@ -1063,7 +1063,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
                 keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
             )
         ) {
-            revert ParanetLib.KnowledgeCollectionIsAPartOfOtherParanet(
+            revert ParanetLib.KnowledgeCollectionIsAPartOfAParanet(
                 knowledgeCollectionStorageContract,
                 knowledgeCollectionTokenId,
                 paranetKnowledgeCollectionsRegistry.getParanetId(
