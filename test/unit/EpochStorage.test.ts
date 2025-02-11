@@ -26,6 +26,11 @@ describe('@unit EpochStorage', () => {
     ({ accounts, EpochStorage } = await loadFixture(deployEpochStorageFixture));
   });
 
+  it('Should have correct name and version', async () => {
+    expect(await EpochStorage.name()).to.equal('EpochStorage');
+    expect(await EpochStorage.version()).to.equal('1.0.0');
+  });
+
   it('Add knowledge value for single epoch, verify totals and max', async () => {
     const epoch = 10;
     await EpochStorage.addEpochProducedKnowledgeValue(123, epoch, 500);
