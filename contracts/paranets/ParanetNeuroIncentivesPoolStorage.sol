@@ -293,7 +293,7 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
     function isProposalVoter(address addr) external view returns (bool) {
         if (voters.length == 0) return false;
         uint256 idx = votersIndexes[addr];
-        return (idx <= voters.length && voters[idx].addr == addr);
+        return (idx < voters.length && voters[idx].addr == addr);
     }
 
     function addVoterClaimedNeuro(address voter, uint256 amount) external {
@@ -464,7 +464,7 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
 
     function updateVoterWeight(address voter, uint96 newWeight) external onlyVotersRegistrar {
         uint256 index = votersIndexes[voter];
-        require(index <= voters.length && voters[index].addr == voter, "Voter not found");
+        require(index < voters.length && voters[index].addr == voter, "Voter not found");
 
         uint96 oldWeight = voters[index].weight;
         require(
