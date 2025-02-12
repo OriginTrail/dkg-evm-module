@@ -367,6 +367,21 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
         emit RewardTransferred(rewardAddress, amount);
     }
 
+    function setTotalMinersClaimedNeuro(uint256 amount) external {
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
+        totalMinersClaimedNeuro = amount;
+    }
+
+    function setTotalOperatorsClaimedNeuro(uint256 amount) external {
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
+        totalOperatorsClaimedNeuro = amount;
+    }
+
+    function setTotalVotersClaimedNeuro(uint256 amount) external {
+        require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
+        totalVotersClaimedNeuro = amount;
+    }
+
     function decrementTotalMinersClaimedNeuro(uint256 amount) external {
         require(msg.sender == paranetNeuroIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalMinersClaimedNeuro -= amount;
