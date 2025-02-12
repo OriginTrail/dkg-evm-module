@@ -108,7 +108,11 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         storage_.setParanetNeuroIncentivesPool(poolAddress);
         pr.addIncentivesPool(
             paranetId,
-            ParanetLib.IncentivesPool({name: incentivesPoolName, storageAddr: storageAddress})
+            ParanetLib.IncentivesPool({
+                name: incentivesPoolName,
+                storageAddr: storageAddress,
+                rewardTokenAddress: rewardTokenAddress
+            })
         );
 
         emit ParanetIncentivesPoolDeployed(
@@ -144,7 +148,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         ParanetNeuroIncentivesPoolStorage storage_ = ParanetNeuroIncentivesPoolStorage(payable(storageAddress));
         require(storage_.paranetId() == paranetId, "Storage paranet ID mismatch");
 
-        address oldPoolAddress = storage_.paranetNeuroIncentivesPool();
+        address oldPoolAddress = storage_.paranetNeuroIncentivesPoolAddress();
         ParanetNeuroIncentivesPool oldPool = ParanetNeuroIncentivesPool(oldPoolAddress);
         uint256 tracToNeuroEmissionMultiplier = oldPool.getEffectiveNeuroEmissionMultiplier(block.timestamp);
 
@@ -167,7 +171,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
             newPoolAddress
         );
 
-        return (newPoolAddress, storageAddress);
+        return newPoolAddress;
     }
 
     function _checkKnowledgeAssetOwner(

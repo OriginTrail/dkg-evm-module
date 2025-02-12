@@ -266,9 +266,9 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
 
     function getIncentivesPoolByPoolName(
         bytes32 paranetId,
-        string calldata name
+        string calldata poolName
     ) external view returns (ParanetLib.IncentivesPool memory) {
-        return paranets[paranetId].incentivesPools[paranets[paranetId].incentivesPoolsByNameIndexes[name]];
+        return paranets[paranetId].incentivesPools[paranets[paranetId].incentivesPoolsByNameIndexes[poolName]];
     }
 
     function getIncentivesPoolByStorageAddress(
@@ -285,10 +285,11 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         return paranets[paranetId].incentivesPools;
     }
 
-    function hasIncentivesPoolByName(bytes32 paranetId, string calldata name) external view returns (bool) {
+    function hasIncentivesPoolByName(bytes32 paranetId, string calldata poolName) external view returns (bool) {
         return
-            paranets[paranetId].incentivesPools[paranets[paranetId].incentivesPoolsByNameIndexes[name]].storageAddr !=
-            address(0);
+            paranets[paranetId]
+                .incentivesPools[paranets[paranetId].incentivesPoolsByNameIndexes[poolName]]
+                .storageAddr != address(0);
     }
 
     function hasIncentivesPoolByStorageAddress(bytes32 paranetId, address storageAddr) external view returns (bool) {

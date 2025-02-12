@@ -386,7 +386,7 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
             hub.isContract(msg.sender) ||
                 paranetsRegistry.hasIncentivesPoolByStorageAddress(
                     paranetId,
-                    IParanetNeuroIncentivesPool(msg.sender).paranetNeuroIncentivesPoolStorage()
+                    IParanetNeuroIncentivesPool(msg.sender).getParanetNeuroIncentivesPoolStorage()
                 ),
             "Hub/IncentivesPool function"
         );
