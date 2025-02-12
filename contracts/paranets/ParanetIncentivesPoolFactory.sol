@@ -66,7 +66,6 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
     }
 
     function deployNeuroIncentivesPool(
-        bool isNativeReward,
         address paranetKCStorageContract,
         uint256 paranetKCTokenId,
         uint256 paranetKATokenId,
