@@ -217,31 +217,16 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
         require(cumulativeVotersWeight <= ParanetLib.MAX_CUMULATIVE_VOTERS_WEIGHT, "Cumulative weight is too big");
     }
 
-    function removeVoters(uint256 limit) external onlyVotersRegistrar {
-        require(voters.length >= limit, "Limit exceeds number of voters");
-
-        for (uint256 i; i < limit; ) {
-            ParanetLib.ParanetIncentivizationProposalVoter memory voter = voters[voters.length - 1];
-            // Decrease total weight
-            cumulativeVotersWeight -= uint16(voter.weight);
-
-            // Clean up indexes
-            delete votersIndexes[voter.addr];
-
-            // Remove last element
-            voters.pop();
-
-            emit VoterRemoved(voter.addr, voter.weight);
-
+    function removeVoters(address[] calldata votersToRemove) external onlyVotersRegistrar {
+        for (uint256 i; i < votersToRemove.length; ) {
+            removeVoter(votersToRemove[i]);
             unchecked {
                 i++;
             }
         }
-
-        emit VotersRemoved(limit);
     }
 
-    function removeVoter(address voterAddress) external onlyVotersRegistrar {
+    function removeVoter(address voterAddress) public onlyVotersRegistrar {
         uint256 index = votersIndexes[voterAddress];
         require(index < voters.length, "Invalid voter index");
 
