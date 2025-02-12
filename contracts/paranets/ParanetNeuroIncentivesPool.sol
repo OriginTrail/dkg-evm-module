@@ -507,27 +507,27 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned, IParanetNeuroIncentiv
                 ParanetLib.EMISSION_MULTIPLIER_SCALING_FACTOR) - totalClaimedNeuro;
     }
 
-    function paranetNeuroIncentivesPoolStorage() external view returns (address) {
+    function getParanetNeuroIncentivesPoolStorage() external view returns (address) {
         return address(paranetNeuroIncentivesPoolStorage);
     }
-}
 
-function _checkHubOwner() internal view virtual {
-    require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
-}
+    function _checkHubOwner() internal view virtual {
+        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+    }
 
-function _checkVotersRegistrar() internal view virtual {
-    require(msg.sender == paranetNeuroIncentivesPoolStorage.votersRegistrar(), "Fn can only be used by registrar");
-}
+    function _checkVotersRegistrar() internal view virtual {
+        require(msg.sender == paranetNeuroIncentivesPoolStorage.votersRegistrar(), "Fn can only be used by registrar");
+    }
 
-function _checkParanetOperator() internal view virtual {
-    require(isParanetOperator(msg.sender), "Fn can only be used by operator");
-}
+    function _checkParanetOperator() internal view virtual {
+        require(isParanetOperator(msg.sender), "Fn can only be used by operator");
+    }
 
-function _checkParanetIncentivizationProposalVoter() internal view virtual {
-    require(isProposalVoter(msg.sender), "Fn can only be used by voter");
-}
+    function _checkParanetIncentivizationProposalVoter() internal view virtual {
+        require(isProposalVoter(msg.sender), "Fn can only be used by voter");
+    }
 
-function _checkParanetKnowledgeMiner() internal view virtual {
-    require(isKnowledgeMiner(msg.sender), "Fn can only be used by K-Miners");
+    function _checkParanetKnowledgeMiner() internal view virtual {
+        require(isKnowledgeMiner(msg.sender), "Fn can only be used by K-Miners");
+    }
 }

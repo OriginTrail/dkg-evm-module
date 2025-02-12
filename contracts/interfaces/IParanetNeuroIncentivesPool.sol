@@ -2,5 +2,5 @@
 pragma solidity ^0.8.20;
 
 interface IParanetNeuroIncentivesPool {
-    function paranetNeuroIncentivesPoolStorage() external view returns (address);
+    function getParanetNeuroIncentivesPoolStorage() external view returns (address);
 }
