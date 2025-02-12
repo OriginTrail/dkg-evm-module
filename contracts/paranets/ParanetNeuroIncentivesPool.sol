@@ -274,41 +274,24 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned, IParanetNeuroIncentiv
                 : minersRewardLimit - paranetNeuroIncentivesPoolStorage.totalMinersClaimedNeuro();
     }
 
-    function claimKnowledgeMinerReward() external onlyParanetKnowledgeMiner {
+    function claimKnowledgeMinerReward(uint256 amount) external onlyParanetKnowledgeMiner {
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
 
         uint256 neuroReward = getTotalKnowledgeMinerIncentiveEstimation();
         uint256 claimableNeuroReward = getClaimableKnowledgeMinerRewardAmount();
-
-        // Use require here
-        if (claimableNeuroReward == 0) {
+        if (claimableNeuroReward == 0 || amount == 0 || amount > claimableNeuroReward) {
             revert ParanetLib.NoRewardAvailable(paranetNeuroIncentivesPoolStorage.paranetId(), msg.sender);
         }
 
-        // Updating the Unrewarded TRAC variable in the Knowledge Miner Profile
-        // If limit for reward wasn't exceeded, we set Unrewarded TRAC to 0, otherwise we need to calculate
-        // how many TRAC tokens were rewarded in this specific call and set variable to the amount that is left
-        // unrewarded
-        //
-        // Example: We have 100 NEURO total reward. 80 NEURO is for Knowledge Miners. Total NEURO Emission Rate is
-        // 0.5 NEURO per 1 TRAC. Knowledge Miner has 200 Unrewarded TRAC. 10% Operator Reward Percentage,
-        // 10% Voters Reward Percentage
-        //
-        // neuroReward = 100 NEURO = 100 * 10^12
-        // claimableNeuroReward = 80 NEURO = 80 * 10^12
-        // newUnrewardedTracSpent = (100 * 10^12 - 80 * 10^12) * 10^18) / (5 * 10^11) = (20 * 10^30) / (5 * 10^11) =
-        // = 40 * 10^18 = 40 TRAC
-        pkmr.setUnrewardedTracSpent(
-            msg.sender,
-            paranetNeuroIncentivesPoolStorage.paranetId(),
-            neuroReward == claimableNeuroReward
-                ? 0
-                : uint96(
-                    ((neuroReward - claimableNeuroReward) * ParanetLib.EMISSION_MULTIPLIER_SCALING_FACTOR) /
-                        getEffectiveNeuroEmissionMultiplier(block.timestamp)
-                )
-        );
-        pkmr.addCumulativeAwardedNeuro(msg.sender, paranetNeuroIncentivesPoolStorage.paranetId(), claimableNeuroReward);
+        uint96 newUnrewardedTracSpent = amount == neuroReward
+            ? 0
+            : uint96(
+                ((neuroReward - amount) * ParanetLib.EMISSION_MULTIPLIER_SCALING_FACTOR) /
+                    getEffectiveNeuroEmissionMultiplier(block.timestamp)
+            );
+
+        pkmr.setUnrewardedTracSpent(msg.sender, paranetNeuroIncentivesPoolStorage.paranetId(), newUnrewardedTracSpent);
+        pkmr.addCumulativeAwardedNeuro(msg.sender, paranetNeuroIncentivesPoolStorage.paranetId(), amount);
 
         if (
             paranetNeuroIncentivesPoolStorage.getClaimedMinerRewardsLength() == 0 ||
@@ -317,13 +300,13 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned, IParanetNeuroIncentiv
                 .addr !=
             msg.sender
         ) {
-            paranetNeuroIncentivesPoolStorage.addMinerClaimedRewardProfile(msg.sender, claimableNeuroReward);
+            paranetNeuroIncentivesPoolStorage.addMinerClaimedRewardProfile(msg.sender, amount);
         } else {
-            paranetNeuroIncentivesPoolStorage.addMinerClaimedReward(msg.sender, claimableNeuroReward);
+            paranetNeuroIncentivesPoolStorage.addMinerClaimedReward(msg.sender, amount);
         }
-        paranetNeuroIncentivesPoolStorage.addTotalMinersClaimedNeuro(claimableNeuroReward);
+        paranetNeuroIncentivesPoolStorage.addTotalMinersClaimedNeuro(amount);
 
-        paranetNeuroIncentivesPoolStorage.transferReward(msg.sender, claimableNeuroReward);
+        paranetNeuroIncentivesPoolStorage.transferReward(msg.sender, amount);
     }
 
     function getTotalParanetOperatorIncentiveEstimation() public view returns (uint256) {
