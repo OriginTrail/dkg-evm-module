@@ -1,9 +1,7 @@
-import { randomBytes } from 'crypto';
-
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
-import { ethers, getBytes } from 'ethers';
+import { ethers } from 'ethers';
 import hre from 'hardhat';
 
 import {
@@ -22,7 +20,11 @@ import {
   Identity,
   Staking,
 } from '../../typechain';
-
+import {
+  createKnowledgeCollection,
+  getKCSignaturesData,
+} from '../helpers/kc-helpers';
+import { createProfile, createProfiles } from '../helpers/profile-helpers';
 type KnowledgeCollectionFixture = {
   accounts: SignerWithAddress[];
   KnowledgeCollection: KnowledgeCollection;
@@ -120,105 +122,6 @@ describe('@unit KnowledgeCollection', () => {
     };
   }
 
-  const createProfile = async (
-    admin: SignerWithAddress,
-    operational: SignerWithAddress,
-  ) => {
-    const nodeId = '0x' + randomBytes(32).toString('hex');
-    const tx = await Profile.connect(operational).createProfile(
-      admin.address,
-      [],
-      `Node ${Math.floor(Math.random() * 1000)}`,
-      nodeId,
-      0,
-    );
-    const receipt = await tx.wait();
-    const identityId = Number(receipt!.logs[0].topics[1]);
-    return { nodeId, identityId };
-  };
-
-  async function signMessage(
-    signer: SignerWithAddress,
-    messageHash: string | Uint8Array,
-  ) {
-    // Pack the message the same way as the contract
-    const packedMessage = getBytes(messageHash);
-
-    // Sign the message
-    const signature = await signer.signMessage(packedMessage);
-
-    const { v, r, s } = ethers.Signature.from(signature);
-
-    // Calculate the combined value
-    const vsValue = BigInt(s) | ((BigInt(v) - BigInt(27)) << BigInt(255));
-
-    // Convert to proper bytes32 format
-    const vs = ethers.zeroPadValue(ethers.toBeHex(vsValue), 32);
-
-    return { r, vs };
-  }
-
-  const setupTestProfiles = async () => {
-    const { identityId: identityIdPublisher } = await createProfile(
-      accounts[0],
-      accounts[1],
-    );
-    const { identityId: identityIdValidator1 } = await createProfile(
-      accounts[0],
-      accounts[2],
-    );
-    const { identityId: identityIdValidator2 } = await createProfile(
-      accounts[0],
-      accounts[3],
-    );
-    const { identityId: identityIdValidator3 } = await createProfile(
-      accounts[0],
-      accounts[4],
-    );
-
-    const merkleRoot = ethers.keccak256(ethers.toUtf8Bytes('test-merkle-root'));
-    const publisherMessageHash = ethers.solidityPackedKeccak256(
-      ['uint72', 'bytes32'],
-      [identityIdPublisher, merkleRoot],
-    );
-
-    // Get signatures
-    const { r: publisherR, vs: publisherVS } = await signMessage(
-      accounts[1],
-      publisherMessageHash,
-    );
-    const { r: validatorR1, vs: validatorVS1 } = await signMessage(
-      accounts[2],
-      merkleRoot,
-    );
-    const { r: validatorR2, vs: validatorVS2 } = await signMessage(
-      accounts[3],
-      merkleRoot,
-    );
-    const { r: validatorR3, vs: validatorVS3 } = await signMessage(
-      accounts[4],
-      merkleRoot,
-    );
-
-    const validatorIds = [
-      identityIdValidator1,
-      identityIdValidator2,
-      identityIdValidator3,
-    ];
-    const validatorRs = [validatorR1, validatorR2, validatorR3];
-    const validatorVSs = [validatorVS1, validatorVS2, validatorVS3];
-
-    return {
-      identityIdPublisher,
-      merkleRoot,
-      publisherR,
-      publisherVS,
-      validatorIds,
-      validatorRs,
-      validatorVSs,
-    };
-  };
-
   beforeEach(async () => {
     hre.helpers.resetDeploymentsJson();
     ({
@@ -236,48 +139,36 @@ describe('@unit KnowledgeCollection', () => {
   });
 
   it('Should create a knowledge collection successfully', async () => {
-    const {
-      identityIdPublisher,
-      merkleRoot,
-      publisherR,
-      publisherVS,
-      validatorIds,
-      validatorRs,
-      validatorVSs,
-    } = await setupTestProfiles();
+    const admin = accounts[0];
+    const publisher = accounts[1];
+    const receivers = [accounts[2], accounts[3], accounts[4]];
 
-    // Setup test parameters
-    const tokenAmount = hre.ethers.parseEther('100');
-    const byteSize = 1000;
-    const isImmutable = false;
+    const { identityId: publisherIdentityId } = await createProfile(
+      Profile,
+      admin,
+      publisher,
+    );
 
-    // Approve tokens
-    await Token.mint(accounts[0].address, tokenAmount);
-    await Token.approve(KnowledgeCollection.getAddress(), tokenAmount);
+    const receiversIdentityIds = (
+      await createProfiles(Profile, admin, receivers)
+    ).map((p) => p.identityId);
 
-    // Create knowledge collection
-    const tx = await KnowledgeCollection.createKnowledgeCollection(
-      'test-operation-id', // publishOperationId
-      merkleRoot,
-      10, // knowledgeAssetsAmount
-      byteSize,
-      2, // epochs
-      tokenAmount,
-      isImmutable,
-      ethers.ZeroAddress, // paymaster
-      identityIdPublisher,
-      publisherR,
-      publisherVS,
-      validatorIds,
-      validatorRs,
-      validatorVSs,
+    const signaturesData = await getKCSignaturesData(
+      publisher,
+      publisherIdentityId,
+      receivers,
+    );
+
+    const { tx, collectionId } = await createKnowledgeCollection(
+      KnowledgeCollection,
+      Token,
+      admin,
+      publisherIdentityId,
+      receiversIdentityIds,
+      signaturesData,
     );
 
     await expect(tx).to.not.be.reverted;
-
-    const receipt = await tx.wait();
-    const collectionId = Number(receipt!.logs[2].topics[1]);
-
     expect(collectionId).to.equal(1);
 
     // Verify knowledge collection was created
@@ -289,37 +180,43 @@ describe('@unit KnowledgeCollection', () => {
     expect(metadata[0][0].length).to.equal(3); // merkle roots
     expect(metadata[1].length).to.equal(0); // burned
     expect(metadata[2]).to.equal(10); // minted
-    expect(metadata[3]).to.equal(byteSize); // byteSize
+    expect(metadata[3]).to.equal(1000); // byteSize
     expect(metadata[4]).to.equal(2); // startEpoch
     expect(metadata[5]).to.equal(4); // endEpoch
-    expect(metadata[6]).to.equal(tokenAmount); // tokenAmount
-    expect(metadata[7]).to.equal(isImmutable); // isImmutable
+    expect(metadata[6]).to.equal(ethers.parseEther('100')); // tokenAmount
+    expect(metadata[7]).to.equal(false); // isImmutable
   });
 
   it('Should revert if insufficient signatures provided', async () => {
-    const { identityIdPublisher, merkleRoot, publisherR, publisherVS } =
-      await setupTestProfiles();
+    const admin = accounts[0];
+    const publisher = accounts[1];
+    const receivers = [accounts[2], accounts[3], accounts[4]];
 
-    const tokenAmount = hre.ethers.parseEther('100');
-    await Token.mint(accounts[0].address, tokenAmount);
-    await Token.approve(KnowledgeCollection.getAddress(), tokenAmount);
+    const { identityId: publisherIdentityId } = await createProfile(
+      Profile,
+      admin,
+      publisher,
+    );
+
+    const signaturesData = await getKCSignaturesData(
+      publisher,
+      publisherIdentityId,
+      receivers,
+    );
+
+    // Override receivers arrays to be empty
+    const receiversIdentityIds: number[] = [];
+    signaturesData.receiverRs = [];
+    signaturesData.receiverVSs = [];
 
     await expect(
-      KnowledgeCollection.createKnowledgeCollection(
-        'test-operation-id', // publishOperationId
-        merkleRoot,
-        10, // knowledgeAssetsAmount
-        1000, // byteSize
-        10, // epochs
-        tokenAmount,
-        false, // isImmutable
-        ethers.ZeroAddress, // paymaster
-        identityIdPublisher,
-        publisherR,
-        publisherVS,
-        [], // Empty validator identityIds array
-        [], // Empty validator R array
-        [], // Empty validator VS array
+      createKnowledgeCollection(
+        KnowledgeCollection,
+        Token,
+        admin,
+        publisherIdentityId,
+        receiversIdentityIds,
+        signaturesData,
       ),
     ).to.be.revertedWithCustomError(
       KnowledgeCollection,
