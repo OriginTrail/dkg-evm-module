@@ -61,6 +61,12 @@ library ParanetLib {
         RequestStatus status;
     }
 
+    struct IncentivesPool {
+        string name;
+        address storageAddr;
+        address rewardTokenAddress;
+    }
+
     struct Paranet {
         address paranetKCStorageContract;
         uint256 paranetKCTokenId;
@@ -71,7 +77,9 @@ library ParanetLib {
         MinersAccessPolicy minersAccessPolicy;
         KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy;
         uint96 cumulativeKnowledgeValue;
-        UnorderedNamedContractDynamicSet.Set incentivesPools;
+        IncentivesPool[] incentivesPools;
+        mapping(string => uint256) incentivesPoolsByNameIndexes;
+        mapping(address => uint256) incentivesPoolsByStorageAddressIndexes;
         Node[] curatedNodes;
         // Identity ID => Index in the array
         mapping(uint72 => uint256) curatedNodesIndexes;
@@ -100,11 +108,6 @@ library ParanetLib {
         MinersAccessPolicy minersAccessPolicy;
         KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy;
         uint96 cumulativeKnowledgeValue;
-    }
-
-    struct IncentivesPool {
-        string poolType;
-        address addr;
     }
 
     struct ParanetService {
