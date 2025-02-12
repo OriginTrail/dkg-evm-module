@@ -123,6 +123,7 @@ contract ParanetNeuroIncentivesPoolStorage is INamed, IVersioned, HubDependent, 
     }
 
     function transferVotersRegistrarRole(address newRegistrar) external onlyVotersRegistrar {
+        require(newRegistrar != address(0), "New registrar cannot be zero address");
         address oldRegistrar = votersRegistrar;
         votersRegistrar = newRegistrar;
         emit VotersRegistrarTransferred(oldRegistrar, newRegistrar);
