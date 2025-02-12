@@ -78,7 +78,9 @@ library ParanetLib {
         KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy;
         uint96 cumulativeKnowledgeValue;
         IncentivesPool[] incentivesPools;
+        // Incentives Pool Name => Index in the array
         mapping(string => uint256) incentivesPoolsByNameIndexes;
+        // Incentives Pool Storage Address => Index in the array
         mapping(address => uint256) incentivesPoolsByStorageAddressIndexes;
         Node[] curatedNodes;
         // Identity ID => Index in the array

@@ -10,8 +10,9 @@ import {Hub} from "../storage/Hub.sol";
 import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
 import {ParanetLib} from "../libraries/ParanetLib.sol";
+import {IParanetNeuroIncentivesPool} from "../interfaces/IParanetNeuroIncentivesPool.sol";
 
-contract ParanetNeuroIncentivesPool is INamed, IVersioned {
+contract ParanetNeuroIncentivesPool is INamed, IVersioned, IParanetNeuroIncentivesPool {
     event NeuroEmissionMultiplierUpdateInitiated(uint256 oldMultiplier, uint256 newMultiplier, uint256 timestamp);
     event NeuroEmissionMultiplierUpdateFinalized(uint256 oldMultiplier, uint256 newMultiplier);
 
@@ -506,23 +507,27 @@ contract ParanetNeuroIncentivesPool is INamed, IVersioned {
                 ParanetLib.EMISSION_MULTIPLIER_SCALING_FACTOR) - totalClaimedNeuro;
     }
 
-    function _checkHubOwner() internal view virtual {
-        require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+    function paranetNeuroIncentivesPoolStorage() external view returns (address) {
+        return address(paranetNeuroIncentivesPoolStorage);
     }
+}
 
-    function _checkVotersRegistrar() internal view virtual {
-        require(msg.sender == paranetNeuroIncentivesPoolStorage.votersRegistrar(), "Fn can only be used by registrar");
-    }
+function _checkHubOwner() internal view virtual {
+    require(msg.sender == hub.owner(), "Fn can only be used by hub owner");
+}
 
-    function _checkParanetOperator() internal view virtual {
-        require(isParanetOperator(msg.sender), "Fn can only be used by operator");
-    }
+function _checkVotersRegistrar() internal view virtual {
+    require(msg.sender == paranetNeuroIncentivesPoolStorage.votersRegistrar(), "Fn can only be used by registrar");
+}
 
-    function _checkParanetIncentivizationProposalVoter() internal view virtual {
-        require(isProposalVoter(msg.sender), "Fn can only be used by voter");
-    }
+function _checkParanetOperator() internal view virtual {
+    require(isParanetOperator(msg.sender), "Fn can only be used by operator");
+}
 
-    function _checkParanetKnowledgeMiner() internal view virtual {
-        require(isKnowledgeMiner(msg.sender), "Fn can only be used by K-Miners");
-    }
+function _checkParanetIncentivizationProposalVoter() internal view virtual {
+    require(isProposalVoter(msg.sender), "Fn can only be used by voter");
+}
+
+function _checkParanetKnowledgeMiner() internal view virtual {
+    require(isKnowledgeMiner(msg.sender), "Fn can only be used by K-Miners");
 }
