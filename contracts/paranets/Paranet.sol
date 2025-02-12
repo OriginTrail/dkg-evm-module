@@ -1042,7 +1042,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 currentEpoch = chronos.getCurrentEpoch();
         uint40 kcStartEpoch = kcs.getStartEpoch(knowledgeCollectionTokenId);
 
-        if (kcStartEpoch != currentEpoch && kcStartEpoch != currentEpoch) {
+        if (kcStartEpoch == currentEpoch || kcStartEpoch - 1 == currentEpoch) {
             revert ParanetLib.KnowledgeCollectionNotInFirstEpoch(
                 knowledgeCollectionStorageContract,
                 knowledgeCollectionTokenId
