@@ -6,6 +6,7 @@ import {ParanetKnowledgeCollectionsRegistry} from "../storage/paranets/ParanetKn
 import {ParanetKnowledgeMinersRegistry} from "../storage/paranets/ParanetKnowledgeMinersRegistry.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {ParanetServicesRegistry} from "../storage/paranets/ParanetServicesRegistry.sol";
+import {ParanetStagingStorage} from "../storage/paranets/ParanetStagingStorage.sol";
 import {ProfileStorage} from "../storage/ProfileStorage.sol";
 import {IdentityStorage} from "../storage/IdentityStorage.sol";
 import {KnowledgeCollectionStorage} from "../storage/KnowledgeCollectionStorage.sol";
@@ -140,6 +141,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     ParanetServicesRegistry public paranetServicesRegistry;
     ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
     ParanetKnowledgeCollectionsRegistry public paranetKnowledgeCollectionsRegistry;
+    ParanetStagingStorage public paranetStagingStorage;
     ProfileStorage public profileStorage;
     IdentityStorage public identityStorage;
 
@@ -167,6 +169,15 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         _;
     }
 
+    modifier onlyCurator(
+        address paranetKCStorageContract,
+        uint256 paranetKnowledgeCollectionTokenId,
+        uint256 paranetKnowledgeAssetTokenId
+    ) {
+        _checkCurator(paranetKCStorageContract, paranetKnowledgeCollectionTokenId, paranetKnowledgeAssetTokenId);
+        _;
+    }
+
     function initialize() public onlyHub {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
@@ -178,6 +189,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         paranetKnowledgeCollectionsRegistry = ParanetKnowledgeCollectionsRegistry(
             hub.getContractAddress("ParanetKnowledgeCollectionsRegistry")
         );
+        paranetStagingStorage = ParanetStagingStorage(hub.getContractAddress("ParanetStagingStorage"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -1072,6 +1084,16 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             );
         }
 
+        if (pr.getKnowledgeCollectionsAccessPolicy(paranetId) == ParanetLib.KnowledgeCollectionsAccessPolicy.STAGING) {
+            require(
+                paranetStagingStorage.isKnowledgeCollectionApproved(
+                    paranetId,
+                    keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
+                ),
+                "Knowledge collection is not approved"
+            );
+        }
+
         KnowledgeCollectionStorage kcs = KnowledgeCollectionStorage(knowledgeCollectionStorageContract);
         uint96 remainingTokenAmount = kcs.getTokenAmount(knowledgeCollectionTokenId);
         KnowledgeCollectionLib.MerkleRoot[] memory merkleRoots = kcs.getMerkleRoots(knowledgeCollectionTokenId);
@@ -1094,6 +1116,131 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             knowledgeCollectionStorageContract,
             knowledgeCollectionTokenId
         );
+    }
+
+    function stageKnowledgeCollection(
+        address paranetKCStorageContract,
+        uint256 paranetKnowledgeCollectionTokenId,
+        uint256 paranetKnowledgeAssetTokenId,
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId
+    ) external onlyKnowledgeCollectionOwner(knowledgeCollectionStorageContract, knowledgeCollectionTokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
+        bytes32 paranetId = keccak256(
+            abi.encodePacked(paranetKCStorageContract, paranetKnowledgeCollectionTokenId, paranetKnowledgeAssetTokenId)
+        );
+
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(
+                paranetKCStorageContract,
+                paranetKnowledgeCollectionTokenId,
+                paranetKnowledgeAssetTokenId
+            );
+        }
+
+        if (pr.getMinersAccessPolicy(paranetId) == ParanetLib.MinersAccessPolicy.CURATED) {
+            require(pr.isKnowledgeMinerRegistered(paranetId, msg.sender), "Knowledge miner is not registered");
+        }
+
+        ParanetLib.KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy = pr
+            .getKnowledgeCollectionsAccessPolicy(paranetId);
+
+        require(
+            knowledgeCollectionsAccessPolicy == ParanetLib.KnowledgeCollectionsAccessPolicy.STAGING,
+            "Paranet does not allow staging of knowledge collections"
+        );
+
+        bytes32 knowledgeCollectionId = keccak256(
+            abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId)
+        );
+        ParanetStagingStorage pss = paranetStagingStorage;
+        require(
+            !pss.isKnowledgeCollectionStaged(paranetId, knowledgeCollectionId),
+            "Knowledge collection is already staged"
+        );
+        pss.stageKnowledgeCollection(paranetId, knowledgeCollectionId, msg.sender);
+    }
+
+    function addCurator(
+        address paranetKCStorageContract,
+        uint256 paranetKnowledgeCollectionTokenId,
+        uint256 paranetKnowledgeAssetTokenId,
+        address curator
+    )
+        external
+        onlyKnowledgeAssetOwner(
+            paranetKCStorageContract,
+            paranetKnowledgeCollectionTokenId,
+            paranetKnowledgeAssetTokenId
+        )
+    {
+        bytes32 paranetId = keccak256(
+            abi.encodePacked(paranetKCStorageContract, paranetKnowledgeCollectionTokenId, paranetKnowledgeAssetTokenId)
+        );
+        ParanetsRegistry pr = paranetsRegistry;
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(
+                paranetKCStorageContract,
+                paranetKnowledgeCollectionTokenId,
+                paranetKnowledgeAssetTokenId
+            );
+        }
+
+        ParanetLib.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
+        require(minersAccessPolicy == ParanetLib.MinersAccessPolicy.CURATED, "Paranet does not allow adding curators");
+        paranetStagingStorage.addCurator(paranetId, curator);
+    }
+
+    function removeCurator(
+        address paranetKCStorageContract,
+        uint256 paranetKnowledgeCollectionTokenId,
+        uint256 paranetKnowledgeAssetTokenId,
+        address curator
+    )
+        external
+        onlyKnowledgeAssetOwner(
+            paranetKCStorageContract,
+            paranetKnowledgeCollectionTokenId,
+            paranetKnowledgeAssetTokenId
+        )
+    {
+        bytes32 paranetId = keccak256(
+            abi.encodePacked(paranetKCStorageContract, paranetKnowledgeCollectionTokenId, paranetKnowledgeAssetTokenId)
+        );
+        ParanetsRegistry pr = paranetsRegistry;
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(
+                paranetKCStorageContract,
+                paranetKnowledgeCollectionTokenId,
+                paranetKnowledgeAssetTokenId
+            );
+        }
+
+        ParanetLib.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
+        require(minersAccessPolicy == ParanetLib.MinersAccessPolicy.CURATED, "Paranet does not allow adding curators");
+        paranetStagingStorage.removeCurator(paranetId, curator);
+    }
+
+    function reviewKnowledgeCollection(
+        address paranetKCStorageContract,
+        uint256 paranetKnowledgeCollectionTokenId,
+        uint256 paranetKnowledgeAssetTokenId,
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId,
+        bool accepted
+    ) external onlyCurator(paranetKCStorageContract, paranetKnowledgeCollectionTokenId, paranetKnowledgeAssetTokenId) {
+        bytes32 paranetId = keccak256(
+            abi.encodePacked(paranetKCStorageContract, paranetKnowledgeCollectionTokenId, paranetKnowledgeAssetTokenId)
+        );
+        bytes32 knowledgeCollectionId = keccak256(
+            abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId)
+        );
+        ParanetStagingStorage pss = paranetStagingStorage;
+        require(
+            pss.isKnowledgeCollectionStaged(paranetId, knowledgeCollectionId),
+            "Knowledge collection is not staged"
+        );
+        pss.reviewKnowledgeCollection(paranetId, knowledgeCollectionId, accepted);
     }
 
     // function processUpdatedKnowledgeCollectionStatesMetadata(
@@ -1293,5 +1440,25 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         );
 
         require(ownedCountInRange == activeCount, "Caller isn't the owner of the KC");
+    }
+
+    function _checkCurator(
+        address paranetKCStorageContract,
+        uint256 paranetKnowledgeCollectionTokenId,
+        uint256 paranetKnowledgeAssetTokenId
+    ) internal view {
+        require(
+            paranetStagingStorage.isCurator(
+                keccak256(
+                    abi.encodePacked(
+                        paranetKCStorageContract,
+                        paranetKnowledgeCollectionTokenId,
+                        paranetKnowledgeAssetTokenId
+                    )
+                ),
+                msg.sender
+            ),
+            "Not authorized curator"
+        );
     }
 }

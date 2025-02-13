@@ -32,7 +32,8 @@ library ParanetLib {
     }
 
     enum KnowledgeCollectionsAccessPolicy {
-        OPEN
+        OPEN,
+        STAGING
     }
 
     struct Node {
