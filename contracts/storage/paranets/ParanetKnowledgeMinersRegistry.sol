@@ -3,7 +3,6 @@
 pragma solidity ^0.8.20;
 
 import {ParanetsRegistry} from "./ParanetsRegistry.sol";
-import {ParanetNeuroIncentivesPoolStorage} from "../../paranets/ParanetNeuroIncentivesPoolStorage.sol";
 import {HubDependent} from "../../abstract/HubDependent.sol";
 import {INamed} from "../../interfaces/INamed.sol";
 import {IVersioned} from "../../interfaces/IVersioned.sol";
