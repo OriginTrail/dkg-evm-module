@@ -4,14 +4,20 @@ import { HardhatEthersSigner as SignerWithAddress } from '@nomicfoundation/hardh
 
 import { Profile } from '../../typechain';
 
+export type NodeAccounts = {
+  admin: SignerWithAddress;
+  operational: SignerWithAddress;
+};
+
 export async function createProfile(
   ProfileContract: Profile,
-  admin: SignerWithAddress,
-  operational: SignerWithAddress,
+  nodeAccounts: NodeAccounts,
 ) {
   const nodeId = '0x' + randomBytes(32).toString('hex');
-  const tx = await ProfileContract.connect(operational).createProfile(
-    admin.address,
+  const tx = await ProfileContract.connect(
+    nodeAccounts.operational,
+  ).createProfile(
+    nodeAccounts.admin.address,
     [],
     `Node ${Math.floor(Math.random() * 1000)}`,
     nodeId,
@@ -24,15 +30,13 @@ export async function createProfile(
 
 export async function createProfiles(
   ProfileContract: Profile,
-  admin: SignerWithAddress,
-  accounts: SignerWithAddress[],
+  nodeAccounts: NodeAccounts[],
 ): Promise<{ nodeId: string; identityId: number }[]> {
   const profiles: { nodeId: string; identityId: number }[] = [];
-  for (let i = 0; i < accounts.length; i++) {
+  for (let i = 0; i < nodeAccounts.length; i++) {
     const { nodeId, identityId } = await createProfile(
       ProfileContract,
-      admin,
-      accounts[i],
+      nodeAccounts[i],
     );
     profiles.push({ nodeId, identityId });
   }

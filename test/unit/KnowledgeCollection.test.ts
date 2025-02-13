@@ -139,30 +139,46 @@ describe('@unit KnowledgeCollection', () => {
   });
 
   it('Should create a knowledge collection successfully', async () => {
-    const admin = accounts[0];
-    const publisher = accounts[1];
-    const receivers = [accounts[2], accounts[3], accounts[4]];
+    const publishingNode = {
+      admin: accounts[1],
+      operational: accounts[2],
+    };
+    const receivingNodes = [
+      {
+        admin: accounts[3],
+        operational: accounts[4],
+      },
+      {
+        admin: accounts[5],
+        operational: accounts[6],
+      },
+      {
+        admin: accounts[7],
+        operational: accounts[8],
+      },
+    ];
+
+    const kcCreator = accounts[9]; // knowledge collection creator
 
     const { identityId: publisherIdentityId } = await createProfile(
       Profile,
-      admin,
-      publisher,
+      publishingNode,
     );
 
     const receiversIdentityIds = (
-      await createProfiles(Profile, admin, receivers)
+      await createProfiles(Profile, receivingNodes)
     ).map((p) => p.identityId);
 
     const signaturesData = await getKCSignaturesData(
-      publisher,
+      publishingNode,
       publisherIdentityId,
-      receivers,
+      receivingNodes,
     );
 
     const { tx, collectionId } = await createKnowledgeCollection(
       KnowledgeCollection,
       Token,
-      admin,
+      kcCreator,
       publisherIdentityId,
       receiversIdentityIds,
       signaturesData,
@@ -188,20 +204,36 @@ describe('@unit KnowledgeCollection', () => {
   });
 
   it('Should revert if insufficient signatures provided', async () => {
-    const admin = accounts[0];
-    const publisher = accounts[1];
-    const receivers = [accounts[2], accounts[3], accounts[4]];
+    const publishingNode = {
+      admin: accounts[1],
+      operational: accounts[2],
+    };
+    const receivingNodes = [
+      {
+        admin: accounts[3],
+        operational: accounts[4],
+      },
+      {
+        admin: accounts[5],
+        operational: accounts[6],
+      },
+      {
+        admin: accounts[7],
+        operational: accounts[8],
+      },
+    ];
+
+    const kcCreator = accounts[9]; // knowledge collection creator
 
     const { identityId: publisherIdentityId } = await createProfile(
       Profile,
-      admin,
-      publisher,
+      publishingNode,
     );
 
     const signaturesData = await getKCSignaturesData(
-      publisher,
+      publishingNode,
       publisherIdentityId,
-      receivers,
+      receivingNodes,
     );
 
     // Override receivers arrays to be empty
@@ -213,7 +245,7 @@ describe('@unit KnowledgeCollection', () => {
       createKnowledgeCollection(
         KnowledgeCollection,
         Token,
-        admin,
+        kcCreator,
         publisherIdentityId,
         receiversIdentityIds,
         signaturesData,

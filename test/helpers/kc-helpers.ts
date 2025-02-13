@@ -1,6 +1,7 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { ethers, getBytes } from 'ethers';
 
+import { NodeAccounts } from './profile-helpers';
 import { KnowledgeCollection, Token } from '../../typechain';
 
 export type ValidatorInfo = {
@@ -30,9 +31,9 @@ export async function signMessage(
 }
 
 export async function getKCSignaturesData(
-  publisher: SignerWithAddress,
+  publishingNode: NodeAccounts,
   publisherIdentityId: number,
-  receivers: SignerWithAddress[],
+  receivingNodes: NodeAccounts[],
 ): Promise<KCSignaturesData> {
   const merkleRoot = ethers.keccak256(ethers.toUtf8Bytes('test-merkle-root'));
   const publisherMessageHash = ethers.solidityPackedKeccak256(
@@ -41,19 +42,19 @@ export async function getKCSignaturesData(
   );
 
   const { r: publisherR, vs: publisherVS } = await signMessage(
-    publisher,
+    publishingNode.operational,
     publisherMessageHash,
   );
   const { r: receiverR1, vs: receiverVS1 } = await signMessage(
-    receivers[0],
+    receivingNodes[0].operational,
     merkleRoot,
   );
   const { r: receiverR2, vs: receiverVS2 } = await signMessage(
-    receivers[1],
+    receivingNodes[1].operational,
     merkleRoot,
   );
   const { r: receiverR3, vs: receiverVS3 } = await signMessage(
-    receivers[2],
+    receivingNodes[2].operational,
     merkleRoot,
   );
   const receiverRs = [receiverR1, receiverR2, receiverR3];
@@ -71,7 +72,7 @@ export async function getKCSignaturesData(
 export async function createKnowledgeCollection(
   KnowledgeCollection: KnowledgeCollection,
   Token: Token,
-  owner: SignerWithAddress,
+  kcCreator: SignerWithAddress,
   publisherIdentityId: number,
   receiversIdentityIds: number[],
   signaturesData: KCSignaturesData,
@@ -84,11 +85,15 @@ export async function createKnowledgeCollection(
   paymaster: string = ethers.ZeroAddress,
 ) {
   // Approve tokens
-  await Token.mint(owner.address, tokenAmount);
-  await Token.approve(KnowledgeCollection.getAddress(), tokenAmount);
+  await Token.connect(kcCreator).increaseAllowance(
+    KnowledgeCollection.getAddress(),
+    tokenAmount,
+  );
 
   // Create knowledge collection
-  const tx = await KnowledgeCollection.createKnowledgeCollection(
+  const tx = await KnowledgeCollection.connect(
+    kcCreator,
+  ).createKnowledgeCollection(
     publishOperationId,
     signaturesData.merkleRoot,
     knowledgeAssetsAmount,
