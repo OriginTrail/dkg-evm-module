@@ -22,9 +22,16 @@ import {
 } from '../../typechain';
 import {
   createKnowledgeCollection,
+  createProfilesAndKC,
   getKCSignaturesData,
 } from '../helpers/kc-helpers';
-import { createProfile, createProfiles } from '../helpers/profile-helpers';
+import { createProfile } from '../helpers/profile-helpers';
+import {
+  getDefaultPublishingNode,
+  getDefaultReceivingNodes,
+  getDefaultKCCreator,
+} from '../helpers/setup-helpers';
+
 type KnowledgeCollectionFixture = {
   accounts: SignerWithAddress[];
   KnowledgeCollection: KnowledgeCollection;
@@ -139,52 +146,17 @@ describe('@unit KnowledgeCollection', () => {
   });
 
   it('Should create a knowledge collection successfully', async () => {
-    const publishingNode = {
-      admin: accounts[1],
-      operational: accounts[2],
-    };
-    const receivingNodes = [
-      {
-        admin: accounts[3],
-        operational: accounts[4],
-      },
-      {
-        admin: accounts[5],
-        operational: accounts[6],
-      },
-      {
-        admin: accounts[7],
-        operational: accounts[8],
-      },
-    ];
+    const kcCreator = getDefaultKCCreator(accounts);
+    const publishingNode = getDefaultPublishingNode(accounts);
+    const receivingNodes = getDefaultReceivingNodes(accounts);
 
-    const kcCreator = accounts[9]; // knowledge collection creator
+    const { receivingNodesIdentityIds, collectionId } =
+      await createProfilesAndKC(kcCreator, publishingNode, receivingNodes, {
+        Profile,
+        KnowledgeCollection,
+        Token,
+      });
 
-    const { identityId: publisherIdentityId } = await createProfile(
-      Profile,
-      publishingNode,
-    );
-
-    const receiversIdentityIds = (
-      await createProfiles(Profile, receivingNodes)
-    ).map((p) => p.identityId);
-
-    const signaturesData = await getKCSignaturesData(
-      publishingNode,
-      publisherIdentityId,
-      receivingNodes,
-    );
-
-    const { tx, collectionId } = await createKnowledgeCollection(
-      KnowledgeCollection,
-      Token,
-      kcCreator,
-      publisherIdentityId,
-      receiversIdentityIds,
-      signaturesData,
-    );
-
-    await expect(tx).to.not.be.reverted;
     expect(collectionId).to.equal(1);
 
     // Verify knowledge collection was created
@@ -193,7 +165,7 @@ describe('@unit KnowledgeCollection', () => {
         collectionId,
       );
 
-    expect(metadata[0][0].length).to.equal(3); // merkle roots
+    expect(metadata[0][0].length).to.equal(receivingNodesIdentityIds.length); // merkle roots
     expect(metadata[1].length).to.equal(0); // burned
     expect(metadata[2]).to.equal(10); // minted
     expect(metadata[3]).to.equal(1000); // byteSize
@@ -204,26 +176,9 @@ describe('@unit KnowledgeCollection', () => {
   });
 
   it('Should revert if insufficient signatures provided', async () => {
-    const publishingNode = {
-      admin: accounts[1],
-      operational: accounts[2],
-    };
-    const receivingNodes = [
-      {
-        admin: accounts[3],
-        operational: accounts[4],
-      },
-      {
-        admin: accounts[5],
-        operational: accounts[6],
-      },
-      {
-        admin: accounts[7],
-        operational: accounts[8],
-      },
-    ];
-
-    const kcCreator = accounts[9]; // knowledge collection creator
+    const kcCreator = getDefaultKCCreator(accounts);
+    const publishingNode = getDefaultPublishingNode(accounts);
+    const receivingNodes = getDefaultReceivingNodes(accounts);
 
     const { identityId: publisherIdentityId } = await createProfile(
       Profile,
@@ -243,12 +198,11 @@ describe('@unit KnowledgeCollection', () => {
 
     await expect(
       createKnowledgeCollection(
-        KnowledgeCollection,
-        Token,
         kcCreator,
         publisherIdentityId,
         receiversIdentityIds,
         signaturesData,
+        { KnowledgeCollection, Token },
       ),
     ).to.be.revertedWithCustomError(
       KnowledgeCollection,
