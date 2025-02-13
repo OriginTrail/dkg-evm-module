@@ -1,22 +1,9 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { ethers, getBytes } from 'ethers';
 
-import { NodeAccounts } from './profile-helpers';
-import { KnowledgeCollection, Token } from '../../typechain';
-
-export type ValidatorInfo = {
-  identityId: number;
-  r: string;
-  vs: string;
-};
-
-export type KCSignaturesData = {
-  merkleRoot: string;
-  publisherR: string;
-  publisherVS: string;
-  receiverRs: string[];
-  receiverVSs: string[];
-};
+import { createProfile, createProfiles } from './profile-helpers';
+import { KCSignaturesData, NodeAccounts } from './types';
+import { KnowledgeCollection, Token, Profile } from '../../typechain';
 
 export async function signMessage(
   signer: SignerWithAddress,
@@ -70,12 +57,14 @@ export async function getKCSignaturesData(
 }
 
 export async function createKnowledgeCollection(
-  KnowledgeCollection: KnowledgeCollection,
-  Token: Token,
   kcCreator: SignerWithAddress,
   publisherIdentityId: number,
   receiversIdentityIds: number[],
   signaturesData: KCSignaturesData,
+  contracts: {
+    KnowledgeCollection: KnowledgeCollection;
+    Token: Token;
+  },
   publishOperationId: string = 'test-operation-id',
   knowledgeAssetsAmount: number = 10,
   byteSize: number = 1000,
@@ -85,13 +74,13 @@ export async function createKnowledgeCollection(
   paymaster: string = ethers.ZeroAddress,
 ) {
   // Approve tokens
-  await Token.connect(kcCreator).increaseAllowance(
-    KnowledgeCollection.getAddress(),
+  await contracts.Token.connect(kcCreator).increaseAllowance(
+    contracts.KnowledgeCollection.getAddress(),
     tokenAmount,
   );
 
   // Create knowledge collection
-  const tx = await KnowledgeCollection.connect(
+  const tx = await contracts.KnowledgeCollection.connect(
     kcCreator,
   ).createKnowledgeCollection(
     publishOperationId,
@@ -114,4 +103,46 @@ export async function createKnowledgeCollection(
   const collectionId = Number(receipt!.logs[2].topics[1]);
 
   return { tx, receipt, collectionId };
+}
+
+export async function createProfilesAndKC(
+  kcCreator: SignerWithAddress,
+  publishingNode: NodeAccounts,
+  receivingNodes: NodeAccounts[],
+  contracts: {
+    Profile: Profile;
+    KnowledgeCollection: KnowledgeCollection;
+    Token: Token;
+  },
+) {
+  const { identityId: publishingNodeIdentityId } = await createProfile(
+    contracts.Profile,
+    publishingNode,
+  );
+  const receivingNodesIdentityIds = (
+    await createProfiles(contracts.Profile, receivingNodes)
+  ).map((p) => p.identityId);
+
+  // Create knowledge collection
+  const signaturesData = await getKCSignaturesData(
+    publishingNode,
+    publishingNodeIdentityId,
+    receivingNodes,
+  );
+  const { collectionId } = await createKnowledgeCollection(
+    kcCreator,
+    publishingNodeIdentityId,
+    receivingNodesIdentityIds,
+    signaturesData,
+    contracts,
+  );
+
+  return {
+    publishingNode,
+    publishingNodeIdentityId,
+    receivingNodes,
+    receivingNodesIdentityIds,
+    kcCreator,
+    collectionId,
+  };
 }
