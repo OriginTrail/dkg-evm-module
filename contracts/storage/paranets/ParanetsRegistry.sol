@@ -252,13 +252,20 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
 
     function addIncentivesPool(
         bytes32 paranetId,
-        ParanetLib.IncentivesPool calldata incentivesPool
+        string calldata incentivesPoolName,
+        address storageAddress,
+        address rewardTokenAddress
     ) external onlyContracts {
         require(paranets[paranetId].incentivesPools.length < _MAX_INCENTIVES_POOLS, "Max incentives pools reached");
-        paranets[paranetId].incentivesPoolsByNameIndexes[incentivesPool.name] = paranets[paranetId]
+        ParanetLib.IncentivesPool memory incentivesPool = ParanetLib.IncentivesPool({
+            name: incentivesPoolName,
+            storageAddr: storageAddress,
+            rewardTokenAddress: rewardTokenAddress
+        });
+        paranets[paranetId].incentivesPoolsByNameIndexes[incentivesPoolName] = paranets[paranetId]
             .incentivesPools
             .length;
-        paranets[paranetId].incentivesPoolsByStorageAddressIndexes[incentivesPool.storageAddr] = paranets[paranetId]
+        paranets[paranetId].incentivesPoolsByStorageAddressIndexes[storageAddress] = paranets[paranetId]
             .incentivesPools
             .length;
         paranets[paranetId].incentivesPools.push(incentivesPool);
