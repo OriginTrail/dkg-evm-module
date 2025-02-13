@@ -19,15 +19,25 @@ import {ProfileLib} from "../libraries/ProfileLib.sol";
 import {KnowledgeCollectionLib} from "../libraries/KnowledgeCollectionLib.sol";
 
 contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
+    // Access Policy Constants
+    uint8 constant NODES_ACCESS_POLICY_OPEN = 0;
+    uint8 constant NODES_ACCESS_POLICY_PERMISSIONED = 1;
+
+    uint8 constant MINERS_ACCESS_POLICY_OPEN = 0;
+    uint8 constant MINERS_ACCESS_POLICY_PERMISSIONED = 1;
+
+    uint8 constant KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_OPEN = 0;
+    uint8 constant KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING = 1;
+
     event ParanetRegistered(
         address indexed paranetKCStorageContract,
         uint256 indexed paranetKCTokenId,
         uint256 indexed parnetKATokenId,
         string paranetName,
         string paranetDescription,
-        ParanetLib.NodesAccessPolicy nodesAccessPolicy,
-        ParanetLib.MinersAccessPolicy minersAccessPolicy,
-        ParanetLib.KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy
+        uint8 nodesAccessPolicy,
+        uint8 minersAccessPolicy,
+        uint8 knowledgeCollectionsSubmissionPolicy
     );
     event ParanetCuratedNodeAdded(
         address indexed paranetKCStorageContract,
@@ -206,9 +216,14 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 paranetKATokenId,
         string calldata paranetName,
         string calldata paranetDescription,
-        ParanetLib.NodesAccessPolicy nodesAccessPolicy,
-        ParanetLib.MinersAccessPolicy minersAccessPolicy
+        uint8 nodesAccessPolicy,
+        uint8 minersAccessPolicy,
+        uint8 knowledgeCollectionsSubmissionPolicy
     ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) returns (bytes32) {
+        require(
+            nodesAccessPolicy < 2 && minersAccessPolicy < 2 && knowledgeCollectionsSubmissionPolicy < 2,
+            "Invalid policy"
+        );
         ParanetsRegistry pr = paranetsRegistry;
 
         bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId));
@@ -229,7 +244,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             paranetDescription,
             nodesAccessPolicy,
             minersAccessPolicy,
-            ParanetLib.KnowledgeCollectionsAccessPolicy.OPEN
+            knowledgeCollectionsSubmissionPolicy
         );
 
         return
@@ -241,7 +256,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
                 paranetDescription,
                 nodesAccessPolicy,
                 minersAccessPolicy,
-                ParanetLib.KnowledgeCollectionsAccessPolicy.OPEN
+                knowledgeCollectionsSubmissionPolicy
             );
     }
 
@@ -287,9 +302,10 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         }
 
-        if (pr.getNodesAccessPolicy(paranetId) != ParanetLib.NodesAccessPolicy.CURATED) {
-            ParanetLib.NodesAccessPolicy[] memory expectedAccessPolicies = new ParanetLib.NodesAccessPolicy[](1);
-            expectedAccessPolicies[0] = ParanetLib.NodesAccessPolicy.CURATED;
+        if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
+            // TODO: Why is this 1 element array
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
 
             revert ParanetLib.InvalidParanetNodesAccessPolicy(
                 expectedAccessPolicies,
@@ -330,9 +346,9 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         }
 
-        if (pr.getNodesAccessPolicy(paranetId) != ParanetLib.NodesAccessPolicy.CURATED) {
-            ParanetLib.NodesAccessPolicy[] memory expectedAccessPolicies = new ParanetLib.NodesAccessPolicy[](1);
-            expectedAccessPolicies[0] = ParanetLib.NodesAccessPolicy.CURATED;
+        if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
 
             revert ParanetLib.InvalidParanetNodesAccessPolicy(
                 expectedAccessPolicies,
@@ -373,9 +389,9 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         }
 
-        if (pr.getNodesAccessPolicy(paranetId) != ParanetLib.NodesAccessPolicy.CURATED) {
-            ParanetLib.NodesAccessPolicy[] memory expectedAccessPolicies = new ParanetLib.NodesAccessPolicy[](1);
-            expectedAccessPolicies[0] = ParanetLib.NodesAccessPolicy.CURATED;
+        if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
 
             revert ParanetLib.InvalidParanetNodesAccessPolicy(
                 expectedAccessPolicies,
@@ -429,9 +445,9 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         }
 
-        if (pr.getNodesAccessPolicy(paranetId) != ParanetLib.NodesAccessPolicy.CURATED) {
-            ParanetLib.NodesAccessPolicy[] memory expectedAccessPolicies = new ParanetLib.NodesAccessPolicy[](1);
-            expectedAccessPolicies[0] = ParanetLib.NodesAccessPolicy.CURATED;
+        if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
 
             revert ParanetLib.InvalidParanetNodesAccessPolicy(
                 expectedAccessPolicies,
@@ -487,9 +503,9 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         }
 
-        if (pr.getNodesAccessPolicy(paranetId) != ParanetLib.NodesAccessPolicy.CURATED) {
-            ParanetLib.NodesAccessPolicy[] memory expectedAccessPolicies = new ParanetLib.NodesAccessPolicy[](1);
-            expectedAccessPolicies[0] = ParanetLib.NodesAccessPolicy.CURATED;
+        if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
 
             revert ParanetLib.InvalidParanetNodesAccessPolicy(
                 expectedAccessPolicies,
@@ -719,9 +735,9 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         }
 
-        if (pr.getMinersAccessPolicy(paranetId) != ParanetLib.MinersAccessPolicy.CURATED) {
-            ParanetLib.MinersAccessPolicy[] memory expectedAccessPolicies = new ParanetLib.MinersAccessPolicy[](1);
-            expectedAccessPolicies[0] = ParanetLib.MinersAccessPolicy.CURATED;
+        if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
 
             revert ParanetLib.InvalidParanetMinersAccessPolicy(
                 expectedAccessPolicies,
@@ -767,9 +783,9 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         }
 
-        if (pr.getMinersAccessPolicy(paranetId) != ParanetLib.MinersAccessPolicy.CURATED) {
-            ParanetLib.MinersAccessPolicy[] memory expectedAccessPolicies = new ParanetLib.MinersAccessPolicy[](1);
-            expectedAccessPolicies[0] = ParanetLib.MinersAccessPolicy.CURATED;
+        if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
 
             revert ParanetLib.InvalidParanetMinersAccessPolicy(
                 expectedAccessPolicies,
@@ -810,9 +826,9 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         }
 
-        if (pr.getMinersAccessPolicy(paranetId) != ParanetLib.MinersAccessPolicy.CURATED) {
-            ParanetLib.MinersAccessPolicy[] memory expectedAccessPolicies = new ParanetLib.MinersAccessPolicy[](1);
-            expectedAccessPolicies[0] = ParanetLib.MinersAccessPolicy.CURATED;
+        if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
 
             revert ParanetLib.InvalidParanetMinersAccessPolicy(
                 expectedAccessPolicies,
@@ -859,9 +875,9 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         }
 
-        if (pr.getMinersAccessPolicy(paranetId) != ParanetLib.MinersAccessPolicy.CURATED) {
-            ParanetLib.MinersAccessPolicy[] memory expectedAccessPolicies = new ParanetLib.MinersAccessPolicy[](1);
-            expectedAccessPolicies[0] = ParanetLib.MinersAccessPolicy.CURATED;
+        if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
 
             revert ParanetLib.InvalidParanetMinersAccessPolicy(
                 expectedAccessPolicies,
@@ -916,9 +932,9 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         }
 
-        if (pr.getMinersAccessPolicy(paranetId) != ParanetLib.MinersAccessPolicy.CURATED) {
-            ParanetLib.MinersAccessPolicy[] memory expectedAccessPolicies = new ParanetLib.MinersAccessPolicy[](1);
-            expectedAccessPolicies[0] = ParanetLib.MinersAccessPolicy.CURATED;
+        if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
 
             revert ParanetLib.InvalidParanetMinersAccessPolicy(
                 expectedAccessPolicies,
@@ -1048,16 +1064,16 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             );
         }
 
-        ParanetLib.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
+        uint8 minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
 
         // Check if paranet is curated and if knowledge miner is whitelisted
         if (
-            minersAccessPolicy == ParanetLib.MinersAccessPolicy.CURATED &&
+            minersAccessPolicy == MINERS_ACCESS_POLICY_PERMISSIONED &&
             !pr.isKnowledgeMinerRegistered(paranetId, msg.sender)
         ) {
             revert ParanetLib.ParanetCuratedMinerDoesntExist(paranetId, msg.sender);
             // Should this be done in both cases why would OPEN have separeted logic ???
-        } else if (minersAccessPolicy == ParanetLib.MinersAccessPolicy.OPEN) {
+        } else if (minersAccessPolicy == MINERS_ACCESS_POLICY_OPEN) {
             // Check if Knowledge Miner has profile
             // If not: Create a profile
             if (!paranetKnowledgeMinersRegistry.knowledgeMinerExists(msg.sender)) {
@@ -1084,7 +1100,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             );
         }
 
-        if (pr.getKnowledgeCollectionsAccessPolicy(paranetId) == ParanetLib.KnowledgeCollectionsAccessPolicy.STAGING) {
+        if (pr.getKnowledgeCollectionsSubmissionPolicy(paranetId) == KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING) {
             require(
                 paranetStagingStorage.isKnowledgeCollectionApproved(
                     paranetId,
@@ -1138,15 +1154,14 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             );
         }
 
-        if (pr.getMinersAccessPolicy(paranetId) == ParanetLib.MinersAccessPolicy.CURATED) {
+        if (pr.getMinersAccessPolicy(paranetId) == MINERS_ACCESS_POLICY_PERMISSIONED) {
             require(pr.isKnowledgeMinerRegistered(paranetId, msg.sender), "Knowledge miner is not registered");
         }
 
-        ParanetLib.KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy = pr
-            .getKnowledgeCollectionsAccessPolicy(paranetId);
+        uint8 knowledgeCollectionsSubmissionPolicy = pr.getKnowledgeCollectionsSubmissionPolicy(paranetId);
 
         require(
-            knowledgeCollectionsAccessPolicy == ParanetLib.KnowledgeCollectionsAccessPolicy.STAGING,
+            knowledgeCollectionsSubmissionPolicy == KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING,
             "Paranet does not allow staging of knowledge collections"
         );
 
@@ -1186,8 +1201,11 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             );
         }
 
-        ParanetLib.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
-        require(minersAccessPolicy == ParanetLib.MinersAccessPolicy.CURATED, "Paranet does not allow adding curators");
+        uint8 knowledgeCollectionsSubmissionPolicy = pr.getKnowledgeCollectionsSubmissionPolicy(paranetId);
+        require(
+            knowledgeCollectionsSubmissionPolicy == KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING,
+            "Paranet does not allow adding curators"
+        );
         paranetStagingStorage.addCurator(paranetId, curator);
     }
 
@@ -1216,8 +1234,11 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             );
         }
 
-        ParanetLib.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
-        require(minersAccessPolicy == ParanetLib.MinersAccessPolicy.CURATED, "Paranet does not allow adding curators");
+        uint8 knowledgeCollectionsSubmissionPolicy = pr.getKnowledgeCollectionsSubmissionPolicy(paranetId);
+        require(
+            knowledgeCollectionsSubmissionPolicy == KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING,
+            "Paranet does not allow adding curators"
+        );
         paranetStagingStorage.removeCurator(paranetId, curator);
     }
 
