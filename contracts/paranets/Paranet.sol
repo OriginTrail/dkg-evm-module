@@ -9,6 +9,7 @@ import {ParanetServicesRegistry} from "../storage/paranets/ParanetServicesRegist
 import {ProfileStorage} from "../storage/ProfileStorage.sol";
 import {IdentityStorage} from "../storage/IdentityStorage.sol";
 import {KnowledgeCollectionStorage} from "../storage/KnowledgeCollectionStorage.sol";
+import {Chronos} from "../storage/Chronos.sol";
 import {ContractStatus} from "../abstract/ContractStatus.sol";
 import {IInitializable} from "../interfaces/IInitializable.sol";
 import {INamed} from "../interfaces/INamed.sol";
@@ -142,6 +143,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     ParanetKnowledgeCollectionsRegistry public paranetKnowledgeCollectionsRegistry;
     ProfileStorage public profileStorage;
     IdentityStorage public identityStorage;
+    Chronos public chronos;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -178,6 +180,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         paranetKnowledgeCollectionsRegistry = ParanetKnowledgeCollectionsRegistry(
             hub.getContractAddress("ParanetKnowledgeCollectionsRegistry")
         );
+        chronos = Chronos(hub.getContractAddress("Chronos"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -1035,6 +1038,16 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
                 paranetKnowledgeAssetTokenId
             );
         }
+        KnowledgeCollectionStorage kcs = KnowledgeCollectionStorage(knowledgeCollectionStorageContract);
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        uint40 kcStartEpoch = kcs.getStartEpoch(knowledgeCollectionTokenId);
+
+        if (kcStartEpoch == currentEpoch || kcStartEpoch - 1 == currentEpoch) {
+            revert ParanetLib.KnowledgeCollectionNotInFirstEpoch(
+                knowledgeCollectionStorageContract,
+                knowledgeCollectionTokenId
+            );
+        }
 
         ParanetLib.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
 
@@ -1072,7 +1085,6 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             );
         }
 
-        KnowledgeCollectionStorage kcs = KnowledgeCollectionStorage(knowledgeCollectionStorageContract);
         uint96 remainingTokenAmount = kcs.getTokenAmount(knowledgeCollectionTokenId);
         KnowledgeCollectionLib.MerkleRoot[] memory merkleRoots = kcs.getMerkleRoots(knowledgeCollectionTokenId);
 

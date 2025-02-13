@@ -61,6 +61,12 @@ library ParanetLib {
         RequestStatus status;
     }
 
+    struct IncentivesPool {
+        string name;
+        address storageAddr;
+        address rewardTokenAddress;
+    }
+
     struct Paranet {
         address paranetKCStorageContract;
         uint256 paranetKCTokenId;
@@ -71,7 +77,11 @@ library ParanetLib {
         MinersAccessPolicy minersAccessPolicy;
         KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy;
         uint96 cumulativeKnowledgeValue;
-        UnorderedNamedContractDynamicSet.Set incentivesPools;
+        IncentivesPool[] incentivesPools;
+        // Incentives Pool Name => Index in the array
+        mapping(string => uint256) incentivesPoolsByNameIndexes;
+        // Incentives Pool Storage Address => Index in the array
+        mapping(address => uint256) incentivesPoolsByStorageAddressIndexes;
         Node[] curatedNodes;
         // Identity ID => Index in the array
         mapping(uint72 => uint256) curatedNodesIndexes;
@@ -100,11 +110,6 @@ library ParanetLib {
         MinersAccessPolicy minersAccessPolicy;
         KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy;
         uint96 cumulativeKnowledgeValue;
-    }
-
-    struct IncentivesPool {
-        string poolType;
-        address addr;
     }
 
     struct ParanetService {
@@ -243,5 +248,9 @@ library ParanetLib {
         bytes32 paranetId,
         uint96 currentCumulativeWeight,
         uint96 targetCumulativeWeight
+    );
+    error KnowledgeCollectionNotInFirstEpoch(
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId
     );
 }

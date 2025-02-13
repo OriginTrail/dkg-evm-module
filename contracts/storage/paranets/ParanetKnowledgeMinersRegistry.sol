@@ -6,6 +6,7 @@ import {ParanetsRegistry} from "./ParanetsRegistry.sol";
 import {HubDependent} from "../../abstract/HubDependent.sol";
 import {INamed} from "../../interfaces/INamed.sol";
 import {IVersioned} from "../../interfaces/IVersioned.sol";
+import {IParanetNeuroIncentivesPool} from "../../interfaces/IParanetNeuroIncentivesPool.sol";
 import {ParanetLib} from "../../libraries/ParanetLib.sol";
 
 contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
@@ -381,7 +382,11 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
 
     function _checkSender(bytes32 paranetId) internal view virtual {
         require(
-            hub.isContract(msg.sender) || paranetsRegistry.hasIncentivesPoolByAddress(paranetId, msg.sender),
+            hub.isContract(msg.sender) ||
+                paranetsRegistry.hasIncentivesPoolByStorageAddress(
+                    paranetId,
+                    IParanetNeuroIncentivesPool(msg.sender).getParanetNeuroIncentivesPoolStorage()
+                ),
             "Hub/IncentivesPool function"
         );
     }
