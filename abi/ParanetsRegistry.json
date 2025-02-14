@@ -13,66 +13,12 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "addr",
-        "type": "address"
-      }
-    ],
-    "name": "AddressAlreadyInSet",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "addr",
-        "type": "address"
-      }
-    ],
-    "name": "AddressDoesNotExist",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
-      }
-    ],
-    "name": "ContractAlreadyExists",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
-      }
-    ],
-    "name": "ContractDoesNotExist",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "EmptyName",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "string",
         "name": "msg",
         "type": "string"
       }
     ],
     "name": "UnauthorizedAccess",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ZeroAddress",
     "type": "error"
   },
   {
@@ -117,6 +63,34 @@
       }
     ],
     "name": "addCuratedNode",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "string",
+        "name": "incentivesPoolName",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "storageAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "rewardTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "addIncentivesPool",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -253,11 +227,16 @@
           },
           {
             "internalType": "address",
-            "name": "addr",
+            "name": "storageAddr",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "rewardTokenAddress",
             "type": "address"
           }
         ],
-        "internalType": "struct UnorderedNamedContractDynamicSet.Contract[]",
+        "internalType": "struct ParanetLib.IncentivesPool[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -375,16 +354,74 @@
       },
       {
         "internalType": "string",
-        "name": "incentivesPoolType",
+        "name": "poolName",
         "type": "string"
       }
     ],
-    "name": "getIncentivesPoolAddress",
+    "name": "getIncentivesPoolByPoolName",
     "outputs": [
       {
-        "internalType": "address",
+        "components": [
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "address",
+            "name": "storageAddr",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "rewardTokenAddress",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct ParanetLib.IncentivesPool",
         "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "storageAddr",
         "type": "address"
+      }
+    ],
+    "name": "getIncentivesPoolByStorageAddress",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "address",
+            "name": "storageAddr",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "rewardTokenAddress",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct ParanetLib.IncentivesPool",
+        "name": "",
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -404,25 +441,6 @@
         "internalType": "bytes32[]",
         "name": "",
         "type": "bytes32[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getKnowledgeCollectionsAccessPolicy",
-    "outputs": [
-      {
-        "internalType": "enum ParanetLib.KnowledgeCollectionsAccessPolicy",
-        "name": "",
-        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -471,6 +489,25 @@
         "internalType": "bytes32[]",
         "name": "",
         "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getKnowledgeCollectionsSubmissionPolicy",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -767,7 +804,7 @@
     "name": "getMinersAccessPolicy",
     "outputs": [
       {
-        "internalType": "enum ParanetLib.MinersAccessPolicy",
+        "internalType": "uint8",
         "name": "",
         "type": "uint8"
       }
@@ -926,7 +963,7 @@
     "name": "getNodesAccessPolicy",
     "outputs": [
       {
-        "internalType": "enum ParanetLib.NodesAccessPolicy",
+        "internalType": "uint8",
         "name": "",
         "type": "uint8"
       }
@@ -1063,18 +1100,18 @@
             "type": "string"
           },
           {
-            "internalType": "enum ParanetLib.NodesAccessPolicy",
+            "internalType": "uint8",
             "name": "nodesAccessPolicy",
             "type": "uint8"
           },
           {
-            "internalType": "enum ParanetLib.MinersAccessPolicy",
+            "internalType": "uint8",
             "name": "minersAccessPolicy",
             "type": "uint8"
           },
           {
-            "internalType": "enum ParanetLib.KnowledgeCollectionsAccessPolicy",
-            "name": "knowledgeCollectionsAccessPolicy",
+            "internalType": "uint8",
+            "name": "knowledgeCollectionsSubmissionPolicy",
             "type": "uint8"
           },
           {
@@ -1150,12 +1187,12 @@
         "type": "bytes32"
       },
       {
-        "internalType": "address",
-        "name": "incentivesPoolAddress",
-        "type": "address"
+        "internalType": "string",
+        "name": "poolName",
+        "type": "string"
       }
     ],
-    "name": "hasIncentivesPoolByAddress",
+    "name": "hasIncentivesPoolByName",
     "outputs": [
       {
         "internalType": "bool",
@@ -1174,12 +1211,12 @@
         "type": "bytes32"
       },
       {
-        "internalType": "string",
-        "name": "incentivesPoolType",
-        "type": "string"
+        "internalType": "address",
+        "name": "storageAddr",
+        "type": "address"
       }
     ],
-    "name": "hasIncentivesPoolByType",
+    "name": "hasIncentivesPoolByStorageAddress",
     "outputs": [
       {
         "internalType": "bool",
@@ -1359,18 +1396,18 @@
         "type": "string"
       },
       {
-        "internalType": "enum ParanetLib.NodesAccessPolicy",
+        "internalType": "uint8",
         "name": "nodesAccessPolicy",
         "type": "uint8"
       },
       {
-        "internalType": "enum ParanetLib.MinersAccessPolicy",
+        "internalType": "uint8",
         "name": "minersAccessPolicy",
         "type": "uint8"
       },
       {
-        "internalType": "enum ParanetLib.KnowledgeCollectionsAccessPolicy",
-        "name": "knowledgeColletionsAccessPolicy",
+        "internalType": "uint8",
+        "name": "knowledgeCollectionsSubmissionPolicy",
         "type": "uint8"
       }
     ],
@@ -1399,42 +1436,6 @@
       }
     ],
     "name": "removeCuratedNode",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "address",
-        "name": "incentivesPoolAddress",
-        "type": "address"
-      }
-    ],
-    "name": "removeIncentivesPool",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "string",
-        "name": "incentivesPoolType",
-        "type": "string"
-      }
-    ],
-    "name": "removeIncentivesPool",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1583,35 +1584,12 @@
         "type": "bytes32"
       },
       {
-        "internalType": "string",
-        "name": "incentivesPoolType",
-        "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "incentivesPoolAddress",
-        "type": "address"
-      }
-    ],
-    "name": "setIncentivesPoolAddress",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "enum ParanetLib.KnowledgeCollectionsAccessPolicy",
-        "name": "knowledgeCollectionsAccessPolicy",
+        "internalType": "uint8",
+        "name": "knowledgeCollectionsSubmissionPolicy",
         "type": "uint8"
       }
     ],
-    "name": "setKnowledgeCollectionsAccessPolicy",
+    "name": "setKnowledgeCollectionsSubmissionPolicy",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1624,7 +1602,7 @@
         "type": "bytes32"
       },
       {
-        "internalType": "enum ParanetLib.MinersAccessPolicy",
+        "internalType": "uint8",
         "name": "minersAccessPolicy",
         "type": "uint8"
       }
@@ -1660,7 +1638,7 @@
         "type": "bytes32"
       },
       {
-        "internalType": "enum ParanetLib.NodesAccessPolicy",
+        "internalType": "uint8",
         "name": "nodesAccessPolicy",
         "type": "uint8"
       }
@@ -1684,29 +1662,6 @@
       }
     ],
     "name": "subCumulativeKnowledgeValue",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "string",
-        "name": "incentivesPoolType",
-        "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "incentivesPoolAddress",
-        "type": "address"
-      }
-    ],
-    "name": "updateIncentivesPoolAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
