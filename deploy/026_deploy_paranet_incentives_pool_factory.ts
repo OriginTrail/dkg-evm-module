@@ -16,4 +16,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ['ParanetIncentivesPoolFactory'];
-func.dependencies = ['Hub', 'ParanetsRegistry'];
+func.dependencies = [
+  'Hub',
+  'ParanetsRegistry',
+  'ParanetIncentivesPoolFactoryHelper',
+];
