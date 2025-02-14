@@ -119,7 +119,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
         emit TokenRewardDeposit(msg.sender, msg.value);
     }
 
-    function totalNeuroReceived() external view returns (uint256) {
+    function totalReceived() external view returns (uint256) {
         return getBalance() + totalMinersclaimedToken + totalOperatorsclaimedToken + totalVotersclaimedToken;
     }
 

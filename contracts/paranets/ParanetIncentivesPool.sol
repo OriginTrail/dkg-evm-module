@@ -22,7 +22,7 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
     Hub public hub;
     ParanetsRegistry public paranetsRegistry;
     ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
-    ParanetIncentivesPoolStorage public ParanetIncentivesPoolStorage;
+    ParanetIncentivesPoolStorage public paranetIncentivesPoolStorage;
 
     // Array of Total TOKEN Emission Multipliers
     // Total TOKEN Emission Multiplier = Ratio of how much TOKEN is released per 1 TRAC spent
@@ -32,22 +32,22 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
     //      0.5 * 10^12 = 5 * 10^11 = 0.5 TOKEN per 1 TRAC
     //      1 = 1 TOKEN wei per 1 TRAC
     //
-    ParanetLib.TokenEmissionMultiplier[] public TokenEmissionMultipliers;
+    ParanetLib.TokenEmissionMultiplier[] public tokenEmissionMultipliers;
 
-    uint256 public TokenEmissionMultiplierUpdateDelay = 7 days;
+    uint256 public tokenEmissionMultiplierUpdateDelay = 7 days;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(
         address hubAddress,
         address knowledgeMinersRegistryAddress,
-        address ParanetIncentivesPoolStorageAddress,
+        address paranetIncentivesPoolStorageAddress,
         uint256 tracToTokenEmissionMultiplier
     ) {
         hub = Hub(hubAddress);
         paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(knowledgeMinersRegistryAddress);
-        ParanetIncentivesPoolStorage = ParanetIncentivesPoolStorage(payable(ParanetIncentivesPoolStorageAddress));
+        paranetIncentivesPoolStorage = ParanetIncentivesPoolStorage(payable(paranetIncentivesPoolStorageAddress));
 
-        TokenEmissionMultipliers.push(
+        tokenEmissionMultipliers.push(
             ParanetLib.TokenEmissionMultiplier({
                 multiplier: tracToTokenEmissionMultiplier,
                 timestamp: block.timestamp,
@@ -89,32 +89,32 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
         return _VERSION;
     }
 
-    function updateTokenEmissionMultiplierUpdateDelay(uint256 newDelay) external onlyHubOwner {
-        TokenEmissionMultiplierUpdateDelay = newDelay;
+    function updatetokenEmissionMultiplierUpdateDelay(uint256 newDelay) external onlyHubOwner {
+        tokenEmissionMultiplierUpdateDelay = newDelay;
     }
 
     function voterclaimedToken(address addr) external view returns (uint256) {
-        uint256 voterIndex = ParanetIncentivesPoolStorage.votersIndexes(addr);
+        uint256 voterIndex = paranetIncentivesPoolStorage.votersIndexes(addr);
 
         // If the index is out of range or the stored voter doesn't match `voterAddress`,
         // return 0 as a default.
         if (
-            voterIndex >= ParanetIncentivesPoolStorage.getVotersCount() ||
-            ParanetIncentivesPoolStorage.getVoterAtIndex(voterIndex).addr != addr
+            voterIndex >= paranetIncentivesPoolStorage.getVotersCount() ||
+            paranetIncentivesPoolStorage.getVoterAtIndex(voterIndex).addr != addr
         ) {
             return 0;
         }
 
-        return ParanetIncentivesPoolStorage.getVoterAtIndex(voterIndex).claimedToken;
+        return paranetIncentivesPoolStorage.getVoterAtIndex(voterIndex).claimedToken;
     }
 
     function isKnowledgeMiner(address addr) public view returns (bool) {
-        return paranetsRegistry.isKnowledgeMinerRegistered(ParanetIncentivesPoolStorage.paranetId(), addr);
+        return paranetsRegistry.isKnowledgeMinerRegistered(paranetIncentivesPoolStorage.paranetId(), addr);
     }
 
     function isParanetOperator(address addr) public view returns (bool) {
         (address paranetKCStorageContract, uint256 paranetKCTokenId, uint256 paranetKATokenId) = paranetsRegistry
-            .getParanetKnowledgeAssetLocator(ParanetIncentivesPoolStorage.paranetId());
+            .getParanetKnowledgeAssetLocator(paranetIncentivesPoolStorage.paranetId());
 
         KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(paranetKCStorageContract);
 
@@ -128,71 +128,71 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
     }
 
     function isProposalVoter(address addr) public view returns (bool) {
-        return (ParanetIncentivesPoolStorage.getVotersCount() != 0 &&
-            ParanetIncentivesPoolStorage.getVoterAtIndex(ParanetIncentivesPoolStorage.votersIndexes(addr)).addr ==
+        return (paranetIncentivesPoolStorage.getVotersCount() != 0 &&
+            paranetIncentivesPoolStorage.getVoterAtIndex(paranetIncentivesPoolStorage.votersIndexes(addr)).addr ==
             addr);
     }
 
-    function getTokenEmissionMultipliers() external view returns (ParanetLib.TokenEmissionMultiplier[] memory) {
-        return TokenEmissionMultipliers;
+    function gettokenEmissionMultipliers() external view returns (ParanetLib.TokenEmissionMultiplier[] memory) {
+        return tokenEmissionMultipliers;
     }
 
     function getEffectiveTokenEmissionMultiplier(uint256 timestamp) public view returns (uint256) {
-        for (uint256 i = TokenEmissionMultipliers.length; i > 0; i--) {
-            if (TokenEmissionMultipliers[i - 1].finalized && timestamp >= TokenEmissionMultipliers[i - 1].timestamp) {
-                return TokenEmissionMultipliers[i - 1].multiplier;
+        for (uint256 i = tokenEmissionMultipliers.length; i > 0; i--) {
+            if (tokenEmissionMultipliers[i - 1].finalized && timestamp >= tokenEmissionMultipliers[i - 1].timestamp) {
+                return tokenEmissionMultipliers[i - 1].multiplier;
             }
         }
-        return TokenEmissionMultipliers[0].multiplier;
+        return tokenEmissionMultipliers[0].multiplier;
     }
 
     // TODO:Should there be some check of this value?
     function initiateTokenEmissionMultiplierUpdate(uint256 newMultiplier) external onlyVotersRegistrar {
-        if (!TokenEmissionMultipliers[TokenEmissionMultipliers.length - 1].finalized) {
-            TokenEmissionMultipliers[TokenEmissionMultipliers.length - 1].multiplier = newMultiplier;
-            TokenEmissionMultipliers[TokenEmissionMultipliers.length - 1].timestamp =
+        if (!tokenEmissionMultipliers[tokenEmissionMultipliers.length - 1].finalized) {
+            tokenEmissionMultipliers[tokenEmissionMultipliers.length - 1].multiplier = newMultiplier;
+            tokenEmissionMultipliers[tokenEmissionMultipliers.length - 1].timestamp =
                 block.timestamp +
-                TokenEmissionMultiplierUpdateDelay;
+                tokenEmissionMultiplierUpdateDelay;
         } else {
-            TokenEmissionMultipliers.push(
+            tokenEmissionMultipliers.push(
                 ParanetLib.TokenEmissionMultiplier({
                     multiplier: newMultiplier,
-                    timestamp: block.timestamp + TokenEmissionMultiplierUpdateDelay,
+                    timestamp: block.timestamp + tokenEmissionMultiplierUpdateDelay,
                     finalized: false
                 })
             );
         }
 
         emit TokenEmissionMultiplierUpdateInitiated(
-            TokenEmissionMultipliers[TokenEmissionMultipliers.length - 2].multiplier,
+            tokenEmissionMultipliers[tokenEmissionMultipliers.length - 2].multiplier,
             newMultiplier,
-            block.timestamp + TokenEmissionMultiplierUpdateDelay
+            block.timestamp + tokenEmissionMultiplierUpdateDelay
         );
     }
 
     function finalizeTokenEmissionMultiplierUpdate() external onlyVotersRegistrar {
-        require(TokenEmissionMultipliers.length > 0, "No emission multiplier updates");
+        require(tokenEmissionMultipliers.length > 0, "No emission multiplier updates");
         require(
-            !TokenEmissionMultipliers[TokenEmissionMultipliers.length - 1].finalized,
+            !tokenEmissionMultipliers[tokenEmissionMultipliers.length - 1].finalized,
             "Last update already finalized"
         );
         require(
-            block.timestamp >= TokenEmissionMultipliers[TokenEmissionMultipliers.length - 1].timestamp,
+            block.timestamp >= tokenEmissionMultipliers[tokenEmissionMultipliers.length - 1].timestamp,
             "Delay period not yet passed"
         );
 
-        TokenEmissionMultipliers[TokenEmissionMultipliers.length - 1].finalized = true;
+        tokenEmissionMultipliers[tokenEmissionMultipliers.length - 1].finalized = true;
 
         emit TokenEmissionMultiplierUpdateFinalized(
-            TokenEmissionMultipliers[TokenEmissionMultipliers.length - 2].multiplier,
-            TokenEmissionMultipliers[TokenEmissionMultipliers.length - 1].multiplier
+            tokenEmissionMultipliers[tokenEmissionMultipliers.length - 2].multiplier,
+            tokenEmissionMultipliers[tokenEmissionMultipliers.length - 1].multiplier
         );
     }
 
     function getTotalKnowledgeMinerIncentiveEstimation() public view returns (uint256) {
         uint96 unrewardedTracSpent = paranetKnowledgeMinersRegistry.getUnrewardedTracSpent(
             msg.sender,
-            ParanetIncentivesPoolStorage.paranetId()
+            paranetIncentivesPoolStorage.paranetId()
         );
 
         if (unrewardedTracSpent < ParanetLib.TOKENS_DIGITS_DIFF) {
@@ -214,8 +214,8 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
             (((unrewardedTracSpent * getEffectiveTokenEmissionMultiplier(block.timestamp)) /
                 ParanetLib.EMISSION_MULTIPLIER_SCALING_FACTOR) *
                 (ParanetLib.PERCENTAGE_SCALING_FACTOR -
-                    ParanetIncentivesPoolStorage.paranetOperatorRewardPercentage() -
-                    ParanetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage())) /
+                    paranetIncentivesPoolStorage.paranetOperatorRewardPercentage() -
+                    paranetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage())) /
             ParanetLib.PERCENTAGE_SCALING_FACTOR;
     }
 
@@ -223,9 +223,9 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
         return
             _getIncentiveEstimation(
                 ParanetLib.PERCENTAGE_SCALING_FACTOR -
-                    ParanetIncentivesPoolStorage.paranetOperatorRewardPercentage() -
-                    ParanetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage(),
-                ParanetIncentivesPoolStorage.totalMinersclaimedToken()
+                    paranetIncentivesPoolStorage.paranetOperatorRewardPercentage() -
+                    paranetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage(),
+                paranetIncentivesPoolStorage.totalMinersclaimedToken()
             );
     }
 
@@ -236,14 +236,14 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
         // and total TOKEN received by the contract, so that Miners don't get tokens belonging to Operator/Voters
         // Following the example from the above, if we have 100 TOKEN as a total reward, Miners should never get
         // more than 80 TOKEN. minersRewardLimit = 80 TOKEN
-        uint256 totalMinersclaimedToken = ParanetIncentivesPoolStorage.totalMinersclaimedToken();
-        uint256 minersRewardLimit = ((ParanetIncentivesPoolStorage.getBalance() +
+        uint256 totalMinersclaimedToken = paranetIncentivesPoolStorage.totalMinersclaimedToken();
+        uint256 minersRewardLimit = ((paranetIncentivesPoolStorage.getBalance() +
             totalMinersclaimedToken +
-            ParanetIncentivesPoolStorage.totalOperatorsclaimedToken() +
-            ParanetIncentivesPoolStorage.totalVotersclaimedToken()) *
+            paranetIncentivesPoolStorage.totalOperatorsclaimedToken() +
+            paranetIncentivesPoolStorage.totalVotersclaimedToken()) *
             (ParanetLib.PERCENTAGE_SCALING_FACTOR -
-                ParanetIncentivesPoolStorage.paranetOperatorRewardPercentage() -
-                ParanetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage())) /
+                paranetIncentivesPoolStorage.paranetOperatorRewardPercentage() -
+                paranetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage())) /
             ParanetLib.PERCENTAGE_SCALING_FACTOR;
 
         return
@@ -255,19 +255,19 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
     function getClaimableAllKnowledgeMinersRewardAmount() public view returns (uint256) {
         uint256 tokenReward = getTotalAllKnowledgeMinersIncentiveEstimation();
 
-        uint256 minersRewardLimit = ((ParanetIncentivesPoolStorage.getBalance() +
-            ParanetIncentivesPoolStorage.totalMinersclaimedToken() +
-            ParanetIncentivesPoolStorage.totalOperatorsclaimedToken() +
-            ParanetIncentivesPoolStorage.totalVotersclaimedToken()) *
+        uint256 minersRewardLimit = ((paranetIncentivesPoolStorage.getBalance() +
+            paranetIncentivesPoolStorage.totalMinersclaimedToken() +
+            paranetIncentivesPoolStorage.totalOperatorsclaimedToken() +
+            paranetIncentivesPoolStorage.totalVotersclaimedToken()) *
             (ParanetLib.PERCENTAGE_SCALING_FACTOR -
-                ParanetIncentivesPoolStorage.paranetOperatorRewardPercentage() -
-                ParanetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage())) /
+                paranetIncentivesPoolStorage.paranetOperatorRewardPercentage() -
+                paranetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage())) /
             ParanetLib.PERCENTAGE_SCALING_FACTOR;
 
         return
-            ParanetIncentivesPoolStorage.totalMinersclaimedToken() + tokenReward <= minersRewardLimit
+            paranetIncentivesPoolStorage.totalMinersclaimedToken() + tokenReward <= minersRewardLimit
                 ? tokenReward
-                : minersRewardLimit - ParanetIncentivesPoolStorage.totalMinersclaimedToken();
+                : minersRewardLimit - paranetIncentivesPoolStorage.totalMinersclaimedToken();
     }
 
     function claimKnowledgeMinerReward(uint256 amount) external onlyParanetKnowledgeMiner {
@@ -276,7 +276,7 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
         uint256 tokenReward = getTotalKnowledgeMinerIncentiveEstimation();
         uint256 claimableTokenReward = getClaimableKnowledgeMinerRewardAmount();
         if (claimableTokenReward == 0 || amount == 0 || amount > claimableTokenReward) {
-            revert ParanetLib.NoRewardAvailable(ParanetIncentivesPoolStorage.paranetId(), msg.sender);
+            revert ParanetLib.NoRewardAvailable(paranetIncentivesPoolStorage.paranetId(), msg.sender);
         }
 
         uint96 newUnrewardedTracSpent = amount == tokenReward
@@ -286,85 +286,85 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
                     getEffectiveTokenEmissionMultiplier(block.timestamp)
             );
 
-        pkmr.setUnrewardedTracSpent(msg.sender, ParanetIncentivesPoolStorage.paranetId(), newUnrewardedTracSpent);
-        pkmr.addcumulativeAwardedToken(msg.sender, ParanetIncentivesPoolStorage.paranetId(), amount);
+        pkmr.setUnrewardedTracSpent(msg.sender, paranetIncentivesPoolStorage.paranetId(), newUnrewardedTracSpent);
+        pkmr.addcumulativeAwardedToken(msg.sender, paranetIncentivesPoolStorage.paranetId(), amount);
 
         if (
-            ParanetIncentivesPoolStorage.getClaimedMinerRewardsLength() == 0 ||
-            ParanetIncentivesPoolStorage
-                .getClaimedMinerRewardsAtIndex(ParanetIncentivesPoolStorage.claimedMinerRewardsIndexes(msg.sender))
+            paranetIncentivesPoolStorage.getClaimedMinerRewardsLength() == 0 ||
+            paranetIncentivesPoolStorage
+                .getClaimedMinerRewardsAtIndex(paranetIncentivesPoolStorage.claimedMinerRewardsIndexes(msg.sender))
                 .addr !=
             msg.sender
         ) {
-            ParanetIncentivesPoolStorage.addMinerClaimedRewardProfile(msg.sender, amount);
+            paranetIncentivesPoolStorage.addMinerClaimedRewardProfile(msg.sender, amount);
         } else {
-            ParanetIncentivesPoolStorage.addMinerClaimedReward(msg.sender, amount);
+            paranetIncentivesPoolStorage.addMinerClaimedReward(msg.sender, amount);
         }
-        ParanetIncentivesPoolStorage.addTotalMinersclaimedToken(amount);
+        paranetIncentivesPoolStorage.addTotalMinersclaimedToken(amount);
 
-        ParanetIncentivesPoolStorage.transferReward(msg.sender, amount);
+        paranetIncentivesPoolStorage.transferReward(msg.sender, amount);
     }
 
     function getTotalParanetOperatorIncentiveEstimation() public view returns (uint256) {
         return
             _getIncentiveEstimation(
-                ParanetIncentivesPoolStorage.paranetOperatorRewardPercentage(),
-                ParanetIncentivesPoolStorage.totalOperatorsclaimedToken()
+                paranetIncentivesPoolStorage.paranetOperatorRewardPercentage(),
+                paranetIncentivesPoolStorage.totalOperatorsclaimedToken()
             );
     }
 
     function getClaimableParanetOperatorRewardAmount() public view returns (uint256) {
         uint256 tokenReward = getTotalParanetOperatorIncentiveEstimation();
 
-        uint256 operatorRewardLimit = ((ParanetIncentivesPoolStorage.getBalance() +
-            ParanetIncentivesPoolStorage.totalMinersclaimedToken() +
-            ParanetIncentivesPoolStorage.totalOperatorsclaimedToken() +
-            ParanetIncentivesPoolStorage.totalVotersclaimedToken()) *
-            ParanetIncentivesPoolStorage.paranetOperatorRewardPercentage()) / ParanetLib.PERCENTAGE_SCALING_FACTOR;
+        uint256 operatorRewardLimit = ((paranetIncentivesPoolStorage.getBalance() +
+            paranetIncentivesPoolStorage.totalMinersclaimedToken() +
+            paranetIncentivesPoolStorage.totalOperatorsclaimedToken() +
+            paranetIncentivesPoolStorage.totalVotersclaimedToken()) *
+            paranetIncentivesPoolStorage.paranetOperatorRewardPercentage()) / ParanetLib.PERCENTAGE_SCALING_FACTOR;
 
         return
-            ParanetIncentivesPoolStorage.totalOperatorsclaimedToken() + tokenReward <= operatorRewardLimit
+            paranetIncentivesPoolStorage.totalOperatorsclaimedToken() + tokenReward <= operatorRewardLimit
                 ? tokenReward
-                : operatorRewardLimit - ParanetIncentivesPoolStorage.totalOperatorsclaimedToken();
+                : operatorRewardLimit - paranetIncentivesPoolStorage.totalOperatorsclaimedToken();
     }
 
     function claimParanetOperatorReward() external onlyParanetOperator {
         uint256 claimableTokenReward = getClaimableParanetOperatorRewardAmount();
 
         if (claimableTokenReward == 0) {
-            revert ParanetLib.NoRewardAvailable(ParanetIncentivesPoolStorage.paranetId(), msg.sender);
+            revert ParanetLib.NoRewardAvailable(paranetIncentivesPoolStorage.paranetId(), msg.sender);
         }
 
         if (
-            ParanetIncentivesPoolStorage.getClaimedOperatorRewardsLength() == 0 ||
-            ParanetIncentivesPoolStorage
+            paranetIncentivesPoolStorage.getClaimedOperatorRewardsLength() == 0 ||
+            paranetIncentivesPoolStorage
                 .getClaimedOperatorRewardsAtIndex(
-                    ParanetIncentivesPoolStorage.claimedOperatorRewardsIndexes(msg.sender)
+                    paranetIncentivesPoolStorage.claimedOperatorRewardsIndexes(msg.sender)
                 )
                 .addr !=
             msg.sender
         ) {
-            ParanetIncentivesPoolStorage.addOperatorClaimedRewardsProfile(msg.sender, claimableTokenReward);
+            paranetIncentivesPoolStorage.addOperatorClaimedRewardsProfile(msg.sender, claimableTokenReward);
         } else {
-            ParanetIncentivesPoolStorage.addClaimedOperatorReward(msg.sender, claimableTokenReward);
+            paranetIncentivesPoolStorage.addClaimedOperatorReward(msg.sender, claimableTokenReward);
         }
-        ParanetIncentivesPoolStorage.addTotalOperatorsclaimedToken(claimableTokenReward);
+        paranetIncentivesPoolStorage.addTotalOperatorsclaimedToken(claimableTokenReward);
 
-        ParanetIncentivesPoolStorage.transferReward(msg.sender, claimableTokenReward);
+        paranetIncentivesPoolStorage.transferReward(msg.sender, claimableTokenReward);
     }
 
     function getTotalProposalVoterIncentiveEstimation() public view returns (uint256) {
         uint256 effectiveTokenEmissionMultiplier = getEffectiveTokenEmissionMultiplier(block.timestamp);
         uint96 cumulativeKnowledgeValueSingleVoterPart = (((paranetsRegistry.getCumulativeKnowledgeValue(
-            ParanetIncentivesPoolStorage.paranetId()
-        ) * ParanetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage()) /
+            paranetIncentivesPoolStorage.paranetId()
+        ) * paranetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage()) /
             ParanetLib.PERCENTAGE_SCALING_FACTOR) *
-            ParanetIncentivesPoolStorage
-                .getVoterAtIndex(ParanetIncentivesPoolStorage.votersIndexes(msg.sender))
+            paranetIncentivesPoolStorage
+                .getVoterAtIndex(paranetIncentivesPoolStorage.votersIndexes(msg.sender))
                 .weight) / ParanetLib.MAX_CUMULATIVE_VOTERS_WEIGHT;
         uint96 rewardedTracSpentSingleVoterPart = uint96(
-            (ParanetIncentivesPoolStorage
-                .getVoterAtIndex(ParanetIncentivesPoolStorage.votersIndexes(msg.sender))
+            (paranetIncentivesPoolStorage
+                .getVoterAtIndex(paranetIncentivesPoolStorage.votersIndexes(msg.sender))
                 .claimedToken * ParanetLib.EMISSION_MULTIPLIER_SCALING_FACTOR) / effectiveTokenEmissionMultiplier
         );
 
@@ -377,23 +377,23 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
         return
             ((cumulativeKnowledgeValueSingleVoterPart * effectiveTokenEmissionMultiplier) /
                 ParanetLib.EMISSION_MULTIPLIER_SCALING_FACTOR) -
-            ParanetIncentivesPoolStorage
-                .getVoterAtIndex(ParanetIncentivesPoolStorage.votersIndexes(msg.sender))
+            paranetIncentivesPoolStorage
+                .getVoterAtIndex(paranetIncentivesPoolStorage.votersIndexes(msg.sender))
                 .claimedToken;
     }
 
     function getTotalAllProposalVotersIncentiveEstimation() public view returns (uint256) {
         return
             _getIncentiveEstimation(
-                ParanetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage(),
-                ParanetIncentivesPoolStorage.totalVotersclaimedToken()
+                paranetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage(),
+                paranetIncentivesPoolStorage.totalVotersclaimedToken()
             );
     }
 
     function getClaimableProposalVoterRewardAmount() public view returns (uint256) {
         if (
-            ParanetIncentivesPoolStorage.getVotersCount() == 0 ||
-            ParanetIncentivesPoolStorage.getVoterAtIndex(ParanetIncentivesPoolStorage.votersIndexes(msg.sender)).addr !=
+            paranetIncentivesPoolStorage.getVotersCount() == 0 ||
+            paranetIncentivesPoolStorage.getVoterAtIndex(paranetIncentivesPoolStorage.votersIndexes(msg.sender)).addr !=
             msg.sender
         ) {
             return 0;
@@ -401,50 +401,50 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
 
         uint256 tokenReward = getTotalProposalVoterIncentiveEstimation();
 
-        uint256 voterRewardLimit = ((((ParanetIncentivesPoolStorage.getBalance() +
-            ParanetIncentivesPoolStorage.totalMinersclaimedToken() +
-            ParanetIncentivesPoolStorage.totalOperatorsclaimedToken() +
-            ParanetIncentivesPoolStorage.totalVotersclaimedToken()) *
-            ParanetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage()) /
+        uint256 voterRewardLimit = ((((paranetIncentivesPoolStorage.getBalance() +
+            paranetIncentivesPoolStorage.totalMinersclaimedToken() +
+            paranetIncentivesPoolStorage.totalOperatorsclaimedToken() +
+            paranetIncentivesPoolStorage.totalVotersclaimedToken()) *
+            paranetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage()) /
             ParanetLib.PERCENTAGE_SCALING_FACTOR) *
-            ParanetIncentivesPoolStorage
-                .getVoterAtIndex(ParanetIncentivesPoolStorage.votersIndexes(msg.sender))
+            paranetIncentivesPoolStorage
+                .getVoterAtIndex(paranetIncentivesPoolStorage.votersIndexes(msg.sender))
                 .weight) / ParanetLib.MAX_CUMULATIVE_VOTERS_WEIGHT;
 
         return
-            ParanetIncentivesPoolStorage
-                .getVoterAtIndex(ParanetIncentivesPoolStorage.votersIndexes(msg.sender))
+            paranetIncentivesPoolStorage
+                .getVoterAtIndex(paranetIncentivesPoolStorage.votersIndexes(msg.sender))
                 .claimedToken +
                 tokenReward <=
                 voterRewardLimit
                 ? tokenReward
                 : voterRewardLimit -
-                    ParanetIncentivesPoolStorage
-                        .getVoterAtIndex(ParanetIncentivesPoolStorage.votersIndexes(msg.sender))
+                    paranetIncentivesPoolStorage
+                        .getVoterAtIndex(paranetIncentivesPoolStorage.votersIndexes(msg.sender))
                         .claimedToken;
     }
 
     function getClaimableAllProposalVotersRewardAmount() public view returns (uint256) {
         uint256 tokenReward = getTotalAllProposalVotersIncentiveEstimation();
 
-        uint256 votersRewardLimit = ((ParanetIncentivesPoolStorage.getBalance() +
-            ParanetIncentivesPoolStorage.totalMinersclaimedToken() +
-            ParanetIncentivesPoolStorage.totalOperatorsclaimedToken() +
-            ParanetIncentivesPoolStorage.totalVotersclaimedToken()) *
-            ParanetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage()) /
+        uint256 votersRewardLimit = ((paranetIncentivesPoolStorage.getBalance() +
+            paranetIncentivesPoolStorage.totalMinersclaimedToken() +
+            paranetIncentivesPoolStorage.totalOperatorsclaimedToken() +
+            paranetIncentivesPoolStorage.totalVotersclaimedToken()) *
+            paranetIncentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage()) /
             ParanetLib.PERCENTAGE_SCALING_FACTOR;
 
         return
-            ParanetIncentivesPoolStorage.totalVotersclaimedToken() + tokenReward <= votersRewardLimit
+            paranetIncentivesPoolStorage.totalVotersclaimedToken() + tokenReward <= votersRewardLimit
                 ? tokenReward
-                : votersRewardLimit - ParanetIncentivesPoolStorage.totalVotersclaimedToken();
+                : votersRewardLimit - paranetIncentivesPoolStorage.totalVotersclaimedToken();
     }
 
     function claimIncentivizationProposalVoterReward() external onlyParanetIncentivizationProposalVoter {
-        if (ParanetIncentivesPoolStorage.cumulativeVotersWeight() != ParanetLib.MAX_CUMULATIVE_VOTERS_WEIGHT) {
+        if (paranetIncentivesPoolStorage.cumulativeVotersWeight() != ParanetLib.MAX_CUMULATIVE_VOTERS_WEIGHT) {
             revert ParanetLib.InvalidCumulativeVotersWeight(
-                ParanetIncentivesPoolStorage.paranetId(),
-                ParanetIncentivesPoolStorage.cumulativeVotersWeight(),
+                paranetIncentivesPoolStorage.paranetId(),
+                paranetIncentivesPoolStorage.cumulativeVotersWeight(),
                 ParanetLib.MAX_CUMULATIVE_VOTERS_WEIGHT
             );
         }
@@ -452,15 +452,15 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
         uint256 claimableTokenReward = getClaimableProposalVoterRewardAmount();
 
         if (claimableTokenReward == 0) {
-            revert ParanetLib.NoRewardAvailable(ParanetIncentivesPoolStorage.paranetId(), msg.sender);
+            revert ParanetLib.NoRewardAvailable(paranetIncentivesPoolStorage.paranetId(), msg.sender);
         }
 
-        ParanetIncentivesPoolStorage
-            .getVoterAtIndex(ParanetIncentivesPoolStorage.votersIndexes(msg.sender))
+        paranetIncentivesPoolStorage
+            .getVoterAtIndex(paranetIncentivesPoolStorage.votersIndexes(msg.sender))
             .claimedToken += claimableTokenReward;
-        ParanetIncentivesPoolStorage.addTotalVotersclaimedToken(claimableTokenReward);
+        paranetIncentivesPoolStorage.addTotalVotersclaimedToken(claimableTokenReward);
 
-        ParanetIncentivesPoolStorage.transferReward(msg.sender, claimableTokenReward);
+        paranetIncentivesPoolStorage.transferReward(msg.sender, claimableTokenReward);
     }
 
     function _getIncentiveEstimation(
@@ -469,7 +469,7 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
     ) internal view returns (uint256) {
         uint256 effectiveTokenEmissionMultiplier = getEffectiveTokenEmissionMultiplier(block.timestamp);
         uint96 cumulativeKnowledgeValuePart = (paranetsRegistry.getCumulativeKnowledgeValue(
-            ParanetIncentivesPoolStorage.paranetId()
+            paranetIncentivesPoolStorage.paranetId()
         ) * rewardPercentage) / ParanetLib.PERCENTAGE_SCALING_FACTOR;
         uint96 rewardedTracSpentPart = uint96(
             (totalclaimedToken * ParanetLib.EMISSION_MULTIPLIER_SCALING_FACTOR) / effectiveTokenEmissionMultiplier
@@ -485,7 +485,7 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
     }
 
     function getParanetIncentivesPoolStorage() external view returns (address) {
-        return address(ParanetIncentivesPoolStorage);
+        return address(paranetIncentivesPoolStorage);
     }
 
     function _checkHubOwner() internal view virtual {
@@ -493,7 +493,7 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
     }
 
     function _checkVotersRegistrar() internal view virtual {
-        require(msg.sender == ParanetIncentivesPoolStorage.votersRegistrar(), "Fn can only be used by registrar");
+        require(msg.sender == paranetIncentivesPoolStorage.votersRegistrar(), "Fn can only be used by registrar");
     }
 
     function _checkParanetOperator() internal view virtual {
