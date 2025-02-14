@@ -980,7 +980,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         bytes32 paranetId,
         uint256 offset,
         uint256 limit
-    ) external view returns (ParanetLib.UniversalCollectionLocator[] memory) {
+    ) external view returns (ParanetLib.UniversalAssetCollectionLocator[] memory) {
         ParanetsRegistry pr = paranetsRegistry;
         bytes32[] memory knowledgeCollections = pr.getKnowledgeCollectionsWithPagination(paranetId, offset, limit);
 

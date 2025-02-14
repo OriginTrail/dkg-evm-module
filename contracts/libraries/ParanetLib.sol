@@ -10,7 +10,7 @@ library ParanetLib {
     uint16 constant PERCENTAGE_SCALING_FACTOR = 10 ** 4;
     uint16 constant MAX_CUMULATIVE_VOTERS_WEIGHT = 10 ** 4;
 
-    struct UniversalCollectionLocator {
+    struct UniversalAssetCollectionLocator {
         address knowledgeCollectionStorageContract;
         uint256 knowledgeCollectionTokenId;
     }
@@ -217,7 +217,7 @@ library ParanetLib {
         uint256 knowledgeCollectionTokenId,
         uint256 knowledgeAssetTokenId
     );
-    error KnowledgeCollectionIsAPartOfOtherParanet(
+    error KnowledgeCollectionIsAPartOfAParanet(
         address paranetKnowledgeCollectionStorageAddress,
         uint256 paranetKnowledgeCollectionTokenId,
         bytes32 paranetId
