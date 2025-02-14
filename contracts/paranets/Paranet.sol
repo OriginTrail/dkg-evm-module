@@ -6,7 +6,7 @@ import {ParanetKnowledgeCollectionsRegistry} from "../storage/paranets/ParanetKn
 import {ParanetKnowledgeMinersRegistry} from "../storage/paranets/ParanetKnowledgeMinersRegistry.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {ParanetServicesRegistry} from "../storage/paranets/ParanetServicesRegistry.sol";
-import {ParanetStagingStorage} from "../storage/paranets/ParanetStagingStorage.sol";
+import {ParanetStagingRegistry} from "../storage/paranets/ParanetStagingRegistry.sol";
 import {ProfileStorage} from "../storage/ProfileStorage.sol";
 import {IdentityStorage} from "../storage/IdentityStorage.sol";
 import {KnowledgeCollectionStorage} from "../storage/KnowledgeCollectionStorage.sol";
@@ -151,7 +151,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     ParanetServicesRegistry public paranetServicesRegistry;
     ParanetKnowledgeMinersRegistry public paranetKnowledgeMinersRegistry;
     ParanetKnowledgeCollectionsRegistry public paranetKnowledgeCollectionsRegistry;
-    ParanetStagingStorage public paranetStagingStorage;
+    ParanetStagingRegistry public paranetStagingRegistry;
     ProfileStorage public profileStorage;
     IdentityStorage public identityStorage;
 
@@ -199,7 +199,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         paranetKnowledgeCollectionsRegistry = ParanetKnowledgeCollectionsRegistry(
             hub.getContractAddress("ParanetKnowledgeCollectionsRegistry")
         );
-        paranetStagingStorage = ParanetStagingStorage(hub.getContractAddress("ParanetStagingStorage"));
+        paranetStagingRegistry = ParanetStagingRegistry(hub.getContractAddress("ParanetStagingRegistry"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -1102,7 +1102,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
 
         if (pr.getKnowledgeCollectionsSubmissionPolicy(paranetId) == KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING) {
             require(
-                paranetStagingStorage.isKnowledgeCollectionApproved(
+                paranetStagingRegistry.isKnowledgeCollectionApproved(
                     paranetId,
                     keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
                 ),
@@ -1168,7 +1168,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         bytes32 knowledgeCollectionId = keccak256(
             abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId)
         );
-        ParanetStagingStorage pss = paranetStagingStorage;
+        ParanetStagingRegistry pss = paranetStagingRegistry;
         require(
             !pss.isKnowledgeCollectionStaged(paranetId, knowledgeCollectionId),
             "Knowledge collection is already staged"
@@ -1206,7 +1206,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             knowledgeCollectionsSubmissionPolicy == KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING,
             "Paranet does not allow adding curators"
         );
-        paranetStagingStorage.addCurator(paranetId, curator);
+        paranetStagingRegistry.addCurator(paranetId, curator);
     }
 
     function removeCurator(
@@ -1239,7 +1239,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             knowledgeCollectionsSubmissionPolicy == KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING,
             "Paranet does not allow adding curators"
         );
-        paranetStagingStorage.removeCurator(paranetId, curator);
+        paranetStagingRegistry.removeCurator(paranetId, curator);
     }
 
     function reviewKnowledgeCollection(
@@ -1256,7 +1256,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         bytes32 knowledgeCollectionId = keccak256(
             abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId)
         );
-        ParanetStagingStorage pss = paranetStagingStorage;
+        ParanetStagingRegistry pss = paranetStagingRegistry;
         require(
             pss.isKnowledgeCollectionStaged(paranetId, knowledgeCollectionId),
             "Knowledge collection is not staged"
@@ -1469,7 +1469,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 paranetKnowledgeAssetTokenId
     ) internal view {
         require(
-            paranetStagingStorage.isCurator(
+            paranetStagingRegistry.isCurator(
                 keccak256(
                     abi.encodePacked(
                         paranetKCStorageContract,

@@ -7,8 +7,8 @@ import {IVersioned} from "../../interfaces/IVersioned.sol";
 import {HubDependent} from "../../abstract/HubDependent.sol";
 import {ParanetLib} from "../../libraries/ParanetLib.sol";
 
-contract ParanetStagingStorage is INamed, IVersioned, HubDependent {
-    string private constant _NAME = "ParanetStagingStorage";
+contract ParanetStagingRegistry is INamed, IVersioned, HubDependent {
+    string private constant _NAME = "ParanetStagingRegistry";
     string private constant _VERSION = "1.0.0";
 
     // Events
@@ -70,13 +70,11 @@ contract ParanetStagingStorage is INamed, IVersioned, HubDependent {
         uint256 lastIndex = paranetCurators[paranetId].length - 1;
 
         if (index != lastIndex) {
-            // Swap the last curator with the one to be removed
             address lastCurator = paranetCurators[paranetId][lastIndex];
             paranetCurators[paranetId][index] = lastCurator;
             paranetCuratorIndexes[paranetId][lastCurator] = index;
         }
 
-        // Remove the last element
         paranetCurators[paranetId].pop();
         delete paranetCuratorIndexes[paranetId][curator];
         delete curators[paranetId][curator];
