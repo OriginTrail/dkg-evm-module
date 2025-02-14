@@ -80,7 +80,6 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
         );
 
         if (rewardTokenAddress != address(0)) {
-            require(checkERC20Compliance(rewardTokenAddress), "Invalid ERC20 contract");
             token = IERC20(rewardTokenAddress);
         }
 
@@ -463,23 +462,6 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
         voters[index].weight = newWeight;
 
         emit VoterWeightUpdated(voter, oldWeight, newWeight);
-    }
-
-    function checkERC20Compliance(address tokenAddress) internal view returns (bool) {
-        bytes4[4] memory selectors = [
-            IERC20.balanceOf.selector,
-            IERC20.totalSupply.selector,
-            IERC20.transfer.selector,
-            IERC20.allowance.selector
-        ];
-
-        for (uint i = 0; i < selectors.length; i++) {
-            (bool success, ) = tokenAddress.staticcall(abi.encodeWithSelector(selectors[i], address(this)));
-            if (!success) {
-                return false; // If any function is missing, reject the contract
-            }
-        }
-        return true; // All ERC-20 functions exist
     }
 
     modifier onlyVotersRegistrar() {

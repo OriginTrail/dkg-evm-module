@@ -15,13 +15,21 @@ import {IVersioned} from "../interfaces/IVersioned.sol";
 
 contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IInitializable {
     event ParanetIncentivesPoolDeployed(
-        bytes32 indexed paranetId,
+        address indexed paranetKCStorageContract,
+        uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
         address storageAddress,
         address poolAddress,
         address rewardTokenAddress
     );
 
-    event ParanetIncentivesPoolRedeployed(bytes32 indexed paranetId, address storageAddress, address newPoolAddress);
+    event ParanetIncentivesPoolRedeployed(
+        address indexed paranetKCStorageContract,
+        uint256 indexed paranetKCTokenId,
+        uint256 indexed paranetKATokenId,
+        address storageAddress,
+        address newPoolAddress
+    );
 
     string private constant _NAME = "ParanetIncentivesPoolFactory";
     string private constant _VERSION = "1.0.0";
@@ -93,7 +101,14 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         storage_.initialize();
         paranetsRegistry.addIncentivesPool(paranetId, incentivesPoolName, storageAddress, rewardTokenAddress);
 
-        emit ParanetIncentivesPoolDeployed(paranetId, storageAddress, poolAddress, rewardTokenAddress);
+        emit ParanetIncentivesPoolDeployed(
+            paranetKCStorageContract,
+            paranetKCTokenId,
+            paranetKATokenId,
+            storageAddress,
+            poolAddress,
+            rewardTokenAddress
+        );
     }
 
     function redeployIncentivesPool(
@@ -121,7 +136,13 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
             address(storage_)
         );
 
-        emit ParanetIncentivesPoolRedeployed(paranetId, storageAddress, newPoolAddress);
+        emit ParanetIncentivesPoolRedeployed(
+            paranetKCStorageContract,
+            paranetKCTokenId,
+            paranetKATokenId,
+            storageAddress,
+            newPoolAddress
+        );
     }
 
     function _computeParanetId(
