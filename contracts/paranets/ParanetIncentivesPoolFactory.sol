@@ -6,6 +6,7 @@ import {Hub} from "../storage/Hub.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
 import {ParanetNeuroIncentivesPool} from "./ParanetNeuroIncentivesPool.sol";
 import {ParanetNeuroIncentivesPoolStorage} from "./ParanetNeuroIncentivesPoolStorage.sol";
+import {ParanetIncentivesPoolFactoryHelper} from "./ParanetIncentivesPoolFactoryHelper.sol";
 import {KnowledgeCollectionStorage} from "../storage/KnowledgeCollectionStorage.sol";
 import {ContractStatus} from "../abstract/ContractStatus.sol";
 import {IInitializable} from "../interfaces/IInitializable.sol";
@@ -26,6 +27,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
     string private constant _VERSION = "1.0.0";
 
     ParanetsRegistry public paranetsRegistry;
+    ParanetIncentivesPoolFactoryHelper public paranetIncentivesPoolFactoryHelper;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -45,6 +47,9 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
 
     function initialize() public onlyHub {
         paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
+        paranetIncentivesPoolFactoryHelper = ParanetIncentivesPoolFactoryHelper(
+            hub.getContractAddress("ParanetIncentivesPoolFactoryHelper")
+        );
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -79,7 +84,11 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         );
         address storageAddress = address(storage_);
 
-        address poolAddress = _deployNeuroIncentivesPool(storageAddress, tracToNeuroEmissionMultiplier, storage_);
+        address poolAddress = paranetIncentivesPoolFactoryHelper.deployNeuroIncentivesPool(
+            storageAddress,
+            tracToNeuroEmissionMultiplier,
+            address(storage_)
+        );
 
         storage_.initialize();
         paranetsRegistry.addIncentivesPool(paranetId, incentivesPoolName, storageAddress, rewardTokenAddress);
@@ -99,34 +108,20 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         require(pr.paranetExists(paranetId));
         require(pr.hasIncentivesPoolByStorageAddress(paranetId, storageAddress));
 
-        ParanetNeuroIncentivesPoolStorage storage_ = ParanetNeuroIncentivesPoolStorage((storageAddress));
+        ParanetNeuroIncentivesPoolStorage storage_ = ParanetNeuroIncentivesPoolStorage(payable(storageAddress));
         require(storage_.paranetId() == paranetId);
 
         address oldPoolAddress = storage_.paranetNeuroIncentivesPoolAddress();
         uint256 tracToNeuroEmissionMultiplier = ParanetNeuroIncentivesPool(oldPoolAddress)
             .getEffectiveNeuroEmissionMultiplier(block.timestamp);
 
-        address newPoolAddress = _deployNeuroIncentivesPool(storageAddress, tracToNeuroEmissionMultiplier, storage_);
+        address newPoolAddress = paranetIncentivesPoolFactoryHelper.deployNeuroIncentivesPool(
+            storageAddress,
+            tracToNeuroEmissionMultiplier,
+            address(storage_)
+        );
 
         emit ParanetIncentivesPoolRedeployed(paranetId, storageAddress, newPoolAddress);
-    }
-
-    function _deployNeuroIncentivesPool(
-        address storageAddress,
-        uint256 tracToNeuroEmissionMultiplier,
-        ParanetNeuroIncentivesPoolStorage poolStorage
-    ) internal returns (address) {
-        address addr = address(
-            new ParanetNeuroIncentivesPool(
-                address(hub),
-                hub.getContractAddress("ParanetKnowledgeMinersRegistry"),
-                storageAddress,
-                tracToNeuroEmissionMultiplier
-            )
-        );
-        poolStorage.setParanetNeuroIncentivesPool(addr);
-
-        return addr;
     }
 
     function _computeParanetId(
