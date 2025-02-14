@@ -21,6 +21,12 @@ contract ParanetStagingStorage is INamed, IVersioned, HubDependent {
     event CuratorAdded(bytes32 indexed paranetId, address indexed curator);
     event CuratorRemoved(bytes32 indexed paranetId, address indexed curator);
 
+    struct StagedCollection {
+        bytes32 knowledgeCollectionId;
+        address submitter;
+        ParanetLib.RequestStatus status;
+    }
+
     // Paranet ID => Collection ID => Staging Status
     mapping(bytes32 => mapping(bytes32 => ParanetLib.RequestStatus)) public stagedCollections;
 
@@ -30,12 +36,10 @@ contract ParanetStagingStorage is INamed, IVersioned, HubDependent {
     // Paranet ID => Curator Address => Is Curator
     mapping(bytes32 => mapping(address => bool)) public curators;
 
-    // Add these structs and functions
-    struct StagedCollection {
-        bytes32 knowledgeCollectionId;
-        address submitter;
-        ParanetLib.RequestStatus status;
-    }
+    // Paranet ID => Curator => Index
+    mapping(bytes32 => mapping(address => uint256)) public paranetCuratorIndexes;
+    // Paranet ID => Curators
+    mapping(bytes32 => address[]) public paranetCurators;
 
     // Track collections for pagination
     mapping(bytes32 => bytes32[]) private pendingknowledgeCollectionIds;
@@ -52,14 +56,36 @@ contract ParanetStagingStorage is INamed, IVersioned, HubDependent {
         return _VERSION;
     }
 
-    function addCurator(bytes32 paranetId, address curator) external onlyContracts {
+    function addCurator(bytes32 paranetId, address curator) public {
+        paranetCuratorIndexes[paranetId][curator] = paranetCurators[paranetId].length;
+        paranetCurators[paranetId].push(curator);
+
         curators[paranetId][curator] = true;
+
         emit CuratorAdded(paranetId, curator);
     }
 
-    function removeCurator(bytes32 paranetId, address curator) external onlyContracts {
-        curators[paranetId][curator] = false;
+    function removeCurator(bytes32 paranetId, address curator) public {
+        uint256 index = paranetCuratorIndexes[paranetId][curator];
+        uint256 lastIndex = paranetCurators[paranetId].length - 1;
+
+        if (index != lastIndex) {
+            // Swap the last curator with the one to be removed
+            address lastCurator = paranetCurators[paranetId][lastIndex];
+            paranetCurators[paranetId][index] = lastCurator;
+            paranetCuratorIndexes[paranetId][lastCurator] = index;
+        }
+
+        // Remove the last element
+        paranetCurators[paranetId].pop();
+        delete paranetCuratorIndexes[paranetId][curator];
+        delete curators[paranetId][curator];
+
         emit CuratorRemoved(paranetId, curator);
+    }
+
+    function getAllParanetCurators(bytes32 paranetId) public view returns (address[] memory) {
+        return paranetCurators[paranetId];
     }
 
     function isCurator(bytes32 paranetId, address account) external view returns (bool) {
