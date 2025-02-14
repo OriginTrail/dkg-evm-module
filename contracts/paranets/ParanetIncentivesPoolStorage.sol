@@ -474,7 +474,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
         ];
 
         for (uint i = 0; i < selectors.length; i++) {
-            (bool success, ) = tokenAddress.staticcall(abi.encodeWithSelector(selectors[i], address(this)));
+            (bool success, ) = tokenAddress.staticcall(abi.encodeWithSelector(selectors[i], tokenAddress));
             if (!success) {
                 return false; // If any function is missing, reject the contract
             }
