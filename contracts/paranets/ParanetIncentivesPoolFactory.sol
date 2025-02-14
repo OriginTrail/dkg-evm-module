@@ -73,7 +73,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         bytes32 paranetId = _computeParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         ParanetsRegistry pr = paranetsRegistry;
         require(pr.paranetExists(paranetId));
-        require(pr.hasIncentivesPoolByName(paranetId, incentivesPoolName));
+        require(!pr.hasIncentivesPoolByName(paranetId, incentivesPoolName));
 
         ParanetIncentivesPoolStorage storage_ = new ParanetIncentivesPoolStorage(
             address(hub),

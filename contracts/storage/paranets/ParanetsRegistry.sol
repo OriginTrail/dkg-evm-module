@@ -285,17 +285,35 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
     }
 
     function hasIncentivesPoolByName(bytes32 paranetId, string calldata poolName) external view returns (bool) {
-        return
-            paranets[paranetId]
-                .incentivesPools[paranets[paranetId].incentivesPoolsByNameIndexes[poolName]]
-                .storageAddr != address(0);
+        ParanetLib.Paranet storage paranet = paranets[paranetId];
+
+        if (paranet.incentivesPools.length == 0) {
+            return false;
+        }
+
+        uint256 index = paranet.incentivesPoolsByNameIndexes[poolName];
+
+        if (index >= paranet.incentivesPools.length) {
+            return false;
+        }
+
+        return paranet.incentivesPools[index].storageAddr != address(0);
     }
 
     function hasIncentivesPoolByStorageAddress(bytes32 paranetId, address storageAddr) external view returns (bool) {
-        return
-            paranets[paranetId]
-                .incentivesPools[paranets[paranetId].incentivesPoolsByStorageAddressIndexes[storageAddr]]
-                .storageAddr != address(0);
+        ParanetLib.Paranet storage paranet = paranets[paranetId];
+
+        if (paranet.incentivesPools.length == 0) {
+            return false;
+        }
+
+        uint256 index = paranet.incentivesPoolsByStorageAddressIndexes[storageAddr];
+
+        if (index >= paranet.incentivesPools.length) {
+            return false;
+        }
+
+        return paranet.incentivesPools[index].storageAddr != address(0);
     }
 
     function getCumulativeKnowledgeValue(bytes32 paranetId) external view returns (uint96) {
