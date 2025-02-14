@@ -233,4 +233,10 @@ library ParanetLib {
         address knowledgeCollectionStorageContract,
         uint256 knowledgeCollectionTokenId
     );
+
+    error KnowledgeCollectionIsAPartOfOtherParanet(
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId,
+        bytes32 paranetId
+    );
 }
