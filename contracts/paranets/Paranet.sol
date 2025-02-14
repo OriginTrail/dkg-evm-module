@@ -1100,29 +1100,16 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             );
         }
 
-        if (pr.getKnowledgeCollectionsSubmissionPolicy(paranetId) == KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING) {
-            require(
-                paranetStagingRegistry.isKnowledgeCollectionApproved(
-                    paranetId,
-                    keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
-                ),
-                "Knowledge collection is not approved"
-            );
-        }
-
-        KnowledgeCollectionStorage kcs = KnowledgeCollectionStorage(knowledgeCollectionStorageContract);
-        uint96 remainingTokenAmount = kcs.getTokenAmount(knowledgeCollectionTokenId);
-        KnowledgeCollectionLib.MerkleRoot[] memory merkleRoots = kcs.getMerkleRoots(knowledgeCollectionTokenId);
+        require(
+            pr.getKnowledgeCollectionsSubmissionPolicy(paranetId) != KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING,
+            "Staging policy denied"
+        );
 
         // Update KnowledgeMiner metadata
         _updateSubmittedKnowledgeCollectionMetadata(
-            paranetKCStorageContract,
-            paranetKnowledgeCollectionTokenId,
-            paranetKnowledgeAssetTokenId,
+            paranetId,
             knowledgeCollectionStorageContract,
-            knowledgeCollectionTokenId,
-            remainingTokenAmount,
-            merkleRoots
+            knowledgeCollectionTokenId
         );
 
         emit KnowledgeCollectionSubmittedToParanet(
@@ -1142,6 +1129,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 knowledgeCollectionTokenId
     ) external onlyKnowledgeCollectionOwner(knowledgeCollectionStorageContract, knowledgeCollectionTokenId) {
         ParanetsRegistry pr = paranetsRegistry;
+
         bytes32 paranetId = keccak256(
             abi.encodePacked(paranetKCStorageContract, paranetKnowledgeCollectionTokenId, paranetKnowledgeAssetTokenId)
         );
@@ -1151,6 +1139,20 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
                 paranetKCStorageContract,
                 paranetKnowledgeCollectionTokenId,
                 paranetKnowledgeAssetTokenId
+            );
+        }
+        ParanetKnowledgeCollectionsRegistry pkcr = paranetKnowledgeCollectionsRegistry;
+        if (
+            pkcr.isParanetKnowledgeCollection(
+                keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
+            )
+        ) {
+            revert ParanetLib.KnowledgeCollectionIsAPartOfOtherParanet(
+                knowledgeCollectionStorageContract,
+                knowledgeCollectionTokenId,
+                pkcr.getParanetId(
+                    keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
+                )
             );
         }
 
@@ -1256,12 +1258,64 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         bytes32 knowledgeCollectionId = keccak256(
             abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId)
         );
+        ParanetsRegistry pr = paranetsRegistry;
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(
+                paranetKCStorageContract,
+                paranetKnowledgeCollectionTokenId,
+                paranetKnowledgeAssetTokenId
+            );
+        }
+
         ParanetStagingRegistry pss = paranetStagingRegistry;
         require(
             pss.isKnowledgeCollectionStaged(paranetId, knowledgeCollectionId),
             "Knowledge collection is not staged"
         );
         pss.reviewKnowledgeCollection(paranetId, knowledgeCollectionId, accepted);
+
+        if (accepted) {
+            ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+            uint8 minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
+            // Check if paranet is curated and if knowledge miner is whitelisted
+            if (
+                minersAccessPolicy == MINERS_ACCESS_POLICY_PERMISSIONED &&
+                !pr.isKnowledgeMinerRegistered(paranetId, msg.sender)
+            ) {
+                revert ParanetLib.ParanetCuratedMinerDoesntExist(paranetId, msg.sender);
+                // Should this be done in both cases why would OPEN have separeted logic ???
+            } else if (minersAccessPolicy == MINERS_ACCESS_POLICY_OPEN) {
+                // Check if Knowledge Miner has profile
+                // If not: Create a profile
+                if (!pkmr.knowledgeMinerExists(msg.sender)) {
+                    pkmr.registerKnowledgeMiner(msg.sender);
+                }
+
+                // Check if Knowledge Miner is registered on paranet
+                if (!pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
+                    pr.addKnowledgeMiner(paranetId, msg.sender);
+                }
+            }
+
+            KnowledgeCollectionStorage kcs = KnowledgeCollectionStorage(knowledgeCollectionStorageContract);
+            uint96 remainingTokenAmount = kcs.getTokenAmount(knowledgeCollectionTokenId);
+            KnowledgeCollectionLib.MerkleRoot[] memory merkleRoots = kcs.getMerkleRoots(knowledgeCollectionTokenId);
+
+            // Update KnowledgeMiner metadata
+            _updateSubmittedKnowledgeCollectionMetadata(
+                paranetId,
+                knowledgeCollectionStorageContract,
+                knowledgeCollectionTokenId
+            );
+
+            emit KnowledgeCollectionSubmittedToParanet(
+                paranetKCStorageContract,
+                paranetKnowledgeCollectionTokenId,
+                paranetKnowledgeAssetTokenId,
+                knowledgeCollectionStorageContract,
+                knowledgeCollectionTokenId
+            );
+        }
     }
 
     // function processUpdatedKnowledgeCollectionStatesMetadata(
@@ -1279,18 +1333,17 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     // }
 
     function _updateSubmittedKnowledgeCollectionMetadata(
-        address paranetKCStorageContract,
-        uint256 paranetKCTokenId,
-        uint256 paranetKATokenId,
+        bytes32 paranetId,
         address knowledgeCollectionStorageContract,
-        uint256 knowledgeCollectionTokenId,
-        uint96 tokenAmount,
-        KnowledgeCollectionLib.MerkleRoot[] memory merkleRoots
+        uint256 knowledgeCollectionTokenId
     ) internal {
+        KnowledgeCollectionStorage kcs = KnowledgeCollectionStorage(knowledgeCollectionStorageContract);
+
         ParanetsRegistry pr = paranetsRegistry;
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
 
-        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId));
+        uint96 remainingTokenAmount = kcs.getTokenAmount(knowledgeCollectionTokenId);
+        KnowledgeCollectionLib.MerkleRoot[] memory merkleRoots = kcs.getMerkleRoots(knowledgeCollectionTokenId);
         bytes32 knowledgeCollectionId = keccak256(
             abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId)
         );
@@ -1305,7 +1358,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Add Knowledge Collection Metadata to the ParanetsRegistry
         pr.addKnowledgeCollecton(paranetId, knowledgeCollectionId);
-        pr.addCumulativeKnowledgeValue(paranetId, tokenAmount);
+        pr.addCumulativeKnowledgeValue(paranetId, remainingTokenAmount);
 
         // Add Knowledge Collection Metadata to the KnowledgeMinersRegistry
         for (uint256 i = 0; i < merkleRoots.length - 1; i++) {
@@ -1324,13 +1377,13 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             knowledgeCollectionStorageContract,
             knowledgeCollectionTokenId,
             merkleRoots[merkleRoots.length - 1].merkleRoot,
-            tokenAmount
+            remainingTokenAmount
         );
         pkmr.addSubmittedKnowledgeCollection(msg.sender, paranetId, knowledgeCollectionId);
-        pkmr.addCumulativeTracSpent(msg.sender, paranetId, tokenAmount);
-        pkmr.addUnrewardedTracSpent(msg.sender, paranetId, tokenAmount);
+        pkmr.addCumulativeTracSpent(msg.sender, paranetId, remainingTokenAmount);
+        pkmr.addUnrewardedTracSpent(msg.sender, paranetId, remainingTokenAmount);
         pkmr.incrementTotalSubmittedKnowledgeCollectionsCount(msg.sender);
-        pkmr.addTotalTracSpent(msg.sender, tokenAmount);
+        pkmr.addTotalTracSpent(msg.sender, remainingTokenAmount);
     }
 
     // function _processUpdatedKnowledgeCollectionStatesMetadata(
