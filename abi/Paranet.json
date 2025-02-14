@@ -13,12 +13,12 @@
   {
     "inputs": [
       {
-        "internalType": "enum ParanetLib.MinersAccessPolicy[]",
+        "internalType": "uint8[]",
         "name": "expectedAccessPolicies",
         "type": "uint8[]"
       },
       {
-        "internalType": "enum ParanetLib.MinersAccessPolicy",
+        "internalType": "uint8",
         "name": "actualAccessPolicy",
         "type": "uint8"
       }
@@ -29,12 +29,12 @@
   {
     "inputs": [
       {
-        "internalType": "enum ParanetLib.NodesAccessPolicy[]",
+        "internalType": "uint8[]",
         "name": "expectedAccessPolicies",
         "type": "uint8[]"
       },
       {
-        "internalType": "enum ParanetLib.NodesAccessPolicy",
+        "internalType": "uint8",
         "name": "actualAccessPolicy",
         "type": "uint8"
       }
@@ -46,12 +46,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "paranetKnowledgeCollectionStorageAddress",
+        "name": "knowledgeCollectionStorageContract",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "paranetKnowledgeCollectionTokenId",
+        "name": "knowledgeCollectionTokenId",
         "type": "uint256"
       },
       {
@@ -61,6 +61,22 @@
       }
     ],
     "name": "KnowledgeCollectionIsAPartOfOtherParanet",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "knowledgeCollectionStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "knowledgeCollectionTokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "KnowledgeCollectionNotInFirstEpoch",
     "type": "error"
   },
   {
@@ -700,12 +716,17 @@
         "components": [
           {
             "internalType": "string",
-            "name": "poolType",
+            "name": "name",
             "type": "string"
           },
           {
             "internalType": "address",
-            "name": "addr",
+            "name": "storageAddr",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "rewardTokenAddress",
             "type": "address"
           }
         ],
@@ -790,20 +811,20 @@
       },
       {
         "indexed": false,
-        "internalType": "enum ParanetLib.NodesAccessPolicy",
+        "internalType": "uint8",
         "name": "nodesAccessPolicy",
         "type": "uint8"
       },
       {
         "indexed": false,
-        "internalType": "enum ParanetLib.MinersAccessPolicy",
+        "internalType": "uint8",
         "name": "minersAccessPolicy",
         "type": "uint8"
       },
       {
         "indexed": false,
-        "internalType": "enum ParanetLib.KnowledgeCollectionsAccessPolicy",
-        "name": "knowledgeCollectionsAccessPolicy",
+        "internalType": "uint8",
+        "name": "knowledgeCollectionsSubmissionPolicy",
         "type": "uint8"
       }
     ],
@@ -938,6 +959,34 @@
     ],
     "name": "ParanetServiceRegistered",
     "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetKCStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKnowledgeCollectionTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKnowledgeAssetTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "curator",
+        "type": "address"
+      }
+    ],
+    "name": "addCurator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [
@@ -1097,6 +1146,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "chronos",
+    "outputs": [
+      {
+        "internalType": "contract Chronos",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -1129,7 +1191,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ParanetLib.UniversalCollectionLocator[]",
+        "internalType": "struct ParanetLib.UniversalAssetCollectionLocator[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -1224,6 +1286,19 @@
   },
   {
     "inputs": [],
+    "name": "paranetStagingRegistry",
+    "outputs": [
+      {
+        "internalType": "contract ParanetStagingRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "paranetsRegistry",
     "outputs": [
       {
@@ -1276,13 +1351,18 @@
         "type": "string"
       },
       {
-        "internalType": "enum ParanetLib.NodesAccessPolicy",
+        "internalType": "uint8",
         "name": "nodesAccessPolicy",
         "type": "uint8"
       },
       {
-        "internalType": "enum ParanetLib.MinersAccessPolicy",
+        "internalType": "uint8",
         "name": "minersAccessPolicy",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "knowledgeCollectionsSubmissionPolicy",
         "type": "uint8"
       }
     ],
@@ -1406,6 +1486,34 @@
       },
       {
         "internalType": "uint256",
+        "name": "paranetKnowledgeCollectionTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKnowledgeAssetTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "curator",
+        "type": "address"
+      }
+    ],
+    "name": "removeCurator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetKCStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
         "name": "paranetKCTokenId",
         "type": "uint256"
       },
@@ -1502,12 +1610,83 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "paranetKCStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKnowledgeCollectionTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKnowledgeAssetTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "knowledgeCollectionStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "knowledgeCollectionTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "accepted",
+        "type": "bool"
+      }
+    ],
+    "name": "reviewKnowledgeCollection",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bool",
         "name": "_status",
         "type": "bool"
       }
     ],
     "name": "setStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "paranetKCStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKnowledgeCollectionTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetKnowledgeAssetTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "knowledgeCollectionStorageContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "knowledgeCollectionTokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "stageKnowledgeCollection",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

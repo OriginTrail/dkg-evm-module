@@ -39,29 +39,6 @@
         "type": "bytes32"
       },
       {
-        "internalType": "uint256",
-        "name": "addedCumulativeAwardedNeuro",
-        "type": "uint256"
-      }
-    ],
-    "name": "addCumulativeAwardedNeuro",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "miner",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      },
-      {
         "internalType": "uint96",
         "name": "addedTracSpent",
         "type": "uint96"
@@ -208,6 +185,29 @@
         "internalType": "address",
         "name": "miner",
         "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "addedcumulativeAwardedToken",
+        "type": "uint256"
+      }
+    ],
+    "name": "addcumulativeAwardedToken",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
       }
     ],
     "name": "decrementTotalSubmittedKnowledgeCollectionsCount",
@@ -226,30 +226,6 @@
     "name": "deleteKnowledgeMiner",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "miner",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getCumulativeAwardedNeuro",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -535,6 +511,30 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getcumulativeAwardedToken",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "hub",
     "outputs": [
@@ -644,29 +644,6 @@
       }
     ],
     "name": "removeSubmittedKnowledgeCollection",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "miner",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "cumulativeAwardedNeuro",
-        "type": "uint256"
-      }
-    ],
-    "name": "setCumulativeAwardedNeuro",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -795,11 +772,11 @@
       },
       {
         "internalType": "uint256",
-        "name": "subtractedCumulativeAwardedNeuro",
+        "name": "cumulativeAwardedToken",
         "type": "uint256"
       }
     ],
-    "name": "subCumulativeAwardedNeuro",
+    "name": "setcumulativeAwardedToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -892,6 +869,29 @@
       }
     ],
     "name": "subUpdatingKnowledgeCollectionUpdateTokenAmount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "miner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "subtractedcumulativeAwardedToken",
+        "type": "uint256"
+      }
+    ],
+    "name": "subcumulativeAwardedToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
