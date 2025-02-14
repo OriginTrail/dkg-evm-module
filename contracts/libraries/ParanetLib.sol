@@ -21,20 +21,6 @@ library ParanetLib {
         uint256 knowledgeAssetTokenId;
     }
 
-    enum NodesAccessPolicy {
-        OPEN,
-        CURATED
-    }
-
-    enum MinersAccessPolicy {
-        OPEN,
-        CURATED
-    }
-
-    enum KnowledgeCollectionsAccessPolicy {
-        OPEN
-    }
-
     struct Node {
         uint72 identityId;
         bytes nodeId;
@@ -73,9 +59,9 @@ library ParanetLib {
         uint256 paranetKATokenId;
         string name;
         string description;
-        NodesAccessPolicy nodesAccessPolicy;
-        MinersAccessPolicy minersAccessPolicy;
-        KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy;
+        uint8 nodesAccessPolicy;
+        uint8 minersAccessPolicy;
+        uint8 knowledgeCollectionsSubmissionPolicy;
         uint96 cumulativeKnowledgeValue;
         IncentivesPool[] incentivesPools;
         // Incentives Pool Name => Index in the array
@@ -106,9 +92,9 @@ library ParanetLib {
         uint256 paranetKATokenId;
         string name;
         string description;
-        NodesAccessPolicy nodesAccessPolicy;
-        MinersAccessPolicy minersAccessPolicy;
-        KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy;
+        uint8 nodesAccessPolicy;
+        uint8 minersAccessPolicy;
+        uint8 knowledgeCollectionsSubmissionPolicy;
         uint96 cumulativeKnowledgeValue;
     }
 
@@ -191,10 +177,7 @@ library ParanetLib {
         uint256 knowledgeCollectionTokenId,
         uint256 knowledgeAssetTokenId
     );
-    error InvalidParanetNodesAccessPolicy(
-        ParanetLib.NodesAccessPolicy[] expectedAccessPolicies,
-        ParanetLib.NodesAccessPolicy actualAccessPolicy
-    );
+    error InvalidParanetNodesAccessPolicy(uint8[] expectedAccessPolicies, uint8 actualAccessPolicy);
     error ParanetCuratedNodeHasAlreadyBeenAdded(bytes32 paranetId, uint72 identityId);
     error ParanetCuratedNodeDoesntExist(bytes32 paranetId, uint72 identityId);
     error ParanetCuratedNodeJoinRequestInvalidStatus(
@@ -203,10 +186,7 @@ library ParanetLib {
         ParanetLib.RequestStatus status
     );
     error ParanetCuratedNodeJoinRequestDoesntExist(bytes32 paranetId, uint72 identityId);
-    error InvalidParanetMinersAccessPolicy(
-        ParanetLib.MinersAccessPolicy[] expectedAccessPolicies,
-        ParanetLib.MinersAccessPolicy actualAccessPolicy
-    );
+    error InvalidParanetMinersAccessPolicy(uint8[] expectedAccessPolicies, uint8 actualAccessPolicy);
     error ParanetCuratedMinerHasAlreadyBeenAdded(bytes32 paranetId, address miner);
     error ParanetCuratedMinerDoesntExist(bytes32 paranetId, address miner);
     error ParanetCuratedMinerAccessRequestInvalidStatus(
