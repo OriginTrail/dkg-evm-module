@@ -6,13 +6,12 @@ import {HubDependent} from "../../abstract/HubDependent.sol";
 import {INamed} from "../../interfaces/INamed.sol";
 import {IVersioned} from "../../interfaces/IVersioned.sol";
 import {ParanetLib} from "../../libraries/ParanetLib.sol";
-import {UnorderedNamedContractDynamicSet} from "../../libraries/UnorderedNamedContractDynamicSet.sol";
 
 contract ParanetsRegistry is INamed, IVersioned, HubDependent {
-    using UnorderedNamedContractDynamicSet for UnorderedNamedContractDynamicSet.Set;
-
     string private constant _NAME = "ParanetsRegistry";
     string private constant _VERSION = "1.0.1";
+
+    uint256 private constant _MAX_INCENTIVES_POOLS = 50;
 
     bytes32[] private paranetIds;
 
@@ -37,9 +36,9 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         uint256 knowledgeAssetTokenId,
         string calldata paranetName,
         string calldata paranetDescription,
-        ParanetLib.NodesAccessPolicy nodesAccessPolicy,
-        ParanetLib.MinersAccessPolicy minersAccessPolicy,
-        ParanetLib.KnowledgeCollectionsAccessPolicy knowledgeColletionsAccessPolicy
+        uint8 nodesAccessPolicy,
+        uint8 minersAccessPolicy,
+        uint8 knowledgeCollectionsSubmissionPolicy
     ) external onlyContracts returns (bytes32) {
         bytes32 paranetId = keccak256(
             abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId, knowledgeAssetTokenId)
@@ -54,7 +53,7 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         paranet.description = paranetDescription;
         paranet.nodesAccessPolicy = nodesAccessPolicy;
         paranet.minersAccessPolicy = minersAccessPolicy;
-        paranet.knowledgeCollectionsAccessPolicy = knowledgeColletionsAccessPolicy;
+        paranet.knowledgeCollectionsSubmissionPolicy = knowledgeCollectionsSubmissionPolicy;
 
         paranetIds.push(paranetId);
         paranetIdsMapping[paranetId] = paranetIds.length - 1;
@@ -99,7 +98,7 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
                 description: paranet.description,
                 nodesAccessPolicy: paranet.nodesAccessPolicy,
                 minersAccessPolicy: paranet.minersAccessPolicy,
-                knowledgeCollectionsAccessPolicy: paranet.knowledgeCollectionsAccessPolicy,
+                knowledgeCollectionsSubmissionPolicy: paranet.knowledgeCollectionsSubmissionPolicy,
                 cumulativeKnowledgeValue: paranet.cumulativeKnowledgeValue
             });
     }
@@ -128,39 +127,31 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         paranets[paranetId].description = description;
     }
 
-    function getNodesAccessPolicy(bytes32 paranetId) external view returns (ParanetLib.NodesAccessPolicy) {
+    function getNodesAccessPolicy(bytes32 paranetId) external view returns (uint8) {
         return paranets[paranetId].nodesAccessPolicy;
     }
 
-    function setNodesAccessPolicy(
-        bytes32 paranetId,
-        ParanetLib.NodesAccessPolicy nodesAccessPolicy
-    ) external onlyContracts {
+    function setNodesAccessPolicy(bytes32 paranetId, uint8 nodesAccessPolicy) external onlyContracts {
         paranets[paranetId].nodesAccessPolicy = nodesAccessPolicy;
     }
 
-    function getMinersAccessPolicy(bytes32 paranetId) external view returns (ParanetLib.MinersAccessPolicy) {
+    function getMinersAccessPolicy(bytes32 paranetId) external view returns (uint8) {
         return paranets[paranetId].minersAccessPolicy;
     }
 
-    function setMinersAccessPolicy(
-        bytes32 paranetId,
-        ParanetLib.MinersAccessPolicy minersAccessPolicy
-    ) external onlyContracts {
+    function setMinersAccessPolicy(bytes32 paranetId, uint8 minersAccessPolicy) external onlyContracts {
         paranets[paranetId].minersAccessPolicy = minersAccessPolicy;
     }
 
-    function getKnowledgeCollectionsAccessPolicy(
-        bytes32 paranetId
-    ) external view returns (ParanetLib.KnowledgeCollectionsAccessPolicy) {
-        return paranets[paranetId].knowledgeCollectionsAccessPolicy;
+    function getKnowledgeCollectionsSubmissionPolicy(bytes32 paranetId) external view returns (uint8) {
+        return paranets[paranetId].knowledgeCollectionsSubmissionPolicy;
     }
 
-    function setKnowledgeCollectionsAccessPolicy(
+    function setKnowledgeCollectionsSubmissionPolicy(
         bytes32 paranetId,
-        ParanetLib.KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy
+        uint8 knowledgeCollectionsSubmissionPolicy
     ) external onlyContracts {
-        paranets[paranetId].knowledgeCollectionsAccessPolicy = knowledgeCollectionsAccessPolicy;
+        paranets[paranetId].knowledgeCollectionsSubmissionPolicy = knowledgeCollectionsSubmissionPolicy;
     }
 
     function addNodeJoinRequest(
@@ -251,52 +242,60 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
             identityId);
     }
 
-    function getIncentivesPoolAddress(
+    function addIncentivesPool(
         bytes32 paranetId,
-        string calldata incentivesPoolType
-    ) external view returns (address) {
-        return paranets[paranetId].incentivesPools.get(incentivesPoolType).addr;
-    }
-
-    function setIncentivesPoolAddress(
-        bytes32 paranetId,
-        string calldata incentivesPoolType,
-        address incentivesPoolAddress
+        string calldata incentivesPoolName,
+        address storageAddress,
+        address rewardTokenAddress
     ) external onlyContracts {
-        paranets[paranetId].incentivesPools.append(incentivesPoolType, incentivesPoolAddress);
+        require(paranets[paranetId].incentivesPools.length < _MAX_INCENTIVES_POOLS, "Max incentives pools reached");
+        ParanetLib.IncentivesPool memory incentivesPool = ParanetLib.IncentivesPool({
+            name: incentivesPoolName,
+            storageAddr: storageAddress,
+            rewardTokenAddress: rewardTokenAddress
+        });
+        paranets[paranetId].incentivesPoolsByNameIndexes[incentivesPoolName] = paranets[paranetId]
+            .incentivesPools
+            .length;
+        paranets[paranetId].incentivesPoolsByStorageAddressIndexes[storageAddress] = paranets[paranetId]
+            .incentivesPools
+            .length;
+        paranets[paranetId].incentivesPools.push(incentivesPool);
     }
 
-    function updateIncentivesPoolAddress(
+    function getIncentivesPoolByPoolName(
         bytes32 paranetId,
-        string calldata incentivesPoolType,
-        address incentivesPoolAddress
-    ) external onlyContracts {
-        paranets[paranetId].incentivesPools.update(incentivesPoolType, incentivesPoolAddress);
+        string calldata poolName
+    ) external view returns (ParanetLib.IncentivesPool memory) {
+        return paranets[paranetId].incentivesPools[paranets[paranetId].incentivesPoolsByNameIndexes[poolName]];
     }
 
-    function removeIncentivesPool(bytes32 paranetId, string calldata incentivesPoolType) external onlyContracts {
-        paranets[paranetId].incentivesPools.remove(incentivesPoolType);
-    }
-
-    function removeIncentivesPool(bytes32 paranetId, address incentivesPoolAddress) external onlyContracts {
-        paranets[paranetId].incentivesPools.remove(incentivesPoolAddress);
-    }
-
-    function getAllIncentivesPools(
-        bytes32 paranetId
-    ) external view returns (UnorderedNamedContractDynamicSet.Contract[] memory) {
-        return paranets[paranetId].incentivesPools.getAll();
-    }
-
-    function hasIncentivesPoolByType(
+    function getIncentivesPoolByStorageAddress(
         bytes32 paranetId,
-        string calldata incentivesPoolType
-    ) external view returns (bool) {
-        return paranets[paranetId].incentivesPools.exists(incentivesPoolType);
+        address storageAddr
+    ) external view returns (ParanetLib.IncentivesPool memory) {
+        return
+            paranets[paranetId].incentivesPools[
+                paranets[paranetId].incentivesPoolsByStorageAddressIndexes[storageAddr]
+            ];
     }
 
-    function hasIncentivesPoolByAddress(bytes32 paranetId, address incentivesPoolAddress) external view returns (bool) {
-        return paranets[paranetId].incentivesPools.exists(incentivesPoolAddress);
+    function getAllIncentivesPools(bytes32 paranetId) external view returns (ParanetLib.IncentivesPool[] memory) {
+        return paranets[paranetId].incentivesPools;
+    }
+
+    function hasIncentivesPoolByName(bytes32 paranetId, string calldata poolName) external view returns (bool) {
+        return
+            paranets[paranetId]
+                .incentivesPools[paranets[paranetId].incentivesPoolsByNameIndexes[poolName]]
+                .storageAddr != address(0);
+    }
+
+    function hasIncentivesPoolByStorageAddress(bytes32 paranetId, address storageAddr) external view returns (bool) {
+        return
+            paranets[paranetId]
+                .incentivesPools[paranets[paranetId].incentivesPoolsByStorageAddressIndexes[storageAddr]]
+                .storageAddr != address(0);
     }
 
     function getCumulativeKnowledgeValue(bytes32 paranetId) external view returns (uint96) {

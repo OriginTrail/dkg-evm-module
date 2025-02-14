@@ -21,20 +21,6 @@ library ParanetLib {
         uint256 knowledgeAssetTokenId;
     }
 
-    enum NodesAccessPolicy {
-        OPEN,
-        CURATED
-    }
-
-    enum MinersAccessPolicy {
-        OPEN,
-        CURATED
-    }
-
-    enum KnowledgeCollectionsAccessPolicy {
-        OPEN
-    }
-
     struct Node {
         uint72 identityId;
         bytes nodeId;
@@ -61,17 +47,27 @@ library ParanetLib {
         RequestStatus status;
     }
 
+    struct IncentivesPool {
+        string name;
+        address storageAddr;
+        address rewardTokenAddress;
+    }
+
     struct Paranet {
         address paranetKCStorageContract;
         uint256 paranetKCTokenId;
         uint256 paranetKATokenId;
         string name;
         string description;
-        NodesAccessPolicy nodesAccessPolicy;
-        MinersAccessPolicy minersAccessPolicy;
-        KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy;
+        uint8 nodesAccessPolicy;
+        uint8 minersAccessPolicy;
+        uint8 knowledgeCollectionsSubmissionPolicy;
         uint96 cumulativeKnowledgeValue;
-        UnorderedNamedContractDynamicSet.Set incentivesPools;
+        IncentivesPool[] incentivesPools;
+        // Incentives Pool Name => Index in the array
+        mapping(string => uint256) incentivesPoolsByNameIndexes;
+        // Incentives Pool Storage Address => Index in the array
+        mapping(address => uint256) incentivesPoolsByStorageAddressIndexes;
         Node[] curatedNodes;
         // Identity ID => Index in the array
         mapping(uint72 => uint256) curatedNodesIndexes;
@@ -96,15 +92,10 @@ library ParanetLib {
         uint256 paranetKATokenId;
         string name;
         string description;
-        NodesAccessPolicy nodesAccessPolicy;
-        MinersAccessPolicy minersAccessPolicy;
-        KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy;
+        uint8 nodesAccessPolicy;
+        uint8 minersAccessPolicy;
+        uint8 knowledgeCollectionsSubmissionPolicy;
         uint96 cumulativeKnowledgeValue;
-    }
-
-    struct IncentivesPool {
-        string poolType;
-        address addr;
     }
 
     struct ParanetService {
@@ -186,10 +177,7 @@ library ParanetLib {
         uint256 knowledgeCollectionTokenId,
         uint256 knowledgeAssetTokenId
     );
-    error InvalidParanetNodesAccessPolicy(
-        ParanetLib.NodesAccessPolicy[] expectedAccessPolicies,
-        ParanetLib.NodesAccessPolicy actualAccessPolicy
-    );
+    error InvalidParanetNodesAccessPolicy(uint8[] expectedAccessPolicies, uint8 actualAccessPolicy);
     error ParanetCuratedNodeHasAlreadyBeenAdded(bytes32 paranetId, uint72 identityId);
     error ParanetCuratedNodeDoesntExist(bytes32 paranetId, uint72 identityId);
     error ParanetCuratedNodeJoinRequestInvalidStatus(
@@ -198,10 +186,7 @@ library ParanetLib {
         ParanetLib.RequestStatus status
     );
     error ParanetCuratedNodeJoinRequestDoesntExist(bytes32 paranetId, uint72 identityId);
-    error InvalidParanetMinersAccessPolicy(
-        ParanetLib.MinersAccessPolicy[] expectedAccessPolicies,
-        ParanetLib.MinersAccessPolicy actualAccessPolicy
-    );
+    error InvalidParanetMinersAccessPolicy(uint8[] expectedAccessPolicies, uint8 actualAccessPolicy);
     error ParanetCuratedMinerHasAlreadyBeenAdded(bytes32 paranetId, address miner);
     error ParanetCuratedMinerDoesntExist(bytes32 paranetId, address miner);
     error ParanetCuratedMinerAccessRequestInvalidStatus(
@@ -243,5 +228,9 @@ library ParanetLib {
         bytes32 paranetId,
         uint96 currentCumulativeWeight,
         uint96 targetCumulativeWeight
+    );
+    error KnowledgeCollectionNotInFirstEpoch(
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId
     );
 }
