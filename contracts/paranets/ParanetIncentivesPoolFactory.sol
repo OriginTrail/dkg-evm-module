@@ -4,8 +4,8 @@ pragma solidity ^0.8.20;
 
 import {Hub} from "../storage/Hub.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
-import {ParanetNeuroIncentivesPool} from "./ParanetNeuroIncentivesPool.sol";
-import {ParanetNeuroIncentivesPoolStorage} from "./ParanetNeuroIncentivesPoolStorage.sol";
+import {ParanetIncentivesPool} from "./ParanetIncentivesPool.sol";
+import {ParanetIncentivesPoolStorage} from "./ParanetIncentivesPoolStorage.sol";
 import {ParanetIncentivesPoolFactoryHelper} from "./ParanetIncentivesPoolFactoryHelper.sol";
 import {KnowledgeCollectionStorage} from "../storage/KnowledgeCollectionStorage.sol";
 import {ContractStatus} from "../abstract/ContractStatus.sol";
@@ -60,11 +60,11 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         return _VERSION;
     }
 
-    function deployNeuroIncentivesPool(
+    function deployIncentivesPool(
         address paranetKCStorageContract,
         uint256 paranetKCTokenId,
         uint256 paranetKATokenId,
-        uint256 tracToNeuroEmissionMultiplier,
+        uint256 tracToTokenEmissionMultiplier,
         uint16 paranetOperatorRewardPercentage,
         uint16 paranetIncentivizationProposalVotersRewardPercentage,
         string calldata incentivesPoolName,
@@ -75,7 +75,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         require(pr.paranetExists(paranetId));
         require(pr.hasIncentivesPoolByName(paranetId, incentivesPoolName));
 
-        ParanetNeuroIncentivesPoolStorage storage_ = new ParanetNeuroIncentivesPoolStorage(
+        ParanetIncentivesPoolStorage storage_ = new ParanetIncentivesPoolStorage(
             address(hub),
             rewardTokenAddress,
             paranetId,
@@ -84,9 +84,9 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         );
         address storageAddress = address(storage_);
 
-        address poolAddress = paranetIncentivesPoolFactoryHelper.deployNeuroIncentivesPool(
+        address poolAddress = paranetIncentivesPoolFactoryHelper.deployIncentivesPool(
             storageAddress,
-            tracToNeuroEmissionMultiplier,
+            tracToTokenEmissionMultiplier,
             address(storage_)
         );
 
@@ -96,7 +96,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         emit ParanetIncentivesPoolDeployed(paranetId, storageAddress, poolAddress, rewardTokenAddress);
     }
 
-    function redeployNeuroIncentivesPool(
+    function redeployIncentivesPool(
         address paranetKCStorageContract,
         uint256 paranetKCTokenId,
         uint256 paranetKATokenId,
@@ -106,18 +106,18 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
 
         ParanetsRegistry pr = paranetsRegistry;
         require(pr.paranetExists(paranetId));
-        require(pr.hasIncentivesPoolByStorageAddress(paranetId, storageAddress));
+        require(!pr.hasIncentivesPoolByStorageAddress(paranetId, storageAddress));
 
-        ParanetNeuroIncentivesPoolStorage storage_ = ParanetNeuroIncentivesPoolStorage(payable(storageAddress));
+        ParanetIncentivesPoolStorage storage_ = ParanetIncentivesPoolStorage(payable(storageAddress));
         require(storage_.paranetId() == paranetId);
 
-        address oldPoolAddress = storage_.paranetNeuroIncentivesPoolAddress();
-        uint256 tracToNeuroEmissionMultiplier = ParanetNeuroIncentivesPool(oldPoolAddress)
-            .getEffectiveNeuroEmissionMultiplier(block.timestamp);
+        address oldPoolAddress = storage_.ParanetIncentivesPoolAddress();
+        uint256 tracToTokenEmissionMultiplier = ParanetIncentivesPool(oldPoolAddress)
+            .getEffectiveTokenEmissionMultiplier(block.timestamp);
 
-        address newPoolAddress = paranetIncentivesPoolFactoryHelper.deployNeuroIncentivesPool(
+        address newPoolAddress = paranetIncentivesPoolFactoryHelper.deployIncentivesPool(
             storageAddress,
-            tracToNeuroEmissionMultiplier,
+            tracToTokenEmissionMultiplier,
             address(storage_)
         );
 
