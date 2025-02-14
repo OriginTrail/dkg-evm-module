@@ -3,8 +3,8 @@
 pragma solidity ^0.8.20;
 
 import {Hub} from "../storage/Hub.sol";
-import {ParanetNeuroIncentivesPool} from "./ParanetNeuroIncentivesPool.sol";
-import {ParanetNeuroIncentivesPoolStorage} from "./ParanetNeuroIncentivesPoolStorage.sol";
+import {ParanetIncentivesPool} from "./ParanetIncentivesPool.sol";
+import {ParanetIncentivesPoolStorage} from "./ParanetIncentivesPoolStorage.sol";
 import {KnowledgeCollectionStorage} from "../storage/KnowledgeCollectionStorage.sol";
 import {ContractStatus} from "../abstract/ContractStatus.sol";
 import {IInitializable} from "../interfaces/IInitializable.sol";
@@ -26,20 +26,20 @@ contract ParanetIncentivesPoolFactoryHelper is INamed, IVersioned, ContractStatu
         return _VERSION;
     }
 
-    function deployNeuroIncentivesPool(
+    function deployIncentivesPool(
         address storageAddress,
-        uint256 tracToNeuroEmissionMultiplier,
+        uint256 tracToTokenEmissionMultiplier,
         address poolStorageAddress
     ) external onlyContracts returns (address) {
         address addr = address(
-            new ParanetNeuroIncentivesPool(
+            new ParanetIncentivesPool(
                 address(hub),
                 hub.getContractAddress("ParanetKnowledgeMinersRegistry"),
                 storageAddress,
-                tracToNeuroEmissionMultiplier
+                tracToTokenEmissionMultiplier
             )
         );
-        ParanetNeuroIncentivesPoolStorage(payable(poolStorageAddress)).setParanetNeuroIncentivesPool(addr);
+        ParanetIncentivesPoolStorage(payable(poolStorageAddress)).setParanetIncentivesPool(addr);
 
         return addr;
     }
