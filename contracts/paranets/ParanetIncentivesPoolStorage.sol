@@ -38,7 +38,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
 
     IERC20 public token;
     ParanetsRegistry public paranetsRegistry;
-    address public ParanetIncentivesPoolAddress;
+    address public paranetIncentivesPoolAddress;
     bytes32 public paranetId;
 
     // Percentage of how much tokens from total TOKEN emission goes to the Paranet Operator
@@ -147,7 +147,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
     }
 
     function addMinerClaimedRewardProfile(address addr, uint256 claimableTokenReward) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         claimedMinerRewardsIndexes[addr] = claimedMinerRewards.length;
         claimedMinerRewards.push(
             ParanetLib.ParanetIncentivesPoolClaimedRewardsProfile({addr: addr, claimedToken: claimableTokenReward})
@@ -156,14 +156,14 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
     }
 
     function addMinerClaimedReward(address addr, uint256 claimableTokenReward) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         uint256 newTotal = claimedMinerRewards[claimedMinerRewardsIndexes[addr]].claimedToken + claimableTokenReward;
         claimedMinerRewards[claimedMinerRewardsIndexes[addr]].claimedToken = newTotal;
         emit MinerRewardIncreased(addr, claimableTokenReward, newTotal);
     }
 
     function addOperatorClaimedRewardsProfile(address addr, uint256 claimableTokenReward) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         claimedOperatorRewardsIndexes[addr] = claimedOperatorRewards.length;
         claimedOperatorRewards.push(
             ParanetLib.ParanetIncentivesPoolClaimedRewardsProfile({addr: addr, claimedToken: claimableTokenReward})
@@ -172,7 +172,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
     }
 
     function addClaimedOperatorReward(address addr, uint256 claimableTokenReward) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         uint256 newTotal = claimedOperatorRewards[claimedOperatorRewardsIndexes[addr]].claimedToken +
             claimableTokenReward;
         claimedOperatorRewards[claimedOperatorRewardsIndexes[addr]].claimedToken = newTotal;
@@ -284,7 +284,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
     }
 
     function addVoterclaimedToken(address voter, uint256 amount) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         uint256 idx = votersIndexes[voter];
         if (idx < voters.length && voters[idx].addr == voter) {
             voters[idx].claimedToken += amount;
@@ -315,24 +315,24 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
     }
 
     function addTotalMinersclaimedToken(uint256 amount) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalMinersclaimedToken += amount;
     }
 
     function addTotalOperatorsclaimedToken(uint256 amount) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalOperatorsclaimedToken += amount;
     }
 
     function addTotalVotersclaimedToken(uint256 amount) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalVotersclaimedToken += amount;
     }
 
-    function setParanetIncentivesPool(address _ParanetIncentivesPoolAddress) external onlyContracts {
-        address oldAddress = ParanetIncentivesPoolAddress;
-        ParanetIncentivesPoolAddress = _ParanetIncentivesPoolAddress;
-        emit IncentivesPoolAddressSet(oldAddress, _ParanetIncentivesPoolAddress);
+    function setParanetIncentivesPool(address _paranetIncentivesPoolAddress) external onlyContracts {
+        address oldAddress = paranetIncentivesPoolAddress;
+        paranetIncentivesPoolAddress = _paranetIncentivesPoolAddress;
+        emit IncentivesPoolAddressSet(oldAddress, _paranetIncentivesPoolAddress);
     }
 
     function getBalance() public view returns (uint256) {
@@ -344,7 +344,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
     }
 
     function transferReward(address rewardAddress, uint256 amount) public {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         if (address(token) == address(0)) {
             payable(rewardAddress).transfer(amount);
         } else {
@@ -354,32 +354,32 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
     }
 
     function setTotalMinersclaimedToken(uint256 amount) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalMinersclaimedToken = amount;
     }
 
     function setTotalOperatorsclaimedToken(uint256 amount) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalOperatorsclaimedToken = amount;
     }
 
     function setTotalVotersclaimedToken(uint256 amount) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalVotersclaimedToken = amount;
     }
 
     function decrementTotalMinersclaimedToken(uint256 amount) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalMinersclaimedToken -= amount;
     }
 
     function decrementTotalOperatorsclaimedToken(uint256 amount) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalOperatorsclaimedToken -= amount;
     }
 
     function decrementTotalVotersclaimedToken(uint256 amount) external {
-        require(msg.sender == ParanetIncentivesPoolAddress, "Caller is not incentives pool contract");
+        require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         totalVotersclaimedToken -= amount;
     }
 
