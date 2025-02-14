@@ -36,9 +36,9 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         uint256 knowledgeAssetTokenId,
         string calldata paranetName,
         string calldata paranetDescription,
-        ParanetLib.NodesAccessPolicy nodesAccessPolicy,
-        ParanetLib.MinersAccessPolicy minersAccessPolicy,
-        ParanetLib.KnowledgeCollectionsAccessPolicy knowledgeColletionsAccessPolicy
+        uint8 nodesAccessPolicy,
+        uint8 minersAccessPolicy,
+        uint8 knowledgeCollectionsSubmissionPolicy
     ) external onlyContracts returns (bytes32) {
         bytes32 paranetId = keccak256(
             abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId, knowledgeAssetTokenId)
@@ -53,7 +53,7 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         paranet.description = paranetDescription;
         paranet.nodesAccessPolicy = nodesAccessPolicy;
         paranet.minersAccessPolicy = minersAccessPolicy;
-        paranet.knowledgeCollectionsAccessPolicy = knowledgeColletionsAccessPolicy;
+        paranet.knowledgeCollectionsSubmissionPolicy = knowledgeCollectionsSubmissionPolicy;
 
         paranetIds.push(paranetId);
         paranetIdsMapping[paranetId] = paranetIds.length - 1;
@@ -98,7 +98,7 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
                 description: paranet.description,
                 nodesAccessPolicy: paranet.nodesAccessPolicy,
                 minersAccessPolicy: paranet.minersAccessPolicy,
-                knowledgeCollectionsAccessPolicy: paranet.knowledgeCollectionsAccessPolicy,
+                knowledgeCollectionsSubmissionPolicy: paranet.knowledgeCollectionsSubmissionPolicy,
                 cumulativeKnowledgeValue: paranet.cumulativeKnowledgeValue
             });
     }
@@ -127,39 +127,31 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         paranets[paranetId].description = description;
     }
 
-    function getNodesAccessPolicy(bytes32 paranetId) external view returns (ParanetLib.NodesAccessPolicy) {
+    function getNodesAccessPolicy(bytes32 paranetId) external view returns (uint8) {
         return paranets[paranetId].nodesAccessPolicy;
     }
 
-    function setNodesAccessPolicy(
-        bytes32 paranetId,
-        ParanetLib.NodesAccessPolicy nodesAccessPolicy
-    ) external onlyContracts {
+    function setNodesAccessPolicy(bytes32 paranetId, uint8 nodesAccessPolicy) external onlyContracts {
         paranets[paranetId].nodesAccessPolicy = nodesAccessPolicy;
     }
 
-    function getMinersAccessPolicy(bytes32 paranetId) external view returns (ParanetLib.MinersAccessPolicy) {
+    function getMinersAccessPolicy(bytes32 paranetId) external view returns (uint8) {
         return paranets[paranetId].minersAccessPolicy;
     }
 
-    function setMinersAccessPolicy(
-        bytes32 paranetId,
-        ParanetLib.MinersAccessPolicy minersAccessPolicy
-    ) external onlyContracts {
+    function setMinersAccessPolicy(bytes32 paranetId, uint8 minersAccessPolicy) external onlyContracts {
         paranets[paranetId].minersAccessPolicy = minersAccessPolicy;
     }
 
-    function getKnowledgeCollectionsAccessPolicy(
-        bytes32 paranetId
-    ) external view returns (ParanetLib.KnowledgeCollectionsAccessPolicy) {
-        return paranets[paranetId].knowledgeCollectionsAccessPolicy;
+    function getKnowledgeCollectionsSubmissionPolicy(bytes32 paranetId) external view returns (uint8) {
+        return paranets[paranetId].knowledgeCollectionsSubmissionPolicy;
     }
 
-    function setKnowledgeCollectionsAccessPolicy(
+    function setKnowledgeCollectionsSubmissionPolicy(
         bytes32 paranetId,
-        ParanetLib.KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy
+        uint8 knowledgeCollectionsSubmissionPolicy
     ) external onlyContracts {
-        paranets[paranetId].knowledgeCollectionsAccessPolicy = knowledgeCollectionsAccessPolicy;
+        paranets[paranetId].knowledgeCollectionsSubmissionPolicy = knowledgeCollectionsSubmissionPolicy;
     }
 
     function addNodeJoinRequest(

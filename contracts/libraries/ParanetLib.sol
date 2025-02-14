@@ -21,20 +21,6 @@ library ParanetLib {
         uint256 knowledgeAssetTokenId;
     }
 
-    enum NodesAccessPolicy {
-        OPEN,
-        CURATED
-    }
-
-    enum MinersAccessPolicy {
-        OPEN,
-        CURATED
-    }
-
-    enum KnowledgeCollectionsAccessPolicy {
-        OPEN
-    }
-
     struct Node {
         uint72 identityId;
         bytes nodeId;
@@ -73,9 +59,9 @@ library ParanetLib {
         uint256 paranetKATokenId;
         string name;
         string description;
-        NodesAccessPolicy nodesAccessPolicy;
-        MinersAccessPolicy minersAccessPolicy;
-        KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy;
+        uint8 nodesAccessPolicy;
+        uint8 minersAccessPolicy;
+        uint8 knowledgeCollectionsSubmissionPolicy;
         uint96 cumulativeKnowledgeValue;
         IncentivesPool[] incentivesPools;
         // Incentives Pool Name => Index in the array
@@ -106,9 +92,9 @@ library ParanetLib {
         uint256 paranetKATokenId;
         string name;
         string description;
-        NodesAccessPolicy nodesAccessPolicy;
-        MinersAccessPolicy minersAccessPolicy;
-        KnowledgeCollectionsAccessPolicy knowledgeCollectionsAccessPolicy;
+        uint8 nodesAccessPolicy;
+        uint8 minersAccessPolicy;
+        uint8 knowledgeCollectionsSubmissionPolicy;
         uint96 cumulativeKnowledgeValue;
     }
 
@@ -141,7 +127,7 @@ library ParanetLib {
         mapping(bytes32 => mapping(bytes32 => uint256)) updatingKnowledgeCollectionsStateIndexes;
         mapping(bytes32 => uint96) cumulativeTracSpent;
         mapping(bytes32 => uint96) unrewardedTracSpent;
-        mapping(bytes32 => uint256) cumulativeAwardedNeuro;
+        mapping(bytes32 => uint256) cumulativeAwardedToken;
     }
 
     struct KnowledgeMinerMetadata {
@@ -164,7 +150,7 @@ library ParanetLib {
         uint96 updateTokenAmount;
     }
 
-    struct NeuroEmissionMultiplier {
+    struct TokenEmissionMultiplier {
         uint256 multiplier;
         uint256 timestamp;
         bool finalized;
@@ -172,7 +158,7 @@ library ParanetLib {
 
     struct ParanetIncentivesPoolClaimedRewardsProfile {
         address addr;
-        uint256 claimedNeuro;
+        uint256 claimedToken;
     }
 
     struct ParanetIncentivizationProposalVoterInput {
@@ -183,7 +169,7 @@ library ParanetLib {
     struct ParanetIncentivizationProposalVoter {
         address addr;
         uint96 weight;
-        uint256 claimedNeuro;
+        uint256 claimedToken;
     }
 
     error ParanetHasAlreadyBeenRegistered(
@@ -191,10 +177,7 @@ library ParanetLib {
         uint256 knowledgeCollectionTokenId,
         uint256 knowledgeAssetTokenId
     );
-    error InvalidParanetNodesAccessPolicy(
-        ParanetLib.NodesAccessPolicy[] expectedAccessPolicies,
-        ParanetLib.NodesAccessPolicy actualAccessPolicy
-    );
+    error InvalidParanetNodesAccessPolicy(uint8[] expectedAccessPolicies, uint8 actualAccessPolicy);
     error ParanetCuratedNodeHasAlreadyBeenAdded(bytes32 paranetId, uint72 identityId);
     error ParanetCuratedNodeDoesntExist(bytes32 paranetId, uint72 identityId);
     error ParanetCuratedNodeJoinRequestInvalidStatus(
@@ -203,10 +186,7 @@ library ParanetLib {
         ParanetLib.RequestStatus status
     );
     error ParanetCuratedNodeJoinRequestDoesntExist(bytes32 paranetId, uint72 identityId);
-    error InvalidParanetMinersAccessPolicy(
-        ParanetLib.MinersAccessPolicy[] expectedAccessPolicies,
-        ParanetLib.MinersAccessPolicy actualAccessPolicy
-    );
+    error InvalidParanetMinersAccessPolicy(uint8[] expectedAccessPolicies, uint8 actualAccessPolicy);
     error ParanetCuratedMinerHasAlreadyBeenAdded(bytes32 paranetId, address miner);
     error ParanetCuratedMinerDoesntExist(bytes32 paranetId, address miner);
     error ParanetCuratedMinerAccessRequestInvalidStatus(
