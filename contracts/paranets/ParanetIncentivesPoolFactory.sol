@@ -111,7 +111,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         ParanetIncentivesPoolStorage storage_ = ParanetIncentivesPoolStorage(payable(storageAddress));
         require(storage_.paranetId() == paranetId);
 
-        address oldPoolAddress = storage_.ParanetIncentivesPoolAddress();
+        address oldPoolAddress = storage_.paranetIncentivesPoolAddress();
         uint256 tracToTokenEmissionMultiplier = ParanetIncentivesPool(oldPoolAddress)
             .getEffectiveTokenEmissionMultiplier(block.timestamp);
 
