@@ -17,8 +17,11 @@ import {
   Token,
   Hub,
   EpochStorage,
-  ParanetNeuroIncentivesPoolStorage,
+  ParanetIncentivesPoolStorage,
+  ParanetIncentivesPoolFactoryHelper,
 } from '../../typechain';
+import { ACCESS_POLICIES } from '../helpers/constants';
+import { createProfilesAndKC } from '../helpers/kc-helpers';
 import { setupParanet } from '../helpers/paranet-helpers';
 import {
   getDefaultPublishingNode,
@@ -34,6 +37,7 @@ type ParanetFixture = {
   ParanetServicesRegistry: ParanetServicesRegistry;
   ParanetKnowledgeMinersRegistry: ParanetKnowledgeMinersRegistry;
   ParanetKnowledgeCollectionsRegistry: ParanetKnowledgeCollectionsRegistry;
+  ParanetIncentivesPoolFactoryHelper: ParanetIncentivesPoolFactoryHelper;
   ParanetIncentivesPoolFactory: ParanetIncentivesPoolFactory;
   KnowledgeCollection: KnowledgeCollection;
   KnowledgeCollectionStorage: KnowledgeCollectionStorage;
@@ -49,6 +53,7 @@ describe('@unit Paranet', () => {
   let ParanetServicesRegistry: ParanetServicesRegistry;
   let ParanetKnowledgeMinersRegistry: ParanetKnowledgeMinersRegistry;
   let ParanetKnowledgeCollectionsRegistry: ParanetKnowledgeCollectionsRegistry;
+  let ParanetIncentivesPoolFactoryHelper: ParanetIncentivesPoolFactoryHelper;
   let ParanetIncentivesPoolFactory: ParanetIncentivesPoolFactory;
   let KnowledgeCollection: KnowledgeCollection;
   let KnowledgeCollectionStorage: KnowledgeCollectionStorage;
@@ -64,6 +69,7 @@ describe('@unit Paranet', () => {
       'ParanetServicesRegistry',
       'ParanetKnowledgeMinersRegistry',
       'ParanetKnowledgeCollectionsRegistry',
+      'ParanetIncentivesPoolFactoryHelper',
       'ParanetIncentivesPoolFactory',
       'KnowledgeCollection',
       'Profile',
@@ -91,6 +97,10 @@ describe('@unit Paranet', () => {
       await hre.ethers.getContract<ParanetKnowledgeCollectionsRegistry>(
         'ParanetKnowledgeCollectionsRegistry',
       );
+    ParanetIncentivesPoolFactoryHelper =
+      await hre.ethers.getContract<ParanetIncentivesPoolFactoryHelper>(
+        'ParanetIncentivesPoolFactoryHelper',
+      );
     ParanetIncentivesPoolFactory =
       await hre.ethers.getContract<ParanetIncentivesPoolFactory>(
         'ParanetIncentivesPoolFactory',
@@ -103,6 +113,11 @@ describe('@unit Paranet', () => {
         'KnowledgeCollectionStorage',
       );
     Profile = await hre.ethers.getContract<Profile>('Profile');
+    // await hre.deployments.deploy('Token', {
+    //   from: accounts[0].address,
+    //   args: ['Neuro', 'NEURO'],
+    //   log: true,
+    // });
     Token = await hre.ethers.getContract<Token>('Token');
 
     return {
@@ -112,6 +127,7 @@ describe('@unit Paranet', () => {
       ParanetServicesRegistry,
       ParanetKnowledgeMinersRegistry,
       ParanetKnowledgeCollectionsRegistry,
+      ParanetIncentivesPoolFactoryHelper,
       ParanetIncentivesPoolFactory,
       KnowledgeCollection,
       KnowledgeCollectionStorage,
@@ -130,6 +146,7 @@ describe('@unit Paranet', () => {
       ParanetServicesRegistry,
       ParanetKnowledgeMinersRegistry,
       ParanetKnowledgeCollectionsRegistry,
+      ParanetIncentivesPoolFactoryHelper,
       ParanetIncentivesPoolFactory,
       KnowledgeCollection,
       KnowledgeCollectionStorage,
@@ -192,6 +209,84 @@ describe('@unit Paranet', () => {
       expect(paranetMetadata.nodesAccessPolicy).to.equal(nodesAccessPolicy);
       expect(paranetMetadata.minersAccessPolicy).to.equal(minersAccessPolicy);
     });
+
+    it('Should revert when registering the same paranet twice', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const paranetName = 'Test Paranet';
+      const paranetDescription = 'Test Paranet Description';
+      const nodesAccessPolicy = ACCESS_POLICIES.OPEN;
+      const minersAccessPolicy = ACCESS_POLICIES.OPEN;
+
+      const { paranetKCStorageContract, paranetKCTokenId, paranetKATokenId } =
+        await setupParanet(
+          kcCreator,
+          publishingNode,
+          receivingNodes,
+          {
+            Paranet,
+            Profile,
+            Token,
+            KnowledgeCollection,
+            KnowledgeCollectionStorage,
+          },
+          paranetName,
+          paranetDescription,
+          nodesAccessPolicy,
+          minersAccessPolicy,
+        );
+
+      await expect(
+        Paranet.connect(kcCreator).registerParanet(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          paranetName,
+          paranetDescription,
+          nodesAccessPolicy,
+          minersAccessPolicy,
+          ACCESS_POLICIES.OPEN,
+        ),
+      ).to.be.revertedWithCustomError(
+        Paranet,
+        'ParanetHasAlreadyBeenRegistered',
+      );
+    });
+
+    it('Should revert when non-owner tries to register paranet', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const nonOwner = accounts[10];
+
+      const paranetKCStorageContract =
+        await KnowledgeCollectionStorage.getAddress();
+
+      const { collectionId } = await createProfilesAndKC(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        {
+          Profile,
+          KnowledgeCollection,
+          Token,
+        },
+      );
+
+      await expect(
+        Paranet.connect(nonOwner).registerParanet(
+          paranetKCStorageContract,
+          collectionId,
+          1,
+          'paranetName',
+          'paranetDescription',
+          ACCESS_POLICIES.OPEN,
+          ACCESS_POLICIES.OPEN,
+          ACCESS_POLICIES.OPEN,
+        ),
+      ).to.be.revertedWith("Caller isn't the owner of the KA");
+    });
   });
 
   describe('Paranet Incentives Pool', () => {
@@ -220,7 +315,7 @@ describe('@unit Paranet', () => {
 
       const tx = await ParanetIncentivesPoolFactory.connect(
         paranetOwner,
-      ).deployNeuroIncentivesPool(
+      ).deployIncentivesPool(
         paranetKCStorageContract,
         paranetKCTokenId,
         paranetKATokenId,
@@ -243,12 +338,11 @@ describe('@unit Paranet', () => {
       expect(event?.args[0]).to.equal(paranetKCStorageContract);
       expect(event?.args[1]).to.equal(paranetKCTokenId);
       expect(event?.args[2]).to.equal(paranetKATokenId);
-      expect(event?.args[5]).to.equal('Neuroweb');
-      expect(event?.args[6]).to.equal(await Token.getAddress());
+      expect(event?.args[5]).to.equal(await Token.getAddress());
 
       let incentivesPool = await ParanetsRegistry.getIncentivesPoolByPoolName(
         paranetId,
-        event?.args[5],
+        'Neuroweb',
       );
       expect(incentivesPool.storageAddr).to.equal(event?.args[3]);
       expect(incentivesPool.rewardTokenAddress).to.equal(
@@ -259,18 +353,18 @@ describe('@unit Paranet', () => {
         paranetId,
         event?.args[3],
       );
-      expect(incentivesPool.name).to.equal(event?.args[5]);
+      expect(incentivesPool.name).to.equal('Neuroweb');
       expect(incentivesPool.rewardTokenAddress).to.equal(
         await Token.getAddress(),
       );
 
       // validate incentives pool address
       const incentivesPoolStorage = (await hre.ethers.getContractAt(
-        'ParanetNeuroIncentivesPoolStorage',
+        'ParanetIncentivesPoolStorage',
         event?.args[3],
-      )) as ParanetNeuroIncentivesPoolStorage;
+      )) as ParanetIncentivesPoolStorage;
       expect(
-        await incentivesPoolStorage.paranetNeuroIncentivesPoolAddress(),
+        await incentivesPoolStorage.paranetIncentivesPoolAddress(),
       ).to.equal(event?.args[4]);
       expect(await incentivesPoolStorage.paranetId()).to.equal(paranetId);
     });

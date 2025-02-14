@@ -27,6 +27,7 @@ export async function setupParanet(
   paranetDescription: string = 'Test Paranet Description',
   nodesAccessPolicy: number = ACCESS_POLICIES.OPEN,
   minersAccessPolicy: number = ACCESS_POLICIES.OPEN,
+  knowledgeCollectionsSubmissionPolicy: number = ACCESS_POLICIES.OPEN,
 ) {
   const { publishingNodeIdentityId, receivingNodesIdentityIds, collectionId } =
     await createProfilesAndKC(
@@ -49,6 +50,7 @@ export async function setupParanet(
     paranetDescription,
     nodesAccessPolicy,
     minersAccessPolicy,
+    knowledgeCollectionsSubmissionPolicy,
   );
 
   return {
