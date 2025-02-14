@@ -4,38 +4,30 @@ pragma solidity ^0.8.20;
 
 import {Hub} from "../storage/Hub.sol";
 import {ParanetsRegistry} from "../storage/paranets/ParanetsRegistry.sol";
-import {ParanetNeuroIncentivesPool} from "./ParanetNeuroIncentivesPool.sol";
-import {ParanetNeuroIncentivesPoolStorage} from "./ParanetNeuroIncentivesPoolStorage.sol";
+import {ParanetIncentivesPool} from "./ParanetIncentivesPool.sol";
+import {ParanetIncentivesPoolStorage} from "./ParanetIncentivesPoolStorage.sol";
+import {ParanetIncentivesPoolFactoryHelper} from "./ParanetIncentivesPoolFactoryHelper.sol";
 import {KnowledgeCollectionStorage} from "../storage/KnowledgeCollectionStorage.sol";
 import {ContractStatus} from "../abstract/ContractStatus.sol";
 import {IInitializable} from "../interfaces/IInitializable.sol";
 import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
-import {ParanetLib} from "../libraries/ParanetLib.sol";
 
 contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IInitializable {
     event ParanetIncentivesPoolDeployed(
-        address indexed paranetKCStorageContract,
-        uint256 indexed paranetKCTokenId,
-        uint256 indexed paranetKATokenId,
+        bytes32 indexed paranetId,
         address storageAddress,
         address poolAddress,
-        string incentivesPoolName,
         address rewardTokenAddress
     );
-    event ParanetIncentivesPoolRedeployed(
-        address indexed paranetKCStorageContract,
-        uint256 indexed paranetKCTokenId,
-        uint256 indexed paranetKATokenId,
-        address storageAddress,
-        address oldPoolAddress,
-        address newPoolAddress
-    );
+
+    event ParanetIncentivesPoolRedeployed(bytes32 indexed paranetId, address storageAddress, address newPoolAddress);
 
     string private constant _NAME = "ParanetIncentivesPoolFactory";
     string private constant _VERSION = "1.0.0";
 
     ParanetsRegistry public paranetsRegistry;
+    ParanetIncentivesPoolFactoryHelper public paranetIncentivesPoolFactoryHelper;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -55,6 +47,9 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
 
     function initialize() public onlyHub {
         paranetsRegistry = ParanetsRegistry(hub.getContractAddress("ParanetsRegistry"));
+        paranetIncentivesPoolFactoryHelper = ParanetIncentivesPoolFactoryHelper(
+            hub.getContractAddress("ParanetIncentivesPoolFactoryHelper")
+        );
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -65,121 +60,87 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         return _VERSION;
     }
 
-    function deployNeuroIncentivesPool(
+    function deployIncentivesPool(
         address paranetKCStorageContract,
         uint256 paranetKCTokenId,
         uint256 paranetKATokenId,
-        uint256 tracToNeuroEmissionMultiplier,
+        uint256 tracToTokenEmissionMultiplier,
         uint16 paranetOperatorRewardPercentage,
         uint16 paranetIncentivizationProposalVotersRewardPercentage,
         string calldata incentivesPoolName,
         address rewardTokenAddress
-    )
-        external
-        onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId)
-        returns (address poolAddress, address storageAddress)
-    {
-        Hub h = hub;
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
+        bytes32 paranetId = _computeParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         ParanetsRegistry pr = paranetsRegistry;
-        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId));
+        require(pr.paranetExists(paranetId));
+        require(pr.hasIncentivesPoolByName(paranetId, incentivesPoolName));
 
-        require(pr.paranetExists(paranetId), "Paranet doesn't exist");
-        require(pr.hasIncentivesPoolByName(paranetId, incentivesPoolName), "Incentives pool already exists");
-
-        ParanetNeuroIncentivesPoolStorage storage_ = new ParanetNeuroIncentivesPoolStorage(
-            address(h),
+        ParanetIncentivesPoolStorage storage_ = new ParanetIncentivesPoolStorage(
+            address(hub),
             rewardTokenAddress,
             paranetId,
             paranetOperatorRewardPercentage,
             paranetIncentivizationProposalVotersRewardPercentage
         );
-        storageAddress = address(storage_);
+        address storageAddress = address(storage_);
 
-        ParanetNeuroIncentivesPool pool = new ParanetNeuroIncentivesPool(
-            address(h),
-            h.getContractAddress("ParanetKnowledgeMinersRegistry"),
+        address poolAddress = paranetIncentivesPoolFactoryHelper.deployIncentivesPool(
             storageAddress,
-            tracToNeuroEmissionMultiplier
+            tracToTokenEmissionMultiplier,
+            address(storage_)
         );
-        poolAddress = address(pool);
 
-        // Initialize storage contract
         storage_.initialize();
-        storage_.setParanetNeuroIncentivesPool(poolAddress);
-        pr.addIncentivesPool(
-            paranetId,
-            ParanetLib.IncentivesPool({
-                name: incentivesPoolName,
-                storageAddr: storageAddress,
-                rewardTokenAddress: rewardTokenAddress
-            })
-        );
+        paranetsRegistry.addIncentivesPool(paranetId, incentivesPoolName, storageAddress, rewardTokenAddress);
 
-        emit ParanetIncentivesPoolDeployed(
-            paranetKCStorageContract,
-            paranetKCTokenId,
-            paranetKATokenId,
-            storageAddress,
-            poolAddress,
-            incentivesPoolName,
-            rewardTokenAddress
-        );
-
-        return (poolAddress, storageAddress);
+        emit ParanetIncentivesPoolDeployed(paranetId, storageAddress, poolAddress, rewardTokenAddress);
     }
 
-    function redeployNeuroIncentivesPool(
+    function redeployIncentivesPool(
         address paranetKCStorageContract,
         uint256 paranetKCTokenId,
         uint256 paranetKATokenId,
         address storageAddress
-    )
-        external
-        onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId)
-        returns (address newPoolAddress)
-    {
-        Hub h = hub;
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
+        bytes32 paranetId = _computeParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+
         ParanetsRegistry pr = paranetsRegistry;
-        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId));
+        require(pr.paranetExists(paranetId));
+        require(!pr.hasIncentivesPoolByStorageAddress(paranetId, storageAddress));
 
-        require(pr.paranetExists(paranetId), "Paranet doesn't exist");
-        require(pr.hasIncentivesPoolByStorageAddress(paranetId, storageAddress), "Incentives pool doesn't exist");
+        ParanetIncentivesPoolStorage storage_ = ParanetIncentivesPoolStorage(payable(storageAddress));
+        require(storage_.paranetId() == paranetId);
 
-        ParanetNeuroIncentivesPoolStorage storage_ = ParanetNeuroIncentivesPoolStorage(payable(storageAddress));
-        require(storage_.paranetId() == paranetId, "Storage paranet ID mismatch");
+        address oldPoolAddress = storage_.ParanetIncentivesPoolAddress();
+        uint256 tracToTokenEmissionMultiplier = ParanetIncentivesPool(oldPoolAddress)
+            .getEffectiveTokenEmissionMultiplier(block.timestamp);
 
-        address oldPoolAddress = storage_.paranetNeuroIncentivesPoolAddress();
-        ParanetNeuroIncentivesPool oldPool = ParanetNeuroIncentivesPool(oldPoolAddress);
-        uint256 tracToNeuroEmissionMultiplier = oldPool.getEffectiveNeuroEmissionMultiplier(block.timestamp);
-
-        ParanetNeuroIncentivesPool newPool = new ParanetNeuroIncentivesPool(
-            address(h),
-            h.getContractAddress("ParanetKnowledgeMinersRegistry"),
+        address newPoolAddress = paranetIncentivesPoolFactoryHelper.deployIncentivesPool(
             storageAddress,
-            tracToNeuroEmissionMultiplier
-        );
-        newPoolAddress = address(newPool);
-
-        storage_.setParanetNeuroIncentivesPool(newPoolAddress);
-
-        emit ParanetIncentivesPoolRedeployed(
-            paranetKCStorageContract,
-            paranetKCTokenId,
-            paranetKATokenId,
-            storageAddress,
-            oldPoolAddress,
-            newPoolAddress
+            tracToTokenEmissionMultiplier,
+            address(storage_)
         );
 
-        return newPoolAddress;
+        emit ParanetIncentivesPoolRedeployed(paranetId, storageAddress, newPoolAddress);
+    }
+
+    function _computeParanetId(
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId,
+        uint256 knowledgeAssetTokenId
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId, knowledgeAssetTokenId)
+            );
     }
 
     function _checkKnowledgeAssetOwner(
         address knowledgeCollectionStorageContractAddress,
         uint256 knowledgeCollectionId,
         uint256 knowledgeAssetId
-    ) internal virtual {
-        require(hub.isAssetStorage(knowledgeCollectionStorageContractAddress), "Given address isn't KC Storage");
+    ) internal view {
+        require(hub.isAssetStorage(knowledgeCollectionStorageContractAddress));
 
         KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(
             knowledgeCollectionStorageContractAddress
@@ -189,7 +150,6 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
             knowledgeCollectionStorage.knowledgeCollectionMaxSize() +
             knowledgeAssetId;
 
-        uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(msg.sender, startTokenId, startTokenId + 1);
-        require(ownedCountInRange == 1, "Caller isn't the owner of the KA");
+        require(knowledgeCollectionStorage.balanceOf(msg.sender, startTokenId, startTokenId + 1) == 1);
     }
 }
