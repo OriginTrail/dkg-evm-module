@@ -19,5 +19,5 @@ func.tags = ['ParanetIncentivesPoolFactory'];
 func.dependencies = [
   'Hub',
   'ParanetsRegistry',
-  ParanetIncentivesPoolFactoryHelper,
+  'ParanetIncentivesPoolFactoryHelper',
 ];
