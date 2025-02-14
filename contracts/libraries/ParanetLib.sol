@@ -127,7 +127,7 @@ library ParanetLib {
         mapping(bytes32 => mapping(bytes32 => uint256)) updatingKnowledgeCollectionsStateIndexes;
         mapping(bytes32 => uint96) cumulativeTracSpent;
         mapping(bytes32 => uint96) unrewardedTracSpent;
-        mapping(bytes32 => uint256) cumulativeAwardedNeuro;
+        mapping(bytes32 => uint256) cumulativeAwardedToken;
     }
 
     struct KnowledgeMinerMetadata {
@@ -150,7 +150,7 @@ library ParanetLib {
         uint96 updateTokenAmount;
     }
 
-    struct NeuroEmissionMultiplier {
+    struct TokenEmissionMultiplier {
         uint256 multiplier;
         uint256 timestamp;
         bool finalized;
@@ -158,7 +158,7 @@ library ParanetLib {
 
     struct ParanetIncentivesPoolClaimedRewardsProfile {
         address addr;
-        uint256 claimedNeuro;
+        uint256 claimedToken;
     }
 
     struct ParanetIncentivizationProposalVoterInput {
@@ -169,7 +169,7 @@ library ParanetLib {
     struct ParanetIncentivizationProposalVoter {
         address addr;
         uint96 weight;
-        uint256 claimedNeuro;
+        uint256 claimedToken;
     }
 
     error ParanetHasAlreadyBeenRegistered(

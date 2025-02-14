@@ -6,7 +6,7 @@ import {ParanetsRegistry} from "./ParanetsRegistry.sol";
 import {HubDependent} from "../../abstract/HubDependent.sol";
 import {INamed} from "../../interfaces/INamed.sol";
 import {IVersioned} from "../../interfaces/IVersioned.sol";
-import {IParanetNeuroIncentivesPool} from "../../interfaces/IParanetNeuroIncentivesPool.sol";
+import {IParanetIncentivesPool} from "../../interfaces/IParanetIncentivesPool.sol";
 import {ParanetLib} from "../../libraries/ParanetLib.sol";
 
 contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
@@ -352,32 +352,32 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
         knowledgeMiners[miner].unrewardedTracSpent[paranetId] -= subtractedUnrewardedTracSpent;
     }
 
-    function getCumulativeAwardedNeuro(address miner, bytes32 paranetId) external view returns (uint256) {
-        return knowledgeMiners[miner].cumulativeAwardedNeuro[paranetId];
+    function getcumulativeAwardedToken(address miner, bytes32 paranetId) external view returns (uint256) {
+        return knowledgeMiners[miner].cumulativeAwardedToken[paranetId];
     }
 
-    function setCumulativeAwardedNeuro(
+    function setcumulativeAwardedToken(
         address miner,
         bytes32 paranetId,
-        uint256 cumulativeAwardedNeuro
+        uint256 cumulativeAwardedToken
     ) external onlyContractsOrIncentivesPool(paranetId) {
-        knowledgeMiners[miner].cumulativeAwardedNeuro[paranetId] = cumulativeAwardedNeuro;
+        knowledgeMiners[miner].cumulativeAwardedToken[paranetId] = cumulativeAwardedToken;
     }
 
-    function addCumulativeAwardedNeuro(
+    function addcumulativeAwardedToken(
         address miner,
         bytes32 paranetId,
-        uint256 addedCumulativeAwardedNeuro
+        uint256 addedcumulativeAwardedToken
     ) external onlyContractsOrIncentivesPool(paranetId) {
-        knowledgeMiners[miner].cumulativeAwardedNeuro[paranetId] += addedCumulativeAwardedNeuro;
+        knowledgeMiners[miner].cumulativeAwardedToken[paranetId] += addedcumulativeAwardedToken;
     }
 
-    function subCumulativeAwardedNeuro(
+    function subcumulativeAwardedToken(
         address miner,
         bytes32 paranetId,
-        uint256 subtractedCumulativeAwardedNeuro
+        uint256 subtractedcumulativeAwardedToken
     ) external onlyContractsOrIncentivesPool(paranetId) {
-        knowledgeMiners[miner].cumulativeAwardedNeuro[paranetId] -= subtractedCumulativeAwardedNeuro;
+        knowledgeMiners[miner].cumulativeAwardedToken[paranetId] -= subtractedcumulativeAwardedToken;
     }
 
     function _checkSender(bytes32 paranetId) internal view virtual {
@@ -385,7 +385,7 @@ contract ParanetKnowledgeMinersRegistry is INamed, IVersioned, HubDependent {
             hub.isContract(msg.sender) ||
                 paranetsRegistry.hasIncentivesPoolByStorageAddress(
                     paranetId,
-                    IParanetNeuroIncentivesPool(msg.sender).getParanetNeuroIncentivesPoolStorage()
+                    IParanetIncentivesPool(msg.sender).getParanetIncentivesPoolStorage()
                 ),
             "Hub/IncentivesPool function"
         );

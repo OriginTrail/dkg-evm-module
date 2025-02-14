@@ -1077,41 +1077,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             );
         }
 
-        uint8 minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
-
-        // Check if paranet is curated and if knowledge miner is whitelisted
-        if (
-            minersAccessPolicy == MINERS_ACCESS_POLICY_PERMISSIONED &&
-            !pr.isKnowledgeMinerRegistered(paranetId, msg.sender)
-        ) {
-            revert ParanetLib.ParanetCuratedMinerDoesntExist(paranetId, msg.sender);
-            // Should this be done in both cases why would OPEN have separeted logic ???
-        } else if (minersAccessPolicy == MINERS_ACCESS_POLICY_OPEN) {
-            // Check if Knowledge Miner has profile
-            // If not: Create a profile
-            if (!paranetKnowledgeMinersRegistry.knowledgeMinerExists(msg.sender)) {
-                paranetKnowledgeMinersRegistry.registerKnowledgeMiner(msg.sender);
-            }
-
-            // Check if Knowledge Miner is registered on paranet
-            if (!pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
-                pr.addKnowledgeMiner(paranetId, msg.sender);
-            }
-        }
-
-        if (
-            paranetKnowledgeCollectionsRegistry.isParanetKnowledgeCollection(
-                keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
-            )
-        ) {
-            revert ParanetLib.KnowledgeCollectionIsAPartOfOtherParanet(
-                knowledgeCollectionStorageContract,
-                knowledgeCollectionTokenId,
-                paranetKnowledgeCollectionsRegistry.getParanetId(
-                    keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
-                )
-            );
-        }
+        _updateKnowledgeMinerMetadata(paranetId);
 
         require(
             pr.getKnowledgeCollectionsSubmissionPolicy(paranetId) != KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING,
@@ -1121,11 +1087,6 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         // Update KnowledgeMiner metadata
         _updateSubmittedKnowledgeCollectionMetadata(
             paranetId,
-            knowledgeCollectionStorageContract,
-            knowledgeCollectionTokenId
-        );
-
-        emit KnowledgeCollectionSubmittedToParanet(
             paranetKCStorageContract,
             paranetKnowledgeCollectionTokenId,
             paranetKnowledgeAssetTokenId,
@@ -1288,46 +1249,42 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         pss.reviewKnowledgeCollection(paranetId, knowledgeCollectionId, accepted);
 
         if (accepted) {
-            ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
-            uint8 minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
-            // Check if paranet is curated and if knowledge miner is whitelisted
-            if (
-                minersAccessPolicy == MINERS_ACCESS_POLICY_PERMISSIONED &&
-                !pr.isKnowledgeMinerRegistered(paranetId, msg.sender)
-            ) {
-                revert ParanetLib.ParanetCuratedMinerDoesntExist(paranetId, msg.sender);
-                // Should this be done in both cases why would OPEN have separeted logic ???
-            } else if (minersAccessPolicy == MINERS_ACCESS_POLICY_OPEN) {
-                // Check if Knowledge Miner has profile
-                // If not: Create a profile
-                if (!pkmr.knowledgeMinerExists(msg.sender)) {
-                    pkmr.registerKnowledgeMiner(msg.sender);
-                }
-
-                // Check if Knowledge Miner is registered on paranet
-                if (!pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
-                    pr.addKnowledgeMiner(paranetId, msg.sender);
-                }
-            }
-
-            KnowledgeCollectionStorage kcs = KnowledgeCollectionStorage(knowledgeCollectionStorageContract);
-            uint96 remainingTokenAmount = kcs.getTokenAmount(knowledgeCollectionTokenId);
-            KnowledgeCollectionLib.MerkleRoot[] memory merkleRoots = kcs.getMerkleRoots(knowledgeCollectionTokenId);
+            _updateKnowledgeMinerMetadata(paranetId);
 
             // Update KnowledgeMiner metadata
             _updateSubmittedKnowledgeCollectionMetadata(
                 paranetId,
-                knowledgeCollectionStorageContract,
-                knowledgeCollectionTokenId
-            );
-
-            emit KnowledgeCollectionSubmittedToParanet(
                 paranetKCStorageContract,
                 paranetKnowledgeCollectionTokenId,
                 paranetKnowledgeAssetTokenId,
                 knowledgeCollectionStorageContract,
                 knowledgeCollectionTokenId
             );
+        }
+    }
+
+    function _updateKnowledgeMinerMetadata(bytes32 paranetId) internal {
+        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+        ParanetsRegistry pr = paranetsRegistry;
+        uint8 minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
+        // Check if paranet is curated and if knowledge miner is whitelisted
+        if (
+            minersAccessPolicy == MINERS_ACCESS_POLICY_PERMISSIONED &&
+            !pr.isKnowledgeMinerRegistered(paranetId, msg.sender)
+        ) {
+            revert ParanetLib.ParanetCuratedMinerDoesntExist(paranetId, msg.sender);
+            // Should this be done in both cases why would OPEN have separeted logic ???
+        } else if (minersAccessPolicy == MINERS_ACCESS_POLICY_OPEN) {
+            // Check if Knowledge Miner has profile
+            // If not: Create a profile
+            if (!pkmr.knowledgeMinerExists(msg.sender)) {
+                pkmr.registerKnowledgeMiner(msg.sender);
+            }
+
+            // Check if Knowledge Miner is registered on paranet
+            if (!pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
+                pr.addKnowledgeMiner(paranetId, msg.sender);
+            }
         }
     }
 
@@ -1347,6 +1304,9 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
 
     function _updateSubmittedKnowledgeCollectionMetadata(
         bytes32 paranetId,
+        address paranetKCStorageContract,
+        uint256 paranetKnowledgeCollectionTokenId,
+        uint256 paranetKnowledgeAssetTokenId,
         address knowledgeCollectionStorageContract,
         uint256 knowledgeCollectionTokenId
     ) internal {
@@ -1397,6 +1357,14 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         pkmr.addUnrewardedTracSpent(msg.sender, paranetId, remainingTokenAmount);
         pkmr.incrementTotalSubmittedKnowledgeCollectionsCount(msg.sender);
         pkmr.addTotalTracSpent(msg.sender, remainingTokenAmount);
+
+        emit KnowledgeCollectionSubmittedToParanet(
+            paranetKCStorageContract,
+            paranetKnowledgeCollectionTokenId,
+            paranetKnowledgeAssetTokenId,
+            knowledgeCollectionStorageContract,
+            knowledgeCollectionTokenId
+        );
     }
 
     // function _processUpdatedKnowledgeCollectionStatesMetadata(
