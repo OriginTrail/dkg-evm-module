@@ -56,7 +56,7 @@ contract ParanetStagingRegistry is INamed, IVersioned, HubDependent {
         return _VERSION;
     }
 
-    function addCurator(bytes32 paranetId, address curator) public {
+    function addCurator(bytes32 paranetId, address curator) public onlyContracts {
         paranetCuratorIndexes[paranetId][curator] = paranetCurators[paranetId].length;
         paranetCurators[paranetId].push(curator);
 
@@ -65,7 +65,7 @@ contract ParanetStagingRegistry is INamed, IVersioned, HubDependent {
         emit CuratorAdded(paranetId, curator);
     }
 
-    function removeCurator(bytes32 paranetId, address curator) public {
+    function removeCurator(bytes32 paranetId, address curator) public onlyContracts {
         uint256 index = paranetCuratorIndexes[paranetId][curator];
         uint256 lastIndex = paranetCurators[paranetId].length - 1;
 
@@ -118,7 +118,7 @@ contract ParanetStagingRegistry is INamed, IVersioned, HubDependent {
         bytes32 paranetId,
         bytes32 knowledgeCollectionId
     ) external view returns (bool) {
-        return stagedCollections[paranetId][knowledgeCollectionId] != ParanetLib.RequestStatus.NONE;
+        return stagedCollections[paranetId][knowledgeCollectionId] == ParanetLib.RequestStatus.PENDING;
     }
 
     function isKnowledgeCollectionApproved(

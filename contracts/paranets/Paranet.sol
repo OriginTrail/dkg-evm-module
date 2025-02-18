@@ -1059,13 +1059,14 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             abi.encodePacked(paranetKCStorageContract, paranetKnowledgeCollectionTokenId, paranetKnowledgeAssetTokenId)
         );
 
-        if (!pr.paranetExists(paranetId)) {
-            revert ParanetLib.ParanetDoesntExist(
-                paranetKCStorageContract,
-                paranetKnowledgeCollectionTokenId,
-                paranetKnowledgeAssetTokenId
-            );
-        }
+        _validateParanetAndKnowledgeCollection(
+            paranetId,
+            paranetKCStorageContract,
+            paranetKnowledgeCollectionTokenId,
+            paranetKnowledgeAssetTokenId,
+            knowledgeCollectionStorageContract,
+            knowledgeCollectionTokenId
+        );
         KnowledgeCollectionStorage kcs = KnowledgeCollectionStorage(knowledgeCollectionStorageContract);
         uint256 currentEpoch = chronos.getCurrentEpoch();
         uint40 kcStartEpoch = kcs.getStartEpoch(knowledgeCollectionTokenId);
@@ -1108,27 +1109,14 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             abi.encodePacked(paranetKCStorageContract, paranetKnowledgeCollectionTokenId, paranetKnowledgeAssetTokenId)
         );
 
-        if (!pr.paranetExists(paranetId)) {
-            revert ParanetLib.ParanetDoesntExist(
-                paranetKCStorageContract,
-                paranetKnowledgeCollectionTokenId,
-                paranetKnowledgeAssetTokenId
-            );
-        }
-        ParanetKnowledgeCollectionsRegistry pkcr = paranetKnowledgeCollectionsRegistry;
-        if (
-            pkcr.isParanetKnowledgeCollection(
-                keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
-            )
-        ) {
-            revert ParanetLib.KnowledgeCollectionIsAPartOfOtherParanet(
-                knowledgeCollectionStorageContract,
-                knowledgeCollectionTokenId,
-                pkcr.getParanetId(
-                    keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
-                )
-            );
-        }
+        _validateParanetAndKnowledgeCollection(
+            paranetId,
+            paranetKCStorageContract,
+            paranetKnowledgeCollectionTokenId,
+            paranetKnowledgeAssetTokenId,
+            knowledgeCollectionStorageContract,
+            knowledgeCollectionTokenId
+        );
 
         if (pr.getMinersAccessPolicy(paranetId) == MINERS_ACCESS_POLICY_PERMISSIONED) {
             require(pr.isKnowledgeMinerRegistered(paranetId, msg.sender), "Knowledge miner is not registered");
@@ -1161,6 +1149,39 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             "Knowledge collection is already staged"
         );
         pss.stageKnowledgeCollection(paranetId, knowledgeCollectionId, msg.sender);
+    }
+
+    function _validateParanetAndKnowledgeCollection(
+        bytes32 paranetId,
+        address paranetKCStorageContract,
+        uint256 paranetKnowledgeCollectionTokenId,
+        uint256 paranetKnowledgeAssetTokenId,
+        address knowledgeCollectionStorageContract,
+        uint256 knowledgeCollectionTokenId
+    ) internal view {
+        ParanetsRegistry pr = paranetsRegistry;
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(
+                paranetKCStorageContract,
+                paranetKnowledgeCollectionTokenId,
+                paranetKnowledgeAssetTokenId
+            );
+        }
+
+        ParanetKnowledgeCollectionsRegistry pkcr = paranetKnowledgeCollectionsRegistry;
+        if (
+            pkcr.isParanetKnowledgeCollection(
+                keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
+            )
+        ) {
+            revert ParanetLib.KnowledgeCollectionIsAPartOfOtherParanet(
+                knowledgeCollectionStorageContract,
+                knowledgeCollectionTokenId,
+                pkcr.getParanetId(
+                    keccak256(abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId))
+                )
+            );
+        }
     }
 
     function addCurator(
@@ -1243,14 +1264,15 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         bytes32 knowledgeCollectionId = keccak256(
             abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId)
         );
-        ParanetsRegistry pr = paranetsRegistry;
-        if (!pr.paranetExists(paranetId)) {
-            revert ParanetLib.ParanetDoesntExist(
-                paranetKCStorageContract,
-                paranetKnowledgeCollectionTokenId,
-                paranetKnowledgeAssetTokenId
-            );
-        }
+
+        _validateParanetAndKnowledgeCollection(
+            paranetId,
+            paranetKCStorageContract,
+            paranetKnowledgeCollectionTokenId,
+            paranetKnowledgeAssetTokenId,
+            knowledgeCollectionStorageContract,
+            knowledgeCollectionTokenId
+        );
 
         ParanetStagingRegistry pss = paranetStagingRegistry;
         require(
