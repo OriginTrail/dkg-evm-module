@@ -347,7 +347,7 @@ describe('@unit Paranet', () => {
           3, // invalid miners access policy
           0, // valid submission policy
         ),
-      ).to.be.revertedWith('Invalid access policy');
+      ).to.be.revertedWith('Invalid policy');
 
       // Try with invalid submission policy (2)
       await expect(
@@ -361,7 +361,7 @@ describe('@unit Paranet', () => {
           0, // valid miners access policy
           2, // invalid submission policy
         ),
-      ).to.be.revertedWith('Invalid access policy');
+      ).to.be.revertedWith('Invalid policy');
 
       // Try with all invalid policies
       await expect(
@@ -375,7 +375,7 @@ describe('@unit Paranet', () => {
           3, // invalid miners access policy
           2, // invalid submission policy
         ),
-      ).to.be.revertedWith('Invalid access policy');
+      ).to.be.revertedWith('Invalid policy');
     });
   });
 
