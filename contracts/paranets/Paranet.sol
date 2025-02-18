@@ -1070,7 +1070,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 currentEpoch = chronos.getCurrentEpoch();
         uint40 kcStartEpoch = kcs.getStartEpoch(knowledgeCollectionTokenId);
 
-        if (kcStartEpoch == currentEpoch || kcStartEpoch - 1 == currentEpoch) {
+        if (!(kcStartEpoch == currentEpoch || kcStartEpoch - 1 == currentEpoch)) {
             revert ParanetLib.KnowledgeCollectionNotInFirstEpoch(
                 knowledgeCollectionStorageContract,
                 knowledgeCollectionTokenId
@@ -1140,6 +1140,17 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             knowledgeCollectionsSubmissionPolicy == KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING,
             "Paranet does not allow staging of knowledge collections"
         );
+
+        KnowledgeCollectionStorage kcs = KnowledgeCollectionStorage(knowledgeCollectionStorageContract);
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        uint40 kcStartEpoch = kcs.getStartEpoch(knowledgeCollectionTokenId);
+
+        if (!(kcStartEpoch == currentEpoch || kcStartEpoch - 1 == currentEpoch)) {
+            revert ParanetLib.KnowledgeCollectionNotInFirstEpoch(
+                knowledgeCollectionStorageContract,
+                knowledgeCollectionTokenId
+            );
+        }
 
         bytes32 knowledgeCollectionId = keccak256(
             abi.encodePacked(knowledgeCollectionStorageContract, knowledgeCollectionTokenId)
