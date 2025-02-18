@@ -301,6 +301,82 @@ describe('@unit Paranet', () => {
         ),
       ).to.be.revertedWith("Caller isn't the owner of the KA");
     });
+
+    it('Should revert when registering paranet with invalid access policy values', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const paranetKCStorageContract =
+        await KnowledgeCollectionStorage.getAddress();
+
+      // Create profiles and KC first
+      const { collectionId } = await createProfilesAndKC(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        {
+          Profile,
+          KnowledgeCollection,
+          Token,
+        },
+      );
+
+      // Try with invalid nodes access policy (2)
+      await expect(
+        Paranet.connect(kcCreator).registerParanet(
+          paranetKCStorageContract,
+          collectionId,
+          1, // kaTokenId
+          'Test Paranet',
+          'Test Description',
+          2, // invalid nodes access policy
+          0, // valid miners access policy
+          0, // valid submission policy
+        ),
+      ).to.be.revertedWith('Invalid policy');
+
+      // Try with invalid miners access policy (3)
+      await expect(
+        Paranet.connect(kcCreator).registerParanet(
+          paranetKCStorageContract,
+          collectionId,
+          1, // kaTokenId
+          'Test Paranet',
+          'Test Description',
+          0, // valid nodes access policy
+          3, // invalid miners access policy
+          0, // valid submission policy
+        ),
+      ).to.be.revertedWith('Invalid access policy');
+
+      // Try with invalid submission policy (2)
+      await expect(
+        Paranet.connect(kcCreator).registerParanet(
+          paranetKCStorageContract,
+          collectionId,
+          1, // kaTokenId
+          'Test Paranet',
+          'Test Description',
+          0, // valid nodes access policy
+          0, // valid miners access policy
+          2, // invalid submission policy
+        ),
+      ).to.be.revertedWith('Invalid access policy');
+
+      // Try with all invalid policies
+      await expect(
+        Paranet.connect(kcCreator).registerParanet(
+          paranetKCStorageContract,
+          collectionId,
+          1, // kaTokenId
+          'Test Paranet',
+          'Test Description',
+          2, // invalid nodes access policy
+          3, // invalid miners access policy
+          2, // invalid submission policy
+        ),
+      ).to.be.revertedWith('Invalid access policy');
+    });
   });
 
   describe('Paranet Incentives Pool', () => {
@@ -1345,7 +1421,7 @@ describe('@unit Paranet', () => {
         paranetId,
         knowledgeCollectionId,
       );
-      expect(status).to.equal(3); // REJECTED
+      expect(status).to.equal(3); // Still REJECTED
 
       // 7. Try to approve the rejected KC (should fail)
       await expect(
@@ -1365,6 +1441,173 @@ describe('@unit Paranet', () => {
         knowledgeCollectionId,
       );
       expect(status).to.equal(3); // Still REJECTED
+    });
+
+    it('Should revert when non-curator tries to review collection', async () => {
+      // 1. Setup paranet with staging policy
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const curator = accounts[10];
+      const nonCurator = accounts[11];
+
+      const {
+        paranetOwner,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        {
+          Paranet,
+          Profile,
+          Token,
+          KnowledgeCollection,
+          KnowledgeCollectionStorage,
+        },
+        'Test Paranet',
+        'Test Paranet Description',
+        0,
+        0,
+        1, // STAGING policy
+      );
+
+      // 2. Add curator
+      await Paranet.connect(paranetOwner).addCurator(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        curator.address,
+      );
+
+      // 3. Create and submit KC to paranet staging
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId } = await createKnowledgeCollection(
+        kcCreator,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+        signaturesData,
+        {
+          KnowledgeCollection: KnowledgeCollection,
+          Token: Token,
+        },
+      );
+
+      await Paranet.connect(kcCreator).stageKnowledgeCollection(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        await KnowledgeCollectionStorage.getAddress(),
+        collectionId,
+      );
+
+      // 4. Try to review with non-curator account
+      await expect(
+        Paranet.connect(nonCurator).reviewKnowledgeCollection(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          await KnowledgeCollectionStorage.getAddress(),
+          collectionId,
+          true, // approve
+        ),
+      ).to.be.revertedWith('Not authorized curator');
+    });
+
+    it('Should revert when reviewing already reviewed collection', async () => {
+      // 1. Setup paranet with staging policy
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const curator = accounts[10];
+
+      const {
+        paranetOwner,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        {
+          Paranet,
+          Profile,
+          Token,
+          KnowledgeCollection,
+          KnowledgeCollectionStorage,
+        },
+        'Test Paranet',
+        'Test Paranet Description',
+        0,
+        0,
+        1, // STAGING policy
+      );
+
+      // 2. Add curator
+      await Paranet.connect(paranetOwner).addCurator(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        curator.address,
+      );
+
+      // 3. Create and submit KC to paranet staging
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId } = await createKnowledgeCollection(
+        kcCreator,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+        signaturesData,
+        {
+          KnowledgeCollection: KnowledgeCollection,
+          Token: Token,
+        },
+      );
+
+      await Paranet.connect(kcCreator).stageKnowledgeCollection(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        await KnowledgeCollectionStorage.getAddress(),
+        collectionId,
+      );
+
+      // 4. First review (approve)
+      await Paranet.connect(curator).reviewKnowledgeCollection(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        await KnowledgeCollectionStorage.getAddress(),
+        collectionId,
+        false, // rejected
+      );
+
+      // 5. Try to review again
+      await expect(
+        Paranet.connect(curator).reviewKnowledgeCollection(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          await KnowledgeCollectionStorage.getAddress(),
+          collectionId,
+          true, // approve
+        ),
+      ).to.be.revertedWith('Knowledge collection is not staged');
     });
   });
 
@@ -1518,6 +1761,363 @@ describe('@unit Paranet', () => {
       expect(curators).to.include(curator1.address);
       expect(curators).to.include(curator3.address);
       expect(curators).to.not.include(curator2.address);
+    });
+
+    it('Should revert when adding curator to non-staging paranet', async () => {
+      // Setup paranet with OPEN submission policy (0)
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const curator = accounts[10];
+
+      const {
+        paranetOwner,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+      } = await setupParanet(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        {
+          Paranet,
+          Profile,
+          Token,
+          KnowledgeCollection,
+          KnowledgeCollectionStorage,
+        },
+        'Test Paranet',
+        'Test Paranet Description',
+        0, // nodesAccessPolicy
+        0, // minersAccessPolicy
+        0, // OPEN submission policy
+      );
+
+      // Attempt to add curator - should fail
+      await expect(
+        Paranet.connect(paranetOwner).addCurator(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          curator.address,
+        ),
+      ).to.be.revertedWith('Paranet does not allow adding curators');
+    });
+
+    it('Should revert when adding same curator twice', async () => {
+      // Setup paranet with staging policy
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const curator = accounts[10];
+
+      const {
+        paranetOwner,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+      } = await setupParanet(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        {
+          Paranet,
+          Profile,
+          Token,
+          KnowledgeCollection,
+          KnowledgeCollectionStorage,
+        },
+        'Test Paranet',
+        'Test Paranet Description',
+        0, // nodesAccessPolicy
+        0, // minersAccessPolicy
+        1, // STAGING policy
+      );
+
+      // Add curator first time
+      await Paranet.connect(paranetOwner).addCurator(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        curator.address,
+      );
+
+      // Try to add same curator again - should fail
+      await expect(
+        Paranet.connect(paranetOwner).addCurator(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          curator.address,
+        ),
+      ).to.be.revertedWith('Existing curator');
+    });
+
+    it('Should revert when removing non-existent curator', async () => {
+      // Setup paranet with staging policy
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const nonExistentCurator = accounts[10];
+
+      const {
+        paranetOwner,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+      } = await setupParanet(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        {
+          Paranet,
+          Profile,
+          Token,
+          KnowledgeCollection,
+          KnowledgeCollectionStorage,
+        },
+        'Test Paranet',
+        'Test Paranet Description',
+        0, // nodesAccessPolicy
+        0, // minersAccessPolicy
+        1, // STAGING policy
+      );
+
+      // Try to remove curator that was never added - should fail
+      await expect(
+        Paranet.connect(paranetOwner).removeCurator(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          nonExistentCurator.address,
+        ),
+      ).to.be.revertedWith('Address is not a curator');
+    });
+  });
+
+  describe('Paranet Service Registration', () => {
+    it('Should register a paranet service successfully', async () => {
+      // 1. Setup initial paranet
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetOwner,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetId,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Create a new knowledge collection for the service
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId: serviceCollectionId } =
+        await createKnowledgeCollection(
+          kcCreator,
+          publishingNodeIdentityId,
+          receivingNodesIdentityIds,
+          signaturesData,
+          {
+            KnowledgeCollection: KnowledgeCollection,
+            Token: Token,
+          },
+        );
+
+      // 3. Setup service parameters
+      const serviceName = 'Test Service';
+      const serviceDescription = 'Test Service Description';
+      const serviceAddresses = [accounts[10].address, accounts[11].address];
+
+      // 4. Register the service
+      const tx = await Paranet.connect(paranetOwner).registerParanetService(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1, // serviceKATokenId
+        serviceName,
+        serviceDescription,
+        serviceAddresses,
+      );
+
+      // 5. Verify service registration
+      const serviceId = ethers.keccak256(
+        ethers.solidityPacked(
+          ['address', 'uint256', 'uint256'],
+          [
+            await KnowledgeCollectionStorage.getAddress(),
+            serviceCollectionId,
+            1,
+          ],
+        ),
+      );
+
+      // Check if service exists
+      const serviceExists =
+        await ParanetServicesRegistry.paranetServiceExists(serviceId);
+      expect(serviceExists).to.be.equal(true);
+
+      // Verify service metadata
+      const serviceMetadata =
+        await ParanetServicesRegistry.getParanetServiceMetadata(serviceId);
+      expect(serviceMetadata.name).to.equal(serviceName);
+      expect(serviceMetadata.description).to.equal(serviceDescription);
+      expect(serviceMetadata.paranetServiceAddresses).to.deep.equal(
+        serviceAddresses,
+      );
+      expect(serviceMetadata.paranetServiceKCStorageContract).to.equal(
+        await KnowledgeCollectionStorage.getAddress(),
+      );
+      expect(serviceMetadata.paranetServiceKCTokenId).to.equal(
+        serviceCollectionId,
+      );
+      expect(serviceMetadata.paranetServiceKATokenId).to.equal(1);
+
+      // Verify service addresses
+      const registeredAddresses =
+        await ParanetServicesRegistry.getParanetServiceAddresses(serviceId);
+      expect(registeredAddresses).to.deep.equal(serviceAddresses);
+
+      // Verify individual service addresses are registered
+      for (const addr of serviceAddresses) {
+        const isRegistered =
+          await ParanetServicesRegistry.isParanetServiceAddressRegistered(
+            serviceId,
+            addr,
+          );
+        expect(isRegistered).to.be.equal(true);
+      }
+
+      // 6. Verify event emission
+      await expect(tx)
+        .to.emit(Paranet, 'ParanetServiceRegistered')
+        .withArgs(
+          await KnowledgeCollectionStorage.getAddress(),
+          serviceCollectionId,
+          1,
+          serviceName,
+          serviceDescription,
+          serviceAddresses,
+        );
+
+      // 7. Add paranet service to paranet
+      const addServiceTx = await Paranet.connect(
+        paranetOwner,
+      ).addParanetServices(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        [
+          {
+            knowledgeCollectionStorageContract:
+              await KnowledgeCollectionStorage.getAddress(),
+            knowledgeCollectionTokenId: serviceCollectionId,
+            knowledgeAssetTokenId: 1,
+          },
+        ],
+      );
+
+      // Verify service is implemented in paranet
+      const isImplemented = await ParanetsRegistry.isServiceImplemented(
+        paranetId,
+        serviceId,
+      );
+      expect(isImplemented).to.be.equal(true);
+
+      // Verify paranet services list
+      const paranetServices = await ParanetsRegistry.getServices(paranetId);
+      expect(paranetServices).to.include(serviceId);
+      expect(paranetServices).to.have.lengthOf(1);
+
+      // Verify ParanetServiceAdded event
+      await expect(addServiceTx)
+        .to.emit(Paranet, 'ParanetServiceAdded')
+        .withArgs(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          await KnowledgeCollectionStorage.getAddress(),
+          serviceCollectionId,
+          1,
+        );
+    });
+
+    it('Should revert when trying to register the same paranet service twice', async () => {
+      // 1. Setup initial paranet
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetOwner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Create a new knowledge collection for the service
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId: serviceCollectionId } =
+        await createKnowledgeCollection(
+          kcCreator,
+          publishingNodeIdentityId,
+          receivingNodesIdentityIds,
+          signaturesData,
+          {
+            KnowledgeCollection: KnowledgeCollection,
+            Token: Token,
+          },
+        );
+
+      // 3. Setup service parameters
+      const serviceName = 'Test Service';
+      const serviceDescription = 'Test Service Description';
+      const serviceAddresses = [accounts[10].address, accounts[11].address];
+
+      // 4. Register the service first time
+      await Paranet.connect(paranetOwner).registerParanetService(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1, // serviceKATokenId
+        serviceName,
+        serviceDescription,
+        serviceAddresses,
+      );
+
+      // 5. Attempt to register the same service again
+      await expect(
+        Paranet.connect(paranetOwner).registerParanetService(
+          await KnowledgeCollectionStorage.getAddress(),
+          serviceCollectionId,
+          1, // serviceKATokenId
+          serviceName,
+          serviceDescription,
+          serviceAddresses,
+        ),
+      ).to.be.revertedWithCustomError(
+        Paranet,
+        'ParanetServiceHasAlreadyBeenRegistered',
+      );
     });
   });
 });
