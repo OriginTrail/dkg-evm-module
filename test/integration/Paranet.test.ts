@@ -1256,6 +1256,116 @@ describe('@unit Paranet', () => {
       expect(total).to.equal(0);
       expect(pendingCollections).to.have.lengthOf(0);
     });
+
+    it('Should not allow approving a rejected knowledge collection', async () => {
+      // 1. Setup paranet with staging policy
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetOwner,
+        paranetId,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        {
+          Paranet,
+          Profile,
+          Token,
+          KnowledgeCollection,
+          KnowledgeCollectionStorage,
+        },
+        'Test Paranet',
+        'Test Paranet Description',
+        0,
+        0,
+        1, // STAGING policy
+      );
+
+      // 2. Add paranet owner as curator
+      await Paranet.connect(paranetOwner).addCurator(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner.address,
+      );
+
+      // 3. Create and submit KC to paranet staging
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId } = await createKnowledgeCollection(
+        kcCreator,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+        signaturesData,
+        {
+          KnowledgeCollection: KnowledgeCollection,
+          Token: Token,
+        },
+      );
+
+      // 4. Stage the Knowledge Collection
+      await Paranet.connect(kcCreator).stageKnowledgeCollection(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        await KnowledgeCollectionStorage.getAddress(),
+        collectionId,
+      );
+
+      const knowledgeCollectionId = ethers.keccak256(
+        ethers.solidityPacked(
+          ['address', 'uint256'],
+          [await KnowledgeCollectionStorage.getAddress(), collectionId],
+        ),
+      );
+
+      // 5. Reject the KC
+      await Paranet.connect(paranetOwner).reviewKnowledgeCollection(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        await KnowledgeCollectionStorage.getAddress(),
+        collectionId,
+        false, // reject
+      );
+
+      // 6. Verify rejection status
+      let status = await ParanetStagingRegistry.getKnowledgeCollectionStatus(
+        paranetId,
+        knowledgeCollectionId,
+      );
+      expect(status).to.equal(3); // REJECTED
+
+      // 7. Try to approve the rejected KC (should fail)
+      await expect(
+        Paranet.connect(paranetOwner).reviewKnowledgeCollection(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          await KnowledgeCollectionStorage.getAddress(),
+          collectionId,
+          true, // try to approve
+        ),
+      ).to.be.revertedWith('Knowledge collection is not staged');
+
+      // 8. Verify status remains rejected
+      status = await ParanetStagingRegistry.getKnowledgeCollectionStatus(
+        paranetId,
+        knowledgeCollectionId,
+      );
+      expect(status).to.equal(3); // Still REJECTED
+    });
   });
 
   describe('Paranet Curator Management', () => {
