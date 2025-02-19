@@ -212,12 +212,12 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         return paranets[paranetId].paranetNodeJoinRequests[identityId].length;
     }
 
-    function addCuratedNode(bytes32 paranetId, uint72 identityId, bytes calldata nodeId) external onlyContracts {
+    function addPermissionedNode(bytes32 paranetId, uint72 identityId, bytes calldata nodeId) external onlyContracts {
         paranets[paranetId].curatedNodesIndexes[identityId] = paranets[paranetId].curatedNodes.length;
         paranets[paranetId].curatedNodes.push(ParanetLib.Node({identityId: identityId, nodeId: nodeId}));
     }
 
-    function removeCuratedNode(bytes32 paranetId, uint72 identityId) external onlyContracts {
+    function removePermissionedNode(bytes32 paranetId, uint72 identityId) external onlyContracts {
         paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodesIndexes[identityId]] = paranets[paranetId]
             .curatedNodes[paranets[paranetId].curatedNodes.length - 1];
         paranets[paranetId].curatedNodesIndexes[
@@ -228,15 +228,15 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         paranets[paranetId].curatedNodes.pop();
     }
 
-    function getCuratedNodes(bytes32 paranetId) external view returns (ParanetLib.Node[] memory) {
+    function getPermissionedNodes(bytes32 paranetId) external view returns (ParanetLib.Node[] memory) {
         return paranets[paranetId].curatedNodes;
     }
 
-    function getCuratedNodesCount(bytes32 paranetId) external view returns (uint256) {
+    function getPermissionedNodesCount(bytes32 paranetId) external view returns (uint256) {
         return paranets[paranetId].curatedNodes.length;
     }
 
-    function isCuratedNode(bytes32 paranetId, uint72 identityId) external view returns (bool) {
+    function isPermissionedNode(bytes32 paranetId, uint72 identityId) external view returns (bool) {
         return (paranets[paranetId].curatedNodes.length != 0 &&
             paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodesIndexes[identityId]].identityId ==
             identityId);

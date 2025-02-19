@@ -178,23 +178,23 @@ library ParanetLib {
         uint256 knowledgeAssetTokenId
     );
     error InvalidParanetNodesAccessPolicy(uint8[] expectedAccessPolicies, uint8 actualAccessPolicy);
-    error ParanetCuratedNodeHasAlreadyBeenAdded(bytes32 paranetId, uint72 identityId);
-    error ParanetCuratedNodeDoesntExist(bytes32 paranetId, uint72 identityId);
-    error ParanetCuratedNodeJoinRequestInvalidStatus(
+    error ParanetPermissionedNodeHasAlreadyBeenAdded(bytes32 paranetId, uint72 identityId);
+    error ParanetPermissionedNodeDoesntExist(bytes32 paranetId, uint72 identityId);
+    error ParanetPermissionedNodeJoinRequestInvalidStatus(
         bytes32 paranetId,
         uint72 identityId,
         ParanetLib.RequestStatus status
     );
-    error ParanetCuratedNodeJoinRequestDoesntExist(bytes32 paranetId, uint72 identityId);
+    error ParanetPermissionedNodeJoinRequestDoesntExist(bytes32 paranetId, uint72 identityId);
     error InvalidParanetMinersAccessPolicy(uint8[] expectedAccessPolicies, uint8 actualAccessPolicy);
-    error ParanetCuratedMinerHasAlreadyBeenAdded(bytes32 paranetId, address miner);
-    error ParanetCuratedMinerDoesntExist(bytes32 paranetId, address miner);
-    error ParanetCuratedMinerAccessRequestInvalidStatus(
+    error ParanetPermissionedMinerHasAlreadyBeenAdded(bytes32 paranetId, address miner);
+    error ParanetPermissionedMinerDoesntExist(bytes32 paranetId, address miner);
+    error ParanetPermissionedMinerAccessRequestInvalidStatus(
         bytes32 paranetId,
         address miner,
         ParanetLib.RequestStatus status
     );
-    error ParanetCuratedMinerAccessRequestDoesntExist(bytes32 paranetId, address miner);
+    error ParanetPermissionedMinerAccessRequestDoesntExist(bytes32 paranetId, address miner);
     error ParanetIncentivesPoolAlreadyExists(
         address knowledgeCollectionStorageAddress,
         uint256 knowledgeCollectionTokenId,
