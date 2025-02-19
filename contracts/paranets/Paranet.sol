@@ -1005,9 +1005,9 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
 
     //     ParanetLib.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
 
-    //     // Check if paranet is curated and if knowledge miner is whitelisted
+    //     // Check if paranet is permisioned and if knowledge miner is whitelisted
     //     if (
-    //         minersAccessPolicy == ParanetLib.MinersAccessPolicy.CURATED &&
+    //         minersAccessPolicy == ParanetLib.MinersAccessPolicy.permisioned &&
     //         !pr.isKnowledgeMinerRegistered(paranetId, msg.sender)
     //     ) {
     //         revert ParanetLib.ParanetCuratedMinerDoesntExist(paranetId, msg.sender);
@@ -1317,7 +1317,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
         ParanetsRegistry pr = paranetsRegistry;
         uint8 minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
-        // Check if paranet is curated and if knowledge miner is whitelisted
+        // Check if paranet is permisioned and if knowledge miner is whitelisted
         if (minersAccessPolicy == MINERS_ACCESS_POLICY_PERMISSIONED) {
             require(pr.isKnowledgeMinerRegistered(paranetId, msg.sender), "Miner is not registered");
             // Should this be done in both cases why would OPEN have separeted logic ???

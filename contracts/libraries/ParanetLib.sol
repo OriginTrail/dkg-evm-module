@@ -68,9 +68,9 @@ library ParanetLib {
         mapping(string => uint256) incentivesPoolsByNameIndexes;
         // Incentives Pool Storage Address => Index in the array
         mapping(address => uint256) incentivesPoolsByStorageAddressIndexes;
-        Node[] curatedNodes;
+        Node[] permissionedNodes;
         // Identity ID => Index in the array
-        mapping(uint72 => uint256) curatedNodesIndexes;
+        mapping(uint72 => uint256) permissionedNodesIndexes;
         // Identity ID => Requests Array
         mapping(uint72 => ParanetNodeJoinRequest[]) paranetNodeJoinRequests;
         bytes32[] services;
