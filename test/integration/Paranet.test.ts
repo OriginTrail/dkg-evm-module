@@ -482,6 +482,7 @@ describe('@unit Paranet', () => {
         paranetOwner,
         publishingNodeIdentityId,
         receivingNodesIdentityIds,
+        paranetId,
       } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
         Paranet,
         Profile,
@@ -491,7 +492,7 @@ describe('@unit Paranet', () => {
       });
 
       // 2. Deploy incentives pool
-      const tracToNeuroEmissionMultiplier = ethers.parseUnits('1', 12); // 1 NEURO per 1 TRAC
+      const tracToNeuroEmissionMultiplier = ethers.parseUnits('5', 12); // 5 NEURO per 1 TRAC
       const operatorRewardPercentage = 1000; // 10%
       const votersRewardPercentage = 2000; // 20%
 
@@ -536,7 +537,6 @@ describe('@unit Paranet', () => {
           Token,
         },
       );
-
       await Paranet.connect(kcCreator).submitKnowledgeCollection(
         paranetKCStorageContract,
         paranetKCTokenId,
@@ -546,7 +546,7 @@ describe('@unit Paranet', () => {
       );
 
       // 4. Fund the incentives pool with tokens
-      const fundAmount = ethers.parseUnits('1000', 18); // 1000 tokens
+      const fundAmount = ethers.parseUnits('1000', 12); // 1000 tokens
       await Token.connect(accounts[0]).mint(poolStorageAddress, fundAmount);
 
       // 5. Get pool contracts
@@ -567,21 +567,91 @@ describe('@unit Paranet', () => {
       );
       expect(await incentivesPoolStorage.totalVotersclaimedToken()).to.equal(0);
 
+      // 6.1. Check claim subfunctions - Not necessary for the claim flow
+      // Check all percentage getters
+      const operatorPercentage =
+        await incentivesPoolStorage.paranetOperatorRewardPercentage();
+      const votersPercentage =
+        await incentivesPoolStorage.paranetIncentivizationProposalVotersRewardPercentage();
+
+      expect(operatorPercentage).to.equal(operatorRewardPercentage); // 10%
+      expect(votersPercentage).to.equal(votersRewardPercentage); // 20%
+
+      // Calculate miners percentage (should be 70%)
+      const minersPercentage =
+        BigInt(10 ** 4) - operatorPercentage - votersPercentage;
+      expect(minersPercentage).to.equal(7000); // 70%
+
+      expect(await incentivesPoolStorage.paranetId()).to.equal(paranetId);
+
+      // Check effective token emission multiplier
+      const effectiveMultiplier =
+        await incentivesPool.getEffectiveTokenEmissionMultiplier(
+          await hre.ethers.provider
+            .getBlock('latest')
+            .then((b) => b!.timestamp),
+        );
+      expect(effectiveMultiplier).to.equal(ethers.parseUnits('5', 12));
+
+      // Check unrewarded TRAC spent
+      const unrewardedTracSpent =
+        await ParanetKnowledgeMinersRegistry.getUnrewardedTracSpent(
+          kcCreator.address,
+          await incentivesPoolStorage.paranetId(),
+        );
+      expect(unrewardedTracSpent).to.be.gt(10 ** 6);
+
+      // Calculate expected reward manually
+      const expectedReward =
+        (((BigInt(unrewardedTracSpent) * effectiveMultiplier) /
+          BigInt(10 ** 18)) *
+          BigInt(minersPercentage)) /
+        BigInt(10 ** 4);
+
+      // Compare with contract calculation
+      const actualReward = await incentivesPool
+        .connect(kcCreator)
+        .getTotalKnowledgeMinerIncentiveEstimation();
+      expect(actualReward).to.equal(expectedReward);
+      expect(actualReward).to.be.gt(0);
+
+      const claimableMinerRewardAmount = await incentivesPool
+        .connect(kcCreator)
+        .getClaimableKnowledgeMinerRewardAmount();
+
+      const newUnrewardedTracSpent =
+        claimableMinerRewardAmount == actualReward
+          ? 0
+          : (BigInt(actualReward - claimableMinerRewardAmount) *
+              BigInt(10 ** 18)) /
+            BigInt(await incentivesPoolStorage.getClaimedMinerRewardsLength());
+
+      expect(newUnrewardedTracSpent).to.equal(0);
+
+      expect(
+        await incentivesPoolStorage.getClaimedMinerRewardsLength(),
+      ).to.equal(0);
+
       // 7. Claim miner rewards
-      const minerRewardEstimate =
-        await incentivesPool.getTotalKnowledgeMinerIncentiveEstimation();
+      const minerRewardEstimate = await incentivesPool
+        .connect(kcCreator)
+        .getTotalKnowledgeMinerIncentiveEstimation();
       expect(minerRewardEstimate).to.be.gt(0);
 
-      const claimableMinerReward =
-        await incentivesPool.getClaimableKnowledgeMinerRewardAmount();
+      const claimableMinerReward = await incentivesPool
+        .connect(kcCreator)
+        .getClaimableKnowledgeMinerRewardAmount();
+
       await incentivesPool
         .connect(kcCreator)
         .claimKnowledgeMinerReward(claimableMinerReward);
 
       // 8. Verify miner rewards claimed correctly
-      expect(await incentivesPoolStorage.totalMinersclaimedToken()).to.equal(
-        claimableMinerReward,
-      );
+      expect(
+        await incentivesPoolStorage
+          .connect(kcCreator)
+          .totalMinersclaimedToken(),
+      ).to.equal(claimableMinerReward);
       const minerProfile =
         await incentivesPoolStorage.getClaimedMinerRewardsAtIndex(
           await incentivesPoolStorage.claimedMinerRewardsIndexes(
@@ -619,6 +689,99 @@ describe('@unit Paranet', () => {
       expect(await incentivesPoolStorage.getBalance()).to.equal(
         expectedRemainingBalance,
       );
+    });
+
+    it('Should fail to claim rewards when pool has no funds', async () => {
+      // 1. Setup paranet first
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetOwner,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+        paranetId,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // Deploy pool without funding it
+      const tx = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        ethers.parseUnits('1', 12), // 1 NEURO per 1 TRAC
+        1000, // 10% operatorRewardPercentage
+        2000, // 20% votersRewardPercentage
+        'TestPool',
+        await Token.getAddress(),
+      );
+
+      const receipt = await tx.wait();
+      const event = receipt!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      const incentivesPool = await hre.ethers.getContractAt(
+        'ParanetIncentivesPool',
+        event?.args[4],
+      );
+
+      // Create and submit knowledge collections to paranet
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId } = await createKnowledgeCollection(
+        kcCreator,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+        signaturesData,
+        {
+          KnowledgeCollection,
+          Token,
+        },
+      );
+
+      await Paranet.connect(kcCreator).submitKnowledgeCollection(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        await KnowledgeCollectionStorage.getAddress(),
+        collectionId,
+      );
+
+      expect(
+        await ParanetsRegistry.isKnowledgeMinerRegistered(
+          paranetId,
+          kcCreator.address,
+        ),
+      ).to.be.equal(true);
+
+      // Try to claim miner rewards
+      await expect(
+        incentivesPool.connect(kcCreator).claimKnowledgeMinerReward(0),
+      ).to.be.revertedWithCustomError(incentivesPool, 'NoRewardAvailable');
+
+      // Try to claim operator rewards
+      await expect(
+        incentivesPool.connect(paranetOwner).claimParanetOperatorReward(),
+      ).to.be.revertedWithCustomError(incentivesPool, 'NoRewardAvailable');
     });
   });
 
