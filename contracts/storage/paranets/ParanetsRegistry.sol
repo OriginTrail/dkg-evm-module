@@ -297,7 +297,8 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
             return false;
         }
 
-        return paranet.incentivesPools[index].storageAddr != address(0);
+        return
+            keccak256(abi.encodePacked(paranet.incentivesPools[index].name)) == keccak256(abi.encodePacked(poolName));
     }
 
     function hasIncentivesPoolByStorageAddress(bytes32 paranetId, address storageAddr) external view returns (bool) {
