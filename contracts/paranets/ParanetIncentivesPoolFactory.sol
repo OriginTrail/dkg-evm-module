@@ -80,8 +80,10 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
     ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
         bytes32 paranetId = _computeParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         ParanetsRegistry pr = paranetsRegistry;
-        require(pr.paranetExists(paranetId));
-        require(!pr.hasIncentivesPoolByName(paranetId, incentivesPoolName));
+        require(pr.paranetExists(paranetId), "Paranet does not exist");
+        require(tracToTokenEmissionMultiplier > 0, "Emission multiplier must be greater than 0");
+        require(bytes(incentivesPoolName).length > 0, "Pool name cannot be empty");
+        require(!pr.hasIncentivesPoolByName(paranetId, incentivesPoolName), "Pool name already exists");
 
         ParanetIncentivesPoolStorage storage_ = new ParanetIncentivesPoolStorage(
             address(hub),
