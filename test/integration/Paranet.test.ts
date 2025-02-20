@@ -466,6 +466,176 @@ describe('@unit Paranet', () => {
       ).to.equal(event?.args[4]);
       expect(await incentivesPoolStorage.paranetId()).to.equal(paranetId);
     });
+
+    it('Should handle multiple incentives pools for same paranet', async () => {
+      // 1. Setup paranet first
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetId,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Deploy first incentives pool
+      const tx1 = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        ethers.parseUnits('1', 12), // 1 NEURO per 1 TRAC
+        1000, // 10% operator
+        2000, // 20% voters
+        'Pool1',
+        await Token.getAddress(),
+      );
+
+      const receipt1 = await tx1.wait();
+      const event1 = receipt1!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      // 3. Deploy second incentives pool with different parameters
+      const tx2 = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        ethers.parseUnits('2', 12), // 2 NEURO per 1 TRAC
+        1500, // 15% operator
+        2500, // 25% voters
+        'Pool2',
+        await Token.getAddress(),
+      );
+
+      const receipt2 = await tx2.wait();
+      const event2 = receipt2!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      // 4. Verify both pools exist and have correct parameters
+      const pool1 = await ParanetsRegistry.getIncentivesPoolByPoolName(
+        paranetId,
+        'Pool1',
+      );
+      const pool2 = await ParanetsRegistry.getIncentivesPoolByPoolName(
+        paranetId,
+        'Pool2',
+      );
+
+      expect(pool1.storageAddr).to.equal(event1?.args[3]);
+      expect(pool2.storageAddr).to.equal(event2?.args[3]);
+      expect(pool1.storageAddr).to.not.equal(pool2.storageAddr);
+
+      // 5. Verify pool parameters through storage contracts
+      const pool1Storage = await hre.ethers.getContractAt(
+        'ParanetIncentivesPoolStorage',
+        event1?.args[3],
+      );
+      const pool2Storage = await hre.ethers.getContractAt(
+        'ParanetIncentivesPoolStorage',
+        event2?.args[3],
+      );
+
+      expect(await pool1Storage.paranetId()).to.equal(paranetId);
+      expect(await pool2Storage.paranetId()).to.equal(paranetId);
+    });
+
+    it('Should fail to deploy incentives pool with invalid parameters', async () => {
+      // 1. Setup paranet
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Try to deploy with operator + voters percentage > 100%
+      await expect(
+        ParanetIncentivesPoolFactory.connect(paranetOwner).deployIncentivesPool(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          ethers.parseUnits('1', 12),
+          5000, // 50% operator
+          6000, // 60% voters (total 110%)
+          'InvalidPool',
+          await Token.getAddress(),
+        ),
+      ).to.be.revertedWith('Invalid rewards ratio');
+
+      // 3. Try to deploy with zero emission multiplier
+      await expect(
+        ParanetIncentivesPoolFactory.connect(paranetOwner).deployIncentivesPool(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          0, // zero multiplier
+          1000,
+          2000,
+          'InvalidPool',
+          await Token.getAddress(),
+        ),
+      ).to.be.revertedWith('Emission multiplier must be greater than 0');
+
+      // 4. Try to deploy with empty pool name
+      await expect(
+        ParanetIncentivesPoolFactory.connect(paranetOwner).deployIncentivesPool(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          ethers.parseUnits('1', 12),
+          1000,
+          2000,
+          '', // empty name
+          await Token.getAddress(),
+        ),
+      ).to.be.revertedWith('Pool name cannot be empty');
+
+      // 5. Try to deploy with invalid paranet
+      await expect(
+        ParanetIncentivesPoolFactory.connect(paranetOwner).deployIncentivesPool(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId + 1, // invalid paranet token id
+          ethers.parseUnits('1', 12),
+          1000,
+          2000,
+          'InvalidPool', // empty name
+          await Token.getAddress(),
+        ),
+      ).to.be.revertedWith('Paranet does not exist');
+    });
   });
 
   describe('Paranet Incentives Pool Rewards', () => {
@@ -773,15 +943,235 @@ describe('@unit Paranet', () => {
         ),
       ).to.be.equal(true);
 
+      // Verify rewards are calculated for the miner
+      const minerRewardEstimate = await incentivesPool
+        .connect(kcCreator)
+        .getTotalKnowledgeMinerIncentiveEstimation();
+      expect(minerRewardEstimate).to.be.gt(0);
+
+      const claimableMinerReward = await incentivesPool
+        .connect(kcCreator)
+        .getClaimableKnowledgeMinerRewardAmount();
+      expect(claimableMinerReward).to.equal(0);
+
       // Try to claim miner rewards
       await expect(
         incentivesPool.connect(kcCreator).claimKnowledgeMinerReward(0),
       ).to.be.revertedWithCustomError(incentivesPool, 'NoRewardAvailable');
 
+      // Verify rewards are calculated for the operator
+      const operatorRewardEstimate = await incentivesPool
+        .connect(paranetOwner)
+        .getTotalParanetOperatorIncentiveEstimation();
+      expect(operatorRewardEstimate).to.be.gt(0);
+
+      const claimableOperatorReward =
+        await incentivesPool.getClaimableParanetOperatorRewardAmount();
+      expect(claimableOperatorReward).to.equal(0);
+
       // Try to claim operator rewards
       await expect(
         incentivesPool.connect(paranetOwner).claimParanetOperatorReward(),
       ).to.be.revertedWithCustomError(incentivesPool, 'NoRewardAvailable');
+    });
+
+    it('Should handle incentives pool with zero rewards available', async () => {
+      // 1. Setup paranet and create KC
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Deploy incentives pool (but don't fund it)
+      const tx = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        ethers.parseUnits('1', 12),
+        1000,
+        2000,
+        'EmptyPool',
+        await Token.getAddress(),
+      );
+
+      const receipt = await tx.wait();
+      const event = receipt!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      // 3. Create and submit KC to generate some rewards
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId } = await createKnowledgeCollection(
+        kcCreator,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+        signaturesData,
+        {
+          KnowledgeCollection,
+          Token,
+        },
+      );
+
+      await Paranet.connect(kcCreator).submitKnowledgeCollection(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        await KnowledgeCollectionStorage.getAddress(),
+        collectionId,
+      );
+
+      // 4. Try to claim rewards from empty pool
+      const incentivesPool = await hre.ethers.getContractAt(
+        'ParanetIncentivesPool',
+        event?.args[4],
+      );
+
+      // Verify rewards are calculated but not claimable
+      const minerRewardEstimate = await incentivesPool
+        .connect(kcCreator)
+        .getTotalKnowledgeMinerIncentiveEstimation();
+      expect(minerRewardEstimate).to.be.gt(0);
+
+      const claimableMinerReward = await incentivesPool
+        .connect(kcCreator)
+        .getClaimableKnowledgeMinerRewardAmount();
+      expect(claimableMinerReward).to.equal(0);
+
+      // Try to claim - should fail
+      await expect(
+        incentivesPool.connect(kcCreator).claimKnowledgeMinerReward(0),
+      ).to.be.revertedWithCustomError(incentivesPool, 'NoRewardAvailable');
+    });
+
+    it('Should handle incentives pool with partial funding', async () => {
+      // 1. Setup paranet and create KC
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Deploy incentives pool
+      const tx = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        ethers.parseUnits('1', 12),
+        1000,
+        2000,
+        'PartialPool',
+        await Token.getAddress(),
+      );
+
+      const receipt = await tx.wait();
+      const event = receipt!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      // 3. Create and submit KC to generate rewards
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId } = await createKnowledgeCollection(
+        kcCreator,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+        signaturesData,
+        {
+          KnowledgeCollection,
+          Token,
+        },
+      );
+
+      await Paranet.connect(kcCreator).submitKnowledgeCollection(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        await KnowledgeCollectionStorage.getAddress(),
+        collectionId,
+      );
+
+      const incentivesPool = await hre.ethers.getContractAt(
+        'ParanetIncentivesPool',
+        event?.args[4],
+      );
+
+      // 4. Fund pool with partial miner reward amount
+      const minerRewardEstimate = await incentivesPool
+        .connect(kcCreator)
+        .getTotalKnowledgeMinerIncentiveEstimation();
+      const partialFunding = minerRewardEstimate / BigInt(2); // Fund 50% of estimated rewards
+
+      await Token.connect(accounts[0]).mint(event?.args[3], partialFunding);
+
+      // 5. Verify partial rewards are claimable
+      const claimableMinerReward = await incentivesPool
+        .connect(kcCreator)
+        .getClaimableKnowledgeMinerRewardAmount();
+      expect(claimableMinerReward).to.be.lessThanOrEqual(partialFunding);
+
+      // 6. Claim partial rewards
+      await incentivesPool
+        .connect(kcCreator)
+        .claimKnowledgeMinerReward(claimableMinerReward);
+
+      // 7. Verify remaining rewards are still tracked but not claimable
+      const remainingEstimate = await incentivesPool
+        .connect(kcCreator)
+        .getTotalKnowledgeMinerIncentiveEstimation();
+      expect(remainingEstimate).to.be.lessThanOrEqual(
+        minerRewardEstimate - partialFunding,
+      );
+
+      const remainingClaimable = await incentivesPool
+        .connect(kcCreator)
+        .getClaimableKnowledgeMinerRewardAmount();
+      expect(remainingClaimable).to.equal(0);
     });
   });
 
