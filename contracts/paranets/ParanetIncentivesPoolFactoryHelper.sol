@@ -36,6 +36,7 @@ contract ParanetIncentivesPoolFactoryHelper is INamed, IVersioned, ContractStatu
                 address(hub),
                 hub.getContractAddress("ParanetKnowledgeMinersRegistry"),
                 storageAddress,
+                hub.getContractAddress("ParanetsRegistry"),
                 tracToTokenEmissionMultiplier
             )
         );

@@ -41,11 +41,13 @@ contract ParanetIncentivesPool is INamed, IVersioned, IParanetIncentivesPool {
         address hubAddress,
         address knowledgeMinersRegistryAddress,
         address paranetIncentivesPoolStorageAddress,
+        address paranetsRegistryAddress,
         uint256 tracToTokenEmissionMultiplier
     ) {
         hub = Hub(hubAddress);
         paranetKnowledgeMinersRegistry = ParanetKnowledgeMinersRegistry(knowledgeMinersRegistryAddress);
         paranetIncentivesPoolStorage = ParanetIncentivesPoolStorage(payable(paranetIncentivesPoolStorageAddress));
+        paranetsRegistry = ParanetsRegistry(paranetsRegistryAddress);
 
         tokenEmissionMultipliers.push(
             ParanetLib.TokenEmissionMultiplier({
