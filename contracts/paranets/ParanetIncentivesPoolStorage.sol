@@ -264,7 +264,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
         require(voters.length > 0, "Address is not a registered voter");
 
         uint256 index = votersIndexes[voterAddress];
-        require(index >= voters.length || voters[index].addr != voterAddress, "Address is not a registered voter");
+        require(index < voters.length && voters[index].addr == voterAddress, "Address is not a registered voter");
 
         return voters[index];
     }
