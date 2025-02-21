@@ -4530,7 +4530,7 @@ describe('@unit Paranet', () => {
       );
     });
 
-    it.only('Should handle claiming rewards from multiple incentives pools with native token', async () => {
+    it('Should handle claiming rewards from multiple incentives pools with native token', async () => {
       // 1. Setup paranet with initial configuration
       const kcCreator = getDefaultKCCreator(accounts);
       const publishingNode = getDefaultPublishingNode(accounts);
