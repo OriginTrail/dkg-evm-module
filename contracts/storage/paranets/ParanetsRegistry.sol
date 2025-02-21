@@ -213,32 +213,35 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
     }
 
     function addPermissionedNode(bytes32 paranetId, uint72 identityId, bytes calldata nodeId) external onlyContracts {
-        paranets[paranetId].curatedNodesIndexes[identityId] = paranets[paranetId].curatedNodes.length;
-        paranets[paranetId].curatedNodes.push(ParanetLib.Node({identityId: identityId, nodeId: nodeId}));
+        paranets[paranetId].permissionedNodesIndexes[identityId] = paranets[paranetId].permissionedNodes.length;
+        paranets[paranetId].permissionedNodes.push(ParanetLib.Node({identityId: identityId, nodeId: nodeId}));
     }
 
     function removePermissionedNode(bytes32 paranetId, uint72 identityId) external onlyContracts {
-        paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodesIndexes[identityId]] = paranets[paranetId]
-            .curatedNodes[paranets[paranetId].curatedNodes.length - 1];
-        paranets[paranetId].curatedNodesIndexes[
-            paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodes.length - 1].identityId
-        ] = paranets[paranetId].curatedNodesIndexes[identityId];
+        paranets[paranetId].permissionedNodes[paranets[paranetId].permissionedNodesIndexes[identityId]] = paranets[
+            paranetId
+        ].permissionedNodes[paranets[paranetId].permissionedNodes.length - 1];
+        paranets[paranetId].permissionedNodesIndexes[
+            paranets[paranetId].permissionedNodes[paranets[paranetId].permissionedNodes.length - 1].identityId
+        ] = paranets[paranetId].permissionedNodesIndexes[identityId];
 
-        delete paranets[paranetId].curatedNodesIndexes[identityId];
-        paranets[paranetId].curatedNodes.pop();
+        delete paranets[paranetId].permissionedNodesIndexes[identityId];
+        paranets[paranetId].permissionedNodes.pop();
     }
 
     function getPermissionedNodes(bytes32 paranetId) external view returns (ParanetLib.Node[] memory) {
-        return paranets[paranetId].curatedNodes;
+        return paranets[paranetId].permissionedNodes;
     }
 
     function getPermissionedNodesCount(bytes32 paranetId) external view returns (uint256) {
-        return paranets[paranetId].curatedNodes.length;
+        return paranets[paranetId].permissionedNodes.length;
     }
 
     function isPermissionedNode(bytes32 paranetId, uint72 identityId) external view returns (bool) {
-        return (paranets[paranetId].curatedNodes.length != 0 &&
-            paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodesIndexes[identityId]].identityId ==
+        return (paranets[paranetId].permissionedNodes.length != 0 &&
+            paranets[paranetId]
+                .permissionedNodes[paranets[paranetId].permissionedNodesIndexes[identityId]]
+                .identityId ==
             identityId);
     }
 
