@@ -12,6 +12,7 @@ import {ContractStatus} from "../abstract/ContractStatus.sol";
 import {IInitializable} from "../interfaces/IInitializable.sol";
 import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
+import "hardhat/console.sol";
 
 contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IInitializable {
     event ParanetIncentivesPoolDeployed(
@@ -122,11 +123,14 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         bytes32 paranetId = _computeParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
 
         ParanetsRegistry pr = paranetsRegistry;
-        require(pr.paranetExists(paranetId));
-        require(!pr.hasIncentivesPoolByStorageAddress(paranetId, storageAddress));
+        require(pr.paranetExists(paranetId), "Paranet does not exist");
+        require(
+            pr.hasIncentivesPoolByStorageAddress(paranetId, storageAddress),
+            "Cannot redeploy an incentives pool that does not exist"
+        );
 
         ParanetIncentivesPoolStorage storage_ = ParanetIncentivesPoolStorage(payable(storageAddress));
-        require(storage_.paranetId() == paranetId);
+        require(storage_.paranetId() == paranetId, "Storage contract does not point to the paranet you provided");
 
         address oldPoolAddress = storage_.paranetIncentivesPoolAddress();
         uint256 tracToTokenEmissionMultiplier = ParanetIncentivesPool(oldPoolAddress)
@@ -137,7 +141,6 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
             tracToTokenEmissionMultiplier,
             address(storage_)
         );
-
         emit ParanetIncentivesPoolRedeployed(
             paranetKCStorageContract,
             paranetKCTokenId,
