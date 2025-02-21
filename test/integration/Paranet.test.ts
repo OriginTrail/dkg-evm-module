@@ -843,6 +843,104 @@ describe('@unit Paranet', () => {
         await newPool.getEffectiveTokenEmissionMultiplier(await time.latest()),
       ).to.equal(originalEmissionMultiplier);
     });
+
+    it('Should handle token emission multiplier updates correctly', async () => {
+      // 1. Setup paranet and pool
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      const initialEmissionMultiplier = ethers.parseUnits('1', 12);
+
+      // Deploy pool
+      const tx = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        initialEmissionMultiplier,
+        1000, // 10% operator
+        2000, // 20% voters
+        'TestPool',
+        await Token.getAddress(),
+      );
+
+      const receipt = await tx.wait();
+      const event = receipt!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      const incentivesPool = await hre.ethers.getContractAt(
+        'ParanetIncentivesPool',
+        event?.args[4],
+      );
+      const incentivesPoolStorage = await hre.ethers.getContractAt(
+        'ParanetIncentivesPoolStorage',
+        event?.args[3],
+      );
+
+      // Get registrar (hub owner)
+      const registrar = await incentivesPoolStorage.votersRegistrar();
+      const registrarSigner = await hre.ethers.getSigner(registrar);
+
+      // Initiate multiplier update
+      const newMultiplier = ethers.parseUnits('2', 12); // 2 NEURO per 1 TRAC
+      await expect(
+        incentivesPool
+          .connect(registrarSigner)
+          .initiateTokenEmissionMultiplierUpdate(newMultiplier),
+      )
+        .to.emit(incentivesPool, 'TokenEmissionMultiplierUpdateInitiated')
+        .withArgs(
+          initialEmissionMultiplier,
+          newMultiplier,
+          (await time.latest()) + 7 * 24 * 3600 + 1, // Add 1 to account for the block being mined
+        );
+
+      // Try to finalize too early - should fail
+      await expect(
+        incentivesPool
+          .connect(registrarSigner)
+          .finalizeTokenEmissionMultiplierUpdate(),
+      ).to.be.revertedWith('Delay period not yet passed');
+
+      // Move time forward 7 days
+      await time.increase(7 * 24 * 3600);
+
+      // Finalize update
+      await expect(
+        incentivesPool
+          .connect(registrarSigner)
+          .finalizeTokenEmissionMultiplierUpdate(),
+      )
+        .to.emit(incentivesPool, 'TokenEmissionMultiplierUpdateFinalized')
+        .withArgs(initialEmissionMultiplier, newMultiplier);
+
+      // Verify new multiplier is active
+      expect(
+        await incentivesPool.getEffectiveTokenEmissionMultiplier(
+          await time.latest(),
+        ),
+      ).to.equal(newMultiplier);
+    });
   });
 
   describe('Paranet Incentives Pool Rewards', () => {
