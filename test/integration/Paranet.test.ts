@@ -4322,4 +4322,440 @@ describe('@unit Paranet', () => {
       expect(finalNodes[0].identityId).to.equal(node2IdentityId);
     });
   });
+
+  describe('Paranet Incentives Pool Rewards', () => {
+    it('Should handle claiming rewards from multiple incentives pools', async () => {
+      // 1. Setup paranet with initial configuration
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        // paranetId,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Deploy two incentive pools with different parameters
+      const tx1 = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        ethers.parseUnits('1', 12), // 1 NEURO per 1 TRAC
+        1000, // 10% operator
+        2000, // 20% voters
+        'Pool1',
+        await Token.getAddress(),
+      );
+      const receipt1 = await tx1.wait();
+      const event1 = receipt1!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      const tx2 = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        ethers.parseUnits('2', 12), // 2 NEURO per 1 TRAC
+        1500, // 15% operator
+        2500, // 25% voters
+        'Pool2',
+        await Token.getAddress(),
+      );
+      const receipt2 = await tx2.wait();
+      const event2 = receipt2!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      // 3. Fund both pools
+      const pool1Amount = ethers.parseUnits('100', 18); // 100 NEURO
+      const pool2Amount = ethers.parseUnits('200', 18); // 200 NEURO
+      await Token.connect(paranetOwner).approve(event1?.args[3], pool1Amount);
+      await Token.connect(paranetOwner).approve(event2?.args[3], pool2Amount);
+
+      const pool1Storage = await hre.ethers.getContractAt(
+        'ParanetIncentivesPoolStorage',
+        event1?.args[3],
+      );
+      const pool1 = await hre.ethers.getContractAt(
+        'ParanetIncentivesPool',
+        event1?.args[4],
+      );
+
+      const pool2Storage = await hre.ethers.getContractAt(
+        'ParanetIncentivesPoolStorage',
+        event2?.args[3],
+      );
+      const pool2 = await hre.ethers.getContractAt(
+        'ParanetIncentivesPool',
+        event2?.args[4],
+      );
+
+      await Token.connect(accounts[0]).mint(pool1Storage, pool1Amount);
+      await Token.connect(accounts[0]).mint(pool2Storage, pool2Amount);
+
+      expect(await pool1Storage.getBalance()).to.equal(pool1Amount);
+      expect(await pool1Storage.totalMinersclaimedToken()).to.equal(0);
+      expect(await pool1Storage.totalOperatorsclaimedToken()).to.equal(0);
+      expect(await pool1Storage.totalVotersclaimedToken()).to.equal(0);
+
+      expect(await pool2Storage.getBalance()).to.equal(pool2Amount);
+      expect(await pool2Storage.totalMinersclaimedToken()).to.equal(0);
+      expect(await pool2Storage.totalOperatorsclaimedToken()).to.equal(0);
+      expect(await pool2Storage.totalVotersclaimedToken()).to.equal(0);
+
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+
+      const miner = accounts[100];
+      const { collectionId } = await createKnowledgeCollection(
+        miner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+        signaturesData,
+        {
+          KnowledgeCollection,
+          Token,
+        },
+      );
+
+      await Paranet.connect(miner).submitKnowledgeCollection(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        await KnowledgeCollectionStorage.getAddress(),
+        collectionId,
+      );
+
+      // 5. Claim rewards from first pool
+      const initialMinerBalance = await Token.balanceOf(
+        await miner.getAddress(),
+      );
+      const minerRewardEstimate1 = await pool1
+        .connect(miner)
+        .getTotalKnowledgeMinerIncentiveEstimation();
+      expect(minerRewardEstimate1).to.be.gt(0);
+
+      await pool1
+        .connect(miner)
+        .claimKnowledgeMinerReward(minerRewardEstimate1);
+      // 6. Verify first pool is empty and second pool still has funds
+      expect(await Token.balanceOf(await miner.getAddress())).to.be.equal(
+        initialMinerBalance + minerRewardEstimate1,
+      );
+      expect(await Token.balanceOf(event1?.args[3])).to.equal(
+        pool1Amount - minerRewardEstimate1,
+      );
+      expect(await Token.balanceOf(event2?.args[3])).to.equal(pool2Amount);
+
+      // 7. Claim rewards from second pool
+      const minerRewardEstimate0 = await pool2
+        .connect(miner)
+        .getTotalKnowledgeMinerIncentiveEstimation();
+      expect(minerRewardEstimate0).to.be.equal(0);
+
+      await expect(
+        pool2.connect(miner).claimKnowledgeMinerReward(minerRewardEstimate0),
+      ).to.be.revertedWithCustomError(pool2, 'NoRewardAvailable');
+
+      expect(await Token.balanceOf(await miner.getAddress())).to.equal(
+        initialMinerBalance + minerRewardEstimate1,
+      );
+      expect(await Token.balanceOf(pool2Storage)).to.equal(pool2Amount);
+
+      const { collectionId: collectionId2 } = await createKnowledgeCollection(
+        miner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+        signaturesData,
+        {
+          KnowledgeCollection,
+          Token,
+        },
+      );
+
+      await Paranet.connect(miner).submitKnowledgeCollection(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        await KnowledgeCollectionStorage.getAddress(),
+        collectionId2,
+      );
+      const initialMinerBalance2 = await Token.balanceOf(
+        await miner.getAddress(),
+      );
+      const minerRewardEstimate2 = await pool1
+        .connect(miner)
+        .getTotalKnowledgeMinerIncentiveEstimation();
+      expect(minerRewardEstimate2).to.be.gt(0);
+
+      await pool2
+        .connect(miner)
+        .claimKnowledgeMinerReward(minerRewardEstimate2);
+
+      // 8. Verify balances is updated
+      expect(await Token.balanceOf(pool1Storage)).to.equal(
+        pool1Amount - minerRewardEstimate1,
+      );
+      expect(await Token.balanceOf(pool2Storage)).to.equal(
+        pool2Amount - minerRewardEstimate2,
+      );
+      expect(await Token.balanceOf(await miner.getAddress())).to.equal(
+        initialMinerBalance2 + minerRewardEstimate2,
+      );
+    });
+
+    it.only('Should handle claiming rewards from multiple incentives pools with native token', async () => {
+      // 1. Setup paranet with initial configuration
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Deploy two incentive pools with different parameters using address(0) for native token
+      const tx1 = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        ethers.parseUnits('1', 12), // 1 ETH per 1 TRAC
+        1000, // 10% operator
+        2000, // 20% voters
+        'Pool1',
+        ethers.ZeroAddress, // Use address(0) for native token
+      );
+      const receipt1 = await tx1.wait();
+      const event1 = receipt1!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      const tx2 = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        ethers.parseUnits('2', 12), // 2 ETH per 1 TRAC
+        1500, // 15% operator
+        2500, // 25% voters
+        'Pool2',
+        ethers.ZeroAddress, // Use address(0) for native token
+      );
+      const receipt2 = await tx2.wait();
+      const event2 = receipt2!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      // 3. Fund both pools with ETH
+      const pool1Amount = ethers.parseEther('100'); // 100 ETH
+      const pool2Amount = ethers.parseEther('200'); // 200 ETH
+
+      const pool1Storage = await hre.ethers.getContractAt(
+        'ParanetIncentivesPoolStorage',
+        event1?.args[3],
+      );
+      const pool1 = await hre.ethers.getContractAt(
+        'ParanetIncentivesPool',
+        event1?.args[4],
+      );
+
+      const pool2Storage = await hre.ethers.getContractAt(
+        'ParanetIncentivesPoolStorage',
+        event2?.args[3],
+      );
+      const pool2 = await hre.ethers.getContractAt(
+        'ParanetIncentivesPool',
+        event2?.args[4],
+      );
+
+      // Send ETH to pools
+      await paranetOwner.sendTransaction({
+        to: pool1Storage.target,
+        value: pool1Amount,
+      });
+      await paranetOwner.sendTransaction({
+        to: pool2Storage.target,
+        value: pool2Amount,
+      });
+
+      // Verify initial balances
+      expect(
+        await hre.ethers.provider.getBalance(pool1Storage.target),
+      ).to.equal(pool1Amount);
+      expect(await pool1Storage.totalMinersclaimedToken()).to.equal(0);
+      expect(await pool1Storage.totalOperatorsclaimedToken()).to.equal(0);
+      expect(await pool1Storage.totalVotersclaimedToken()).to.equal(0);
+
+      expect(
+        await hre.ethers.provider.getBalance(pool2Storage.target),
+      ).to.equal(pool2Amount);
+      expect(await pool2Storage.totalMinersclaimedToken()).to.equal(0);
+      expect(await pool2Storage.totalOperatorsclaimedToken()).to.equal(0);
+      expect(await pool2Storage.totalVotersclaimedToken()).to.equal(0);
+
+      // 4. Create and submit knowledge collection
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+
+      const miner = accounts[100];
+      const { collectionId } = await createKnowledgeCollection(
+        miner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+        signaturesData,
+        {
+          KnowledgeCollection,
+          Token,
+        },
+      );
+
+      await Paranet.connect(miner).submitKnowledgeCollection(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        await KnowledgeCollectionStorage.getAddress(),
+        collectionId,
+      );
+
+      // 5. Claim rewards from first pool
+      const initialMinerBalance = await hre.ethers.provider.getBalance(
+        miner.address,
+      );
+      const minerRewardEstimate1 = await pool1
+        .connect(miner)
+        .getTotalKnowledgeMinerIncentiveEstimation();
+      expect(minerRewardEstimate1).to.be.gt(0);
+
+      const claimTx1 = await pool1
+        .connect(miner)
+        .claimKnowledgeMinerReward(minerRewardEstimate1);
+      const receipt3 = await claimTx1.wait();
+      const gasCost1 = receipt3!.gasUsed * receipt3!.gasPrice;
+
+      // 6. Verify first pool balance and miner received ETH
+      const newMinerBalance = await hre.ethers.provider.getBalance(
+        miner.address,
+      );
+      expect(newMinerBalance).to.be.equal(
+        initialMinerBalance + minerRewardEstimate1 - gasCost1,
+      );
+      expect(
+        await hre.ethers.provider.getBalance(pool1Storage.target),
+      ).to.equal(pool1Amount - minerRewardEstimate1);
+      expect(
+        await hre.ethers.provider.getBalance(pool2Storage.target),
+      ).to.equal(pool2Amount);
+
+      // 7. Try claiming from second pool (should fail as no rewards available yet)
+      const minerRewardEstimate0 = await pool2
+        .connect(miner)
+        .getTotalKnowledgeMinerIncentiveEstimation();
+      expect(minerRewardEstimate0).to.be.equal(0);
+
+      await expect(
+        pool2.connect(miner).claimKnowledgeMinerReward(minerRewardEstimate0),
+      ).to.be.revertedWithCustomError(pool2, 'NoRewardAvailable');
+
+      await expect(
+        pool1.connect(miner).claimKnowledgeMinerReward(minerRewardEstimate0),
+      ).to.be.revertedWithCustomError(pool1, 'NoRewardAvailable');
+
+      // 8. Submit second knowledge collection
+      const { collectionId: collectionId2 } = await createKnowledgeCollection(
+        miner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+        signaturesData,
+        {
+          KnowledgeCollection,
+          Token,
+        },
+      );
+
+      await Paranet.connect(miner).submitKnowledgeCollection(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        await KnowledgeCollectionStorage.getAddress(),
+        collectionId2,
+      );
+
+      // 9. Claim rewards from second pool
+      const initialMinerBalance2 = await hre.ethers.provider.getBalance(
+        miner.address,
+      );
+      const minerRewardEstimate2 = await pool2
+        .connect(miner)
+        .getTotalKnowledgeMinerIncentiveEstimation();
+      expect(minerRewardEstimate2).to.be.gt(0);
+
+      const claimTx2 = await pool2
+        .connect(miner)
+        .claimKnowledgeMinerReward(minerRewardEstimate2);
+      const receipt4 = await claimTx2.wait();
+      const gasCost2 = receipt4!.gasUsed * receipt4!.gasPrice;
+
+      // 10. Verify final balances
+      expect(
+        await hre.ethers.provider.getBalance(pool1Storage.target),
+      ).to.equal(pool1Amount - minerRewardEstimate1);
+      expect(
+        await hre.ethers.provider.getBalance(pool2Storage.target),
+      ).to.equal(pool2Amount - minerRewardEstimate2);
+      expect(await hre.ethers.provider.getBalance(miner.address)).to.equal(
+        initialMinerBalance2 + minerRewardEstimate2 - gasCost2,
+      );
+    });
+  });
 });

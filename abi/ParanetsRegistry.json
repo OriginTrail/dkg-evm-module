@@ -52,29 +52,6 @@
         "type": "bytes32"
       },
       {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "bytes",
-        "name": "nodeId",
-        "type": "bytes"
-      }
-    ],
-    "name": "addCuratedNode",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      },
-      {
         "internalType": "string",
         "name": "incentivesPoolName",
         "type": "string"
@@ -185,6 +162,29 @@
         "type": "bytes32"
       },
       {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "bytes",
+        "name": "nodeId",
+        "type": "bytes"
+      }
+    ],
+    "name": "addPermissionedNode",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
         "internalType": "bytes32",
         "name": "serviceId",
         "type": "bytes32"
@@ -271,56 +271,6 @@
         "internalType": "uint96",
         "name": "",
         "type": "uint96"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getCuratedNodes",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint72",
-            "name": "identityId",
-            "type": "uint72"
-          },
-          {
-            "internalType": "bytes",
-            "name": "nodeId",
-            "type": "bytes"
-          }
-        ],
-        "internalType": "struct ParanetLib.Node[]",
-        "name": "",
-        "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getCuratedNodesCount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1149,6 +1099,56 @@
         "type": "bytes32"
       }
     ],
+    "name": "getPermissionedNodes",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint72",
+            "name": "identityId",
+            "type": "uint72"
+          },
+          {
+            "internalType": "bytes",
+            "name": "nodeId",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct ParanetLib.Node[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getPermissionedNodesCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      }
+    ],
     "name": "getServices",
     "outputs": [
       {
@@ -1248,30 +1248,6 @@
         "type": "bytes32"
       },
       {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      }
-    ],
-    "name": "isCuratedNode",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      },
-      {
         "internalType": "bytes32",
         "name": "knowledgeCollectionId",
         "type": "bytes32"
@@ -1302,6 +1278,30 @@
       }
     ],
     "name": "isKnowledgeMinerRegistered",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "isPermissionedNode",
     "outputs": [
       {
         "internalType": "bool",
@@ -1430,24 +1430,6 @@
         "type": "bytes32"
       },
       {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      }
-    ],
-    "name": "removeCuratedNode",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "paranetId",
-        "type": "bytes32"
-      },
-      {
         "internalType": "bytes32",
         "name": "knowledgeCollectionId",
         "type": "bytes32"
@@ -1518,6 +1500,24 @@
       }
     ],
     "name": "removeNodeJoinRequest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paranetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "removePermissionedNode",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
