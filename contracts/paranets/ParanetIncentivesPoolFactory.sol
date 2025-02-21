@@ -165,7 +165,10 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         uint256 knowledgeCollectionId,
         uint256 knowledgeAssetId
     ) internal view {
-        require(hub.isAssetStorage(knowledgeCollectionStorageContractAddress));
+        require(
+            hub.isAssetStorage(knowledgeCollectionStorageContractAddress),
+            "Knowledge collection storage contract with the provided address is not registered"
+        );
 
         KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(
             knowledgeCollectionStorageContractAddress
@@ -175,6 +178,9 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
             knowledgeCollectionStorage.knowledgeCollectionMaxSize() +
             knowledgeAssetId;
 
-        require(knowledgeCollectionStorage.balanceOf(msg.sender, startTokenId, startTokenId + 1) == 1);
+        require(
+            knowledgeCollectionStorage.balanceOf(msg.sender, startTokenId, startTokenId + 1) == 1,
+            "Caller is not the owner of the knowledge asset"
+        );
     }
 }
