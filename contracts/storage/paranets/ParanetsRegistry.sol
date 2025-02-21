@@ -317,7 +317,9 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
             return false;
         }
 
-        return paranet.incentivesPools[index].storageAddr != address(0);
+        address incentivesPoolStorageAddress = paranet.incentivesPools[index].storageAddr;
+
+        return incentivesPoolStorageAddress != address(0) && incentivesPoolStorageAddress == storageAddr;
     }
 
     function getCumulativeKnowledgeValue(bytes32 paranetId) external view returns (uint96) {
