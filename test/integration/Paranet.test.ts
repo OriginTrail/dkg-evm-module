@@ -636,6 +636,104 @@ describe('@unit Paranet', () => {
         ),
       ).to.be.revertedWith('Paranet does not exist');
     });
+
+    it('Should handle voter management correctly', async () => {
+      // 1. Setup paranet and pool
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // Deploy pool
+      const tx = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        ethers.parseUnits('1', 12),
+        1000,
+        2000,
+        'TestPool',
+        await Token.getAddress(),
+      );
+
+      const receipt = await tx.wait();
+      const event = receipt!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      const incentivesPoolStorage = await hre.ethers.getContractAt(
+        'ParanetIncentivesPoolStorage',
+        event?.args[3],
+      );
+
+      // Get registrar
+      const registrar = await incentivesPoolStorage.votersRegistrar();
+      const registrarSigner = await hre.ethers.getSigner(registrar);
+
+      // Add voters
+      const voters = [
+        { addr: accounts[5].address, weight: 5000 }, // 50%
+        { addr: accounts[6].address, weight: 3000 }, // 30%
+        { addr: accounts[7].address, weight: 2000 }, // 20%
+      ];
+
+      await incentivesPoolStorage.connect(registrarSigner).addVoters(voters);
+
+      // Verify voters were added correctly
+      expect(await incentivesPoolStorage.getVotersCount()).to.equal(3);
+      expect(await incentivesPoolStorage.cumulativeVotersWeight()).to.equal(
+        10000,
+      );
+
+      // Update voter weight
+      await incentivesPoolStorage
+        .connect(registrarSigner)
+        .updateVoterWeight(accounts[5].address, 4000);
+
+      const updatedVoter = await incentivesPoolStorage.getVoter(
+        accounts[5].address,
+      );
+      expect(updatedVoter.weight).to.equal(4000);
+      expect(await incentivesPoolStorage.cumulativeVotersWeight()).to.equal(
+        9000,
+      );
+
+      // Remove voter
+      await incentivesPoolStorage
+        .connect(registrarSigner)
+        .removeVoter(accounts[6].address);
+
+      expect(await incentivesPoolStorage.getVotersCount()).to.equal(2);
+      expect(await incentivesPoolStorage.cumulativeVotersWeight()).to.equal(
+        6000,
+      );
+
+      // Try to add voter that would exceed max weight
+      const overweightVoter = [{ addr: accounts[8].address, weight: 5000 }];
+      await expect(
+        incentivesPoolStorage
+          .connect(registrarSigner)
+          .addVoters(overweightVoter),
+      ).to.be.revertedWith('Cumulative weight is too big');
+    });
   });
 
   describe('Paranet Incentives Pool Rewards', () => {
