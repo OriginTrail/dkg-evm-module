@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { ethers, EventLog } from 'ethers';
 import hre from 'hardhat';
@@ -733,6 +733,115 @@ describe('@unit Paranet', () => {
           .connect(registrarSigner)
           .addVoters(overweightVoter),
       ).to.be.revertedWith('Cumulative weight is too big');
+    });
+
+    it('Should handle incentives pool redeployment', async () => {
+      // 1. Setup paranet and initial pool
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+        paranetId,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      const originalEmissionMultiplier = ethers.parseUnits('1', 12);
+
+      // Deploy initial pool
+      const tx = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        originalEmissionMultiplier,
+        1000,
+        2000,
+        'TestPool',
+        await Token.getAddress(),
+      );
+
+      const receipt = await tx.wait();
+      const event = receipt!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      const originalStorageAddress = event?.args[3];
+      const originalPoolAddress = event?.args[4];
+
+      // Fund the pool
+      const fundingAmount = ethers.parseUnits('1000', 12);
+      await Token.connect(accounts[0]).mint(
+        originalStorageAddress,
+        fundingAmount,
+      );
+
+      // Redeploy pool
+      const redeployTx = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).redeployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        originalStorageAddress,
+      );
+
+      const redeployReceipt = await redeployTx.wait();
+      const redeployEvent = redeployReceipt!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolRedeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      // Verify new pool address is different
+      const newPoolAddress = redeployEvent?.args[4];
+      expect(newPoolAddress).to.not.equal(originalPoolAddress);
+
+      // Verify storage address remains the same
+      expect(redeployEvent?.args[3]).to.equal(originalStorageAddress);
+
+      // Verify storage contract points to the same paranet
+      const incentivesPoolStorage = await hre.ethers.getContractAt(
+        'ParanetIncentivesPoolStorage',
+        originalStorageAddress,
+      );
+      expect(await incentivesPoolStorage.paranetId()).to.equal(paranetId);
+
+      // Verify storage contract points to the new pool and not the old one
+      expect(
+        await incentivesPoolStorage.paranetIncentivesPoolAddress(),
+      ).to.equal(newPoolAddress);
+      expect(
+        await incentivesPoolStorage.paranetIncentivesPoolAddress(),
+      ).to.not.equal(originalPoolAddress);
+
+      // Verify funds are preserved
+      expect(await incentivesPoolStorage.getBalance()).to.equal(fundingAmount);
+
+      // Verify new pool has the same emission multiplier
+      const newPool = await hre.ethers.getContractAt(
+        'ParanetIncentivesPool',
+        newPoolAddress,
+      );
+      expect(
+        await newPool.getEffectiveTokenEmissionMultiplier(await time.latest()),
+      ).to.equal(originalEmissionMultiplier);
     });
   });
 
