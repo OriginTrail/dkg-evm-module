@@ -12,7 +12,6 @@ import {ContractStatus} from "../abstract/ContractStatus.sol";
 import {IInitializable} from "../interfaces/IInitializable.sol";
 import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
-import "hardhat/console.sol";
 
 contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IInitializable {
     event ParanetIncentivesPoolDeployed(
