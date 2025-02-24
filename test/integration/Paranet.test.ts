@@ -24,6 +24,7 @@ import {
   ParanetStagingRegistry,
   IdentityStorage,
   HubLib,
+  ParanetLib,
 } from '../../typechain';
 import { ACCESS_POLICIES } from '../helpers/constants';
 import {
@@ -56,6 +57,7 @@ type ParanetFixture = {
   ParanetStagingRegistry: ParanetStagingRegistry;
   IdentityStorage: IdentityStorage;
   HubLib: HubLib;
+  ParanetLib: ParanetLib;
 };
 
 describe('@unit Paranet', () => {
@@ -75,6 +77,7 @@ describe('@unit Paranet', () => {
   let ParanetStagingRegistry: ParanetStagingRegistry;
   let IdentityStorage: IdentityStorage;
   let HubLib: HubLib;
+  let ParanetLib: ParanetLib;
 
   // Deploy all contracts, set the HubOwner and necessary accounts. Returns the ParanetFixture
   async function deployParanetFixture(): Promise<ParanetFixture> {
@@ -152,6 +155,15 @@ describe('@unit Paranet', () => {
       hubLibDeployment.address,
     );
 
+    const paranetLibDeployment = await hre.deployments.deploy('ParanetLib', {
+      from: accounts[0].address,
+      log: true,
+    });
+    ParanetLib = await hre.ethers.getContract<ParanetLib>(
+      'ParanetLib',
+      paranetLibDeployment.address,
+    );
+
     return {
       accounts,
       Paranet,
@@ -169,6 +181,7 @@ describe('@unit Paranet', () => {
       ParanetStagingRegistry,
       IdentityStorage,
       HubLib,
+      ParanetLib,
     };
   }
 
@@ -189,6 +202,7 @@ describe('@unit Paranet', () => {
       Token,
       ParanetStagingRegistry,
       HubLib,
+      ParanetLib,
     } = await loadFixture(deployParanetFixture));
   });
 
@@ -406,6 +420,321 @@ describe('@unit Paranet', () => {
           2, // invalid submission policy
         ),
       ).to.be.revertedWith('Invalid policy');
+    });
+  });
+
+  describe.only('Paranet Metadata', () => {
+    it('Should update paranet metadata successfully', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetId,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      const newName = 'New Name';
+      const newDescription = 'New Description';
+
+      await Paranet.connect(paranetOwner).updateParanetMetadata(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        newName,
+        newDescription,
+      );
+
+      const updatedName = await ParanetsRegistry.getName(paranetId);
+      const updatedDescription =
+        await ParanetsRegistry.getDescription(paranetId);
+      expect(updatedName).to.equal(newName);
+      expect(updatedDescription).to.equal(newDescription);
+    });
+
+    it('Should emit ParanetMetadataUpdated event with correct parameters', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      const newName = 'New Name';
+      const newDescription = 'New Description';
+
+      await expect(
+        Paranet.connect(paranetOwner).updateParanetMetadata(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          newName,
+          newDescription,
+        ),
+      )
+        .to.emit(Paranet, 'ParanetMetadataUpdated')
+        .withArgs(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          newName,
+          newDescription,
+        );
+    });
+
+    it('Should handle empty strings for name and description', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetId,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      await Paranet.connect(paranetOwner).updateParanetMetadata(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        '',
+        '',
+      );
+
+      expect(await ParanetsRegistry.getName(paranetId)).to.equal('');
+      expect(await ParanetsRegistry.getDescription(paranetId)).to.equal('');
+    });
+
+    it('Should handle very long name and description', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetId,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      const longName = 'a'.repeat(100);
+      const longDescription = 'b'.repeat(1000);
+
+      await Paranet.connect(paranetOwner).updateParanetMetadata(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        longName,
+        longDescription,
+      );
+
+      expect(await ParanetsRegistry.getName(paranetId)).to.equal(longName);
+      expect(await ParanetsRegistry.getDescription(paranetId)).to.equal(
+        longDescription,
+      );
+    });
+
+    it('Should allow multiple updates to the same paranet', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetId,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // First update
+      await Paranet.connect(paranetOwner).updateParanetMetadata(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        'First Name',
+        'First Description',
+      );
+
+      expect(await ParanetsRegistry.getName(paranetId)).to.equal('First Name');
+      expect(await ParanetsRegistry.getDescription(paranetId)).to.equal(
+        'First Description',
+      );
+
+      // Second update
+      await Paranet.connect(paranetOwner).updateParanetMetadata(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        'Second Name',
+        'Second Description',
+      );
+
+      expect(await ParanetsRegistry.getName(paranetId)).to.equal('Second Name');
+      expect(await ParanetsRegistry.getDescription(paranetId)).to.equal(
+        'Second Description',
+      );
+    });
+
+    it('Should handle special characters in name and description', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetId,
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      const specialName = '!@#$%^&*()_+-=[]{}|;:,.<>?`~';
+      const specialDescription = '¡™£¢∞§¶•ªº–≠œ∑´®†¥¨ˆøπ"åß∂ƒ©˙∆˚¬…æ';
+
+      await Paranet.connect(paranetOwner).updateParanetMetadata(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        specialName,
+        specialDescription,
+      );
+
+      expect(await ParanetsRegistry.getName(paranetId)).to.equal(specialName);
+      expect(await ParanetsRegistry.getDescription(paranetId)).to.equal(
+        specialDescription,
+      );
+    });
+
+    it('Should revert when non-owner tries to update paranet metadata', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const nonOwner = accounts[10];
+
+      const { paranetKCStorageContract, paranetKCTokenId, paranetKATokenId } =
+        await setupParanet(kcCreator, publishingNode, receivingNodes, {
+          Paranet,
+          Profile,
+          Token,
+          KnowledgeCollection,
+          KnowledgeCollectionStorage,
+        });
+
+      const newName = 'New Name';
+      const newDescription = 'New Description';
+
+      await expect(
+        Paranet.connect(nonOwner).updateParanetMetadata(
+          paranetKCStorageContract,
+          paranetKCTokenId,
+          paranetKATokenId,
+          newName,
+          newDescription,
+        ),
+      ).to.be.revertedWith("Caller isn't the owner of the KA");
+    });
+
+    it('updateParanetMetadata should revert when paranet does not exist', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      // Create a KC first
+      const { collectionId } = await createProfilesAndKC(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        { Profile, KnowledgeCollection, Token },
+      );
+
+      // Try to update metadata for non-existent paranet
+      await expect(
+        Paranet.connect(kcCreator).updateParanetMetadata(
+          await KnowledgeCollectionStorage.getAddress(),
+          collectionId,
+          1,
+          'New Name',
+          'New Description',
+        ),
+      ).to.be.revertedWithCustomError(ParanetLib, 'ParanetDoesntExist');
+    });
+
+    it('Should revert when trying to update with extremely large token IDs', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const { paranetKCStorageContract, paranetOwner } = await setupParanet(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        {
+          Paranet,
+          Profile,
+          Token,
+          KnowledgeCollection,
+          KnowledgeCollectionStorage,
+        },
+      );
+
+      const maxUint256 = ethers.MaxUint256;
+
+      await expect(
+        Paranet.connect(paranetOwner).updateParanetMetadata(
+          paranetKCStorageContract,
+          maxUint256,
+          maxUint256,
+          'New Name',
+          'New Description',
+        ),
+      ).to.be.reverted; // Should revert with token ID out of range or similar
     });
   });
 
