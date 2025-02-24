@@ -193,6 +193,13 @@ describe('@unit Paranet', () => {
   });
 
   describe('Paranet Registration', () => {
+    it('Should return the correct name and version of the paranet', async () => {
+      const name = await Paranet.name();
+      const version = await Paranet.version();
+      expect(name).to.equal('Paranet');
+      expect(version).to.equal('1.0.0');
+    });
+
     it('Should register a paranet successfully', async () => {
       const kcCreator = getDefaultKCCreator(accounts);
       const publishingNode = getDefaultPublishingNode(accounts);
@@ -405,10 +412,17 @@ describe('@unit Paranet', () => {
   describe('Paranet Incentives Pool', () => {
     it('Should return correct name and version of factory, incentives pool and storage', async () => {
       // Incentives pool factory
-      const name = await ParanetIncentivesPoolFactory.name();
-      const version = await ParanetIncentivesPoolFactory.version();
-      expect(name).to.equal('ParanetIncentivesPoolFactory');
-      expect(version).to.equal('1.0.0');
+      const poolFactoryName = await ParanetIncentivesPoolFactory.name();
+      const poolFactoryVersion = await ParanetIncentivesPoolFactory.version();
+      expect(poolFactoryName).to.equal('ParanetIncentivesPoolFactory');
+      expect(poolFactoryVersion).to.equal('1.0.0');
+
+      // Incentives pool factory helper
+      const poolFactoryHelperName = await ParanetIncentivesPoolFactory.name();
+      const poolFactoryHelperVersion =
+        await ParanetIncentivesPoolFactory.version();
+      expect(poolFactoryHelperName).to.equal('ParanetIncentivesPoolFactory');
+      expect(poolFactoryHelperVersion).to.equal('1.0.0');
 
       const kcCreator = getDefaultKCCreator(accounts);
       const publishingNode = getDefaultPublishingNode(accounts);
