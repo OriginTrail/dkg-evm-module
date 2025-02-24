@@ -423,7 +423,7 @@ describe('@unit Paranet', () => {
     });
   });
 
-  describe.only('Paranet Metadata', () => {
+  describe('Paranet Metadata', () => {
     it('Should update paranet metadata successfully', async () => {
       const kcCreator = getDefaultKCCreator(accounts);
       const publishingNode = getDefaultPublishingNode(accounts);
@@ -4196,6 +4196,554 @@ describe('@unit Paranet', () => {
         Paranet,
         'ParanetServiceHasAlreadyBeenRegistered',
       );
+    });
+  });
+
+  describe.only('Paranet Service Metadata', () => {
+    it('Should update paranet service metadata successfully', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetOwner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Create a new knowledge collection for the service
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId: serviceCollectionId } =
+        await createKnowledgeCollection(
+          kcCreator,
+          publishingNodeIdentityId,
+          receivingNodesIdentityIds,
+          signaturesData,
+          {
+            KnowledgeCollection: KnowledgeCollection,
+            Token: Token,
+          },
+        );
+
+      // 3. Setup service parameters
+      const serviceName = 'Test Service';
+      const serviceDescription = 'Test Service Description';
+      const serviceAddresses = [accounts[10].address, accounts[11].address];
+
+      // 4. Register the service
+      await Paranet.connect(paranetOwner).registerParanetService(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1, // serviceKATokenId
+        serviceName,
+        serviceDescription,
+        serviceAddresses,
+      );
+
+      const serviceId = ethers.keccak256(
+        ethers.solidityPacked(
+          ['address', 'uint256', 'uint256'],
+          [
+            await KnowledgeCollectionStorage.getAddress(),
+            serviceCollectionId,
+            1,
+          ],
+        ),
+      );
+
+      const newName = 'New Service Name';
+      const newDescription = 'New Service Description';
+      const newServiceAddresses = [accounts[1].address, accounts[2].address];
+
+      await Paranet.connect(paranetOwner).updateParanetServiceMetadata(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1,
+        newName,
+        newDescription,
+        newServiceAddresses,
+      );
+
+      expect(await ParanetServicesRegistry.getName(serviceId)).to.equal(
+        newName,
+      );
+      expect(await ParanetServicesRegistry.getDescription(serviceId)).to.equal(
+        newDescription,
+      );
+      expect(
+        await ParanetServicesRegistry.getParanetServiceAddresses(serviceId),
+      ).to.deep.equal(newServiceAddresses);
+    });
+
+    it('Should emit ParanetServiceMetadataUpdated event with correct parameters', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetOwner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Create a new knowledge collection for the service
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId: serviceCollectionId } =
+        await createKnowledgeCollection(
+          kcCreator,
+          publishingNodeIdentityId,
+          receivingNodesIdentityIds,
+          signaturesData,
+          {
+            KnowledgeCollection: KnowledgeCollection,
+            Token: Token,
+          },
+        );
+
+      // 3. Setup service parameters
+      const serviceName = 'Test Service';
+      const serviceDescription = 'Test Service Description';
+      const serviceAddresses = [accounts[10].address, accounts[11].address];
+
+      // 4. Register the service
+      await Paranet.connect(paranetOwner).registerParanetService(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1, // serviceKATokenId
+        serviceName,
+        serviceDescription,
+        serviceAddresses,
+      );
+
+      const newName = 'New Service Name';
+      const newDescription = 'New Service Description';
+      const newServiceAddresses = [accounts[1].address, accounts[2].address];
+
+      await expect(
+        Paranet.connect(paranetOwner).updateParanetServiceMetadata(
+          await KnowledgeCollectionStorage.getAddress(),
+          serviceCollectionId,
+          1,
+          newName,
+          newDescription,
+          newServiceAddresses,
+        ),
+      )
+        .to.emit(Paranet, 'ParanetServiceMetadataUpdated')
+        .withArgs(
+          await KnowledgeCollectionStorage.getAddress(),
+          serviceCollectionId,
+          1,
+          newName,
+          newDescription,
+          newServiceAddresses,
+        );
+    });
+
+    it('Should handle empty strings and empty address array', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetOwner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Create a new knowledge collection for the service
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId: serviceCollectionId } =
+        await createKnowledgeCollection(
+          kcCreator,
+          publishingNodeIdentityId,
+          receivingNodesIdentityIds,
+          signaturesData,
+          {
+            KnowledgeCollection: KnowledgeCollection,
+            Token: Token,
+          },
+        );
+
+      // 3. Setup service parameters
+      const serviceName = 'Test Service';
+      const serviceDescription = 'Test Service Description';
+      const serviceAddresses = [accounts[10].address, accounts[11].address];
+
+      // 4. Register the service
+      await Paranet.connect(paranetOwner).registerParanetService(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1, // serviceKATokenId
+        serviceName,
+        serviceDescription,
+        serviceAddresses,
+      );
+
+      const serviceId = ethers.keccak256(
+        ethers.solidityPacked(
+          ['address', 'uint256', 'uint256'],
+          [
+            await KnowledgeCollectionStorage.getAddress(),
+            serviceCollectionId,
+            1,
+          ],
+        ),
+      );
+
+      await Paranet.connect(paranetOwner).updateParanetServiceMetadata(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1,
+        '',
+        '',
+        [],
+      );
+
+      expect(await ParanetServicesRegistry.getName(serviceId)).to.equal('');
+      expect(await ParanetServicesRegistry.getDescription(serviceId)).to.equal(
+        '',
+      );
+      expect(
+        await ParanetServicesRegistry.getParanetServiceAddresses(serviceId),
+      ).to.deep.equal([]);
+    });
+
+    it('Should handle very long name, description and large address array', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetOwner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Create a new knowledge collection for the service
+      // 2. Create a new knowledge collection for the service
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId: serviceCollectionId } =
+        await createKnowledgeCollection(
+          kcCreator,
+          publishingNodeIdentityId,
+          receivingNodesIdentityIds,
+          signaturesData,
+          {
+            KnowledgeCollection: KnowledgeCollection,
+            Token: Token,
+          },
+        );
+
+      // 3. Setup service parameters
+      const serviceName = 'Test Service';
+      const serviceDescription = 'Test Service Description';
+      const serviceAddresses = [accounts[10].address, accounts[11].address];
+
+      // 4. Register the service
+      await Paranet.connect(paranetOwner).registerParanetService(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1, // serviceKATokenId
+        serviceName,
+        serviceDescription,
+        serviceAddresses,
+      );
+
+      const serviceId = ethers.keccak256(
+        ethers.solidityPacked(
+          ['address', 'uint256', 'uint256'],
+          [
+            await KnowledgeCollectionStorage.getAddress(),
+            serviceCollectionId,
+            1,
+          ],
+        ),
+      );
+
+      const longName = 'a'.repeat(100);
+      const longDescription = 'b'.repeat(1000);
+      const manyAddresses = accounts
+        .slice(0, 20)
+        .map((account) => account.address); // 20 addresses
+
+      await Paranet.connect(paranetOwner).updateParanetServiceMetadata(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1,
+        longName,
+        longDescription,
+        manyAddresses,
+      );
+
+      expect(await ParanetServicesRegistry.getName(serviceId)).to.equal(
+        longName,
+      );
+      expect(await ParanetServicesRegistry.getDescription(serviceId)).to.equal(
+        longDescription,
+      );
+      expect(
+        await ParanetServicesRegistry.getParanetServiceAddresses(serviceId),
+      ).to.deep.equal(manyAddresses);
+    });
+
+    it('Should allow multiple updates to the same service', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetOwner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Create a new knowledge collection for the service
+      // 2. Create a new knowledge collection for the service
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId: serviceCollectionId } =
+        await createKnowledgeCollection(
+          kcCreator,
+          publishingNodeIdentityId,
+          receivingNodesIdentityIds,
+          signaturesData,
+          {
+            KnowledgeCollection: KnowledgeCollection,
+            Token: Token,
+          },
+        );
+
+      // 3. Setup service parameters
+      const serviceName = 'Test Service';
+      const serviceDescription = 'Test Service Description';
+      const serviceAddresses = [accounts[10].address, accounts[11].address];
+
+      // 4. Register the service
+      await Paranet.connect(paranetOwner).registerParanetService(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1, // serviceKATokenId
+        serviceName,
+        serviceDescription,
+        serviceAddresses,
+      );
+
+      const serviceId = ethers.keccak256(
+        ethers.solidityPacked(
+          ['address', 'uint256', 'uint256'],
+          [
+            await KnowledgeCollectionStorage.getAddress(),
+            serviceCollectionId,
+            1,
+          ],
+        ),
+      );
+
+      // First update
+      await Paranet.connect(paranetOwner).updateParanetServiceMetadata(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1,
+        'First Name',
+        'First Description',
+        [accounts[1].address],
+      );
+
+      // Second update
+      await Paranet.connect(paranetOwner).updateParanetServiceMetadata(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1,
+        'Second Name',
+        'Second Description',
+        [accounts[2].address, accounts[3].address],
+      );
+
+      expect(await ParanetServicesRegistry.getName(serviceId)).to.equal(
+        'Second Name',
+      );
+      expect(await ParanetServicesRegistry.getDescription(serviceId)).to.equal(
+        'Second Description',
+      );
+      expect(
+        await ParanetServicesRegistry.getParanetServiceAddresses(serviceId),
+      ).to.deep.equal([accounts[2].address, accounts[3].address]);
+    });
+
+    // Error cases
+    it('Should revert when non-owner tries to update service metadata', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const nonOwner = accounts[10];
+
+      const {
+        paranetOwner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Create a new knowledge collection for the service
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId: serviceCollectionId } =
+        await createKnowledgeCollection(
+          kcCreator,
+          publishingNodeIdentityId,
+          receivingNodesIdentityIds,
+          signaturesData,
+          {
+            KnowledgeCollection: KnowledgeCollection,
+            Token: Token,
+          },
+        );
+
+      // 3. Setup service parameters
+      const serviceName = 'Test Service';
+      const serviceDescription = 'Test Service Description';
+      const serviceAddresses = [accounts[10].address, accounts[11].address];
+
+      // 4. Register the service
+      await Paranet.connect(paranetOwner).registerParanetService(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1, // serviceKATokenId
+        serviceName,
+        serviceDescription,
+        serviceAddresses,
+      );
+
+      await expect(
+        Paranet.connect(nonOwner).updateParanetServiceMetadata(
+          await KnowledgeCollectionStorage.getAddress(),
+          serviceCollectionId,
+          1,
+          'New Name',
+          'New Description',
+          [accounts[1].address],
+        ),
+      ).to.be.revertedWith("Caller isn't the owner of the KA");
+    });
+
+    it('Should revert when service does not exist', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetOwner,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      // 2. Create a new knowledge collection for the service
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        1,
+        receivingNodes,
+      );
+      const { collectionId: serviceCollectionId } =
+        await createKnowledgeCollection(
+          kcCreator,
+          publishingNodeIdentityId,
+          receivingNodesIdentityIds,
+          signaturesData,
+          {
+            KnowledgeCollection: KnowledgeCollection,
+            Token: Token,
+          },
+        );
+
+      // 3. Setup service parameters
+      const serviceName = 'Test Service';
+      const serviceDescription = 'Test Service Description';
+      const serviceAddresses = [accounts[10].address, accounts[11].address];
+
+      // 4. Register the service
+      await Paranet.connect(paranetOwner).registerParanetService(
+        await KnowledgeCollectionStorage.getAddress(),
+        serviceCollectionId,
+        1, // serviceKATokenId
+        serviceName,
+        serviceDescription,
+        serviceAddresses,
+      );
+
+      await expect(
+        Paranet.connect(kcCreator).updateParanetServiceMetadata(
+          await KnowledgeCollectionStorage.getAddress(),
+          serviceCollectionId,
+          2,
+          'New Name',
+          'New Description',
+          [accounts[1].address],
+        ),
+      ).to.be.revertedWithCustomError(ParanetLib, 'ParanetServiceDoesntExist');
     });
   });
 
