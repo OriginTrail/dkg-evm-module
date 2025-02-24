@@ -403,6 +403,78 @@ describe('@unit Paranet', () => {
   });
 
   describe('Paranet Incentives Pool', () => {
+    it('Should return correct name and version of factory, incentives pool and storage', async () => {
+      // Incentives pool factory
+      const name = await ParanetIncentivesPoolFactory.name();
+      const version = await ParanetIncentivesPoolFactory.version();
+      expect(name).to.equal('ParanetIncentivesPoolFactory');
+      expect(version).to.equal('1.0.0');
+
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      const tracToNeuroEmissionMultiplier = ethers.parseUnits('1', 12); // 1 NEURO per 1 TRAC
+      const operatorRewardPercentage = 1000; // 10%
+      const votersRewardPercentage = 2000; // 20%
+
+      const tx = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        tracToNeuroEmissionMultiplier,
+        operatorRewardPercentage,
+        votersRewardPercentage,
+        'Neuroweb',
+        await Token.getAddress(),
+      );
+
+      // get incentives pool name and version
+      const receipt = await tx.wait();
+      const event = receipt!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+      const incentivesPool = await hre.ethers.getContractAt(
+        'ParanetIncentivesPool',
+        event?.args[4],
+      );
+      const incentivesPoolName = await incentivesPool.name();
+      const incentivesPoolVersion = await incentivesPool.version();
+      expect(incentivesPoolName).to.equal('ParanetIncentivesPool');
+      expect(incentivesPoolVersion).to.equal('1.0.0');
+
+      const incentivesPoolStorage = await hre.ethers.getContractAt(
+        'ParanetIncentivesPoolStorage',
+        event?.args[3],
+      );
+      const incentivesPoolStorageName = await incentivesPoolStorage.name();
+      const incentivesPoolStorageVersion =
+        await incentivesPoolStorage.version();
+      expect(incentivesPoolStorageName).to.equal(
+        'ParanetIncentivesPoolStorage',
+      );
+      expect(incentivesPoolStorageVersion).to.equal('1.0.0');
+    });
+
     it('Should deploy incentives pool successfully', async () => {
       const kcCreator = getDefaultKCCreator(accounts);
       const publishingNode = getDefaultPublishingNode(accounts);
@@ -706,6 +778,11 @@ describe('@unit Paranet', () => {
         event?.args[4],
       );
 
+      // Test non-existent voter
+      expect(
+        await incentivesPool.voterclaimedToken(accounts[5].address),
+      ).to.equal(0);
+
       // Get registrar
       const registrar = await incentivesPoolStorage.votersRegistrar();
       const registrarSigner = await hre.ethers.getSigner(registrar);
@@ -724,6 +801,14 @@ describe('@unit Paranet', () => {
       expect(await incentivesPoolStorage.cumulativeVotersWeight()).to.equal(
         10000,
       );
+
+      // Now voter exists but hasn't claimed anything yet
+      expect(
+        await incentivesPool.voterclaimedToken(accounts[5].address),
+      ).to.equal(0);
+      expect(
+        await incentivesPool.isProposalVoter(accounts[5].address),
+      ).to.be.eq(true);
 
       // Update voter weight
       await incentivesPoolStorage
@@ -783,6 +868,27 @@ describe('@unit Paranet', () => {
         .connect(accounts[5])
         .getClaimableProposalVoterRewardAmount();
       expect(claimableVoterReward).to.equal(voterShare);
+
+      // Transfer registrar role to new address
+      await expect(
+        incentivesPoolStorage
+          .connect(registrarSigner)
+          .transferVotersRegistrarRole(accounts[6].address),
+      )
+        .to.emit(incentivesPoolStorage, 'VotersRegistrarTransferred')
+        .withArgs(registrarSigner.address, accounts[6].address);
+
+      // Verify new registrar
+      expect(await incentivesPoolStorage.votersRegistrar()).to.equal(
+        accounts[6].address,
+      );
+
+      // Test zero address revert
+      await expect(
+        incentivesPoolStorage
+          .connect(accounts[6])
+          .transferVotersRegistrarRole(ethers.ZeroAddress),
+      ).to.be.revertedWith('New registrar cannot be zero address');
     });
 
     it('Should handle incentives pool redeployment', async () => {
@@ -1070,6 +1176,31 @@ describe('@unit Paranet', () => {
           await time.latest(),
         ),
       ).to.equal(fourthMultiplier);
+
+      // Should allow hub owner to update token emission multiplier delay
+      const hubContract = await hre.ethers.getContractAt(
+        'Hub',
+        await incentivesPool.hub(),
+      );
+      const hubOwner = await hubContract.owner();
+      const hubOwnerSigner = await hre.ethers.getSigner(hubOwner);
+
+      // Update delay as hub owner
+      const newDelay = 14 * 24 * 60 * 60; // 14 days
+      await incentivesPool
+        .connect(hubOwnerSigner)
+        .updatetokenEmissionMultiplierUpdateDelay(newDelay);
+      expect(
+        await incentivesPool.tokenEmissionMultiplierUpdateDelay(),
+      ).to.equal(newDelay);
+
+      // Try to update delay as non-hub owner
+      const nonOwner = accounts[9];
+      await expect(
+        incentivesPool
+          .connect(nonOwner)
+          .updatetokenEmissionMultiplierUpdateDelay(newDelay),
+      ).to.be.revertedWith('Fn can only be used by hub owner');
     });
   });
 
@@ -1252,6 +1383,15 @@ describe('@unit Paranet', () => {
         .claimKnowledgeMinerReward(claimableMinerReward);
 
       // 8. Verify miner rewards claimed correctly
+      // Test getting all rewarded miners/operators
+      const allMiners = await incentivesPoolStorage.getAllRewardedMiners();
+      expect(allMiners.length).to.equal(1);
+
+      // Test claimed token queries
+      expect(
+        await incentivesPoolStorage.minerclaimedToken(kcCreator.address),
+      ).to.equal(claimableMinerReward);
+
       expect(
         await incentivesPoolStorage
           .connect(kcCreator)
@@ -1276,6 +1416,14 @@ describe('@unit Paranet', () => {
       await incentivesPool.connect(paranetOwner).claimParanetOperatorReward();
 
       // 10. Verify operator rewards claimed correctly
+      const allOperators =
+        await incentivesPoolStorage.getAllRewardedOperators();
+      expect(allOperators.length).to.equal(1);
+
+      expect(
+        await incentivesPoolStorage.operatorclaimedToken(paranetOwner.address),
+      ).to.equal(claimableOperatorReward);
+
       expect(await incentivesPoolStorage.totalOperatorsclaimedToken()).to.equal(
         claimableOperatorReward,
       );
