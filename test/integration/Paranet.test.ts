@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+// import { randomBytes } from 'crypto';
 
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
@@ -3433,1057 +3433,1057 @@ describe('@unit Paranet', () => {
     });
   });
 
-  describe('Paranet Permissioned Miners', () => {
-    it('Should allow owner to add and remove curated miners', async () => {
-      // Setup paranet with permissioned miners policy
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const miner1 = accounts[10];
-      const miner2 = accounts[11];
-
-      const {
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-        paranetId, // Add this to destructuring
-      } = await setupParanet(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        {
-          Paranet,
-          Profile,
-          Token,
-          KnowledgeCollection,
-          KnowledgeCollectionStorage,
-        },
-        'Test Paranet',
-        'Test Paranet Description',
-        ACCESS_POLICIES.OPEN, // nodes policy
-        1, // miners policy
-        ACCESS_POLICIES.OPEN, // submission policy
-      );
-
-      // Verify initial state
-      expect(
-        await ParanetsRegistry.getKnowledgeMinersCount(paranetId),
-      ).to.equal(0);
-      expect(
-        await ParanetsRegistry.isKnowledgeMinerRegistered(
-          paranetId,
-          miner1.address,
-        ),
-      ).to.be.equal(false);
-      expect(
-        await ParanetsRegistry.isKnowledgeMinerRegistered(
-          paranetId,
-          miner2.address,
-        ),
-      ).to.be.equal(false);
-
-      // Add miners
-      await expect(
-        Paranet.connect(kcCreator).addParanetCuratedMiners(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          [miner1.address, miner2.address],
-        ),
-      )
-        .to.emit(Paranet, 'ParanetCuratedMinerAdded')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          miner1.address,
-        )
-        .to.emit(Paranet, 'ParanetCuratedMinerAdded')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          miner2.address,
-        );
-
-      // Verify miners were added
-      expect(
-        await ParanetsRegistry.getKnowledgeMinersCount(paranetId),
-      ).to.equal(2);
-      expect(
-        await ParanetsRegistry.isKnowledgeMinerRegistered(
-          paranetId,
-          miner1.address,
-        ),
-      ).to.be.equal(true);
-      expect(
-        await ParanetsRegistry.isKnowledgeMinerRegistered(
-          paranetId,
-          miner2.address,
-        ),
-      ).to.be.equal(true);
-
-      const registeredMiners =
-        await ParanetsRegistry.getKnowledgeMiners(paranetId);
-      expect(registeredMiners[0]).to.be.equal(miner1.address);
-      expect(registeredMiners[1]).to.be.equal(miner2.address);
-
-      // Remove miners
-      await expect(
-        Paranet.connect(kcCreator).removeParanetCuratedMiners(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          [miner1.address],
-        ),
-      )
-        .to.emit(Paranet, 'ParanetCuratedMinerRemoved')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          miner1.address,
-        );
-
-      // Verify miner1 was removed but miner2 remains
-      expect(
-        await ParanetsRegistry.getKnowledgeMinersCount(paranetId),
-      ).to.equal(1);
-      expect(
-        await ParanetsRegistry.isKnowledgeMinerRegistered(
-          paranetId,
-          miner1.address,
-        ),
-      ).to.be.equal(false);
-      expect(
-        await ParanetsRegistry.isKnowledgeMinerRegistered(
-          paranetId,
-          miner2.address,
-        ),
-      ).to.be.equal(true);
-
-      const remainingMiners =
-        await ParanetsRegistry.getKnowledgeMiners(paranetId);
-      expect(remainingMiners).to.have.lengthOf(1);
-      expect(remainingMiners[0]).to.equal(miner2.address);
-    });
-
-    it('Should handle miner access requests correctly', async () => {
-      // Setup paranet with permissioned miners policy
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const miner = accounts[10];
-
-      const {
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-        paranetId,
-      } = await setupParanet(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        {
-          Paranet,
-          Profile,
-          Token,
-          KnowledgeCollection,
-          KnowledgeCollectionStorage,
-        },
-        'Test Paranet',
-        'Test Paranet Description',
-        ACCESS_POLICIES.OPEN, // nodes policy
-        1, // miners policy
-        ACCESS_POLICIES.OPEN, // submission policy
-      );
-
-      // Request access
-      await expect(
-        Paranet.connect(miner).requestParanetCuratedMinerAccess(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-        ),
-      )
-        .to.emit(Paranet, 'ParanetCuratedMinerAccessRequestCreated')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          miner.address,
-        );
-
-      // Verify request state
-      const latestRequest =
-        await ParanetsRegistry.getLatestKnowledgeMinerAccessRequest(
-          paranetId,
-          miner.address,
-        );
-      expect(latestRequest.miner).to.equal(miner.address);
-      expect(latestRequest.status).to.equal(1); // PENDING status
-      expect(latestRequest.createdAt).to.be.gt(0);
-      expect(latestRequest.updatedAt).to.equal(latestRequest.createdAt);
-
-      // Approve request
-      await expect(
-        Paranet.connect(kcCreator).approveCuratedMiner(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          miner.address,
-        ),
-      )
-        .to.emit(Paranet, 'ParanetCuratedMinerAccessRequestAccepted')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          miner.address,
-        )
-        .to.emit(Paranet, 'ParanetCuratedMinerAdded')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          miner.address,
-        );
-
-      // Verify request state after approval
-      const updatedRequest =
-        await ParanetsRegistry.getLatestKnowledgeMinerAccessRequest(
-          paranetId,
-          miner.address,
-        );
-      expect(updatedRequest.miner).to.equal(miner.address);
-      expect(updatedRequest.status).to.equal(2); // ACCEPTED status
-      expect(updatedRequest.createdAt).to.equal(latestRequest.createdAt);
-      expect(updatedRequest.updatedAt).to.be.gt(latestRequest.updatedAt);
-
-      // Verify miner is now registered
-      expect(
-        await ParanetsRegistry.isKnowledgeMinerRegistered(
-          paranetId,
-          miner.address,
-        ),
-      ).to.be.equal(true);
-    });
-
-    it('Should handle miner access request rejection', async () => {
-      // Setup paranet with permissioned miners policy
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const miner = accounts[10];
-
-      const {
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-        paranetId,
-      } = await setupParanet(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        {
-          Paranet,
-          Profile,
-          Token,
-          KnowledgeCollection,
-          KnowledgeCollectionStorage,
-        },
-        'Test Paranet',
-        'Test Paranet Description',
-        ACCESS_POLICIES.OPEN, // nodes policy
-        1, // miners policy
-        ACCESS_POLICIES.OPEN, // submission policy
-      );
-
-      // Request access
-      await Paranet.connect(miner).requestParanetCuratedMinerAccess(
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-      );
-
-      // Verify initial request state
-      const latestRequest =
-        await ParanetsRegistry.getLatestKnowledgeMinerAccessRequest(
-          paranetId,
-          miner.address,
-        );
-      expect(latestRequest.miner).to.equal(miner.address);
-      expect(latestRequest.status).to.equal(1); // PENDING status
-      expect(latestRequest.createdAt).to.be.gt(0);
-      expect(latestRequest.updatedAt).to.equal(latestRequest.createdAt);
-
-      // Reject request
-      await expect(
-        Paranet.connect(kcCreator).rejectCuratedMiner(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          miner.address,
-        ),
-      )
-        .to.emit(Paranet, 'ParanetCuratedMinerAccessRequestRejected')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          miner.address,
-        );
-
-      // Verify request state after rejection
-      const updatedRequest =
-        await ParanetsRegistry.getLatestKnowledgeMinerAccessRequest(
-          paranetId,
-          miner.address,
-        );
-      expect(updatedRequest.miner).to.equal(miner.address);
-      expect(updatedRequest.status).to.equal(3); // REJECTED status
-      expect(updatedRequest.createdAt).to.equal(latestRequest.createdAt);
-      expect(updatedRequest.updatedAt).to.be.gt(latestRequest.updatedAt);
-
-      // Verify miner is not registered
-      expect(
-        await ParanetsRegistry.isKnowledgeMinerRegistered(
-          paranetId,
-          miner.address,
-        ),
-      ).to.be.equal(false);
-    });
-
-    it('Should revert when non-owner tries to add/remove miners', async () => {
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const miner = accounts[10];
-      const nonOwner = accounts[11];
-
-      const { paranetKCStorageContract, paranetKCTokenId, paranetKATokenId } =
-        await setupParanet(
-          kcCreator,
-          publishingNode,
-          receivingNodes,
-          {
-            Paranet,
-            Profile,
-            Token,
-            KnowledgeCollection,
-            KnowledgeCollectionStorage,
-          },
-          'Test Paranet',
-          'Test Paranet Description',
-          ACCESS_POLICIES.OPEN,
-          1,
-          ACCESS_POLICIES.OPEN,
-        );
-
-      // Try to add miner as non-owner
-      await expect(
-        Paranet.connect(nonOwner).addParanetCuratedMiners(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          [miner.address],
-        ),
-      ).to.be.revertedWith("Caller isn't the owner of the KA");
-
-      // Try to remove miner as non-owner
-      await expect(
-        Paranet.connect(nonOwner).removeParanetCuratedMiners(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          [miner.address],
-        ),
-      ).to.be.revertedWith("Caller isn't the owner of the KA");
-    });
-
-    it('Should revert when requesting access multiple times', async () => {
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const miner = accounts[10];
-
-      const { paranetKCStorageContract, paranetKCTokenId, paranetKATokenId } =
-        await setupParanet(
-          kcCreator,
-          publishingNode,
-          receivingNodes,
-          {
-            Paranet,
-            Profile,
-            Token,
-            KnowledgeCollection,
-            KnowledgeCollectionStorage,
-          },
-          'Test Paranet',
-          'Test Paranet Description',
-          ACCESS_POLICIES.OPEN,
-          1,
-          ACCESS_POLICIES.OPEN,
-        );
-
-      // First request
-      await Paranet.connect(miner).requestParanetCuratedMinerAccess(
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-      );
-
-      // Try to request again while first request is pending
-      await expect(
-        Paranet.connect(miner).requestParanetCuratedMinerAccess(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-        ),
-      ).to.be.revertedWithCustomError(
-        Paranet,
-        'ParanetCuratedMinerAccessRequestInvalidStatus',
-      );
-    });
-
-    it('Should allow registered miner to submit KC but reject unregistered miner', async () => {
-      // Setup paranet with permissioned miners policy
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const miner1 = accounts[10];
-      const miner2 = accounts[11];
-
-      const {
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-        paranetId,
-        publishingNodeIdentityId,
-        receivingNodesIdentityIds,
-      } = await setupParanet(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        {
-          Paranet,
-          Profile,
-          Token,
-          KnowledgeCollection,
-          KnowledgeCollectionStorage,
-        },
-        'Test Paranet',
-        'Test Paranet Description',
-        ACCESS_POLICIES.OPEN, // nodes policy
-        1, // miners policy - PERMISSIONED
-        ACCESS_POLICIES.OPEN, // submission policy
-      );
-
-      // Add miner1 as a curated miner
-      await Paranet.connect(kcCreator).addParanetCuratedMiners(
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-        [miner1.address],
-      );
-
-      // Create KC for miner1
-      const signaturesData1 = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
-      const { collectionId: miner1CollectionId } =
-        await createKnowledgeCollection(
-          miner1, // Using miner1 as KC creator
-          publishingNodeIdentityId,
-          receivingNodesIdentityIds,
-          signaturesData1,
-          {
-            KnowledgeCollection: KnowledgeCollection,
-            Token: Token,
-          },
-        );
-
-      // Create KC for miner2
-      const signaturesData2 = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
-      const { collectionId: miner2CollectionId } =
-        await createKnowledgeCollection(
-          miner2, // Using miner2 as KC creator
-          publishingNodeIdentityId,
-          receivingNodesIdentityIds,
-          signaturesData2,
-          {
-            KnowledgeCollection: KnowledgeCollection,
-            Token: Token,
-          },
-        );
-
-      // Miner1 (registered) submits KC - should succeed
-      await expect(
-        Paranet.connect(miner1).submitKnowledgeCollection(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          await KnowledgeCollectionStorage.getAddress(),
-          miner1CollectionId,
-        ),
-      )
-        .to.emit(Paranet, 'KnowledgeCollectionSubmittedToParanet')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          await KnowledgeCollectionStorage.getAddress(),
-          miner1CollectionId,
-        );
-
-      // Verify miner1's KC was added
-      const miner1CollectionBytes = ethers.keccak256(
-        ethers.solidityPacked(
-          ['address', 'uint256'],
-          [await KnowledgeCollectionStorage.getAddress(), miner1CollectionId],
-        ),
-      );
-
-      expect(
-        await ParanetsRegistry.isKnowledgeCollectionRegistered(
-          paranetId,
-          miner1CollectionBytes,
-        ),
-      ).to.be.equal(true);
-
-      // Miner2 (unregistered) attempts to submit KC - should fail
-      await expect(
-        Paranet.connect(miner2).submitKnowledgeCollection(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          await KnowledgeCollectionStorage.getAddress(),
-          miner2CollectionId,
-        ),
-      ).to.be.revertedWith('Miner is not registered');
-
-      // Verify miner2's KC was not added
-
-      const miner2CollectionBytes = ethers.keccak256(
-        ethers.solidityPacked(
-          ['address', 'uint256'],
-          [await KnowledgeCollectionStorage.getAddress(), miner2CollectionId],
-        ),
-      );
-      expect(
-        await ParanetsRegistry.isKnowledgeCollectionRegistered(
-          paranetId,
-          miner2CollectionBytes,
-        ),
-      ).to.be.equal(false);
-
-      // Verify total KC count is 1 (only miner1's KC)
-      expect(
-        await ParanetsRegistry.getKnowledgeCollectionsCount(paranetId),
-      ).to.equal(1);
-    });
-  });
-
-  describe('Paranet Permissioned Nodes', () => {
-    it('Should allow owner to add and remove curated nodes', async () => {
-      // Setup paranet with permissioned nodes policy
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const node1 = accounts[10];
-      const node2 = accounts[11];
-
-      // Create profiles for test nodes
-      await Profile.connect(node1).createProfile(
-        accounts[0].address,
-        [], // operational wallets
-        'Node1',
-        '0x' + randomBytes(32).toString('hex'),
-        0,
-      );
-      await Profile.connect(node2).createProfile(
-        accounts[0].address,
-        [], // operational wallets
-        'Node2',
-        '0x' + randomBytes(32).toString('hex'),
-        0,
-      );
-      const node1IdentityId = await IdentityStorage.getIdentityId(
-        node1.address,
-      );
-      const node2IdentityId = await IdentityStorage.getIdentityId(
-        node2.address,
-      );
-
-      const {
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-        paranetId,
-      } = await setupParanet(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        {
-          Paranet,
-          Profile,
-          Token,
-          KnowledgeCollection,
-          KnowledgeCollectionStorage,
-        },
-        'Test Paranet',
-        'Test Paranet Description',
-        1, // NODES_ACCESS_POLICY_PERMISSIONED
-        ACCESS_POLICIES.OPEN,
-        ACCESS_POLICIES.OPEN,
-      );
-
-      // Verify initial state
-      expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
-        0,
-      );
-      expect(
-        await ParanetsRegistry.isCuratedNode(paranetId, node1IdentityId),
-      ).to.be.equal(false);
-      expect(
-        await ParanetsRegistry.isCuratedNode(paranetId, node2IdentityId),
-      ).to.be.equal(false);
-
-      // Add nodes
-      await expect(
-        Paranet.connect(kcCreator).addParanetCuratedNodes(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          [node1IdentityId, node2IdentityId],
-        ),
-      )
-        .to.emit(Paranet, 'ParanetCuratedNodeAdded')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          node1IdentityId,
-        )
-        .to.emit(Paranet, 'ParanetCuratedNodeAdded')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          node2IdentityId,
-        );
-
-      // Verify nodes were added
-      expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
-        2,
-      );
-      expect(
-        await ParanetsRegistry.isCuratedNode(paranetId, node1IdentityId),
-      ).to.be.equal(true);
-      expect(
-        await ParanetsRegistry.isCuratedNode(paranetId, node2IdentityId),
-      ).to.be.equal(true);
-
-      const curatedNodes = await ParanetsRegistry.getCuratedNodes(paranetId);
-      expect(curatedNodes[0].identityId).to.equal(node1IdentityId);
-      expect(curatedNodes[1].identityId).to.equal(node2IdentityId);
-
-      // Remove node1
-      await expect(
-        Paranet.connect(kcCreator).removeParanetCuratedNodes(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          [node1IdentityId],
-        ),
-      )
-        .to.emit(Paranet, 'ParanetCuratedNodeRemoved')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          node1IdentityId,
-        );
-
-      // Verify node1 was removed but node2 remains
-      expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
-        1,
-      );
-      expect(
-        await ParanetsRegistry.isCuratedNode(paranetId, node1IdentityId),
-      ).to.be.equal(false);
-      expect(
-        await ParanetsRegistry.isCuratedNode(paranetId, node2IdentityId),
-      ).to.be.equal(true);
-
-      const remainingNodes = await ParanetsRegistry.getCuratedNodes(paranetId);
-      expect(remainingNodes).to.have.lengthOf(1);
-      expect(remainingNodes[0].identityId).to.equal(node2IdentityId);
-    });
-
-    it('Should handle node join requests correctly', async () => {
-      // Setup paranet with permissioned nodes policy
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const applicantNode = accounts[10];
-
-      // Create profile for applicant node
-      await Profile.connect(applicantNode).createProfile(
-        accounts[0].address,
-        [], // operational wallets
-        'Applicant',
-        '0x' + randomBytes(32).toString('hex'),
-        0,
-      );
-      const applicantIdentityId = await IdentityStorage.getIdentityId(
-        applicantNode.address,
-      );
-
-      const {
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-        paranetId,
-      } = await setupParanet(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        {
-          Paranet,
-          Profile,
-          Token,
-          KnowledgeCollection,
-          KnowledgeCollectionStorage,
-        },
-        'Test Paranet',
-        'Test Paranet Description',
-        1, // NODES_ACCESS_POLICY_PERMISSIONED
-        ACCESS_POLICIES.OPEN,
-        ACCESS_POLICIES.OPEN,
-      );
-
-      // Request to join
-      await expect(
-        Paranet.connect(applicantNode).requestParanetCuratedNodeAccess(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-        ),
-      )
-        .to.emit(Paranet, 'ParanetCuratedNodeJoinRequestCreated')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          applicantIdentityId,
-        );
-
-      // Verify initial request state
-      const latestRequest = await ParanetsRegistry.getLatestNodeJoinRequest(
-        paranetId,
-        applicantIdentityId,
-      );
-      expect(latestRequest.identityId).to.equal(applicantIdentityId);
-      expect(latestRequest.status).to.equal(1); // PENDING status
-      expect(latestRequest.createdAt).to.be.gt(0);
-      expect(latestRequest.updatedAt).to.equal(latestRequest.createdAt);
-
-      // Approve request
-      await expect(
-        Paranet.connect(kcCreator).approveCuratedNode(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          applicantIdentityId,
-        ),
-      )
-        .to.emit(Paranet, 'ParanetCuratedNodeJoinRequestAccepted')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          applicantIdentityId,
-        )
-        .to.emit(Paranet, 'ParanetCuratedNodeAdded')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          applicantIdentityId,
-        );
-
-      // Verify request state after approval
-      const updatedRequest = await ParanetsRegistry.getLatestNodeJoinRequest(
-        paranetId,
-        applicantIdentityId,
-      );
-      expect(updatedRequest.identityId).to.equal(applicantIdentityId);
-      expect(updatedRequest.status).to.equal(2); // ACCEPTED status
-      expect(updatedRequest.createdAt).to.equal(latestRequest.createdAt);
-      expect(updatedRequest.updatedAt).to.be.gt(latestRequest.updatedAt);
-
-      // Verify node is now registered
-      expect(
-        await ParanetsRegistry.isCuratedNode(paranetId, applicantIdentityId),
-      ).to.be.equal(true);
-    });
-
-    it('Should handle node join request rejection correctly', async () => {
-      // Setup paranet with permissioned nodes policy
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const applicantNode = accounts[10];
-
-      // Create profile for applicant node
-      await Profile.connect(applicantNode).createProfile(
-        accounts[0].address,
-        [], // operational wallets
-        'Applicant',
-        '0x' + randomBytes(32).toString('hex'),
-        0,
-      );
-      const applicantIdentityId = await IdentityStorage.getIdentityId(
-        applicantNode.address,
-      );
-
-      const {
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-        paranetId,
-      } = await setupParanet(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        {
-          Paranet,
-          Profile,
-          Token,
-          KnowledgeCollection,
-          KnowledgeCollectionStorage,
-        },
-        'Test Paranet',
-        'Test Paranet Description',
-        1, // NODES_ACCESS_POLICY_PERMISSIONED
-        ACCESS_POLICIES.OPEN,
-        ACCESS_POLICIES.OPEN,
-      );
-
-      // Request to join
-      await expect(
-        Paranet.connect(applicantNode).requestParanetCuratedNodeAccess(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-        ),
-      )
-        .to.emit(Paranet, 'ParanetCuratedNodeJoinRequestCreated')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          applicantIdentityId,
-        );
-
-      // Verify initial request state
-      const latestRequest = await ParanetsRegistry.getLatestNodeJoinRequest(
-        paranetId,
-        applicantIdentityId,
-      );
-      expect(latestRequest.identityId).to.equal(applicantIdentityId);
-      expect(latestRequest.status).to.equal(1); // PENDING status
-
-      // Reject request
-      await expect(
-        Paranet.connect(kcCreator).rejectCuratedNode(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          applicantIdentityId,
-        ),
-      )
-        .to.emit(Paranet, 'ParanetCuratedNodeJoinRequestRejected')
-        .withArgs(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          applicantIdentityId,
-        );
-
-      // Verify request state after rejection
-      const updatedRequest = await ParanetsRegistry.getLatestNodeJoinRequest(
-        paranetId,
-        applicantIdentityId,
-      );
-      expect(updatedRequest.identityId).to.equal(applicantIdentityId);
-      expect(updatedRequest.status).to.equal(3); // REJECTED status
-      expect(updatedRequest.createdAt).to.equal(latestRequest.createdAt);
-      expect(updatedRequest.updatedAt).to.be.gt(latestRequest.updatedAt);
-
-      // Verify node is not registered
-      expect(
-        await ParanetsRegistry.isCuratedNode(paranetId, applicantIdentityId),
-      ).to.be.equal(false);
-    });
-
-    it('Should handle edge cases when adding and removing multiple nodes', async () => {
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const node1 = accounts[10];
-      const node2 = accounts[11];
-      const node3 = accounts[12];
-
-      // Create profiles for test nodes
-      await Profile.connect(node1).createProfile(
-        accounts[0].address,
-        [], // operational wallets
-        'Node1',
-        '0x' + randomBytes(32).toString('hex'),
-        0,
-      );
-      await Profile.connect(node2).createProfile(
-        accounts[0].address,
-        [], // operational wallets
-        'Node2',
-        '0x' + randomBytes(32).toString('hex'),
-        0,
-      );
-      await Profile.connect(node3).createProfile(
-        accounts[0].address,
-        [], // operational wallets
-        'Node3',
-        '0x' + randomBytes(32).toString('hex'),
-        0,
-      );
-      const node1IdentityId = await IdentityStorage.getIdentityId(
-        node1.address,
-      );
-      const node2IdentityId = await IdentityStorage.getIdentityId(
-        node2.address,
-      );
-      const node3IdentityId = await IdentityStorage.getIdentityId(
-        node3.address,
-      );
-
-      const {
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-        paranetId,
-      } = await setupParanet(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        {
-          Paranet,
-          Profile,
-          Token,
-          KnowledgeCollection,
-          KnowledgeCollectionStorage,
-        },
-        'Test Paranet',
-        'Test Paranet Description',
-        1, // NODES_ACCESS_POLICY_PERMISSIONED
-        ACCESS_POLICIES.OPEN,
-        ACCESS_POLICIES.OPEN,
-      );
-
-      // Add nodes in sequence
-      await Paranet.connect(kcCreator).addParanetCuratedNodes(
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-        [node1IdentityId],
-      );
-
-      await Paranet.connect(kcCreator).addParanetCuratedNodes(
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-        [node2IdentityId, node3IdentityId],
-      );
-
-      // Verify all nodes were added
-      expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
-        3,
-      );
-      const allNodes = await ParanetsRegistry.getCuratedNodes(paranetId);
-      expect(allNodes.map((node) => node.identityId)).to.have.members([
-        node1IdentityId,
-        node2IdentityId,
-        node3IdentityId,
-      ]);
-
-      // Remove nodes from edges (first and last)
-      await Paranet.connect(kcCreator).removeParanetCuratedNodes(
-        paranetKCStorageContract,
-        paranetKCTokenId,
-        paranetKATokenId,
-        [node1IdentityId, node3IdentityId],
-      );
-
-      // Verify middle node remains
-      expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
-        1,
-      );
-      expect(
-        await ParanetsRegistry.isCuratedNode(paranetId, node1IdentityId),
-      ).to.be.equal(false);
-      expect(
-        await ParanetsRegistry.isCuratedNode(paranetId, node2IdentityId),
-      ).to.be.equal(true);
-      expect(
-        await ParanetsRegistry.isCuratedNode(paranetId, node3IdentityId),
-      ).to.be.equal(false);
-
-      // Try to remove non-existent node - should revert
-      await expect(
-        Paranet.connect(kcCreator).removeParanetCuratedNodes(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          [node1IdentityId], // Already removed
-        ),
-      ).to.be.revertedWithCustomError(Paranet, 'ParanetCuratedNodeDoesntExist');
-
-      // Verify state remains unchanged
-      expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
-        1,
-      );
-      expect(
-        await ParanetsRegistry.isCuratedNode(paranetId, node2IdentityId),
-      ).to.be.equal(true);
-
-      // Try to add duplicate node
-      await expect(
-        Paranet.connect(kcCreator).addParanetCuratedNodes(
-          paranetKCStorageContract,
-          paranetKCTokenId,
-          paranetKATokenId,
-          [node2IdentityId],
-        ),
-      ).to.be.revertedWithCustomError(
-        Paranet,
-        'ParanetCuratedNodeHasAlreadyBeenAdded',
-      );
-
-      expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
-        1,
-      );
-      const finalNodes = await ParanetsRegistry.getCuratedNodes(paranetId);
-      expect(finalNodes).to.have.lengthOf(1);
-      expect(finalNodes[0].identityId).to.equal(node2IdentityId);
-    });
-  });
+  // describe('Paranet Permissioned Miners', () => {
+  //   it('Should allow owner to add and remove curated miners', async () => {
+  //     // Setup paranet with permissioned miners policy
+  //     const kcCreator = getDefaultKCCreator(accounts);
+  //     const publishingNode = getDefaultPublishingNode(accounts);
+  //     const receivingNodes = getDefaultReceivingNodes(accounts);
+  //     const miner1 = accounts[10];
+  //     const miner2 = accounts[11];
+
+  //     const {
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //       paranetId, // Add this to destructuring
+  //     } = await setupParanet(
+  //       kcCreator,
+  //       publishingNode,
+  //       receivingNodes,
+  //       {
+  //         Paranet,
+  //         Profile,
+  //         Token,
+  //         KnowledgeCollection,
+  //         KnowledgeCollectionStorage,
+  //       },
+  //       'Test Paranet',
+  //       'Test Paranet Description',
+  //       ACCESS_POLICIES.OPEN, // nodes policy
+  //       1, // miners policy
+  //       ACCESS_POLICIES.OPEN, // submission policy
+  //     );
+
+  //     // Verify initial state
+  //     expect(
+  //       await ParanetsRegistry.getKnowledgeMinersCount(paranetId),
+  //     ).to.equal(0);
+  //     expect(
+  //       await ParanetsRegistry.isKnowledgeMinerRegistered(
+  //         paranetId,
+  //         miner1.address,
+  //       ),
+  //     ).to.be.equal(false);
+  //     expect(
+  //       await ParanetsRegistry.isKnowledgeMinerRegistered(
+  //         paranetId,
+  //         miner2.address,
+  //       ),
+  //     ).to.be.equal(false);
+
+  //     // Add miners
+  //     await expect(
+  //       Paranet.connect(kcCreator).addParanetCuratedMiners(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         [miner1.address, miner2.address],
+  //       ),
+  //     )
+  //       .to.emit(Paranet, 'ParanetCuratedMinerAdded')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         miner1.address,
+  //       )
+  //       .to.emit(Paranet, 'ParanetCuratedMinerAdded')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         miner2.address,
+  //       );
+
+  //     // Verify miners were added
+  //     expect(
+  //       await ParanetsRegistry.getKnowledgeMinersCount(paranetId),
+  //     ).to.equal(2);
+  //     expect(
+  //       await ParanetsRegistry.isKnowledgeMinerRegistered(
+  //         paranetId,
+  //         miner1.address,
+  //       ),
+  //     ).to.be.equal(true);
+  //     expect(
+  //       await ParanetsRegistry.isKnowledgeMinerRegistered(
+  //         paranetId,
+  //         miner2.address,
+  //       ),
+  //     ).to.be.equal(true);
+
+  //     const registeredMiners =
+  //       await ParanetsRegistry.getKnowledgeMiners(paranetId);
+  //     expect(registeredMiners[0]).to.be.equal(miner1.address);
+  //     expect(registeredMiners[1]).to.be.equal(miner2.address);
+
+  //     // Remove miners
+  //     await expect(
+  //       Paranet.connect(kcCreator).removeParanetCuratedMiners(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         [miner1.address],
+  //       ),
+  //     )
+  //       .to.emit(Paranet, 'ParanetCuratedMinerRemoved')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         miner1.address,
+  //       );
+
+  //     // Verify miner1 was removed but miner2 remains
+  //     expect(
+  //       await ParanetsRegistry.getKnowledgeMinersCount(paranetId),
+  //     ).to.equal(1);
+  //     expect(
+  //       await ParanetsRegistry.isKnowledgeMinerRegistered(
+  //         paranetId,
+  //         miner1.address,
+  //       ),
+  //     ).to.be.equal(false);
+  //     expect(
+  //       await ParanetsRegistry.isKnowledgeMinerRegistered(
+  //         paranetId,
+  //         miner2.address,
+  //       ),
+  //     ).to.be.equal(true);
+
+  //     const remainingMiners =
+  //       await ParanetsRegistry.getKnowledgeMiners(paranetId);
+  //     expect(remainingMiners).to.have.lengthOf(1);
+  //     expect(remainingMiners[0]).to.equal(miner2.address);
+  //   });
+
+  //   it('Should handle miner access requests correctly', async () => {
+  //     // Setup paranet with permissioned miners policy
+  //     const kcCreator = getDefaultKCCreator(accounts);
+  //     const publishingNode = getDefaultPublishingNode(accounts);
+  //     const receivingNodes = getDefaultReceivingNodes(accounts);
+  //     const miner = accounts[10];
+
+  //     const {
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //       paranetId,
+  //     } = await setupParanet(
+  //       kcCreator,
+  //       publishingNode,
+  //       receivingNodes,
+  //       {
+  //         Paranet,
+  //         Profile,
+  //         Token,
+  //         KnowledgeCollection,
+  //         KnowledgeCollectionStorage,
+  //       },
+  //       'Test Paranet',
+  //       'Test Paranet Description',
+  //       ACCESS_POLICIES.OPEN, // nodes policy
+  //       1, // miners policy
+  //       ACCESS_POLICIES.OPEN, // submission policy
+  //     );
+
+  //     // Request access
+  //     await expect(
+  //       Paranet.connect(miner).requestParanetCuratedMinerAccess(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //       ),
+  //     )
+  //       .to.emit(Paranet, 'ParanetCuratedMinerAccessRequestCreated')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         miner.address,
+  //       );
+
+  //     // Verify request state
+  //     const latestRequest =
+  //       await ParanetsRegistry.getLatestKnowledgeMinerAccessRequest(
+  //         paranetId,
+  //         miner.address,
+  //       );
+  //     expect(latestRequest.miner).to.equal(miner.address);
+  //     expect(latestRequest.status).to.equal(1); // PENDING status
+  //     expect(latestRequest.createdAt).to.be.gt(0);
+  //     expect(latestRequest.updatedAt).to.equal(latestRequest.createdAt);
+
+  //     // Approve request
+  //     await expect(
+  //       Paranet.connect(kcCreator).approveCuratedMiner(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         miner.address,
+  //       ),
+  //     )
+  //       .to.emit(Paranet, 'ParanetCuratedMinerAccessRequestAccepted')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         miner.address,
+  //       )
+  //       .to.emit(Paranet, 'ParanetCuratedMinerAdded')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         miner.address,
+  //       );
+
+  //     // Verify request state after approval
+  //     const updatedRequest =
+  //       await ParanetsRegistry.getLatestKnowledgeMinerAccessRequest(
+  //         paranetId,
+  //         miner.address,
+  //       );
+  //     expect(updatedRequest.miner).to.equal(miner.address);
+  //     expect(updatedRequest.status).to.equal(2); // ACCEPTED status
+  //     expect(updatedRequest.createdAt).to.equal(latestRequest.createdAt);
+  //     expect(updatedRequest.updatedAt).to.be.gt(latestRequest.updatedAt);
+
+  //     // Verify miner is now registered
+  //     expect(
+  //       await ParanetsRegistry.isKnowledgeMinerRegistered(
+  //         paranetId,
+  //         miner.address,
+  //       ),
+  //     ).to.be.equal(true);
+  //   });
+
+  //   it('Should handle miner access request rejection', async () => {
+  //     // Setup paranet with permissioned miners policy
+  //     const kcCreator = getDefaultKCCreator(accounts);
+  //     const publishingNode = getDefaultPublishingNode(accounts);
+  //     const receivingNodes = getDefaultReceivingNodes(accounts);
+  //     const miner = accounts[10];
+
+  //     const {
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //       paranetId,
+  //     } = await setupParanet(
+  //       kcCreator,
+  //       publishingNode,
+  //       receivingNodes,
+  //       {
+  //         Paranet,
+  //         Profile,
+  //         Token,
+  //         KnowledgeCollection,
+  //         KnowledgeCollectionStorage,
+  //       },
+  //       'Test Paranet',
+  //       'Test Paranet Description',
+  //       ACCESS_POLICIES.OPEN, // nodes policy
+  //       1, // miners policy
+  //       ACCESS_POLICIES.OPEN, // submission policy
+  //     );
+
+  //     // Request access
+  //     await Paranet.connect(miner).requestParanetCuratedMinerAccess(
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //     );
+
+  //     // Verify initial request state
+  //     const latestRequest =
+  //       await ParanetsRegistry.getLatestKnowledgeMinerAccessRequest(
+  //         paranetId,
+  //         miner.address,
+  //       );
+  //     expect(latestRequest.miner).to.equal(miner.address);
+  //     expect(latestRequest.status).to.equal(1); // PENDING status
+  //     expect(latestRequest.createdAt).to.be.gt(0);
+  //     expect(latestRequest.updatedAt).to.equal(latestRequest.createdAt);
+
+  //     // Reject request
+  //     await expect(
+  //       Paranet.connect(kcCreator).rejectCuratedMiner(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         miner.address,
+  //       ),
+  //     )
+  //       .to.emit(Paranet, 'ParanetCuratedMinerAccessRequestRejected')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         miner.address,
+  //       );
+
+  //     // Verify request state after rejection
+  //     const updatedRequest =
+  //       await ParanetsRegistry.getLatestKnowledgeMinerAccessRequest(
+  //         paranetId,
+  //         miner.address,
+  //       );
+  //     expect(updatedRequest.miner).to.equal(miner.address);
+  //     expect(updatedRequest.status).to.equal(3); // REJECTED status
+  //     expect(updatedRequest.createdAt).to.equal(latestRequest.createdAt);
+  //     expect(updatedRequest.updatedAt).to.be.gt(latestRequest.updatedAt);
+
+  //     // Verify miner is not registered
+  //     expect(
+  //       await ParanetsRegistry.isKnowledgeMinerRegistered(
+  //         paranetId,
+  //         miner.address,
+  //       ),
+  //     ).to.be.equal(false);
+  //   });
+
+  //   it('Should revert when non-owner tries to add/remove miners', async () => {
+  //     const kcCreator = getDefaultKCCreator(accounts);
+  //     const publishingNode = getDefaultPublishingNode(accounts);
+  //     const receivingNodes = getDefaultReceivingNodes(accounts);
+  //     const miner = accounts[10];
+  //     const nonOwner = accounts[11];
+
+  //     const { paranetKCStorageContract, paranetKCTokenId, paranetKATokenId } =
+  //       await setupParanet(
+  //         kcCreator,
+  //         publishingNode,
+  //         receivingNodes,
+  //         {
+  //           Paranet,
+  //           Profile,
+  //           Token,
+  //           KnowledgeCollection,
+  //           KnowledgeCollectionStorage,
+  //         },
+  //         'Test Paranet',
+  //         'Test Paranet Description',
+  //         ACCESS_POLICIES.OPEN,
+  //         1,
+  //         ACCESS_POLICIES.OPEN,
+  //       );
+
+  //     // Try to add miner as non-owner
+  //     await expect(
+  //       Paranet.connect(nonOwner).addParanetCuratedMiners(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         [miner.address],
+  //       ),
+  //     ).to.be.revertedWith("Caller isn't the owner of the KA");
+
+  //     // Try to remove miner as non-owner
+  //     await expect(
+  //       Paranet.connect(nonOwner).removeParanetCuratedMiners(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         [miner.address],
+  //       ),
+  //     ).to.be.revertedWith("Caller isn't the owner of the KA");
+  //   });
+
+  //   it('Should revert when requesting access multiple times', async () => {
+  //     const kcCreator = getDefaultKCCreator(accounts);
+  //     const publishingNode = getDefaultPublishingNode(accounts);
+  //     const receivingNodes = getDefaultReceivingNodes(accounts);
+  //     const miner = accounts[10];
+
+  //     const { paranetKCStorageContract, paranetKCTokenId, paranetKATokenId } =
+  //       await setupParanet(
+  //         kcCreator,
+  //         publishingNode,
+  //         receivingNodes,
+  //         {
+  //           Paranet,
+  //           Profile,
+  //           Token,
+  //           KnowledgeCollection,
+  //           KnowledgeCollectionStorage,
+  //         },
+  //         'Test Paranet',
+  //         'Test Paranet Description',
+  //         ACCESS_POLICIES.OPEN,
+  //         1,
+  //         ACCESS_POLICIES.OPEN,
+  //       );
+
+  //     // First request
+  //     await Paranet.connect(miner).requestParanetCuratedMinerAccess(
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //     );
+
+  //     // Try to request again while first request is pending
+  //     await expect(
+  //       Paranet.connect(miner).requestParanetCuratedMinerAccess(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //       ),
+  //     ).to.be.revertedWithCustomError(
+  //       Paranet,
+  //       'ParanetCuratedMinerAccessRequestInvalidStatus',
+  //     );
+  //   });
+
+  //   it('Should allow registered miner to submit KC but reject unregistered miner', async () => {
+  //     // Setup paranet with permissioned miners policy
+  //     const kcCreator = getDefaultKCCreator(accounts);
+  //     const publishingNode = getDefaultPublishingNode(accounts);
+  //     const receivingNodes = getDefaultReceivingNodes(accounts);
+  //     const miner1 = accounts[10];
+  //     const miner2 = accounts[11];
+
+  //     const {
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //       paranetId,
+  //       publishingNodeIdentityId,
+  //       receivingNodesIdentityIds,
+  //     } = await setupParanet(
+  //       kcCreator,
+  //       publishingNode,
+  //       receivingNodes,
+  //       {
+  //         Paranet,
+  //         Profile,
+  //         Token,
+  //         KnowledgeCollection,
+  //         KnowledgeCollectionStorage,
+  //       },
+  //       'Test Paranet',
+  //       'Test Paranet Description',
+  //       ACCESS_POLICIES.OPEN, // nodes policy
+  //       1, // miners policy - PERMISSIONED
+  //       ACCESS_POLICIES.OPEN, // submission policy
+  //     );
+
+  //     // Add miner1 as a curated miner
+  //     await Paranet.connect(kcCreator).addParanetCuratedMiners(
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //       [miner1.address],
+  //     );
+
+  //     // Create KC for miner1
+  //     const signaturesData1 = await getKCSignaturesData(
+  //       publishingNode,
+  //       1,
+  //       receivingNodes,
+  //     );
+  //     const { collectionId: miner1CollectionId } =
+  //       await createKnowledgeCollection(
+  //         miner1, // Using miner1 as KC creator
+  //         publishingNodeIdentityId,
+  //         receivingNodesIdentityIds,
+  //         signaturesData1,
+  //         {
+  //           KnowledgeCollection: KnowledgeCollection,
+  //           Token: Token,
+  //         },
+  //       );
+
+  //     // Create KC for miner2
+  //     const signaturesData2 = await getKCSignaturesData(
+  //       publishingNode,
+  //       1,
+  //       receivingNodes,
+  //     );
+  //     const { collectionId: miner2CollectionId } =
+  //       await createKnowledgeCollection(
+  //         miner2, // Using miner2 as KC creator
+  //         publishingNodeIdentityId,
+  //         receivingNodesIdentityIds,
+  //         signaturesData2,
+  //         {
+  //           KnowledgeCollection: KnowledgeCollection,
+  //           Token: Token,
+  //         },
+  //       );
+
+  //     // Miner1 (registered) submits KC - should succeed
+  //     await expect(
+  //       Paranet.connect(miner1).submitKnowledgeCollection(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         await KnowledgeCollectionStorage.getAddress(),
+  //         miner1CollectionId,
+  //       ),
+  //     )
+  //       .to.emit(Paranet, 'KnowledgeCollectionSubmittedToParanet')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         await KnowledgeCollectionStorage.getAddress(),
+  //         miner1CollectionId,
+  //       );
+
+  //     // Verify miner1's KC was added
+  //     const miner1CollectionBytes = ethers.keccak256(
+  //       ethers.solidityPacked(
+  //         ['address', 'uint256'],
+  //         [await KnowledgeCollectionStorage.getAddress(), miner1CollectionId],
+  //       ),
+  //     );
+
+  //     expect(
+  //       await ParanetsRegistry.isKnowledgeCollectionRegistered(
+  //         paranetId,
+  //         miner1CollectionBytes,
+  //       ),
+  //     ).to.be.equal(true);
+
+  //     // Miner2 (unregistered) attempts to submit KC - should fail
+  //     await expect(
+  //       Paranet.connect(miner2).submitKnowledgeCollection(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         await KnowledgeCollectionStorage.getAddress(),
+  //         miner2CollectionId,
+  //       ),
+  //     ).to.be.revertedWith('Miner is not registered');
+
+  //     // Verify miner2's KC was not added
+
+  //     const miner2CollectionBytes = ethers.keccak256(
+  //       ethers.solidityPacked(
+  //         ['address', 'uint256'],
+  //         [await KnowledgeCollectionStorage.getAddress(), miner2CollectionId],
+  //       ),
+  //     );
+  //     expect(
+  //       await ParanetsRegistry.isKnowledgeCollectionRegistered(
+  //         paranetId,
+  //         miner2CollectionBytes,
+  //       ),
+  //     ).to.be.equal(false);
+
+  //     // Verify total KC count is 1 (only miner1's KC)
+  //     expect(
+  //       await ParanetsRegistry.getKnowledgeCollectionsCount(paranetId),
+  //     ).to.equal(1);
+  //   });
+  // });
+
+  // describe('Paranet Permissioned Nodes', () => {
+  //   it('Should allow owner to add and remove curated nodes', async () => {
+  //     // Setup paranet with permissioned nodes policy
+  //     const kcCreator = getDefaultKCCreator(accounts);
+  //     const publishingNode = getDefaultPublishingNode(accounts);
+  //     const receivingNodes = getDefaultReceivingNodes(accounts);
+  //     const node1 = accounts[10];
+  //     const node2 = accounts[11];
+
+  //     // Create profiles for test nodes
+  //     await Profile.connect(node1).createProfile(
+  //       accounts[0].address,
+  //       [], // operational wallets
+  //       'Node1',
+  //       '0x' + randomBytes(32).toString('hex'),
+  //       0,
+  //     );
+  //     await Profile.connect(node2).createProfile(
+  //       accounts[0].address,
+  //       [], // operational wallets
+  //       'Node2',
+  //       '0x' + randomBytes(32).toString('hex'),
+  //       0,
+  //     );
+  //     const node1IdentityId = await IdentityStorage.getIdentityId(
+  //       node1.address,
+  //     );
+  //     const node2IdentityId = await IdentityStorage.getIdentityId(
+  //       node2.address,
+  //     );
+
+  //     const {
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //       paranetId,
+  //     } = await setupParanet(
+  //       kcCreator,
+  //       publishingNode,
+  //       receivingNodes,
+  //       {
+  //         Paranet,
+  //         Profile,
+  //         Token,
+  //         KnowledgeCollection,
+  //         KnowledgeCollectionStorage,
+  //       },
+  //       'Test Paranet',
+  //       'Test Paranet Description',
+  //       1, // NODES_ACCESS_POLICY_PERMISSIONED
+  //       ACCESS_POLICIES.OPEN,
+  //       ACCESS_POLICIES.OPEN,
+  //     );
+
+  //     // Verify initial state
+  //     expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
+  //       0,
+  //     );
+  //     expect(
+  //       await ParanetsRegistry.isCuratedNode(paranetId, node1IdentityId),
+  //     ).to.be.equal(false);
+  //     expect(
+  //       await ParanetsRegistry.isCuratedNode(paranetId, node2IdentityId),
+  //     ).to.be.equal(false);
+
+  //     // Add nodes
+  //     await expect(
+  //       Paranet.connect(kcCreator).addParanetCuratedNodes(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         [node1IdentityId, node2IdentityId],
+  //       ),
+  //     )
+  //       .to.emit(Paranet, 'ParanetCuratedNodeAdded')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         node1IdentityId,
+  //       )
+  //       .to.emit(Paranet, 'ParanetCuratedNodeAdded')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         node2IdentityId,
+  //       );
+
+  //     // Verify nodes were added
+  //     expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
+  //       2,
+  //     );
+  //     expect(
+  //       await ParanetsRegistry.isCuratedNode(paranetId, node1IdentityId),
+  //     ).to.be.equal(true);
+  //     expect(
+  //       await ParanetsRegistry.isCuratedNode(paranetId, node2IdentityId),
+  //     ).to.be.equal(true);
+
+  //     const curatedNodes = await ParanetsRegistry.getCuratedNodes(paranetId);
+  //     expect(curatedNodes[0].identityId).to.equal(node1IdentityId);
+  //     expect(curatedNodes[1].identityId).to.equal(node2IdentityId);
+
+  //     // Remove node1
+  //     await expect(
+  //       Paranet.connect(kcCreator).removeParanetCuratedNodes(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         [node1IdentityId],
+  //       ),
+  //     )
+  //       .to.emit(Paranet, 'ParanetCuratedNodeRemoved')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         node1IdentityId,
+  //       );
+
+  //     // Verify node1 was removed but node2 remains
+  //     expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
+  //       1,
+  //     );
+  //     expect(
+  //       await ParanetsRegistry.isCuratedNode(paranetId, node1IdentityId),
+  //     ).to.be.equal(false);
+  //     expect(
+  //       await ParanetsRegistry.isCuratedNode(paranetId, node2IdentityId),
+  //     ).to.be.equal(true);
+
+  //     const remainingNodes = await ParanetsRegistry.getCuratedNodes(paranetId);
+  //     expect(remainingNodes).to.have.lengthOf(1);
+  //     expect(remainingNodes[0].identityId).to.equal(node2IdentityId);
+  //   });
+
+  //   it('Should handle node join requests correctly', async () => {
+  //     // Setup paranet with permissioned nodes policy
+  //     const kcCreator = getDefaultKCCreator(accounts);
+  //     const publishingNode = getDefaultPublishingNode(accounts);
+  //     const receivingNodes = getDefaultReceivingNodes(accounts);
+  //     const applicantNode = accounts[10];
+
+  //     // Create profile for applicant node
+  //     await Profile.connect(applicantNode).createProfile(
+  //       accounts[0].address,
+  //       [], // operational wallets
+  //       'Applicant',
+  //       '0x' + randomBytes(32).toString('hex'),
+  //       0,
+  //     );
+  //     const applicantIdentityId = await IdentityStorage.getIdentityId(
+  //       applicantNode.address,
+  //     );
+
+  //     const {
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //       paranetId,
+  //     } = await setupParanet(
+  //       kcCreator,
+  //       publishingNode,
+  //       receivingNodes,
+  //       {
+  //         Paranet,
+  //         Profile,
+  //         Token,
+  //         KnowledgeCollection,
+  //         KnowledgeCollectionStorage,
+  //       },
+  //       'Test Paranet',
+  //       'Test Paranet Description',
+  //       1, // NODES_ACCESS_POLICY_PERMISSIONED
+  //       ACCESS_POLICIES.OPEN,
+  //       ACCESS_POLICIES.OPEN,
+  //     );
+
+  //     // Request to join
+  //     await expect(
+  //       Paranet.connect(applicantNode).requestParanetCuratedNodeAccess(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //       ),
+  //     )
+  //       .to.emit(Paranet, 'ParanetCuratedNodeJoinRequestCreated')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         applicantIdentityId,
+  //       );
+
+  //     // Verify initial request state
+  //     const latestRequest = await ParanetsRegistry.getLatestNodeJoinRequest(
+  //       paranetId,
+  //       applicantIdentityId,
+  //     );
+  //     expect(latestRequest.identityId).to.equal(applicantIdentityId);
+  //     expect(latestRequest.status).to.equal(1); // PENDING status
+  //     expect(latestRequest.createdAt).to.be.gt(0);
+  //     expect(latestRequest.updatedAt).to.equal(latestRequest.createdAt);
+
+  //     // Approve request
+  //     await expect(
+  //       Paranet.connect(kcCreator).approveCuratedNode(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         applicantIdentityId,
+  //       ),
+  //     )
+  //       .to.emit(Paranet, 'ParanetCuratedNodeJoinRequestAccepted')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         applicantIdentityId,
+  //       )
+  //       .to.emit(Paranet, 'ParanetCuratedNodeAdded')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         applicantIdentityId,
+  //       );
+
+  //     // Verify request state after approval
+  //     const updatedRequest = await ParanetsRegistry.getLatestNodeJoinRequest(
+  //       paranetId,
+  //       applicantIdentityId,
+  //     );
+  //     expect(updatedRequest.identityId).to.equal(applicantIdentityId);
+  //     expect(updatedRequest.status).to.equal(2); // ACCEPTED status
+  //     expect(updatedRequest.createdAt).to.equal(latestRequest.createdAt);
+  //     expect(updatedRequest.updatedAt).to.be.gt(latestRequest.updatedAt);
+
+  //     // Verify node is now registered
+  //     expect(
+  //       await ParanetsRegistry.isCuratedNode(paranetId, applicantIdentityId),
+  //     ).to.be.equal(true);
+  //   });
+
+  //   it('Should handle node join request rejection correctly', async () => {
+  //     // Setup paranet with permissioned nodes policy
+  //     const kcCreator = getDefaultKCCreator(accounts);
+  //     const publishingNode = getDefaultPublishingNode(accounts);
+  //     const receivingNodes = getDefaultReceivingNodes(accounts);
+  //     const applicantNode = accounts[10];
+
+  //     // Create profile for applicant node
+  //     await Profile.connect(applicantNode).createProfile(
+  //       accounts[0].address,
+  //       [], // operational wallets
+  //       'Applicant',
+  //       '0x' + randomBytes(32).toString('hex'),
+  //       0,
+  //     );
+  //     const applicantIdentityId = await IdentityStorage.getIdentityId(
+  //       applicantNode.address,
+  //     );
+
+  //     const {
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //       paranetId,
+  //     } = await setupParanet(
+  //       kcCreator,
+  //       publishingNode,
+  //       receivingNodes,
+  //       {
+  //         Paranet,
+  //         Profile,
+  //         Token,
+  //         KnowledgeCollection,
+  //         KnowledgeCollectionStorage,
+  //       },
+  //       'Test Paranet',
+  //       'Test Paranet Description',
+  //       1, // NODES_ACCESS_POLICY_PERMISSIONED
+  //       ACCESS_POLICIES.OPEN,
+  //       ACCESS_POLICIES.OPEN,
+  //     );
+
+  //     // Request to join
+  //     await expect(
+  //       Paranet.connect(applicantNode).requestParanetCuratedNodeAccess(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //       ),
+  //     )
+  //       .to.emit(Paranet, 'ParanetCuratedNodeJoinRequestCreated')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         applicantIdentityId,
+  //       );
+
+  //     // Verify initial request state
+  //     const latestRequest = await ParanetsRegistry.getLatestNodeJoinRequest(
+  //       paranetId,
+  //       applicantIdentityId,
+  //     );
+  //     expect(latestRequest.identityId).to.equal(applicantIdentityId);
+  //     expect(latestRequest.status).to.equal(1); // PENDING status
+
+  //     // Reject request
+  //     await expect(
+  //       Paranet.connect(kcCreator).rejectCuratedNode(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         applicantIdentityId,
+  //       ),
+  //     )
+  //       .to.emit(Paranet, 'ParanetCuratedNodeJoinRequestRejected')
+  //       .withArgs(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         applicantIdentityId,
+  //       );
+
+  //     // Verify request state after rejection
+  //     const updatedRequest = await ParanetsRegistry.getLatestNodeJoinRequest(
+  //       paranetId,
+  //       applicantIdentityId,
+  //     );
+  //     expect(updatedRequest.identityId).to.equal(applicantIdentityId);
+  //     expect(updatedRequest.status).to.equal(3); // REJECTED status
+  //     expect(updatedRequest.createdAt).to.equal(latestRequest.createdAt);
+  //     expect(updatedRequest.updatedAt).to.be.gt(latestRequest.updatedAt);
+
+  //     // Verify node is not registered
+  //     expect(
+  //       await ParanetsRegistry.isCuratedNode(paranetId, applicantIdentityId),
+  //     ).to.be.equal(false);
+  //   });
+
+  //   it('Should handle edge cases when adding and removing multiple nodes', async () => {
+  //     const kcCreator = getDefaultKCCreator(accounts);
+  //     const publishingNode = getDefaultPublishingNode(accounts);
+  //     const receivingNodes = getDefaultReceivingNodes(accounts);
+  //     const node1 = accounts[10];
+  //     const node2 = accounts[11];
+  //     const node3 = accounts[12];
+
+  //     // Create profiles for test nodes
+  //     await Profile.connect(node1).createProfile(
+  //       accounts[0].address,
+  //       [], // operational wallets
+  //       'Node1',
+  //       '0x' + randomBytes(32).toString('hex'),
+  //       0,
+  //     );
+  //     await Profile.connect(node2).createProfile(
+  //       accounts[0].address,
+  //       [], // operational wallets
+  //       'Node2',
+  //       '0x' + randomBytes(32).toString('hex'),
+  //       0,
+  //     );
+  //     await Profile.connect(node3).createProfile(
+  //       accounts[0].address,
+  //       [], // operational wallets
+  //       'Node3',
+  //       '0x' + randomBytes(32).toString('hex'),
+  //       0,
+  //     );
+  //     const node1IdentityId = await IdentityStorage.getIdentityId(
+  //       node1.address,
+  //     );
+  //     const node2IdentityId = await IdentityStorage.getIdentityId(
+  //       node2.address,
+  //     );
+  //     const node3IdentityId = await IdentityStorage.getIdentityId(
+  //       node3.address,
+  //     );
+
+  //     const {
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //       paranetId,
+  //     } = await setupParanet(
+  //       kcCreator,
+  //       publishingNode,
+  //       receivingNodes,
+  //       {
+  //         Paranet,
+  //         Profile,
+  //         Token,
+  //         KnowledgeCollection,
+  //         KnowledgeCollectionStorage,
+  //       },
+  //       'Test Paranet',
+  //       'Test Paranet Description',
+  //       1, // NODES_ACCESS_POLICY_PERMISSIONED
+  //       ACCESS_POLICIES.OPEN,
+  //       ACCESS_POLICIES.OPEN,
+  //     );
+
+  //     // Add nodes in sequence
+  //     await Paranet.connect(kcCreator).addParanetCuratedNodes(
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //       [node1IdentityId],
+  //     );
+
+  //     await Paranet.connect(kcCreator).addParanetCuratedNodes(
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //       [node2IdentityId, node3IdentityId],
+  //     );
+
+  //     // Verify all nodes were added
+  //     expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
+  //       3,
+  //     );
+  //     const allNodes = await ParanetsRegistry.getCuratedNodes(paranetId);
+  //     expect(allNodes.map((node) => node.identityId)).to.have.members([
+  //       node1IdentityId,
+  //       node2IdentityId,
+  //       node3IdentityId,
+  //     ]);
+
+  //     // Remove nodes from edges (first and last)
+  //     await Paranet.connect(kcCreator).removeParanetCuratedNodes(
+  //       paranetKCStorageContract,
+  //       paranetKCTokenId,
+  //       paranetKATokenId,
+  //       [node1IdentityId, node3IdentityId],
+  //     );
+
+  //     // Verify middle node remains
+  //     expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
+  //       1,
+  //     );
+  //     expect(
+  //       await ParanetsRegistry.isCuratedNode(paranetId, node1IdentityId),
+  //     ).to.be.equal(false);
+  //     expect(
+  //       await ParanetsRegistry.isCuratedNode(paranetId, node2IdentityId),
+  //     ).to.be.equal(true);
+  //     expect(
+  //       await ParanetsRegistry.isCuratedNode(paranetId, node3IdentityId),
+  //     ).to.be.equal(false);
+
+  //     // Try to remove non-existent node - should revert
+  //     await expect(
+  //       Paranet.connect(kcCreator).removeParanetCuratedNodes(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         [node1IdentityId], // Already removed
+  //       ),
+  //     ).to.be.revertedWithCustomError(Paranet, 'ParanetCuratedNodeDoesntExist');
+
+  //     // Verify state remains unchanged
+  //     expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
+  //       1,
+  //     );
+  //     expect(
+  //       await ParanetsRegistry.isCuratedNode(paranetId, node2IdentityId),
+  //     ).to.be.equal(true);
+
+  //     // Try to add duplicate node
+  //     await expect(
+  //       Paranet.connect(kcCreator).addParanetCuratedNodes(
+  //         paranetKCStorageContract,
+  //         paranetKCTokenId,
+  //         paranetKATokenId,
+  //         [node2IdentityId],
+  //       ),
+  //     ).to.be.revertedWithCustomError(
+  //       Paranet,
+  //       'ParanetCuratedNodeHasAlreadyBeenAdded',
+  //     );
+
+  //     expect(await ParanetsRegistry.getCuratedNodesCount(paranetId)).to.equal(
+  //       1,
+  //     );
+  //     const finalNodes = await ParanetsRegistry.getCuratedNodes(paranetId);
+  //     expect(finalNodes).to.have.lengthOf(1);
+  //     expect(finalNodes[0].identityId).to.equal(node2IdentityId);
+  //   });
+  // });
 
   describe('Paranet Incentives Pool Rewards', () => {
     it('Should handle claiming rewards from multiple incentives pools', async () => {
