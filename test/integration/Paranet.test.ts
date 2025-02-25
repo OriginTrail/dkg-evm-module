@@ -4199,7 +4199,7 @@ describe('@unit Paranet', () => {
     });
   });
 
-  describe.only('Paranet Service Metadata', () => {
+  describe('Paranet Service Metadata', () => {
     it('Should update paranet service metadata successfully', async () => {
       const kcCreator = getDefaultKCCreator(accounts);
       const publishingNode = getDefaultPublishingNode(accounts);
