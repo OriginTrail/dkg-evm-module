@@ -39,7 +39,7 @@ describe('@unit Profile contract', function () {
   const identityId1 = 1;
 
   async function deployProfileFixture(): Promise<ProfileFixture> {
-    await hre.deployments.fixture(['Profile']);
+    await hre.deployments.fixture(['Profile', 'Token']);
     Profile = await hre.ethers.getContract<Profile>('Profile');
     ParametersStorage =
       await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
