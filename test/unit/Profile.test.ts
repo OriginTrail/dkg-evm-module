@@ -3,80 +3,41 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
-import {
-  Hub,
-  ParametersStorage,
-  Profile,
-  ProfileStorage,
-  StakingStorage,
-  Token,
-  WhitelistStorage,
-} from '../../typechain';
+import { Profile, WhitelistStorage } from '../../typechain';
 
 type ProfileFixture = {
   accounts: SignerWithAddress[];
-  Hub: Hub;
   Profile: Profile;
-  ParametersStorage: ParametersStorage;
-  ProfileStorage: ProfileStorage;
   WhitelistStorage: WhitelistStorage;
-  Token: Token;
-  StakingStorage: StakingStorage;
 };
 
 describe('@unit Profile contract', function () {
   let accounts: SignerWithAddress[];
-  let Hub: Hub;
   let Profile: Profile;
-  let ParametersStorage: ParametersStorage;
-  let ProfileStorage: ProfileStorage;
   let WhitelistStorage: WhitelistStorage;
-  let Token: Token;
-  let StakingStorage: StakingStorage;
 
   const nodeId1 =
     '0x07f38512786964d9e70453371e7c98975d284100d44bd68dab67fe00b525cb66';
   const identityId1 = 1;
 
   async function deployProfileFixture(): Promise<ProfileFixture> {
-    await hre.deployments.fixture(['Profile', 'Token']);
+    await hre.deployments.fixture(['Profile']);
+
+    accounts = await hre.ethers.getSigners();
     Profile = await hre.ethers.getContract<Profile>('Profile');
-    ParametersStorage =
-      await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
-    ProfileStorage =
-      await hre.ethers.getContract<ProfileStorage>('ProfileStorage');
     WhitelistStorage =
       await hre.ethers.getContract<WhitelistStorage>('WhitelistStorage');
-    Token = await hre.ethers.getContract<Token>('Token');
-    StakingStorage =
-      await hre.ethers.getContract<StakingStorage>('StakingStorage');
-    accounts = await hre.ethers.getSigners();
-    Hub = await hre.ethers.getContract<Hub>('Hub');
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return {
       accounts,
-      Hub,
       Profile,
-      ParametersStorage,
-      ProfileStorage,
       WhitelistStorage,
-      Token,
-      StakingStorage,
     };
   }
 
   beforeEach(async () => {
-    ({
-      accounts,
-      Hub,
-      Profile,
-      ParametersStorage,
-      ProfileStorage,
-      WhitelistStorage,
-      Token,
-      StakingStorage,
-    } = await loadFixture(deployProfileFixture));
+    ({ accounts, Profile, WhitelistStorage } =
+      await loadFixture(deployProfileFixture));
   });
 
   it('The contract is named "Profile"', async () => {
