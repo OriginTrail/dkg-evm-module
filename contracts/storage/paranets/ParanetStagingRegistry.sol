@@ -142,13 +142,11 @@ contract ParanetStagingRegistry is INamed, IVersioned, HubDependent {
         return collectionSubmitters[paranetId][knowledgeCollectionId];
     }
 
-    // Add this after stageKnowledgeCollection function
     function _addToPendingCollections(bytes32 paranetId, bytes32 knowledgeCollectionId) internal {
         pendingCollectionIndexes[paranetId][knowledgeCollectionId] = pendingknowledgeCollectionIds[paranetId].length;
         pendingknowledgeCollectionIds[paranetId].push(knowledgeCollectionId);
     }
 
-    // Add this in reviewKnowledgeCollection function after status update
     function _removeFromPendingCollections(bytes32 paranetId, bytes32 knowledgeCollectionId) internal {
         uint256 index = pendingCollectionIndexes[paranetId][knowledgeCollectionId];
         uint256 lastIndex = pendingknowledgeCollectionIds[paranetId].length - 1;

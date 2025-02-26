@@ -284,7 +284,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
         return (idx < voters.length && voters[idx].addr == addr);
     }
 
-    function addVoterclaimedToken(address voter, uint256 amount) external {
+    function addVoterClaimedToken(address voter, uint256 amount) external {
         require(msg.sender == paranetIncentivesPoolAddress, "Caller is not incentives pool contract");
         uint256 idx = votersIndexes[voter];
         if (idx < voters.length && voters[idx].addr == voter) {
