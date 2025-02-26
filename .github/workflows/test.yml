@@ -1,0 +1,30 @@
+name: Hardhat tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Hardhat tests
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Cache node modules
+        id: cache-node-modules
+        uses: actions/cache@v3
+        with:
+          path: 'node_modules'
+          key: node-modules-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run tests
+        run: npx hardhat test
