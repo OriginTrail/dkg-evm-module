@@ -21,14 +21,14 @@ import {KnowledgeCollectionLib} from "../libraries/KnowledgeCollectionLib.sol";
 
 contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
     // Access Policy Constants
-    uint8 constant NODES_ACCESS_POLICY_OPEN = 0;
-    uint8 constant NODES_ACCESS_POLICY_PERMISSIONED = 1;
+    uint8 private constant NODES_ACCESS_POLICY_OPEN = 0;
+    uint8 private constant NODES_ACCESS_POLICY_PERMISSIONED = 1;
 
-    uint8 constant MINERS_ACCESS_POLICY_OPEN = 0;
-    uint8 constant MINERS_ACCESS_POLICY_PERMISSIONED = 1;
+    uint8 private constant MINERS_ACCESS_POLICY_OPEN = 0;
+    uint8 private constant MINERS_ACCESS_POLICY_PERMISSIONED = 1;
 
-    uint8 constant KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_OPEN = 0;
-    uint8 constant KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING = 1;
+    uint8 private constant KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_OPEN = 0;
+    uint8 private constant KNOWLEDGE_COLLECTIONS_SUBMISSION_POLICY_STAGING = 1;
 
     event ParanetRegistered(
         address indexed paranetKCStorageContract,
