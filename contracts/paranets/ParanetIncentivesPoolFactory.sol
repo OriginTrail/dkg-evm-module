@@ -80,8 +80,10 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
     ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
         bytes32 paranetId = _computeParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
         ParanetsRegistry pr = paranetsRegistry;
-        require(pr.paranetExists(paranetId));
-        require(!pr.hasIncentivesPoolByName(paranetId, incentivesPoolName));
+        require(pr.paranetExists(paranetId), "Paranet does not exist");
+        require(tracToTokenEmissionMultiplier > 0, "Emission multiplier must be greater than 0");
+        require(bytes(incentivesPoolName).length > 0, "Pool name cannot be empty");
+        require(!pr.hasIncentivesPoolByName(paranetId, incentivesPoolName), "Pool name already exists");
 
         ParanetIncentivesPoolStorage storage_ = new ParanetIncentivesPoolStorage(
             address(hub),
@@ -120,11 +122,14 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         bytes32 paranetId = _computeParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
 
         ParanetsRegistry pr = paranetsRegistry;
-        require(pr.paranetExists(paranetId));
-        require(!pr.hasIncentivesPoolByStorageAddress(paranetId, storageAddress));
+        require(pr.paranetExists(paranetId), "Paranet does not exist");
+        require(
+            pr.hasIncentivesPoolByStorageAddress(paranetId, storageAddress),
+            "Cannot redeploy an incentives pool that does not exist"
+        );
 
         ParanetIncentivesPoolStorage storage_ = ParanetIncentivesPoolStorage(payable(storageAddress));
-        require(storage_.paranetId() == paranetId);
+        require(storage_.paranetId() == paranetId, "Storage contract does not point to the paranet you provided");
 
         address oldPoolAddress = storage_.paranetIncentivesPoolAddress();
         uint256 tracToTokenEmissionMultiplier = ParanetIncentivesPool(oldPoolAddress)
@@ -135,7 +140,6 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
             tracToTokenEmissionMultiplier,
             address(storage_)
         );
-
         emit ParanetIncentivesPoolRedeployed(
             paranetKCStorageContract,
             paranetKCTokenId,
@@ -161,7 +165,10 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
         uint256 knowledgeCollectionId,
         uint256 knowledgeAssetId
     ) internal view {
-        require(hub.isAssetStorage(knowledgeCollectionStorageContractAddress));
+        require(
+            hub.isAssetStorage(knowledgeCollectionStorageContractAddress),
+            "Knowledge collection storage contract with the provided address is not registered"
+        );
 
         KnowledgeCollectionStorage knowledgeCollectionStorage = KnowledgeCollectionStorage(
             knowledgeCollectionStorageContractAddress
@@ -171,6 +178,9 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
             knowledgeCollectionStorage.knowledgeCollectionMaxSize() +
             knowledgeAssetId;
 
-        require(knowledgeCollectionStorage.balanceOf(msg.sender, startTokenId, startTokenId + 1) == 1);
+        require(
+            knowledgeCollectionStorage.balanceOf(msg.sender, startTokenId, startTokenId + 1) == 1,
+            "Caller is not the owner of the knowledge asset"
+        );
     }
 }

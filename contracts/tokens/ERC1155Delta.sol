@@ -325,7 +325,7 @@ contract ERC1155Delta is Context, ERC165, IERC1155, IERC1155MetadataURI, IERC115
         uint256 startTokenId = _nextTokenId();
 
         unchecked {
-            require(type(uint256).max - amount >= startTokenId);
+            require(type(uint256).max - amount >= startTokenId, "Minting more tokens than the maximum allowed");
             for (uint256 i = 0; i < amount; i++) {
                 ids[i] = startTokenId + i;
                 amounts[i] = 1;

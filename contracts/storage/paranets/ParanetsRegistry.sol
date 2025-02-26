@@ -212,33 +212,36 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
         return paranets[paranetId].paranetNodeJoinRequests[identityId].length;
     }
 
-    function addCuratedNode(bytes32 paranetId, uint72 identityId, bytes calldata nodeId) external onlyContracts {
-        paranets[paranetId].curatedNodesIndexes[identityId] = paranets[paranetId].curatedNodes.length;
-        paranets[paranetId].curatedNodes.push(ParanetLib.Node({identityId: identityId, nodeId: nodeId}));
+    function addPermissionedNode(bytes32 paranetId, uint72 identityId, bytes calldata nodeId) external onlyContracts {
+        paranets[paranetId].permissionedNodesIndexes[identityId] = paranets[paranetId].permissionedNodes.length;
+        paranets[paranetId].permissionedNodes.push(ParanetLib.Node({identityId: identityId, nodeId: nodeId}));
     }
 
-    function removeCuratedNode(bytes32 paranetId, uint72 identityId) external onlyContracts {
-        paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodesIndexes[identityId]] = paranets[paranetId]
-            .curatedNodes[paranets[paranetId].curatedNodes.length - 1];
-        paranets[paranetId].curatedNodesIndexes[
-            paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodes.length - 1].identityId
-        ] = paranets[paranetId].curatedNodesIndexes[identityId];
+    function removePermissionedNode(bytes32 paranetId, uint72 identityId) external onlyContracts {
+        paranets[paranetId].permissionedNodes[paranets[paranetId].permissionedNodesIndexes[identityId]] = paranets[
+            paranetId
+        ].permissionedNodes[paranets[paranetId].permissionedNodes.length - 1];
+        paranets[paranetId].permissionedNodesIndexes[
+            paranets[paranetId].permissionedNodes[paranets[paranetId].permissionedNodes.length - 1].identityId
+        ] = paranets[paranetId].permissionedNodesIndexes[identityId];
 
-        delete paranets[paranetId].curatedNodesIndexes[identityId];
-        paranets[paranetId].curatedNodes.pop();
+        delete paranets[paranetId].permissionedNodesIndexes[identityId];
+        paranets[paranetId].permissionedNodes.pop();
     }
 
-    function getCuratedNodes(bytes32 paranetId) external view returns (ParanetLib.Node[] memory) {
-        return paranets[paranetId].curatedNodes;
+    function getPermissionedNodes(bytes32 paranetId) external view returns (ParanetLib.Node[] memory) {
+        return paranets[paranetId].permissionedNodes;
     }
 
-    function getCuratedNodesCount(bytes32 paranetId) external view returns (uint256) {
-        return paranets[paranetId].curatedNodes.length;
+    function getPermissionedNodesCount(bytes32 paranetId) external view returns (uint256) {
+        return paranets[paranetId].permissionedNodes.length;
     }
 
-    function isCuratedNode(bytes32 paranetId, uint72 identityId) external view returns (bool) {
-        return (paranets[paranetId].curatedNodes.length != 0 &&
-            paranets[paranetId].curatedNodes[paranets[paranetId].curatedNodesIndexes[identityId]].identityId ==
+    function isPermissionedNode(bytes32 paranetId, uint72 identityId) external view returns (bool) {
+        return (paranets[paranetId].permissionedNodes.length != 0 &&
+            paranets[paranetId]
+                .permissionedNodes[paranets[paranetId].permissionedNodesIndexes[identityId]]
+                .identityId ==
             identityId);
     }
 
@@ -297,7 +300,8 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
             return false;
         }
 
-        return paranet.incentivesPools[index].storageAddr != address(0);
+        return
+            keccak256(abi.encodePacked(paranet.incentivesPools[index].name)) == keccak256(abi.encodePacked(poolName));
     }
 
     function hasIncentivesPoolByStorageAddress(bytes32 paranetId, address storageAddr) external view returns (bool) {
@@ -313,7 +317,9 @@ contract ParanetsRegistry is INamed, IVersioned, HubDependent {
             return false;
         }
 
-        return paranet.incentivesPools[index].storageAddr != address(0);
+        address incentivesPoolStorageAddress = paranet.incentivesPools[index].storageAddr;
+
+        return incentivesPoolStorageAddress != address(0) && incentivesPoolStorageAddress == storageAddr;
     }
 
     function getCumulativeKnowledgeValue(bytes32 paranetId) external view returns (uint96) {

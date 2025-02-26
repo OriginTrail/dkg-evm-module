@@ -236,12 +236,12 @@
       "deployed": true
     },
     "Paranet": {
-      "evmAddress": "0x2b4151c089a46271179ddb75bA170f352D66D047",
+      "evmAddress": "0x1b57cfdcA17834e9236B745c7d2Fe051216C19ea",
       "version": "1.0.0",
       "gitBranch": "v8-paranet-update",
-      "gitCommitHash": "5115bc4b4c82fa3fe42df976f37fc6372056230c",
-      "deploymentBlock": 14320933,
-      "deploymentTimestamp": 1739545262737,
+      "gitCommitHash": "3b84160f991b8d70ecb453779e76582e1897068a",
+      "deploymentBlock": 14321650,
+      "deploymentTimestamp": 1739549006694,
       "deployed": true
     },
     "ParanetIncentivesPoolFactoryHelper": {

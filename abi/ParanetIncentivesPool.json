@@ -17,6 +17,11 @@
         "type": "address"
       },
       {
+        "internalType": "address",
+        "name": "paranetsRegistryAddress",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "tracToTokenEmissionMultiplier",
         "type": "uint256"
