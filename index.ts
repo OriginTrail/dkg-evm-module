@@ -21,7 +21,7 @@ import Migrator from './abi/Migrator.json';
 import ParametersStorage from './abi/ParametersStorage.json';
 import Paranet from './abi/Paranet.json';
 import ParanetIncentivesPoolFactory from './abi/ParanetIncentivesPoolFactory.json';
-import ParanetKnowledgeAssetsRegistry from './abi/ParanetKnowledgeAssetsRegistry.json';
+import ParanetKnowledgeCollectionsRegistry from './abi/ParanetKnowledgeCollectionsRegistry.json';
 import ParanetKnowledgeMinersRegistry from './abi/ParanetKnowledgeMinersRegistry.json';
 import ParanetNeuroIncentivesPool from './abi/ParanetNeuroIncentivesPool.json';
 import ParanetServicesRegistry from './abi/ParanetServicesRegistry.json';
@@ -49,7 +49,7 @@ export {
   Identity as IdentityABI,
   Paranet as ParanetABI,
   ParanetIncentivesPoolFactory as ParanetIncentivesPoolFactoryABI,
-  ParanetKnowledgeAssetsRegistry as ParanetKnowledgeAssetsRegistryABI,
+  ParanetKnowledgeCollectionsRegistry as ParanetKnowledgeCollectionsRegistryABI,
   ParanetKnowledgeMinersRegistry as ParanetKnowledgeMinersRegistryABI,
   ParanetServicesRegistry as ParanetServicesRegistryABI,
   ParanetsRegistry as ParanetsRegistryABI,

@@ -104,12 +104,17 @@
         "type": "bytes32"
       }
     ],
-    "name": "getParanetServiceKnowledgeAssetLocator",
+    "name": "getParanetServiceKnowledgeCollectionLocator",
     "outputs": [
       {
         "internalType": "address",
         "name": "",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       },
       {
         "internalType": "uint256",
@@ -134,8 +139,13 @@
         "components": [
           {
             "internalType": "address",
-            "name": "paranetServiceKAStorageContract",
+            "name": "paranetServiceKCStorageContract",
             "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "paranetServiceKCTokenId",
+            "type": "uint256"
           },
           {
             "internalType": "uint256",
@@ -239,8 +249,13 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "paranetServiceKAStorageContract",
+        "name": "paranetServiceKCStorageContract",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paranetServiceKCTokenId",
+        "type": "uint256"
       },
       {
         "internalType": "uint256",

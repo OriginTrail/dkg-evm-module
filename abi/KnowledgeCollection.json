@@ -191,11 +191,6 @@
   },
   {
     "inputs": [],
-    "name": "ZeroTokenAmount",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "askStorage",
     "outputs": [
       {
@@ -372,29 +367,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint96",
-        "name": "tokenAmount",
-        "type": "uint96"
-      },
-      {
-        "internalType": "address",
-        "name": "paymaster",
-        "type": "address"
-      }
-    ],
-    "name": "increaseKnowledgeCollectionTokenAmount",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "initialize",
     "outputs": [],
@@ -433,6 +405,45 @@
     "outputs": [
       {
         "internalType": "contract ParametersStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paranetKnowledgeCollectionsRegistry",
+    "outputs": [
+      {
+        "internalType": "contract ParanetKnowledgeCollectionsRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paranetKnowledgeMinersRegistry",
+    "outputs": [
+      {
+        "internalType": "contract ParanetKnowledgeMinersRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paranetsRegistry",
+    "outputs": [
+      {
+        "internalType": "contract ParanetsRegistry",
         "name": "",
         "type": "address"
       }
