@@ -31,6 +31,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
     event VoterRewardClaimed(address indexed voter, uint256 amount);
     event IncentivesPoolAddressSet(address indexed oldAddress, address indexed newAddress);
     event RewardTransferred(address indexed recipient, uint256 amount);
+    event TokenOriginSet(address indexed oldOrigin, address indexed newOrigin);
 
     string private constant _NAME = "ParanetIncentivesPoolStorage";
     string private constant _VERSION = "1.0.0";
@@ -61,10 +62,11 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
     ParanetLib.ParanetIncentivesPoolClaimedRewardsProfile[] public claimedOperatorRewards;
     mapping(address => uint256) public claimedOperatorRewardsIndexes;
 
-    // Is this good type ?
     uint96 public cumulativeVotersWeight;
     ParanetLib.ParanetIncentivizationProposalVoter[] public voters;
     mapping(address => uint256) public votersIndexes;
+
+    address public tokenOrigin;
 
     constructor(
         address hubAddress,
@@ -462,6 +464,13 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
         voters[index].weight = newWeight;
 
         emit VoterWeightUpdated(voter, oldWeight, newWeight);
+    }
+
+    function setTokenOrigin(address newOrigin) external onlyContracts {
+        require(newOrigin != address(0), "Token origin cannot be zero address");
+        address oldOrigin = tokenOrigin;
+        tokenOrigin = newOrigin;
+        emit TokenOriginSet(oldOrigin, newOrigin);
     }
 
     modifier onlyVotersRegistrar() {
