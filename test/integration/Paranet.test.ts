@@ -900,6 +900,61 @@ describe('@unit Paranet', () => {
       expect(await incentivesPoolStorage.paranetId()).to.equal(paranetId);
     });
 
+    it('Access control for incentives pool storage', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      const tx = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        ethers.parseUnits('1', 12), // 1 NEURO per 1 TRAC
+        1000, // 10% operator
+        2000, // 20% voters
+        'Pool',
+        await Token.getAddress(),
+      );
+
+      const receipt = await tx.wait();
+      const event = receipt!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      const poolStorage = await hre.ethers.getContractAt(
+        'ParanetIncentivesPoolStorage',
+        event?.args[3],
+      );
+
+      await expect(
+        poolStorage
+          .connect(accounts[1])
+          .addMinerClaimedRewardProfile(
+            accounts[0].address,
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+    });
+
     it('Should handle multiple incentives pools for same paranet', async () => {
       // 1. Setup paranet first
       const kcCreator = getDefaultKCCreator(accounts);
