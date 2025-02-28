@@ -1230,6 +1230,11 @@ describe('@unit Paranet', () => {
         10000,
       );
 
+      // Try to add voter for the second time
+      await expect(
+        incentivesPoolStorage.connect(registrarSigner).addVoters(voters)
+      ).to.be.revertedWith('Voter already exists');
+
       // Now voter exists but hasn't claimed anything yet
       expect(
         await incentivesPool.voterclaimedToken(accounts[5].address),
@@ -1301,8 +1306,6 @@ describe('@unit Paranet', () => {
         addr: accounts[index % accounts.length].address, // Wrap around if index exceeds accounts.length
         weight: 1000 // Fixed weight for all entries (or adjust as needed)
       }));
-
-      console.log("VotersBatch size is :", votersBachTooLarge.length);
 
       await expect(
         incentivesPoolStorage
