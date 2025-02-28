@@ -1047,6 +1047,31 @@ describe('@unit Paranet', () => {
           )
       ).to.be.revertedWith('Caller is not incentives pool contract');
 
+      await expect(
+        poolStorage
+          .connect(accounts[1])
+          .decrementTotalMinersclaimedToken(
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(accounts[1])
+          .decrementTotalVotersclaimedToken(
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(accounts[1])
+          .decrementTotalOperatorsclaimedToken(
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+
     });
 
     it('Should handle multiple incentives pools for same paranet', async () => {
