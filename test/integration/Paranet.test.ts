@@ -1290,14 +1290,27 @@ describe('@unit Paranet', () => {
       expect(voterReward).to.be.eq(0); // storage contract was not funded
 
       // Verify voter weight affects reward calculation
-      const voter = await incentivesPoolStorage.getVoter(accounts[5].address);
-      const voterShare = (voterReward * BigInt(voter.weight)) / BigInt(10000);
+      const voter = await incentivesPoolStorage.getVoter(accounts[5].address); const voterShare = (voterReward * BigInt(voter.weight)) / BigInt(10000);
       const claimableVoterReward = await incentivesPool
         .connect(accounts[5])
         .getClaimableProposalVoterRewardAmount();
       expect(claimableVoterReward).to.equal(voterShare);
 
-      // Transfer registrar role to new address
+      // Verfiy batch is too large
+       const votersBachTooLarge = Array.from({ length: 101 }, (_, index) => ({
+        addr: accounts[index % accounts.length].address, // Wrap around if index exceeds accounts.length
+        weight: 1000 // Fixed weight for all entries (or adjust as needed)
+      }));
+
+      console.log("VotersBatch size is :", votersBachTooLarge.length);
+
+      await expect(
+        incentivesPoolStorage
+          .connect(registrarSigner)
+          .addVoters(votersBachTooLarge),
+      ).to.be.revertedWith('Batch too large');
+
+     // Transfer registrar role to new address
       await expect(
         incentivesPoolStorage
           .connect(registrarSigner)
@@ -1317,6 +1330,7 @@ describe('@unit Paranet', () => {
           .connect(accounts[6])
           .transferVotersRegistrarRole(ethers.ZeroAddress),
       ).to.be.revertedWith('New registrar cannot be zero address');
+
     });
 
     it('Should handle incentives pool redeployment', async () => {
