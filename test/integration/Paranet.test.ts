@@ -980,6 +980,18 @@ describe('@unit Paranet', () => {
             ethers.parseUnits('100', 12),
           )
       ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(accounts[1])
+          .addVoterclaimedToken(
+            accounts[0].address,
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+
+
     });
 
     it('Should handle multiple incentives pools for same paranet', async () => {
