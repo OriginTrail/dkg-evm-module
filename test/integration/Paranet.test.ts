@@ -1266,6 +1266,13 @@ describe('@unit Paranet', () => {
         6000,
       );
 
+      // Try to get a non existing voter
+      await expect(
+        incentivesPoolStorage
+          .connect(registrarSigner)
+          .getVoterAtIndex(105),
+      ).to.be.revertedWith('Index is out of bounds');
+
       // Try to add voter that would exceed max weight
       const overweightVoter = [{ addr: accounts[8].address, weight: 5000 }];
       await expect(
