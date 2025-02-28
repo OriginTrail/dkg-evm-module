@@ -1323,6 +1323,11 @@ describe('@unit Paranet', () => {
         10000,
       );
 
+      // Try to add voter for the second time
+      await expect(
+        incentivesPoolStorage.connect(registrarSigner).addVoters(voters)
+      ).to.be.revertedWith('Voter already exists');
+
       // Now voter exists but hasn't claimed anything yet
       expect(
         await incentivesPool.voterclaimedToken(accounts[5].address),
@@ -1353,6 +1358,13 @@ describe('@unit Paranet', () => {
       expect(await incentivesPoolStorage.cumulativeVotersWeight()).to.equal(
         6000,
       );
+
+      // Try to get a non existing voter
+      await expect(
+        incentivesPoolStorage
+          .connect(registrarSigner)
+          .getVoterAtIndex(105),
+      ).to.be.revertedWith('Index is out of bounds');
 
       // Try to add voter that would exceed max weight
       const overweightVoter = [{ addr: accounts[8].address, weight: 5000 }];
@@ -1390,7 +1402,19 @@ describe('@unit Paranet', () => {
         .getClaimableProposalVoterRewardAmount();
       expect(claimableVoterReward).to.equal(voterShare);
 
-      // Transfer registrar role to new address
+      // Verfiy batch is too large
+       const votersBachTooLarge = Array.from({ length: 101 }, (_, index) => ({
+        addr: accounts[index % accounts.length].address, // Wrap around if index exceeds accounts.length
+        weight: 1000 // Fixed weight for all entries (or adjust as needed)
+      }));
+
+      await expect(
+        incentivesPoolStorage
+          .connect(registrarSigner)
+          .addVoters(votersBachTooLarge),
+      ).to.be.revertedWith('Batch too large');
+
+     // Transfer registrar role to new address
       await expect(
         incentivesPoolStorage
           .connect(registrarSigner)
@@ -1410,6 +1434,7 @@ describe('@unit Paranet', () => {
           .connect(accounts[6])
           .transferVotersRegistrarRole(ethers.ZeroAddress),
       ).to.be.revertedWith('New registrar cannot be zero address');
+
     });
 
     it('Should handle incentives pool redeployment', async () => {
