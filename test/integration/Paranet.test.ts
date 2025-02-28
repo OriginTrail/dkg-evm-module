@@ -986,7 +986,7 @@ describe('@unit Paranet', () => {
       await expect(
         poolStorage
           .connect(notIncentivesPool)
-          .addVoterclaimedToken(
+          .addVoterClaimedToken(
             accounts[0].address,
             ethers.parseUnits('100', 12),
           )
