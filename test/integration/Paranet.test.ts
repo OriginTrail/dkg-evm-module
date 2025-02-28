@@ -945,9 +945,11 @@ describe('@unit Paranet', () => {
         event?.args[3],
       );
 
+      const notIncentivesPool = accounts[1];
+
       await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .addMinerClaimedReward(
             accounts[0].address,
             ethers.parseUnits('100', 12),
@@ -956,7 +958,7 @@ describe('@unit Paranet', () => {
 
        await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .addMinerClaimedRewardProfile(
             accounts[0].address,
             ethers.parseUnits('100', 12),
@@ -965,7 +967,7 @@ describe('@unit Paranet', () => {
 
        await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .addClaimedOperatorReward(
             accounts[0].address,
             ethers.parseUnits('100', 12),
@@ -974,7 +976,7 @@ describe('@unit Paranet', () => {
 
       await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .addOperatorClaimedRewardsProfile(
             accounts[0].address,
             ethers.parseUnits('100', 12),
@@ -983,7 +985,7 @@ describe('@unit Paranet', () => {
 
       await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .addVoterclaimedToken(
             accounts[0].address,
             ethers.parseUnits('100', 12),
@@ -992,7 +994,7 @@ describe('@unit Paranet', () => {
 
       await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .addTotalMinersclaimedToken(
             ethers.parseUnits('100', 12),
           )
@@ -1000,7 +1002,7 @@ describe('@unit Paranet', () => {
 
       await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .addTotalOperatorsclaimedToken(
             ethers.parseUnits('100', 12),
           )
@@ -1008,7 +1010,7 @@ describe('@unit Paranet', () => {
 
       await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .addTotalVotersclaimedToken(
             ethers.parseUnits('100', 12),
           )
@@ -1016,7 +1018,7 @@ describe('@unit Paranet', () => {
 
       await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .transferReward(
             accounts[0].address,
             ethers.parseUnits('100', 12),
@@ -1025,7 +1027,7 @@ describe('@unit Paranet', () => {
 
       await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .setTotalMinersclaimedToken(
             ethers.parseUnits('100', 12),
           )
@@ -1033,7 +1035,7 @@ describe('@unit Paranet', () => {
 
       await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .setTotalVotersclaimedToken(
             ethers.parseUnits('100', 12),
           )
@@ -1041,7 +1043,7 @@ describe('@unit Paranet', () => {
 
       await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .setTotalOperatorsclaimedToken(
             ethers.parseUnits('100', 12),
           )
@@ -1049,7 +1051,7 @@ describe('@unit Paranet', () => {
 
       await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .decrementTotalMinersclaimedToken(
             ethers.parseUnits('100', 12),
           )
@@ -1057,7 +1059,7 @@ describe('@unit Paranet', () => {
 
       await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .decrementTotalVotersclaimedToken(
             ethers.parseUnits('100', 12),
           )
@@ -1065,12 +1067,11 @@ describe('@unit Paranet', () => {
 
       await expect(
         poolStorage
-          .connect(accounts[1])
+          .connect(notIncentivesPool)
           .decrementTotalOperatorsclaimedToken(
             ethers.parseUnits('100', 12),
           )
       ).to.be.revertedWith('Caller is not incentives pool contract');
-
 
     });
 
