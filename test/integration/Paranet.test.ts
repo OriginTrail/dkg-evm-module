@@ -900,6 +900,181 @@ describe('@unit Paranet', () => {
       expect(await incentivesPoolStorage.paranetId()).to.equal(paranetId);
     });
 
+    it('Access control for incentives pool storage', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const {
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        paranetOwner,
+      } = await setupParanet(kcCreator, publishingNode, receivingNodes, {
+        Paranet,
+        Profile,
+        Token,
+        KnowledgeCollection,
+        KnowledgeCollectionStorage,
+      });
+
+      const tx = await ParanetIncentivesPoolFactory.connect(
+        paranetOwner,
+      ).deployIncentivesPool(
+        paranetKCStorageContract,
+        paranetKCTokenId,
+        paranetKATokenId,
+        ethers.parseUnits('1', 12), // 1 NEURO per 1 TRAC
+        1000, // 10% operator
+        2000, // 20% voters
+        'Pool',
+        await Token.getAddress(),
+      );
+
+      const receipt = await tx.wait();
+      const event = receipt!.logs.find(
+        (log) =>
+          log.topics[0] ===
+          ParanetIncentivesPoolFactory.interface.getEvent(
+            'ParanetIncentivesPoolDeployed',
+          ).topicHash,
+      ) as EventLog;
+
+      const poolStorage = await hre.ethers.getContractAt(
+        'ParanetIncentivesPoolStorage',
+        event?.args[3],
+      );
+
+      const notIncentivesPool = accounts[1];
+
+      await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .addMinerClaimedReward(
+            accounts[0].address,
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+       await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .addMinerClaimedRewardProfile(
+            accounts[0].address,
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+       await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .addClaimedOperatorReward(
+            accounts[0].address,
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .addOperatorClaimedRewardsProfile(
+            accounts[0].address,
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .addVoterClaimedToken(
+            accounts[0].address,
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .addTotalMinersclaimedToken(
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .addTotalOperatorsclaimedToken(
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .addTotalVotersclaimedToken(
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .transferReward(
+            accounts[0].address,
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .setTotalMinersclaimedToken(
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .setTotalVotersclaimedToken(
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .setTotalOperatorsclaimedToken(
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .decrementTotalMinersclaimedToken(
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .decrementTotalVotersclaimedToken(
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+      await expect(
+        poolStorage
+          .connect(notIncentivesPool)
+          .decrementTotalOperatorsclaimedToken(
+            ethers.parseUnits('100', 12),
+          )
+      ).to.be.revertedWith('Caller is not incentives pool contract');
+
+    });
+
     it('Should handle multiple incentives pools for same paranet', async () => {
       // 1. Setup paranet first
       const kcCreator = getDefaultKCCreator(accounts);
@@ -1148,6 +1323,11 @@ describe('@unit Paranet', () => {
         10000,
       );
 
+      // Try to add voter for the second time
+      await expect(
+        incentivesPoolStorage.connect(registrarSigner).addVoters(voters)
+      ).to.be.revertedWith('Voter already exists');
+
       // Now voter exists but hasn't claimed anything yet
       expect(
         await incentivesPool.voterclaimedToken(accounts[5].address),
@@ -1178,6 +1358,13 @@ describe('@unit Paranet', () => {
       expect(await incentivesPoolStorage.cumulativeVotersWeight()).to.equal(
         6000,
       );
+
+      // Try to get a non existing voter
+      await expect(
+        incentivesPoolStorage
+          .connect(registrarSigner)
+          .getVoterAtIndex(105),
+      ).to.be.revertedWith('Index is out of bounds');
 
       // Try to add voter that would exceed max weight
       const overweightVoter = [{ addr: accounts[8].address, weight: 5000 }];
@@ -1215,7 +1402,19 @@ describe('@unit Paranet', () => {
         .getClaimableProposalVoterRewardAmount();
       expect(claimableVoterReward).to.equal(voterShare);
 
-      // Transfer registrar role to new address
+      // Verfiy batch is too large
+       const votersBachTooLarge = Array.from({ length: 101 }, (_, index) => ({
+        addr: accounts[index % accounts.length].address, // Wrap around if index exceeds accounts.length
+        weight: 1000 // Fixed weight for all entries (or adjust as needed)
+      }));
+
+      await expect(
+        incentivesPoolStorage
+          .connect(registrarSigner)
+          .addVoters(votersBachTooLarge),
+      ).to.be.revertedWith('Batch too large');
+
+     // Transfer registrar role to new address
       await expect(
         incentivesPoolStorage
           .connect(registrarSigner)
@@ -1235,6 +1434,7 @@ describe('@unit Paranet', () => {
           .connect(accounts[6])
           .transferVotersRegistrarRole(ethers.ZeroAddress),
       ).to.be.revertedWith('New registrar cannot be zero address');
+
     });
 
     it('Should handle incentives pool redeployment', async () => {
