@@ -96,8 +96,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
 
         address poolAddress = paranetIncentivesPoolFactoryHelper.deployIncentivesPool(
             storageAddress,
-            tracToTokenEmissionMultiplier,
-            address(storage_)
+            tracToTokenEmissionMultiplier
         );
 
         storage_.initialize();
@@ -137,8 +136,7 @@ contract ParanetIncentivesPoolFactory is INamed, IVersioned, ContractStatus, IIn
 
         address newPoolAddress = paranetIncentivesPoolFactoryHelper.deployIncentivesPool(
             storageAddress,
-            tracToTokenEmissionMultiplier,
-            address(storage_)
+            tracToTokenEmissionMultiplier
         );
         emit ParanetIncentivesPoolRedeployed(
             paranetKCStorageContract,
