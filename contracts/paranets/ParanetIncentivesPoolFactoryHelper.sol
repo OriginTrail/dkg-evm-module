@@ -27,15 +27,14 @@ contract ParanetIncentivesPoolFactoryHelper is INamed, IVersioned, ContractStatu
     }
 
     function deployIncentivesPool(
-        address storageAddress,
-        uint256 tracToTokenEmissionMultiplier,
-        address poolStorageAddress
+        address poolStorageAddress,
+        uint256 tracToTokenEmissionMultiplier
     ) external onlyContracts returns (address) {
         address addr = address(
             new ParanetIncentivesPool(
                 address(hub),
                 hub.getContractAddress("ParanetKnowledgeMinersRegistry"),
-                storageAddress,
+                poolStorageAddress,
                 hub.getContractAddress("ParanetsRegistry"),
                 tracToTokenEmissionMultiplier
             )

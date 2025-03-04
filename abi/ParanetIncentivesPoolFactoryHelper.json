@@ -30,18 +30,13 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "storageAddress",
+        "name": "poolStorageAddress",
         "type": "address"
       },
       {
         "internalType": "uint256",
         "name": "tracToTokenEmissionMultiplier",
         "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "poolStorageAddress",
-        "type": "address"
       }
     ],
     "name": "deployIncentivesPool",
