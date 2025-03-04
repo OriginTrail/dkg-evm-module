@@ -91,17 +91,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
 
         paranetOperatorRewardPercentage = paranetOperatorRewardPercentage_;
         paranetIncentivizationProposalVotersRewardPercentage = paranetIncentivizationProposalVotersRewardPercentage_;
-
-        address hubOwner = hub.owner();
-        uint256 size;
-        assembly {
-            size := extcodesize(hubOwner)
-        }
-        if (size > 0) {
-            votersRegistrar = Ownable(hubOwner).owner();
-        } else {
-            votersRegistrar = hubOwner;
-        }
+        votersRegistrar = hub.owner();
     }
 
     function initialize() public onlyContracts {
