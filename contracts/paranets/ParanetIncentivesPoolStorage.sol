@@ -10,7 +10,6 @@ import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
 import {IInitializable} from "../interfaces/IInitializable.sol";
 import {ParanetLib} from "../libraries/ParanetLib.sol";
-import {ICustodian} from "../interfaces/ICustodian.sol";
 import {HubLib} from "../libraries/HubLib.sol";
 
 contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInitializable {
@@ -471,13 +470,32 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
     }
 
     function _isMultiSigOwner(address multiSigAddress) internal view returns (bool) {
-        try ICustodian(multiSigAddress).getOwners() returns (address[] memory multiSigOwners) {
-            for (uint256 i = 0; i < multiSigOwners.length; i++) {
-                if (msg.sender == multiSigOwners[i]) {
-                    return true;
-                }
-            } // solhint-disable-next-line no-empty-blocks
-        } catch {}
+        // Check if the address is a contract
+        uint256 size;
+        assembly {
+            size := extcodesize(multiSigAddress)
+        }
+        if (size == 0) {
+            return false;
+        }
+
+        // Call the getOwners function on the multiSigAddress
+        (bool success, bytes memory returnData) = multiSigAddress.staticcall(abi.encodeWithSignature("getOwners()"));
+
+        // If call failed or returned invalid data, return false
+        if (!success || returnData.length == 0) {
+            return false;
+        }
+
+        // Decode the returned data
+        address[] memory multiSigOwners = abi.decode(returnData, (address[]));
+
+        // Check if msg.sender is one of the owners
+        for (uint256 i = 0; i < multiSigOwners.length; i++) {
+            if (msg.sender == multiSigOwners[i]) {
+                return true;
+            }
+        }
 
         return false;
     }
