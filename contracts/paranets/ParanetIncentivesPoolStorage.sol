@@ -10,6 +10,8 @@ import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
 import {IInitializable} from "../interfaces/IInitializable.sol";
 import {ParanetLib} from "../libraries/ParanetLib.sol";
+import {ICustodian} from "../interfaces/ICustodian.sol";
+import {HubLib} from "../libraries/HubLib.sol";
 
 contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInitializable {
     event TokenRewardDeposit(address sender, uint256 amount);
@@ -114,7 +116,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
         return getBalance() + totalMinersclaimedToken + totalOperatorsclaimedToken + totalVotersclaimedToken;
     }
 
-    function transferVotersRegistrarRole(address newRegistrar) external onlyVotersRegistrar {
+    function transferVotersRegistrarRole(address newRegistrar) external onlyHubOwnerOrMultiSigOwner {
         require(newRegistrar != address(0), "New registrar cannot be zero address");
         address oldRegistrar = votersRegistrar;
         votersRegistrar = newRegistrar;
@@ -465,6 +467,30 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
 
     modifier onlyVotersRegistrar() {
         require(msg.sender == votersRegistrar, "Fn can only be used by registrar");
+        _;
+    }
+
+    function _isMultiSigOwner(address multiSigAddress) internal view returns (bool) {
+        try ICustodian(multiSigAddress).getOwners() returns (address[] memory multiSigOwners) {
+            for (uint256 i = 0; i < multiSigOwners.length; i++) {
+                if (msg.sender == multiSigOwners[i]) {
+                    return true;
+                }
+            } // solhint-disable-next-line no-empty-blocks
+        } catch {}
+
+        return false;
+    }
+
+    function _checkHubOwnerOrMultiSigOwner() internal view virtual {
+        address hubOwner = hub.owner();
+        if (msg.sender != hubOwner && !_isMultiSigOwner(hubOwner)) {
+            revert HubLib.UnauthorizedAccess("Only Hub Owner or Multisig Owner");
+        }
+    }
+
+    modifier onlyHubOwnerOrMultiSigOwner() {
+        _checkHubOwnerOrMultiSigOwner();
         _;
     }
 }
