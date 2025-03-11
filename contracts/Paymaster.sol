@@ -15,8 +15,8 @@ contract Paymaster is Ownable(msg.sender) {
 
     mapping(address => bool) public allowedAddresses;
 
-    modifier onlyAllowed() {
-        if (!allowedAddresses[msg.sender]) {
+    modifier onlyAllowed(address sender) {
+        if (!allowedAddresses[sender]) {
             revert NotAllowed();
         }
         _;
@@ -59,7 +59,7 @@ contract Paymaster is Ownable(msg.sender) {
         _transferTokens(recipient, amount);
     }
 
-    function coverCost(uint256 amount) external onlyAllowed {
+    function coverCost(uint256 amount, address sender) external onlyAllowed(sender) {
         _transferTokens(hub.getContractAddress("KnowledgeCollection"), amount);
     }
 
