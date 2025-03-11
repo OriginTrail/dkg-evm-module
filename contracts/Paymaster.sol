@@ -60,7 +60,13 @@ contract Paymaster is Ownable(msg.sender) {
     }
 
     function coverCost(uint256 amount, address _originalSender) external onlyAllowed(_originalSender) {
-        _transferTokens(hub.getContractAddress("KnowledgeCollection"), amount);
+        address knowledgeCollectionAddress = hub.getContractAddress("KnowledgeCollection");
+
+        if (msg.sender != knowledgeCollectionAddress) {
+            revert("Sender is not the KnowledgeCollection contract");
+        }
+
+        _transferTokens(knowledgeCollectionAddress, amount);
     }
 
     function _transferTokens(address to, uint256 amount) internal {
