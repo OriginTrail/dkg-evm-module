@@ -25,6 +25,7 @@ import {
   IdentityStorage,
   HubLib,
   ParanetLib,
+  Paymaster,
 } from '../../typechain';
 import { ACCESS_POLICIES } from '../helpers/constants';
 import {
@@ -58,6 +59,7 @@ type ParanetFixture = {
   IdentityStorage: IdentityStorage;
   HubLib: HubLib;
   ParanetLib: ParanetLib;
+  Paymaster: Paymaster;
 };
 
 describe('@unit Paranet', () => {
@@ -78,6 +80,7 @@ describe('@unit Paranet', () => {
   let IdentityStorage: IdentityStorage;
   let HubLib: HubLib;
   let ParanetLib: ParanetLib;
+  let Paymaster: Paymaster;
 
   // Deploy all contracts, set the HubOwner and necessary accounts. Returns the ParanetFixture
   async function deployParanetFixture(): Promise<ParanetFixture> {
@@ -95,6 +98,7 @@ describe('@unit Paranet', () => {
       'EpochStorage',
       'ParanetStagingRegistry',
       'IdentityStorage',
+      'Paymaster',
     ]);
 
     accounts = await hre.ethers.getSigners();
@@ -164,6 +168,10 @@ describe('@unit Paranet', () => {
       paranetLibDeployment.address,
     );
 
+    Paymaster = await hre.ethers.getContract<Paymaster>(
+      'Paymaster',
+    );
+
     return {
       accounts,
       Paranet,
@@ -182,6 +190,7 @@ describe('@unit Paranet', () => {
       IdentityStorage,
       HubLib,
       ParanetLib,
+      Paymaster,
     };
   }
 
@@ -203,6 +212,7 @@ describe('@unit Paranet', () => {
       ParanetStagingRegistry,
       HubLib,
       ParanetLib,
+      Paymaster,
     } = await loadFixture(deployParanetFixture));
   });
 
