@@ -25,6 +25,7 @@ import {
   IdentityStorage,
   HubLib,
   ParanetLib,
+  PaymasterManager,
   Paymaster,
 } from '../../typechain';
 import { ACCESS_POLICIES } from '../helpers/constants';
@@ -32,6 +33,7 @@ import {
   createProfilesAndKC,
   getKCSignaturesData,
   createKnowledgeCollection,
+  createPaymaster,
 } from '../helpers/kc-helpers';
 import { setupParanet } from '../helpers/paranet-helpers';
 import {
@@ -59,6 +61,7 @@ type ParanetFixture = {
   IdentityStorage: IdentityStorage;
   HubLib: HubLib;
   ParanetLib: ParanetLib;
+  PaymasterManager: PaymasterManager,
   Paymaster: Paymaster;
 };
 
@@ -80,6 +83,7 @@ describe('@unit Paranet', () => {
   let IdentityStorage: IdentityStorage;
   let HubLib: HubLib;
   let ParanetLib: ParanetLib;
+  let PaymasterManager: PaymasterManager;
   let Paymaster: Paymaster;
 
   // Deploy all contracts, set the HubOwner and necessary accounts. Returns the ParanetFixture
@@ -98,6 +102,7 @@ describe('@unit Paranet', () => {
       'EpochStorage',
       'ParanetStagingRegistry',
       'IdentityStorage',
+      'PaymasterManager',
       'Paymaster',
     ]);
 
@@ -167,7 +172,9 @@ describe('@unit Paranet', () => {
       'ParanetLib',
       paranetLibDeployment.address,
     );
-
+    PaymasterManager = await hre.ethers.getContract<PaymasterManager>(
+      'PaymasterManager',
+    );
     Paymaster = await hre.ethers.getContract<Paymaster>(
       'Paymaster',
     );
@@ -190,6 +197,7 @@ describe('@unit Paranet', () => {
       IdentityStorage,
       HubLib,
       ParanetLib,
+      PaymasterManager,
       Paymaster,
     };
   }
