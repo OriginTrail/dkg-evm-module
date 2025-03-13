@@ -716,6 +716,24 @@ describe('@unit Paranet', () => {
       ).to.be.revertedWithCustomError(ParanetLib, 'ParanetDoesntExist');
     });
 
+    it('Should create a KC with Paymaster passed', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const paymaster = accounts[0].address
+
+      // Create a KC first
+      const { collectionId } = await createProfilesAndKC(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        { Profile, KnowledgeCollection, Token },
+        {paymaster: paymaster},
+      );
+
+    });
+
     it('Should revert when trying to update with extremely large token IDs', async () => {
       const kcCreator = getDefaultKCCreator(accounts);
       const publishingNode = getDefaultPublishingNode(accounts);
