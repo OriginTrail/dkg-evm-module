@@ -3,7 +3,7 @@ import { ethers, getBytes } from 'ethers';
 
 import { createProfile, createProfiles } from './profile-helpers';
 import { KCSignaturesData, NodeAccounts } from './types';
-import { KnowledgeCollection, Token, Profile } from '../../typechain';
+import { KnowledgeCollection, Token, Profile, PaymasterManager } from '../../typechain';
 
 export async function signMessage(
   signer: SignerWithAddress,
@@ -55,6 +55,38 @@ export async function getKCSignaturesData(
     receiverVSs,
   };
 }
+
+export async function createPaymaster(
+  paymasterCreator: SignerWithAddress,
+  paymasterManager: PaymasterManager
+) {
+  const tx = await paymasterManager.connect(paymasterCreator).deployPaymaster(paymasterCreator.address);
+  const receipt = await tx.wait();
+
+  const paymasterDeployedEvent = receipt!.logs.find(
+    log => log.topics[0] === paymasterManager.interface.getEvent('PaymasterDeployed').topicHash
+  );
+
+  if (!paymasterDeployedEvent) {
+    throw new Error('PaymasterDeployed event not found in transaction logs');
+  }
+
+  // Parse the event data
+  const parsedEvent = paymasterManager.interface.parseLog({
+    topics: paymasterDeployedEvent.topics as string[],
+    data: paymasterDeployedEvent.data
+  });
+
+  if (!parsedEvent) {
+    throw new Error('Failed to parse PaymasterDeployed event');
+  }
+
+  // Extract event values
+  const deployer = parsedEvent.args.deployer;
+  const paymasterAddress = parsedEvent.args.paymasterAddress;
+
+  return {deployer, paymasterAddress}
+};
 
 export async function createKnowledgeCollection(
   kcCreator: SignerWithAddress,
