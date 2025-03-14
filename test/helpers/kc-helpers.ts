@@ -60,7 +60,7 @@ export async function createPaymaster(
   paymasterCreator: SignerWithAddress,
   paymasterManager: PaymasterManager
 ) {
-  const tx = await paymasterManager.connect(paymasterCreator).deployPaymaster(paymasterCreator.address);
+  const tx = await paymasterManager.connect(paymasterCreator).deployPaymaster();
   const receipt = await tx.wait();
 
   const paymasterDeployedEvent = receipt!.logs.find(
