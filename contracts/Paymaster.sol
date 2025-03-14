@@ -7,7 +7,7 @@ import {TokenLib} from "./libraries/TokenLib.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Paymaster is Ownable(msg.sender) {
+contract Paymaster is Ownable {
     error NotAllowed();
 
     Hub public hub;
@@ -22,7 +22,7 @@ contract Paymaster is Ownable(msg.sender) {
         _;
     }
 
-    constructor(address hubAddress) {
+    constructor(address hubAddress, address initialOwner) Ownable(initialOwner) {
         hub = Hub(hubAddress);
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }
