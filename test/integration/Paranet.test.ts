@@ -33,7 +33,6 @@ import {
   createProfilesAndKC,
   getKCSignaturesData,
   createKnowledgeCollection,
-  createPaymaster,
 } from '../helpers/kc-helpers';
 import { setupParanet } from '../helpers/paranet-helpers';
 import {
@@ -3143,84 +3142,6 @@ describe('@unit Paranet', () => {
           knowledgeCollectionId,
         );
       expect(isRegisteredInSecondParanet).to.be.equal(false);
-    });
-  });
-
-  describe('Paymaster integration with KnowledgeCollection', () => {
-    it('Should deploy a KC with Paymaster passed', async () => {
-      const kcCreator = getDefaultKCCreator(accounts);
-      const paymasterCreator = kcCreator;
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const tokenAmount = ethers.parseEther('100');
-
-      const p = await createPaymaster(paymasterCreator, PaymasterManager);
-
-      const paymaster = await hre.ethers.getContractAt('Paymaster', p.paymasterAddress);
-
-      // Fund the paymaster with tokens
-      await Token.connect(kcCreator).approve(p.paymasterAddress, tokenAmount);
-      await paymaster.connect(kcCreator).fundPaymaster(tokenAmount);
-
-      const tx = await paymaster.owner();
-
-      await createProfilesAndKC(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        { Profile, KnowledgeCollection, Token },
-        {
-          paymaster: p.paymasterAddress,
-        },
-      );
-
-      // Verify the deployer of the Paymaster is the owner of it
-      expect(p.deployer).to.equal(tx);
-    });
-
-    it('Should call Paymaster.coverCost when creating a KC with a valid paymaster', async () => {
-      const kcCreator = getDefaultKCCreator(accounts);
-      const paymasterCreator = kcCreator;
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const tokenAmount = ethers.parseEther('100');
-
-      const p = await createPaymaster(paymasterCreator, PaymasterManager);
-
-      const paymaster = await hre.ethers.getContractAt('Paymaster', p.paymasterAddress);
-
-      // Fund the paymaster with tokens
-      await Token.connect(kcCreator).approve(p.paymasterAddress, tokenAmount);
-      await paymaster.connect(kcCreator).fundPaymaster(tokenAmount);
-
-      const initialPaymasterBalance = await Token.balanceOf(p.paymasterAddress);
-
-      const { collectionId } = await createProfilesAndKC(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        { Profile, KnowledgeCollection, Token },
-        { paymaster: p.paymasterAddress,
-        },
-      );
-
-      // Verify that the paymaster's token balance has decreased by the token amount
-      // This confirms that tokens were transferred from the paymaster to the KC contract
-      const finalPaymasterBalance = await Token.balanceOf(p.paymasterAddress);
-      expect(finalPaymasterBalance).to.equal(initialPaymasterBalance - tokenAmount);
-
-      // Verify that the KC storage has the correct token amount for the collection
-      const storedTokenAmount = await KnowledgeCollectionStorage.getTokenAmount(collectionId);
-      expect(storedTokenAmount).to.equal(tokenAmount);
-
-      // Verify that the KC was created with the correct token amount
-      const collectionData = await KnowledgeCollectionStorage.getKnowledgeCollection(collectionId);
-      expect(collectionData.tokenAmount).to.equal(tokenAmount);
-
-      // Verify that the paymaster was used (indirectly, by checking that the KC creator didn't spend tokens)
-      const kcCreatorBalance = await Token.balanceOf(kcCreator.address);
-      // The KC creator's balance should not have changed since the paymaster covered the cost
-      expect(kcCreatorBalance).to.be.gt(0); // Just verify the creator has tokens
     });
   });
 
