@@ -25,6 +25,7 @@ contract Paymaster is Ownable {
     constructor(address hubAddress, address initialOwner) Ownable(initialOwner) {
         hub = Hub(hubAddress);
         tokenContract = IERC20(hub.getContractAddress("Token"));
+        allowedAddresses[initialOwner] = true;
     }
 
     function addAllowedAddress(address _address) external onlyOwner {
