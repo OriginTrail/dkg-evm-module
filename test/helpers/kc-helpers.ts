@@ -114,6 +114,15 @@ export async function createProfilesAndKC(
     KnowledgeCollection: KnowledgeCollection;
     Token: Token;
   },
+  kcOptions?: {
+    publishOperationId?: string;
+    knowledgeAssetsAmount?: number;
+    byteSize?: number;
+    epochs?: number;
+    tokenAmount?: bigint;
+    isImmutable?: boolean;
+    paymaster?: string;
+  }
 ) {
   const { identityId: publishingNodeIdentityId } = await createProfile(
     contracts.Profile,
@@ -135,6 +144,13 @@ export async function createProfilesAndKC(
     receivingNodesIdentityIds,
     signaturesData,
     contracts,
+    kcOptions?.publishOperationId,
+    kcOptions?.knowledgeAssetsAmount,
+    kcOptions?.byteSize,
+    kcOptions?.epochs,
+    kcOptions?.tokenAmount,
+    kcOptions?.isImmutable,
+    kcOptions?.paymaster
   );
 
   return {
