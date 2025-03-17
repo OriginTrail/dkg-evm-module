@@ -7,7 +7,7 @@ import {TokenLib} from "./libraries/TokenLib.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Paymaster is Ownable(msg.sender) {
+contract Paymaster is Ownable {
     error NotAllowed();
 
     Hub public hub;
@@ -15,14 +15,14 @@ contract Paymaster is Ownable(msg.sender) {
 
     mapping(address => bool) public allowedAddresses;
 
-    modifier onlyAllowed() {
-        if (!allowedAddresses[msg.sender]) {
+    modifier onlyAllowed(address _originalSender) {
+        if (!allowedAddresses[_originalSender]) {
             revert NotAllowed();
         }
         _;
     }
 
-    constructor(address hubAddress) {
+    constructor(address hubAddress, address initialOwner) Ownable(initialOwner) {
         hub = Hub(hubAddress);
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }
@@ -59,8 +59,14 @@ contract Paymaster is Ownable(msg.sender) {
         _transferTokens(recipient, amount);
     }
 
-    function coverCost(uint256 amount) external onlyAllowed {
-        _transferTokens(hub.getContractAddress("KnowledgeCollection"), amount);
+    function coverCost(uint256 amount, address _originalSender) external onlyAllowed(_originalSender) {
+        address knowledgeCollectionAddress = hub.getContractAddress("KnowledgeCollection");
+
+        if (msg.sender != knowledgeCollectionAddress) {
+            revert("Sender is not the KnowledgeCollection contract");
+        }
+
+        _transferTokens(knowledgeCollectionAddress, amount);
     }
 
     function _transferTokens(address to, uint256 amount) internal {
