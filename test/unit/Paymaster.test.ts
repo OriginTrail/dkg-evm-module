@@ -13,7 +13,7 @@ describe('@unit Paymaster', () => {
   let Paymaster: Paymaster;
   let owner: SignerWithAddress;
   let user: SignerWithAddress;
-  let knowledgeCollectionAddress: string;
+  let knowledgeCollection: SignerWithAddress;
 
   async function deployPaymasterFixture() {
     await hre.deployments.fixture(['Hub', 'Token']);
@@ -26,13 +26,13 @@ describe('@unit Paymaster', () => {
 
     // Deploy Paymaster
     const PaymasterFactory = await hre.ethers.getContractFactory('Paymaster');
-    Paymaster = await PaymasterFactory.deploy(Hub.getAddress());
+    Paymaster = await PaymasterFactory.deploy(Hub.getAddress(), owner);
 
     // Set mock KnowledgeCollection address in Hub
-    knowledgeCollectionAddress = accounts[3].address;
+    knowledgeCollection = accounts[3];
     await Hub.setContractAddress(
       'KnowledgeCollection',
-      knowledgeCollectionAddress,
+      knowledgeCollection.address,
     );
 
     // Reset user's balance to zero first
@@ -179,32 +179,39 @@ describe('@unit Paymaster', () => {
     });
 
     it('Should allow allowed address to cover cost', async () => {
-      await expect(Paymaster.connect(user).coverCost(coverAmount))
+      await expect(Paymaster.connect(knowledgeCollection).coverCost(coverAmount, user.address))
         .to.emit(Token, 'Transfer')
         .withArgs(
           await Paymaster.getAddress(),
-          knowledgeCollectionAddress,
+          knowledgeCollection.address,
           coverAmount,
         );
     });
 
     it('Should revert when non-allowed address tries to cover cost', async () => {
-      const nonAllowed = accounts[4];
+      const notAllowed = accounts[4];
       await expect(
-        Paymaster.connect(nonAllowed).coverCost(coverAmount),
+        Paymaster.connect(knowledgeCollection).coverCost(coverAmount, notAllowed),
       ).to.be.revertedWithCustomError(Paymaster, 'NotAllowed');
+    });
+
+    it('Should revert when non-KnowledgeCollection contract address tries to cover cost', async () => {
+      const notKnowledgeCollection = accounts[4];
+      await expect(
+        Paymaster.connect(notKnowledgeCollection).coverCost(coverAmount, user.address),
+      ).to.be.revertedWith('Sender is not the KnowledgeCollection contract');
     });
 
     it('Should revert with zero amount', async () => {
       await expect(
-        Paymaster.connect(user).coverCost(0),
+        Paymaster.connect(knowledgeCollection).coverCost(0, user.address),
       ).to.be.revertedWithCustomError(Paymaster, 'ZeroTokenAmount');
     });
 
     it('Should revert with insufficient balance', async () => {
       const tooMuch = parseEther('200');
       await expect(
-        Paymaster.connect(user).coverCost(tooMuch),
+        Paymaster.connect(knowledgeCollection).coverCost(tooMuch, user.address),
       ).to.be.revertedWithCustomError(Paymaster, 'TooLowBalance');
     });
   });
