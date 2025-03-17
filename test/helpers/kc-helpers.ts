@@ -114,3 +114,61 @@ export async function createKnowledgeCollection(
 
   return { tx, receipt, collectionId };
 }
+
+export async function createProfilesAndKC(
+  kcCreator: SignerWithAddress,
+  publishingNode: NodeAccounts,
+  receivingNodes: NodeAccounts[],
+  contracts: {
+    Profile: Profile;
+    KnowledgeCollection: KnowledgeCollection;
+    Token: Token;
+  },
+  kcOptions?: {
+    publishOperationId?: string;
+    knowledgeAssetsAmount?: number;
+    byteSize?: number;
+    epochs?: number;
+    tokenAmount?: bigint;
+    isImmutable?: boolean;
+    paymaster?: string;
+  }
+) {
+  const { identityId: publishingNodeIdentityId } = await createProfile(
+    contracts.Profile,
+    publishingNode,
+  );
+  const receivingNodesIdentityIds = (
+    await createProfiles(contracts.Profile, receivingNodes)
+  ).map((p) => p.identityId);
+
+  // Create knowledge collection
+  const signaturesData = await getKCSignaturesData(
+    publishingNode,
+    publishingNodeIdentityId,
+    receivingNodes,
+  );
+  const { collectionId } = await createKnowledgeCollection(
+    kcCreator,
+    publishingNodeIdentityId,
+    receivingNodesIdentityIds,
+    signaturesData,
+    contracts,
+    kcOptions?.publishOperationId,
+    kcOptions?.knowledgeAssetsAmount,
+    kcOptions?.byteSize,
+    kcOptions?.epochs,
+    kcOptions?.tokenAmount,
+    kcOptions?.isImmutable,
+    kcOptions?.paymaster
+  );
+
+  return {
+    publishingNode,
+    publishingNodeIdentityId,
+    receivingNodes,
+    receivingNodesIdentityIds,
+    kcCreator,
+    collectionId,
+  };
+}
