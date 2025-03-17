@@ -27,7 +27,7 @@ contract PaymasterManager is INamed, IVersioned, ContractStatus {
     }
 
     function deployPaymaster() external {
-        address paymasterAddress = address(new Paymaster(address(hub)));
+        address paymasterAddress = address(new Paymaster(address(hub), msg.sender));
 
         validPaymasters[paymasterAddress] = true;
         deployedPaymasters[msg.sender].push(paymasterAddress);
