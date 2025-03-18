@@ -317,7 +317,6 @@ describe('@integration Paymaster', () => {
     const publishingNode = getDefaultPublishingNode(accounts);
     const receivingNodes = getDefaultReceivingNodes(accounts);
     const nonWhitelistedUser = accounts[7]; // This user will not be whitelisted
-
     // Deploy the paymaster owned by kcCreator
     const { paymasterAddress } = await createPaymaster(kcCreator, PaymasterManager);
     const paymaster = await hre.ethers.getContractAt('Paymaster', paymasterAddress);
@@ -343,6 +342,40 @@ describe('@integration Paymaster', () => {
         { paymaster: paymasterAddress, tokenAmount: tokenAmount }
       )
     ).to.be.revertedWithCustomError(paymaster, 'NotAllowed');
+
+    // Verify paymaster's balance hasn't changed (no tokens were spent)
+    const finalPaymasterBalance = await Token.balanceOf(paymasterAddress);
+    expect(finalPaymasterBalance).to.equal(tokenAmount);
+  });
+
+  it('Non KnowledgeCollection address cant call coverCost', async () => {
+    const kcCreator = getDefaultKCCreator(accounts);
+    const nonKC = accounts[6]; // This will be our non-KnowledgeCollection address
+
+    // Deploy the paymaster owned by kcCreator
+    const { paymasterAddress } = await createPaymaster(kcCreator, PaymasterManager);
+    const paymaster = await hre.ethers.getContractAt('Paymaster', paymasterAddress);
+
+    // Fund the paymaster with tokens
+    const tokenAmount = ethers.parseEther('100');
+    await Token.connect(kcCreator).approve(paymasterAddress, tokenAmount);
+    await paymaster.connect(kcCreator).fundPaymaster(tokenAmount);
+
+    // Get the actual KnowledgeCollection address from the Hub
+    const hub = await hre.ethers.getContract<Hub>('Hub');
+    const knowledgeCollectionAddress = await hub.getContractAddress('KnowledgeCollection');
+
+    // Verify that nonKC is not the KnowledgeCollection address
+    expect(nonKC.address).to.not.equal(knowledgeCollectionAddress);
+
+    await paymaster.connect(kcCreator).addAllowedAddress(nonKC.address);
+
+    expect(await paymaster.allowedAddresses(nonKC.address)).to.be.true;
+
+    // Try to call coverCost from nonKC address
+    await expect(
+      paymaster.connect(nonKC).coverCost(ethers.parseEther('10'), nonKC.address)
+    ).to.be.revertedWith('Sender is not the KnowledgeCollection contract');
 
     // Verify paymaster's balance hasn't changed (no tokens were spent)
     const finalPaymasterBalance = await Token.balanceOf(paymasterAddress);
