@@ -10,6 +10,7 @@ import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
 import {IInitializable} from "../interfaces/IInitializable.sol";
 import {ParanetLib} from "../libraries/ParanetLib.sol";
+import {HubLib} from "../libraries/HubLib.sol";
 
 contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInitializable {
     event TokenRewardDeposit(address sender, uint256 amount);
@@ -91,17 +92,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
 
         paranetOperatorRewardPercentage = paranetOperatorRewardPercentage_;
         paranetIncentivizationProposalVotersRewardPercentage = paranetIncentivizationProposalVotersRewardPercentage_;
-
-        address hubOwner = hub.owner();
-        uint256 size;
-        assembly {
-            size := extcodesize(hubOwner)
-        }
-        if (size > 0) {
-            votersRegistrar = Ownable(hubOwner).owner();
-        } else {
-            votersRegistrar = hubOwner;
-        }
+        votersRegistrar = hub.owner();
     }
 
     function initialize() public onlyContracts {
@@ -124,7 +115,7 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
         return getBalance() + totalMinersclaimedToken + totalOperatorsclaimedToken + totalVotersclaimedToken;
     }
 
-    function transferVotersRegistrarRole(address newRegistrar) external onlyVotersRegistrar {
+    function transferVotersRegistrarRole(address newRegistrar) external onlyHubOwnerOrMultiSigOwner {
         require(newRegistrar != address(0), "New registrar cannot be zero address");
         address oldRegistrar = votersRegistrar;
         votersRegistrar = newRegistrar;
@@ -475,6 +466,49 @@ contract ParanetIncentivesPoolStorage is INamed, IVersioned, HubDependent, IInit
 
     modifier onlyVotersRegistrar() {
         require(msg.sender == votersRegistrar, "Fn can only be used by registrar");
+        _;
+    }
+
+    function _isMultiSigOwner(address multiSigAddress) internal view returns (bool) {
+        // Check if the address is a contract
+        uint256 size;
+        assembly {
+            size := extcodesize(multiSigAddress)
+        }
+        if (size == 0) {
+            return false;
+        }
+
+        // Call the getOwners function on the multiSigAddress
+        (bool success, bytes memory returnData) = multiSigAddress.staticcall(abi.encodeWithSignature("getOwners()"));
+
+        // If call failed or returned invalid data, return false
+        if (!success || returnData.length == 0) {
+            return false;
+        }
+
+        // Decode the returned data
+        address[] memory multiSigOwners = abi.decode(returnData, (address[]));
+
+        // Check if msg.sender is one of the owners
+        for (uint256 i = 0; i < multiSigOwners.length; i++) {
+            if (msg.sender == multiSigOwners[i]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function _checkHubOwnerOrMultiSigOwner() internal view virtual {
+        address hubOwner = hub.owner();
+        if (msg.sender != hubOwner && !_isMultiSigOwner(hubOwner)) {
+            revert HubLib.UnauthorizedAccess("Only Hub Owner or Multisig Owner");
+        }
+    }
+
+    modifier onlyHubOwnerOrMultiSigOwner() {
+        _checkHubOwnerOrMultiSigOwner();
         _;
     }
 }
