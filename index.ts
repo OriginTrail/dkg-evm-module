@@ -10,6 +10,7 @@ import IContractStatus from './abi/IContractStatus.json';
 import ICustodian from './abi/ICustodian.json';
 import Identity from './abi/Identity.json';
 import IdentityStorage from './abi/IdentityStorage.json';
+import IERC20Extended from './abi/IERC20Extended.json';
 import IIndexable from './abi/IIndexable.json';
 import IInitializable from './abi/IInitializable.json';
 import INamed from './abi/INamed.json';
@@ -23,7 +24,6 @@ import Paranet from './abi/Paranet.json';
 import ParanetIncentivesPoolFactory from './abi/ParanetIncentivesPoolFactory.json';
 import ParanetKnowledgeCollectionsRegistry from './abi/ParanetKnowledgeCollectionsRegistry.json';
 import ParanetKnowledgeMinersRegistry from './abi/ParanetKnowledgeMinersRegistry.json';
-import ParanetNeuroIncentivesPool from './abi/ParanetNeuroIncentivesPool.json';
 import ParanetServicesRegistry from './abi/ParanetServicesRegistry.json';
 import ParanetsRegistry from './abi/ParanetsRegistry.json';
 import Paymaster from './abi/Paymaster.json';
@@ -53,7 +53,6 @@ export {
   ParanetKnowledgeMinersRegistry as ParanetKnowledgeMinersRegistryABI,
   ParanetServicesRegistry as ParanetServicesRegistryABI,
   ParanetsRegistry as ParanetsRegistryABI,
-  ParanetNeuroIncentivesPool as ParanetNeuroIncentivesPoolABI,
   ProfileStorage as ProfileStorageABI,
   Profile as ProfileABI,
   StakingStorage as StakingStorageABI,
@@ -76,4 +75,5 @@ export {
   IVersioned as IVersionedABI,
   IContractStatus as IContractStatusABI,
   IPaymaster as IPaymasterABI,
+  IERC20Extended as IERC20ExtendedABI,
 };
