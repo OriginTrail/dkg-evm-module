@@ -290,263 +290,268 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         );
     }
 
-    // function addParanetPermissionedNodes(
-    //     address paranetKCStorageContract,
-    //     uint256 paranetKCTokenId,
-    //     uint256 paranetKATokenId,
-    //     uint72[] calldata identityIds
-    // ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
-    //     ParanetsRegistry pr = paranetsRegistry;
-    //     ProfileStorage ps = profileStorage;
+    function addParanetPermissionedNodes(
+        address paranetKCStorageContract,
+        uint256 paranetKCTokenId,
+        uint256 paranetKATokenId,
+        uint72[] calldata identityIds
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
+        ProfileStorage ps = profileStorage;
 
-    //     bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
 
-    //     if (!pr.paranetExists(paranetId)) {
-    //         revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
-    //     }
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        }
 
-    //     if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
-    //         // TODO: Why is this 1 element array
-    //         uint8[] memory expectedAccessPolicies = new uint8[](1);
-    //         expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
+        if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
+            // TODO: Why is this 1 element array
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
 
-    //         revert ParanetLib.InvalidParanetNodesAccessPolicy(
-    //             expectedAccessPolicies,
-    //             pr.getNodesAccessPolicy(paranetId)
-    //         );
-    //     }
+            revert ParanetLib.InvalidParanetNodesAccessPolicy(
+                expectedAccessPolicies,
+                pr.getNodesAccessPolicy(paranetId)
+            );
+        }
 
-    //     for (uint256 i; i < identityIds.length; ) {
-    //         if (!ps.profileExists(identityIds[i])) {
-    //             revert ProfileLib.ProfileDoesntExist(identityIds[i]);
-    //         }
+        for (uint256 i; i < identityIds.length; ) {
+            if (!ps.profileExists(identityIds[i])) {
+                revert ProfileLib.ProfileDoesntExist(identityIds[i]);
+            }
 
-    //         if (pr.isPermissionedNode(paranetId, identityIds[i])) {
-    //             revert ParanetLib.ParanetPermissionedNodeHasAlreadyBeenAdded(paranetId, identityIds[i]);
-    //         }
+            if (pr.isPermissionedNode(paranetId, identityIds[i])) {
+                revert ParanetLib.ParanetPermissionedNodeHasAlreadyBeenAdded(paranetId, identityIds[i]);
+            }
 
-    //         pr.addPermissionedNode(paranetId, identityIds[i], ps.getNodeId(identityIds[i]));
+            pr.addPermissionedNode(paranetId, identityIds[i], ps.getNodeId(identityIds[i]));
 
-    //         emit ParanetPermissionedNodeAdded(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId, identityIds[i]);
+            emit ParanetPermissionedNodeAdded(
+                paranetKCStorageContract,
+                paranetKCTokenId,
+                paranetKATokenId,
+                identityIds[i]
+            );
 
-    //         unchecked {
-    //             i++;
-    //         }
-    //     }
-    // }
+            unchecked {
+                i++;
+            }
+        }
+    }
 
-    // function removeParanetPermissionedNodes(
-    //     address paranetKCStorageContract,
-    //     uint256 paranetKCTokenId,
-    //     uint256 paranetKATokenId,
-    //     uint72[] calldata identityIds
-    // ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
-    //     ParanetsRegistry pr = paranetsRegistry;
+    function removeParanetPermissionedNodes(
+        address paranetKCStorageContract,
+        uint256 paranetKCTokenId,
+        uint256 paranetKATokenId,
+        uint72[] calldata identityIds
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
 
-    //     bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
 
-    //     if (!pr.paranetExists(paranetId)) {
-    //         revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
-    //     }
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        }
 
-    //     if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
-    //         uint8[] memory expectedAccessPolicies = new uint8[](1);
-    //         expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
+        if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
 
-    //         revert ParanetLib.InvalidParanetNodesAccessPolicy(
-    //             expectedAccessPolicies,
-    //             pr.getNodesAccessPolicy(paranetId)
-    //         );
-    //     }
+            revert ParanetLib.InvalidParanetNodesAccessPolicy(
+                expectedAccessPolicies,
+                pr.getNodesAccessPolicy(paranetId)
+            );
+        }
 
-    //     for (uint256 i; i < identityIds.length; ) {
-    //         if (!pr.isPermissionedNode(paranetId, identityIds[i])) {
-    //             revert ParanetLib.ParanetPermissionedNodeDoesntExist(paranetId, identityIds[i]);
-    //         }
+        for (uint256 i; i < identityIds.length; ) {
+            if (!pr.isPermissionedNode(paranetId, identityIds[i])) {
+                revert ParanetLib.ParanetPermissionedNodeDoesntExist(paranetId, identityIds[i]);
+            }
 
-    //         pr.removePermissionedNode(paranetId, identityIds[i]);
+            pr.removePermissionedNode(paranetId, identityIds[i]);
 
-    //         emit ParanetPermissionedNodeRemoved(
-    //             paranetKCStorageContract,
-    //             paranetKCTokenId,
-    //             paranetKATokenId,
-    //             identityIds[i]
-    //         );
+            emit ParanetPermissionedNodeRemoved(
+                paranetKCStorageContract,
+                paranetKCTokenId,
+                paranetKATokenId,
+                identityIds[i]
+            );
 
-    //         unchecked {
-    //             i++;
-    //         }
-    //     }
-    // }
+            unchecked {
+                i++;
+            }
+        }
+    }
 
-    // function requestParanetPermissionedNodeAccess(
-    //     address paranetKCStorageContract,
-    //     uint256 paranetKCTokenId,
-    //     uint256 paranetKATokenId
-    // ) external {
-    //     ParanetsRegistry pr = paranetsRegistry;
+    function requestParanetPermissionedNodeAccess(
+        address paranetKCStorageContract,
+        uint256 paranetKCTokenId,
+        uint256 paranetKATokenId
+    ) external {
+        ParanetsRegistry pr = paranetsRegistry;
 
-    //     bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
 
-    //     if (!pr.paranetExists(paranetId)) {
-    //         revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
-    //     }
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        }
 
-    //     if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
-    //         uint8[] memory expectedAccessPolicies = new uint8[](1);
-    //         expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
+        if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
 
-    //         revert ParanetLib.InvalidParanetNodesAccessPolicy(
-    //             expectedAccessPolicies,
-    //             pr.getNodesAccessPolicy(paranetId)
-    //         );
-    //     }
+            revert ParanetLib.InvalidParanetNodesAccessPolicy(
+                expectedAccessPolicies,
+                pr.getNodesAccessPolicy(paranetId)
+            );
+        }
 
-    //     uint72 identityId = identityStorage.getIdentityId(msg.sender);
+        uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
-    //     if (!profileStorage.profileExists(identityId)) {
-    //         revert ProfileLib.ProfileDoesntExist(identityId);
-    //     }
+        if (!profileStorage.profileExists(identityId)) {
+            revert ProfileLib.ProfileDoesntExist(identityId);
+        }
 
-    //     ParanetLib.ParanetNodeJoinRequest[] memory paranetNodeJoinRequests = pr.getNodeJoinRequests(
-    //         paranetId,
-    //         identityId
-    //     );
+        ParanetLib.ParanetNodeJoinRequest[] memory paranetNodeJoinRequests = pr.getNodeJoinRequests(
+            paranetId,
+            identityId
+        );
 
-    //     if (
-    //         paranetNodeJoinRequests.length > 0 &&
-    //         paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status == ParanetLib.RequestStatus.PENDING
-    //     ) {
-    //         revert ParanetLib.ParanetPermissionedNodeJoinRequestInvalidStatus(
-    //             paranetId,
-    //             identityId,
-    //             paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status
-    //         );
-    //     }
+        if (
+            paranetNodeJoinRequests.length > 0 &&
+            paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status == ParanetLib.RequestStatus.PENDING
+        ) {
+            revert ParanetLib.ParanetPermissionedNodeJoinRequestInvalidStatus(
+                paranetId,
+                identityId,
+                paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status
+            );
+        }
 
-    //     pr.addNodeJoinRequest(paranetId, identityId, ParanetLib.RequestStatus.PENDING);
+        pr.addNodeJoinRequest(paranetId, identityId, ParanetLib.RequestStatus.PENDING);
 
-    //     emit ParanetPermissionedNodeJoinRequestCreated(
-    //         paranetKCStorageContract,
-    //         paranetKCTokenId,
-    //         paranetKATokenId,
-    //         identityId
-    //     );
-    // }
+        emit ParanetPermissionedNodeJoinRequestCreated(
+            paranetKCStorageContract,
+            paranetKCTokenId,
+            paranetKATokenId,
+            identityId
+        );
+    }
 
-    // function approvePermissionedNode(
-    //     address paranetKCStorageContract,
-    //     uint256 paranetKCTokenId,
-    //     uint256 paranetKATokenId,
-    //     uint72 identityId
-    // ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
-    //     ParanetsRegistry pr = paranetsRegistry;
+    function approvePermissionedNode(
+        address paranetKCStorageContract,
+        uint256 paranetKCTokenId,
+        uint256 paranetKATokenId,
+        uint72 identityId
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
 
-    //     bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
 
-    //     if (!pr.paranetExists(paranetId)) {
-    //         revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
-    //     }
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        }
 
-    //     if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
-    //         uint8[] memory expectedAccessPolicies = new uint8[](1);
-    //         expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
+        if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
 
-    //         revert ParanetLib.InvalidParanetNodesAccessPolicy(
-    //             expectedAccessPolicies,
-    //             pr.getNodesAccessPolicy(paranetId)
-    //         );
-    //     }
+            revert ParanetLib.InvalidParanetNodesAccessPolicy(
+                expectedAccessPolicies,
+                pr.getNodesAccessPolicy(paranetId)
+            );
+        }
 
-    //     ParanetLib.ParanetNodeJoinRequest[] memory paranetNodeJoinRequests = pr.getNodeJoinRequests(
-    //         paranetId,
-    //         identityId
-    //     );
+        ParanetLib.ParanetNodeJoinRequest[] memory paranetNodeJoinRequests = pr.getNodeJoinRequests(
+            paranetId,
+            identityId
+        );
 
-    //     if (paranetNodeJoinRequests.length == 0) {
-    //         revert ParanetLib.ParanetPermissionedNodeJoinRequestDoesntExist(paranetId, identityId);
-    //     } else if (
-    //         paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status != ParanetLib.RequestStatus.PENDING
-    //     ) {
-    //         revert ParanetLib.ParanetPermissionedNodeJoinRequestInvalidStatus(
-    //             paranetId,
-    //             identityId,
-    //             paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status
-    //         );
-    //     }
+        if (paranetNodeJoinRequests.length == 0) {
+            revert ParanetLib.ParanetPermissionedNodeJoinRequestDoesntExist(paranetId, identityId);
+        } else if (
+            paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status != ParanetLib.RequestStatus.PENDING
+        ) {
+            revert ParanetLib.ParanetPermissionedNodeJoinRequestInvalidStatus(
+                paranetId,
+                identityId,
+                paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status
+            );
+        }
 
-    //     pr.updateNodeJoinRequestStatus(
-    //         paranetId,
-    //         identityId,
-    //         paranetNodeJoinRequests.length - 1,
-    //         ParanetLib.RequestStatus.APPROVED
-    //     );
-    //     pr.addPermissionedNode(paranetId, identityId, profileStorage.getNodeId(identityId));
+        pr.updateNodeJoinRequestStatus(
+            paranetId,
+            identityId,
+            paranetNodeJoinRequests.length - 1,
+            ParanetLib.RequestStatus.APPROVED
+        );
+        pr.addPermissionedNode(paranetId, identityId, profileStorage.getNodeId(identityId));
 
-    //     emit ParanetPermissionedNodeJoinRequestAccepted(
-    //         paranetKCStorageContract,
-    //         paranetKCTokenId,
-    //         paranetKATokenId,
-    //         identityId
-    //     );
-    //     emit ParanetPermissionedNodeAdded(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId, identityId);
-    // }
+        emit ParanetPermissionedNodeJoinRequestAccepted(
+            paranetKCStorageContract,
+            paranetKCTokenId,
+            paranetKATokenId,
+            identityId
+        );
+        emit ParanetPermissionedNodeAdded(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId, identityId);
+    }
 
-    // function rejectPermissionedNode(
-    //     address paranetKCStorageContract,
-    //     uint256 paranetKCTokenId,
-    //     uint256 paranetKATokenId,
-    //     uint72 identityId
-    // ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
-    //     ParanetsRegistry pr = paranetsRegistry;
+    function rejectPermissionedNode(
+        address paranetKCStorageContract,
+        uint256 paranetKCTokenId,
+        uint256 paranetKATokenId,
+        uint72 identityId
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
 
-    //     bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
 
-    //     if (!pr.paranetExists(paranetId)) {
-    //         revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
-    //     }
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        }
 
-    //     if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
-    //         uint8[] memory expectedAccessPolicies = new uint8[](1);
-    //         expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
+        if (pr.getNodesAccessPolicy(paranetId) != NODES_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = NODES_ACCESS_POLICY_PERMISSIONED;
 
-    //         revert ParanetLib.InvalidParanetNodesAccessPolicy(
-    //             expectedAccessPolicies,
-    //             pr.getNodesAccessPolicy(paranetId)
-    //         );
-    //     }
+            revert ParanetLib.InvalidParanetNodesAccessPolicy(
+                expectedAccessPolicies,
+                pr.getNodesAccessPolicy(paranetId)
+            );
+        }
 
-    //     ParanetLib.ParanetNodeJoinRequest[] memory paranetNodeJoinRequests = pr.getNodeJoinRequests(
-    //         paranetId,
-    //         identityId
-    //     );
+        ParanetLib.ParanetNodeJoinRequest[] memory paranetNodeJoinRequests = pr.getNodeJoinRequests(
+            paranetId,
+            identityId
+        );
 
-    //     if (paranetNodeJoinRequests.length == 0) {
-    //         revert ParanetLib.ParanetPermissionedNodeJoinRequestDoesntExist(paranetId, identityId);
-    //     } else if (
-    //         paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status != ParanetLib.RequestStatus.PENDING
-    //     ) {
-    //         revert ParanetLib.ParanetPermissionedNodeJoinRequestInvalidStatus(
-    //             paranetId,
-    //             identityId,
-    //             paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status
-    //         );
-    //     }
+        if (paranetNodeJoinRequests.length == 0) {
+            revert ParanetLib.ParanetPermissionedNodeJoinRequestDoesntExist(paranetId, identityId);
+        } else if (
+            paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status != ParanetLib.RequestStatus.PENDING
+        ) {
+            revert ParanetLib.ParanetPermissionedNodeJoinRequestInvalidStatus(
+                paranetId,
+                identityId,
+                paranetNodeJoinRequests[paranetNodeJoinRequests.length - 1].status
+            );
+        }
 
-    //     pr.updateNodeJoinRequestStatus(
-    //         paranetId,
-    //         identityId,
-    //         paranetNodeJoinRequests.length - 1,
-    //         ParanetLib.RequestStatus.REJECTED
-    //     );
+        pr.updateNodeJoinRequestStatus(
+            paranetId,
+            identityId,
+            paranetNodeJoinRequests.length - 1,
+            ParanetLib.RequestStatus.REJECTED
+        );
 
-    //     emit ParanetPermissionedNodeJoinRequestRejected(
-    //         paranetKCStorageContract,
-    //         paranetKCTokenId,
-    //         paranetKATokenId,
-    //         identityId
-    //     );
-    // }
+        emit ParanetPermissionedNodeJoinRequestRejected(
+            paranetKCStorageContract,
+            paranetKCTokenId,
+            paranetKATokenId,
+            identityId
+        );
+    }
 
     function addParanetServices(
         address paranetKCStorageContract,
@@ -723,258 +728,258 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         );
     }
 
-    // function addParanetPermissionedMiners(
-    //     address paranetKCStorageContract,
-    //     uint256 paranetKCTokenId,
-    //     uint256 paranetKATokenId,
-    //     address[] calldata minerAddresses
-    // ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
-    //     ParanetsRegistry pr = paranetsRegistry;
-    //     ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
+    function addParanetPermissionedMiners(
+        address paranetKCStorageContract,
+        uint256 paranetKCTokenId,
+        uint256 paranetKATokenId,
+        address[] calldata minerAddresses
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
+        ParanetKnowledgeMinersRegistry pkmr = paranetKnowledgeMinersRegistry;
 
-    //     bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
 
-    //     if (!pr.paranetExists(paranetId)) {
-    //         revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
-    //     }
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        }
 
-    //     if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
-    //         uint8[] memory expectedAccessPolicies = new uint8[](1);
-    //         expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
+        if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
 
-    //         revert ParanetLib.InvalidParanetMinersAccessPolicy(
-    //             expectedAccessPolicies,
-    //             pr.getMinersAccessPolicy(paranetId)
-    //         );
-    //     }
+            revert ParanetLib.InvalidParanetMinersAccessPolicy(
+                expectedAccessPolicies,
+                pr.getMinersAccessPolicy(paranetId)
+            );
+        }
 
-    //     for (uint256 i; i < minerAddresses.length; ) {
-    //         if (!pkmr.knowledgeMinerExists(minerAddresses[i])) {
-    //             pkmr.registerKnowledgeMiner(minerAddresses[i]);
-    //         }
+        for (uint256 i; i < minerAddresses.length; ) {
+            if (!pkmr.knowledgeMinerExists(minerAddresses[i])) {
+                pkmr.registerKnowledgeMiner(minerAddresses[i]);
+            }
 
-    //         if (pr.isKnowledgeMinerRegistered(paranetId, minerAddresses[i])) {
-    //             revert ParanetLib.ParanetPermissionedMinerHasAlreadyBeenAdded(paranetId, minerAddresses[i]);
-    //         }
+            if (pr.isKnowledgeMinerRegistered(paranetId, minerAddresses[i])) {
+                revert ParanetLib.ParanetPermissionedMinerHasAlreadyBeenAdded(paranetId, minerAddresses[i]);
+            }
 
-    //         pr.addKnowledgeMiner(paranetId, minerAddresses[i]);
+            pr.addKnowledgeMiner(paranetId, minerAddresses[i]);
 
-    //         emit ParanetPermissionedMinerAdded(
-    //             paranetKCStorageContract,
-    //             paranetKCTokenId,
-    //             paranetKATokenId,
-    //             minerAddresses[i]
-    //         );
+            emit ParanetPermissionedMinerAdded(
+                paranetKCStorageContract,
+                paranetKCTokenId,
+                paranetKATokenId,
+                minerAddresses[i]
+            );
 
-    //         unchecked {
-    //             i++;
-    //         }
-    //     }
-    // }
+            unchecked {
+                i++;
+            }
+        }
+    }
 
-    // function removeParanetPermissionedMiners(
-    //     address paranetKCStorageContract,
-    //     uint256 paranetKCTokenId,
-    //     uint256 paranetKATokenId,
-    //     address[] calldata minerAddresses
-    // ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
-    //     ParanetsRegistry pr = paranetsRegistry;
+    function removeParanetPermissionedMiners(
+        address paranetKCStorageContract,
+        uint256 paranetKCTokenId,
+        uint256 paranetKATokenId,
+        address[] calldata minerAddresses
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
 
-    //     bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
 
-    //     if (!pr.paranetExists(paranetId)) {
-    //         revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
-    //     }
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        }
 
-    //     if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
-    //         uint8[] memory expectedAccessPolicies = new uint8[](1);
-    //         expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
+        if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
 
-    //         revert ParanetLib.InvalidParanetMinersAccessPolicy(
-    //             expectedAccessPolicies,
-    //             pr.getMinersAccessPolicy(paranetId)
-    //         );
-    //     }
+            revert ParanetLib.InvalidParanetMinersAccessPolicy(
+                expectedAccessPolicies,
+                pr.getMinersAccessPolicy(paranetId)
+            );
+        }
 
-    //     for (uint256 i; i < minerAddresses.length; ) {
-    //         if (!pr.isKnowledgeMinerRegistered(paranetId, minerAddresses[i])) {
-    //             revert ParanetLib.ParanetPermissionedMinerDoesntExist(paranetId, minerAddresses[i]);
-    //         }
+        for (uint256 i; i < minerAddresses.length; ) {
+            if (!pr.isKnowledgeMinerRegistered(paranetId, minerAddresses[i])) {
+                revert ParanetLib.ParanetPermissionedMinerDoesntExist(paranetId, minerAddresses[i]);
+            }
 
-    //         pr.removeKnowledgeMiner(paranetId, minerAddresses[i]);
+            pr.removeKnowledgeMiner(paranetId, minerAddresses[i]);
 
-    //         emit ParanetPermissionedMinerRemoved(
-    //             paranetKCStorageContract,
-    //             paranetKCTokenId,
-    //             paranetKATokenId,
-    //             minerAddresses[i]
-    //         );
+            emit ParanetPermissionedMinerRemoved(
+                paranetKCStorageContract,
+                paranetKCTokenId,
+                paranetKATokenId,
+                minerAddresses[i]
+            );
 
-    //         unchecked {
-    //             i++;
-    //         }
-    //     }
-    // }
+            unchecked {
+                i++;
+            }
+        }
+    }
 
-    // function requestParanetPermissionedMinerAccess(
-    //     address paranetKCStorageContract,
-    //     uint256 paranetKCTokenId,
-    //     uint256 paranetKATokenId
-    // ) external {
-    //     ParanetsRegistry pr = paranetsRegistry;
+    function requestParanetPermissionedMinerAccess(
+        address paranetKCStorageContract,
+        uint256 paranetKCTokenId,
+        uint256 paranetKATokenId
+    ) external {
+        ParanetsRegistry pr = paranetsRegistry;
 
-    //     bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
 
-    //     if (!pr.paranetExists(paranetId)) {
-    //         revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
-    //     }
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        }
 
-    //     if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
-    //         uint8[] memory expectedAccessPolicies = new uint8[](1);
-    //         expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
+        if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
 
-    //         revert ParanetLib.InvalidParanetMinersAccessPolicy(
-    //             expectedAccessPolicies,
-    //             pr.getMinersAccessPolicy(paranetId)
-    //         );
-    //     }
+            revert ParanetLib.InvalidParanetMinersAccessPolicy(
+                expectedAccessPolicies,
+                pr.getMinersAccessPolicy(paranetId)
+            );
+        }
 
-    //     ParanetLib.ParanetKnowledgeMinerAccessRequest[] memory paranetKnowledgeMinersAccessRequests = pr
-    //         .getKnowledgeMinerAccessRequests(paranetId, msg.sender);
+        ParanetLib.ParanetKnowledgeMinerAccessRequest[] memory paranetKnowledgeMinersAccessRequests = pr
+            .getKnowledgeMinerAccessRequests(paranetId, msg.sender);
 
-    //     if (
-    //         paranetKnowledgeMinersAccessRequests.length > 0 &&
-    //         paranetKnowledgeMinersAccessRequests[paranetKnowledgeMinersAccessRequests.length - 1].status ==
-    //         ParanetLib.RequestStatus.PENDING
-    //     ) {
-    //         revert ParanetLib.ParanetPermissionedMinerAccessRequestInvalidStatus(
-    //             paranetId,
-    //             msg.sender,
-    //             paranetKnowledgeMinersAccessRequests[paranetKnowledgeMinersAccessRequests.length - 1].status
-    //         );
-    //     }
+        if (
+            paranetKnowledgeMinersAccessRequests.length > 0 &&
+            paranetKnowledgeMinersAccessRequests[paranetKnowledgeMinersAccessRequests.length - 1].status ==
+            ParanetLib.RequestStatus.PENDING
+        ) {
+            revert ParanetLib.ParanetPermissionedMinerAccessRequestInvalidStatus(
+                paranetId,
+                msg.sender,
+                paranetKnowledgeMinersAccessRequests[paranetKnowledgeMinersAccessRequests.length - 1].status
+            );
+        }
 
-    //     pr.addKnowledgeMinerAccessRequest(paranetId, msg.sender, ParanetLib.RequestStatus.PENDING);
+        pr.addKnowledgeMinerAccessRequest(paranetId, msg.sender, ParanetLib.RequestStatus.PENDING);
 
-    //     emit ParanetPermissionedMinerAccessRequestCreated(
-    //         paranetKCStorageContract,
-    //         paranetKCTokenId,
-    //         paranetKATokenId,
-    //         msg.sender
-    //     );
-    // }
+        emit ParanetPermissionedMinerAccessRequestCreated(
+            paranetKCStorageContract,
+            paranetKCTokenId,
+            paranetKATokenId,
+            msg.sender
+        );
+    }
 
-    // function approvePermissionedMiner(
-    //     address paranetKCStorageContract,
-    //     uint256 paranetKCTokenId,
-    //     uint256 paranetKATokenId,
-    //     address minerAddress
-    // ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
-    //     ParanetsRegistry pr = paranetsRegistry;
+    function approvePermissionedMiner(
+        address paranetKCStorageContract,
+        uint256 paranetKCTokenId,
+        uint256 paranetKATokenId,
+        address minerAddress
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
 
-    //     bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
 
-    //     if (!pr.paranetExists(paranetId)) {
-    //         revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
-    //     }
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        }
 
-    //     if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
-    //         uint8[] memory expectedAccessPolicies = new uint8[](1);
-    //         expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
+        if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
 
-    //         revert ParanetLib.InvalidParanetMinersAccessPolicy(
-    //             expectedAccessPolicies,
-    //             pr.getMinersAccessPolicy(paranetId)
-    //         );
-    //     }
+            revert ParanetLib.InvalidParanetMinersAccessPolicy(
+                expectedAccessPolicies,
+                pr.getMinersAccessPolicy(paranetId)
+            );
+        }
 
-    //     ParanetLib.ParanetKnowledgeMinerAccessRequest[] memory paranetKnowledgeMinersAccessRequests = pr
-    //         .getKnowledgeMinerAccessRequests(paranetId, minerAddress);
+        ParanetLib.ParanetKnowledgeMinerAccessRequest[] memory paranetKnowledgeMinersAccessRequests = pr
+            .getKnowledgeMinerAccessRequests(paranetId, minerAddress);
 
-    //     if (paranetKnowledgeMinersAccessRequests.length == 0) {
-    //         revert ParanetLib.ParanetPermissionedMinerAccessRequestDoesntExist(paranetId, minerAddress);
-    //     } else if (
-    //         paranetKnowledgeMinersAccessRequests[paranetKnowledgeMinersAccessRequests.length - 1].status !=
-    //         ParanetLib.RequestStatus.PENDING
-    //     ) {
-    //         revert ParanetLib.ParanetPermissionedMinerAccessRequestInvalidStatus(
-    //             paranetId,
-    //             minerAddress,
-    //             paranetKnowledgeMinersAccessRequests[paranetKnowledgeMinersAccessRequests.length - 1].status
-    //         );
-    //     }
+        if (paranetKnowledgeMinersAccessRequests.length == 0) {
+            revert ParanetLib.ParanetPermissionedMinerAccessRequestDoesntExist(paranetId, minerAddress);
+        } else if (
+            paranetKnowledgeMinersAccessRequests[paranetKnowledgeMinersAccessRequests.length - 1].status !=
+            ParanetLib.RequestStatus.PENDING
+        ) {
+            revert ParanetLib.ParanetPermissionedMinerAccessRequestInvalidStatus(
+                paranetId,
+                minerAddress,
+                paranetKnowledgeMinersAccessRequests[paranetKnowledgeMinersAccessRequests.length - 1].status
+            );
+        }
 
-    //     pr.updateKnowledgeMinerAccessRequestStatus(
-    //         paranetId,
-    //         minerAddress,
-    //         paranetKnowledgeMinersAccessRequests.length - 1,
-    //         ParanetLib.RequestStatus.APPROVED
-    //     );
-    //     pr.addKnowledgeMiner(paranetId, minerAddress);
+        pr.updateKnowledgeMinerAccessRequestStatus(
+            paranetId,
+            minerAddress,
+            paranetKnowledgeMinersAccessRequests.length - 1,
+            ParanetLib.RequestStatus.APPROVED
+        );
+        pr.addKnowledgeMiner(paranetId, minerAddress);
 
-    //     emit ParanetPermissionedMinerAccessRequestAccepted(
-    //         paranetKCStorageContract,
-    //         paranetKCTokenId,
-    //         paranetKATokenId,
-    //         minerAddress
-    //     );
-    //     emit ParanetPermissionedMinerAdded(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId, minerAddress);
-    // }
+        emit ParanetPermissionedMinerAccessRequestAccepted(
+            paranetKCStorageContract,
+            paranetKCTokenId,
+            paranetKATokenId,
+            minerAddress
+        );
+        emit ParanetPermissionedMinerAdded(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId, minerAddress);
+    }
 
-    // function rejectPermissionedMiner(
-    //     address paranetKCStorageContract,
-    //     uint256 paranetKCTokenId,
-    //     uint256 paranetKATokenId,
-    //     address minerAddress
-    // ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
-    //     ParanetsRegistry pr = paranetsRegistry;
+    function rejectPermissionedMiner(
+        address paranetKCStorageContract,
+        uint256 paranetKCTokenId,
+        uint256 paranetKATokenId,
+        address minerAddress
+    ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) {
+        ParanetsRegistry pr = paranetsRegistry;
 
-    //     bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
 
-    //     if (!pr.paranetExists(paranetId)) {
-    //         revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
-    //     }
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
+        }
 
-    //     if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
-    //         uint8[] memory expectedAccessPolicies = new uint8[](1);
-    //         expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
+        if (pr.getMinersAccessPolicy(paranetId) != MINERS_ACCESS_POLICY_PERMISSIONED) {
+            uint8[] memory expectedAccessPolicies = new uint8[](1);
+            expectedAccessPolicies[0] = MINERS_ACCESS_POLICY_PERMISSIONED;
 
-    //         revert ParanetLib.InvalidParanetMinersAccessPolicy(
-    //             expectedAccessPolicies,
-    //             pr.getMinersAccessPolicy(paranetId)
-    //         );
-    //     }
+            revert ParanetLib.InvalidParanetMinersAccessPolicy(
+                expectedAccessPolicies,
+                pr.getMinersAccessPolicy(paranetId)
+            );
+        }
 
-    //     ParanetLib.ParanetKnowledgeMinerAccessRequest[] memory paranetKnowledgeMinerAccessRequests = pr
-    //         .getKnowledgeMinerAccessRequests(paranetId, minerAddress);
+        ParanetLib.ParanetKnowledgeMinerAccessRequest[] memory paranetKnowledgeMinerAccessRequests = pr
+            .getKnowledgeMinerAccessRequests(paranetId, minerAddress);
 
-    //     if (paranetKnowledgeMinerAccessRequests.length == 0) {
-    //         revert ParanetLib.ParanetPermissionedMinerAccessRequestDoesntExist(paranetId, minerAddress);
-    //     } else if (
-    //         paranetKnowledgeMinerAccessRequests[paranetKnowledgeMinerAccessRequests.length - 1].status !=
-    //         ParanetLib.RequestStatus.PENDING
-    //     ) {
-    //         revert ParanetLib.ParanetPermissionedMinerAccessRequestInvalidStatus(
-    //             paranetId,
-    //             minerAddress,
-    //             paranetKnowledgeMinerAccessRequests[paranetKnowledgeMinerAccessRequests.length - 1].status
-    //         );
-    //     }
+        if (paranetKnowledgeMinerAccessRequests.length == 0) {
+            revert ParanetLib.ParanetPermissionedMinerAccessRequestDoesntExist(paranetId, minerAddress);
+        } else if (
+            paranetKnowledgeMinerAccessRequests[paranetKnowledgeMinerAccessRequests.length - 1].status !=
+            ParanetLib.RequestStatus.PENDING
+        ) {
+            revert ParanetLib.ParanetPermissionedMinerAccessRequestInvalidStatus(
+                paranetId,
+                minerAddress,
+                paranetKnowledgeMinerAccessRequests[paranetKnowledgeMinerAccessRequests.length - 1].status
+            );
+        }
 
-    //     pr.updateKnowledgeMinerAccessRequestStatus(
-    //         paranetId,
-    //         minerAddress,
-    //         paranetKnowledgeMinerAccessRequests.length - 1,
-    //         ParanetLib.RequestStatus.REJECTED
-    //     );
+        pr.updateKnowledgeMinerAccessRequestStatus(
+            paranetId,
+            minerAddress,
+            paranetKnowledgeMinerAccessRequests.length - 1,
+            ParanetLib.RequestStatus.REJECTED
+        );
 
-    //     emit ParanetPermissionedMinerAccessRequestRejected(
-    //         paranetKCStorageContract,
-    //         paranetKCTokenId,
-    //         paranetKATokenId,
-    //         minerAddress
-    //     );
-    // }
+        emit ParanetPermissionedMinerAccessRequestRejected(
+            paranetKCStorageContract,
+            paranetKCTokenId,
+            paranetKATokenId,
+            minerAddress
+        );
+    }
 
     function getKnowledgeCollectionLocatorsWithPagination(
         bytes32 paranetId,
@@ -989,61 +994,64 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         return pkcr.getKnowledgeCollectionLocators(knowledgeCollections);
     }
 
-    // function mintKnowledgeCollection(
-    //     address paranetKCStorageContract,
-    //     uint256 paranetKCTokenId,
-    //     ContentCollectionStructs.CollectionInputArgs calldata knowledgeCollectionArgs
-    // ) external returns (uint256) {
-    //     ParanetsRegistry pr = paranetsRegistry;
-    //     bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId));
+    function mintKnowledgeCollection(
+        address paranetKCStorageContract,
+        uint256 paranetKCTokenId,
+        ContentCollectionStructs.CollectionInputArgs calldata knowledgeCollectionArgs
+    ) external returns (uint256) {
+        ParanetsRegistry pr = paranetsRegistry;
+        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId));
 
-    //     // Check if Paranet exists
-    //     // If not: Throw an error
-    //     if (!pr.paranetExists(paranetId)) {
-    //         revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId);
-    //     }
+        // Check if Paranet exists
+        // If not: Throw an error
+        if (!pr.paranetExists(paranetId)) {
+            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId);
+        }
 
-    //     ParanetLib.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
+        ParanetLib.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
 
-    //     // Check if paranet is permissioned and if knowledge miner is whitelisted
-    //     if (
-    //         minersAccessPolicy == ParanetLib.MinersAccessPolicy.permissioned &&
-    //         !pr.isKnowledgeMinerRegistered(paranetId, msg.sender)
-    //     ) {
-    //         revert ParanetLib.ParanetPermissionedMinerDoesntExist(paranetId, msg.sender);
-    //     } else if (minersAccessPolicy == ParanetLib.MinersAccessPolicy.OPEN) {
-    //         // Check if Knowledge Miner has profile
-    //         // If not: Create a profile
-    //         if (!paranetKnowledgeMinersRegistry.knowledgeMinerExists(msg.sender)) {
-    //             paranetKnowledgeMinersRegistry.registerKnowledgeMiner(msg.sender);
-    //         }
+        // Check if paranet is permissioned and if knowledge miner is whitelisted
+        if (
+            minersAccessPolicy == ParanetLib.MinersAccessPolicy.permissioned &&
+            !pr.isKnowledgeMinerRegistered(paranetId, msg.sender)
+        ) {
+            revert ParanetLib.ParanetPermissionedMinerDoesntExist(paranetId, msg.sender);
+        } else if (minersAccessPolicy == ParanetLib.MinersAccessPolicy.OPEN) {
+            // Check if Knowledge Miner has profile
+            // If not: Create a profile
+            if (!paranetKnowledgeMinersRegistry.knowledgeMinerExists(msg.sender)) {
+                paranetKnowledgeMinersRegistry.registerKnowledgeMiner(msg.sender);
+            }
 
-    //         // Check if Knowledge Miner is registered on paranet
-    //         if (!pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
-    //             pr.addKnowledgeMiner(paranetId, msg.sender);
-    //         }
-    //     }
+            // Check if Knowledge Miner is registered on paranet
+            if (!pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
+                pr.addKnowledgeMiner(paranetId, msg.sender);
+            }
+        }
 
-    //     // Mint Knowledge Collection
-    //     uint256 knowledgeCollectionTokenId = contentCollection.createCollectionFromContract(msg.sender, knowledgeCollectionArgs);
+        // Mint Knowledge Collection
+        uint256 knowledgeCollectionTokenId = contentCollection.createCollectionFromContract(
+            msg.sender,
+            knowledgeCollectionArgs
+        );
 
-    //     _updateSubmittedKnowledgeCollectionMetadata(
-    //         paranetKCStorageContract,
-    //         paranetKCTokenId,
-    //         address(contentCollectionStorage),
-    //         knowledgeCollectionTokenId,
-    //         knowledgeCollectionArgs.tokenAmount
-    //     );
+        _updateSubmittedKnowledgeCollectionMetadata(
+            paranetKCStorageContract,
+            paranetKCTokenId,
+            address(contentCollectionStorage),
+            knowledgeCollectionTokenId,
+            knowledgeCollectionArgs.tokenAmount
+        );
 
-    //     emit KnowledgeCollectionSubmittedToParanet(
-    //         paranetKCStorageContract,
-    //         paranetKCTokenId,
-    //         address(contentCollectionStorage),
-    //         knowledgeCollectionTokenId
-    //     );
+        emit KnowledgeCollectionSubmittedToParanet(
+            paranetKCStorageContract,
+            paranetKCTokenId,
+            address(contentCollectionStorage),
+            knowledgeCollectionTokenId
+        );
 
-    //     return knowledgeCollectionTokenId;
-    // }
+        return knowledgeCollectionTokenId;
+    }
 
     // If asset has been updated there should be logic to update paranet kc states metadata with info about previouse state if posible
 
