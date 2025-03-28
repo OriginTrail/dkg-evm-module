@@ -994,64 +994,64 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         return pkcr.getKnowledgeCollectionLocators(knowledgeCollections);
     }
 
-    function mintKnowledgeCollection(
-        address paranetKCStorageContract,
-        uint256 paranetKCTokenId,
-        ContentCollectionStructs.CollectionInputArgs calldata knowledgeCollectionArgs
-    ) external returns (uint256) {
-        ParanetsRegistry pr = paranetsRegistry;
-        bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId));
+    // function mintKnowledgeCollection(
+    //     address paranetKCStorageContract,
+    //     uint256 paranetKCTokenId,
+    //     ContentCollectionStructs.CollectionInputArgs calldata knowledgeCollectionArgs
+    // ) external returns (uint256) {
+    //     ParanetsRegistry pr = paranetsRegistry;
+    //     bytes32 paranetId = keccak256(abi.encodePacked(paranetKCStorageContract, paranetKCTokenId));
 
-        // Check if Paranet exists
-        // If not: Throw an error
-        if (!pr.paranetExists(paranetId)) {
-            revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId);
-        }
+    //     // Check if Paranet exists
+    //     // If not: Throw an error
+    //     if (!pr.paranetExists(paranetId)) {
+    //         revert ParanetLib.ParanetDoesntExist(paranetKCStorageContract, paranetKCTokenId);
+    //     }
 
-        ParanetLib.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
+    //     ParanetLib.MinersAccessPolicy minersAccessPolicy = pr.getMinersAccessPolicy(paranetId);
 
-        // Check if paranet is permissioned and if knowledge miner is whitelisted
-        if (
-            minersAccessPolicy == ParanetLib.MinersAccessPolicy.permissioned &&
-            !pr.isKnowledgeMinerRegistered(paranetId, msg.sender)
-        ) {
-            revert ParanetLib.ParanetPermissionedMinerDoesntExist(paranetId, msg.sender);
-        } else if (minersAccessPolicy == ParanetLib.MinersAccessPolicy.OPEN) {
-            // Check if Knowledge Miner has profile
-            // If not: Create a profile
-            if (!paranetKnowledgeMinersRegistry.knowledgeMinerExists(msg.sender)) {
-                paranetKnowledgeMinersRegistry.registerKnowledgeMiner(msg.sender);
-            }
+    //     // Check if paranet is permissioned and if knowledge miner is whitelisted
+    //     if (
+    //         minersAccessPolicy == ParanetLib.MinersAccessPolicy.permissioned &&
+    //         !pr.isKnowledgeMinerRegistered(paranetId, msg.sender)
+    //     ) {
+    //         revert ParanetLib.ParanetPermissionedMinerDoesntExist(paranetId, msg.sender);
+    //     } else if (minersAccessPolicy == ParanetLib.MinersAccessPolicy.OPEN) {
+    //         // Check if Knowledge Miner has profile
+    //         // If not: Create a profile
+    //         if (!paranetKnowledgeMinersRegistry.knowledgeMinerExists(msg.sender)) {
+    //             paranetKnowledgeMinersRegistry.registerKnowledgeMiner(msg.sender);
+    //         }
 
-            // Check if Knowledge Miner is registered on paranet
-            if (!pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
-                pr.addKnowledgeMiner(paranetId, msg.sender);
-            }
-        }
+    //         // Check if Knowledge Miner is registered on paranet
+    //         if (!pr.isKnowledgeMinerRegistered(paranetId, msg.sender)) {
+    //             pr.addKnowledgeMiner(paranetId, msg.sender);
+    //         }
+    //     }
 
-        // Mint Knowledge Collection
-        uint256 knowledgeCollectionTokenId = contentCollection.createCollectionFromContract(
-            msg.sender,
-            knowledgeCollectionArgs
-        );
+    //     // Mint Knowledge Collection
+    //     uint256 knowledgeCollectionTokenId = contentCollection.createCollectionFromContract(
+    //         msg.sender,
+    //         knowledgeCollectionArgs
+    //     );
 
-        _updateSubmittedKnowledgeCollectionMetadata(
-            paranetKCStorageContract,
-            paranetKCTokenId,
-            address(contentCollectionStorage),
-            knowledgeCollectionTokenId,
-            knowledgeCollectionArgs.tokenAmount
-        );
+    //     _updateSubmittedKnowledgeCollectionMetadata(
+    //         paranetKCStorageContract,
+    //         paranetKCTokenId,
+    //         address(contentCollectionStorage),
+    //         knowledgeCollectionTokenId,
+    //         knowledgeCollectionArgs.tokenAmount
+    //     );
 
-        emit KnowledgeCollectionSubmittedToParanet(
-            paranetKCStorageContract,
-            paranetKCTokenId,
-            address(contentCollectionStorage),
-            knowledgeCollectionTokenId
-        );
+    //     emit KnowledgeCollectionSubmittedToParanet(
+    //         paranetKCStorageContract,
+    //         paranetKCTokenId,
+    //         address(contentCollectionStorage),
+    //         knowledgeCollectionTokenId
+    //     );
 
-        return knowledgeCollectionTokenId;
-    }
+    //     return knowledgeCollectionTokenId;
+    // }
 
     // If asset has been updated there should be logic to update paranet kc states metadata with info about previouse state if posible
 
