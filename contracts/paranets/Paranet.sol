@@ -224,7 +224,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
         uint8 knowledgeCollectionsSubmissionPolicy
     ) external onlyKnowledgeAssetOwner(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId) returns (bytes32) {
         require(
-            nodesAccessPolicy < 1 && minersAccessPolicy < 1 && knowledgeCollectionsSubmissionPolicy < 2,
+            nodesAccessPolicy < 2 && minersAccessPolicy < 2 && knowledgeCollectionsSubmissionPolicy < 2,
             "Invalid policy"
         );
         ParanetsRegistry pr = paranetsRegistry;
