@@ -231,7 +231,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
 
         bytes32 paranetId = _getParanetId(paranetKCStorageContract, paranetKCTokenId, paranetKATokenId);
 
-        _checkParanetExists(paranetId);
+        require(!paranetsRegistry.paranetExists(paranetId), "Paranet does not exist");
 
         emit ParanetRegistered(
             paranetKCStorageContract,
