@@ -1473,7 +1473,7 @@ contract Paranet is INamed, IVersioned, ContractStatus, IInitializable {
             knowledgeAssetId;
 
         uint256 ownedCountInRange = knowledgeCollectionStorage.balanceOf(msg.sender, startTokenId, startTokenId + 1);
-        require(ownedCountInRange == 1, "Caller notthe owner of the KA");
+        require(ownedCountInRange == 1, "Caller not the owner of the KA");
     }
 
     function _checkKnowledgeCollectionOwner(
