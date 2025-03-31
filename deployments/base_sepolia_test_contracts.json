@@ -245,21 +245,21 @@
       "deployed": true
     },
     "ParanetIncentivesPoolFactoryHelper": {
-      "evmAddress": "0x1fF9Df4aB50a8C565E8f61DA4173457326f2185c",
+      "evmAddress": "0xeD9DC8F9a6A24686F42Aa65EA52AcE25eAD5bCA6",
       "version": "1.0.0",
-      "gitBranch": "v8-paranet-update",
-      "gitCommitHash": "c6cd370193d87cd6a83784ec9774e449591bd7b3",
-      "deploymentBlock": 22402765,
-      "deploymentTimestamp": 1740573821914,
+      "gitBranch": "test/debug-incentives-pool-deployment",
+      "gitCommitHash": "6c323e37b26e28fd7c25bc01a6e4d1711d7d4ac2",
+      "deploymentBlock": 22788782,
+      "deploymentTimestamp": 1741345857287,
       "deployed": true
     },
     "ParanetIncentivesPoolFactory": {
-      "evmAddress": "0xba4f91Ac4c9aaD669d70E9ec08543437E9A7525e",
+      "evmAddress": "0x9686B628948F0b83f4e610F2a5DeFfd4D3769e9c",
       "version": "1.0.0",
-      "gitBranch": "v8-paranet-update",
-      "gitCommitHash": "c6cd370193d87cd6a83784ec9774e449591bd7b3",
-      "deploymentBlock": 22402768,
-      "deploymentTimestamp": 1740573828690,
+      "gitBranch": "test/debug-incentives-pool-deployment",
+      "gitCommitHash": "6c323e37b26e28fd7c25bc01a6e4d1711d7d4ac2",
+      "deploymentBlock": 22788786,
+      "deploymentTimestamp": 1741345864175,
       "deployed": true
     }
   }

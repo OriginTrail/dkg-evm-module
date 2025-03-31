@@ -1389,10 +1389,17 @@ describe('@unit Paranet', () => {
           .addVoters(votersBachTooLarge),
       ).to.be.revertedWith('Batch too large');
 
-      // Transfer registrar role to new address
+      // Try to transfer registrar role as a non-hub owner or multisig owner
       await expect(
         incentivesPoolStorage
-          .connect(registrarSigner)
+          .connect(accounts[6])
+          .transferVotersRegistrarRole(accounts[7].address),
+      ).to.be.revertedWithCustomError(HubLib, 'UnauthorizedAccess');
+
+      // Transfer registrar role to new address as a hub owner
+      await expect(
+        incentivesPoolStorage
+          .connect(accounts[0])
           .transferVotersRegistrarRole(accounts[6].address),
       )
         .to.emit(incentivesPoolStorage, 'VotersRegistrarTransferred')
@@ -1406,7 +1413,7 @@ describe('@unit Paranet', () => {
       // Test zero address revert
       await expect(
         incentivesPoolStorage
-          .connect(accounts[6])
+          .connect(accounts[0])
           .transferVotersRegistrarRole(ethers.ZeroAddress),
       ).to.be.revertedWith('New registrar cannot be zero address');
     });

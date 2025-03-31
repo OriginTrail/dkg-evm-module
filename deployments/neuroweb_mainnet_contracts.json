@@ -272,23 +272,23 @@
       "deployed": true
     },
     "ParanetIncentivesPoolFactoryHelper": {
-      "evmAddress": "0x29Ab8B786D63B459a28D65fa824993f10606EE40",
-      "substrateAddress": "5EMjsczUXQRLX8drgxrMCzrTzoyA4YbTo7z9UqUiVF1cmK1B",
+      "evmAddress": "0xE43E43366Ee7b6462dcA8aFC969f1E051d8a7422",
+      "substrateAddress": "5EMjsd17ugw9pKJ4eKoFBg5Qgx8KcvZfxAZWk8mtDCUKb5d3",
       "version": "1.0.0",
-      "gitBranch": "v8-paranet-update",
-      "gitCommitHash": "c6cd370193d87cd6a83784ec9774e449591bd7b3",
-      "deploymentBlock": 8128874,
-      "deploymentTimestamp": 1740574604553,
+      "gitBranch": "test/debug-incentives-pool-deployment",
+      "gitCommitHash": "3b4b684c8029529bc19e891896077a5655a40162",
+      "deploymentBlock": 8242675,
+      "deploymentTimestamp": 1741264276151,
       "deployed": true
     },
     "ParanetIncentivesPoolFactory": {
-      "evmAddress": "0x8F0E61d9347c4358e4017db451e7AA8256c1Cc91",
-      "substrateAddress": "5EMjsczpqgCfZpC32pkr7XxkR2ef5UJGuDnFctKKbMarpTf2",
+      "evmAddress": "0xE329A50B14f04AE7914390705b7059fA5E47df26",
+      "substrateAddress": "5EMjsd17h8bJf7uo6tpdBVL1Tzcth8AaqkcngmCdErvrTDLX",
       "version": "1.0.0",
-      "gitBranch": "v8-paranet-update",
-      "gitCommitHash": "c6cd370193d87cd6a83784ec9774e449591bd7b3",
-      "deploymentBlock": 8128875,
-      "deploymentTimestamp": 1740574609458,
+      "gitBranch": "test/debug-incentives-pool-deployment",
+      "gitCommitHash": "3b4b684c8029529bc19e891896077a5655a40162",
+      "deploymentBlock": 8242676,
+      "deploymentTimestamp": 1741264280939,
       "deployed": true
     }
   }
