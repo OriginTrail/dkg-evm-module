@@ -306,10 +306,7 @@ describe('@unit Paranet', () => {
           minersAccessPolicy,
           ACCESS_POLICIES.OPEN,
         ),
-      ).to.be.revertedWithCustomError(
-        Paranet,
-        'ParanetHasAlreadyBeenRegistered',
-      );
+      ).to.be.revertedWith('Paranet does not exist');
     });
 
     it('Should revert when non-owner tries to register paranet', async () => {
@@ -321,6 +318,7 @@ describe('@unit Paranet', () => {
       const paranetKCStorageContract =
         await KnowledgeCollectionStorage.getAddress();
 
+      // Create knowledge collection owned by kcCreator
       const { collectionId } = await createProfilesAndKC(
         kcCreator,
         publishingNode,
@@ -332,18 +330,19 @@ describe('@unit Paranet', () => {
         },
       );
 
+      // Try to register paranet with non-owner
       await expect(
         Paranet.connect(nonOwner).registerParanet(
           paranetKCStorageContract,
           collectionId,
-          1,
+          1, // knowledgeAssetId
           'paranetName',
           'paranetDescription',
           ACCESS_POLICIES.OPEN,
           ACCESS_POLICIES.OPEN,
           ACCESS_POLICIES.OPEN,
         ),
-      ).to.be.revertedWith("Caller isn't the owner of the KA");
+      ).to.be.revertedWith('Caller not the owner of the KA');
     });
 
     it('Should revert when registering paranet with invalid access policy values', async () => {
@@ -678,7 +677,7 @@ describe('@unit Paranet', () => {
           newName,
           newDescription,
         ),
-      ).to.be.revertedWith("Caller isn't the owner of the KA");
+      ).to.be.revertedWith('Caller not the owner of the KA');
     });
 
     it('updateParanetMetadata should revert when paranet does not exist', async () => {
@@ -703,7 +702,7 @@ describe('@unit Paranet', () => {
           'New Name',
           'New Description',
         ),
-      ).to.be.revertedWithCustomError(ParanetLib, 'ParanetDoesntExist');
+      ).to.be.revertedWith('Paranet does not exist');
     });
 
     it('Should revert when trying to update with extremely large token IDs', async () => {
@@ -2921,7 +2920,7 @@ describe('@unit Paranet', () => {
           await KnowledgeCollectionStorage.getAddress(),
           collectionId,
         ),
-      ).to.be.revertedWith("Caller isn't the owner of the KC");
+      ).to.be.revertedWith('Caller not the owner of KC');
     });
 
     it('Should revert when registering the same knowledge collection twice', async () => {
@@ -3208,7 +3207,7 @@ describe('@unit Paranet', () => {
           paranetKATokenId,
           nonOwner.address,
         ),
-      ).to.be.revertedWith("Caller isn't the owner of the KA");
+      ).to.be.revertedWith('Caller not the owner of the KA');
     });
 
     it('Should submit KC to staging and have curator approve it', async () => {
@@ -3693,7 +3692,7 @@ describe('@unit Paranet', () => {
           collectionId,
           true, // try to approve
         ),
-      ).to.be.revertedWith('Knowledge collection is not staged');
+      ).to.be.revertedWith('Knowledge collection not staged');
 
       // 8. Verify status remains rejected
       status = await ParanetStagingRegistry.getKnowledgeCollectionStatus(
@@ -3867,7 +3866,7 @@ describe('@unit Paranet', () => {
           collectionId,
           true, // approve
         ),
-      ).to.be.revertedWith('Knowledge collection is not staged');
+      ).to.be.revertedWith('Knowledge collection not staged');
     });
   });
 
@@ -4151,7 +4150,7 @@ describe('@unit Paranet', () => {
           paranetKATokenId,
           nonExistentCurator.address,
         ),
-      ).to.be.revertedWith('Address is not a curator');
+      ).to.be.revertedWith('Address not a curator');
     });
   });
 
@@ -4863,7 +4862,7 @@ describe('@unit Paranet', () => {
           'New Description',
           [accounts[1].address],
         ),
-      ).to.be.revertedWith("Caller isn't the owner of the KA");
+      ).to.be.revertedWith('Caller not the owner of the KA');
     });
 
     it('Should revert when service does not exist', async () => {
@@ -4920,12 +4919,18 @@ describe('@unit Paranet', () => {
         Paranet.connect(kcCreator).updateParanetServiceMetadata(
           await KnowledgeCollectionStorage.getAddress(),
           serviceCollectionId,
-          2,
+          2, // different KA token ID than the one registered
           'New Name',
           'New Description',
           [accounts[1].address],
         ),
-      ).to.be.revertedWithCustomError(ParanetLib, 'ParanetServiceDoesntExist');
+      )
+        .to.be.revertedWithCustomError(ParanetLib, 'ParanetServiceDoesntExist')
+        .withArgs(
+          await KnowledgeCollectionStorage.getAddress(),
+          serviceCollectionId,
+          2,
+        );
     });
   });
 
