@@ -53,11 +53,8 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
         return proofingPeriodDurationInBlocks;
     }
 
-    function setProofingPeriodDurationInBlocks(uint8 durationInBlocks) external {
-        require(
-            msg.sender == hub.owner() || msg.sender == hub.getContractAddress("RandomSampling"),
-            "Only hub owner or RandomSampling contract can call this function"
-        );
+    function setProofingPeriodDurationInBlocks(uint8 durationInBlocks) external onlyContracts {
+        require(durationInBlocks > 0, "Duration in blocks must be greater than 0");
         proofingPeriodDurationInBlocks = durationInBlocks;
     }
 
