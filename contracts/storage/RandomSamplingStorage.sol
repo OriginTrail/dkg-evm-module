@@ -19,12 +19,18 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
     mapping(uint72 => RandomSamplingLib.Challenge) public nodesChallenges;
     // epoch => identityId => successful proofs count
     mapping(uint256 => mapping(uint72 => uint256)) public epochNodeValidProofsCount;
-    // epoch => identityId => score
-    mapping(uint256 => mapping(uint72 => uint256)) public epochNodeTotalScore;
-    // epoch => score
-    mapping(uint256 => uint256) public epochAllNodesTotalScore;
+    // identityId => epoch => proofPeriodStartBlock => score
+    mapping(uint72 => mapping(uint256 => mapping(uint256 => uint256))) public nodeEpochProofPeriodScore;
+    // epoch => proofPeriodStartBlock => score
+    mapping(uint256 => mapping(uint256 => uint256)) public allNodesEpochProofPeriodScore;
+    // // epoch => identityId => score
+    // mapping(uint256 => mapping(uint72 => uint256)) public epochNodeTotalScore;
+    // // epoch => score
+    // mapping(uint256 => uint256) public epochAllNodesTotalScore;
 
-    constructor(address hubAddress) HubDependent(hubAddress) {}
+    constructor(address hubAddress, uint8 _proofingPeriodDurationInBlocks) HubDependent(hubAddress) {
+        proofingPeriodDurationInBlocks = _proofingPeriodDurationInBlocks;
+    }
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -66,6 +72,21 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
         nodesChallenges[identityId] = challenge;
     }
 
+    function getNodeEpochProofPeriodScore(
+        uint72 identityId,
+        uint256 epoch,
+        uint256 proofPeriodStartBlock
+    ) external view returns (uint256) {
+        return nodeEpochProofPeriodScore[identityId][epoch][proofPeriodStartBlock];
+    }
+
+    function getEpochAllNodesProofPeriodScore(
+        uint256 epoch,
+        uint256 proofPeriodStartBlock
+    ) external view returns (uint256) {
+        return allNodesEpochProofPeriodScore[epoch][proofPeriodStartBlock];
+    }
+
     function incrementEpochNodeValidProofsCount(uint256 epoch, uint72 identityId) external onlyRandomSamplingContract {
         epochNodeValidProofsCount[epoch][identityId] += 1;
     }
@@ -74,22 +95,26 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
         return epochNodeValidProofsCount[epoch][identityId];
     }
 
-    function getEpochNodeTotalScore(uint256 epoch, uint72 identityId) external view returns (uint256) {
-        return epochNodeTotalScore[epoch][identityId];
-    }
+    // function getEpochNodeTotalScore(uint256 epoch, uint72 identityId) external view returns (uint256) {
+    //     return epochNodeTotalScore[epoch][identityId];
+    // }
 
-    function addToEpochNodeTotalScore(
+    function addToNodeScore(
         uint256 epoch,
+        uint256 proofPeriodStartBlock,
         uint72 identityId,
         uint256 score
     ) external onlyRandomSamplingContract {
-        epochNodeTotalScore[epoch][identityId] += score;
-        epochAllNodesTotalScore[epoch] += score;
+        nodeEpochProofPeriodScore[identityId][epoch][proofPeriodStartBlock] += score;
+        allNodesEpochProofPeriodScore[epoch][proofPeriodStartBlock] += score;
+
+        // epochNodeTotalScore[epoch][identityId] += score;
+        // epochAllNodesTotalScore[epoch] += score;
     }
 
-    function getEpochAllNodesTotalScore(uint256 epoch) external view returns (uint256) {
-        return epochAllNodesTotalScore[epoch];
-    }
+    // function getEpochAllNodesTotalScore(uint256 epoch) external view returns (uint256) {
+    //     return epochAllNodesTotalScore[epoch];
+    // }
 
     modifier onlyRandomSamplingContract() {
         require(
