@@ -22,34 +22,38 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     uint8 public avgBlockTimeInSeconds;
 
     IdentityStorage public identityStorage;
-    RandomSamplingStorage public rss;
-    KnowledgeCollectionStorage public kcs;
+    RandomSamplingStorage public randomSamplingStorage;
+    KnowledgeCollectionStorage public knowledgeCollectionStorage;
     StakingStorage public stakingStorage;
     ProfileStorage public profileStorage;
     EpochStorage public epochStorage;
     Chronos public chronos;
     AskStorage public askStorage;
 
-    event ChallengeCreated(uint256 knowledgeCollectionId, uint256 chunkId, uint256 activeProofPeriodBlock);
+    event ChallengeCreated(
+        uint256 indexed identityId,
+        uint256 indexed epoch,
+        uint256 knowledgeCollectionId,
+        uint256 chunkId,
+        uint256 indexed activeProofPeriodBlock
+    );
     event ValidProofSubmitted(uint72 indexed identityId, uint256 indexed epoch, uint256 score);
-    event AvgBlockTimeUpdated(uint256 indexed chainId, uint8 avgBlockTimeInSeconds);
+    event AvgBlockTimeUpdated(uint8 avgBlockTimeInSeconds);
     event ProofingPeriodDurationInBlocksUpdated(uint8 durationInBlocks);
 
     constructor(address hubAddress, uint8 _avgBlockTimeInSeconds) ContractStatus(hubAddress) {
         avgBlockTimeInSeconds = _avgBlockTimeInSeconds;
     }
 
-    function initialize(uint8 _proofingPeriodDurationInBlocks) external {
+    function initialize() external {
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-        rss = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
-        kcs = KnowledgeCollectionStorage(hub.getContractAddress("KnowledgeCollectionStorage"));
+        randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
+        knowledgeCollectionStorage = KnowledgeCollectionStorage(hub.getContractAddress("KnowledgeCollectionStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         epochStorage = EpochStorage(hub.getContractAddress("EpochStorage"));
         chronos = Chronos(hub.getContractAddress("Chronos"));
         askStorage = AskStorage(hub.getContractAddress("AskStorage"));
-
-        rss.setProofingPeriodDurationInBlocks(_proofingPeriodDurationInBlocks);
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -64,9 +68,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         // identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
-        RandomSamplingLib.Challenge memory nodeChallenge = rss.getNodeChallenge(identityId);
+        RandomSamplingLib.Challenge memory nodeChallenge = randomSamplingStorage.getNodeChallenge(identityId);
 
-        if (nodeChallenge.activeProofPeriodStartBlock == rss.getActiveProofPeriodStartBlock()) {
+        if (
+            nodeChallenge.activeProofPeriodStartBlock == randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock()
+        ) {
             // If node has already solved the challenge for this period, return an empty challenge
             if (nodeChallenge.solved == true) {
                 return RandomSamplingLib.Challenge(0, 0, 0, false);
@@ -82,7 +88,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         RandomSamplingLib.Challenge memory challenge = _generateChallenge(identityId, msg.sender);
 
         // Store the new challenge in the storage contract
-        rss.setNodeChallenge(identityId, challenge);
+        randomSamplingStorage.setNodeChallenge(identityId, challenge);
 
         return challenge;
     }
@@ -90,11 +96,15 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     function computeMerkleRoot(bytes32 chunk, bytes32[] memory merkleProof) public pure returns (bytes32) {
         bytes32 computedHash = keccak256(abi.encodePacked(chunk));
 
-        for (uint256 i = 0; i < merkleProof.length; i++) {
+        for (uint256 i = 0; i < merkleProof.length; ) {
             if (computedHash < merkleProof[i]) {
                 computedHash = keccak256(abi.encodePacked(computedHash, merkleProof[i]));
             } else {
                 computedHash = keccak256(abi.encodePacked(merkleProof[i], computedHash));
+            }
+
+            unchecked {
+                i++;
             }
         }
 
@@ -105,14 +115,13 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         // Get node identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
-        // update the active proof period start block if necessary
-        uint256 currentActiveBlock = rss.getActiveProofPeriodStartBlock();
-
         // Get node challenge
-        RandomSamplingLib.Challenge memory challenge = rss.getNodeChallenge(identityId);
+        RandomSamplingLib.Challenge memory challenge = randomSamplingStorage.getNodeChallenge(identityId);
+
+        uint256 activeProofPeriodStartBlock = randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
 
         // verify that the challengeId matches the current challenge
-        if (challenge.activeProofPeriodStartBlock != currentActiveBlock) {
+        if (challenge.activeProofPeriodStartBlock != activeProofPeriodStartBlock) {
             // This challenge is no longer active
             return false;
         }
@@ -121,16 +130,16 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         bytes32 computedMerkleRoot = computeMerkleRoot(chunk, merkleProof);
 
         // Get the expected merkle root for this challenge
-        bytes32 expectedMerkleRoot = kcs.getLatestMerkleRoot(challenge.knowledgeCollectionId);
+        bytes32 expectedMerkleRoot = knowledgeCollectionStorage.getLatestMerkleRoot(challenge.knowledgeCollectionId);
 
         // Verify the submitted root matches
         if (computedMerkleRoot == expectedMerkleRoot) {
             // Mark as correct submission and add points to the node
             challenge.solved = true;
-            rss.setNodeChallenge(identityId, challenge);
+            randomSamplingStorage.setNodeChallenge(identityId, challenge);
 
             uint256 epoch = chronos.getCurrentEpoch();
-            rss.incrementEpochNodeValidProofsCount(epoch, identityId);
+            randomSamplingStorage.incrementEpochNodeValidProofsCount(epoch, identityId);
 
             uint256 SCALING_FACTOR = 1e18;
 
@@ -153,7 +162,12 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
 
             // Node score
             uint256 score = nodeStakeFactor + nodePublishingFactor - nodeAskFactor;
-            rss.addToEpochNodeTotalScore(epoch, identityId, score);
+            randomSamplingStorage.addToNodeScore(epoch, activeProofPeriodStartBlock, identityId, score);
+
+            // uint256 delegatorCount = ;
+
+            // iterate through all delegators
+            for (uint8 i = 0; i < stakingStorage.getDelegatorCount(identityId); i++) {}
 
             emit ValidProofSubmitted(identityId, epoch, score);
 
@@ -180,13 +194,21 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
             )
         );
 
-        uint256 knowledgeCollectionId = uint256(pseudoRandomVariable) % kcs.getLatestKnowledgeCollectionId();
+        uint256 knowledgeCollectionId = uint256(pseudoRandomVariable) %
+            knowledgeCollectionStorage.getLatestKnowledgeCollectionId();
 
-        uint88 chunksCount = kcs.getKnowledgeCollection(knowledgeCollectionId).byteSize / rss.CHUNK_BYTE_SIZE();
+        uint88 chunksCount = knowledgeCollectionStorage.getKnowledgeCollection(knowledgeCollectionId).byteSize /
+            randomSamplingStorage.CHUNK_BYTE_SIZE();
         uint256 chunkId = uint256(pseudoRandomVariable) % chunksCount;
-        uint256 activeProofPeriodStartBlock = rss.getActiveProofPeriodStartBlock();
+        uint256 activeProofPeriodStartBlock = randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
 
-        emit ChallengeCreated(knowledgeCollectionId, chunkId, activeProofPeriodStartBlock);
+        emit ChallengeCreated(
+            identityId,
+            chronos.getCurrentEpoch(),
+            knowledgeCollectionId,
+            chunkId,
+            activeProofPeriodStartBlock
+        );
 
         return RandomSamplingLib.Challenge(knowledgeCollectionId, chunkId, activeProofPeriodStartBlock, false);
     }
@@ -195,13 +217,13 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         uint256 allNodesCount = identityStorage.lastIdentityId();
         uint256 epochLengthInSeconds = chronos.epochLength();
         uint256 maxPossibleNodeProofsInEpoch = epochLengthInSeconds /
-            (rss.getProofingPeriodDurationInBlocks() * avgBlockTimeInSeconds);
+            (randomSamplingStorage.getProofingPeriodDurationInBlocks() * avgBlockTimeInSeconds);
         return allNodesCount * maxPossibleNodeProofsInEpoch;
     }
 
     function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyHubOwner {
         avgBlockTimeInSeconds = blockTimeInSeconds;
-        emit AvgBlockTimeUpdated(block.chainid, blockTimeInSeconds);
+        emit AvgBlockTimeUpdated(blockTimeInSeconds);
     }
 
     // get rewards amount

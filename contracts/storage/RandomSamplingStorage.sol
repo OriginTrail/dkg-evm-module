@@ -14,7 +14,7 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
 
     uint8 public proofingPeriodDurationInBlocks;
 
-    uint256 public activeProofPeriodStartBlock;
+    uint256 private activeProofPeriodStartBlock;
     // identityId => Challenge - used in proof to verify the challenge is within proofing period
     mapping(uint72 => RandomSamplingLib.Challenge) public nodesChallenges;
     // epoch => identityId => successful proofs count
@@ -40,7 +40,7 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
         return _VERSION;
     }
 
-    function getActiveProofPeriodStartBlock() external returns (uint256) {
+    function updateAndGetActiveProofPeriodStartBlock() external returns (uint256) {
         if (block.number > activeProofPeriodStartBlock + proofingPeriodDurationInBlocks) {
             uint256 newActiveBlock = block.number - (block.number % proofingPeriodDurationInBlocks);
             activeProofPeriodStartBlock = newActiveBlock;
@@ -65,10 +65,7 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
         return nodesChallenges[identityId];
     }
 
-    function setNodeChallenge(
-        uint72 identityId,
-        RandomSamplingLib.Challenge memory challenge
-    ) external onlyRandomSamplingContract {
+    function setNodeChallenge(uint72 identityId, RandomSamplingLib.Challenge memory challenge) external onlyContracts {
         nodesChallenges[identityId] = challenge;
     }
 
@@ -87,7 +84,7 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
         return allNodesEpochProofPeriodScore[epoch][proofPeriodStartBlock];
     }
 
-    function incrementEpochNodeValidProofsCount(uint256 epoch, uint72 identityId) external onlyRandomSamplingContract {
+    function incrementEpochNodeValidProofsCount(uint256 epoch, uint72 identityId) external onlyContracts {
         epochNodeValidProofsCount[epoch][identityId] += 1;
     }
 
@@ -104,7 +101,7 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
         uint256 proofPeriodStartBlock,
         uint72 identityId,
         uint256 score
-    ) external onlyRandomSamplingContract {
+    ) external onlyContracts {
         nodeEpochProofPeriodScore[identityId][epoch][proofPeriodStartBlock] += score;
         allNodesEpochProofPeriodScore[epoch][proofPeriodStartBlock] += score;
 
@@ -115,12 +112,4 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
     // function getEpochAllNodesTotalScore(uint256 epoch) external view returns (uint256) {
     //     return epochAllNodesTotalScore[epoch];
     // }
-
-    modifier onlyRandomSamplingContract() {
-        require(
-            msg.sender == hub.getContractAddress("RandomSampling"),
-            "Only RandomSampling contract can call this function"
-        );
-        _;
-    }
 }
