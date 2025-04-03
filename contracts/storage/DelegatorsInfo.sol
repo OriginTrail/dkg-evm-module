@@ -13,8 +13,6 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "DelegatorsInfo";
     string private constant _VERSION = "1.0.0";
 
-    ShardingTableStorage public shardingTableStorage;
-
     // IdentityId => Delegators
     mapping(uint72 => address[]) public nodeDelegators;
     // IdentityId => Delegator => Index
@@ -25,9 +23,7 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
 
-    function initialize() public onlyHub {
-        shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
-    }
+    function initialize() public onlyHub {}
 
     function name() external pure virtual override returns (string memory) {
         return _NAME;
@@ -40,17 +36,26 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     function addDelegator(uint72 identityId, address delegator) external onlyContracts {
         nodeDelegatorIndex[identityId][delegator] = nodeDelegators[identityId].length;
         nodeDelegators[identityId].push(delegator);
+        isDelegatorMap[identityId][delegator] = true;
     }
 
     function removeDelegator(uint72 identityId, address delegator) external onlyContracts {
-        uint256 index = nodeDelegatorIndex[identityId][delegator];
-
-        if (nodeDelegators[identityId].length == index - 1) {
-            nodeDelegators[identityId].pop();
-        } else {
-            nodeDelegators[identityId][index] = nodeDelegators[identityId][nodeDelegators[identityId].length - 1];
-            nodeDelegators[identityId].pop();
+        if (!isDelegatorMap[identityId][delegator]) {
+            revert("Delegator not found");
         }
+
+        uint256 indexToRemove = nodeDelegatorIndex[identityId][delegator];
+        uint256 lastIndex = nodeDelegators[identityId].length - 1;
+
+        if (indexToRemove != lastIndex) {
+            address lastDelegator = nodeDelegators[identityId][lastIndex];
+            nodeDelegators[identityId][indexToRemove] = lastDelegator;
+            nodeDelegatorIndex[identityId][lastDelegator] = indexToRemove;
+        }
+
+        nodeDelegators[identityId].pop();
+        delete nodeDelegatorIndex[identityId][delegator];
+        isDelegatorMap[identityId][delegator] = false;
     }
 
     function getDelegators(uint72 identityId) external view returns (address[] memory) {
@@ -61,7 +66,7 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
         return nodeDelegatorIndex[identityId][delegator];
     }
 
-    function isDelegator(uint72 identityId, address delegator) external view returns (bool) {
+    function isNodeDelegator(uint72 identityId, address delegator) external view returns (bool) {
         return isDelegatorMap[identityId][delegator];
     }
 
