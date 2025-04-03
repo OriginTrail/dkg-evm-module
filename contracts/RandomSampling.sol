@@ -97,7 +97,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         return challenge;
     }
 
-    function computeMerkleRoot(bytes32 chunk, bytes32[] memory merkleProof) public pure returns (bytes32) {
+    function _computeMerkleRoot(bytes32 chunk, bytes32[] memory merkleProof) internal pure returns (bytes32) {
         bytes32 computedHash = keccak256(abi.encodePacked(chunk));
 
         for (uint256 i = 0; i < merkleProof.length; ) {
@@ -131,7 +131,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         }
 
         // Construct the merkle root from chunk and merkleProof
-        bytes32 computedMerkleRoot = computeMerkleRoot(chunk, merkleProof);
+        bytes32 computedMerkleRoot = _computeMerkleRoot(chunk, merkleProof);
 
         // Get the expected merkle root for this challenge
         bytes32 expectedMerkleRoot = knowledgeCollectionStorage.getLatestMerkleRoot(challenge.knowledgeCollectionId);
