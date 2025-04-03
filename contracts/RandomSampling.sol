@@ -149,8 +149,8 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
             uint256 score = _calculateNodeScore(identityId);
             randomSamplingStorage.addToNodeScore(epoch, activeProofPeriodStartBlock, identityId, score);
 
-            // // Calculate delegators' scores for the previous proof period and store them
-            // _calculateDelegatorsScore(identityId, epoch, activeProofPeriodStartBlock);
+            // Calculate delegators' scores for the previous proof period and store them
+            _calculateAndStoreDelegatorScores(identityId, epoch, activeProofPeriodStartBlock);
 
             emit ValidProofSubmitted(identityId, epoch, score);
 
@@ -207,11 +207,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         return nodeStakeFactor + nodePublishingFactor - nodeAskFactor;
     }
 
-    function _calculateDelegatorsScore(
+    function _calculateAndStoreDelegatorScores(
         uint72 identityId,
         uint256 epoch,
         uint256 activeProofPeriodStartBlock
-    ) private view returns (uint256) {
+    ) private {
         uint256 lastProofPeriodStartBlock = randomSamplingStorage.getHistoricalProofPeriodStartBlock(
             activeProofPeriodStartBlock,
             1
