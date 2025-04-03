@@ -13,7 +13,7 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _VERSION = "1.0.0";
 
     // IdentityId => Delegators
-    mapping(uint72 => address[]) public nodeDelegators;
+    mapping(uint72 => address[]) public nodeDelegatorAddresses;
     // IdentityId => Delegator => Index
     mapping(uint72 => mapping(address => uint256)) public nodeDelegatorIndex;
     // IdentityId => Delegator => IsDelegator
@@ -33,8 +33,8 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function addDelegator(uint72 identityId, address delegator) external onlyContracts {
-        nodeDelegatorIndex[identityId][delegator] = nodeDelegators[identityId].length;
-        nodeDelegators[identityId].push(delegator);
+        nodeDelegatorIndex[identityId][delegator] = nodeDelegatorAddresses[identityId].length;
+        nodeDelegatorAddresses[identityId].push(delegator);
         isDelegatorMap[identityId][delegator] = true;
     }
 
@@ -44,21 +44,21 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         uint256 indexToRemove = nodeDelegatorIndex[identityId][delegator];
-        uint256 lastIndex = nodeDelegators[identityId].length - 1;
+        uint256 lastIndex = nodeDelegatorAddresses[identityId].length - 1;
 
         if (indexToRemove != lastIndex) {
-            address lastDelegator = nodeDelegators[identityId][lastIndex];
-            nodeDelegators[identityId][indexToRemove] = lastDelegator;
+            address lastDelegator = nodeDelegatorAddresses[identityId][lastIndex];
+            nodeDelegatorAddresses[identityId][indexToRemove] = lastDelegator;
             nodeDelegatorIndex[identityId][lastDelegator] = indexToRemove;
         }
 
-        nodeDelegators[identityId].pop();
+        nodeDelegatorAddresses[identityId].pop();
         delete nodeDelegatorIndex[identityId][delegator];
         delete isDelegatorMap[identityId][delegator];
     }
 
     function getDelegators(uint72 identityId) external view returns (address[] memory) {
-        return nodeDelegators[identityId];
+        return nodeDelegatorAddresses[identityId];
     }
 
     function getDelegatorIndex(uint72 identityId, address delegator) external view returns (uint256) {
@@ -81,8 +81,9 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
                     }
                     continue;
                 }
-                nodeDelegatorIndex[delegatorNodes[j]][newAddresses[i]] = nodeDelegators[delegatorNodes[j]].length;
-                nodeDelegators[delegatorNodes[j]].push(newAddresses[i]);
+                nodeDelegatorIndex[delegatorNodes[j]][newAddresses[i]] = nodeDelegatorAddresses[delegatorNodes[j]]
+                    .length;
+                nodeDelegatorAddresses[delegatorNodes[j]].push(newAddresses[i]);
                 isDelegatorMap[delegatorNodes[j]][newAddresses[i]] = true;
                 unchecked {
                     j++;

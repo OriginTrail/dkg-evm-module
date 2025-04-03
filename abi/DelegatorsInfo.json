@@ -189,17 +189,17 @@
         "type": "uint72"
       },
       {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "nodeDelegatorIndex",
-    "outputs": [
-      {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "name": "nodeDelegatorAddresses",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -213,17 +213,17 @@
         "type": "uint72"
       },
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "nodeDelegators",
-    "outputs": [
-      {
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "name": "nodeDelegatorIndex",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
