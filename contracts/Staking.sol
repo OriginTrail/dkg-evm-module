@@ -335,7 +335,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         uint96 totalNodeStakeAfter = totalNodeStakeBefore + returnableStakeAmount;
-
         ss.setDelegatorStakeInfo(
             identityId,
             delegatorKey,
@@ -344,6 +343,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         );
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.increaseTotalStake(delegatorWithdrawalAmount);
+        // Check if delegator had any stake before canceling withdrawal
+        if (delegatorStakeBase == 0 && delegatorStakeIndexed == 0) {
+            delegatorsInfo.addDelegator(identityId, msg.sender);
+        }
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
 
