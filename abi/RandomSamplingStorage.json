@@ -7,9 +7,9 @@
         "type": "address"
       },
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "_proofingPeriodDurationInBlocks",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "stateMutability": "nonpayable",
@@ -302,7 +302,17 @@
           },
           {
             "internalType": "uint256",
+            "name": "epoch",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
             "name": "activeProofPeriodStartBlock",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "proofingPeriodDurationInBlocks",
             "type": "uint256"
           },
           {
@@ -353,9 +363,9 @@
     "name": "getProofingPeriodDurationInBlocks",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -469,7 +479,17 @@
       },
       {
         "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "activeProofPeriodStartBlock",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "proofingPeriodDurationInBlocks",
         "type": "uint256"
       },
       {
@@ -486,9 +506,9 @@
     "name": "proofingPeriodDurationInBlocks",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -515,7 +535,17 @@
           },
           {
             "internalType": "uint256",
+            "name": "epoch",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
             "name": "activeProofPeriodStartBlock",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "proofingPeriodDurationInBlocks",
             "type": "uint256"
           },
           {
@@ -537,9 +567,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint16",
         "name": "durationInBlocks",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "name": "setProofingPeriodDurationInBlocks",

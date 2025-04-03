@@ -12,7 +12,7 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
     string private constant _VERSION = "1.0.0";
     uint8 public constant CHUNK_BYTE_SIZE = 32;
 
-    uint8 public proofingPeriodDurationInBlocks;
+    uint16 public proofingPeriodDurationInBlocks;
 
     uint256 private activeProofPeriodStartBlock;
     // identityId => Challenge - used in proof to verify the challenge is within proofing period
@@ -26,7 +26,7 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
     // epoch => identityId => delegatorKey => score
     mapping(uint256 => mapping(uint72 => mapping(bytes32 => uint256))) public epochNodeDelegatorScore;
 
-    constructor(address hubAddress, uint8 _proofingPeriodDurationInBlocks) HubDependent(hubAddress) {
+    constructor(address hubAddress, uint16 _proofingPeriodDurationInBlocks) HubDependent(hubAddress) {
         proofingPeriodDurationInBlocks = _proofingPeriodDurationInBlocks;
     }
 
@@ -61,11 +61,11 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
         return proofPeriodStartBlock - (offset * proofingPeriodDurationInBlocks);
     }
 
-    function getProofingPeriodDurationInBlocks() external view returns (uint8) {
+    function getProofingPeriodDurationInBlocks() external view returns (uint16) {
         return proofingPeriodDurationInBlocks;
     }
 
-    function setProofingPeriodDurationInBlocks(uint8 durationInBlocks) external onlyContracts {
+    function setProofingPeriodDurationInBlocks(uint16 durationInBlocks) external onlyContracts {
         require(durationInBlocks > 0, "Duration in blocks must be greater than 0");
         proofingPeriodDurationInBlocks = durationInBlocks;
     }
