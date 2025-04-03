@@ -15,10 +15,12 @@ import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {EpochStorage} from "./storage/EpochStorage.sol";
 import {Chronos} from "./storage/Chronos.sol";
 import {AskStorage} from "./storage/AskStorage.sol";
+import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
 
 contract RandomSampling is INamed, IVersioned, ContractStatus {
     string private constant _NAME = "RandomSampling";
     string private constant _VERSION = "1.0.0";
+    uint256 SCALING_FACTOR = 1e18;
     uint8 public avgBlockTimeInSeconds;
 
     IdentityStorage public identityStorage;
@@ -29,6 +31,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     EpochStorage public epochStorage;
     Chronos public chronos;
     AskStorage public askStorage;
+    // DelegatorsInfo public delegatorsInfo;
 
     event ChallengeCreated(
         uint256 indexed identityId,
@@ -54,6 +57,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         epochStorage = EpochStorage(hub.getContractAddress("EpochStorage"));
         chronos = Chronos(hub.getContractAddress("Chronos"));
         askStorage = AskStorage(hub.getContractAddress("AskStorage"));
+        // delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -141,33 +145,12 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
             uint256 epoch = chronos.getCurrentEpoch();
             randomSamplingStorage.incrementEpochNodeValidProofsCount(epoch, identityId);
 
-            uint256 SCALING_FACTOR = 1e18;
-
-            // Node stake factor
-            uint256 nodeStake = stakingStorage.getNodeStake(identityId);
-            uint256 nodeStakeFactor = (2 * ((nodeStake * SCALING_FACTOR) / 2000000) ** 2) / SCALING_FACTOR;
-
-            // Node ask factor
-            uint256 nodeAsk = profileStorage.getAsk(identityId);
-            (uint256 askLowerBound, uint256 askUpperBound) = askStorage.getAskBounds();
-            uint256 nodeAskFactor = (nodeStake *
-                (((askUpperBound - nodeAsk) * SCALING_FACTOR) / (askUpperBound - askLowerBound)) ** 2) /
-                2 /
-                SCALING_FACTOR;
-
-            // Node publishing factor
-            uint256 nodePubFactor = epochStorage.getNodeCurrentEpochProducedKnowledgeValue(identityId);
-            uint256 nodePublishingFactor = (nodeStakeFactor *
-                (nodePubFactor * epochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue())) / SCALING_FACTOR;
-
-            // Node score
-            uint256 score = nodeStakeFactor + nodePublishingFactor - nodeAskFactor;
+            // Calculate node score at this proof period and store it
+            uint256 score = _calculateNodeScore(identityId);
             randomSamplingStorage.addToNodeScore(epoch, activeProofPeriodStartBlock, identityId, score);
 
-            // uint256 delegatorCount = ;
-
-            // iterate through all delegators
-            for (uint8 i = 0; i < stakingStorage.getDelegatorCount(identityId); i++) {}
+            // // Calculate delegators' scores for the previous proof period and store them
+            // _calculateDelegatorsScore(identityId, epoch, activeProofPeriodStartBlock);
 
             emit ValidProofSubmitted(identityId, epoch, score);
 
@@ -175,6 +158,91 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         }
 
         return false;
+    }
+
+    function getAllExpectedEpochProofsCount() internal view returns (uint256) {
+        uint256 allNodesCount = identityStorage.lastIdentityId();
+        uint256 epochLengthInSeconds = chronos.epochLength();
+        uint256 maxPossibleNodeProofsInEpoch = epochLengthInSeconds /
+            (randomSamplingStorage.getProofingPeriodDurationInBlocks() * avgBlockTimeInSeconds);
+        return allNodesCount * maxPossibleNodeProofsInEpoch;
+    }
+
+    function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyHubOwner {
+        avgBlockTimeInSeconds = blockTimeInSeconds;
+        emit AvgBlockTimeUpdated(blockTimeInSeconds);
+    }
+
+    function _calculateNodeScore(uint72 identityId) private view returns (uint256) {
+        // 1. Node stake factor calculation
+        // Formula: nodeStakeFactor = 2 * (nodeStake / 2,000,000)^2
+        uint256 nodeStake = stakingStorage.getNodeStake(identityId);
+        uint256 stakeRatio = nodeStake / 2000000;
+        uint256 nodeStakeFactor = (2 * stakeRatio * stakeRatio) / SCALING_FACTOR;
+
+        // 2. Node ask factor calculation
+        // Formula: nodeStake * ((upperAskBound - nodeAsk) / (upperAskBound - lowerAskBound))^2 / 2,000,000
+        uint256 nodeAskScaled = profileStorage.getAsk(identityId) * 1e18;
+        (uint256 askLowerBound, uint256 askUpperBound) = askStorage.getAskBounds();
+        uint256 nodeAskFactor = 0;
+        if (nodeAskScaled <= askUpperBound && nodeAskScaled >= askLowerBound) {
+            uint256 askBoundsDiff = askUpperBound - askLowerBound;
+            if (askBoundsDiff == 0) {
+                revert("Ask bounds difference is 0");
+            }
+            uint256 askDiffRatio = ((askUpperBound - nodeAskScaled) * SCALING_FACTOR) / askBoundsDiff;
+            nodeAskFactor = (stakeRatio * (askDiffRatio ** 2)) / (SCALING_FACTOR ** 2);
+        }
+
+        // 3. Node publishing factor calculation
+        // Original: nodeStakeFactor * (nodePublishingFactor / MAX(allNodesPublishingFactors))
+        uint256 nodePubFactor = epochStorage.getNodeCurrentEpochProducedKnowledgeValue(identityId);
+        uint256 maxNodePubFactor = epochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue();
+        if (maxNodePubFactor == 0) {
+            revert("Max node publishing factor is 0");
+        }
+        uint256 pubRatio = (nodePubFactor * SCALING_FACTOR) / maxNodePubFactor;
+        uint256 nodePublishingFactor = (nodeStakeFactor * pubRatio) / SCALING_FACTOR;
+
+        return nodeStakeFactor + nodePublishingFactor - nodeAskFactor;
+    }
+
+    function _calculateDelegatorsScore(
+        uint72 identityId,
+        uint256 epoch,
+        uint256 activeProofPeriodStartBlock
+    ) private view returns (uint256) {
+        uint256 lastProofPeriodStartBlock = randomSamplingStorage.getHistoricalProofPeriodStartBlock(
+            activeProofPeriodStartBlock,
+            1
+        );
+        uint256 myNodeScore = randomSamplingStorage.getNodeEpochProofPeriodScore(
+            identityId,
+            epoch,
+            lastProofPeriodStartBlock
+        );
+        uint256 allNodesScore = randomSamplingStorage.getEpochAllNodesProofPeriodScore(
+            epoch,
+            lastProofPeriodStartBlock
+        );
+        uint256 lastProofPeriodScoreRatio = (myNodeScore * SCALING_FACTOR) / allNodesScore;
+
+        // update all delegators' scores
+        address[] memory delegatorsAddresses = delegatorsInfo.getDelegators(identityId);
+        for (uint8 i = 0; i < delegatorsAddresses.length; ) {
+            bytes32 delegatorKey = keccak256(abi.encodePacked(delegatorsAddresses[i]));
+
+            uint256 delegatorStake = stakingStorage.getDelegatorTotalStake(identityId, delegatorKey);
+            uint256 nodeStake = stakingStorage.getNodeStake(identityId);
+            // Need to divide by SCALING_FACTOR^2 to get the correct score
+            uint256 delegatorScore = (lastProofPeriodScoreRatio * delegatorStake * SCALING_FACTOR) / nodeStake;
+
+            randomSamplingStorage.addToEpochNodeDelegatorScore(epoch, identityId, delegatorKey, delegatorScore);
+
+            unchecked {
+                i++;
+            }
+        }
     }
 
     function _generateChallenge(
@@ -211,19 +279,6 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         );
 
         return RandomSamplingLib.Challenge(knowledgeCollectionId, chunkId, activeProofPeriodStartBlock, false);
-    }
-
-    function getAllExpectedEpochProofsCount() internal view returns (uint256) {
-        uint256 allNodesCount = identityStorage.lastIdentityId();
-        uint256 epochLengthInSeconds = chronos.epochLength();
-        uint256 maxPossibleNodeProofsInEpoch = epochLengthInSeconds /
-            (randomSamplingStorage.getProofingPeriodDurationInBlocks() * avgBlockTimeInSeconds);
-        return allNodesCount * maxPossibleNodeProofsInEpoch;
-    }
-
-    function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyHubOwner {
-        avgBlockTimeInSeconds = blockTimeInSeconds;
-        emit AvgBlockTimeUpdated(blockTimeInSeconds);
     }
 
     // get rewards amount

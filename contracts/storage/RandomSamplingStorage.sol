@@ -23,10 +23,8 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
     mapping(uint72 => mapping(uint256 => mapping(uint256 => uint256))) public nodeEpochProofPeriodScore;
     // epoch => proofPeriodStartBlock => score
     mapping(uint256 => mapping(uint256 => uint256)) public allNodesEpochProofPeriodScore;
-    // // epoch => identityId => score
-    // mapping(uint256 => mapping(uint72 => uint256)) public epochNodeTotalScore;
-    // // epoch => score
-    // mapping(uint256 => uint256) public epochAllNodesTotalScore;
+    // epoch => identityId => delegatorKey => score
+    mapping(uint256 => mapping(uint72 => mapping(bytes32 => uint256))) public epochNodeDelegatorScore;
 
     constructor(address hubAddress, uint8 _proofingPeriodDurationInBlocks) HubDependent(hubAddress) {
         proofingPeriodDurationInBlocks = _proofingPeriodDurationInBlocks;
@@ -47,6 +45,16 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
         }
 
         return activeProofPeriodStartBlock;
+    }
+
+    function getHistoricalProofPeriodStartBlock(
+        uint256 proofPeriodStartBlock,
+        uint256 offset
+    ) external view returns (uint256) {
+        require(proofPeriodStartBlock > 0, "Proof period start block must be greater than 0");
+        require(proofPeriodStartBlock % proofingPeriodDurationInBlocks == 0, "Proof period start block is not valid");
+        require(offset > 0, "Offset must be greater than 0");
+        return proofPeriodStartBlock - (offset * proofingPeriodDurationInBlocks);
     }
 
     function getProofingPeriodDurationInBlocks() external view returns (uint8) {
@@ -89,10 +97,6 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
         return epochNodeValidProofsCount[epoch][identityId];
     }
 
-    // function getEpochNodeTotalScore(uint256 epoch, uint72 identityId) external view returns (uint256) {
-    //     return epochNodeTotalScore[epoch][identityId];
-    // }
-
     function addToNodeScore(
         uint256 epoch,
         uint256 proofPeriodStartBlock,
@@ -101,12 +105,22 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
     ) external onlyContracts {
         nodeEpochProofPeriodScore[identityId][epoch][proofPeriodStartBlock] += score;
         allNodesEpochProofPeriodScore[epoch][proofPeriodStartBlock] += score;
-
-        // epochNodeTotalScore[epoch][identityId] += score;
-        // epochAllNodesTotalScore[epoch] += score;
     }
 
-    // function getEpochAllNodesTotalScore(uint256 epoch) external view returns (uint256) {
-    //     return epochAllNodesTotalScore[epoch];
-    // }
+    function getEpochNodeDelegatorScore(
+        uint256 epoch,
+        uint72 identityId,
+        bytes32 delegatorKey
+    ) external view returns (uint256) {
+        return epochNodeDelegatorScore[epoch][identityId][delegatorKey];
+    }
+
+    function addToEpochNodeDelegatorScore(
+        uint256 epoch,
+        uint72 identityId,
+        bytes32 delegatorKey,
+        uint256 score
+    ) external onlyContracts {
+        epochNodeDelegatorScore[epoch][identityId][delegatorKey] += score;
+    }
 }
