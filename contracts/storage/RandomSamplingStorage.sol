@@ -47,8 +47,12 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
         return activeProofPeriodStartBlock;
     }
 
-    function isActiveProofPeriodStillValid() external view returns (bool) {
-        return block.number <= activeProofPeriodStartBlock + proofingPeriodDurationInBlocks;
+    function getActiveProofPeriodStatus() external view returns (RandomSamplingLib.ProofPeriodStatus memory) {
+        return
+            RandomSamplingLib.ProofPeriodStatus(
+                activeProofPeriodStartBlock,
+                block.number <= activeProofPeriodStartBlock + proofingPeriodDurationInBlocks
+            );
     }
 
     function getHistoricalProofPeriodStartBlock(
