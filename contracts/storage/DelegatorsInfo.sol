@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.20;
 
-import {ShardingTableStorage} from "./ShardingTableStorage.sol";
 import {StakingStorage} from "./StakingStorage.sol";
 import {IInitializable} from "../interfaces/IInitializable.sol";
 import {INamed} from "../interfaces/INamed.sol";
@@ -70,21 +69,21 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
         return isDelegatorMap[identityId][delegator];
     }
 
-    function migrate(address[] memory newAddress) external onlyContracts {
+    function migrate(address[] memory newAddresses) external onlyContracts {
         StakingStorage ss = StakingStorage(hub.getContractAddress("StakingStorage"));
-        for (uint256 i = 0; i < newAddress.length; ) {
-            bytes32 addressHash = keccak256(abi.encodePacked(newAddress[i]));
+        for (uint256 i = 0; i < newAddresses.length; ) {
+            bytes32 addressHash = keccak256(abi.encodePacked(newAddresses[i]));
             uint72[] memory delegatorNodes = ss.getDelegatorNodes(addressHash);
             for (uint256 j = 0; j < delegatorNodes.length; ) {
-                if (isDelegatorMap[delegatorNodes[j]][newAddress[i]]) {
+                if (isDelegatorMap[delegatorNodes[j]][newAddresses[i]]) {
                     unchecked {
                         j++;
                     }
                     continue;
                 }
-                nodeDelegatorIndex[delegatorNodes[j]][newAddress[i]] = nodeDelegators[delegatorNodes[j]].length;
-                nodeDelegators[delegatorNodes[j]].push(newAddress[i]);
-                isDelegatorMap[delegatorNodes[j]][newAddress[i]] = true;
+                nodeDelegatorIndex[delegatorNodes[j]][newAddresses[i]] = nodeDelegators[delegatorNodes[j]].length;
+                nodeDelegators[delegatorNodes[j]].push(newAddresses[i]);
+                isDelegatorMap[delegatorNodes[j]][newAddresses[i]] = true;
                 unchecked {
                     j++;
                 }
