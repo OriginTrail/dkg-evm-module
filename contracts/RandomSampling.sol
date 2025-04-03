@@ -38,7 +38,8 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         uint256 indexed epoch,
         uint256 knowledgeCollectionId,
         uint256 chunkId,
-        uint256 indexed activeProofPeriodBlock
+        uint256 indexed activeProofPeriodBlock,
+        uint256 proofingPeriodDurationInBlocks
     );
     event ValidProofSubmitted(uint72 indexed identityId, uint256 indexed epoch, uint256 score);
     event AvgBlockTimeUpdated(uint8 avgBlockTimeInSeconds);
@@ -79,7 +80,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         ) {
             // If node has already solved the challenge for this period, return an empty challenge
             if (nodeChallenge.solved == true) {
-                return RandomSamplingLib.Challenge(0, 0, 0, false);
+                return RandomSamplingLib.Challenge(0, 0, 0, 0, 0, false);
             }
 
             // If the challenge for this node exists but has not been solved yet, return the existing challenge
@@ -275,10 +276,19 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
             chronos.getCurrentEpoch(),
             knowledgeCollectionId,
             chunkId,
-            activeProofPeriodStartBlock
+            activeProofPeriodStartBlock,
+            randomSamplingStorage.getProofingPeriodDurationInBlocks()
         );
 
-        return RandomSamplingLib.Challenge(knowledgeCollectionId, chunkId, activeProofPeriodStartBlock, false);
+        return
+            RandomSamplingLib.Challenge(
+                knowledgeCollectionId,
+                chunkId,
+                chronos.getCurrentEpoch(),
+                activeProofPeriodStartBlock,
+                randomSamplingStorage.getProofingPeriodDurationInBlocks(),
+                false
+            );
     }
 
     // get rewards amount

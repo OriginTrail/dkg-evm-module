@@ -76,6 +76,12 @@
         "internalType": "uint256",
         "name": "activeProofPeriodBlock",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "proofingPeriodDurationInBlocks",
+        "type": "uint256"
       }
     ],
     "name": "ChallengeCreated",
@@ -176,7 +182,17 @@
           },
           {
             "internalType": "uint256",
+            "name": "epoch",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
             "name": "activeProofPeriodStartBlock",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "proofingPeriodDurationInBlocks",
             "type": "uint256"
           },
           {
