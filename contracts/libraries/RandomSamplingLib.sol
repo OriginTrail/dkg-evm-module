@@ -11,4 +11,9 @@ library RandomSamplingLib {
         uint256 proofingPeriodDurationInBlocks;
         bool solved;
     }
+
+    struct ProofPeriodStatus {
+        uint256 activeProofPeriodStartBlock;
+        bool isValid;
+    }
 }
