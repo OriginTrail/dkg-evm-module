@@ -55,7 +55,7 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
 
         nodeDelegators[identityId].pop();
         delete nodeDelegatorIndex[identityId][delegator];
-        isDelegatorMap[identityId][delegator] = false;
+        delete isDelegatorMap[identityId][delegator];
     }
 
     function getDelegators(uint72 identityId) external view returns (address[] memory) {
