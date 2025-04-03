@@ -61,6 +61,10 @@ contract StakingStorage is INamed, IVersioned, Guardian {
     mapping(uint72 => StakingLib.StakeWithdrawalRequest) public operatorFeeWithdrawals;
 
     mapping(bytes32 => EnumerableSetLib.Uint256Set) private delegatorNodes;
+    mapping(uint72 => EnumerableSetLib.Bytes32Set) private nodeDelegators;
+
+    // Add new mapping for direct address lookup
+    mapping(uint72 => mapping(address => bool)) public isDelegatorMap;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) Guardian(hubAddress) {}
@@ -661,14 +665,24 @@ contract StakingStorage is INamed, IVersioned, Guardian {
     // Internal Operations
     // -----------------------------------------------------------------------------------------------------------------
 
+    function isDelegator(uint72 identityId, address delegator) external view returns (bool) {
+        return isDelegatorMap[identityId][delegator];
+    }
+
     function _updateDelegatorActivity(uint72 identityId, bytes32 delegatorKey, bool wasActive, bool isActive) internal {
+        address delegator = address(uint160(uint256(delegatorKey)));
+
         if (!wasActive && isActive) {
             delegatorNodes[delegatorKey].add(identityId);
+            nodeDelegators[identityId].add(delegatorKey);
+            isDelegatorMap[identityId][delegator] = true;
             nodes[identityId].delegatorCount += 1;
 
             emit DelegatorCountUpdated(identityId, nodes[identityId].delegatorCount);
         } else if (wasActive && !isActive) {
             delegatorNodes[delegatorKey].remove(identityId);
+            nodeDelegators[identityId].remove(delegatorKey);
+            isDelegatorMap[identityId][delegator] = false;
             nodes[identityId].delegatorCount -= 1;
 
             emit DelegatorCountUpdated(identityId, nodes[identityId].delegatorCount);
