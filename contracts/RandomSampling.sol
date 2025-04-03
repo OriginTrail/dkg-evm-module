@@ -31,7 +31,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     EpochStorage public epochStorage;
     Chronos public chronos;
     AskStorage public askStorage;
-    // DelegatorsInfo public delegatorsInfo;
+    DelegatorsInfo public delegatorsInfo;
 
     event ChallengeCreated(
         uint256 indexed identityId,
@@ -57,7 +57,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         epochStorage = EpochStorage(hub.getContractAddress("EpochStorage"));
         chronos = Chronos(hub.getContractAddress("Chronos"));
         askStorage = AskStorage(hub.getContractAddress("AskStorage"));
-        // delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
+        delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
     }
 
     function name() external pure virtual override returns (string memory) {
