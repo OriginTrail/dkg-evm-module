@@ -9,6 +9,7 @@ import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
+import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IInitializable} from "./interfaces/IInitializable.sol";
 import {INamed} from "./interfaces/INamed.sol";
@@ -23,7 +24,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Staking";
-    string private constant _VERSION = "1.0.0";
+    string private constant _VERSION = "1.0.1";
 
     Ask public askContract;
     ShardingTableStorage public shardingTableStorage;
@@ -32,6 +33,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     StakingStorage public stakingStorage;
+    DelegatorsInfo public delegatorsInfo;
     IERC20 public tokenContract;
 
     // solhint-disable-next-line no-empty-blocks
@@ -55,6 +57,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
+        delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
     }
 
@@ -102,6 +105,15 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         askContract.recalculateActiveSet();
 
+        // Check if this is first time staking
+        if (
+            delegatorStakeBase == 0 &&
+            delegatorStakeIndexed == 0 &&
+            !delegatorsInfo.isNodeDelegator(identityId, msg.sender)
+        ) {
+            delegatorsInfo.addDelegator(identityId, msg.sender);
+        }
+
         token.transferFrom(msg.sender, address(ss), addedStake);
     }
 
@@ -121,27 +133,32 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         _updateStakeInfo(fromIdentityId, delegatorKey);
         _updateStakeInfo(toIdentityId, delegatorKey);
 
-        (uint96 delegatorStakeBase, uint96 delegatorStakeIndexed, ) = ss.getDelegatorStakeInfo(
+        (uint96 fromDelegatorStakeBase, uint96 fromDelegatorStakeIndexed, ) = ss.getDelegatorStakeInfo(
             fromIdentityId,
             delegatorKey
         );
 
-        if (stakeAmount > delegatorStakeBase + delegatorStakeIndexed) {
-            revert StakingLib.WithdrawalExceedsStake(delegatorStakeBase + delegatorStakeIndexed, stakeAmount);
+        (uint96 toDelegatorStakeBase, uint96 toDelegatorStakeIndexed, ) = ss.getDelegatorStakeInfo(
+            toIdentityId,
+            delegatorKey
+        );
+
+        if (stakeAmount > fromDelegatorStakeBase + fromDelegatorStakeIndexed) {
+            revert StakingLib.WithdrawalExceedsStake(fromDelegatorStakeBase + fromDelegatorStakeIndexed, stakeAmount);
         }
 
         if (ss.getNodeStake(toIdentityId) + stakeAmount > parametersStorage.maximumStake()) {
             revert StakingLib.MaximumStakeExceeded(parametersStorage.maximumStake());
         }
 
-        uint96 newDelegatorStakeBase = delegatorStakeBase;
-        uint96 newDelegatorStakeIndexed = delegatorStakeIndexed;
+        uint96 newFromDelegatorStakeBase = fromDelegatorStakeBase;
+        uint96 newFromDelegatorStakeIndexed = fromDelegatorStakeIndexed;
 
-        if (stakeAmount > delegatorStakeIndexed) {
-            newDelegatorStakeBase = delegatorStakeBase - (stakeAmount - delegatorStakeIndexed);
-            newDelegatorStakeIndexed = 0;
+        if (stakeAmount > fromDelegatorStakeIndexed) {
+            newFromDelegatorStakeBase = fromDelegatorStakeBase - (stakeAmount - fromDelegatorStakeIndexed);
+            newFromDelegatorStakeIndexed = 0;
         } else {
-            newDelegatorStakeIndexed = delegatorStakeIndexed - stakeAmount;
+            newFromDelegatorStakeIndexed = fromDelegatorStakeIndexed - stakeAmount;
         }
 
         uint96 totalFromNodeStakeBefore = ss.getNodeStake(fromIdentityId);
@@ -150,26 +167,39 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint96 totalToNodeStakeBefore = ss.getNodeStake(toIdentityId);
         uint96 totalToNodeStakeAfter = totalToNodeStakeBefore + stakeAmount;
 
-        ss.setDelegatorStakeInfo(fromIdentityId, delegatorKey, newDelegatorStakeBase, newDelegatorStakeIndexed);
+        ss.setDelegatorStakeInfo(fromIdentityId, delegatorKey, newFromDelegatorStakeBase, newFromDelegatorStakeIndexed);
         ss.setNodeStake(fromIdentityId, totalFromNodeStakeAfter);
 
         _removeNodeFromShardingTable(fromIdentityId, totalFromNodeStakeAfter);
 
         ask.recalculateActiveSet();
 
-        if (stakeAmount > delegatorStakeIndexed) {
-            ss.increaseDelegatorStakeBase(toIdentityId, delegatorKey, (delegatorStakeBase - newDelegatorStakeBase));
+        if (stakeAmount > fromDelegatorStakeIndexed) {
+            ss.increaseDelegatorStakeBase(
+                toIdentityId,
+                delegatorKey,
+                (fromDelegatorStakeBase - newFromDelegatorStakeBase)
+            );
         }
         ss.increaseDelegatorStakeRewardIndexed(
             toIdentityId,
             delegatorKey,
-            (delegatorStakeIndexed - newDelegatorStakeIndexed)
+            (fromDelegatorStakeIndexed - newFromDelegatorStakeIndexed)
         );
         ss.setNodeStake(toIdentityId, totalToNodeStakeAfter);
 
         _addNodeToShardingTable(toIdentityId, totalToNodeStakeAfter);
 
         ask.recalculateActiveSet();
+
+        // Check if all stake is being removed from fromIdentityId
+        if (newFromDelegatorStakeIndexed == 0) {
+            delegatorsInfo.removeDelegator(fromIdentityId, msg.sender);
+        }
+        // Check if this is first time delegating to toIdentityId
+        if (toDelegatorStakeBase == 0 && toDelegatorStakeIndexed == 0) {
+            delegatorsInfo.addDelegator(toIdentityId, msg.sender);
+        }
     }
 
     function requestWithdrawal(uint72 identityId, uint96 removedStake) external profileExists(identityId) {
@@ -211,6 +241,11 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         _removeNodeFromShardingTable(identityId, totalNodeStakeAfter);
 
         askContract.recalculateActiveSet();
+
+        // Check if all stake is being removed
+        if (newDelegatorStakeBase == 0 && newDelegatorStakeIndexed == 0) {
+            delegatorsInfo.removeDelegator(identityId, msg.sender);
+        }
 
         if (totalNodeStakeAfter >= parametersStorage.maximumStake()) {
             ss.addDelegatorCumulativePaidOutRewards(
@@ -300,7 +335,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         uint96 totalNodeStakeAfter = totalNodeStakeBefore + returnableStakeAmount;
-
         ss.setDelegatorStakeInfo(
             identityId,
             delegatorKey,
@@ -309,6 +343,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         );
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.increaseTotalStake(delegatorWithdrawalAmount);
+        // Check if delegator had any stake before canceling withdrawal
+        if (delegatorStakeBase == 0 && delegatorStakeIndexed == 0) {
+            delegatorsInfo.addDelegator(identityId, msg.sender);
+        }
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
 
