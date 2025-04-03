@@ -40,11 +40,15 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
 
     function updateAndGetActiveProofPeriodStartBlock() external returns (uint256) {
         if (block.number > activeProofPeriodStartBlock + proofingPeriodDurationInBlocks) {
-            uint256 newActiveBlock = block.number - (block.number % proofingPeriodDurationInBlocks);
+            uint256 newActiveBlock = block.number - (block.number % proofingPeriodDurationInBlocks) + 1;
             activeProofPeriodStartBlock = newActiveBlock;
         }
 
         return activeProofPeriodStartBlock;
+    }
+
+    function isActiveProofPeriodStillValid() external view returns (bool) {
+        return block.number <= activeProofPeriodStartBlock + proofingPeriodDurationInBlocks;
     }
 
     function getHistoricalProofPeriodStartBlock(

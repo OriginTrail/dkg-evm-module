@@ -159,30 +159,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "chunk",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32[]",
-        "name": "merkleProof",
-        "type": "bytes32[]"
-      }
-    ],
-    "name": "computeMerkleRoot",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "createChallenge",
     "outputs": [
