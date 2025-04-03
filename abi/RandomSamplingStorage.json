@@ -5,10 +5,26 @@
         "internalType": "address",
         "name": "hubAddress",
         "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_proofingPeriodDurationInBlocks",
+        "type": "uint8"
       }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "msg",
+        "type": "string"
+      }
+    ],
+    "name": "UnauthorizedAccess",
+    "type": "error"
   },
   {
     "inputs": [],
@@ -29,16 +45,31 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "activeProofPeriodStartBlock",
-    "outputs": [
+    "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "score",
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "name": "addToEpochNodeDelegatorScore",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -46,6 +77,11 @@
       {
         "internalType": "uint256",
         "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "proofPeriodStartBlock",
         "type": "uint256"
       },
       {
@@ -59,7 +95,7 @@
         "type": "uint256"
       }
     ],
-    "name": "addToEpochNodeTotalScore",
+    "name": "addToNodeScore",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -70,9 +106,14 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
-    "name": "epochAllNodesTotalScore",
+    "name": "allNodesEpochProofPeriodScore",
     "outputs": [
       {
         "internalType": "uint256",
@@ -94,9 +135,14 @@
         "internalType": "uint72",
         "name": "",
         "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
       }
     ],
-    "name": "epochNodeTotalScore",
+    "name": "epochNodeDelegatorScore",
     "outputs": [
       {
         "internalType": "uint256",
@@ -132,27 +178,19 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getActiveProofPeriodStartBlock",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
         "name": "epoch",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "proofPeriodStartBlock",
+        "type": "uint256"
       }
     ],
-    "name": "getEpochAllNodesTotalScore",
+    "name": "getEpochAllNodesProofPeriodScore",
     "outputs": [
       {
         "internalType": "uint256",
@@ -174,9 +212,14 @@
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
       }
     ],
-    "name": "getEpochNodeTotalScore",
+    "name": "getEpochNodeDelegatorScore",
     "outputs": [
       {
         "internalType": "uint256",
@@ -201,6 +244,30 @@
       }
     ],
     "name": "getEpochNodeValidProofsCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "proofPeriodStartBlock",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      }
+    ],
+    "name": "getHistoricalProofPeriodStartBlock",
     "outputs": [
       {
         "internalType": "uint256",
@@ -247,6 +314,35 @@
         "internalType": "struct RandomSamplingLib.Challenge",
         "name": "",
         "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "proofPeriodStartBlock",
+        "type": "uint256"
+      }
+    ],
+    "name": "getNodeEpochProofPeriodScore",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -307,6 +403,35 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "nodeEpochProofPeriodScore",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -406,6 +531,19 @@
     ],
     "name": "setProofingPeriodDurationInBlocks",
     "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "updateAndGetActiveProofPeriodStartBlock",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
