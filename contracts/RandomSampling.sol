@@ -52,10 +52,12 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     function initialize() external {
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
-        knowledgeCollectionStorage = KnowledgeCollectionStorage(hub.getContractAddress("KnowledgeCollectionStorage"));
+        knowledgeCollectionStorage = KnowledgeCollectionStorage(
+            hub.getAssetStorageAddress("KnowledgeCollectionStorage")
+        );
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
-        epochStorage = EpochStorage(hub.getContractAddress("EpochStorage"));
+        epochStorage = EpochStorage(hub.getContractAddress("EpochStorageV8"));
         chronos = Chronos(hub.getContractAddress("Chronos"));
         askStorage = AskStorage(hub.getContractAddress("AskStorage"));
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
