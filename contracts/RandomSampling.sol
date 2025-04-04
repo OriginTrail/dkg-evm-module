@@ -264,9 +264,26 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
                 uint8(1) // sector = 1 by default
             )
         );
+        uint256 knowledgeCollectionId = 0;
+        for (uint8 i = 0; i < 50; ) {
+            knowledgeCollectionId =
+                (uint256(pseudoRandomVariable) % knowledgeCollectionStorage.getLatestKnowledgeCollectionId()) +
+                1;
 
-        uint256 knowledgeCollectionId = (uint256(pseudoRandomVariable) %
-            knowledgeCollectionStorage.getLatestKnowledgeCollectionId()) + 1;
+            if (chronos.getCurrentEpoch() <= knowledgeCollectionStorage.getEndEpoch(knowledgeCollectionId)) {
+                break;
+            }
+
+            if (i == 49) {
+                revert("Failed to find a knowledge collection that is active in the current epoch");
+            }
+
+            pseudoRandomVariable = keccak256(abi.encodePacked(pseudoRandomVariable));
+
+            unchecked {
+                i++;
+            }
+        }
 
         uint88 chunksCount = knowledgeCollectionStorage.getKnowledgeCollection(knowledgeCollectionId).byteSize /
             randomSamplingStorage.CHUNK_BYTE_SIZE();
