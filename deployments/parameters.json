@@ -17,6 +17,12 @@
     "KnowledgeCollectionStorage": {
       "knowledgeCollectionSize": "1000000",
       "uriBase": "did:dkg"
+    },
+    "RandomSampling": {
+      "avgBlockTimeInSeconds": "1"
+    },
+    "RandomSamplingStorage": {
+      "proofingPeriodDurationInBlocks": "100"
     }
   },
   "devnet": {
