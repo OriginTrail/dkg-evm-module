@@ -265,8 +265,8 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
             )
         );
 
-        uint256 knowledgeCollectionId = uint256(pseudoRandomVariable) %
-            knowledgeCollectionStorage.getLatestKnowledgeCollectionId();
+        uint256 knowledgeCollectionId = (uint256(pseudoRandomVariable) %
+            knowledgeCollectionStorage.getLatestKnowledgeCollectionId()) + 1;
 
         uint88 chunksCount = knowledgeCollectionStorage.getKnowledgeCollection(knowledgeCollectionId).byteSize /
             randomSamplingStorage.CHUNK_BYTE_SIZE();
