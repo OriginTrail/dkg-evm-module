@@ -269,12 +269,12 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
             )
         );
         uint256 knowledgeCollectionId = 0;
+        uint256 knowledgeCollectionsCount = knowledgeCollectionStorage.getLatestKnowledgeCollectionId();
+        uint256 currentEpoch = chronos.getCurrentEpoch();
         for (uint8 i = 0; i < 50; ) {
-            knowledgeCollectionId =
-                (uint256(pseudoRandomVariable) % knowledgeCollectionStorage.getLatestKnowledgeCollectionId()) +
-                1;
+            knowledgeCollectionId = (uint256(pseudoRandomVariable) % knowledgeCollectionsCount) + 1;
 
-            if (chronos.getCurrentEpoch() <= knowledgeCollectionStorage.getEndEpoch(knowledgeCollectionId)) {
+            if (currentEpoch <= knowledgeCollectionStorage.getEndEpoch(knowledgeCollectionId)) {
                 break;
             }
 
