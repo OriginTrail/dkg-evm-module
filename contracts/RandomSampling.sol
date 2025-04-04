@@ -205,7 +205,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         uint256 pubRatio = (nodePubFactor * SCALING_FACTOR) / maxNodePubFactor;
         uint256 nodePublishingFactor = (nodeStakeFactor * pubRatio) / SCALING_FACTOR;
 
-        return nodeStakeFactor + nodePublishingFactor - nodeAskFactor;
+        return nodeStakeFactor + nodePublishingFactor + nodeAskFactor;
     }
 
     function _calculateAndStoreDelegatorScores(
