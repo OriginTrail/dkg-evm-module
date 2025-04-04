@@ -1,9 +1,10 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
-import hre from 'hardhat';
+import hre, { ethers } from 'hardhat';
 
 import { Hub, RandomSamplingStorage } from '../../typechain';
+import { RandomSampling } from '../../typechain/contracts/RandomSampling';
 
 type RandomStorageFixture = {
   accounts: SignerWithAddress[];
@@ -12,6 +13,7 @@ type RandomStorageFixture = {
 };
 
 describe('@unit RandomSamplingStorage', function () {
+  let RandomSampling: RandomSampling;
   let RandomSamplingStorage: RandomSamplingStorage;
   let Hub: Hub;
   let accounts: SignerWithAddress[];
@@ -33,6 +35,13 @@ describe('@unit RandomSamplingStorage', function () {
     ({ RandomSamplingStorage } = await loadFixture(
       deployRandomSamplingFixture,
     ));
+
+    const RandomSamplingFactory =
+      await ethers.getContractFactory('RandomSampling');
+    RandomSampling = await RandomSamplingFactory.deploy(
+      accounts[0].address,
+      64,
+    );
   });
 
   it('Should have correct name and version', async () => {
@@ -40,5 +49,20 @@ describe('@unit RandomSamplingStorage', function () {
       'RandomSamplingStorage',
     );
     expect(await RandomSamplingStorage.version()).to.equal('1.0.0');
+  });
+
+  it('Should set correct period duration', async () => {
+    await RandomSamplingStorage.setProofingPeriodDurationInBlocks(128);
+    expect(
+      await RandomSamplingStorage.proofingPeriodDurationInBlocks(),
+    ).to.equal(128);
+  });
+
+  it('Should set correct challenge for node', async () => {
+    RandomSamplingStorage = await hre.ethers.getContract<RandomSamplingStorage>(
+    // const storageChallenge = await RandomSamplingStorage.getNodeChallenge(
+    //   accounts[0].address,
+    // );
+    // expect(storageChallenge).to.equal(challenge);
   });
 });
