@@ -16,6 +16,7 @@ import {EpochStorage} from "./storage/EpochStorage.sol";
 import {Chronos} from "./storage/Chronos.sol";
 import {AskStorage} from "./storage/AskStorage.sol";
 import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
+import {ParametersStorage} from "./storage/ParametersStorage.sol";
 
 contract RandomSampling is INamed, IVersioned, ContractStatus {
     string private constant _NAME = "RandomSampling";
@@ -32,7 +33,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     Chronos public chronos;
     AskStorage public askStorage;
     DelegatorsInfo public delegatorsInfo;
-
+    ParametersStorage public parametersStorage;
     event ChallengeCreated(
         uint256 indexed identityId,
         uint256 indexed epoch,
@@ -61,6 +62,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         chronos = Chronos(hub.getContractAddress("Chronos"));
         askStorage = AskStorage(hub.getContractAddress("AskStorage"));
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
+        parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -179,7 +181,9 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     function _calculateNodeScore(uint72 identityId) private view returns (uint256) {
         // 1. Node stake factor calculation
         // Formula: nodeStakeFactor = 2 * (nodeStake / 2,000,000)^2
+        uint96 maximumStake = parametersStorage.maximumStake();
         uint256 nodeStake = stakingStorage.getNodeStake(identityId);
+        nodeStake = nodeStake > maximumStake ? maximumStake : nodeStake;
         uint256 stakeRatio = nodeStake / 2000000;
         uint256 nodeStakeFactor = (2 * stakeRatio * stakeRatio) / SCALING_FACTOR;
 
