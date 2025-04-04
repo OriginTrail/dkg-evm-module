@@ -40,8 +40,15 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
 
     function updateAndGetActiveProofPeriodStartBlock() external returns (uint256) {
         if (block.number > activeProofPeriodStartBlock + proofingPeriodDurationInBlocks) {
-            uint256 newActiveBlock = block.number - (block.number % proofingPeriodDurationInBlocks) + 1;
-            activeProofPeriodStartBlock = newActiveBlock;
+            // Calculate how many complete periods have passed since the last active period started
+            uint256 blocksSinceLastStart = block.number - activeProofPeriodStartBlock;
+            uint256 completePeriodsPassed = blocksSinceLastStart / (proofingPeriodDurationInBlocks + 1);
+
+            // The +1 ensures there's always a block gap between periods
+            activeProofPeriodStartBlock =
+                activeProofPeriodStartBlock +
+                completePeriodsPassed *
+                (proofingPeriodDurationInBlocks + 1);
         }
 
         return activeProofPeriodStartBlock;
