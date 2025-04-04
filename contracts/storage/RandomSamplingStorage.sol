@@ -69,7 +69,7 @@ contract RandomSamplingStorage is INamed, IVersioned, HubDependent {
         require(proofPeriodStartBlock > 0, "Proof period start block must be greater than 0");
         require(proofPeriodStartBlock % proofingPeriodDurationInBlocks == 0, "Proof period start block is not valid");
         require(offset > 0, "Offset must be greater than 0");
-        return proofPeriodStartBlock - (offset * proofingPeriodDurationInBlocks);
+        return proofPeriodStartBlock - (offset * (proofingPeriodDurationInBlocks + 1));
     }
 
     function getProofingPeriodDurationInBlocks() external view returns (uint16) {
