@@ -6,7 +6,19 @@ library RandomSamplingLib {
     struct Challenge {
         uint256 knowledgeCollectionId;
         uint256 chunkId; // TODO:Smaller data structure
+        uint256 epoch;
         uint256 activeProofPeriodStartBlock;
+        uint256 proofingPeriodDurationInBlocks;
         bool solved;
+    }
+
+    struct ProofPeriodStatus {
+        uint256 activeProofPeriodStartBlock;
+        bool isValid;
+    }
+
+    struct ProofingPeriodDuration {
+        uint16 durationInBlocks;
+        uint256 effectiveEpoch; // When this duration takes effect (by epoch instead of timestamp)
     }
 }
