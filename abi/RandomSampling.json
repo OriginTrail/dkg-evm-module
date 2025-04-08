@@ -10,6 +10,16 @@
         "internalType": "uint8",
         "name": "_avgBlockTimeInSeconds",
         "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_W1",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_W2",
+        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
@@ -127,6 +137,32 @@
   },
   {
     "inputs": [],
+    "name": "W1",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "W2",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "askStorage",
     "outputs": [
       {
@@ -230,6 +266,30 @@
         "internalType": "contract EpochStorage",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      }
+    ],
+    "name": "getDelegatorEpochRewardsAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -349,6 +409,19 @@
   {
     "inputs": [
       {
+        "internalType": "uint16",
+        "name": "durationInBlocks",
+        "type": "uint16"
+      }
+    ],
+    "name": "setProofingPeriodDurationInBlocks",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bool",
         "name": "_status",
         "type": "bool"
@@ -357,6 +430,45 @@
     "name": "setStatus",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_W1",
+        "type": "uint256"
+      }
+    ],
+    "name": "setW1",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_W2",
+        "type": "uint256"
+      }
+    ],
+    "name": "setW2",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "shardingTableStorage",
+    "outputs": [
+      {
+        "internalType": "contract ShardingTableStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
