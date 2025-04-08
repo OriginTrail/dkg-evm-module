@@ -7,7 +7,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await hre.helpers.deploy({
     newContractName: 'RandomSampling',
-    additionalArgs: [randomSamplingParametersConfig.avgBlockTimeInSeconds],
+    additionalArgs: [
+      randomSamplingParametersConfig.avgBlockTimeInSeconds,
+      randomSamplingParametersConfig.W1,
+      randomSamplingParametersConfig.W2,
+    ],
   });
 };
 

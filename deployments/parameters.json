@@ -19,7 +19,9 @@
       "uriBase": "did:dkg"
     },
     "RandomSampling": {
-      "avgBlockTimeInSeconds": "1"
+      "avgBlockTimeInSeconds": "1",
+      "W1": "0",
+      "W2": "2"
     },
     "RandomSamplingStorage": {
       "proofingPeriodDurationInBlocks": "100"
