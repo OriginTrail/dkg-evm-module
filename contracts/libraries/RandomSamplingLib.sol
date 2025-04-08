@@ -16,4 +16,9 @@ library RandomSamplingLib {
         uint256 activeProofPeriodStartBlock;
         bool isValid;
     }
+
+    struct ProofingPeriodDuration {
+        uint16 durationInBlocks;
+        uint256 effectiveEpoch; // When this duration takes effect (by epoch instead of timestamp)
+    }
 }

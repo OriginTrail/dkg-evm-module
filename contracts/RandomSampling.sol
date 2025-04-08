@@ -17,12 +17,15 @@ import {Chronos} from "./storage/Chronos.sol";
 import {AskStorage} from "./storage/AskStorage.sol";
 import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
+import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 
 contract RandomSampling is INamed, IVersioned, ContractStatus {
     string private constant _NAME = "RandomSampling";
     string private constant _VERSION = "1.0.0";
     uint256 SCALING_FACTOR = 1e18;
     uint8 public avgBlockTimeInSeconds;
+    uint256 public W1;
+    uint256 public W2;
 
     IdentityStorage public identityStorage;
     RandomSamplingStorage public randomSamplingStorage;
@@ -34,6 +37,8 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     AskStorage public askStorage;
     DelegatorsInfo public delegatorsInfo;
     ParametersStorage public parametersStorage;
+    ShardingTableStorage public shardingTableStorage;
+
     event ChallengeCreated(
         uint256 indexed identityId,
         uint256 indexed epoch,
@@ -46,8 +51,10 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     event AvgBlockTimeUpdated(uint8 avgBlockTimeInSeconds);
     event ProofingPeriodDurationInBlocksUpdated(uint8 durationInBlocks);
 
-    constructor(address hubAddress, uint8 _avgBlockTimeInSeconds) ContractStatus(hubAddress) {
+    constructor(address hubAddress, uint8 _avgBlockTimeInSeconds, uint256 _W1, uint256 _W2) ContractStatus(hubAddress) {
         avgBlockTimeInSeconds = _avgBlockTimeInSeconds;
+        W1 = _W1;
+        W2 = _W2;
     }
 
     function initialize() external {
@@ -63,6 +70,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         askStorage = AskStorage(hub.getContractAddress("AskStorage"));
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
+        shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -71,6 +79,28 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
 
     function version() external pure virtual override returns (string memory) {
         return _VERSION;
+    }
+
+    function setW1(uint256 _W1) external onlyHubOwner {
+        W1 = _W1;
+    }
+
+    function setW2(uint256 _W2) external onlyHubOwner {
+        W2 = _W2;
+    }
+
+    function setProofingPeriodDurationInBlocks(uint16 durationInBlocks) external onlyContracts {
+        require(durationInBlocks > 0, "Duration in blocks must be greater than 0");
+
+        // Calculate the effective epoch (current epoch + delay)
+        uint256 effectiveEpoch = chronos.getCurrentEpoch() + 1;
+
+        // Check if there's a pending change
+        if (randomSamplingStorage.isPendingProofingPeriodDuration()) {
+            randomSamplingStorage.replacePendingProofingPeriodDuration(durationInBlocks, effectiveEpoch);
+        } else {
+            randomSamplingStorage.addProofingPeriodDuration(durationInBlocks, effectiveEpoch);
+        }
     }
 
     function createChallenge() external returns (RandomSamplingLib.Challenge memory) {
@@ -163,14 +193,6 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         }
 
         return false;
-    }
-
-    function getAllExpectedEpochProofsCount() internal view returns (uint256) {
-        uint256 allNodesCount = identityStorage.lastIdentityId();
-        uint256 epochLengthInSeconds = chronos.epochLength();
-        uint256 maxPossibleNodeProofsInEpoch = epochLengthInSeconds /
-            (randomSamplingStorage.getProofingPeriodDurationInBlocks() * avgBlockTimeInSeconds);
-        return allNodesCount * maxPossibleNodeProofsInEpoch;
     }
 
     function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyHubOwner {
@@ -300,7 +322,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
             knowledgeCollectionId,
             chunkId,
             activeProofPeriodStartBlock,
-            randomSamplingStorage.getProofingPeriodDurationInBlocks()
+            randomSamplingStorage.getActiveProofingPeriodDurationInBlocks()
         );
 
         return
@@ -309,12 +331,37 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
                 chunkId,
                 chronos.getCurrentEpoch(),
                 activeProofPeriodStartBlock,
-                randomSamplingStorage.getProofingPeriodDurationInBlocks(),
+                randomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
                 false
             );
     }
 
     // get rewards amount
+    function getDelegatorEpochRewardsAmount(uint72 identityId, uint256 epoch) public view returns (uint256) {
+        require(chronos.getCurrentEpoch() > epoch, "Epoch is not over yet");
+
+        uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
+
+        uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
+        uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
+
+        uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
+
+        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+        uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
+            epoch,
+            identityId,
+            delegatorKey
+        );
+
+        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
+
+        uint256 reward = ((totalEpochTracFees / 2) *
+            (W1 * (epochNodeValidProofsCount / allExpectedEpochProofsCount) + W2 * epochNodeDelegatorScore)) /
+            SCALING_FACTOR ** 2;
+
+        return reward;
+    }
 
     // claim rewards
 }
