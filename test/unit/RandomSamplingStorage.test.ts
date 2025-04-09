@@ -3,31 +3,38 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import hre, { ethers } from 'hardhat';
 
-import { Hub, RandomSamplingStorage } from '../../typechain';
-import { RandomSampling } from '../../typechain/contracts/RandomSampling';
+import parameters from '../../deployments/parameters.json';
+import { Hub, RandomSamplingStorage, Chronos } from '../../typechain';
 
 type RandomStorageFixture = {
   accounts: SignerWithAddress[];
   RandomSamplingStorage: RandomSamplingStorage;
   Hub: Hub;
+  Chronos: Chronos;
 };
 
 describe('@unit RandomSamplingStorage', function () {
-  let RandomSampling: RandomSampling;
+  // let RandomSampling: RandomSampling;
   let RandomSamplingStorage: RandomSamplingStorage;
   let Hub: Hub;
   let accounts: SignerWithAddress[];
+  const proofingPeriodDurationInBlocks =
+    parameters.development.RandomSamplingStorage.proofingPeriodDurationInBlocks;
+  let Chronos: Chronos;
 
   async function deployRandomSamplingFixture(): Promise<RandomStorageFixture> {
     await hre.deployments.fixture(['RandomSamplingStorage']);
+
+    Hub = await hre.ethers.getContract<Hub>('Hub');
+    accounts = await ethers.getSigners();
+    Chronos = await hre.ethers.getContract<Chronos>('Chronos');
     RandomSamplingStorage = await hre.ethers.getContract<RandomSamplingStorage>(
       'RandomSamplingStorage',
     );
-    Hub = await hre.ethers.getContract<Hub>('Hub');
-    accounts = await hre.ethers.getSigners();
+
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
-    return { accounts, RandomSamplingStorage, Hub };
+    return { accounts, RandomSamplingStorage, Hub, Chronos };
   }
 
   beforeEach(async () => {
@@ -35,13 +42,6 @@ describe('@unit RandomSamplingStorage', function () {
     ({ RandomSamplingStorage } = await loadFixture(
       deployRandomSamplingFixture,
     ));
-
-    const RandomSamplingFactory =
-      await ethers.getContractFactory('RandomSampling');
-    RandomSampling = await RandomSamplingFactory.deploy(
-      accounts[0].address,
-      64,
-    );
   });
 
   it('Should have correct name and version', async () => {
@@ -51,18 +51,17 @@ describe('@unit RandomSamplingStorage', function () {
     expect(await RandomSamplingStorage.version()).to.equal('1.0.0');
   });
 
-  it('Should set correct period duration', async () => {
-    await RandomSamplingStorage.setProofingPeriodDurationInBlocks(128);
-    expect(
-      await RandomSamplingStorage.proofingPeriodDurationInBlocks(),
-    ).to.equal(128);
-  });
+  /** 1. Initialization TESTS **/
+  it('Should set the initial parameters correctly', async function () {
+    const proofingPeriod =
+      await RandomSamplingStorage.proofingPeriodDurations(0);
 
-  it('Should set correct challenge for node', async () => {
-    RandomSamplingStorage = await hre.ethers.getContract<RandomSamplingStorage>(
-    // const storageChallenge = await RandomSamplingStorage.getNodeChallenge(
-    //   accounts[0].address,
-    // );
-    // expect(storageChallenge).to.equal(challenge);
+    expect(proofingPeriod.durationInBlocks).to.equal(
+      proofingPeriodDurationInBlocks,
+    );
+
+    const currentEpochTx = await Chronos.getCurrentEpoch();
+    const currentEpoch = BigInt(currentEpochTx.toString());
+    expect(proofingPeriod.effectiveEpoch).to.equal(currentEpoch);
   });
 });
