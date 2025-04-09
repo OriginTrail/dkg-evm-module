@@ -235,52 +235,6 @@ describe('@integration RandomSampling', () => {
     });
   });
 
-  describe('Proofing Period Management', () => {
-    it('Should return the correct proofing period status', async () => {
-      const status = await RandomSamplingStorage.getActiveProofPeriodStatus();
-      expect(status.activeProofPeriodStartBlock).to.be.a('bigint');
-      expect(status.isValid).to.be.a('boolean');
-    });
-
-    it('Should update activeProofPeriodStartBlock when period expires', async () => {
-      // Get initial active proof period using a view function
-      const initialTx =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await initialTx.wait();
-
-      const initialStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const initialPeriodStartBlock = initialStatus.activeProofPeriodStartBlock;
-
-      const currentBlock = await hre.ethers.provider.getBlockNumber();
-      const diff = currentBlock - Number(initialPeriodStartBlock);
-
-      // Mine blocks to pass the proofing period
-      const proofingPeriodDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      const blocksToMine = Number(proofingPeriodDuration) + 1 - diff;
-
-      for (let i = 0; i < blocksToMine; i++) {
-        await hre.network.provider.send('evm_mine');
-      }
-
-      // Update and get the new active proof period
-      const tx =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await tx.wait();
-
-      const statusAfterUpdate =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const newPeriodStartBlock = statusAfterUpdate.activeProofPeriodStartBlock;
-
-      // The new period should be different from the initial one
-      expect(newPeriodStartBlock).to.be.greaterThan(initialPeriodStartBlock);
-      expect(newPeriodStartBlock).to.be.equal(
-        initialPeriodStartBlock + BigInt(proofingPeriodDuration) + 1n,
-      );
-    });
-  });
-
   describe('Challenge Creation and Proof Submission', () => {
     it('Should create a challenge for a node', async () => {
       const kcCreator = getDefaultKCCreator(accounts);

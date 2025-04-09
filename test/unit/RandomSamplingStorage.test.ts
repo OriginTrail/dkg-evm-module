@@ -6,7 +6,10 @@ import hre, { ethers } from 'hardhat';
 import parameters from '../../deployments/parameters.json';
 import { Hub, RandomSamplingStorage, Chronos } from '../../typechain';
 import { RandomSamplingLib } from '../../typechain/contracts/storage/RandomSamplingStorage';
-import { createMockChallenge } from '../helpers/random-sampling';
+import {
+  createMockChallenge,
+  mineProofPeriodBlocks,
+} from '../helpers/random-sampling';
 
 type RandomStorageFixture = {
   accounts: SignerWithAddress[];
@@ -80,7 +83,7 @@ describe('@unit RandomSamplingStorage', function () {
       .withArgs('Only Hub');
   });
 
-  it('Should revert contact call if not called by other Contracts', async () => {
+  it('Should revert contact call on onlyContract modifiers', async () => {
     await expect(
       RandomSamplingStorage.connect(
         accounts[1],
@@ -104,6 +107,7 @@ describe('@unit RandomSamplingStorage', function () {
       )
       .withArgs('Only Contracts in Hub');
 
+    // TODO: Test positive path - isContractAllowed contract can call this function
     await expect(
       RandomSamplingStorage.connect(accounts[1]).setNodeChallenge(
         0,
@@ -149,5 +153,100 @@ describe('@unit RandomSamplingStorage', function () {
         'UnauthorizedAccess',
       )
       .withArgs('Only Contracts in Hub');
+  });
+
+  it('Should return the correct proofing period status', async () => {
+    const status = await RandomSamplingStorage.getActiveProofPeriodStatus();
+    expect(status.activeProofPeriodStartBlock).to.be.a('bigint');
+    expect(status.isValid).to.be.a('boolean');
+  });
+
+  /*Test: updateAndGetActiveProofPeriodStartBlock returns correct updated start block
+      Validate the “+1 block gap” is applied.
+    */
+  describe('Proofing Period Management', () => {
+    it('Should return the correct proofing period status', async () => {
+      const status = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      expect(status.activeProofPeriodStartBlock).to.be.a('bigint');
+      expect(status.isValid).to.be.a('boolean');
+    });
+
+    it('Should update start block after one full proofing period (duration + 1)', async () => {
+      // Get initial active proof period using a view function
+      const initialTx =
+        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await initialTx.wait();
+
+      const initialStatus =
+        await RandomSamplingStorage.getActiveProofPeriodStatus();
+      const initialPeriodStartBlock = initialStatus.activeProofPeriodStartBlock;
+
+      const proofingPeriodDuration: bigint = await mineProofPeriodBlocks(
+        initialPeriodStartBlock,
+        RandomSamplingStorage,
+      );
+
+      expect(proofingPeriodDuration).to.be.equal(
+        BigInt(proofingPeriodDurationInBlocks) + 1n,
+      );
+
+      // Update and get the new active proof period
+      const tx =
+        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await tx.wait();
+
+      const statusAfterUpdate =
+        await RandomSamplingStorage.getActiveProofPeriodStatus();
+      const newPeriodStartBlock = statusAfterUpdate.activeProofPeriodStartBlock;
+
+      // The new period should be different from the initial one
+      expect(newPeriodStartBlock).to.be.greaterThan(initialPeriodStartBlock);
+      expect(newPeriodStartBlock).to.be.equal(
+        initialPeriodStartBlock + proofingPeriodDuration,
+      );
+    });
+
+    it('Should update correctly when multiple full periods have passed', async () => {
+      const PERIODS = 100;
+
+      const initialTx =
+        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await initialTx.wait();
+
+      let proofingPeriodDuration: bigint;
+      for (let i = 1; i < PERIODS; i++) {
+        const proofPeriodStatus =
+          await RandomSamplingStorage.getActiveProofPeriodStatus();
+        const periodStartBlock = proofPeriodStatus.activeProofPeriodStartBlock;
+
+        proofingPeriodDuration = await mineProofPeriodBlocks(
+          periodStartBlock,
+          RandomSamplingStorage,
+        );
+
+        // Check if we get correct period back
+        expect(proofingPeriodDuration).to.be.equal(
+          BigInt(proofingPeriodDurationInBlocks) + 1n,
+        );
+
+        // Update and get the new active proof period
+        const tx =
+          await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+        await tx.wait();
+
+        const statusAfterUpdate =
+          await RandomSamplingStorage.getActiveProofPeriodStatus();
+        const newPeriodStartBlock =
+          statusAfterUpdate.activeProofPeriodStartBlock;
+
+        expect(newPeriodStartBlock).to.be.greaterThan(periodStartBlock);
+        expect(newPeriodStartBlock).to.be.equal(
+          periodStartBlock + proofingPeriodDuration,
+        );
+        expect(
+          (periodStartBlock + proofingPeriodDuration) / BigInt(i),
+        ).to.be.equal(BigInt(proofingPeriodDurationInBlocks) + 1n);
+      }
+    });
   });
 });

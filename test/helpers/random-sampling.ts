@@ -1,3 +1,5 @@
+import hre from 'hardhat';
+
 import { Chronos, RandomSamplingStorage } from '../../typechain';
 import { RandomSamplingLib } from '../../typechain/contracts/storage/RandomSamplingStorage';
 
@@ -32,4 +34,25 @@ export async function createMockChallenge(
   };
 
   return challenge;
+}
+
+async function mineBlocks(blocks: number): Promise<void> {
+  for (let i = 0; i < blocks; i++) {
+    await hre.network.provider.send('evm_mine');
+  }
+}
+
+export async function mineProofPeriodBlocks(
+  periodStartBlock: bigint,
+  RandomSamplingStorage: RandomSamplingStorage,
+): Promise<bigint> {
+  const currentBlock = await hre.ethers.provider.getBlockNumber();
+  const diff = currentBlock - Number(periodStartBlock);
+  const proofingPeriodDuration =
+    await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+
+  const blocksToMine = Number(proofingPeriodDuration) + 1 - diff;
+  await mineBlocks(blocksToMine);
+
+  return proofingPeriodDuration + 1n;
 }
