@@ -11,6 +11,7 @@ import {
   mineBlocks,
   mineProofPeriodBlocks,
 } from '../helpers/random-sampling';
+import { ContractTransactionResponse } from 'ethers';
 
 type RandomStorageFixture = {
   accounts: SignerWithAddress[];
@@ -248,6 +249,10 @@ describe('@unit RandomSamplingStorage', function () {
     });
 
     it('Should enforce +1 block gap between periods', async () => {
+      let tx: ContractTransactionResponse;
+      let statusAfterUpdate: RandomSamplingLib.ProofPeriodStatusStructOutput;
+      let newPeriodStartBlock: bigint;
+
       const initialTx =
         await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
       await initialTx.wait();
@@ -256,22 +261,39 @@ describe('@unit RandomSamplingStorage', function () {
         await RandomSamplingStorage.getActiveProofPeriodStatus();
       const initialPeriodStartBlock = initialStatus.activeProofPeriodStartBlock;
 
-      // Mine one block less than the proofing period duration
-      await mineBlocks(Number(proofingPeriodDurationInBlocks) - 2);
+      const currentBlock = await ethers.provider.getBlockNumber();
 
-      // Try and update the active proof period
-      const tx =
+      const diff = Number(proofingPeriodDurationInBlocks) - currentBlock;
+
+      // Mine one block less than the proofing period duration
+      await mineBlocks(diff - 1);
+
+      tx =
+        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      tx.wait();
+
+      statusAfterUpdate =
+        await RandomSamplingStorage.getActiveProofPeriodStatus();
+      newPeriodStartBlock = statusAfterUpdate.activeProofPeriodStartBlock;
+
+      // Should still be equal to the initial one
+      expect(newPeriodStartBlock).to.be.equal(initialPeriodStartBlock);
+
+      // Move another block
+      await mineBlocks(1);
+
+      tx =
         await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
       await tx.wait();
 
-      const statusAfterUpdate =
+      statusAfterUpdate =
         await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const newPeriodStartBlock = statusAfterUpdate.activeProofPeriodStartBlock;
+      newPeriodStartBlock = statusAfterUpdate.activeProofPeriodStartBlock;
 
-      console.log('newPeriodStartBlock', newPeriodStartBlock);
-
-      // The new period should be different from the initial one
-      // expect(newPeriodStartBlock).to.be.equal(initialPeriodStartBlock);
+      expect(newPeriodStartBlock).to.be.greaterThan(initialPeriodStartBlock);
+      expect(newPeriodStartBlock).to.be.equal(
+        initialPeriodStartBlock + BigInt(proofingPeriodDurationInBlocks) + 1n,
+      );
     });
   });
 });
