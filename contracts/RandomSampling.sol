@@ -89,6 +89,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         W2 = _W2;
     }
 
+    function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyHubOwner {
+        avgBlockTimeInSeconds = blockTimeInSeconds;
+        emit AvgBlockTimeUpdated(blockTimeInSeconds);
+    }
+
     function setProofingPeriodDurationInBlocks(uint16 durationInBlocks) external onlyContracts {
         require(durationInBlocks > 0, "Duration in blocks must be greater than 0");
 
@@ -132,24 +137,6 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         return challenge;
     }
 
-    function _computeMerkleRoot(bytes32 chunk, bytes32[] memory merkleProof) internal pure returns (bytes32) {
-        bytes32 computedHash = keccak256(abi.encodePacked(chunk));
-
-        for (uint256 i = 0; i < merkleProof.length; ) {
-            if (computedHash < merkleProof[i]) {
-                computedHash = keccak256(abi.encodePacked(computedHash, merkleProof[i]));
-            } else {
-                computedHash = keccak256(abi.encodePacked(merkleProof[i], computedHash));
-            }
-
-            unchecked {
-                i++;
-            }
-        }
-
-        return computedHash;
-    }
-
     function submitProof(bytes32 chunk, bytes32[] calldata merkleProof) public returns (bool) {
         // Get node identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
@@ -166,7 +153,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         }
 
         // Construct the merkle root from chunk and merkleProof
-        bytes32 computedMerkleRoot = _computeMerkleRoot(chunk, merkleProof);
+        bytes32 computedMerkleRoot = _computeMerkleRootFromProof(chunk, challenge.chunkId, merkleProof);
 
         // Get the expected merkle root for this challenge
         bytes32 expectedMerkleRoot = knowledgeCollectionStorage.getLatestMerkleRoot(challenge.knowledgeCollectionId);
@@ -195,9 +182,114 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         return false;
     }
 
-    function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyHubOwner {
-        avgBlockTimeInSeconds = blockTimeInSeconds;
-        emit AvgBlockTimeUpdated(blockTimeInSeconds);
+    function getDelegatorEpochRewardsAmount(uint72 identityId, uint256 epoch) public view returns (uint256) {
+        require(chronos.getCurrentEpoch() > epoch, "Epoch is not over yet");
+
+        uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
+
+        uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
+        uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
+
+        uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
+
+        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+        uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
+            epoch,
+            identityId,
+            delegatorKey
+        );
+
+        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
+
+        uint256 reward = ((totalEpochTracFees / 2) *
+            (W1 * (epochNodeValidProofsCount / allExpectedEpochProofsCount) + W2 * epochNodeDelegatorScore)) /
+            SCALING_FACTOR ** 2;
+
+        return reward;
+    }
+
+    function _computeMerkleRootFromProof(
+        bytes32 chunk,
+        uint256 chunkId,
+        bytes32[] memory merkleProof
+    ) internal pure returns (bytes32) {
+        bytes32 computedHash = keccak256(abi.encodePacked(chunk, chunkId));
+
+        for (uint256 i = 0; i < merkleProof.length; ) {
+            if (computedHash < merkleProof[i]) {
+                computedHash = keccak256(abi.encodePacked(computedHash, merkleProof[i]));
+            } else {
+                computedHash = keccak256(abi.encodePacked(merkleProof[i], computedHash));
+            }
+
+            unchecked {
+                i++;
+            }
+        }
+
+        return computedHash;
+    }
+
+    function _generateChallenge(
+        uint72 identityId,
+        address originalSender
+    ) internal returns (RandomSamplingLib.Challenge memory) {
+        bytes32 myBlockHash = blockhash(block.number - (identityId % 256));
+
+        bytes32 pseudoRandomVariable = keccak256(
+            abi.encodePacked(
+                block.difficulty,
+                myBlockHash,
+                originalSender,
+                block.timestamp,
+                tx.gasprice,
+                uint8(1) // sector = 1 by default
+            )
+        );
+        uint256 knowledgeCollectionId = 0;
+        uint256 knowledgeCollectionsCount = knowledgeCollectionStorage.getLatestKnowledgeCollectionId();
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        for (uint8 i = 0; i < 50; ) {
+            knowledgeCollectionId = (uint256(pseudoRandomVariable) % knowledgeCollectionsCount) + 1;
+
+            if (currentEpoch <= knowledgeCollectionStorage.getEndEpoch(knowledgeCollectionId)) {
+                break;
+            }
+
+            if (i == 49) {
+                revert("Failed to find a knowledge collection that is active in the current epoch");
+            }
+
+            pseudoRandomVariable = keccak256(abi.encodePacked(pseudoRandomVariable));
+
+            unchecked {
+                i++;
+            }
+        }
+
+        uint88 chunksCount = knowledgeCollectionStorage.getKnowledgeCollection(knowledgeCollectionId).byteSize /
+            randomSamplingStorage.CHUNK_BYTE_SIZE();
+        uint256 chunkId = uint256(pseudoRandomVariable) % chunksCount;
+        uint256 activeProofPeriodStartBlock = randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+
+        emit ChallengeCreated(
+            identityId,
+            chronos.getCurrentEpoch(),
+            knowledgeCollectionId,
+            chunkId,
+            activeProofPeriodStartBlock,
+            randomSamplingStorage.getActiveProofingPeriodDurationInBlocks()
+        );
+
+        return
+            RandomSamplingLib.Challenge(
+                knowledgeCollectionId,
+                chunkId,
+                chronos.getCurrentEpoch(),
+                activeProofPeriodStartBlock,
+                randomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
+                false
+            );
     }
 
     function _calculateNodeScore(uint72 identityId) private view returns (uint256) {
@@ -273,95 +365,5 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
             }
         }
     }
-
-    function _generateChallenge(
-        uint72 identityId,
-        address originalSender
-    ) internal returns (RandomSamplingLib.Challenge memory) {
-        bytes32 myBlockHash = blockhash(block.number - (identityId % 256));
-
-        bytes32 pseudoRandomVariable = keccak256(
-            abi.encodePacked(
-                block.difficulty,
-                myBlockHash,
-                originalSender,
-                block.timestamp,
-                tx.gasprice,
-                uint8(1) // sector = 1 by default
-            )
-        );
-        uint256 knowledgeCollectionId = 0;
-        uint256 knowledgeCollectionsCount = knowledgeCollectionStorage.getLatestKnowledgeCollectionId();
-        uint256 currentEpoch = chronos.getCurrentEpoch();
-        for (uint8 i = 0; i < 50; ) {
-            knowledgeCollectionId = (uint256(pseudoRandomVariable) % knowledgeCollectionsCount) + 1;
-
-            if (currentEpoch <= knowledgeCollectionStorage.getEndEpoch(knowledgeCollectionId)) {
-                break;
-            }
-
-            if (i == 49) {
-                revert("Failed to find a knowledge collection that is active in the current epoch");
-            }
-
-            pseudoRandomVariable = keccak256(abi.encodePacked(pseudoRandomVariable));
-
-            unchecked {
-                i++;
-            }
-        }
-
-        uint88 chunksCount = knowledgeCollectionStorage.getKnowledgeCollection(knowledgeCollectionId).byteSize /
-            randomSamplingStorage.CHUNK_BYTE_SIZE();
-        uint256 chunkId = uint256(pseudoRandomVariable) % chunksCount;
-        uint256 activeProofPeriodStartBlock = randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-
-        emit ChallengeCreated(
-            identityId,
-            chronos.getCurrentEpoch(),
-            knowledgeCollectionId,
-            chunkId,
-            activeProofPeriodStartBlock,
-            randomSamplingStorage.getActiveProofingPeriodDurationInBlocks()
-        );
-
-        return
-            RandomSamplingLib.Challenge(
-                knowledgeCollectionId,
-                chunkId,
-                chronos.getCurrentEpoch(),
-                activeProofPeriodStartBlock,
-                randomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
-                false
-            );
-    }
-
-    // get rewards amount
-    function getDelegatorEpochRewardsAmount(uint72 identityId, uint256 epoch) public view returns (uint256) {
-        require(chronos.getCurrentEpoch() > epoch, "Epoch is not over yet");
-
-        uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
-
-        uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
-        uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
-
-        uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
-
-        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
-        uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
-            epoch,
-            identityId,
-            delegatorKey
-        );
-
-        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
-
-        uint256 reward = ((totalEpochTracFees / 2) *
-            (W1 * (epochNodeValidProofsCount / allExpectedEpochProofsCount) + W2 * epochNodeDelegatorScore)) /
-            SCALING_FACTOR ** 2;
-
-        return reward;
-    }
-
     // claim rewards
 }
