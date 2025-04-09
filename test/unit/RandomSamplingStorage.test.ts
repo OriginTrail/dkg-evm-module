@@ -5,6 +5,8 @@ import hre, { ethers } from 'hardhat';
 
 import parameters from '../../deployments/parameters.json';
 import { Hub, RandomSamplingStorage, Chronos } from '../../typechain';
+import { RandomSamplingLib } from '../../typechain/contracts/storage/RandomSamplingStorage';
+import { createMockChallenge } from '../helpers/random-sampling';
 
 type RandomStorageFixture = {
   accounts: SignerWithAddress[];
@@ -21,6 +23,7 @@ describe('@unit RandomSamplingStorage', function () {
   const proofingPeriodDurationInBlocks =
     parameters.development.RandomSamplingStorage.proofingPeriodDurationInBlocks;
   let Chronos: Chronos;
+  let MockChallenge: RandomSamplingLib.ChallengeStruct;
 
   async function deployRandomSamplingFixture(): Promise<RandomStorageFixture> {
     await hre.deployments.fixture(['RandomSamplingStorage']);
@@ -42,6 +45,8 @@ describe('@unit RandomSamplingStorage', function () {
     ({ RandomSamplingStorage } = await loadFixture(
       deployRandomSamplingFixture,
     ));
+
+    MockChallenge = await createMockChallenge(RandomSamplingStorage, Chronos);
   });
 
   it('Should have correct name and version', async () => {
@@ -51,7 +56,7 @@ describe('@unit RandomSamplingStorage', function () {
     expect(await RandomSamplingStorage.version()).to.equal('1.0.0');
   });
 
-  /** 1. Initialization TESTS **/
+  // 1. Initialization tests
   it('Should set the initial parameters correctly', async function () {
     const proofingPeriod =
       await RandomSamplingStorage.proofingPeriodDurations(0);
@@ -63,5 +68,52 @@ describe('@unit RandomSamplingStorage', function () {
     const currentEpochTx = await Chronos.getCurrentEpoch();
     const currentEpoch = BigInt(currentEpochTx.toString());
     expect(proofingPeriod.effectiveEpoch).to.equal(currentEpoch);
+  });
+
+  // 2. Access tests
+  it('Should revert contact call if not called by Hub', async () => {
+    await expect(RandomSamplingStorage.connect(accounts[1]).initialize())
+      .to.be.revertedWithCustomError(
+        RandomSamplingStorage,
+        'UnauthorizedAccess',
+      )
+      .withArgs('Only Hub');
+  });
+
+  it('Should revert contact call if not called by other Contracts', async () => {
+    await expect(
+      RandomSamplingStorage.connect(
+        accounts[1],
+      ).replacePendingProofingPeriodDuration(0, 0),
+    )
+      .to.be.revertedWithCustomError(
+        RandomSamplingStorage,
+        'UnauthorizedAccess',
+      )
+      .withArgs('Only Contracts in Hub');
+
+    await expect(
+      RandomSamplingStorage.connect(accounts[1]).addProofingPeriodDuration(
+        0,
+        0,
+      ),
+    )
+      .to.be.revertedWithCustomError(
+        RandomSamplingStorage,
+        'UnauthorizedAccess',
+      )
+      .withArgs('Only Contracts in Hub');
+
+    await expect(
+      RandomSamplingStorage.connect(accounts[1]).setNodeChallenge(
+        0,
+        RandomSamplingStorage,
+      ),
+    )
+      .to.be.revertedWithCustomError(
+        RandomSamplingStorage,
+        'UnauthorizedAccess',
+      )
+      .withArgs('Only Contracts in Hub');
   });
 });

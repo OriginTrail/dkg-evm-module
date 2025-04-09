@@ -23,21 +23,12 @@ import {
 } from '../../typechain';
 import { createProfilesAndKC } from '../helpers/kc-helpers';
 import { createProfile } from '../helpers/profile-helpers';
+import { createMockChallenge } from '../helpers/random-sampling';
 import {
   getDefaultKCCreator,
   getDefaultReceivingNodes,
   getDefaultPublishingNode,
 } from '../helpers/setup-helpers';
-
-// Type definition for a Challenge
-type Challenge = {
-  knowledgeCollectionId: bigint;
-  chunkId: bigint;
-  epoch: bigint;
-  activeProofPeriodStartBlock: bigint;
-  proofingPeriodDurationInBlocks: bigint;
-  solved: boolean;
-};
 
 // Fixture containing all contracts and accounts needed to test RandomSampling
 type RandomSamplingFixture = {
@@ -188,36 +179,6 @@ describe('@integration RandomSampling', () => {
       ParanetKnowledgeCollectionsRegistry,
     } = await loadFixture(deployRandomSamplingFixture));
   });
-
-  // Helper function to create a mock challenge
-  async function createMockChallenge(): Promise<Challenge> {
-    // Get all values as BigNumberish
-    const activeBlockTx =
-      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-    await activeBlockTx.wait();
-
-    const activeBlockStatus =
-      await RandomSamplingStorage.getActiveProofPeriodStatus();
-    const activeBlock = activeBlockStatus.activeProofPeriodStartBlock;
-
-    const currentEpochTx = await Chronos.getCurrentEpoch();
-    const currentEpoch = BigInt(currentEpochTx.toString());
-
-    const proofingPeriodDurationTx =
-      await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-    const proofingPeriodDuration = BigInt(proofingPeriodDurationTx.toString());
-
-    const challenge: Challenge = {
-      knowledgeCollectionId: 1n,
-      chunkId: 1n,
-      epoch: currentEpoch,
-      activeProofPeriodStartBlock: activeBlock,
-      proofingPeriodDurationInBlocks: proofingPeriodDuration,
-      solved: true,
-    };
-
-    return challenge;
-  }
 
   describe('Contract Initialization', () => {
     it('Should return the correct name and version of the RandomSampling contract', async () => {
@@ -388,7 +349,10 @@ describe('@integration RandomSampling', () => {
       const { identityId } = await createProfile(Profile, publishingNode);
 
       // Create a mock challenge that's marked as solved
-      const mockChallenge = await createMockChallenge();
+      const mockChallenge = await createMockChallenge(
+        RandomSamplingStorage,
+        Chronos,
+      );
 
       // Store the mock challenge in the storage contract
       await RandomSamplingStorage.setNodeChallenge(identityId, mockChallenge);
