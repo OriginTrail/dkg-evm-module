@@ -137,7 +137,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         return challenge;
     }
 
-    function submitProof(bytes32 chunk, bytes32[] calldata merkleProof) public returns (bool) {
+    function submitProof(string memory chunk, bytes32[] calldata merkleProof) public returns (bool) {
         // Get node identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -209,7 +209,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     }
 
     function _computeMerkleRootFromProof(
-        bytes32 chunk,
+        string memory chunk,
         uint256 chunkId,
         bytes32[] memory merkleProof
     ) internal pure returns (bytes32) {
