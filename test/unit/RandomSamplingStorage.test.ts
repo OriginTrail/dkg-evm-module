@@ -107,7 +107,41 @@ describe('@unit RandomSamplingStorage', function () {
     await expect(
       RandomSamplingStorage.connect(accounts[1]).setNodeChallenge(
         0,
+        MockChallenge,
+      ),
+    )
+      .to.be.revertedWithCustomError(
         RandomSamplingStorage,
+        'UnauthorizedAccess',
+      )
+      .withArgs('Only Contracts in Hub');
+
+    await expect(
+      RandomSamplingStorage.connect(
+        accounts[1],
+      ).incrementEpochNodeValidProofsCount(0, 0),
+    )
+      .to.be.revertedWithCustomError(
+        RandomSamplingStorage,
+        'UnauthorizedAccess',
+      )
+      .withArgs('Only Contracts in Hub');
+
+    await expect(
+      RandomSamplingStorage.connect(accounts[1]).addToNodeScore(0, 0, 0, 0),
+    )
+      .to.be.revertedWithCustomError(
+        RandomSamplingStorage,
+        'UnauthorizedAccess',
+      )
+      .withArgs('Only Contracts in Hub');
+
+    await expect(
+      RandomSamplingStorage.connect(accounts[1]).addToEpochNodeDelegatorScore(
+        0,
+        0,
+        ethers.encodeBytes32String('0'),
+        0,
       ),
     )
       .to.be.revertedWithCustomError(
