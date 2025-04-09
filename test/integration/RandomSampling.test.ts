@@ -204,7 +204,7 @@ describe('@integration RandomSampling', () => {
     const currentEpoch = BigInt(currentEpochTx.toString());
 
     const proofingPeriodDurationTx =
-      await RandomSamplingStorage.getProofingPeriodDurationInBlocks();
+      await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
     const proofingPeriodDuration = BigInt(proofingPeriodDurationTx.toString());
 
     const challenge: Challenge = {
@@ -230,6 +230,16 @@ describe('@integration RandomSampling', () => {
     it('Should have the correct avgBlockTimeInSeconds after initialization', async () => {
       const avgBlockTime = await RandomSampling.avgBlockTimeInSeconds();
       expect(avgBlockTime).to.equal(avgBlockTimeInSeconds);
+    });
+
+    it('Should have the correct W1 after initialization', async () => {
+      const W1 = await RandomSampling.W1();
+      expect(W1).to.equal(0);
+    });
+
+    it('Should have the correct W2 after initialization', async () => {
+      const W2 = await RandomSampling.W2();
+      expect(W2).to.equal(2);
     });
 
     it('Should successfully initialize with all dependent contracts', async () => {
@@ -286,7 +296,7 @@ describe('@integration RandomSampling', () => {
 
       // Mine blocks to pass the proofing period
       const proofingPeriodDuration =
-        await RandomSamplingStorage.getProofingPeriodDurationInBlocks();
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
       const blocksToMine = Number(proofingPeriodDuration) + 1 - diff;
 
       for (let i = 0; i < blocksToMine; i++) {
@@ -349,7 +359,7 @@ describe('@integration RandomSampling', () => {
       );
 
       const proofPeriodDuration =
-        await RandomSamplingStorage.getProofingPeriodDurationInBlocks();
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
 
       // Verify challenge properties
       expect(challenge.knowledgeCollectionId).to.be.a('bigint');
@@ -397,8 +407,6 @@ describe('@integration RandomSampling', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(challenge.solved).to.be.true;
     });
-
-    // TODO: Should submit a valid proof successfully
   });
 
   describe('Score Calculation', () => {
