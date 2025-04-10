@@ -89,6 +89,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         W2 = _W2;
     }
 
+    function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyHubOwner {
+        avgBlockTimeInSeconds = blockTimeInSeconds;
+        emit AvgBlockTimeUpdated(blockTimeInSeconds);
+    }
+
     function setProofingPeriodDurationInBlocks(uint16 durationInBlocks) external onlyContracts {
         require(durationInBlocks > 0, "Duration in blocks must be greater than 0");
 
@@ -114,7 +119,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         ) {
             // If node has already solved the challenge for this period, return an empty challenge
             if (nodeChallenge.solved == true) {
-                return RandomSamplingLib.Challenge(0, 0, 0, 0, 0, false);
+                return RandomSamplingLib.Challenge(0, 0, address(0), 0, 0, 0, false);
             }
 
             // If the challenge for this node exists but has not been solved yet, return the existing challenge
@@ -132,25 +137,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         return challenge;
     }
 
-    function _computeMerkleRoot(bytes32 chunk, bytes32[] memory merkleProof) internal pure returns (bytes32) {
-        bytes32 computedHash = keccak256(abi.encodePacked(chunk));
-
-        for (uint256 i = 0; i < merkleProof.length; ) {
-            if (computedHash < merkleProof[i]) {
-                computedHash = keccak256(abi.encodePacked(computedHash, merkleProof[i]));
-            } else {
-                computedHash = keccak256(abi.encodePacked(merkleProof[i], computedHash));
-            }
-
-            unchecked {
-                i++;
-            }
-        }
-
-        return computedHash;
-    }
-
-    function submitProof(bytes32 chunk, bytes32[] calldata merkleProof) public returns (bool) {
+    function submitProof(string memory chunk, bytes32[] calldata merkleProof) public returns (bool) {
         // Get node identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -166,7 +153,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         }
 
         // Construct the merkle root from chunk and merkleProof
-        bytes32 computedMerkleRoot = _computeMerkleRoot(chunk, merkleProof);
+        bytes32 computedMerkleRoot = _computeMerkleRootFromProof(chunk, challenge.chunkId, merkleProof);
 
         // Get the expected merkle root for this challenge
         bytes32 expectedMerkleRoot = knowledgeCollectionStorage.getLatestMerkleRoot(challenge.knowledgeCollectionId);
@@ -195,83 +182,52 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         return false;
     }
 
-    function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyHubOwner {
-        avgBlockTimeInSeconds = blockTimeInSeconds;
-        emit AvgBlockTimeUpdated(blockTimeInSeconds);
-    }
+    function getDelegatorEpochRewardsAmount(uint72 identityId, uint256 epoch) public view returns (uint256) {
+        require(chronos.getCurrentEpoch() > epoch, "Epoch is not over yet");
 
-    function _calculateNodeScore(uint72 identityId) private view returns (uint256) {
-        // 1. Node stake factor calculation
-        // Formula: nodeStakeFactor = 2 * (nodeStake / 2,000,000)^2
-        uint96 maximumStake = parametersStorage.maximumStake();
-        uint256 nodeStake = stakingStorage.getNodeStake(identityId);
-        nodeStake = nodeStake > maximumStake ? maximumStake : nodeStake;
-        uint256 stakeRatio = nodeStake / 2000000;
-        uint256 nodeStakeFactor = (2 * stakeRatio * stakeRatio) / SCALING_FACTOR;
+        uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
 
-        // 2. Node ask factor calculation
-        // Formula: nodeStake * ((upperAskBound - nodeAsk) / (upperAskBound - lowerAskBound))^2 / 2,000,000
-        uint256 nodeAskScaled = profileStorage.getAsk(identityId) * 1e18;
-        (uint256 askLowerBound, uint256 askUpperBound) = askStorage.getAskBounds();
-        uint256 nodeAskFactor = 0;
-        if (nodeAskScaled <= askUpperBound && nodeAskScaled >= askLowerBound) {
-            uint256 askBoundsDiff = askUpperBound - askLowerBound;
-            if (askBoundsDiff == 0) {
-                revert("Ask bounds difference is 0");
-            }
-            uint256 askDiffRatio = ((askUpperBound - nodeAskScaled) * SCALING_FACTOR) / askBoundsDiff;
-            nodeAskFactor = (stakeRatio * (askDiffRatio ** 2)) / (SCALING_FACTOR ** 2);
-        }
+        uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
+        uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
 
-        // 3. Node publishing factor calculation
-        // Original: nodeStakeFactor * (nodePublishingFactor / MAX(allNodesPublishingFactors))
-        uint256 nodePubFactor = epochStorage.getNodeCurrentEpochProducedKnowledgeValue(identityId);
-        uint256 maxNodePubFactor = epochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue();
-        if (maxNodePubFactor == 0) {
-            revert("Max node publishing factor is 0");
-        }
-        uint256 pubRatio = (nodePubFactor * SCALING_FACTOR) / maxNodePubFactor;
-        uint256 nodePublishingFactor = (nodeStakeFactor * pubRatio) / SCALING_FACTOR;
+        uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
 
-        return nodeStakeFactor + nodePublishingFactor + nodeAskFactor;
-    }
-
-    function _calculateAndStoreDelegatorScores(
-        uint72 identityId,
-        uint256 epoch,
-        uint256 activeProofPeriodStartBlock
-    ) private {
-        uint256 lastProofPeriodStartBlock = randomSamplingStorage.getHistoricalProofPeriodStartBlock(
-            activeProofPeriodStartBlock,
-            1
-        );
-        uint256 myNodeScore = randomSamplingStorage.getNodeEpochProofPeriodScore(
+        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+        uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
+            epoch,
             identityId,
-            epoch,
-            lastProofPeriodStartBlock
+            delegatorKey
         );
-        uint256 allNodesScore = randomSamplingStorage.getEpochAllNodesProofPeriodScore(
-            epoch,
-            lastProofPeriodStartBlock
-        );
-        uint256 lastProofPeriodScoreRatio = (myNodeScore * SCALING_FACTOR) / allNodesScore;
 
-        // update all delegators' scores
-        address[] memory delegatorsAddresses = delegatorsInfo.getDelegators(identityId);
-        for (uint8 i = 0; i < delegatorsAddresses.length; ) {
-            bytes32 delegatorKey = keccak256(abi.encodePacked(delegatorsAddresses[i]));
+        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
 
-            uint256 delegatorStake = stakingStorage.getDelegatorTotalStake(identityId, delegatorKey);
-            uint256 nodeStake = stakingStorage.getNodeStake(identityId);
-            // Need to divide by SCALING_FACTOR^2 to get the correct score
-            uint256 delegatorScore = (lastProofPeriodScoreRatio * delegatorStake * SCALING_FACTOR) / nodeStake;
+        uint256 reward = ((totalEpochTracFees / 2) *
+            (W1 * (epochNodeValidProofsCount / allExpectedEpochProofsCount) + W2 * epochNodeDelegatorScore)) /
+            SCALING_FACTOR ** 2;
 
-            randomSamplingStorage.addToEpochNodeDelegatorScore(epoch, identityId, delegatorKey, delegatorScore);
+        return reward;
+    }
+
+    function _computeMerkleRootFromProof(
+        string memory chunk,
+        uint256 chunkId,
+        bytes32[] memory merkleProof
+    ) internal pure returns (bytes32) {
+        bytes32 computedHash = keccak256(abi.encodePacked(chunk, chunkId));
+
+        for (uint256 i = 0; i < merkleProof.length; ) {
+            if (computedHash < merkleProof[i]) {
+                computedHash = keccak256(abi.encodePacked(computedHash, merkleProof[i]));
+            } else {
+                computedHash = keccak256(abi.encodePacked(merkleProof[i], computedHash));
+            }
 
             unchecked {
                 i++;
             }
         }
+
+        return computedHash;
     }
 
     function _generateChallenge(
@@ -329,6 +285,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
             RandomSamplingLib.Challenge(
                 knowledgeCollectionId,
                 chunkId,
+                address(knowledgeCollectionStorage),
                 chronos.getCurrentEpoch(),
                 activeProofPeriodStartBlock,
                 randomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
@@ -336,32 +293,79 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
             );
     }
 
-    // get rewards amount
-    function getDelegatorEpochRewardsAmount(uint72 identityId, uint256 epoch) public view returns (uint256) {
-        require(chronos.getCurrentEpoch() > epoch, "Epoch is not over yet");
+    function _calculateNodeScore(uint72 identityId) private view returns (uint256) {
+        // 1. Node stake factor calculation
+        // Formula: nodeStakeFactor = 2 * (nodeStake / 2,000,000)^2
+        uint96 maximumStake = parametersStorage.maximumStake();
+        uint256 nodeStake = stakingStorage.getNodeStake(identityId);
+        nodeStake = nodeStake > maximumStake ? maximumStake : nodeStake;
+        uint256 stakeRatio = nodeStake / 2000000;
+        uint256 nodeStakeFactor = (2 * stakeRatio * stakeRatio) / SCALING_FACTOR;
 
-        uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
+        // 2. Node ask factor calculation
+        // Formula: nodeStake * ((upperAskBound - nodeAsk) / (upperAskBound - lowerAskBound))^2 / 2,000,000
+        uint256 nodeAskScaled = profileStorage.getAsk(identityId) * 1e18;
+        (uint256 askLowerBound, uint256 askUpperBound) = askStorage.getAskBounds();
+        uint256 nodeAskFactor = 0;
+        if (nodeAskScaled <= askUpperBound && nodeAskScaled >= askLowerBound) {
+            uint256 askBoundsDiff = askUpperBound - askLowerBound;
+            if (askBoundsDiff == 0) {
+                revert("Ask bounds difference is 0");
+            }
+            uint256 askDiffRatio = ((askUpperBound - nodeAskScaled) * SCALING_FACTOR) / askBoundsDiff;
+            nodeAskFactor = (stakeRatio * (askDiffRatio ** 2)) / (SCALING_FACTOR ** 2);
+        }
 
-        uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
-        uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
+        // 3. Node publishing factor calculation
+        // Original: nodeStakeFactor * (nodePublishingFactor / MAX(allNodesPublishingFactors))
+        uint256 nodePubFactor = epochStorage.getNodeCurrentEpochProducedKnowledgeValue(identityId);
+        uint256 maxNodePubFactor = epochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue();
+        if (maxNodePubFactor == 0) {
+            revert("Max node publishing factor is 0");
+        }
+        uint256 pubRatio = (nodePubFactor * SCALING_FACTOR) / maxNodePubFactor;
+        uint256 nodePublishingFactor = (nodeStakeFactor * pubRatio) / SCALING_FACTOR;
 
-        uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
-
-        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
-        uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
-            epoch,
-            identityId,
-            delegatorKey
-        );
-
-        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
-
-        uint256 reward = ((totalEpochTracFees / 2) *
-            (W1 * (epochNodeValidProofsCount / allExpectedEpochProofsCount) + W2 * epochNodeDelegatorScore)) /
-            SCALING_FACTOR ** 2;
-
-        return reward;
+        return nodeStakeFactor + nodePublishingFactor + nodeAskFactor;
     }
 
+    function _calculateAndStoreDelegatorScores(
+        uint72 identityId,
+        uint256 epoch,
+        uint256 activeProofPeriodStartBlock
+    ) private {
+        uint256 lastProofPeriodStartBlock = randomSamplingStorage.getHistoricalProofPeriodStartBlock(
+            activeProofPeriodStartBlock,
+            1
+        );
+        uint256 nodeScore = randomSamplingStorage.getNodeEpochProofPeriodScore(
+            identityId,
+            epoch,
+            lastProofPeriodStartBlock
+        );
+        uint256 nodeStake = stakingStorage.getNodeStake(identityId);
+
+        if (nodeScore > 0 && nodeStake > 0) {
+            uint256 allNodesScore = randomSamplingStorage.getEpochAllNodesProofPeriodScore(
+                epoch,
+                lastProofPeriodStartBlock
+            );
+            uint256 lastProofPeriodScoreRatio = (nodeScore * SCALING_FACTOR) / allNodesScore;
+
+            // update all delegators' scores
+            address[] memory delegatorsAddresses = delegatorsInfo.getDelegators(identityId);
+            for (uint8 i = 0; i < delegatorsAddresses.length; ) {
+                bytes32 delegatorKey = keccak256(abi.encodePacked(delegatorsAddresses[i]));
+                uint256 delegatorStake = stakingStorage.getDelegatorTotalStake(identityId, delegatorKey);
+                // Need to divide by SCALING_FACTOR^2 to get the correct score
+                uint256 delegatorScore = (lastProofPeriodScoreRatio * delegatorStake * SCALING_FACTOR) / nodeStake;
+                randomSamplingStorage.addToEpochNodeDelegatorScore(epoch, identityId, delegatorKey, delegatorScore);
+
+                unchecked {
+                    i++;
+                }
+            }
+        }
+    }
     // claim rewards
 }

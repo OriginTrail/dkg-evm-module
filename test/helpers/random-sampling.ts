@@ -1,11 +1,16 @@
 import hre from 'hardhat';
 
-import { Chronos, RandomSamplingStorage } from '../../typechain';
+import {
+  Chronos,
+  RandomSamplingStorage,
+  KnowledgeCollectionStorage,
+} from '../../typechain';
 import { RandomSamplingLib } from '../../typechain/contracts/storage/RandomSamplingStorage';
 
 // Helper function to create a mock challenge
 export async function createMockChallenge(
   randomSamplingStorage: RandomSamplingStorage,
+  KnowledgeCollectionStorage: KnowledgeCollectionStorage,
   chronos: Chronos,
 ): Promise<RandomSamplingLib.ChallengeStruct> {
   // Get all values as BigNumberish
@@ -26,6 +31,8 @@ export async function createMockChallenge(
 
   const challenge: RandomSamplingLib.ChallengeStruct = {
     knowledgeCollectionId: 1n,
+    knowledgeCollectionStorageContract:
+      await KnowledgeCollectionStorage.getAddress(),
     chunkId: 1n,
     epoch: currentEpoch,
     activeProofPeriodStartBlock: activeBlock,
@@ -52,8 +59,8 @@ export async function mineProofPeriodBlocks(
   const proofingPeriodDuration =
     await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
 
-  const blocksToMine = Number(proofingPeriodDuration) + 1 - diff;
+  const blocksToMine = Number(proofingPeriodDuration) - diff;
   await mineBlocks(blocksToMine);
 
-  return proofingPeriodDuration + 1n;
+  return proofingPeriodDuration;
 }

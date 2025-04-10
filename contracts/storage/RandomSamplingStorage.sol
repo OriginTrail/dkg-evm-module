@@ -65,16 +65,15 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, HubDepende
     function updateAndGetActiveProofPeriodStartBlock() external returns (uint256) {
         uint256 activeProofingPeriodDurationInBlocks = getActiveProofingPeriodDurationInBlocks();
 
-        if (block.number > activeProofPeriodStartBlock + activeProofingPeriodDurationInBlocks) {
+        if (block.number > activeProofPeriodStartBlock + activeProofingPeriodDurationInBlocks - 1) {
             // Calculate how many complete periods have passed since the last active period started
             uint256 blocksSinceLastStart = block.number - activeProofPeriodStartBlock;
-            uint256 completePeriodsPassed = blocksSinceLastStart / (activeProofingPeriodDurationInBlocks + 1);
+            uint256 completePeriodsPassed = blocksSinceLastStart / activeProofingPeriodDurationInBlocks;
 
-            // The +1 ensures there's always a block gap between periods
             activeProofPeriodStartBlock =
                 activeProofPeriodStartBlock +
                 completePeriodsPassed *
-                (activeProofingPeriodDurationInBlocks + 1);
+                activeProofingPeriodDurationInBlocks;
         }
 
         return activeProofPeriodStartBlock;
@@ -84,7 +83,7 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, HubDepende
         return
             RandomSamplingLib.ProofPeriodStatus(
                 activeProofPeriodStartBlock,
-                block.number <= activeProofPeriodStartBlock + getActiveProofingPeriodDurationInBlocks()
+                block.number < activeProofPeriodStartBlock + getActiveProofingPeriodDurationInBlocks()
             );
     }
 
@@ -94,11 +93,11 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, HubDepende
     ) external view returns (uint256) {
         require(proofPeriodStartBlock > 0, "Proof period start block must be greater than 0");
         require(
-            proofPeriodStartBlock % (getActiveProofingPeriodDurationInBlocks() + 1) == 0,
+            proofPeriodStartBlock % getActiveProofingPeriodDurationInBlocks() == 0,
             "Proof period start block is not valid"
         );
         require(offset > 0, "Offset must be greater than 0");
-        return proofPeriodStartBlock - (offset * (getActiveProofingPeriodDurationInBlocks() + 1));
+        return proofPeriodStartBlock - offset * getActiveProofingPeriodDurationInBlocks();
     }
 
     function isPendingProofingPeriodDuration() public view returns (bool) {

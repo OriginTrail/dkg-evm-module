@@ -433,6 +433,11 @@
             "type": "uint256"
           },
           {
+            "internalType": "address",
+            "name": "knowledgeCollectionStorageContract",
+            "type": "address"
+          },
+          {
             "internalType": "uint256",
             "name": "epoch",
             "type": "uint256"
@@ -604,6 +609,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "address",
+        "name": "knowledgeCollectionStorageContract",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "epoch",
         "type": "uint256"
@@ -687,6 +697,11 @@
             "internalType": "uint256",
             "name": "chunkId",
             "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "knowledgeCollectionStorageContract",
+            "type": "address"
           },
           {
             "internalType": "uint256",
