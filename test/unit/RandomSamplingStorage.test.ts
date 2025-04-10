@@ -1,6 +1,7 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
+import { ContractTransactionResponse } from 'ethers';
 import hre, { ethers } from 'hardhat';
 
 import parameters from '../../deployments/parameters.json';
@@ -11,7 +12,6 @@ import {
   mineBlocks,
   mineProofPeriodBlocks,
 } from '../helpers/random-sampling';
-import { ContractTransactionResponse } from 'ethers';
 
 type RandomStorageFixture = {
   accounts: SignerWithAddress[];
@@ -19,6 +19,8 @@ type RandomStorageFixture = {
   Hub: Hub;
   Chronos: Chronos;
 };
+
+const PANIC_ARITHMETIC_OVERFLOW = 0x11;
 
 describe('@unit RandomSamplingStorage', function () {
   // let RandomSampling: RandomSampling;
@@ -54,113 +56,111 @@ describe('@unit RandomSamplingStorage', function () {
     MockChallenge = await createMockChallenge(RandomSamplingStorage, Chronos);
   });
 
-  it('Should have correct name and version', async () => {
-    expect(await RandomSamplingStorage.name()).to.equal(
-      'RandomSamplingStorage',
-    );
-    expect(await RandomSamplingStorage.version()).to.equal('1.0.0');
+  describe('Initialization', () => {
+    it('Should have correct name and version', async () => {
+      expect(await RandomSamplingStorage.name()).to.equal(
+        'RandomSamplingStorage',
+      );
+      expect(await RandomSamplingStorage.version()).to.equal('1.0.0');
+    });
+
+    // 1. Initialization tests
+    it('Should set the initial parameters correctly', async function () {
+      const proofingPeriod =
+        await RandomSamplingStorage.proofingPeriodDurations(0);
+
+      expect(proofingPeriod.durationInBlocks).to.equal(
+        proofingPeriodDurationInBlocks,
+      );
+
+      const currentEpochTx = await Chronos.getCurrentEpoch();
+      const currentEpoch = BigInt(currentEpochTx.toString());
+      expect(proofingPeriod.effectiveEpoch).to.equal(currentEpoch);
+    });
   });
 
-  // 1. Initialization tests
-  it('Should set the initial parameters correctly', async function () {
-    const proofingPeriod =
-      await RandomSamplingStorage.proofingPeriodDurations(0);
+  describe('Access Control', () => {
+    // 2. Access tests
+    it('Should revert contact call if not called by Hub', async () => {
+      await expect(RandomSamplingStorage.connect(accounts[1]).initialize())
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Hub');
+    });
 
-    expect(proofingPeriod.durationInBlocks).to.equal(
-      proofingPeriodDurationInBlocks,
-    );
-
-    const currentEpochTx = await Chronos.getCurrentEpoch();
-    const currentEpoch = BigInt(currentEpochTx.toString());
-    expect(proofingPeriod.effectiveEpoch).to.equal(currentEpoch);
-  });
-
-  // 2. Access tests
-  it('Should revert contact call if not called by Hub', async () => {
-    await expect(RandomSamplingStorage.connect(accounts[1]).initialize())
-      .to.be.revertedWithCustomError(
-        RandomSamplingStorage,
-        'UnauthorizedAccess',
+    it('Should revert contact call on onlyContract modifiers', async () => {
+      await expect(
+        RandomSamplingStorage.connect(
+          accounts[1],
+        ).replacePendingProofingPeriodDuration(0, 0),
       )
-      .withArgs('Only Hub');
-  });
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
 
-  it('Should revert contact call on onlyContract modifiers', async () => {
-    await expect(
-      RandomSamplingStorage.connect(
-        accounts[1],
-      ).replacePendingProofingPeriodDuration(0, 0),
-    )
-      .to.be.revertedWithCustomError(
-        RandomSamplingStorage,
-        'UnauthorizedAccess',
+      await expect(
+        RandomSamplingStorage.connect(accounts[1]).addProofingPeriodDuration(
+          0,
+          0,
+        ),
       )
-      .withArgs('Only Contracts in Hub');
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
 
-    await expect(
-      RandomSamplingStorage.connect(accounts[1]).addProofingPeriodDuration(
-        0,
-        0,
-      ),
-    )
-      .to.be.revertedWithCustomError(
-        RandomSamplingStorage,
-        'UnauthorizedAccess',
+      // TODO: Test positive path - isContractAllowed contract can call this function
+      await expect(
+        RandomSamplingStorage.connect(accounts[1]).setNodeChallenge(
+          0,
+          MockChallenge,
+        ),
       )
-      .withArgs('Only Contracts in Hub');
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
 
-    // TODO: Test positive path - isContractAllowed contract can call this function
-    await expect(
-      RandomSamplingStorage.connect(accounts[1]).setNodeChallenge(
-        0,
-        MockChallenge,
-      ),
-    )
-      .to.be.revertedWithCustomError(
-        RandomSamplingStorage,
-        'UnauthorizedAccess',
+      await expect(
+        RandomSamplingStorage.connect(
+          accounts[1],
+        ).incrementEpochNodeValidProofsCount(0, 0),
       )
-      .withArgs('Only Contracts in Hub');
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
 
-    await expect(
-      RandomSamplingStorage.connect(
-        accounts[1],
-      ).incrementEpochNodeValidProofsCount(0, 0),
-    )
-      .to.be.revertedWithCustomError(
-        RandomSamplingStorage,
-        'UnauthorizedAccess',
+      await expect(
+        RandomSamplingStorage.connect(accounts[1]).addToNodeScore(0, 0, 0, 0),
       )
-      .withArgs('Only Contracts in Hub');
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
 
-    await expect(
-      RandomSamplingStorage.connect(accounts[1]).addToNodeScore(0, 0, 0, 0),
-    )
-      .to.be.revertedWithCustomError(
-        RandomSamplingStorage,
-        'UnauthorizedAccess',
+      await expect(
+        RandomSamplingStorage.connect(accounts[1]).addToEpochNodeDelegatorScore(
+          0,
+          0,
+          ethers.encodeBytes32String('0'),
+          0,
+        ),
       )
-      .withArgs('Only Contracts in Hub');
-
-    await expect(
-      RandomSamplingStorage.connect(accounts[1]).addToEpochNodeDelegatorScore(
-        0,
-        0,
-        ethers.encodeBytes32String('0'),
-        0,
-      ),
-    )
-      .to.be.revertedWithCustomError(
-        RandomSamplingStorage,
-        'UnauthorizedAccess',
-      )
-      .withArgs('Only Contracts in Hub');
-  });
-
-  it('Should return the correct proofing period status', async () => {
-    const status = await RandomSamplingStorage.getActiveProofPeriodStatus();
-    expect(status.activeProofPeriodStartBlock).to.be.a('bigint');
-    expect(status.isValid).to.be.a('boolean');
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
+    });
   });
 
   describe('Proofing Period Management', () => {
@@ -294,6 +294,35 @@ describe('@unit RandomSamplingStorage', function () {
       expect(newPeriodStartBlock).to.be.equal(
         initialPeriodStartBlock + BigInt(proofingPeriodDurationInBlocks) + 1n,
       );
+    });
+
+    it('getHistoricalProofPeriodStartBlock should revert if called with invalid parameters', async () => {
+      // Update to current block
+      await mineProofPeriodBlocks(100n, RandomSamplingStorage);
+
+      const tx =
+        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await tx.wait();
+
+      const initialStatus =
+        await RandomSamplingStorage.getActiveProofPeriodStatus();
+      const initialPeriodStartBlock = initialStatus.activeProofPeriodStartBlock;
+
+      console.log('Current block:', await ethers.provider.getBlockNumber());
+      console.log(initialPeriodStartBlock);
+
+      await expect(
+        RandomSamplingStorage.getHistoricalProofPeriodStartBlock(0, 1),
+      ).to.be.revertedWith('Proof period start block must be greater than 0');
+      await expect(
+        RandomSamplingStorage.getHistoricalProofPeriodStartBlock(102, 1),
+      ).to.be.revertedWith('Proof period start block is not valid');
+      await expect(
+        RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
+          initialPeriodStartBlock,
+          999,
+        ),
+      ).to.be.revertedWithPanic(PANIC_ARITHMETIC_OVERFLOW);
     });
   });
 });
