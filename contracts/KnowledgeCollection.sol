@@ -118,7 +118,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         es.addTokensToEpochRange(1, currentEpoch, currentEpoch + epochs + 1, tokenAmount);
         es.addEpochProducedKnowledgeValue(publisherNodeIdentityId, currentEpoch, tokenAmount);
 
-        _addTokens(tokenAmount, paymaster);
+        _addTokens(tokenAmount, paymaster, msg.sender);
 
         return id;
     }
@@ -223,7 +223,7 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
 
         epochStorage.addTokensToEpochRange(1, endEpoch, endEpoch + epochs, tokenAmount);
 
-        _addTokens(tokenAmount, paymaster);
+        _addTokens(tokenAmount, paymaster, msg.sender);
 
         ParanetKnowledgeCollectionsRegistry pkar = paranetKnowledgeCollectionsRegistry;
 
@@ -300,11 +300,11 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         }
     }
 
-    function _addTokens(uint96 tokenAmount, address paymaster) internal {
+    function _addTokens(uint96 tokenAmount, address paymaster, address originalSender) internal {
         IERC20 token = tokenContract;
 
         if (paymasterManager.validPaymasters(paymaster)) {
-            IPaymaster(paymaster).coverCost(tokenAmount);
+            IPaymaster(paymaster).coverCost(tokenAmount, originalSender);
         } else {
             if (token.allowance(msg.sender, address(this)) < tokenAmount) {
                 revert TokenLib.TooLowAllowance(
