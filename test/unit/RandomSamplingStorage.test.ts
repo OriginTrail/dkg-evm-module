@@ -1,5 +1,5 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { loadFixture, mine } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { ContractTransactionResponse } from 'ethers';
 import hre, { ethers } from 'hardhat';
@@ -337,6 +337,51 @@ describe('@unit RandomSamplingStorage', function () {
       expect(historicalPeriodStartBlock).to.be.equal(
         periodStartBlock - BigInt(proofingPeriodDurationInBlocks) * 2n - 2n,
       );
+    });
+
+    it('Should return correct active proof period', async () => {
+      let tx =
+        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await tx.wait();
+
+      let status = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      let periodStartBlock = status.activeProofPeriodStartBlock;
+
+      expect(status.isValid).to.be.equal(true, 'Active period should be valid');
+
+      await mineProofPeriodBlocks(periodStartBlock, RandomSamplingStorage);
+
+      status = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      periodStartBlock = status.activeProofPeriodStartBlock;
+
+      tx =
+        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await tx.wait();
+
+      expect(status.isValid).to.be.equal(
+        false,
+        'Active period should be valid',
+      );
+
+      // status = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      // periodStartBlock = status.activeProofPeriodStartBlock;
+
+      // expect(status.isValid).to.be.equal(true, 'Active period should be valid');
+      // // Mine a few blocks
+      // mineBlocks(Number(proofingPeriodDuration - 10n));
+      // status = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      // periodStartBlock = status.activeProofPeriodStartBlock;
+
+      // expect(status.isValid).to.be.equal(true, 'Active period should be valid');
+      // mineBlocks(Number(proofingPeriodDuration));
+
+      // status = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      // periodStartBlock = status.activeProofPeriodStartBlock;
+
+      // console.log(status.isValid);
+
+      // // Now should be invalid
+      // expect(status.isValid).to.be.equal(false, 'Period should not be active');
     });
   });
 });
