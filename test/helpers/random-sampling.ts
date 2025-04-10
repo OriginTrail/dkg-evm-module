@@ -46,7 +46,6 @@ export async function createMockChallenge(
 // TODO: Move to common utils
 export async function mineBlocks(blocks: number): Promise<void> {
   for (let i = 0; i < blocks; i++) {
-    console.log('Mining block', i + 1);
     await hre.network.provider.send('evm_mine');
   }
 }

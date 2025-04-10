@@ -60,14 +60,7 @@ describe('@unit RandomSamplingStorage', function () {
     const tx =
       await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
     tx.wait();
-
-    const statusAfterUpdate =
-      await RandomSamplingStorage.getActiveProofPeriodStatus();
-    return {
-      activeProofPeriodStartBlock:
-        statusAfterUpdate.activeProofPeriodStartBlock,
-      isValid: statusAfterUpdate.isValid,
-    };
+    return await RandomSamplingStorage.getActiveProofPeriodStatus();
   }
 
   beforeEach(async () => {
@@ -198,12 +191,9 @@ describe('@unit RandomSamplingStorage', function () {
     });
     it('Should update start block after one full proofing period (duration + 1)', async () => {
       // Get initial active proof period using a view function
-      const initialTx =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await initialTx.wait();
-      const initialStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const initialPeriodStartBlock = initialStatus.activeProofPeriodStartBlock;
+      const { activeProofPeriodStartBlock: initialPeriodStartBlock } =
+        await updateAndGetActiveProofPeriod();
+
       const proofingPeriodDuration: bigint = await mineProofPeriodBlocks(
         initialPeriodStartBlock,
         RandomSamplingStorage,
@@ -226,15 +216,9 @@ describe('@unit RandomSamplingStorage', function () {
     });
     it('Should update correctly when multiple full periods have passed', async () => {
       const PERIODS = 100;
-      console.log(`Current block: ${await ethers.provider.getBlockNumber()}`);
-      const initialTx =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await initialTx.wait();
-      const proofPeriodStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const initialPeriodStartBlock =
-        proofPeriodStatus.activeProofPeriodStartBlock;
-      console.log(`Initial block: ${initialPeriodStartBlock}`);
+      const { activeProofPeriodStartBlock: initialPeriodStartBlock } =
+        await updateAndGetActiveProofPeriod();
+
       let proofingPeriodDuration: bigint;
       for (let i = 1; i < PERIODS; i++) {
         const proofPeriodStatus =
@@ -250,17 +234,8 @@ describe('@unit RandomSamplingStorage', function () {
           BigInt(proofingPeriodDurationInBlocks),
         );
         // Update and get the new active proof period
-        const tx =
-          await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-        await tx.wait();
-        console.log(
-          `Period ${i} - ${periodStartBlock} + ${proofingPeriodDuration}`,
-        );
-        console.log((periodStartBlock + proofingPeriodDuration) / BigInt(i));
-        const statusAfterUpdate =
-          await RandomSamplingStorage.getActiveProofPeriodStatus();
-        const newPeriodStartBlock =
-          statusAfterUpdate.activeProofPeriodStartBlock;
+        const { activeProofPeriodStartBlock: newPeriodStartBlock } =
+          await updateAndGetActiveProofPeriod();
         expect(newPeriodStartBlock).to.be.greaterThan(periodStartBlock);
         expect(newPeriodStartBlock).to.be.equal(
           periodStartBlock + proofingPeriodDuration,
@@ -312,7 +287,7 @@ describe('@unit RandomSamplingStorage', function () {
     });
 
     it('Should return correct active proof period', async () => {
-      let { activeProofPeriodStartBlock, isValid } =
+      const { activeProofPeriodStartBlock, isValid } =
         await updateAndGetActiveProofPeriod();
 
       expect(isValid).to.be.equal(true, 'Period should be valid');
@@ -347,4 +322,7 @@ describe('@unit RandomSamplingStorage', function () {
       );
     });
   });
+
+  // getActiveProofingPeriodDurationInBlocks
+  it('Should pick correct proofing period duration based on epoch', async () => {});
 });
