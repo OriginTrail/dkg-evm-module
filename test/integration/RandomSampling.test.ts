@@ -1,6 +1,9 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+// @ts-expect-error: No type definitions available for assertion-tools
+import { kcTools } from 'assertion-tools';
 import { expect } from 'chai';
+import { ethers } from 'ethers';
 import hre from 'hardhat';
 
 import {
@@ -20,9 +23,18 @@ import {
   KnowledgeCollection,
   ParanetKnowledgeMinersRegistry,
   ParanetKnowledgeCollectionsRegistry,
+  Staking,
+  ShardingTableStorage,
+  ShardingTable,
+  ParametersStorage,
+  Ask,
 } from '../../typechain';
-import { createProfilesAndKC } from '../helpers/kc-helpers';
-import { createProfile } from '../helpers/profile-helpers';
+import {
+  createProfilesAndKC,
+  getKCSignaturesData,
+  createKnowledgeCollection,
+} from '../helpers/kc-helpers';
+import { createProfile, createProfiles } from '../helpers/profile-helpers';
 import {
   getDefaultKCCreator,
   getDefaultReceivingNodes,
@@ -33,6 +45,7 @@ import {
 type Challenge = {
   knowledgeCollectionId: bigint;
   chunkId: bigint;
+  knowledgeCollectionStorageContract: string;
   epoch: bigint;
   activeProofPeriodStartBlock: bigint;
   proofingPeriodDurationInBlocks: bigint;
@@ -58,6 +71,11 @@ type RandomSamplingFixture = {
   Token: Token;
   ParanetKnowledgeMinersRegistry: ParanetKnowledgeMinersRegistry;
   ParanetKnowledgeCollectionsRegistry: ParanetKnowledgeCollectionsRegistry;
+  Staking: Staking;
+  ShardingTableStorage: ShardingTableStorage;
+  ShardingTable: ShardingTable;
+  ParametersStorage: ParametersStorage;
+  Ask: Ask;
 };
 
 describe('@integration RandomSampling', () => {
@@ -71,11 +89,16 @@ describe('@integration RandomSampling', () => {
   let EpochStorage: EpochStorage;
   let Chronos: Chronos;
   let AskStorage: AskStorage;
+  let Ask: Ask;
   let DelegatorsInfo: DelegatorsInfo;
   let Profile: Profile;
   let Hub: Hub;
   let KnowledgeCollection: KnowledgeCollection;
   let Token: Token;
+  let Staking: Staking;
+  let ShardingTableStorage: ShardingTableStorage;
+  let ShardingTable: ShardingTable;
+  let ParametersStorage: ParametersStorage;
   let ParanetKnowledgeMinersRegistry: ParanetKnowledgeMinersRegistry;
   let ParanetKnowledgeCollectionsRegistry: ParanetKnowledgeCollectionsRegistry;
 
@@ -99,6 +122,8 @@ describe('@integration RandomSampling', () => {
       'RandomSampling',
       'ParanetKnowledgeMinersRegistry',
       'ParanetKnowledgeCollectionsRegistry',
+      'Staking',
+      'Ask',
     ]);
 
     accounts = await hre.ethers.getSigners();
@@ -136,6 +161,15 @@ describe('@integration RandomSampling', () => {
     DelegatorsInfo =
       await hre.ethers.getContract<DelegatorsInfo>('DelegatorsInfo');
     Profile = await hre.ethers.getContract<Profile>('Profile');
+    Staking = await hre.ethers.getContract<Staking>('Staking');
+    ShardingTableStorage = await hre.ethers.getContract<ShardingTableStorage>(
+      'ShardingTableStorage',
+    );
+    ShardingTable =
+      await hre.ethers.getContract<ShardingTable>('ShardingTable');
+    ParametersStorage =
+      await hre.ethers.getContract<ParametersStorage>('ParametersStorage');
+    Ask = await hre.ethers.getContract<Ask>('Ask');
 
     // Get RandomSampling contract after all others are registered
     RandomSampling =
@@ -165,6 +199,11 @@ describe('@integration RandomSampling', () => {
       Token,
       ParanetKnowledgeMinersRegistry,
       ParanetKnowledgeCollectionsRegistry,
+      Staking,
+      ShardingTableStorage,
+      ShardingTable,
+      ParametersStorage,
+      Ask,
     };
   }
 
@@ -186,6 +225,11 @@ describe('@integration RandomSampling', () => {
       RandomSamplingStorage,
       ParanetKnowledgeMinersRegistry,
       ParanetKnowledgeCollectionsRegistry,
+      Staking,
+      ShardingTableStorage,
+      ShardingTable,
+      ParametersStorage,
+      Ask,
     } = await loadFixture(deployRandomSamplingFixture));
   });
 
@@ -210,6 +254,8 @@ describe('@integration RandomSampling', () => {
     const challenge: Challenge = {
       knowledgeCollectionId: 1n,
       chunkId: 1n,
+      knowledgeCollectionStorageContract:
+        await KnowledgeCollectionStorage.getAddress(),
       epoch: currentEpoch,
       activeProofPeriodStartBlock: activeBlock,
       proofingPeriodDurationInBlocks: proofingPeriodDuration,
@@ -297,7 +343,7 @@ describe('@integration RandomSampling', () => {
       // Mine blocks to pass the proofing period
       const proofingPeriodDuration =
         await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      const blocksToMine = Number(proofingPeriodDuration) + 1 - diff;
+      const blocksToMine = Number(proofingPeriodDuration) - diff;
 
       for (let i = 0; i < blocksToMine; i++) {
         await hre.network.provider.send('evm_mine');
@@ -315,7 +361,7 @@ describe('@integration RandomSampling', () => {
       // The new period should be different from the initial one
       expect(newPeriodStartBlock).to.be.greaterThan(initialPeriodStartBlock);
       expect(newPeriodStartBlock).to.be.equal(
-        initialPeriodStartBlock + BigInt(proofingPeriodDuration) + 1n,
+        initialPeriodStartBlock + BigInt(proofingPeriodDuration),
       );
     });
   });
@@ -404,6 +450,130 @@ describe('@integration RandomSampling', () => {
         await RandomSamplingStorage.getNodeChallenge(identityId);
 
       // Since the challenge was solved, the challenge should still be marked as solved
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(challenge.solved).to.be.true;
+    });
+
+    it('Should submit a valid proof successfully', async () => {
+      const quads = [
+        '<urn:us-cities:info:new-york> <http://schema.org/area> "468.9 sq mi" .',
+        '<urn:us-cities:info:new-york> <http://schema.org/name> "New York" .',
+        '<urn:us-cities:info:new-york> <http://schema.org/population> "8,336,817" .',
+        '<urn:us-cities:info:new-york> <http://schema.org/state> "New York" .',
+        '<urn:us-cities:info:new-york> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/City> .',
+        '<uuid:a1a241ad-9f62-4dcc-94b6-f59b299dee0a> <https://ontology.origintrail.io/dkg/1.0#privateMerkleRoot> "0xaac2a420672a1eb77506c544ff01beed2be58c0ee3576fe037c846f97481cefd" .',
+        '<https://ontology.origintrail.io/dkg/1.0#metadata-hash:0x5cb6421dd41c7a62a84c223779303919e7293753d8a1f6f49da2e598013fe652> <https://ontology.origintrail.io/dkg/1.0#representsPrivateResource> <uuid:396b91f8-977b-4f5d-8658-bc4bc195ba3c> .',
+        '<https://ontology.origintrail.io/dkg/1.0#metadata-hash:0x6a2292b30c844d2f8f2910bf11770496a3a79d5a6726d1b2fd3ddd18e09b5850> <https://ontology.origintrail.io/dkg/1.0#representsPrivateResource> <uuid:7eab0ccb-dd6c-4f81-a342-3c22e6276ec5> .',
+        '<https://ontology.origintrail.io/dkg/1.0#metadata-hash:0xc1f682b783b1b93c9d5386eb1730c9647cf4b55925ec24f5e949e7457ba7bfac> <https://ontology.origintrail.io/dkg/1.0#representsPrivateResource> <uuid:8b843b0c-33d8-4546-9a6d-207fd22c793c> .',
+      ];
+      // Generate the Merkle tree and get the root
+      const merkleRoot = kcTools.calculateMerkleRoot(quads, 32);
+
+      expect(merkleRoot).to.equal(
+        '0xe860c5ab7ed7c79dbdff4af603cad8952eb2f5573db4e3b06585990f55fd8a95',
+      );
+
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      const { identityId: publishingNodeIdentityId } = await createProfile(
+        Profile,
+        publishingNode,
+      );
+      const receivingNodesIdentityIds = (
+        await createProfiles(Profile, receivingNodes)
+      ).map((p) => p.identityId);
+
+      // Mint tokens and set stake
+      const minStake = await ParametersStorage.minimumStake();
+      await Token.mint(accounts[0].address, minStake);
+      await Token.connect(accounts[0]).approve(
+        await Staking.getAddress(),
+        minStake,
+      );
+      await Staking.stake(publishingNodeIdentityId, minStake);
+
+      expect(
+        await StakingStorage.getNodeStake(publishingNodeIdentityId),
+      ).to.equal(minStake);
+      expect(
+        await ShardingTableStorage.nodeExists(publishingNodeIdentityId),
+      ).to.equal(true);
+
+      // Recalculate the active set
+      const newAsk = 200n;
+      await Profile.connect(publishingNode.operational).updateAsk(
+        publishingNodeIdentityId,
+        newAsk,
+      );
+      await Ask.connect(accounts[0]).recalculateActiveSet();
+
+      // Create a knowledge collection
+      const signaturesData = await getKCSignaturesData(
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        merkleRoot,
+      );
+
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNodeIdentityId,
+        receivingNodesIdentityIds,
+        signaturesData,
+        {
+          KnowledgeCollection,
+          Token,
+        },
+        'f6821709-be83-464d-a450-84c51d1077f5',
+        5,
+        1280,
+        2,
+        BigInt('11641036927376871'),
+        false,
+        ethers.ZeroAddress,
+      );
+
+      // Update and get the new active proof period
+      const tx =
+        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await tx.wait();
+
+      // Create challenge
+      const challengeTx = await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+      await challengeTx.wait();
+
+      // Get the challenge from storage to verify it
+      let challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      // Get chunk from quads
+      const chunks = kcTools.splitIntoChunks(quads, 32);
+      const challengeChunk = chunks[challenge.chunkId];
+
+      // Generate a proof for our challenge chunk
+      const { proof } = kcTools.calculateMerkleProof(
+        quads,
+        32,
+        challenge.chunkId,
+      );
+
+      // Submit proof
+      const submitProofTx = await RandomSampling.connect(
+        publishingNode.operational,
+      ).submitProof(challengeChunk, proof);
+      await submitProofTx.wait();
+
+      // Get the challenge from storage to verify it
+      challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      // Since the challenge was solved, the challenge should be marked as solved
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(challenge.solved).to.be.true;
     });
