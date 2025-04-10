@@ -108,7 +108,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         }
     }
 
-    function createChallenge() external returns (RandomSamplingLib.Challenge memory) {
+    function createChallenge() external {
         // identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -117,14 +117,14 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         if (
             nodeChallenge.activeProofPeriodStartBlock == randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock()
         ) {
-            // If node has already solved the challenge for this period, return an empty challenge
+            // Revert if node has already solved the challenge for this period
             if (nodeChallenge.solved == true) {
-                return RandomSamplingLib.Challenge(0, 0, address(0), 0, 0, 0, false);
+                revert("The challenge for this proof period has already been solved");
             }
 
-            // If the challenge for this node exists but has not been solved yet, return the existing challenge
+            // Revert if a challenge for this node exists but has not been solved yet
             if (nodeChallenge.knowledgeCollectionId != 0) {
-                return nodeChallenge;
+                revert("An unsolved challenge already exists for this node in the current proof period");
             }
         }
 
@@ -133,11 +133,9 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
 
         // Store the new challenge in the storage contract
         randomSamplingStorage.setNodeChallenge(identityId, challenge);
-
-        return challenge;
     }
 
-    function submitProof(string memory chunk, bytes32[] calldata merkleProof) public returns (bool) {
+    function submitProof(string memory chunk, bytes32[] calldata merkleProof) public {
         // Get node identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -148,8 +146,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
 
         // verify that the challengeId matches the current challenge
         if (challenge.activeProofPeriodStartBlock != activeProofPeriodStartBlock) {
-            // This challenge is no longer active
-            return false;
+            revert("This challenge is no longer active");
         }
 
         // Construct the merkle root from chunk and merkleProof
@@ -175,11 +172,9 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
             _calculateAndStoreDelegatorScores(identityId, epoch, activeProofPeriodStartBlock);
 
             emit ValidProofSubmitted(identityId, epoch, score);
-
-            return true;
+        } else {
+            revert("Proof is not valid");
         }
-
-        return false;
     }
 
     function getDelegatorEpochRewardsAmount(uint72 identityId, uint256 epoch) public view returns (uint256) {
