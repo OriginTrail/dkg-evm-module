@@ -296,20 +296,16 @@ describe('@unit RandomSamplingStorage', function () {
       );
     });
 
-    it('getHistoricalProofPeriodStartBlock should revert if called with invalid parameters', async () => {
+    it('Should return correct historical proofing period start', async () => {
       // Update to current block
       await mineProofPeriodBlocks(100n, RandomSamplingStorage);
 
-      const tx =
+      let tx =
         await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
       await tx.wait();
 
-      const initialStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const initialPeriodStartBlock = initialStatus.activeProofPeriodStartBlock;
-
-      console.log('Current block:', await ethers.provider.getBlockNumber());
-      console.log(initialPeriodStartBlock);
+      let status = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      let periodStartBlock = status.activeProofPeriodStartBlock;
 
       await expect(
         RandomSamplingStorage.getHistoricalProofPeriodStartBlock(0, 1),
@@ -319,10 +315,28 @@ describe('@unit RandomSamplingStorage', function () {
       ).to.be.revertedWith('Proof period start block is not valid');
       await expect(
         RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
-          initialPeriodStartBlock,
+          periodStartBlock,
           999,
         ),
       ).to.be.revertedWithPanic(PANIC_ARITHMETIC_OVERFLOW);
+
+      await mineProofPeriodBlocks(periodStartBlock, RandomSamplingStorage);
+      tx =
+        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await tx.wait();
+
+      status = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      periodStartBlock = status.activeProofPeriodStartBlock;
+
+      const historicalPeriodStartBlock =
+        await RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
+          periodStartBlock,
+          2,
+        );
+
+      expect(historicalPeriodStartBlock).to.be.equal(
+        periodStartBlock - BigInt(proofingPeriodDurationInBlocks) * 2n - 2n,
+      );
     });
   });
 });
