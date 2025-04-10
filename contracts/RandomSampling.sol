@@ -337,31 +337,32 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
             activeProofPeriodStartBlock,
             1
         );
-        uint256 myNodeScore = randomSamplingStorage.getNodeEpochProofPeriodScore(
+        uint256 nodeScore = randomSamplingStorage.getNodeEpochProofPeriodScore(
             identityId,
             epoch,
             lastProofPeriodStartBlock
         );
-        uint256 allNodesScore = randomSamplingStorage.getEpochAllNodesProofPeriodScore(
-            epoch,
-            lastProofPeriodStartBlock
-        );
-        uint256 lastProofPeriodScoreRatio = (myNodeScore * SCALING_FACTOR) / allNodesScore;
+        uint256 nodeStake = stakingStorage.getNodeStake(identityId);
 
-        // update all delegators' scores
-        address[] memory delegatorsAddresses = delegatorsInfo.getDelegators(identityId);
-        for (uint8 i = 0; i < delegatorsAddresses.length; ) {
-            bytes32 delegatorKey = keccak256(abi.encodePacked(delegatorsAddresses[i]));
+        if (nodeScore > 0 && nodeStake > 0) {
+            uint256 allNodesScore = randomSamplingStorage.getEpochAllNodesProofPeriodScore(
+                epoch,
+                lastProofPeriodStartBlock
+            );
+            uint256 lastProofPeriodScoreRatio = (nodeScore * SCALING_FACTOR) / allNodesScore;
 
-            uint256 delegatorStake = stakingStorage.getDelegatorTotalStake(identityId, delegatorKey);
-            uint256 nodeStake = stakingStorage.getNodeStake(identityId);
-            // Need to divide by SCALING_FACTOR^2 to get the correct score
-            uint256 delegatorScore = (lastProofPeriodScoreRatio * delegatorStake * SCALING_FACTOR) / nodeStake;
+            // update all delegators' scores
+            address[] memory delegatorsAddresses = delegatorsInfo.getDelegators(identityId);
+            for (uint8 i = 0; i < delegatorsAddresses.length; ) {
+                bytes32 delegatorKey = keccak256(abi.encodePacked(delegatorsAddresses[i]));
+                uint256 delegatorStake = stakingStorage.getDelegatorTotalStake(identityId, delegatorKey);
+                // Need to divide by SCALING_FACTOR^2 to get the correct score
+                uint256 delegatorScore = (lastProofPeriodScoreRatio * delegatorStake * SCALING_FACTOR) / nodeStake;
+                randomSamplingStorage.addToEpochNodeDelegatorScore(epoch, identityId, delegatorKey, delegatorScore);
 
-            randomSamplingStorage.addToEpochNodeDelegatorScore(epoch, identityId, delegatorKey, delegatorScore);
-
-            unchecked {
-                i++;
+                unchecked {
+                    i++;
+                }
             }
         }
     }
