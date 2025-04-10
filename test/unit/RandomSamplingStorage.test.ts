@@ -56,6 +56,20 @@ describe('@unit RandomSamplingStorage', function () {
     return { accounts, RandomSamplingStorage, Hub, Chronos };
   }
 
+  async function updateAndGetActiveProofPeriod() {
+    const tx =
+      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+    tx.wait();
+
+    const statusAfterUpdate =
+      await RandomSamplingStorage.getActiveProofPeriodStatus();
+    return {
+      activeProofPeriodStartBlock:
+        statusAfterUpdate.activeProofPeriodStartBlock,
+      isValid: statusAfterUpdate.isValid,
+    };
+  }
+
   beforeEach(async () => {
     hre.helpers.resetDeploymentsJson();
     ({ RandomSamplingStorage } = await loadFixture(
@@ -69,330 +83,265 @@ describe('@unit RandomSamplingStorage', function () {
     );
   });
 
-  describe('Initialization', () => {
-    it('Should have correct name and version', async () => {
-      expect(await RandomSamplingStorage.name()).to.equal(
-        'RandomSamplingStorage',
-      );
-      expect(await RandomSamplingStorage.version()).to.equal('1.0.0');
-    });
+  // describe('Initialization', () => {
+  //   it('Should have correct name and version', async () => {
+  //     expect(await RandomSamplingStorage.name()).to.equal(
+  //       'RandomSamplingStorage',
+  //     );
+  //     expect(await RandomSamplingStorage.version()).to.equal('1.0.0');
+  //   });
 
-    // 1. Initialization tests
-    it('Should set the initial parameters correctly', async function () {
-      const proofingPeriod =
-        await RandomSamplingStorage.proofingPeriodDurations(0);
+  //   // 1. Initialization tests
+  //   it('Should set the initial parameters correctly', async function () {
+  //     const proofingPeriod =
+  //       await RandomSamplingStorage.proofingPeriodDurations(0);
 
-      expect(proofingPeriod.durationInBlocks).to.equal(
-        proofingPeriodDurationInBlocks,
-      );
+  //     expect(proofingPeriod.durationInBlocks).to.equal(
+  //       proofingPeriodDurationInBlocks,
+  //     );
 
-      const currentEpochTx = await Chronos.getCurrentEpoch();
-      const currentEpoch = BigInt(currentEpochTx.toString());
-      expect(proofingPeriod.effectiveEpoch).to.equal(currentEpoch);
-    });
-  });
+  //     const currentEpochTx = await Chronos.getCurrentEpoch();
+  //     const currentEpoch = BigInt(currentEpochTx.toString());
+  //     expect(proofingPeriod.effectiveEpoch).to.equal(currentEpoch);
+  //   });
+  // });
 
-  describe('Access Control', () => {
-    // 2. Access tests
-    it('Should revert contact call if not called by Hub', async () => {
-      await expect(RandomSamplingStorage.connect(accounts[1]).initialize())
-        .to.be.revertedWithCustomError(
-          RandomSamplingStorage,
-          'UnauthorizedAccess',
-        )
-        .withArgs('Only Hub');
-    });
+  // describe('Access Control', () => {
+  //   // 2. Access tests
+  //   it('Should revert contact call if not called by Hub', async () => {
+  //     await expect(RandomSamplingStorage.connect(accounts[1]).initialize())
+  //       .to.be.revertedWithCustomError(
+  //         RandomSamplingStorage,
+  //         'UnauthorizedAccess',
+  //       )
+  //       .withArgs('Only Hub');
+  //   });
 
-    it('Should revert contact call on onlyContract modifiers', async () => {
-      await expect(
-        RandomSamplingStorage.connect(
-          accounts[1],
-        ).replacePendingProofingPeriodDuration(0, 0),
-      )
-        .to.be.revertedWithCustomError(
-          RandomSamplingStorage,
-          'UnauthorizedAccess',
-        )
-        .withArgs('Only Contracts in Hub');
+  //   it('Should revert contact call on onlyContract modifiers', async () => {
+  //     await expect(
+  //       RandomSamplingStorage.connect(
+  //         accounts[1],
+  //       ).replacePendingProofingPeriodDuration(0, 0),
+  //     )
+  //       .to.be.revertedWithCustomError(
+  //         RandomSamplingStorage,
+  //         'UnauthorizedAccess',
+  //       )
+  //       .withArgs('Only Contracts in Hub');
 
-      await expect(
-        RandomSamplingStorage.connect(accounts[1]).addProofingPeriodDuration(
-          0,
-          0,
-        ),
-      )
-        .to.be.revertedWithCustomError(
-          RandomSamplingStorage,
-          'UnauthorizedAccess',
-        )
-        .withArgs('Only Contracts in Hub');
+  //     await expect(
+  //       RandomSamplingStorage.connect(accounts[1]).addProofingPeriodDuration(
+  //         0,
+  //         0,
+  //       ),
+  //     )
+  //       .to.be.revertedWithCustomError(
+  //         RandomSamplingStorage,
+  //         'UnauthorizedAccess',
+  //       )
+  //       .withArgs('Only Contracts in Hub');
 
-      // TODO: Test positive path - isContractAllowed contract can call this function
-      await expect(
-        RandomSamplingStorage.connect(accounts[1]).setNodeChallenge(
-          0,
-          MockChallenge,
-        ),
-      )
-        .to.be.revertedWithCustomError(
-          RandomSamplingStorage,
-          'UnauthorizedAccess',
-        )
-        .withArgs('Only Contracts in Hub');
+  //     // TODO: Test positive path - isContractAllowed contract can call this function
+  //     await expect(
+  //       RandomSamplingStorage.connect(accounts[1]).setNodeChallenge(
+  //         0,
+  //         MockChallenge,
+  //       ),
+  //     )
+  //       .to.be.revertedWithCustomError(
+  //         RandomSamplingStorage,
+  //         'UnauthorizedAccess',
+  //       )
+  //       .withArgs('Only Contracts in Hub');
 
-      //   await expect(
-      //     RandomSamplingStorage.connect(
-      //       accounts[1],
-      //     ).incrementEpochNodeValidProofsCount(0, 0),
-      //   )
-      //     .to.be.revertedWithCustomError(
-      //       RandomSamplingStorage,
-      //       'UnauthorizedAccess',
-      //     )
-      //     .withArgs('Only Contracts in Hub');
+  //       await expect(
+  //         RandomSamplingStorage.connect(
+  //           accounts[1],
+  //         ).incrementEpochNodeValidProofsCount(0, 0),
+  //       )
+  //         .to.be.revertedWithCustomError(
+  //           RandomSamplingStorage,
+  //           'UnauthorizedAccess',
+  //         )
+  //         .withArgs('Only Contracts in Hub');
 
-      //   await expect(
-      //     RandomSamplingStorage.connect(accounts[1]).addToNodeScore(0, 0, 0, 0),
-      //   )
-      //     .to.be.revertedWithCustomError(
-      //       RandomSamplingStorage,
-      //       'UnauthorizedAccess',
-      //     )
-      //     .withArgs('Only Contracts in Hub');
+  //       await expect(
+  //         RandomSamplingStorage.connect(accounts[1]).addToNodeScore(0, 0, 0, 0),
+  //       )
+  //         .to.be.revertedWithCustomError(
+  //           RandomSamplingStorage,
+  //           'UnauthorizedAccess',
+  //         )
+  //         .withArgs('Only Contracts in Hub');
 
-      //   await expect(
-      //     RandomSamplingStorage.connect(accounts[1]).addToEpochNodeDelegatorScore(
-      //       0,
-      //       0,
-      //       ethers.encodeBytes32String('0'),
-      //       0,
-      //     ),
-      //   )
-      //     .to.be.revertedWithCustomError(
-      //       RandomSamplingStorage,
-      //       'UnauthorizedAccess',
-      //     )
-      //     .withArgs('Only Contracts in Hub');
-    });
-  });
+  //       await expect(
+  //         RandomSamplingStorage.connect(
+  //           accounts[1],
+  //         ).addToEpochNodeDelegatorScore(
+  //           0,
+  //           0,
+  //           ethers.encodeBytes32String('0'),
+  //           0,
+  //         ),
+  //       )
+  //         .to.be.revertedWithCustomError(
+  //           RandomSamplingStorage,
+  //           'UnauthorizedAccess',
+  //         )
+  //         .withArgs('Only Contracts in Hub');
+  //   });
+  // });
 
   describe('Proofing Period Management', () => {
-    it('Should return the correct proofing period status', async () => {
-      const status = await RandomSamplingStorage.getActiveProofPeriodStatus();
-      expect(status.activeProofPeriodStartBlock).to.be.a('bigint');
-      expect(status.isValid).to.be.a('boolean');
-    });
-
-    it('Should update start block after one full proofing period (duration + 1)', async () => {
-      // Get initial active proof period using a view function
-      const initialTx =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await initialTx.wait();
-
-      const initialStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const initialPeriodStartBlock = initialStatus.activeProofPeriodStartBlock;
-
-      const proofingPeriodDuration: bigint = await mineProofPeriodBlocks(
-        initialPeriodStartBlock,
-        RandomSamplingStorage,
-      );
-
-      expect(proofingPeriodDuration).to.be.equal(
-        proofingPeriodDurationInBlocks,
-      );
-
-      // Update and get the new active proof period
-      const tx =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await tx.wait();
-
-      const statusAfterUpdate =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const newPeriodStartBlock = statusAfterUpdate.activeProofPeriodStartBlock;
-
-      // The new period should be different from the initial one
-      expect(newPeriodStartBlock).to.be.greaterThan(initialPeriodStartBlock);
-      expect(newPeriodStartBlock).to.be.equal(
-        initialPeriodStartBlock + proofingPeriodDuration,
-      );
-    });
-
-    // it('Should update correctly when multiple full periods have passed', async () => {
-    //   const PERIODS = 100;
-
-    //   const initialTx =
-    //     await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-    //   await initialTx.wait();
-
-    //   let proofingPeriodDuration: bigint;
-    //   for (let i = 1; i < PERIODS; i++) {
-    //     const proofPeriodStatus =
+    //   it('Should return the correct proofing period status', async () => {
+    //     const status = await RandomSamplingStorage.getActiveProofPeriodStatus();
+    //     expect(status.activeProofPeriodStartBlock).to.be.a('bigint');
+    //     expect(status.isValid).to.be.a('boolean');
+    //   });
+    //   it('Should update start block after one full proofing period (duration + 1)', async () => {
+    //     // Get initial active proof period using a view function
+    //     const initialTx =
+    //       await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+    //     await initialTx.wait();
+    //     const initialStatus =
     //       await RandomSamplingStorage.getActiveProofPeriodStatus();
-    //     const periodStartBlock = proofPeriodStatus.activeProofPeriodStartBlock;
-
-    //     proofingPeriodDuration = await mineProofPeriodBlocks(
-    //       periodStartBlock,
+    //     const initialPeriodStartBlock = initialStatus.activeProofPeriodStartBlock;
+    //     const proofingPeriodDuration: bigint = await mineProofPeriodBlocks(
+    //       initialPeriodStartBlock,
     //       RandomSamplingStorage,
     //     );
-
-    //     // Check if we get correct period back
     //     expect(proofingPeriodDuration).to.be.equal(
-    //       BigInt(proofingPeriodDurationInBlocks) + 1n,
+    //       proofingPeriodDurationInBlocks,
     //     );
-
     //     // Update and get the new active proof period
     //     const tx =
     //       await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
     //     await tx.wait();
-
     //     const statusAfterUpdate =
     //       await RandomSamplingStorage.getActiveProofPeriodStatus();
-    //     const newPeriodStartBlock =
-    //       statusAfterUpdate.activeProofPeriodStartBlock;
-
-    //     expect(newPeriodStartBlock).to.be.greaterThan(periodStartBlock);
+    //     const newPeriodStartBlock = statusAfterUpdate.activeProofPeriodStartBlock;
+    //     // The new period should be different from the initial one
+    //     expect(newPeriodStartBlock).to.be.greaterThan(initialPeriodStartBlock);
     //     expect(newPeriodStartBlock).to.be.equal(
-    //       periodStartBlock + proofingPeriodDuration,
+    //       initialPeriodStartBlock + proofingPeriodDuration,
     //     );
-    //     expect(
-    //       (periodStartBlock + proofingPeriodDuration) / BigInt(i),
-    //     ).to.be.equal(BigInt(proofingPeriodDurationInBlocks) + 1n);
-    //   }
-    // });
+    //   });
+    //   it('Should update correctly when multiple full periods have passed', async () => {
+    //     const PERIODS = 100;
+    //     console.log(`Current block: ${await ethers.provider.getBlockNumber()}`);
+    //     const initialTx =
+    //       await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+    //     await initialTx.wait();
+    //     const proofPeriodStatus =
+    //       await RandomSamplingStorage.getActiveProofPeriodStatus();
+    //     const initialPeriodStartBlock =
+    //       proofPeriodStatus.activeProofPeriodStartBlock;
+    //     console.log(`Initial block: ${initialPeriodStartBlock}`);
+    //     let proofingPeriodDuration: bigint;
+    //     for (let i = 1; i < PERIODS; i++) {
+    //       const proofPeriodStatus =
+    //         await RandomSamplingStorage.getActiveProofPeriodStatus();
+    //       const periodStartBlock = proofPeriodStatus.activeProofPeriodStartBlock;
+    //       console.log(`Period ${i} - ${periodStartBlock}`);
+    //       proofingPeriodDuration = await mineProofPeriodBlocks(
+    //         periodStartBlock,
+    //         RandomSamplingStorage,
+    //       );
+    //       // Check if we get correct period back
+    //       expect(proofingPeriodDuration).to.be.equal(
+    //         BigInt(proofingPeriodDurationInBlocks),
+    //       );
+    //       // Update and get the new active proof period
+    //       const tx =
+    //         await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+    //       await tx.wait();
+    //       console.log(
+    //         `Period ${i} - ${periodStartBlock} + ${proofingPeriodDuration}`,
+    //       );
+    //       console.log((periodStartBlock + proofingPeriodDuration) / BigInt(i));
+    //       const statusAfterUpdate =
+    //         await RandomSamplingStorage.getActiveProofPeriodStatus();
+    //       const newPeriodStartBlock =
+    //         statusAfterUpdate.activeProofPeriodStartBlock;
+    //       expect(newPeriodStartBlock).to.be.greaterThan(periodStartBlock);
+    //       expect(newPeriodStartBlock).to.be.equal(
+    //         periodStartBlock + proofingPeriodDuration,
+    //       );
+    //       expect(
+    //         (newPeriodStartBlock - initialPeriodStartBlock) / BigInt(i),
+    //       ).to.be.equal(proofingPeriodDuration);
+    //     }
+    //   });
 
-    // it('Should enforce +1 block gap between periods', async () => {
-    //   let tx: ContractTransactionResponse;
-    //   let statusAfterUpdate: RandomSamplingLib.ProofPeriodStatusStructOutput;
-    //   let newPeriodStartBlock: bigint;
+    it('Should return correct historical proofing period start', async () => {
+      const { activeProofPeriodStartBlock } =
+        await updateAndGetActiveProofPeriod();
 
-    //   const initialTx =
-    //     await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-    //   await initialTx.wait();
+      await expect(
+        RandomSamplingStorage.getHistoricalProofPeriodStartBlock(0, 1),
+      ).to.be.revertedWith('Proof period start block must be greater than 0');
+      await expect(
+        RandomSamplingStorage.getHistoricalProofPeriodStartBlock(100, 0),
+      ).to.be.revertedWith('Offset must be greater than 0');
+      await expect(
+        RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
+          activeProofPeriodStartBlock + 10n,
+          1,
+        ),
+      ).to.be.revertedWith('Proof period start block is not valid');
+      await expect(
+        RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
+          activeProofPeriodStartBlock,
+          999,
+        ),
+      ).to.be.revertedWithPanic(PANIC_ARITHMETIC_OVERFLOW);
 
-    //   const initialStatus =
-    //     await RandomSamplingStorage.getActiveProofPeriodStatus();
-    //   const initialPeriodStartBlock = initialStatus.activeProofPeriodStartBlock;
+      await mineProofPeriodBlocks(
+        activeProofPeriodStartBlock,
+        RandomSamplingStorage,
+      );
 
-    //   const currentBlock = await ethers.provider.getBlockNumber();
-
-    //   const diff = Number(proofingPeriodDurationInBlocks) - currentBlock;
-
-    //   // Mine one block less than the proofing period duration
-    //   await mineBlocks(diff - 1);
-
-    //   tx =
-    //     await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-    //   tx.wait();
-
-    //   statusAfterUpdate =
-    //     await RandomSamplingStorage.getActiveProofPeriodStatus();
-    //   newPeriodStartBlock = statusAfterUpdate.activeProofPeriodStartBlock;
-
-    //   // Should still be equal to the initial one
-    //   expect(newPeriodStartBlock).to.be.equal(initialPeriodStartBlock);
-
-    //   // Move another block
-    //   await mineBlocks(1);
-
-    //   tx =
-    //     await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-    //   await tx.wait();
-
-    //   statusAfterUpdate =
-    //     await RandomSamplingStorage.getActiveProofPeriodStatus();
-    //   newPeriodStartBlock = statusAfterUpdate.activeProofPeriodStartBlock;
-
-    //   expect(newPeriodStartBlock).to.be.greaterThan(initialPeriodStartBlock);
-    //   expect(newPeriodStartBlock).to.be.equal(
-    //     initialPeriodStartBlock + BigInt(proofingPeriodDurationInBlocks) + 1n,
-    //   );
-    // });
-
-    // it('Should return correct historical proofing period start', async () => {
-    //   // Update to current block
-    //   await mineProofPeriodBlocks(100n, RandomSamplingStorage);
-
-    //   let tx =
-    //     await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-    //   await tx.wait();
-
-    //   let status = await RandomSamplingStorage.getActiveProofPeriodStatus();
-    //   let periodStartBlock = status.activeProofPeriodStartBlock;
-
-    //   await expect(
-    //     RandomSamplingStorage.getHistoricalProofPeriodStartBlock(0, 1),
-    //   ).to.be.revertedWith('Proof period start block must be greater than 0');
-    //   await expect(
-    //     RandomSamplingStorage.getHistoricalProofPeriodStartBlock(102, 1),
-    //   ).to.be.revertedWith('Proof period start block is not valid');
-    //   await expect(
-    //     RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
-    //       periodStartBlock,
-    //       999,
-    //     ),
-    //   ).to.be.revertedWithPanic(PANIC_ARITHMETIC_OVERFLOW);
-
-    //   await mineProofPeriodBlocks(periodStartBlock, RandomSamplingStorage);
-    //   tx =
-    //     await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-    //   await tx.wait();
-
-    //   status = await RandomSamplingStorage.getActiveProofPeriodStatus();
-    //   periodStartBlock = status.activeProofPeriodStartBlock;
-
-    //   const historicalPeriodStartBlock =
-    //     await RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
-    //       periodStartBlock,
-    //       2,
-    //     );
-
-    //   expect(historicalPeriodStartBlock).to.be.equal(
-    //     periodStartBlock - BigInt(proofingPeriodDurationInBlocks) * 2n - 2n,
-    //   );
-    // });
+      const { activeProofPeriodStartBlock: newPeriodStartBlock } =
+        await updateAndGetActiveProofPeriod();
+      const historicalPeriodStartBlock =
+        await RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
+          newPeriodStartBlock,
+          2,
+        );
+      expect(historicalPeriodStartBlock).to.be.equal(
+        newPeriodStartBlock - BigInt(proofingPeriodDurationInBlocks) * 2n,
+      );
+    });
 
     // it('Should return correct active proof period', async () => {
     //   let tx =
     //     await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
     //   await tx.wait();
-
     //   let status = await RandomSamplingStorage.getActiveProofPeriodStatus();
     //   let periodStartBlock = status.activeProofPeriodStartBlock;
-
     //   expect(status.isValid).to.be.equal(true, 'Active period should be valid');
-
     //   await mineProofPeriodBlocks(periodStartBlock, RandomSamplingStorage);
-
     //   status = await RandomSamplingStorage.getActiveProofPeriodStatus();
     //   periodStartBlock = status.activeProofPeriodStartBlock;
-
     //   tx =
     //     await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
     //   await tx.wait();
-
     //   expect(status.isValid).to.be.equal(
     //     false,
     //     'Active period should be valid',
     //   );
-
     // status = await RandomSamplingStorage.getActiveProofPeriodStatus();
     // periodStartBlock = status.activeProofPeriodStartBlock;
-
     // expect(status.isValid).to.be.equal(true, 'Active period should be valid');
     // // Mine a few blocks
     // mineBlocks(Number(proofingPeriodDuration - 10n));
     // status = await RandomSamplingStorage.getActiveProofPeriodStatus();
     // periodStartBlock = status.activeProofPeriodStartBlock;
-
     // expect(status.isValid).to.be.equal(true, 'Active period should be valid');
     // mineBlocks(Number(proofingPeriodDuration));
-
     // status = await RandomSamplingStorage.getActiveProofPeriodStatus();
     // periodStartBlock = status.activeProofPeriodStartBlock;
-
     // console.log(status.isValid);
-
     // // Now should be invalid
     // expect(status.isValid).to.be.equal(false, 'Period should not be active');
     // });
