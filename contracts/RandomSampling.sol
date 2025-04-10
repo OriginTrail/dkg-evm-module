@@ -119,7 +119,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         ) {
             // If node has already solved the challenge for this period, return an empty challenge
             if (nodeChallenge.solved == true) {
-                return RandomSamplingLib.Challenge(0, 0, 0, 0, 0, false);
+                return RandomSamplingLib.Challenge(0, 0, address(0), 0, 0, 0, false);
             }
 
             // If the challenge for this node exists but has not been solved yet, return the existing challenge
@@ -285,6 +285,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
             RandomSamplingLib.Challenge(
                 knowledgeCollectionId,
                 chunkId,
+                address(knowledgeCollectionStorage),
                 chronos.getCurrentEpoch(),
                 activeProofPeriodStartBlock,
                 randomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
