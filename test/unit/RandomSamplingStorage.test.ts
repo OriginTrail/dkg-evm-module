@@ -313,37 +313,40 @@ describe('@unit RandomSamplingStorage', function () {
       );
     });
 
-    // it('Should return correct active proof period', async () => {
-    //   let tx =
-    //     await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-    //   await tx.wait();
-    //   let status = await RandomSamplingStorage.getActiveProofPeriodStatus();
-    //   let periodStartBlock = status.activeProofPeriodStartBlock;
-    //   expect(status.isValid).to.be.equal(true, 'Active period should be valid');
-    //   await mineProofPeriodBlocks(periodStartBlock, RandomSamplingStorage);
-    //   status = await RandomSamplingStorage.getActiveProofPeriodStatus();
-    //   periodStartBlock = status.activeProofPeriodStartBlock;
-    //   tx =
-    //     await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-    //   await tx.wait();
-    //   expect(status.isValid).to.be.equal(
-    //     false,
-    //     'Active period should be valid',
-    //   );
-    // status = await RandomSamplingStorage.getActiveProofPeriodStatus();
-    // periodStartBlock = status.activeProofPeriodStartBlock;
-    // expect(status.isValid).to.be.equal(true, 'Active period should be valid');
-    // // Mine a few blocks
-    // mineBlocks(Number(proofingPeriodDuration - 10n));
-    // status = await RandomSamplingStorage.getActiveProofPeriodStatus();
-    // periodStartBlock = status.activeProofPeriodStartBlock;
-    // expect(status.isValid).to.be.equal(true, 'Active period should be valid');
-    // mineBlocks(Number(proofingPeriodDuration));
-    // status = await RandomSamplingStorage.getActiveProofPeriodStatus();
-    // periodStartBlock = status.activeProofPeriodStartBlock;
-    // console.log(status.isValid);
-    // // Now should be invalid
-    // expect(status.isValid).to.be.equal(false, 'Period should not be active');
-    // });
+    it('Should return correct active proof period', async () => {
+      let { activeProofPeriodStartBlock, isValid } =
+        await updateAndGetActiveProofPeriod();
+
+      expect(isValid).to.be.equal(true, 'Period should be valid');
+
+      await mineProofPeriodBlocks(
+        activeProofPeriodStartBlock,
+        RandomSamplingStorage,
+      );
+
+      let statusAfterUpdate =
+        await RandomSamplingStorage.getActiveProofPeriodStatus();
+      expect(statusAfterUpdate.isValid).to.be.equal(
+        false,
+        'Period should be valid',
+      );
+
+      await updateAndGetActiveProofPeriod();
+      await mineBlocks(Number(proofingPeriodDurationInBlocks) - 2);
+      statusAfterUpdate =
+        await RandomSamplingStorage.getActiveProofPeriodStatus();
+      expect(statusAfterUpdate.isValid).to.be.equal(
+        true,
+        'Period should be valid',
+      );
+
+      await mineBlocks(Number(proofingPeriodDurationInBlocks) * 20);
+      statusAfterUpdate =
+        await RandomSamplingStorage.getActiveProofPeriodStatus();
+      expect(statusAfterUpdate.isValid).to.be.equal(
+        false,
+        'Period should not be active',
+      );
+    });
   });
 });
