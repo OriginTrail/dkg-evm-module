@@ -16,4 +16,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ['RandomSamplingStorage'];
-func.dependencies = ['Hub', 'Chronos', 'Token', 'KnowledgeCollectionStorage'];
+func.dependencies = ['Hub', 'Chronos'];
