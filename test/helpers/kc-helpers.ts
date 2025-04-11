@@ -117,6 +117,9 @@ export async function createProfilesAndKC(
     KnowledgeCollection: KnowledgeCollection;
     Token: Token;
   },
+  merkleRoot: HexString = ethers.keccak256(
+    ethers.toUtf8Bytes('test-merkle-root'),
+  ),
 ) {
   const { identityId: publishingNodeIdentityId } = await createProfile(
     contracts.Profile,
@@ -131,6 +134,7 @@ export async function createProfilesAndKC(
     publishingNode,
     publishingNodeIdentityId,
     receivingNodes,
+    merkleRoot,
   );
   const { collectionId } = await createKnowledgeCollection(
     kcCreator,
