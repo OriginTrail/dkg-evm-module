@@ -10,13 +10,22 @@ import {
   Chronos,
   KnowledgeCollectionStorage,
   RandomSampling,
+  Profile,
+  Token,
+  KnowledgeCollection,
 } from '../../typechain';
 import { RandomSamplingLib } from '../../typechain/contracts/storage/RandomSamplingStorage';
+import { createProfilesAndKC } from '../helpers/kc-helpers';
 import {
   createMockChallenge,
   mineBlocks,
   mineProofPeriodBlocks,
 } from '../helpers/random-sampling';
+import {
+  getDefaultKCCreator,
+  getDefaultPublishingNode,
+  getDefaultReceivingNodes,
+} from '../helpers/setup-helpers';
 
 type RandomStorageFixture = {
   accounts: SignerWithAddress[];
@@ -28,25 +37,32 @@ type RandomStorageFixture = {
 const PANIC_ARITHMETIC_OVERFLOW = 0x11;
 
 describe('@unit RandomSamplingStorage', function () {
-  // let RandomSampling: RandomSampling;
-  let RandomSamplingStorage: RandomSamplingStorage;
   let Hub: Hub;
-  let accounts: SignerWithAddress[];
-  const proofingPeriodDurationInBlocks =
-    parameters.development.RandomSamplingStorage.proofingPeriodDurationInBlocks;
+  let RandomSamplingStorage: RandomSamplingStorage;
+  let RandomSampling: RandomSampling;
   let Chronos: Chronos;
   let KnowledgeCollectionStorage: KnowledgeCollectionStorage;
+  let Token: Token;
+  let KnowledgeCollection: KnowledgeCollection;
   let MockChallenge: RandomSamplingLib.ChallengeStruct;
-  let RandomSampling: RandomSampling;
+  let Profile: Profile;
+  let accounts: SignerWithAddress[];
+
+  const proofingPeriodDurationInBlocks =
+    parameters.development.RandomSamplingStorage.proofingPeriodDurationInBlocks;
 
   async function deployRandomSamplingFixture(): Promise<RandomStorageFixture> {
     await hre.deployments.fixture([
       'Token',
+      'ParanetKnowledgeCollectionsRegistry',
+      'ParanetKnowledgeMinersRegistry',
       'KnowledgeCollectionStorage',
+      'KnowledgeCollection',
       'RandomSamplingStorage',
       'RandomSampling',
       'ShardingTableStorage',
       'EpochStorage',
+      'Profile',
     ]);
 
     Hub = await hre.ethers.getContract<Hub>('Hub');
@@ -55,13 +71,17 @@ describe('@unit RandomSamplingStorage', function () {
     RandomSamplingStorage = await hre.ethers.getContract<RandomSamplingStorage>(
       'RandomSamplingStorage',
     );
+    RandomSampling =
+      await hre.ethers.getContract<RandomSampling>('RandomSampling');
+    Token = await hre.ethers.getContract<Token>('Token');
     KnowledgeCollectionStorage =
       await hre.ethers.getContract<KnowledgeCollectionStorage>(
         'KnowledgeCollectionStorage',
       );
-
-    RandomSampling =
-      await hre.ethers.getContract<RandomSampling>('RandomSampling');
+    KnowledgeCollection = await hre.ethers.getContract<KnowledgeCollection>(
+      'KnowledgeCollection',
+    );
+    Profile = await hre.ethers.getContract<Profile>('Profile');
 
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
@@ -330,40 +350,112 @@ describe('@unit RandomSamplingStorage', function () {
         'Period should not be active',
       );
     });
+
+    it('Should pick correct proofing period duration based on epoch', async () => {
+      let proofingPeriodDuration =
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      expect(proofingPeriodDuration).to.be.equal(
+        BigInt(proofingPeriodDurationInBlocks),
+      );
+
+      // Increase time half of the next epoch
+      await time.increase(Number(await Chronos.epochLength()) / 2);
+      // Should still pick the same proofing period duration
+      expect(proofingPeriodDuration).to.be.equal(
+        BigInt(proofingPeriodDurationInBlocks),
+      );
+
+      // Set new proofing period duration for the new epoch
+      const newProofingPeriodDuration = 1000;
+      await RandomSampling.setProofingPeriodDurationInBlocks(
+        newProofingPeriodDuration,
+      );
+      proofingPeriodDuration =
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      expect(proofingPeriodDuration).to.be.equal(proofingPeriodDuration);
+
+      // Increate time to the next epoch
+      await time.increase(Number(await Chronos.epochLength()) + 1);
+
+      // Should now be able to pick new proofing period duration
+      proofingPeriodDuration =
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      expect(proofingPeriodDuration).to.be.equal(
+        BigInt(newProofingPeriodDuration),
+      );
+    });
+
+    it('Should return correct proofing period duration based on epoch history', async () => {
+      const baseDuration = 100;
+      const testEpochs = 3;
+
+      const currentEpoch = await Chronos.getCurrentEpoch();
+
+      for (let i = 0; i < testEpochs; i++) {
+        const duration = baseDuration + i;
+        await RandomSampling.setProofingPeriodDurationInBlocks(duration);
+        await time.increase(Number(await Chronos.epochLength()));
+      }
+
+      const newEpoch = await Chronos.getCurrentEpoch();
+      expect(newEpoch).to.equal(currentEpoch + BigInt(testEpochs));
+
+      // go back before any effectiveEpoch
+      await expect(
+        RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(
+          newEpoch - BigInt(testEpochs + 1),
+        ),
+      ).to.be.revertedWith('No applicable duration found');
+
+      for (let i = 0; i < testEpochs; i++) {
+        const targetEpoch = newEpoch - BigInt(i);
+        const expectedDuration = baseDuration + (testEpochs - 1 - i);
+
+        const actual =
+          await RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(
+            targetEpoch,
+          );
+
+        expect(actual).to.equal(expectedDuration);
+      }
+    });
   });
 
-  it('Should pick correct proofing period duration based on epoch', async () => {
-    let proofingPeriodDuration =
-      await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-    expect(proofingPeriodDuration).to.be.equal(
-      BigInt(proofingPeriodDurationInBlocks),
+  // await expect(RandomSamplingStorage.connect(accounts[1]).initialize())
+  describe('Challenge Handling', async () => {
+    const kcCreator = getDefaultKCCreator(accounts);
+    const publishingNode = getDefaultPublishingNode(accounts);
+    const receivingNodes = getDefaultReceivingNodes(accounts);
+
+    const { publishingNodeIdentityId } = await createProfilesAndKC(
+      kcCreator,
+      publishingNode,
+      receivingNodes,
+      {
+        Profile,
+        KnowledgeCollection,
+        Token,
+      },
     );
 
-    // Increase time half of the next epoch
-    await time.increase(Number(await Chronos.epochLength()) / 2);
-    // Should still pick the same proofing period duration
-    expect(proofingPeriodDuration).to.be.equal(
-      BigInt(proofingPeriodDurationInBlocks),
-    );
+    it('Should set and get challenge correctly', async () => {
+      const challenge = await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+      const nodeChallenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
 
-    // Set new proofing period duration for the new epoch
-    const newProofingPeriodDuration = 1000;
-    await RandomSampling.setProofingPeriodDurationInBlocks(
-      newProofingPeriodDuration,
-    );
-    proofingPeriodDuration =
-      await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      expect(challenge).to.deep.equal(nodeChallenge);
+    });
 
-    expect(proofingPeriodDuration).to.be.equal(proofingPeriodDuration);
-
-    // Increate time to the next epoch
-    await time.increase(Number(await Chronos.epochLength()) + 1);
-
-    // Should now be able to pick new proofing period duration
-    proofingPeriodDuration =
-      await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-    expect(proofingPeriodDuration).to.be.equal(
-      BigInt(newProofingPeriodDuration),
-    );
+    it('Should revert if challenge is not found', async () => {
+      await expect(
+        RandomSamplingStorage.getNodeChallenge(1),
+      ).to.be.revertedWithCustomError(
+        RandomSamplingStorage,
+        'ChallengeNotFound',
+      );
+    });
   });
 });
