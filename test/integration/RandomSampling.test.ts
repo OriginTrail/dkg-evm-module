@@ -554,18 +554,18 @@ describe('@integration RandomSampling', () => {
         await hre.network.provider.send('evm_mine');
       }
 
-      // Create second challenge in same period
+      // Attempt to create second challenge - should revert
       const tx2 = RandomSampling.connect(
         publishingNode.operational,
       ).createChallenge();
       await expect(tx2).to.be.revertedWith(
         'An unsolved challenge already exists for this node in the current proof period',
       );
+
+      // Verify stored challenge hasn't changed
       const challenge2 = await RandomSamplingStorage.getNodeChallenge(
         publishingNodeIdentityId,
       );
-
-      // Challenges should be identical
       expect(challenge2.knowledgeCollectionId).to.equal(
         challenge1.knowledgeCollectionId,
       );
@@ -580,54 +580,24 @@ describe('@integration RandomSampling', () => {
       expect(challenge2.solved).to.equal(challenge1.solved); // Both false
     });
 
-    it('Should return an existing solved challenge if already solved for current period', async () => {
+    it('Should revert if creating challenge when already solved for current period', async () => {
       // Create profile and identity first
       const publishingNode = getDefaultPublishingNode(accounts);
       const { identityId } = await createProfile(Profile, publishingNode);
 
       // Create a mock challenge that's marked as solved
-      const mockChallenge = await createMockChallenge();
+      const mockChallenge = await createMockChallenge(); // Uses helper which sets solved=true
 
       // Store the mock challenge in the storage contract
-      // Make sure the mock challenge's start block matches the current active one
-      const tx1 =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await tx1.wait();
-      const proofPeriodStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const proofPeriodStartBlock =
-        proofPeriodStatus.activeProofPeriodStartBlock;
+      await RandomSamplingStorage.setNodeChallenge(identityId, mockChallenge);
 
-      const challengeToStore: Challenge = {
-        ...mockChallenge,
-      };
-      challengeToStore.activeProofPeriodStartBlock = proofPeriodStartBlock;
-      await RandomSamplingStorage.setNodeChallenge(
-        identityId,
-        challengeToStore,
-      );
-
-      // Try to create a new challenge for the same period
+      // Try to create a new challenge for the same period - should revert
       const challengeTx = RandomSampling.connect(
         publishingNode.operational,
       ).createChallenge();
       await expect(challengeTx).to.be.revertedWith(
         'The challenge for this proof period has already been solved',
       );
-
-      // Get the challenge from storage - it should be the one we stored
-      const returnedChallenge =
-        await RandomSamplingStorage.getNodeChallenge(identityId);
-
-      // Since the challenge was solved, the stored challenge should still be marked as solved
-      expect(returnedChallenge.knowledgeCollectionId).to.equal(
-        challengeToStore.knowledgeCollectionId,
-      );
-      expect(returnedChallenge.activeProofPeriodStartBlock).to.equal(
-        challengeToStore.activeProofPeriodStartBlock,
-      );
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(returnedChallenge.solved).to.be.true;
     });
 
     it('Should submit a valid proof successfully and calculate the correct score', async () => {
@@ -836,38 +806,83 @@ describe('@integration RandomSampling', () => {
         publishingNodeIdentityId,
       );
 
-      // Generate invalid proof data (e.g., wrong chunk or manipulated proof)
+      // Generate invalid proof data
       const chunks = kcTools.splitIntoChunks(quads, 32);
-      const wrongChunk = chunks[challenge.chunkId + 1n];
-      const { proof } = kcTools.calculateMerkleProof(
+      const correctChunk = chunks[challenge.chunkId];
+      const wrongChunk =
+        challenge.chunkId + 1n < chunks.length
+          ? chunks[challenge.chunkId + 1n]
+          : challenge.chunkId > 0
+            ? chunks[challenge.chunkId - 1n]
+            : 'invalid chunk data';
+      const { proof: correctProof } = kcTools.calculateMerkleProof(
         quads,
         32,
         challenge.chunkId,
-      ); // Correct proof
+      );
+      const wrongProof: string[] = [];
 
       // Try submitting correct proof with wrong chunk
       const submitWrongChunkTx = RandomSampling.connect(
         publishingNode.operational,
-      ).submitProof(wrongChunk, proof);
+      ).submitProof(wrongChunk, correctProof);
       await expect(submitWrongChunkTx).to.be.revertedWith('Proof is not valid');
       let finalChallenge = await RandomSamplingStorage.getNodeChallenge(
         publishingNodeIdentityId,
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(finalChallenge.solved).to.be.false;
+      expect(finalChallenge.solved).to.be.false; // Ensure state unchanged
 
-      // Try submitting correct chunk with wrong proof (e.g., an empty proof)
-      const challengeChunk = chunks[challenge.chunkId];
-      const wrongProof: string[] = [];
+      // Try submitting correct chunk with wrong proof
       const submitWrongProofTx = RandomSampling.connect(
         publishingNode.operational,
-      ).submitProof(challengeChunk, wrongProof);
+      ).submitProof(correctChunk, wrongProof);
       await expect(submitWrongProofTx).to.be.revertedWith('Proof is not valid');
       finalChallenge = await RandomSamplingStorage.getNodeChallenge(
         publishingNodeIdentityId,
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(finalChallenge.solved).to.be.false;
+      expect(finalChallenge.solved).to.be.false; // Ensure state unchanged
+    });
+
+    it('Should fail challenge creation if no active Knowledge Collections exist', async () => {
+      // Setup a node profile
+      const publishingNode = getDefaultPublishingNode(accounts);
+
+      const { identityId: publishingNodeIdentityId } = await createProfile(
+        Profile,
+        publishingNode,
+      );
+
+      const minStake = await ParametersStorage.minimumStake();
+      await setNodeStake(
+        publishingNode,
+        BigInt(publishingNodeIdentityId),
+        BigInt(minStake),
+        accounts[0],
+        {
+          Token,
+          Staking,
+          Ask,
+        },
+      );
+      await Profile.connect(publishingNode.operational).updateAsk(
+        BigInt(publishingNodeIdentityId),
+        100n,
+      );
+      await Ask.connect(accounts[0]).recalculateActiveSet();
+
+      // Ensure no KCs are created or they are expired (by default none are created here)
+
+      // Attempt to create challenge
+      const createTx = RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+
+      // Verification
+      await expect(createTx).to.be.revertedWith(
+        'No knowledge collections exist',
+      );
     });
   });
 
