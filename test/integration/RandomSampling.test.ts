@@ -800,6 +800,75 @@ describe('@integration RandomSampling', () => {
         'This challenge is no longer active',
       );
     });
+
+    it('Should fail to submit invalid proof (wrong chunk/proof)', async () => {
+      // Setup
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const { publishingNodeIdentityId } = await createProfilesAndKC(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        { Profile, KnowledgeCollection, Token },
+        merkleRoot,
+      );
+      const minStake = await ParametersStorage.minimumStake();
+      await setNodeStake(
+        publishingNode,
+        BigInt(publishingNodeIdentityId),
+        BigInt(minStake),
+        accounts[0],
+        { Token, Staking, Ask },
+      );
+      await Profile.connect(publishingNode.operational).updateAsk(
+        publishingNodeIdentityId,
+        100n,
+      );
+      await Ask.connect(accounts[0]).recalculateActiveSet();
+
+      // Create challenge
+      const challengeTx = await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+      await challengeTx.wait();
+      const challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      // Generate invalid proof data (e.g., wrong chunk or manipulated proof)
+      const chunks = kcTools.splitIntoChunks(quads, 32);
+      const wrongChunk = chunks[challenge.chunkId + 1n];
+      const { proof } = kcTools.calculateMerkleProof(
+        quads,
+        32,
+        challenge.chunkId,
+      ); // Correct proof
+
+      // Try submitting correct proof with wrong chunk
+      const submitWrongChunkTx = RandomSampling.connect(
+        publishingNode.operational,
+      ).submitProof(wrongChunk, proof);
+      await expect(submitWrongChunkTx).to.be.revertedWith('Proof is not valid');
+      let finalChallenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(finalChallenge.solved).to.be.false;
+
+      // Try submitting correct chunk with wrong proof (e.g., an empty proof)
+      const challengeChunk = chunks[challenge.chunkId];
+      const wrongProof: string[] = [];
+      const submitWrongProofTx = RandomSampling.connect(
+        publishingNode.operational,
+      ).submitProof(challengeChunk, wrongProof);
+      await expect(submitWrongProofTx).to.be.revertedWith('Proof is not valid');
+      finalChallenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(finalChallenge.solved).to.be.false;
+    });
   });
 
   describe('Score Calculation', () => {
