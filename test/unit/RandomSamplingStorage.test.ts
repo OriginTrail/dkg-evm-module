@@ -1,7 +1,6 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
-import { loadFixture, mine } from '@nomicfoundation/hardhat-network-helpers';
+import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
-import { ContractTransactionResponse } from 'ethers';
 import hre, { ethers } from 'hardhat';
 
 import parameters from '../../deployments/parameters.json';
@@ -10,6 +9,7 @@ import {
   RandomSamplingStorage,
   Chronos,
   KnowledgeCollectionStorage,
+  RandomSampling,
 } from '../../typechain';
 import { RandomSamplingLib } from '../../typechain/contracts/storage/RandomSamplingStorage';
 import {
@@ -37,9 +37,17 @@ describe('@unit RandomSamplingStorage', function () {
   let Chronos: Chronos;
   let KnowledgeCollectionStorage: KnowledgeCollectionStorage;
   let MockChallenge: RandomSamplingLib.ChallengeStruct;
+  let RandomSampling: RandomSampling;
 
   async function deployRandomSamplingFixture(): Promise<RandomStorageFixture> {
-    await hre.deployments.fixture(['RandomSamplingStorage']);
+    await hre.deployments.fixture([
+      'Token',
+      'KnowledgeCollectionStorage',
+      'RandomSamplingStorage',
+      'RandomSampling',
+      'ShardingTableStorage',
+      'EpochStorage',
+    ]);
 
     Hub = await hre.ethers.getContract<Hub>('Hub');
     accounts = await ethers.getSigners();
@@ -51,6 +59,10 @@ describe('@unit RandomSamplingStorage', function () {
       await hre.ethers.getContract<KnowledgeCollectionStorage>(
         'KnowledgeCollectionStorage',
       );
+
+    RandomSampling =
+      await hre.ethers.getContract<RandomSampling>('RandomSampling');
+
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, RandomSamplingStorage, Hub, Chronos };
@@ -65,7 +77,7 @@ describe('@unit RandomSamplingStorage', function () {
 
   beforeEach(async () => {
     hre.helpers.resetDeploymentsJson();
-    ({ RandomSamplingStorage } = await loadFixture(
+    ({ RandomSamplingStorage, Chronos } = await loadFixture(
       deployRandomSamplingFixture,
     ));
 
@@ -84,7 +96,6 @@ describe('@unit RandomSamplingStorage', function () {
       expect(await RandomSamplingStorage.version()).to.equal('1.0.0');
     });
 
-    // 1. Initialization tests
     it('Should set the initial parameters correctly', async function () {
       const proofingPeriod =
         await RandomSamplingStorage.proofingPeriodDurations(0);
@@ -134,7 +145,6 @@ describe('@unit RandomSamplingStorage', function () {
         )
         .withArgs('Only Contracts in Hub');
 
-      // TODO: Test positive path - isContractAllowed contract can call this function
       await expect(
         RandomSamplingStorage.connect(accounts[1]).setNodeChallenge(
           0,
@@ -224,7 +234,6 @@ describe('@unit RandomSamplingStorage', function () {
         const proofPeriodStatus =
           await RandomSamplingStorage.getActiveProofPeriodStatus();
         const periodStartBlock = proofPeriodStatus.activeProofPeriodStartBlock;
-        console.log(`Period ${i} - ${periodStartBlock}`);
         proofingPeriodDuration = await mineProofPeriodBlocks(
           periodStartBlock,
           RandomSamplingStorage,
@@ -323,6 +332,38 @@ describe('@unit RandomSamplingStorage', function () {
     });
   });
 
-  // getActiveProofingPeriodDurationInBlocks
-  it('Should pick correct proofing period duration based on epoch', async () => {});
+  it('Should pick correct proofing period duration based on epoch', async () => {
+    let proofingPeriodDuration =
+      await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+    expect(proofingPeriodDuration).to.be.equal(
+      BigInt(proofingPeriodDurationInBlocks),
+    );
+
+    // Increase time half of the next epoch
+    await time.increase(Number(await Chronos.epochLength()) / 2);
+    // Should still pick the same proofing period duration
+    expect(proofingPeriodDuration).to.be.equal(
+      BigInt(proofingPeriodDurationInBlocks),
+    );
+
+    // Set new proofing period duration for the new epoch
+    const newProofingPeriodDuration = 1000;
+    await RandomSampling.setProofingPeriodDurationInBlocks(
+      newProofingPeriodDuration,
+    );
+    proofingPeriodDuration =
+      await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+
+    expect(proofingPeriodDuration).to.be.equal(proofingPeriodDuration);
+
+    // Increate time to the next epoch
+    await time.increase(Number(await Chronos.epochLength()) + 1);
+
+    // Should now be able to pick new proofing period duration
+    proofingPeriodDuration =
+      await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+    expect(proofingPeriodDuration).to.be.equal(
+      BigInt(newProofingPeriodDuration),
+    );
+  });
 });
