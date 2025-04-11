@@ -1,5 +1,6 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { ethers, getBytes } from 'ethers';
+import { HexString } from 'ethers/lib.commonjs/utils/data';
 
 import { createProfile, createProfiles } from './profile-helpers';
 import { KCSignaturesData, NodeAccounts } from './types';
@@ -21,8 +22,10 @@ export async function getKCSignaturesData(
   publishingNode: NodeAccounts,
   publisherIdentityId: number,
   receivingNodes: NodeAccounts[],
+  merkleRoot: HexString = ethers.keccak256(
+    ethers.toUtf8Bytes('test-merkle-root'),
+  ),
 ): Promise<KCSignaturesData> {
-  const merkleRoot = ethers.keccak256(ethers.toUtf8Bytes('test-merkle-root'));
   const publisherMessageHash = ethers.solidityPackedKeccak256(
     ['uint72', 'bytes32'],
     [publisherIdentityId, merkleRoot],
@@ -114,6 +117,9 @@ export async function createProfilesAndKC(
     KnowledgeCollection: KnowledgeCollection;
     Token: Token;
   },
+  merkleRoot: HexString = ethers.keccak256(
+    ethers.toUtf8Bytes('test-merkle-root'),
+  ),
 ) {
   const { identityId: publishingNodeIdentityId } = await createProfile(
     contracts.Profile,
@@ -128,6 +134,7 @@ export async function createProfilesAndKC(
     publishingNode,
     publishingNodeIdentityId,
     receivingNodes,
+    merkleRoot,
   );
   const { collectionId } = await createKnowledgeCollection(
     kcCreator,
