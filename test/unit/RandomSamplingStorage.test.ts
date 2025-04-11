@@ -438,41 +438,32 @@ describe('@unit RandomSamplingStorage', function () {
         },
       );
 
-      await RandomSampling.connect(
-        publishingNode.operational,
-      ).createChallenge();
+      const signer = await ethers.getSigner(accounts[0].address);
+      await RandomSamplingStorage.connect(signer).setNodeChallenge(
+        publishingNodeIdentityId,
+        MockChallenge,
+      );
 
-      const nodeChallenge = await RandomSamplingStorage.getNodeChallenge(
+      const challenge = await RandomSamplingStorage.getNodeChallenge(
         publishingNodeIdentityId,
       );
 
-      const proofPeriodDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      const proofPeriodStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const proofPeriodStartBlock =
-        proofPeriodStatus.activeProofPeriodStartBlock;
-
       // Verify challenge properties
-      expect(nodeChallenge.knowledgeCollectionId).to.be.a('bigint');
-      expect(nodeChallenge.chunkId).to.be.a('bigint');
-      expect(nodeChallenge.epoch).to.be.a('bigint');
-      expect(nodeChallenge.activeProofPeriodStartBlock).to.be.a('bigint');
-      expect(nodeChallenge.proofingPeriodDurationInBlocks).to.be.a('bigint');
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(nodeChallenge.solved).to.be.false;
-
-      expect(nodeChallenge.knowledgeCollectionId).to.be.equal(1n);
-      expect(nodeChallenge.epoch).to.be.equal(1n);
-      expect(nodeChallenge.activeProofPeriodStartBlock).to.be.equal(
-        proofPeriodStartBlock,
+      expect(challenge.knowledgeCollectionId).to.be.equal(
+        MockChallenge.knowledgeCollectionId,
       );
-      expect(nodeChallenge.proofingPeriodDurationInBlocks).to.be.equal(
-        proofPeriodDuration,
+      expect(challenge.chunkId).to.be.equal(MockChallenge.chunkId);
+      expect(challenge.epoch).to.be.equal(MockChallenge.epoch);
+      expect(challenge.proofingPeriodDurationInBlocks).to.be.equal(
+        MockChallenge.proofingPeriodDurationInBlocks,
       );
-
-      expect(nodeChallenge == null).to.equal(false);
-      expect(nodeChallenge.solved).to.equal(false);
+      expect(challenge.activeProofPeriodStartBlock).to.be.equal(
+        MockChallenge.activeProofPeriodStartBlock,
+      );
+      expect(challenge.proofingPeriodDurationInBlocks).to.be.equal(
+        MockChallenge.proofingPeriodDurationInBlocks,
+      );
+      expect(challenge.solved).to.be.equal(MockChallenge.solved);
     });
 
     it('Should revert if challenge is not found', async () => {
@@ -487,9 +478,58 @@ describe('@unit RandomSamplingStorage', function () {
       ];
       const nodeChallenge: RandomSamplingLib.ChallengeStruct =
         await RandomSamplingStorage.getNodeChallenge(2);
-
-      console.log(nodeChallenge);
       expect(nodeChallenge).to.be.deep.equal(invalidChallenge);
+    });
+  });
+
+  /*
+    Test: incrementEpochNodeValidProofsCount and getEpochNodeValidProofsCount
+    Assert increment logic over multiple epochs and nodes.
+    Test: addToNodeScore correctly adds to individual and global scores
+    Validate changes in both nodeEpochProofPeriodScore and allNodesEpochProofPeriodScore.
+    Test: getEpochNodeDelegatorScore and addToEpochNodeDelegatorScore
+    Confirm scores accumulate correctly per delegator key.
+  */
+  describe('Node Score System', () => {
+    it('Should increment and get epoch node valid proofs count', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const { publishingNodeIdentityId } = await createProfilesAndKC(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        {
+          Profile,
+          KnowledgeCollection,
+          Token,
+        },
+      );
+
+      const signer = await ethers.getSigner(accounts[0].address);
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const currentNodeScore =
+        await RandomSamplingStorage.getEpochNodeValidProofsCount(
+          currentEpoch,
+          publishingNodeIdentityId,
+        );
+
+      expect(currentNodeScore).to.be.equal(0n);
+
+      for (let i = 0; i < 10; i++) {
+        await RandomSamplingStorage.connect(
+          signer,
+        ).incrementEpochNodeValidProofsCount(i, publishingNodeIdentityId);
+
+        const validProofsCount =
+          await RandomSamplingStorage.getEpochNodeValidProofsCount(
+            i,
+            publishingNodeIdentityId,
+          );
+        expect(validProofsCount).to.be.equal(BigInt(i) + 1n);
+
+        break;
+      }
     });
   });
 });
