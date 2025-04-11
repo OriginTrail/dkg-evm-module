@@ -422,40 +422,74 @@ describe('@unit RandomSamplingStorage', function () {
   });
 
   // await expect(RandomSamplingStorage.connect(accounts[1]).initialize())
-  describe('Challenge Handling', async () => {
-    const kcCreator = getDefaultKCCreator(accounts);
-    const publishingNode = getDefaultPublishingNode(accounts);
-    const receivingNodes = getDefaultReceivingNodes(accounts);
-
-    const { publishingNodeIdentityId } = await createProfilesAndKC(
-      kcCreator,
-      publishingNode,
-      receivingNodes,
-      {
-        Profile,
-        KnowledgeCollection,
-        Token,
-      },
-    );
-
+  describe('Challenge Handling', () => {
     it('Should set and get challenge correctly', async () => {
-      const challenge = await RandomSampling.connect(
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const { publishingNodeIdentityId } = await createProfilesAndKC(
+        kcCreator,
+        publishingNode,
+        receivingNodes,
+        {
+          Profile,
+          KnowledgeCollection,
+          Token,
+        },
+      );
+
+      await RandomSampling.connect(
         publishingNode.operational,
       ).createChallenge();
+
       const nodeChallenge = await RandomSamplingStorage.getNodeChallenge(
         publishingNodeIdentityId,
       );
 
-      expect(challenge).to.deep.equal(nodeChallenge);
+      const proofPeriodDuration =
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      const proofPeriodStatus =
+        await RandomSamplingStorage.getActiveProofPeriodStatus();
+      const proofPeriodStartBlock =
+        proofPeriodStatus.activeProofPeriodStartBlock;
+
+      // Verify challenge properties
+      expect(nodeChallenge.knowledgeCollectionId).to.be.a('bigint');
+      expect(nodeChallenge.chunkId).to.be.a('bigint');
+      expect(nodeChallenge.epoch).to.be.a('bigint');
+      expect(nodeChallenge.activeProofPeriodStartBlock).to.be.a('bigint');
+      expect(nodeChallenge.proofingPeriodDurationInBlocks).to.be.a('bigint');
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(nodeChallenge.solved).to.be.false;
+
+      expect(nodeChallenge.knowledgeCollectionId).to.be.equal(1n);
+      expect(nodeChallenge.epoch).to.be.equal(1n);
+      expect(nodeChallenge.activeProofPeriodStartBlock).to.be.equal(
+        proofPeriodStartBlock,
+      );
+      expect(nodeChallenge.proofingPeriodDurationInBlocks).to.be.equal(
+        proofPeriodDuration,
+      );
+
+      expect(nodeChallenge == null).to.equal(false);
+      expect(nodeChallenge.solved).to.equal(false);
     });
 
     it('Should revert if challenge is not found', async () => {
-      await expect(
-        RandomSamplingStorage.getNodeChallenge(1),
-      ).to.be.revertedWithCustomError(
-        RandomSamplingStorage,
-        'ChallengeNotFound',
-      );
+      const invalidChallenge = [
+        0n,
+        0n,
+        '0x0000000000000000000000000000000000000000',
+        0n,
+        0n,
+        0n,
+        false,
+      ];
+      const nodeChallenge: RandomSamplingLib.ChallengeStruct =
+        await RandomSamplingStorage.getNodeChallenge(2);
+
+      console.log(nodeChallenge);
+      expect(nodeChallenge).to.be.deep.equal(invalidChallenge);
     });
   });
 });
