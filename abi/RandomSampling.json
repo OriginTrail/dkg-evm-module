@@ -28,6 +28,22 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "computedMerkleRoot",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "expectedMerkleRoot",
+        "type": "bytes32"
+      }
+    ],
+    "name": "MerkleRootMismatchError",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string",
         "name": "msg",
         "type": "string"

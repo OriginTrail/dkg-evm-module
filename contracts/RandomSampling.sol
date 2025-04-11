@@ -39,6 +39,8 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     ParametersStorage public parametersStorage;
     ShardingTableStorage public shardingTableStorage;
 
+    error MerkleRootMismatchError(bytes32 computedMerkleRoot, bytes32 expectedMerkleRoot);
+
     event ChallengeCreated(
         uint256 indexed identityId,
         uint256 indexed epoch,
@@ -173,7 +175,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
 
             emit ValidProofSubmitted(identityId, epoch, score);
         } else {
-            revert("Proof is not valid");
+            revert MerkleRootMismatchError(computedMerkleRoot, expectedMerkleRoot);
         }
     }
 
