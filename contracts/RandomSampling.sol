@@ -241,8 +241,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
                 uint8(1) // sector = 1 by default
             )
         );
-        uint256 knowledgeCollectionId = 0;
         uint256 knowledgeCollectionsCount = knowledgeCollectionStorage.getLatestKnowledgeCollectionId();
+        if (knowledgeCollectionsCount == 0) {
+            revert("No knowledge collections exist");
+        }
+        uint256 knowledgeCollectionId = 0;
         uint256 currentEpoch = chronos.getCurrentEpoch();
         for (uint8 i = 0; i < 50; ) {
             knowledgeCollectionId = (uint256(pseudoRandomVariable) % knowledgeCollectionsCount) + 1;
