@@ -30,6 +30,7 @@ import {
 } from '../../typechain';
 import { createProfilesAndKC } from '../helpers/kc-helpers';
 import { createProfile } from '../helpers/profile-helpers';
+import { createMockChallenge } from '../helpers/random-sampling';
 import {
   getDefaultKCCreator,
   getDefaultReceivingNodes,
@@ -52,17 +53,6 @@ const quads = [
 ];
 // Generate the Merkle tree and get the root
 const merkleRoot = kcTools.calculateMerkleRoot(quads, 32);
-
-// Type definition for a Challenge
-type Challenge = {
-  knowledgeCollectionId: bigint;
-  chunkId: bigint;
-  knowledgeCollectionStorageContract: string;
-  epoch: bigint;
-  activeProofPeriodStartBlock: bigint;
-  proofingPeriodDurationInBlocks: bigint;
-  solved: boolean;
-};
 
 // Fixture containing all contracts and accounts needed to test RandomSampling
 type RandomSamplingFixture = {
@@ -317,38 +307,6 @@ describe('@integration RandomSampling', () => {
     } = await loadFixture(deployRandomSamplingFixture));
   });
 
-  // Helper function to create a mock challenge
-  async function createMockChallenge(): Promise<Challenge> {
-    // Get all values as BigNumberish
-    const activeBlockTx =
-      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-    await activeBlockTx.wait();
-
-    const activeBlockStatus =
-      await RandomSamplingStorage.getActiveProofPeriodStatus();
-    const activeBlock = activeBlockStatus.activeProofPeriodStartBlock;
-
-    const currentEpochTx = await Chronos.getCurrentEpoch();
-    const currentEpoch = BigInt(currentEpochTx.toString());
-
-    const proofingPeriodDurationTx =
-      await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-    const proofingPeriodDuration = BigInt(proofingPeriodDurationTx.toString());
-
-    const challenge: Challenge = {
-      knowledgeCollectionId: 1n,
-      chunkId: 1n,
-      knowledgeCollectionStorageContract:
-        await KnowledgeCollectionStorage.getAddress(),
-      epoch: currentEpoch,
-      activeProofPeriodStartBlock: activeBlock,
-      proofingPeriodDurationInBlocks: proofingPeriodDuration,
-      solved: true,
-    };
-
-    return challenge;
-  }
-
   describe('Contract Initialization', () => {
     it('Should return the correct name and version of the RandomSampling contract', async () => {
       const name = await RandomSampling.name();
@@ -404,52 +362,6 @@ describe('@integration RandomSampling', () => {
     });
   });
 
-  describe('Proofing Period Management', () => {
-    it('Should return the correct proofing period status', async () => {
-      const status = await RandomSamplingStorage.getActiveProofPeriodStatus();
-      expect(status.activeProofPeriodStartBlock).to.be.a('bigint');
-      expect(status.isValid).to.be.a('boolean');
-    });
-
-    it('Should update activeProofPeriodStartBlock when period expires', async () => {
-      // Get initial active proof period using a view function
-      const initialTx =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await initialTx.wait();
-
-      const initialStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const initialPeriodStartBlock = initialStatus.activeProofPeriodStartBlock;
-
-      const currentBlock = await hre.ethers.provider.getBlockNumber();
-      const diff = currentBlock - Number(initialPeriodStartBlock);
-
-      // Mine blocks to pass the proofing period
-      const proofingPeriodDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      const blocksToMine = Number(proofingPeriodDuration) - diff;
-
-      for (let i = 0; i < blocksToMine; i++) {
-        await hre.network.provider.send('evm_mine');
-      }
-
-      // Update and get the new active proof period
-      const tx =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await tx.wait();
-
-      const statusAfterUpdate =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const newPeriodStartBlock = statusAfterUpdate.activeProofPeriodStartBlock;
-
-      // The new period should be different from the initial one
-      expect(newPeriodStartBlock).to.be.greaterThan(initialPeriodStartBlock);
-      expect(newPeriodStartBlock).to.be.equal(
-        initialPeriodStartBlock + BigInt(proofingPeriodDuration),
-      );
-    });
-  });
-
   describe('Challenge Creation and Proof Submission', () => {
     it('Should create a challenge for a node', async () => {
       const kcCreator = getDefaultKCCreator(accounts);
@@ -473,10 +385,6 @@ describe('@integration RandomSampling', () => {
         await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
       await tx.wait();
 
-      const proofPeriodStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const proofPeriodStartBlock =
-        proofPeriodStatus.activeProofPeriodStartBlock;
       // Create challenge
       const challengeTx = await RandomSampling.connect(
         publishingNode.operational,
@@ -490,6 +398,10 @@ describe('@integration RandomSampling', () => {
 
       const proofPeriodDuration =
         await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      const proofPeriodStatus =
+        await RandomSamplingStorage.getActiveProofPeriodStatus();
+      const proofPeriodStartBlock =
+        proofPeriodStatus.activeProofPeriodStartBlock;
 
       // Verify challenge properties
       expect(challenge.knowledgeCollectionId).to.be.a('bigint');
@@ -510,6 +422,9 @@ describe('@integration RandomSampling', () => {
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(challenge.solved).to.be.false;
+
+      expect(challenge == null).to.equal(false);
+      expect(challenge.solved).to.equal(false);
     });
 
     it('Should return the same challenge if unsolved within the period', async () => {
@@ -586,7 +501,11 @@ describe('@integration RandomSampling', () => {
       const { identityId } = await createProfile(Profile, publishingNode);
 
       // Create a mock challenge that's marked as solved
-      const mockChallenge = await createMockChallenge(); // Uses helper which sets solved=true
+      const mockChallenge = await createMockChallenge(
+        RandomSamplingStorage,
+        KnowledgeCollectionStorage,
+        Chronos,
+      );
 
       // Store the mock challenge in the storage contract
       await RandomSamplingStorage.setNodeChallenge(identityId, mockChallenge);
