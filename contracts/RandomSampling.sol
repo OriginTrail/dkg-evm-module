@@ -299,12 +299,12 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         uint96 maximumStake = parametersStorage.maximumStake();
         uint256 nodeStake = stakingStorage.getNodeStake(identityId);
         nodeStake = nodeStake > maximumStake ? maximumStake : nodeStake;
-        uint256 stakeRatio = nodeStake / 2000000;
+        uint256 stakeRatio = nodeStake / 2_000_000;
         uint256 nodeStakeFactor = (2 * stakeRatio * stakeRatio) / SCALING_FACTOR;
 
         // 2. Node ask factor calculation
         // Formula: nodeStake * ((upperAskBound - nodeAsk) / (upperAskBound - lowerAskBound))^2 / 2,000,000
-        uint256 nodeAskScaled = profileStorage.getAsk(identityId) * 1e18;
+        uint256 nodeAskScaled = uint256(profileStorage.getAsk(identityId)) * 1e18;
         (uint256 askLowerBound, uint256 askUpperBound) = askStorage.getAskBounds();
         uint256 nodeAskFactor = 0;
         if (nodeAskScaled <= askUpperBound && nodeAskScaled >= askLowerBound) {
