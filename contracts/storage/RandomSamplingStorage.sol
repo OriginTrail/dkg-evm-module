@@ -65,6 +65,10 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, HubDepende
     function updateAndGetActiveProofPeriodStartBlock() external returns (uint256) {
         uint256 activeProofingPeriodDurationInBlocks = getActiveProofingPeriodDurationInBlocks();
 
+        if (activeProofingPeriodDurationInBlocks == 0) {
+            revert("Active proofing period duration in blocks should not be 0");
+        }
+
         if (block.number > activeProofPeriodStartBlock + activeProofingPeriodDurationInBlocks - 1) {
             // Calculate how many complete periods have passed since the last active period started
             uint256 blocksSinceLastStart = block.number - activeProofPeriodStartBlock;
