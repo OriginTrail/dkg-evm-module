@@ -137,7 +137,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         randomSamplingStorage.setNodeChallenge(identityId, challenge);
     }
 
-    function submitProof(bytes32 chunkHash, bytes32[] calldata merkleProof) public {
+    function submitProof(string memory chunk, bytes32[] calldata merkleProof) public {
         // Get node identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -152,7 +152,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         }
 
         // Construct the merkle root from chunk and merkleProof
-        bytes32 computedMerkleRoot = _computeMerkleRootFromProof(chunkHash, merkleProof);
+        bytes32 computedMerkleRoot = _computeMerkleRootFromProof(chunk, challenge.chunkId, merkleProof);
 
         // Get the expected merkle root for this challenge
         bytes32 expectedMerkleRoot = knowledgeCollectionStorage.getLatestMerkleRoot(challenge.knowledgeCollectionId);
@@ -206,10 +206,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     }
 
     function _computeMerkleRootFromProof(
-        bytes32 chunkHash,
+        string memory chunk,
+        uint256 chunkId,
         bytes32[] memory merkleProof
     ) internal pure returns (bytes32) {
-        bytes32 computedHash = chunkHash;
+        bytes32 computedHash = keccak256(abi.encodePacked(chunk, chunkId));
 
         for (uint256 i = 0; i < merkleProof.length; ) {
             if (computedHash < merkleProof[i]) {
