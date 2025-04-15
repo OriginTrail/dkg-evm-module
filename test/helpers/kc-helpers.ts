@@ -1,9 +1,9 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { ethers, getBytes } from 'ethers';
+import { HexString } from 'ethers/lib.commonjs/utils/data';
 
-import { createProfile, createProfiles } from './profile-helpers';
 import { KCSignaturesData, NodeAccounts } from './types';
-import { KnowledgeCollection, Token, Profile } from '../../typechain';
+import { KnowledgeCollection, Token } from '../../typechain';
 
 export async function signMessage(
   signer: SignerWithAddress,
@@ -21,8 +21,10 @@ export async function getKCSignaturesData(
   publishingNode: NodeAccounts,
   publisherIdentityId: number,
   receivingNodes: NodeAccounts[],
+  merkleRoot: HexString = ethers.keccak256(
+    ethers.toUtf8Bytes('test-merkle-root'),
+  ),
 ): Promise<KCSignaturesData> {
-  const merkleRoot = ethers.keccak256(ethers.toUtf8Bytes('test-merkle-root'));
   const publisherMessageHash = ethers.solidityPackedKeccak256(
     ['uint72', 'bytes32'],
     [publisherIdentityId, merkleRoot],
@@ -32,20 +34,17 @@ export async function getKCSignaturesData(
     publishingNode.operational,
     publisherMessageHash,
   );
-  const { r: receiverR1, vs: receiverVS1 } = await signMessage(
-    receivingNodes[0].operational,
-    merkleRoot,
-  );
-  const { r: receiverR2, vs: receiverVS2 } = await signMessage(
-    receivingNodes[1].operational,
-    merkleRoot,
-  );
-  const { r: receiverR3, vs: receiverVS3 } = await signMessage(
-    receivingNodes[2].operational,
-    merkleRoot,
-  );
-  const receiverRs = [receiverR1, receiverR2, receiverR3];
-  const receiverVSs = [receiverVS1, receiverVS2, receiverVS3];
+
+  const receiverRs = [];
+  const receiverVSs = [];
+  for (const node of receivingNodes) {
+    const { r: receiverR, vs: receiverVS } = await signMessage(
+      node.operational,
+      merkleRoot,
+    );
+    receiverRs.push(receiverR);
+    receiverVSs.push(receiverVS);
+  }
 
   return {
     merkleRoot,
@@ -58,13 +57,17 @@ export async function getKCSignaturesData(
 
 export async function createKnowledgeCollection(
   kcCreator: SignerWithAddress,
-  publisherIdentityId: number,
-  receiversIdentityIds: number[],
-  signaturesData: KCSignaturesData,
+  publishingNode: NodeAccounts,
+  publishingNodeIdentityId: number,
+  receivingNodes: NodeAccounts[],
+  receivingNodesIdentityIds: number[],
   contracts: {
     KnowledgeCollection: KnowledgeCollection;
     Token: Token;
   },
+  merkleRoot: HexString = ethers.keccak256(
+    ethers.toUtf8Bytes('test-merkle-root'),
+  ),
   publishOperationId: string = 'test-operation-id',
   knowledgeAssetsAmount: number = 10,
   byteSize: number = 1000,
@@ -73,6 +76,13 @@ export async function createKnowledgeCollection(
   isImmutable: boolean = false,
   paymaster: string = ethers.ZeroAddress,
 ) {
+  const signaturesData = await getKCSignaturesData(
+    publishingNode,
+    publishingNodeIdentityId,
+    receivingNodes,
+    merkleRoot,
+  );
+
   // Approve tokens
   await contracts.Token.connect(kcCreator).increaseAllowance(
     contracts.KnowledgeCollection.getAddress(),
@@ -91,10 +101,10 @@ export async function createKnowledgeCollection(
     tokenAmount,
     isImmutable,
     paymaster,
-    publisherIdentityId,
+    publishingNodeIdentityId,
     signaturesData.publisherR,
     signaturesData.publisherVS,
-    receiversIdentityIds,
+    receivingNodesIdentityIds,
     signaturesData.receiverRs,
     signaturesData.receiverVSs,
   );
@@ -103,46 +113,4 @@ export async function createKnowledgeCollection(
   const collectionId = Number(receipt!.logs[2].topics[1]);
 
   return { tx, receipt, collectionId };
-}
-
-export async function createProfilesAndKC(
-  kcCreator: SignerWithAddress,
-  publishingNode: NodeAccounts,
-  receivingNodes: NodeAccounts[],
-  contracts: {
-    Profile: Profile;
-    KnowledgeCollection: KnowledgeCollection;
-    Token: Token;
-  },
-) {
-  const { identityId: publishingNodeIdentityId } = await createProfile(
-    contracts.Profile,
-    publishingNode,
-  );
-  const receivingNodesIdentityIds = (
-    await createProfiles(contracts.Profile, receivingNodes)
-  ).map((p) => p.identityId);
-
-  // Create knowledge collection
-  const signaturesData = await getKCSignaturesData(
-    publishingNode,
-    publishingNodeIdentityId,
-    receivingNodes,
-  );
-  const { collectionId } = await createKnowledgeCollection(
-    kcCreator,
-    publishingNodeIdentityId,
-    receivingNodesIdentityIds,
-    signaturesData,
-    contracts,
-  );
-
-  return {
-    publishingNode,
-    publishingNodeIdentityId,
-    receivingNodes,
-    receivingNodesIdentityIds,
-    kcCreator,
-    collectionId,
-  };
 }

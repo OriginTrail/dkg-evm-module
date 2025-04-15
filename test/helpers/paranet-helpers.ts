@@ -2,7 +2,8 @@ import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { ethers } from 'ethers';
 
 import { ACCESS_POLICIES } from './constants';
-import { createProfilesAndKC } from './kc-helpers';
+import { createKnowledgeCollection } from './kc-helpers';
+import { createProfile, createProfiles } from './profile-helpers';
 import { NodeAccounts } from './types';
 import {
   Profile,
@@ -29,13 +30,22 @@ export async function setupParanet(
   minersAccessPolicy: number = ACCESS_POLICIES.OPEN,
   knowledgeCollectionsSubmissionPolicy: number = ACCESS_POLICIES.OPEN,
 ) {
-  const { publishingNodeIdentityId, receivingNodesIdentityIds, collectionId } =
-    await createProfilesAndKC(
-      kcCreator,
-      publishingNode,
-      receivingNodes,
-      contracts,
-    );
+  const { identityId: publishingNodeIdentityId } = await createProfile(
+    contracts.Profile,
+    publishingNode,
+  );
+  const receivingNodesIdentityIds = (
+    await createProfiles(contracts.Profile, receivingNodes)
+  ).map((p) => p.identityId);
+
+  const { collectionId } = await createKnowledgeCollection(
+    kcCreator,
+    publishingNode,
+    publishingNodeIdentityId,
+    receivingNodes,
+    receivingNodesIdentityIds,
+    contracts,
+  );
 
   // Register paranet
   const paranetKCStorageContract =
