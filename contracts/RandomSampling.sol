@@ -19,13 +19,13 @@ import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 
-contract RandomSampling is INamed, IVersioned, ContractStatus {
+contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "RandomSampling";
     string private constant _VERSION = "1.0.0";
-    uint256 SCALING_FACTOR = 1e18;
+    uint256 public constant SCALING_FACTOR = 1e18;
     uint8 public avgBlockTimeInSeconds;
-    uint256 public W1;
-    uint256 public W2;
+    uint256 public w1;
+    uint256 public w2;
 
     IdentityStorage public identityStorage;
     RandomSamplingStorage public randomSamplingStorage;
@@ -53,10 +53,10 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     event AvgBlockTimeUpdated(uint8 avgBlockTimeInSeconds);
     event ProofingPeriodDurationInBlocksUpdated(uint8 durationInBlocks);
 
-    constructor(address hubAddress, uint8 _avgBlockTimeInSeconds, uint256 _W1, uint256 _W2) ContractStatus(hubAddress) {
+    constructor(address hubAddress, uint8 _avgBlockTimeInSeconds, uint256 _w1, uint256 _w2) ContractStatus(hubAddress) {
         avgBlockTimeInSeconds = _avgBlockTimeInSeconds;
-        W1 = _W1;
-        W2 = _W2;
+        w1 = _w1;
+        w2 = _w2;
     }
 
     function initialize() external {
@@ -83,12 +83,12 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         return _VERSION;
     }
 
-    function setW1(uint256 _W1) external onlyHubOwner {
-        W1 = _W1;
+    function setW1(uint256 _w1) external onlyHubOwner {
+        w1 = _w1;
     }
 
-    function setW2(uint256 _W2) external onlyHubOwner {
-        W2 = _W2;
+    function setW2(uint256 _w2) external onlyHubOwner {
+        w2 = _w2;
     }
 
     function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyHubOwner {
@@ -199,7 +199,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
         uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
 
         uint256 reward = ((totalEpochTracFees / 2) *
-            (W1 * (epochNodeValidProofsCount / allExpectedEpochProofsCount) + W2 * epochNodeDelegatorScore)) /
+            (w1 * (epochNodeValidProofsCount / allExpectedEpochProofsCount) + w2 * epochNodeDelegatorScore)) /
             SCALING_FACTOR ** 2;
 
         return reward;
@@ -208,7 +208,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus {
     function _computeMerkleRootFromProof(
         string memory chunk,
         uint256 chunkId,
-        bytes32[] memory merkleProof
+        bytes32[] calldata merkleProof
     ) internal pure returns (bytes32) {
         bytes32 computedHash = keccak256(abi.encodePacked(chunk, chunkId));
 

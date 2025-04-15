@@ -29,11 +29,11 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, HubDepende
     // epoch => identityId => delegatorKey => score
     mapping(uint256 => mapping(uint72 => mapping(bytes32 => uint256))) public epochNodeDelegatorScore;
 
-    event ProofingPeriodDurationAdded(uint16 durationInBlocks, uint256 effectiveEpoch);
+    event ProofingPeriodDurationAdded(uint16 durationInBlocks, uint256 indexed effectiveEpoch);
     event PendingProofingPeriodDurationReplaced(
         uint16 oldDurationInBlocks,
         uint16 newDurationInBlocks,
-        uint256 effectiveEpoch
+        uint256 indexed effectiveEpoch
     );
 
     constructor(address hubAddress, uint16 _proofingPeriodDurationInBlocks) HubDependent(hubAddress) {
@@ -162,7 +162,10 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, HubDepende
         return nodesChallenges[identityId];
     }
 
-    function setNodeChallenge(uint72 identityId, RandomSamplingLib.Challenge memory challenge) external onlyContracts {
+    function setNodeChallenge(
+        uint72 identityId,
+        RandomSamplingLib.Challenge calldata challenge
+    ) external onlyContracts {
         nodesChallenges[identityId] = challenge;
     }
 

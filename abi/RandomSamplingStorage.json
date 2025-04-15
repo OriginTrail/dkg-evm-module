@@ -47,7 +47,7 @@
         "type": "uint16"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "effectiveEpoch",
         "type": "uint256"
@@ -66,7 +66,7 @@
         "type": "uint16"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "effectiveEpoch",
         "type": "uint256"

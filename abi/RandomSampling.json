@@ -13,12 +13,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "_W1",
+        "name": "_w1",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "_W2",
+        "name": "_w2",
         "type": "uint256"
       }
     ],
@@ -153,20 +153,7 @@
   },
   {
     "inputs": [],
-    "name": "W1",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "W2",
+    "name": "SCALING_FACTOR",
     "outputs": [
       {
         "internalType": "uint256",
@@ -414,7 +401,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_W1",
+        "name": "_w1",
         "type": "uint256"
       }
     ],
@@ -427,7 +414,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_W2",
+        "name": "_w2",
         "type": "uint256"
       }
     ],
@@ -504,6 +491,32 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "w1",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "w2",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]
