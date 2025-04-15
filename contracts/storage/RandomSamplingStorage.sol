@@ -37,6 +37,7 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, HubDepende
     );
 
     constructor(address hubAddress, uint16 _proofingPeriodDurationInBlocks) HubDependent(hubAddress) {
+        require(_proofingPeriodDurationInBlocks > 0, "Proofing period duration in blocks must be greater than 0");
         proofingPeriodDurations.push(
             RandomSamplingLib.ProofingPeriodDuration({
                 durationInBlocks: _proofingPeriodDurationInBlocks,

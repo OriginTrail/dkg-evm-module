@@ -54,6 +54,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     event ProofingPeriodDurationInBlocksUpdated(uint8 durationInBlocks);
 
     constructor(address hubAddress, uint8 _avgBlockTimeInSeconds, uint256 _w1, uint256 _w2) ContractStatus(hubAddress) {
+        require(_avgBlockTimeInSeconds > 0, "Average block time in seconds must be greater than 0");
         avgBlockTimeInSeconds = _avgBlockTimeInSeconds;
         w1 = _w1;
         w2 = _w2;
@@ -92,6 +93,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyHubOwner {
+        require(blockTimeInSeconds > 0, "Block time in seconds must be greater than 0");
         avgBlockTimeInSeconds = blockTimeInSeconds;
         emit AvgBlockTimeUpdated(blockTimeInSeconds);
     }
@@ -185,9 +187,14 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
 
         uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
+
         uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
 
         uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
+
+        if (allExpectedEpochProofsCount == 0) {
+            revert("All expected epoch proofs count is 0");
+        }
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
         uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
@@ -231,7 +238,8 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint72 identityId,
         address originalSender
     ) internal returns (RandomSamplingLib.Challenge memory) {
-        bytes32 myBlockHash = blockhash(block.number - (identityId % 256));
+        // +1 to avoid blockhash(block.number) situation
+        bytes32 myBlockHash = blockhash(block.number - ((identityId % 256) + 1));
 
         bytes32 pseudoRandomVariable = keccak256(
             abi.encodePacked(
