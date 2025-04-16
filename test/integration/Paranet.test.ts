@@ -27,12 +27,9 @@ import {
   ParanetLib,
 } from '../../typechain';
 import { ACCESS_POLICIES } from '../helpers/constants';
-import {
-  createProfilesAndKC,
-  getKCSignaturesData,
-  createKnowledgeCollection,
-} from '../helpers/kc-helpers';
+import { createKnowledgeCollection } from '../helpers/kc-helpers';
 import { setupParanet } from '../helpers/paranet-helpers';
+import { createProfiles, createProfile } from '../helpers/profile-helpers';
 import {
   getDefaultPublishingNode,
   getDefaultReceivingNodes,
@@ -318,16 +315,27 @@ describe('@unit Paranet', () => {
       const paranetKCStorageContract =
         await KnowledgeCollectionStorage.getAddress();
 
-      // Create knowledge collection owned by kcCreator
-      const { collectionId } = await createProfilesAndKC(
+      const contracts = {
+        Profile,
+        KnowledgeCollection,
+        Token,
+      };
+
+      const { identityId: publishingNodeIdentityId } = await createProfile(
+        contracts.Profile,
+        publishingNode,
+      );
+      const receivingNodesIdentityIds = (
+        await createProfiles(contracts.Profile, receivingNodes)
+      ).map((p) => p.identityId);
+
+      const { collectionId } = await createKnowledgeCollection(
         kcCreator,
         publishingNode,
+        publishingNodeIdentityId,
         receivingNodes,
-        {
-          Profile,
-          KnowledgeCollection,
-          Token,
-        },
+        receivingNodesIdentityIds,
+        contracts,
       );
 
       // Try to register paranet with non-owner
@@ -352,16 +360,27 @@ describe('@unit Paranet', () => {
       const paranetKCStorageContract =
         await KnowledgeCollectionStorage.getAddress();
 
-      // Create profiles and KC first
-      const { collectionId } = await createProfilesAndKC(
+      const contracts = {
+        Profile,
+        KnowledgeCollection,
+        Token,
+      };
+
+      const { identityId: publishingNodeIdentityId } = await createProfile(
+        contracts.Profile,
+        publishingNode,
+      );
+      const receivingNodesIdentityIds = (
+        await createProfiles(contracts.Profile, receivingNodes)
+      ).map((p) => p.identityId);
+
+      const { collectionId } = await createKnowledgeCollection(
         kcCreator,
         publishingNode,
+        publishingNodeIdentityId,
         receivingNodes,
-        {
-          Profile,
-          KnowledgeCollection,
-          Token,
-        },
+        receivingNodesIdentityIds,
+        contracts,
       );
 
       // Try with invalid nodes access policy (2)
@@ -685,12 +704,27 @@ describe('@unit Paranet', () => {
       const publishingNode = getDefaultPublishingNode(accounts);
       const receivingNodes = getDefaultReceivingNodes(accounts);
 
-      // Create a KC first
-      const { collectionId } = await createProfilesAndKC(
+      const contracts = {
+        Profile,
+        KnowledgeCollection,
+        Token,
+      };
+
+      const { identityId: publishingNodeIdentityId } = await createProfile(
+        contracts.Profile,
+        publishingNode,
+      );
+      const receivingNodesIdentityIds = (
+        await createProfiles(contracts.Profile, receivingNodes)
+      ).map((p) => p.identityId);
+
+      const { collectionId } = await createKnowledgeCollection(
         kcCreator,
         publishingNode,
+        publishingNodeIdentityId,
         receivingNodes,
-        { Profile, KnowledgeCollection, Token },
+        receivingNodesIdentityIds,
+        contracts,
       );
 
       // Try to update metadata for non-existent paranet
@@ -1785,16 +1819,12 @@ describe('@unit Paranet', () => {
       const poolAddress = event?.args[4];
 
       // 3. Create and submit knowledge collections to paranet
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
           KnowledgeCollection,
           Token,
@@ -2022,16 +2052,12 @@ describe('@unit Paranet', () => {
       );
 
       // Create and submit knowledge collections to paranet
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
           KnowledgeCollection,
           Token,
@@ -2130,16 +2156,12 @@ describe('@unit Paranet', () => {
       ) as EventLog;
 
       // 3. Create and submit KC to generate some rewards
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
           KnowledgeCollection,
           Token,
@@ -2222,16 +2244,12 @@ describe('@unit Paranet', () => {
       ) as EventLog;
 
       // 3. Create and submit KC to generate rewards
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
           KnowledgeCollection,
           Token,
@@ -2386,18 +2404,13 @@ describe('@unit Paranet', () => {
       expect(await pool2Storage.totalOperatorsclaimedToken()).to.equal(0);
       expect(await pool2Storage.totalVotersclaimedToken()).to.equal(0);
 
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
-
       const miner = accounts[100];
       const { collectionId } = await createKnowledgeCollection(
         miner,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
           KnowledgeCollection,
           Token,
@@ -2450,9 +2463,10 @@ describe('@unit Paranet', () => {
 
       const { collectionId: collectionId2 } = await createKnowledgeCollection(
         miner,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
           KnowledgeCollection,
           Token,
@@ -2602,18 +2616,13 @@ describe('@unit Paranet', () => {
       expect(await pool2Storage.totalVotersclaimedToken()).to.equal(0);
 
       // 4. Create and submit knowledge collection
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
-
       const miner = accounts[100];
       const { collectionId } = await createKnowledgeCollection(
         miner,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
           KnowledgeCollection,
           Token,
@@ -2674,9 +2683,10 @@ describe('@unit Paranet', () => {
       // 8. Submit second knowledge collection
       const { collectionId: collectionId2 } = await createKnowledgeCollection(
         miner,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
           KnowledgeCollection,
           Token,
@@ -2742,19 +2752,15 @@ describe('@unit Paranet', () => {
         KnowledgeCollectionStorage,
       });
 
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
-          KnowledgeCollection: KnowledgeCollection,
-          Token: Token,
+          KnowledgeCollection,
+          Token,
         },
       );
       // 3. Submit knowledge collection to paranet
@@ -2837,19 +2843,15 @@ describe('@unit Paranet', () => {
         remainingTokenAmount,
       );
 
-      const signaturesData2 = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId: collectionId2 } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData2,
         {
-          KnowledgeCollection: KnowledgeCollection,
-          Token: Token,
+          KnowledgeCollection,
+          Token,
         },
       );
 
@@ -2895,19 +2897,15 @@ describe('@unit Paranet', () => {
       });
 
       // 2. Create a knowledge collection
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
-          KnowledgeCollection: KnowledgeCollection,
-          Token: Token,
+          KnowledgeCollection,
+          Token,
         },
       );
 
@@ -2944,19 +2942,15 @@ describe('@unit Paranet', () => {
       });
 
       // 2. Create a knowledge collection
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
-          KnowledgeCollection: KnowledgeCollection,
-          Token: Token,
+          KnowledgeCollection,
+          Token,
         },
       );
 
@@ -3005,22 +2999,16 @@ describe('@unit Paranet', () => {
       );
 
       // 2. Setup second paranet
-
-      const signaturesData2 = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
-
       const { collectionId: secondParanetCollectionId } =
         await createKnowledgeCollection(
           kcCreator,
+          publishingNode,
           firstParanet.publishingNodeIdentityId,
+          receivingNodes,
           firstParanet.receivingNodesIdentityIds,
-          signaturesData2,
           {
-            KnowledgeCollection: KnowledgeCollection,
-            Token: Token,
+            KnowledgeCollection,
+            Token,
           },
         );
 
@@ -3036,19 +3024,15 @@ describe('@unit Paranet', () => {
       );
 
       // 3. Create a knowledge collection
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         firstParanet.publishingNodeIdentityId,
+        receivingNodes,
         firstParanet.receivingNodesIdentityIds,
-        signaturesData,
         {
-          KnowledgeCollection: KnowledgeCollection,
-          Token: Token,
+          KnowledgeCollection,
+          Token,
         },
       );
 
@@ -3251,19 +3235,15 @@ describe('@unit Paranet', () => {
       );
 
       // 4. Submit KC to paranet (goes to staging)
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
-          KnowledgeCollection: KnowledgeCollection,
-          Token: Token,
+          KnowledgeCollection,
+          Token,
         },
       );
       // 3. Submit knowledge collection to paranet
@@ -3368,19 +3348,15 @@ describe('@unit Paranet', () => {
       );
 
       // 3. Create and submit KC to paranet staging
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
-          KnowledgeCollection: KnowledgeCollection,
-          Token: Token,
+          KnowledgeCollection,
+          Token,
         },
       );
 
@@ -3479,19 +3455,15 @@ describe('@unit Paranet', () => {
       );
 
       // 3. Create and submit KC to paranet staging
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
-          KnowledgeCollection: KnowledgeCollection,
-          Token: Token,
+          KnowledgeCollection,
+          Token,
         },
       );
 
@@ -3633,19 +3605,15 @@ describe('@unit Paranet', () => {
       );
 
       // 3. Create and submit KC to paranet staging
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
-          KnowledgeCollection: KnowledgeCollection,
-          Token: Token,
+          KnowledgeCollection,
+          Token,
         },
       );
 
@@ -3744,19 +3712,15 @@ describe('@unit Paranet', () => {
       );
 
       // 3. Create and submit KC to paranet staging
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
-          KnowledgeCollection: KnowledgeCollection,
-          Token: Token,
+          KnowledgeCollection,
+          Token,
         },
       );
 
@@ -3822,19 +3786,15 @@ describe('@unit Paranet', () => {
       );
 
       // 3. Create and submit KC to paranet staging
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId } = await createKnowledgeCollection(
         kcCreator,
+        publishingNode,
         publishingNodeIdentityId,
+        receivingNodes,
         receivingNodesIdentityIds,
-        signaturesData,
         {
-          KnowledgeCollection: KnowledgeCollection,
-          Token: Token,
+          KnowledgeCollection,
+          Token,
         },
       );
 
@@ -4178,20 +4138,16 @@ describe('@unit Paranet', () => {
       });
 
       // 2. Create a new knowledge collection for the service
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId: serviceCollectionId } =
         await createKnowledgeCollection(
           kcCreator,
+          publishingNode,
           publishingNodeIdentityId,
+          receivingNodes,
           receivingNodesIdentityIds,
-          signaturesData,
           {
-            KnowledgeCollection: KnowledgeCollection,
-            Token: Token,
+            KnowledgeCollection,
+            Token,
           },
         );
 
@@ -4331,20 +4287,16 @@ describe('@unit Paranet', () => {
       });
 
       // 2. Create a new knowledge collection for the service
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId: serviceCollectionId } =
         await createKnowledgeCollection(
           kcCreator,
+          publishingNode,
           publishingNodeIdentityId,
+          receivingNodes,
           receivingNodesIdentityIds,
-          signaturesData,
           {
-            KnowledgeCollection: KnowledgeCollection,
-            Token: Token,
+            KnowledgeCollection,
+            Token,
           },
         );
 
@@ -4399,20 +4351,16 @@ describe('@unit Paranet', () => {
       });
 
       // 2. Create a new knowledge collection for the service
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId: serviceCollectionId } =
         await createKnowledgeCollection(
           kcCreator,
+          publishingNode,
           publishingNodeIdentityId,
+          receivingNodes,
           receivingNodesIdentityIds,
-          signaturesData,
           {
-            KnowledgeCollection: KnowledgeCollection,
-            Token: Token,
+            KnowledgeCollection,
+            Token,
           },
         );
 
@@ -4484,20 +4432,16 @@ describe('@unit Paranet', () => {
       });
 
       // 2. Create a new knowledge collection for the service
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId: serviceCollectionId } =
         await createKnowledgeCollection(
           kcCreator,
+          publishingNode,
           publishingNodeIdentityId,
+          receivingNodes,
           receivingNodesIdentityIds,
-          signaturesData,
           {
-            KnowledgeCollection: KnowledgeCollection,
-            Token: Token,
+            KnowledgeCollection,
+            Token,
           },
         );
 
@@ -4559,20 +4503,16 @@ describe('@unit Paranet', () => {
       });
 
       // 2. Create a new knowledge collection for the service
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId: serviceCollectionId } =
         await createKnowledgeCollection(
           kcCreator,
+          publishingNode,
           publishingNodeIdentityId,
+          receivingNodes,
           receivingNodesIdentityIds,
-          signaturesData,
           {
-            KnowledgeCollection: KnowledgeCollection,
-            Token: Token,
+            KnowledgeCollection,
+            Token,
           },
         );
 
@@ -4638,21 +4578,16 @@ describe('@unit Paranet', () => {
       });
 
       // 2. Create a new knowledge collection for the service
-      // 2. Create a new knowledge collection for the service
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId: serviceCollectionId } =
         await createKnowledgeCollection(
           kcCreator,
+          publishingNode,
           publishingNodeIdentityId,
+          receivingNodes,
           receivingNodesIdentityIds,
-          signaturesData,
           {
-            KnowledgeCollection: KnowledgeCollection,
-            Token: Token,
+            KnowledgeCollection,
+            Token,
           },
         );
 
@@ -4726,21 +4661,16 @@ describe('@unit Paranet', () => {
       });
 
       // 2. Create a new knowledge collection for the service
-      // 2. Create a new knowledge collection for the service
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId: serviceCollectionId } =
         await createKnowledgeCollection(
           kcCreator,
+          publishingNode,
           publishingNodeIdentityId,
+          receivingNodes,
           receivingNodesIdentityIds,
-          signaturesData,
           {
-            KnowledgeCollection: KnowledgeCollection,
-            Token: Token,
+            KnowledgeCollection,
+            Token,
           },
         );
 
@@ -4821,20 +4751,16 @@ describe('@unit Paranet', () => {
       });
 
       // 2. Create a new knowledge collection for the service
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId: serviceCollectionId } =
         await createKnowledgeCollection(
           kcCreator,
+          publishingNode,
           publishingNodeIdentityId,
+          receivingNodes,
           receivingNodesIdentityIds,
-          signaturesData,
           {
-            KnowledgeCollection: KnowledgeCollection,
-            Token: Token,
+            KnowledgeCollection,
+            Token,
           },
         );
 
@@ -4883,20 +4809,16 @@ describe('@unit Paranet', () => {
       });
 
       // 2. Create a new knowledge collection for the service
-      const signaturesData = await getKCSignaturesData(
-        publishingNode,
-        1,
-        receivingNodes,
-      );
       const { collectionId: serviceCollectionId } =
         await createKnowledgeCollection(
           kcCreator,
+          publishingNode,
           publishingNodeIdentityId,
+          receivingNodes,
           receivingNodesIdentityIds,
-          signaturesData,
           {
-            KnowledgeCollection: KnowledgeCollection,
-            Token: Token,
+            KnowledgeCollection,
+            Token,
           },
         );
 
