@@ -22,10 +22,9 @@ import {
 } from '../../typechain';
 import {
   createKnowledgeCollection,
-  createProfilesAndKC,
   getKCSignaturesData,
 } from '../helpers/kc-helpers';
-import { createProfile } from '../helpers/profile-helpers';
+import { createProfile, createProfiles } from '../helpers/profile-helpers';
 import {
   getDefaultPublishingNode,
   getDefaultReceivingNodes,
@@ -150,12 +149,28 @@ describe('@unit KnowledgeCollection', () => {
     const publishingNode = getDefaultPublishingNode(accounts);
     const receivingNodes = getDefaultReceivingNodes(accounts);
 
-    const { receivingNodesIdentityIds, collectionId } =
-      await createProfilesAndKC(kcCreator, publishingNode, receivingNodes, {
-        Profile,
-        KnowledgeCollection,
-        Token,
-      });
+    const contracts = {
+      Profile,
+      KnowledgeCollection,
+      Token,
+    };
+
+    const { identityId: publishingNodeIdentityId } = await createProfile(
+      contracts.Profile,
+      publishingNode,
+    );
+    const receivingNodesIdentityIds = (
+      await createProfiles(contracts.Profile, receivingNodes)
+    ).map((p) => p.identityId);
+
+    const { collectionId } = await createKnowledgeCollection(
+      kcCreator,
+      publishingNode,
+      publishingNodeIdentityId,
+      receivingNodes,
+      receivingNodesIdentityIds,
+      contracts,
+    );
 
     expect(collectionId).to.equal(1);
 
@@ -196,13 +211,29 @@ describe('@unit KnowledgeCollection', () => {
     signaturesData.receiverRs = [];
     signaturesData.receiverVSs = [];
 
+    // Approve tokens
+    await Token.connect(kcCreator).increaseAllowance(
+      KnowledgeCollection.getAddress(),
+      ethers.parseEther('100'),
+    );
+
+    // Create knowledge collection
     await expect(
-      createKnowledgeCollection(
-        kcCreator,
+      KnowledgeCollection.connect(kcCreator).createKnowledgeCollection(
+        'test-operation-id',
+        signaturesData.merkleRoot,
+        10,
+        1000,
+        2,
+        ethers.parseEther('100'),
+        false,
+        ethers.ZeroAddress,
         publisherIdentityId,
+        signaturesData.publisherR,
+        signaturesData.publisherVS,
         receiversIdentityIds,
-        signaturesData,
-        { KnowledgeCollection, Token },
+        signaturesData.receiverRs,
+        signaturesData.receiverVSs,
       ),
     ).to.be.revertedWithCustomError(
       KnowledgeCollection,
