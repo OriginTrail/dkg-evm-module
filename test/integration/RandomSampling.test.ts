@@ -28,12 +28,14 @@ import {
   ParametersStorage,
   Ask,
 } from '../../typechain';
-import { createProfilesAndKC } from '../helpers/kc-helpers';
-import { createProfile } from '../helpers/profile-helpers';
+import { createKnowledgeCollection } from '../helpers/kc-helpers';
+import { createProfile, createProfiles } from '../helpers/profile-helpers';
 import {
   getDefaultKCCreator,
   getDefaultReceivingNodes,
   getDefaultPublishingNode,
+  setupNodeWithStakeAndAsk,
+  setNodeStake,
 } from '../helpers/setup-helpers';
 
 // Sample values for tests
@@ -52,17 +54,6 @@ const quads = [
 ];
 // Generate the Merkle tree and get the root
 const merkleRoot = kcTools.calculateMerkleRoot(quads, 32);
-
-// Type definition for a Challenge
-type Challenge = {
-  knowledgeCollectionId: bigint;
-  chunkId: bigint;
-  knowledgeCollectionStorageContract: string;
-  epoch: bigint;
-  activeProofPeriodStartBlock: bigint;
-  proofingPeriodDurationInBlocks: bigint;
-  solved: boolean;
-};
 
 // Fixture containing all contracts and accounts needed to test RandomSampling
 type RandomSamplingFixture = {
@@ -89,23 +80,6 @@ type RandomSamplingFixture = {
   ParametersStorage: ParametersStorage;
   Ask: Ask;
 };
-
-async function setNodeStake(
-  node: { operational: SignerWithAddress; admin: SignerWithAddress },
-  identityId: bigint,
-  amount: bigint,
-  hubOwner: SignerWithAddress,
-  deps: { Token: Token; Staking: Staking; Ask: Ask },
-) {
-  const { Token, Staking } = deps;
-
-  await Token.mint(node.operational.address, amount);
-  await Token.connect(node.operational).approve(
-    await Staking.getAddress(),
-    amount,
-  );
-  await Staking.connect(node.operational).stake(identityId, amount);
-}
 
 async function calculateExpectedNodeScore(
   identityId: bigint,
@@ -317,38 +291,6 @@ describe('@integration RandomSampling', () => {
     } = await loadFixture(deployRandomSamplingFixture));
   });
 
-  // Helper function to create a mock challenge
-  async function createMockChallenge(): Promise<Challenge> {
-    // Get all values as BigNumberish
-    const activeBlockTx =
-      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-    await activeBlockTx.wait();
-
-    const activeBlockStatus =
-      await RandomSamplingStorage.getActiveProofPeriodStatus();
-    const activeBlock = activeBlockStatus.activeProofPeriodStartBlock;
-
-    const currentEpochTx = await Chronos.getCurrentEpoch();
-    const currentEpoch = BigInt(currentEpochTx.toString());
-
-    const proofingPeriodDurationTx =
-      await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-    const proofingPeriodDuration = BigInt(proofingPeriodDurationTx.toString());
-
-    const challenge: Challenge = {
-      knowledgeCollectionId: 1n,
-      chunkId: 1n,
-      knowledgeCollectionStorageContract:
-        await KnowledgeCollectionStorage.getAddress(),
-      epoch: currentEpoch,
-      activeProofPeriodStartBlock: activeBlock,
-      proofingPeriodDurationInBlocks: proofingPeriodDuration,
-      solved: true,
-    };
-
-    return challenge;
-  }
-
   describe('Contract Initialization', () => {
     it('Should return the correct name and version of the RandomSampling contract', async () => {
       const name = await RandomSampling.name();
@@ -363,12 +305,12 @@ describe('@integration RandomSampling', () => {
     });
 
     it('Should have the correct W1 after initialization', async () => {
-      const W1 = await RandomSampling.W1();
+      const W1 = await RandomSampling.w1();
       expect(W1).to.equal(0);
     });
 
     it('Should have the correct W2 after initialization', async () => {
-      const W2 = await RandomSampling.W2();
+      const W2 = await RandomSampling.w2();
       expect(W2).to.equal(2);
     });
 
@@ -404,139 +346,256 @@ describe('@integration RandomSampling', () => {
     });
   });
 
-  describe('Proofing Period Management', () => {
-    it('Should return the correct proofing period status', async () => {
-      const status = await RandomSamplingStorage.getActiveProofPeriodStatus();
-      expect(status.activeProofPeriodStartBlock).to.be.a('bigint');
-      expect(status.isValid).to.be.a('boolean');
+  describe('Proofing Period Duration Management', () => {
+    it('Should add proofing period duration if none is pending', async () => {
+      // Setup
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const initialDuration =
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      const newDuration = initialDuration + 10n;
+      const expectedEffectiveEpoch = currentEpoch + 1n;
+      const hubOwner = accounts[0];
+
+      // Ensure no pending change initially
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(
+        await RandomSamplingStorage.isPendingProofingPeriodDuration(),
+        'Should be no pending duration initially',
+      ).to.be.false;
+
+      // Action
+      const setDurationTx =
+        await RandomSampling.connect(
+          hubOwner,
+        ).setProofingPeriodDurationInBlocks(newDuration);
+
+      // Verification
+      // 1. Event Emission
+      await expect(setDurationTx)
+        .to.emit(RandomSamplingStorage, 'ProofingPeriodDurationAdded')
+        .withArgs(newDuration, expectedEffectiveEpoch);
+
+      // 2. Pending state updated
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(
+        await RandomSamplingStorage.isPendingProofingPeriodDuration(),
+        'Should be a pending duration after setting',
+      ).to.be.true;
+
+      // 3. Active duration remains unchanged in the current epoch
+      expect(
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
+        'Active duration should remain unchanged in current epoch',
+      ).to.equal(initialDuration);
     });
 
-    it('Should update activeProofPeriodStartBlock when period expires', async () => {
-      // Get initial active proof period using a view function
-      const initialTx =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await initialTx.wait();
-
-      const initialStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const initialPeriodStartBlock = initialStatus.activeProofPeriodStartBlock;
-
-      const currentBlock = await hre.ethers.provider.getBlockNumber();
-      const diff = currentBlock - Number(initialPeriodStartBlock);
-
-      // Mine blocks to pass the proofing period
-      const proofingPeriodDuration =
+    it('Should replace pending proofing period duration if one exists', async () => {
+      // Setup
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const avgBlockTimeInSeconds =
+        await RandomSampling.avgBlockTimeInSeconds();
+      const initialDuration =
         await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      const blocksToMine = Number(proofingPeriodDuration) - diff;
+      const firstNewDuration = initialDuration + 10n;
+      const secondNewDuration = firstNewDuration + 10n;
+      const expectedEffectiveEpoch = currentEpoch + 1n;
+      const hubOwner = accounts[0];
 
-      for (let i = 0; i < blocksToMine; i++) {
+      // Add the first pending change
+      await RandomSampling.connect(hubOwner).setProofingPeriodDurationInBlocks(
+        firstNewDuration,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(
+        await RandomSamplingStorage.isPendingProofingPeriodDuration(),
+        'Should have pending duration after first set',
+      ).to.be.true;
+
+      // Action: Replace the pending change
+      const replaceDurationTx =
+        await RandomSampling.connect(
+          hubOwner,
+        ).setProofingPeriodDurationInBlocks(secondNewDuration);
+
+      // Verification
+      // 1. Event Emission
+      await expect(replaceDurationTx)
+        .to.emit(RandomSamplingStorage, 'PendingProofingPeriodDurationReplaced')
+        .withArgs(firstNewDuration, secondNewDuration, expectedEffectiveEpoch);
+
+      // 2. Pending state remains true
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(
+        await RandomSamplingStorage.isPendingProofingPeriodDuration(),
+        'Should still have pending duration after replace',
+      ).to.be.true;
+
+      // 3. Active duration remains unchanged in the current epoch
+      expect(
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
+        'Active duration should remain unchanged',
+      ).to.equal(initialDuration);
+
+      // 4. Check the actual pending value
+      // Advance to the effective epoch
+      const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
+      const blocksUntilNextEpoch =
+        Number(timeUntilNextEpoch) / Number(avgBlockTimeInSeconds) + 10;
+      for (let i = 0; i < blocksUntilNextEpoch; i++) {
         await hre.network.provider.send('evm_mine');
       }
 
-      // Update and get the new active proof period
-      const tx =
+      expect(
+        await Chronos.getCurrentEpoch(),
+        'Should be in the next epoch',
+      ).to.equal(expectedEffectiveEpoch);
+      expect(
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
+        'Active duration should be updated in effective epoch',
+      ).to.equal(secondNewDuration);
+    });
+
+    it('Should correctly apply the new duration only in the effective epoch', async () => {
+      // Setup
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const effectiveEpoch = currentEpoch + 1n;
+      const initialDuration =
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      const newDuration = initialDuration + 20n; // Different new duration
+      const hubOwner = accounts[0];
+      const avgBlockTime = await RandomSampling.avgBlockTimeInSeconds();
+
+      // Schedule change for next epoch
+      await RandomSampling.connect(hubOwner).setProofingPeriodDurationInBlocks(
+        newDuration,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(
+        await RandomSamplingStorage.isPendingProofingPeriodDuration(),
+        'Duration change should be pending',
+      ).to.be.true;
+
+      // Ensure activeProofPeriodStartBlock is initialized if needed
+      let initialStartBlockE = (
+        await RandomSamplingStorage.getActiveProofPeriodStatus()
+      ).activeProofPeriodStartBlock;
+      if (initialStartBlockE === 0n) {
         await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await tx.wait();
+        initialStartBlockE = (
+          await RandomSamplingStorage.getActiveProofPeriodStatus()
+        ).activeProofPeriodStartBlock;
+      }
+      expect(initialStartBlockE).to.be.greaterThan(
+        0n,
+        'Initial start block should be > 0',
+      );
 
-      const statusAfterUpdate =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const newPeriodStartBlock = statusAfterUpdate.activeProofPeriodStartBlock;
+      // --- Verification in Current Epoch (Epoch E) ---
+      expect(
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
+        'Active duration should be initial in Epoch E',
+      ).to.equal(initialDuration);
 
-      // The new period should be different from the initial one
-      expect(newPeriodStartBlock).to.be.greaterThan(initialPeriodStartBlock);
-      expect(newPeriodStartBlock).to.be.equal(
-        initialPeriodStartBlock + BigInt(proofingPeriodDuration),
+      // Advance blocks within Epoch E by the initial duration
+      for (let i = 0; i < Number(initialDuration); i++) {
+        await hre.network.provider.send('evm_mine');
+      }
+
+      // Update period and check if it used the initial duration
+      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      const updatedStartBlockE = (
+        await RandomSamplingStorage.getActiveProofPeriodStatus()
+      ).activeProofPeriodStartBlock;
+      expect(updatedStartBlockE).to.equal(
+        initialStartBlockE + initialDuration,
+        'Start block should advance by initial duration in Epoch E',
+      );
+
+      // --- Advance to Next Epoch (Epoch E+1) ---
+      const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
+      const blocksUntilNextEpoch =
+        timeUntilNextEpoch > 0n
+          ? Number(timeUntilNextEpoch / avgBlockTime) + 1 // Ensure we pass the epoch boundary
+          : 1; // If already at boundary, just mine one block
+      for (let i = 0; i < blocksUntilNextEpoch; i++) {
+        await hre.network.provider.send('evm_mine');
+      }
+
+      expect(
+        await Chronos.getCurrentEpoch(),
+        'Should now be in the effective epoch',
+      ).to.equal(effectiveEpoch);
+
+      // --- Verification in Effective Epoch (Epoch E+1) ---
+      expect(
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
+        'Active duration should be new in Epoch E+1',
+      ).to.equal(newDuration);
+
+      // Get the start block relevant for this new epoch
+      // It might have carried over or been updated by the block advance
+      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      const startBlockE1 = (
+        await RandomSamplingStorage.getActiveProofPeriodStatus()
+      ).activeProofPeriodStartBlock;
+
+      // Advance blocks within Epoch E+1 by the *new* duration
+      for (let i = 0; i < Number(newDuration); i++) {
+        await hre.network.provider.send('evm_mine');
+      }
+
+      // Update period and check if it used the new duration
+      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      const updatedStartBlockE1 = (
+        await RandomSamplingStorage.getActiveProofPeriodStatus()
+      ).activeProofPeriodStartBlock;
+      expect(updatedStartBlockE1).to.equal(
+        startBlockE1 + newDuration,
+        'Start block should advance by new duration in Epoch E+1',
       );
     });
   });
 
-  describe('Challenge Creation and Proof Submission', () => {
-    it('Should create a challenge for a node', async () => {
+  describe('Challenge Creation', () => {
+    it('Should revert if an unsolved challenge already exists for this node in the current proof period', async () => {
+      // creator of the KC
       const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
+      // create a publishing node with stake and ask
+      const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
+      const minStake = await ParametersStorage.minimumStake();
+      const deps = {
+        accounts,
+        Profile,
+        Token,
+        Staking,
+        Ask,
+        KnowledgeCollection,
+      };
+      const { node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(1, minStake, 100n, deps);
+      // create receiving nodes
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 10,
+          minStake,
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
 
-      // Create profiles and KC first
-      const { publishingNodeIdentityId } = await createProfilesAndKC(
+      await createKnowledgeCollection(
         kcCreator,
         publishingNode,
-        receivingNodes,
-        {
-          Profile,
-          KnowledgeCollection,
-          Token,
-        },
-      );
-
-      // Update and get the new active proof period
-      const tx =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await tx.wait();
-
-      const proofPeriodStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const proofPeriodStartBlock =
-        proofPeriodStatus.activeProofPeriodStartBlock;
-      // Create challenge
-      const challengeTx = await RandomSampling.connect(
-        publishingNode.operational,
-      ).createChallenge();
-      await challengeTx.wait();
-
-      // Get the challenge from storage to verify it
-      const challenge = await RandomSamplingStorage.getNodeChallenge(
         publishingNodeIdentityId,
-      );
-
-      const proofPeriodDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-
-      // Verify challenge properties
-      expect(challenge.knowledgeCollectionId).to.be.a('bigint');
-      expect(challenge.chunkId).to.be.a('bigint');
-      expect(challenge.epoch).to.be.a('bigint');
-      expect(challenge.activeProofPeriodStartBlock).to.be.a('bigint');
-      expect(challenge.proofingPeriodDurationInBlocks).to.be.a('bigint');
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(challenge.solved).to.be.false;
-
-      expect(challenge.knowledgeCollectionId).to.be.equal(1n);
-      expect(challenge.epoch).to.be.equal(1n);
-      expect(challenge.activeProofPeriodStartBlock).to.be.equal(
-        proofPeriodStartBlock,
-      );
-      expect(challenge.proofingPeriodDurationInBlocks).to.be.equal(
-        proofPeriodDuration,
-      );
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(challenge.solved).to.be.false;
-    });
-
-    it('Should return the same challenge if unsolved within the period', async () => {
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-
-      const { publishingNodeIdentityId } = await createProfilesAndKC(
-        kcCreator,
-        publishingNode,
         receivingNodes,
-        { Profile, KnowledgeCollection, Token },
+        receivingNodesIdentityIds,
+        deps,
         merkleRoot,
       );
-      const minStake = await ParametersStorage.minimumStake();
-      await setNodeStake(
-        publishingNode,
-        BigInt(publishingNodeIdentityId),
-        BigInt(minStake),
-        accounts[0],
-        { Token, Staking, Ask },
-      );
-      await Profile.connect(publishingNode.operational).updateAsk(
-        publishingNodeIdentityId,
-        100n,
-      );
-      await Ask.connect(accounts[0]).recalculateActiveSet();
 
       // Create first challenge
       const tx1 = await RandomSampling.connect(
@@ -580,16 +639,72 @@ describe('@integration RandomSampling', () => {
       expect(challenge2.solved).to.equal(challenge1.solved); // Both false
     });
 
-    it('Should revert if creating challenge when already solved for current period', async () => {
+    it('Should revert if the challenge for this proof period has already been solved', async () => {
       // Create profile and identity first
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const { identityId } = await createProfile(Profile, publishingNode);
+      const kcCreator = getDefaultKCCreator(accounts);
+      const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
+      const minStake = await ParametersStorage.minimumStake();
+      const deps = {
+        accounts,
+        Profile,
+        Token,
+        Staking,
+        Ask,
+        KnowledgeCollection,
+      };
+      const { node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(1, minStake, nodeAsk, deps);
 
-      // Create a mock challenge that's marked as solved
-      const mockChallenge = await createMockChallenge(); // Uses helper which sets solved=true
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 10,
+          minStake,
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+      );
+
+      // Create first challenge
+      const tx1 = await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+      await tx1.wait();
+      const challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      // Mark the challenge as solved
+      const solvedChallenge = {
+        knowledgeCollectionId: challenge.knowledgeCollectionId,
+        chunkId: challenge.chunkId,
+        knowledgeCollectionStorageContract:
+          challenge.knowledgeCollectionStorageContract,
+        epoch: challenge.epoch,
+        activeProofPeriodStartBlock: challenge.activeProofPeriodStartBlock,
+        proofingPeriodDurationInBlocks:
+          challenge.proofingPeriodDurationInBlocks,
+        solved: true,
+      };
 
       // Store the mock challenge in the storage contract
-      await RandomSamplingStorage.setNodeChallenge(identityId, mockChallenge);
+      await RandomSamplingStorage.setNodeChallenge(
+        publishingNodeIdentityId,
+        solvedChallenge,
+      );
 
       // Try to create a new challenge for the same period - should revert
       const challengeTx = RandomSampling.connect(
@@ -600,36 +715,226 @@ describe('@integration RandomSampling', () => {
       );
     });
 
-    it('Should submit a valid proof successfully and calculate the correct score', async () => {
-      const kcCreator = getDefaultKCCreator(accounts);
+    it('Should revert if no Knowledge Collections exist in the system', async () => {
+      // Setup a node profile
       const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
 
-      const { publishingNodeIdentityId } = await createProfilesAndKC(
-        kcCreator,
+      const { identityId: publishingNodeIdentityId } = await createProfile(
+        Profile,
         publishingNode,
-        receivingNodes,
-        { Profile, KnowledgeCollection, Token },
-        merkleRoot,
       );
 
-      // Mint tokens and set stake
       const minStake = await ParametersStorage.minimumStake();
       await setNodeStake(
         publishingNode,
         BigInt(publishingNodeIdentityId),
         BigInt(minStake),
-        accounts[0],
-        { Token, Staking, Ask },
+        {
+          Token,
+          Staking,
+          Ask,
+        },
       );
-
-      // Recalculate the active set
-      const newAsk = 200n;
       await Profile.connect(publishingNode.operational).updateAsk(
-        publishingNodeIdentityId,
-        newAsk,
+        BigInt(publishingNodeIdentityId),
+        100n,
       );
       await Ask.connect(accounts[0]).recalculateActiveSet();
+
+      // Ensure no KCs are created or they are expired (by default none are created here)
+
+      // Attempt to create challenge
+      const createTx = RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+
+      // Verification
+      await expect(createTx).to.be.revertedWith(
+        'No knowledge collections exist',
+      );
+    });
+
+    it('Should set the node challenge successfully and emit ChallengeCreated event', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const publishingNode = getDefaultPublishingNode(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+
+      // Create profiles and KC first
+      const contracts = {
+        Profile,
+        KnowledgeCollection,
+        Token,
+      };
+
+      const { identityId: publishingNodeIdentityId } = await createProfile(
+        contracts.Profile,
+        publishingNode,
+      );
+      const receivingNodesIdentityIds = (
+        await createProfiles(contracts.Profile, receivingNodes)
+      ).map((p) => p.identityId);
+
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        contracts,
+      );
+
+      // Update and get the new active proof period
+      const tx =
+        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await tx.wait();
+
+      const proofPeriodStatus =
+        await RandomSamplingStorage.getActiveProofPeriodStatus();
+      const proofPeriodStartBlock =
+        proofPeriodStatus.activeProofPeriodStartBlock;
+      // Create challenge
+      const challengeTx = await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+      const receipt = await challengeTx.wait();
+
+      // Get the challenge from storage to verify it
+      const challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      await expect(receipt)
+        .to.emit(RandomSampling, 'ChallengeCreated')
+        .withArgs(
+          publishingNodeIdentityId,
+          challenge.epoch,
+          challenge.knowledgeCollectionId,
+          challenge.chunkId,
+          proofPeriodStartBlock,
+          challenge.proofingPeriodDurationInBlocks,
+        );
+
+      const proofPeriodDuration =
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+
+      // Verify challenge properties
+      expect(challenge.knowledgeCollectionId)
+        .to.be.a('bigint')
+        .and.to.be.equal(1n);
+      expect(challenge.chunkId).to.be.a('bigint').and.to.be.greaterThan(0n);
+      expect(challenge.epoch).to.be.a('bigint').and.to.be.equal(1n);
+      expect(challenge.activeProofPeriodStartBlock)
+        .to.be.a('bigint')
+        .and.to.be.equal(proofPeriodStartBlock);
+      expect(challenge.proofingPeriodDurationInBlocks)
+        .to.be.a('bigint')
+        .and.to.be.equal(proofPeriodDuration);
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(challenge.solved).to.be.false;
+    });
+
+    it('Should revert if it fails to find a Knowledge Collection that is active in the current epoch', async () => {
+      // Setup: create node profile/stake/ask
+      const nodeAsk = 200000000000000000n;
+      const minStake = await ParametersStorage.minimumStake();
+      const deps = {
+        accounts,
+        Profile,
+        Token,
+        Staking,
+        Ask,
+        KnowledgeCollection,
+      };
+      const { node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(1, minStake, nodeAsk, deps);
+
+      // Create a KC but set its endEpoch to be in the past (e.g., epoch 0)
+      const kcCreator = getDefaultKCCreator(accounts);
+      const receivingNodes = getDefaultReceivingNodes(accounts);
+      const receivingNodesIdentityIds = (
+        await createProfiles(Profile, receivingNodes)
+      ).map((p) => p.identityId);
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      expect(currentEpoch).to.be.greaterThan(
+        0n,
+        'Test requires current epoch > 0',
+      ); // Ensure test premise is valid
+
+      // Use createKnowledgeCollection helper, setting endEpoch manually if possible,
+      // or directly interact with KnowledgeCollection contract
+
+      const epochs = 1;
+
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+      );
+
+      // Advance to epochs + 10
+      for (let i = 0; i < epochs + 10; i++) {
+        const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
+        const blocksUntilNextEpoch =
+          Number(timeUntilNextEpoch) / Number(avgBlockTimeInSeconds) + 5;
+        for (let i = 0; i < blocksUntilNextEpoch; i++) {
+          await hre.network.provider.send('evm_mine');
+        }
+      }
+
+      // Action: Call createChallenge
+      const createTx = RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+
+      // Verification: Expect revert with the specific message
+      await expect(createTx).to.be.revertedWith(
+        'Failed to find a knowledge collection that is active in the current epoch',
+      );
+    });
+  });
+
+  describe('Proof Submission', () => {
+    it('Should submit a valid proof successfully and calculate the correct score', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const minStake = await ParametersStorage.minimumStake();
+      const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
+      const deps = {
+        accounts,
+        Profile,
+        Token,
+        Staking,
+        Ask,
+        KnowledgeCollection,
+      };
+
+      const { node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(1, minStake, nodeAsk, deps);
+
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 10,
+          minStake,
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+      );
 
       // Update and get the new active proof period
       const tx =
@@ -655,7 +960,7 @@ describe('@integration RandomSampling', () => {
       const { proof } = kcTools.calculateMerkleProof(
         quads,
         32,
-        challenge.chunkId,
+        Number(challenge.chunkId),
       );
 
       // Submit proof
@@ -714,19 +1019,33 @@ describe('@integration RandomSampling', () => {
       const kcCreator = getDefaultKCCreator(accounts);
       const publishingNode = getDefaultPublishingNode(accounts);
       const receivingNodes = getDefaultReceivingNodes(accounts);
-      const { publishingNodeIdentityId } = await createProfilesAndKC(
+      const contracts = {
+        Profile,
+        KnowledgeCollection,
+        Token,
+      };
+
+      const { identityId: publishingNodeIdentityId } = await createProfile(
+        contracts.Profile,
+        publishingNode,
+      );
+      const receivingNodesIdentityIds = (
+        await createProfiles(contracts.Profile, receivingNodes)
+      ).map((p) => p.identityId);
+
+      await createKnowledgeCollection(
         kcCreator,
         publishingNode,
+        publishingNodeIdentityId,
         receivingNodes,
-        { Profile, KnowledgeCollection, Token },
-        merkleRoot,
+        receivingNodesIdentityIds,
+        contracts,
       );
       const minStake = await ParametersStorage.minimumStake();
       await setNodeStake(
         publishingNode,
         BigInt(publishingNodeIdentityId),
         BigInt(minStake),
-        accounts[0],
         { Token, Staking, Ask },
       );
       await Profile.connect(publishingNode.operational).updateAsk(
@@ -776,19 +1095,33 @@ describe('@integration RandomSampling', () => {
       const kcCreator = getDefaultKCCreator(accounts);
       const publishingNode = getDefaultPublishingNode(accounts);
       const receivingNodes = getDefaultReceivingNodes(accounts);
-      const { publishingNodeIdentityId } = await createProfilesAndKC(
+      const contracts = {
+        Profile,
+        KnowledgeCollection,
+        Token,
+      };
+
+      const { identityId: publishingNodeIdentityId } = await createProfile(
+        contracts.Profile,
+        publishingNode,
+      );
+      const receivingNodesIdentityIds = (
+        await createProfiles(contracts.Profile, receivingNodes)
+      ).map((p) => p.identityId);
+
+      await createKnowledgeCollection(
         kcCreator,
         publishingNode,
+        publishingNodeIdentityId,
         receivingNodes,
-        { Profile, KnowledgeCollection, Token },
-        merkleRoot,
+        receivingNodesIdentityIds,
+        contracts,
       );
       const minStake = await ParametersStorage.minimumStake();
       await setNodeStake(
         publishingNode,
         BigInt(publishingNodeIdentityId),
         BigInt(minStake),
-        accounts[0],
         { Token, Staking, Ask },
       );
       await Profile.connect(publishingNode.operational).updateAsk(
@@ -826,7 +1159,10 @@ describe('@integration RandomSampling', () => {
       const submitWrongChunkTx = RandomSampling.connect(
         publishingNode.operational,
       ).submitProof(wrongChunk, correctProof);
-      await expect(submitWrongChunkTx).to.be.revertedWith('Proof is not valid');
+      await expect(submitWrongChunkTx).to.be.revertedWithCustomError(
+        RandomSampling,
+        'MerkleRootMismatchError',
+      );
       let finalChallenge = await RandomSamplingStorage.getNodeChallenge(
         publishingNodeIdentityId,
       );
@@ -837,58 +1173,16 @@ describe('@integration RandomSampling', () => {
       const submitWrongProofTx = RandomSampling.connect(
         publishingNode.operational,
       ).submitProof(correctChunk, wrongProof);
-      await expect(submitWrongProofTx).to.be.revertedWith('Proof is not valid');
+      await expect(submitWrongProofTx).to.be.revertedWithCustomError(
+        RandomSampling,
+        'MerkleRootMismatchError',
+      );
       finalChallenge = await RandomSamplingStorage.getNodeChallenge(
         publishingNodeIdentityId,
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(finalChallenge.solved).to.be.false; // Ensure state unchanged
     });
-
-    it('Should fail challenge creation if no active Knowledge Collections exist', async () => {
-      // Setup a node profile
-      const publishingNode = getDefaultPublishingNode(accounts);
-
-      const { identityId: publishingNodeIdentityId } = await createProfile(
-        Profile,
-        publishingNode,
-      );
-
-      const minStake = await ParametersStorage.minimumStake();
-      await setNodeStake(
-        publishingNode,
-        BigInt(publishingNodeIdentityId),
-        BigInt(minStake),
-        accounts[0],
-        {
-          Token,
-          Staking,
-          Ask,
-        },
-      );
-      await Profile.connect(publishingNode.operational).updateAsk(
-        BigInt(publishingNodeIdentityId),
-        100n,
-      );
-      await Ask.connect(accounts[0]).recalculateActiveSet();
-
-      // Ensure no KCs are created or they are expired (by default none are created here)
-
-      // Attempt to create challenge
-      const createTx = RandomSampling.connect(
-        publishingNode.operational,
-      ).createChallenge();
-
-      // Verification
-      await expect(createTx).to.be.revertedWith(
-        'No knowledge collections exist',
-      );
-    });
-  });
-
-  describe('Score Calculation', () => {
-    // TODO: Should calculate node scores correctly upon valid proof submission
-    // TODO: Should calculate delegator scores correctly
   });
 
   describe('Admin Functions', () => {
