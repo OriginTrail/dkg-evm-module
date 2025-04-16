@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 
 import { ACCESS_POLICIES } from './constants';
 import { createProfilesAndKC } from './kc-helpers';
-import { NodeAccounts } from './types';
+import { NodeAccount } from './types';
 import {
   Profile,
   KnowledgeCollection,
@@ -14,8 +14,8 @@ import {
 
 export async function setupParanet(
   kcCreator: SignerWithAddress,
-  publishingNode: NodeAccounts,
-  receivingNodes: NodeAccounts[],
+  publishingNode: NodeAccount,
+  receivingNodes: NodeAccount[],
   contracts: {
     Paranet: Paranet;
     Profile: Profile;

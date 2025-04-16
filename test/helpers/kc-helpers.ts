@@ -3,7 +3,7 @@ import { ethers, getBytes } from 'ethers';
 import { HexString } from 'ethers/lib.commonjs/utils/data';
 
 import { createProfile, createProfiles } from './profile-helpers';
-import { KCSignaturesData, NodeAccounts } from './types';
+import { KCSignaturesData, NodeAccount } from './types';
 import { KnowledgeCollection, Token, Profile } from '../../typechain';
 
 export async function signMessage(
@@ -19,9 +19,9 @@ export async function signMessage(
 }
 
 export async function getKCSignaturesData(
-  publishingNode: NodeAccounts,
+  publishingNode: NodeAccount,
   publisherIdentityId: number,
-  receivingNodes: NodeAccounts[],
+  receivingNodes: NodeAccount[],
   merkleRoot: HexString = ethers.keccak256(
     ethers.toUtf8Bytes('test-merkle-root'),
   ),
@@ -110,8 +110,8 @@ export async function createKnowledgeCollection(
 
 export async function createProfilesAndKC(
   kcCreator: SignerWithAddress,
-  publishingNode: NodeAccounts,
-  receivingNodes: NodeAccounts[],
+  publishingNode: NodeAccount,
+  receivingNodes: NodeAccount[],
   contracts: {
     Profile: Profile;
     KnowledgeCollection: KnowledgeCollection;

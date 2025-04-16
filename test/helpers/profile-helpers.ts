@@ -1,11 +1,11 @@
 import { randomBytes } from 'crypto';
 
-import { NodeAccounts } from './types';
+import { NodeAccount } from './types';
 import { Profile } from '../../typechain';
 
 export async function createProfile(
   Profile: Profile,
-  nodeAccounts: NodeAccounts,
+  nodeAccounts: NodeAccount,
 ) {
   const nodeId = '0x' + randomBytes(32).toString('hex');
   const tx = await Profile.connect(nodeAccounts.operational).createProfile(
@@ -22,7 +22,7 @@ export async function createProfile(
 
 export async function createProfiles(
   Profile: Profile,
-  nodeAccounts: NodeAccounts[],
+  nodeAccounts: NodeAccount[],
 ): Promise<{ nodeId: string; identityId: number }[]> {
   const profiles: { nodeId: string; identityId: number }[] = [];
   for (let i = 0; i < nodeAccounts.length; i++) {

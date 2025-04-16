@@ -1,10 +1,18 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
-export function getDefaultPublishingNode(accounts: SignerWithAddress[]) {
+export function getPublishingNode(
+  accounts: SignerWithAddress[],
+  admin: number,
+  operational: number,
+) {
   return {
-    admin: accounts[1],
-    operational: accounts[2],
+    admin: accounts[admin],
+    operational: accounts[operational],
   };
+}
+
+export function getDefaultPublishingNode(accounts: SignerWithAddress[]) {
+  return getPublishingNode(accounts, 1, 2);
 }
 
 export function getDefaultReceivingNodes(
@@ -12,11 +20,15 @@ export function getDefaultReceivingNodes(
   receivingNodesNumber: number = 3,
 ) {
   return Array.from({ length: receivingNodesNumber }, (_, i) => ({
-    admin: accounts[3 + i],
-    operational: accounts[4 + i],
+    admin: accounts[accounts.length - i - 1],
+    operational: accounts[accounts.length - i - 2],
   }));
 }
 
+export function getKCCreator(accounts: SignerWithAddress[], account: number) {
+  return accounts[account];
+}
+
 export function getDefaultKCCreator(accounts: SignerWithAddress[]) {
-  return accounts[9];
+  return getKCCreator(accounts, 9);
 }
