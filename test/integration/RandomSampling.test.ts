@@ -897,124 +897,7 @@ describe('@integration RandomSampling', () => {
   });
 
   describe('Proof Submission', () => {
-    it('Should submit a valid proof successfully and calculate the correct score', async () => {
-      const kcCreator = getDefaultKCCreator(accounts);
-      const minStake = await ParametersStorage.minimumStake();
-      const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
-      const deps = {
-        accounts,
-        Profile,
-        Token,
-        Staking,
-        Ask,
-        KnowledgeCollection,
-      };
-
-      const { node: publishingNode, identityId: publishingNodeIdentityId } =
-        await setupNodeWithStakeAndAsk(1, minStake, nodeAsk, deps);
-
-      const receivingNodes = [];
-      const receivingNodesIdentityIds = [];
-      for (let i = 0; i < 5; i++) {
-        const { node, identityId } = await setupNodeWithStakeAndAsk(
-          i + 10,
-          minStake,
-          nodeAsk,
-          deps,
-        );
-        receivingNodes.push(node);
-        receivingNodesIdentityIds.push(identityId);
-      }
-
-      await createKnowledgeCollection(
-        kcCreator,
-        publishingNode,
-        publishingNodeIdentityId,
-        receivingNodes,
-        receivingNodesIdentityIds,
-        deps,
-        merkleRoot,
-      );
-
-      // Update and get the new active proof period
-      const tx =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await tx.wait();
-
-      // Create challenge
-      const challengeTx = await RandomSampling.connect(
-        publishingNode.operational,
-      ).createChallenge();
-      await challengeTx.wait();
-
-      // Get the challenge from storage to verify it
-      let challenge = await RandomSamplingStorage.getNodeChallenge(
-        publishingNodeIdentityId,
-      );
-
-      // Get chunk from quads
-      const chunks = kcTools.splitIntoChunks(quads, 32);
-      const challengeChunk = chunks[challenge.chunkId];
-
-      // Generate a proof for our challenge chunk
-      const { proof } = kcTools.calculateMerkleProof(
-        quads,
-        32,
-        Number(challenge.chunkId),
-      );
-
-      // Submit proof
-      const submitProofTx = await RandomSampling.connect(
-        publishingNode.operational,
-      ).submitProof(challengeChunk, proof);
-      const receipt = await submitProofTx.wait();
-
-      // Get the challenge from storage to verify it
-      challenge = await RandomSamplingStorage.getNodeChallenge(
-        publishingNodeIdentityId,
-      );
-
-      // Since the challenge was solved, the challenge should be marked as solved
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(challenge.solved).to.be.true;
-
-      await expect(receipt)
-        .to.emit(RandomSampling, 'ValidProofSubmitted')
-        .withArgs(
-          publishingNodeIdentityId,
-          challenge.epoch,
-          (score: bigint) => score > 0, // Just check score is positive, calculation checked elsewhere
-        );
-
-      const expectedScore = await calculateExpectedNodeScore(
-        BigInt(publishingNodeIdentityId),
-        BigInt(minStake),
-        {
-          ParametersStorage,
-          ProfileStorage,
-          AskStorage,
-          EpochStorage,
-        },
-      );
-
-      expect(
-        await RandomSamplingStorage.getNodeEpochProofPeriodScore(
-          publishingNodeIdentityId,
-          challenge.epoch,
-          challenge.activeProofPeriodStartBlock,
-        ),
-      ).to.equal(expectedScore);
-
-      expect(
-        await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
-          challenge.epoch,
-
-          challenge.activeProofPeriodStartBlock,
-        ),
-      ).to.equal(expectedScore);
-    });
-
-    it('Should fail to submit proof for expired challenge', async () => {
+    it('Should revert if challenge is no longer active', async () => {
       // Setup
       const kcCreator = getDefaultKCCreator(accounts);
       const publishingNode = getDefaultPublishingNode(accounts);
@@ -1055,10 +938,9 @@ describe('@integration RandomSampling', () => {
       await Ask.connect(accounts[0]).recalculateActiveSet();
 
       // Create challenge
-      const challengeTx = await RandomSampling.connect(
+      await RandomSampling.connect(
         publishingNode.operational,
       ).createChallenge();
-      await challengeTx.wait();
       const challenge = await RandomSamplingStorage.getNodeChallenge(
         publishingNodeIdentityId,
       );
@@ -1090,7 +972,7 @@ describe('@integration RandomSampling', () => {
       );
     });
 
-    it('Should fail to submit invalid proof (wrong chunk/proof)', async () => {
+    it("Should revert with MerkleRootMismatchError if merkle roots don't match", async () => {
       // Setup
       const kcCreator = getDefaultKCCreator(accounts);
       const publishingNode = getDefaultPublishingNode(accounts);
@@ -1182,6 +1064,549 @@ describe('@integration RandomSampling', () => {
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(finalChallenge.solved).to.be.false; // Ensure state unchanged
+    });
+
+    it('Should submit a valid proof and successfully update challenge state (solved=true)', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const minStake = await ParametersStorage.minimumStake();
+      const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
+      const deps = {
+        accounts,
+        Profile,
+        Token,
+        Staking,
+        Ask,
+        KnowledgeCollection,
+      };
+
+      const { node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(1, minStake, nodeAsk, deps);
+
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 10,
+          minStake,
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+      );
+
+      // Update and get the new active proof period
+      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+
+      // Create challenge
+      const challengeTx = await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+      await challengeTx.wait();
+
+      // Get the challenge from storage to verify it
+      let challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      // Get chunk from quads
+      const chunks = kcTools.splitIntoChunks(quads, 32);
+      const challengeChunk = chunks[challenge.chunkId];
+
+      // Generate a proof for our challenge chunk
+      const { proof } = kcTools.calculateMerkleProof(
+        quads,
+        32,
+        Number(challenge.chunkId),
+      );
+
+      // Submit proof
+      await RandomSampling.connect(publishingNode.operational).submitProof(
+        challengeChunk,
+        proof,
+      );
+
+      // Get the challenge from storage to verify it
+      challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      // Since the challenge was solved, the challenge should be marked as solved
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(challenge.solved).to.be.true;
+    });
+
+    it('Should submit a valid proof and successfully increment epochNodeValidProofsCount', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const minStake = await ParametersStorage.minimumStake();
+      const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
+      const deps = {
+        accounts,
+        Profile,
+        Token,
+        Staking,
+        Ask,
+        KnowledgeCollection,
+      };
+
+      const { node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(1, minStake, nodeAsk, deps);
+
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 10,
+          minStake,
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+      );
+
+      // Update and get the new active proof period
+      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+
+      // Create challenge
+      await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+
+      // Get the challenge from storage to verify it
+      let challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      // Get chunk from quads
+      const chunks = kcTools.splitIntoChunks(quads, 32);
+      const challengeChunk = chunks[challenge.chunkId];
+
+      // Generate a proof for our challenge chunk
+      const { proof } = kcTools.calculateMerkleProof(
+        quads,
+        32,
+        Number(challenge.chunkId),
+      );
+
+      // Submit proof
+      await RandomSampling.connect(publishingNode.operational).submitProof(
+        challengeChunk,
+        proof,
+      );
+
+      // Get the challenge from storage to verify it
+      challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      // Verify that epochNodeValidProofsCount was incremented
+      const epochNodeValidProofsCount =
+        await RandomSamplingStorage.getEpochNodeValidProofsCount(
+          challenge.epoch,
+          publishingNodeIdentityId,
+        );
+      expect(epochNodeValidProofsCount).to.equal(1n);
+    });
+
+    it('Should submit a valid proof and successfully emit ValidProofSubmitted event with correct parameters', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const minStake = await ParametersStorage.minimumStake();
+      const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
+      const deps = {
+        accounts,
+        Profile,
+        Token,
+        Staking,
+        Ask,
+        KnowledgeCollection,
+      };
+
+      const { node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(1, minStake, nodeAsk, deps);
+
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 10,
+          minStake,
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+      );
+
+      // Update and get the new active proof period
+      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+
+      // Create challenge
+      await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+
+      // Get the challenge from storage to verify it
+      let challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      // Get chunk from quads
+      const chunks = kcTools.splitIntoChunks(quads, 32);
+      const challengeChunk = chunks[challenge.chunkId];
+
+      // Generate a proof for our challenge chunk
+      const { proof } = kcTools.calculateMerkleProof(
+        quads,
+        32,
+        Number(challenge.chunkId),
+      );
+
+      // Submit proof
+      const receipt = await RandomSampling.connect(
+        publishingNode.operational,
+      ).submitProof(challengeChunk, proof);
+
+      // Get the challenge from storage to verify it
+      challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      // Verify that epochNodeValidProofsCount was incremented
+      await expect(receipt)
+        .to.emit(RandomSampling, 'ValidProofSubmitted')
+        .withArgs(
+          publishingNodeIdentityId,
+          challenge.epoch,
+          (score: bigint) => score > 0,
+        );
+    });
+
+    it('Should submit a valid proof and successfully and add score to nodeEpochProofPeriodScore and allNodesEpochProofPeriodScore', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const minStake = await ParametersStorage.minimumStake();
+      const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
+      const deps = {
+        accounts,
+        Profile,
+        Token,
+        Staking,
+        Ask,
+        KnowledgeCollection,
+      };
+
+      const { node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(1, minStake, nodeAsk, deps);
+
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 10,
+          minStake,
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+      );
+
+      // Update and get the new active proof period
+      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+
+      // Create challenge
+      await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+
+      // Get the challenge from storage to verify it
+      let challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      // Get chunk from quads
+      const chunks = kcTools.splitIntoChunks(quads, 32);
+      const challengeChunk = chunks[challenge.chunkId];
+
+      // Generate a proof for our challenge chunk
+      const { proof } = kcTools.calculateMerkleProof(
+        quads,
+        32,
+        Number(challenge.chunkId),
+      );
+
+      // Submit proof
+      await RandomSampling.connect(publishingNode.operational).submitProof(
+        challengeChunk,
+        proof,
+      );
+
+      // Get the challenge from storage to verify it
+      challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      const expectedScore = await calculateExpectedNodeScore(
+        BigInt(publishingNodeIdentityId),
+        BigInt(minStake),
+        {
+          ParametersStorage,
+          ProfileStorage,
+          AskStorage,
+          EpochStorage,
+        },
+      );
+
+      expect(
+        await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+          publishingNodeIdentityId,
+          challenge.epoch,
+          challenge.activeProofPeriodStartBlock,
+        ),
+      ).to.equal(expectedScore);
+
+      expect(
+        await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
+          challenge.epoch,
+
+          challenge.activeProofPeriodStartBlock,
+        ),
+      ).to.equal(expectedScore);
+    });
+
+    it('Should succeed if submitting proof exactly on the last block of the period', async () => {
+      // Setup
+      const kcCreator = getDefaultKCCreator(accounts);
+      const minStake = await ParametersStorage.minimumStake();
+      const nodeAsk = 200000000000000000n; // 0.2 ETH
+      const deps = {
+        accounts,
+        Profile,
+        Token,
+        Staking,
+        Ask,
+        KnowledgeCollection,
+      };
+
+      const { node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(1, minStake, nodeAsk, deps);
+
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 10,
+          minStake,
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+      );
+
+      // Create challenge
+      await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+      const challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+      const startBlock = challenge.activeProofPeriodStartBlock;
+      const duration = challenge.proofingPeriodDurationInBlocks;
+      const targetBlock = startBlock + duration - 2n;
+      const currentBlock = BigInt(await hre.ethers.provider.getBlockNumber());
+
+      // Advance blocks to exactly S + D - 1
+      if (targetBlock > currentBlock) {
+        const blocksToMine = Number(targetBlock - currentBlock);
+        for (let i = 0; i < blocksToMine; i++) {
+          await hre.network.provider.send('evm_mine');
+        }
+      }
+
+      expect(BigInt(await hre.ethers.provider.getBlockNumber())).to.equal(
+        targetBlock,
+      );
+
+      // Action: Prepare and submit proof
+      const chunks = kcTools.splitIntoChunks(quads, 32);
+      const challengeChunk = chunks[challenge.chunkId];
+      const { proof } = kcTools.calculateMerkleProof(
+        quads,
+        32,
+        Number(challenge.chunkId),
+      );
+
+      const submitTx = RandomSampling.connect(
+        publishingNode.operational,
+      ).submitProof(challengeChunk, proof);
+
+      // Verification
+      await expect(submitTx).to.not.be.reverted;
+
+      const updatedChallenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(updatedChallenge.solved).to.be.true;
+
+      const expectedScore = await calculateExpectedNodeScore(
+        BigInt(publishingNodeIdentityId),
+        BigInt(minStake),
+        {
+          ParametersStorage,
+          ProfileStorage,
+          AskStorage,
+          EpochStorage,
+        },
+      );
+      expect(
+        await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+          publishingNodeIdentityId,
+          challenge.epoch,
+          startBlock,
+        ),
+      ).to.equal(expectedScore);
+
+      await expect(submitTx)
+        .to.emit(RandomSampling, 'ValidProofSubmitted')
+        .withArgs(
+          publishingNodeIdentityId,
+          challenge.epoch,
+          (score: bigint) => score.toString() === expectedScore.toString(),
+        );
+    });
+
+    it('Should revert if submitting proof exactly on the first block of the next period', async () => {
+      // Setup
+      const kcCreator = getDefaultKCCreator(accounts);
+      const minStake = await ParametersStorage.minimumStake();
+      const nodeAsk = 200000000000000000n; // 0.2 ETH
+      const deps = {
+        accounts,
+        Profile,
+        Token,
+        Staking,
+        Ask,
+        KnowledgeCollection,
+      };
+
+      const { node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(1, minStake, nodeAsk, deps);
+
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 10,
+          minStake,
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+      );
+
+      // Create challenge
+      await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+      const challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+      const startBlock = challenge.activeProofPeriodStartBlock;
+      const duration = challenge.proofingPeriodDurationInBlocks;
+      const targetBlock = startBlock + duration - 1n;
+      const currentBlock = BigInt(await hre.ethers.provider.getBlockNumber());
+
+      // Advance blocks to exactly S + D
+      if (targetBlock > currentBlock) {
+        const blocksToMine = Number(targetBlock - currentBlock);
+        for (let i = 0; i < blocksToMine; i++) {
+          await hre.network.provider.send('evm_mine');
+        }
+      }
+      expect(BigInt(await hre.ethers.provider.getBlockNumber())).to.equal(
+        targetBlock,
+      );
+
+      // Action: Prepare and submit proof for the previous period
+      const chunks = kcTools.splitIntoChunks(quads, 32);
+      const challengeChunk = chunks[challenge.chunkId];
+      const { proof } = kcTools.calculateMerkleProof(
+        quads,
+        32,
+        Number(challenge.chunkId),
+      );
+
+      const submitTx = RandomSampling.connect(
+        publishingNode.operational,
+      ).submitProof(challengeChunk, proof);
+
+      // Verification
+      await expect(submitTx).to.be.revertedWith(
+        'This challenge is no longer active',
+      );
     });
   });
 
