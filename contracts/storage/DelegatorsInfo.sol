@@ -19,6 +19,9 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     // IdentityId => Delegator => IsDelegator
     mapping(uint72 => mapping(address => bool)) public isDelegatorMap;
 
+    event DelegatorAdded(uint72 indexed identityId, address indexed delegator);
+    event DelegatorRemoved(uint72 indexed identityId, address indexed delegator);
+
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
 
@@ -36,6 +39,8 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
         nodeDelegatorIndex[identityId][delegator] = nodeDelegatorAddresses[identityId].length;
         nodeDelegatorAddresses[identityId].push(delegator);
         isDelegatorMap[identityId][delegator] = true;
+
+        emit DelegatorAdded(identityId, delegator);
     }
 
     function removeDelegator(uint72 identityId, address delegator) external onlyContracts {
@@ -55,6 +60,8 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
         nodeDelegatorAddresses[identityId].pop();
         delete nodeDelegatorIndex[identityId][delegator];
         delete isDelegatorMap[identityId][delegator];
+
+        emit DelegatorRemoved(identityId, delegator);
     }
 
     function getDelegators(uint72 identityId) external view returns (address[] memory) {
@@ -85,6 +92,9 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
                     .length;
                 nodeDelegatorAddresses[delegatorNodes[j]].push(newAddresses[i]);
                 isDelegatorMap[delegatorNodes[j]][newAddresses[i]] = true;
+
+                emit DelegatorAdded(delegatorNodes[j], newAddresses[i]);
+
                 unchecked {
                     j++;
                 }
