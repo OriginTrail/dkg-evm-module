@@ -261,6 +261,33 @@
       "deploymentBlock": 22788786,
       "deploymentTimestamp": 1741345864175,
       "deployed": true
+    },
+    "DelegatorsInfo": {
+      "evmAddress": "0x4B5a565d33eB20fb7aD66572402edB14cA2b43e2",
+      "version": "1.0.0",
+      "gitBranch": "release/v8.0.7-testnet",
+      "gitCommitHash": "9086d672d83a3d011ad9e0f68c080d91ef69b515",
+      "deploymentBlock": 24609693,
+      "deploymentTimestamp": 1744987678184,
+      "deployed": true
+    },
+    "RandomSamplingStorage": {
+      "evmAddress": "0x0E4d6dAef761D281f67Bc02D0c55c26305Ffc766",
+      "version": "1.0.0",
+      "gitBranch": "release/v8.0.7-testnet",
+      "gitCommitHash": "9086d672d83a3d011ad9e0f68c080d91ef69b515",
+      "deploymentBlock": 24607118,
+      "deploymentTimestamp": 1744982528388,
+      "deployed": true
+    },
+    "RandomSampling": {
+      "evmAddress": "0x1A51F6f5c9c23F08652F4482b299A3529C7597ca",
+      "version": "1.0.0",
+      "gitBranch": "release/v8.0.7-testnet",
+      "gitCommitHash": "9086d672d83a3d011ad9e0f68c080d91ef69b515",
+      "deploymentBlock": 24607121,
+      "deploymentTimestamp": 1744982531809,
+      "deployed": true
     }
   }
 }
