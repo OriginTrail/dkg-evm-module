@@ -60,7 +60,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         w2 = _w2;
     }
 
-    function initialize() external {
+    function initialize() public onlyHub {
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
         knowledgeCollectionStorage = KnowledgeCollectionStorage(
