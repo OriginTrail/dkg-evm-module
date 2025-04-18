@@ -209,7 +209,7 @@
       "gitCommitHash": "04baf6bee66a9023a60acedf00b82d1152e31a17",
       "deploymentBlock": 7064218,
       "deploymentTimestamp": 1744106244945,
-      "deployed": true
+      "deployed": false
     },
     "ParanetsRegistry": {
       "evmAddress": "0x17bb588fdE9e2F69aceAb9A24deE753245E3EAFE",
@@ -289,6 +289,36 @@
       "gitCommitHash": "04baf6bee66a9023a60acedf00b82d1152e31a17",
       "deploymentBlock": 7064217,
       "deploymentTimestamp": 1744106239694,
+      "deployed": true
+    },
+    "DelegatorsInfo": {
+      "evmAddress": "0x40A822a830Fc3a63C8F042A10F5346C46C05BC7d",
+      "substrateAddress": "5EMjsczZ8YhqTH7HWSXZ3nnD4oCfhEx9pXmrKCFR6R5VCVfb",
+      "version": "1.0.0",
+      "gitBranch": "release/v8.0.7-testnet",
+      "gitCommitHash": "9086d672d83a3d011ad9e0f68c080d91ef69b515",
+      "deploymentBlock": 7195336,
+      "deploymentTimestamp": 1744987580235,
+      "deployed": true
+    },
+    "RandomSamplingStorage": {
+      "evmAddress": "0x63ec38B6816F2855cAA0Cb735b17Db933a15d11d",
+      "substrateAddress": "5EMjsczgCPtztnDBmaoAKGHUa1NB9veqR9eHWuTeapkSJ7er",
+      "version": "1.0.0",
+      "gitBranch": "release/v8.0.7-testnet",
+      "gitCommitHash": "9086d672d83a3d011ad9e0f68c080d91ef69b515",
+      "deploymentBlock": 7194647,
+      "deploymentTimestamp": 1744983074858,
+      "deployed": true
+    },
+    "RandomSampling": {
+      "evmAddress": "0x99aaf878f85A6aD905159c9D1c12BFFc58454501",
+      "substrateAddress": "5EMjsczry13xcRnpRYdcq4tGJEkYCK5W4pT6JGFc5ja2DmaC",
+      "version": "1.0.0",
+      "gitBranch": "release/v8.0.7-testnet",
+      "gitCommitHash": "9086d672d83a3d011ad9e0f68c080d91ef69b515",
+      "deploymentBlock": 7194648,
+      "deploymentTimestamp": 1744983079796,
       "deployed": true
     }
   }
