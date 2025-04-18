@@ -6,10 +6,10 @@ import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
 import {IInitializable} from "../interfaces/IInitializable.sol";
 import {RandomSamplingLib} from "../libraries/RandomSamplingLib.sol";
-import {HubDependent} from "../abstract/HubDependent.sol";
 import {Chronos} from "../storage/Chronos.sol";
+import {ContractStatus} from "../abstract/ContractStatus.sol";
 
-contract RandomSamplingStorage is INamed, IVersioned, IInitializable, HubDependent {
+contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractStatus {
     string private constant _NAME = "RandomSamplingStorage";
     string private constant _VERSION = "1.0.0";
     uint8 public constant CHUNK_BYTE_SIZE = 32;
@@ -36,7 +36,7 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, HubDepende
         uint256 indexed effectiveEpoch
     );
 
-    constructor(address hubAddress, uint16 _proofingPeriodDurationInBlocks) HubDependent(hubAddress) {
+    constructor(address hubAddress, uint16 _proofingPeriodDurationInBlocks) ContractStatus(hubAddress) {
         require(_proofingPeriodDurationInBlocks > 0, "Proofing period duration in blocks must be greater than 0");
         proofingPeriodDurations.push(
             RandomSamplingLib.ProofingPeriodDuration({
@@ -49,6 +49,7 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, HubDepende
     function initialize() public onlyHub {
         chronos = Chronos(hub.getContractAddress("Chronos"));
         // update the last proofing period duration with the current epoch
+        // TODO: What happens when contract is initialized twice?
         proofingPeriodDurations[proofingPeriodDurations.length - 1] = RandomSamplingLib.ProofingPeriodDuration({
             durationInBlocks: proofingPeriodDurations[proofingPeriodDurations.length - 1].durationInBlocks,
             effectiveEpoch: chronos.getCurrentEpoch()
