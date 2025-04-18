@@ -76,7 +76,7 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
         return isDelegatorMap[identityId][delegator];
     }
 
-    function migrate(address[] memory newAddresses) external onlyContracts {
+    function migrate(address[] memory newAddresses) public {
         StakingStorage ss = StakingStorage(hub.getContractAddress("StakingStorage"));
         for (uint256 i = 0; i < newAddresses.length; ) {
             bytes32 addressHash = keccak256(abi.encodePacked(newAddresses[i]));
