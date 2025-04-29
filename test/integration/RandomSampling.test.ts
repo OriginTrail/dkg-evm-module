@@ -3,7 +3,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 // @ts-expect-error: No type definitions available for assertion-tools
 import { kcTools } from 'assertion-tools';
 import { expect } from 'chai';
-import hre from 'hardhat';
+import hre, { ethers } from 'hardhat';
 
 import {
   RandomSampling,
@@ -1739,6 +1739,12 @@ describe('@integration RandomSampling', () => {
         ),
       ).to.equal(delegatorStake);
 
+      const stakingStorageAmount = await Token.balanceOf(
+        await StakingStorage.getAddress(),
+      );
+
+      const tokenAmount = ethers.parseEther('100');
+
       // 3. Create Knowledge Collection (generates fees for rewards)
       const kcCreator = getDefaultKCCreator(accounts);
       await createKnowledgeCollection(
@@ -1753,6 +1759,16 @@ describe('@integration RandomSampling', () => {
         10,
         1000,
         10, // epochsDuration
+        tokenAmount,
+      );
+
+      const stakingStorageAmountAfter = await Token.balanceOf(
+        await StakingStorage.getAddress(),
+      );
+
+      // Verify that the staking storage received the token amount
+      expect(stakingStorageAmountAfter).to.equal(
+        stakingStorageAmount + tokenAmount,
       );
 
       // 4. Node submits a proof in the current epoch
