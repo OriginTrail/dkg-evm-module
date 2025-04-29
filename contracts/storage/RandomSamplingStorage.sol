@@ -28,6 +28,8 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
     mapping(uint256 => mapping(uint256 => uint256)) public allNodesEpochProofPeriodScore;
     // epoch => identityId => delegatorKey => score
     mapping(uint256 => mapping(uint72 => mapping(bytes32 => uint256))) public epochNodeDelegatorScore;
+    // epoch => identityId => delegatorKey => rewards claimed status
+    mapping(uint256 => mapping(uint72 => mapping(bytes32 => bool))) public epochNodeDelegatorRewardsClaimed;
 
     event ProofingPeriodDurationAdded(uint16 durationInBlocks, uint256 indexed effectiveEpoch);
     event PendingProofingPeriodDurationReplaced(
@@ -219,5 +221,24 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         uint256 score
     ) external onlyContracts {
         epochNodeDelegatorScore[epoch][identityId][delegatorKey] += score;
+    }
+
+    // --- Rewards Claimed Status ---
+
+    function getEpochNodeDelegatorRewardsClaimed(
+        uint256 epoch,
+        uint72 identityId,
+        bytes32 delegatorKey
+    ) external view returns (bool) {
+        return epochNodeDelegatorRewardsClaimed[epoch][identityId][delegatorKey];
+    }
+
+    function setEpochNodeDelegatorRewardsClaimed(
+        uint256 epoch,
+        uint72 identityId,
+        bytes32 delegatorKey,
+        bool claimed
+    ) external onlyContracts {
+        epochNodeDelegatorRewardsClaimed[epoch][identityId][delegatorKey] = claimed;
     }
 }
