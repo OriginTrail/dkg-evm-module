@@ -396,9 +396,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
 
         uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
-        if (allExpectedEpochProofsCount == 0) {
-            revert("All expected epoch proofs count is 0");
-        }
+        require(allExpectedEpochProofsCount > 0, "All expected epoch proofs count must be greater than 0");
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
         uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
