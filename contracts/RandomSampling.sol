@@ -194,11 +194,17 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         // get delegator key
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
 
+        // Check if a delegator has >0 score in the epoch
+        uint256 delegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(epoch, identityId, delegatorKey);
+        require(delegatorScore > 0, "Delegator has no score for the given epoch");
+
         // make sure the delegator has not claimed the rewards yet
-        require(
-            !randomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey),
-            "Rewards already claimed"
+        bool rewardsClaimed = randomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
+            epoch,
+            identityId,
+            delegatorKey
         );
+        require(!rewardsClaimed, "Rewards already claimed");
 
         // get rewards amount
         uint256 rewardAmount = _getDelegatorEpochRewardsAmount(identityId, epoch, msg.sender);
