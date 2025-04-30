@@ -52,6 +52,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     event ValidProofSubmitted(uint72 indexed identityId, uint256 indexed epoch, uint256 score);
     event AvgBlockTimeUpdated(uint8 avgBlockTimeInSeconds);
     event ProofingPeriodDurationInBlocksUpdated(uint8 durationInBlocks);
+    event RewardsClaimed(uint72 indexed identityId, uint256 indexed epoch, address indexed delegator, uint256 amount);
 
     constructor(address hubAddress, uint8 _avgBlockTimeInSeconds, uint256 _w1, uint256 _w2) ContractStatus(hubAddress) {
         require(_avgBlockTimeInSeconds > 0, "Average block time in seconds must be greater than 0");
@@ -182,34 +183,41 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function getDelegatorEpochRewardsAmount(uint72 identityId, uint256 epoch) public view returns (uint256) {
+        return _getDelegatorEpochRewardsAmount(identityId, epoch, msg.sender);
+    }
+
+    function claimRewards(uint72 identityId, uint256 epoch) external {
+        // make sure the epoch is over and it is finalized
         require(chronos.getCurrentEpoch() > epoch, "Epoch is not over yet");
+        require(epochStorage.lastFinalizedEpoch(1) >= epoch, "Epoch is not finalized yet");
 
-        uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
-
-        uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
-
-        uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
-
-        uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
-
-        if (allExpectedEpochProofsCount == 0) {
-            revert("All expected epoch proofs count is 0");
-        }
-
+        // get delegator key
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
-        uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
+
+        // Check if a delegator has >0 score in the epoch
+        uint256 delegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(epoch, identityId, delegatorKey);
+        require(delegatorScore > 0, "Delegator has no score for the given epoch");
+
+        // make sure the delegator has not claimed the rewards yet
+        bool rewardsClaimed = randomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
             epoch,
             identityId,
             delegatorKey
         );
+        require(!rewardsClaimed, "Rewards already claimed");
 
-        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
+        // get rewards amount
+        uint256 rewardAmount = _getDelegatorEpochRewardsAmount(identityId, epoch, msg.sender);
+        require(rewardAmount > 0, "No rewards to claim");
+        require(rewardAmount <= type(uint96).max, "Reward amount exceeds uint96");
 
-        uint256 reward = ((totalEpochTracFees / 2) *
-            (w1 * (epochNodeValidProofsCount / allExpectedEpochProofsCount) + w2 * epochNodeDelegatorScore)) /
-            SCALING_FACTOR ** 2;
+        // Mark as claimed - before transfer to avoid reentrancy
+        randomSamplingStorage.setEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey, true);
 
-        return reward;
+        // Transfer the rewards to the delegator via StakingStorage
+        stakingStorage.transferStake(msg.sender, uint96(rewardAmount));
+
+        emit RewardsClaimed(identityId, epoch, msg.sender, rewardAmount);
     }
 
     function _computeMerkleRootFromProof(
@@ -375,5 +383,32 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             }
         }
     }
-    // claim rewards
+
+    function _getDelegatorEpochRewardsAmount(
+        uint72 identityId,
+        uint256 epoch,
+        address delegator
+    ) internal view returns (uint256) {
+        uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
+
+        uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
+
+        uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
+
+        uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
+        require(allExpectedEpochProofsCount > 0, "All expected epoch proofs count must be greater than 0");
+
+        bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
+        uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
+            epoch,
+            identityId,
+            delegatorKey
+        );
+        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
+
+        uint256 reward = ((totalEpochTracFees / 2) *
+            (w1 * (epochNodeValidProofsCount / allExpectedEpochProofsCount) + w2 * epochNodeDelegatorScore)) /
+            SCALING_FACTOR ** 2;
+        return reward;
+    }
 }

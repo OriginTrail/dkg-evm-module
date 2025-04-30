@@ -3,7 +3,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 // @ts-expect-error: No type definitions available for assertion-tools
 import { kcTools } from 'assertion-tools';
 import { expect } from 'chai';
-import hre from 'hardhat';
+import hre, { ethers } from 'hardhat';
 
 import {
   RandomSampling,
@@ -557,7 +557,7 @@ describe('@integration RandomSampling', () => {
   });
 
   describe('Challenge Creation', () => {
-    it('Should revert if an unsolved challenge already exists for this node in the current proof period', async () => {
+    it('Should revert if an unsolved challenge already exists for this node in the current proof period', async () => {
       // creator of the KC
       const kcCreator = getDefaultKCCreator(accounts);
       // create a publishing node with stake and ask
@@ -754,7 +754,7 @@ describe('@integration RandomSampling', () => {
       );
     });
 
-    it('Should set the node challenge successfully and emit ChallengeCreated event', async () => {
+    it('Should set the node challenge successfully and emit ChallengeCreated event', async () => {
       const kcCreator = getDefaultKCCreator(accounts);
       const publishingNode = getDefaultPublishingNode(accounts);
       const receivingNodes = getDefaultReceivingNodes(accounts);
@@ -932,7 +932,7 @@ describe('@integration RandomSampling', () => {
         { Token, Staking, Ask },
       );
       await Profile.connect(publishingNode.operational).updateAsk(
-        publishingNodeIdentityId,
+        BigInt(publishingNodeIdentityId),
         100n,
       );
       await Ask.connect(accounts[0]).recalculateActiveSet();
@@ -958,7 +958,7 @@ describe('@integration RandomSampling', () => {
       const { proof } = kcTools.calculateMerkleProof(
         quads,
         32,
-        challenge.chunkId,
+        Number(challenge.chunkId),
       );
 
       const submitProofTx = RandomSampling.connect(
@@ -1628,6 +1628,498 @@ describe('@integration RandomSampling', () => {
       expect(await RandomSampling.avgBlockTimeInSeconds()).to.equal(
         newAvgBlockTime,
       );
+    });
+  });
+
+  describe('Reward Claiming', () => {
+    let publishingNode: {
+      operational: SignerWithAddress;
+      admin: SignerWithAddress;
+    };
+    let publishingNodeIdentityId: number;
+    let delegatorAccount: SignerWithAddress;
+    let delegatorKey: string;
+    let epochToClaim: bigint;
+    let deps: {
+      accounts: SignerWithAddress[];
+      Profile: Profile;
+      Token: Token;
+      Staking: Staking;
+      Ask: Ask;
+      KnowledgeCollection: KnowledgeCollection;
+      ParametersStorage: ParametersStorage;
+      RandomSampling: RandomSampling;
+      RandomSamplingStorage: RandomSamplingStorage;
+      EpochStorage: EpochStorage;
+      Chronos: Chronos;
+      StakingStorage: StakingStorage;
+      IdentityStorage: IdentityStorage;
+      ShardingTableStorage: ShardingTableStorage;
+    };
+
+    // Helper function to advance to the next epoch
+    const advanceToNextEpoch = async () => {
+      const timeUntil = await Chronos.timeUntilNextEpoch();
+      const avgBlockTime = await RandomSampling.avgBlockTimeInSeconds();
+      const blocksToMine =
+        timeUntil > 0n ? Number(timeUntil / BigInt(avgBlockTime)) + 2 : 2; // Add buffer
+      for (let i = 0; i < blocksToMine; i++) {
+        await hre.network.provider.send('evm_mine');
+      }
+    };
+
+    // Setup common scenario for reward claiming tests
+    beforeEach(async () => {
+      delegatorAccount = accounts[1];
+      delegatorKey = hre.ethers.keccak256(
+        hre.ethers.solidityPacked(['address'], [delegatorAccount.address]),
+      );
+
+      // Dependencies for setup
+      deps = {
+        accounts,
+        Profile,
+        Token,
+        Staking,
+        Ask,
+        KnowledgeCollection,
+        ParametersStorage,
+        RandomSampling,
+        RandomSamplingStorage,
+        EpochStorage,
+        Chronos,
+        StakingStorage,
+        IdentityStorage,
+        ShardingTableStorage,
+      };
+
+      const nodeAsk = 200000000000000000n; // 0.2 TRAC ask
+      const nodeStake = (await ParametersStorage.minimumStake()) * 2n; // Stake more than min
+      const delegatorStake = nodeStake / 10n; // Delegate a tenth of node's stake
+
+      // 1. Setup Node
+      ({ node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(
+          2, // Account index offset for setup helper
+          nodeStake,
+          nodeAsk,
+          deps,
+        ));
+
+      // 2. Setup Receiving Nodes
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 3,
+          await ParametersStorage.minimumStake(),
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+
+      // 3. Setup Delegator
+      await Token.mint(delegatorAccount.address, delegatorStake * 2n);
+      await Token.connect(delegatorAccount).approve(
+        await Staking.getAddress(),
+        delegatorStake,
+      );
+      await Staking.connect(delegatorAccount).stake(
+        publishingNodeIdentityId,
+        delegatorStake,
+      );
+
+      // Verify delegation
+      expect(
+        await StakingStorage.getDelegatorTotalStake(
+          publishingNodeIdentityId,
+          delegatorKey,
+        ),
+      ).to.equal(delegatorStake);
+
+      const stakingStorageAmount = await Token.balanceOf(
+        await StakingStorage.getAddress(),
+      );
+
+      const tokenAmount = ethers.parseEther('100');
+
+      // 3. Create Knowledge Collection (generates fees for rewards)
+      const kcCreator = getDefaultKCCreator(accounts);
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot, // Use predefined merkleRoot
+        'test-operation-id',
+        10,
+        1000,
+        10, // epochsDuration
+        tokenAmount,
+      );
+
+      const stakingStorageAmountAfter = await Token.balanceOf(
+        await StakingStorage.getAddress(),
+      );
+
+      // Verify that the staking storage received the token amount
+      expect(stakingStorageAmountAfter).to.equal(
+        stakingStorageAmount + tokenAmount,
+      );
+
+      // 4. Node submits a proof in the current epoch
+      epochToClaim = await Chronos.getCurrentEpoch();
+
+      await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+      let challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+      let chunks = kcTools.splitIntoChunks(quads, 32);
+      let challengeChunk = chunks[challenge.chunkId];
+      const { proof } = kcTools.calculateMerkleProof(
+        quads,
+        32,
+        Number(challenge.chunkId),
+      );
+      await RandomSampling.connect(publishingNode.operational).submitProof(
+        challengeChunk,
+        proof,
+      );
+
+      // Verify proof was counted
+      expect(
+        await RandomSamplingStorage.getEpochNodeValidProofsCount(
+          epochToClaim,
+          publishingNodeIdentityId,
+        ),
+      ).to.equal(1n);
+
+      // Advance to the next proofing period
+      const proofingPeriodDurationInBlocks =
+        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      for (let i = 0; i < Number(proofingPeriodDurationInBlocks); i++) {
+        await hre.network.provider.send('evm_mine');
+      }
+      await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+      challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+      chunks = kcTools.splitIntoChunks(quads, 32);
+      challengeChunk = chunks[challenge.chunkId];
+      const { proof: proof2 } = kcTools.calculateMerkleProof(
+        quads,
+        32,
+        Number(challenge.chunkId),
+      );
+      await RandomSampling.connect(publishingNode.operational).submitProof(
+        challengeChunk,
+        proof2,
+      );
+
+      // 5. Advance time past the epoch and finalize it
+      await advanceToNextEpoch(); // Advance to epoch + 1
+      await advanceToNextEpoch(); // Advance to epoch + 2 to ensure epoch is finalizable
+
+      await expect(
+        RandomSampling.connect(delegatorAccount).claimRewards(
+          publishingNodeIdentityId,
+          epochToClaim,
+        ),
+      ).to.be.revertedWith('Epoch is not finalized yet');
+
+      // Create another KC to initialize the lazy finalization
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+      );
+
+      // Check finalization (using pool 1 as per RandomSampling logic)
+      expect(
+        await EpochStorage.lastFinalizedEpoch(1),
+        'Epoch should be finalized',
+      ).to.be.gte(epochToClaim);
+    });
+
+    it('Should allow a delegator to successfully claim their rewards', async () => {
+      // Arrange
+      const expectedReward = await RandomSampling.connect(
+        delegatorAccount,
+      ).getDelegatorEpochRewardsAmount(publishingNodeIdentityId, epochToClaim);
+      expect(expectedReward).to.be.greaterThan(
+        0n,
+        'Expected reward should be positive',
+      );
+
+      const delegatorInitialBalance = await Token.balanceOf(
+        delegatorAccount.address,
+      );
+      const stakingStorageInitialBalance = await Token.balanceOf(
+        await StakingStorage.getAddress(),
+      );
+
+      // Act
+      const claimTx = await RandomSampling.connect(
+        delegatorAccount,
+      ).claimRewards(publishingNodeIdentityId, epochToClaim);
+      await claimTx.wait();
+
+      // Assert
+      // 1. Event Emission
+      await expect(claimTx)
+        .to.emit(RandomSampling, 'RewardsClaimed')
+        .withArgs(
+          publishingNodeIdentityId,
+          epochToClaim,
+          delegatorAccount.address,
+          expectedReward,
+        );
+
+      // 2. Balance Check
+      const delegatorFinalBalance = await Token.balanceOf(
+        delegatorAccount.address,
+      );
+      const stakingStorageFinalBalance = await Token.balanceOf(
+        await StakingStorage.getAddress(),
+      );
+      expect(delegatorFinalBalance).to.equal(
+        delegatorInitialBalance + expectedReward,
+      );
+      expect(stakingStorageFinalBalance).to.equal(
+        stakingStorageInitialBalance - expectedReward,
+      );
+
+      // 3. Claim Status Update
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(
+        await RandomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
+          epochToClaim,
+          publishingNodeIdentityId,
+          delegatorKey,
+        ),
+      ).to.be.true;
+    });
+
+    it('Should revert if the epoch to claim is not yet over', async () => {
+      // Arrange: Need a scenario where epoch is *not* over. Let's setup again without advancing time.
+      await hre.deployments.fixture(['RandomSampling']); // Redeploy for clean state relative to time
+      ({
+        accounts,
+        IdentityStorage,
+        StakingStorage,
+        ProfileStorage,
+        EpochStorage,
+        Chronos,
+        AskStorage,
+        DelegatorsInfo,
+        Profile,
+        Hub,
+        RandomSampling,
+        RandomSamplingStorage,
+        ParanetKnowledgeMinersRegistry,
+        ParanetKnowledgeCollectionsRegistry,
+        Staking,
+        ShardingTableStorage,
+        ShardingTable,
+        ParametersStorage,
+        Ask,
+        Token,
+        KnowledgeCollection,
+      } = await loadFixture(deployRandomSamplingFixture)); // Reload all contracts
+
+      // Redo minimal setup for node and KC within the current epoch
+      publishingNode = { operational: accounts[1], admin: accounts[1] };
+      delegatorAccount = accounts[2];
+      deps = {
+        accounts,
+        Profile,
+        Token,
+        Staking,
+        Ask,
+        KnowledgeCollection,
+        ParametersStorage,
+        RandomSampling,
+        RandomSamplingStorage,
+        EpochStorage,
+        Chronos,
+        StakingStorage,
+        IdentityStorage,
+        ShardingTableStorage,
+      };
+      const nodeStake = await ParametersStorage.minimumStake();
+      const nodeAsk = 200000000000000000n; // 0.2 TRAC ask
+
+      ({ identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(1, nodeStake, nodeAsk, deps));
+
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 3,
+          await ParametersStorage.minimumStake(),
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+
+      const kcCreator = getDefaultKCCreator(accounts);
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+        'test-operation-id',
+        10,
+        1000,
+        10,
+      );
+      const currentEpoch = await Chronos.getCurrentEpoch();
+
+      // Act & Assert
+      await expect(
+        RandomSampling.connect(delegatorAccount).claimRewards(
+          publishingNodeIdentityId,
+          currentEpoch, // Try claiming for the *current*, not-yet-over epoch
+        ),
+      ).to.be.revertedWith('Epoch is not over yet');
+    });
+
+    it('Should revert if rewards have already been claimed', async () => {
+      // Arrange: Claim rewards once successfully first
+      const expectedReward = await RandomSampling.connect(
+        delegatorAccount,
+      ).getDelegatorEpochRewardsAmount(publishingNodeIdentityId, epochToClaim);
+      expect(expectedReward).to.be.greaterThan(0n);
+      await RandomSampling.connect(delegatorAccount).claimRewards(
+        publishingNodeIdentityId,
+        epochToClaim,
+      );
+
+      // Verify claimed status
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(
+        await RandomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
+          epochToClaim,
+          publishingNodeIdentityId,
+          delegatorKey,
+        ),
+      ).to.be.true;
+
+      // Act & Assert: Try claiming again
+      await expect(
+        RandomSampling.connect(delegatorAccount).claimRewards(
+          publishingNodeIdentityId,
+          epochToClaim,
+        ),
+      ).to.be.revertedWith('Rewards already claimed');
+    });
+
+    it('Should revert if the delegator has no rewards to claim for the epoch (e.g., node submitted no proofs)', async () => {
+      const nodeStake = await ParametersStorage.minimumStake();
+      const nodeAsk = 200000000000000000n; // 0.2 TRAC ask
+      const delegatorStake = nodeStake / 2n;
+      ({ node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(15, nodeStake, nodeAsk, deps));
+
+      // Setup receiving nodes
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 20,
+          await ParametersStorage.minimumStake(),
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+
+      await Token.connect(accounts[0]).transfer(
+        delegatorAccount.address,
+        delegatorStake * 2n,
+      );
+      await Token.connect(delegatorAccount).approve(
+        await Staking.getAddress(),
+        delegatorStake,
+      );
+      await Staking.connect(delegatorAccount).stake(
+        publishingNodeIdentityId,
+        delegatorStake,
+      );
+      const kcCreator = getDefaultKCCreator(accounts);
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+        'test-operation-id',
+        10,
+        1000,
+        10,
+      );
+      epochToClaim = await Chronos.getCurrentEpoch();
+
+      // *** Crucially, DO NOT submit proof ***
+
+      // Advance past epoch and finalize
+      await advanceToNextEpoch();
+      await advanceToNextEpoch();
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+        'test-operation-id',
+        10,
+        1000,
+        10,
+      );
+
+      // Verify no proofs were counted
+      expect(
+        await RandomSamplingStorage.getEpochNodeValidProofsCount(
+          epochToClaim,
+          publishingNodeIdentityId,
+        ),
+      ).to.equal(0n);
+
+      // Check expected reward is zero
+      const expectedReward = await RandomSampling.connect(
+        delegatorAccount,
+      ).getDelegatorEpochRewardsAmount(publishingNodeIdentityId, epochToClaim);
+      expect(expectedReward).to.equal(0n);
+
+      // Act & Assert
+      await expect(
+        RandomSampling.connect(delegatorAccount).claimRewards(
+          publishingNodeIdentityId,
+          epochToClaim,
+        ),
+      ).to.be.revertedWith('No rewards to claim');
     });
   });
 });
