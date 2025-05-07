@@ -53,6 +53,8 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     event AvgBlockTimeUpdated(uint8 avgBlockTimeInSeconds);
     event ProofingPeriodDurationInBlocksUpdated(uint8 durationInBlocks);
     event RewardsClaimed(uint72 indexed identityId, uint256 indexed epoch, address indexed delegator, uint256 amount);
+    event W1Updated(uint256 oldW1, uint256 newW1);
+    event W2Updated(uint256 oldW2, uint256 newW2);
 
     constructor(address hubAddress, uint8 _avgBlockTimeInSeconds, uint256 _w1, uint256 _w2) ContractStatus(hubAddress) {
         require(_avgBlockTimeInSeconds > 0, "Average block time in seconds must be greater than 0");
@@ -86,11 +88,15 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function setW1(uint256 _w1) external onlyHubOwner {
+        uint256 oldW1 = w1;
         w1 = _w1;
+        emit W1Updated(oldW1, w1);
     }
 
     function setW2(uint256 _w2) external onlyHubOwner {
+        uint256 oldW2 = w2;
         w2 = _w2;
+        emit W2Updated(oldW2, w2);
     }
 
     function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyHubOwner {
@@ -123,7 +129,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             nodeChallenge.activeProofPeriodStartBlock == randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock()
         ) {
             // Revert if node has already solved the challenge for this period
-            if (nodeChallenge.solved == true) {
+            if (nodeChallenge.solved) {
                 revert("The challenge for this proof period has already been solved");
             }
 
@@ -140,12 +146,16 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         randomSamplingStorage.setNodeChallenge(identityId, challenge);
     }
 
-    function submitProof(string memory chunk, bytes32[] calldata merkleProof) public {
+    function submitProof(string memory chunk, bytes32[] calldata merkleProof) external {
         // Get node identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
         // Get node challenge
         RandomSamplingLib.Challenge memory challenge = randomSamplingStorage.getNodeChallenge(identityId);
+
+        if (challenge.solved) {
+            revert("This challenge has already been solved");
+        }
 
         uint256 activeProofPeriodStartBlock = randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
 
@@ -182,7 +192,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
-    function getDelegatorEpochRewardsAmount(uint72 identityId, uint256 epoch) public view returns (uint256) {
+    function getDelegatorEpochRewardsAmount(uint72 identityId, uint256 epoch) external view returns (uint256) {
         return _getDelegatorEpochRewardsAmount(identityId, epoch, msg.sender);
     }
 
@@ -320,7 +330,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
 
         // 2. Node ask factor calculation
         // Formula: nodeStake * ((upperAskBound - nodeAsk) / (upperAskBound - lowerAskBound))^2 / 2,000,000
-        uint256 nodeAskScaled = uint256(profileStorage.getAsk(identityId)) * 1e18;
+        uint256 nodeAskScaled = uint256(profileStorage.getAsk(identityId)) * SCALING_FACTOR;
         (uint256 askLowerBound, uint256 askUpperBound) = askStorage.getAskBounds();
         uint256 nodeAskFactor = 0;
         if (nodeAskScaled <= askUpperBound && nodeAskScaled >= askLowerBound) {

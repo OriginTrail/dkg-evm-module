@@ -183,6 +183,44 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldW1",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newW1",
+        "type": "uint256"
+      }
+    ],
+    "name": "W1Updated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldW2",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newW2",
+        "type": "uint256"
+      }
+    ],
+    "name": "W2Updated",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "SCALING_FACTOR",
     "outputs": [

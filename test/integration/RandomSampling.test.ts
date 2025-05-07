@@ -1608,6 +1608,86 @@ describe('@integration RandomSampling', () => {
         'This challenge is no longer active',
       );
     });
+
+    it('Should revert if proof for the same challenge is submitted twice', async () => {
+      const kcCreator = getDefaultKCCreator(accounts);
+      const minStake = await ParametersStorage.minimumStake();
+      const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
+      const deps = {
+        accounts,
+        Profile,
+        Token,
+        Staking,
+        Ask,
+        KnowledgeCollection,
+      };
+
+      const { node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(1, minStake, nodeAsk, deps);
+
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 10,
+          minStake,
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+      );
+
+      // Update and get the new active proof period
+      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+
+      // Create challenge
+      await RandomSampling.connect(
+        publishingNode.operational,
+      ).createChallenge();
+
+      // Get the challenge from storage to verify it
+      const challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+
+      // Get chunk from quads
+      const chunks = kcTools.splitIntoChunks(quads, 32);
+      const challengeChunk = chunks[challenge.chunkId];
+
+      // Generate a proof for our challenge chunk
+      const { proof } = kcTools.calculateMerkleProof(
+        quads,
+        32,
+        Number(challenge.chunkId),
+      );
+
+      // Submit proof
+      await RandomSampling.connect(publishingNode.operational).submitProof(
+        challengeChunk,
+        proof,
+      );
+
+      // Submit proof again
+      const submitTx = RandomSampling.connect(
+        publishingNode.operational,
+      ).submitProof(challengeChunk, proof);
+
+      // Expect revert
+      await expect(submitTx).to.be.revertedWith(
+        'This challenge has already been solved',
+      );
+    });
   });
 
   describe('Admin Functions', () => {
@@ -2031,7 +2111,7 @@ describe('@integration RandomSampling', () => {
       ).to.be.revertedWith('Rewards already claimed');
     });
 
-    it('Should revert if the delegator has no rewards to claim for the epoch (e.g., node submitted no proofs)', async () => {
+    it('Should revert if the delegator has no score for the given epoch (e.g., node submitted no proofs)', async () => {
       const nodeStake = await ParametersStorage.minimumStake();
       const nodeAsk = 200000000000000000n; // 0.2 TRAC ask
       const delegatorStake = nodeStake / 2n;
@@ -2119,7 +2199,7 @@ describe('@integration RandomSampling', () => {
           publishingNodeIdentityId,
           epochToClaim,
         ),
-      ).to.be.revertedWith('No rewards to claim');
+      ).to.be.revertedWith('Delegator has no score for the given epoch');
     });
   });
 });
