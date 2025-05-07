@@ -28,13 +28,17 @@ import {
   createPaymaster,
 } from '../helpers/paymaster-helpers';
 import {
-  createProfilesAndKC,
-} from '../helpers/kc-helpers';
-import {
   getDefaultPublishingNode,
   getDefaultReceivingNodes,
   getDefaultKCCreator,
 } from '../helpers/setup-helpers';
+import {
+  createProfile, createProfiles,
+} from '../helpers/profile-helpers';
+import {
+  createKnowledgeCollection,
+} from '../helpers/kc-helpers';
+
 
 // Fixture containing all contracts and accounts needed to test Paranet
 type PaymasterFixture = {
@@ -237,16 +241,30 @@ describe('@integration Paymaster', () => {
     expect(deployer).to.equal(paymasterOwner);
     expect(kcCreator.address).to.equal(paymasterOwner);
 
-    const { collectionId } = await createProfilesAndKC(
+    const { identityId: publishingNodeIdentityId } = await createProfile(
+      Profile,
+      publishingNode,
+    );
+    const receivingNodesIdentityIds = (
+      await createProfiles(Profile, receivingNodes)
+    ).map((p) => p.identityId);
+
+    const { collectionId } = await createKnowledgeCollection(
       kcCreator,
       publishingNode,
+      publishingNodeIdentityId,
       receivingNodes,
-      { Profile, KnowledgeCollection, Token },
-      { paymaster: paymasterAddress,
-        tokenAmount: tokenAmount,
-      }
+      receivingNodesIdentityIds,
+      { KnowledgeCollection, Token },
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      tokenAmount,
+      undefined,
+      paymasterAddress
     );
-
     // Verify that the paymaster's token balance has decreased by the token amount
     // This confirms that tokens were transferred from the paymaster to the KC contract
     const finalPaymasterBalance = await Token.balanceOf(paymasterAddress);
@@ -289,16 +307,30 @@ describe('@integration Paymaster', () => {
 
     await Token.connect(kcCreator).transfer(whitelistedUser.address, ethers.parseEther('10'));
 
-    const { collectionId } = await createProfilesAndKC(
+    const { identityId: publishingNodeIdentityId } = await createProfile(
+      Profile,
+      publishingNode,
+    );
+    const receivingNodesIdentityIds = (
+      await createProfiles(Profile, receivingNodes)
+    ).map((p) => p.identityId);
+
+    const { collectionId } = await createKnowledgeCollection(
       whitelistedUser,
       publishingNode,
+      publishingNodeIdentityId,
       receivingNodes,
-      { Profile, KnowledgeCollection, Token },
-      { paymaster: paymasterAddress,
-        tokenAmount: tokenAmount,
-      }
+      receivingNodesIdentityIds,
+      { KnowledgeCollection, Token },
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      tokenAmount,
+      undefined,
+      paymasterAddress
     );
-
     // Check that we can retrieve the collection and it has valid data
     const collectionData = await KnowledgeCollectionStorage.getKnowledgeCollection(collectionId);
     expect(collectionData.tokenAmount).to.equal(tokenAmount);
@@ -332,17 +364,33 @@ describe('@integration Paymaster', () => {
     // Give the non-whitelisted user some tokens to create profiles
     await Token.connect(kcCreator).transfer(nonWhitelistedUser.address, ethers.parseEther('10'));
 
+    const { identityId: publishingNodeIdentityId } = await createProfile(
+      Profile,
+      publishingNode,
+    );
+    const receivingNodesIdentityIds = (
+      await createProfiles(Profile, receivingNodes)
+    ).map((p) => p.identityId);
+
     // When a non-whitelisted user tries to use the paymaster, the transaction should revert
     await expect(
-      createProfilesAndKC(
+      createKnowledgeCollection(
         nonWhitelistedUser,
         publishingNode,
+        publishingNodeIdentityId,
         receivingNodes,
-        { Profile, KnowledgeCollection, Token },
-        { paymaster: paymasterAddress, tokenAmount: tokenAmount }
+        receivingNodesIdentityIds,
+        { KnowledgeCollection, Token },
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        tokenAmount,
+        undefined,
+        paymasterAddress
       )
     ).to.be.revertedWithCustomError(paymaster, 'NotAllowed');
-
     // Verify paymaster's balance hasn't changed (no tokens were spent)
     const finalPaymasterBalance = await Token.balanceOf(paymasterAddress);
     expect(finalPaymasterBalance).to.equal(tokenAmount);
