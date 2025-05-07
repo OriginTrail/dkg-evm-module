@@ -146,12 +146,12 @@
       "deployed": true
     },
     "Ask": {
-      "evmAddress": "0xAB454CAC31f29c714dF7d61bbf0EA877889f4c25",
+      "evmAddress": "0x99aaf878f85A6aD905159c9D1c12BFFc58454501",
       "version": "1.0.0",
-      "gitBranch": "v8-contracts",
-      "gitCommitHash": "ddb3f9e1ef7c2f9f7ca8554b19fae7d521a5507f",
-      "deploymentBlock": 13494291,
-      "deploymentTimestamp": 1735137931936,
+      "gitBranch": "feature/random-sampling",
+      "gitCommitHash": "f9a27fe39e560294dfaa3035a3977eb52aea9a8f",
+      "deploymentBlock": 15645173,
+      "deploymentTimestamp": 1746624945008,
       "deployed": true
     },
     "Staking": {

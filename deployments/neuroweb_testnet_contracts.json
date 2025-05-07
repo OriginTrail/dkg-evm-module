@@ -162,13 +162,13 @@
       "deployed": true
     },
     "Ask": {
-      "evmAddress": "0x4F823cfFa6b051Fa0321FA2963F4073589A27B54",
-      "substrateAddress": "5EMjsczc79k5aRA7wb1CLiCy6E51RHLoLTkvDk49iLkJ6BL9",
+      "evmAddress": "0x16cE77136A6bdf09a622665E8c626C3aE4a9d5D4",
+      "substrateAddress": "5EMjsczQkBKmabbzKnXMCtmV3RLWkA3Uxoo9WhpPQgcdhKvj",
       "version": "1.0.0",
-      "gitBranch": "main",
-      "gitCommitHash": "04baf6bee66a9023a60acedf00b82d1152e31a17",
-      "deploymentBlock": 7064209,
-      "deploymentTimestamp": 1744106191737,
+      "gitBranch": "feature/random-sampling",
+      "gitCommitHash": "f9a27fe39e560294dfaa3035a3977eb52aea9a8f",
+      "deploymentBlock": 7437670,
+      "deploymentTimestamp": 1746625028380,
       "deployed": true
     },
     "Staking": {
