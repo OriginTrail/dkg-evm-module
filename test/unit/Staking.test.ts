@@ -109,7 +109,7 @@ describe('Staking contract', function () {
 
   it('Should have correct name and version', async () => {
     expect(await Staking.name()).to.equal('Staking');
-    expect(await Staking.version()).to.equal('1.0.0');
+    expect(await Staking.version()).to.equal('1.0.1');
   });
 
   it('Should revert if staking 0 tokens', async () => {
