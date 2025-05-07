@@ -18,6 +18,11 @@
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
       }
     ],
     "name": "coverCost",
