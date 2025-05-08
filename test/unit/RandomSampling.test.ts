@@ -72,7 +72,7 @@ describe('@unit RandomSampling', () => {
     it('Should update W1 correctly', async () => {
       const newW1 = hre.ethers.parseUnits('2', 18);
       await RandomSampling.setW1(newW1);
-      expect(await RandomSampling.W1()).to.equal(newW1);
+      expect(await RandomSampling.w1()).to.equal(newW1);
     });
   });
 
@@ -80,7 +80,7 @@ describe('@unit RandomSampling', () => {
     it('Should update W2 correctly', async () => {
       const newW2 = hre.ethers.parseUnits('3', 18);
       await RandomSampling.setW2(newW2);
-      expect(await RandomSampling.W2()).to.equal(newW2);
+      expect(await RandomSampling.w2()).to.equal(newW2);
     });
   });
 
