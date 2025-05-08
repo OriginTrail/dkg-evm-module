@@ -108,7 +108,7 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         return proofPeriodStartBlock - offset * getActiveProofingPeriodDurationInBlocks();
     }
 
-    function isPendingProofingPeriodDuration() public view returns (bool) {
+    function isPendingProofingPeriodDuration() external view returns (bool) {
         return chronos.getCurrentEpoch() < proofingPeriodDurations[proofingPeriodDurations.length - 1].effectiveEpoch;
     }
 
