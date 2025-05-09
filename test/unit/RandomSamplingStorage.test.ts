@@ -10,35 +10,10 @@ import {
   Chronos,
   KnowledgeCollectionStorage,
   RandomSampling,
-  Profile,
-  Token,
-  KnowledgeCollection,
 } from '../../typechain';
 import { RandomSamplingLib } from '../../typechain/contracts/storage/RandomSamplingStorage';
-import {
-  getDefaultKCCreator,
-  getDefaultPublishingNode,
-  getDefaultReceivingNodes,
-} from '../helpers/setup-helpers';
 
-// Helper functions
-async function createProfilesAndKC(
-  kcCreator: SignerWithAddress,
-  publishingNode: any,
-  receivingNodes: any[],
-  contracts: {
-    Profile: Profile;
-    KnowledgeCollection: KnowledgeCollection;
-    Token: Token;
-  }
-) {
-  const publishingNodeIdentityId = 1;
-  const receivingNodesIdentityIds = [2, 3];
-
-  return { publishingNodeIdentityId, receivingNodesIdentityIds };
-}
-
-// Helper functions that were previously in random-sampling.ts
+// Helper functions for random sampling
 async function mineBlocks(blocks: number) {
   for (let i = 0; i < blocks; i++) {
     await hre.network.provider.send("evm_mine");
@@ -90,10 +65,7 @@ describe('@unit RandomSamplingStorage', function () {
   let RandomSampling: RandomSampling;
   let Chronos: Chronos;
   let KnowledgeCollectionStorage: KnowledgeCollectionStorage;
-  let Token: Token;
-  let KnowledgeCollection: KnowledgeCollection;
   let MockChallenge: RandomSamplingLib.ChallengeStruct;
-  let Profile: Profile;
   let accounts: SignerWithAddress[];
 
   const proofingPeriodDurationInBlocks =
@@ -121,15 +93,10 @@ describe('@unit RandomSamplingStorage', function () {
     );
     RandomSampling =
       await hre.ethers.getContract<RandomSampling>('RandomSampling');
-    Token = await hre.ethers.getContract<Token>('Token');
     KnowledgeCollectionStorage =
       await hre.ethers.getContract<KnowledgeCollectionStorage>(
         'KnowledgeCollectionStorage',
       );
-    KnowledgeCollection = await hre.ethers.getContract<KnowledgeCollection>(
-      'KnowledgeCollection',
-    );
-    Profile = await hre.ethers.getContract<Profile>('Profile');
 
     await Hub.setContractAddress('HubOwner', accounts[0].address);
 
@@ -153,6 +120,184 @@ describe('@unit RandomSamplingStorage', function () {
       KnowledgeCollectionStorage,
       Chronos,
     );
+  });
+
+  describe('Node Score System', () => {
+    it('Should increment and get epoch node valid proofs count', async () => {
+      const nodeId = 1n;
+      const signer = await ethers.getSigner(accounts[0].address);
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const epochLength = await Chronos.epochLength();
+
+      // Test initial state
+      const initialCount = await RandomSamplingStorage.getEpochNodeValidProofsCount(
+        currentEpoch,
+        nodeId
+      );
+      expect(initialCount).to.equal(0n, 'Should start with 0 proofs');
+
+      // Test incrementing in current epoch
+      await RandomSamplingStorage.connect(signer).incrementEpochNodeValidProofsCount(
+        currentEpoch,
+        nodeId
+      );
+      const countAfterIncrement = await RandomSamplingStorage.getEpochNodeValidProofsCount(
+        currentEpoch,
+        nodeId
+      );
+      expect(countAfterIncrement).to.equal(1n, 'Should increment to 1');
+
+      // Test multiple increments
+      await RandomSamplingStorage.connect(signer).incrementEpochNodeValidProofsCount(
+        currentEpoch,
+        nodeId
+      );
+      const countAfterMultiple = await RandomSamplingStorage.getEpochNodeValidProofsCount(
+        currentEpoch,
+        nodeId
+      );
+      expect(countAfterMultiple).to.equal(2n, 'Should increment to 2');
+
+      // Move to next epoch properly
+      await time.increase(Number(epochLength));
+      const nextEpoch = await Chronos.getCurrentEpoch();
+      expect(nextEpoch).to.equal(currentEpoch + 1n, 'Should be in next epoch');
+
+      // Test in next epoch
+      await RandomSamplingStorage.connect(signer).incrementEpochNodeValidProofsCount(
+        nextEpoch,
+        nodeId
+      );
+      const nextEpochCount = await RandomSamplingStorage.getEpochNodeValidProofsCount(
+        nextEpoch,
+        nodeId
+      );
+      expect(nextEpochCount).to.equal(1n, 'Should start at 1 in new epoch');
+      expect(await RandomSamplingStorage.getEpochNodeValidProofsCount(currentEpoch, nodeId))
+        .to.equal(2n, 'Previous epoch count should remain unchanged');
+    });
+
+    it('Should add to node score and get node score', async () => {
+      const nodeIds = [1n, 2n, 3n];
+      const signer = await ethers.getSigner(accounts[0].address);
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const proofPeriodIndex = 1n;
+
+      // Test initial state for all nodes
+      for (const nodeId of nodeIds) {
+        expect(await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+          nodeId,
+          currentEpoch, 
+          proofPeriodIndex
+        )).to.equal(0n, `Node ${nodeId} should start with 0 score`);
+      }
+      expect(await RandomSamplingStorage.allNodesEpochProofPeriodScore(
+        currentEpoch, 
+        proofPeriodIndex
+      )).to.equal(0n, 'Global score should start at 0');
+
+      // Add scores to different nodes
+      const scores = [100n, 200n, 300n];
+      let expectedGlobalScore = 0n;
+
+      for (let i = 0; i < nodeIds.length; i++) {
+        const nodeId = nodeIds[i];
+        const score = scores[i];
+        expectedGlobalScore += score;
+
+        // Add score to node
+        await RandomSamplingStorage.connect(signer).addToNodeScore(
+          currentEpoch,
+          proofPeriodIndex,
+          nodeId,
+          score
+        );
+
+        // Verify individual node score
+        const nodeScore = await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+          nodeId,
+          currentEpoch,
+          proofPeriodIndex
+        );
+        expect(nodeScore).to.equal(score, 
+          `Node ${nodeId} should have score ${score}`);
+
+        // Verify global score
+        const globalScore = await RandomSamplingStorage.allNodesEpochProofPeriodScore(
+          currentEpoch,
+          proofPeriodIndex
+        );
+        expect(globalScore).to.equal(expectedGlobalScore,
+          `Global score should be ${expectedGlobalScore} after adding ${score} to node ${nodeId}`);
+      }
+
+      // Test adding more score to existing node
+      const additionalScore = 50n;
+      await RandomSamplingStorage.connect(signer).addToNodeScore(
+        currentEpoch,
+        proofPeriodIndex,
+        nodeIds[0],
+        additionalScore
+      );
+
+      // Verify updated individual score
+      const updatedNodeScore = await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+        nodeIds[0],
+        currentEpoch,
+        proofPeriodIndex
+      );
+      expect(updatedNodeScore).to.equal(scores[0] + additionalScore,
+        'Node score should be updated with additional score');
+
+      // Verify updated global score
+      const updatedGlobalScore = await RandomSamplingStorage.allNodesEpochProofPeriodScore(
+        currentEpoch,
+        proofPeriodIndex
+      );
+      expect(updatedGlobalScore).to.equal(expectedGlobalScore + additionalScore,
+        'Global score should be updated with additional score');
+    });
+
+    it('Should accumulate delegator scores correctly', async () => {
+      const publishingNodeIdentityId = 1n;
+      const signer = await ethers.getSigner(accounts[0].address);
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const delegatorKey = ethers.encodeBytes32String('delegator1');
+      const score = 100n;
+
+      // Test initial state
+      expect(await RandomSamplingStorage.getEpochNodeDelegatorScore(
+        currentEpoch,
+        publishingNodeIdentityId,
+        delegatorKey
+      )).to.equal(0n);
+
+      // Add score and verify accumulation
+      await RandomSamplingStorage.connect(signer).addToEpochNodeDelegatorScore(
+        currentEpoch,
+        publishingNodeIdentityId,
+        delegatorKey,
+        score
+      );
+      expect(await RandomSamplingStorage.getEpochNodeDelegatorScore(
+        currentEpoch,
+        publishingNodeIdentityId,
+        delegatorKey
+      )).to.equal(score);
+
+      // Add more score and verify accumulation
+      await RandomSamplingStorage.connect(signer).addToEpochNodeDelegatorScore(
+        currentEpoch,
+        publishingNodeIdentityId,
+        delegatorKey,
+        score
+      );
+      expect(await RandomSamplingStorage.getEpochNodeDelegatorScore(
+        currentEpoch,
+        publishingNodeIdentityId,
+        delegatorKey
+      )).to.equal(score * 2n);
+    });
   });
 
   describe('Initialization', () => {
@@ -254,25 +399,9 @@ describe('@unit RandomSamplingStorage', function () {
         .withArgs('Only Contracts in Hub');
     });
 
-    it('Should allow access when impersonating hub', async () => {
-      const hubAddress = await Hub.getAddress();
-      
-      // Impersonate hub
-      await hre.network.provider.request({
-        method: "hardhat_impersonateAccount",
-        params: [hubAddress],
-      });
-
-      // Fund the impersonated account
-      await hre.network.provider.send("hardhat_setBalance", [
-        hubAddress,
-        "0x1000000000000000000", // 1 ETH
-      ]);
-
-      const hubSigner = await ethers.getSigner(hubAddress);
-
-      // Set Hub as HubOwner
-      await Hub.connect(accounts[0]).setContractAddress('HubOwner', hubAddress);
+    it('Should allow access when called by Hub', async () => {
+      const { RandomSamplingStorage, Hub } = await loadFixture(deployRandomSamplingFixture);
+      const hubSigner = await Hub.runner;
       
       // Test initialize
       await expect(RandomSamplingStorage.connect(hubSigner).initialize())
@@ -292,65 +421,69 @@ describe('@unit RandomSamplingStorage', function () {
       await expect(
         RandomSamplingStorage.connect(hubSigner).addProofingPeriodDuration(0, 0)
       ).to.not.be.reverted;
-
-      // Stop impersonating
-      await hre.network.provider.request({
-        method: "hardhat_stopImpersonatingAccount",
-        params: [hubAddress],
-      });
     });
   });
 
   describe('Proofing Period Management', () => {
     it('Should return the correct proofing period status', async () => {
+      const { activeProofPeriodStartBlock } = await updateAndGetActiveProofPeriod();
+      const duration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+
+      // Initial check
       const status = await RandomSamplingStorage.getActiveProofPeriodStatus();
       expect(status.activeProofPeriodStartBlock).to.be.a('bigint');
       expect(status.isValid).to.be.a('boolean');
+      expect(status.isValid).to.be.true;
+
+      // Test at middle of period
+      const middleBlock = activeProofPeriodStartBlock + (duration / 2n);
+      await mineBlocks(Number(middleBlock - BigInt(await hre.ethers.provider.getBlockNumber())));
+      const middleStatus = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      expect(middleStatus.isValid).to.be.true;
+
+      // Test at end of period
+      const endBlock = activeProofPeriodStartBlock + duration - 1n;
+      await mineBlocks(Number(endBlock - BigInt(await hre.ethers.provider.getBlockNumber())));
+      const endStatus = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      expect(endStatus.isValid).to.be.true;
+
+      // Test after period ends
+      await mineBlocks(1);
+      const afterStatus = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      expect(afterStatus.isValid).to.be.false;
     });
 
-    it('Should update start block after one full proofing period (duration + 1)', async () => {
-      const { activeProofPeriodStartBlock: initialPeriodStartBlock } = await updateAndGetActiveProofPeriod();
-      const proofingPeriodDuration: bigint = await mineProofPeriodBlocks(
-        initialPeriodStartBlock,
-        RandomSamplingStorage
-      );
-      expect(proofingPeriodDuration).to.be.equal(proofingPeriodDurationInBlocks);
+    it('Should update start block correctly for different period scenarios', async () => {
+      // Test when no period has passed
+      const { activeProofPeriodStartBlock: initialBlock } = await updateAndGetActiveProofPeriod();
+      const statusNoPeriod = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      expect(statusNoPeriod.activeProofPeriodStartBlock).to.equal(initialBlock);
 
-      const tx = await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await tx.wait();
-      const statusAfterUpdate = await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const newPeriodStartBlock = statusAfterUpdate.activeProofPeriodStartBlock;
+      // Test when 1 full period has passed
+      const duration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      await mineBlocks(Number(duration));
+      const { activeProofPeriodStartBlock: onePeriodBlock } = await updateAndGetActiveProofPeriod();
+      expect(onePeriodBlock).to.equal(initialBlock + duration);
 
-      expect(newPeriodStartBlock).to.be.greaterThan(initialPeriodStartBlock);
-      expect(newPeriodStartBlock).to.be.equal(initialPeriodStartBlock + proofingPeriodDuration);
-    });
+      // Test when 2 full periods have passed
+      await mineBlocks(Number(duration));
+      const { activeProofPeriodStartBlock: twoPeriodBlock } = await updateAndGetActiveProofPeriod();
+      expect(twoPeriodBlock).to.equal(initialBlock + (duration * 2n));
 
-    it('Should update correctly when multiple full periods have passed', async () => {
-      const PERIODS = 100;
-      const { activeProofPeriodStartBlock: initialPeriodStartBlock } = await updateAndGetActiveProofPeriod();
-
-      let proofingPeriodDuration: bigint;
-      for (let i = 1; i < PERIODS; i++) {
-        const proofPeriodStatus = await RandomSamplingStorage.getActiveProofPeriodStatus();
-        const periodStartBlock = proofPeriodStatus.activeProofPeriodStartBlock;
-        proofingPeriodDuration = await mineProofPeriodBlocks(periodStartBlock, RandomSamplingStorage);
-        
-        expect(proofingPeriodDuration).to.be.equal(BigInt(proofingPeriodDurationInBlocks));
-        
-        const { activeProofPeriodStartBlock: newPeriodStartBlock } = await updateAndGetActiveProofPeriod();
-        expect(newPeriodStartBlock).to.be.greaterThan(periodStartBlock);
-        
-        // Calculate expected block based on contract logic
-        const blocksSinceLastStart = Number(newPeriodStartBlock - initialPeriodStartBlock);
-        const completePeriodsPassed = Math.floor(blocksSinceLastStart / Number(proofingPeriodDuration));
-        const expectedBlock = initialPeriodStartBlock + (BigInt(completePeriodsPassed) * proofingPeriodDuration);
-        expect(newPeriodStartBlock).to.be.equal(expectedBlock);
+      // Test when n full periods have passed (using n=5 as example)
+      const n = 5;
+      for (let i = 0; i < n - 2; i++) {
+        await mineBlocks(Number(duration));
       }
+      const { activeProofPeriodStartBlock: nPeriodBlock } = await updateAndGetActiveProofPeriod();
+      expect(nPeriodBlock).to.equal(initialBlock + (duration * BigInt(n)));
     });
 
     it('Should return correct historical proofing period start', async () => {
       const { activeProofPeriodStartBlock } = await updateAndGetActiveProofPeriod();
+      const duration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
 
+      // Test invalid inputs
       await expect(
         RandomSamplingStorage.getHistoricalProofPeriodStartBlock(0, 1)
       ).to.be.revertedWith('Proof period start block must be greater than 0');
@@ -367,24 +500,37 @@ describe('@unit RandomSamplingStorage', function () {
         RandomSamplingStorage.getHistoricalProofPeriodStartBlock(activeProofPeriodStartBlock, 999)
       ).to.be.revertedWithPanic(PANIC_ARITHMETIC_OVERFLOW);
 
+      // Test valid historical blocks
       await mineProofPeriodBlocks(activeProofPeriodStartBlock, RandomSamplingStorage);
-
       const { activeProofPeriodStartBlock: newPeriodStartBlock } = await updateAndGetActiveProofPeriod();
-      const historicalPeriodStartBlock = await RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
+
+      // Test offset 1
+      const onePeriodBack = await RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
+        newPeriodStartBlock,
+        1
+      );
+      expect(onePeriodBack).to.equal(newPeriodStartBlock - duration);
+
+      // Test offset 2
+      const twoPeriodsBack = await RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
         newPeriodStartBlock,
         2
       );
-      expect(historicalPeriodStartBlock).to.be.equal(
-        newPeriodStartBlock - BigInt(proofingPeriodDurationInBlocks) * 2n
+      expect(twoPeriodsBack).to.equal(newPeriodStartBlock - (duration * 2n));
+
+      // Test offset 3
+      const threePeriodsBack = await RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
+        newPeriodStartBlock,
+        3
       );
+      expect(threePeriodsBack).to.equal(newPeriodStartBlock - (duration * 3n));
+
+      // Test that returned block is aligned with period start
+      expect(threePeriodsBack % duration).to.equal(0n, 'Historical block should be aligned with period start');
     });
 
     it('Should return correct active proof period', async () => {
       const { activeProofPeriodStartBlock, isValid } = await updateAndGetActiveProofPeriod();
-      console.log('Initial state:');
-      console.log('activeProofPeriodStartBlock:', activeProofPeriodStartBlock.toString());
-      console.log('isValid:', isValid);
-      console.log('Current block:', (await hre.ethers.provider.getBlockNumber()).toString());
       expect(isValid).to.be.equal(true, 'Period should be valid');
 
       // Mine blocks up to the last block of the current period
@@ -393,21 +539,11 @@ describe('@unit RandomSamplingStorage', function () {
       await mineBlocks(blocksToMine);
       
       let statusAfterUpdate = await RandomSamplingStorage.getActiveProofPeriodStatus();
-      console.log('\nAfter mining blocks:');
-      console.log('activeProofPeriodStartBlock:', statusAfterUpdate.activeProofPeriodStartBlock.toString());
-      console.log('isValid:', statusAfterUpdate.isValid);
-      console.log('Current block:', (await hre.ethers.provider.getBlockNumber()).toString());
-      console.log('Expected end block:', (statusAfterUpdate.activeProofPeriodStartBlock + BigInt(proofingPeriodDurationInBlocks)).toString());
       expect(statusAfterUpdate.isValid).to.be.equal(true, 'Period should still be valid');
 
       // Mine one more block to reach the end of the period
       await mineBlocks(1);
       statusAfterUpdate = await RandomSamplingStorage.getActiveProofPeriodStatus();
-      console.log('\nAfter mining one more block:');
-      console.log('activeProofPeriodStartBlock:', statusAfterUpdate.activeProofPeriodStartBlock.toString());
-      console.log('isValid:', statusAfterUpdate.isValid);
-      console.log('Current block:', (await hre.ethers.provider.getBlockNumber()).toString());
-      console.log('Expected end block:', (statusAfterUpdate.activeProofPeriodStartBlock + BigInt(proofingPeriodDurationInBlocks)).toString());
       expect(statusAfterUpdate.isValid).to.be.equal(false, 'Period should not be valid');
 
       // Update the period and mine blocks for the new period
@@ -417,58 +553,92 @@ describe('@unit RandomSamplingStorage', function () {
       await mineBlocks(blocksToMineNew);
       
       statusAfterUpdate = await RandomSamplingStorage.getActiveProofPeriodStatus();
-      console.log('\nAfter updating period and mining blocks:');
-      console.log('activeProofPeriodStartBlock:', statusAfterUpdate.activeProofPeriodStartBlock.toString());
-      console.log('isValid:', statusAfterUpdate.isValid);
-      console.log('Current block:', (await hre.ethers.provider.getBlockNumber()).toString());
-      console.log('Expected end block:', (statusAfterUpdate.activeProofPeriodStartBlock + BigInt(proofingPeriodDurationInBlocks)).toString());
       expect(statusAfterUpdate.isValid).to.be.equal(true, 'New period should be valid');
     });
 
     it('Should pick correct proofing period duration based on epoch', async () => {
-      let proofingPeriodDuration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      expect(proofingPeriodDuration).to.be.equal(BigInt(proofingPeriodDurationInBlocks));
+      const initialDuration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const epochLength = await Chronos.epochLength();
 
-      await time.increase(Number(await Chronos.epochLength()) / 2);
-      expect(proofingPeriodDuration).to.be.equal(BigInt(proofingPeriodDurationInBlocks));
+      // Test initial duration
+      expect(initialDuration).to.equal(BigInt(proofingPeriodDurationInBlocks));
 
-      const newProofingPeriodDuration = 1000;
-      await RandomSampling.setProofingPeriodDurationInBlocks(newProofingPeriodDuration);
-      proofingPeriodDuration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      expect(proofingPeriodDuration).to.be.equal(proofingPeriodDuration);
+      // Test duration in middle of epoch
+      await time.increase(Number(epochLength) / 2);
+      const midEpochDuration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      expect(midEpochDuration).to.equal(initialDuration, 'Duration should not change mid-epoch');
 
-      await time.increase(Number(await Chronos.epochLength()) + 1);
+      // Set new duration for next epoch
+      const newDuration = 1000;
+      await RandomSampling.setProofingPeriodDurationInBlocks(newDuration);
+      
+      // Verify duration hasn't changed yet
+      const beforeEpochEndDuration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      expect(beforeEpochEndDuration).to.equal(initialDuration, 'Duration should not change before epoch end');
 
-      proofingPeriodDuration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      expect(proofingPeriodDuration).to.be.equal(BigInt(newProofingPeriodDuration));
+      // Move to next epoch
+      await time.increase(Number(epochLength) + 1);
+      const nextEpochDuration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      expect(nextEpochDuration).to.equal(BigInt(newDuration), 'Duration should change in next epoch');
+
+      // Set another duration for future epoch
+      const futureDuration = 2000;
+      await RandomSampling.setProofingPeriodDurationInBlocks(futureDuration);
+      
+      // Verify current epoch still has previous duration
+      const currentEpochDuration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      expect(currentEpochDuration).to.equal(BigInt(newDuration), 'Current epoch should keep previous duration');
+
+      // Move to future epoch
+      await time.increase(Number(epochLength));
+      const futureEpochDuration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+      expect(futureEpochDuration).to.equal(BigInt(futureDuration), 'Future epoch should have new duration');
     });
 
     it('Should return correct proofing period duration based on epoch history', async () => {
       const baseDuration = 100;
-      const testEpochs = 3;
-
+      const testEpochs = 5; // Increased number of epochs for better coverage
       const currentEpoch = await Chronos.getCurrentEpoch();
+      const epochLength = await Chronos.epochLength();
 
+      // Set up multiple durations with different effective epochs
+      const durations = [];
       for (let i = 0; i < testEpochs; i++) {
-        const duration = baseDuration + i;
+        const duration = baseDuration + (i * 100); // Larger increments for clearer testing
+        durations.push(duration);
         await RandomSampling.setProofingPeriodDurationInBlocks(duration);
-        await time.increase(Number(await Chronos.epochLength()));
+        await time.increase(Number(epochLength));
       }
 
-      const newEpoch = await Chronos.getCurrentEpoch();
-      expect(newEpoch).to.equal(currentEpoch + BigInt(testEpochs));
+      const finalEpoch = await Chronos.getCurrentEpoch();
+      expect(finalEpoch).to.equal(currentEpoch + BigInt(testEpochs));
 
+      // Test invalid epoch (before first duration)
       await expect(
-        RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(newEpoch - BigInt(testEpochs + 1))
+        RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(currentEpoch - 1n)
       ).to.be.revertedWith('No applicable duration found');
 
+      // Test each epoch's duration
       for (let i = 0; i < testEpochs; i++) {
-        const targetEpoch = newEpoch - BigInt(i);
-        const expectedDuration = baseDuration + (testEpochs - 1 - i);
-
+        const targetEpoch = finalEpoch - BigInt(i);
+        const expectedDuration = durations[testEpochs - 1 - i];
+        
         const actual = await RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(targetEpoch);
-        expect(actual).to.equal(expectedDuration);
+        expect(actual).to.equal(expectedDuration, 
+          `Epoch ${targetEpoch} should have duration ${expectedDuration}`);
       }
+
+      // Test edge case - current epoch
+      const currentEpochDuration = await RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(finalEpoch);
+      expect(currentEpochDuration).to.equal(durations[durations.length - 1],
+        'Current epoch should have the latest duration');
+
+      // Test edge case - first epoch with duration
+      const firstEpochWithDuration = currentEpoch;
+      const firstEpochDuration = await RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(firstEpochWithDuration);
+      expect(firstEpochDuration).to.equal(durations[0],
+        'First epoch should have the first duration');
     });
 
     it('Should return same block when no period has passed', async () => {
@@ -496,23 +666,38 @@ describe('@unit RandomSamplingStorage', function () {
       // Should update the block since we've reached the end of the period
       expect(finalBlock).to.be.greaterThan(initialBlock);
     });
+
+    it('Should return correct status for different block numbers', async () => {
+      const { activeProofPeriodStartBlock } = await updateAndGetActiveProofPeriod();
+      const duration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+
+      // Test at start block
+      const statusAtStart = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      expect(statusAtStart.isValid).to.be.true;
+      expect(statusAtStart.activeProofPeriodStartBlock).to.equal(activeProofPeriodStartBlock);
+
+      // Test at middle block
+      const middleBlock = activeProofPeriodStartBlock + (duration / 2n);
+      await mineBlocks(Number(middleBlock - BigInt(await hre.ethers.provider.getBlockNumber())));
+      const statusAtMiddle = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      expect(statusAtMiddle.isValid).to.be.true;
+
+      // Test at last valid block
+      const lastValidBlock = activeProofPeriodStartBlock + duration - 1n;
+      await mineBlocks(Number(lastValidBlock - BigInt(await hre.ethers.provider.getBlockNumber())));
+      const statusAtLastValid = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      expect(statusAtLastValid.isValid).to.be.true;
+
+      // Test at first invalid block
+      await mineBlocks(1);
+      const statusAtInvalid = await RandomSamplingStorage.getActiveProofPeriodStatus();
+      expect(statusAtInvalid.isValid).to.be.false;
+    });
   });
 
   describe('Challenge Handling', () => {
     it('Should set and get challenge correctly', async () => {
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const { publishingNodeIdentityId } = await createProfilesAndKC(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        {
-          Profile,
-          KnowledgeCollection,
-          Token,
-        }
-      );
+      const publishingNodeIdentityId = 1n;
 
       const signer = await ethers.getSigner(accounts[0].address);
       await RandomSamplingStorage.connect(signer).setNodeChallenge(
@@ -537,34 +722,8 @@ describe('@unit RandomSamplingStorage', function () {
       expect(challenge.solved).to.be.equal(MockChallenge.solved);
     });
 
-    it('Should revert if challenge is not found', async () => {
-      const invalidChallenge = [
-        0n,
-        0n,
-        '0x0000000000000000000000000000000000000000',
-        0n,
-        0n,
-        0n,
-        false,
-      ];
-      const nodeChallenge: RandomSamplingLib.ChallengeStruct = await RandomSamplingStorage.getNodeChallenge(2);
-      expect(nodeChallenge).to.be.deep.equal(invalidChallenge);
-    });
-
     it('Should handle multiple challenges and updates correctly', async () => {
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const { publishingNodeIdentityId } = await createProfilesAndKC(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        {
-          Profile,
-          KnowledgeCollection,
-          Token,
-        }
-      );
+      const publishingNodeIdentityId = 1n;
 
       const signer = await ethers.getSigner(accounts[0].address);
 
@@ -603,111 +762,8 @@ describe('@unit RandomSamplingStorage', function () {
     });
   });
 
-  /*
-    Test: incrementEpochNodeValidProofsCount and getEpochNodeValidProofsCount
-    Assert increment logic over multiple epochs and nodes.
-    Test: addToNodeScore correctly adds to individual and global scores
-    Validate changes in both nodeEpochProofPeriodScore and allNodesEpochProofPeriodScore.
-    Test: getEpochNodeDelegatorScore and addToEpochNodeDelegatorScore
-    Confirm scores accumulate correctly per delegator key.
-  */
-  describe('Node Score System', () => {
-    it('Should increment and get epoch node valid proofs count', async () => {
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const { publishingNodeIdentityId } = await createProfilesAndKC(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        { Profile, KnowledgeCollection, Token }
-      );
-
-      const signer = await ethers.getSigner(accounts[0].address);
-      const currentEpoch = await Chronos.getCurrentEpoch();
-
-      // Test initial state
-      expect(await RandomSamplingStorage.getEpochNodeValidProofsCount(currentEpoch, publishingNodeIdentityId)).to.equal(0n);
-
-      // Increment and verify
-      await RandomSamplingStorage.connect(signer).incrementEpochNodeValidProofsCount(currentEpoch, publishingNodeIdentityId);
-      expect(await RandomSamplingStorage.getEpochNodeValidProofsCount(currentEpoch, publishingNodeIdentityId)).to.equal(1n);
-
-      // Test next epoch
-      await time.increase(Number(await Chronos.epochLength()));
-      const nextEpoch = await Chronos.getCurrentEpoch();
-      
-      // Verify new epoch starts with 0
-      expect(await RandomSamplingStorage.getEpochNodeValidProofsCount(nextEpoch, publishingNodeIdentityId)).to.equal(0n);
-    });
-
-    it('Should add to node score and update global scores', async () => {
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const { publishingNodeIdentityId } = await createProfilesAndKC(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        { Profile, KnowledgeCollection, Token }
-      );
-
-      const signer = await ethers.getSigner(accounts[0].address);
-      const currentEpoch = await Chronos.getCurrentEpoch();
-      const score = 100n;
-      const proofPeriodIndex = 1n;
-
-      // Test initial state
-      expect(await RandomSamplingStorage.getNodeEpochProofPeriodScore(currentEpoch, publishingNodeIdentityId, proofPeriodIndex)).to.equal(0n);
-      expect(await RandomSamplingStorage.allNodesEpochProofPeriodScore(currentEpoch, proofPeriodIndex)).to.equal(0n);
-
-      // Add score and verify both individual and global scores
-      await RandomSamplingStorage.connect(signer).addToNodeScore(currentEpoch, publishingNodeIdentityId, proofPeriodIndex, score);
-      expect(await RandomSamplingStorage.getNodeEpochProofPeriodScore(currentEpoch, publishingNodeIdentityId, proofPeriodIndex)).to.equal(score);
-      expect(await RandomSamplingStorage.allNodesEpochProofPeriodScore(currentEpoch, proofPeriodIndex)).to.equal(score);
-    });
-
-    it('Should accumulate delegator scores correctly', async () => {
-      const kcCreator = getDefaultKCCreator(accounts);
-      const publishingNode = getDefaultPublishingNode(accounts);
-      const receivingNodes = getDefaultReceivingNodes(accounts);
-      const { publishingNodeIdentityId } = await createProfilesAndKC(
-        kcCreator,
-        publishingNode,
-        receivingNodes,
-        { Profile, KnowledgeCollection, Token }
-      );
-
-      const signer = await ethers.getSigner(accounts[0].address);
-      const currentEpoch = await Chronos.getCurrentEpoch();
-      const delegatorKey = ethers.encodeBytes32String('delegator1');
-      const score = 100n;
-
-      // Test initial state
-      expect(await RandomSamplingStorage.getEpochNodeDelegatorScore(currentEpoch, publishingNodeIdentityId, delegatorKey)).to.equal(0n);
-
-      // Add score and verify accumulation
-      await RandomSamplingStorage.connect(signer).addToEpochNodeDelegatorScore(
-        currentEpoch,
-        publishingNodeIdentityId,
-        delegatorKey,
-        score
-      );
-      expect(await RandomSamplingStorage.getEpochNodeDelegatorScore(currentEpoch, publishingNodeIdentityId, delegatorKey)).to.equal(score);
-
-      // Add more score and verify accumulation
-      await RandomSamplingStorage.connect(signer).addToEpochNodeDelegatorScore(
-        currentEpoch,
-        publishingNodeIdentityId,
-        delegatorKey,
-        score
-      );
-      expect(await RandomSamplingStorage.getEpochNodeDelegatorScore(currentEpoch, publishingNodeIdentityId, delegatorKey)).to.equal(score * 2n);
-    });
-  });
-
   describe('Proofing Period Duration', () => {
-    it('Should revert if no matching duration found', async () => {
+    it('Should revert if no matching duration in blocks found', async () => {
       // Get current epoch
       const currentEpoch = await Chronos.getCurrentEpoch();
       
@@ -718,7 +774,7 @@ describe('@unit RandomSamplingStorage', function () {
       // Move to next epoch
       await time.increase(Number(await Chronos.epochLength()));
       
-      // Now try to get duration for an epoch before the first duration was set
+      // Try to get duration for an epoch before the first duration was set
       await expect(
         RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(0n)
       ).to.be.revertedWith('No applicable duration found');

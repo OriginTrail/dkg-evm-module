@@ -71,7 +71,9 @@ describe('@unit RandomSampling', () => {
   describe('setW1() and W1 getter', () => {
     it('Should update W1 correctly', async () => {
       const newW1 = hre.ethers.parseUnits('2', 18);
-      await RandomSampling.setW1(newW1);
+      const oldW1 = await RandomSampling.w1();
+      const tx = RandomSampling.setW1(newW1);
+      await expect(tx).to.emit(RandomSampling, 'W1Updated').withArgs(oldW1, newW1);
       expect(await RandomSampling.w1()).to.equal(newW1);
     });
   });
@@ -79,7 +81,9 @@ describe('@unit RandomSampling', () => {
   describe('setW2() and W2 getter', () => {
     it('Should update W2 correctly', async () => {
       const newW2 = hre.ethers.parseUnits('3', 18);
-      await RandomSampling.setW2(newW2);
+      const oldW2 = await RandomSampling.w2();
+      const tx = RandomSampling.setW2(newW2);
+      await expect(tx).to.emit(RandomSampling, 'W2Updated').withArgs(oldW2, newW2);
       expect(await RandomSampling.w2()).to.equal(newW2);
     });
   });
