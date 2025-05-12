@@ -5,7 +5,7 @@ on:
     branches: [ main, master ]
   push:
     branches: [ main, master ]
-  workflow_dispatch:  # Ovo omogućuje ručno pokretanje
+  workflow_dispatch:  
 
 jobs:
   test:
