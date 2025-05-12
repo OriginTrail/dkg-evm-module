@@ -48,6 +48,33 @@ describe('@unit RandomSampling', () => {
     ({ accounts, RandomSampling, Hub, avgBlockTimeInSeconds, w1, w2 } = await loadFixture(deployRandomSamplingFixture));
   });
 
+  describe('constructor', () => {
+    it('Should set correct initial values', async () => {
+      // Check initial values set in constructor
+      expect(await RandomSampling.avgBlockTimeInSeconds()).to.equal(avgBlockTimeInSeconds);
+      expect(await RandomSampling.w1()).to.equal(w1);
+      expect(await RandomSampling.w2()).to.equal(w2);
+    });
+
+    it('Should revert if avgBlockTimeInSeconds is 0', async () => {
+      const RandomSamplingFactory = await hre.ethers.getContractFactory('RandomSampling');
+      await expect(
+        RandomSamplingFactory.deploy(
+          Hub.target,
+          0, // avgBlockTimeInSeconds = 0
+          w1,
+          w2
+        )
+      ).to.be.revertedWith('Average block time in seconds must be greater than 0');
+    });
+
+    it('Should set correct Hub reference', async () => {
+      // Check that Hub reference is set correctly
+      const hubAddress = await RandomSampling.hub();
+      expect(hubAddress).to.equal(Hub.target);
+    });
+  });
+
   describe('name()', () => {
     it('Should return correct name', async () => {
       expect(await RandomSampling.name()).to.equal('RandomSampling');
@@ -69,33 +96,55 @@ describe('@unit RandomSampling', () => {
   });
 
   describe('setW1() and W1 getter', () => {
-    it('Should update W1 correctly', async () => {
+    it('Should update W1 correctly and revert for non-owners', async () => {
+      // Test successful update by owner (accounts[0] is set as Hub owner in fixture)
       const newW1 = hre.ethers.parseUnits('2', 18);
       const oldW1 = await RandomSampling.w1();
       const tx = RandomSampling.setW1(newW1);
       await expect(tx).to.emit(RandomSampling, 'W1Updated').withArgs(oldW1, newW1);
       expect(await RandomSampling.w1()).to.equal(newW1);
+
+      // Test revert for non-owner (accounts[1] is not the Hub owner)
+      await expect(RandomSampling.connect(accounts[1]).setW1(newW1))
+        .to.be.revertedWithCustomError(RandomSampling, 'UnauthorizedAccess')
+        .withArgs('Only Hub Owner');
     });
   });
 
   describe('setW2() and W2 getter', () => {
-    it('Should update W2 correctly', async () => {
+    it('Should update W2 correctly and revert for non-owners', async () => {
+      // Test successful update by owner (accounts[0] is set as Hub owner in fixture)
       const newW2 = hre.ethers.parseUnits('3', 18);
       const oldW2 = await RandomSampling.w2();
       const tx = RandomSampling.setW2(newW2);
       await expect(tx).to.emit(RandomSampling, 'W2Updated').withArgs(oldW2, newW2);
       expect(await RandomSampling.w2()).to.equal(newW2);
+
+      // Test revert for non-owner (accounts[1] is not the Hub owner)
+      await expect(RandomSampling.connect(accounts[1]).setW2(newW2))
+        .to.be.revertedWithCustomError(RandomSampling, 'UnauthorizedAccess')
+        .withArgs('Only Hub Owner');
     });
   });
 
   describe('setAvgBlockTimeInSeconds()', () => {
-    it('Should update avgBlockTimeInSeconds and emit event', async () => {
+    it('Should update avgBlockTimeInSeconds and revert for non-owners', async () => {
+      // Test successful update by owner (accounts[0] is set as Hub owner in fixture)
       const newAvg = 15;
       await expect(RandomSampling.setAvgBlockTimeInSeconds(newAvg))
         .to.emit(RandomSampling, 'AvgBlockTimeUpdated')
         .withArgs(newAvg);
-
       expect(await RandomSampling.avgBlockTimeInSeconds()).to.equal(newAvg);
+
+      // Test revert for non-owner (accounts[1] is not the Hub owner)
+      await expect(RandomSampling.connect(accounts[1]).setAvgBlockTimeInSeconds(newAvg))
+        .to.be.revertedWithCustomError(RandomSampling, 'UnauthorizedAccess')
+        .withArgs('Only Hub Owner');
+    });
+
+    it('Should revert if blockTimeInSeconds is 0', async () => {
+      await expect(RandomSampling.setAvgBlockTimeInSeconds(0))
+        .to.be.revertedWith('Block time in seconds must be greater than 0');
     });
   });
 }); 
