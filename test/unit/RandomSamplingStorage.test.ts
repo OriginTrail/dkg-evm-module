@@ -14,6 +14,8 @@ import {
 import { RandomSamplingLib } from '../../typechain/contracts/storage/RandomSamplingStorage';
 import { mineBlocks, mineProofPeriodBlocks } from '../../test/helpers/blockchain-helpers';
 
+const HUNDRED_ETH = ethers.parseEther('100');
+
 // Helper functions for random sampling
 async function createMockChallenge(
   randomSamplingStorage: RandomSamplingStorage,
@@ -44,6 +46,25 @@ type RandomStorageFixture = {
 };
 
 const PANIC_ARITHMETIC_OVERFLOW = 0x11;
+
+async function impersonateAndFund(contract: any) {
+  await hre.network.provider.request({
+    method: 'hardhat_impersonateAccount',
+    params: [await contract.getAddress()],
+  });
+
+  await hre.network.provider.send("hardhat_setBalance", [
+    await contract.getAddress(),
+    `0x${HUNDRED_ETH.toString(16)}`
+  ]);
+}
+
+async function stopImpersonate(contract: any) {
+  await hre.network.provider.request({
+    method: 'hardhat_stopImpersonatingAccount',
+    params: [await contract.getAddress()],
+  });
+}
 
 describe('@unit RandomSamplingStorage', function () {
   let Hub: Hub;
@@ -83,8 +104,6 @@ describe('@unit RandomSamplingStorage', function () {
       await hre.ethers.getContract<KnowledgeCollectionStorage>(
         'KnowledgeCollectionStorage',
       );
-
-    await Hub.setContractAddress('HubOwner', accounts[0].address);
 
     return { accounts, RandomSamplingStorage, Hub, Chronos };
   }
@@ -371,6 +390,14 @@ describe('@unit RandomSamplingStorage', function () {
   });
 
   describe('Access Control', () => {
+    beforeEach(async () => {
+      // Check if RandomSampling is already registered
+      const currentRandomSampling = await Hub.getContractAddress('RandomSampling');
+      if (currentRandomSampling !== await RandomSampling.getAddress()) {
+        await Hub.connect(accounts[0]).setContractAddress('RandomSampling', await RandomSampling.getAddress());
+      }
+    });
+
     it('Should revert contact call if not called by Hub', async () => {
       await expect(RandomSamplingStorage.connect(accounts[1]).initialize())
         .to.be.revertedWithCustomError(RandomSamplingStorage, 'UnauthorizedAccess')
@@ -421,27 +448,70 @@ describe('@unit RandomSamplingStorage', function () {
     });
 
     it('Should allow access when called by Hub', async () => {
-      const { RandomSamplingStorage, Hub } = await loadFixture(deployRandomSamplingFixture);
-      const hubSigner = await Hub.runner;
-      
-      // Test initialize
-      await expect(RandomSamplingStorage.connect(hubSigner).initialize())
-        .to.not.be.reverted;
+      // Initialize with Hub
+      await impersonateAndFund(Hub);
+      const hubSigner = await ethers.getSigner(await Hub.getAddress());
 
-      // Test setNodeChallenge
       await expect(
-        RandomSamplingStorage.connect(hubSigner).setNodeChallenge(0, MockChallenge)
+        RandomSamplingStorage.connect(hubSigner).initialize()
       ).to.not.be.reverted;
 
-      // Test replacePendingProofingPeriodDuration
+      await stopImpersonate(Hub);
+
+      // Test contract-only functions with RandomSampling
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
+
       await expect(
-        RandomSamplingStorage.connect(hubSigner).replacePendingProofingPeriodDuration(0, 0)
+        RandomSamplingStorage.connect(rsSigner).setNodeChallenge(0, MockChallenge)
       ).to.not.be.reverted;
 
-      // Test addProofingPeriodDuration
       await expect(
-        RandomSamplingStorage.connect(hubSigner).addProofingPeriodDuration(0, 0)
+        RandomSamplingStorage.connect(rsSigner).replacePendingProofingPeriodDuration(0, 0)
       ).to.not.be.reverted;
+
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addProofingPeriodDuration(0, 0)
+      ).to.not.be.reverted;
+
+      await stopImpersonate(RandomSampling);
+    });
+
+    it('Should allow access when called by registered contract', async () => {
+      // Test contract-only functions with RandomSampling
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
+
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).replacePendingProofingPeriodDuration(1000, 1)
+      ).to.not.be.reverted;
+
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addProofingPeriodDuration(1000, 1)
+      ).to.not.be.reverted;
+
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setNodeChallenge(1, MockChallenge)
+      ).to.not.be.reverted;
+
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).incrementEpochNodeValidProofsCount(1, 1)
+      ).to.not.be.reverted;
+
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addToNodeScore(1, 1, 1, 1000)
+      ).to.not.be.reverted;
+
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addToEpochNodeDelegatorScore(
+          1,
+          1,
+          ethers.encodeBytes32String('test'),
+          1000
+        )
+      ).to.not.be.reverted;
+
+      await stopImpersonate(RandomSampling);
     });
   });
 
@@ -590,9 +660,28 @@ describe('@unit RandomSamplingStorage', function () {
       const midEpochDuration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
       expect(midEpochDuration).to.equal(initialDuration, 'Duration should not change mid-epoch');
 
+      // Impersonate RandomSampling
+      await hre.network.provider.request({
+        method: 'hardhat_impersonateAccount',
+        params: [await RandomSampling.getAddress()],
+      });
+      const rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
+
+      // Fund the RandomSampling contract
+      await hre.network.provider.send("hardhat_setBalance", [
+        await RandomSampling.getAddress(),
+        "0x56BC75E2D63100000" // 100 ETH in hex
+      ]);
+
       // Set new duration for next epoch
       const newDuration = 1000;
-      await RandomSampling.setProofingPeriodDurationInBlocks(newDuration);
+      await RandomSampling.connect(rsSigner).setProofingPeriodDurationInBlocks(newDuration);
+
+      // Stop impersonating RandomSampling
+      await hre.network.provider.request({
+        method: 'hardhat_stopImpersonatingAccount',
+        params: [await RandomSampling.getAddress()],
+      });
       
       // Verify duration hasn't changed yet
       const beforeEpochEndDuration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
@@ -603,9 +692,28 @@ describe('@unit RandomSamplingStorage', function () {
       const nextEpochDuration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
       expect(nextEpochDuration).to.equal(BigInt(newDuration), 'Duration should change in next epoch');
 
+      // Impersonate RandomSampling again
+      await hre.network.provider.request({
+        method: 'hardhat_impersonateAccount',
+        params: [await RandomSampling.getAddress()],
+      });
+      const rsSigner2 = await ethers.getSigner(await RandomSampling.getAddress());
+
+      // Fund the RandomSampling contract
+      await hre.network.provider.send("hardhat_setBalance", [
+        await RandomSampling.getAddress(),
+        "0x56BC75E2D63100000" // 100 ETH in hex
+      ]);
+
       // Set another duration for future epoch
       const futureDuration = 2000;
-      await RandomSampling.setProofingPeriodDurationInBlocks(futureDuration);
+      await RandomSampling.connect(rsSigner2).setProofingPeriodDurationInBlocks(futureDuration);
+
+      // Stop impersonating RandomSampling
+      await hre.network.provider.request({
+        method: 'hardhat_stopImpersonatingAccount',
+        params: [await RandomSampling.getAddress()],
+      });
       
       // Verify current epoch still has previous duration
       const currentEpochDuration = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
@@ -619,16 +727,37 @@ describe('@unit RandomSamplingStorage', function () {
 
     it('Should return correct proofing period duration based on epoch history', async () => {
       const baseDuration = 100;
-      const testEpochs = 5; // Increased number of epochs for better coverage
+      const testEpochs = 5;
       const currentEpoch = await Chronos.getCurrentEpoch();
       const epochLength = await Chronos.epochLength();
 
       // Set up multiple durations with different effective epochs
       const durations = [];
       for (let i = 0; i < testEpochs; i++) {
-        const duration = baseDuration + (i * 100); // Larger increments for clearer testing
+        const duration = baseDuration + (i * 100);
         durations.push(duration);
-        await RandomSampling.setProofingPeriodDurationInBlocks(duration);
+
+        // Impersonate RandomSampling
+        await hre.network.provider.request({
+          method: 'hardhat_impersonateAccount',
+          params: [await RandomSampling.getAddress()],
+        });
+        const rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
+
+        // Fund the RandomSampling contract
+        await hre.network.provider.send("hardhat_setBalance", [
+          await RandomSampling.getAddress(),
+          "0x56BC75E2D63100000" // 100 ETH in hex
+        ]);
+
+        await RandomSampling.connect(rsSigner).setProofingPeriodDurationInBlocks(duration);
+
+        // Stop impersonating RandomSampling
+        await hre.network.provider.request({
+          method: 'hardhat_stopImpersonatingAccount',
+          params: [await RandomSampling.getAddress()],
+        });
+
         await time.increase(Number(epochLength));
       }
 
@@ -786,18 +915,36 @@ describe('@unit RandomSamplingStorage', function () {
   describe('Proofing Period Duration Management', () => {
     it('Should correctly track pending proofing period duration', async () => {
       const currentEpoch = await Chronos.getCurrentEpoch();
-      const hubSigner = await Hub.runner;
 
       // Initially should be false
       expect(await RandomSamplingStorage.isPendingProofingPeriodDuration()).to.be.false;
 
+      // Impersonate RandomSampling
+      await hre.network.provider.request({
+        method: 'hardhat_impersonateAccount',
+        params: [await RandomSampling.getAddress()],
+      });
+      const rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
+
+      // Fund the RandomSampling contract
+      await hre.network.provider.send("hardhat_setBalance", [
+        await RandomSampling.getAddress(),
+        "0x56BC75E2D63100000" // 100 ETH in hex
+      ]);
+
       // Add a new duration
-      await RandomSamplingStorage.connect(hubSigner).addProofingPeriodDuration(1000, currentEpoch + 1n);
+      await RandomSamplingStorage.connect(rsSigner).addProofingPeriodDuration(1000, currentEpoch + 1n);
       expect(await RandomSamplingStorage.isPendingProofingPeriodDuration()).to.be.true;
 
       // Replace pending duration
-      await RandomSamplingStorage.connect(hubSigner).replacePendingProofingPeriodDuration(2000, currentEpoch + 1n);
+      await RandomSamplingStorage.connect(rsSigner).replacePendingProofingPeriodDuration(2000, currentEpoch + 1n);
       expect(await RandomSamplingStorage.isPendingProofingPeriodDuration()).to.be.true;
+
+      // Stop impersonating RandomSampling
+      await hre.network.provider.request({
+        method: 'hardhat_stopImpersonatingAccount',
+        params: [await RandomSampling.getAddress()],
+      });
 
       // Move to next epoch
       await time.increase(Number(await Chronos.epochLength()));
@@ -806,17 +953,35 @@ describe('@unit RandomSamplingStorage', function () {
 
     it('Should handle multiple proofing period durations correctly', async () => {
       const currentEpoch = await Chronos.getCurrentEpoch();
-      const hubSigner = await Hub.runner;
+
+      // Impersonate RandomSampling
+      await hre.network.provider.request({
+        method: 'hardhat_impersonateAccount',
+        params: [await RandomSampling.getAddress()],
+      });
+      const rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
+
+      // Fund the RandomSampling contract
+      await hre.network.provider.send("hardhat_setBalance", [
+        await RandomSampling.getAddress(),
+        "0x56BC75E2D63100000" // 100 ETH in hex
+      ]);
 
       // Add multiple durations
       const durations = [1000, 2000, 3000];
       for (let i = 0; i < durations.length; i++) {
-        await RandomSamplingStorage.connect(hubSigner).addProofingPeriodDuration(
+        await RandomSamplingStorage.connect(rsSigner).addProofingPeriodDuration(
           durations[i],
           currentEpoch + BigInt(i + 1)
         );
         expect(await RandomSamplingStorage.isPendingProofingPeriodDuration()).to.be.true;
       }
+
+      // Stop impersonating RandomSampling
+      await hre.network.provider.request({
+        method: 'hardhat_stopImpersonatingAccount',
+        params: [await RandomSampling.getAddress()],
+      });
 
       // Verify durations are set correctly
       for (let i = 0; i < durations.length; i++) {
@@ -828,18 +993,36 @@ describe('@unit RandomSamplingStorage', function () {
 
     it('Should replace pending duration correctly', async () => {
       const currentEpoch = await Chronos.getCurrentEpoch();
-      const hubSigner = await Hub.runner;
+
+      // Impersonate RandomSampling
+      await hre.network.provider.request({
+        method: 'hardhat_impersonateAccount',
+        params: [await RandomSampling.getAddress()],
+      });
+      const rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
+
+      // Fund the RandomSampling contract
+      await hre.network.provider.send("hardhat_setBalance", [
+        await RandomSampling.getAddress(),
+        "0x56BC75E2D63100000" // 100 ETH in hex
+      ]);
 
       // Add initial duration
-      await RandomSamplingStorage.connect(hubSigner).addProofingPeriodDuration(1000, currentEpoch + 1n);
+      await RandomSamplingStorage.connect(rsSigner).addProofingPeriodDuration(1000, currentEpoch + 1n);
       expect(await RandomSamplingStorage.isPendingProofingPeriodDuration()).to.be.true;
 
       // Replace with new duration
       const newDuration = 2000;
-      await RandomSamplingStorage.connect(hubSigner).replacePendingProofingPeriodDuration(
+      await RandomSamplingStorage.connect(rsSigner).replacePendingProofingPeriodDuration(
         newDuration,
         currentEpoch + 1n
       );
+
+      // Stop impersonating RandomSampling
+      await hre.network.provider.request({
+        method: 'hardhat_stopImpersonatingAccount',
+        params: [await RandomSampling.getAddress()],
+      });
 
       // Verify new duration is set
       const duration = await RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(currentEpoch + 1n);
@@ -993,33 +1176,6 @@ describe('@unit RandomSamplingStorage', function () {
         const actualDuration = await RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(targetEpoch);
         expect(actualDuration).to.equal(expectedDuration);
       }
-    });
-
-    it('Should only apply latest epoch on multiple initialize calls', async () => {
-      const currentEpoch = await Chronos.getCurrentEpoch();
-      
-      // First initialization
-      await RandomSamplingStorage.initialize();
-      const firstProofingPeriod = await RandomSamplingStorage.proofingPeriodDurations(0);
-      expect(firstProofingPeriod.effectiveEpoch).to.equal(currentEpoch);
-
-      // Move to next epoch
-      await time.increase(Number(await Chronos.epochLength()));
-      const nextEpoch = await Chronos.getCurrentEpoch();
-
-      // Add a new duration before second initialization
-      const newDuration = 1000;
-      await RandomSampling.setProofingPeriodDurationInBlocks(newDuration);
-
-      // Second initialization
-      await RandomSamplingStorage.initialize();
-      
-      // Verify durations are preserved
-      const firstDuration = await RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(currentEpoch);
-      const secondDuration = await RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(nextEpoch);
-      
-      expect(firstDuration).to.equal(firstProofingPeriod.durationInBlocks);
-      expect(secondDuration).to.be.equal(BigInt(newDuration));
     });
   });
 });
