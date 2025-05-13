@@ -2,9 +2,9 @@ name: Random Sampling Tests
 
 on:
   pull_request:
-    branches: [ main, feature/random-sampling-unit-tests ]
+    branches: [ main, feature/random-sampling-unit-tests, feature/random-sampling ]
   push:
-    branches: [ feature/random-sampling-unit-tests ]
+    branches: [ feature/random-sampling-unit-tests, feature/random-sampling ]
   workflow_dispatch:  
 
 jobs:
@@ -29,6 +29,8 @@ jobs:
         npx hardhat test test/unit/RandomSamplingStorage.test.ts
         echo "Running RandomSampling tests..."
         npx hardhat test test/unit/RandomSampling.test.ts
+        echo "Running RandomSamplingIntegration tests..."
+        npx hardhat test test/integration/RandomSampling.test.ts
       env:
         REPORT_GAS: true
         COVERAGE: true 
