@@ -2,9 +2,11 @@ name: Random Sampling Tests
 
 on:
   pull_request:
-    branches: [ main, feature/random-sampling-unit-tests, feature/random-sampling ]
+    branches:
+      - '*' 
   push:
-    branches: [ feature/random-sampling-unit-tests, feature/random-sampling ]
+    branches:
+      - '*' 
   workflow_dispatch:  
 
 jobs:
