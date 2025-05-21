@@ -2201,5 +2201,235 @@ describe('@integration RandomSampling', () => {
         ),
       ).to.be.revertedWith('Delegator has no score for the given epoch');
     });
+    it('Should calculate zero rewards if the total reward pool for the epoch was zero', async () => {
+      // Setup node and delegator
+      const nodeStake = await ParametersStorage.minimumStake();
+      const nodeAsk = 200000000000000000n; // 0.2 TRAC ask
+      const delegatorStake = nodeStake / 2n;
+      ({ node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(15, nodeStake, nodeAsk, deps));
+    
+      // Setup receiving nodes
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 20,
+          await ParametersStorage.minimumStake(),
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+    
+      // Setup delegator
+      await Token.connect(accounts[0]).transfer(
+        delegatorAccount.address,
+        delegatorStake * 2n,
+      );
+      await Token.connect(delegatorAccount).approve(
+        await Staking.getAddress(),
+        delegatorStake,
+      );
+      await Staking.connect(delegatorAccount).stake(
+        publishingNodeIdentityId,
+        delegatorStake,
+      );
+    
+      // Create KC with valid token amount
+      const kcCreator = getDefaultKCCreator(accounts);
+      const { merkleRoot: kcMerkleRoot } = await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+        'test-operation-id',
+        10,
+        1000,
+        10,
+        ethers.parseEther('100'), // Use a valid token amount
+      );
+      epochToClaim = await Chronos.getCurrentEpoch();
+    
+      // Submit a valid proof to ensure node has score
+      await RandomSampling.connect(publishingNode.operational).createChallenge();
+      const challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+      const chunks = kcTools.splitIntoChunks(quads, 32);
+      const challengeChunk = chunks[challenge.chunkId];
+      const { proof } = kcTools.calculateMerkleProof(
+        quads,
+        32,
+        Number(challenge.chunkId),
+      );
+    
+      // Use the merkle root from the knowledge collection
+      await RandomSampling.connect(publishingNode.operational).submitProof(
+        challengeChunk,
+        proof,
+      );
+    
+      // Verify proof was counted
+      expect(
+        await RandomSamplingStorage.getEpochNodeValidProofsCount(
+          epochToClaim,
+          publishingNodeIdentityId,
+        ),
+      ).to.equal(1n);
+    
+      // Advance past epoch and finalize
+      await advanceToNextEpoch();
+      await advanceToNextEpoch();
+    
+      // Create another KC to finalize the epoch
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+        'test-operation-id-2',
+        10,
+        1000,
+        10,
+        ethers.parseEther('100'),
+      );
+    
+      // Check expected reward is zero
+      const expectedReward = await RandomSampling.connect(
+        delegatorAccount,
+      ).getDelegatorEpochRewardsAmount(publishingNodeIdentityId, epochToClaim);
+      expect(expectedReward).to.equal(0n);
+    
+      // Act & Assert
+      await expect(
+        RandomSampling.connect(delegatorAccount).claimRewards(
+          publishingNodeIdentityId,
+          epochToClaim,
+        ),
+      ).to.be.revertedWith('Delegator has no score for the given epoch');
+    });
+    it('Should calculate zero rewards if allExpectedEpochProofsCount is zero', async () => {
+      // Setup node and delegator
+      const nodeStake = await ParametersStorage.minimumStake();
+      const nodeAsk = 200000000000000000n; // 0.2 TRAC ask
+      const delegatorStake = nodeStake / 2n;
+      ({ node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(15, nodeStake, nodeAsk, deps));
+    
+      // Setup receiving nodes
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 20,
+          await ParametersStorage.minimumStake(),
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+    
+      // Setup delegator
+      await Token.connect(accounts[0]).transfer(
+        delegatorAccount.address,
+        delegatorStake * 2n,
+      );
+      await Token.connect(delegatorAccount).approve(
+        await Staking.getAddress(),
+        delegatorStake,
+      );
+      await Staking.connect(delegatorAccount).stake(
+        publishingNodeIdentityId,
+        delegatorStake,
+      );
+    
+      // Create KC with valid token amount
+      const kcCreator = getDefaultKCCreator(accounts);
+      const { merkleRoot: kcMerkleRoot } = await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+        'test-operation-id',
+        10,
+        1000,
+        10,
+        ethers.parseEther('100'),
+      );
+      epochToClaim = await Chronos.getCurrentEpoch();
+    
+      // Submit a valid proof to ensure node has score
+      await RandomSampling.connect(publishingNode.operational).createChallenge();
+      const challenge = await RandomSamplingStorage.getNodeChallenge(
+        publishingNodeIdentityId,
+      );
+      const chunks = kcTools.splitIntoChunks(quads, 32);
+      const challengeChunk = chunks[challenge.chunkId];
+      const { proof } = kcTools.calculateMerkleProof(
+        quads,
+        32,
+        Number(challenge.chunkId),
+      );
+    
+      // Use the merkle root from the knowledge collection
+      await RandomSampling.connect(publishingNode.operational).submitProof(
+        challengeChunk,
+        proof,
+      );
+    
+      // Verify proof was counted
+      expect(
+        await RandomSamplingStorage.getEpochNodeValidProofsCount(
+          epochToClaim,
+          publishingNodeIdentityId,
+        ),
+      ).to.equal(1n);
+    
+      // Advance past epoch and finalize
+      await advanceToNextEpoch();
+      await advanceToNextEpoch();
+    
+      // Create another KC to finalize the epoch
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+        'test-operation-id-2',
+        10,
+        1000,
+        10,
+        ethers.parseEther('100'),
+      );
+    
+      // Check expected reward is zero
+      const expectedReward = await RandomSampling.connect(
+        delegatorAccount,
+      ).getDelegatorEpochRewardsAmount(publishingNodeIdentityId, epochToClaim);
+      expect(expectedReward).to.equal(0n);
+    
+      // Act & Assert
+      await expect(
+        RandomSampling.connect(delegatorAccount).claimRewards(
+          publishingNodeIdentityId,
+          epochToClaim,
+        ),
+      ).to.be.revertedWith('Delegator has no score for the given epoch');
+    });
   });
 });
