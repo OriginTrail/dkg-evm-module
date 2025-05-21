@@ -2737,7 +2737,7 @@ it('Should revert if maxNodePublishingFactor is zero', async () => {
  *  Node score combines stake-, ask- and publishing-factor
  * ───────────────────────────────────────────────────────────────────────────
  */
-it.only('Should calculate the correct node score based on node stake, ask and publishing factor', async () => {
+it('Should calculate the correct node score based on node stake, ask and publishing factor', async () => {
   /* 0. Configure ASK-bound factors up-front (100 – 1000 TRAC) */
   const lowerFactor = 100n  * SCALING_FACTOR;
   const upperFactor = 1000n * SCALING_FACTOR;
