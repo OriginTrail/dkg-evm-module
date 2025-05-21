@@ -2202,4 +2202,618 @@ describe('@integration RandomSampling', () => {
       ).to.be.revertedWith('Delegator has no score for the given epoch');
     });
   });
+
+  describe('Scoring System', () => {
+
+ /*
+ * ────────────────────────────────────────────────────────────────────────────
+ *  NODE STAKE == 0
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+it('Should calculate score correctly when node stake is zero', async () => {
+  // 1. Three "normal" nodes with minimum stake
+  const minStake = await ParametersStorage.minimumStake();
+  const nodeAsk  = 250n;
+  const deps     = { accounts, Profile, Token, Staking, Ask, KnowledgeCollection };
+
+  const normalNodes: { operational: SignerWithAddress; admin: SignerWithAddress }[] = [];
+  const normalIds: bigint[] = [];
+
+  for (let i = 0; i < 3; i++) {
+    const { node, identityId } = await setupNodeWithStakeAndAsk(i * 2, minStake, nodeAsk, deps);
+    normalNodes.push(node);
+    normalIds.push(BigInt(identityId));
+  }
+
+  // 2. A node whose stake we set to zero
+  const { node: zeroNode, identityId: zeroId } =
+        await setupNodeWithStakeAndAsk(8, minStake, nodeAsk, deps);
+  await Staking.connect(zeroNode.operational).requestWithdrawal(BigInt(zeroId), minStake);
+  expect(await StakingStorage.getNodeStake(BigInt(zeroId))).to.equal(0n);
+
+  // 3. KC, proof-period, challenges & proofs
+  const kcCreator   = getDefaultKCCreator(accounts);
+  const recNodes    = getDefaultReceivingNodes(accounts).map((node, i) => ({
+    operational: accounts[16 + i * 4],
+    admin: accounts[17 + i * 4]
+  }));
+  const recProfiles = await createProfiles(Profile, recNodes);
+  const recIds      = recProfiles.map(p => Number(p.identityId));
+
+  await createKnowledgeCollection(
+    kcCreator, normalNodes[0], Number(normalIds[0]), recNodes, recIds, deps, merkleRoot);
+
+  await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+  const chunks = kcTools.splitIntoChunks(quads, 32);
+
+  const solve = async (node: any, id: bigint) => {
+    await RandomSampling.connect(node.operational).createChallenge();
+    const ch = await RandomSamplingStorage.getNodeChallenge(id);
+    const { proof } = kcTools.calculateMerkleProof(quads, 32, Number(ch.chunkId));
+    await RandomSampling.connect(node.operational).submitProof(chunks[ch.chunkId], proof);
+    return ch;
+  };
+
+  for (let i = 0; i < normalNodes.length; i++) await solve(normalNodes[i], normalIds[i]);
+  const zCh = await solve(zeroNode, BigInt(zeroId));
+
+  // 4. Assertions
+  const zeroScore = await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+    BigInt(zeroId), zCh.epoch, zCh.activeProofPeriodStartBlock);
+  expect(zeroScore).to.equal(0n);
+
+  const totalScore = await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
+    zCh.epoch, zCh.activeProofPeriodStartBlock);
+  expect(totalScore).to.be.greaterThan(0n);
+
+  for (let i = 0; i < normalIds.length; i++) {
+    const s = await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+      normalIds[i], zCh.epoch, zCh.activeProofPeriodStartBlock);
+    expect(s).to.be.greaterThan(0n);
+  }
+});
+
+
+
+/*
+ * ────────────────────────────────────────────────────────────────────────────
+ *  NODE STAKE == maximumStake  (and capping when stake > maximum)
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+it('Should calculate score correctly when node stake equals / exceeds maximum', async () => {
+  const minStake = await ParametersStorage.minimumStake();
+  const maxStake = await ParametersStorage.maximumStake();
+  const nodeAsk  = 250n;
+  const deps     = { accounts, Profile, Token, Staking, Ask, KnowledgeCollection };
+
+  // 1. Three normal nodes
+  const normalNodes: { operational: SignerWithAddress; admin: SignerWithAddress }[] = [];
+  const normalIds: bigint[] = [];
+  for (let i = 0; i < 3; i++) {
+    const { node, identityId } = await setupNodeWithStakeAndAsk(i * 8, minStake, nodeAsk, deps);
+    normalNodes.push(node);
+    normalIds.push(BigInt(identityId));
+  }
+
+  // 2. One node staked at exactly maximumStake
+  const { node: maxNode, identityId: maxId } =
+        await setupNodeWithStakeAndAsk(24, maxStake, nodeAsk, deps);
+  const maxIdBigInt = BigInt(maxId);
+
+  // 3. KC & proof period
+  const kcCreator = getDefaultKCCreator(accounts);
+  const recNodes  = getDefaultReceivingNodes(accounts).map((node, i) => ({
+    operational: accounts[32 + i * 4],
+    admin: accounts[33 + i * 4]
+  }));
+  const recProfiles = await createProfiles(Profile, recNodes);
+  const recIds    = recProfiles.map(p => Number(p.identityId));
+
+  await createKnowledgeCollection(
+    kcCreator, normalNodes[0], Number(normalIds[0]), recNodes, recIds, deps, merkleRoot);
+  await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+
+  const chunks = kcTools.splitIntoChunks(quads, 32);
+  const solve = async (node: any, id: bigint) => {
+    await RandomSampling.connect(node.operational).createChallenge();
+    const ch = await RandomSamplingStorage.getNodeChallenge(id);
+    const { proof } = kcTools.calculateMerkleProof(quads, 32, Number(ch.chunkId));
+    await RandomSampling.connect(node.operational).submitProof(chunks[ch.chunkId], proof);
+    return ch;
+  };
+
+  for (let i = 0; i < normalNodes.length; i++) await solve(normalNodes[i], normalIds[i]);
+  const mCh = await solve(maxNode, maxIdBigInt);
+
+  // 4. Assertions – maxStake node should beat normals
+  const scoreMax = await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+    maxIdBigInt, mCh.epoch, mCh.activeProofPeriodStartBlock);
+  for (let i = 0; i < normalIds.length; i++) {
+    const s = await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+      normalIds[i], mCh.epoch, mCh.activeProofPeriodStartBlock);
+    expect(scoreMax).to.be.greaterThan(s);
+  }
+
+  // 5. Check capping logic (stake > maximum)
+  const expectedMax = await calculateExpectedNodeScore(
+    maxIdBigInt, maxStake, { ParametersStorage, ProfileStorage, AskStorage, EpochStorage });
+
+  const expectedCap = await calculateExpectedNodeScore(
+    maxIdBigInt, maxStake * 2n, { ParametersStorage, ProfileStorage, AskStorage, EpochStorage });
+
+  expect(expectedCap).to.equal(expectedMax);
+  expect(scoreMax).to.equal(expectedMax);
+});
+
+async function calculateExpectedNodeScore(
+  identityId: bigint,
+  nodeStake: bigint,
+  deps: {
+    ParametersStorage: ParametersStorage;
+    ProfileStorage: ProfileStorage;
+    AskStorage: AskStorage;
+    EpochStorage: EpochStorage;
+  },
+): Promise<bigint> {
+  const { ParametersStorage, ProfileStorage, AskStorage, EpochStorage } = deps;
+
+  /* 1. Stake factor ------------------------------------------------------ */
+  const maximumStake    = await ParametersStorage.maximumStake();
+  const cappedStake     = nodeStake > maximumStake ? maximumStake : nodeStake;
+
+  const stakeDivisor    = 2_000_000n;                      // konst. iz kontrakta
+  const stakeRatio      = cappedStake / stakeDivisor;      // (ulaz / 2m)
+  const nodeStakeFactor = (2n * (stakeRatio ** 2n)) / SCALING_FACTOR;
+
+  /* 2. Ask factor (izračunato od lowerBound → upperBound) ---------------- */
+  const nodeAskScaled   = BigInt(await ProfileStorage.getAsk(identityId)) * SCALING_FACTOR;
+  const [ askLowerBound, askUpperBound ] = await AskStorage.getAskBounds();
+
+  let nodeAskFactor = 0n;
+  if (nodeAskScaled >= askLowerBound && nodeAskScaled <= askUpperBound) {
+    const diffBounds = askUpperBound - askLowerBound;      // != 0 (provereno ranije)
+    const askRatio   = ((nodeAskScaled - askLowerBound) * SCALING_FACTOR) / diffBounds;
+    // stakeRatio  *  (askRatio)^2   /  SCALE^2
+    nodeAskFactor    = (stakeRatio * (askRatio ** 2n)) / (SCALING_FACTOR * SCALING_FACTOR);
+  }
+
+  /* 3. Publishing factor ------------------------------------------------- */
+  const nodePub        = await EpochStorage.getNodeCurrentEpochProducedKnowledgeValue(identityId);
+  const maxNodePub     = await EpochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue();
+
+  let nodePublishingFactor = 0n;
+  if (maxNodePub > 0n) {
+    const pubRatio      = (nodePub * SCALING_FACTOR) / maxNodePub;
+    nodePublishingFactor = (nodeStakeFactor * pubRatio) / SCALING_FACTOR;
+  }
+
+  /* 4. SUM --------------------------------------------------------------- */
+  return nodeStakeFactor + nodePublishingFactor + nodeAskFactor;
+}
+
+
+it('Should calculate score correctly when ask is exactly on bounds', async () => {
+  /* Get bounds from on-chain storage */
+  // Initialize ask bounds first
+  const askLowerBound = 100n * SCALING_FACTOR;  // 100 TRAC
+  const askUpperBound = 1000n * SCALING_FACTOR; // 1000 TRAC
+  
+  console.log('Setting ask bounds:', {
+    lower: askLowerBound.toString(),
+    upper: askUpperBound.toString()
+  });
+
+  // Set up some nodes first to ensure we have active stake
+  const minStake = await ParametersStorage.minimumStake();
+  const nodeAsk = 250n;
+  const deps = { accounts, Profile, Token, Staking, Ask, KnowledgeCollection };
+
+  // Create a few nodes to ensure we have active stake
+  for (let i = 0; i < 3; i++) {
+    await setupNodeWithStakeAndAsk(i * 4, minStake, nodeAsk, deps);
+  }
+
+  // Now set the ask bounds
+  await ParametersStorage.connect(accounts[0]).setAskLowerBoundFactor(askLowerBound);
+  await ParametersStorage.connect(accounts[0]).setAskUpperBoundFactor(askUpperBound);
+  
+  // Verify bounds were set correctly
+  const [actualLower, actualUpper] = await AskStorage.getAskBounds();
+  console.log('Actual ask bounds:', {
+    lower: actualLower.toString(),
+    upper: actualUpper.toString()
+  });
+
+  await Ask.connect(accounts[0]).recalculateActiveSet();
+
+  const askLower = askLowerBound / SCALING_FACTOR;   // convert back to wei
+  const askUpper = askUpperBound / SCALING_FACTOR;
+
+  /* 1. Node at lowerBound */
+  const { node: lowerNode, identityId: lowerId } =
+        await setupNodeWithStakeAndAsk(60, minStake, askLower, deps);
+
+  /* 2. Node at upperBound */
+  const { node: upperNode, identityId: upperId } =
+        await setupNodeWithStakeAndAsk(68, minStake, askUpper, deps);
+
+  /* 3. Simple KC (for proof to work) */
+  const kcCreator = getDefaultKCCreator(accounts);
+  const recNodes = getDefaultReceivingNodes(accounts).map((node, i) => ({
+    operational: accounts[16 + i * 4],
+    admin: accounts[17 + i * 4]
+  }));
+  const recProfiles = await createProfiles(Profile, recNodes);
+  const recIds = recProfiles.map(p => Number(p.identityId));
+
+  await createKnowledgeCollection(
+    kcCreator, lowerNode, Number(lowerId), recNodes, recIds, deps, merkleRoot);
+
+  /* 4. Start proof period and solve challenges for both nodes */
+  await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+
+  const chunks = kcTools.splitIntoChunks(quads, 32);
+  const solve = async (node: any, id: bigint) => {
+    await RandomSampling.connect(node.operational).createChallenge();
+    const ch = await RandomSamplingStorage.getNodeChallenge(id);
+    const { proof } = kcTools.calculateMerkleProof(quads, 32, Number(ch.chunkId));
+    await RandomSampling.connect(node.operational).submitProof(chunks[ch.chunkId], proof);
+    return ch;
+  };
+
+  const chLower = await solve(lowerNode, BigInt(lowerId));
+  const chUpper = await solve(upperNode, BigInt(upperId));
+
+  /* 5. Results from storage */
+  const scoreLower = await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+                       BigInt(lowerId), chLower.epoch, chLower.activeProofPeriodStartBlock);
+  const scoreUpper = await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+                       BigInt(upperId), chUpper.epoch, chUpper.activeProofPeriodStartBlock);
+
+  console.log('Scores:', {
+    lower: scoreLower.toString(),
+    upper: scoreUpper.toString()
+  });
+
+  /* 6. Expected values (calculated locally) */
+  const expectedLower = await calculateExpectedNodeScore(
+                          BigInt(lowerId), BigInt(minStake),
+                          { ParametersStorage, ProfileStorage, AskStorage, EpochStorage });
+
+  const expectedUpper = await calculateExpectedNodeScore(
+                          BigInt(upperId), BigInt(minStake),
+                          { ParametersStorage, ProfileStorage, AskStorage, EpochStorage });
+
+  console.log('Expected scores:', {
+    lower: expectedLower.toString(),
+    upper: expectedUpper.toString()
+  });
+
+  /* 7. Assertions */
+  expect(scoreLower).to.equal(expectedLower);
+  expect(scoreUpper).to.equal(expectedUpper);
+
+  // Node with ASK == lowerBound should have higher score than node with ASK == upperBound
+  // (because lower ask is better)
+  expect(scoreLower).to.be.greaterThan(scoreUpper);
+});
+
+ /* -----------------------------------------------------------------
+ *  NODE ASK  –  askLowerBound == askUpperBound
+ * ----------------------------------------------------------------*/
+it('Should calculate score correctly when askLowerBound == askUpperBound', async () => {
+  /* 0.  Set ASK bounds to the SAME value (e.g. 500 TRAC) */
+  const oneValue = 500n * SCALING_FACTOR;          // 500 TRAC in wei-scale
+  await ParametersStorage.connect(accounts[0]).setAskLowerBoundFactor(oneValue);
+  await ParametersStorage.connect(accounts[0]).setAskUpperBoundFactor(oneValue);
+
+  // Recalculate the active set after bounds change
+  await Ask.connect(accounts[0]).recalculateActiveSet();
+
+  /* 1.  Prepare a node with ASK exactly on the bound */
+  const minStake   = await ParametersStorage.minimumStake();
+  const deps       = { accounts, Profile, Token, Staking, Ask, KnowledgeCollection };
+
+  const askAtBound = oneValue / SCALING_FACTOR;    // back to plain TRAC value
+
+  const { node: boundNode, identityId: boundId } =
+        await setupNodeWithStakeAndAsk(80, minStake, askAtBound, deps);
+
+  /* 2.  Create a minimal KC so proof-flow works */
+  const kcCreator = getDefaultKCCreator(accounts);
+  const recNodes  = getDefaultReceivingNodes(accounts);
+  const recIds    = (await createProfiles(Profile, recNodes)).map(p => Number(p.identityId));
+
+  await createKnowledgeCollection(
+    kcCreator,
+    boundNode,
+    Number(boundId),
+    recNodes,
+    recIds,
+    deps,
+    merkleRoot
+  );
+
+  /* 3.  Start the proof period and solve the challenge */
+  await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+
+  await RandomSampling.connect(boundNode.operational).createChallenge();
+  const challenge = await RandomSamplingStorage.getNodeChallenge(BigInt(boundId));
+
+  const chunks    = kcTools.splitIntoChunks(quads, 32);
+  const { proof } = kcTools.calculateMerkleProof(quads, 32, Number(challenge.chunkId));
+
+  await RandomSampling.connect(boundNode.operational).submitProof(
+    chunks[challenge.chunkId],
+    proof
+  );
+
+  /* 4.  Pull on-chain score from storage */
+  const scoreOnChain = await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+    BigInt(boundId),
+    challenge.epoch,
+    challenge.activeProofPeriodStartBlock
+  );
+
+  /* 5.  Calculate expected score locally
+         – ASK factor must be 0 because bounds are equal */
+  const expected = await calculateExpectedNodeScore(
+    BigInt(boundId),
+    BigInt(minStake),
+    { ParametersStorage, ProfileStorage, AskStorage, EpochStorage }
+  );
+
+  /* 6.  Assertions */
+  expect(scoreOnChain).to.equal(expected);
+
+  // Score should still be > 0 because stake- and/or publishing-factors contribute
+  expect(scoreOnChain).to.be.greaterThan(0n);
+});
+
+ /* -----------------------------------------------------------------
+ *  PUBLISHING FACTOR  –  node has produced 0 KB in the epoch
+ * ----------------------------------------------------------------*/
+it('Should calculate score correctly when node publishing factor is zero', async () => {
+  /* 0.  One "active" node that will publish something,
+         plus one "silent" node that publishes nothing.        */
+  const minStake   = await ParametersStorage.minimumStake();
+  const askValue   = 300n;                                         // 0.0003 TRAC
+  const deps       = { accounts, Profile, Token, Staking, Ask, KnowledgeCollection };
+
+  /* Active node (makes KC, gives non-zero global MAX publish factor) */
+  const { node: activeNode, identityId: activeId } =
+        await setupNodeWithStakeAndAsk(90, minStake, askValue, deps);
+
+  /* Silent node – same stake/ASK, but will *not* create its own KC */
+  const { node: silentNode, identityId: silentId } =
+        await setupNodeWithStakeAndAsk(94, minStake, askValue, deps);
+
+  /* 1.  Build one KC **published by the active node**               */
+  const kcCreator = getDefaultKCCreator(accounts);
+  const recNodes  = getDefaultReceivingNodes(accounts);
+  const recIds    = (await createProfiles(Profile, recNodes)).map(p => Number(p.identityId));
+
+  await createKnowledgeCollection(
+    kcCreator,
+    activeNode,
+    Number(activeId),
+    recNodes,
+    recIds,
+    deps,
+    merkleRoot
+  );
+
+  /* 2.  Kick off a proof period                                     */
+  await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+
+  const chunks = kcTools.splitIntoChunks(quads, 32);
+  const solve  = async (node: any, id: bigint) => {
+    await RandomSampling.connect(node.operational).createChallenge();
+    const ch     = await RandomSamplingStorage.getNodeChallenge(id);
+    const { proof } = kcTools.calculateMerkleProof(quads, 32, Number(ch.chunkId));
+    await RandomSampling.connect(node.operational).submitProof(chunks[ch.chunkId], proof);
+    return ch;
+  };
+
+  /* Active node solves its challenge – ensures it keeps a >0 publish metric */
+  await solve(activeNode, BigInt(activeId));
+
+  /* Silent node also needs to solve a challenge (it may reference
+     the active node's KC – that's fine, we have the quads).        */
+  const slCh = await solve(silentNode, BigInt(silentId));
+
+  /* 3.  On-chain scores                                             */
+  const scoreSilent = await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+    BigInt(silentId), slCh.epoch, slCh.activeProofPeriodStartBlock
+  );
+  const scoreActive = await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+    BigInt(activeId), slCh.epoch, slCh.activeProofPeriodStartBlock   // same PP start block
+  );
+
+  /* 4.  Expected silent-node score (publishing factor should be 0)  */
+  const expectedSilent = await calculateExpectedNodeScore(
+    BigInt(silentId),
+    BigInt(minStake),
+    { ParametersStorage, ProfileStorage, AskStorage, EpochStorage }
+  );
+
+  /* 5.  Assertions                                                  */
+  expect(scoreSilent).to.equal(expectedSilent);
+
+  // With identical stake & ask, active node MUST outperform silent node,
+  // because silent node's publishing factor is zero.
+  expect(scoreActive).to.be.greaterThan(scoreSilent);
+});
+
+/*
+ * ───────────────────────────────────────────────────────────────────────────
+ *  Should revert if maxNodePublishingFactor is zero
+ *  – scenario: nobody has published anything in the **current** epoch
+ *    so  EpochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue() == 0
+ *    and  _calculateNodeScore() must revert from submitProof().
+ * ───────────────────────────────────────────────────────────────────────────
+ */
+it('Should revert if maxNodePublishingFactor is zero', async () => {
+  /** 1.  Node with normal stake / ask */
+  const minStake = await ParametersStorage.minimumStake();
+  const nodeAsk  = 250n;
+  const deps     = { accounts, Profile, Token, Staking, Ask, KnowledgeCollection };
+
+  const { node: publishingNode, identityId: publishingId } =
+        await setupNodeWithStakeAndAsk(40, minStake, nodeAsk, deps);
+
+  /** 2.  Minimal KC so that challenges can be issued.
+   *      The KC is created in the **current** epoch (E0).            */
+  const kcCreator = getDefaultKCCreator(accounts);
+  const recNodes  = getDefaultReceivingNodes(accounts).map((_, i) => ({
+    operational: accounts[80 + i * 4],
+    admin:       accounts[81 + i * 4],
+  }));
+  const recProfiles = await createProfiles(Profile, recNodes);
+  const recIds = recProfiles.map(p => Number(p.identityId));
+
+  await createKnowledgeCollection(
+    kcCreator,
+    publishingNode,
+    publishingId,
+    recNodes,
+    recIds,
+    deps,
+    merkleRoot,          // predefined in the test-suite
+    'op-id',
+    10,                  // feeNumerator
+    1000,                // feeDenominator
+    5                    // epochsDuration  (active for several epochs)
+  );
+
+  /** 3.  Jump **one** epoch ahead so that:
+   *      – the KC is still active (epochsDuration = 5)
+   *      – but nobody has published in the **new** epoch (E1).
+   *      For E1 the max publishing factor will therefore be 0.         */
+  const jumpToNextEpoch = async () => {
+    const timeUntil = await Chronos.timeUntilNextEpoch();
+    const blockTime = await RandomSampling.avgBlockTimeInSeconds();
+    const blocks    = timeUntil > 0n
+                    ? Number(timeUntil / BigInt(blockTime)) + 2
+                    : 2;
+    for (let i = 0; i < blocks; i++) {
+      await hre.network.provider.send('evm_mine');
+    }
+  };
+  await jumpToNextEpoch();   // Now we are in epoch E1
+
+  /** 4.  Start new proof period and create challenge                  */
+  await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+
+  await RandomSampling.connect(publishingNode.operational).createChallenge();
+  const ch = await RandomSamplingStorage.getNodeChallenge(publishingId);
+
+  /** 5.  Prepare a *valid* proof – the score calculation itself will
+   *      revert inside submitProof because maxNodePubFactor == 0.      */
+  const chunks = kcTools.splitIntoChunks(quads, 32);
+  const { proof } = kcTools.calculateMerkleProof(quads, 32, Number(ch.chunkId));
+
+  const tx = RandomSampling
+               .connect(publishingNode.operational)
+               .submitProof(chunks[ch.chunkId], proof);
+
+  await expect(tx).to.be.revertedWith('Max node publishing factor is 0');
+
+  /** 6.  Sanity – no score written                                    */
+  const score = await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+                  BigInt(publishingId),
+                  ch.epoch,
+                  ch.activeProofPeriodStartBlock);
+  expect(score).to.equal(0n);
+});
+
+/*
+ * ───────────────────────────────────────────────────────────────────────────
+ *  Full-formula check: stake + ask + publishing
+ * ───────────────────────────────────────────────────────────────────────────
+ */
+/*
+ * ───────────────────────────────────────────────────────────────────────────
+ *  Node score combines stake-, ask- and publishing-factor
+ * ───────────────────────────────────────────────────────────────────────────
+ */
+it.only('Should calculate the correct node score based on node stake, ask and publishing factor', async () => {
+  /* 0. Configure ASK-bound factors up-front (100 – 1000 TRAC) */
+  const lowerFactor = 100n  * SCALING_FACTOR;
+  const upperFactor = 1000n * SCALING_FACTOR;
+  await ParametersStorage.connect(accounts[0]).setAskLowerBoundFactor(lowerFactor);
+  await ParametersStorage.connect(accounts[0]).setAskUpperBoundFactor(upperFactor);
+
+  /* 1. Three publisher nodes, identical ASK (550 TRAC), different stakes   */
+  const minStake  = await ParametersStorage.minimumStake();
+  const maxStake  = await ParametersStorage.maximumStake();
+  const deps      = { accounts, Profile, Token, Staking, Ask, KnowledgeCollection };
+
+  const { node: minNode , identityId: minId  } = await setupNodeWithStakeAndAsk(0 ,  minStake     , 550n, deps);
+  const { node: dblNode , identityId: dblId  } = await setupNodeWithStakeAndAsk(8 ,  minStake*2n  , 550n, deps);
+  const { node: maxNode , identityId: maxId  } = await setupNodeWithStakeAndAsk(16,  maxStake      , 550n, deps);
+
+  /* 2. Receiver nodes (needed only for KC signature quorum)                */
+  const recNodes: { operational: SignerWithAddress; admin: SignerWithAddress }[] = [];
+  const recIds  : number[] = [];
+
+  for (let i = 0; i < 5; i++) {
+    const { node, identityId } = await setupNodeWithStakeAndAsk(24 + i*8, minStake, 600n, deps);
+    recNodes.push(node);
+    recIds  .push(identityId);      // IDs are known – no extra profile creation
+  }
+
+  /* 3. Now that all nodes have ASK-ove, build the active set                */
+  await Ask.connect(accounts[0]).recalculateActiveSet();
+
+  /* 4. Publish a KC (publisher = minNode)                                   */
+  const kcCreator = getDefaultKCCreator(accounts);
+  await createKnowledgeCollection(
+    kcCreator,
+    minNode,
+    minId,
+    recNodes,
+    recIds,
+    deps,
+    merkleRoot
+  );
+
+  /* 5. Start proof period and solve challenges for all three publishers     */
+  await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+  const chunks = kcTools.splitIntoChunks(quads, 32);
+
+  const solve = async (node: any, id: bigint) => {
+    await RandomSampling.connect(node.operational).createChallenge();
+    const ch = await RandomSamplingStorage.getNodeChallenge(id);
+    const { proof } = kcTools.calculateMerkleProof(quads, 32, Number(ch.chunkId));
+    await RandomSampling.connect(node.operational).submitProof(chunks[ch.chunkId], proof);
+    return ch;
+  };
+
+  const chMin  = await solve(minNode , BigInt(minId ));
+  const chDbl  = await solve(dblNode , BigInt(dblId ));
+  const chMax  = await solve(maxNode , BigInt(maxId ));
+
+  /* 6. On-chain scores                                                      */
+  const scoreMin  = await RandomSamplingStorage.getNodeEpochProofPeriodScore(BigInt(minId ), chMin.epoch, chMin.activeProofPeriodStartBlock);
+  const scoreDbl  = await RandomSamplingStorage.getNodeEpochProofPeriodScore(BigInt(dblId ), chDbl.epoch, chDbl.activeProofPeriodStartBlock);
+  const scoreMax  = await RandomSamplingStorage.getNodeEpochProofPeriodScore(BigInt(maxId ), chMax.epoch, chMax.activeProofPeriodStartBlock);
+
+  /* 7. Off-chain reference scores                                           */
+  const expectedMin  = await calculateExpectedNodeScore(BigInt(minId ),  minStake     , { ParametersStorage, ProfileStorage, AskStorage, EpochStorage });
+  const expectedDbl  = await calculateExpectedNodeScore(BigInt(dblId ),  minStake*2n  , { ParametersStorage, ProfileStorage, AskStorage, EpochStorage });
+  const expectedMax  = await calculateExpectedNodeScore(BigInt(maxId ),  maxStake     , { ParametersStorage, ProfileStorage, AskStorage, EpochStorage });
+
+  /* 8. Assertions                                                           */
+  expect(scoreMin ).to.equal(expectedMin );
+  expect(scoreDbl ).to.equal(expectedDbl );
+  expect(scoreMax ).to.equal(expectedMax );
+
+  // Higher stake → higher score (ASK & publishing factor are the same)
+  expect(scoreDbl).to.be.greaterThan(scoreMin);
+  expect(scoreMax).to.be.greaterThan(scoreDbl);
+});
+
+
+  });
 });
