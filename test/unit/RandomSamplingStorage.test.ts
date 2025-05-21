@@ -2,6 +2,7 @@ import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import hre, { ethers } from 'hardhat';
+import { EventLog } from 'ethers';
 
 import parameters from '../../deployments/parameters.json';
 import {
@@ -1027,6 +1028,63 @@ describe('@unit RandomSamplingStorage', function () {
       // Verify new duration is set
       const duration = await RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(currentEpoch + 1n);
       expect(duration).to.equal(BigInt(newDuration));
+    });
+
+    it('Should emit ProofingPeriodDurationAdded event with correct parameters', async () => {
+      const newDuration = 1000;
+      const effectiveEpoch = await Chronos.getCurrentEpoch() + 1n;
+      
+      // Impersonate RandomSampling
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
+
+      // Add new proofing period duration and capture the event
+      const tx = await RandomSamplingStorage.connect(rsSigner).addProofingPeriodDuration(newDuration, effectiveEpoch);
+      const receipt = await tx.wait();
+      
+      // Find the ProofingPeriodDurationAdded event
+      const event = receipt?.logs.find(
+        log => (log as EventLog).fragment?.name === 'ProofingPeriodDurationAdded'
+      ) as EventLog;
+      
+      // Verify event parameters
+      expect(event).to.not.be.undefined;
+      expect(event?.args).to.not.be.undefined;
+      expect(event?.args[0]).to.equal(newDuration);
+      expect(event?.args[1]).to.equal(effectiveEpoch);
+
+      await stopImpersonate(RandomSampling);
+    });
+
+    it('Should emit PendingProofingPeriodDurationReplaced event with correct parameters', async () => {
+      const oldDuration = 1000;
+      const newDuration = 2000;
+      const effectiveEpoch = await Chronos.getCurrentEpoch() + 1n;
+      
+      // Impersonate RandomSampling
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
+
+      // First add a duration
+      await RandomSamplingStorage.connect(rsSigner).addProofingPeriodDuration(oldDuration, effectiveEpoch);
+      
+      // Then replace it and capture the event
+      const tx = await RandomSamplingStorage.connect(rsSigner).replacePendingProofingPeriodDuration(newDuration, effectiveEpoch);
+      const receipt = await tx.wait();
+      
+      // Find the PendingProofingPeriodDurationReplaced event
+      const event = receipt?.logs.find(
+        log => (log as EventLog).fragment?.name === 'PendingProofingPeriodDurationReplaced'
+      ) as EventLog;
+      
+      // Verify event parameters
+      expect(event).to.not.be.undefined;
+      expect(event?.args).to.not.be.undefined;
+      expect(event?.args[0]).to.equal(oldDuration);
+      expect(event?.args[1]).to.equal(newDuration);
+      expect(event?.args[2]).to.equal(effectiveEpoch);
+
+      await stopImpersonate(RandomSampling);
     });
   });
 
