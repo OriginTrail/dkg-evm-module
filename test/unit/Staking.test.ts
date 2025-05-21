@@ -121,12 +121,11 @@ describe('Staking contract', function () {
   });
 
   it('Should revert if profile does not exist', async () => {
-  const bogusId = 9_999;
-  await expect(
-    Staking.stake(bogusId, 100),
-  ).to.be.revertedWithCustomError(Staking, 'ProfileDoesntExist')
-   .withArgs(bogusId);                  
-});
+    const bogusId = 9_999;
+    await expect(Staking.stake(bogusId, 100))
+      .to.be.revertedWithCustomError(Staking, 'ProfileDoesntExist')
+      .withArgs(bogusId);
+  });
 
   it('Should revert if token allowance too low', async () => {
     const { identityId } = await createProfile();
@@ -137,56 +136,50 @@ describe('Staking contract', function () {
   });
 
   it('Should revert if token balance too low', async () => {
-  const { identityId } = await createProfile();
-  const want = 2n ** 96n - 1n;                   
-  await Token.connect(accounts[0]).approve(await Staking.getAddress(), want);
+    const { identityId } = await createProfile();
+    const want = 2n ** 96n - 1n;
+    await Token.connect(accounts[0]).approve(await Staking.getAddress(), want);
 
-  const actualBal = await Token.balanceOf(accounts[0].address); 
-  await expect(
-    Staking.stake(identityId, want),
-  ).to.be.revertedWithCustomError(Staking, 'TooLowBalance')
-   .withArgs(
-     await Token.getAddress(),
-     actualBal,   
-     want,
-   );
-});
+    const actualBal = await Token.balanceOf(accounts[0].address);
+    await expect(Staking.stake(identityId, want))
+      .to.be.revertedWithCustomError(Staking, 'TooLowBalance')
+      .withArgs(await Token.getAddress(), actualBal, want);
+  });
 
   it('Should revert if maximum stake exceeded', async () => {
     const { identityId } = await createProfile();
     const maxStake = await ParametersStorage.maximumStake();
-  
+
     await Token.mint(accounts[0].address, maxStake + 1n);
     await Token.connect(accounts[0]).approve(
       await Staking.getAddress(),
       maxStake + 1n,
     );
-      await Staking.stake(identityId, maxStake);
-      const before = await StakingStorage.getNodeStake(identityId);
-      await expect(
-      Staking.stake(identityId, 1),
-    ).to.be.revertedWithCustomError(Staking, 'MaximumStakeExceeded')
+    await Staking.stake(identityId, maxStake);
+    const before = await StakingStorage.getNodeStake(identityId);
+    await expect(Staking.stake(identityId, 1))
+      .to.be.revertedWithCustomError(Staking, 'MaximumStakeExceeded')
       .withArgs(maxStake);
-      expect(await StakingStorage.getNodeStake(identityId)).to.equal(before);
+    expect(await StakingStorage.getNodeStake(identityId)).to.equal(before);
   });
 
   it('Should stake successfully and reflect on node stake', async () => {
     const { identityId } = await createProfile();
     const amount = hre.ethers.parseEther('100'); // 100e18
-  
+
     await Token.mint(accounts[0].address, amount);
-    await Token.connect(accounts[0]).approve(await Staking.getAddress(), amount);
-      await expect(
-      Staking.stake(identityId, amount),
-    ).to.changeTokenBalances(
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      amount,
+    );
+    await expect(Staking.stake(identityId, amount)).to.changeTokenBalances(
       Token,
       [accounts[0], await StakingStorage.getAddress()],
       [-amount, amount],
     );
-  
+
     expect(await StakingStorage.getNodeStake(identityId)).to.equal(amount);
   });
-  
 
   it('Should add node to sharding table when above minimum stake', async () => {
     const { identityId } = await createProfile();
@@ -203,12 +196,15 @@ describe('Staking contract', function () {
   it('Should redelegate stake to another identity', async () => {
     const node1 = await createProfile();
     const node2 = await createProfile(accounts[0], accounts[2]);
-  
+
     const initial = hre.ethers.parseEther('1000');
-  
+
     await Token.mint(accounts[0].address, initial);
-    await Token.connect(accounts[0]).approve(await Staking.getAddress(), initial);
-  
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      initial,
+    );
+
     await Staking.stake(node1.identityId, initial);
     const half = initial / 2n;
     const node1Before = await StakingStorage.getNodeStake(node1.identityId);
@@ -216,11 +212,9 @@ describe('Staking contract', function () {
     const dKey = hre.ethers.keccak256(
       hre.ethers.solidityPacked(['address'], [accounts[0].address]),
     );
-    const [dBaseBefore, dIdxBefore] = await StakingStorage.getDelegatorStakeInfo(
-      node1.identityId,
-      dKey,
-    );
-  
+    const [dBaseBefore, dIdxBefore] =
+      await StakingStorage.getDelegatorStakeInfo(node1.identityId, dKey);
+
     await Staking.redelegate(node1.identityId, node2.identityId, half);
     expect(await StakingStorage.getNodeStake(node1.identityId)).to.equal(
       node1Before - half,
@@ -228,19 +222,15 @@ describe('Staking contract', function () {
     expect(await StakingStorage.getNodeStake(node2.identityId)).to.equal(
       node2Before + half,
     );
-      const [dBaseAfter1, dIdxAfter1] = await StakingStorage.getDelegatorStakeInfo(
-      node1.identityId,
-      dKey,
-    );
-    const [dBaseAfter2, dIdxAfter2] = await StakingStorage.getDelegatorStakeInfo(
-      node2.identityId,
-      dKey,
-    );
-  
+    const [dBaseAfter1, dIdxAfter1] =
+      await StakingStorage.getDelegatorStakeInfo(node1.identityId, dKey);
+    const [dBaseAfter2, dIdxAfter2] =
+      await StakingStorage.getDelegatorStakeInfo(node2.identityId, dKey);
+
     expect(dBaseAfter1 + dIdxAfter1 + dBaseAfter2 + dIdxAfter2).to.equal(
       dBaseBefore + dIdxBefore,
     );
-      await expect(
+    await expect(
       Staking.redelegate(node1.identityId, node2.identityId, 0),
     ).to.be.revertedWithCustomError(Staking, 'ZeroTokenAmount');
     await expect(
@@ -259,101 +249,114 @@ describe('Staking contract', function () {
   });
 
   it('Should handle requestWithdrawal exceeding stake', async () => {
-  const { identityId } = await createProfile();
-  const stake = hre.ethers.parseEther('100');
+    const { identityId } = await createProfile();
+    const stake = hre.ethers.parseEther('100');
 
-  await Token.mint(accounts[0].address, stake);
-  await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
-  await Staking.stake(identityId, stake);
+    await Token.mint(accounts[0].address, stake);
+    await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
+    await Staking.stake(identityId, stake);
 
-  const nodeStakeBefore   = await StakingStorage.getNodeStake(identityId);
-  const totalStakeBefore  = await StakingStorage.getTotalStake();
-  const delegatorKey      = hre.ethers.keccak256(
-    hre.ethers.solidityPacked(['address'], [accounts[0].address]),
-  );
-  const [baseBefore, idxBefore] =
-    await StakingStorage.getDelegatorStakeInfo(identityId, delegatorKey);
-    await expect(
-    Staking.requestWithdrawal(identityId, stake + 1n),
-  ).to.be.revertedWithCustomError(Staking, 'WithdrawalExceedsStake')
-   .withArgs(stake, stake + 1n);
-  expect(await StakingStorage.getNodeStake(identityId)).to.equal(nodeStakeBefore);
-  expect(await StakingStorage.getTotalStake()).to.equal(totalStakeBefore);
+    const nodeStakeBefore = await StakingStorage.getNodeStake(identityId);
+    const totalStakeBefore = await StakingStorage.getTotalStake();
+    const delegatorKey = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [accounts[0].address]),
+    );
+    const [baseBefore, idxBefore] = await StakingStorage.getDelegatorStakeInfo(
+      identityId,
+      delegatorKey,
+    );
+    await expect(Staking.requestWithdrawal(identityId, stake + 1n))
+      .to.be.revertedWithCustomError(Staking, 'WithdrawalExceedsStake')
+      .withArgs(stake, stake + 1n);
+    expect(await StakingStorage.getNodeStake(identityId)).to.equal(
+      nodeStakeBefore,
+    );
+    expect(await StakingStorage.getTotalStake()).to.equal(totalStakeBefore);
 
-  const [baseAfter, idxAfter] =
-    await StakingStorage.getDelegatorStakeInfo(identityId, delegatorKey);
-  expect(baseAfter).to.equal(baseBefore);
-  expect(idxAfter).to.equal(idxBefore);
-});
+    const [baseAfter, idxAfter] = await StakingStorage.getDelegatorStakeInfo(
+      identityId,
+      delegatorKey,
+    );
+    expect(baseAfter).to.equal(baseBefore);
+    expect(idxAfter).to.equal(idxBefore);
+  });
 
   it('Should create a withdrawal request', async () => {
-  const { identityId } = await createProfile();
-  const stake = hre.ethers.parseEther('100');
+    const { identityId } = await createProfile();
+    const stake = hre.ethers.parseEther('100');
 
-  await Token.mint(accounts[0].address, stake);
-  await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
-  await Staking.stake(identityId, stake);
+    await Token.mint(accounts[0].address, stake);
+    await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
+    await Staking.stake(identityId, stake);
 
-  const half            = stake / 2n;
-  const nodeStakeBefore = await StakingStorage.getNodeStake(identityId);
-  const totalStakeBefore= await StakingStorage.getTotalStake();
+    const half = stake / 2n;
+    const nodeStakeBefore = await StakingStorage.getNodeStake(identityId);
+    const totalStakeBefore = await StakingStorage.getTotalStake();
 
-  const latestTs   = (await hre.ethers.provider.getBlock('latest'))!.timestamp; //  '!' → није null
-  const delay      = await ParametersStorage.stakeWithdrawalDelay();
-  const minExpected = BigInt(latestTs) + delay;
+    const latestTs = (await hre.ethers.provider.getBlock('latest'))!.timestamp; //  '!' → није null
+    const delay = await ParametersStorage.stakeWithdrawalDelay();
+    const minExpected = BigInt(latestTs) + delay;
 
-  await Staking.requestWithdrawal(identityId, half);
+    await Staking.requestWithdrawal(identityId, half);
 
-  const delegatorKey = hre.ethers.keccak256(
-    hre.ethers.solidityPacked(['address'], [accounts[0].address]),
-  );
-  const req = await StakingStorage.getDelegatorWithdrawalRequest(identityId, delegatorKey);
+    const delegatorKey = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [accounts[0].address]),
+    );
+    const req = await StakingStorage.getDelegatorWithdrawalRequest(
+      identityId,
+      delegatorKey,
+    );
 
-  expect(req[0]).to.equal(half);
-  expect(req[1]).to.equal(0n);
+    expect(req[0]).to.equal(half);
+    expect(req[1]).to.equal(0n);
 
-  expect(req[2]).to.be.at.least(minExpected);
-  expect(req[2]).to.be.at.most(minExpected + 2n);
+    expect(req[2]).to.be.at.least(minExpected);
+    expect(req[2]).to.be.at.most(minExpected + 2n);
 
-  expect(await StakingStorage.getNodeStake(identityId))
-    .to.equal(nodeStakeBefore - half);
-  expect(await StakingStorage.getTotalStake())
-    .to.equal(totalStakeBefore - half);
-});
+    expect(await StakingStorage.getNodeStake(identityId)).to.equal(
+      nodeStakeBefore - half,
+    );
+    expect(await StakingStorage.getTotalStake()).to.equal(
+      totalStakeBefore - half,
+    );
+  });
 
- 
-it('Should finalize withdrawal after delay', async () => {
-  const { identityId } = await createProfile();
-  const stake = hre.ethers.parseEther('100');
+  it('Should finalize withdrawal after delay', async () => {
+    const { identityId } = await createProfile();
+    const stake = hre.ethers.parseEther('100');
 
-  await Token.mint(accounts[0].address, stake);
-  await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
-  await Staking.stake(identityId, stake);
+    await Token.mint(accounts[0].address, stake);
+    await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
+    await Staking.stake(identityId, stake);
 
-  const wAmt = stake / 2n;
-  const delegatorKey = hre.ethers.keccak256(
-    hre.ethers.solidityPacked(['address'], [accounts[0].address]),
-  );
+    const wAmt = stake / 2n;
+    const delegatorKey = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [accounts[0].address]),
+    );
 
-  await Staking.requestWithdrawal(identityId, wAmt);
-  const wr = await StakingStorage.getDelegatorWithdrawalRequest(identityId, delegatorKey);
+    await Staking.requestWithdrawal(identityId, wAmt);
+    const wr = await StakingStorage.getDelegatorWithdrawalRequest(
+      identityId,
+      delegatorKey,
+    );
 
-  const nodeStakeBefore  = await StakingStorage.getNodeStake(identityId);   // već 50 ETH
-  const totalStakeBefore = await StakingStorage.getTotalStake();
-  const balBefore        = await Token.balanceOf(accounts[0].address);
-  await time.increaseTo(wr[2]);
-  await Staking.finalizeWithdrawal(identityId);
-  const balAfter = await Token.balanceOf(accounts[0].address);
-  expect(balAfter - balBefore).to.equal(wAmt);
-  const wrAfter = await StakingStorage.getDelegatorWithdrawalRequest(identityId, delegatorKey);
-  expect(wrAfter[0] + wrAfter[1] + wrAfter[2]).to.equal(0n);
-  expect(await StakingStorage.getNodeStake(identityId))
-    .to.equal(nodeStakeBefore);
-  expect(await StakingStorage.getTotalStake())
-    .to.equal(totalStakeBefore);
-});
-
-
+    const nodeStakeBefore = await StakingStorage.getNodeStake(identityId); // već 50 ETH
+    const totalStakeBefore = await StakingStorage.getTotalStake();
+    const balBefore = await Token.balanceOf(accounts[0].address);
+    await time.increaseTo(wr[2]);
+    await Staking.finalizeWithdrawal(identityId);
+    const balAfter = await Token.balanceOf(accounts[0].address);
+    expect(balAfter - balBefore).to.equal(wAmt);
+    const wrAfter = await StakingStorage.getDelegatorWithdrawalRequest(
+      identityId,
+      delegatorKey,
+    );
+    expect(wrAfter[0] + wrAfter[1] + wrAfter[2]).to.equal(0n);
+    expect(await StakingStorage.getNodeStake(identityId)).to.equal(
+      nodeStakeBefore,
+    );
+    expect(await StakingStorage.getTotalStake()).to.equal(totalStakeBefore);
+  });
 
   it('Should revert finalizeWithdrawal if not requested', async () => {
     const { identityId } = await createProfile();
@@ -378,32 +381,37 @@ it('Should finalize withdrawal after delay', async () => {
   });
 
   it('Should cancel withdrawal request', async () => {
-  const { identityId } = await createProfile();
-  const stake = hre.ethers.parseEther('200');
+    const { identityId } = await createProfile();
+    const stake = hre.ethers.parseEther('200');
 
-  await Token.mint(accounts[0].address, stake);
-  await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
-  await Staking.stake(identityId, stake);
+    await Token.mint(accounts[0].address, stake);
+    await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
+    await Staking.stake(identityId, stake);
 
-  const wAmt = hre.ethers.parseEther('100');
-  await Staking.requestWithdrawal(identityId, wAmt);
+    const wAmt = hre.ethers.parseEther('100');
+    await Staking.requestWithdrawal(identityId, wAmt);
 
-  const nodeStakeAfterReq  = await StakingStorage.getNodeStake(identityId);
-  const totalStakeAfterReq = await StakingStorage.getTotalStake();
+    const nodeStakeAfterReq = await StakingStorage.getNodeStake(identityId);
+    const totalStakeAfterReq = await StakingStorage.getTotalStake();
 
-  await Staking.cancelWithdrawal(identityId);
+    await Staking.cancelWithdrawal(identityId);
 
-  const delegatorKey = hre.ethers.keccak256(
-    hre.ethers.solidityPacked(['address'], [accounts[0].address]),
-  );
-  const wr = await StakingStorage.getDelegatorWithdrawalRequest(identityId, delegatorKey);
-  expect(wr[0] + wr[1] + wr[2]).to.equal(0n);
+    const delegatorKey = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [accounts[0].address]),
+    );
+    const wr = await StakingStorage.getDelegatorWithdrawalRequest(
+      identityId,
+      delegatorKey,
+    );
+    expect(wr[0] + wr[1] + wr[2]).to.equal(0n);
 
-  expect(await StakingStorage.getNodeStake(identityId))
-    .to.equal(nodeStakeAfterReq + wAmt);
-  expect(await StakingStorage.getTotalStake())
-    .to.equal(totalStakeAfterReq + wAmt);
-});
+    expect(await StakingStorage.getNodeStake(identityId)).to.equal(
+      nodeStakeAfterReq + wAmt,
+    );
+    expect(await StakingStorage.getTotalStake()).to.equal(
+      totalStakeAfterReq + wAmt,
+    );
+  });
 
   it('Should revert cancelWithdrawal if no request', async () => {
     const { identityId } = await createProfile();
@@ -412,185 +420,192 @@ it('Should finalize withdrawal after delay', async () => {
     ).to.be.revertedWithCustomError(Staking, 'WithdrawalWasntInitiated');
   });
 
-it('Should distribute rewards correctly', async () => {
-  const { identityId } = await createProfile(accounts[0], accounts[1], 20n);
+  it('Should distribute rewards correctly', async () => {
+    const { identityId } = await createProfile(accounts[0], accounts[1], 20n);
 
-  const stake = hre.ethers.parseEther('100');
-  await Token.mint(accounts[0].address, stake);
-  await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
-  await Staking.stake(identityId, stake);
+    const stake = hre.ethers.parseEther('100');
+    await Token.mint(accounts[0].address, stake);
+    await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
+    await Staking.stake(identityId, stake);
 
-  const reward         = hre.ethers.parseEther('50');  
-  const feeExpected    = reward * 20n / 100n;         
-  const delegatorShare = reward - feeExpected;         
+    const reward = hre.ethers.parseEther('50');
+    const feeExpected = (reward * 20n) / 100n;
+    const delegatorShare = reward - feeExpected;
 
-  await Token.mint(await StakingStorage.getAddress(), reward);
+    await Token.mint(await StakingStorage.getAddress(), reward);
 
-  const stakeBefore  = await StakingStorage.getNodeStake(identityId);
-  const idxBefore    = await StakingStorage.getNodeRewardIndex(identityId);
-  const totBefore    = await StakingStorage.getTotalStake();
+    const stakeBefore = await StakingStorage.getNodeStake(identityId);
+    const idxBefore = await StakingStorage.getNodeRewardIndex(identityId);
+    const totBefore = await StakingStorage.getTotalStake();
 
-  await Staking.distributeRewards(identityId, reward);
+    await Staking.distributeRewards(identityId, reward);
 
-  expect(await StakingStorage.getOperatorFeeBalance(identityId))
-    .to.equal(feeExpected);
+    expect(await StakingStorage.getOperatorFeeBalance(identityId)).to.equal(
+      feeExpected,
+    );
 
-  expect(await StakingStorage.getNodeStake(identityId))
-    .to.equal(stakeBefore + delegatorShare);
+    expect(await StakingStorage.getNodeStake(identityId)).to.equal(
+      stakeBefore + delegatorShare,
+    );
 
-  const incExpected  = (delegatorShare * 10n ** 18n) / stakeBefore;
-  const idxAfter     = await StakingStorage.getNodeRewardIndex(identityId);
-  expect(idxAfter - idxBefore).to.equal(incExpected);
+    const incExpected = (delegatorShare * 10n ** 18n) / stakeBefore;
+    const idxAfter = await StakingStorage.getNodeRewardIndex(identityId);
+    expect(idxAfter - idxBefore).to.equal(incExpected);
 
-  expect(await StakingStorage.getTotalStake())
-    .to.equal(totBefore + delegatorShare);
-});
-
+    expect(await StakingStorage.getTotalStake()).to.equal(
+      totBefore + delegatorShare,
+    );
+  });
 
   it('Should restake operator fee', async () => {
-  const { identityId } = await createProfile(accounts[0], accounts[1], 50n); // 50 %
-  const stake = hre.ethers.parseEther('100');
+    const { identityId } = await createProfile(accounts[0], accounts[1], 50n); // 50 %
+    const stake = hre.ethers.parseEther('100');
 
-  await Token.mint(accounts[0].address, stake);
-  await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
-  await Staking.stake(identityId, stake);
+    await Token.mint(accounts[0].address, stake);
+    await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
+    await Staking.stake(identityId, stake);
 
-  const reward = hre.ethers.parseEther('20'); // fee = 10
-  await Token.mint(await StakingStorage.getAddress(), reward);
-  await Staking.distributeRewards(identityId, reward);
+    const reward = hre.ethers.parseEther('20'); // fee = 10
+    await Token.mint(await StakingStorage.getAddress(), reward);
+    await Staking.distributeRewards(identityId, reward);
 
-  const feeBal = await StakingStorage.getOperatorFeeBalance(identityId);
-  expect(feeBal).to.equal(reward / 2n);
+    const feeBal = await StakingStorage.getOperatorFeeBalance(identityId);
+    expect(feeBal).to.equal(reward / 2n);
 
-  await expect(
-    Staking.restakeOperatorFee(identityId, feeBal + 1n),
-  ).to.be.revertedWithCustomError(Staking, 'AmountExceedsOperatorFeeBalance')
-   .withArgs(feeBal, feeBal + 1n);
+    await expect(Staking.restakeOperatorFee(identityId, feeBal + 1n))
+      .to.be.revertedWithCustomError(Staking, 'AmountExceedsOperatorFeeBalance')
+      .withArgs(feeBal, feeBal + 1n);
 
-  const restake = feeBal / 2n;
-  const stakeBefore = await StakingStorage.getNodeStake(identityId);
+    const restake = feeBal / 2n;
+    const stakeBefore = await StakingStorage.getNodeStake(identityId);
 
-  await Staking.restakeOperatorFee(identityId, restake);
+    await Staking.restakeOperatorFee(identityId, restake);
 
-  expect(await StakingStorage.getOperatorFeeBalance(identityId))
-    .to.equal(feeBal - restake);
-  expect(await StakingStorage.getNodeStake(identityId))
-    .to.equal(stakeBefore + restake);
-});
+    expect(await StakingStorage.getOperatorFeeBalance(identityId)).to.equal(
+      feeBal - restake,
+    );
+    expect(await StakingStorage.getNodeStake(identityId)).to.equal(
+      stakeBefore + restake,
+    );
+  });
 
-it('Should request operator fee withdrawal', async () => {
-  const { identityId } = await createProfile(accounts[0], accounts[1], 50n);
-  const stake = hre.ethers.parseEther('100');
+  it('Should request operator fee withdrawal', async () => {
+    const { identityId } = await createProfile(accounts[0], accounts[1], 50n);
+    const stake = hre.ethers.parseEther('100');
 
-  // ─── 1. stake some tokens ────────────────────────────────────────────
-  await Token.mint(accounts[0].address, stake);
-  await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
-  await Staking.stake(identityId, stake);
+    // ─── 1. stake some tokens ────────────────────────────────────────────
+    await Token.mint(accounts[0].address, stake);
+    await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
+    await Staking.stake(identityId, stake);
 
-  // ─── 2. generate operator fee via reward distribution (fee = 10 ETH) ─
-  const reward = hre.ethers.parseEther('20');
-  await Token.mint(await StakingStorage.getAddress(), reward);
-  await Staking.distributeRewards(identityId, reward);
+    // ─── 2. generate operator fee via reward distribution (fee = 10 ETH) ─
+    const reward = hre.ethers.parseEther('20');
+    await Token.mint(await StakingStorage.getAddress(), reward);
+    await Staking.distributeRewards(identityId, reward);
 
-  const feeBal  = await StakingStorage.getOperatorFeeBalance(identityId);
-  const withdraw= feeBal / 2n;                              // ask to withdraw half
+    const feeBal = await StakingStorage.getOperatorFeeBalance(identityId);
+    const withdraw = feeBal / 2n; // ask to withdraw half
 
-  // ─── 3. capture block-time just *before* the TX ──────────────────────
-  const latestTs = (await hre.ethers.provider.getBlock('latest'))!.timestamp;   // <- non-null assertion
-  const delay       = await ParametersStorage.stakeWithdrawalDelay();
-  const minExpected = BigInt(latestTs) + delay;
+    // ─── 3. capture block-time just *before* the TX ──────────────────────
+    const latestTs = (await hre.ethers.provider.getBlock('latest'))!.timestamp; // <- non-null assertion
+    const delay = await ParametersStorage.stakeWithdrawalDelay();
+    const minExpected = BigInt(latestTs) + delay;
 
-  // ─── 4. make the withdrawal request ──────────────────────────────────
-  await Staking.requestOperatorFeeWithdrawal(identityId, withdraw);
+    // ─── 4. make the withdrawal request ──────────────────────────────────
+    await Staking.requestOperatorFeeWithdrawal(identityId, withdraw);
 
-  const req = await StakingStorage.getOperatorFeeWithdrawalRequest(identityId);
-  expect(req[0]).to.equal(withdraw);
-  expect(req[1]).to.equal(withdraw);
+    const req =
+      await StakingStorage.getOperatorFeeWithdrawalRequest(identityId);
+    expect(req[0]).to.equal(withdraw);
+    expect(req[1]).to.equal(withdraw);
 
-  // ♦ tolerate ±2 seconds around the theoretical release-time
-  expect(req[2]).to.be.at.least(minExpected);
-  expect(req[2]).to.be.at.most(minExpected + 2n);
+    // ♦ tolerate ±2 seconds around the theoretical release-time
+    expect(req[2]).to.be.at.least(minExpected);
+    expect(req[2]).to.be.at.most(minExpected + 2n);
 
-  // balance decreased on storage side
-  expect(await StakingStorage.getOperatorFeeBalance(identityId))
-    .to.equal(feeBal - withdraw);
-});
-
+    // balance decreased on storage side
+    expect(await StakingStorage.getOperatorFeeBalance(identityId)).to.equal(
+      feeBal - withdraw,
+    );
+  });
 
   it('Should finalize operator fee withdrawal', async () => {
-  const { identityId } = await createProfile(accounts[0], accounts[1], 30n); // 30 %
-  const stake = hre.ethers.parseEther('100');
+    const { identityId } = await createProfile(accounts[0], accounts[1], 30n); // 30 %
+    const stake = hre.ethers.parseEther('100');
 
-  await Token.mint(accounts[0].address, stake);
-  await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
-  await Staking.stake(identityId, stake);
-  const reward = hre.ethers.parseEther('40'); // fee = 12
-  await Token.mint(await StakingStorage.getAddress(), reward);
-  await Staking.distributeRewards(identityId, reward);
+    await Token.mint(accounts[0].address, stake);
+    await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
+    await Staking.stake(identityId, stake);
+    const reward = hre.ethers.parseEther('40'); // fee = 12
+    await Token.mint(await StakingStorage.getAddress(), reward);
+    await Staking.distributeRewards(identityId, reward);
 
-  const feeBal = await StakingStorage.getOperatorFeeBalance(identityId);
-  expect(feeBal).to.equal(reward * 30n / 100n);          // 12 ETH
+    const feeBal = await StakingStorage.getOperatorFeeBalance(identityId);
+    expect(feeBal).to.equal((reward * 30n) / 100n); // 12 ETH
 
-  // ────────── 1) early finalize (negative path)
-  await expect(
-    Staking.finalizeOperatorFeeWithdrawal(identityId),
-  ).to.be.revertedWithCustomError(Staking, 'WithdrawalWasntInitiated');
+    // ────────── 1) early finalize (negative path)
+    await expect(
+      Staking.finalizeOperatorFeeWithdrawal(identityId),
+    ).to.be.revertedWithCustomError(Staking, 'WithdrawalWasntInitiated');
 
-  // ────────── 2) happy path
-  const withdraw = feeBal / 2n;                           // 6 ETH
-  const delay    = await ParametersStorage.stakeWithdrawalDelay();
-  await Staking.requestOperatorFeeWithdrawal(identityId, withdraw);
+    // ────────── 2) happy path
+    const withdraw = feeBal / 2n; // 6 ETH
+    const delay = await ParametersStorage.stakeWithdrawalDelay();
+    await Staking.requestOperatorFeeWithdrawal(identityId, withdraw);
 
-  const req = await StakingStorage.getOperatorFeeWithdrawalRequest(identityId);
-  await time.increaseTo(req[2]);                          // skip delay
+    const req =
+      await StakingStorage.getOperatorFeeWithdrawalRequest(identityId);
+    await time.increaseTo(req[2]); // skip delay
 
-  const balBefore = await Token.balanceOf(accounts[0].address);
-  await Staking.finalizeOperatorFeeWithdrawal(identityId);
-  const balAfter  = await Token.balanceOf(accounts[0].address);
+    const balBefore = await Token.balanceOf(accounts[0].address);
+    await Staking.finalizeOperatorFeeWithdrawal(identityId);
+    const balAfter = await Token.balanceOf(accounts[0].address);
 
-  expect(balAfter - balBefore).to.equal(withdraw);
-  expect(await StakingStorage.getOperatorFeeBalance(identityId))
-    .to.equal(feeBal - withdraw);
+    expect(balAfter - balBefore).to.equal(withdraw);
+    expect(await StakingStorage.getOperatorFeeBalance(identityId)).to.equal(
+      feeBal - withdraw,
+    );
 
-  const reqAfter = await StakingStorage.getOperatorFeeWithdrawalRequest(identityId);
-  expect(reqAfter[0] + reqAfter[1] + reqAfter[2]).to.equal(0n);
-});
+    const reqAfter =
+      await StakingStorage.getOperatorFeeWithdrawalRequest(identityId);
+    expect(reqAfter[0] + reqAfter[1] + reqAfter[2]).to.equal(0n);
+  });
 
+  it('Should cancel operator fee withdrawal', async () => {
+    // create profile with 50 % operator fee
+    const { identityId } = await createProfile(accounts[0], accounts[1], 50n);
+    const stake = hre.ethers.parseEther('80');
 
- it('Should cancel operator fee withdrawal', async () => {
-  // create profile with 50 % operator fee
-  const { identityId } = await createProfile(accounts[0], accounts[1], 50n);
-  const stake = hre.ethers.parseEther('80');
+    // stake some tokens
+    await Token.mint(accounts[0].address, stake);
+    await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
+    await Staking.stake(identityId, stake);
 
-  // stake some tokens
-  await Token.mint(accounts[0].address, stake);
-  await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake);
-  await Staking.stake(identityId, stake);
+    // generate operator fee via reward distribution (fee = 10 ETH)
+    const reward = hre.ethers.parseEther('20');
+    await Token.mint(await StakingStorage.getAddress(), reward);
+    await Staking.distributeRewards(identityId, reward);
 
-  // generate operator fee via reward distribution (fee = 10 ETH)
-  const reward = hre.ethers.parseEther('20');
-  await Token.mint(await StakingStorage.getAddress(), reward);
-  await Staking.distributeRewards(identityId, reward);
+    const feeBal = await StakingStorage.getOperatorFeeBalance(identityId);
+    const withdraw = feeBal / 2n; // ask to withdraw half
 
-  const feeBal = await StakingStorage.getOperatorFeeBalance(identityId);
-  const withdraw = feeBal / 2n;                 // ask to withdraw half
+    // make the withdrawal request
+    await Staking.requestOperatorFeeWithdrawal(identityId, withdraw);
 
-  // make the withdrawal request
-  await Staking.requestOperatorFeeWithdrawal(identityId, withdraw);
+    // happy-path: cancel it
+    await Staking.cancelOperatorFeeWithdrawal(identityId);
+    expect(await StakingStorage.getOperatorFeeBalance(identityId)).to.equal(
+      feeBal,
+    ); // balance restored
+    const rec =
+      await StakingStorage.getOperatorFeeWithdrawalRequest(identityId);
+    expect(rec[0] + rec[1] + rec[2]).to.equal(0n); // record wiped
 
-  // happy-path: cancel it
-  await Staking.cancelOperatorFeeWithdrawal(identityId);
-  expect(await StakingStorage.getOperatorFeeBalance(identityId))
-    .to.equal(feeBal);                           // balance restored
-  const rec = await StakingStorage.getOperatorFeeWithdrawalRequest(identityId);
-  expect(rec[0] + rec[1] + rec[2]).to.equal(0n); // record wiped
-
-  // negative-path: second cancel must revert
-  await expect(
-    Staking.cancelOperatorFeeWithdrawal(identityId),
-  ).to.be.revertedWithCustomError(Staking, 'WithdrawalWasntInitiated');
-});
-
+    // negative-path: second cancel must revert
+    await expect(
+      Staking.cancelOperatorFeeWithdrawal(identityId),
+    ).to.be.revertedWithCustomError(Staking, 'WithdrawalWasntInitiated');
+  });
 
   it('Should revert if non-admin tries to restake operator fee or request operator fee withdrawal', async () => {
     const { identityId } = await createProfile();
@@ -622,33 +637,36 @@ it('Should request operator fee withdrawal', async () => {
     );
   });
 
-
   it('Should simulateStakeInfoUpdate correctly', async () => {
-  const { identityId } = await createProfile();
-  const stake0 = hre.ethers.parseEther('100');
-  // stake 100 ETH
-  await Token.mint(accounts[0].address, stake0);
-  await Token.connect(accounts[0]).approve(await Staking.getAddress(), stake0);
-  await Staking.stake(identityId, stake0);
+    const { identityId } = await createProfile();
+    const stake0 = hre.ethers.parseEther('100');
+    // stake 100 ETH
+    await Token.mint(accounts[0].address, stake0);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      stake0,
+    );
+    await Staking.stake(identityId, stake0);
 
-  const dKey = hre.ethers.keccak256(
-    hre.ethers.solidityPacked(['address'], [accounts[0].address]),
-  );
-  // send a reward with 0 % fee so math is simple
-  const reward = hre.ethers.parseEther('20');
-  await Token.mint(await StakingStorage.getAddress(), reward);
-  await Staking.distributeRewards(identityId, reward);
-  // manual expectation
-  const incIndex = (reward * 10n ** 18n) / stake0;
-  const expectedUnrealized = (stake0 * incIndex) / 10n ** 18n;
-  // call the view helper
-  const [base, indexed, unrealized] =
-    await Staking.simulateStakeInfoUpdate(identityId, dKey);
-  // check base + indexed + unrealized math
-  expect(unrealized).to.equal(expectedUnrealized);
-  expect(base + indexed).to.equal(stake0 + expectedUnrealized);
-});
-
+    const dKey = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [accounts[0].address]),
+    );
+    // send a reward with 0 % fee so math is simple
+    const reward = hre.ethers.parseEther('20');
+    await Token.mint(await StakingStorage.getAddress(), reward);
+    await Staking.distributeRewards(identityId, reward);
+    // manual expectation
+    const incIndex = (reward * 10n ** 18n) / stake0;
+    const expectedUnrealized = (stake0 * incIndex) / 10n ** 18n;
+    // call the view helper
+    const [base, indexed, unrealized] = await Staking.simulateStakeInfoUpdate(
+      identityId,
+      dKey,
+    );
+    // check base + indexed + unrealized math
+    expect(unrealized).to.equal(expectedUnrealized);
+    expect(base + indexed).to.equal(stake0 + expectedUnrealized);
+  });
 
   it('Full scenario: Multiple nodes, delegators, operator fees, redelegations, partial withdrawals, cancellations, rewards', async () => {
     console.log('--- START FULL SCENARIO TEST ---');
@@ -990,8 +1008,7 @@ it('Should request operator fee withdrawal', async () => {
     const tableLimit = await ParametersStorage.shardingTableSizeLimit();
     expect(await ShardingTableStorage.nodesCount()).to.be.at.most(tableLimit);
 
-    console.log('--- END FULL SCENARIO TEST ---'); 
-    
+    console.log('--- END FULL SCENARIO TEST ---');
   });
 
   it('Stress test: Rapid stake/un-stake cycles, redelegations, operator fee changes, trying to break invariants', async () => {
@@ -1304,8 +1321,8 @@ it('Should request operator fee withdrawal', async () => {
     expect(finalNodeAStake).to.be.gte(0n);
     expect(finalNodeBStake).to.be.gte(0n);
     const totalStake = await StakingStorage.getTotalStake();
-    const stakeAEnd  = await StakingStorage.getNodeStake(NodeA.identityId);
-    const stakeBEnd  = await StakingStorage.getNodeStake(NodeB.identityId);
+    const stakeAEnd = await StakingStorage.getNodeStake(NodeA.identityId);
+    const stakeBEnd = await StakingStorage.getNodeStake(NodeB.identityId);
     expect(totalStake).to.equal(stakeAEnd + stakeBEnd);
 
     const limit = await ParametersStorage.shardingTableSizeLimit();
