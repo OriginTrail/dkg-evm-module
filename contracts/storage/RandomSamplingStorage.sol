@@ -26,6 +26,10 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
     mapping(uint72 => mapping(uint256 => mapping(uint256 => uint256))) public nodeEpochProofPeriodScore;
     // epoch => proofPeriodStartBlock => score
     mapping(uint256 => mapping(uint256 => uint256)) public allNodesEpochProofPeriodScore;
+    // identityId => epoch => score
+    mapping(uint72 => mapping(uint256 => uint256)) public nodeEpochScore;
+    // epoch => score
+    mapping(uint256 => uint256) public allNodesEpochScore;
     // epoch => identityId => delegatorKey => score
     mapping(uint256 => mapping(uint72 => mapping(bytes32 => uint256))) public epochNodeDelegatorScore;
     // epoch => identityId => delegatorKey => rewards claimed status
@@ -36,6 +40,26 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         uint16 oldDurationInBlocks,
         uint16 newDurationInBlocks,
         uint256 indexed effectiveEpoch
+    );
+    event NodeEpochScoreAdded(uint256 indexed epoch, uint72 indexed identityId, uint256 scoreAdded, uint256 totalScore);
+    event AllNodesEpochScoreAdded(uint256 indexed epoch, uint256 scoreAdded, uint256 totalScore);
+    event NodeEpochProofPeriodScoreAdded(
+        uint256 indexed epoch,
+        uint256 indexed proofPeriodStartBlock,
+        uint72 indexed identityId,
+        uint256 scoreAdded
+    );
+    event AllNodesEpochProofPeriodScoreAdded(
+        uint256 indexed epoch,
+        uint256 indexed proofPeriodStartBlock,
+        uint256 scoreAdded,
+        uint256 totalScore
+    );
+    event EpochNodeDelegatorScoreAdded(
+        uint256 indexed epoch,
+        uint72 indexed identityId,
+        bytes32 indexed delegatorKey,
+        uint256 scoreAdded
     );
 
     constructor(address hubAddress, uint16 _proofingPeriodDurationInBlocks) ContractStatus(hubAddress) {
@@ -196,14 +220,38 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         return epochNodeValidProofsCount[epoch][identityId];
     }
 
-    function addToNodeScore(
+    function addToNodeEpochScore(uint256 epoch, uint72 identityId, uint256 score) external onlyContracts {
+        nodeEpochScore[identityId][epoch] += score;
+        emit NodeEpochScoreAdded(epoch, identityId, score, nodeEpochScore[identityId][epoch]);
+    }
+
+    function addToAllNodesEpochScore(uint256 epoch, uint256 score) external onlyContracts {
+        allNodesEpochScore[epoch] += score;
+        emit AllNodesEpochScoreAdded(epoch, score, allNodesEpochScore[epoch]);
+    }
+
+    function addToNodeEpochProofPeriodScore(
         uint256 epoch,
         uint256 proofPeriodStartBlock,
         uint72 identityId,
         uint256 score
     ) external onlyContracts {
         nodeEpochProofPeriodScore[identityId][epoch][proofPeriodStartBlock] += score;
+        emit NodeEpochProofPeriodScoreAdded(epoch, proofPeriodStartBlock, identityId, score);
+    }
+
+    function addToAllNodesEpochProofPeriodScore(
+        uint256 epoch,
+        uint256 proofPeriodStartBlock,
+        uint256 score
+    ) external onlyContracts {
         allNodesEpochProofPeriodScore[epoch][proofPeriodStartBlock] += score;
+        emit AllNodesEpochProofPeriodScoreAdded(
+            epoch,
+            proofPeriodStartBlock,
+            score,
+            allNodesEpochProofPeriodScore[epoch][proofPeriodStartBlock]
+        );
     }
 
     function getEpochNodeDelegatorScore(
@@ -221,6 +269,7 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         uint256 score
     ) external onlyContracts {
         epochNodeDelegatorScore[epoch][identityId][delegatorKey] += score;
+        emit EpochNodeDelegatorScoreAdded(epoch, identityId, delegatorKey, score);
     }
 
     // --- Rewards Claimed Status ---

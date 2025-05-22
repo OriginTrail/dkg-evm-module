@@ -181,7 +181,10 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
 
             // Calculate node score at this proof period and store it
             uint256 score = calculateNodeScore(identityId);
-            randomSamplingStorage.addToNodeScore(epoch, activeProofPeriodStartBlock, identityId, score);
+            randomSamplingStorage.addToNodeEpochProofPeriodScore(epoch, activeProofPeriodStartBlock, identityId, score);
+            randomSamplingStorage.addToAllNodesEpochProofPeriodScore(epoch, activeProofPeriodStartBlock, score);
+            randomSamplingStorage.addToNodeEpochScore(epoch, identityId, score);
+            randomSamplingStorage.addToAllNodesEpochScore(epoch, score);
 
             // Calculate delegators' scores for the previous proof period and store them
             _calculateAndStoreDelegatorScores(identityId, epoch, activeProofPeriodStartBlock);
