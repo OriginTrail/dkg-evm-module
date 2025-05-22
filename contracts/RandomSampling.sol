@@ -187,7 +187,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             randomSamplingStorage.addToAllNodesEpochScore(epoch, score);
 
             // Calculate delegators' scores for the previous proof period and store them
-            _calculateAndStoreDelegatorScores(identityId, epoch, activeProofPeriodStartBlock);
+            _calculateAndStoreDelegatorScores(identityId, epoch, score);
 
             emit ValidProofSubmitted(identityId, epoch, score);
         } else {
@@ -200,26 +200,30 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epoch,
         address delegator
     ) public view returns (uint256) {
-        uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
+        // // First part of the formula - W1 * (node valid proofs count / all expected epoch proofs count)
+        // uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
+        // uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
+        // uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
+        // uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
+        // require(allExpectedEpochProofsCount > 0, "All expected epoch proofs count must be greater than 0");
+        // proofsRatio = (epochNodeValidProofsCount * SCALING_FACTOR) / allExpectedEpochProofsCount;
+        uint256 proofsRatio = 0;
 
-        uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
-
-        uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
-
-        uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
-        require(allExpectedEpochProofsCount > 0, "All expected epoch proofs count must be greater than 0");
-
+        // Second part of the formula - W2 * (delegator score / all nodes scores)
         bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
         uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
             epoch,
             identityId,
             delegatorKey
         );
-        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
+        uint256 allNodesEpochScore = randomSamplingStorage.getAllNodesEpochScore(epoch);
+        uint256 scoreRatio = (epochNodeDelegatorScore * SCALING_FACTOR) / allNodesEpochScore;
 
-        uint256 reward = ((totalEpochTracFees / 2) *
-            (w1 * (epochNodeValidProofsCount / allExpectedEpochProofsCount) + w2 * epochNodeDelegatorScore)) /
-            SCALING_FACTOR ** 2;
+        // Reward calculation
+        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
+        // SCALING_FACTOR ** 2 because we multiplied by SCALING_FACTOR once in the delegator score calculation and once in scoreRatio
+        uint256 reward = ((totalEpochTracFees / 2) * (w1 * proofsRatio + w2 * scoreRatio)) / SCALING_FACTOR ** 2;
+
         return reward;
     }
 
@@ -382,36 +386,16 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         return nodeStakeFactor + nodePublishingFactor + nodeAskFactor;
     }
 
-    function _calculateAndStoreDelegatorScores(
-        uint72 identityId,
-        uint256 epoch,
-        uint256 activeProofPeriodStartBlock
-    ) private {
-        uint256 lastProofPeriodStartBlock = randomSamplingStorage.getHistoricalProofPeriodStartBlock(
-            activeProofPeriodStartBlock,
-            1
-        );
-        uint256 nodeScore = randomSamplingStorage.getNodeEpochProofPeriodScore(
-            identityId,
-            epoch,
-            lastProofPeriodStartBlock
-        );
+    function _calculateAndStoreDelegatorScores(uint72 identityId, uint256 epoch, uint256 nodeScore) private {
         uint256 nodeStake = stakingStorage.getNodeStake(identityId);
-
         if (nodeScore > 0 && nodeStake > 0) {
-            uint256 allNodesScore = randomSamplingStorage.getEpochAllNodesProofPeriodScore(
-                epoch,
-                lastProofPeriodStartBlock
-            );
-            uint256 lastProofPeriodScoreRatio = (nodeScore * SCALING_FACTOR) / allNodesScore;
-
             // update all delegators' scores
             address[] memory delegatorsAddresses = delegatorsInfo.getDelegators(identityId);
             for (uint8 i = 0; i < delegatorsAddresses.length; ) {
                 bytes32 delegatorKey = keccak256(abi.encodePacked(delegatorsAddresses[i]));
                 uint256 delegatorStake = stakingStorage.getDelegatorTotalStake(identityId, delegatorKey);
-                // Need to divide by SCALING_FACTOR^2 to get the correct score
-                uint256 delegatorScore = (lastProofPeriodScoreRatio * delegatorStake * SCALING_FACTOR) / nodeStake;
+                // Need to divide by SCALING_FACTOR to get the correct score
+                uint256 delegatorScore = nodeScore * ((delegatorStake * SCALING_FACTOR) / nodeStake);
                 randomSamplingStorage.addToEpochNodeDelegatorScore(epoch, identityId, delegatorKey, delegatorScore);
 
                 unchecked {
