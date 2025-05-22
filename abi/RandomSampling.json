@@ -334,6 +334,11 @@
         "internalType": "uint256",
         "name": "epoch",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "delegator",
+        "type": "address"
       }
     ],
     "name": "getDelegatorEpochRewardsAmount",

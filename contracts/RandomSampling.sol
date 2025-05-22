@@ -192,8 +192,32 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
-    function getDelegatorEpochRewardsAmount(uint72 identityId, uint256 epoch) external view returns (uint256) {
-        return _getDelegatorEpochRewardsAmount(identityId, epoch, msg.sender);
+    function getDelegatorEpochRewardsAmount(
+        uint72 identityId,
+        uint256 epoch,
+        address delegator
+    ) public view returns (uint256) {
+        uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
+
+        uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
+
+        uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
+
+        uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
+        require(allExpectedEpochProofsCount > 0, "All expected epoch proofs count must be greater than 0");
+
+        bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
+        uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
+            epoch,
+            identityId,
+            delegatorKey
+        );
+        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
+
+        uint256 reward = ((totalEpochTracFees / 2) *
+            (w1 * (epochNodeValidProofsCount / allExpectedEpochProofsCount) + w2 * epochNodeDelegatorScore)) /
+            SCALING_FACTOR ** 2;
+        return reward;
     }
 
     function claimRewards(uint72 identityId, uint256 epoch) external {
@@ -217,7 +241,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         require(!rewardsClaimed, "Rewards already claimed");
 
         // get rewards amount
-        uint256 rewardAmount = _getDelegatorEpochRewardsAmount(identityId, epoch, msg.sender);
+        uint256 rewardAmount = getDelegatorEpochRewardsAmount(identityId, epoch, msg.sender);
         require(rewardAmount > 0, "No rewards to claim");
         require(rewardAmount <= type(uint96).max, "Reward amount exceeds uint96");
 
@@ -392,33 +416,5 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
                 }
             }
         }
-    }
-
-    function _getDelegatorEpochRewardsAmount(
-        uint72 identityId,
-        uint256 epoch,
-        address delegator
-    ) internal view returns (uint256) {
-        uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
-
-        uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
-
-        uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
-
-        uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
-        require(allExpectedEpochProofsCount > 0, "All expected epoch proofs count must be greater than 0");
-
-        bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
-        uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
-            epoch,
-            identityId,
-            delegatorKey
-        );
-        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
-
-        uint256 reward = ((totalEpochTracFees / 2) *
-            (w1 * (epochNodeValidProofsCount / allExpectedEpochProofsCount) + w2 * epochNodeDelegatorScore)) /
-            SCALING_FACTOR ** 2;
-        return reward;
     }
 }
