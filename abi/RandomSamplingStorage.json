@@ -113,6 +113,12 @@
         "internalType": "uint256",
         "name": "scoreAdded",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalScore",
+        "type": "uint256"
       }
     ],
     "name": "EpochNodeDelegatorScoreAdded",
@@ -557,6 +563,25 @@
         "internalType": "uint256",
         "name": "epoch",
         "type": "uint256"
+      }
+    ],
+    "name": "getAllNodesEpochScore",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
       },
       {
         "internalType": "uint256",
@@ -775,6 +800,30 @@
       }
     ],
     "name": "getNodeEpochProofPeriodScore",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getNodeEpochScore",
     "outputs": [
       {
         "internalType": "uint256",

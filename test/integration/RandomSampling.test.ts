@@ -2214,4 +2214,22 @@ describe('@integration RandomSampling', () => {
       ).to.be.revertedWith('Delegator has no score for the given epoch');
     });
   });
+
+  describe('Delegator rewards', () => {
+    it('Should revert if allNodesEpochScore is 0 for the given epoch', async () => {
+      const testIdentityId = 1;
+      const testEpoch = 1;
+      const testDelegator = accounts[1].address;
+
+      await expect(
+        RandomSampling.getDelegatorEpochRewardsAmount(
+          testIdentityId,
+          testEpoch,
+          testDelegator,
+        ),
+      ).to.be.revertedWith(
+        'None of the nodes have any score for the given epoch. Cannot calculate rewards.',
+      );
+    });
+  });
 });

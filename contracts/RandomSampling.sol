@@ -217,6 +217,10 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             delegatorKey
         );
         uint256 allNodesEpochScore = randomSamplingStorage.getAllNodesEpochScore(epoch);
+        require(
+            allNodesEpochScore > 0,
+            "None of the nodes have any score for the given epoch. Cannot calculate rewards."
+        );
         uint256 scoreRatio = (epochNodeDelegatorScore * SCALING_FACTOR) / allNodesEpochScore;
 
         // Reward calculation
