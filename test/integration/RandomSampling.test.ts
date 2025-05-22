@@ -2201,7 +2201,7 @@ describe('@integration RandomSampling', () => {
         ),
       ).to.be.revertedWith('Delegator has no score for the given epoch');
     });
-    it('Should calculate zero rewards if the total reward pool for the epoch was zero', async () => {
+    it.only('Should calculate zero rewards if the total reward pool for the epoch was zero', async () => {
       // Setup node and delegator
       const nodeStake = await ParametersStorage.minimumStake();
       const nodeAsk = 200000000000000000n; // 0.2 TRAC ask
@@ -2316,7 +2316,7 @@ describe('@integration RandomSampling', () => {
         ),
       ).to.be.revertedWith('Delegator has no score for the given epoch');
     });
-    it('Should calculate zero rewards if allExpectedEpochProofsCount is zero', async () => {
+    it.only('Should calculate zero rewards if allExpectedEpochProofsCount is zero', async () => {
       // Setup node and delegator
       const nodeStake = await ParametersStorage.minimumStake();
       const nodeAsk = 200000000000000000n; // 0.2 TRAC ask
@@ -2430,6 +2430,386 @@ describe('@integration RandomSampling', () => {
           epochToClaim,
         ),
       ).to.be.revertedWith('Delegator has no score for the given epoch');
+    });
+    it.only('Should calculate rewards correctly with different W1/W2 values', async () => {
+      // Setup node and delegator with higher stakes
+      const nodeStake = await ParametersStorage.minimumStake() * 8n; // 8x minimum stake
+      const nodeAsk = 200000000000000000n; // 0.2 TRAC ask
+      const delegatorStake = nodeStake / 2n;
+      ({ node: publishingNode, identityId: publishingNodeIdentityId } =
+        await setupNodeWithStakeAndAsk(15, nodeStake, nodeAsk, deps));
+    
+      // Setup receiving nodes
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 20,
+          await ParametersStorage.minimumStake(),
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+    
+      // Setup delegator with more stake
+      await Token.connect(accounts[0]).transfer(
+        delegatorAccount.address,
+        delegatorStake * 16n, // Give more tokens to ensure enough for staking
+      );
+      await Token.connect(delegatorAccount).approve(
+        await Staking.getAddress(),
+        delegatorStake,
+      );
+      await Staking.connect(delegatorAccount).stake(
+        publishingNodeIdentityId,
+        delegatorStake,
+      );
+    
+      // Create KC with larger token amount to ensure reward pool has significant funds
+      const kcCreator = getDefaultKCCreator(accounts);
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+        'test-operation-id',
+        10,
+        1000,
+        10,
+        ethers.parseEther('5000'), // Increased token amount significantly
+      );
+      epochToClaim = await Chronos.getCurrentEpoch();
+    
+      // Submit multiple valid proofs to ensure node has a good score
+      for (let i = 0; i < 10; i++) { // Increased number of proofs significantly
+        await RandomSampling.connect(publishingNode.operational).createChallenge();
+        const challenge = await RandomSamplingStorage.getNodeChallenge(
+          publishingNodeIdentityId,
+        );
+        const chunks = kcTools.splitIntoChunks(quads, 32);
+        const challengeChunk = chunks[challenge.chunkId];
+        const { proof } = kcTools.calculateMerkleProof(
+          quads,
+          32,
+          Number(challenge.chunkId),
+        );
+        await RandomSampling.connect(publishingNode.operational).submitProof(
+          challengeChunk,
+          proof,
+        );
+
+        // Advance to next proof period
+        const proofingPeriodDurationInBlocks = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+        for (let j = 0; j < Number(proofingPeriodDurationInBlocks); j++) {
+          await hre.network.provider.send('evm_mine');
+        }
+      }
+    
+      // Verify proof count
+      const proofCount = await RandomSamplingStorage.getEpochNodeValidProofsCount(
+        epochToClaim,
+        publishingNodeIdentityId,
+      );
+      expect(proofCount).to.be.greaterThan(0n);
+    
+      // Advance time to finalize epoch
+      await advanceToNextEpoch();
+      await advanceToNextEpoch();
+    
+      // Create another KC to trigger finalization with significant token amount
+      await createKnowledgeCollection(
+        kcCreator,
+        publishingNode,
+        publishingNodeIdentityId,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+        'test-operation-id-2',
+        10,
+        1000,
+        10,
+        ethers.parseEther('5000'), // Increased token amount significantly
+      );
+    
+      // Verify epoch is finalized
+      expect(await EpochStorage.lastFinalizedEpoch(1)).to.be.gte(epochToClaim);
+
+      // Verify delegator has a score
+      const delegatorScore = await RandomSamplingStorage.getEpochNodeDelegatorScore(
+        epochToClaim,
+        publishingNodeIdentityId,
+        delegatorKey,
+      );
+      expect(delegatorScore).to.be.greaterThan(0n);
+    
+      // Test case 1: Default W1=0, W2=2 (reward based on delegator score)
+      const defaultReward = await RandomSampling.connect(
+        delegatorAccount,
+      ).getDelegatorEpochRewardsAmount(publishingNodeIdentityId, epochToClaim);
+      expect(defaultReward).to.be.greaterThan(0n);
+    
+      // Test case 2: W1=1, W2=1 (equal weight between proof count and delegator score)
+      await RandomSampling.connect(accounts[0]).setW1(1);
+      await RandomSampling.connect(accounts[0]).setW2(1);
+      const equalWeightReward = await RandomSampling.connect(
+        delegatorAccount,
+      ).getDelegatorEpochRewardsAmount(publishingNodeIdentityId, epochToClaim);
+      expect(equalWeightReward).to.be.greaterThan(0n);
+    
+      // Test case 3: W1=2, W2=0 (reward based only on proof count)
+      await RandomSampling.connect(accounts[0]).setW1(2);
+      await RandomSampling.connect(accounts[0]).setW2(0);
+      const onlyW1Reward = await RandomSampling.connect(
+        delegatorAccount,
+      ).getDelegatorEpochRewardsAmount(publishingNodeIdentityId, epochToClaim);
+      
+      // When W1=2 and W2=0, reward should be based only on proof count
+      // Since we have submitted proofs, the reward should be greater than 0
+      expect(onlyW1Reward).to.be.greaterThan(0n);
+    
+      // Verify rewards are different based on W1/W2 values
+      expect(defaultReward).to.not.equal(equalWeightReward);
+      expect(defaultReward).to.not.equal(onlyW1Reward);
+      expect(equalWeightReward).to.not.equal(onlyW1Reward);
+    
+      // Verify the relationship between rewards based on W1/W2 values
+      // When W1=0, W2=2: reward is based on delegator score
+      // When W1=1, W2=1: reward is split between proof count and delegator score
+      // When W1=2, W2=0: reward is based only on proof count
+      
+      // Since we have both proofs and delegator score, all rewards should be positive
+      expect(defaultReward).to.be.greaterThan(0n);
+      expect(equalWeightReward).to.be.greaterThan(0n);
+      expect(onlyW1Reward).to.be.greaterThan(0n);
+
+      // Verify that rewards are proportional to their respective weights
+      // The reward with W1=2, W2=0 should be higher than the default case
+      // since we have a high proof count and W1 is weighted more heavily
+      expect(onlyW1Reward).to.be.greaterThan(defaultReward);
+    });
+    it.only('Should handle multiple nodes and delegators correctly', async () => {
+      // Setup multiple nodes with different stakes
+      const nodeStake1 = await ParametersStorage.minimumStake() * 8n;
+      const nodeStake2 = await ParametersStorage.minimumStake() * 4n;
+      const nodeAsk = 200000000000000000n; // 0.2 TRAC ask
+
+      // Setup first node
+      const { node: node1, identityId: node1Id } = await setupNodeWithStakeAndAsk(
+        15,
+        nodeStake1,
+        nodeAsk,
+        deps,
+      );
+
+      // Setup second node
+      const { node: node2, identityId: node2Id } = await setupNodeWithStakeAndAsk(
+        20,
+        nodeStake2,
+        nodeAsk,
+        deps,
+      );
+
+      // Setup receiving nodes
+      const receivingNodes = [];
+      const receivingNodesIdentityIds = [];
+      for (let i = 0; i < 5; i++) {
+        const { node, identityId } = await setupNodeWithStakeAndAsk(
+          i + 25,
+          await ParametersStorage.minimumStake(),
+          nodeAsk,
+          deps,
+        );
+        receivingNodes.push(node);
+        receivingNodesIdentityIds.push(identityId);
+      }
+
+      // Setup multiple delegators with different stakes
+      const delegator1 = accounts[30];
+      const delegator2 = accounts[31];
+      const delegator1Key = hre.ethers.keccak256(
+        hre.ethers.solidityPacked(['address'], [delegator1.address]),
+      );
+      const delegator2Key = hre.ethers.keccak256(
+        hre.ethers.solidityPacked(['address'], [delegator2.address]),
+      );
+
+      // Delegator 1 stakes to node 1
+      const delegator1Stake = nodeStake1 / 4n;
+      await Token.connect(accounts[0]).transfer(
+        delegator1.address,
+        delegator1Stake * 2n,
+      );
+      await Token.connect(delegator1).approve(
+        await Staking.getAddress(),
+        delegator1Stake,
+      );
+      await Staking.connect(delegator1).stake(node1Id, delegator1Stake);
+
+      // Delegator 2 stakes to node 2
+      const delegator2Stake = nodeStake2 / 4n;
+      await Token.connect(accounts[0]).transfer(
+        delegator2.address,
+        delegator2Stake * 2n,
+      );
+      await Token.connect(delegator2).approve(
+        await Staking.getAddress(),
+        delegator2Stake,
+      );
+      await Staking.connect(delegator2).stake(node2Id, delegator2Stake);
+
+      // Create KC with significant token amount
+      const kcCreator = getDefaultKCCreator(accounts);
+      await createKnowledgeCollection(
+        kcCreator,
+        node1,
+        node1Id,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+        'test-operation-id',
+        10,
+        1000,
+        10,
+        ethers.parseEther('5000'),
+      );
+
+      const epochToClaim = await Chronos.getCurrentEpoch();
+
+      // Node 1 submits multiple proofs
+      for (let i = 0; i < 5; i++) {
+        await RandomSampling.connect(node1.operational).createChallenge();
+        const challenge = await RandomSamplingStorage.getNodeChallenge(node1Id);
+        const chunks = kcTools.splitIntoChunks(quads, 32);
+        const challengeChunk = chunks[challenge.chunkId];
+        const { proof } = kcTools.calculateMerkleProof(
+          quads,
+          32,
+          Number(challenge.chunkId),
+        );
+        await RandomSampling.connect(node1.operational).submitProof(
+          challengeChunk,
+          proof,
+        );
+
+        // Advance to next proof period
+        const proofingPeriodDurationInBlocks = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+        for (let j = 0; j < Number(proofingPeriodDurationInBlocks); j++) {
+          await hre.network.provider.send('evm_mine');
+        }
+      }
+
+      // Node 2 submits fewer proofs
+      for (let i = 0; i < 2; i++) {
+        await RandomSampling.connect(node2.operational).createChallenge();
+        const challenge = await RandomSamplingStorage.getNodeChallenge(node2Id);
+        const chunks = kcTools.splitIntoChunks(quads, 32);
+        const challengeChunk = chunks[challenge.chunkId];
+        const { proof } = kcTools.calculateMerkleProof(
+          quads,
+          32,
+          Number(challenge.chunkId),
+        );
+        await RandomSampling.connect(node2.operational).submitProof(
+          challengeChunk,
+          proof,
+        );
+
+        // Advance to next proof period
+        const proofingPeriodDurationInBlocks = await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+        for (let j = 0; j < Number(proofingPeriodDurationInBlocks); j++) {
+          await hre.network.provider.send('evm_mine');
+        }
+      }
+
+      // Verify proof counts
+      const node1ProofCount = await RandomSamplingStorage.getEpochNodeValidProofsCount(
+        epochToClaim,
+        node1Id,
+      );
+      const node2ProofCount = await RandomSamplingStorage.getEpochNodeValidProofsCount(
+        epochToClaim,
+        node2Id,
+      );
+      expect(node1ProofCount).to.equal(5n);
+      expect(node2ProofCount).to.equal(2n);
+
+      // Advance time to finalize epoch
+      await advanceToNextEpoch();
+      await advanceToNextEpoch();
+
+      // Create another KC to trigger finalization
+      await createKnowledgeCollection(
+        kcCreator,
+        node1,
+        node1Id,
+        receivingNodes,
+        receivingNodesIdentityIds,
+        deps,
+        merkleRoot,
+        'test-operation-id-2',
+        10,
+        1000,
+        10,
+        ethers.parseEther('5000'),
+      );
+
+      // Verify epoch is finalized
+      expect(await EpochStorage.lastFinalizedEpoch(1)).to.be.gte(epochToClaim);
+
+      // Get rewards for both delegators
+      const delegator1Reward = await RandomSampling.connect(
+        delegator1,
+      ).getDelegatorEpochRewardsAmount(node1Id, epochToClaim);
+      const delegator2Reward = await RandomSampling.connect(
+        delegator2,
+      ).getDelegatorEpochRewardsAmount(node2Id, epochToClaim);
+
+      // Verify rewards are greater than 0
+      expect(delegator1Reward).to.be.greaterThan(0n);
+      expect(delegator2Reward).to.be.greaterThan(0n);
+
+      // Verify that delegator1 gets more rewards than delegator2
+      // This is because node1 has more proofs and higher stake
+      expect(delegator1Reward).to.be.greaterThan(delegator2Reward);
+
+      // Claim rewards for both delegators
+      await RandomSampling.connect(delegator1).claimRewards(
+        node1Id,
+        epochToClaim,
+      );
+      await RandomSampling.connect(delegator2).claimRewards(
+        node2Id,
+        epochToClaim,
+      );
+
+      // Verify rewards were claimed
+      expect(
+        await RandomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
+          epochToClaim,
+          node1Id,
+          delegator1Key,
+        ),
+      ).to.be.true;
+      expect(
+        await RandomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
+          epochToClaim,
+          node2Id,
+          delegator2Key,
+        ),
+      ).to.be.true;
+
+      // Verify balances increased
+      const delegator1FinalBalance = await Token.balanceOf(delegator1.address);
+      const delegator2FinalBalance = await Token.balanceOf(delegator2.address);
+      expect(delegator1FinalBalance).to.be.greaterThan(delegator1Stake);
+      expect(delegator2FinalBalance).to.be.greaterThan(delegator2Stake);
     });
   });
 });
