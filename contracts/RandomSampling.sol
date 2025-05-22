@@ -180,7 +180,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             randomSamplingStorage.incrementEpochNodeValidProofsCount(epoch, identityId);
 
             // Calculate node score at this proof period and store it
-            uint256 score = _calculateNodeScore(identityId);
+            uint256 score = calculateNodeScore(identityId);
             randomSamplingStorage.addToNodeScore(epoch, activeProofPeriodStartBlock, identityId, score);
 
             // Calculate delegators' scores for the previous proof period and store them
@@ -343,7 +343,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             );
     }
 
-    function _calculateNodeScore(uint72 identityId) private view returns (uint256) {
+    function calculateNodeScore(uint72 identityId) public view returns (uint256) {
         // 1. Node stake factor calculation
         // Formula: nodeStakeFactor = 2 * (nodeStake / 2,000,000)^2
         uint96 maximumStake = parametersStorage.maximumStake();
