@@ -34,27 +34,8 @@ jobs:
       - name: Run Solidity and Typescript formatters
         run: npm run format
 
-  generate-matrix:
-    runs-on: ubuntu-latest
-    outputs:
-      testFiles: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Find all .test.ts files
-        id: set-matrix
-        run: |
-          files=$(find test -type f -name "*.test.ts" | jq -R . | jq -s .)
-          echo "matrix=${files}" >> $GITHUB_OUTPUT
-
   test:
-    needs: generate-matrix
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        file: ${{ fromJson(needs.generate-matrix.outputs.testFiles) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -65,5 +46,6 @@ jobs:
       - name: Clean hardhat-deploy cache
         run: rm -rf deployments/.chainId deployments/hardhat
 
-      - name: Run test file: ${{ matrix.file }}
-        run: npx hardhat test ${{ matrix.file }} --network hardhat
+      - name: Run all tests in parallel with isolated environment
+        run: |
+          find test -type f -name "*.test.ts" | xargs -n 1 -P 4 -I {} bash -c 'rm -rf deployments/.chainId deployments/hardhat && npx hardhat test {} --network hardhat'
