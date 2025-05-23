@@ -57,4 +57,4 @@ runs:
         steps.cache-typechain-types.outputs.cache-hit != 'true'
       name: Install dependencies & run prepare
       shell: bash
-      run: npm ci
+      run: npm install

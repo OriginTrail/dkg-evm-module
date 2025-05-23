@@ -43,9 +43,5 @@ jobs:
       - name: Set up environment
         uses: ./.github/actions/setup
 
-      - name: Clean hardhat-deploy cache
-        run: rm -rf deployments/.chainId deployments/hardhat
-
-      - name: Run all tests in parallel with isolated environment
-        run: |
-          find test -type f -name "*.test.ts" | xargs -n 1 -P 4 -I {} bash -c 'rm -rf deployments/.chainId deployments/hardhat && npx hardhat test {} --network hardhat'
+      - name: Run tests
+        run: npm run test:parallel
