@@ -42,11 +42,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Find all .test.ts files
+      - name: Find all .test.ts files and format for matrix
         id: set-matrix
         run: |
-          files=$(find test -type f -name "*.test.ts" | jq -R . | jq -s .)
-          echo "matrix=${files}" >> $GITHUB_OUTPUT
+          files=$(find test -type f -name "*.test.ts" | jq -R . | jq -s -c .)
+          echo "matrix=$files" >> $GITHUB_OUTPUT
 
   test:
     needs: generate-matrix
