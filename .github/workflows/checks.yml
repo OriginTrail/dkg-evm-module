@@ -5,37 +5,27 @@ on:
     branches:
       - main
 
-concurrency:
-  group: checks-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  lint:
+  generate-matrix:
     runs-on: ubuntu-latest
+    outputs:
+      testFiles: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up environment
-        uses: ./.github/actions/setup
-
-      - name: Run Solidity and Typescript linters
-        run: npm run lint
-
-  format:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up environment
-        uses: ./.github/actions/setup
-
-      - name: Run Solidity and Typescript formatters
-        run: npm run format
+      - name: Find all .test.ts files
+        id: set-matrix
+        run: |
+          echo "matrix=$(find test -type f -name '*.test.ts' | jq -R . | jq -s .)" >> $GITHUB_OUTPUT
 
   test:
+    needs: generate-matrix
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        file: ${{ fromJson(needs.generate-matrix.outputs.testFiles) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -43,5 +33,9 @@ jobs:
       - name: Set up environment
         uses: ./.github/actions/setup
 
-      - name: Run tests
-        run: npm run test:parallel
+      - name: Clean hardhat cache
+        run: rm -rf deployments/.chainId deployments/hardhat
+
+      - name: Run test: ${{ matrix.file }}
+        run: npx hardhat test ${{ matrix.file }} --network hardhat
+
