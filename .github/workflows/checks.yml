@@ -46,9 +46,7 @@ jobs:
         id: set-matrix
         run: |
           files=$(find test -type f -name "*.test.ts" | jq -R . | jq -s .)
-          echo "matrix<<EOF" >> $GITHUB_OUTPUT
-          echo "$files" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "matrix=${files}" >> $GITHUB_OUTPUT
 
   test:
     needs: generate-matrix
