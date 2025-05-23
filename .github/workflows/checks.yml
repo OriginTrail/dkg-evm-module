@@ -43,5 +43,8 @@ jobs:
       - name: Set up environment
         uses: ./.github/actions/setup
 
+      - name: Clean hardhat-deploy cache
+        run: rm -rf deployments/.chainId
+
       - name: Run tests
         run: npm run test:parallel
