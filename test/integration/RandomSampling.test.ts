@@ -1936,7 +1936,11 @@ describe('@integration RandomSampling', () => {
       // Arrange
       const expectedReward = await RandomSampling.connect(
         delegatorAccount,
-      ).getDelegatorEpochRewardsAmount(publishingNodeIdentityId, epochToClaim);
+      ).getDelegatorEpochRewardsAmount(
+        publishingNodeIdentityId,
+        epochToClaim,
+        delegatorAccount.address,
+      );
       expect(expectedReward).to.be.greaterThan(
         0n,
         'Expected reward should be positive',
@@ -2085,7 +2089,11 @@ describe('@integration RandomSampling', () => {
       // Arrange: Claim rewards once successfully first
       const expectedReward = await RandomSampling.connect(
         delegatorAccount,
-      ).getDelegatorEpochRewardsAmount(publishingNodeIdentityId, epochToClaim);
+      ).getDelegatorEpochRewardsAmount(
+        publishingNodeIdentityId,
+        epochToClaim,
+        delegatorAccount.address,
+      );
       expect(expectedReward).to.be.greaterThan(0n);
       await RandomSampling.connect(delegatorAccount).claimRewards(
         publishingNodeIdentityId,
@@ -2190,7 +2198,11 @@ describe('@integration RandomSampling', () => {
       // Check expected reward is zero
       const expectedReward = await RandomSampling.connect(
         delegatorAccount,
-      ).getDelegatorEpochRewardsAmount(publishingNodeIdentityId, epochToClaim);
+      ).getDelegatorEpochRewardsAmount(
+        publishingNodeIdentityId,
+        epochToClaim,
+        delegatorAccount.address,
+      );
       expect(expectedReward).to.equal(0n);
 
       // Act & Assert
@@ -2200,6 +2212,24 @@ describe('@integration RandomSampling', () => {
           epochToClaim,
         ),
       ).to.be.revertedWith('Delegator has no score for the given epoch');
+    });
+  });
+
+  describe('Delegator rewards', () => {
+    it('Should revert if allNodesEpochScore is 0 for the given epoch', async () => {
+      const testIdentityId = 1;
+      const testEpoch = 1;
+      const testDelegator = accounts[1].address;
+
+      await expect(
+        RandomSampling.getDelegatorEpochRewardsAmount(
+          testIdentityId,
+          testEpoch,
+          testDelegator,
+        ),
+      ).to.be.revertedWith(
+        'None of the nodes have any score for the given epoch. Cannot calculate rewards.',
+      );
     });
   });
 });

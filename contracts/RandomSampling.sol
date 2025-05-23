@@ -180,11 +180,14 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             randomSamplingStorage.incrementEpochNodeValidProofsCount(epoch, identityId);
 
             // Calculate node score at this proof period and store it
-            uint256 score = _calculateNodeScore(identityId);
-            randomSamplingStorage.addToNodeScore(epoch, activeProofPeriodStartBlock, identityId, score);
+            uint256 score = calculateNodeScore(identityId);
+            randomSamplingStorage.addToNodeEpochProofPeriodScore(epoch, activeProofPeriodStartBlock, identityId, score);
+            randomSamplingStorage.addToAllNodesEpochProofPeriodScore(epoch, activeProofPeriodStartBlock, score);
+            randomSamplingStorage.addToNodeEpochScore(epoch, identityId, score);
+            randomSamplingStorage.addToAllNodesEpochScore(epoch, score);
 
             // Calculate delegators' scores for the previous proof period and store them
-            _calculateAndStoreDelegatorScores(identityId, epoch, activeProofPeriodStartBlock);
+            _calculateAndStoreDelegatorScores(identityId, epoch, score);
 
             emit ValidProofSubmitted(identityId, epoch, score);
         } else {
@@ -192,8 +195,40 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
-    function getDelegatorEpochRewardsAmount(uint72 identityId, uint256 epoch) external view returns (uint256) {
-        return _getDelegatorEpochRewardsAmount(identityId, epoch, msg.sender);
+    function getDelegatorEpochRewardsAmount(
+        uint72 identityId,
+        uint256 epoch,
+        address delegator
+    ) public view returns (uint256) {
+        // // First part of the formula - W1 * (node valid proofs count / all expected epoch proofs count)
+        // uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
+        // uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
+        // uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
+        // uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
+        // require(allExpectedEpochProofsCount > 0, "All expected epoch proofs count must be greater than 0");
+        // proofsRatio = (epochNodeValidProofsCount * SCALING_FACTOR) / allExpectedEpochProofsCount;
+        uint256 proofsRatio = 0;
+
+        // Second part of the formula - W2 * (delegator score / all nodes scores)
+        bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
+        uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
+            epoch,
+            identityId,
+            delegatorKey
+        );
+        uint256 allNodesEpochScore = randomSamplingStorage.getAllNodesEpochScore(epoch);
+        require(
+            allNodesEpochScore > 0,
+            "None of the nodes have any score for the given epoch. Cannot calculate rewards."
+        );
+        uint256 scoreRatio = (epochNodeDelegatorScore * SCALING_FACTOR) / allNodesEpochScore;
+
+        // Reward calculation
+        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
+        // SCALING_FACTOR ** 2 because we multiplied by SCALING_FACTOR once in the delegator score calculation and once in scoreRatio
+        uint256 reward = ((totalEpochTracFees / 2) * (w1 * proofsRatio + w2 * scoreRatio)) / SCALING_FACTOR ** 2;
+
+        return reward;
     }
 
     function claimRewards(uint72 identityId, uint256 epoch) external {
@@ -217,7 +252,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         require(!rewardsClaimed, "Rewards already claimed");
 
         // get rewards amount
-        uint256 rewardAmount = _getDelegatorEpochRewardsAmount(identityId, epoch, msg.sender);
+        uint256 rewardAmount = getDelegatorEpochRewardsAmount(identityId, epoch, msg.sender);
         require(rewardAmount > 0, "No rewards to claim");
         require(rewardAmount <= type(uint96).max, "Reward amount exceeds uint96");
 
@@ -319,7 +354,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             );
     }
 
-    function _calculateNodeScore(uint72 identityId) private view returns (uint256) {
+    function calculateNodeScore(uint72 identityId) public view returns (uint256) {
         // 1. Node stake factor calculation
         // Formula: nodeStakeFactor = 2 * (nodeStake / 2,000,000)^2
         uint96 maximumStake = parametersStorage.maximumStake();
@@ -355,36 +390,16 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         return nodeStakeFactor + nodePublishingFactor + nodeAskFactor;
     }
 
-    function _calculateAndStoreDelegatorScores(
-        uint72 identityId,
-        uint256 epoch,
-        uint256 activeProofPeriodStartBlock
-    ) private {
-        uint256 lastProofPeriodStartBlock = randomSamplingStorage.getHistoricalProofPeriodStartBlock(
-            activeProofPeriodStartBlock,
-            1
-        );
-        uint256 nodeScore = randomSamplingStorage.getNodeEpochProofPeriodScore(
-            identityId,
-            epoch,
-            lastProofPeriodStartBlock
-        );
+    function _calculateAndStoreDelegatorScores(uint72 identityId, uint256 epoch, uint256 nodeScore) private {
         uint256 nodeStake = stakingStorage.getNodeStake(identityId);
-
         if (nodeScore > 0 && nodeStake > 0) {
-            uint256 allNodesScore = randomSamplingStorage.getEpochAllNodesProofPeriodScore(
-                epoch,
-                lastProofPeriodStartBlock
-            );
-            uint256 lastProofPeriodScoreRatio = (nodeScore * SCALING_FACTOR) / allNodesScore;
-
             // update all delegators' scores
             address[] memory delegatorsAddresses = delegatorsInfo.getDelegators(identityId);
             for (uint8 i = 0; i < delegatorsAddresses.length; ) {
                 bytes32 delegatorKey = keccak256(abi.encodePacked(delegatorsAddresses[i]));
                 uint256 delegatorStake = stakingStorage.getDelegatorTotalStake(identityId, delegatorKey);
-                // Need to divide by SCALING_FACTOR^2 to get the correct score
-                uint256 delegatorScore = (lastProofPeriodScoreRatio * delegatorStake * SCALING_FACTOR) / nodeStake;
+                // Need to divide by SCALING_FACTOR to get the correct score
+                uint256 delegatorScore = nodeScore * ((delegatorStake * SCALING_FACTOR) / nodeStake);
                 randomSamplingStorage.addToEpochNodeDelegatorScore(epoch, identityId, delegatorKey, delegatorScore);
 
                 unchecked {
@@ -392,33 +407,5 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
                 }
             }
         }
-    }
-
-    function _getDelegatorEpochRewardsAmount(
-        uint72 identityId,
-        uint256 epoch,
-        address delegator
-    ) internal view returns (uint256) {
-        uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
-
-        uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
-
-        uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
-
-        uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
-        require(allExpectedEpochProofsCount > 0, "All expected epoch proofs count must be greater than 0");
-
-        bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
-        uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
-            epoch,
-            identityId,
-            delegatorKey
-        );
-        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
-
-        uint256 reward = ((totalEpochTracFees / 2) *
-            (w1 * (epochNodeValidProofsCount / allExpectedEpochProofsCount) + w2 * epochNodeDelegatorScore)) /
-            SCALING_FACTOR ** 2;
-        return reward;
     }
 }
