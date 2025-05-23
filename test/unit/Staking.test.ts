@@ -550,7 +550,7 @@ describe('Staking contract', function () {
 
     // ────────── 2) happy path
     const withdraw = feeBal / 2n; // 6 ETH
-    const delay = await ParametersStorage.stakeWithdrawalDelay();
+    //const delay = await ParametersStorage.stakeWithdrawalDelay();
     await Staking.requestOperatorFeeWithdrawal(identityId, withdraw);
 
     const req =
