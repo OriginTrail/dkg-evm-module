@@ -197,7 +197,7 @@ describe('@unit RandomSamplingStorage', function () {
           proofPeriodIndex
         )).to.equal(0n, `Node ${nodeId} should start with 0 score`);
       }
-      expect(await RandomSamplingStorage.allNodesEpochProofPeriodScore(
+      expect(await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
         currentEpoch, 
         proofPeriodIndex
       )).to.equal(0n, 'Global score should start at 0');
@@ -212,10 +212,17 @@ describe('@unit RandomSamplingStorage', function () {
         expectedGlobalScore += score;
 
         // Add score to node
-        await RandomSamplingStorage.connect(signer).addToNodeScore(
+        await RandomSamplingStorage.connect(signer).addToNodeEpochProofPeriodScore(
           currentEpoch,
           proofPeriodIndex,
           nodeId,
+          score
+        );
+
+        // Add to global score
+        await RandomSamplingStorage.connect(signer).addToAllNodesEpochProofPeriodScore(
+          currentEpoch,
+          proofPeriodIndex,
           score
         );
 
@@ -229,7 +236,7 @@ describe('@unit RandomSamplingStorage', function () {
           `Node ${nodeId} should have score ${score}`);
 
         // Verify global score
-        const globalScore = await RandomSamplingStorage.allNodesEpochProofPeriodScore(
+        const globalScore = await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
           currentEpoch,
           proofPeriodIndex
         );
@@ -239,10 +246,17 @@ describe('@unit RandomSamplingStorage', function () {
 
       // Test adding more score to existing node
       const additionalScore = 50n;
-      await RandomSamplingStorage.connect(signer).addToNodeScore(
+      await RandomSamplingStorage.connect(signer).addToNodeEpochProofPeriodScore(
         currentEpoch,
         proofPeriodIndex,
         nodeIds[0],
+        additionalScore
+      );
+
+      // Add to global score
+      await RandomSamplingStorage.connect(signer).addToAllNodesEpochProofPeriodScore(
+        currentEpoch,
+        proofPeriodIndex,
         additionalScore
       );
 
@@ -256,7 +270,7 @@ describe('@unit RandomSamplingStorage', function () {
         'Node score should be updated with additional score');
 
       // Verify updated global score
-      const updatedGlobalScore = await RandomSamplingStorage.allNodesEpochProofPeriodScore(
+      const updatedGlobalScore = await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
         currentEpoch,
         proofPeriodIndex
       );
@@ -431,7 +445,7 @@ describe('@unit RandomSamplingStorage', function () {
         .withArgs('Only Contracts in Hub');
 
       await expect(
-        RandomSamplingStorage.connect(accounts[1]).addToNodeScore(0, 0, 0, 0)
+        RandomSamplingStorage.connect(accounts[1]).addToNodeEpochProofPeriodScore(0, 0, 0, 0)
       )
         .to.be.revertedWithCustomError(RandomSamplingStorage, 'UnauthorizedAccess')
         .withArgs('Only Contracts in Hub');
@@ -475,6 +489,23 @@ describe('@unit RandomSamplingStorage', function () {
         RandomSamplingStorage.connect(rsSigner).addProofingPeriodDuration(0, 0)
       ).to.not.be.reverted;
 
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).incrementEpochNodeValidProofsCount(1, 1)
+      ).to.not.be.reverted;
+
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addToNodeEpochProofPeriodScore(1, 1, 1, 1000)
+      ).to.not.be.reverted;
+
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addToEpochNodeDelegatorScore(
+          1,
+          1,
+          ethers.encodeBytes32String('test'),
+          1000
+        )
+      ).to.not.be.reverted;
+
       await stopImpersonate(RandomSampling);
     });
 
@@ -500,7 +531,7 @@ describe('@unit RandomSamplingStorage', function () {
       ).to.not.be.reverted;
 
       await expect(
-        RandomSamplingStorage.connect(rsSigner).addToNodeScore(1, 1, 1, 1000)
+        RandomSamplingStorage.connect(rsSigner).addToNodeEpochProofPeriodScore(1, 1, 1, 1000)
       ).to.not.be.reverted;
 
       await expect(
