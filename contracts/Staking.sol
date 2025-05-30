@@ -551,45 +551,63 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         return (delegatorStakeBase, delegatorStakeIndexed + additionalReward, additionalReward);
     }
 
-    function _prepareForStakeChange(
-        uint256 currentEpoch,
-        uint72 identityId,
-        bytes32 delegatorKey,
-        uint96 newEpochStakeBase
+    function _prepareForStakeChange( 
+    uint256 epoch,
+    uint72  identityId,
+    bytes32 delegatorKey
     ) internal {
-        // Fetch current node score metrics for the epoch from RandomSamplingStorage
-        uint256 nodeScorePerStake = randomSamplingStorage.getNodeEpochScorePerStake(currentEpoch, identityId);
+    // 1. Current “score-per-stake” 
+    uint256 nodeScorePerStake = randomSamplingStorage.getNodeEpochScorePerStake(
+        epoch,
+        identityId
+    );
 
-        // Fetch current delegator data for the epoch from RandomSamplingStorage
-        (
-            uint96 currentDelegatorEpochStakeBase,
-            uint256 delegatorLastSettledScorePerStake,
-            uint256 currentDelegatorEpochScore
-        ) = randomSamplingStorage.getDelegatorEpochData(currentEpoch, identityId, delegatorKey);
+    // 2. Last index at which this delegator was settled
+    uint256 lastSettled = randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
+        epoch,
+        identityId,
+        delegatorKey
+    );
 
-        // Calculate score earned in this period
-        uint256 scoreEarned = 0;
-        if (nodeScorePerStake > delegatorLastSettledScorePerStake) {
-            // scoreEarned = D1.stakeBase * (N1.nodeEpochScorePerStake - D1.lastSettledNodeEpochScorePerStake)
-            // The calculation uses currentDelegatorEpochStakeBase (stake before this change).
-            // Assumes nodeScorePerStake and delegatorLastSettledScorePerStake are scaled, result is divided by 1e18.
-            uint256 scorePerStakeDifference = nodeScorePerStake - delegatorLastSettledScorePerStake;
-            scoreEarned = (uint256(currentDelegatorEpochStakeBase) * scorePerStakeDifference) / 1e18;
-        }
+    // Nothing new to settle
+    if (nodeScorePerStake <= lastSettled) {
+        return;
+    }
 
-        uint256 updatedDelegatorEpochScore = currentDelegatorEpochScore + scoreEarned;
-        uint256 updatedDelegatorLastSettledScorePerStake = nodeScorePerStake;
+    uint96 stakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
 
-        // Update delegator's epoch data in RandomSamplingStorage, including the new stake base for the epoch
-        randomSamplingStorage.setDelegatorEpochData(
-            currentEpoch,
+    // If the delegator has no stake, just bump the index and exit
+    if (stakeBase == 0) {
+        randomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
+            epoch,
             identityId,
             delegatorKey,
-            newEpochStakeBase, // This is the new total stake base for the delegator for this epoch
-            updatedDelegatorEpochScore,
-            updatedDelegatorLastSettledScorePerStake
+            nodeScorePerStake
+        );
+        return;
+    }
+
+    // 4. Newly earned score for this delegator in the epoch
+    uint256 diff = nodeScorePerStake - lastSettled;     // scaled (1 e18)
+    uint256 scoreEarned  = (uint256(stakeBase) * diff) / 1e18;  // unscaled
+
+    // 5. Persist results
+    if (scoreEarned > 0) {
+        randomSamplingStorage.addToEpochNodeDelegatorScore(
+            epoch,
+            identityId,
+            delegatorKey,
+            scoreEarned
         );
     }
+
+    randomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
+        epoch,
+        identityId,
+        delegatorKey,
+        nodeScorePerStake
+    );
+}
 
     function _updateStakeInfo(uint72 identityId, bytes32 delegatorKey) internal {
         StakingStorage ss = stakingStorage;
