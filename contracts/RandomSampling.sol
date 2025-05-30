@@ -52,7 +52,6 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     event ValidProofSubmitted(uint72 indexed identityId, uint256 indexed epoch, uint256 score);
     event AvgBlockTimeUpdated(uint8 avgBlockTimeInSeconds);
     event ProofingPeriodDurationInBlocksUpdated(uint8 durationInBlocks);
-    event RewardsClaimed(uint72 indexed identityId, uint256 indexed epoch, address indexed delegator, uint256 amount);
     event W1Updated(uint256 oldW1, uint256 newW1);
     event W2Updated(uint256 oldW2, uint256 newW2);
 
@@ -186,8 +185,12 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             randomSamplingStorage.addToNodeEpochScore(epoch, identityId, score);
             randomSamplingStorage.addToAllNodesEpochScore(epoch, score);
 
-            // Calculate delegators' scores for the previous proof period and store them
-            _calculateAndStoreDelegatorScores(identityId, epoch, score);
+            // Calculate and add to nodeEpochScorePerStake
+            uint96 totalNodeStake = stakingStorage.getNodeStake(identityId);
+            if (totalNodeStake > 0) {
+                uint256 newNodeScorePerStakeContribution = (score * SCALING_FACTOR) / totalNodeStake; // score is already scaled by 1e18 (SCALING_FACTOR), so multiply again before division to maintain precision
+                randomSamplingStorage.addToNodeEpochScorePerStake(epoch, identityId, newNodeScorePerStakeContribution);
+            }
 
             emit ValidProofSubmitted(identityId, epoch, score);
         } else {
@@ -211,58 +214,43 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Second part of the formula - W2 * (delegator score / all nodes scores)
         bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
-        uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
-            epoch,
-            identityId,
-            delegatorKey
-        );
+
+        // Get the score that was already settled for the delegator in this epoch
+        uint256 settledDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(epoch, identityId, delegatorKey);
+
+        // Get the stake base of the delegator from StakingStorage
+        (uint96 delegatorStakeBaseForScoring, , ) = stakingStorage.getDelegatorStakeInfo(identityId, delegatorKey);
+
+        // Get the current total score-per-stake for the node and the last settled score-per-stake for the delegator
+        uint256 latestNodeScorePerStake = randomSamplingStorage.getNodeEpochScorePerStake(epoch, identityId);
+        uint256 delegatorLastSettledScorePerStake = randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(epoch, identityId, delegatorKey);
+
+        uint256 newlyEarnedScoreSinceLastSettlement = 0;
+        if (latestNodeScorePerStake > delegatorLastSettledScorePerStake && delegatorStakeBaseForScoring > 0) {
+            // (latestNodeScorePerStake - delegatorLastSettledScorePerStake) is scaled by SCALING_FACTOR
+            // delegatorStakeBaseForScoring is not scaled
+            // Result of multiplication is scaled by SCALING_FACTOR. Divide by SCALING_FACTOR to get unscaled newly earned score.
+            newlyEarnedScoreSinceLastSettlement = (delegatorStakeBaseForScoring * (latestNodeScorePerStake - delegatorLastSettledScorePerStake)) / SCALING_FACTOR;
+        }
+
+        uint256 totalEffectiveDelegatorScore = settledDelegatorScore + newlyEarnedScoreSinceLastSettlement;
+
         uint256 allNodesEpochScore = randomSamplingStorage.getAllNodesEpochScore(epoch);
         require(
             allNodesEpochScore > 0,
             "None of the nodes have any score for the given epoch. Cannot calculate rewards."
         );
-        uint256 scoreRatio = (epochNodeDelegatorScore * SCALING_FACTOR) / allNodesEpochScore;
+        // totalEffectiveDelegatorScore is unscaled, allNodesEpochScore is unscaled sum of unscaled scores.
+        // scoreRatio needs to be scaled by SCALING_FACTOR for the final reward formula.
+        uint256 scoreRatio = (totalEffectiveDelegatorScore * SCALING_FACTOR) / allNodesEpochScore;
 
         // Reward calculation
         uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
-        // SCALING_FACTOR ** 2 because we multiplied by SCALING_FACTOR once in the delegator score calculation and once in scoreRatio
+        // SCALING_FACTOR ** 2 because one SCALING_FACTOR is for totalEpochTracFees (if unscaled)
+        // and the other is because (w1 * proofsRatio + w2 * scoreRatio) is a sum of terms scaled by SCALING_FACTOR.
         uint256 reward = ((totalEpochTracFees / 2) * (w1 * proofsRatio + w2 * scoreRatio)) / SCALING_FACTOR ** 2;
 
         return reward;
-    }
-
-    function claimRewards(uint72 identityId, uint256 epoch) external {
-        // make sure the epoch is over and it is finalized
-        require(chronos.getCurrentEpoch() > epoch, "Epoch is not over yet");
-        require(epochStorage.lastFinalizedEpoch(1) >= epoch, "Epoch is not finalized yet");
-
-        // get delegator key
-        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
-
-        // Check if a delegator has >0 score in the epoch
-        uint256 delegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(epoch, identityId, delegatorKey);
-        require(delegatorScore > 0, "Delegator has no score for the given epoch");
-
-        // make sure the delegator has not claimed the rewards yet
-        bool rewardsClaimed = randomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
-            epoch,
-            identityId,
-            delegatorKey
-        );
-        require(!rewardsClaimed, "Rewards already claimed");
-
-        // get rewards amount
-        uint256 rewardAmount = getDelegatorEpochRewardsAmount(identityId, epoch, msg.sender);
-        require(rewardAmount > 0, "No rewards to claim");
-        require(rewardAmount <= type(uint96).max, "Reward amount exceeds uint96");
-
-        // Mark as claimed - before transfer to avoid reentrancy
-        randomSamplingStorage.setEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey, true);
-
-        // Transfer the rewards to the delegator via StakingStorage
-        stakingStorage.transferStake(msg.sender, uint96(rewardAmount));
-
-        emit RewardsClaimed(identityId, epoch, msg.sender, rewardAmount);
     }
 
     function _computeMerkleRootFromProof(
@@ -388,24 +376,5 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 nodePublishingFactor = (nodeStakeFactor * pubRatio) / SCALING_FACTOR;
 
         return nodeStakeFactor + nodePublishingFactor + nodeAskFactor;
-    }
-
-    function _calculateAndStoreDelegatorScores(uint72 identityId, uint256 epoch, uint256 nodeScore) private {
-        uint256 nodeStake = stakingStorage.getNodeStake(identityId);
-        if (nodeScore > 0 && nodeStake > 0) {
-            // update all delegators' scores
-            address[] memory delegatorsAddresses = delegatorsInfo.getDelegators(identityId);
-            for (uint8 i = 0; i < delegatorsAddresses.length; ) {
-                bytes32 delegatorKey = keccak256(abi.encodePacked(delegatorsAddresses[i]));
-                uint256 delegatorStake = stakingStorage.getDelegatorTotalStake(identityId, delegatorKey);
-                // Need to divide by SCALING_FACTOR to get the correct score
-                uint256 delegatorScore = nodeScore * ((delegatorStake * SCALING_FACTOR) / nodeStake);
-                randomSamplingStorage.addToEpochNodeDelegatorScore(epoch, identityId, delegatorKey, delegatorScore);
-
-                unchecked {
-                    i++;
-                }
-            }
-        }
     }
 }

@@ -32,6 +32,10 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
     mapping(uint256 => uint256) public allNodesEpochScore;
     // epoch => identityId => delegatorKey => score
     mapping(uint256 => mapping(uint72 => mapping(bytes32 => uint256))) public epochNodeDelegatorScore;
+    // epoch => identityId => scorePerStake
+    mapping(uint256 => mapping(uint72 => uint256)) public nodeEpochScorePerStake;
+    // epoch => identityId => delegatorKey => last settled nodeEpochScorePerStake
+    mapping(uint256 => mapping(uint72 => mapping(bytes32 => uint256))) public delegatorLastSettledNodeEpochScorePerStake;
     // epoch => identityId => delegatorKey => rewards claimed status
     mapping(uint256 => mapping(uint72 => mapping(bytes32 => bool))) public epochNodeDelegatorRewardsClaimed;
 
@@ -55,12 +59,19 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         uint256 scoreAdded,
         uint256 totalScore
     );
+    event NodeEpochScorePerStakeUpdated(uint256 indexed epoch, uint72 indexed identityId, uint256 totalNodeEpochScorePerStake);
     event EpochNodeDelegatorScoreAdded(
         uint256 indexed epoch,
         uint72 indexed identityId,
         bytes32 indexed delegatorKey,
         uint256 scoreAdded,
         uint256 totalScore
+    );
+    event DelegatorLastSettledNodeEpochScorePerStakeUpdated(
+        uint256 indexed epoch,
+        uint72 indexed identityId,
+        bytes32 indexed delegatorKey,
+        uint256 nodeEpochScorePerStake
     );
 
     constructor(address hubAddress, uint16 _proofingPeriodDurationInBlocks) ContractStatus(hubAddress) {
@@ -284,6 +295,38 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
             delegatorKey,
             score,
             epochNodeDelegatorScore[epoch][identityId][delegatorKey]
+        );
+    }
+
+    function getNodeEpochScorePerStake(uint256 epoch, uint72 identityId) external view returns (uint256) {
+        return nodeEpochScorePerStake[epoch][identityId];
+    }
+
+    function addToNodeEpochScorePerStake(uint256 epoch, uint72 identityId, uint256 scorePerStakeToAdd) external onlyContracts {
+        nodeEpochScorePerStake[epoch][identityId] += scorePerStakeToAdd;
+        emit NodeEpochScorePerStakeUpdated(epoch, identityId, nodeEpochScorePerStake[epoch][identityId]);
+    }
+
+    function getDelegatorLastSettledNodeEpochScorePerStake(
+        uint256 epoch,
+        uint72 identityId,
+        bytes32 delegatorKey
+    ) external view returns (uint256) {
+        return delegatorLastSettledNodeEpochScorePerStake[epoch][identityId][delegatorKey];
+    }
+
+    function setDelegatorLastSettledNodeEpochScorePerStake(
+        uint256 epoch,
+        uint72 identityId,
+        bytes32 delegatorKey,
+        uint256 newNodeEpochScorePerStake
+    ) external onlyContracts {
+        delegatorLastSettledNodeEpochScorePerStake[epoch][identityId][delegatorKey] = newNodeEpochScorePerStake;
+        emit DelegatorLastSettledNodeEpochScorePerStakeUpdated(
+            epoch,
+            identityId,
+            delegatorKey,
+            newNodeEpochScorePerStake
         );
     }
 
