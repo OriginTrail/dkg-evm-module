@@ -18,9 +18,23 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     mapping(uint72 => mapping(address => uint256)) public nodeDelegatorIndex;
     // IdentityId => Delegator => IsDelegator
     mapping(uint72 => mapping(address => bool)) public isDelegatorMap;
+    // IdentityId => Delegator => LastClaimedEpoch
+    mapping(uint72 => mapping(address => uint256)) public lastClaimedEpoch;
+    // IdentityId => Delegator => RollingRewards
+    mapping(uint72 => mapping(address => uint256)) public delegatorRollingRewards;
 
     event DelegatorAdded(uint72 indexed identityId, address indexed delegator);
     event DelegatorRemoved(uint72 indexed identityId, address indexed delegator);
+    event DelegatorLastClaimedEpochUpdated(
+        uint72 indexed identityId,
+        address indexed delegator,
+        uint256 newLastClaimedEpoch
+    );
+    event DelegatorRollingRewardsUpdated(
+        uint72 indexed identityId,
+        address indexed delegator,
+        uint256 newRewardsAmount
+    );
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -62,6 +76,38 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
         delete isDelegatorMap[identityId][delegator];
 
         emit DelegatorRemoved(identityId, delegator);
+    }
+
+    function setLastClaimedEpoch(
+        uint72 identityId,
+        address delegator,
+        uint256 epoch
+    ) external onlyContracts {
+        lastClaimedEpoch[identityId][delegator] = epoch;
+        emit DelegatorLastClaimedEpochUpdated(identityId, delegator, epoch);
+    }
+
+    function getLastClaimedEpoch(
+        uint72 identityId,
+        address delegator
+    ) external view returns (uint256) {
+        return lastClaimedEpoch[identityId][delegator];
+    }
+
+    function setDelegatorRollingRewards(
+        uint72 identityId,
+        address delegator,
+        uint256 amount
+    ) external onlyContracts {
+        delegatorRollingRewards[identityId][delegator] = amount;
+        emit DelegatorRollingRewardsUpdated(identityId, delegator, amount);
+    }
+
+    function getDelegatorRollingRewards(
+        uint72 identityId,
+        address delegator
+    ) external view returns (uint256) {
+        return delegatorRollingRewards[identityId][delegator];
     }
 
     function getDelegators(uint72 identityId) external view returns (address[] memory) {
