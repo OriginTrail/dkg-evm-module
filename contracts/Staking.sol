@@ -21,6 +21,7 @@ import {TokenLib} from "./libraries/TokenLib.sol";
 import {IdentityLib} from "./libraries/IdentityLib.sol";
 import {Permissions} from "./libraries/Permissions.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {RandomSamplingStorage} from "./storage/RandomSamplingStorage.sol";
 
 contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Staking";
@@ -35,6 +36,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     StakingStorage public stakingStorage;
     DelegatorsInfo public delegatorsInfo;
     IERC20 public tokenContract;
+    RandomSamplingStorage public randomSamplingStorage;
+
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -59,6 +62,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
+        randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
+
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -544,6 +549,46 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint96 additionalReward = uint96((currentStake * diff) / 1e18);
 
         return (delegatorStakeBase, delegatorStakeIndexed + additionalReward, additionalReward);
+    }
+
+    function _prepareForStakeChange(
+        uint256 currentEpoch,
+        uint72 identityId,
+        bytes32 delegatorKey,
+        uint96 newEpochStakeBase
+    ) internal {
+        // Fetch current node score metrics for the epoch from RandomSamplingStorage
+        uint256 nodeScorePerStake = randomSamplingStorage.getNodeEpochScorePerStake(currentEpoch, identityId);
+
+        // Fetch current delegator data for the epoch from RandomSamplingStorage
+        (
+            uint96 currentDelegatorEpochStakeBase,
+            uint256 delegatorLastSettledScorePerStake,
+            uint256 currentDelegatorEpochScore
+        ) = randomSamplingStorage.getDelegatorEpochData(currentEpoch, identityId, delegatorKey);
+
+        // Calculate score earned in this period
+        uint256 scoreEarned = 0;
+        if (nodeScorePerStake > delegatorLastSettledScorePerStake) {
+            // scoreEarned = D1.stakeBase * (N1.nodeEpochScorePerStake - D1.lastSettledNodeEpochScorePerStake)
+            // The calculation uses currentDelegatorEpochStakeBase (stake before this change).
+            // Assumes nodeScorePerStake and delegatorLastSettledScorePerStake are scaled, result is divided by 1e18.
+            uint256 scorePerStakeDifference = nodeScorePerStake - delegatorLastSettledScorePerStake;
+            scoreEarned = (uint256(currentDelegatorEpochStakeBase) * scorePerStakeDifference) / 1e18;
+        }
+
+        uint256 updatedDelegatorEpochScore = currentDelegatorEpochScore + scoreEarned;
+        uint256 updatedDelegatorLastSettledScorePerStake = nodeScorePerStake;
+
+        // Update delegator's epoch data in RandomSamplingStorage, including the new stake base for the epoch
+        randomSamplingStorage.setDelegatorEpochData(
+            currentEpoch,
+            identityId,
+            delegatorKey,
+            newEpochStakeBase, // This is the new total stake base for the delegator for this epoch
+            updatedDelegatorEpochScore,
+            updatedDelegatorLastSettledScorePerStake
+        );
     }
 
     function _updateStakeInfo(uint72 identityId, bytes32 delegatorKey) internal {
