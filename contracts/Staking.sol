@@ -22,6 +22,8 @@ import {IdentityLib} from "./libraries/IdentityLib.sol";
 import {Permissions} from "./libraries/Permissions.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {RandomSamplingStorage} from "./storage/RandomSamplingStorage.sol";
+import {Chronos} from "./storage/Chronos.sol";
+import {EpochStorage} from "./storage/EpochStorage.sol";
 
 contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Staking";
@@ -37,6 +39,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     DelegatorsInfo public delegatorsInfo;
     IERC20 public tokenContract;
     RandomSamplingStorage public randomSamplingStorage;
+    Chronos public chronos;
+    EpochStorage public epochStorage;
 
 
     // solhint-disable-next-line no-empty-blocks
@@ -63,6 +67,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
         randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
+        chronos = Chronos(hub.getContractAddress("Chronos"));
+        epochStorage = EpochStorage(hub.getContractAddress("EpochStorage"));
 
     }
 
@@ -555,11 +561,18 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     uint256 epoch,
     uint72  identityId,
     bytes32 delegatorKey
-    ) internal {
-    // 1. Current “score-per-stake” 
+    ) internal
+    returns (uint256 delegatorEpochScore) {
+    // 1. Current "score-per-stake" 
     uint256 nodeScorePerStake = randomSamplingStorage.getNodeEpochScorePerStake(
         epoch,
         identityId
+    );
+
+    uint256 scoreBefore = randomSamplingStorage.getEpochNodeDelegatorScore(
+        epoch,
+        identityId,
+        delegatorKey
     );
 
     // 2. Last index at which this delegator was settled
@@ -571,7 +584,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
     // Nothing new to settle
     if (nodeScorePerStake <= lastSettled) {
-        return;
+      return scoreBefore;
     }
 
     uint96 stakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
@@ -584,12 +597,11 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             delegatorKey,
             nodeScorePerStake
         );
-        return;
+       return scoreBefore;
     }
-
     // 4. Newly earned score for this delegator in the epoch
-    uint256 diff = nodeScorePerStake - lastSettled;     // scaled (1 e18)
-    uint256 scoreEarned  = (uint256(stakeBase) * diff) / 1e18;  // unscaled
+    uint256 diff = nodeScorePerStake - lastSettled;   // scaled 1e18
+    uint256 scoreEarned = (uint256(stakeBase) * diff) / 1e18;
 
     // 5. Persist results
     if (scoreEarned > 0) {
@@ -607,6 +619,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         delegatorKey,
         nodeScorePerStake
     );
+
+   return scoreBefore + scoreEarned;
 }
 
     function _updateStakeInfo(uint72 identityId, bytes32 delegatorKey) internal {
@@ -664,4 +678,69 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert ProfileLib.ProfileDoesntExist(identityId);
         }
     }
+
+   
+function claimDelegatorReward(
+    uint72  identityId,
+    uint256 epoch,
+    address delegator
+) external profileExists(identityId) {
+
+    uint256 currentEpoch = chronos.getCurrentEpoch();
+    require(epoch < currentEpoch,                    "epoch not finalised");
+
+    // caller must be the delegator or a node admin
+    if (msg.sender != delegator) {
+        require(
+            identityStorage.keyHasPurpose(
+                identityId,
+                keccak256(abi.encodePacked(msg.sender)),
+                IdentityLib.ADMIN_KEY
+            ),
+            "unauthorised caller"
+        );
+    }
+
+    uint256 lastClaimed = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+    require(epoch == lastClaimed + 1,                "claim epochs in order");
+
+    bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
+    require(
+        !randomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey),
+        "already claimed"
+    );
+
+    uint256 delegatorScore = _prepareForStakeChange(epoch, identityId, delegatorKey);
+    uint256 nodeScore      = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
+    uint256 epocRewardsPool       = epochStorage.getEpochPool(1, epoch);          // fee-pot for delegators
+
+    uint256 reward = (delegatorScore == 0 || nodeScore == 0 || epocRewardsPool == 0)
+        ? 0
+        : (delegatorScore * epocRewardsPool) / nodeScore;
+
+    // update state even when reward is zero
+    randomSamplingStorage.setEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey, true);
+    delegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch);
+
+    if (reward == 0) return;
+
+    uint256 rolling = delegatorsInfo.getDelegatorRollingRewards(identityId, delegator);
+
+    // if there are still older epochs pending, accumulate; otherwise restake immediately
+    if ((currentEpoch - 1) - epoch > 0) {
+        delegatorsInfo.setDelegatorRollingRewards(identityId, delegator, rolling + reward);
+    } else {
+        uint256 total = reward + rolling;
+        delegatorsInfo.setDelegatorRollingRewards(identityId, delegator, 0);
+
+        stakingStorage.increaseDelegatorStakeBase(identityId, delegatorKey,   uint96(total));
+        stakingStorage.increaseNodeStake(identityId,                           uint96(total));
+        stakingStorage.increaseTotalStake(                                     uint96(total));
+    }
+
+    stakingStorage.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, uint96(reward));
+}
+
+
+
 }
