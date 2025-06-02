@@ -42,7 +42,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     Chronos public chronos;
     EpochStorage public epochStorage;
 
-
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
 
@@ -69,7 +68,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
         chronos = Chronos(hub.getContractAddress("Chronos"));
         epochStorage = EpochStorage(hub.getContractAddress("EpochStorage"));
-
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -93,6 +91,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         if (token.balanceOf(msg.sender) < addedStake) {
             revert TokenLib.TooLowBalance(address(token), token.balanceOf(msg.sender), addedStake);
         }
+
+        _validateDelegatorEpochClaims(identityId, msg.sender);
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
         _updateStakeInfo(identityId, delegatorKey);
@@ -128,6 +128,48 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         token.transferFrom(msg.sender, address(ss), addedStake);
     }
 
+    function _validateDelegatorEpochClaims(uint72 identityId, address delegator) internal {
+        bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+        uint256 previousEpoch = currentEpoch - 1;
+
+        // If delegator is up to date with claims, no validation needed
+        if (lastClaimedEpoch == previousEpoch) {
+            return;
+        }
+
+        // Check if delegator has multiple unclaimed epochs
+        if (lastClaimedEpoch < currentEpoch - 2) {
+            revert("Must claim all previous epoch rewards before changing stake");
+        }
+
+        // Delegator has exactly one unclaimed epoch (previousEpoch)
+        // Check if there are actually rewards to claim for that epoch
+        uint256 delegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
+            previousEpoch,
+            identityId,
+            delegatorKey
+        );
+
+        uint256 nodeScorePerStake = randomSamplingStorage.getNodeEpochScorePerStake(previousEpoch, identityId);
+
+        uint256 lastSettledScore = randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
+            previousEpoch,
+            identityId,
+            delegatorKey
+        );
+
+        // If no rewards exist for this delegator in the previous epoch, auto-advance their claim state
+        if (delegatorScore == 0 && nodeScorePerStake == lastSettledScore) {
+            delegatorsInfo.setLastClaimedEpoch(identityId, delegator, previousEpoch);
+            return;
+        }
+
+        // Delegator has unclaimed rewards that must be claimed first
+        revert("Must claim the previous epoch rewards before changing stake");
+    }
+
     function redelegate(
         uint72 fromIdentityId,
         uint72 toIdentityId,
@@ -141,6 +183,11 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+
+        // // Validate epoch claims for both source and destination nodes
+        // _validateDelegatorEpochClaims(fromIdentityId, msg.sender);
+        // _validateDelegatorEpochClaims(toIdentityId, msg.sender);
+
         _updateStakeInfo(fromIdentityId, delegatorKey);
         _updateStakeInfo(toIdentityId, delegatorKey);
 
@@ -364,7 +411,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         askContract.recalculateActiveSet();
     }
 
-
     function restakeOperatorFee(uint72 identityId, uint96 addedStake) external onlyAdmin(identityId) {
         StakingStorage ss = stakingStorage;
 
@@ -517,71 +563,59 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         return (delegatorStakeBase, delegatorStakeIndexed + additionalReward, additionalReward);
     }
 
-    function _prepareForStakeChange( 
-    uint256 epoch,
-    uint72  identityId,
-    bytes32 delegatorKey
-    ) internal
-    returns (uint256 delegatorEpochScore) {
-    // 1. Current "score-per-stake" 
-    uint256 nodeScorePerStake = randomSamplingStorage.getNodeEpochScorePerStake(
-        epoch,
-        identityId
-    );
+    function _prepareForStakeChange(
+        uint256 epoch,
+        uint72 identityId,
+        bytes32 delegatorKey
+    ) internal returns (uint256 delegatorEpochScore) {
+        // 1. Current "score-per-stake"
+        uint256 nodeScorePerStake = randomSamplingStorage.getNodeEpochScorePerStake(epoch, identityId);
 
-    uint256 currentDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
-        epoch,
-        identityId,
-        delegatorKey
-    );
+        uint256 currentDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
+            epoch,
+            identityId,
+            delegatorKey
+        );
 
-    // 2. Last index at which this delegator was settled
-    uint256 delegatorLastSettledNodeEpochScorePerStake = randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
-        epoch,
-        identityId,
-        delegatorKey
-    );
+        // 2. Last index at which this delegator was settled
+        uint256 delegatorLastSettledNodeEpochScorePerStake = randomSamplingStorage
+            .getDelegatorLastSettledNodeEpochScorePerStake(epoch, identityId, delegatorKey);
 
-    // Nothing new to settle
-    if (nodeScorePerStake == delegatorLastSettledNodeEpochScorePerStake) {
-      return currentDelegatorScore;
-    }
+        // Nothing new to settle
+        if (nodeScorePerStake == delegatorLastSettledNodeEpochScorePerStake) {
+            return currentDelegatorScore;
+        }
 
-    uint96 stakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
+        uint96 stakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
 
-    // If the delegator has no stake, just bump the index and exit
-    if (stakeBase == 0) {
+        // If the delegator has no stake, just bump the index and exit
+        if (stakeBase == 0) {
+            randomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
+                epoch,
+                identityId,
+                delegatorKey,
+                nodeScorePerStake
+            );
+            return currentDelegatorScore;
+        }
+        // 4. Newly earned score for this delegator in the epoch
+        uint256 diff = nodeScorePerStake - delegatorLastSettledNodeEpochScorePerStake; // scaled 1e18
+        uint256 scoreEarned = (uint256(stakeBase) * diff) / 1e18;
+
+        // 5. Persist results
+        if (scoreEarned > 0) {
+            randomSamplingStorage.addToEpochNodeDelegatorScore(epoch, identityId, delegatorKey, scoreEarned);
+        }
+
         randomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
             epoch,
             identityId,
             delegatorKey,
             nodeScorePerStake
         );
-       return currentDelegatorScore;
+
+        return currentDelegatorScore + scoreEarned;
     }
-    // 4. Newly earned score for this delegator in the epoch
-    uint256 diff = nodeScorePerStake - delegatorLastSettledNodeEpochScorePerStake;   // scaled 1e18
-    uint256 scoreEarned = (uint256(stakeBase) * diff) / 1e18;
-
-    // 5. Persist results
-    if (scoreEarned > 0) {
-        randomSamplingStorage.addToEpochNodeDelegatorScore(
-            epoch,
-            identityId,
-            delegatorKey,
-            scoreEarned
-        );
-    }
-
-    randomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
-        epoch,
-        identityId,
-        delegatorKey,
-        nodeScorePerStake
-    );
-
-   return currentDelegatorScore + scoreEarned;
-}
 
     function _updateStakeInfo(uint72 identityId, bytes32 delegatorKey) internal {
         StakingStorage ss = stakingStorage;
@@ -639,62 +673,57 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
-   
-function claimDelegatorRewards(
-    uint72  identityId,
-    uint256 epoch,
-    address delegator
-) external profileExists(identityId) {
+    function claimDelegatorRewards(
+        uint72 identityId,
+        uint256 epoch,
+        address delegator
+    ) external profileExists(identityId) {
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        require(epoch < currentEpoch, "epoch not finalised");
 
-    uint256 currentEpoch = chronos.getCurrentEpoch();
-    require(epoch < currentEpoch, "epoch not finalised");
+        uint256 lastClaimed = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+        require(epoch == lastClaimed + 1, "delegator has older epochs that they need to claim rewards first");
 
-    uint256 lastClaimed = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
-    require(epoch == lastClaimed + 1, "delegator has older epochs that they need to claim rewards first");
+        //TODO make to seperate checks
 
-    //TODO make to seperate checks
+        bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
+        require(
+            !randomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey),
+            "already claimed"
+        );
 
-    bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
-    require(
-        !randomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey),
-        "already claimed"
-    );
+        //TODO move EpochNodeDelegatorRewardsClaimed to delegatorsInfo
 
-    //TODO move EpochNodeDelegatorRewardsClaimed to delegatorsInfo
+        uint256 delegatorScore = _prepareForStakeChange(epoch, identityId, delegatorKey);
+        uint256 nodeScore = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
+        uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch); // fee-pot for delegators
 
-    uint256 delegatorScore = _prepareForStakeChange(epoch, identityId, delegatorKey);
-    uint256 nodeScore      = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
-    uint256 epocRewardsPool       = epochStorage.getEpochPool(1, epoch);          // fee-pot for delegators
+        //TODO chach scaling factor
+        uint256 reward = (delegatorScore == 0 || nodeScore == 0 || epocRewardsPool == 0)
+            ? 0
+            : (delegatorScore * epocRewardsPool) / nodeScore;
 
-    //TODO chach scaling factor
-    uint256 reward = (delegatorScore == 0 || nodeScore == 0 || epocRewardsPool == 0)
-        ? 0
-        : (delegatorScore * epocRewardsPool) / nodeScore;
+        // update state even when reward is zero
+        randomSamplingStorage.setEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey, true);
+        uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+        delegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch);
 
-    // update state even when reward is zero
-    randomSamplingStorage.setEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey, true);
-    uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
-    delegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch);
+        if (reward == 0) return;
 
-    if (reward == 0) return;
+        uint256 rolling = delegatorsInfo.getDelegatorRollingRewards(identityId, delegator);
 
-    uint256 rolling = delegatorsInfo.getDelegatorRollingRewards(identityId, delegator);
+        // if there are still older epochs pending, accumulate; otherwise restake immediately
+        if ((currentEpoch - 1) - lastClaimedEpoch > 1) {
+            delegatorsInfo.setDelegatorRollingRewards(identityId, delegator, rolling + reward);
+        } else {
+            uint256 total = reward + rolling;
+            delegatorsInfo.setDelegatorRollingRewards(identityId, delegator, 0);
 
-    // if there are still older epochs pending, accumulate; otherwise restake immediately
-    if ((currentEpoch - 1) - lastClaimedEpoch > 1) {
-        delegatorsInfo.setDelegatorRollingRewards(identityId, delegator, rolling + reward);
-    } else {
-        uint256 total = reward + rolling;
-        delegatorsInfo.setDelegatorRollingRewards(identityId, delegator, 0);
-
-        stakingStorage.increaseDelegatorStakeBase(identityId, delegatorKey,   uint96(total));
-        stakingStorage.increaseNodeStake(identityId,                           uint96(total));
-        stakingStorage.increaseTotalStake(                                     uint96(total));
+            stakingStorage.increaseDelegatorStakeBase(identityId, delegatorKey, uint96(total));
+            stakingStorage.increaseNodeStake(identityId, uint96(total));
+            stakingStorage.increaseTotalStake(uint96(total));
+        }
+        //Should it increase on roling rewards or on stakeBaseIncrease only?
+        stakingStorage.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, uint96(reward));
     }
-   //Should it increase on roling rewards or on stakeBaseIncrease only?
-    stakingStorage.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, uint96(reward));
-}
-
-
-
 }
