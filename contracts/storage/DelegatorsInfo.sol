@@ -33,6 +33,7 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     event DelegatorRollingRewardsUpdated(
         uint72 indexed identityId,
         address indexed delegator,
+        uint256 oldRewardsAmount,
         uint256 newRewardsAmount
     );
 
@@ -99,8 +100,19 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
         address delegator,
         uint256 amount
     ) external onlyContracts {
+        uint256 oldAmount = delegatorRollingRewards[identityId][delegator];
         delegatorRollingRewards[identityId][delegator] = amount;
-        emit DelegatorRollingRewardsUpdated(identityId, delegator, amount);
+        emit DelegatorRollingRewardsUpdated(identityId, delegator, oldAmount, amount);
+    }
+
+    function addDelegatorRollingRewards(
+        uint72 identityId,
+        address delegator,
+        uint256 amount
+    ) external onlyContracts {
+        uint256 oldAmount = delegatorRollingRewards[identityId][delegator];
+        delegatorRollingRewards[identityId][delegator] += amount;
+        emit DelegatorRollingRewardsUpdated(identityId, delegator, oldAmount, delegatorRollingRewards[identityId][delegator]);
     }
 
     function getDelegatorRollingRewards(

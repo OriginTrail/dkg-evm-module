@@ -96,8 +96,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         _validateDelegatorEpochClaims(identityId, msg.sender);
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
-        uint256 currentEpoch = chronos.getCurrentEpoch();
-         _prepareForStakeChange(currentEpoch, identityId, delegatorKey);
+         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         uint96 delegatorStakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
 
@@ -106,8 +105,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         if (totalNodeStakeAfter > parametersStorage.maximumStake()) {
             revert StakingLib.MaximumStakeExceeded(parametersStorage.maximumStake());
         }
-
-        ss.setDelegatorStakeInfo(identityId, delegatorKey, delegatorStakeBase + addedStake, 0);
+        ss.setDelegatorStakeBase(identityId,delegatorKey, delegatorStakeBase + addedStake);
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.increaseTotalStake(addedStake);
 
@@ -116,7 +114,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         askContract.recalculateActiveSet();
 
         // Check if this is first time staking
-       if (delegatorStakeBase == 0 && !delegatorsInfo.isNodeDelegator(identityId, msg.sender))
+       if (!delegatorsInfo.isNodeDelegator(identityId, msg.sender))
         delegatorsInfo.addDelegator(identityId, msg.sender);
 
 
@@ -266,8 +264,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
 
-        uint256 currentEpoch = chronos.getCurrentEpoch();
-        _prepareForStakeChange(currentEpoch, identityId, delegatorKey);
+        _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
        uint96 delegatorStakeBase = ss.getDelegatorStakeBase(identityId, delegatorKey);
         if (removedStake > delegatorStakeBase) {
@@ -278,7 +275,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint96 totalNodeStakeBefore  = ss.getNodeStake(identityId);
         uint96 totalNodeStakeAfter   = totalNodeStakeBefore - removedStake;
 
-        ss.setDelegatorStakeInfo(identityId, delegatorKey, newDelegatorStakeBase, 0);
+        ss.setDelegatorStakeBase(identityId,delegatorKey, newDelegatorStakeBase);
         ss.setNodeStake(identityId, totalNodeStakeAfter);
         ss.decreaseTotalStake(removedStake);
 
@@ -291,14 +288,12 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
        if (totalNodeStakeAfter >= parametersStorage.maximumStake()) {
         ss.transferStake(msg.sender, removedStake);
-        ss.addNodeCumulativePaidOutRewards(identityId, removedStake);
-        ss.addDelegatorCumulativePaidOutRewards(identityId, delegatorKey, removedStake);
        } else {
-        (uint96 prevAmount,,) = ss.getDelegatorWithdrawalRequest(identityId, delegatorKey);
+        (uint96 prevDelegatorWithdrawalAmount,,) = ss.getDelegatorWithdrawalRequest(identityId, delegatorKey);
         ss.createDelegatorWithdrawalRequest(
             identityId,
             delegatorKey,
-            removedStake + prevAmount,
+            removedStake + prevDelegatorWithdrawalAmount,
             0,                                    // no indexed rewards any more
             block.timestamp + parametersStorage.stakeWithdrawalDelay()
         );
@@ -332,31 +327,30 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         StakingStorage ss = stakingStorage;
 
        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
-       (uint96 amount, /*unused*/, uint256 ts) =
+       (uint96 prevDelegatorWithdrawalAmount, /*unused*/, uint256 ts) =
         ss.getDelegatorWithdrawalRequest(identityId, delegatorKey);
-      if (amount == 0) revert StakingLib.WithdrawalWasntInitiated();
+      if (prevDelegatorWithdrawalAmount == 0) revert StakingLib.WithdrawalWasntInitiated();
 
         _validateDelegatorEpochClaims(identityId, msg.sender);              // cannot revert stake while rewards pending
-        uint256 currentEpoch = chronos.getCurrentEpoch();
-        _prepareForStakeChange(currentEpoch, identityId, delegatorKey);
+        _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
        uint96 nodeStakeBefore = ss.getNodeStake(identityId);
        uint96 maxStake       = parametersStorage.maximumStake();
        uint96 restake;        
        uint96 keepPending;    
 
-    if (nodeStakeBefore + amount > maxStake) {
+    if (nodeStakeBefore + prevDelegatorWithdrawalAmount > maxStake) {
         restake     = maxStake - nodeStakeBefore;   // might be zero
-        keepPending = amount - restake;
+        keepPending = prevDelegatorWithdrawalAmount - restake;
     } else {
-        restake     = amount;
+        restake     = prevDelegatorWithdrawalAmount;
         keepPending = 0;
     }
 
     if (restake > 0) {
         uint96 newBase = ss.getDelegatorStakeBase(identityId, delegatorKey) + restake;
 
-        ss.setDelegatorStakeInfo(identityId, delegatorKey, newBase, 0);
+        ss.setDelegatorStakeBase(identityId, delegatorKey, newBase);
         ss.setNodeStake(identityId, nodeStakeBefore + restake);
         ss.increaseTotalStake(restake);
 
@@ -670,7 +664,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 nodeScore = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
         uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch); // fee-pot for delegators
 
-        //TODO chach scaling factor
+        //TODO check scaling factor
         uint256 reward = (delegatorScore == 0 || nodeScore == 0 || epocRewardsPool == 0)
             ? 0
             : (delegatorScore * epocRewardsPool) / nodeScore;

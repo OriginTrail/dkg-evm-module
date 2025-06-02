@@ -59,7 +59,7 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         uint256 scoreAdded,
         uint256 totalScore
     );
-    event NodeEpochScorePerStakeUpdated(uint256 indexed epoch, uint72 indexed identityId, uint256 totalNodeEpochScorePerStake);
+    event NodeEpochScorePerStakeUpdated(uint256 indexed epoch, uint72 indexed identityId, uint256 scoreAdded, uint256 totalNodeEpochScorePerStake);
     event EpochNodeDelegatorScoreAdded(
         uint256 indexed epoch,
         uint72 indexed identityId,
