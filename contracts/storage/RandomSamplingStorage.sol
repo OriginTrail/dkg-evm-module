@@ -71,7 +71,7 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         uint256 indexed epoch,
         uint72 indexed identityId,
         bytes32 indexed delegatorKey,
-        uint256 nodeEpochScorePerStake
+        uint256 newDelegatorLastSettledNodeEpochScorePerStake
     );
 
     constructor(address hubAddress, uint16 _proofingPeriodDurationInBlocks) ContractStatus(hubAddress) {
@@ -304,7 +304,7 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
 
     function addToNodeEpochScorePerStake(uint256 epoch, uint72 identityId, uint256 scorePerStakeToAdd) external onlyContracts {
         nodeEpochScorePerStake[epoch][identityId] += scorePerStakeToAdd;
-        emit NodeEpochScorePerStakeUpdated(epoch, identityId, nodeEpochScorePerStake[epoch][identityId]);
+        emit NodeEpochScorePerStakeUpdated(epoch, identityId, scorePerStakeToAdd, nodeEpochScorePerStake[epoch][identityId]);
     }
 
     function getDelegatorLastSettledNodeEpochScorePerStake(

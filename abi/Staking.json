@@ -234,7 +234,7 @@
         "type": "address"
       }
     ],
-    "name": "claimDelegatorReward",
+    "name": "claimDelegatorRewards",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
