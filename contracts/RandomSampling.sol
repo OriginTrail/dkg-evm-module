@@ -308,24 +308,20 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         if (knowledgeCollectionsCount == 0) {
             revert("No knowledge collections exist");
         }
-        uint256 knowledgeCollectionId = 0;
+
         uint256 currentEpoch = chronos.getCurrentEpoch();
-        for (uint8 i = 0; i < 50; ) {
-            knowledgeCollectionId = (uint256(pseudoRandomVariable) % knowledgeCollectionsCount) + 1;
 
-            if (currentEpoch <= knowledgeCollectionStorage.getEndEpoch(knowledgeCollectionId)) {
-                break;
-            }
+        // Optimized binary search approach for finding active knowledge collection
+        uint256 knowledgeCollectionId = _findActiveKnowledgeCollection(
+            pseudoRandomVariable,
+            1,
+            knowledgeCollectionsCount,
+            currentEpoch,
+            0
+        );
 
-            if (i == 49) {
-                revert("Failed to find a knowledge collection that is active in the current epoch");
-            }
-
-            pseudoRandomVariable = keccak256(abi.encodePacked(pseudoRandomVariable));
-
-            unchecked {
-                i++;
-            }
+        if (knowledgeCollectionId == 0) {
+            revert("Failed to find a knowledge collection that is active in the current epoch");
         }
 
         uint88 chunksCount = knowledgeCollectionStorage.getKnowledgeCollection(knowledgeCollectionId).byteSize /
@@ -335,7 +331,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
 
         emit ChallengeCreated(
             identityId,
-            chronos.getCurrentEpoch(),
+            currentEpoch,
             knowledgeCollectionId,
             chunkId,
             activeProofPeriodStartBlock,
@@ -347,11 +343,65 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
                 knowledgeCollectionId,
                 chunkId,
                 address(knowledgeCollectionStorage),
-                chronos.getCurrentEpoch(),
+                currentEpoch,
                 activeProofPeriodStartBlock,
                 randomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
                 false
             );
+    }
+
+    /**
+     * @dev Recursive binary search to find an active knowledge collection
+     * Randomly chooses a collection from current range, then splits if needed
+     * @param randomSeed Random seed for picking a collection from current range
+     * @param start Start of the range (inclusive)
+     * @param end End of the range (inclusive)
+     * @param currentEpoch Current epoch to check collection activity against
+     * @param depth Current recursion depth to prevent infinite loops
+     * @return knowledgeCollectionId ID of an active knowledge collection, or 0 if none found
+     */
+    function _findActiveKnowledgeCollection(
+        bytes32 randomSeed,
+        uint256 start,
+        uint256 end,
+        uint256 currentEpoch,
+        uint8 depth
+    ) internal view returns (uint256) {
+        if (depth >= 50) {
+            return 0; // No active collection found
+        }
+
+        // Pick a random knowledge collection from current range
+        uint256 randomKcId = start + (uint256(randomSeed) % (end - start + 1));
+
+        // Check if this random collection is active
+        if (currentEpoch <= knowledgeCollectionStorage.getEndEpoch(randomKcId)) {
+            return randomKcId;
+        }
+
+        // If single element and not active, return 0
+        if (start == end) {
+            return 0;
+        }
+
+        // Split range in half and search both halves
+        uint256 mid = start + (end - start) / 2;
+        bytes32 newRandomSeed = keccak256(abi.encodePacked(randomSeed));
+
+        // Randomly decide which half to search first
+        bool searchLeftFirst = uint256(newRandomSeed) % 2 == 0;
+
+        if (searchLeftFirst) {
+            // Try left half first, then right half if left returns 0
+            uint256 result = _findActiveKnowledgeCollection(newRandomSeed, start, mid, currentEpoch, depth + 1);
+            if (result != 0) return result;
+            return _findActiveKnowledgeCollection(newRandomSeed, mid + 1, end, currentEpoch, depth + 1);
+        } else {
+            // Try right half first, then left half if right returns 0
+            uint256 result = _findActiveKnowledgeCollection(newRandomSeed, mid + 1, end, currentEpoch, depth + 1);
+            if (result != 0) return result;
+            return _findActiveKnowledgeCollection(newRandomSeed, start, mid, currentEpoch, depth + 1);
+        }
     }
 
     function calculateNodeScore(uint72 identityId) public view returns (uint256) {
