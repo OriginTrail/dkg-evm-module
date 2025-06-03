@@ -383,14 +383,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert StakingLib.AmountExceedsOperatorFeeBalance(oldOperatorFeeBalance, addedStake);
         }
 
-        uint96 newOperatorFeeBalance = oldOperatorFeeBalance - addedStake;
-        ss.setOperatorFeeBalance(identityId, newOperatorFeeBalance);
+         _validateDelegatorEpochClaims(identityId, msg.sender);               // -- last-claimed check
+         bytes32 operatorKey = keccak256(abi.encodePacked(msg.sender));
+         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, operatorKey);   // -- settle epoch score
 
-        bytes32 operatorKey = keccak256(abi.encodePacked(msg.sender));
-        _updateStakeInfo(identityId, operatorKey);
-
-        (uint96 delegatorStakeBase, uint96 delegatorStakeIndexed, ) = ss.getDelegatorStakeInfo(identityId, operatorKey);
-
+        ss.setOperatorFeeBalance(identityId, oldOperatorFeeBalance - addedStake);
+        
+        uint96 delegatorStakeBase   = ss.getDelegatorStakeBase(identityId, operatorKey);
         uint96 totalNodeStakeBefore = ss.getNodeStake(identityId);
         uint96 totalNodeStakeAfter = totalNodeStakeBefore + addedStake;
 
@@ -398,13 +397,17 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert StakingLib.MaximumStakeExceeded(parametersStorage.maximumStake());
         }
 
-        ss.setDelegatorStakeInfo(identityId, operatorKey, delegatorStakeBase + addedStake, delegatorStakeIndexed);
+        ss.setDelegatorStakeBase(identityId, operatorKey, delegatorStakeBase + addedStake);
         ss.setNodeStake(identityId, totalNodeStakeAfter);
-        ss.addOperatorFeeCumulativePaidOutRewards(identityId, addedStake);
+        ss.addOperatorFeeCumulativePaidOutRewards(identityId, addedStake);   // bookkeeping
         ss.increaseTotalStake(addedStake);
 
-        _addNodeToShardingTable(identityId, totalNodeStakeAfter);
+        if (!delegatorsInfo.isNodeDelegator(identityId, msg.sender)) {
+        // admin might be staking for the first time
+        delegatorsInfo.addDelegator(identityId, msg.sender);
+         }
 
+        _addNodeToShardingTable(identityId, totalNodeStakeAfter);
         askContract.recalculateActiveSet();
     }
 
@@ -420,27 +423,25 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert StakingLib.AmountExceedsOperatorFeeBalance(oldOperatorFeeBalance, withdrawalAmount);
         }
 
-        uint256 releaseTime = block.timestamp + parametersStorage.stakeWithdrawalDelay();
+        bytes32 operatorKey = keccak256(abi.encodePacked(msg.sender));
+        _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, operatorKey); 
 
-        ss.setOperatorFeeBalance(identityId, oldOperatorFeeBalance - withdrawalAmount);
-        ss.createOperatorFeeWithdrawalRequest(identityId, withdrawalAmount, withdrawalAmount, releaseTime);
+        uint256 releaseTime = block.timestamp + parametersStorage.stakeWithdrawalDelay();
+        //da li od operatorfee, ili od basestaka
+        ss.setOperatorFeeBalance(identityId, oldOperatorFeeBalance - withdrawalAmount);  // bookkeeping
+        ss.createOperatorFeeWithdrawalRequest(identityId, withdrawalAmount, /*indexed*/ 0, releaseTime);
+
     }
 
     function finalizeOperatorFeeWithdrawal(uint72 identityId) external onlyAdmin(identityId) {
         StakingStorage ss = stakingStorage;
 
-        (uint96 operatorFeeWithdrawalAmount, uint96 operatorFeeIndexedOutAmount, uint256 timestamp) = ss
-            .getOperatorFeeWithdrawalRequest(identityId);
-        if (operatorFeeWithdrawalAmount == 0) {
-            revert StakingLib.WithdrawalWasntInitiated();
-        }
-        if (block.timestamp < timestamp) {
-            revert StakingLib.WithdrawalPeriodPending(block.timestamp, timestamp);
-        }
+     (uint96 operatorFeeWithdrawalAmount, /*unused*/, uint256 ts) = ss.getOperatorFeeWithdrawalRequest(identityId);
+     if (operatorFeeWithdrawalAmount == 0) revert StakingLib.WithdrawalWasntInitiated();
+     if (block.timestamp < ts)  revert StakingLib.WithdrawalPeriodPending(block.timestamp, ts);
 
-        ss.deleteOperatorFeeWithdrawalRequest(identityId);
-        ss.addOperatorFeeCumulativePaidOutRewards(identityId, operatorFeeIndexedOutAmount);
-        ss.transferStake(msg.sender, operatorFeeWithdrawalAmount);
+     ss.addOperatorFeeCumulativePaidOutRewards(identityId, operatorFeeWithdrawalAmount);
+     ss.transferStake(msg.sender, operatorFeeWithdrawalAmount);
     }
 
     function cancelOperatorFeeWithdrawal(uint72 identityId) external onlyAdmin(identityId) {
@@ -645,6 +646,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         require(epoch == lastClaimed + 1, "delegator has older epochs that they need to claim rewards first");
 
         //TODO make to seperate checks
+       
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
         require(
@@ -657,11 +659,20 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 delegatorScore = _prepareForStakeChange(epoch, identityId, delegatorKey);
         uint256 nodeScore = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
         uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch); // fee-pot for delegators
+        //ova trazenje fee procenta u odredjenom trenutku radi preko for pretlje
+        uint256 endOfEpochTimestamp = chronos.timestampForEpoch(epoch + 1) - 1;
+        uint256 feePercentageForEpoch = profileStorage.getOperatorFeePercentageByTimestamp(identityId, endOfEpochTimestamp);
+        uint96 operatorFeeAmount = uint96((uint256(epochStorage.getEpochPool(1, epoch)) * feePercentageForEpoch) / 10000);
+        uint256 rewardsForDelegators = epocRewardsPool - operatorFeeAmount;
+        if (!delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
+          stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
+        } 
+
 
         //TODO check scaling factor
-        uint256 reward = (delegatorScore == 0 || nodeScore == 0 || epocRewardsPool == 0)
+        uint256 reward = (delegatorScore == 0 || nodeScore == 0 || rewardsForDelegators == 0)
             ? 0
-            : (delegatorScore * epocRewardsPool) / nodeScore;
+            : (delegatorScore * rewardsForDelegators) / nodeScore;
 
         // update state even when reward is zero
         randomSamplingStorage.setEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey, true);

@@ -22,6 +22,8 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     mapping(uint72 => mapping(address => uint256)) public lastClaimedEpoch;
     // IdentityId => Delegator => RollingRewards
     mapping(uint72 => mapping(address => uint256)) public delegatorRollingRewards;
+    // IdentityId => Epoch => OperatorFeeClaimed
+    mapping(uint72 => mapping(uint256 => bool)) public isOperatorFeeClaimedForEpoch;
 
     event DelegatorAdded(uint72 indexed identityId, address indexed delegator);
     event DelegatorRemoved(uint72 indexed identityId, address indexed delegator);
@@ -36,6 +38,7 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 oldRewardsAmount,
         uint256 newRewardsAmount
     );
+    event IsOperatorFeeClaimedForEpochUpdated(uint72 indexed identityId, uint256 indexed epoch, bool isClaimed);
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -132,6 +135,19 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
 
     function isNodeDelegator(uint72 identityId, address delegator) external view returns (bool) {
         return isDelegatorMap[identityId][delegator];
+    }
+
+    function setIsOperatorFeeClaimedForEpoch(
+        uint72 identityId,
+        uint256 epoch,
+        bool isClaimed
+    ) external onlyContracts {
+        isOperatorFeeClaimedForEpoch[identityId][epoch] = isClaimed;
+        emit IsOperatorFeeClaimedForEpochUpdated(identityId, epoch, isClaimed);
+    }
+
+    function getIsOperatorFeeClaimedForEpoch(uint72 identityId, uint256 epoch) external view returns (bool) {
+        return isOperatorFeeClaimedForEpoch[identityId][epoch];
     }
 
     function migrate(address[] memory newAddresses) public {
