@@ -304,23 +304,17 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         StakingStorage ss = stakingStorage;
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
-        (
-            uint96 delegatorWithdrawalAmount,
-            uint96 delegatorIndexedOutRewardAmount,
-            uint256 delegatorWithdrawalTimestamp
-        ) = ss.getDelegatorWithdrawalRequest(identityId, delegatorKey);
+        (uint96 withdrawalAmount,, uint256 releaseTs) = ss.getDelegatorWithdrawalRequest(identityId, delegatorKey);
 
-        if (delegatorWithdrawalAmount == 0) {
+        if (withdrawalAmount == 0) {
             revert StakingLib.WithdrawalWasntInitiated();
         }
-        if (block.timestamp < delegatorWithdrawalTimestamp) {
-            revert StakingLib.WithdrawalPeriodPending(block.timestamp, delegatorWithdrawalTimestamp);
+        if (block.timestamp < releaseTs) {
+            revert StakingLib.WithdrawalPeriodPending(block.timestamp, releaseTs);
         }
 
         ss.deleteDelegatorWithdrawalRequest(identityId, delegatorKey);
-        ss.addDelegatorCumulativePaidOutRewards(identityId, delegatorKey, 0);
-        ss.addNodeCumulativePaidOutRewards(identityId, delegatorIndexedOutRewardAmount);
-        ss.transferStake(msg.sender, delegatorWithdrawalAmount);
+        ss.transferStake(msg.sender, withdrawalAmount);
     }
 
     function cancelWithdrawal(uint72 identityId) external profileExists(identityId) {
