@@ -424,7 +424,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         bytes32 operatorKey = keccak256(abi.encodePacked(msg.sender));
-        _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, operatorKey); 
 
         uint256 releaseTime = block.timestamp + parametersStorage.stakeWithdrawalDelay();
         //da li od operatorfee, ili od basestaka
