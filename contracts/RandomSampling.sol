@@ -316,8 +316,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             pseudoRandomVariable,
             1,
             knowledgeCollectionsCount,
-            currentEpoch,
-            0
+            currentEpoch
         );
 
         if (knowledgeCollectionId == 0) {
@@ -351,57 +350,77 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     /**
-     * @dev Recursive binary search to find an active knowledge collection
-     * Randomly chooses a collection from current range, then splits if needed
+     * @dev Iterative binary search to find an active knowledge collection
+     * Uses queue-like BFS approach to systematically search ranges while maintaining randomness
      * @param randomSeed Random seed for picking a collection from current range
      * @param start Start of the range (inclusive)
      * @param end End of the range (inclusive)
      * @param currentEpoch Current epoch to check collection activity against
-     * @param depth Current recursion depth to prevent infinite loops
      * @return knowledgeCollectionId ID of an active knowledge collection, or 0 if none found
      */
     function _findActiveKnowledgeCollection(
         bytes32 randomSeed,
         uint256 start,
         uint256 end,
-        uint256 currentEpoch,
-        uint8 depth
+        uint256 currentEpoch
     ) internal view returns (uint256) {
-        if (depth >= 50) {
-            return 0; // No active collection found
+        // Queue using fixed array - [start1, end1, start2, end2, ...]
+        uint256[100] memory queue; // Can hold 50 ranges max
+        uint8 queueStart = 0; // Front of queue
+        uint8 queueEnd = 0; // Back of queue
+
+        // Push initial range
+        queue[queueEnd++] = start;
+        queue[queueEnd++] = end;
+
+        bytes32 currentRandom = randomSeed;
+        uint8 iterations = 0;
+
+        while (queueStart < queueEnd && iterations < 50) {
+            // Pop range from front of queue (BFS behavior)
+            uint256 currentStart = queue[queueStart++];
+            uint256 currentEnd = queue[queueStart++];
+
+            // Pick random collection from current range
+            uint256 randomKcId = currentStart + (uint256(currentRandom) % (currentEnd - currentStart + 1));
+
+            // Check if this collection is active
+            if (currentEpoch <= knowledgeCollectionStorage.getEndEpoch(randomKcId)) {
+                return randomKcId;
+            }
+
+            // If single element and not active, continue to next range
+            if (currentStart == currentEnd) {
+                currentRandom = keccak256(abi.encodePacked(currentRandom));
+                unchecked {
+                    iterations++;
+                }
+                continue;
+            }
+
+            // Split range and push both halves to back of queue (BFS order)
+            uint256 mid = currentStart + (currentEnd - currentStart) / 2;
+
+            if (queueEnd < 96) {
+                // Leave room for both ranges
+                // Always push left half first, then right half (consistent BFS)
+                if (currentStart <= mid) {
+                    queue[queueEnd++] = currentStart;
+                    queue[queueEnd++] = mid;
+                }
+                if (mid + 1 <= currentEnd) {
+                    queue[queueEnd++] = mid + 1;
+                    queue[queueEnd++] = currentEnd;
+                }
+            }
+
+            currentRandom = keccak256(abi.encodePacked(currentRandom));
+            unchecked {
+                iterations++;
+            }
         }
 
-        // Pick a random knowledge collection from current range
-        uint256 randomKcId = start + (uint256(randomSeed) % (end - start + 1));
-
-        // Check if this random collection is active
-        if (currentEpoch <= knowledgeCollectionStorage.getEndEpoch(randomKcId)) {
-            return randomKcId;
-        }
-
-        // If single element and not active, return 0
-        if (start == end) {
-            return 0;
-        }
-
-        // Split range in half and search both halves
-        uint256 mid = start + (end - start) / 2;
-        bytes32 newRandomSeed = keccak256(abi.encodePacked(randomSeed));
-
-        // Randomly decide which half to search first
-        bool searchLeftFirst = uint256(newRandomSeed) % 2 == 0;
-
-        if (searchLeftFirst) {
-            // Try left half first, then right half if left returns 0
-            uint256 result = _findActiveKnowledgeCollection(newRandomSeed, start, mid, currentEpoch, depth + 1);
-            if (result != 0) return result;
-            return _findActiveKnowledgeCollection(newRandomSeed, mid + 1, end, currentEpoch, depth + 1);
-        } else {
-            // Try right half first, then left half if right returns 0
-            uint256 result = _findActiveKnowledgeCollection(newRandomSeed, mid + 1, end, currentEpoch, depth + 1);
-            if (result != 0) return result;
-            return _findActiveKnowledgeCollection(newRandomSeed, start, mid, currentEpoch, depth + 1);
-        }
+        return 0; // No active collection found
     }
 
     function calculateNodeScore(uint72 identityId) public view returns (uint256) {
