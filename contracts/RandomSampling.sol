@@ -350,8 +350,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     /**
-     * @dev Iterative binary search to find an active knowledge collection
-     * Uses queue-like BFS approach to systematically search ranges while maintaining randomness
+     * @dev BFS approach to finding an active knowledge collection
      * @param randomSeed Random seed for picking a collection from current range
      * @param start Start of the range (inclusive)
      * @param end End of the range (inclusive)
