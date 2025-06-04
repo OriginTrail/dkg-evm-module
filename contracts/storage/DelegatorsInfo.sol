@@ -26,6 +26,8 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     mapping(uint72 => mapping(uint256 => bool)) public isOperatorFeeClaimedForEpoch;
     // IdentityId => Epoch => Amount
     mapping(uint72 => mapping(uint256 => uint256)) public EpochLeftoverDelegatorsRewards;
+    // IdentityId => Epoch
+    mapping(uint72 => uint256) public lastClaimedEpochOperatorFeeAmount;
 
     event DelegatorAdded(uint72 indexed identityId, address indexed delegator);
     event DelegatorRemoved(uint72 indexed identityId, address indexed delegator);
@@ -37,11 +39,12 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     event DelegatorRollingRewardsUpdated(
         uint72 indexed identityId,
         address indexed delegator,
-        uint256 oldRewardsAmount,
-        uint256 newRewardsAmount
+        uint256 amount,
+        uint256 newTotalRollingRewards
     );
     event IsOperatorFeeClaimedForEpochUpdated(uint72 indexed identityId, uint256 indexed epoch, bool isClaimed);
     event EpochLeftoverDelegatorsRewardsSet(uint72 indexed identityId, uint256 indexed epoch, uint256 amount);
+    event LastClaimedEpochOperatorFeeAmountSet(uint72 indexed identityId, uint256 epoch);
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -95,18 +98,16 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function setDelegatorRollingRewards(uint72 identityId, address delegator, uint256 amount) external onlyContracts {
-        uint256 oldAmount = delegatorRollingRewards[identityId][delegator];
         delegatorRollingRewards[identityId][delegator] = amount;
-        emit DelegatorRollingRewardsUpdated(identityId, delegator, oldAmount, amount);
+        emit DelegatorRollingRewardsUpdated(identityId, delegator, amount, amount);
     }
 
     function addDelegatorRollingRewards(uint72 identityId, address delegator, uint256 amount) external onlyContracts {
-        uint256 oldAmount = delegatorRollingRewards[identityId][delegator];
         delegatorRollingRewards[identityId][delegator] += amount;
         emit DelegatorRollingRewardsUpdated(
             identityId,
             delegator,
-            oldAmount,
+            amount,
             delegatorRollingRewards[identityId][delegator]
         );
     }
@@ -147,6 +148,15 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
 
     function getEpochLeftoverDelegatorsRewards(uint72 identityId, uint256 epoch) external view returns (uint256) {
         return EpochLeftoverDelegatorsRewards[identityId][epoch];
+    }
+
+    function setLastClaimedEpochOperatorFeeAmount(uint72 identityId, uint256 epoch) external onlyContracts {
+        lastClaimedEpochOperatorFeeAmount[identityId] = epoch;
+        emit LastClaimedEpochOperatorFeeAmountSet(identityId, epoch);
+    }
+
+    function getLastClaimedEpochOperatorFeeAmount(uint72 identityId) external view returns (uint256) {
+        return lastClaimedEpochOperatorFeeAmount[identityId];
     }
 
     function migrate(address[] memory newAddresses) public {

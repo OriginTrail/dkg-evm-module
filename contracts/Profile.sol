@@ -132,7 +132,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
 
     function updateOperatorFee(uint72 identityId, uint16 newOperatorFee) external onlyAdmin(identityId) {
         uint256 currentEpoch = chronos.getCurrentEpoch();
-        if (currentEpoch == 0) return;
+
         if (currentEpoch > 1) {
             uint256 prev = currentEpoch - 1;
             if (!delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, prev)) {
@@ -147,11 +147,10 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         ProfileStorage ps = profileStorage;
 
         uint256 epochStart = chronos.timestampForEpoch(currentEpoch);
-        if (block.timestamp > epochStart + 3 days) {
-            revert("update only first 3 days");
-        }
+        uint256 epochLength = chronos.epochLength();
+        uint256 nextEpochStart = epochStart + epochLength;
 
-        uint256 nextEpochStart = epochStart + chronos.epochLength();
+        uint256 effectiveStart = block.timestamp <= epochStart + 3 days ? nextEpochStart : nextEpochStart + epochLength;
 
         if (ps.isOperatorFeeChangePending(identityId)) {
             ps.replacePendingOperatorFee(identityId, newOperatorFee, nextEpochStart);
