@@ -8,6 +8,8 @@ import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {WhitelistStorage} from "./storage/WhitelistStorage.sol";
+import {Chronos} from "./storage/Chronos.sol";
+import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IInitializable} from "./interfaces/IInitializable.sol";
 import {INamed} from "./interfaces/INamed.sol";
@@ -26,6 +28,8 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     ParametersStorage public parametersStorage;
     ProfileStorage public profileStorage;
     WhitelistStorage public whitelistStorage;
+    Chronos public chronos;
+    DelegatorsInfo public delegatorsInfo;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -57,6 +61,8 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         whitelistStorage = WhitelistStorage(hub.getContractAddress("WhitelistStorage"));
+        chronos = Chronos(hub.getContractAddress("Chronos"));
+        delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -125,20 +131,32 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function updateOperatorFee(uint72 identityId, uint16 newOperatorFee) external onlyAdmin(identityId) {
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        if (currentEpoch == 0) return;
+        if (currentEpoch > 1) {
+            uint256 prev = currentEpoch - 1;
+            if (!delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, prev)) {
+                revert("previous epoch rewards not yet claimed for node");
+            }
+        }
+
         if (newOperatorFee > 10000) {
             revert ProfileLib.InvalidOperatorFee();
         }
 
         ProfileStorage ps = profileStorage;
 
+        uint256 epochStart = chronos.timestampForEpoch(currentEpoch);
+        if (block.timestamp > epochStart + 3 days) {
+            revert("update only first 3 days");
+        }
+
+        uint256 nextEpochStart = epochStart + chronos.epochLength();
+
         if (ps.isOperatorFeeChangePending(identityId)) {
-            ps.replacePendingOperatorFee(
-                identityId,
-                newOperatorFee,
-                block.timestamp + parametersStorage.operatorFeeUpdateDelay()
-            );
+            ps.replacePendingOperatorFee(identityId, newOperatorFee, nextEpochStart);
         } else {
-            ps.addOperatorFee(identityId, newOperatorFee, block.timestamp + parametersStorage.operatorFeeUpdateDelay());
+            ps.addOperatorFee(identityId, newOperatorFee, nextEpochStart);
         }
     }
 

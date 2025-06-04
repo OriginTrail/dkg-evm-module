@@ -656,23 +656,24 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 nodeScore = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
         uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch); // fee-pot for delegators
         //ova trazenje fee procenta u odredjenom trenutku radi preko for pretlje
-        uint256 endOfEpochTimestamp = chronos.timestampForEpoch(epoch + 1) - 1;
-        uint256 feePercentageForEpoch = profileStorage.getOperatorFeePercentageByTimestamp(
-            identityId,
-            endOfEpochTimestamp
-        );
-        uint96 operatorFeeAmount = uint96(
-            (uint256(epochStorage.getEpochPool(1, epoch)) * feePercentageForEpoch) / 10000
-        );
-        uint256 rewardsForDelegators = epocRewardsPool - operatorFeeAmount;
+
         if (!delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
+            uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
+            uint96 operatorFeeAmount = uint96((epocRewardsPool * feePercentageForEpoch) / 10000);
+            uint256 currentEpochDelegatorPool = epocRewardsPool - operatorFeeAmount;
             stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
+            delegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, true);
+            // Set the calculated total rewards for delegators for this epoch
+            delegatorsInfo.setEpochLeftoverDelegatorsRewards(identityId, epoch, currentEpochDelegatorPool);
         }
 
+        // Fetch the definitive total rewards for delegators for this epoch
+        uint256 actualTotalRewardsForDelegators = delegatorsInfo.getEpochLeftoverDelegatorsRewards(identityId, epoch);
+
         //TODO check scaling factor
-        uint256 reward = (delegatorScore == 0 || nodeScore == 0 || rewardsForDelegators == 0)
+        uint256 reward = (delegatorScore == 0 || nodeScore == 0 || actualTotalRewardsForDelegators == 0)
             ? 0
-            : (delegatorScore * rewardsForDelegators) / nodeScore;
+            : (delegatorScore * actualTotalRewardsForDelegators) / nodeScore;
 
         // update state even when reward is zero
         randomSamplingStorage.setEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey, true);
