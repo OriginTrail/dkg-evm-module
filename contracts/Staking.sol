@@ -500,6 +500,32 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     //     return (delegatorStakeBase, delegatorStakeIndexed + additionalReward, additionalReward);
     // }
 
+    function getNetDelegatorsRewards(
+        uint72 identityId,
+        uint256 epoch
+    ) public view profileExists(identityId) returns (uint256) {
+        // If the operator fee has been claimed, return the net delegators rewards
+        if (delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
+            return delegatorsInfo.getEpochLeftoverDelegatorsRewards(identityId, epoch);
+        }
+
+        uint256 nodeScore = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
+        if (nodeScore == 0) return 0;
+
+        uint256 allNodesScore = randomSamplingStorage.getAllNodesEpochScore(epoch);
+        if (allNodesScore == 0) return 0;
+
+        uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch);
+        if (epocRewardsPool == 0) return 0;
+
+        uint256 delegatorsRewards = (epocRewardsPool * nodeScore) / allNodesScore;
+
+        uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
+        uint96 operatorFeeAmount = uint96((delegatorsRewards * feePercentageForEpoch) / 10000);
+
+        return delegatorsRewards - operatorFeeAmount;
+    }
+
     function claimDelegatorRewards(
         uint72 identityId,
         uint256 epoch,
@@ -532,23 +558,27 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 delegatorScore = _prepareForStakeChange(epoch, identityId, delegatorKey);
         uint256 nodeScore = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
         uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch); // fee-pot for delegators
+        uint256 totalLeftoverEpochlRewardsForDelegators = 0;
 
         if (!delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
             uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
             uint96 operatorFeeAmount = uint96((epocRewardsPool * feePercentageForEpoch) / 10000);
-            uint256 leftoverEpochDelegatorPool = epocRewardsPool - operatorFeeAmount;
+            totalLeftoverEpochlRewardsForDelegators = getNetDelegatorsRewards(identityId, epoch);
             stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
             delegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, true);
             delegatorsInfo.setLastClaimedDelegatorsRewardsEpoch(identityId, epoch);
             // Set the calculated total rewards for delegators for this epoch
-            delegatorsInfo.setEpochLeftoverDelegatorsRewards(identityId, epoch, leftoverEpochDelegatorPool);
+            delegatorsInfo.setEpochLeftoverDelegatorsRewards(
+                identityId,
+                epoch,
+                totalLeftoverEpochlRewardsForDelegators
+            );
+        } else {
+            totalLeftoverEpochlRewardsForDelegators = delegatorsInfo.getEpochLeftoverDelegatorsRewards(
+                identityId,
+                epoch
+            );
         }
-
-        // Fetch the definitive total rewards for delegators for this epoch
-        uint256 totalLeftoverEpochlRewardsForDelegators = delegatorsInfo.getEpochLeftoverDelegatorsRewards(
-            identityId,
-            epoch
-        );
 
         //TODO check scaling factor
         uint256 reward = (delegatorScore == 0 || nodeScore == 0 || totalLeftoverEpochlRewardsForDelegators == 0)
@@ -718,86 +748,4 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert ProfileLib.ProfileDoesntExist(identityId);
         }
     }
-
-    function claimDelegatorRewards(
-        uint72 identityId,
-        uint256 epoch,
-        address delegator
-    ) external profileExists(identityId) {
-        uint256 currentEpoch = chronos.getCurrentEpoch();
-        require(epoch < currentEpoch, "epoch not finalised");
-
-        uint256 lastClaimed = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
-        if (lastClaimed == currentEpoch - 1) {
-            revert("already claimed all finalised epochs");
-        }
-
-        if (epoch <= lastClaimed) {
-            revert("epoch already claimed");
-        }
-
-        if (epoch > lastClaimed + 1) {
-            revert("must claim older epochs first");
-        }
-
-        bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
-        require(
-            !delegatorsInfo.getEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey),
-            "already claimed"
-        );
-
-        uint256 delegatorScore = _prepareForStakeChange(epoch, identityId, delegatorKey);
-        uint256 nodeScore = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
-        uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch);
-        uint256 totalLeftoverEpochlRewardsForDelegators = 0;
-
-        if (!delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
-            uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
-            uint96 operatorFeeAmount = uint96((epocRewardsPool * feePercentageForEpoch) / 10000);
-            totalLeftoverEpochlRewardsForDelegators = epocRewardsPool - operatorFeeAmount;
-            stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
-            delegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, true);
-            delegatorsInfo.setLastClaimedDelegatorsRewardsEpoch(identityId, epoch);
-            // Set the calculated total rewards for delegators for this epoch
-            delegatorsInfo.setEpochLeftoverDelegatorsRewards(
-                identityId,
-                epoch,
-                totalLeftoverEpochlRewardsForDelegators
-            );
-        } else {
-            totalLeftoverEpochlRewardsForDelegators = delegatorsInfo.getEpochLeftoverDelegatorsRewards(
-                identityId,
-                epoch
-            );
-        }
-
-        //TODO check scaling factor
-        uint256 reward = (delegatorScore == 0 || nodeScore == 0 || totalLeftoverEpochlRewardsForDelegators == 0)
-            ? 0
-            : (delegatorScore * totalLeftoverEpochlRewardsForDelegators) / nodeScore;
-
-        // update state even when reward is zero
-        delegatorsInfo.setEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey, true);
-        uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
-        delegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch);
-
-        if (reward == 0) return;
-
-        uint256 rolling = delegatorsInfo.getDelegatorRollingRewards(identityId, delegator);
-
-        // if there are still older epochs pending, accumulate; otherwise restake immediately
-        if ((currentEpoch - 1) - lastClaimedEpoch > 1) {
-            delegatorsInfo.setDelegatorRollingRewards(identityId, delegator, rolling + reward);
-        } else {
-            uint256 total = reward + rolling;
-            delegatorsInfo.setDelegatorRollingRewards(identityId, delegator, 0);
-
-            stakingStorage.increaseDelegatorStakeBase(identityId, delegatorKey, uint96(total));
-            stakingStorage.increaseNodeStake(identityId, uint96(total));
-            stakingStorage.increaseTotalStake(uint96(total));
-        }
-        //Should it increase on roling rewards or on stakeBaseIncrease only?
-        stakingStorage.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, uint96(reward));
-    }
-
 }
