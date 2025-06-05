@@ -634,24 +634,28 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         uint256 delegatorScore = _prepareForStakeChange(epoch, identityId, delegatorKey);
         uint256 nodeScore = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
-        uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch); // fee-pot for delegators
+        uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch);
+        uint256 totalLeftoverEpochlRewardsForDelegators = 0;
 
         if (!delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
             uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
             uint96 operatorFeeAmount = uint96((epocRewardsPool * feePercentageForEpoch) / 10000);
-            uint256 leftoverEpochDelegatorPool = epocRewardsPool - operatorFeeAmount;
+            totalLeftoverEpochlRewardsForDelegators = epocRewardsPool - operatorFeeAmount;
             stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
             delegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, true);
             delegatorsInfo.setLastClaimedDelegatorsRewardsEpoch(identityId, epoch);
             // Set the calculated total rewards for delegators for this epoch
-            delegatorsInfo.setEpochLeftoverDelegatorsRewards(identityId, epoch, leftoverEpochDelegatorPool);
+            delegatorsInfo.setEpochLeftoverDelegatorsRewards(
+                identityId,
+                epoch,
+                totalLeftoverEpochlRewardsForDelegators
+            );
+        } else {
+            totalLeftoverEpochlRewardsForDelegators = delegatorsInfo.getEpochLeftoverDelegatorsRewards(
+                identityId,
+                epoch
+            );
         }
-
-        // Fetch the definitive total rewards for delegators for this epoch
-        uint256 totalLeftoverEpochlRewardsForDelegators = delegatorsInfo.getEpochLeftoverDelegatorsRewards(
-            identityId,
-            epoch
-        );
 
         //TODO check scaling factor
         uint256 reward = (delegatorScore == 0 || nodeScore == 0 || totalLeftoverEpochlRewardsForDelegators == 0)
