@@ -35,9 +35,8 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
     // epoch => identityId => scorePerStake
     mapping(uint256 => mapping(uint72 => uint256)) public nodeEpochScorePerStake;
     // epoch => identityId => delegatorKey => last settled nodeEpochScorePerStake
-    mapping(uint256 => mapping(uint72 => mapping(bytes32 => uint256))) public delegatorLastSettledNodeEpochScorePerStake;
-    // epoch => identityId => delegatorKey => rewards claimed status
-    mapping(uint256 => mapping(uint72 => mapping(bytes32 => bool))) public epochNodeDelegatorRewardsClaimed;
+    mapping(uint256 => mapping(uint72 => mapping(bytes32 => uint256)))
+        public delegatorLastSettledNodeEpochScorePerStake;
 
     event ProofingPeriodDurationAdded(uint16 durationInBlocks, uint256 indexed effectiveEpoch);
     event PendingProofingPeriodDurationReplaced(
@@ -59,7 +58,12 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         uint256 scoreAdded,
         uint256 totalScore
     );
-    event NodeEpochScorePerStakeUpdated(uint256 indexed epoch, uint72 indexed identityId, uint256 scoreAdded, uint256 totalNodeEpochScorePerStake);
+    event NodeEpochScorePerStakeUpdated(
+        uint256 indexed epoch,
+        uint72 indexed identityId,
+        uint256 scoreAdded,
+        uint256 totalNodeEpochScorePerStake
+    );
     event EpochNodeDelegatorScoreAdded(
         uint256 indexed epoch,
         uint72 indexed identityId,
@@ -302,9 +306,18 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         return nodeEpochScorePerStake[epoch][identityId];
     }
 
-    function addToNodeEpochScorePerStake(uint256 epoch, uint72 identityId, uint256 scorePerStakeToAdd) external onlyContracts {
+    function addToNodeEpochScorePerStake(
+        uint256 epoch,
+        uint72 identityId,
+        uint256 scorePerStakeToAdd
+    ) external onlyContracts {
         nodeEpochScorePerStake[epoch][identityId] += scorePerStakeToAdd;
-        emit NodeEpochScorePerStakeUpdated(epoch, identityId, scorePerStakeToAdd, nodeEpochScorePerStake[epoch][identityId]);
+        emit NodeEpochScorePerStakeUpdated(
+            epoch,
+            identityId,
+            scorePerStakeToAdd,
+            nodeEpochScorePerStake[epoch][identityId]
+        );
     }
 
     function getDelegatorLastSettledNodeEpochScorePerStake(
@@ -328,24 +341,5 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
             delegatorKey,
             newNodeEpochScorePerStake
         );
-    }
-
-    // --- Rewards Claimed Status ---
-
-    function getEpochNodeDelegatorRewardsClaimed(
-        uint256 epoch,
-        uint72 identityId,
-        bytes32 delegatorKey
-    ) external view returns (bool) {
-        return epochNodeDelegatorRewardsClaimed[epoch][identityId][delegatorKey];
-    }
-
-    function setEpochNodeDelegatorRewardsClaimed(
-        uint256 epoch,
-        uint72 identityId,
-        bytes32 delegatorKey,
-        bool claimed
-    ) external onlyContracts {
-        epochNodeDelegatorRewardsClaimed[epoch][identityId][delegatorKey] = claimed;
     }
 }
