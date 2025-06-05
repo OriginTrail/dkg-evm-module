@@ -37,7 +37,6 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
     // epoch => identityId => delegatorKey => last settled nodeEpochScorePerStake
     mapping(uint256 => mapping(uint72 => mapping(bytes32 => uint256)))
         public delegatorLastSettledNodeEpochScorePerStake;
-    // epoch => identityId => delegatorKey => rewards claimed status
 
     event ProofingPeriodDurationAdded(uint16 durationInBlocks, uint256 indexed effectiveEpoch);
     event PendingProofingPeriodDurationReplaced(

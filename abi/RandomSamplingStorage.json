@@ -111,7 +111,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "nodeEpochScorePerStake",
+        "name": "newDelegatorLastSettledNodeEpochScorePerStake",
         "type": "uint256"
       }
     ],
@@ -231,6 +231,12 @@
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "scoreAdded",
+        "type": "uint256"
       },
       {
         "indexed": false,

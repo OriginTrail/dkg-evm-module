@@ -30,6 +30,8 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     mapping(uint72 => uint256) public lastClaimedDelegatorsRewardsEpoch;
     // epoch => identityId => delegatorKey => rewards claimed status
     mapping(uint256 => mapping(uint72 => mapping(bytes32 => bool))) public epochNodeDelegatorRewardsClaimed;
+    // IdentityId => Delegator => HasEverDelegatedToNode
+    mapping(uint72 => mapping(address => bool)) public hasEverDelegatedToNode;
 
     event DelegatorAdded(uint72 indexed identityId, address indexed delegator);
     event DelegatorRemoved(uint72 indexed identityId, address indexed delegator);
@@ -47,6 +49,11 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     event IsOperatorFeeClaimedForEpochUpdated(uint72 indexed identityId, uint256 indexed epoch, bool isClaimed);
     event EpochLeftoverDelegatorsRewardsSet(uint72 indexed identityId, uint256 indexed epoch, uint256 amount);
     event LastClaimedDelegatorsRewardsEpochSet(uint72 indexed identityId, uint256 epoch);
+    event HasEverDelegatedToNodeUpdated(
+        uint72 indexed identityId,
+        address indexed delegator,
+        bool hasEverDelegatedToNode
+    );
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -176,6 +183,15 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
         bool claimed
     ) external onlyContracts {
         epochNodeDelegatorRewardsClaimed[epoch][identityId][delegatorKey] = claimed;
+    }
+
+    function setHasEverDelegatedToNode(
+        uint72 identityId,
+        address delegator,
+        bool _hasEverDelegatedToNode
+    ) external onlyContracts {
+        hasEverDelegatedToNode[identityId][delegator] = _hasEverDelegatedToNode;
+        emit HasEverDelegatedToNodeUpdated(identityId, delegator, _hasEverDelegatedToNode);
     }
 
     function migrate(address[] memory newAddresses) public {
