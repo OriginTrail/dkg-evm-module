@@ -343,6 +343,4 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
             newNodeEpochScorePerStake
         );
     }
-
-    // --- Rewards Claimed Status ---
 }

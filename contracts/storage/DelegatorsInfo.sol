@@ -27,7 +27,7 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     // IdentityId => Epoch => Amount
     mapping(uint72 => mapping(uint256 => uint256)) public EpochLeftoverDelegatorsRewards;
     // IdentityId => Epoch
-    mapping(uint72 => uint256) public lastClaimedEpochOperatorFee;
+    mapping(uint72 => uint256) public lastClaimedDelegatorsRewardsEpoch;
     // epoch => identityId => delegatorKey => rewards claimed status
     mapping(uint256 => mapping(uint72 => mapping(bytes32 => bool))) public epochNodeDelegatorRewardsClaimed;
 
@@ -46,7 +46,7 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     );
     event IsOperatorFeeClaimedForEpochUpdated(uint72 indexed identityId, uint256 indexed epoch, bool isClaimed);
     event EpochLeftoverDelegatorsRewardsSet(uint72 indexed identityId, uint256 indexed epoch, uint256 amount);
-    event LastClaimedEpochOperatorFeeSet(uint72 indexed identityId, uint256 epoch);
+    event LastClaimedDelegatorsRewardsEpochSet(uint72 indexed identityId, uint256 epoch);
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -152,14 +152,15 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
         return EpochLeftoverDelegatorsRewards[identityId][epoch];
     }
 
-    function setLastClaimedEpochOperatorFee(uint72 identityId, uint256 epoch) external onlyContracts {
-        lastClaimedEpochOperatorFee[identityId] = epoch;
-        emit LastClaimedEpochOperatorFeeSet(identityId, epoch);
+    function setLastClaimedDelegatorsRewardsEpoch(uint72 identityId, uint256 epoch) external onlyContracts {
+        lastClaimedDelegatorsRewardsEpoch[identityId] = epoch;
+        emit LastClaimedDelegatorsRewardsEpochSet(identityId, epoch);
     }
 
-    function getLastClaimedEpochOperatorFee(uint72 identityId) external view returns (uint256) {
-        return lastClaimedEpochOperatorFee[identityId];
+    function getLastClaimedDelegatorsRewardsEpoch(uint72 identityId) external view returns (uint256) {
+        return lastClaimedDelegatorsRewardsEpoch[identityId];
     }
+
     function getEpochNodeDelegatorRewardsClaimed(
         uint256 epoch,
         uint72 identityId,

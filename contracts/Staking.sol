@@ -642,7 +642,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             uint256 leftoverEpochDelegatorPool = epocRewardsPool - operatorFeeAmount;
             stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
             delegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, true);
-            delegatorsInfo.setLastClaimedEpochOperatorFee(identityId, epoch);
+            delegatorsInfo.setLastClaimedDelegatorsRewardsEpoch(identityId, epoch);
             // Set the calculated total rewards for delegators for this epoch
             delegatorsInfo.setEpochLeftoverDelegatorsRewards(identityId, epoch, leftoverEpochDelegatorPool);
         }
