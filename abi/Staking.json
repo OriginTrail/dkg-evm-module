@@ -216,9 +216,9 @@
         "type": "uint72"
       },
       {
-        "internalType": "uint256",
-        "name": "epoch",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "epochs",
+        "type": "uint256[]"
       },
       {
         "internalType": "address[]",
