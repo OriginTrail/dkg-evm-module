@@ -591,6 +591,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
+    /**
+     * @dev Calculate the estimated rewards for a delegator in an epoch
+     * @param identityId Node's identity ID
+     * @param epoch Epoch number
+     * @param delegator Delegator's address
+     * @return Estimated rewards for the delegator in the epoch
+     */
     function getEstimatedRewards(uint72 identityId, uint256 epoch, address delegator) external view returns (uint256) {
         require(delegatorsInfo.isNodeDelegator(identityId, delegator), "Delegator not found");
 
@@ -602,23 +609,44 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 nodeScore = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
         if (nodeScore == 0) return 0;
 
+        // Calculate the final delegators rewards pool
+        uint256 netDelegatorsRewards = getNetDelegatorsRewards(identityId, epoch);
+
+        if (netDelegatorsRewards == 0) return 0;
+
+        return (delegatorScore * netDelegatorsRewards) / nodeScore;
+    }
+
+    /**
+     * @dev Fetch the net rewards for delegators in an epoch (rewards of node's delegators - operator fee)
+     * @param identityId Node's identity ID
+     * @param epoch Epoch number
+     * @return Net rewards for delegators in the epoch
+     */
+    function getNetDelegatorsRewards(
+        uint72 identityId,
+        uint256 epoch
+    ) public view profileExists(identityId) returns (uint256) {
+        // If the operator fee has been claimed, return the net delegators rewards
+        if (delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
+            return delegatorsInfo.getEpochLeftoverDelegatorsRewards(identityId, epoch);
+        }
+
+        uint256 nodeScore = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
+        if (nodeScore == 0) return 0;
+
+        uint256 allNodesScore = randomSamplingStorage.getAllNodesEpochScore(epoch);
+        if (allNodesScore == 0) return 0;
+
         uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch);
         if (epocRewardsPool == 0) return 0;
 
-        // Calculate the final delegators rewards pool
-        uint256 finalDelegatorsRewardsPool;
-        // Subtract the operator fee if necessary
-        if (!delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
-            uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
-            uint96 operatorFeeAmount = uint96((epocRewardsPool * feePercentageForEpoch) / 10000);
-            finalDelegatorsRewardsPool = epocRewardsPool - operatorFeeAmount;
-        } else {
-            finalDelegatorsRewardsPool = delegatorsInfo.getEpochLeftoverDelegatorsRewards(identityId, epoch);
-        }
+        uint256 delegatorsRewards = (epocRewardsPool * nodeScore) / allNodesScore;
 
-        if (finalDelegatorsRewardsPool == 0) return 0;
+        uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
+        uint96 operatorFeeAmount = uint96((delegatorsRewards * feePercentageForEpoch) / 10000);
 
-        return (delegatorScore * finalDelegatorsRewardsPool) / nodeScore;
+        return delegatorsRewards - operatorFeeAmount;
     }
 
     function _validateDelegatorEpochClaims(uint72 identityId, address delegator) internal {
