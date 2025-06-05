@@ -581,11 +581,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
     function batchClaimDelegatorRewards(
         uint72 identityId,
-        uint256 epoch,
+        uint256[] memory epochs,
         address[] memory delegators
     ) external profileExists(identityId) {
-        for (uint256 i = 0; i < delegators.length; i++) {
-            claimDelegatorRewards(identityId, epoch, delegators[i]);
+        for (uint256 i = 0; i < epochs.length; i++) {
+            for (uint256 j = 0; j < delegators.length; j++) {
+                claimDelegatorRewards(identityId, epochs[i], delegators[j]);
+            }
         }
     }
 
