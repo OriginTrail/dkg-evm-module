@@ -504,27 +504,29 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint72 identityId,
         uint256 epoch,
         address delegator
-    ) external profileExists(identityId) {
+    ) public profileExists(identityId) {
         uint256 currentEpoch = chronos.getCurrentEpoch();
-        require(epoch < currentEpoch, "epoch not finalised");
+        require(epoch < currentEpoch, "Epoch not finalised");
+
+        require(delegatorsInfo.isNodeDelegator(identityId, delegator), "Delegator not found");
 
         uint256 lastClaimed = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
         if (lastClaimed == currentEpoch - 1) {
-            revert("already claimed all finalised epochs");
+            revert("Already claimed all finalised epochs");
         }
 
         if (epoch <= lastClaimed) {
-            revert("epoch already claimed");
+            revert("Epoch already claimed");
         }
 
         if (epoch > lastClaimed + 1) {
-            revert("must claim older epochs first");
+            revert("Must claim older epochs first");
         }
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
         require(
             !delegatorsInfo.getEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey),
-            "already claimed"
+            "Already claimed rewards for this epoch"
         );
 
         uint256 delegatorScore = _prepareForStakeChange(epoch, identityId, delegatorKey);
@@ -575,6 +577,18 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
         //Should it increase on roling rewards or on stakeBaseIncrease only?
         stakingStorage.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, uint96(reward));
+    }
+
+    function batchClaimDelegatorRewards(
+        uint72 identityId,
+        uint256[] memory epochs,
+        address[] memory delegators
+    ) external profileExists(identityId) {
+        for (uint256 i = 0; i < epochs.length; i++) {
+            for (uint256 j = 0; j < delegators.length; j++) {
+                claimDelegatorRewards(identityId, epochs[i], delegators[j]);
+            }
+        }
     }
 
     function _validateDelegatorEpochClaims(uint72 identityId, address delegator) internal {

@@ -211,7 +211,7 @@
         "type": "uint256"
       }
     ],
-    "name": "LastClaimedEpochOperatorFeeAmountSet",
+    "name": "LastClaimedDelegatorsRewardsEpochSet",
     "type": "event"
   },
   {
@@ -298,6 +298,35 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72",
+        "name": "",
+        "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "epochNodeDelegatorRewardsClaimed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -397,6 +426,35 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getEpochNodeDelegatorRewardsClaimed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -424,14 +482,9 @@
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
-      },
-      {
-        "internalType": "address",
-        "name": "delegator",
-        "type": "address"
       }
     ],
-    "name": "getLastClaimedEpoch",
+    "name": "getLastClaimedDelegatorsRewardsEpoch",
     "outputs": [
       {
         "internalType": "uint256",
@@ -448,9 +501,14 @@
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
+      },
+      {
+        "internalType": "address",
+        "name": "delegator",
+        "type": "address"
       }
     ],
-    "name": "getLastClaimedEpochOperatorFeeAmount",
+    "name": "getLastClaimedEpoch",
     "outputs": [
       {
         "internalType": "uint256",
@@ -583,14 +641,9 @@
         "internalType": "uint72",
         "name": "",
         "type": "uint72"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
-    "name": "lastClaimedEpoch",
+    "name": "lastClaimedDelegatorsRewardsEpoch",
     "outputs": [
       {
         "internalType": "uint256",
@@ -607,9 +660,14 @@
         "internalType": "uint72",
         "name": "",
         "type": "uint72"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
-    "name": "lastClaimedEpochOperatorFeeAmount",
+    "name": "lastClaimedEpoch",
     "outputs": [
       {
         "internalType": "uint256",
@@ -761,6 +819,34 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bool",
+        "name": "claimed",
+        "type": "bool"
+      }
+    ],
+    "name": "setEpochNodeDelegatorRewardsClaimed",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -812,17 +898,12 @@
         "type": "uint72"
       },
       {
-        "internalType": "address",
-        "name": "delegator",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
         "name": "epoch",
         "type": "uint256"
       }
     ],
-    "name": "setLastClaimedEpoch",
+    "name": "setLastClaimedDelegatorsRewardsEpoch",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -835,12 +916,17 @@
         "type": "uint72"
       },
       {
+        "internalType": "address",
+        "name": "delegator",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "epoch",
         "type": "uint256"
       }
     ],
-    "name": "setLastClaimedEpochOperatorFeeAmount",
+    "name": "setLastClaimedEpoch",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
