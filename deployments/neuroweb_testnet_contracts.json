@@ -312,13 +312,13 @@
       "deployed": true
     },
     "RandomSampling": {
-      "evmAddress": "0x2229f9872eE1906FCFD59c5998F6ac12a03011Ae",
-      "substrateAddress": "5EMjsczT2AshaEJs92ZkmsoqeoLhrwC2zVq1A4PMCL7g1czn",
+      "evmAddress": "0xEd5035e928e123700baf7698C8FE3e78Dbd5E8eA",
+      "substrateAddress": "5EMjsd19j6gjHen86EgGwDrx8ff9NqmDzhLJiSX8Fv1MLrn3",
       "version": "1.0.0",
       "gitBranch": "feature/random-sampling",
-      "gitCommitHash": "01b72351e11a9b45bc82e5a9bea8fe3e9a08610e",
-      "deploymentBlock": 7623613,
-      "deploymentTimestamp": 1747904907729,
+      "gitCommitHash": "18c4b1845b5a0a0db1a1f288e49b89dbbb6317cc",
+      "deploymentBlock": 7793042,
+      "deploymentTimestamp": 1749038833389,
       "deployed": true
     }
   }

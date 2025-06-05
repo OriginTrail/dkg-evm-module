@@ -296,24 +296,19 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         if (knowledgeCollectionsCount == 0) {
             revert("No knowledge collections exist");
         }
-        uint256 knowledgeCollectionId = 0;
+
         uint256 currentEpoch = chronos.getCurrentEpoch();
-        for (uint8 i = 0; i < 50; ) {
-            knowledgeCollectionId = (uint256(pseudoRandomVariable) % knowledgeCollectionsCount) + 1;
 
-            if (currentEpoch <= knowledgeCollectionStorage.getEndEpoch(knowledgeCollectionId)) {
-                break;
-            }
+        // Optimized binary search approach for finding active knowledge collection
+        uint256 knowledgeCollectionId = _findActiveKnowledgeCollection(
+            pseudoRandomVariable,
+            1,
+            knowledgeCollectionsCount,
+            currentEpoch
+        );
 
-            if (i == 49) {
-                revert("Failed to find a knowledge collection that is active in the current epoch");
-            }
-
-            pseudoRandomVariable = keccak256(abi.encodePacked(pseudoRandomVariable));
-
-            unchecked {
-                i++;
-            }
+        if (knowledgeCollectionId == 0) {
+            revert("Failed to find a knowledge collection that is active in the current epoch");
         }
 
         uint88 chunksCount = knowledgeCollectionStorage.getKnowledgeCollection(knowledgeCollectionId).byteSize /
@@ -323,7 +318,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
 
         emit ChallengeCreated(
             identityId,
-            chronos.getCurrentEpoch(),
+            currentEpoch,
             knowledgeCollectionId,
             chunkId,
             activeProofPeriodStartBlock,
@@ -335,11 +330,84 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
                 knowledgeCollectionId,
                 chunkId,
                 address(knowledgeCollectionStorage),
-                chronos.getCurrentEpoch(),
+                currentEpoch,
                 activeProofPeriodStartBlock,
                 randomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
                 false
             );
+    }
+
+    /**
+     * @dev BFS approach to finding an active knowledge collection
+     * @param randomSeed Random seed for picking a collection from current range
+     * @param start Start of the range (inclusive)
+     * @param end End of the range (inclusive)
+     * @param currentEpoch Current epoch to check collection activity against
+     * @return knowledgeCollectionId ID of an active knowledge collection, or 0 if none found
+     */
+    function _findActiveKnowledgeCollection(
+        bytes32 randomSeed,
+        uint256 start,
+        uint256 end,
+        uint256 currentEpoch
+    ) internal view returns (uint256) {
+        // Queue using fixed array - [start1, end1, start2, end2, ...]
+        uint256[100] memory queue; // Can hold 50 ranges max
+        uint8 queueStart = 0; // Front of queue
+        uint8 queueEnd = 0; // Back of queue
+
+        // Push initial range
+        queue[queueEnd++] = start;
+        queue[queueEnd++] = end;
+
+        bytes32 currentRandom = randomSeed;
+        uint8 iterations = 0;
+
+        while (queueStart < queueEnd && iterations < 50) {
+            // Pop range from front of queue (BFS behavior)
+            uint256 currentStart = queue[queueStart++];
+            uint256 currentEnd = queue[queueStart++];
+
+            // Pick random collection from current range
+            uint256 randomKcId = currentStart + (uint256(currentRandom) % (currentEnd - currentStart + 1));
+
+            // Check if this collection is active
+            if (currentEpoch <= knowledgeCollectionStorage.getEndEpoch(randomKcId)) {
+                return randomKcId;
+            }
+
+            // If single element and not active, continue to next range
+            if (currentStart == currentEnd) {
+                currentRandom = keccak256(abi.encodePacked(currentRandom));
+                unchecked {
+                    iterations++;
+                }
+                continue;
+            }
+
+            // Split range and push both halves to back of queue (BFS order)
+            uint256 mid = currentStart + (currentEnd - currentStart) / 2;
+
+            if (queueEnd < 96) {
+                // Leave room for both ranges
+                // Always push left half first, then right half (consistent BFS)
+                if (currentStart <= mid) {
+                    queue[queueEnd++] = currentStart;
+                    queue[queueEnd++] = mid;
+                }
+                if (mid + 1 <= currentEnd) {
+                    queue[queueEnd++] = mid + 1;
+                    queue[queueEnd++] = currentEnd;
+                }
+            }
+
+            currentRandom = keccak256(abi.encodePacked(currentRandom));
+            unchecked {
+                iterations++;
+            }
+        }
+
+        return 0; // No active collection found
     }
 
     function calculateNodeScore(uint72 identityId) public view returns (uint256) {
