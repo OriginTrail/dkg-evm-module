@@ -422,7 +422,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         bytes32 operatorKey = keccak256(abi.encodePacked(msg.sender));
 
         uint256 withdrawalReleaseTimestamp = block.timestamp + parametersStorage.stakeWithdrawalDelay();
-        //da li od operatorfee, ili od basestaka
         ss.setOperatorFeeBalance(identityId, oldOperatorFeeBalance - withdrawalAmount); // bookkeeping
         ss.createOperatorFeeWithdrawalRequest(identityId, withdrawalAmount, /*indexed*/ 0, withdrawalReleaseTimestamp);
     }
@@ -615,22 +614,27 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         require(epoch < currentEpoch, "epoch not finalised");
 
         uint256 lastClaimed = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
-        require(epoch == lastClaimed + 1, "delegator has older epochs that they need to claim rewards first");
+        if (lastClaimed == currentEpoch - 1) {
+            revert("already claimed all finalised epochs");
+        }
 
-        //TODO make to seperate checks
+        if (epoch <= lastClaimed) {
+            revert("epoch already claimed");
+        }
+
+        if (epoch > lastClaimed + 1) {
+            revert("must claim older epochs first");
+        }
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
         require(
-            !randomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey),
+            !delegatorsInfo.getEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey),
             "already claimed"
         );
-
-        //TODO move EpochNodeDelegatorRewardsClaimed to delegatorsInfo
 
         uint256 delegatorScore = _prepareForStakeChange(epoch, identityId, delegatorKey);
         uint256 nodeScore = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
         uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch); // fee-pot for delegators
-        //ova trazenje fee procenta u odredjenom trenutku radi preko for pretlje
 
         if (!delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
             uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
@@ -638,7 +642,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             uint256 leftoverEpochDelegatorPool = epocRewardsPool - operatorFeeAmount;
             stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
             delegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, true);
-            delegatorsInfo.setLastClaimedEpochOperatorFeeAmount(identityId, epoch);
+            delegatorsInfo.setLastClaimedDelegatorsRewardsEpoch(identityId, epoch);
             // Set the calculated total rewards for delegators for this epoch
             delegatorsInfo.setEpochLeftoverDelegatorsRewards(identityId, epoch, leftoverEpochDelegatorPool);
         }
@@ -655,7 +659,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             : (delegatorScore * totalLeftoverEpochlRewardsForDelegators) / nodeScore;
 
         // update state even when reward is zero
-        randomSamplingStorage.setEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey, true);
+        delegatorsInfo.setEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey, true);
         uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
         delegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch);
 
