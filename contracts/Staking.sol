@@ -433,73 +433,73 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ss.increaseOperatorFeeBalance(identityId, operatorFeeWithdrawalAmount);
     }
 
-    function getOperatorStats(uint72 identityId) external view returns (uint96, uint96, uint96) {
-        StakingStorage ss = stakingStorage;
+    // function getOperatorStats(uint72 identityId) external view returns (uint96, uint96, uint96) {
+    //     StakingStorage ss = stakingStorage;
 
-        bytes32[] memory adminKeys = identityStorage.getKeysByPurpose(identityId, IdentityLib.ADMIN_KEY);
+    //     bytes32[] memory adminKeys = identityStorage.getKeysByPurpose(identityId, IdentityLib.ADMIN_KEY);
 
-        uint96 totalSimBase;
-        uint96 totalSimIndexed;
-        uint96 totalSimUnrealized;
-        uint96 totalEarned;
-        uint96 totalPaidOut;
-        for (uint256 i; i < adminKeys.length; i++) {
-            (uint96 simBase, uint96 simIndexed, uint96 simUnrealized) = simulateStakeInfoUpdate(
-                identityId,
-                adminKeys[i]
-            );
+    //     uint96 totalSimBase;
+    //     uint96 totalSimIndexed;
+    //     uint96 totalSimUnrealized;
+    //     uint96 totalEarned;
+    //     uint96 totalPaidOut;
+    //     for (uint256 i; i < adminKeys.length; i++) {
+    //         (uint96 simBase, uint96 simIndexed, uint96 simUnrealized) = simulateStakeInfoUpdate(
+    //             identityId,
+    //             adminKeys[i]
+    //         );
 
-            (uint96 operatorEarned, uint96 operatorPaidOut) = ss.getDelegatorRewardsInfo(identityId, adminKeys[i]);
+    //         (uint96 operatorEarned, uint96 operatorPaidOut) = ss.getDelegatorRewardsInfo(identityId, adminKeys[i]);
 
-            totalSimBase += simBase;
-            totalSimIndexed += simIndexed;
-            totalSimUnrealized += simUnrealized;
-            totalEarned += operatorEarned;
-            totalPaidOut += operatorPaidOut;
-        }
+    //         totalSimBase += simBase;
+    //         totalSimIndexed += simIndexed;
+    //         totalSimUnrealized += simUnrealized;
+    //         totalEarned += operatorEarned;
+    //         totalPaidOut += operatorPaidOut;
+    //     }
 
-        return (totalSimBase + totalSimIndexed, totalEarned + totalSimUnrealized - totalPaidOut, totalPaidOut);
-    }
+    //     return (totalSimBase + totalSimIndexed, totalEarned + totalSimUnrealized - totalPaidOut, totalPaidOut);
+    // }
 
-    function getNodeStats(uint72 identityId) external view returns (uint96, uint96, uint96) {
-        return stakingStorage.getNodeRewardsInfo(identityId);
-    }
+    // function getNodeStats(uint72 identityId) external view returns (uint96, uint96, uint96) {
+    //     return stakingStorage.getNodeRewardsInfo(identityId);
+    // }
 
-    function getOperatorFeeStats(uint72 identityId) external view returns (uint96, uint96, uint96) {
-        return stakingStorage.getNodeOperatorFeesInfo(identityId);
-    }
+    // function getOperatorFeeStats(uint72 identityId) external view returns (uint96, uint96, uint96) {
+    //     return stakingStorage.getNodeOperatorFeesInfo(identityId);
+    // }
 
-    function getDelegatorStats(uint72 identityId, address delegator) external view returns (uint96, uint96, uint96) {
-        bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
-        (uint96 simBase, uint96 simIndexed, uint96 simUnrealized) = simulateStakeInfoUpdate(identityId, delegatorKey);
+    // function getDelegatorStats(uint72 identityId, address delegator) external view returns (uint96, uint96, uint96) {
+    //     bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
+    //     (uint96 simBase, uint96 simIndexed, uint96 simUnrealized) = simulateStakeInfoUpdate(identityId, delegatorKey);
 
-        (uint96 delegatorEarned, uint96 delegatorPaidOut) = stakingStorage.getDelegatorRewardsInfo(
-            identityId,
-            delegatorKey
-        );
+    //     (uint96 delegatorEarned, uint96 delegatorPaidOut) = stakingStorage.getDelegatorRewardsInfo(
+    //         identityId,
+    //         delegatorKey
+    //     );
 
-        return (simBase + simIndexed, delegatorEarned + simUnrealized - delegatorPaidOut, delegatorPaidOut);
-    }
+    //     return (simBase + simIndexed, delegatorEarned + simUnrealized - delegatorPaidOut, delegatorPaidOut);
+    // }
 
-    function simulateStakeInfoUpdate(
-        uint72 identityId,
-        bytes32 delegatorKey
-    ) public view returns (uint96, uint96, uint96) {
-        uint256 nodeRewardIndex = stakingStorage.getNodeRewardIndex(identityId);
+    // function simulateStakeInfoUpdate(
+    //     uint72 identityId,
+    //     bytes32 delegatorKey
+    // ) public view returns (uint96, uint96, uint96) {
+    //     uint256 nodeRewardIndex = stakingStorage.getNodeRewardIndex(identityId);
 
-        (uint96 delegatorStakeBase, uint96 delegatorStakeIndexed, uint256 delegatorLastRewardIndex) = stakingStorage
-            .getDelegatorStakeInfo(identityId, delegatorKey);
+    //     (uint96 delegatorStakeBase, uint96 delegatorStakeIndexed, uint256 delegatorLastRewardIndex) = stakingStorage
+    //         .getDelegatorStakeInfo(identityId, delegatorKey);
 
-        if (nodeRewardIndex <= delegatorLastRewardIndex) {
-            return (delegatorStakeBase, delegatorStakeIndexed, 0);
-        }
+    //     if (nodeRewardIndex <= delegatorLastRewardIndex) {
+    //         return (delegatorStakeBase, delegatorStakeIndexed, 0);
+    //     }
 
-        uint256 diff = nodeRewardIndex - delegatorLastRewardIndex;
-        uint256 currentStake = uint256(delegatorStakeBase) + uint256(delegatorStakeIndexed);
-        uint96 additionalReward = uint96((currentStake * diff) / 1e18);
+    //     uint256 diff = nodeRewardIndex - delegatorLastRewardIndex;
+    //     uint256 currentStake = uint256(delegatorStakeBase) + uint256(delegatorStakeIndexed);
+    //     uint96 additionalReward = uint96((currentStake * diff) / 1e18);
 
-        return (delegatorStakeBase, delegatorStakeIndexed + additionalReward, additionalReward);
-    }
+    //     return (delegatorStakeBase, delegatorStakeIndexed + additionalReward, additionalReward);
+    // }
 
     function claimDelegatorRewards(
         uint72 identityId,
