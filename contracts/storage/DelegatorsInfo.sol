@@ -27,7 +27,9 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     // IdentityId => Epoch => Amount
     mapping(uint72 => mapping(uint256 => uint256)) public EpochLeftoverDelegatorsRewards;
     // IdentityId => Epoch
-    mapping(uint72 => uint256) public lastClaimedEpochOperatorFeeAmount;
+    mapping(uint72 => uint256) public lastClaimedEpochOperatorFee;
+    // epoch => identityId => delegatorKey => rewards claimed status
+    mapping(uint256 => mapping(uint72 => mapping(bytes32 => bool))) public epochNodeDelegatorRewardsClaimed;
 
     event DelegatorAdded(uint72 indexed identityId, address indexed delegator);
     event DelegatorRemoved(uint72 indexed identityId, address indexed delegator);
@@ -44,7 +46,7 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     );
     event IsOperatorFeeClaimedForEpochUpdated(uint72 indexed identityId, uint256 indexed epoch, bool isClaimed);
     event EpochLeftoverDelegatorsRewardsSet(uint72 indexed identityId, uint256 indexed epoch, uint256 amount);
-    event LastClaimedEpochOperatorFeeAmountSet(uint72 indexed identityId, uint256 epoch);
+    event LastClaimedEpochOperatorFeeSet(uint72 indexed identityId, uint256 epoch);
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -150,13 +152,29 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
         return EpochLeftoverDelegatorsRewards[identityId][epoch];
     }
 
-    function setLastClaimedEpochOperatorFeeAmount(uint72 identityId, uint256 epoch) external onlyContracts {
-        lastClaimedEpochOperatorFeeAmount[identityId] = epoch;
-        emit LastClaimedEpochOperatorFeeAmountSet(identityId, epoch);
+    function setLastClaimedEpochOperatorFee(uint72 identityId, uint256 epoch) external onlyContracts {
+        lastClaimedEpochOperatorFee[identityId] = epoch;
+        emit LastClaimedEpochOperatorFeeSet(identityId, epoch);
     }
 
-    function getLastClaimedEpochOperatorFeeAmount(uint72 identityId) external view returns (uint256) {
-        return lastClaimedEpochOperatorFeeAmount[identityId];
+    function getLastClaimedEpochOperatorFee(uint72 identityId) external view returns (uint256) {
+        return lastClaimedEpochOperatorFee[identityId];
+    }
+    function getEpochNodeDelegatorRewardsClaimed(
+        uint256 epoch,
+        uint72 identityId,
+        bytes32 delegatorKey
+    ) external view returns (bool) {
+        return epochNodeDelegatorRewardsClaimed[epoch][identityId][delegatorKey];
+    }
+
+    function setEpochNodeDelegatorRewardsClaimed(
+        uint256 epoch,
+        uint72 identityId,
+        bytes32 delegatorKey,
+        bool claimed
+    ) external onlyContracts {
+        epochNodeDelegatorRewardsClaimed[epoch][identityId][delegatorKey] = claimed;
     }
 
     function migrate(address[] memory newAddresses) public {
