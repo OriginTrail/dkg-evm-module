@@ -29,6 +29,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Staking";
     string private constant _VERSION = "1.0.1";
 
+    event StakeRedelegated(
+        uint72 indexed fromIdentityId,
+        uint72 indexed toIdentityId,
+        address indexed delegator,
+        uint96 amount
+    );
+
     Ask public askContract;
     ShardingTableStorage public shardingTableStorage;
     ShardingTable public shardingTableContract;
@@ -132,15 +139,21 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         StakingStorage ss = stakingStorage;
         Ask ask = askContract;
 
+        if (fromIdentityId == toIdentityId) {
+            revert("Cannot redelegate to the same node");
+        }
+
         if (stakeAmount == 0) {
             revert TokenLib.ZeroTokenAmount();
         }
 
+        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+
         // Validate that all claims have been settled for the source node before changing stake
         _validateDelegatorEpochClaims(fromIdentityId, msg.sender);
+        _prepareForStakeChange(chronos.getCurrentEpoch(), fromIdentityId, delegatorKey);
 
         // Validate that all claims have been settled for the destination node before changing stake
-        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
         uint256 previousEpoch = chronos.getCurrentEpoch() - 1;
         bool hasEverDelegatedToNode = delegatorsInfo.hasEverDelegatedToNode(toIdentityId, msg.sender);
         uint96 toDelegatorStakeBase = ss.getDelegatorStakeBase(toIdentityId, delegatorKey);
@@ -158,6 +171,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Validate that all claims have been settled for the destination node before changing stake
         _validateDelegatorEpochClaims(toIdentityId, msg.sender);
+        _prepareForStakeChange(chronos.getCurrentEpoch(), toIdentityId, delegatorKey);
 
         uint96 fromDelegatorStakeBase = ss.getDelegatorStakeBase(fromIdentityId, delegatorKey);
 
@@ -165,8 +179,9 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert StakingLib.WithdrawalExceedsStake(fromDelegatorStakeBase, stakeAmount);
         }
 
-        if (ss.getNodeStake(toIdentityId) + stakeAmount > parametersStorage.maximumStake()) {
-            revert StakingLib.MaximumStakeExceeded(parametersStorage.maximumStake());
+        uint96 maxStake = parametersStorage.maximumStake();
+        if (ss.getNodeStake(toIdentityId) + stakeAmount > maxStake) {
+            revert StakingLib.MaximumStakeExceeded(maxStake);
         }
 
         // calculate new delegator stake base on the source node
@@ -208,6 +223,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         if (!delegatorsInfo.hasEverDelegatedToNode(toIdentityId, msg.sender)) {
             delegatorsInfo.setHasEverDelegatedToNode(toIdentityId, msg.sender, true);
         }
+
+        emit StakeRedelegated(fromIdentityId, toIdentityId, msg.sender, stakeAmount);
     }
 
     function requestWithdrawal(uint72 identityId, uint96 removedStake) external profileExists(identityId) {
