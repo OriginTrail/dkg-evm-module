@@ -191,7 +191,20 @@
   },
   {
     "inputs": [],
-    "name": "SCALING_FACTOR",
+    "name": "SCALE18",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SCALE36",
     "outputs": [
       {
         "internalType": "uint256",
