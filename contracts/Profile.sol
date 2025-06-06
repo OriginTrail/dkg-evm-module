@@ -135,8 +135,8 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
 
         if (currentEpoch > 1) {
             uint256 prev = currentEpoch - 1;
-            if (!delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, prev)) {
-                revert("previous epoch rewards not yet claimed for node");
+            if (delegatorsInfo.getLastClaimedDelegatorsRewardsEpoch(identityId) < prev) {
+                revert("Cannot update operatorFee if operatorReward has not been claimed for previous epochs");
             }
         }
 
@@ -150,12 +150,14 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epochLength = chronos.epochLength();
         uint256 nextEpochStart = epochStart + epochLength;
 
-        uint256 effectiveStart = block.timestamp <= epochStart + 3 days ? nextEpochStart : nextEpochStart + epochLength;
+        uint256 effectiveStart = block.timestamp <= epochStart + 15 days
+            ? nextEpochStart
+            : nextEpochStart + epochLength;
 
         if (ps.isOperatorFeeChangePending(identityId)) {
-            ps.replacePendingOperatorFee(identityId, newOperatorFee, nextEpochStart);
+            ps.replacePendingOperatorFee(identityId, newOperatorFee, effectiveStart);
         } else {
-            ps.addOperatorFee(identityId, newOperatorFee, nextEpochStart);
+            ps.addOperatorFee(identityId, newOperatorFee, effectiveStart);
         }
     }
 
