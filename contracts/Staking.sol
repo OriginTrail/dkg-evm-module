@@ -680,7 +680,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
         // 4. Newly earned score for this delegator in the epoch
         uint256 diff = nodeScorePerStake - delegatorLastSettledNodeEpochScorePerStake; // scaled 1e18
-        uint256 scoreEarned = (uint256(stakeBase) * diff) / 1e18;
+        uint256 scoreEarned = (uint256(stakeBase) * diff);
 
         // 5. Persist results
         if (scoreEarned > 0) {
