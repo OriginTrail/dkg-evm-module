@@ -641,12 +641,12 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch);
         if (epocRewardsPool == 0) return 0;
 
-        uint256 delegatorsRewards = (epocRewardsPool * nodeScore) / allNodesScore;
+        uint256 totalNodeDelegatorsRewards = (epocRewardsPool * nodeScore) / allNodesScore;
 
         uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
-        uint96 operatorFeeAmount = uint96((delegatorsRewards * feePercentageForEpoch) / 10000);
+        uint96 operatorFeeAmount = uint96((totalNodeDelegatorsRewards * feePercentageForEpoch) / 10000);
 
-        return delegatorsRewards - operatorFeeAmount;
+        return totalNodeDelegatorsRewards - operatorFeeAmount;
     }
 
     function _validateDelegatorEpochClaims(uint72 identityId, address delegator) internal {
