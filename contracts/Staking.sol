@@ -120,19 +120,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         askContract.recalculateActiveSet();
 
         // Check if this is first time staking
-        if (!delegatorsInfo.isNodeDelegator(identityId, msg.sender)) {
-            delegatorsInfo.addDelegator(identityId, msg.sender);
-        }
-
-        if (!delegatorsInfo.hasEverDelegatedToNode(identityId, msg.sender)) {
-            delegatorsInfo.setHasEverDelegatedToNode(identityId, msg.sender, true);
-        }
-
-        // If delegator was inactive and is now staking again, reset their lastStakeHeldEpoch
-        uint256 lastStakeHeldEpoch = delegatorsInfo.getLastStakeHeldEpoch(identityId, msg.sender);
-        if (lastStakeHeldEpoch > 0) {
-            delegatorsInfo.setLastStakeHeldEpoch(identityId, msg.sender, 0);
-        }
+        _manageDelegatorStatus(identityId, msg.sender);
 
         token.transferFrom(msg.sender, address(ss), addedStake);
     }
@@ -210,20 +198,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
                 delegatorsInfo.setLastStakeHeldEpoch(fromIdentityId, msg.sender, currentEpoch);
             }
         }
-        // Check if delegator is recorded as a delegator on the destination node
-        if (!delegatorsInfo.isNodeDelegator(toIdentityId, msg.sender)) {
-            delegatorsInfo.addDelegator(toIdentityId, msg.sender);
-        }
-        // Check if delegator has ever delegated to the destination node
-        if (!delegatorsInfo.hasEverDelegatedToNode(toIdentityId, msg.sender)) {
-            delegatorsInfo.setHasEverDelegatedToNode(toIdentityId, msg.sender, true);
-        }
 
-        // If delegator was inactive on destination node and is now redelegating to it, reset their lastStakeHeldEpoch
-        uint256 toLastStakeHeldEpoch = delegatorsInfo.getLastStakeHeldEpoch(toIdentityId, msg.sender);
-        if (toLastStakeHeldEpoch > 0) {
-            delegatorsInfo.setLastStakeHeldEpoch(toIdentityId, msg.sender, 0);
-        }
+        _manageDelegatorStatus(toIdentityId, msg.sender);
 
         emit StakeRedelegated(fromIdentityId, toIdentityId, msg.sender, stakeAmount);
     }
@@ -389,20 +365,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ss.addOperatorFeeCumulativePaidOutRewards(identityId, addedStake); // bookkeeping
         ss.increaseTotalStake(addedStake);
 
-        if (!delegatorsInfo.isNodeDelegator(identityId, msg.sender)) {
-            // admin might be staking for the first time
-            delegatorsInfo.addDelegator(identityId, msg.sender);
-        }
-
-        if (!delegatorsInfo.hasEverDelegatedToNode(identityId, msg.sender)) {
-            delegatorsInfo.setHasEverDelegatedToNode(identityId, msg.sender, true);
-        }
-
-        // If operator was inactive and is now restaking fees, reset their lastStakeHeldEpoch
-        uint256 lastStakeHeldEpoch = delegatorsInfo.getLastStakeHeldEpoch(identityId, msg.sender);
-        if (lastStakeHeldEpoch > 0) {
-            delegatorsInfo.setLastStakeHeldEpoch(identityId, msg.sender, 0);
-        }
+        _manageDelegatorStatus(identityId, msg.sender);
 
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
         askContract.recalculateActiveSet();
@@ -831,6 +794,20 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 scoreEarned = (uint256(stakeBase) * diff) / 1e18;
 
         return currentDelegatorScore + scoreEarned;
+    }
+
+    function _manageDelegatorStatus(uint72 identityId, address delegator) internal {
+        if (!delegatorsInfo.isNodeDelegator(identityId, delegator)) {
+            delegatorsInfo.addDelegator(identityId, delegator);
+        }
+        if (!delegatorsInfo.hasEverDelegatedToNode(identityId, delegator)) {
+            delegatorsInfo.setHasEverDelegatedToNode(identityId, delegator, true);
+        }
+        // If operator was inactive and is now restaking fees, reset their lastStakeHeldEpoch
+        uint256 lastStakeHeldEpoch = delegatorsInfo.getLastStakeHeldEpoch(identityId, delegator);
+        if (lastStakeHeldEpoch > 0) {
+            delegatorsInfo.setLastStakeHeldEpoch(identityId, delegator, 0);
+        }
     }
 
     function _addNodeToShardingTable(uint72 identityId, uint96 newStake) internal {
