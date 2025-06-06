@@ -74,7 +74,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         tokenContract = IERC20(hub.getContractAddress("Token"));
         randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
         chronos = Chronos(hub.getContractAddress("Chronos"));
-        epochStorage = EpochStorage(hub.getContractAddress("EpochStorage"));
+        epochStorage = EpochStorage(hub.getContractAddress("EpochStorageV8"));
     }
 
     function name() external pure virtual override returns (string memory) {
