@@ -526,6 +526,29 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         return delegatorsRewards - operatorFeeAmount;
     }
 
+    function getNodeRewardsForEpoch(
+        uint72 identityId,
+        uint256 epoch
+    ) public view profileExists(identityId) returns (uint256) {
+        // If the operator fee has been claimed, return the net delegators rewards
+        if (delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
+            return delegatorsInfo.getEpochLeftoverDelegatorsRewards(identityId, epoch);
+        }
+
+        uint256 nodeScore = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
+        if (nodeScore == 0) return 0;
+
+        uint256 allNodesScore = randomSamplingStorage.getAllNodesEpochScore(epoch);
+        if (allNodesScore == 0) return 0;
+
+        uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch);
+        if (epocRewardsPool == 0) return 0;
+
+        uint256 nodeRewardsForEpoch = (epocRewardsPool * nodeScore) / allNodesScore;
+
+        return nodeRewardsForEpoch;
+    }
+
     function claimDelegatorRewards(
         uint72 identityId,
         uint256 epoch,
@@ -557,13 +580,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         uint256 delegatorScore = _prepareForStakeChange(epoch, identityId, delegatorKey);
         uint256 nodeScore = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
-        uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch); // fee-pot for delegators
+        uint256 epocRewardsPool = getNodeRewardsForEpoch(identityId, epoch);
         uint256 totalLeftoverEpochlRewardsForDelegators = 0;
 
         if (!delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
             uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
             uint96 operatorFeeAmount = uint96((epocRewardsPool * feePercentageForEpoch) / 10000);
-            totalLeftoverEpochlRewardsForDelegators = getNetDelegatorsRewards(identityId, epoch);
+            totalLeftoverEpochlRewardsForDelegators = epocRewardsPool - operatorFeeAmount;
             stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
             delegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, true);
             delegatorsInfo.setLastClaimedDelegatorsRewardsEpoch(identityId, epoch);
