@@ -215,6 +215,31 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "delegator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      }
+    ],
+    "name": "LastStakeHeldEpochUpdated",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint72",
@@ -523,6 +548,30 @@
     "inputs": [
       {
         "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "address",
+        "name": "delegator",
+        "type": "address"
+      }
+    ],
+    "name": "getLastStakeHeldEpoch",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
         "name": "",
         "type": "uint72"
       },
@@ -668,6 +717,30 @@
       }
     ],
     "name": "lastClaimedEpoch",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "",
+        "type": "uint72"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "lastStakeHeldEpoch",
     "outputs": [
       {
         "internalType": "uint256",
@@ -927,6 +1000,29 @@
       }
     ],
     "name": "setLastClaimedEpoch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "address",
+        "name": "delegator",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      }
+    ],
+    "name": "setLastStakeHeldEpoch",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
