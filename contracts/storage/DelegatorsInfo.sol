@@ -32,6 +32,8 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     mapping(uint256 => mapping(uint72 => mapping(bytes32 => bool))) public epochNodeDelegatorRewardsClaimed;
     // IdentityId => Delegator => HasEverDelegatedToNode
     mapping(uint72 => mapping(address => bool)) public hasEverDelegatedToNode;
+    // IdentityId => Delegator => LastStakeHeldEpoch (the last epoch when delegator held stake, 0 if fully claimed)
+    mapping(uint72 => mapping(address => uint256)) public lastStakeHeldEpoch;
 
     event DelegatorAdded(uint72 indexed identityId, address indexed delegator);
     event DelegatorRemoved(uint72 indexed identityId, address indexed delegator);
@@ -54,6 +56,7 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
         address indexed delegator,
         bool hasEverDelegatedToNode
     );
+    event LastStakeHeldEpochUpdated(uint72 indexed identityId, address indexed delegator, uint256 epoch);
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -192,6 +195,15 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     ) external onlyContracts {
         hasEverDelegatedToNode[identityId][delegator] = _hasEverDelegatedToNode;
         emit HasEverDelegatedToNodeUpdated(identityId, delegator, _hasEverDelegatedToNode);
+    }
+
+    function setLastStakeHeldEpoch(uint72 identityId, address delegator, uint256 epoch) external onlyContracts {
+        lastStakeHeldEpoch[identityId][delegator] = epoch;
+        emit LastStakeHeldEpochUpdated(identityId, delegator, epoch);
+    }
+
+    function getLastStakeHeldEpoch(uint72 identityId, address delegator) external view returns (uint256) {
+        return lastStakeHeldEpoch[identityId][delegator];
     }
 
     function migrate(address[] memory newAddresses) public {
