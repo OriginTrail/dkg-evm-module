@@ -131,9 +131,12 @@ describe('@unit RandomSamplingStorage', function () {
   describe('Scoring System', () => {
     it('Should increment and get epoch node valid proofs count', async () => {
       const nodeId = 1n;
-      const signer = await ethers.getSigner(accounts[0].address);
       const currentEpoch = await Chronos.getCurrentEpoch();
       const epochLength = await Chronos.epochLength();
+
+      // Impersonate RandomSampling for contract-only function
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
 
       // Test initial state
       const initialCount = await RandomSamplingStorage.getEpochNodeValidProofsCount(
@@ -143,7 +146,7 @@ describe('@unit RandomSamplingStorage', function () {
       expect(initialCount).to.equal(0n, 'Should start with 0 proofs');
 
       // Test incrementing in current epoch
-      await RandomSamplingStorage.connect(signer).incrementEpochNodeValidProofsCount(
+      await RandomSamplingStorage.connect(rsSigner).incrementEpochNodeValidProofsCount(
         currentEpoch,
         nodeId
       );
@@ -154,7 +157,7 @@ describe('@unit RandomSamplingStorage', function () {
       expect(countAfterIncrement).to.equal(1n, 'Should increment to 1');
 
       // Test multiple increments
-      await RandomSamplingStorage.connect(signer).incrementEpochNodeValidProofsCount(
+      await RandomSamplingStorage.connect(rsSigner).incrementEpochNodeValidProofsCount(
         currentEpoch,
         nodeId
       );
@@ -170,7 +173,7 @@ describe('@unit RandomSamplingStorage', function () {
       expect(nextEpoch).to.equal(currentEpoch + 1n, 'Should be in next epoch');
 
       // Test in next epoch
-      await RandomSamplingStorage.connect(signer).incrementEpochNodeValidProofsCount(
+      await RandomSamplingStorage.connect(rsSigner).incrementEpochNodeValidProofsCount(
         nextEpoch,
         nodeId
       );
@@ -181,13 +184,18 @@ describe('@unit RandomSamplingStorage', function () {
       expect(nextEpochCount).to.equal(1n, 'Should start at 1 in new epoch');
       expect(await RandomSamplingStorage.getEpochNodeValidProofsCount(currentEpoch, nodeId))
         .to.equal(2n, 'Previous epoch count should remain unchanged');
+
+      await stopImpersonate(RandomSampling);
     });
 
     it('Should add to node score and get node score', async () => {
       const nodeIds = [1n, 2n, 3n];
-      const signer = await ethers.getSigner(accounts[0].address);
       const currentEpoch = await Chronos.getCurrentEpoch();
       const proofPeriodIndex = 1n;
+
+      // Impersonate RandomSampling for contract-only functions
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
 
       // Test initial state for all nodes
       for (const nodeId of nodeIds) {
@@ -197,7 +205,7 @@ describe('@unit RandomSamplingStorage', function () {
           proofPeriodIndex
         )).to.equal(0n, `Node ${nodeId} should start with 0 score`);
       }
-      expect(await RandomSamplingStorage.allNodesEpochProofPeriodScore(
+      expect(await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
         currentEpoch, 
         proofPeriodIndex
       )).to.equal(0n, 'Global score should start at 0');
@@ -212,10 +220,17 @@ describe('@unit RandomSamplingStorage', function () {
         expectedGlobalScore += score;
 
         // Add score to node
-        await RandomSamplingStorage.connect(signer).addToNodeScore(
+        await RandomSamplingStorage.connect(rsSigner).addToNodeEpochProofPeriodScore(
           currentEpoch,
           proofPeriodIndex,
           nodeId,
+          score
+        );
+
+        // Add to global score
+        await RandomSamplingStorage.connect(rsSigner).addToAllNodesEpochProofPeriodScore(
+          currentEpoch,
+          proofPeriodIndex,
           score
         );
 
@@ -229,7 +244,7 @@ describe('@unit RandomSamplingStorage', function () {
           `Node ${nodeId} should have score ${score}`);
 
         // Verify global score
-        const globalScore = await RandomSamplingStorage.allNodesEpochProofPeriodScore(
+        const globalScore = await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
           currentEpoch,
           proofPeriodIndex
         );
@@ -239,10 +254,17 @@ describe('@unit RandomSamplingStorage', function () {
 
       // Test adding more score to existing node
       const additionalScore = 50n;
-      await RandomSamplingStorage.connect(signer).addToNodeScore(
+      await RandomSamplingStorage.connect(rsSigner).addToNodeEpochProofPeriodScore(
         currentEpoch,
         proofPeriodIndex,
         nodeIds[0],
+        additionalScore
+      );
+
+      // Add to global score
+      await RandomSamplingStorage.connect(rsSigner).addToAllNodesEpochProofPeriodScore(
+        currentEpoch,
+        proofPeriodIndex,
         additionalScore
       );
 
@@ -256,12 +278,14 @@ describe('@unit RandomSamplingStorage', function () {
         'Node score should be updated with additional score');
 
       // Verify updated global score
-      const updatedGlobalScore = await RandomSamplingStorage.allNodesEpochProofPeriodScore(
+      const updatedGlobalScore = await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
         currentEpoch,
         proofPeriodIndex
       );
       expect(updatedGlobalScore).to.equal(expectedGlobalScore + additionalScore,
         'Global score should be updated with additional score');
+
+      await stopImpersonate(RandomSampling);
     });
 
     it('Should accumulate delegator scores correctly', async () => {
@@ -303,6 +327,59 @@ describe('@unit RandomSamplingStorage', function () {
         publishingNodeIdentityId,
         delegatorKey
       )).to.equal(score * 2n);
+    });
+
+    it('Should add to and get nodeEpochScorePerStake correctly and emit event', async () => {
+      const nodeId = 1n;
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const scorePerStakeToAdd = 500n;
+      const expectedTotalScorePerStake = 500n;
+
+      // Initial state
+      expect(await RandomSamplingStorage.getNodeEpochScorePerStake(currentEpoch, nodeId))
+        .to.equal(0n, 'Initial nodeEpochScorePerStake should be 0');
+
+      // Impersonate RandomSampling for contract-only function
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
+
+      // Add scorePerStake and check event
+      await expect(RandomSamplingStorage.connect(rsSigner).addToNodeEpochScorePerStake(currentEpoch, nodeId, scorePerStakeToAdd))
+        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeUpdated')
+        .withArgs(currentEpoch, nodeId, expectedTotalScorePerStake);
+
+      // Verify stored value
+      expect(await RandomSamplingStorage.getNodeEpochScorePerStake(currentEpoch, nodeId))
+        .to.equal(expectedTotalScorePerStake, `nodeEpochScorePerStake should be ${expectedTotalScorePerStake}`);
+
+      // Add more and verify accumulation
+      const anotherScorePerStakeToAdd = 300n;
+      const newExpectedTotalScorePerStake = expectedTotalScorePerStake + anotherScorePerStakeToAdd;
+      await expect(RandomSamplingStorage.connect(rsSigner).addToNodeEpochScorePerStake(currentEpoch, nodeId, anotherScorePerStakeToAdd))
+        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeUpdated')
+        .withArgs(currentEpoch, nodeId, newExpectedTotalScorePerStake);
+      
+      expect(await RandomSamplingStorage.getNodeEpochScorePerStake(currentEpoch, nodeId))
+        .to.equal(newExpectedTotalScorePerStake, `nodeEpochScorePerStake should be ${newExpectedTotalScorePerStake}`);
+
+      // Test different node
+      const anotherNodeId = 2n;
+      await expect(RandomSamplingStorage.connect(rsSigner).addToNodeEpochScorePerStake(currentEpoch, anotherNodeId, scorePerStakeToAdd))
+        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeUpdated')
+        .withArgs(currentEpoch, anotherNodeId, scorePerStakeToAdd);
+      expect(await RandomSamplingStorage.getNodeEpochScorePerStake(currentEpoch, anotherNodeId))
+        .to.equal(scorePerStakeToAdd);
+      
+      // Test different epoch
+      await time.increase(Number(await Chronos.epochLength()));
+      const nextEpoch = await Chronos.getCurrentEpoch();
+      await expect(RandomSamplingStorage.connect(rsSigner).addToNodeEpochScorePerStake(nextEpoch, nodeId, scorePerStakeToAdd))
+        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeUpdated')
+        .withArgs(nextEpoch, nodeId, scorePerStakeToAdd);
+      expect(await RandomSamplingStorage.getNodeEpochScorePerStake(nextEpoch, nodeId))
+        .to.equal(scorePerStakeToAdd);
+
+      await stopImpersonate(RandomSampling);
     });
   });
 
@@ -431,18 +508,19 @@ describe('@unit RandomSamplingStorage', function () {
         .withArgs('Only Contracts in Hub');
 
       await expect(
-        RandomSamplingStorage.connect(accounts[1]).addToNodeScore(0, 0, 0, 0)
+        RandomSamplingStorage.connect(accounts[1]).addToNodeEpochProofPeriodScore(0, 0, 0, 0)
       )
         .to.be.revertedWithCustomError(RandomSamplingStorage, 'UnauthorizedAccess')
         .withArgs('Only Contracts in Hub');
 
       await expect(
-        RandomSamplingStorage.connect(accounts[1]).addToEpochNodeDelegatorScore(
-          0,
-          0,
-          ethers.encodeBytes32String('0'),
-          0
-        )
+        RandomSamplingStorage.connect(accounts[1]).addToNodeEpochScorePerStake(0, 0, 0)
+      )
+        .to.be.revertedWithCustomError(RandomSamplingStorage, 'UnauthorizedAccess')
+        .withArgs('Only Contracts in Hub');
+      
+      await expect(
+        RandomSamplingStorage.connect(accounts[1]).setDelegatorLastSettledNodeEpochScorePerStake(0, 0, ethers.encodeBytes32String('0'), 0)
       )
         .to.be.revertedWithCustomError(RandomSamplingStorage, 'UnauthorizedAccess')
         .withArgs('Only Contracts in Hub');
@@ -475,6 +553,27 @@ describe('@unit RandomSamplingStorage', function () {
         RandomSamplingStorage.connect(rsSigner).addProofingPeriodDuration(0, 0)
       ).to.not.be.reverted;
 
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).incrementEpochNodeValidProofsCount(1, 1)
+      ).to.not.be.reverted;
+
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addToNodeEpochProofPeriodScore(1, 1, 1, 1000)
+      ).to.not.be.reverted;
+
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addToNodeEpochScorePerStake(1, 1, 1000)
+      ).to.not.be.reverted;
+
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setDelegatorLastSettledNodeEpochScorePerStake(
+          1,
+          1,
+          ethers.encodeBytes32String('test'),
+          1000
+        )
+      ).to.not.be.reverted;
+
       await stopImpersonate(RandomSampling);
     });
 
@@ -500,11 +599,15 @@ describe('@unit RandomSamplingStorage', function () {
       ).to.not.be.reverted;
 
       await expect(
-        RandomSamplingStorage.connect(rsSigner).addToNodeScore(1, 1, 1, 1000)
+        RandomSamplingStorage.connect(rsSigner).addToNodeEpochProofPeriodScore(1, 1, 1, 1000)
       ).to.not.be.reverted;
 
       await expect(
-        RandomSamplingStorage.connect(rsSigner).addToEpochNodeDelegatorScore(
+        RandomSamplingStorage.connect(rsSigner).addToNodeEpochScorePerStake(1, 1, 1000)
+      ).to.not.be.reverted;
+      
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setDelegatorLastSettledNodeEpochScorePerStake(
           1,
           1,
           ethers.encodeBytes32String('test'),
@@ -1193,6 +1296,68 @@ describe('@unit RandomSamplingStorage', function () {
         publishingNodeIdentityId,
         delegatorKey
       )).to.be.false;
+    });
+  });
+
+  describe('Delegator Last Settled Node Epoch Score Per Stake Management', () => {
+    it('Should set and get delegatorLastSettledNodeEpochScorePerStake correctly and emit event', async () => {
+      const nodeId = 1n;
+      const delegatorKey = ethers.encodeBytes32String('delegatorTest');
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const scorePerStakeToSet = 12345n;
+
+      // Impersonate RandomSampling for contract-only function
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
+
+      // Initial state
+      expect(await RandomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(currentEpoch, nodeId, delegatorKey))
+        .to.equal(0n, 'Initial delegatorLastSettledNodeEpochScorePerStake should be 0');
+
+      // Set scorePerStake and check event
+      await expect(RandomSamplingStorage.connect(rsSigner).setDelegatorLastSettledNodeEpochScorePerStake(currentEpoch, nodeId, delegatorKey, scorePerStakeToSet))
+        .to.emit(RandomSamplingStorage, 'DelegatorLastSettledNodeEpochScorePerStakeUpdated')
+        .withArgs(currentEpoch, nodeId, delegatorKey, scorePerStakeToSet);
+
+      // Verify stored value
+      expect(await RandomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(currentEpoch, nodeId, delegatorKey))
+        .to.equal(scorePerStakeToSet, `delegatorLastSettledNodeEpochScorePerStake should be ${scorePerStakeToSet}`);
+
+      // Set again to test overwrite
+      const newScorePerStakeToSet = 54321n;
+      await expect(RandomSamplingStorage.connect(rsSigner).setDelegatorLastSettledNodeEpochScorePerStake(currentEpoch, nodeId, delegatorKey, newScorePerStakeToSet))
+        .to.emit(RandomSamplingStorage, 'DelegatorLastSettledNodeEpochScorePerStakeUpdated')
+        .withArgs(currentEpoch, nodeId, delegatorKey, newScorePerStakeToSet);
+      
+      expect(await RandomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(currentEpoch, nodeId, delegatorKey))
+        .to.equal(newScorePerStakeToSet, `delegatorLastSettledNodeEpochScorePerStake should be ${newScorePerStakeToSet} after overwrite`);
+
+      // Test different delegatorKey
+      const anotherDelegatorKey = ethers.encodeBytes32String('delegatorTest2');
+      await expect(RandomSamplingStorage.connect(rsSigner).setDelegatorLastSettledNodeEpochScorePerStake(currentEpoch, nodeId, anotherDelegatorKey, scorePerStakeToSet))
+        .to.emit(RandomSamplingStorage, 'DelegatorLastSettledNodeEpochScorePerStakeUpdated')
+        .withArgs(currentEpoch, nodeId, anotherDelegatorKey, scorePerStakeToSet);
+      expect(await RandomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(currentEpoch, nodeId, anotherDelegatorKey))
+        .to.equal(scorePerStakeToSet);
+      
+      // Test different node
+      const anotherNodeId = 2n;
+      await expect(RandomSamplingStorage.connect(rsSigner).setDelegatorLastSettledNodeEpochScorePerStake(currentEpoch, anotherNodeId, delegatorKey, scorePerStakeToSet))
+        .to.emit(RandomSamplingStorage, 'DelegatorLastSettledNodeEpochScorePerStakeUpdated')
+        .withArgs(currentEpoch, anotherNodeId, delegatorKey, scorePerStakeToSet);
+      expect(await RandomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(currentEpoch, anotherNodeId, delegatorKey))
+        .to.equal(scorePerStakeToSet);
+        
+      // Test different epoch
+      await time.increase(Number(await Chronos.epochLength()));
+      const nextEpoch = await Chronos.getCurrentEpoch();
+      await expect(RandomSamplingStorage.connect(rsSigner).setDelegatorLastSettledNodeEpochScorePerStake(nextEpoch, nodeId, delegatorKey, scorePerStakeToSet))
+        .to.emit(RandomSamplingStorage, 'DelegatorLastSettledNodeEpochScorePerStakeUpdated')
+        .withArgs(nextEpoch, nodeId, delegatorKey, scorePerStakeToSet);
+      expect(await RandomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(nextEpoch, nodeId, delegatorKey))
+        .to.equal(scorePerStakeToSet);
+
+      await stopImpersonate(RandomSampling);
     });
   });
 

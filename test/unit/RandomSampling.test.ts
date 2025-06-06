@@ -51,7 +51,7 @@ describe('@unit RandomSampling', () => {
   describe('constructor', () => {
     it('Should set correct initial values', async () => {
       // Check initial values set in constructor
-      expect(await RandomSampling.avgBlockTimeInSeconds()).to.equal(avgBlockTimeInSeconds);
+      expect(await RandomSampling.avgBlockTimeInSeconds()).to.equal(BigInt(avgBlockTimeInSeconds));
       expect(await RandomSampling.w1()).to.equal(w1);
       expect(await RandomSampling.w2()).to.equal(w2);
     });
@@ -154,9 +154,9 @@ describe('@unit RandomSampling', () => {
       
       await expect(tx)
         .to.emit(RandomSampling, 'AvgBlockTimeUpdated')
-        .withArgs(newAvg);
+        .withArgs(BigInt(newAvg));
       
-      expect(await RandomSampling.avgBlockTimeInSeconds()).to.equal(newAvg);
+      expect(await RandomSampling.avgBlockTimeInSeconds()).to.equal(BigInt(newAvg));
 
       // Test revert for non-owner
       await expect(RandomSampling.connect(accounts[1]).setAvgBlockTimeInSeconds(newAvg))
@@ -169,4 +169,4 @@ describe('@unit RandomSampling', () => {
         .to.be.revertedWith('Block time in seconds must be greater than 0');
     });
   });
-}); 
+});
