@@ -7,6 +7,7 @@ import {IVersioned} from "./interfaces/IVersioned.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IInitializable} from "./interfaces/IInitializable.sol";
 import {RandomSamplingLib} from "./libraries/RandomSamplingLib.sol";
+import {ProfileLib} from "./libraries/ProfileLib.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {RandomSamplingStorage} from "./storage/RandomSamplingStorage.sol";
 import {KnowledgeCollectionStorage} from "./storage/KnowledgeCollectionStorage.sol";
@@ -61,6 +62,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         avgBlockTimeInSeconds = _avgBlockTimeInSeconds;
         w1 = _w1;
         w2 = _w2;
+    }
+
+    modifier profileExists(uint72 identityId) {
+        _checkProfileExists(identityId);
+        _;
     }
 
     function initialize() public onlyHub {
@@ -119,8 +125,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
-    function createChallenge() external {
-        // identityId
+    function createChallenge() external profileExists(identityStorage.getIdentityId(msg.sender)) {
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
         RandomSamplingLib.Challenge memory nodeChallenge = randomSamplingStorage.getNodeChallenge(identityId);
@@ -146,7 +151,10 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         randomSamplingStorage.setNodeChallenge(identityId, challenge);
     }
 
-    function submitProof(string memory chunk, bytes32[] calldata merkleProof) external {
+    function submitProof(
+        string memory chunk,
+        bytes32[] calldata merkleProof
+    ) external profileExists(identityStorage.getIdentityId(msg.sender)) {
         // Get node identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -200,70 +208,6 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         } else {
             revert MerkleRootMismatchError(computedMerkleRoot, expectedMerkleRoot);
         }
-    }
-
-    function getDelegatorEpochRewardsAmount(
-        uint72 identityId,
-        uint256 epoch,
-        address delegator
-    ) public view returns (uint256) {
-        // // First part of the formula - W1 * (node valid proofs count / all expected epoch proofs count)
-        // uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
-        // uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
-        // uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
-        // uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
-        // require(allExpectedEpochProofsCount > 0, "All expected epoch proofs count must be greater than 0");
-        // proofsRatio = (epochNodeValidProofsCount * SCALING_FACTOR) / allExpectedEpochProofsCount;
-        uint256 proofsRatio = 0;
-
-        // Second part of the formula - W2 * (delegator score / all nodes scores)
-        bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
-
-        // Get the score that was already settled for the delegator in this epoch
-        uint256 settledDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
-            epoch,
-            identityId,
-            delegatorKey
-        );
-
-        // Get the stake base of the delegator from StakingStorage
-        (uint96 delegatorStakeBaseForScoring, , ) = stakingStorage.getDelegatorStakeInfo(identityId, delegatorKey);
-
-        // Get the current total score-per-stake for the node and the last settled score-per-stake for the delegator
-        uint256 latestNodeScorePerStake = randomSamplingStorage.getNodeEpochScorePerStake(epoch, identityId);
-        uint256 delegatorLastSettledScorePerStake = randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
-            epoch,
-            identityId,
-            delegatorKey
-        );
-
-        uint256 newlyEarnedScoreSinceLastSettlement = 0;
-        if (latestNodeScorePerStake > delegatorLastSettledScorePerStake && delegatorStakeBaseForScoring > 0) {
-            // (latestNodeScorePerStake - delegatorLastSettledScorePerStake) is scaled by SCALING_FACTOR
-            // delegatorStakeBaseForScoring is not scaled
-            // Result of multiplication is scaled by SCALING_FACTOR. Divide by SCALING_FACTOR to get unscaled newly earned score.
-            newlyEarnedScoreSinceLastSettlement = (delegatorStakeBaseForScoring *
-                (latestNodeScorePerStake - delegatorLastSettledScorePerStake));
-        }
-
-        uint256 totalEffectiveDelegatorScore = settledDelegatorScore + newlyEarnedScoreSinceLastSettlement;
-
-        uint256 allNodesEpochScore = randomSamplingStorage.getAllNodesEpochScore(epoch);
-        require(
-            allNodesEpochScore > 0,
-            "None of the nodes have any score for the given epoch. Cannot calculate rewards."
-        );
-        // totalEffectiveDelegatorScore is unscaled, allNodesEpochScore is unscaled sum of unscaled scores.
-        // scoreRatio needs to be scaled by SCALING_FACTOR for the final reward formula.
-        uint256 scoreRatio = (totalEffectiveDelegatorScore * SCALE18) / allNodesEpochScore;
-
-        // Reward calculation
-        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
-        // SCALING_FACTOR ** 2 because one SCALING_FACTOR is for totalEpochTracFees (if unscaled)
-        // and the other is because (w1 * proofsRatio + w2 * scoreRatio) is a sum of terms scaled by SCALING_FACTOR.
-        uint256 reward = ((totalEpochTracFees / 2) * (w1 * proofsRatio + w2 * scoreRatio)) / SCALE18 ** 2;
-
-        return reward;
     }
 
     function _computeMerkleRootFromProof(
@@ -453,5 +397,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 nodePublishingFactor = (nodeStakeFactor * pubRatio36) / SCALE36; // ≤ 2 e36
 
         return nodeStakeFactor + nodeAskFactor + nodePublishingFactor; // 1e36-scaled
+    }
+
+    function _checkProfileExists(uint72 identityId) internal view virtual {
+        if (!profileStorage.profileExists(identityId)) {
+            revert ProfileLib.ProfileDoesntExist(identityId);
+        }
     }
 }
