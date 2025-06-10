@@ -363,7 +363,7 @@
         "type": "address"
       }
     ],
-    "name": "getEstimatedRewards",
+    "name": "getDelegatorReward",
     "outputs": [
       {
         "internalType": "uint256",
@@ -387,7 +387,7 @@
         "type": "uint256"
       }
     ],
-    "name": "getNetDelegatorsRewards",
+    "name": "getNetNodeRewards",
     "outputs": [
       {
         "internalType": "uint256",
