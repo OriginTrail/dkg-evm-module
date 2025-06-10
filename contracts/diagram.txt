@@ -1,0 +1,951 @@
+sequenceDiagram
+actor D3 as Delegator3
+actor D2 as Delegator2
+actor D1 as Delegator1
+participant S as Staking
+participant SS as StakingStorage
+participant N as Node1
+participant RS as RandomSampling
+participant RSS as RandomSamplingStorage
+
+autonumber
+
+Note over S, N: Initial State (Epoch 1): <br><br> Node1 <br> - N1.totalNodeStake: 0 <br> - N1.nodeEpochScorePerStake (epoch 1): 0 <br> - N1.epochScore (epoch 1): 0 <br><br> Delegator 1 <br> - D1.stakeBase (on N1): 0 <br> - D1.epochScore (on N1, epoch 1): 0 <br> - D1.lastSettledNodeEpochScorePerStake (on N1, epoch 1): 0 <br> - D1.lastClaimedEpoch: 0 <br><br> AllNodesEpochScore (epoch 1): 0
+
+rect LightBlue
+    Note over D1, RSS: Step 1: Delegator1 delegates 10,000 TRAC to Node 1 (Epoch 1)
+    D1 ->> S: calls stake(N1_id, 10_000)
+
+    Note over S: Check if D1 has some epochs that they didn't claim for
+    alt D1.lastClaimedEpoch != currentEpoch - 1:
+        Note over S: D1 has some unclaimed epoch rewards. Check if D1 has only 1 or more epochs that they didnt claim for
+        alt (currentEpoch - 1) - D1.lastClaimedEpoch > 1:
+            Note over S: There is more than 1 epoch that D1 needs to claim rewards for
+            Note over S: REVERT: "Must claim all previous epoch rewards before changing stake"
+            S -->> D1: Transaction reverted
+        else
+            Note over S: D1 didn't claim for only one epoch. Check if rewards for this delegator even exist in the unclaimed epoch
+            alt If D1.epochScore(currentEpoch - 1) == 0 && (N1.nodeEpochScorePerStake(currentEpoch - 1) - D1.lastSettledNodeEpochScorePerStake(currentEpoch - 1))  == 0:
+                Note over S: D1 has no rewards to claim for epoch 0 (currentEpoch - 1) --> set last claimed epoch for D1 to 0 (currentEpoch - 1)
+                S ->> RSS: set D1.lastClaimedEpoch = currentEpoch - 1 = 0
+            else:
+                Note over S: D1 didn't claim their reward for currentEpoch - 1 (epoch 0)
+                Note over S: REVERT: "Must claim all previous epoch rewards before changing stake"
+                S -->> D1: Transaction reverted
+            end
+        end
+    end
+    
+    rect LightYellow
+        Note over S, RS: Phase 1: Settle D1's score before stake change
+        S ->> RS: calls prepareForStakeChange(epoch 1, N1_id, D1_key)
+        RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 1) (is 0)
+        RS ->> RSS: get D1.lastSettledNodeEpochScorePerStake (epoch 1) (is 0)
+        RS ->> RSS: get D1.stakeBase (epoch 1) (is 0)
+        Note over RS: scoreEarned = D1.stakeBase * (N1.nodeEpochScorePerStake - D1.lastSettledNodeEpochScorePerStake) = 0 * (0 - 0) = 0
+        RS ->> RSS: set D1.epochScore (epoch 1) = 0 + 0 = 0
+        RS ->> RSS: set D1.lastSettledNodeEpochScorePerStake (epoch 1) = 0
+        RS ->> RSS: set D1.stakeBase (epoch 1) = 10_000 (new stake)
+    end
+
+    rect LightYellow
+        Note over S, SS: Phase 2: StakingStorage updates stake
+        S ->> SS: setDelegatorStakeInfo(N1_id, D1_key, base=10_000, indexed=0)
+        S ->> SS: setNodeStake(N1_id, 10_000)
+        S ->> SS: increase totalStake by 10_000
+        D1 ->> SS: Delegator1 transfers 10_000 TRAC to StakingStorage
+    end
+end
+
+Note over S, N: State after Step 1 (Epoch 1): <br><br> Node1 <br> - N1.totalNodeStake: 10_000 <br> - N1.nodeEpochScorePerStake (epoch 1): 0 <br> - N1.epochScore (epoch 1): 0 <br><br> Delegator 1 <br> - D1.stakeBase (on N1): 10_000 <br> - D1.epochScore (on N1, epoch 1): 0 <br> - D1.lastSettledNodeEpochScorePerStake (on N1, epoch 1): 0 <br> - D1.lastClaimedEpoch: 0 <br><br> Delegator 2: D2.lastClaimedEpoch: 0 <br> Delegator 3: D3.lastClaimedEpoch: 0
+
+rect LightBlue
+    Note over D2, RSS: Step 2: Delegator2 delegates 20,000 TRAC to Node 1 (Epoch 1)
+    D2 ->> S: calls stake(N1_id, 20_000)
+
+    Note over S: Check if D2 has some epochs that they didn't claim for
+    alt D2.lastClaimedEpoch != currentEpoch - 1:
+        Note over S: rest of the checks...
+    end
+    Note over S: D2.lastClaimedEpoch == currentEpoch - 1  -->  0 == 1 - 1 ✅
+    
+    rect LightYellow
+        Note over S, RS: Phase 1: Settle D2's score before stake change
+        S ->> RS: calls prepareForStakeChange(epoch 1, N1_id, D2_key)
+        RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 1) (is 0)
+        RS ->> RSS: get D2.lastSettledNodeEpochScorePerStake (epoch 1) (is 0)
+        RS ->> RSS: get D2.stakeBase (epoch 1) (is 0)
+        Note over RS: scoreEarned = D2.stakeBase * (N1.nodeEpochScorePerStake - D2.lastSettledNodeEpochScorePerStake) = 0 * (0 - 0) = 0
+        RS ->> RSS: set D2.epochScore (epoch 1) = 0
+        RS ->> RSS: set D2.lastSettledNodeEpochScorePerStake (epoch 1) = 0
+        RS ->> RSS: set D2.stakeBase (epoch 1) = 20_000
+    end
+
+    rect LightYellow
+        Note over S, SS: Phase 2: StakingStorage updates stake
+        S ->> SS: setDelegatorStakeInfo(N1_id, D2_key, base=20_000, indexed=0)
+        S ->> SS: setNodeStake(N1_id, 30_000)
+        S ->> SS: increase totalStake by 20_000
+        D2 ->> SS: Delegator2 transfers 20_000 TRAC to StakingStorage
+    end
+end
+
+Note over S, N: State after Step 2 (Epoch 1): <br><br> Node1 <br> - N1.totalNodeStake: 30_000 <br> - N1.nodeEpochScorePerStake (epoch 1): 0 <br> - N1.epochScore (epoch 1): 0 <br><br> Delegator 1 <br> - D1.stakeBase: 10_000, D1.epochScore: 0 <br> - D1.lastClaimedEpoch: 0 <br><br> Delegator 2 <br> - D2.stakeBase: 20_000, D2.epochScore: 0 <br> - D2.lastClaimedEpoch: 0 <br><br> Delegator 3: D3.lastClaimedEpoch: 0
+
+rect LightBlue
+    Note over D3, RSS: Step 3: Delegator3 delegates 30,000 TRAC to Node 1 (Epoch 1)
+    D3 ->> S: calls stake(N1_id, 30_000)
+    
+    Note over S: Check if D3 has some epochs that they didn't claim for
+    alt D3.lastClaimedEpoch != currentEpoch - 1:
+        Note over S: rest of the checks...
+    end
+    Note over S: D3.lastClaimedEpoch == currentEpoch - 1  -->  0 == 1 - 1 ✅
+
+    rect LightYellow
+        Note over S, RS: Phase 1: Settle D3's score before stake change
+        S ->> RS: calls prepareForStakeChange(epoch 1, N1_id, D3_key)
+        RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 1) (is 0)
+        RS ->> RSS: get D3.lastSettledNodeEpochScorePerStake (epoch 1) (is 0)
+        RS ->> RSS: get D3.stakeBase (epoch 1) (is 0)
+        Note over RS: scoreEarned = D3.stakeBase * (N1.nodeEpochScorePerStake - D3.lastSettledNodeEpochScorePerStake) = 0 * (0 - 0) = 0
+        RS ->> RSS: set D3.epochScore (epoch 1) = 0
+        RS ->> RSS: set D3.lastSettledNodeEpochScorePerStake (epoch 1) = 0
+        RS ->> RSS: set D3.stakeBase (epoch 1) = 30_000
+    end
+
+    rect LightYellow
+        Note over S, SS: Phase 2: StakingStorage updates stake
+        S ->> SS: setDelegatorStakeInfo(N1_id, D3_key, base=30_000, indexed=0)
+        S ->> SS: setNodeStake(N1_id, 60_000)
+        S ->> SS: increase totalStake by 30_000
+        D3 ->> SS: Delegator3 transfers 30_000 TRAC to StakingStorage
+    end
+end
+
+Note over S, N: State after Step 3 (Epoch 1): <br><br> Node1 <br> - N1.totalNodeStake: 60_000 <br> - N1.nodeEpochScorePerStake (epoch 1): 0 <br> - N1.epochScore (epoch 1): 0 <br><br> Delegator 1: D1.stakeBase: 10_000, D1.lastClaimedEpoch: 0 <br> Delegator 2: D2.stakeBase: 20_000, D2.lastClaimedEpoch: 0 <br> Delegator 3: D3.stakeBase: 30_000, D3.lastClaimedEpoch: 0
+
+rect LightBlue
+    Note over SS, RSS: Step 4: Node 1 submits proof (Epoch 1)
+    N ->> RS: executes submitProof(chunk, merkleProof)
+    Note over RS: Node 1 score = 0.006 (calculated based on 60k stake)
+    RS ->> SS: getNodeStake(N1_id) (returns 60_000)
+    Note over RS: nodeScorePerStake = 0.006 / 60_000 = 0.0000001
+    RS ->> RSS: N1.nodeEpochScorePerStake (epoch 1) += 0.0000001
+    RS ->> RSS: N1.epochScore (epoch 1) += 0.006
+    RS ->> RSS: AllNodesEpochScore (epoch 1) += 0.006
+end
+
+Note over S, N: State after Step 4 (Epoch 1): <br><br> Node1 <br> - N1.totalNodeStake: 60_000 <br> - N1.nodeEpochScorePerStake (epoch 1): 0.0000001 <br> - N1.epochScore (epoch 1): 0.006 <br><br> All delegators still have unsettled scores for this proof period
+
+rect LightBlue
+    Note over D1, RSS: Step 5: Delegator1 delegates 10,000 more TRAC to Node 1 (Epoch 1)
+    D1 ->> S: calls stake(N1_id, 10_000)
+    
+    Note over S: Check if D1 has some epochs that they didn't claim for
+    alt D1.lastClaimedEpoch != currentEpoch - 1:
+        Note over S: rest of the checks...
+    end
+    Note over S: D1.lastClaimedEpoch == currentEpoch - 1  -->  0 == 1 - 1 ✅
+
+    rect LightYellow
+        Note over S, RS: Phase 1: Settle D1's score before stake change
+        S ->> RS: calls prepareForStakeChange(epoch 1, N1_id, D1_key) settle final score
+        RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 1) (is 0.0000001)
+        RS ->> RSS: get D1.lastSettledNodeEpochScorePerStake (epoch 1) (is 0)
+        RS ->> RSS: get D1.stakeBase (epoch 1) (is 10_000)
+        Note over RS: scoreEarned = D1.stakeBase * (N1.nodeEpochScorePerStake - D1.lastSettledNodeEpochScorePerStake) = 10_000 * (0.0000001 - 0) = 0.001
+        RS ->> RSS: set D1.epochScore (epoch 1) = 0 + 0.001 = 0.001
+        RS ->> RSS: set D1.lastSettledNodeEpochScorePerStake (epoch 1) = 0.0000001
+        RS ->> RSS: set D1.stakeBase (epoch 1) = 20_000 (new total stake)
+    end
+
+    rect LightYellow
+        Note over S, SS: Phase 2: StakingStorage updates stake
+        S ->> SS: setDelegatorStakeInfo(N1_id, D1_key, base=20_000, indexed=0)
+        S ->> SS: setNodeStake(N1_id, 70_000)
+        S ->> SS: increase totalStake by 10_000
+        D1 ->> SS: Delegator1 transfers 10_000 TRAC to StakingStorage
+    end
+end
+
+Note over S, N: State after Step 5 (Epoch 1): <br><br> Node1 <br> - N1.totalNodeStake: 70_000 <br> - N1.nodeEpochScorePerStake (epoch 1): 0.0000001 <br> - N1.epochScore (epoch 1): 0.006 <br><br> Delegator 1: D1.stakeBase: 20_000, D1.epochScore (epoch 1): 0.001, D1.lastClaimedEpoch: 0 <br> Delegator 2: D2.epochScore (epoch 1): 0 (unsettled), D2.lastClaimedEpoch: 0 <br> Delegator 3: D3.epochScore (epoch 1): 0 (unsettled), D3.lastClaimedEpoch: 0
+
+rect LightBlue
+    Note over SS, RSS: Step 6: Node 1 submits second proof (Epoch 1)
+    N ->> RS: executes submitProof(chunk, merkleProof)
+    Note over RS: Node 1 score = 0.007 (calculated based on 70k stake)
+    RS ->> SS: getNodeStake(N1_id) (returns 70_000)
+    Note over RS: nodeScorePerStake = 0.007 / 70_000 = 0.0000001
+    RS ->> RSS: N1.nodeEpochScorePerStake (epoch 1) += 0.0000001 = 0.0000002
+    RS ->> RSS: N1.epochScore (epoch 1) += 0.007 = 0.013
+    RS ->> RSS: AllNodesEpochScore (epoch 1) += 0.007 = 0.013
+end
+
+Note over S, N: State after Step 6 (Epoch 1): <br><br> Node1 <br> - N1.totalNodeStake: 70_000 <br> - N1.nodeEpochScorePerStake (epoch 1): 0.0000002 <br> - N1.epochScore (epoch 1): 0.013 <br><br> Delegator 1: D1.epochScore (epoch 1): 0.001 (settled up to first proof), D1.lastClaimedEpoch: 0 <br> Delegator 2: D2.epochScore (epoch 1): 0 (unsettled for both proofs), D2.lastClaimedEpoch: 0 <br> Delegator 3: D3.epochScore (epoch 1): 0 (unsettled for both proofs), D3.lastClaimedEpoch: 0
+
+rect LightBlue
+    Note over D2, RSS: <br> Advance to epoch 2... <br>
+end
+
+rect LightBlue
+    Note over D1, RSS: Step 7: Delegator1 claims reward for epoch 1 - totalEpochFees = 3900 TRAC
+    D1 ->> S: calls claimDelegatorReward(N1_id, epoch 1, D1_address)
+
+    Note over S: Check if D1 has some epochs that they didn't claim for
+    alt If D1.lastClaimedEpoch == currentEpoch - 1 (0 == 2 - 1) ❌
+        Note over S: REVERT: "Delegator has already claimed rewards for all finalized epochs"
+        S -->> D1: Transaction reverted
+    else:
+        Note over S: Check if delegator is claiming for the oldes unclaimed epoch first (lastClaimedEpoch + 1) and not some epoch newer than that
+        alt If D1.lastClaimedEpoch + 1 != epochDelegatorWantsToClaimFor (0 + 1 != 1) ❌
+            Note over S: REVERT: "Delegator has older epochs that they didn't claim rewards for"
+            S -->> D1: Transaction reverted
+        end
+    end
+
+    Note over S: Calculate Node 1 total reward = 3900 TRAC
+    Note over S: rewardsForDelegators = 3900 TRAC (assume 0 operator fee)
+
+    Note over S, RS: Settle Delegator1's final score for epoch 1
+    S ->> RS: calls prepareForStakeChange(epoch 1, N1_id, D1_key) settle final score
+    RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 1) (is 0.0000002)
+    RS ->> RSS: get D1.lastSettledNodeEpochScorePerStake (epoch 1) (is 0.0000001)
+    RS ->> RSS: get D1.stakeBase (epoch 1) (is 20_000)
+    Note over RS: scoreEarned = D1.stakeBase * (N1.nodeEpochScorePerStake - D1.lastSettledNodeEpochScorePerStake) = 20_000 * (0.0000002 - 0.0000001) = 0.002
+    RS ->> RSS: set D1.epochScore (epoch 1) = 0.001 + 0.002 = 0.003
+    RS ->> RSS: set D1.lastSettledNodeEpochScorePerStake (epoch 1) = 0.0000002
+    RS -->> S: returns D1.epochScore (epoch 1) = 0.003
+
+    Note over S: totalNodeScoreForEpoch1 = N1.epochScore (epoch 1) = 0.013
+    Note over S: D1_reward_share = (0.003 / 0.013) * 3900 = 900 TRAC
+    S ->> SS: update D1.stakeBase += 900 (20_000 + 900 = 20_900)
+    S ->> SS: update N1.totalNodeStake += 900
+    S ->> SS: increase totalStake by 900
+    S ->> RSS: set D1.lastClaimedEpoch = 1
+end
+
+Note over S, N: State after Step 7 (D1 claims epoch 1 rewards): <br><br> Node1 <br> - N1.totalNodeStake: 70_900 <br><br> Delegator 1 <br> - D1.stakeBase: 20_900 <br> - D1.epochScore (epoch 1): 0.003 (final) <br> - D1.lastClaimedEpoch: 1 <br><br> Delegator 2: D2.stakeBase: 20_000, D2.epochScore (epoch 1): 0 (still unsettled), D2.lastClaimedEpoch: 0 <br> Delegator 3: D3.stakeBase: 30_000, D3.epochScore (epoch 1): 0 (still unsettled), D3.lastClaimedEpoch: 0
+
+rect LightBlue
+    Note over D2, RSS: Step 8: Delegator2 claims reward for epoch 1 - totalEpochFees = 3900 TRAC
+    D2 ->> S: calls claimDelegatorReward(N1_id, epoch 1, D2_address)
+
+    Note over S: Check if D2 has some epochs that they didn't claim for
+    alt If D2.lastClaimedEpoch == currentEpoch - 1 (0 == 2 - 1) ❌
+        Note over S: REVERT: "Delegator has already claimed rewards for all finalized epochs"
+        S -->> D2: Transaction reverted
+    else:
+        Note over S: Check if delegator is claiming for the oldes unclaimed epoch first (lastClaimedEpoch + 1) and not some epoch newer than that
+        alt If D2.lastClaimedEpoch + 1 != epochDelegatorWantsToClaimFor (0 + 1 != 1) ❌
+            Note over S: REVERT: "Delegator has older epochs that they didn't claim rewards for"
+            S -->> D2: Transaction reverted
+        end
+    end
+
+    Note over S: Calculate Node 1 total reward = 3900 TRAC
+    Note over S: rewardsForDelegators = 3900 TRAC
+
+    Note over S, RS: Settle Delegator2's final score for epoch 1
+    S ->> RS: calls prepareForStakeChange(epoch 1, N1_id, D2_key)
+    RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 1) (is 0.0000002)
+    RS ->> RSS: get D2.lastSettledNodeEpochScorePerStake (epoch 1) (is 0)
+    RS ->> RSS: get D2.stakeBase (epoch 1) (is 20_000)
+    Note over RS: scoreEarned = D2.stakeBase * (N1.nodeEpochScorePerStake - D2.lastSettledNodeEpochScorePerStake) = 20_000 * (0.0000002 - 0) = 0.004
+    RS ->> RSS: set D2.epochScore (epoch 1) = 0 + 0.004 = 0.004
+    RS ->> RSS: set D2.lastSettledNodeEpochScorePerStake (epoch 1) = 0.0000002
+    RS -->> S: returns D2.epochScore (epoch 1) = 0.004
+
+    Note over S: D2_reward_share = (0.004 / 0.013) * 3900 = 1200 TRAC
+    S ->> SS: update D2.stakeBase += 1200 (20_000 + 1200 = 21_200)
+    S ->> SS: update N1.totalNodeStake += 1200
+    S ->> SS: increase totalStake by 1200
+    S ->> RSS: set D2.lastClaimedEpoch = 1
+end
+
+Note over S, N: State after Step 8 (D2 claims epoch 1 rewards): <br><br> Node1 <br> - N1.totalNodeStake: 72_100 <br><br> Delegator 1: D1.stakeBase: 20_900, D1.lastClaimedEpoch: 1 <br> Delegator 2: D2.stakeBase: 21_200, D2.epochScore (epoch 1): 0.004 (final), D2.lastClaimedEpoch: 1 <br> Delegator 3: D3.stakeBase: 30_000, D3.epochScore (epoch 1): 0 (still unsettled), D3.lastClaimedEpoch: 0
+
+rect LightBlue
+    Note over D3, RSS: Step 9: Delegator3 tries to request withdrawal of 5,000 TRAC (Epoch 2) - SHOULD REVERT
+    D3 ->> S: calls requestWithdrawal(N1_id, 5_000)
+
+    Note over S: Check if D3 has some epochs that they didn't claim for
+    alt D3.lastClaimedEpoch != currentEpoch - 1 (0 != 2 - 1) ✅
+        Note over S: D3 has some unclaimed epoch rewards. Check if D3 has only 1 or more epochs that they didnt claim for
+        alt (currentEpoch - 1) - D3.lastClaimedEpoch > 1 (2 - 1 - 0 > 1) ❌
+            Note over S: There is more than 1 epoch that D3 needs to claim rewards for
+            Note over S: REVERT: "Must claim all previous epoch rewards before changing stake"
+            S -->> D3: Transaction reverted
+        else
+            Note over S: D3 didn't claim for only one epoch. Check if rewards for this delegator even exist in the unclaimed epoch
+            alt If D3.epochScore(currentEpoch - 1) == 0 && (N1.nodeEpochScorePerStake(currentEpoch - 1) - D3.lastSettledNodeEpochScorePerStake(currentEpoch - 1)) (0 == 0 && 0.0000002 - 0 == 0) ❌
+                Note over S: D3 has no rewards to claim for epoch 0 (currentEpoch - 1) --> set last claimed epoch for D3 to 0 (currentEpoch - 1)
+                S ->> RSS: set D3.lastClaimedEpoch = currentEpoch - 1 = 0
+            else:
+                Note over S: D3 didn't claim their reward for currentEpoch - 1 (epoch 1)
+                Note over S: REVERT: "Must claim all previous epoch rewards before changing stake"
+                S -->> D3: Transaction reverted
+            end
+        end
+    end
+end
+
+Note over S, N: State after Step 9 (D3 withdrawal reverted): <br><br> Node1 <br> - N1.totalNodeStake: 72_100 (unchanged) <br><br> Delegator 1: D1.stakeBase: 20_900, D1.lastClaimedEpoch: 1 <br> Delegator 2: D2.stakeBase: 21_200, D2.lastClaimedEpoch: 1 <br> Delegator 3: D3.stakeBase: 30_000, D3.epochScore (epoch 1): 0 (still unsettled), D3.lastClaimedEpoch: 0 <br><br> ❌ D3 cannot change stake until claiming epoch 1 rewards
+
+rect LightBlue
+    Note over SS, RSS: Step 10: Node 1 submits proof (Epoch 2)
+    N ->> RS: executes submitProof(chunk, merkleProof)
+    Note over RS: Node 1 score = 0.0072 (calculated based on 72_100 stake)
+    RS ->> SS: getNodeStake(N1_id) (returns 72_100)
+    Note over RS: nodeScorePerStake = 0.0072 / 72_100 = 0.0000000998613037
+    RS ->> RSS: N1.nodeEpochScorePerStake (epoch 2) += 0.0000000998613037
+    RS ->> RSS: N1.epochScore (epoch 2) += 0.0072
+    RS ->> RSS: AllNodesEpochScore (epoch 2) += 0.0072
+end
+
+Note over S, N: State after Step 10 (Epoch 2): <br><br> Node1 <br> - N1.totalNodeStake: 72_100 <br> - N1.nodeEpochScorePerStake (epoch 2): 0.0000000998613037 <br> - N1.epochScore (epoch 2): 0.0072 <br><br> All delegators have unsettled scores for this proof period
+
+rect LightBlue
+    Note over D2, RSS: Step 11: Delegator2 requests withdrawal of 10,000 TRAC (Epoch 2)
+    D2 ->> S: calls requestWithdrawal(N1_id, 10_000)
+
+    Note over S: Check if D2 has some epochs that they didn't claim for
+    alt D2.lastClaimedEpoch != currentEpoch - 1 (1 != 2 - 1) ❌
+        Note over S: Claimed rewards for all possible epochs, no need to check further
+    end
+    
+    rect LightYellow
+        Note over S, RS: Phase 1: Settle D2's score before stake change
+        S ->> RS: calls prepareForStakeChange(epoch 2, N1_id, D2_key)
+        RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 2) (is 0.0000000998613037)
+        RS ->> RSS: get D2.lastSettledNodeEpochScorePerStake (epoch 2) (is 0)
+        RS ->> RSS: get D2.stakeBase (epoch 2) (is 21_200)
+        Note over RS: scoreEarned = D2.stakeBase * (N1.nodeEpochScorePerStake - D2.lastSettledNodeEpochScorePerStake) = 21_200 * (0.0000000998613037 - 0) = 0.00211705963
+        RS ->> RSS: set D2.epochScore (epoch 2) = 0.00211705963
+        RS ->> RSS: set D2.lastSettledNodeEpochScorePerStake (epoch 2) = 0.0000000998613037
+        RS ->> RSS: set D2.stakeBase (epoch 2) = 11_200 (remaining stake)
+    end
+
+    rect LightYellow
+        Note over S, SS: Phase 2: StakingStorage updates stake
+        S ->> SS: setDelegatorStakeInfo(N1_id, D2_key, base=11_200, indexed=0)
+        S ->> SS: setNodeStake(N1_id, 62_100)
+        S ->> SS: create withdrawal request for 10_000 TRAC
+    end
+end
+
+Note over S, N: State after Step 11 (D2 requests withdrawal, Epoch 2): <br><br> Node1 <br> - N1.totalNodeStake: 62_100 <br><br> Delegator 1: D1.stakeBase: 20_900, D1.lastClaimedEpoch: 1 <br> Delegator 2: D2.stakeBase: 11_200, D2.lastClaimedEpoch: 1 <br> - D2.stakeBase (epoch 2): 11_200 <br> Delegator 3: D3.stakeBase: 30_000, D3.lastClaimedEpoch: 0
+
+rect LightBlue
+    Note over SS, RSS: Step 12: Node 1 submits second proof (Epoch 2)
+    N ->> RS: executes submitProof(chunk, merkleProof)
+    Note over RS: Node 1 score = 0.0062 (calculated based on 62_100 stake)
+    RS ->> SS: getNodeStake(N1_id) (returns 62_100)
+    Note over RS: nodeScorePerStake = 0.0062 / 62_100 = 0.0000000998389694
+    RS ->> RSS: N1.nodeEpochScorePerStake (epoch 2) += 0.0000000998389694 = 0.0000000998613037 + 0.0000000998389694 =  0.000000199700273
+    RS ->> RSS: N1.epochScore (epoch 2) += 0.0062 = 0.0134
+    RS ->> RSS: AllNodesEpochScore (epoch 2) += 0.0062 = 0.0134
+end
+
+Note over S, N: State after Step 12 (Epoch 2): <br><br> Node1 <br> - N1.totalNodeStake: 62_100 <br> - N1.nodeEpochScorePerStake (epoch 2): 0.000000199700273 <br> - N1.epochScore (epoch 2): 0.0134 <br><br> All delegators have unsettled scores for the second proof period
+
+rect LightBlue
+    Note over D2, RSS: <br> Advance to epoch 3... <br>
+end
+
+rect LightBlue
+    Note over D1, RSS: Step 13: Delegator1 claims reward for epoch 2 - totalEpochFees = 4020 TRAC
+    D1 ->> S: calls claimDelegatorReward(N1_id, epoch 2, D1_address)
+
+    Note over S: Check if D1 has some epochs that they didn't claim for
+    alt If D1.lastClaimedEpoch == currentEpoch - 1 (1 == 3 - 1) ❌
+        Note over S: REVERT: "Delegator has already claimed rewards for all finalized epochs"
+        S -->> D1: Transaction reverted
+    else:
+        Note over S: Check if delegator is claiming for the oldes unclaimed epoch first (lastClaimedEpoch + 1) and not some epoch newer than that
+        alt If D1.lastClaimedEpoch + 1 != epochDelegatorWantsToClaimFor (1 + 1 != 2) ❌
+            Note over S: REVERT: "Delegator has older epochs that they didn't claim rewards for"
+            S -->> D1: Transaction reverted
+        end
+    end
+
+    Note over S: Calculate Node 1 total reward = 4020 TRAC
+    Note over S: rewardsForDelegators = 4020 TRAC
+
+    Note over S, RS: Settle Delegator1's final score for epoch 2
+    S ->> RS: calls prepareForStakeChange(epoch 2, N1_id, D1_key)
+    RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 2) (is 0.000000199700273)
+    RS ->> RSS: get D1.lastSettledNodeEpochScorePerStake (epoch 2) (is 0)
+    RS ->> RSS: get D1.stakeBase (epoch 2) (is 0)
+    Note over RS: scoreEarned = D1.stakeBase * (N1.nodeEpochScorePerStake - D1.lastSettledNodeEpochScorePerStake) = 20_900 * (0.000000199700273 - 0) = 0.0041737357
+    RS ->> RSS: set D1.epochScore (epoch 2) = 0
+    RS ->> RSS: set D1.lastSettledNodeEpochScorePerStake (epoch 2) = 0.000000199700273
+    RS -->> S: returns D1.epochScore (epoch 2) = 0
+
+    Note over S: D1_reward_share = (0.0041737357 / 0.0134) * 4020 = 1252.12071 TRAC
+    S ->> RSS: set D1.lastClaimedEpoch = 2
+end
+
+Note over S, N: State after Step 13 (D1 claims epoch 2 rewards): <br><br> Delegator 1: D1.stakeBase: 20_900 (no change) <br> - D1.epochScore (epoch 2): 0.0041737357 (final), D1.lastClaimedEpoch: 2
+
+rect LightBlue
+    Note over D2, RSS: Step 14: Delegator2 claims reward for epoch 2 - totalEpochFees = 4020 TRAC
+    D2 ->> S: calls claimDelegatorReward(N1_id, epoch 2, D2_address)
+
+    Note over S: Check if D2 has some epochs that they didn't claim for
+    alt If D2.lastClaimedEpoch == currentEpoch - 1 (1 == 3 - 1) ❌
+        Note over S: REVERT: "Delegator has already claimed rewards for all finalized epochs"
+        S -->> D2: Transaction reverted
+    else:
+        Note over S: Check if delegator is claiming for the oldes unclaimed epoch first (lastClaimedEpoch + 1) and not some epoch newer than that
+        alt If D2.lastClaimedEpoch + 1 != epochDelegatorWantsToClaimFor (1 + 1 != 2) ❌
+            Note over S: REVERT: "Delegator has older epochs that they didn't claim rewards for"
+            S -->> D2: Transaction reverted
+        end
+    end
+
+    Note over S: Calculate Node 1 total reward = 4020 TRAC
+    Note over S: rewardsForDelegators = 4020 TRAC
+
+    Note over S, RS: Settle Delegator2's final score for epoch 2
+    S ->> RS: calls prepareForStakeChange(epoch 2, N1_id, D2_key)
+    RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 2) (is 0.000000199700273)
+    RS ->> RSS: get D2.lastSettledNodeEpochScorePerStake (epoch 2) (is 0.0000000998613037)
+    RS ->> RSS: get D2.stakeBase (epoch 2) (is 11_200)
+    Note over RS: scoreEarned = D2.stakeBase * (N1.nodeEpochScorePerStake - D2.lastSettledNodeEpochScorePerStake) = 11_200 * (0.000000199700273 - 0.0000000998613037) = 0.00111819645
+    RS ->> RSS: set D2.epochScore (epoch 2) = 0.00211705963 + 0.00111819645 = 0.00323525608
+    RS ->> RSS: set D2.lastSettledNodeEpochScorePerStake (epoch 2) = 0.000000199700273
+    RS -->> S: returns D2.epochScore (epoch 2) = 0.00323525608
+
+    Note over S: D2_reward_share = (0.00323525608 / 0.0134) * 4020 = 970.576824 TRAC
+    S ->> SS: update D2.stakeBase += 970.576824 (11_200 + 970.576824 = 12_170.576824)
+    S ->> SS: update N1.totalNodeStake += 970.576824
+    S ->> SS: increase totalStake by 970.576824
+    S ->> RSS: set D2.lastClaimedEpoch = 2
+end
+
+Note over S, N: State after Step 14 (D2 claims epoch 2 rewards): <br><br> Delegator 2 <br> - D2.stakeBase: 12_170.576824 <br> - D2.epochScore (epoch 2): 0.00323525608 (final), D2.lastClaimedEpoch: 2
+
+rect LightBlue
+    Note over D2, RSS: Step 15: Delegator2 finalizes withdrawal of 10,000 TRAC (Epoch 3) - NOW ALLOWED
+    D2 ->> S: calls finalizeWithdrawal(N1_id)
+        
+    S ->> SS: getDelegatorWithdrawalRequest(N1_id, D2_key)
+    SS -->> S: returns (amount: 10_000, indexedOutAmount: 0, withdrawalTimestamp)
+    S ->> SS: deleteDelegatorWithdrawalRequest(N1_id, D2_key)
+    S ->> SS: addDelegatorCumulativePaidOutRewards(N1_id, D2_key, 10_000)
+    S ->> SS: addNodeCumulativePaidOutRewards(N1_id, 10_000)
+    S ->> SS: transferStake(D2_address, 10_000)
+end
+
+Note over S, N: State after Step 15 (D2 finalizes withdrawal): <br><br> Delegator 2 <br> - D2.stakeBase: 12_170.576824 <br> - D2.cumulativePaidOutRewards: 10_000
+
+rect LightBlue
+    Note over D3, RSS: Step 16: Delegator3 delegates 5,000 TRAC to Node 1 (Epoch 3) - SHOULD REVERT
+    D3 ->> S: calls stake(N1_id, 5_000)
+    
+    Note over S: Check unclaimed rewards: require(D1.lastClaimedEpoch == currentEpoch-1) - 1 == 3 - 1 ❌
+
+    Note over S: Check if D3 has some epochs that they didn't claim for
+    alt D3.lastClaimedEpoch != currentEpoch - 1 (1 != 3 - 1) ✅
+        Note over S: D3 has some unclaimed epoch rewards. Check if D3 has only 1 or more epochs that they didnt claim for
+        alt (currentEpoch - 1) - D3.lastClaimedEpoch > 1 (3 - 1 - 1 > 1) ❌
+            Note over S: There is more than 1 epoch that D3 needs to claim rewards for
+            Note over S: REVERT: "Must claim all previous epoch rewards before changing stake"
+            S -->> D3: Transaction reverted
+        end
+    end
+
+    Note over S: REVERT: "Must claim all previous epoch rewards before changing stake"
+    S -->> D3: Transaction reverted
+end
+
+Note over S, N: State after Step 16 (D3 stake reverted): <br><br> Delegator 3 <br> - D3.stakeBase: 30_000 (unchanged) <br> - D3.lastClaimedEpoch: 0 <br><br> ❌ D3 cannot stake until claiming epochs 1 and 2 rewards
+
+rect LightBlue
+    Note over D3, RSS: Step 17: Delegator3 claims reward for epoch 1 - totalEpochFees = 3900 TRAC
+    D3 ->> S: calls claimDelegatorReward(N1_id, epoch 1, D3_address)
+
+    Note over S: Check if D3 has some epochs that they didn't claim for
+    alt If D3.lastClaimedEpoch == currentEpoch - 1 (0 == 3 - 1) ❌
+        Note over S: REVERT: "Delegator has already claimed rewards for all finalized epochs"
+        S -->> D3: Transaction reverted
+    else:
+        Note over S: Check if delegator is claiming for the oldes unclaimed epoch first (lastClaimedEpoch + 1) and not some epoch newer than that
+        alt If D3.lastClaimedEpoch + 1 != epochDelegatorWantsToClaimFor (0 + 1 != 1) ❌
+            Note over S: REVERT: "Delegator has older epochs that they didn't claim rewards for"
+            S -->> D3: Transaction reverted
+        end
+    end
+
+    Note over S: Calculate Node 1 total reward = 3900 TRAC
+    Note over S: rewardsForDelegators = 3900 TRAC
+
+    Note over S, RS: Settle Delegator3's final score for epoch 1
+    S ->> RS: calls prepareForStakeChange(epoch 1, N1_id, D3_key)
+    RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 1) (is 0.0000002)
+    RS ->> RSS: get D3.lastSettledNodeEpochScorePerStake (epoch 1) (is 0)
+    RS ->> RSS: get D3.stakeBase (epoch 1) (is 30_000)
+    Note over RS: scoreEarned = D3.stakeBase * (N1.nodeEpochScorePerStake - D3.lastSettledNodeEpochScorePerStake) = 30_000 * (0.0000002 - 0) = 0.006
+    RS ->> RSS: set D3.epochScore (epoch 1) = 0 + 0.006 = 0.006
+    RS ->> RSS: set D3.lastSettledNodeEpochScorePerStake (epoch 1) = 0.0000002
+    RS -->> S: returns D3.epochScore (epoch 1) = 0.006
+
+    Note over S: D3_reward_share = (0.006 / 0.013) * 3900 = 1800 TRAC
+    Note over S: Check if the number epochs that delegator needs to claim for is bigger than 1 <br> possibleEpochsToClaim = currentEpoch - 1 = 2 <br> lastClaimedEpoch = 0
+    alt If possibleEpochsToClaim - lastClaimedEpoch > 1 (2 > 1) ✅
+        Note over S: increase D3.rollingRewards, and leave stakeBase as is.
+        S ->> SS: update D3.rollingRewards += 1800 = 1800
+    else
+        Note over S: D3_total_rewards = D3.rollingRewards + D3_reward_share
+        S ->> SS: set D3.rollingRewards = 0
+        S ->> SS: update D3.stakeBase += D3_total_rewards
+        S ->> SS: update N1.totalNodeStake += D3_total_rewards
+        S ->> SS: increase totalStake by D3_total_rewards
+    end
+    S ->> RSS: set D3.lastClaimedEpoch = 1
+end
+
+Note over S, N: State after Step 17 (D3 claims epoch 1 rewards): <br><br> Delegator 3 <br> - D3.stakeBase: 31_800 <br> - D3.epochScore (epoch 1): 0.006 (final), D3.lastClaimedEpoch: 1 <br><br> ✅ D3 correctly gets rewards based on 30_000 stake for epoch 1!
+
+rect LightBlue
+    Note over D3, RSS: Step 18: Delegator3 claims reward for epoch 2 - totalEpochFees = 4020 TRAC
+    D3 ->> S: calls claimDelegatorReward(N1_id, epoch 2, D3_address)
+
+    Note over S: Check if D3 has some epochs that they didn't claim for
+    alt If D3.lastClaimedEpoch == currentEpoch - 1 (1 == 3 - 1) ❌
+        Note over S: REVERT: "Delegator has already claimed rewards for all finalized epochs"
+        S -->> D3: Transaction reverted
+    else:
+        Note over S: Check if delegator is claiming for the oldes unclaimed epoch first (lastClaimedEpoch + 1) and not some epoch newer than that
+        alt If D3.lastClaimedEpoch + 1 != epochDelegatorWantsToClaimFor (1 + 1 != 2) ❌
+            Note over S: REVERT: "Delegator has older epochs that they didn't claim rewards for"
+            S -->> D3: Transaction reverted
+        end
+    end
+
+    Note over S: Check if epochs that delegator needs to claim for is bigger than 1, currentEpoch = 3, lastClaimedEpoch + 1 = 1 + 1 = 2 <br><br> currentEpoch - lastClaimedEpoch > 1 --> 1 > 1 ❌ <br><br> We need to increase stakeBase with the D3.rollingRewards + new calculated rewards
+
+    Note over S: Calculate Node 1 total reward = 4020 TRAC
+    Note over S: rewardsForDelegators = 4020 TRAC
+
+    Note over S, RS: Settle Delegator3's final score for epoch 2
+    S ->> RS: calls prepareForStakeChange(epoch 2, N1_id, D3_key)
+    RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 2) (is 0.000000199700273)
+    RS ->> RSS: get D3.lastSettledNodeEpochScorePerStake (epoch 2) (is 0)
+    RS ->> RSS: get D3.stakeBase (epoch 2) (is 30_000)
+    Note over RS: scoreEarned = D3.stakeBase * (N1.nodeEpochScorePerStake - D3.lastSettledNodeEpochScorePerStake) = 30_000 * (0.000000199700273 - 0) = 0.00599100819
+    RS ->> RSS: set D3.epochScore (epoch 2) = 0.00599100819
+    RS ->> RSS: set D3.lastSettledNodeEpochScorePerStake (epoch 2) = 0.000000199700273
+    RS -->> S: returns D3.epochScore (epoch 2) = 0
+
+    Note over S: D3_reward_share = (0.00599100819 / 0.0134) * 4020 = 1797.302457 TRAC
+    Note over S: D3_total_rewards = D3.rollingRewards + D3_reward_share = 1800 + 1797.302457 = 3597.302457 TRAC
+    S ->> SS: update D3.stakeBase += D3_total_rewards = 33_597.302457
+    S ->> SS: update N1.totalNodeStake += 3597.302457
+    S ->> SS: increase totalStake by 3597.302457
+    S ->> RSS: set D3.lastClaimedEpoch = 2
+end
+
+Note over S, N: State after Step 18 (D3 claims epoch 2 rewards): <br><br> Delegator 3 <br> - D3.stakeBase: 33_597.302457 <br> - D3.epochScore (epoch 2): 0.00599100819 (final), D3.lastClaimedEpoch: 2
+
+rect LightBlue
+    Note over D3, RSS: Step 19: Delegator3 requests withdrawal of 5,000 TRAC (Epoch 3) - NOW ALLOWED
+    D3 ->> S: calls requestWithdrawal(N1_id, 5_000)
+
+    Note over S: Check if D3 has some epochs that they didn't claim for
+    alt D3.lastClaimedEpoch != currentEpoch - 1 (2 != 3 - 1) ❌
+        Note over S: Claimed rewards for all possible epochs, no need to check further
+    end
+
+    rect LightYellow
+        Note over S, RS: Phase 1: Settle D3's score before stake change
+        S ->> RS: calls prepareForStakeChange(epoch 3, N1_id, D3_key)
+        RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 3) (is 0)
+        RS ->> RSS: get D3.lastSettledNodeEpochScorePerStake (epoch 3) (is 0)
+        RS ->> RSS: get D3.stakeBase (epoch 3) (is 0)
+        Note over RS: scoreEarned = D3.stakeBase * (N1.nodeEpochScorePerStake - D3.lastSettledNodeEpochScorePerStake) = 33_597.302457 * (0 - 0) = 0
+        RS ->> RSS: set D3.epochScore (epoch 3) = 0
+        RS ->> RSS: set D3.lastSettledNodeEpochScorePerStake (epoch 3) = 0
+        RS ->> RSS: set D3.stakeBase (epoch 3) = 33_597.302457 - 10_000 = 23_597.302457 (remaining stake)
+    end
+
+    rect LightYellow
+        Note over S, SS: Phase 2: StakingStorage updates stake
+        S ->> SS: setDelegatorStakeInfo(N1_id, D3_key, base=23_597.302457, indexed=0)
+        S ->> SS: setNodeStake(N1_id, 66667.879281 - 10_000 = 56667.879281)
+        S ->> SS: create withdrawal request for 5_000 TRAC
+    end
+end
+
+Note over S, N: State after Step 19 (D3 requests withdrawal, Epoch 3): <br><br> Node1 <br> - N1.totalNodeStake: 56_667.879281 <br><br> Delegator 1: D1.stakeBase: 20_900, D1.lastClaimedEpoch: 2 <br> Delegator 2: D2.stakeBase: 12_170.576824, D2.lastClaimedEpoch: 2 <br> Delegator 3: D3.stakeBase: 23_597.302457, D3.lastClaimedEpoch: 2
+
+rect LightBlue
+    Note over D2, RSS: <br> Advance to epoch 4... <br>
+end
+
+rect LightBlue
+    Note over D3, RSS: Step 20: Delegator3 finalizes withdrawal of 5,000 TRAC (Epoch 4)
+    D3 ->> S: calls finalizeWithdrawal(N1_id)
+
+    Note over S: Finalize withdrawal
+    S ->> SS: getDelegatorWithdrawalRequest(N1_id, D3_key)
+    SS -->> S: returns (amount: 5_000, indexedOutAmount: 0, withdrawalTimestamp)
+    S ->> SS: deleteDelegatorWithdrawalRequest(N1_id, D3_key)
+    S ->> SS: addDelegatorCumulativePaidOutRewards(N1_id, D3_key, 5_000)
+    S ->> SS: addNodeCumulativePaidOutRewards(N1_id, 5_000)
+    S ->> SS: transferStake(D3_address, 5_000)
+end
+
+Note over S, N: State after Step 20 (D3 finalize withdrawal): <br><br> Delegator 3 <br> - D3.stakeBase: 23_597.302457 (unchanged) <br> - D3.lastClaimedEpoch: 3 <br><br>
+
+rect LightBlue
+    Note over D1, RSS: Step 23: Delegator1 delegates 5,000 TRAC to Node 1 (Epoch 4)
+    D1 ->> S: calls stake(N1_id, 5_000)
+
+    Note over S: Check if D1 has some epochs that they didn't claim for
+    alt D1.lastClaimedEpoch != currentEpoch - 1:
+        Note over S: rest of the checks...
+    end
+    Note over S: D1.lastClaimedEpoch == currentEpoch - 1  -->  3 == 4 - 1 ✅
+
+    Note over S: Proceed with the rest of the stake function...
+end
+
+Note over S, N: Final State after Step 23 (D1 stake reverted): <br><br> Node1 <br> - N1.totalNodeStake: 58_435.22 <br><br> Delegator 1 <br> - D1.stakeBase: 20_900 (unchanged) <br> - D1.lastClaimedEpoch: 2 <br><br> Delegator 2: D2.stakeBase: 12_170.576824, D2.lastClaimedEpoch: 2 <br> Delegator 3: D3.stakeBase: 26_800, D3.lastClaimedEpoch: 3 <br><br> ❌ D1 cannot stake until claiming epoch 3 rewards <br><br> 🎯 The system successfully prevents stake changes until all <br> previous epoch rewards are claimed, ensuring accurate <br> reward calculations based on historical stake amounts! <br><br> ✅ Key Benefits: <br> - No loops needed in smart contracts <br> - Delegators control when to settle their scores <br> - Rewards always calculated with correct historical stakes <br> - System prevents the "late withdrawal" reward calculation bug
+
+rect LightBlue
+    Note over D1, RSS: <br> REDELEGATION SCENARIOS <br> Start of Epoch 4 <br><br> Node1.totalNodeStake = 58_435.22 TRAC <br> Node1.nodeEpochScorePerStake(4) = 0.00000005 <br> Node2.totalNodeStake = 10_000 TRAC (foreign stake) <br> D1.stakeBase (on N1) = 20_900 TRAC <br> D1.lastClaimedEpoch = 2
+end
+
+participant N2 as Node2
+
+rect LightBlue
+    Note over D1, RSS: Case A – "all-out" redelegate from N1 to a brand-new N2 <br> Step A-1 – D1 first claims epoch 3 on N1
+    D1 ->> S: calls claimDelegatorReward(N1_id, epoch 3, D1_address)
+
+    Note over S: Check if D1 has some epochs that they didn't claim for
+    alt If D1.lastClaimedEpoch == currentEpoch - 1 (2 == 4 - 1) ❌
+        Note over S: REVERT: "Delegator has already claimed rewards for all finalized epochs"
+        S -->> D1: Transaction reverted
+    else:
+        Note over S: Check if delegator is claiming for the oldest unclaimed epoch first (lastClaimedEpoch + 1) and not some epoch newer than that
+        alt If D1.lastClaimedEpoch + 1 != epochDelegatorWantsToClaimFor (2 + 1 != 3) ❌
+            Note over S: REVERT: "Delegator has older epochs that they didn't claim rewards for"
+            S -->> D1: Transaction reverted
+        end
+    end
+
+    Note over S: Calculate Node 1 total reward for epoch 3
+    Note over S: rewardsForDelegators for epoch 3
+
+    Note over S, RS: Settle Delegator1's final score for epoch 3
+    S ->> RS: calls prepareForStakeChange(epoch 3, N1_id, D1_key)
+    RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 3)  
+    RS ->> RSS: get D1.lastSettledNodeEpochScorePerStake (epoch 3)
+    RS ->> RSS: get D1.stakeBase (epoch 3) (is 20_900)
+    Note over RS: Calculate D1's earned score for epoch 3
+    RS ->> RSS: set D1.epochScore (epoch 3) 
+    RS ->> RSS: set D1.lastSettledNodeEpochScorePerStake (epoch 3)
+    RS -->> S: returns D1.epochScore (epoch 3)
+
+    Note over S: RewardEarned = 1_260 TRAC
+    S ->> SS: update D1.stakeBase += 1_260 (20_900 + 1_260 = 22_160)
+    S ->> SS: update N1.totalNodeStake += 1_260
+    S ->> SS: increase totalStake by 1_260
+    S ->> RSS: set D1.lastClaimedEpoch = 3
+end
+
+Note over S, N2: State after Step A-1: <br><br> Node1 <br> - N1.totalNodeStake: 59_695.22 <br><br> Delegator 1 <br> - D1.stakeBase: 22_160 <br> - D1.lastClaimedEpoch: 3
+
+rect LightBlue
+    Note over D1, RSS: Step A-2 – redelegate(N1 → N2, stakeAmount = 22_160)
+    D1 ->> S: calls redelegate(N1_id, N2_id, 22_160)
+
+    Note over S: Guards
+    alt fromIdentityId == toIdentityId
+        Note over S: REVERT: "Cannot redelegate to the same node"
+        S -->> D1: Transaction reverted
+    end
+    alt stakeAmount == 0
+        Note over S: REVERT: ZeroTokenAmount
+        S -->> D1: Transaction reverted
+    end
+    Note over S: ✔ from ≠ to ✔ amount > 0 ✔ destination won't exceed maxStake
+
+    Note over S: Validation
+    S ->> S: _validateDelegatorEpochClaims(N1_id, D1_address) ✓
+    S ->> S: _validateDelegatorEpochClaims(N2_id, D1_address) ✓ (first time on N2)
+
+    Note over S: Lazy-settle (source, then dest)
+    S ->> RS: _prepareForStakeChange(epoch 4, N1_id, D1_key)
+    RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 4) (is 0.00000005)
+    RS ->> RSS: get D1.lastSettledNodeEpochScorePerStake (epoch 4) (is 0)
+    RS ->> RSS: get D1.stakeBase (epoch 4) (is 22_160)
+    Note over RS: newlyEarnedScore = 22_160 × 0.00000005 = 0.001108
+    RS ->> RSS: set D1.epochScore (epoch 4) = 0.001108
+    RS ->> RSS: set D1.lastSettledNodeEpochScorePerStake (epoch 4) = 0.00000005
+    RS -->> S: returns fromDelegatorEpochScore = 0.001108
+
+    S ->> RS: _prepareForStakeChange(epoch 4, N2_id, D1_key)
+    Note over RS: → all zero (fresh node)
+
+    Note over S: State writes
+    S ->> SS: getDelegatorStakeBase(N1_id, D1_key) (returns 22_160)
+    alt stakeAmount > fromDelegatorStakeBase
+        Note over S: REVERT: WithdrawalExceedsStake
+        S -->> D1: Transaction reverted
+    end
+    alt ss.getNodeStake(N2_id) + stakeAmount > maxStake
+        Note over S: REVERT: MaximumStakeExceeded
+        S -->> D1: Transaction reverted
+    end
+
+    Note over S: newFromDelegatorStakeBase = 22_160 - 22_160 = 0
+    S ->> SS: setDelegatorStakeBase(N1_id, D1_key, 0)
+    S ->> SS: setNodeStake(N1_id, 59_695.22 - 22_160 = 37_535.22)
+    S ->> SS: increaseDelegatorStakeBase(N2_id, D1_key, 22_160)
+    S ->> SS: setNodeStake(N2_id, 10_000 + 22_160 = 32_160)
+
+    Note over S: if-branches triggered inside the function
+    alt newFromDelegatorStakeBase == 0
+        Note over S: ✔ removeDelegator(N1, D1)
+        alt fromDelegatorEpochScore > 0 (0.001108 > 0)
+            Note over S: ✔ setLastStakeHeldEpoch(N1, D1) = 4
+        end
+    end
+
+    S ->> S: _manageDelegatorStatus(N2_id, D1_address)
+    Note over S: ✔ !isNodeDelegator(N2, D1) → addDelegator(N2, D1)
+    Note over S: ✔ !hasEverDelegatedToNode(N2, D1) → setHasEverDelegated... true
+    Note over S: ✖ toLastStakeHeldEpoch(N2, D1) was 0 → skip reset
+
+    S -->> D1: emit StakeRedelegated(N1, N2, D1, 22_160)
+end
+
+Note over S, N2: Snapshot after Case A: <br><br> Node1.totalNodeStake = 37_535.22, D1.stakeBase(N1)=0, lastStakeHeldEpoch(N1,D1)=4 <br> Node2.totalNodeStake = 32_160, D1.stakeBase(N2)=22_160
+
+rect LightBlue
+    Note over N2, RSS: Proof on N2 (still epoch 4)
+    N2 ->> RS: executes submitProof(chunk, merkleProof)
+    Note over RS: Node 2 score calculation
+    RS ->> SS: getNodeStake(N2_id) (returns 32_160)
+    RS ->> RSS: N2.nodeEpochScorePerStake (epoch 4) = 0.00000008
+    Note over RS: D1.extraScore = 22_160 × 0.00000008 = 0.0017728
+end
+
+rect LightBlue
+    Note over D1, RSS: Case B – "full-back" redelegate from N2 to N1 in the same epoch <br> Step B-1 – redelegate(N2 → N1, stakeAmount = 22_160)
+    D1 ->> S: calls redelegate(N2_id, N1_id, 22_160)
+
+    Note over S: Validation
+    S ->> S: _validateDelegatorEpochClaims(N2_id, D1_address) ✓ (lastStakeHeldEpoch = 0)
+    S ->> S: _validateDelegatorEpochClaims(N1_id, D1_address) ✓ (lastStakeHeldEpoch = 4 == current epoch, allowed)
+
+    Note over S: Lazy-settle
+    S ->> RS: _prepareForStakeChange(epoch 4, N2_id, D1_key)
+    RS ->> RSS: get N2.nodeEpochScorePerStake (epoch 4) (is 0.00000008)
+    RS ->> RSS: get D1.lastSettledNodeEpochScorePerStake (epoch 4) (is 0)
+    RS ->> RSS: get D1.stakeBase (epoch 4) (is 22_160)
+    Note over RS: newlyEarnedScore = 22_160 × (0.00000008 – 0) = 0.0017728
+    RS ->> RSS: set D1.epochScore (epoch 4) on N2 = 0.0017728
+    RS -->> S: returns fromDelegatorEpochScore = 0.0017728
+
+    S ->> RS: _prepareForStakeChange(epoch 4, N1_id, D1_key)
+    Note over RS: → index already caught, newlyEarnedScore = 0
+
+    Note over S: State writes
+    Note over S: newFromDelegatorStakeBase = 22_160 - 22_160 = 0
+    S ->> SS: setDelegatorStakeBase(N2_id, D1_key, 0)
+    S ->> SS: setNodeStake(N2_id, 32_160 - 22_160 = 10_000)
+    S ->> SS: increaseDelegatorStakeBase(N1_id, D1_key, 22_160)
+    S ->> SS: setNodeStake(N1_id, 37_535.22 + 22_160 = 59_695.22)
+
+    Note over S: if-branches
+    alt newFromDelegatorStakeBase == 0
+        Note over S: ✖ not triggered (D1 still on N1)
+    end
+    alt !isNodeDelegator(N1,D1)
+        Note over S: ✖ already true, skip add
+    end
+    alt !hasEverDelegatedToNode(N1)
+        Note over S: ✖ already true
+    end
+    alt toLastStakeHeldEpoch(N1, D1) > 0 (4 > 0)
+        Note over S: ✖ flag is 0, skip reset
+    end
+
+    S -->> D1: emit StakeRedelegated(N2, N1, D1, 22_160)
+end
+
+Note over S, N2: Snapshot after Case B: <br><br> Node1.totalNodeStake = 59_695.22, D1.stakeBase(N1)=22_160, lastStakeHeldEpoch(N1)=0 <br> Node2.totalNodeStake = 10_000, D1.stakeBase(N2)=0, lastStakeHeldEpoch(N2)=4
+
+rect LightBlue
+    Note over N, RSS: Proofs later in Epoch 4
+    N ->> RS: Node1.nodeEpochScorePerStake(4) = 0.00000007
+    Note over RS: D1.extraScore(N1) = 22_160 × (0.00000007 – 0.00000005) = 0.0004432
+    
+    N2 ->> RS: Node2.nodeEpochScorePerStake(4) = 0.00000009
+    Note over RS: D1.extraScore(N2) = 0 (no stake on N2)
+end
+
+rect LightBlue
+    Note over D1, RSS: <br> Advance to Epoch 5 <br><br> Node1.totalNodeStake = 59_695.22 TRAC <br> Node1.nodeEpochScorePerStake(5) = 0.00000004 <br> Node2.totalNodeStake = 10_000 TRAC <br> Node2.nodeEpochScorePerStake(5) = 0.00000006 <br> D1.stakeBase(N1) = 22_160 <br> D1.stakeBase(N2) = 0 <br> lastStakeHeldEpoch(N1,D1) = 0, lastStakeHeldEpoch(N2,D1) = 4 <br> D1.lastClaimedEpoch = 3
+end
+
+rect LightBlue
+    Note over D1, RSS: Case C – partial move from Node 1 back to Node 2 <br> Step C-0 – D1 claims outstanding epoch 4 reward on N2
+    D1 ->> S: calls claimDelegatorReward(N2_id, epoch 4, D1_address)
+
+    Note over S: Check if D1 has some epochs that they didn't claim for on N2
+    alt If D1.lastClaimedEpoch == currentEpoch - 1
+        Note over S: Check lastStakeHeldEpoch logic for N2
+    else:
+        Note over S: Standard claim validation
+    end
+
+    Note over S, RS: Settle Delegator1's final score for epoch 4 on N2
+    S ->> RS: calls prepareForStakeChange(epoch 4, N2_id, D1_key)
+    Note over RS: Calculate rewards based on D1's epoch 4 activity on N2
+    RS -->> S: returns D1.epochScore (epoch 4) on N2
+
+    Note over S: RewardEarned = 800 TRAC
+    S ->> SS: update D1.stakeBase(N2) += 800 (0 + 800 = 800)
+    S ->> SS: update N2.totalNodeStake += 800 (10_000 + 800 = 10_800)
+    S ->> RSS: set lastStakeHeldEpoch(N2,D1) = 0
+end
+
+Note over S, N2: Current balances before redelegate: <br><br> Node1.totalNodeStake = 59_695.22 <br> Node2.totalNodeStake = 10_800 <br> D1.stakeBase(N1) = 22_160 <br> D1.stakeBase(N2) = 800
+
+rect LightBlue
+    Note over D1, RSS: Step C-1 – redelegate(N1 → N2, stakeAmount = 1_500)
+    D1 ->> S: calls redelegate(N1_id, N2_id, 1_500)
+
+    Note over S: Guards
+    Note over S: ✔ from ≠ to ✔ amount > 0 
+    alt ss.getNodeStake(N2_id) + stakeAmount > maxStake (10_800 + 1_500 = 12_300 > 12_000)
+        Note over S: Adjust amount to fit maxStake: 1_500 → 1_200
+    end
+
+    Note over S: Validation
+    S ->> S: _validateDelegatorEpochClaims(N1_id, D1_address) ✓
+    S ->> S: _validateDelegatorEpochClaims(N2_id, D1_address) ✓
+
+    Note over S: Lazy-settle
+    S ->> RS: _prepareForStakeChange(epoch 5, N1_id, D1_key)
+    RS ->> RSS: get N1.nodeEpochScorePerStake (epoch 5) (is 0.00000004)
+    RS ->> RSS: get D1.lastSettledNodeEpochScorePerStake (epoch 5) (is 0)
+    RS ->> RSS: get D1.stakeBase (epoch 5) (is 22_160)
+    Note over RS: newlyEarnedScore = 22_160 × 0.00000004 = 0.0008864
+    RS ->> RSS: set D1.epochScore (epoch 5) on N1 = 0.0008864
+
+    S ->> RS: _prepareForStakeChange(epoch 5, N2_id, D1_key)
+    RS ->> RSS: get N2.nodeEpochScorePerStake (epoch 5) (is 0.00000006)
+    RS ->> RSS: get D1.lastSettledNodeEpochScorePerStake (epoch 5) (is 0)
+    RS ->> RSS: get D1.stakeBase (epoch 5) (is 800)
+    Note over RS: newlyEarnedScore = 800 × 0.00000006 = 0.000048
+    RS ->> RSS: set D1.epochScore (epoch 5) on N2 = 0.000048
+
+    Note over S: State writes
+    Note over S: newFromDelegatorStakeBase = 22_160 – 1_200 = 20_960
+    S ->> SS: setDelegatorStakeBase(N1_id, D1_key, 20_960)
+    S ->> SS: setNodeStake(N1_id, 59_695.22 - 1_200 = 58_495.22)
+    S ->> SS: increaseDelegatorStakeBase(N2_id, D1_key, 1_200)
+    S ->> SS: setNodeStake(N2_id, 10_800 + 1_200 = 12_000)
+
+    Note over S: if-branches inside redelegate
+    alt newFromDelegatorStakeBase == 0 (20_960 == 0)
+        Note over S: ✖ not triggered (D1 still on N1)
+    end
+    alt !isNodeDelegator(N2,D1)
+        Note over S: ✖ already true, skip add
+    end
+    alt !hasEverDelegatedToNode(N2,D1)
+        Note over S: ✖ already true
+    end
+    alt toLastStakeHeldEpoch(N2,D1) > 0 (0 > 0)
+        Note over S: ✖ flag is 0, skip reset
+    end
+
+    S -->> D1: emit StakeRedelegated(N1, N2, D1, 1_200)
+end
+
+Note over S, N2: Snapshot after Case C: <br><br> Node1.totalNodeStake = 58_495.22, D1.stakeBase(N1) = 20_960 <br> Node2.totalNodeStake = 12_000, D1.stakeBase(N2) = 2_000 <br> lastStakeHeldEpoch flags on both nodes remain 0 – all paths clean.
+
+rect LightBlue
+    Note over N, RSS: Proofs later in Epoch 4
+    N ->> RS: Node1.nodeEpochScorePerStake(4) = 0.00000007
+    Note over RS: D1.extraScore(N1) = 22_160 × (0.00000007 – 0.00000005) = 0.0004432
+    
+    N2 ->> RS: Node2.nodeEpochScorePerStake(4) = 0.00000009
+    Note over RS: D1.extraScore(N2) = 0 (no stake on N2)
+end
+
+rect LightBlue
+    Note over D1, RSS: <br> Advance to Epoch 6 <br><br> Node1.totalNodeStake = 58_495.22 TRAC <br> Node2.totalNodeStake = 12_000 TRAC <br> D1.stakeBase (on N1) = 20_960 TRAC <br> D1.stakeBase (on N2) = 2_000 TRAC <br> D1.lastClaimedEpoch = 4
+end
+
+rect LightBlue
+    Note over D1, RSS: Case D – one epoch unclaimed on source → must claim before redelegate <br> Context: currentEpoch = 6, D1.lastClaimedEpoch = 4 → exactly one epoch (5) unclaimed. <br> Epoch-5 had non-zero rewards for D1 on N1.
+    D1 ->> S: calls redelegate(N1_id, N2_id, 500)
+
+    Note over S: Validation
+    S ->> S: _validateDelegatorEpochClaims(N1_id, D1_address)
+    alt D1.lastClaimedEpoch != currentEpoch - 1 (4 != 6 - 1)
+        Note over S: D1 has some unclaimed epoch rewards
+        alt (currentEpoch - 1) - D1.lastClaimedEpoch > 1 (5 - 4 > 1)
+            Note over S: There is more than 1 epoch that D1 needs to claim rewards for
+            Note over S: REVERT: "Must claim all previous epoch rewards before changing stake"
+            S -->> D1: Transaction reverted
+        else
+            Note over S: D1 didn't claim for only one epoch. Check if rewards for this delegator even exist in the unclaimed epoch
+            alt If D1.epochScore(epoch 5) == 0 && (N1.nodeEpochScorePerStake(epoch 5) - D1.lastSettledNodeEpochScorePerStake(epoch 5)) == 0
+                Note over S: D1 has no rewards to claim for epoch 5 --> set last claimed epoch for D1 to 5
+                S ->> RSS: set D1.lastClaimedEpoch = 5
+            else
+                Note over S: D1 didn't claim their reward for epoch 5
+                Note over S: REVERT: "Must claim all previous epoch rewards before changing stake"
+                S -->> D1: Transaction reverted
+            end
+        end
+    end
+
+    Note over S: Result: Validation sees one unclaimed epoch with rewards → revert <br> (No state changes.)
+end
+
+rect LightBlue
+    Note over D1, RSS: Case E – more than one epoch unclaimed → must claim older epochs first <br> Context: imagine instead D1.lastClaimedEpoch = 3 (so epochs 4 and 5 unclaimed).
+    D1 ->> S: calls redelegate(N1_id, N2_id, 500)
+
+    Note over S: Validation
+    S ->> S: _validateDelegatorEpochClaims(N1_id, D1_address)
+    alt D1.lastClaimedEpoch != currentEpoch - 1 (3 != 6 - 1)
+        Note over S: D1 has some unclaimed epoch rewards
+        alt (currentEpoch - 1) - D1.lastClaimedEpoch > 1 (5 - 3 > 1)
+            Note over S: There is more than 1 epoch that D1 needs to claim rewards for
+            Note over S: REVERT: "Must claim all previous epoch rewards before changing stake"
+            S -->> D1: Transaction reverted
+        end
+    end
+
+    Note over S: Result: Validation sees two unclaimed epochs → revert <br> (No state changes.)
+end
+
+rect LightBlue
+    Note over D1, RSS: Case F – stakeAmount larger than current stake → cannot withdraw more than you have <br> Context: D1.stakeBase(N1) = 20_960 TRAC
+    D1 ->> S: calls redelegate(N1_id, N2_id, 25_000)
+
+    Note over S: Guards and validation pass
+
+    Note over S: Lazy-settle completes
+
+    S ->> SS: getDelegatorStakeBase(N1_id, D1_key) (returns 20_960)
+    alt stakeAmount > fromDelegatorStakeBase (25_000 > 20_960)
+        Note over S: REVERT: WithdrawalExceedsStake(20_960, 25_000)
+        S -->> D1: Transaction reverted
+    end
+
+    Note over S: Result: Pre-check stakeAmount > fromDelegatorStakeBase → revert <br> (No state changes.)
+end
+
+Note over S, N2: 🎯 REDELEGATION SCENARIOS COMPLETE! <br><br> ✅ Key Redelegation Features Demonstrated: <br> - All-out redelegation with proper state cleanup <br> - Same-epoch back-and-forth redelegation <br> - Partial redelegation with multi-node positions <br> - Proper validation of unclaimed epochs <br> - Stake amount validation <br> - Lazy settlement ensures accurate rewards <br><br> 🔒 Security Features: <br> - Must claim all previous epochs before redelegating <br> - Cannot redelegate more than current stake <br> - Proper state management for multi-node positions <br> - lastStakeHeldEpoch tracking prevents reward manipulation
