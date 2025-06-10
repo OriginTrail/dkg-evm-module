@@ -24,7 +24,6 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "RandomSampling";
     string private constant _VERSION = "1.0.0";
     uint256 public constant SCALE18 = 1e18;
-    uint256 public constant SCALE36 = 1e36;
     uint8 public avgBlockTimeInSeconds;
     uint256 public w1;
     uint256 public w2;
@@ -186,8 +185,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
 
             uint256 epoch = chronos.getCurrentEpoch();
             randomSamplingStorage.incrementEpochNodeValidProofsCount(epoch, identityId);
-            uint256 score36 = calculateNodeScore(identityId);
-            uint256 score18 = score36 / SCALE18;
+            uint256 score18 = calculateNodeScore(identityId);
             randomSamplingStorage.addToNodeEpochProofPeriodScore(
                 epoch,
                 activeProofPeriodStartBlock,
@@ -201,8 +199,8 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             // Calculate and add to nodeEpochScorePerStake
             uint96 totalNodeStake = stakingStorage.getNodeStake(identityId);
             if (totalNodeStake > 0) {
-                uint256 contribution = (score36 / totalNodeStake) / SCALE18;
-                randomSamplingStorage.addToNodeEpochScorePerStake(epoch, identityId, contribution);
+                uint256 nodeScorePerStake36 = (score18 * SCALE18) / totalNodeStake;
+                randomSamplingStorage.addToNodeEpochScorePerStake(epoch, identityId, nodeScorePerStake36);
             }
             emit ValidProofSubmitted(identityId, epoch, score18);
         } else {
@@ -368,35 +366,33 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     function calculateNodeScore(uint72 identityId) public view returns (uint256) {
-        uint256 nodeStake = stakingStorage.getNodeStake(identityId);
-        uint256 maximumStake = parametersStorage.maximumStake();
-        if (nodeStake > maximumStake) nodeStake = maximumStake;
+        // 1. Node stake factor calculation
+        // Formula: nodeStakeFactor = 2 * (nodeStake / 2,000,000)^2
+        uint256 maximumStake = uint256(parametersStorage.maximumStake());
+        uint256 nodeStake = uint256(stakingStorage.getNodeStake(identityId));
+        nodeStake = nodeStake > maximumStake ? maximumStake : nodeStake;
+        uint256 stakeRatio18 = (nodeStake * SCALE18) / maximumStake;
+        uint256 nodeStakeFactor18 = (2 * stakeRatio18 * stakeRatio18) / SCALE18;
 
-        // ratio in 1e36
-        uint256 stakeRatio36 = (nodeStake * SCALE36) / 2_000_000;
-        uint256 nodeStakeFactor = (2 * stakeRatio36 * stakeRatio36) / SCALE36; // ≤ 2 e36
-
-        uint256 nodeAsk = uint256(profileStorage.getAsk(identityId)); // raw ask
-        (uint256 askLowerBound, uint256 askUpperBound) = askStorage.getAskBounds();
-        uint256 nodeAskFactor = 0;
-
-        if (askUpperBound > askLowerBound && nodeAsk >= askLowerBound && nodeAsk <= askUpperBound) {
-            // (upper – ask)/(upper – lower)  in 1e36
-            uint256 diffRatio36 = ((askUpperBound - nodeAsk) * SCALE36) / (askUpperBound - askLowerBound);
-
-            // equivalent to: stakeRatio * diffRatio² / SCALE36
-            uint256 tmp = (stakeRatio36 * diffRatio36) / SCALE36;
-            nodeAskFactor = (tmp * diffRatio36) / SCALE36; // ≤ 1 e36
+        // 2. Node ask factor calculation
+        // Formula: nodeStake * ((upperAskBound - nodeAsk) / (upperAskBound - lowerAskBound))^2 / 2,000,000
+        uint256 nodeAsk18 = uint256(profileStorage.getAsk(identityId)) * SCALE18;
+        (uint256 askLowerBound18, uint256 askUpperBound18) = askStorage.getAskBounds();
+        uint256 nodeAskFactor18;
+        if (askUpperBound18 > askLowerBound18 && nodeAsk18 >= askLowerBound18 && nodeAsk18 <= askUpperBound18) {
+            uint256 askDiffRatio18 = ((askUpperBound18 - nodeAsk18) * SCALE18) / (askUpperBound18 - askLowerBound18);
+            nodeAskFactor18 = (stakeRatio18 * (askDiffRatio18 ** 2)) / (SCALE18 ** 2);
         }
 
-        uint256 nodePub = epochStorage.getNodeCurrentEpochProducedKnowledgeValue(identityId);
-        uint256 maxNodePub = epochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue();
-        require(maxNodePub != 0, "max publish = 0");
+        // 3. Node publishing factor calculation
+        // Original: nodeStakeFactor * (nodePublishingFactor / MAX(allNodesPublishingFactors))
+        uint256 nodePub = uint256(epochStorage.getNodeCurrentEpochProducedKnowledgeValue(identityId));
+        uint256 maxNodePub = uint256(epochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue());
+        require(maxNodePub > 0, "max publish is 0");
+        uint256 pubRatio18 = (nodePub * SCALE18) / maxNodePub;
+        uint256 nodePublishingFactor18 = (nodeStakeFactor18 * pubRatio18) / SCALE18;
 
-        uint256 pubRatio36 = (nodePub * SCALE36) / maxNodePub; // 1e36 scaled
-        uint256 nodePublishingFactor = (nodeStakeFactor * pubRatio36) / SCALE36; // ≤ 2 e36
-
-        return nodeStakeFactor + nodeAskFactor + nodePublishingFactor; // 1e36-scaled
+        return nodeStakeFactor18 + nodeAskFactor18 + nodePublishingFactor18;
     }
 
     function _checkProfileExists(uint72 identityId) internal view virtual {
