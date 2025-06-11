@@ -606,7 +606,7 @@ describe(`Full complex scenario - Steps 1-7 with Score Verification`, function (
     // Get node score
     const nodeFinalScore =
       await contracts.randomSamplingStorage.getNodeEpochScore(epoch1, node1Id);
-    const netDelegatorRewards = await contracts.staking.getNetDelegatorsRewards(
+    const netNodeRewards = await contracts.staking.getNetNodeRewards(
       node1Id,
       epoch1,
     );
@@ -614,7 +614,7 @@ describe(`Full complex scenario - Steps 1-7 with Score Verification`, function (
     console.log(`    🧮 Reward calculation verification:`);
     console.log(`    📊 Node1 final score: ${nodeFinalScore}`);
     console.log(
-      `    💎 Net delegator rewards: ${ethers.formatUnits(netDelegatorRewards, 18)} TRAC`,
+      `    💎 Net delegator rewards: ${ethers.formatUnits(netNodeRewards, 18)} TRAC`,
     );
 
     // Claim rewards
@@ -630,8 +630,7 @@ describe(`Full complex scenario - Steps 1-7 with Score Verification`, function (
       );
 
     // Calculate expected reward: (delegator_score / node_score) * available_rewards
-    const expectedReward =
-      (d1FinalScore * netDelegatorRewards) / nodeFinalScore;
+    const expectedReward = (d1FinalScore * netNodeRewards) / nodeFinalScore;
 
     console.log(`    📊 Delegator1 final score: ${d1FinalScore}`);
     console.log(
