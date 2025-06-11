@@ -1,9 +1,9 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
+// @ts-expect-error: No type definitions available for assertion-tools
 import { kcTools } from 'assertion-tools';
 import { expect } from 'chai';
 import hre, { ethers } from 'hardhat';
-// @ts-expect-error: No type definitions available for assertion-tools
 
 import {
   Hub,
