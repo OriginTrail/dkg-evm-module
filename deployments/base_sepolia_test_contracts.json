@@ -155,12 +155,12 @@
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0xDCFb92EFfd31202C17f37e5d79Ef4040489A7155",
+      "evmAddress": "0xC9482C70fF7afd26AD9A18F6BaD60A2140BED2c9",
       "version": "1.0.1",
       "gitBranch": "release/reworked-staking",
-      "gitCommitHash": "7a489bac60a752cbfa8ae52a2ee23a561db4557c",
-      "deploymentBlock": 26726436,
-      "deploymentTimestamp": 1749221164507,
+      "gitCommitHash": "cf73272bf135db799a8688c1cdb5fe42781e0723",
+      "deploymentBlock": 26897790,
+      "deploymentTimestamp": 1749563873267,
       "deployed": true
     },
     "Profile": {
@@ -281,12 +281,12 @@
       "deployed": true
     },
     "RandomSampling": {
-      "evmAddress": "0xCfc21f99D38206A695d5d39DdB30A3D6C2f8Aa28",
+      "evmAddress": "0xFDC4dc288D0b73322174423389bA5d27b912BE6c",
       "version": "1.0.0",
       "gitBranch": "release/reworked-staking",
-      "gitCommitHash": "7a489bac60a752cbfa8ae52a2ee23a561db4557c",
-      "deploymentBlock": 26726443,
-      "deploymentTimestamp": 1749221178321,
+      "gitCommitHash": "cf73272bf135db799a8688c1cdb5fe42781e0723",
+      "deploymentBlock": 26897794,
+      "deploymentTimestamp": 1749563879525,
       "deployed": true
     }
   }

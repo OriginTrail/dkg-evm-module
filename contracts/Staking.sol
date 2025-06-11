@@ -589,13 +589,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     /**
-     * @dev Calculate the estimated rewards for a delegator in an epoch
+     * @dev Calculate the reward for a delegator in an epoch (correct only for the finalized epochs)
      * @param identityId Node's identity ID
      * @param epoch Epoch number
      * @param delegator Delegator's address
-     * @return Estimated rewards for the delegator in the epoch
+     * @return Reward for the delegator in the epoch
      */
-    function getEstimatedRewards(uint72 identityId, uint256 epoch, address delegator) external view returns (uint256) {
+    function getDelegatorReward(uint72 identityId, uint256 epoch, address delegator) external view returns (uint256) {
         require(delegatorsInfo.isNodeDelegator(identityId, delegator), "Delegator not found");
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
@@ -607,20 +607,20 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         if (nodeScore18 == 0) return 0;
 
         // Calculate the final delegators rewards pool
-        uint256 netDelegatorsRewards = getNetDelegatorsRewards(identityId, epoch);
+        uint256 netNodeRewards = getNetNodeRewards(identityId, epoch);
 
-        if (netDelegatorsRewards == 0) return 0;
+        if (netNodeRewards == 0) return 0;
 
-        return (delegatorScore18 * netDelegatorsRewards) / nodeScore18;
+        return (delegatorScore18 * netNodeRewards) / nodeScore18;
     }
 
     /**
-     * @dev Fetch the net rewards for delegators in an epoch (rewards of node's delegators - operator fee)
+     * @dev Fetch the net rewards for all node's delegators in an epoch (rewards of node's delegators - operator fee)
      * @param identityId Node's identity ID
      * @param epoch Epoch number
-     * @return Net rewards for delegators in the epoch
+     * @return Net rewards for node's delegators in the epoch
      */
-    function getNetDelegatorsRewards(
+    function getNetNodeRewards(
         uint72 identityId,
         uint256 epoch
     ) public view profileExists(identityId) returns (uint256) {
@@ -638,12 +638,12 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch);
         if (epocRewardsPool == 0) return 0;
 
-        uint256 totalNodeDelegatorsRewards = (epocRewardsPool * nodeScore18) / allNodesScore18;
+        uint256 totalNodeRewards = (epocRewardsPool * nodeScore18) / allNodesScore18;
 
         uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
-        uint96 operatorFeeAmount = uint96((totalNodeDelegatorsRewards * feePercentageForEpoch) / 10000);
+        uint96 operatorFeeAmount = uint96((totalNodeRewards * feePercentageForEpoch) / 10000);
 
-        return totalNodeDelegatorsRewards - operatorFeeAmount;
+        return totalNodeRewards - operatorFeeAmount;
     }
 
     function _validateDelegatorEpochClaims(uint72 identityId, address delegator) internal {
