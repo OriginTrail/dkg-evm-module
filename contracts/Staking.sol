@@ -101,6 +101,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         _validateDelegatorEpochClaims(identityId, msg.sender);
+        _settleAndRollStakeAccumulator(identityId);
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
@@ -145,9 +146,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
         uint256 currentEpoch = chronos.getCurrentEpoch();
 
-        // Validate that all claims have been settled for the source and destination nodes before changing stake
+        // Validate that all claims have been settled and stake weights are up to date for the source node before changing stake
         _validateDelegatorEpochClaims(fromIdentityId, msg.sender);
+        _settleAndRollStakeAccumulator(fromIdentityId);
+
+        // Validate that all claims have been settled and stake weights are up to date for the destination node before changing stake
         _validateDelegatorEpochClaims(toIdentityId, msg.sender);
+        _settleAndRollStakeAccumulator(toIdentityId);
 
         // Prepare for stake change on the source and destination nodes
         uint256 fromDelegatorEpochScore18 = _prepareForStakeChange(currentEpoch, fromIdentityId, delegatorKey);
@@ -213,6 +218,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         _validateDelegatorEpochClaims(identityId, msg.sender);
+        _settleAndRollStakeAccumulator(identityId);
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
         uint256 currentEpoch = chronos.getCurrentEpoch();
@@ -286,6 +292,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         if (prevDelegatorWithdrawalAmount == 0) revert StakingLib.WithdrawalWasntInitiated();
 
         _validateDelegatorEpochClaims(identityId, msg.sender); // cannot revert stake while rewards pending
+        _settleAndRollStakeAccumulator(identityId);
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         uint96 nodeStakeBefore = ss.getNodeStake(identityId);
@@ -348,6 +355,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         _validateDelegatorEpochClaims(identityId, msg.sender);
+        _settleAndRollStakeAccumulator(identityId);
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
@@ -442,6 +450,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             !delegatorsInfo.getEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey),
             "Already claimed rewards for this epoch"
         );
+
+        _settleAndRollStakeAccumulator(identityId);
 
         uint256 delegatorScore18 = _prepareForStakeChange(epoch, identityId, delegatorKey);
         uint256 nodeScore18 = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
@@ -674,5 +684,57 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         if (!profileStorage.profileExists(identityId)) {
             revert ProfileLib.ProfileDoesntExist(identityId);
         }
+    }
+
+    /**
+     * @dev Called **after claim-checks have passed** and *before*
+     *      any code that changes `currentStake`.
+     *
+     *      1. If lastUpdateEpoch == currentEpoch, extends weightedSum to the current timestamp
+     *      2. If lastUpdateEpoch < currentEpoch, stores Savg for the lastUpdateEpoch
+     *      3. If previous epoch was silent (stake was flat since lastUpdateEpoch), sets Savg for the previousEpoch to the current stake
+     *      4. Re-initialises the accumulator for the current epoch
+     *      MUST be called before any stake-changing operation.
+     */
+    function _settleAndRollStakeAccumulator(uint72 identityId) internal {
+        StakingLib.StakeAccumulator memory stakeAcc = delegatorsInfo.getStakeAccumulator(identityId);
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        uint256 nowTs = block.timestamp;
+
+        require(stakeAcc.lastUpdateEpoch <= currentEpoch, "lastUpdateEpoch must be smaller or equal to currentEpoch");
+
+        uint256 currentNodeStake = uint256(stakingStorage.getNodeStake(identityId));
+
+        // still inside same epoch → nothing to seal
+        if (currentEpoch == stakeAcc.lastUpdateEpoch) {
+            stakeAcc.weightedSum += currentNodeStake * (nowTs - stakeAcc.lastUpdateTs);
+            stakeAcc.lastUpdateTs = nowTs;
+            delegatorsInfo.setStakeAccumulator(identityId, stakeAcc);
+            return;
+        }
+
+        // stakeAcc.lastUpdateEpoch is smaller than currentEpoch
+        uint256 previousEpoch = currentEpoch - 1;
+
+        // Seal the lastUpdateEpoch avg stake
+        uint256 lastUpdateEpochEnd = chronos.timestampForEpoch(stakeAcc.lastUpdateEpoch + 1);
+        stakeAcc.weightedSum += currentNodeStake * (lastUpdateEpochEnd - stakeAcc.lastUpdateTs);
+        delegatorsInfo.setEpochAvgStake(
+            identityId,
+            stakeAcc.lastUpdateEpoch,
+            uint96(stakeAcc.weightedSum / chronos.epochLength())
+        );
+
+        // If previous epoch was silent (stake was flat since lastUpdateEpoch) - set the avg stake to the current stake
+        if (stakeAcc.lastUpdateEpoch < previousEpoch) {
+            delegatorsInfo.setEpochAvgStake(identityId, previousEpoch, uint96(currentNodeStake));
+        }
+
+        // start accumulator for new epoch
+        uint256 currentEpochStart = chronos.timestampForEpoch(currentEpoch);
+        stakeAcc.weightedSum = currentNodeStake * (nowTs - currentEpochStart);
+        stakeAcc.lastUpdateEpoch = currentEpoch;
+        stakeAcc.lastUpdateTs = nowTs;
+        delegatorsInfo.setStakeAccumulator(identityId, stakeAcc);
     }
 }

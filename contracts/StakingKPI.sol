@@ -14,6 +14,8 @@ import {ProfileLib} from "./libraries/ProfileLib.sol";
 import {IdentityLib} from "./libraries/IdentityLib.sol";
 import {EpochStorage} from "./storage/EpochStorage.sol";
 import {RandomSamplingStorage} from "./storage/RandomSamplingStorage.sol";
+import {Chronos} from "./storage/Chronos.sol";
+import {StakingLib} from "./libraries/StakingLib.sol";
 
 contract StakingKPI is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "StakingKPI";
@@ -26,6 +28,7 @@ contract StakingKPI is INamed, IVersioned, ContractStatus, IInitializable {
     DelegatorsInfo public delegatorsInfo;
     RandomSamplingStorage public randomSamplingStorage;
     EpochStorage public epochStorage;
+    Chronos public chronos;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -42,6 +45,7 @@ contract StakingKPI is INamed, IVersioned, ContractStatus, IInitializable {
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
         randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
         epochStorage = EpochStorage(hub.getContractAddress("EpochStorageV8"));
+        chronos = Chronos(hub.getContractAddress("Chronos"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -180,6 +184,43 @@ contract StakingKPI is INamed, IVersioned, ContractStatus, IInitializable {
         uint96 operatorFeeAmount = uint96((totalNodeRewards * feePercentageForEpoch) / 10_000);
 
         return totalNodeRewards - operatorFeeAmount;
+    }
+
+    /**
+     * @dev Annualised Node Yield based on the **last finalised epoch**.
+     *      Assumes epochs are monthly, so ×12 to annualise.
+     *      Returns 1e18-scaled value.
+     */
+    function getANY(uint72 identityId) external view returns (uint256) {
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        require(currentEpoch > 1, "no finished epoch yet");
+
+        uint256 previousEpochNetNodeRewards = getNetNodeRewards(identityId, currentEpoch - 1);
+        uint96 previousEpochAvgStake = _getPreviousEpochStakeAvg(identityId);
+        if (previousEpochAvgStake == 0) return 0;
+
+        return ((previousEpochNetNodeRewards * SCALE18) / previousEpochAvgStake) * 12;
+    }
+
+    function _getPreviousEpochStakeAvg(uint72 identityId) internal view returns (uint96) {
+        StakingLib.StakeAccumulator memory stakeAcc = delegatorsInfo.getStakeAccumulator(identityId);
+
+        uint256 previousEpoch = chronos.getCurrentEpoch() - 1;
+        uint256 previousEpochEnd = chronos.timestampForEpoch(previousEpoch + 1);
+
+        // Epoch has already been sealed, return the sealed value
+        if (previousEpoch < stakeAcc.lastUpdateEpoch) return delegatorsInfo.getEpochAvgStake(identityId, previousEpoch);
+
+        uint96 currentNodeStake = stakingStorage.getNodeStake(identityId);
+        if (previousEpoch == stakeAcc.lastUpdateEpoch) {
+            // Epoch avg stake is not completely settled yet, calculate the total weighted sum and return the avg
+            uint256 leftoverWeightedSum = uint256(currentNodeStake) * (previousEpochEnd - stakeAcc.lastUpdateTs);
+            uint256 totalWeightedSum = stakeAcc.weightedSum + leftoverWeightedSum;
+            return uint96(totalWeightedSum / chronos.epochLength());
+        }
+
+        // Epoch is silent (no stake change), return the current stake
+        return currentNodeStake;
     }
 
     function _simulatePrepareForStakeChange(
