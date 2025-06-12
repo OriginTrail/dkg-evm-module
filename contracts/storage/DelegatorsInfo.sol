@@ -7,6 +7,7 @@ import {IInitializable} from "../interfaces/IInitializable.sol";
 import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
 import {ContractStatus} from "../abstract/ContractStatus.sol";
+import {StakingLib} from "../libraries/StakingLib.sol";
 
 contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "DelegatorsInfo";
@@ -34,6 +35,13 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
     mapping(uint72 => mapping(address => bool)) public hasEverDelegatedToNode;
     // IdentityId => Delegator => LastStakeHeldEpoch (the last epoch when delegator held stake, 0 if fully claimed)
     mapping(uint72 => mapping(address => uint256)) public lastStakeHeldEpoch;
+
+    // ================================================
+    // ANY KPI variables
+    // ================================================
+
+    mapping(uint72 => StakingLib.StakeAccumulator) public stakeAccumulator; // identityId → running accumulator
+    mapping(uint72 => mapping(uint256 => uint96)) public epochAvgStake; // identityId → epoch → Savg
 
     event DelegatorAdded(uint72 indexed identityId, address indexed delegator);
     event DelegatorRemoved(uint72 indexed identityId, address indexed delegator);
@@ -204,6 +212,25 @@ contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
 
     function getLastStakeHeldEpoch(uint72 identityId, address delegator) external view returns (uint256) {
         return lastStakeHeldEpoch[identityId][delegator];
+    }
+
+    function getEpochAvgStake(uint72 identityId, uint256 epoch) external view returns (uint96) {
+        return epochAvgStake[identityId][epoch];
+    }
+
+    function setEpochAvgStake(uint72 identityId, uint256 epoch, uint96 avgStake) external onlyContracts {
+        epochAvgStake[identityId][epoch] = avgStake;
+    }
+
+    function getStakeAccumulator(uint72 identityId) external view returns (StakingLib.StakeAccumulator memory) {
+        return stakeAccumulator[identityId];
+    }
+
+    function setStakeAccumulator(
+        uint72 identityId,
+        StakingLib.StakeAccumulator memory stakeAcc
+    ) external onlyContracts {
+        stakeAccumulator[identityId] = stakeAcc;
     }
 
     function migrate(address[] memory newAddresses) public {

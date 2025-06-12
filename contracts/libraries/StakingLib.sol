@@ -28,6 +28,12 @@ library StakingLib {
         uint256 timestamp;
     }
 
+    struct StakeAccumulator {
+        uint256 lastUpdateTs; // block.timestamp at last change
+        uint256 lastUpdateEpoch; // chronos.getCurrentEpoch() at last change
+        uint256 weightedSum; // Σ(stake·Δt) for the *current* epoch
+    }
+
     error WithdrawalWasntInitiated();
     error WithdrawalPeriodPending(uint256 nowTimestamp, uint256 endTimestamp);
     error MaximumStakeExceeded(uint256 amount);
