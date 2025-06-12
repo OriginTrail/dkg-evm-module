@@ -7,6 +7,7 @@ import {IVersioned} from "./interfaces/IVersioned.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IInitializable} from "./interfaces/IInitializable.sol";
 import {RandomSamplingLib} from "./libraries/RandomSamplingLib.sol";
+import {ProfileLib} from "./libraries/ProfileLib.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
 import {RandomSamplingStorage} from "./storage/RandomSamplingStorage.sol";
 import {KnowledgeCollectionStorage} from "./storage/KnowledgeCollectionStorage.sol";
@@ -22,7 +23,7 @@ import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "RandomSampling";
     string private constant _VERSION = "1.0.0";
-    uint256 public constant SCALING_FACTOR = 1e18;
+    uint256 public constant SCALE18 = 1e18;
     uint8 public avgBlockTimeInSeconds;
     uint256 public w1;
     uint256 public w2;
@@ -52,7 +53,6 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     event ValidProofSubmitted(uint72 indexed identityId, uint256 indexed epoch, uint256 score);
     event AvgBlockTimeUpdated(uint8 avgBlockTimeInSeconds);
     event ProofingPeriodDurationInBlocksUpdated(uint8 durationInBlocks);
-    event RewardsClaimed(uint72 indexed identityId, uint256 indexed epoch, address indexed delegator, uint256 amount);
     event W1Updated(uint256 oldW1, uint256 newW1);
     event W2Updated(uint256 oldW2, uint256 newW2);
 
@@ -61,6 +61,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         avgBlockTimeInSeconds = _avgBlockTimeInSeconds;
         w1 = _w1;
         w2 = _w2;
+    }
+
+    modifier profileExists(uint72 identityId) {
+        _checkProfileExists(identityId);
+        _;
     }
 
     function initialize() public onlyHub {
@@ -119,8 +124,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
-    function createChallenge() external {
-        // identityId
+    function createChallenge() external profileExists(identityStorage.getIdentityId(msg.sender)) {
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
         RandomSamplingLib.Challenge memory nodeChallenge = randomSamplingStorage.getNodeChallenge(identityId);
@@ -146,7 +150,10 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         randomSamplingStorage.setNodeChallenge(identityId, challenge);
     }
 
-    function submitProof(string memory chunk, bytes32[] calldata merkleProof) external {
+    function submitProof(
+        string memory chunk,
+        bytes32[] calldata merkleProof
+    ) external profileExists(identityStorage.getIdentityId(msg.sender)) {
         // Get node identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -178,91 +185,27 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
 
             uint256 epoch = chronos.getCurrentEpoch();
             randomSamplingStorage.incrementEpochNodeValidProofsCount(epoch, identityId);
+            uint256 score18 = calculateNodeScore(identityId);
+            randomSamplingStorage.addToNodeEpochProofPeriodScore(
+                epoch,
+                activeProofPeriodStartBlock,
+                identityId,
+                score18
+            );
+            randomSamplingStorage.addToAllNodesEpochProofPeriodScore(epoch, activeProofPeriodStartBlock, score18);
+            randomSamplingStorage.addToNodeEpochScore(epoch, identityId, score18);
+            randomSamplingStorage.addToAllNodesEpochScore(epoch, score18);
 
-            // Calculate node score at this proof period and store it
-            uint256 score = calculateNodeScore(identityId);
-            randomSamplingStorage.addToNodeEpochProofPeriodScore(epoch, activeProofPeriodStartBlock, identityId, score);
-            randomSamplingStorage.addToAllNodesEpochProofPeriodScore(epoch, activeProofPeriodStartBlock, score);
-            randomSamplingStorage.addToNodeEpochScore(epoch, identityId, score);
-            randomSamplingStorage.addToAllNodesEpochScore(epoch, score);
-
-            // Calculate delegators' scores for the previous proof period and store them
-            _calculateAndStoreDelegatorScores(identityId, epoch, score);
-
-            emit ValidProofSubmitted(identityId, epoch, score);
+            // Calculate and add to nodeEpochScorePerStake
+            uint96 totalNodeStake = stakingStorage.getNodeStake(identityId);
+            if (totalNodeStake > 0) {
+                uint256 nodeScorePerStake36 = (score18 * SCALE18) / totalNodeStake;
+                randomSamplingStorage.addToNodeEpochScorePerStake(epoch, identityId, nodeScorePerStake36);
+            }
+            emit ValidProofSubmitted(identityId, epoch, score18);
         } else {
             revert MerkleRootMismatchError(computedMerkleRoot, expectedMerkleRoot);
         }
-    }
-
-    function getDelegatorEpochRewardsAmount(
-        uint72 identityId,
-        uint256 epoch,
-        address delegator
-    ) public view returns (uint256) {
-        // // First part of the formula - W1 * (node valid proofs count / all expected epoch proofs count)
-        // uint256 epochNodeValidProofsCount = randomSamplingStorage.getEpochNodeValidProofsCount(epoch, identityId);
-        // uint256 proofingPeriodDurationInBlocks = randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(epoch);
-        // uint256 maxNodeProofsInEpoch = chronos.epochLength() / (proofingPeriodDurationInBlocks * avgBlockTimeInSeconds);
-        // uint256 allExpectedEpochProofsCount = shardingTableStorage.nodesCount() * maxNodeProofsInEpoch;
-        // require(allExpectedEpochProofsCount > 0, "All expected epoch proofs count must be greater than 0");
-        // proofsRatio = (epochNodeValidProofsCount * SCALING_FACTOR) / allExpectedEpochProofsCount;
-        uint256 proofsRatio = 0;
-
-        // Second part of the formula - W2 * (delegator score / all nodes scores)
-        bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
-        uint256 epochNodeDelegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(
-            epoch,
-            identityId,
-            delegatorKey
-        );
-        uint256 allNodesEpochScore = randomSamplingStorage.getAllNodesEpochScore(epoch);
-        require(
-            allNodesEpochScore > 0,
-            "None of the nodes have any score for the given epoch. Cannot calculate rewards."
-        );
-        uint256 scoreRatio = (epochNodeDelegatorScore * SCALING_FACTOR) / allNodesEpochScore;
-
-        // Reward calculation
-        uint256 totalEpochTracFees = epochStorage.getEpochPool(1, epoch);
-        // SCALING_FACTOR ** 2 because we multiplied by SCALING_FACTOR once in the delegator score calculation and once in scoreRatio
-        uint256 reward = ((totalEpochTracFees / 2) * (w1 * proofsRatio + w2 * scoreRatio)) / SCALING_FACTOR ** 2;
-
-        return reward;
-    }
-
-    function claimRewards(uint72 identityId, uint256 epoch) external {
-        // make sure the epoch is over and it is finalized
-        require(chronos.getCurrentEpoch() > epoch, "Epoch is not over yet");
-        require(epochStorage.lastFinalizedEpoch(1) >= epoch, "Epoch is not finalized yet");
-
-        // get delegator key
-        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
-
-        // Check if a delegator has >0 score in the epoch
-        uint256 delegatorScore = randomSamplingStorage.getEpochNodeDelegatorScore(epoch, identityId, delegatorKey);
-        require(delegatorScore > 0, "Delegator has no score for the given epoch");
-
-        // make sure the delegator has not claimed the rewards yet
-        bool rewardsClaimed = randomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
-            epoch,
-            identityId,
-            delegatorKey
-        );
-        require(!rewardsClaimed, "Rewards already claimed");
-
-        // get rewards amount
-        uint256 rewardAmount = getDelegatorEpochRewardsAmount(identityId, epoch, msg.sender);
-        require(rewardAmount > 0, "No rewards to claim");
-        require(rewardAmount <= type(uint96).max, "Reward amount exceeds uint96");
-
-        // Mark as claimed - before transfer to avoid reentrancy
-        randomSamplingStorage.setEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey, true);
-
-        // Transfer the rewards to the delegator via StakingStorage
-        stakingStorage.transferStake(msg.sender, uint96(rewardAmount));
-
-        emit RewardsClaimed(identityId, epoch, msg.sender, rewardAmount);
     }
 
     function _computeMerkleRootFromProof(
@@ -425,55 +368,36 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     function calculateNodeScore(uint72 identityId) public view returns (uint256) {
         // 1. Node stake factor calculation
         // Formula: nodeStakeFactor = 2 * (nodeStake / 2,000,000)^2
-        uint96 maximumStake = parametersStorage.maximumStake();
-        uint256 nodeStake = stakingStorage.getNodeStake(identityId);
+        uint256 maximumStake = uint256(parametersStorage.maximumStake());
+        uint256 nodeStake = uint256(stakingStorage.getNodeStake(identityId));
         nodeStake = nodeStake > maximumStake ? maximumStake : nodeStake;
-        uint256 stakeRatio = nodeStake / 2_000_000;
-        uint256 nodeStakeFactor = (2 * stakeRatio * stakeRatio) / SCALING_FACTOR;
+        uint256 stakeRatio18 = (nodeStake * SCALE18) / maximumStake;
+        uint256 nodeStakeFactor18 = (2 * stakeRatio18 * stakeRatio18) / SCALE18;
 
         // 2. Node ask factor calculation
         // Formula: nodeStake * ((upperAskBound - nodeAsk) / (upperAskBound - lowerAskBound))^2 / 2,000,000
-        uint256 nodeAskScaled = uint256(profileStorage.getAsk(identityId)) * SCALING_FACTOR;
-        (uint256 askLowerBound, uint256 askUpperBound) = askStorage.getAskBounds();
-        uint256 nodeAskFactor = 0;
-        if (nodeAskScaled <= askUpperBound && nodeAskScaled >= askLowerBound) {
-            uint256 askBoundsDiff = askUpperBound - askLowerBound;
-            if (askBoundsDiff == 0) {
-                revert("Ask bounds difference is 0");
-            }
-            uint256 askDiffRatio = ((askUpperBound - nodeAskScaled) * SCALING_FACTOR) / askBoundsDiff;
-            nodeAskFactor = (stakeRatio * (askDiffRatio ** 2)) / (SCALING_FACTOR ** 2);
+        uint256 nodeAsk18 = uint256(profileStorage.getAsk(identityId)) * SCALE18;
+        (uint256 askLowerBound18, uint256 askUpperBound18) = askStorage.getAskBounds();
+        uint256 nodeAskFactor18;
+        if (askUpperBound18 > askLowerBound18 && nodeAsk18 >= askLowerBound18 && nodeAsk18 <= askUpperBound18) {
+            uint256 askDiffRatio18 = ((askUpperBound18 - nodeAsk18) * SCALE18) / (askUpperBound18 - askLowerBound18);
+            nodeAskFactor18 = (stakeRatio18 * (askDiffRatio18 ** 2)) / (SCALE18 ** 2);
         }
 
         // 3. Node publishing factor calculation
         // Original: nodeStakeFactor * (nodePublishingFactor / MAX(allNodesPublishingFactors))
-        uint256 nodePubFactor = epochStorage.getNodeCurrentEpochProducedKnowledgeValue(identityId);
-        uint256 maxNodePubFactor = epochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue();
-        if (maxNodePubFactor == 0) {
-            revert("Max node publishing factor is 0");
-        }
-        uint256 pubRatio = (nodePubFactor * SCALING_FACTOR) / maxNodePubFactor;
-        uint256 nodePublishingFactor = (nodeStakeFactor * pubRatio) / SCALING_FACTOR;
+        uint256 nodePub = uint256(epochStorage.getNodeCurrentEpochProducedKnowledgeValue(identityId));
+        uint256 maxNodePub = uint256(epochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue());
+        require(maxNodePub > 0, "max publish is 0");
+        uint256 pubRatio18 = (nodePub * SCALE18) / maxNodePub;
+        uint256 nodePublishingFactor18 = (nodeStakeFactor18 * pubRatio18) / SCALE18;
 
-        return nodeStakeFactor + nodePublishingFactor + nodeAskFactor;
+        return nodeStakeFactor18 + nodeAskFactor18 + nodePublishingFactor18;
     }
 
-    function _calculateAndStoreDelegatorScores(uint72 identityId, uint256 epoch, uint256 nodeScore) private {
-        uint256 nodeStake = stakingStorage.getNodeStake(identityId);
-        if (nodeScore > 0 && nodeStake > 0) {
-            // update all delegators' scores
-            address[] memory delegatorsAddresses = delegatorsInfo.getDelegators(identityId);
-            for (uint8 i = 0; i < delegatorsAddresses.length; ) {
-                bytes32 delegatorKey = keccak256(abi.encodePacked(delegatorsAddresses[i]));
-                uint256 delegatorStake = stakingStorage.getDelegatorTotalStake(identityId, delegatorKey);
-                // Need to divide by SCALING_FACTOR to get the correct score
-                uint256 delegatorScore = nodeScore * ((delegatorStake * SCALING_FACTOR) / nodeStake);
-                randomSamplingStorage.addToEpochNodeDelegatorScore(epoch, identityId, delegatorKey, delegatorScore);
-
-                unchecked {
-                    i++;
-                }
-            }
+    function _checkProfileExists(uint72 identityId) internal view virtual {
+        if (!profileStorage.profileExists(identityId)) {
+            revert ProfileLib.ProfileDoesntExist(identityId);
         }
     }
 }

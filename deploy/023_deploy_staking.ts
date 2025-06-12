@@ -21,4 +21,7 @@ func.dependencies = [
   'NodeOperatorFeesStorage',
   'Ask',
   'DelegatorsInfo',
+  'Chronos',
+  'RandomSamplingStorage',
+  'EpochStorageV8',
 ];
