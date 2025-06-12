@@ -193,11 +193,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Check if all stake is being removed from the source node
         if (newFromDelegatorStakeBase == 0) {
-            delegatorsInfo.removeDelegator(fromIdentityId, msg.sender);
-            // If delegator has earned some score, set the lastStakeHeldEpoch to the current epoch (meaning they have earned rewards for this epoch)
-            if (fromDelegatorEpochScore18 > 0) {
-                delegatorsInfo.setLastStakeHeldEpoch(fromIdentityId, msg.sender, currentEpoch);
-            }
+            _handleDelegatorRemovalOnZeroStake(fromIdentityId, msg.sender, fromDelegatorEpochScore18, currentEpoch);
         }
 
         _manageDelegatorStatus(toIdentityId, msg.sender);
@@ -236,11 +232,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         askContract.recalculateActiveSet();
 
         if (newDelegatorStakeBase == 0) {
-            delegatorsInfo.removeDelegator(identityId, msg.sender);
-            // If delegator has earned some score, set the lastStakeHeldEpoch to the current epoch (meaning they have earned rewards for this epoch)
-            if (delegatorEpochScore18 > 0) {
-                delegatorsInfo.setLastStakeHeldEpoch(identityId, msg.sender, currentEpoch);
-            }
+            _handleDelegatorRemovalOnZeroStake(identityId, msg.sender, delegatorEpochScore18, currentEpoch);
         }
 
         if (totalNodeStakeAfter >= parametersStorage.maximumStake()) {
@@ -308,15 +300,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             ss.increaseTotalStake(restake);
 
             // the delegator might have had zero stake before the cancel
-            if (!delegatorsInfo.isNodeDelegator(identityId, msg.sender)) {
-                delegatorsInfo.addDelegator(identityId, msg.sender);
-            }
-
             // If delegator was inactive and is now restaking, reset their lastStakeHeldEpoch
-            uint256 lastStakeHeldEpoch = delegatorsInfo.getLastStakeHeldEpoch(identityId, msg.sender);
-            if (lastStakeHeldEpoch > 0) {
-                delegatorsInfo.setLastStakeHeldEpoch(identityId, msg.sender, 0);
-            }
+            _manageDelegatorStatus(identityId, msg.sender);
         }
 
         if (keepPending == 0) {
@@ -488,6 +473,11 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         if (lastStakeHeldEpoch > 0 && epoch >= lastStakeHeldEpoch) {
             // They've now claimed all rewards they're entitled to, reset the tracker
             delegatorsInfo.setLastStakeHeldEpoch(identityId, delegator, 0);
+
+            // Check if they should be removed from delegators list
+            if (reward == 0 && stakingStorage.getDelegatorStakeBase(identityId, delegatorKey) == 0) {
+                delegatorsInfo.removeDelegator(identityId, delegator);
+            }
         }
 
         if (reward == 0) return;
@@ -673,6 +663,22 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     function _checkProfileExists(uint72 identityId) internal view virtual {
         if (!profileStorage.profileExists(identityId)) {
             revert ProfileLib.ProfileDoesntExist(identityId);
+        }
+    }
+
+    function _handleDelegatorRemovalOnZeroStake(
+        uint72 identityId,
+        address delegator,
+        uint256 delegatorEpochScore18,
+        uint256 currentEpoch
+    ) internal {
+        // Don't remove delegator immediately - they might still be eligible for rewards in current epoch
+        if (delegatorEpochScore18 > 0) {
+            // Delegator earned score in current epoch (can claim), keep them for claiming current epoch rewards after current epoch is finalised
+            delegatorsInfo.setLastStakeHeldEpoch(identityId, delegator, currentEpoch);
+        } else {
+            // No score earned in current epoch, safe to remove immediately
+            delegatorsInfo.removeDelegator(identityId, delegator);
         }
     }
 }
