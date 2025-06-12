@@ -300,7 +300,6 @@ async function setupTestEnvironment(): Promise<{
   };
 
   await contracts.hub.setContractAddress('HubOwner', accounts.owner.address);
-  const DECIMALS = await contracts.token.decimals();
 
   // Mint tokens for all participants
   for (const delegator of [
@@ -453,6 +452,9 @@ describe(`Full complex scenario`, function () {
     // STEP 1: Delegator1 stakes 10,000 TRAC
     // ================================================================================================================
     console.log(`\n📊 STEP 1: Delegator1 stakes 10,000 TRAC`);
+
+    const epochBeforeStake = await contracts.chronos.getCurrentEpoch();
+    console.log(`    ℹ️  Current epoch before staking: ${epochBeforeStake}`);
 
     await contracts.token
       .connect(accounts.delegator1)
@@ -687,7 +689,7 @@ describe(`Full complex scenario`, function () {
         accounts.delegator1.address,
       );
 
-    // Verify reward was auto-staked (since gap is only 1 epoch)
+    // Verify reward was restaked (since gap is only 1 epoch)
     const actualReward = d1StakeBaseAfter - d1StakeBaseBefore;
     console.log(
       `    ✅ Actual reward: ${ethers.formatUnits(actualReward, 18)} TRAC`,
@@ -897,7 +899,7 @@ describe(`Full complex scenario`, function () {
     /* ---------- BEFORE snapshot -------------------------------------- */
     const d2StakeBaseBefore =
       await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d2Key);
-    const nodeStakeBefore =
+    const nodeStakeBefore11 =
       await contracts.stakingStorage.getNodeStake(node1Id);
 
     const scorePerStakeCur =
@@ -933,7 +935,8 @@ describe(`Full complex scenario`, function () {
     /* ---------- AFTER snapshot --------------------------------------- */
     const d2StakeBaseAfter =
       await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d2Key);
-    const nodeStakeAfter = await contracts.stakingStorage.getNodeStake(node1Id);
+    const nodeStakeAfter11 =
+      await contracts.stakingStorage.getNodeStake(node1Id);
 
     const d2ScoreAfter =
       await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
@@ -959,8 +962,8 @@ describe(`Full complex scenario`, function () {
       ethers.parseUnits('10000', 18),
       'withdrawal request amount',
     );
-    expect(nodeStakeAfter).to.equal(
-      nodeStakeBefore - ethers.parseUnits('10000', 18),
+    expect(nodeStakeAfter11).to.equal(
+      nodeStakeBefore11 - ethers.parseUnits('10000', 18),
       'node total stake should fall by 10 000 TRAC',
     );
     expect(d2StakeBaseAfter).to.equal(
@@ -980,7 +983,7 @@ describe(`Full complex scenario`, function () {
       `    ✅ withdrawal request stored (${ethers.formatUnits(withdrawAmount, 18)} TRAC)`,
     );
     console.log(
-      `    ✅ node stake ${ethers.formatUnits(nodeStakeBefore, 18)} → ${ethers.formatUnits(nodeStakeAfter, 18)} TRAC`,
+      `    ✅ node stake ${ethers.formatUnits(nodeStakeBefore11, 18)} → ${ethers.formatUnits(nodeStakeAfter11, 18)} TRAC`,
     );
     console.log(
       `    ✅ D2 stakeBase ${ethers.formatUnits(d2StakeBaseBefore, 18)} → ${ethers.formatUnits(d2StakeBaseAfter, 18)} TRAC`,
@@ -1129,22 +1132,22 @@ describe(`Full complex scenario`, function () {
       node1Id,
       d1Key,
     );
-    const nodeScore18 = await contracts.randomSamplingStorage.getNodeEpochScore(
+    const nodeScore = await contracts.randomSamplingStorage.getNodeEpochScore(
       claimEpoch,
       node1Id,
     );
-    const perStake36 =
+    const perStake =
       await contracts.randomSamplingStorage.getNodeEpochScorePerStake(
         claimEpoch,
         node1Id,
       );
-    const d1LastSettled36 =
+    const d1LastSettled =
       await contracts.randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
         claimEpoch,
         node1Id,
         d1Key,
       );
-    const d1StoredScore18 =
+    const d1StoredScore =
       await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
         claimEpoch,
         node1Id,
@@ -1152,11 +1155,11 @@ describe(`Full complex scenario`, function () {
       );
 
     /* "lazy-settle" delta that _will_ be written inside claim() */
-    const d1SettleDiff36 = perStake36 - d1LastSettled36;
-    const earnedScore18 = (BigInt(d1BaseBefore) * d1SettleDiff36) / SCALE18;
+    const d1SettleDiff = perStake - d1LastSettled;
+    const earnedScore = (BigInt(d1BaseBefore) * d1SettleDiff) / SCALE18;
 
     /* total score that delegator should have after settle */
-    const d1TotalScore18 = d1StoredScore18 + earnedScore18;
+    const d1TotalScore = d1StoredScore + earnedScore;
 
     /* net pool for delegators that epoch */
     const netDelegatorRewards13 = await contracts.staking.getNetNodeRewards(
@@ -1166,19 +1169,19 @@ describe(`Full complex scenario`, function () {
 
     /* expected TRAC reward (18 decimals) */
     const expectedReward13 =
-      nodeScore18 === 0n
+      nodeScore === 0n
         ? 0n
-        : (d1TotalScore18 * netDelegatorRewards13) / nodeScore18;
+        : (d1TotalScore * netDelegatorRewards13) / nodeScore;
 
     console.log(
-      `    ℹ️  claimEpoch=${claimEpoch}  nodeScore=${nodeScore18}  ` +
-        `d1Score(before)=${d1StoredScore18}  earned=${earnedScore18}  ` +
+      `    ℹ️  claimEpoch=${claimEpoch}  nodeScore=${nodeScore}  ` +
+        `d1Score(before)=${d1StoredScore}  earned=${earnedScore}  ` +
         `pool=${ethers.formatUnits(netDelegatorRewards13, 18)} TRAC`,
     );
     console.log(
-      `    🔢 nodeScore        = ${nodeScore18}`,
-      `\n    🔢 d1StoredScore   = ${d1StoredScore18}`,
-      `\n    🔢 d1EarnedScore   = ${earnedScore18}`,
+      `    🔢 nodeScore        = ${nodeScore}`,
+      `\n    🔢 d1StoredScore   = ${d1StoredScore}`,
+      `\n    🔢 d1EarnedScore   = ${earnedScore}`,
     );
 
     /* ---------------------------------------------------------------
@@ -1278,10 +1281,10 @@ describe(`Full complex scenario`, function () {
         d2Key,
       );
 
-    // Lazy-settle part to be added inside claim()
-    const d2SettleDiff36 = perStakeClaim - d2LastSettledClaim;
-    const d2EarnedScore = (d2BaseBefore14 * d2SettleDiff36) / SCALE18;
-    const d2TotalScore18 = d2StoredScore + d2EarnedScore;
+    /* "lazy-settle" part to be added inside claim() */
+    const d2SettleDiff = perStakeClaim - d2LastSettledClaim;
+    const d2EarnedScore = (d2BaseBefore14 * d2SettleDiff) / SCALE18;
+    const d2TotalScore = d2StoredScore + d2EarnedScore;
 
     const netDelegatorRewards14 = await contracts.staking.getNetNodeRewards(
       node1Id,
@@ -1291,7 +1294,7 @@ describe(`Full complex scenario`, function () {
     const expectedReward14 =
       nodeScoreClaim === 0n
         ? 0n
-        : (d2TotalScore18 * netDelegatorRewards14) / nodeScoreClaim;
+        : (d2TotalScore * netDelegatorRewards14) / nodeScoreClaim;
 
     console.log(
       `    🔢 nodeScore        = ${nodeScoreClaim}`,
@@ -1355,14 +1358,14 @@ describe(`Full complex scenario`, function () {
 
     console.log(
       `    ✅ D2 reward ${ethers.formatUnits(actualReward14, 18)} TRAC ` +
-        `auto-staked → new base ${ethers.formatUnits(d2BaseAfter14, 18)} TRAC`,
+        `restaked → new base ${ethers.formatUnits(d2BaseAfter14, 18)} TRAC`,
     );
     console.log(`    ✅ lastClaimedEpoch set to ${d2LastClaimedAfter}\n`);
     console.log('\n✨ Steps 8-14 completed – ready for next tests ✨\n');
   });
 
   /******************************************************************************************
-   *  Steps 15 – 23 (continue from the chain-state left after Step 14)                       *
+   *  Steps 15 – 21 (continue from the chain-state left after Step 14)                       *
    ******************************************************************************************/
   it('Should execute steps 15-23 with detailed score calculations and verification', async function () {
     /* helpers already in scope from previous tests */
@@ -1390,7 +1393,7 @@ describe(`Full complex scenario`, function () {
 
     /* 2️⃣  Snapshot BEFORE */
     const balBefore = await contracts.token.balanceOf(accounts.delegator2);
-    const nodeStakeBefore =
+    const nodeStakeBefore15 =
       await contracts.stakingStorage.getNodeStake(node1Id);
 
     console.log(
@@ -1404,7 +1407,8 @@ describe(`Full complex scenario`, function () {
 
     /* 4️⃣  Snapshot AFTER */
     const balAfter = await contracts.token.balanceOf(accounts.delegator2);
-    const nodeStakeAfter = await contracts.stakingStorage.getNodeStake(node1Id);
+    const nodeStakeAfter15 =
+      await contracts.stakingStorage.getNodeStake(node1Id);
     const [reqAfter] =
       await contracts.stakingStorage.getDelegatorWithdrawalRequest(
         node1Id,
@@ -1413,8 +1417,8 @@ describe(`Full complex scenario`, function () {
 
     /* 5️⃣  Assertions */
     expect(balAfter - balBefore, 'wallet diff').to.equal(TEN_K); // ← BigInt diff
-    expect(nodeStakeAfter, 'node stake already reduced in step 11').to.equal(
-      nodeStakeBefore,
+    expect(nodeStakeAfter15, 'node stake already reduced in step 11').to.equal(
+      nodeStakeBefore15,
     );
     expect(reqAfter, 'withdrawal request should be cleared').to.equal(0n);
 
@@ -1463,8 +1467,8 @@ describe(`Full complex scenario`, function () {
       );
 
     /**
-     * 0  – sentinel “never claimed”  (default)
-     * n–1 – standard “oldest un-claimed epoch”
+     * 0  – sentinel "never claimed"  (default)
+     * n–1 – standard "oldest un-claimed epoch"
      */
     expect(
       lastClaimedBefore === 0n || lastClaimedBefore === claimEpoch17 - 1n,
@@ -1548,6 +1552,390 @@ describe(`Full complex scenario`, function () {
     console.log(
       `    ✅ rollingRewards = ${ethers.formatUnits(rollingRewards, 18)} TRAC`,
       `\n    ✅ lastClaimedEpoch = ${lastClaimedAfter}\n`,
+    );
+
+    /**********************************************************************
+     * STEP 18 – Delegator 3 claims rewards for epoch 2
+     * --------------------------------------------------------------------
+     **********************************************************************/
+    console.log('\n💰 STEP 18: Delegator3 claims rewards for epoch 2');
+
+    const claimEpoch18 = 3n; // <-- the epoch we're claiming for
+
+    /* ── 1. PRE-CONDITIONS ──────────────────────────────────────────────── */
+    const d3LastClaimedBefore18 =
+      await contracts.delegatorsInfo.getLastClaimedEpoch(
+        node1Id,
+        accounts.delegator3.address,
+      );
+
+    // Must be claiming the oldest pending epoch (1 → 2)
+    expect(d3LastClaimedBefore18).to.equal(
+      claimEpoch18 - 1n,
+      'Delegator-3 is skipping an older unclaimed epoch',
+    );
+
+    /* ── 2. MANUAL REWARD CALCULATION ───────────────────────────────────── */
+    const d3BaseBefore18 = await contracts.stakingStorage.getDelegatorStakeBase(
+      node1Id,
+      d3Key,
+    );
+    const d3RollingBefore18 =
+      await contracts.delegatorsInfo.getDelegatorRollingRewards(
+        node1Id,
+        accounts.delegator3.address,
+      );
+
+    const nodeScoreEp2 =
+      await contracts.randomSamplingStorage.getNodeEpochScore(
+        claimEpoch18,
+        node1Id,
+      );
+    const perStakeEp2 =
+      await contracts.randomSamplingStorage.getNodeEpochScorePerStake(
+        claimEpoch18,
+        node1Id,
+      );
+
+    const d3LastSettledEp2 =
+      await contracts.randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
+        claimEpoch18,
+        node1Id,
+        d3Key,
+      );
+    const d3StoredScoreEp2 =
+      await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+        claimEpoch18,
+        node1Id,
+        d3Key,
+      );
+
+    /* "lazy-settle" part that will be written inside claim() */
+    const d3EarnedScore =
+      (d3BaseBefore18 * (perStakeEp2 - d3LastSettledEp2)) / SCALE18;
+    const d3TotalScore = d3StoredScoreEp2 + d3EarnedScore;
+
+    const netDelegatorRewardsEp2 = await contracts.staking.getNetNodeRewards(
+      node1Id,
+      claimEpoch18,
+    );
+
+    // New reward for epoch 2
+    const rewardEp2 =
+      nodeScoreEp2 === 0n
+        ? 0n
+        : (d3TotalScore * netDelegatorRewardsEp2) / nodeScoreEp2;
+
+    // ► what will actually be auto-staked:
+    const expectedStakeIncrease18 = d3RollingBefore18 + rewardEp2;
+
+    /* ── 3. CLAIM TRANSACTION ───────────────────────────────────────────── */
+    await contracts.staking
+      .connect(accounts.delegator3)
+      .claimDelegatorRewards(
+        node1Id,
+        claimEpoch18,
+        accounts.delegator3.address,
+      );
+
+    /* ── 4. POST-CLAIM SNAPSHOT ─────────────────────────────────────────── */
+    const d3BaseAfter18 = await contracts.stakingStorage.getDelegatorStakeBase(
+      node1Id,
+      d3Key,
+    );
+    const d3RollingAfter18 =
+      await contracts.delegatorsInfo.getDelegatorRollingRewards(
+        node1Id,
+        accounts.delegator3.address,
+      );
+    const d3LastClaimedAfter18 =
+      await contracts.delegatorsInfo.getLastClaimedEpoch(
+        node1Id,
+        accounts.delegator3.address,
+      );
+    const nodeStakeAfter18 =
+      await contracts.stakingStorage.getNodeStake(node1Id);
+
+    /* ── 5. ASSERTIONS ──────────────────────────────────────────────────── */
+    expect(
+      d3BaseAfter18 - d3BaseBefore18,
+      'auto-staked amount mismatch',
+    ).to.equal(expectedStakeIncrease18);
+
+    expect(d3RollingAfter18, 'rollingRewards should now be 0').to.equal(0n);
+
+    expect(d3LastClaimedAfter18, 'lastClaimedEpoch not updated').to.equal(
+      claimEpoch18,
+    );
+
+    // nodeStakeAfter14 must be in scope from previous step
+    expect(nodeStakeAfter18).to.equal(
+      nodeStakeAfter15 + expectedStakeIncrease18,
+      'Node total stake should include D3 reward',
+    );
+
+    console.log(
+      `    🧮 reward(epoch2)   = ${ethers.formatUnits(rewardEp2, 18)} TRAC`,
+      `\n    🧮 rolling(before) = ${ethers.formatUnits(d3RollingBefore18, 18)} TRAC`,
+      `\n    ✅ restaked     = ${ethers.formatUnits(expectedStakeIncrease18, 18)} TRAC`,
+    );
+    console.log(
+      `    ✅ new D3 stakeBase = ${ethers.formatUnits(d3BaseAfter18, 18)} TRAC`,
+      `\n    ✅ rolling(after)  = ${ethers.formatUnits(d3RollingAfter18, 18)} TRAC`,
+      `\n    ✅ lastClaimedEpoch = ${d3LastClaimedAfter18}\n`,
+    );
+
+    /**********************************************************************
+     * STEP 19 – Delegator 3 requests withdrawal of 10 000 TRAC            *
+     **********************************************************************/
+    console.log('\n📤 STEP 19: Delegator3 requests withdrawal of 10 000 TRAC');
+
+    /* ---------- BEFORE snapshot -------------------------------------- */
+    const d3StakeBaseBefore19 =
+      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d3Key);
+    const nodeStakeBefore19 =
+      await contracts.stakingStorage.getNodeStake(node1Id);
+
+    // latest epoch (== 4)
+    const currentEpoch19 = await contracts.chronos.getCurrentEpoch();
+    console.log(`    ℹ️  currentEpoch19 = ${currentEpoch19}`);
+
+    const scorePerStakeCur19 =
+      await contracts.randomSamplingStorage.getNodeEpochScorePerStake(
+        currentEpoch19,
+        node1Id,
+      );
+    const d3LastSettledBefore19 =
+      await contracts.randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
+        currentEpoch19,
+        node1Id,
+        d3Key,
+      );
+    const d3ScoreBefore19 =
+      await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+        currentEpoch19,
+        node1Id,
+        d3Key,
+      );
+
+    /* how much score will be lazily settled by _prepareForStakeChange() */
+    const expectedScoreInc19 = calculateExpectedDelegatorScore(
+      d3StakeBaseBefore19,
+      scorePerStakeCur19,
+      d3LastSettledBefore19,
+    );
+
+    /* ---------- perform withdrawal request --------------------------- */
+    await contracts.staking
+      .connect(accounts.delegator3)
+      .requestWithdrawal(node1Id, TEN_K); // TEN_K = 10 000 TRAC
+
+    /* ---------- AFTER snapshot --------------------------------------- */
+    const d3StakeBaseAfter19 =
+      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d3Key);
+    const nodeStakeAfter19 =
+      await contracts.stakingStorage.getNodeStake(node1Id);
+
+    const d3ScoreAfter19 =
+      await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+        currentEpoch19,
+        node1Id,
+        d3Key,
+      );
+    const d3LastSettledAfter19 =
+      await contracts.randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
+        currentEpoch19,
+        node1Id,
+        d3Key,
+      );
+
+    const [withdrawAmount19] =
+      await contracts.stakingStorage.getDelegatorWithdrawalRequest(
+        node1Id,
+        d3Key,
+      );
+
+    /* ---------- Assertions ------------------------------------------- */
+    expect(withdrawAmount19).to.equal(
+      TEN_K,
+      'withdrawal request amount mismatch',
+    );
+
+    expect(nodeStakeAfter19).to.equal(
+      nodeStakeBefore19 - TEN_K,
+      'node total stake should fall by 10 000 TRAC',
+    );
+    expect(d3StakeBaseAfter19).to.equal(
+      d3StakeBaseBefore19 - TEN_K,
+      'delegator base stake should fall by 10 000 TRAC',
+    );
+
+    expect(d3ScoreAfter19).to.equal(
+      d3ScoreBefore19 + expectedScoreInc19,
+      'delegator score must be lazily settled before stake change',
+    );
+    expect(d3LastSettledAfter19).to.equal(
+      scorePerStakeCur19,
+      'lastSettled index must be bumped to current nodeScorePerStake',
+    );
+
+    /* ---------- Console summary -------------------------------------- */
+    console.log(
+      `    ✅ withdrawal request stored (${ethers.formatUnits(withdrawAmount19, 18)} TRAC)`,
+    );
+    console.log(
+      `    ✅ node stake ${ethers.formatUnits(nodeStakeBefore19, 18)} → ${ethers.formatUnits(nodeStakeAfter19, 18)} TRAC`,
+    );
+    console.log(
+      `    ✅ D3 stakeBase ${ethers.formatUnits(d3StakeBaseBefore19, 18)} → ${ethers.formatUnits(d3StakeBaseAfter19, 18)} TRAC`,
+    );
+    console.log(
+      `    ✅ D3 epoch-score ${d3ScoreBefore19} → ${d3ScoreAfter19} (settled +${expectedScoreInc19})`,
+    );
+
+    /**********************************************************************
+     * STEP 20 – Jump to epoch-6  ➜ finalise withdrawal of 10 000 TRAC
+     **********************************************************************/
+    console.log(
+      '\n⏭️  STEP 20: Jump to epoch-6 so epoch-4 is finalised and D3 finalises withdrawal',
+    );
+
+    /* 1️⃣  → epoch-5 */
+    let ttn = await contracts.chronos.timeUntilNextEpoch();
+    await time.increase(ttn + 1n); // epoch 5
+
+    /* 2️⃣  → epoch-6 (неопходно да се epoch-4 финализује) */
+    ttn = await contracts.chronos.timeUntilNextEpoch();
+    await time.increase(ttn + 1n); // epoch 6
+
+    /* publish dummy KC = тригерира Hub.finalizeEpoch() → epoch-4 је сада finalised */
+    await createKnowledgeCollection(
+      accounts.kcCreator,
+      accounts.node1,
+      Number(node1Id),
+      receivingNodes,
+      receivingNodesIdentityIds,
+      { KnowledgeCollection: contracts.kc, Token: contracts.token },
+      merkleRoot,
+      'finalise-epoch4',
+      1, // holders
+      10, // chunks
+      1, // replicas
+      toTRAC(1), // минимална такса
+    );
+
+    expect(await contracts.epochStorage.lastFinalizedEpoch(1)).to.equal(
+      5n,
+      'Epoch-4 should now be finalised',
+    );
+
+    const epoch6 = await contracts.chronos.getCurrentEpoch(); // == 6
+    console.log(`    ✅ Now in epoch ${epoch6} (epoch-4 finalised)`);
+
+    /* 3️⃣  Make sure the withdrawal delay elapsed */
+    const [pending20, , releaseTs20] =
+      await contracts.stakingStorage.getDelegatorWithdrawalRequest(
+        node1Id,
+        d3Key,
+      );
+
+    expect(pending20).to.equal(TEN_K, 'pending amount mismatch');
+
+    const now20 = BigInt(await time.latest());
+    if (now20 < releaseTs20) await time.increase(releaseTs20 - now20 + 1n);
+
+    /* 4️⃣  BEFORE snapshot */
+    const balBefore20 = await contracts.token.balanceOf(accounts.delegator3);
+    const nodeStakeBefore20 =
+      await contracts.stakingStorage.getNodeStake(node1Id);
+
+    /* 5️⃣  Finalise withdrawal */
+    await contracts.staking
+      .connect(accounts.delegator3)
+      .finalizeWithdrawal(node1Id);
+
+    /* 6️⃣  AFTER snapshot & asserts */
+    const balAfter20 = await contracts.token.balanceOf(accounts.delegator3);
+    const nodeStakeAfter20 =
+      await contracts.stakingStorage.getNodeStake(node1Id);
+    const [reqAfter20] =
+      await contracts.stakingStorage.getDelegatorWithdrawalRequest(
+        node1Id,
+        d3Key,
+      );
+
+    expect(balAfter20 - balBefore20).to.equal(TEN_K, 'wallet diff');
+    expect(nodeStakeAfter20).to.equal(
+      nodeStakeBefore20,
+      'node stake invariant',
+    );
+    expect(reqAfter20).to.equal(0n, 'request must be cleared');
+
+    console.log(
+      `    🪙 +${ethers.formatUnits(TEN_K, 18)} TRAC to Delegator3 – withdrawal finalised`,
+    );
+
+    /**********************************************************************
+     * STEP 21 – Delegator 1 tries to stake extra 5 000 TRAC (★ must revert)
+     **********************************************************************/
+    console.log(
+      '\n⛔  STEP 21: Delegator1 attempts to stake 5 000 TRAC – should revert',
+    );
+
+    /* ---------- context info ---------------------------------------- */
+    const currentEpoch21 = await contracts.chronos.getCurrentEpoch(); // == epoch5
+    const d1LastClaimed21 = await contracts.delegatorsInfo.getLastClaimedEpoch(
+      node1Id,
+      accounts.delegator1.address,
+    );
+    console.log(
+      `    ℹ️  currentEpoch = ${currentEpoch21}, D1.lastClaimedEpoch = ${d1LastClaimed21}`,
+    );
+    // D1 has NOT yet claimed epoch 3 (and 4) → stake change must fail
+
+    /* ---------- BEFORE snapshot ------------------------------------- */
+    const d1StakeBaseBefore21 =
+      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d1Key);
+    const nodeStakeBefore21 =
+      await contracts.stakingStorage.getNodeStake(node1Id);
+
+    /* ---------- token approval -------------------------------------- */
+    await contracts.token
+      .connect(accounts.delegator1)
+      .approve(await contracts.staking.getAddress(), toTRAC18(5_000));
+
+    /* ---------- stake tx (expect revert) ---------------------------- */
+    await expect(
+      contracts.staking
+        .connect(accounts.delegator1)
+        .stake(node1Id, toTRAC18(5_000)),
+    ).to.be.revertedWith(
+      'Must claim all previous epoch rewards before changing stake',
+    );
+
+    console.log(
+      '    ✅ Revert received – Delegator1 must first claim epoch 3 rewards',
+    );
+
+    /* ---------- AFTER snapshot -------------------------------------- */
+    const d1StakeBaseAfter21 =
+      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d1Key);
+    const nodeStakeAfter21 =
+      await contracts.stakingStorage.getNodeStake(node1Id);
+
+    /* ---------- invariants ----------------------------------------- */
+    expect(d1StakeBaseAfter21, 'D1.stakeBase should stay unchanged').to.equal(
+      d1StakeBaseBefore21,
+    );
+    expect(nodeStakeAfter21, 'Node total stake should stay unchanged').to.equal(
+      nodeStakeBefore21,
+    );
+
+    /* ---------- console summary ------------------------------------ */
+    console.log(
+      `    ❌ Stake blocked – D1 must claim rewards first`,
+      `\n    ✅ D1.stakeBase remains ${ethers.formatUnits(d1StakeBaseAfter21, 18)} TRAC`,
+      `\n    ✅ Node1.totalStake remains ${ethers.formatUnits(nodeStakeAfter21, 18)} TRAC\n`,
     );
   });
 });
