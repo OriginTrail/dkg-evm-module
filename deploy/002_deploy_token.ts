@@ -38,6 +38,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const amountToMint = hre.ethers.parseEther(`${10_000_000}`);
     const accounts = await hre.ethers.getSigners();
 
+    /*
     for (const acc of accounts) {
       const mintTx = await Token.mint(acc.address, amountToMint, {
         from: deployer,
@@ -45,6 +46,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       });
       await mintTx.wait();
     }
+    */
   } else {
     throw new Error('Missing Token address in the JSON config!');
   }
