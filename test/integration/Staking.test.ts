@@ -1797,21 +1797,16 @@ describe(`Full complex scenario`, function () {
     );
 
     /**********************************************************************
-     * STEP 20 – Jump to epoch-6  ➜ finalise withdrawal of 10 000 TRAC
+     * STEP 20 – Jump to epoch-5  ➜ finalise withdrawal of 10 000 TRAC
      **********************************************************************/
     console.log(
-      '\n⏭️  STEP 20: Jump to epoch-6 so epoch-4 is finalised and D3 finalises withdrawal',
+      '\n⏭️  STEP 20: Jump to epoch-5 so epoch-4 is finalised and D3 finalises withdrawal',
     );
 
     /* 1️⃣  → epoch-5 */
     let ttn = await contracts.chronos.timeUntilNextEpoch();
     await time.increase(ttn + 1n); // epoch 5
 
-    /* 2️⃣  → epoch-6 (неопходно да се epoch-4 финализује) */
-    ttn = await contracts.chronos.timeUntilNextEpoch();
-    await time.increase(ttn + 1n); // epoch 6
-
-    /* publish dummy KC = тригерира Hub.finalizeEpoch() → epoch-4 је сада finalised */
     await createKnowledgeCollection(
       accounts.kcCreator,
       accounts.node1,
@@ -1828,12 +1823,12 @@ describe(`Full complex scenario`, function () {
     );
 
     expect(await contracts.epochStorage.lastFinalizedEpoch(1)).to.equal(
-      5n,
+      4n,
       'Epoch-4 should now be finalised',
     );
 
-    const epoch6 = await contracts.chronos.getCurrentEpoch(); // == 6
-    console.log(`    ✅ Now in epoch ${epoch6} (epoch-4 finalised)`);
+    const epoch5 = await contracts.chronos.getCurrentEpoch(); // == 5
+    console.log(`    ✅ Now in epoch ${epoch5} (epoch-4 finalised)`);
 
     /* 3️⃣  Make sure the withdrawal delay elapsed */
     const [pending20, , releaseTs20] =
@@ -1894,6 +1889,13 @@ describe(`Full complex scenario`, function () {
     console.log(
       `    ℹ️  currentEpoch = ${currentEpoch21}, D1.lastClaimedEpoch = ${d1LastClaimed21}`,
     );
+    const lastFinalized = await contracts.epochStorage.lastFinalizedEpoch(1);
+    console.log(
+      `ℹ️  DEBUG  currentEpoch=${currentEpoch21}, ` +
+        `lastFinalized=${lastFinalized}, ` +
+        `D1.lastClaimed=${d1LastClaimed21}`,
+    );
+
     // D1 has NOT yet claimed epoch 3 (and 4) → stake change must fail
 
     /* ---------- BEFORE snapshot ------------------------------------- */
@@ -1913,7 +1915,7 @@ describe(`Full complex scenario`, function () {
         .connect(accounts.delegator1)
         .stake(node1Id, toTRAC18(5_000)),
     ).to.be.revertedWith(
-      'Must claim all previous epoch rewards before changing stake',
+      'Must claim the previous epoch rewards before changing stake',
     );
 
     console.log(
@@ -1939,6 +1941,108 @@ describe(`Full complex scenario`, function () {
       `    ❌ Stake blocked – D1 must claim rewards first`,
       `\n    ✅ D1.stakeBase remains ${ethers.formatUnits(d1StakeBaseAfter21, 18)} TRAC`,
       `\n    ✅ Node1.totalStake remains ${ethers.formatUnits(nodeStakeAfter21, 18)} TRAC\n`,
+    );
+  });
+  /* ------------------------------------------------------------------
+   *  STEP A-1 – G
+   * ------------------------------------------------------------------ */
+  it('Redelegate steps – Step A1-G', async function () {
+    const currentEpoch = await contracts.chronos.getCurrentEpoch();
+    const d1LastClaimed = await contracts.delegatorsInfo.getLastClaimedEpoch(
+      node1Id,
+      accounts.delegator1.address,
+    );
+    expect(d1LastClaimed).to.equal(2n, 'D1 already claimed epoch 3');
+
+    const claimEpoch = 3n;
+
+    // Ensure epoch 3 is finalised
+    if ((await contracts.epochStorage.lastFinalizedEpoch(1)) < claimEpoch) {
+      let ttn = await contracts.chronos.timeUntilNextEpoch();
+      await time.increase(ttn + 1n); // push one epoch
+      await createKnowledgeCollection(
+        // dummy KC triggers finalise
+        accounts.kcCreator,
+        accounts.node1,
+        Number(node1Id),
+        receivingNodes,
+        receivingNodesIdentityIds,
+        { KnowledgeCollection: contracts.kc, Token: contracts.token },
+        merkleRoot,
+        'auto-finalise-3',
+        1,
+        10,
+        1,
+        toTRAC(1),
+      );
+    }
+
+    /* MANUAL REWARD CALCULATION */
+    const SCALE = ethers.parseUnits('1', 18);
+    const d1BaseBefore = await contracts.stakingStorage.getDelegatorStakeBase(
+      node1Id,
+      d1Key,
+    );
+    const nodeScore = await contracts.randomSamplingStorage.getNodeEpochScore(
+      claimEpoch,
+      node1Id,
+    );
+    const perStake =
+      await contracts.randomSamplingStorage.getNodeEpochScorePerStake(
+        claimEpoch,
+        node1Id,
+      );
+    const d1Settled =
+      await contracts.randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
+        claimEpoch,
+        node1Id,
+        d1Key,
+      );
+    const d1Stored =
+      await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+        claimEpoch,
+        node1Id,
+        d1Key,
+      );
+
+    const earnedScore = (d1BaseBefore * (perStake - d1Settled)) / SCALE;
+    const d1TotalScore = d1Stored + earnedScore;
+    const netRewards = await contracts.stakingKPI.getNetNodeRewards(
+      node1Id,
+      claimEpoch,
+    );
+    const expectedReward =
+      nodeScore === 0n ? 0n : (d1TotalScore * netRewards) / nodeScore;
+
+    /* CLAIM */
+    await contracts.staking
+      .connect(accounts.delegator1)
+      .claimDelegatorRewards(node1Id, claimEpoch, accounts.delegator1.address);
+
+    /* ASSERTIONS */
+    const d1BaseAfter = await contracts.stakingStorage.getDelegatorStakeBase(
+      node1Id,
+      d1Key,
+    );
+    const nodeStakeNow = await contracts.stakingStorage.getNodeStake(node1Id);
+    const lastClaimed = await contracts.delegatorsInfo.getLastClaimedEpoch(
+      node1Id,
+      accounts.delegator1.address,
+    );
+
+    expect(d1BaseAfter - d1BaseBefore).to.equal(
+      expectedReward,
+      'reward mismatch',
+    );
+    expect(nodeStakeNow).to.equal(
+      (await contracts.stakingStorage.getNodeStake(node1Id)) /* pre-claim */ +
+        expectedReward,
+      'nodeStake not increased by reward',
+    );
+    expect(lastClaimed).to.equal(claimEpoch, 'lastClaimedEpoch not updated');
+
+    console.log(
+      `    D1 restaked ${ethers.formatUnits(expectedReward, 18)} TRAC (epoch ${claimEpoch})`,
     );
   });
 });
