@@ -2266,6 +2266,10 @@ describe('@unit RandomSamplingStorage', function () {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(challengeRecencyEvent).to.not.be.undefined;
 
+      // Check ChallengeRecencyFactorUpdated has correct old and new values
+      expect(challengeRecencyEvent?.args[0]).to.equal(0);
+      expect(challengeRecencyEvent?.args[1]).to.equal(challengeRecencyFactor);
+
       // Check for BfsIterationsUpdated event
       const bfsIterationsEvent = receipt?.logs.find(
         (log) =>
@@ -2273,6 +2277,10 @@ describe('@unit RandomSamplingStorage', function () {
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(bfsIterationsEvent).to.not.be.undefined;
+
+      // Check BfsIterationsUpdated has correct old and new values
+      expect(bfsIterationsEvent?.args[0]).to.equal(0);
+      expect(bfsIterationsEvent?.args[1]).to.equal(bfsIterations);
     });
 
     it('Should accept valid edge case values in constructor', async () => {
