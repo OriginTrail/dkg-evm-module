@@ -1800,7 +1800,21 @@ describe(`Full complex scenario`, function () {
      * STEP 20 – Jump to epoch-5  ➜ finalise withdrawal of 10 000 TRAC
      **********************************************************************/
     console.log(
-      '\n⏭️  STEP 20: Jump to epoch-5 so epoch-4 is finalised and D3 finalises withdrawal',
+      '\n⏭️  STEP 20: Node 1 Submit Proof for epoch-4, Jump to epoch-5 so epoch-4 is finalised and D3 finalises withdrawal',
+    );
+
+    await advanceToNextProofingPeriod(contracts);
+
+    // 2. take a stake snapshot (needed by the helper that double-checks maths)
+    const stakeSnapshot = await contracts.stakingStorage.getNodeStake(node1Id);
+
+    // 3. have node-1 submit one more proof for *epoch-4*
+    await submitProofAndVerifyScore(
+      node1Id,
+      accounts.node1,
+      contracts,
+      currentEpoch19, // <- epoch-4
+      stakeSnapshot,
     );
 
     /* 1️⃣  → epoch-5 */
