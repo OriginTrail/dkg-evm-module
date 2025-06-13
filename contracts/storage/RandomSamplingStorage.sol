@@ -8,6 +8,8 @@ import {IInitializable} from "../interfaces/IInitializable.sol";
 import {RandomSamplingLib} from "../libraries/RandomSamplingLib.sol";
 import {Chronos} from "../storage/Chronos.sol";
 import {ContractStatus} from "../abstract/ContractStatus.sol";
+import {ICustodian} from "../interfaces/ICustodian.sol";
+import {HubLib} from "../libraries/HubLib.sol";
 
 contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractStatus {
     string private constant _NAME = "RandomSamplingStorage";
@@ -16,8 +18,14 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
     Chronos public chronos;
 
     RandomSamplingLib.ProofingPeriodDuration[] public proofingPeriodDurations;
-
     uint256 private activeProofPeriodStartBlock;
+
+    // _findActiveKnowledgeCollection related variables
+    uint16 public challengeRecencyFactor; // e.g. 5000 = 50% chance to pop newer/older half first, 10 000 = always newest first
+    uint8 public bfsIterations; // cap the while-loop (gas safety)
+    uint16 public constant MAX_CHALLENGE_RECENCY_FACTOR = 10_000; // 100%
+    uint8 public constant DEFAULT_BFS_ITERATIONS = 50; // 50 iterations
+
     // identityId => Challenge - used in proof to verify the challenge is within proofing period
     mapping(uint72 => RandomSamplingLib.Challenge) public nodesChallenges;
     // epoch => identityId => successful proofs count
@@ -77,15 +85,40 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         bytes32 indexed delegatorKey,
         uint256 newDelegatorLastSettledNodeEpochScorePerStake
     );
+    event ChallengeRecencyFactorUpdated(uint16 oldChallengeRecencyFactor, uint16 newChallengeRecencyFactor);
+    event BfsIterationsUpdated(uint8 oldBfsIterations, uint8 newBfsIterations);
 
-    constructor(address hubAddress, uint16 _proofingPeriodDurationInBlocks) ContractStatus(hubAddress) {
+    constructor(
+        address hubAddress,
+        uint16 _proofingPeriodDurationInBlocks,
+        uint16 _challengeRecencyFactor,
+        uint8 _bfsIterations
+    ) ContractStatus(hubAddress) {
         require(_proofingPeriodDurationInBlocks > 0, "Proofing period duration in blocks must be greater than 0");
+        require(
+            _challengeRecencyFactor <= MAX_CHALLENGE_RECENCY_FACTOR,
+            "Challenge recency factor must be between 0 and MAX_CHALLENGE_RECENCY_FACTOR"
+        );
+        require(_bfsIterations > 0, "Bfs iterations must be greater than 0");
+
         proofingPeriodDurations.push(
             RandomSamplingLib.ProofingPeriodDuration({
                 durationInBlocks: _proofingPeriodDurationInBlocks,
                 effectiveEpoch: 0
             })
         );
+        challengeRecencyFactor = _challengeRecencyFactor;
+        bfsIterations = _bfsIterations;
+
+        emit ProofingPeriodDurationAdded(_proofingPeriodDurationInBlocks, 0);
+        emit ChallengeRecencyFactorUpdated(0, _challengeRecencyFactor);
+        emit BfsIterationsUpdated(0, _bfsIterations);
+    }
+
+    // @dev Only transactions by HubController owner or one of the owners of the MultiSig Wallet
+    modifier onlyOwnerOrMultiSigOwner() {
+        _checkOwnerOrMultiSigOwner();
+        _;
     }
 
     function initialize() public onlyHub {
@@ -96,6 +129,11 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
             durationInBlocks: proofingPeriodDurations[proofingPeriodDurations.length - 1].durationInBlocks,
             effectiveEpoch: chronos.getCurrentEpoch()
         });
+
+        emit ProofingPeriodDurationAdded(
+            proofingPeriodDurations[proofingPeriodDurations.length - 1].durationInBlocks,
+            proofingPeriodDurations[proofingPeriodDurations.length - 1].effectiveEpoch
+        );
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -341,5 +379,57 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
             delegatorKey,
             newNodeEpochScorePerStake
         );
+    }
+
+    function setChallengeRecencyFactor(uint16 newChallengeRecencyFactor) external onlyOwnerOrMultiSigOwner {
+        require(
+            newChallengeRecencyFactor <= MAX_CHALLENGE_RECENCY_FACTOR,
+            "Recency factor must be between 0 and MAX_CHALLENGE_RECENCY_FACTOR"
+        );
+        uint16 oldChallengeRecencyFactor = challengeRecencyFactor;
+        challengeRecencyFactor = newChallengeRecencyFactor;
+        emit ChallengeRecencyFactorUpdated(oldChallengeRecencyFactor, newChallengeRecencyFactor);
+    }
+
+    function getChallengeRecencyFactor() external view returns (uint16) {
+        return challengeRecencyFactor;
+    }
+
+    function setBfsIterations(uint8 newBfsIterations) external onlyOwnerOrMultiSigOwner {
+        require(newBfsIterations > 0, "Iterations must be greater than 0");
+        uint8 oldBfsIterations = bfsIterations;
+        bfsIterations = newBfsIterations;
+        emit BfsIterationsUpdated(oldBfsIterations, newBfsIterations);
+    }
+
+    function getBfsIterations() external view returns (uint8) {
+        return bfsIterations;
+    }
+
+    function getMaxChallengeRecencyFactor() external pure returns (uint16) {
+        return MAX_CHALLENGE_RECENCY_FACTOR;
+    }
+
+    function getDefaultBfsIterations() external pure returns (uint8) {
+        return DEFAULT_BFS_ITERATIONS;
+    }
+
+    function _isMultiSigOwner(address multiSigAddress) internal view returns (bool) {
+        try ICustodian(multiSigAddress).getOwners() returns (address[] memory multiSigOwners) {
+            for (uint256 i = 0; i < multiSigOwners.length; i++) {
+                if (msg.sender == multiSigOwners[i]) {
+                    return true;
+                }
+            } // solhint-disable-next-line no-empty-blocks
+        } catch {}
+
+        return false;
+    }
+
+    function _checkOwnerOrMultiSigOwner() internal view virtual {
+        address hubOwner = hub.owner();
+        if (msg.sender != hubOwner && !_isMultiSigOwner(hubOwner)) {
+            revert HubLib.UnauthorizedAccess("Only Hub Owner or Multisig Owner");
+        }
     }
 }

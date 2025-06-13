@@ -293,12 +293,10 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     /**
-     * @dev BFS approach to finding an active knowledge collection
-     * @param randomSeed Random seed for picking a collection from current range
-     * @param start Start of the range (inclusive)
-     * @param end End of the range (inclusive)
-     * @param currentEpoch Current epoch to check collection activity against
-     * @return knowledgeCollectionId ID of an active knowledge collection, or 0 if none found
+     * @dev Adaptive BFS search for an active collection.
+     *      challengeRecencyFactor  5,000    → 50% chance to pop newer/older half first
+     *                          10,000→ always pop newer half first
+     *      bfsIterations          user-controllable gas/latency guard (default: 50)
      */
     function _findActiveKnowledgeCollection(
         bytes32 randomSeed,
@@ -306,63 +304,87 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 end,
         uint256 currentEpoch
     ) internal view returns (uint256) {
-        // Queue using fixed array - [start1, end1, start2, end2, ...]
-        uint256[100] memory queue; // Can hold 50 ranges max
-        uint8 queueStart = 0; // Front of queue
-        uint8 queueEnd = 0; // Back of queue
+        uint8 bfsIterations = randomSamplingStorage.getBfsIterations();
+        uint8 itCap = bfsIterations == 0 ? randomSamplingStorage.getDefaultBfsIterations() : bfsIterations;
+        uint16 challengeRecencyFactor = randomSamplingStorage.getChallengeRecencyFactor();
+        uint16 maxChallengeRecencyFactor = randomSamplingStorage.getMaxChallengeRecencyFactor();
 
-        // Push initial range
+        // Calculate proper queue size: we process at most itCap ranges, each can split into 2
+        // Maximum queue size = initial range + ranges from splitting = 2 * (itCap + 1) slots
+        uint256 queueSize = 2 * (uint256(itCap) + 1);
+        uint256[] memory queue = new uint256[](queueSize);
+
+        uint16 queueStart = 0; // front index
+        uint16 queueEnd = 0; // back  index
         queue[queueEnd++] = start;
         queue[queueEnd++] = end;
 
-        bytes32 currentRandom = randomSeed;
+        bytes32 currentRandomSeed = randomSeed;
         uint8 iterations = 0;
 
-        while (queueStart < queueEnd && iterations < 50) {
-            // Pop range from front of queue (BFS behavior)
-            uint256 currentStart = queue[queueStart++];
-            uint256 currentEnd = queue[queueStart++];
+        while (queueStart < queueEnd && iterations < itCap) {
+            uint256 lo = queue[queueStart++];
+            uint256 hi = queue[queueStart++];
+            uint256 span = hi - lo + 1;
 
-            // Pick random collection from current range
-            uint256 randomKcId = currentStart + (uint256(currentRandom) % (currentEnd - currentStart + 1));
+            uint256 pick;
+            uint256 roll = uint256(currentRandomSeed);
+            if (challengeRecencyFactor == 0) {
+                pick = lo + (roll % span); // uniform
+            } else {
+                // 1) decide which half we favour this iteration
+                bool favourNewer = (roll % maxChallengeRecencyFactor) < challengeRecencyFactor;
+                uint256 mid = lo + (span >> 1);
 
-            // Check if this collection is active
-            if (currentEpoch <= knowledgeCollectionStorage.getEndEpoch(randomKcId)) {
-                return randomKcId;
-            }
-
-            // If single element and not active, continue to next range
-            if (currentStart == currentEnd) {
-                currentRandom = keccak256(abi.encodePacked(currentRandom));
-                unchecked {
-                    iterations++;
-                }
-                continue;
-            }
-
-            // Split range and push both halves to back of queue (BFS order)
-            uint256 mid = currentStart + (currentEnd - currentStart) / 2;
-
-            if (queueEnd < 96) {
-                // Leave room for both ranges
-                // Always push left half first, then right half (consistent BFS)
-                if (currentStart <= mid) {
-                    queue[queueEnd++] = currentStart;
-                    queue[queueEnd++] = mid;
-                }
-                if (mid + 1 <= currentEnd) {
-                    queue[queueEnd++] = mid + 1;
-                    queue[queueEnd++] = currentEnd;
+                if (favourNewer) {
+                    // sample uniformly from newer half [mid+1,hi]
+                    uint256 newerSpan = hi - mid;
+                    pick = (newerSpan == 0) ? hi : mid + 1 + (roll % newerSpan);
+                } else {
+                    // sample from older half [lo,mid]
+                    uint256 olderSpan = mid - lo + 1;
+                    pick = lo + (roll % olderSpan);
                 }
             }
 
-            currentRandom = keccak256(abi.encodePacked(currentRandom));
+            if (currentEpoch <= knowledgeCollectionStorage.getEndEpoch(pick)) {
+                return pick;
+            }
+
+            // not active → split and enqueue, order depends on challengeRecencyFactor
+            if (lo != hi && queueEnd <= queueSize - 4) {
+                // Ensure we have space for 2 ranges (4 slots)
+                uint256 mid = lo + (span >> 1);
+                bool newerFirst = (uint256(currentRandomSeed) >> 128) % maxChallengeRecencyFactor <
+                    challengeRecencyFactor;
+
+                if (newerFirst) {
+                    if (mid + 1 <= hi) {
+                        queue[queueEnd++] = mid + 1;
+                        queue[queueEnd++] = hi;
+                    }
+                    if (lo <= mid) {
+                        queue[queueEnd++] = lo;
+                        queue[queueEnd++] = mid;
+                    }
+                } else {
+                    if (lo <= mid) {
+                        queue[queueEnd++] = lo;
+                        queue[queueEnd++] = mid;
+                    }
+                    if (mid + 1 <= hi) {
+                        queue[queueEnd++] = mid + 1;
+                        queue[queueEnd++] = hi;
+                    }
+                }
+            }
+
+            currentRandomSeed = keccak256(abi.encodePacked(currentRandomSeed));
             unchecked {
-                iterations++;
+                ++iterations;
             }
         }
-
-        return 0; // No active collection found
+        return 0; // no active collection found
     }
 
     function calculateNodeScore(uint72 identityId) public view returns (uint256) {

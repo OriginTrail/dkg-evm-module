@@ -32,10 +32,14 @@
     },
     "RandomSamplingStorage": {
       "hardhat": {
-        "proofingPeriodDurationInBlocks": "100"
+        "proofingPeriodDurationInBlocks": "100",
+        "challengeRecencyFactor": "6000",
+        "bfsIterations": "50"
       },
       "localhost": {
-        "proofingPeriodDurationInBlocks": "100"
+        "proofingPeriodDurationInBlocks": "100",
+        "challengeRecencyFactor": "6000",
+        "bfsIterations": "50"
       }
     }
   },
@@ -78,13 +82,19 @@
     },
     "RandomSamplingStorage": {
       "base_sepolia_dev": {
-        "proofingPeriodDurationInBlocks": "900"
+        "proofingPeriodDurationInBlocks": "900",
+        "challengeRecencyFactor": "6000",
+        "bfsIterations": "50"
       },
       "base_sepolia_stable_dev_staging": {
-        "proofingPeriodDurationInBlocks": "900"
+        "proofingPeriodDurationInBlocks": "900",
+        "challengeRecencyFactor": "6000",
+        "bfsIterations": "50"
       },
       "base_sepolia_stable_dev_prod": {
-        "proofingPeriodDurationInBlocks": "900"
+        "proofingPeriodDurationInBlocks": "900",
+        "challengeRecencyFactor": "6000",
+        "bfsIterations": "50"
       }
     }
   },
@@ -128,13 +138,19 @@
     },
     "RandomSamplingStorage": {
       "neuroweb_testnet": {
-        "proofingPeriodDurationInBlocks": "257"
+        "proofingPeriodDurationInBlocks": "257",
+        "challengeRecencyFactor": "6000",
+        "bfsIterations": "50"
       },
       "gnosis_chiado_test": {
-        "proofingPeriodDurationInBlocks": "360"
+        "proofingPeriodDurationInBlocks": "360",
+        "challengeRecencyFactor": "6000",
+        "bfsIterations": "50"
       },
       "base_sepolia_test": {
-        "proofingPeriodDurationInBlocks": "900"
+        "proofingPeriodDurationInBlocks": "900",
+        "challengeRecencyFactor": "6000",
+        "bfsIterations": "50"
       }
     }
   },
@@ -178,13 +194,19 @@
     },
     "RandomSamplingStorage": {
       "neuroweb_mainnet": {
-        "proofingPeriodDurationInBlocks": "300"
+        "proofingPeriodDurationInBlocks": "300",
+        "challengeRecencyFactor": "6000",
+        "bfsIterations": "50"
       },
       "gnosis_mainnet": {
-        "proofingPeriodDurationInBlocks": "360"
+        "proofingPeriodDurationInBlocks": "360",
+        "challengeRecencyFactor": "6000",
+        "bfsIterations": "50"
       },
       "base_mainnet": {
-        "proofingPeriodDurationInBlocks": "900"
+        "proofingPeriodDurationInBlocks": "900",
+        "challengeRecencyFactor": "6000",
+        "bfsIterations": "50"
       }
     }
   }

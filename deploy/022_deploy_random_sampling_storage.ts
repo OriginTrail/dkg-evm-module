@@ -3,6 +3,8 @@ import { DeployFunction } from 'hardhat-deploy/types';
 
 type RandomSamplingStorageNetworkConfig = {
   proofingPeriodDurationInBlocks: string;
+  challengeRecencyFactor: string;
+  bfsIterations: string;
 };
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -22,6 +24,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     newContractName: 'RandomSamplingStorage',
     additionalArgs: [
       randomSamplingStorageParametersConfig.proofingPeriodDurationInBlocks,
+      randomSamplingStorageParametersConfig.challengeRecencyFactor,
+      randomSamplingStorageParametersConfig.bfsIterations,
     ],
   });
 };

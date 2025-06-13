@@ -10,6 +10,16 @@
         "internalType": "uint16",
         "name": "_proofingPeriodDurationInBlocks",
         "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_challengeRecencyFactor",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_bfsIterations",
+        "type": "uint8"
       }
     ],
     "stateMutability": "nonpayable",
@@ -85,6 +95,44 @@
       }
     ],
     "name": "AllNodesEpochScoreAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "oldBfsIterations",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "newBfsIterations",
+        "type": "uint8"
+      }
+    ],
+    "name": "BfsIterationsUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "oldChallengeRecencyFactor",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "newChallengeRecencyFactor",
+        "type": "uint16"
+      }
+    ],
+    "name": "ChallengeRecencyFactorUpdated",
     "type": "event"
   },
   {
@@ -306,6 +354,32 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "DEFAULT_BFS_ITERATIONS",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_CHALLENGE_RECENCY_FACTOR",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint16",
@@ -511,6 +585,32 @@
   },
   {
     "inputs": [],
+    "name": "bfsIterations",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "challengeRecencyFactor",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "chronos",
     "outputs": [
       {
@@ -662,6 +762,45 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getBfsIterations",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getChallengeRecencyFactor",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getDefaultBfsIterations",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -808,6 +947,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getMaxChallengeRecencyFactor",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -1171,6 +1323,32 @@
       }
     ],
     "name": "replacePendingProofingPeriodDuration",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "newBfsIterations",
+        "type": "uint8"
+      }
+    ],
+    "name": "setBfsIterations",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "newChallengeRecencyFactor",
+        "type": "uint16"
+      }
+    ],
+    "name": "setChallengeRecencyFactor",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
