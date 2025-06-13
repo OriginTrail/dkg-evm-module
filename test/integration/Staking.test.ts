@@ -17,6 +17,7 @@ import {
   DelegatorsInfo,
   Ask,
   Staking,
+  StakingKPI,
   RandomSampling,
   Profile,
   KnowledgeCollection,
@@ -60,6 +61,7 @@ type TestContracts = {
   epochStorage: EpochStorage;
   delegatorsInfo: DelegatorsInfo;
   staking: Staking;
+  stakingKPI: StakingKPI;
   profile: Profile;
   randomSampling: RandomSampling;
   kc: KnowledgeCollection;
@@ -289,6 +291,7 @@ async function setupTestEnvironment(): Promise<{
     delegatorsInfo:
       await hre.ethers.getContract<DelegatorsInfo>('DelegatorsInfo'),
     staking: await hre.ethers.getContract<Staking>('Staking'),
+    stakingKPI: await hre.ethers.getContract<StakingKPI>('StakingKPI'),
     profile: await hre.ethers.getContract<Profile>('Profile'),
     randomSampling:
       await hre.ethers.getContract<RandomSampling>('RandomSampling'),
@@ -650,7 +653,7 @@ describe(`Full complex scenario`, function () {
     // Get node score
     const nodeFinalScore =
       await contracts.randomSamplingStorage.getNodeEpochScore(epoch1, node1Id);
-    const netNodeRewards = await contracts.staking.getNetNodeRewards(
+    const netNodeRewards = await contracts.stakingKPI.getNetNodeRewards(
       node1Id,
       epoch1,
     );
@@ -778,7 +781,7 @@ describe(`Full complex scenario`, function () {
         previousEpoch,
         node1Id,
       );
-    const netRewardsPrev = await contracts.staking.getNetNodeRewards(
+    const netRewardsPrev = await contracts.stakingKPI.getNetNodeRewards(
       node1Id,
       previousEpoch,
     );
@@ -1162,7 +1165,7 @@ describe(`Full complex scenario`, function () {
     const d1TotalScore = d1StoredScore + earnedScore;
 
     /* net pool for delegators that epoch */
-    const netDelegatorRewards13 = await contracts.staking.getNetNodeRewards(
+    const netDelegatorRewards13 = await contracts.stakingKPI.getNetNodeRewards(
       node1Id,
       claimEpoch,
     );
@@ -1286,7 +1289,7 @@ describe(`Full complex scenario`, function () {
     const d2EarnedScore = (d2BaseBefore14 * d2SettleDiff) / SCALE18;
     const d2TotalScore = d2StoredScore + d2EarnedScore;
 
-    const netDelegatorRewards14 = await contracts.staking.getNetNodeRewards(
+    const netDelegatorRewards14 = await contracts.stakingKPI.getNetNodeRewards(
       node1Id,
       claimEpoch,
     );
@@ -1506,7 +1509,7 @@ describe(`Full complex scenario`, function () {
       (stakeBaseBefore * (perStake17 - lastSettled17)) / SCALE18;
     const totalScore17 = storedScore17 + earnedScore17;
 
-    const rewardsPool17 = await contracts.staking.getNetNodeRewards(
+    const rewardsPool17 = await contracts.stakingKPI.getNetNodeRewards(
       node1Id,
       claimEpoch17,
     );
@@ -1615,7 +1618,7 @@ describe(`Full complex scenario`, function () {
       (d3BaseBefore18 * (perStakeEp2 - d3LastSettledEp2)) / SCALE18;
     const d3TotalScore = d3StoredScoreEp2 + d3EarnedScore;
 
-    const netDelegatorRewardsEp2 = await contracts.staking.getNetNodeRewards(
+    const netDelegatorRewardsEp2 = await contracts.stakingKPI.getNetNodeRewards(
       node1Id,
       claimEpoch18,
     );
