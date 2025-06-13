@@ -2035,4 +2035,116 @@ describe(`Full complex scenario`, function () {
       claimEpoch,
     );
   });
+
+  /* ------------------------------------------------------------------
+   *  STEP A-2 – D1 redelegates entire stake N1 → N2, then N2 submits a proof
+   * ------------------------------------------------------------------ */
+  it('Redelegate steps – Step A2', async function () {
+    // No proofs have been submitted in epoch 5 → node score is zero
+    const curEpoch = await contracts.chronos.getCurrentEpoch(); // should be 5
+    expect(curEpoch).to.equal(5n, 'expected to be in epoch 5');
+
+    /* 1️⃣  Snapshot before redelegation -------------------------------- */
+    const stakeMoved = await contracts.stakingStorage.getDelegatorStakeBase(
+      node1Id,
+      d1Key,
+    ); // D1 stake on N1
+
+    const n1StakeBefore = await contracts.stakingStorage.getNodeStake(node1Id);
+    const n2StakeBefore = await contracts.stakingStorage.getNodeStake(
+      nodeIds.node2Id,
+    );
+
+    console.log(
+      `\n[BEFORE] N1.totalStake=${ethers.formatUnits(n1StakeBefore, 18)} ` +
+        `| N2.totalStake=${ethers.formatUnits(n2StakeBefore, 18)} ` +
+        `| D1.base(N1)=${ethers.formatUnits(stakeMoved, 18)}`,
+    );
+    const d1BaseN1before = await contracts.stakingStorage.getDelegatorStakeBase(
+      node1Id,
+      d1Key,
+    );
+    console.log(
+      `   👉  D1.base on Node2 = ${ethers.formatUnits(d1BaseN1before, 18)} TRAC`,
+    );
+    /* 2️⃣  Redelegate the full stake N1 → N2 --------------------------- */
+    await contracts.staking
+      .connect(accounts.delegator1)
+      .redelegate(node1Id, nodeIds.node2Id, stakeMoved);
+
+    /* 3️⃣  Snapshot after redelegation + assertions -------------------- */
+    const n1StakeAfter = await contracts.stakingStorage.getNodeStake(node1Id);
+    const n2StakeAfter = await contracts.stakingStorage.getNodeStake(
+      nodeIds.node2Id,
+    );
+    const d1BaseN1 = await contracts.stakingStorage.getDelegatorStakeBase(
+      node1Id,
+      d1Key,
+    );
+    const d1BaseN2 = await contracts.stakingStorage.getDelegatorStakeBase(
+      nodeIds.node2Id,
+      d1Key,
+    );
+
+    const d1StillOnN1 = await contracts.delegatorsInfo.isNodeDelegator(
+      node1Id,
+      accounts.delegator1.address,
+    );
+    console.log(`   👉  DelegatorOnOldNode = ${d1StillOnN1}`);
+
+    const d1OnN2 = await contracts.delegatorsInfo.isNodeDelegator(
+      nodeIds.node2Id,
+      accounts.delegator1.address,
+    );
+    const lastStakeHeldEpochN1 =
+      await contracts.delegatorsInfo.getLastStakeHeldEpoch(
+        node1Id,
+        accounts.delegator1.address,
+      );
+
+    expect(d1BaseN1).to.equal(0n, 'D1 should have 0 stake on N1');
+    expect(d1BaseN2).to.equal(stakeMoved, 'stake should be moved to N2');
+    expect(n1StakeAfter).to.equal(n1StakeBefore - stakeMoved);
+    expect(n2StakeAfter).to.equal(n2StakeBefore + stakeMoved);
+    expect(d1StillOnN1).to.be.false;
+    expect(d1OnN2).to.be.true;
+    expect(lastStakeHeldEpochN1).to.equal(
+      0n,
+      'no pending rewards tracker expected',
+    );
+
+    console.log('✅ Redelegation successful – D1 fully moved to N2');
+
+    /* 4️⃣  Advance to a new proof period and let N2 submit its first proof */
+    await advanceToNextProofingPeriod(contracts);
+
+    await submitProofAndVerifyScore(
+      nodeIds.node2Id,
+      accounts.node2,
+      contracts,
+      curEpoch, // epoch 5
+      n2StakeAfter,
+    );
+
+    /* ── Delegator score check ───────────────────────────────────────── */
+    /* Immediately after the proof the delegator score on N2 must
+   still be zero – nothing has been settled for the delegator yet. */
+
+    const d1ScoreN2 =
+      await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+        curEpoch,
+        nodeIds.node2Id,
+        d1Key,
+      );
+    console.log(
+      `   👉  D1.base on Node2 = ${ethers.formatUnits(d1BaseN2, 18)} TRAC`,
+    );
+
+    expect(d1ScoreN2).to.equal(
+      0n,
+      'Delegator score should still be zero right after the first proof on N2',
+    );
+
+    console.log('📈  N2 proof OK – Step A2 finished (delegator score still 0)');
+  });
 });
