@@ -34,7 +34,7 @@ const config: HardhatUserConfig = {
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       loggingEnabled: false,
-      allowUnlimitedContractSize: false,
+      allowUnlimitedContractSize: true,
       saveDeployments: false,
       mining: {
         auto: true,
@@ -50,7 +50,7 @@ const config: HardhatUserConfig = {
           evmVersion: 'london',
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 1000,
             details: {
               peephole: true,
               inliner: true,

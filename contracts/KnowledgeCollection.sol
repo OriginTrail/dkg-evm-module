@@ -24,6 +24,7 @@ import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ECDSA} from "solady/src/utils/ECDSA.sol";
 
+
 contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "KnowledgeCollection";
     string private constant _VERSION = "1.0.0";
@@ -107,15 +108,15 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
             merkleRoot,
             knowledgeAssetsAmount,
             byteSize,
-            currentEpoch + 1,
-            currentEpoch + epochs + 1,
+            currentEpoch,
+            currentEpoch + epochs,
             tokenAmount,
             isImmutable
         );
 
         _validateTokenAmount(byteSize, epochs, tokenAmount, true);
 
-        es.addTokensToEpochRange(1, currentEpoch, currentEpoch + epochs + 1, tokenAmount);
+        es.addTokensToEpochRange(1, currentEpoch, currentEpoch + epochs - 1, tokenAmount);
         es.addEpochProducedKnowledgeValue(publisherNodeIdentityId, currentEpoch, tokenAmount);
 
         _addTokens(tokenAmount, paymaster);

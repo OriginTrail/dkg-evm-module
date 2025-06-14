@@ -531,6 +531,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         } else {
             // delegator is delegating to a node for the first time ever, set the last claimed epoch to the previous epoch
             delegatorsInfo.setLastClaimedEpoch(identityId, delegator, previousEpoch);
+            lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
         }
 
         // If delegator is up to date with claims, no validation needed
