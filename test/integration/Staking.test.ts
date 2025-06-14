@@ -341,14 +341,19 @@ async function setupTestEnvironment(): Promise<{
     contracts.profile,
     accounts.node2,
   );
-
+  console.log(`\n📚 Node1 ID = ${node1Id}, operator fee=0`);
   await contracts.profile
     .connect(accounts.node1.admin)
     .updateOperatorFee(node1Id, 0); // 0 %
+
+  expect(await contracts.profileStorage.getOperatorFee(node1Id)).to.equal(0);
+
+  console.log(`\n📚 Node2 ID = ${node2Id}, operator fee=0`);
   await contracts.profile
     .connect(accounts.node2.admin)
     .updateOperatorFee(node2Id, 0); // 0 %
 
+  expect(await contracts.profileStorage.getOperatorFee(node2Id)).to.equal(0);
   // Initialize ask system (required to prevent division by zero in RandomSampling)
   await contracts.parametersStorage.setMinimumStake(toTRAC(100));
 
@@ -406,8 +411,12 @@ describe(`Full complex scenario`, function () {
     TOKEN_DECIMALS = Number(await contracts.token.decimals());
 
     epoch1 = await contracts.chronos.getCurrentEpoch();
+    let epochLength = await contracts.chronos.epochLength();
+    let leftUntilNextEpoch = await contracts.chronos.timeUntilNextEpoch();
     console.log(`\n🏁 Starting test in epoch ${epoch1}`);
-
+    console.log(`\n🏁 Epoch length ${epochLength}`);
+    console.log(`\n🏁 Time until next epoch ${leftUntilNextEpoch}`);
+    console.log(`\n🏁 Remaining percentage of time until next epoch ${leftUntilNextEpoch/epochLength}`);
     // Create delegator keys for state verification
     d1Key = ethers.keccak256(
       ethers.solidityPacked(['address'], [accounts.delegator1.address]),
@@ -436,6 +445,8 @@ describe(`Full complex scenario`, function () {
     }
 
     const kcTokenAmount = toTRAC(48_000);
+    const numberOfEpochs = 10;
+    console.log(`\n📚 Reward pool = ${ethers.formatUnits(kcTokenAmount, 18)} TRAC, for ${numberOfEpochs} epochs =  ${kcTokenAmount/BigInt(numberOfEpochs)} per epoch`);
     await createKnowledgeCollection(
       accounts.kcCreator,
       accounts.node1,
@@ -447,9 +458,23 @@ describe(`Full complex scenario`, function () {
       'test-op-id',
       10,
       1000,
-      10,
+      numberOfEpochs,
       kcTokenAmount,
     );
+
+    expect(await contracts.epochStorage.getEpochPool(1, epoch1)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
+    expect(await contracts.epochStorage.getEpochPool(1, 3)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
+    expect(await contracts.epochStorage.getEpochPool(1, 4)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
+    expect(await contracts.epochStorage.getEpochPool(1, 5)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
+    expect(await contracts.epochStorage.getEpochPool(1, 6)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
+    expect(await contracts.epochStorage.getEpochPool(1, 7)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
+    expect(await contracts.epochStorage.getEpochPool(1, 8)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
+    expect(await contracts.epochStorage.getEpochPool(1, 9)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
+    expect(await contracts.epochStorage.getEpochPool(1, 10)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
+    expect(await contracts.epochStorage.getEpochPool(1, 11)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
+    expect(await contracts.epochStorage.getEpochPool(1, 12)).to.equal(0);
+
+    // we're sure tokens are well distributed to epochs
 
     // ================================================================================================================
     // STEP 1: Delegator1 stakes 10,000 TRAC
@@ -473,6 +498,12 @@ describe(`Full complex scenario`, function () {
       `    ✅ Node1 total stake: ${ethers.formatUnits(totalStakeAfterStep1, 18)} TRAC`,
     );
     expect(totalStakeAfterStep1).to.equal(toTRAC(10_000));
+    const totalDelegatorStakeAfterStep1 =
+      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d1Key); 
+    console.log(
+      `    ✅ Delegator1 total stake: ${ethers.formatUnits(totalDelegatorStakeAfterStep1, 18)} TRAC`,
+    );
+    expect(totalDelegatorStakeAfterStep1).to.equal(toTRAC(10_000));
 
     // ================================================================================================================
     // STEP 2: Delegator2 stakes 20,000 TRAC
@@ -492,6 +523,12 @@ describe(`Full complex scenario`, function () {
       `    ✅ Node1 total stake: ${ethers.formatUnits(totalStakeAfterStep2, 18)} TRAC`,
     );
     expect(totalStakeAfterStep2).to.equal(toTRAC(30_000));
+    const totalDelegatorStakeAfterStep2 =
+      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d2Key); 
+    console.log(
+      `    ✅ Delegator2 total stake: ${ethers.formatUnits(totalDelegatorStakeAfterStep2, 18)} TRAC`,
+    );
+    expect(totalDelegatorStakeAfterStep2).to.equal(toTRAC(20_000));
 
     // ================================================================================================================
     // STEP 3: Delegator3 stakes 30,000 TRAC
@@ -510,7 +547,13 @@ describe(`Full complex scenario`, function () {
     console.log(
       `    ✅ Node1 total stake: ${ethers.formatUnits(totalStakeAfterStep3, 18)} TRAC`,
     );
-    expect(totalStakeAfterStep3).to.equal(toTRAC(60_000));
+    expect(totalStakeAfterStep3).to.equal(toTRAC(60_000));  
+    const totalDelegatorStakeAfterStep3 =
+      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d3Key); 
+    console.log(
+      `    ✅ Delegator3 total stake: ${ethers.formatUnits(totalDelegatorStakeAfterStep3, 18)} TRAC`,
+    );
+    expect(totalDelegatorStakeAfterStep3).to.equal(toTRAC(30_000));
 
     // ================================================================================================================
     // STEP 4: Node1 submits first proof with score verification
@@ -565,6 +608,12 @@ describe(`Full complex scenario`, function () {
       `    ✅ Node1 total stake: ${ethers.formatUnits(totalStakeAfterStep5, 18)} TRAC`,
     );
     expect(totalStakeAfterStep5).to.equal(toTRAC(70_000));
+    const totalDelegator1StakeAfterStep5 =
+      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d1Key); 
+    console.log(
+      `    ✅ Delegator1 total stake: ${ethers.formatUnits(totalDelegator1StakeAfterStep5, 18)} TRAC`,
+    );
+    expect(totalDelegator1StakeAfterStep5).to.equal(toTRAC(20_000));
 
     // Verify delegator1's score settlement from first proof period
     const d1ScoreAfterStake =
@@ -681,7 +730,7 @@ describe(`Full complex scenario`, function () {
 
     console.log(`    📊 Delegator1 final score: ${d1FinalScore}`);
     console.log(
-      `    💰 Expected reward: ${ethers.formatUnits(expectedReward, 18)} TRAC`,
+      `    💰 Expected reward for Delegator1: ${ethers.formatUnits(expectedReward, 18)} TRAC`,
     );
 
     const d1StakeBaseAfter =
@@ -695,7 +744,7 @@ describe(`Full complex scenario`, function () {
     // Verify reward was restaked (since gap is only 1 epoch)
     const actualReward = d1StakeBaseAfter - d1StakeBaseBefore;
     console.log(
-      `    ✅ Actual reward: ${ethers.formatUnits(actualReward, 18)} TRAC`,
+      `    ✅ Actual reward for Delegator1: ${ethers.formatUnits(actualReward, 18)} TRAC`,
     );
 
     // TODO: Fix manual reward calculation - delegator accumulates score across multiple proof periods
@@ -816,6 +865,29 @@ describe(`Full complex scenario`, function () {
     );
     expect(d2ActualReward).to.equal(d2ExpectedReward);
 
+    // verifying that delegator3 value should be netreward - d2ActualReward - d1ActualReward
+
+    const d3ScorePrev =
+    await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+      previousEpoch,
+      node1Id,
+      d3Key,
+    );
+    const d3ExpectedReward = (d3ScorePrev * netRewardsPrev) / nodeScorePrev;
+    const d1ScorePrev =
+    await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+      previousEpoch,
+      node1Id,
+      d1Key,
+    );
+  const d1ExpectedReward = (d1ScorePrev * netRewardsPrev) / nodeScorePrev; 
+
+  
+  console.log(`    [CHECK] Delegator1 expected reward: ${ethers.formatUnits(d1ExpectedReward, 18)} TRAC`);
+  console.log(`    [CHECK] Delegator2 expected reward: ${ethers.formatUnits(d2ExpectedReward, 18)} TRAC`);
+  console.log(`    [CHECK] Delegator3 expected reward: ${ethers.formatUnits(d3ExpectedReward, 18)} TRAC (BECAUSE HE DID NOT CLAIM)`);
+  console.log(`    [CHECK] Net reward: ${ethers.formatUnits(netRewardsPrev, 18)} TRAC`);
+  
     /**********************************************************************
      * STEP 9 – Delegator3 attempts withdrawal before claim → revert       *
      **********************************************************************/
