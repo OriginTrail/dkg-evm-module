@@ -8,12 +8,18 @@ import {IInitializable} from "../interfaces/IInitializable.sol";
 import {RandomSamplingLib} from "../libraries/RandomSamplingLib.sol";
 import {Chronos} from "../storage/Chronos.sol";
 import {ContractStatus} from "../abstract/ContractStatus.sol";
+import {ICustodian} from "../interfaces/ICustodian.sol";
+import {HubLib} from "../libraries/HubLib.sol";
 
 contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractStatus {
     string private constant _NAME = "RandomSamplingStorage";
     string private constant _VERSION = "1.0.0";
     uint8 public constant CHUNK_BYTE_SIZE = 32;
     Chronos public chronos;
+
+    uint256 public w1;
+    uint256 public w2;
+    uint8 public avgBlockTimeInSeconds;
 
     RandomSamplingLib.ProofingPeriodDuration[] public proofingPeriodDurations;
 
@@ -38,6 +44,9 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
     mapping(uint256 => mapping(uint72 => mapping(bytes32 => uint256)))
         public delegatorLastSettledNodeEpochScorePerStake;
 
+    event W1Updated(uint256 oldW1, uint256 newW1);
+    event W2Updated(uint256 oldW2, uint256 newW2);
+    event AvgBlockTimeUpdated(uint8 avgBlockTimeInSeconds);
     event ProofingPeriodDurationAdded(uint16 durationInBlocks, uint256 indexed effectiveEpoch);
     event PendingProofingPeriodDurationReplaced(
         uint16 oldDurationInBlocks,
@@ -77,25 +86,46 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         bytes32 indexed delegatorKey,
         uint256 newDelegatorLastSettledNodeEpochScorePerStake
     );
+    event NodeChallengeSet(uint72 indexed identityId, RandomSamplingLib.Challenge challenge);
+    event ActiveProofPeriodStartBlockUpdated(uint256 indexed activeProofPeriodStartBlock);
+    event EpochNodeValidProofsCountIncremented(uint256 indexed epoch, uint72 indexed identityId, uint256 newCount);
 
-    constructor(address hubAddress, uint16 _proofingPeriodDurationInBlocks) ContractStatus(hubAddress) {
+    constructor(
+        address hubAddress,
+        uint16 _proofingPeriodDurationInBlocks,
+        uint8 _avgBlockTimeInSeconds,
+        uint256 _w1,
+        uint256 _w2
+    ) ContractStatus(hubAddress) {
         require(_proofingPeriodDurationInBlocks > 0, "Proofing period duration in blocks must be greater than 0");
+        require(_avgBlockTimeInSeconds > 0, "Average block time in seconds must be greater than 0");
+
+        chronos = Chronos(hub.getContractAddress("Chronos"));
+
         proofingPeriodDurations.push(
             RandomSamplingLib.ProofingPeriodDuration({
                 durationInBlocks: _proofingPeriodDurationInBlocks,
-                effectiveEpoch: 0
+                effectiveEpoch: chronos.getCurrentEpoch()
             })
         );
+        avgBlockTimeInSeconds = _avgBlockTimeInSeconds;
+        w1 = _w1;
+        w2 = _w2;
+
+        emit ProofingPeriodDurationAdded(_proofingPeriodDurationInBlocks, chronos.getCurrentEpoch());
+        emit AvgBlockTimeUpdated(_avgBlockTimeInSeconds);
+        emit W1Updated(0, _w1);
+        emit W2Updated(0, _w2);
     }
 
-    function initialize() public onlyHub {
+    // @dev Only transactions by HubController owner or one of the owners of the MultiSig Wallet
+    modifier onlyOwnerOrMultiSigOwner() {
+        _checkOwnerOrMultiSigOwner();
+        _;
+    }
+
+    function initialize() external onlyHub {
         chronos = Chronos(hub.getContractAddress("Chronos"));
-        // update the last proofing period duration with the current epoch
-        // TODO: What happens when contract is initialized twice?
-        proofingPeriodDurations[proofingPeriodDurations.length - 1] = RandomSamplingLib.ProofingPeriodDuration({
-            durationInBlocks: proofingPeriodDurations[proofingPeriodDurations.length - 1].durationInBlocks,
-            effectiveEpoch: chronos.getCurrentEpoch()
-        });
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -104,6 +134,32 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
 
     function version() external pure virtual override returns (string memory) {
         return _VERSION;
+    }
+
+    function setW1(uint256 _w1) external onlyOwnerOrMultiSigOwner {
+        uint256 oldW1 = w1;
+        w1 = _w1;
+        emit W1Updated(oldW1, w1);
+    }
+
+    function getW1() external view returns (uint256) {
+        return w1;
+    }
+
+    function setW2(uint256 _w2) external onlyOwnerOrMultiSigOwner {
+        uint256 oldW2 = w2;
+        w2 = _w2;
+        emit W2Updated(oldW2, w2);
+    }
+
+    function getW2() external view returns (uint256) {
+        return w2;
+    }
+
+    function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyOwnerOrMultiSigOwner {
+        require(blockTimeInSeconds > 0, "Block time in seconds must be greater than 0");
+        avgBlockTimeInSeconds = blockTimeInSeconds;
+        emit AvgBlockTimeUpdated(blockTimeInSeconds);
     }
 
     function updateAndGetActiveProofPeriodStartBlock() external returns (uint256) {
@@ -122,6 +178,8 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
                 activeProofPeriodStartBlock +
                 completePeriodsPassed *
                 activeProofingPeriodDurationInBlocks;
+
+            emit ActiveProofPeriodStartBlockUpdated(activeProofPeriodStartBlock);
         }
 
         return activeProofPeriodStartBlock;
@@ -211,6 +269,7 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         RandomSamplingLib.Challenge calldata challenge
     ) external onlyContracts {
         nodesChallenges[identityId] = challenge;
+        emit NodeChallengeSet(identityId, challenge);
     }
 
     function getNodeEpochProofPeriodScore(
@@ -230,6 +289,7 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
 
     function incrementEpochNodeValidProofsCount(uint256 epoch, uint72 identityId) external onlyContracts {
         epochNodeValidProofsCount[epoch][identityId] += 1;
+        emit EpochNodeValidProofsCountIncremented(epoch, identityId, epochNodeValidProofsCount[epoch][identityId]);
     }
 
     function getEpochNodeValidProofsCount(uint256 epoch, uint72 identityId) external view returns (uint256) {
@@ -341,5 +401,24 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
             delegatorKey,
             newNodeEpochScorePerStake
         );
+    }
+
+    function _isMultiSigOwner(address multiSigAddress) internal view returns (bool) {
+        try ICustodian(multiSigAddress).getOwners() returns (address[] memory multiSigOwners) {
+            for (uint256 i = 0; i < multiSigOwners.length; i++) {
+                if (msg.sender == multiSigOwners[i]) {
+                    return true;
+                }
+            } // solhint-disable-next-line no-empty-blocks
+        } catch {}
+
+        return false;
+    }
+
+    function _checkOwnerOrMultiSigOwner() internal view virtual {
+        address hubOwner = hub.owner();
+        if (msg.sender != hubOwner && !_isMultiSigOwner(hubOwner)) {
+            revert HubLib.UnauthorizedAccess("Only Hub Owner or Multisig Owner");
+        }
     }
 }
