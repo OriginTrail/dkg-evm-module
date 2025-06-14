@@ -300,17 +300,17 @@ describe('@integration RandomSampling', () => {
     });
 
     it('Should have the correct avgBlockTimeInSeconds after initialization', async () => {
-      const avgBlockTime = await RandomSampling.avgBlockTimeInSeconds();
+      const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
       expect(avgBlockTime).to.equal(avgBlockTimeInSeconds);
     });
 
     it('Should have the correct W1 after initialization', async () => {
-      const W1 = await RandomSampling.w1();
+      const W1 = await RandomSamplingStorage.getW1();
       expect(W1).to.equal(0);
     });
 
     it('Should have the correct W2 after initialization', async () => {
-      const W2 = await RandomSampling.w2();
+      const W2 = await RandomSamplingStorage.getW2();
       expect(W2).to.equal(2);
     });
 
@@ -393,7 +393,7 @@ describe('@integration RandomSampling', () => {
       // Setup
       const currentEpoch = await Chronos.getCurrentEpoch();
       const avgBlockTimeInSeconds =
-        await RandomSampling.avgBlockTimeInSeconds();
+        await RandomSamplingStorage.avgBlockTimeInSeconds();
       const initialDuration =
         await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
       const firstNewDuration = initialDuration + 10n;
@@ -463,7 +463,7 @@ describe('@integration RandomSampling', () => {
         await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
       const newDuration = initialDuration + 20n; // Different new duration
       const hubOwner = accounts[0];
-      const avgBlockTime = await RandomSampling.avgBlockTimeInSeconds();
+      const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
 
       // Schedule change for next epoch
       await RandomSampling.connect(hubOwner).setProofingPeriodDurationInBlocks(
@@ -1696,16 +1696,16 @@ describe('@integration RandomSampling', () => {
 
       // Non-hub owner should fail
       await expect(
-        RandomSampling.connect(accounts[1]).setAvgBlockTimeInSeconds(
+        RandomSamplingStorage.connect(accounts[1]).setAvgBlockTimeInSeconds(
           newAvgBlockTime,
         ),
       ).to.be.reverted;
 
       // Hub owner should succeed
-      await RandomSampling.connect(accounts[0]).setAvgBlockTimeInSeconds(
+      await RandomSamplingStorage.connect(accounts[0]).setAvgBlockTimeInSeconds(
         newAvgBlockTime,
       );
-      expect(await RandomSampling.avgBlockTimeInSeconds()).to.equal(
+      expect(await RandomSamplingStorage.avgBlockTimeInSeconds()).to.equal(
         newAvgBlockTime,
       );
     });
@@ -1740,7 +1740,7 @@ describe('@integration RandomSampling', () => {
     // Helper function to advance to the next epoch
     const advanceToNextEpoch = async () => {
       const timeUntil = await Chronos.timeUntilNextEpoch();
-      const avgBlockTime = await RandomSampling.avgBlockTimeInSeconds();
+      const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
       const blocksToMine =
         timeUntil > 0n ? Number(timeUntil / BigInt(avgBlockTime)) + 2 : 2; // Add buffer
       for (let i = 0; i < blocksToMine; i++) {
@@ -1934,7 +1934,7 @@ describe('@integration RandomSampling', () => {
 
     it('Should allow a delegator to successfully claim their rewards', async () => {
       // Arrange
-      const expectedReward = await RandomSampling.connect(
+      const expectedReward = await Staking.connect(
         delegatorAccount,
       ).getDelegatorEpochRewardsAmount(
         publishingNodeIdentityId,
@@ -2215,24 +2215,6 @@ describe('@integration RandomSampling', () => {
     });
   });
 
-  describe('Delegator rewards', () => {
-    it('Should revert if allNodesEpochScore is 0 for the given epoch', async () => {
-      const testIdentityId = 1;
-      const testEpoch = 1;
-      const testDelegator = accounts[1].address;
-
-      await expect(
-        RandomSampling.getDelegatorEpochRewardsAmount(
-          testIdentityId,
-          testEpoch,
-          testDelegator,
-        ),
-      ).to.be.revertedWith(
-        'None of the nodes have any score for the given epoch. Cannot calculate rewards.',
-      );
-    });
-  });
-
   describe('Optimized Knowledge Collection Search', () => {
     let publishingNode: {
       operational: SignerWithAddress;
@@ -2329,7 +2311,7 @@ describe('@integration RandomSampling', () => {
       }
 
       // Advance to epoch 5 (so first 15 collections are expired, last 5 are active)
-      const avgBlockTime = await RandomSampling.avgBlockTimeInSeconds();
+      const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
       for (let epoch = Number(initialEpoch); epoch < 5; epoch++) {
         const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
         const blocksToMine =
@@ -2426,7 +2408,7 @@ describe('@integration RandomSampling', () => {
       }
 
       // Advance to epoch 5 (all collections expired)
-      const avgBlockTime = await RandomSampling.avgBlockTimeInSeconds();
+      const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
       for (let epoch = 1; epoch < 5; epoch++) {
         const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
         const blocksToMine =
@@ -2485,7 +2467,7 @@ describe('@integration RandomSampling', () => {
       );
 
       // Advance to epoch 4 (first 9 expired, last 1 active)
-      const avgBlockTime = await RandomSampling.avgBlockTimeInSeconds();
+      const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
       for (let epoch = 1; epoch < 4; epoch++) {
         const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
         const blocksToMine =
@@ -2615,7 +2597,7 @@ describe('@integration RandomSampling', () => {
       }
 
       // Advance to epoch 4 (expired ones are expired, active ones are active)
-      const avgBlockTime = await RandomSampling.avgBlockTimeInSeconds();
+      const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
       for (let epoch = 1; epoch < 4; epoch++) {
         const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
         const blocksToMine =

@@ -5,21 +5,6 @@
         "internalType": "address",
         "name": "hubAddress",
         "type": "address"
-      },
-      {
-        "internalType": "uint8",
-        "name": "_avgBlockTimeInSeconds",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_w1",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_w2",
-        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
@@ -72,19 +57,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "avgBlockTimeInSeconds",
-        "type": "uint8"
-      }
-    ],
-    "name": "AvgBlockTimeUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "uint256",
         "name": "identityId",
@@ -128,19 +100,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "durationInBlocks",
-        "type": "uint8"
-      }
-    ],
-    "name": "ProofingPeriodDurationInBlocksUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "uint72",
         "name": "identityId",
@@ -160,44 +119,6 @@
       }
     ],
     "name": "ValidProofSubmitted",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "oldW1",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newW1",
-        "type": "uint256"
-      }
-    ],
-    "name": "W1Updated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "oldW2",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newW2",
-        "type": "uint256"
-      }
-    ],
-    "name": "W2Updated",
     "type": "event"
   },
   {
@@ -221,19 +142,6 @@
         "internalType": "contract AskStorage",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "avgBlockTimeInSeconds",
-    "outputs": [
-      {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -405,19 +313,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint8",
-        "name": "blockTimeInSeconds",
-        "type": "uint8"
-      }
-    ],
-    "name": "setAvgBlockTimeInSeconds",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint16",
         "name": "durationInBlocks",
         "type": "uint16"
@@ -437,32 +332,6 @@
       }
     ],
     "name": "setStatus",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_w1",
-        "type": "uint256"
-      }
-    ],
-    "name": "setW1",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_w2",
-        "type": "uint256"
-      }
-    ],
-    "name": "setW2",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -535,32 +404,6 @@
       }
     ],
     "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "w1",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "w2",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   }
 ]

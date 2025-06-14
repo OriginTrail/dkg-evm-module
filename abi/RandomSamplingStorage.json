@@ -10,6 +10,21 @@
         "internalType": "uint16",
         "name": "_proofingPeriodDurationInBlocks",
         "type": "uint16"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_avgBlockTimeInSeconds",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_w1",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_w2",
+        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
@@ -30,6 +45,19 @@
     "inputs": [],
     "name": "ZeroAddressHub",
     "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "activeProofPeriodStartBlock",
+        "type": "uint256"
+      }
+    ],
+    "name": "ActiveProofPeriodStartBlockUpdated",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -85,6 +113,19 @@
       }
     ],
     "name": "AllNodesEpochScoreAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "avgBlockTimeInSeconds",
+        "type": "uint8"
+      }
+    ],
+    "name": "AvgBlockTimeUpdated",
     "type": "event"
   },
   {
@@ -153,6 +194,87 @@
       }
     ],
     "name": "EpochNodeDelegatorScoreAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newCount",
+        "type": "uint256"
+      }
+    ],
+    "name": "EpochNodeValidProofsCountIncremented",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "knowledgeCollectionId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chunkId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "knowledgeCollectionStorageContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "epoch",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "activeProofPeriodStartBlock",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "proofingPeriodDurationInBlocks",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "solved",
+            "type": "bool"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct RandomSamplingLib.Challenge",
+        "name": "challenge",
+        "type": "tuple"
+      }
+    ],
+    "name": "NodeChallengeSet",
     "type": "event"
   },
   {
@@ -290,6 +412,44 @@
       }
     ],
     "name": "ProofingPeriodDurationAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldW1",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newW1",
+        "type": "uint256"
+      }
+    ],
+    "name": "W1Updated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldW2",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newW2",
+        "type": "uint256"
+      }
+    ],
+    "name": "W2Updated",
     "type": "event"
   },
   {
@@ -504,6 +664,19 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "avgBlockTimeInSeconds",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -945,6 +1118,32 @@
   },
   {
     "inputs": [],
+    "name": "getW1",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getW2",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "hub",
     "outputs": [
       {
@@ -1178,6 +1377,19 @@
   {
     "inputs": [
       {
+        "internalType": "uint8",
+        "name": "blockTimeInSeconds",
+        "type": "uint8"
+      }
+    ],
+    "name": "setAvgBlockTimeInSeconds",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "epoch",
         "type": "uint256"
@@ -1272,6 +1484,32 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_w1",
+        "type": "uint256"
+      }
+    ],
+    "name": "setW1",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_w2",
+        "type": "uint256"
+      }
+    ],
+    "name": "setW2",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "status",
     "outputs": [
@@ -1308,6 +1546,32 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "w1",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "w2",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

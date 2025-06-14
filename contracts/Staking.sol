@@ -512,7 +512,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
     function _validateDelegatorEpochClaims(uint72 identityId, address delegator) internal {
         bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
-        uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
         uint256 currentEpoch = chronos.getCurrentEpoch();
         uint256 previousEpoch = currentEpoch - 1;
 
@@ -532,6 +531,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             // delegator is delegating to a node for the first time ever, set the last claimed epoch to the previous epoch
             delegatorsInfo.setLastClaimedEpoch(identityId, delegator, previousEpoch);
         }
+
+        uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
 
         // If delegator is up to date with claims, no validation needed
         if (lastClaimedEpoch == previousEpoch) {
