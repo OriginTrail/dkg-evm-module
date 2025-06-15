@@ -21,6 +21,7 @@ import {Permissions} from "./libraries/Permissions.sol";
 contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Profile";
     string private constant _VERSION = "1.0.0";
+    uint256 private constant HALF_EPOCH_DURATION = 15 days;
 
     Ask public askContract;
     Identity public identityContract;
@@ -105,7 +106,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         if (ps.nodeIdsList(nodeId)) {
             revert ProfileLib.NodeIdAlreadyExists(nodeId);
         }
-        if (initialOperatorFee > 10000) {
+        if (initialOperatorFee > parametersStorage.maxOperatorFee()) {
             revert ProfileLib.OperatorFeeOutOfRange(initialOperatorFee);
         }
         uint72 identityId = id.createIdentity(msg.sender, adminWallet);
@@ -140,7 +141,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
             }
         }
 
-        if (newOperatorFee > 10000) {
+        if (newOperatorFee > parametersStorage.maxOperatorFee()) {
             revert ProfileLib.InvalidOperatorFee();
         }
 
@@ -150,7 +151,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epochLength = chronos.epochLength();
         uint256 nextEpochStart = epochStart + epochLength;
 
-        uint256 effectiveStart = block.timestamp <= epochStart + 15 days
+        uint256 effectiveStart = block.timestamp <= epochStart + HALF_EPOCH_DURATION
             ? nextEpochStart
             : nextEpochStart + epochLength;
 
