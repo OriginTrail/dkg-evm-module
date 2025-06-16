@@ -1573,7 +1573,7 @@ describe('Staking contract', function () {
   /**********************************************************************
    * Operator-Fee Corner-Case tests
    **********************************************************************/
-  it('🔄 Two consecutive operator-fee withdrawal requests overwrite the previous one', async () => {
+  it('🔄 Two consecutive operator-fee withdrawal requests accumulate', async () => {
     // !IMPORTANT: TODO: UPDATE CONTRACT TO ACT LIKE THIS
     const { identityId } = await createProfile();
     const feeBal = hre.ethers.parseEther('100');
@@ -1589,24 +1589,24 @@ describe('Staking contract', function () {
       'Balance should be equal to feeBal - first',
     );
 
-    // 2️⃣ second request 30 TRAC – should overwrite
+    // 2️⃣ second request 30 TRAC – should accumulate with first
     const second = hre.ethers.parseEther('30');
     await Staking.requestOperatorFeeWithdrawal(identityId, second);
 
     expect(await StakingStorage.getOperatorFeeBalance(identityId)).to.equal(
-      feeBal - second,
-      'Balance should be equal to feeBal - second',
+      feeBal - first - second,
+      'Balance should be equal to feeBal - first - second',
     );
     const [amount, , release] =
       await StakingStorage.getOperatorFeeWithdrawalRequest(identityId);
     expect(amount).to.equal(
-      second,
-      'Second request should overwrite the first',
+      first + second,
+      'Second request should accumulate with the first',
     );
-    // FIXED: If second request overwrites the first, balance should be 100 - 30 = 70, not 30
+    // After two consecutive requests (40 then 30) the balance should be 100 - 40 - 30 = 30
     expect(await StakingStorage.getOperatorFeeBalance(identityId)).to.equal(
-      feeBal - second,
-      'Balance should reflect only the latest request deduction after overwrite',
+      feeBal - first - second,
+      'Balance should reflect both deductions accumulated',
     );
     expect(release).to.be.gt(0, 'Release timestamp set');
   });
