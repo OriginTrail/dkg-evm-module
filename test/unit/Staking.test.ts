@@ -1154,7 +1154,6 @@ describe('Staking contract', function () {
     // After two consecutive requests (40 then 30) the balance should be 100 − 40 = 30
     expect(await StakingStorage.getOperatorFeeBalance(identityId)).to.equal(feeBal - first - second, 'Balance should reflect both deductions');
     expect(release).to.be.gt(0, 'Release timestamp set');
-
   });
 
   it('cancelOperatorFeeWithdrawal replenishes balance and deletes request', async () => {
