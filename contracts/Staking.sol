@@ -364,13 +364,21 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert TokenLib.ZeroTokenAmount();
         }
 
-        uint96 oldOperatorFeeBalance = ss.getOperatorFeeBalance(identityId);
-        if (withdrawalAmount > oldOperatorFeeBalance) {
-            revert StakingLib.AmountExceedsOperatorFeeBalance(oldOperatorFeeBalance, withdrawalAmount);
+        // Check if there's an existing withdrawal request and return its amount to balance
+        uint96 existingRequestAmount = ss.getOperatorFeeWithdrawalRequestAmount(identityId);
+        uint96 currentOperatorFeeBalance = ss.getOperatorFeeBalance(identityId);
+
+        // If there's an existing request, add it back to the balance (cancel previous request)
+        if (existingRequestAmount > 0) {
+            currentOperatorFeeBalance += existingRequestAmount;
+        }
+
+        if (withdrawalAmount > currentOperatorFeeBalance) {
+            revert StakingLib.AmountExceedsOperatorFeeBalance(currentOperatorFeeBalance, withdrawalAmount);
         }
 
         uint256 withdrawalReleaseTimestamp = block.timestamp + parametersStorage.stakeWithdrawalDelay();
-        ss.setOperatorFeeBalance(identityId, oldOperatorFeeBalance - withdrawalAmount); // bookkeeping
+        ss.setOperatorFeeBalance(identityId, currentOperatorFeeBalance - withdrawalAmount); // bookkeeping
         ss.createOperatorFeeWithdrawalRequest(identityId, withdrawalAmount, /*indexed*/ 0, withdrawalReleaseTimestamp);
     }
 
@@ -383,6 +391,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         if (block.timestamp < withdrawalReleaseTimestamp)
             revert StakingLib.WithdrawalPeriodPending(block.timestamp, withdrawalReleaseTimestamp);
 
+        ss.deleteOperatorFeeWithdrawalRequest(identityId);
         ss.addOperatorFeeCumulativePaidOutRewards(identityId, operatorFeeWithdrawalAmount);
         ss.transferStake(msg.sender, operatorFeeWithdrawalAmount);
     }
