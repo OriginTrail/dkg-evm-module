@@ -19,14 +19,13 @@ import {AskStorage} from "./storage/AskStorage.sol";
 import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
 import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
+import {ICustodian} from "./interfaces/ICustodian.sol";
+import {HubLib} from "./libraries/HubLib.sol";
 
 contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "RandomSampling";
     string private constant _VERSION = "1.0.0";
     uint256 public constant SCALE18 = 1e18;
-    uint8 public avgBlockTimeInSeconds;
-    uint256 public w1;
-    uint256 public w2;
 
     IdentityStorage public identityStorage;
     RandomSamplingStorage public randomSamplingStorage;
@@ -51,29 +50,22 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 proofingPeriodDurationInBlocks
     );
     event ValidProofSubmitted(uint72 indexed identityId, uint256 indexed epoch, uint256 score);
-    event AvgBlockTimeUpdated(uint8 avgBlockTimeInSeconds);
-    event ProofingPeriodDurationInBlocksUpdated(uint8 durationInBlocks);
-    event W1Updated(uint256 oldW1, uint256 newW1);
-    event W2Updated(uint256 oldW2, uint256 newW2);
 
     /**
      * @dev Constructor initializes the contract with essential parameters for random sampling
-     * Sets up average block time for time-based calculations and scoring weights
      * Only called once during deployment
      * @param hubAddress Address of the Hub contract for access control
-     * @param _avgBlockTimeInSeconds Average blockchain block time for timing calculations (must be > 0)
-     * @param _w1 Weight parameter for scoring algorithm
-     * @param _w2 Weight parameter for scoring algorithm
      */
-    constructor(address hubAddress, uint8 _avgBlockTimeInSeconds, uint256 _w1, uint256 _w2) ContractStatus(hubAddress) {
-        require(_avgBlockTimeInSeconds > 0, "Average block time in seconds must be greater than 0");
-        avgBlockTimeInSeconds = _avgBlockTimeInSeconds;
-        w1 = _w1;
-        w2 = _w2;
-    }
+    constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     modifier profileExists(uint72 identityId) {
         _checkProfileExists(identityId);
+        _;
+    }
+
+    // @dev Only transactions by HubController owner or one of the owners of the MultiSig Wallet
+    modifier onlyOwnerOrMultiSigOwner() {
+        _checkOwnerOrMultiSigOwner();
         _;
     }
 
@@ -115,49 +107,13 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     /**
-     * @dev Updates the W1 weight parameter used in node scoring calculations
-     * Only the Hub owner can modify this parameter
-     * Emits W1Updated event when changed
-     * @param _w1 New W1 weight value for scoring algorithm
-     */
-    function setW1(uint256 _w1) external onlyHubOwner {
-        uint256 oldW1 = w1;
-        w1 = _w1;
-        emit W1Updated(oldW1, w1);
-    }
-
-    /**
-     * @dev Updates the W2 weight parameter used in node scoring calculations
-     * Only the Hub owner can modify this parameter
-     * Emits W2Updated event when changed
-     * @param _w2 New W2 weight value for scoring algorithm
-     */
-    function setW2(uint256 _w2) external onlyHubOwner {
-        uint256 oldW2 = w2;
-        w2 = _w2;
-        emit W2Updated(oldW2, w2);
-    }
-
-    /**
-     * @dev Updates the average block time parameter used for timing calculations
-     * Only the Hub owner can modify this parameter
-     * Used to estimate time-based durations in blocks
-     * @param blockTimeInSeconds New average block time in seconds (must be > 0)
-     */
-    function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyHubOwner {
-        require(blockTimeInSeconds > 0, "Block time in seconds must be greater than 0");
-        avgBlockTimeInSeconds = blockTimeInSeconds;
-        emit AvgBlockTimeUpdated(blockTimeInSeconds);
-    }
-
-    /**
      * @dev Sets the duration of proofing periods in blocks with a one-epoch delay
      * Only contracts registered in the Hub can call this function
      * If a pending change exists, replaces it; otherwise adds a new duration
      * Changes take effect in the next epoch to ensure smooth transitions
      * @param durationInBlocks New proofing period duration in blocks (must be > 0)
      */
-    function setProofingPeriodDurationInBlocks(uint16 durationInBlocks) external onlyContracts {
+    function setProofingPeriodDurationInBlocks(uint16 durationInBlocks) external onlyOwnerOrMultiSigOwner {
         require(durationInBlocks > 0, "Duration in blocks must be greater than 0");
 
         // Calculate the effective epoch (current epoch + delay)
@@ -503,6 +459,25 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     function _checkProfileExists(uint72 identityId) internal view virtual {
         if (!profileStorage.profileExists(identityId)) {
             revert ProfileLib.ProfileDoesntExist(identityId);
+        }
+    }
+
+    function _isMultiSigOwner(address multiSigAddress) internal view returns (bool) {
+        try ICustodian(multiSigAddress).getOwners() returns (address[] memory multiSigOwners) {
+            for (uint256 i = 0; i < multiSigOwners.length; i++) {
+                if (msg.sender == multiSigOwners[i]) {
+                    return true;
+                }
+            } // solhint-disable-next-line no-empty-blocks
+        } catch {}
+
+        return false;
+    }
+
+    function _checkOwnerOrMultiSigOwner() internal view virtual {
+        address hubOwner = hub.owner();
+        if (msg.sender != hubOwner && !_isMultiSigOwner(hubOwner)) {
+            revert HubLib.UnauthorizedAccess("Only Hub Owner or Multisig Owner");
         }
     }
 }
