@@ -27,6 +27,8 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
     uint256 public askUpperBoundFactor;
     uint256 public askLowerBoundFactor;
 
+    uint16 public maxOperatorFee;
+
     constructor(address hubAddress) HubDependent(hubAddress) {
         minimumStake = 50_000 ether;
         maximumStake = 2_000_000 ether;
@@ -42,6 +44,8 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
 
         askUpperBoundFactor = 1467000000000000000;
         askLowerBoundFactor = 533000000000000000;
+
+        maxOperatorFee = 10_000;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -106,5 +110,11 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         shardingTableSizeLimit = shardingTableSizeLimit_;
 
         emit ParameterChanged("shardingTableSizeLimit", shardingTableSizeLimit);
+    }
+
+    function setMaxOperatorFee(uint16 maxOperatorFee_) external onlyHub {
+        maxOperatorFee = maxOperatorFee_;
+
+        emit ParameterChanged("maxOperatorFee", maxOperatorFee);
     }
 }

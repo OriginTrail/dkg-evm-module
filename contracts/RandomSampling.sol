@@ -51,6 +51,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     );
     event ValidProofSubmitted(uint72 indexed identityId, uint256 indexed epoch, uint256 score);
 
+    /**
+     * @dev Constructor initializes the contract with essential parameters for random sampling
+     * Only called once during deployment
+     * @param hubAddress Address of the Hub contract for access control
+     */
     constructor(address hubAddress) ContractStatus(hubAddress) {}
 
     modifier profileExists(uint72 identityId) {
@@ -64,6 +69,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         _;
     }
 
+    /**
+     * @dev Initializes the contract by connecting to all required Hub dependencies
+     * Called once during deployment to set up contract references for storage and computation
+     * Only the Hub can call this function
+     */
     function initialize() public onlyHub {
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
@@ -80,14 +90,29 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
     }
 
+    /**
+     * @dev Returns the name of this contract
+     * Used for contract identification and versioning
+     */
     function name() external pure virtual override returns (string memory) {
         return _NAME;
     }
 
+    /**
+     * @dev Returns the version of this contract
+     * Used for contract identification and versioning
+     */
     function version() external pure virtual override returns (string memory) {
         return _VERSION;
     }
 
+    /**
+     * @dev Sets the duration of proofing periods in blocks with a one-epoch delay
+     * Only contracts registered in the Hub can call this function
+     * If a pending change exists, replaces it; otherwise adds a new duration
+     * Changes take effect in the next epoch to ensure smooth transitions
+     * @param durationInBlocks New proofing period duration in blocks (must be > 0)
+     */
     function setProofingPeriodDurationInBlocks(uint16 durationInBlocks) external onlyOwnerOrMultiSigOwner {
         require(durationInBlocks > 0, "Duration in blocks must be greater than 0");
 
@@ -102,6 +127,13 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
+    /**
+     * @dev Creates a new challenge for the calling node in the current proofing period
+     * Caller must have a registered profile and cannot have an active unsolved challenge
+     * Generates a random knowledge collection and chunk to be proven
+     * Emits ChallengeCreated event with challenge details
+     * Can only create one challenge per proofing period
+     */
     function createChallenge() external profileExists(identityStorage.getIdentityId(msg.sender)) {
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -128,6 +160,15 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         randomSamplingStorage.setNodeChallenge(identityId, challenge);
     }
 
+    /**
+     * @dev Submits proof for an active challenge to earn score used for later reward calculation
+     * Validates the submitted chunk and merkle proof against the expected Merkle root
+     * On successful proof: marks challenge as solved, increments valid proofs count,
+     * calculates and adds node score, and updates epoch scoring data
+     * Emits ValidProofSubmitted event on success
+     * @param chunk The data chunk being proven (must match challenge requirements)
+     * @param merkleProof Array of hashes for Merkle proof verification
+     */
     function submitProof(
         string memory chunk,
         bytes32[] calldata merkleProof
@@ -186,6 +227,16 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
+    /**
+     * @dev Internal function to compute Merkle root from a chunk and its proof
+     * Reconstructs the Merkle tree root by hashing the chunk with its ID and
+     * traversing up the tree using the provided proof hashes
+     * Uses standard Merkle tree construction where smaller hash goes left
+     * @param chunk The data chunk to verify
+     * @param chunkId Unique identifier for the chunk position
+     * @param merkleProof Array of sibling hashes for tree traversal
+     * @return computedRoot The computed Merkle root hash
+     */
     function _computeMerkleRootFromProof(
         string memory chunk,
         uint256 chunkId,
@@ -208,6 +259,16 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         return computedHash;
     }
 
+    /**
+     * @dev Internal function to generate a new random challenge for a node
+     * Uses blockchain properties (block hash, difficulty, timestamp, gas price) for randomness
+     * Selects a random active knowledge collection and chunk within it
+     * Creates challenge with current epoch and active proof period information
+     * Emits ChallengeCreated event with all challenge details
+     * @param identityId The node identity receiving the challenge
+     * @param originalSender The original caller address for randomness seed
+     * @return challenge The generated challenge struct
+     */
     function _generateChallenge(
         uint72 identityId,
         address originalSender
@@ -271,10 +332,14 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     /**
-     * @dev BFS approach to finding an active knowledge collection
+     * @dev Internal function to find an active knowledge collection using breadth-first search
+     * Uses BFS with a queue-based approach to efficiently search for collections that are
+     * still active (current epoch <= collection's end epoch)
+     * Splits ranges recursively and uses randomness to select from each range
+     * Limits iterations to prevent infinite loops and ensures gas efficiency
      * @param randomSeed Random seed for picking a collection from current range
-     * @param start Start of the range (inclusive)
-     * @param end End of the range (inclusive)
+     * @param start Start of the range (inclusive) - collection ID range to search
+     * @param end End of the range (inclusive) - collection ID range to search
      * @param currentEpoch Current epoch to check collection activity against
      * @return knowledgeCollectionId ID of an active knowledge collection, or 0 if none found
      */
@@ -343,6 +408,18 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         return 0; // No active collection found
     }
 
+    /**
+     * @dev Calculates the node score based on stake, ask price, and publishing activity
+     * Score = nodeStakeFactor + nodeAskFactor + nodePublishingFactor
+     *
+     * nodeStakeFactor: 2 * (nodeStake / maxStake)^2 - rewards higher stake
+     * nodeAskFactor: (nodeStake/maxStake) * ((upperBound - nodeAsk) / (upperBound - lowerBound))^2 - rewards lower ask prices
+     * nodePublishingFactor: nodeStakeFactor * (nodePublishing / maxNodePublishing) - rewards active publishers
+     *
+     * All calculations use 18-decimal precision for accuracy
+     * @param identityId The node identity to calculate score for
+     * @return score18 The calculated node score scaled by 18-decimal for precision
+     */
     function calculateNodeScore(uint72 identityId) public view returns (uint256) {
         // 1. Node stake factor calculation
         // Formula: nodeStakeFactor = 2 * (nodeStake / 2,000,000)^2
@@ -373,6 +450,12 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         return nodeStakeFactor18 + nodeAskFactor18 + nodePublishingFactor18;
     }
 
+    /**
+     * @dev Internal function to validate that a node profile exists
+     * Used by modifiers and functions to ensure operations target valid nodes
+     * Reverts with ProfileDoesntExist error if profile is not found
+     * @param identityId Node identity to check existence for
+     */
     function _checkProfileExists(uint72 identityId) internal view virtual {
         if (!profileStorage.profileExists(identityId)) {
             revert ProfileLib.ProfileDoesntExist(identityId);
