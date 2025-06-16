@@ -44,7 +44,7 @@ contract StakingKPI is INamed, IVersioned, ContractStatus, IInitializable {
      * Called once during deployment to set up contract references for staking calculations
      * Only the Hub can call this function
      */
-    function initialize() public onlyHub {
+    function initialize() external onlyHub {
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
@@ -160,8 +160,8 @@ contract StakingKPI is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epoch
     ) public view profileExists(identityId) returns (uint256) {
         // If the operator fee has been claimed, return the net delegators rewards
-        if (delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
-            return delegatorsInfo.getEpochLeftoverDelegatorsRewards(identityId, epoch);
+        if (delegatorsInfo.isOperatorFeeClaimedForEpoch(identityId, epoch)) {
+            return delegatorsInfo.getNetNodeEpochRewards(identityId, epoch);
         }
 
         uint256 nodeScore18 = randomSamplingStorage.getNodeEpochScore(epoch, identityId);

@@ -68,7 +68,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
      * Called once during deployment to set up contract references
      * Only the Hub can call this function
      */
-    function initialize() public onlyHub {
+    function initialize() external onlyHub {
         askContract = Ask(hub.getContractAddress("Ask"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
@@ -515,6 +515,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 currentEpoch = chronos.getCurrentEpoch();
         require(epoch < currentEpoch, "Epoch not finalised");
 
+        // Cannot claim rewards for a delegator that is not a node delegator
         require(delegatorsInfo.isNodeDelegator(identityId, delegator), "Delegator not found");
 
         uint256 lastClaimed = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
@@ -532,49 +533,46 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
         require(
-            !delegatorsInfo.getEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey),
+            !delegatorsInfo.hasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey),
             "Already claimed rewards for this epoch"
         );
 
         // settle all pending score changes for the node's delegator
         uint256 delegatorScore18 = _prepareForStakeChange(epoch, identityId, delegatorKey);
         uint256 nodeScore18 = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
-        uint256 totalLeftoverEpochlRewardsForDelegators;
-        uint256 nodeDelegatorsRewardsForEpoch;
+        uint256 reward;
 
-        if (!delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
-            uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
-            uint256 allNodesScore18 = randomSamplingStorage.getAllNodesEpochScore(epoch);
-            if (allNodesScore18 > 0) {
-                nodeDelegatorsRewardsForEpoch = (epochStorage.getEpochPool(1, epoch) * nodeScore18) / allNodesScore18;
+        // If delegatorScore18 = 0 or nodeScore18 = 0, rewards are 0 too
+        if (delegatorScore18 != 0 && nodeScore18 != 0) {
+            // netNodeRewards (rewards for node's delegators) = grossNodeRewards - operator fee
+            uint256 netNodeRewards;
+            if (!delegatorsInfo.isOperatorFeeClaimedForEpoch(identityId, epoch)) {
+                // Operator fee has not been claimed for this epoch, calculate it
+                uint256 allNodesScore18 = randomSamplingStorage.getAllNodesEpochScore(epoch);
+                if (allNodesScore18 > 0) {
+                    uint256 grossNodeRewards = (epochStorage.getEpochPool(1, epoch) * nodeScore18) / allNodesScore18;
+                    uint96 operatorFeeAmount = uint96(
+                        (grossNodeRewards * profileStorage.getLatestOperatorFeePercentage(identityId)) /
+                            parametersStorage.maxOperatorFee()
+                    );
+                    netNodeRewards = grossNodeRewards - operatorFeeAmount;
+                    stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
+                    // Mark the operator fee as claimed for this epoch
+                    delegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, true);
+                    // Set node's delegators net rewards for this epoch so we don't have to calculate it again
+                    delegatorsInfo.setNetNodeEpochRewards(identityId, epoch, netNodeRewards);
+                }
+            } else {
+                // Operator fee has been claimed for this epoch already, use the previously calculated node's delegators net rewards for this epoch
+                netNodeRewards = delegatorsInfo.getNetNodeEpochRewards(identityId, epoch);
             }
 
-            uint96 operatorFeeAmount = uint96(
-                (nodeDelegatorsRewardsForEpoch * feePercentageForEpoch) / parametersStorage.maxOperatorFee()
-            );
-            totalLeftoverEpochlRewardsForDelegators = nodeDelegatorsRewardsForEpoch - operatorFeeAmount;
-            stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
-            delegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, true);
-            delegatorsInfo.setLastClaimedDelegatorsRewardsEpoch(identityId, epoch);
-            // Set the calculated total rewards for delegators for this epoch
-            delegatorsInfo.setEpochLeftoverDelegatorsRewards(
-                identityId,
-                epoch,
-                totalLeftoverEpochlRewardsForDelegators
-            );
-        } else {
-            totalLeftoverEpochlRewardsForDelegators = delegatorsInfo.getEpochLeftoverDelegatorsRewards(
-                identityId,
-                epoch
-            );
+            reward = (delegatorScore18 * netNodeRewards) / nodeScore18;
         }
 
-        uint256 reward = (delegatorScore18 == 0 || nodeScore18 == 0 || totalLeftoverEpochlRewardsForDelegators == 0)
-            ? 0
-            : (delegatorScore18 * totalLeftoverEpochlRewardsForDelegators) / nodeScore18;
-
         // update state even when reward is zero
-        delegatorsInfo.setEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey, true);
+        // Mark the delegator's rewards as claimed for this epoch
+        delegatorsInfo.setHasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey, true);
         uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
         delegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch);
 
