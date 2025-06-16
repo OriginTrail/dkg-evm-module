@@ -32,7 +32,6 @@ import {
   getDefaultKCCreator,
 } from '../helpers/setup-helpers';
 
-
 // Sample data for KC
 const quads = [
   '<urn:us-cities:info:new-york> <http://schema.org/area> "468.9 sq mi" .',
@@ -50,6 +49,20 @@ const quads = [
   ),
 ];
 const merkleRoot = kcTools.calculateMerkleRoot(quads, 32);
+
+// Helper function for distribution calculation
+function calcDistribution(
+  tokenAmount: bigint,
+  numberOfEpochs: bigint,
+  epochLen: bigint,
+  timeLeft: bigint,
+) {
+  const basePer = tokenAmount / numberOfEpochs;
+  const curPart = (basePer * timeLeft) / epochLen;
+  const tailPart = basePer - curPart;
+  const allocated = curPart + basePer * (numberOfEpochs - 1n) + tailPart;
+  return { curPart, basePer, tailPart, allocated };
+}
 
 type KnowledgeCollectionFixture = {
   accounts: SignerWithAddress[];
@@ -164,6 +177,113 @@ describe('@unit KnowledgeCollection', () => {
     } = await loadFixture(deployKnowledgeCollectionFixture));
   });
 
+  it('Should create a KC & distribute tokens fractionally across epochs', async () => {
+    /* ---------- actors & helpers ---------- */
+    const kcCreator = getDefaultKCCreator(accounts);
+    const publishingNode = getDefaultPublishingNode(accounts);
+    const receivingNodes = getDefaultReceivingNodes(accounts);
+
+    const contracts = {
+      Profile,
+      KnowledgeCollection,
+      Token,
+    };
+
+    const { identityId: publishingNodeIdentityId } = await createProfile(
+      contracts.Profile,
+      publishingNode,
+    );
+    const receivingNodesIdentityIds = (
+      await createProfiles(contracts.Profile, receivingNodes)
+    ).map((p) => p.identityId);
+
+    /* ---------- test params ---------- */
+    const tokenAmount = ethers.parseEther('100'); // bigint
+    const numberOfEpochs = 5n;
+    const merkleRoot = kcTools.calculateMerkleRoot(
+      // short quad list just for hash – no chunking needed
+      ['<urn:x> <urn:y> <urn:z> .'],
+      32,
+    );
+
+    /* ---------- create KC ---------- */
+    const { collectionId } = await createKnowledgeCollection(
+      kcCreator,
+      publishingNode,
+      publishingNodeIdentityId,
+      receivingNodes,
+      receivingNodesIdentityIds,
+      contracts,
+      merkleRoot,
+      'test-operation-id',
+      10,
+      1000,
+      Number(numberOfEpochs),
+      tokenAmount,
+      false,
+      ethers.ZeroAddress,
+    );
+
+    expect(collectionId).to.equal(1);
+
+    /* ---------- metadata checks ---------- */
+    const meta =
+      await KnowledgeCollectionStorage.getKnowledgeCollectionMetadata(1);
+    const currentEpoch = await Chronos.getCurrentEpoch();
+    expect(meta[4]).to.equal(currentEpoch); // start
+    expect(meta[5]).to.equal(currentEpoch + numberOfEpochs); // end
+    expect(meta[6]).to.equal(tokenAmount); // tokens
+
+    /* ---------- reconstruct expected distribution ---------- */
+    const epochLen = await Chronos.epochLength();
+    const timeLeft = await Chronos.timeUntilNextEpoch();
+
+    const dist = calcDistribution(
+      tokenAmount,
+      numberOfEpochs,
+      epochLen,
+      timeLeft,
+    );
+    /* report */
+    console.log('\n🧮  Expected distribution');
+    console.table({
+      'current (fraction)': dist.curPart.toString(),
+      'full per epoch': dist.basePer.toString(),
+      'tail (fraction)': dist.tailPart.toString(),
+      'sum check': dist.allocated.toString(),
+    });
+
+    /* ---------- on-chain epoch pools ---------- */
+    const pools: bigint[] = [];
+    for (let i = 0n; i <= numberOfEpochs; i++) {
+      const ep = currentEpoch + i;
+      const p = await EpochStorage.getEpochPool(1, ep);
+      pools.push(p);
+      console.log(`epoch ${ep} ➜ ${p.toString()}`);
+    }
+
+    /* ---------- assertions ---------- */
+    // 1) current epoch
+    expect(pools[0]).to.equal(dist.curPart);
+
+    // 2) middle full epochs
+    for (let i = 1; i < Number(numberOfEpochs); i++) {
+      expect(pools[i]).to.equal(dist.basePer);
+    }
+
+    // 3) final fractional epoch
+    expect(pools[Number(numberOfEpochs)]).to.equal(dist.tailPart);
+
+    // 4) nothing beyond final
+    expect(
+      await EpochStorage.getEpochPool(1, currentEpoch + numberOfEpochs + 1n),
+    ).to.equal(0);
+
+    // 5) totals match
+    const sum = pools.reduce((acc, v) => acc + v, 0n);
+    expect(sum).to.equal(tokenAmount);
+  });
+
   it('Should create a knowledge collection successfully and distribute tokens to epochs', async () => {
     const kcCreator = getDefaultKCCreator(accounts);
     const publishingNode = getDefaultPublishingNode(accounts);
@@ -220,13 +340,25 @@ describe('@unit KnowledgeCollection', () => {
     expect(metadata[5]).to.equal(currentEpoch + BigInt(numberOfEpochs)); // endEpoch
     expect(metadata[6]).to.equal(tokenAmount); // tokenAmount
     expect(metadata[7]).to.equal(false); // isImmutable
-    
-    expect(await EpochStorage.getEpochPool(1, currentEpoch)).to.be.equal(tokenAmount/BigInt(numberOfEpochs));
-    expect(await EpochStorage.getEpochPool(1, currentEpoch+1n)).to.be.equal(tokenAmount/BigInt(numberOfEpochs));
-    expect(await EpochStorage.getEpochPool(1, currentEpoch+2n)).to.be.equal(tokenAmount/BigInt(numberOfEpochs));
-    expect(await EpochStorage.getEpochPool(1, currentEpoch+3n)).to.be.equal(tokenAmount/BigInt(numberOfEpochs));
-    expect(await EpochStorage.getEpochPool(1, currentEpoch+4n)).to.be.equal(tokenAmount/BigInt(numberOfEpochs));
-    expect(await EpochStorage.getEpochPool(1, currentEpoch+5n)).to.be.equal(0);
+
+    expect(await EpochStorage.getEpochPool(1, currentEpoch)).to.be.equal(
+      tokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await EpochStorage.getEpochPool(1, currentEpoch + 1n)).to.be.equal(
+      tokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await EpochStorage.getEpochPool(1, currentEpoch + 2n)).to.be.equal(
+      tokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await EpochStorage.getEpochPool(1, currentEpoch + 3n)).to.be.equal(
+      tokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await EpochStorage.getEpochPool(1, currentEpoch + 4n)).to.be.equal(
+      tokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await EpochStorage.getEpochPool(1, currentEpoch + 5n)).to.be.equal(
+      0,
+    );
   });
 
   it('Should revert if insufficient signatures provided', async () => {
