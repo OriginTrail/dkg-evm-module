@@ -121,9 +121,11 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert TokenLib.TooLowBalance(address(token), token.balanceOf(msg.sender), addedStake);
         }
 
+        // Validate that all claims have been settled for the node before changing stake
         _validateDelegatorEpochClaims(identityId, msg.sender);
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+        // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         uint96 delegatorStakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
@@ -182,6 +184,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Prepare for stake change on the source and destination nodes
         uint256 fromDelegatorEpochScore18 = _prepareForStakeChange(currentEpoch, fromIdentityId, delegatorKey);
+        // settle all pending score changes for the node's delegator
         _prepareForStakeChange(currentEpoch, toIdentityId, delegatorKey);
 
         uint96 fromDelegatorStakeBase = ss.getDelegatorStakeBase(fromIdentityId, delegatorKey);
@@ -247,11 +250,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert TokenLib.ZeroTokenAmount();
         }
 
+        // Validate that all claims have been settled for the node before changing stake
         _validateDelegatorEpochClaims(identityId, msg.sender);
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
         uint256 currentEpoch = chronos.getCurrentEpoch();
 
+        // settle all pending score changes for the node's delegator
         uint256 delegatorEpochScore18 = _prepareForStakeChange(currentEpoch, identityId, delegatorKey);
 
         uint96 delegatorStakeBase = ss.getDelegatorStakeBase(identityId, delegatorKey);
@@ -331,7 +336,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             .getDelegatorWithdrawalRequest(identityId, delegatorKey);
         if (prevDelegatorWithdrawalAmount == 0) revert StakingLib.WithdrawalWasntInitiated();
 
-        _validateDelegatorEpochClaims(identityId, msg.sender); // cannot revert stake while rewards pending
+        // Validate that all claims have been settled for the node before changing stake
+        _validateDelegatorEpochClaims(identityId, msg.sender);
+
+        // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         uint96 nodeStakeBefore = ss.getNodeStake(identityId);
@@ -395,8 +403,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert StakingLib.AmountExceedsOperatorFeeBalance(oldOperatorFeeBalance, addedStake);
         }
 
+        // Validate that all claims have been settled for the node before changing stake
         _validateDelegatorEpochClaims(identityId, msg.sender);
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+        // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         ss.setOperatorFeeBalance(identityId, oldOperatorFeeBalance - addedStake);
@@ -486,7 +496,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     /**
-     * @dev Claims rewards for a delegator for a specific epoch
+     * @dev Claims rewards for a delegator for a specific epoch. Claiming is not the same as withdrawing.
+     * Claiming adds delegator's rewards to their stake. Withdrawing takes delegator's stake out of the system.
      * Handles operator fee distribution and delegator reward calculation
      * Must claim epochs in sequential order starting from last claimed + 1
      * If more than one epoch rewards are pending, the rewards are accumulated in rolling rewards
@@ -525,6 +536,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             "Already claimed rewards for this epoch"
         );
 
+        // settle all pending score changes for the node's delegator
         uint256 delegatorScore18 = _prepareForStakeChange(epoch, identityId, delegatorKey);
         uint256 nodeScore18 = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
         uint256 totalLeftoverEpochlRewardsForDelegators;
