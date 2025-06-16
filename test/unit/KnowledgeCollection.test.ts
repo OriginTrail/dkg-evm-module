@@ -182,28 +182,34 @@ describe('@unit KnowledgeCollection', () => {
     const kcCreator = getDefaultKCCreator(accounts);
     const publishingNode = getDefaultPublishingNode(accounts);
     const receivingNodes = getDefaultReceivingNodes(accounts);
-
-    const contracts = {
-      Profile,
-      KnowledgeCollection,
-      Token,
-    };
+    const contracts = { Profile, KnowledgeCollection, Token };
 
     const { identityId: publishingNodeIdentityId } = await createProfile(
-      contracts.Profile,
+      Profile,
       publishingNode,
     );
     const receivingNodesIdentityIds = (
-      await createProfiles(contracts.Profile, receivingNodes)
+      await createProfiles(Profile, receivingNodes)
     ).map((p) => p.identityId);
 
-    /* ---------- test params ---------- */
-    const tokenAmount = ethers.parseEther('100'); // bigint
+    /* ---------- parameters ---------- */
+    const tokenAmount = ethers.parseEther('100');
     const numberOfEpochs = 5n;
     const merkleRoot = kcTools.calculateMerkleRoot(
-      // short quad list just for hash – no chunking needed
       ['<urn:x> <urn:y> <urn:z> .'],
       32,
+    );
+
+    /* ---------- epoch telemetry BEFORE tx ---------- */
+    const currentEpoch = await Chronos.getCurrentEpoch();
+    const epochLen = await Chronos.epochLength(); // bigint
+    const timeLeft0 = await Chronos.timeUntilNextEpoch();
+    const elapsed0 = epochLen - timeLeft0;
+    const pct0 = Number((elapsed0 * 100n) / epochLen);
+
+    console.log(
+      `\n⏱️  BEFORE  | Epoch #${currentEpoch}: ` +
+        `${elapsed0.toString()}s elapsed / ${epochLen.toString()}s  (${pct0}%)`,
     );
 
     /* ---------- create KC ---------- */
@@ -223,37 +229,46 @@ describe('@unit KnowledgeCollection', () => {
       false,
       ethers.ZeroAddress,
     );
-
     expect(collectionId).to.equal(1);
 
-    /* ---------- metadata checks ---------- */
+    /* ---------- epoch telemetry AFTER tx ---------- */
+    const timeLeft1 = await Chronos.timeUntilNextEpoch();
+    const elapsed1 = epochLen - timeLeft1;
+    const pct1 = Number((elapsed1 * 100n) / epochLen);
+    const delta = elapsed1 - elapsed0;
+
+    console.log(
+      `⏱️  AFTER   | Epoch #${currentEpoch}: ` +
+        `${elapsed1.toString()}s elapsed / ${epochLen.toString()}s  (${pct1}%)`,
+    );
+    console.log(
+      `🕑  Δ during tx: ${delta.toString()}s (${Number((delta * 100n) / epochLen)}%)`,
+    );
+
+    /* ---------- metadata sanity ---------- */
     const meta =
       await KnowledgeCollectionStorage.getKnowledgeCollectionMetadata(1);
-    const currentEpoch = await Chronos.getCurrentEpoch();
-    expect(meta[4]).to.equal(currentEpoch); // start
-    expect(meta[5]).to.equal(currentEpoch + numberOfEpochs); // end
-    expect(meta[6]).to.equal(tokenAmount); // tokens
+    expect(meta[4]).to.equal(currentEpoch);
+    expect(meta[5]).to.equal(currentEpoch + numberOfEpochs);
+    expect(meta[6]).to.equal(tokenAmount);
 
-    /* ---------- reconstruct expected distribution ---------- */
-    const epochLen = await Chronos.epochLength();
-    const timeLeft = await Chronos.timeUntilNextEpoch();
+    /* ---------- expected distribution ---------- */
+    const basePer = tokenAmount / numberOfEpochs;
+    const curPart = (basePer * timeLeft1) / epochLen;
+    let tailPart = basePer - curPart;
+    const fullCnt = numberOfEpochs - 1n;
+    const alloc = curPart + basePer * fullCnt + tailPart;
+    if (alloc < tokenAmount) tailPart += tokenAmount - alloc;
 
-    const dist = calcDistribution(
-      tokenAmount,
-      numberOfEpochs,
-      epochLen,
-      timeLeft,
-    );
-    /* report */
-    console.log('\n🧮  Expected distribution');
+    console.log('\n🧮  Expected token split');
     console.table({
-      'current (fraction)': dist.curPart.toString(),
-      'full per epoch': dist.basePer.toString(),
-      'tail (fraction)': dist.tailPart.toString(),
-      'sum check': dist.allocated.toString(),
+      'current (fraction)': curPart.toString(),
+      'full per epoch': basePer.toString(),
+      'tail (fraction)': tailPart.toString(),
+      'sum check': (curPart + basePer * fullCnt + tailPart).toString(),
     });
 
-    /* ---------- on-chain epoch pools ---------- */
+    /* ---------- on-chain pools & assertions ---------- */
     const pools: bigint[] = [];
     for (let i = 0n; i <= numberOfEpochs; i++) {
       const ep = currentEpoch + i;
@@ -262,26 +277,25 @@ describe('@unit KnowledgeCollection', () => {
       console.log(`epoch ${ep} ➜ ${p.toString()}`);
     }
 
-    /* ---------- assertions ---------- */
-    // 1) current epoch
-    expect(pools[0]).to.equal(dist.curPart);
+    // current epoch
+    expect(pools[0]).to.equal(curPart);
 
-    // 2) middle full epochs
+    // full middle epochs
     for (let i = 1; i < Number(numberOfEpochs); i++) {
-      expect(pools[i]).to.equal(dist.basePer);
+      expect(pools[i]).to.equal(basePer);
     }
 
-    // 3) final fractional epoch
-    expect(pools[Number(numberOfEpochs)]).to.equal(dist.tailPart);
+    // final fractional
+    expect(pools[Number(numberOfEpochs)]).to.equal(tailPart);
 
-    // 4) nothing beyond final
+    // beyond final
     expect(
       await EpochStorage.getEpochPool(1, currentEpoch + numberOfEpochs + 1n),
     ).to.equal(0);
 
-    // 5) totals match
-    const sum = pools.reduce((acc, v) => acc + v, 0n);
-    expect(sum).to.equal(tokenAmount);
+    // sum check
+    const total = pools.reduce((a, v) => a + v, 0n);
+    expect(total).to.equal(tokenAmount);
   });
 
   it('Should create a knowledge collection successfully and distribute tokens to epochs', async () => {
@@ -410,5 +424,104 @@ describe('@unit KnowledgeCollection', () => {
       KnowledgeCollection,
       'MinSignaturesRequirementNotMet',
     );
+  });
+
+  it('Should create KC at ~half-epoch mark and distribute tokens correctly', async () => {
+    /* ---------- actors ---------- */
+    const kcCreator = getDefaultKCCreator(accounts);
+    const publishingNode = getDefaultPublishingNode(accounts);
+    const receivingNodes = getDefaultReceivingNodes(accounts);
+    const contracts = { Profile, KnowledgeCollection, Token };
+
+    const { identityId: pubNodeId } = await createProfile(
+      Profile,
+      publishingNode,
+    );
+    const recvIds = (await createProfiles(Profile, receivingNodes)).map(
+      (p) => p.identityId,
+    );
+
+    /* ---------- params ---------- */
+    const tokenAmount = ethers.parseEther('50');
+    const numberOfEpochs = 3n;
+    const merkleRoot = kcTools.calculateMerkleRoot(
+      ['<urn:x> <urn:y> <urn:z> .'],
+      32,
+    );
+
+    /* ---------- warp EVM to ~50 % of next epoch ---------- */
+    const epochLen = await Chronos.epochLength(); // bigint
+    const timeLeftInit = await Chronos.timeUntilNextEpoch(); // bigint
+
+    // Δ = remaining-to-end + half epoch
+    const delta = timeLeftInit + epochLen / 2n;
+    await hre.ethers.provider.send('evm_increaseTime', [Number(delta)]);
+    await hre.ethers.provider.send('evm_mine', []); // mine new block
+
+    /* ---------- telemetry just before tx ---------- */
+    const currentEpoch = await Chronos.getCurrentEpoch();
+    const timeLeft0 = await Chronos.timeUntilNextEpoch();
+    const elapsed0 = epochLen - timeLeft0;
+    console.log(
+      `\n⏱️  HALF-EPOCH TEST | Epoch #${currentEpoch}: ` +
+        `${elapsed0.toString()}s elapsed of ${epochLen.toString()}s ` +
+        `(~${Number((elapsed0 * 100n) / epochLen)}%)`,
+    );
+
+    /* ---------- create KC ---------- */
+    const { collectionId } = await createKnowledgeCollection(
+      kcCreator,
+      publishingNode,
+      pubNodeId,
+      receivingNodes,
+      recvIds,
+      contracts,
+      merkleRoot,
+      'half-epoch-op',
+      5, // knowledgeAssetsAmount
+      500, // byteSize
+      Number(numberOfEpochs),
+      tokenAmount,
+      false,
+      ethers.ZeroAddress,
+    );
+    expect(collectionId).to.equal(1);
+
+    /* ---------- compute expected parts (use on-chain timeLeft1) ---------- */
+    const timeLeft1 = await Chronos.timeUntilNextEpoch();
+    const basePer = tokenAmount / numberOfEpochs;
+    const curPart = (basePer * timeLeft1) / epochLen;
+    let tailPart = basePer - curPart;
+    const fullCnt = numberOfEpochs - 1n;
+    let alloc = curPart + basePer * fullCnt + tailPart;
+    if (alloc < tokenAmount) tailPart += tokenAmount - alloc; // crumbs
+
+    console.log('\n🧮  Expected split (half-epoch)');
+    console.table({
+      'current (fraction)': curPart.toString(),
+      'full per epoch': basePer.toString(),
+      'tail (fraction)': tailPart.toString(),
+    });
+
+    /* ---------- fetch pools ---------- */
+    const pools: bigint[] = [];
+    for (let i = 0n; i <= numberOfEpochs; i++) {
+      pools.push(await EpochStorage.getEpochPool(1, currentEpoch + i));
+    }
+    pools.forEach((v, i) =>
+      console.log(`epoch ${currentEpoch + BigInt(i)} ➜ ${v.toString()}`),
+    );
+
+    /* ---------- assertions ---------- */
+    expect(pools[0]).to.equal(curPart); // fractional start
+    for (let i = 1; i < Number(numberOfEpochs); i++)
+      expect(pools[i]).to.equal(basePer); // full middles
+    expect(pools[Number(numberOfEpochs)]).to.equal(tailPart); // fractional end
+    expect(
+      await EpochStorage.getEpochPool(1, currentEpoch + numberOfEpochs + 1n),
+    ).to.equal(0); // nothing beyond
+
+    const sum = pools.reduce((a, v) => a + v, 0n);
+    expect(sum).to.equal(tokenAmount); // total check
   });
 });
