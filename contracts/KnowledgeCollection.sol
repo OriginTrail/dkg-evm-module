@@ -72,6 +72,39 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         return _VERSION;
     }
 
+    function _distributeTokens(EpochStorage es, uint96 tokenAmount, uint256 epochs, uint40 currentEpoch) internal {
+        require(epochs > 0, "epochs must be > 0");
+
+        uint256 epochLen = chronos.epochLength();
+        uint256 timeLeft = chronos.timeUntilNextEpoch(); // seconds remaining in current epoch
+        uint256 basePer = tokenAmount / epochs; // nominal amount for a full epoch
+        uint256 curPart = (basePer * timeLeft) / epochLen;
+        uint256 tailPart = basePer - curPart; // goes to the final fractional epoch
+        uint256 fullEpCnt = epochs - 1; // number of full middle epochs
+        uint256 allocFull = basePer * fullEpCnt;
+
+        // Add any rounding remainder to the tail so total == tokenAmount
+        uint256 allocated = curPart + allocFull + tailPart;
+        if (allocated < tokenAmount) {
+            tailPart += tokenAmount - allocated;
+        }
+
+        // 1) Current (fractional) epoch
+        if (curPart > 0) {
+            es.addTokensToEpochRange(1, currentEpoch, currentEpoch, uint96(curPart));
+        }
+
+        // 2) Full epochs between current and final
+        if (fullEpCnt > 0 && allocFull > 0) {
+            es.addTokensToEpochRange(1, currentEpoch + 1, currentEpoch + uint40(fullEpCnt), uint96(allocFull));
+        }
+
+        // 3) Final (fractional) epoch
+        if (tailPart > 0) {
+            es.addTokensToEpochRange(1, currentEpoch + uint40(epochs), currentEpoch + uint40(epochs), uint96(tailPart));
+        }
+    }
+
     function createKnowledgeCollection(
         string calldata publishOperationId,
         bytes32 merkleRoot,
@@ -107,15 +140,14 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
             merkleRoot,
             knowledgeAssetsAmount,
             byteSize,
-            currentEpoch + 1,
-            currentEpoch + epochs + 1,
+            currentEpoch,
+            currentEpoch + epochs,
             tokenAmount,
             isImmutable
         );
 
-        _validateTokenAmount(byteSize, epochs, tokenAmount, true);
-
-        es.addTokensToEpochRange(1, currentEpoch, currentEpoch + epochs + 1, tokenAmount);
+        _validateTokenAmount(byteSize, epochs, tokenAmount, /* includeCurrentEpoch = */ false);
+        _distributeTokens(es, tokenAmount, epochs, currentEpoch);
         es.addEpochProducedKnowledgeValue(publisherNodeIdentityId, currentEpoch, tokenAmount);
 
         _addTokens(tokenAmount, paymaster);
