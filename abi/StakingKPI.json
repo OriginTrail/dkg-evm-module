@@ -124,16 +124,6 @@
         "internalType": "uint96",
         "name": "",
         "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
       }
     ],
     "stateMutability": "view",
@@ -177,16 +167,6 @@
         "internalType": "uint96",
         "name": "",
         "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
       }
     ],
     "stateMutability": "view",
@@ -206,16 +186,6 @@
         "internalType": "uint96",
         "name": "",
         "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
       }
     ],
     "stateMutability": "view",
@@ -231,16 +201,6 @@
     ],
     "name": "getOperatorStats",
     "outputs": [
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
-      },
       {
         "internalType": "uint96",
         "name": "",
@@ -333,40 +293,6 @@
     "name": "setStatus",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "delegatorKey",
-        "type": "bytes32"
-      }
-    ],
-    "name": "simulateStakeInfoUpdate",
-    "outputs": [
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint96",
-        "name": "",
-        "type": "uint96"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

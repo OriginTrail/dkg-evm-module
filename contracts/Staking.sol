@@ -63,7 +63,12 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         _;
     }
 
-    function initialize() public onlyHub {
+    /**
+     * @dev Initializes the contract by connecting to all required Hub dependencies
+     * Called once during deployment to set up contract references
+     * Only the Hub can call this function
+     */
+    function initialize() external onlyHub {
         askContract = Ask(hub.getContractAddress("Ask"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         shardingTableContract = ShardingTable(hub.getContractAddress("ShardingTable"));
@@ -78,14 +83,30 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         epochStorage = EpochStorage(hub.getContractAddress("EpochStorageV8"));
     }
 
+    /**
+     * @dev Returns the name of this contract
+     * Used for contract identification and versioning
+     */
     function name() external pure virtual override returns (string memory) {
         return _NAME;
     }
 
+    /**
+     * @dev Returns the version of this contract
+     * Used for contract identification and versioning
+     */
     function version() external pure virtual override returns (string memory) {
         return _VERSION;
     }
 
+    /**
+     * @dev Stakes tokens to a specific node, increasing both delegator and node stake
+     * Transfers tokens from caller to StakingStorage, updates sharding table and active set
+     * Validates token allowance, balance, and maximum stake limits
+     * Must settle any pending previous epoch rewards before changing stake
+     * @param identityId The node to stake to (must exist)
+     * @param addedStake Amount of tokens to stake (must be > 0)
+     */
     function stake(uint72 identityId, uint96 addedStake) external profileExists(identityId) {
         IERC20 token = tokenContract;
         StakingStorage ss = stakingStorage;
@@ -100,9 +121,11 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert TokenLib.TooLowBalance(address(token), token.balanceOf(msg.sender), addedStake);
         }
 
+        // Validate that all claims have been settled for the node before changing stake
         _validateDelegatorEpochClaims(identityId, msg.sender);
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+        // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         uint96 delegatorStakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
@@ -126,6 +149,16 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         token.transferFrom(msg.sender, address(ss), addedStake);
     }
 
+    /**
+     * @dev Moves stake from one node to another without unstaking/restaking process
+     * Validates both source and destination nodes exist and all claims are settled
+     * Updates stake amounts, sharding table, and active set for both nodes
+     * Handles delegator removal if all stake is moved from source node and no score was earned in the current epoch
+     * Must settle any pending previous epoch rewards before redelegating
+     * @param fromIdentityId Source node to move stake from
+     * @param toIdentityId Destination node to move stake to (cannot be same as source)
+     * @param stakeAmount Amount of stake to move (must be > 0 and <= delegator's stake)
+     */
     function redelegate(
         uint72 fromIdentityId,
         uint72 toIdentityId,
@@ -151,6 +184,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Prepare for stake change on the source and destination nodes
         uint256 fromDelegatorEpochScore18 = _prepareForStakeChange(currentEpoch, fromIdentityId, delegatorKey);
+        // settle all pending score changes for the node's delegator
         _prepareForStakeChange(currentEpoch, toIdentityId, delegatorKey);
 
         uint96 fromDelegatorStakeBase = ss.getDelegatorStakeBase(fromIdentityId, delegatorKey);
@@ -181,8 +215,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         _removeNodeFromShardingTable(fromIdentityId, totalFromNodeStakeAfter);
 
-        ask.recalculateActiveSet();
-
         // update the delegator stake base and the total node stake on the destination node
         ss.increaseDelegatorStakeBase(toIdentityId, delegatorKey, stakeAmount);
         ss.setNodeStake(toIdentityId, totalToNodeStakeAfter);
@@ -201,6 +233,16 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         emit StakeRedelegated(fromIdentityId, toIdentityId, msg.sender, stakeAmount);
     }
 
+    /**
+     * @dev Initiates withdrawal process for staked tokens with time delay
+     * For nodes above maximum stake: tokens are transferred immediately
+     * For other nodes: creates withdrawal request with delay period
+     * Updates sharding table/active set
+     * Removes delegator from node if all stake is withdrawn and no score was earned in the current epoch
+     * Must settle any pending previous epoch rewards before withdrawing
+     * @param identityId Node to withdraw stake from (must exist)
+     * @param removedStake Amount to withdraw (must be > 0 and <= delegator's stake)
+     */
     function requestWithdrawal(uint72 identityId, uint96 removedStake) external profileExists(identityId) {
         StakingStorage ss = stakingStorage;
 
@@ -208,11 +250,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert TokenLib.ZeroTokenAmount();
         }
 
+        // Validate that all claims have been settled for the node before changing stake
         _validateDelegatorEpochClaims(identityId, msg.sender);
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
         uint256 currentEpoch = chronos.getCurrentEpoch();
 
+        // settle all pending score changes for the node's delegator
         uint256 delegatorEpochScore18 = _prepareForStakeChange(currentEpoch, identityId, delegatorKey);
 
         uint96 delegatorStakeBase = ss.getDelegatorStakeBase(identityId, delegatorKey);
@@ -249,6 +293,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
+    /**
+     * @dev Completes withdrawal process after the delay period has passed
+     * Transfers the withdrawn tokens from StakingStorage to the delegator
+     * Validates that withdrawal was initiated and delay period is complete
+     * Removes the withdrawal request after successful transfer
+     * @param identityId Node that withdrawal was requested from (must exist)
+     */
     function finalizeWithdrawal(uint72 identityId) external profileExists(identityId) {
         StakingStorage ss = stakingStorage;
 
@@ -269,6 +320,14 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ss.transferStake(msg.sender, withdrawalAmount);
     }
 
+    /**
+     * @dev Cancels pending withdrawal and restakes the tokens back to the node
+     * If restaking would exceed maximum stake, partial amount is restaked and rest remains pending
+     * Settles rewards and updates sharding table/active set
+     * Validates that withdrawal was initiated and no rewards are pending claim
+     * Must settle any pending previous epoch rewards before cancelling withdrawal
+     * @param identityId Node to cancel withdrawal from (must exist)
+     */
     function cancelWithdrawal(uint72 identityId) external profileExists(identityId) {
         StakingStorage ss = stakingStorage;
 
@@ -277,7 +336,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             .getDelegatorWithdrawalRequest(identityId, delegatorKey);
         if (prevDelegatorWithdrawalAmount == 0) revert StakingLib.WithdrawalWasntInitiated();
 
-        _validateDelegatorEpochClaims(identityId, msg.sender); // cannot revert stake while rewards pending
+        // Validate that all claims have been settled for the node before changing stake
+        _validateDelegatorEpochClaims(identityId, msg.sender);
+
+        // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         uint96 nodeStakeBefore = ss.getNodeStake(identityId);
@@ -320,6 +382,15 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         askContract.recalculateActiveSet();
     }
 
+    /**
+     * @dev Converts accumulated operator fees back into stake for the node
+     * Only the node admin can perform this operation
+     * Settles rewards, validates fee balance, and updates stake amounts
+     * Updates sharding table and active set after restaking
+     * Must settle any pending previous epoch rewards before restaking
+     * @param identityId Node to restake fees for (caller must be admin)
+     * @param addedStake Amount of fees to convert to stake (must be > 0 and <= fee balance)
+     */
     function restakeOperatorFee(uint72 identityId, uint96 addedStake) external onlyAdmin(identityId) {
         StakingStorage ss = stakingStorage;
 
@@ -332,8 +403,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert StakingLib.AmountExceedsOperatorFeeBalance(oldOperatorFeeBalance, addedStake);
         }
 
+        // Validate that all claims have been settled for the node before changing stake
         _validateDelegatorEpochClaims(identityId, msg.sender);
         bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+        // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         ss.setOperatorFeeBalance(identityId, oldOperatorFeeBalance - addedStake);
@@ -357,6 +430,14 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         askContract.recalculateActiveSet();
     }
 
+    /**
+     * @dev Initiates withdrawal process for accumulated operator fees
+     * Only the node admin can perform this operation
+     * Creates withdrawal request with delay period before funds can be claimed
+     * Validates that sufficient fees are available for withdrawal
+     * @param identityId Node to withdraw fees from (caller must be admin)
+     * @param withdrawalAmount Amount of fees to withdraw (must be > 0 and <= fee balance)
+     */
     function requestOperatorFeeWithdrawal(uint72 identityId, uint96 withdrawalAmount) external onlyAdmin(identityId) {
         StakingStorage ss = stakingStorage;
 
@@ -364,29 +445,63 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert TokenLib.ZeroTokenAmount();
         }
 
-        uint96 oldOperatorFeeBalance = ss.getOperatorFeeBalance(identityId);
-        if (withdrawalAmount > oldOperatorFeeBalance) {
-            revert StakingLib.AmountExceedsOperatorFeeBalance(oldOperatorFeeBalance, withdrawalAmount);
+        // Check if there's an existing withdrawal request
+        uint96 existingRequestAmount = ss.getOperatorFeeWithdrawalRequestAmount(identityId);
+        uint96 currentOperatorFeeBalance = ss.getOperatorFeeBalance(identityId);
+
+        // If there's an existing request, add it back to the balance first
+        if (existingRequestAmount > 0) {
+            currentOperatorFeeBalance += existingRequestAmount;
+        }
+
+        // Calculate total request amount (existing + new)
+        uint96 totalRequestAmount = existingRequestAmount + withdrawalAmount;
+
+        if (totalRequestAmount > currentOperatorFeeBalance) {
+            revert StakingLib.AmountExceedsOperatorFeeBalance(currentOperatorFeeBalance, totalRequestAmount);
         }
 
         uint256 withdrawalReleaseTimestamp = block.timestamp + parametersStorage.stakeWithdrawalDelay();
-        ss.setOperatorFeeBalance(identityId, oldOperatorFeeBalance - withdrawalAmount); // bookkeeping
-        ss.createOperatorFeeWithdrawalRequest(identityId, withdrawalAmount, /*indexed*/ 0, withdrawalReleaseTimestamp);
+        // Deduct total request amount from balance
+        ss.setOperatorFeeBalance(identityId, currentOperatorFeeBalance - totalRequestAmount);
+        // Create request with total amount (existing + new)
+        ss.createOperatorFeeWithdrawalRequest(
+            identityId,
+            totalRequestAmount,
+            /*indexed*/ 0,
+            withdrawalReleaseTimestamp
+        );
     }
 
+    /**
+     * @dev Completes operator fee withdrawal after delay period has passed
+     * Only the node admin can perform this operation
+     * Transfers the withdrawn fees to the admin and updates bookkeeping
+     * Validates that withdrawal was initiated and delay period is complete
+     * @param identityId Node to finalize fee withdrawal for (caller must be admin)
+     */
     function finalizeOperatorFeeWithdrawal(uint72 identityId) external onlyAdmin(identityId) {
         StakingStorage ss = stakingStorage;
 
-        (uint96 operatorFeeWithdrawalAmount /*unused*/, , uint256 withdrawalReleaseTimestamp) = ss
-            .getOperatorFeeWithdrawalRequest(identityId);
+        (uint96 operatorFeeWithdrawalAmount, , uint256 withdrawalReleaseTimestamp) = ss.getOperatorFeeWithdrawalRequest(
+            identityId
+        );
         if (operatorFeeWithdrawalAmount == 0) revert StakingLib.WithdrawalWasntInitiated();
         if (block.timestamp < withdrawalReleaseTimestamp)
             revert StakingLib.WithdrawalPeriodPending(block.timestamp, withdrawalReleaseTimestamp);
 
+        ss.deleteOperatorFeeWithdrawalRequest(identityId);
         ss.addOperatorFeeCumulativePaidOutRewards(identityId, operatorFeeWithdrawalAmount);
         ss.transferStake(msg.sender, operatorFeeWithdrawalAmount);
     }
 
+    /**
+     * @dev Cancels pending operator fee withdrawal and returns fees to balance
+     * Only the node admin can perform this operation
+     * Validates that withdrawal was initiated and restores the fee balance
+     * No delay period restrictions apply for cancellation
+     * @param identityId Node to cancel fee withdrawal for (caller must be admin)
+     */
     function cancelOperatorFeeWithdrawal(uint72 identityId) external onlyAdmin(identityId) {
         StakingStorage ss = stakingStorage;
 
@@ -399,6 +514,18 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         ss.increaseOperatorFeeBalance(identityId, operatorFeeWithdrawalAmount);
     }
 
+    /**
+     * @dev Claims rewards for a delegator for a specific epoch. Claiming is not the same as withdrawing.
+     * Claiming adds delegator's rewards to their stake. Withdrawing takes delegator's stake out of the system.
+     * Handles operator fee distribution and delegator reward calculation
+     * Must claim epochs in sequential order starting from last claimed + 1
+     * If more than one epoch rewards are pending, the rewards are accumulated in rolling rewards
+     * Automatically restakes rewards if no other epoch rewards are pending
+     * Updates delegator status and handles removal when appropriate
+     * @param identityId Node to which delegator has delegated (must exist)
+     * @param epoch Epoch to claim rewards for (must be finalized and in sequence)
+     * @param delegator Address of the delegator to claim for (must be a node delegator)
+     */
     function claimDelegatorRewards(
         uint72 identityId,
         uint256 epoch,
@@ -407,6 +534,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 currentEpoch = chronos.getCurrentEpoch();
         require(epoch < currentEpoch, "Epoch not finalised");
 
+        // Cannot claim rewards for a delegator that is not a node delegator
         require(delegatorsInfo.isNodeDelegator(identityId, delegator), "Delegator not found");
 
         uint256 lastClaimed = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
@@ -424,47 +552,46 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
         require(
-            !delegatorsInfo.getEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey),
+            !delegatorsInfo.hasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey),
             "Already claimed rewards for this epoch"
         );
 
+        // settle all pending score changes for the node's delegator
         uint256 delegatorScore18 = _prepareForStakeChange(epoch, identityId, delegatorKey);
         uint256 nodeScore18 = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
-        uint256 totalLeftoverEpochlRewardsForDelegators;
-        uint256 nodeDelegatorsRewardsForEpoch;
+        uint256 reward;
 
-        if (!delegatorsInfo.getIsOperatorFeeClaimedForEpoch(identityId, epoch)) {
-            uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
-            uint256 allNodesScore18 = randomSamplingStorage.getAllNodesEpochScore(epoch);
-            if (allNodesScore18 > 0) {
-                uint256 epocRewardsPool = epochStorage.getEpochPool(1, epoch);
-                nodeDelegatorsRewardsForEpoch = (epocRewardsPool * nodeScore18) / allNodesScore18;
+        // If delegatorScore18 = 0 or nodeScore18 = 0, rewards are 0 too
+        if (delegatorScore18 != 0 && nodeScore18 != 0) {
+            // netNodeRewards (rewards for node's delegators) = grossNodeRewards - operator fee
+            uint256 netNodeRewards;
+            if (!delegatorsInfo.isOperatorFeeClaimedForEpoch(identityId, epoch)) {
+                // Operator fee has not been claimed for this epoch, calculate it
+                uint256 allNodesScore18 = randomSamplingStorage.getAllNodesEpochScore(epoch);
+                if (allNodesScore18 > 0) {
+                    uint256 grossNodeRewards = (epochStorage.getEpochPool(1, epoch) * nodeScore18) / allNodesScore18;
+                    uint96 operatorFeeAmount = uint96(
+                        (grossNodeRewards * profileStorage.getLatestOperatorFeePercentage(identityId)) /
+                            parametersStorage.maxOperatorFee()
+                    );
+                    netNodeRewards = grossNodeRewards - operatorFeeAmount;
+                    stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
+                    // Mark the operator fee as claimed for this epoch
+                    delegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, true);
+                    // Set node's delegators net rewards for this epoch so we don't have to calculate it again
+                    delegatorsInfo.setNetNodeEpochRewards(identityId, epoch, netNodeRewards);
+                }
+            } else {
+                // Operator fee has been claimed for this epoch already, use the previously calculated node's delegators net rewards for this epoch
+                netNodeRewards = delegatorsInfo.getNetNodeEpochRewards(identityId, epoch);
             }
 
-            uint96 operatorFeeAmount = uint96((nodeDelegatorsRewardsForEpoch * feePercentageForEpoch) / 10_000);
-            totalLeftoverEpochlRewardsForDelegators = nodeDelegatorsRewardsForEpoch - operatorFeeAmount;
-            stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
-            delegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, true);
-            delegatorsInfo.setLastClaimedDelegatorsRewardsEpoch(identityId, epoch);
-            // Set the calculated total rewards for delegators for this epoch
-            delegatorsInfo.setEpochLeftoverDelegatorsRewards(
-                identityId,
-                epoch,
-                totalLeftoverEpochlRewardsForDelegators
-            );
-        } else {
-            totalLeftoverEpochlRewardsForDelegators = delegatorsInfo.getEpochLeftoverDelegatorsRewards(
-                identityId,
-                epoch
-            );
+            reward = (delegatorScore18 * netNodeRewards) / nodeScore18;
         }
 
-        uint256 reward = (delegatorScore18 == 0 || nodeScore18 == 0 || totalLeftoverEpochlRewardsForDelegators == 0)
-            ? 0
-            : (delegatorScore18 * totalLeftoverEpochlRewardsForDelegators) / nodeScore18;
-
         // update state even when reward is zero
-        delegatorsInfo.setEpochNodeDelegatorRewardsClaimed(epoch, identityId, delegatorKey, true);
+        // Mark the delegator's rewards as claimed for this epoch
+        delegatorsInfo.setHasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey, true);
         uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
         delegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch);
 
@@ -498,6 +625,15 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         stakingStorage.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, uint96(reward));
     }
 
+    /**
+     * @dev Claims rewards for multiple delegators across multiple epochs in batch
+     * Calls claimDelegatorRewards internally for each epoch-delegator combination
+     * Provides gas-efficient way to process multiple reward claims
+     * All standard reward claiming rules and validations apply
+     * @param identityId Node to claim rewards from (must exist)
+     * @param epochs Array of epochs to claim for (each must be valid for claiming)
+     * @param delegators Array of delegator addresses (each must be a node delegator)
+     */
     function batchClaimDelegatorRewards(
         uint72 identityId,
         uint256[] memory epochs,
@@ -510,9 +646,16 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
+    /**
+     * @dev Internal function to validate that delegator has claimed all required epoch rewards
+     * Ensures delegators claim rewards before changing stake to prevent reward loss
+     * Handles special cases for new delegators and those with zero stake
+     * Auto-advances claim state when no rewards exist for previous epoch
+     * @param identityId Node to validate claims for
+     * @param delegator Address of delegator to validate
+     */
     function _validateDelegatorEpochClaims(uint72 identityId, address delegator) internal {
         bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
-        uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
         uint256 currentEpoch = chronos.getCurrentEpoch();
         uint256 previousEpoch = currentEpoch - 1;
 
@@ -533,6 +676,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             delegatorsInfo.setLastClaimedEpoch(identityId, delegator, previousEpoch);
             lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
         }
+
+        uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
 
         // If delegator is up to date with claims, no validation needed
         if (lastClaimedEpoch == previousEpoch) {
@@ -567,6 +712,16 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         revert("Must claim the previous epoch rewards before changing stake");
     }
 
+    /**
+     * @dev Internal function to settle delegator rewards before stake changes
+     * Calculates and applies newly earned score for the delegator in the epoch
+     * Updates delegator's last settled score-per-stake index to current value
+     * Handles edge cases for delegators with zero stake
+     * @param epoch Epoch to settle score for
+     * @param identityId Node to settle score for
+     * @param delegatorKey Keccak256 hash of delegator address
+     * @return delegatorEpochScore Total score for the delegator in the epoch after settlement
+     */
     function _prepareForStakeChange(
         uint256 epoch,
         uint72 identityId,
@@ -621,6 +776,14 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         return currentDelegatorScore18 + scoreEarned18;
     }
 
+    /**
+     * @dev Internal function to manage delegator registration and status tracking
+     * Adds delegator to node's delegator list if not already registered
+     * Marks delegator as having ever delegated to the node (for claim validation)
+     * Resets lastStakeHeldEpoch when delegator becomes active again
+     * @param identityId Node to manage delegator status for
+     * @param delegator Address of the delegator
+     */
     function _manageDelegatorStatus(uint72 identityId, address delegator) internal {
         if (!delegatorsInfo.isNodeDelegator(identityId, delegator)) {
             delegatorsInfo.addDelegator(identityId, delegator);
@@ -635,6 +798,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
+    /**
+     * @dev Internal function to add node to sharding table when stake requirements are met
+     * Only adds node if it doesn't exist and has minimum required stake
+     * Validates that sharding table isn't full before adding
+     * @param identityId Node to potentially add to sharding table
+     * @param newStake Current stake amount for the node
+     */
     function _addNodeToShardingTable(uint72 identityId, uint96 newStake) internal {
         ShardingTableStorage sts = shardingTableStorage;
         ParametersStorage params = parametersStorage;
@@ -647,12 +817,24 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
+    /**
+     * @dev Internal function to remove node from sharding table when stake falls below minimum
+     * Only removes node if it exists and stake is below minimum threshold
+     * @param identityId Node to potentially remove from sharding table
+     * @param newStake Current stake amount for the node
+     */
     function _removeNodeFromShardingTable(uint72 identityId, uint96 newStake) internal {
         if (shardingTableStorage.nodeExists(identityId) && newStake < parametersStorage.minimumStake()) {
             shardingTableContract.removeNode(identityId);
         }
     }
 
+    /**
+     * @dev Internal function to validate that caller is an admin of the specified node
+     * Checks if caller's address has admin key purpose for the identity
+     * Used by functions that require node admin permissions
+     * @param identityId Node identity to check admin rights for
+     */
     function _checkAdmin(uint72 identityId) internal view virtual {
         if (
             !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), IdentityLib.ADMIN_KEY)
@@ -661,12 +843,27 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
     }
 
+    /**
+     * @dev Internal function to validate that a node profile exists
+     * Used by modifiers and functions to ensure operations target valid nodes
+     * @param identityId Node identity to check existence for
+     */
     function _checkProfileExists(uint72 identityId) internal view virtual {
         if (!profileStorage.profileExists(identityId)) {
             revert ProfileLib.ProfileDoesntExist(identityId);
         }
     }
 
+    /**
+     * @dev Internal function to handle delegator cleanup when stake reaches zero
+     * If delegator earned score in current epoch: keeps them for future reward claims
+     * If no score earned: removes delegator from node immediately
+     * Prevents loss of rewards while optimizing storage usage
+     * @param identityId Node to handle delegator removal for
+     * @param delegator Address of delegator with zero stake
+     * @param delegatorEpochScore18 Score earned by delegator in current epoch
+     * @param currentEpoch Current epoch number
+     */
     function _handleDelegatorRemovalOnZeroStake(
         uint72 identityId,
         address delegator,
@@ -675,7 +872,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     ) internal {
         // Don't remove delegator immediately - they might still be eligible for rewards in current epoch
         if (delegatorEpochScore18 > 0) {
-            // Delegator earned score in current epoch (can claim), keep them for claiming current epoch rewards after current epoch is finalised
+            // Delegator earned score in current epoch (can claim), keep them for future reward claims
             delegatorsInfo.setLastStakeHeldEpoch(identityId, delegator, currentEpoch);
         } else {
             // No score earned in current epoch, safe to remove immediately
