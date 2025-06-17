@@ -422,7 +422,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
      */
     function calculateNodeScore(uint72 identityId) public view returns (uint256) {
         // 1. Node stake factor calculation
-        // Formula: nodeStakeFactor = 2 * (nodeStake / 2,000,000)^2
+        // Formula: nodeStakeFactor = 2 * (nodeStake / maximumStake)^2
         uint256 maximumStake = uint256(parametersStorage.maximumStake());
         uint256 nodeStake = uint256(stakingStorage.getNodeStake(identityId));
         nodeStake = nodeStake > maximumStake ? maximumStake : nodeStake;
@@ -430,7 +430,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 nodeStakeFactor18 = (2 * stakeRatio18 * stakeRatio18) / SCALE18;
 
         // 2. Node ask factor calculation
-        // Formula: nodeStake * ((upperAskBound - nodeAsk) / (upperAskBound - lowerAskBound))^2 / 2,000,000
+        // Formula: nodeStake * ((upperAskBound - nodeAsk) / (upperAskBound - lowerAskBound))^2 / maximumStake
         uint256 nodeAsk18 = uint256(profileStorage.getAsk(identityId)) * SCALE18;
         (uint256 askLowerBound18, uint256 askUpperBound18) = askStorage.getAskBounds();
         uint256 nodeAskFactor18;
