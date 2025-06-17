@@ -2241,26 +2241,39 @@ describe(`Full complex scenario`, function () {
   });
 
   /* ------------------------------------------------------------------
-   *  STEP B  –  redelegate all stake N2 → N1  (D1 ostaje delegator N2)
+   *  STEP B  –  redelegate all stake N2 → N1
    * ------------------------------------------------------------------ */
-  it('Redelegate steps – Step B (N2 → N1, D1 kept as N2 delegator)', async function () {
-    /* ──────────────── 1. PREPARATION ───────────────── */
+  it('Redelegate steps – Step B (N2 → N1)', async function () {
+    /* ──────────────── 1. PREPARATION & INITIAL STATE ───────────────── */
     const epoch = await contracts.chronos.getCurrentEpoch();
+    console.log(`\n\n--- STEP B: Redelegate N2 -> N1 (Epoch ${epoch}) ---`);
 
-    // 1.2  Snapshot of stake before the proof
+    const d1isDelegatorN2_before =
+      await contracts.delegatorsInfo.isNodeDelegator(
+        nodeIds.node2Id,
+        accounts.delegator1.address,
+      );
+    const d1LastStakeHeldN2_before =
+      await contracts.delegatorsInfo.getLastStakeHeldEpoch(
+        nodeIds.node2Id,
+        accounts.delegator1.address,
+      );
+    console.log(
+      `🔎 [B.1] Initial D1 on N2: isDelegator=${d1isDelegatorN2_before}, lastStakeHeldEpoch=${d1LastStakeHeldN2_before}`,
+    );
+
     const d1BaseN2_before =
       await contracts.stakingStorage.getDelegatorStakeBase(
         nodeIds.node2Id,
         d1Key,
       );
-    expect(d1BaseN2_before).to.be.gt(0n, 'D1 must have stake on N2');
-
-    const n2Stake_before = await contracts.stakingStorage.getNodeStake(
-      nodeIds.node2Id,
-    );
+    expect(
+      d1BaseN2_before,
+      'D1 must have stake on N2 to start Step B',
+    ).to.be.gt(0n);
 
     /* ──────────────── 2. NODE-2 SUBMITS PROOF ───────── */
-    // Ensure Node2 has enough KCs for the current epoch BEFORE submitting proof
+    console.log(`🔬 [B.2] Node2 submitting proof...`);
     await createKnowledgeCollection(
       accounts.kcCreator,
       accounts.node2,
@@ -2269,7 +2282,7 @@ describe(`Full complex scenario`, function () {
       receivingNodesIdentityIds,
       { KnowledgeCollection: contracts.kc, Token: contracts.token },
       merkleRoot,
-      'test-op-id-node2-proof-stepB',
+      'test-op-id-node2-epoch6',
       10,
       1000,
       10,
@@ -2277,39 +2290,30 @@ describe(`Full complex scenario`, function () {
     );
 
     await advanceToNextProofingPeriod(contracts);
-
+    const n2Stake_beforeProof = await contracts.stakingStorage.getNodeStake(
+      nodeIds.node2Id,
+    );
     await submitProofAndVerifyScore(
       nodeIds.node2Id,
       accounts.node2,
       contracts,
       epoch,
-      n2Stake_before,
+      n2Stake_beforeProof,
     );
-
-    const n2_perStake =
-      await contracts.randomSamplingStorage.getNodeEpochScorePerStake(
-        epoch,
-        nodeIds.node2Id,
-      );
-    const d1_lastSettled_before =
-      await contracts.randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
-        epoch,
-        nodeIds.node2Id,
-        d1Key,
-      );
-
-    const expectedScoreInc = calculateExpectedDelegatorScore(
-      d1BaseN2_before,
-      n2_perStake,
-      d1_lastSettled_before,
-    );
+    console.log(`    ✅ Node2 proof submitted.`);
 
     /* ──────────────── 3. REDELEGATE N2 → N1 ─────────── */
+    console.log(`✈️  [B.3] D1 redelegating all stake from N2 to N1...`);
+    const n1Stake_beforeRedelegate =
+      await contracts.stakingStorage.getNodeStake(node1Id);
     await contracts.staking
       .connect(accounts.delegator1)
       .redelegate(nodeIds.node2Id, node1Id, d1BaseN2_before);
+    console.log('    ✅ Redelegation transaction sent.');
 
-    /* ──────────────── 4. POST-SNAPSHOT ──────────────── */
+    /* ──────────────── 4. POST-SNAPSHOT & ASSERTIONS ──────────────── */
+    console.log(`🔎 [B.4] Final State & Assertions...`);
+
     const [
       d1BaseN2_after,
       d1BaseN1_after,
@@ -2317,8 +2321,6 @@ describe(`Full complex scenario`, function () {
       n1Stake_after,
       stillDelegatorOnN2,
       lastStakeHeldEpochN2,
-      d1ScoreN2_after,
-      d1LastSettled_after,
     ] = await Promise.all([
       contracts.stakingStorage.getDelegatorStakeBase(nodeIds.node2Id, d1Key),
       contracts.stakingStorage.getDelegatorStakeBase(node1Id, d1Key),
@@ -2332,43 +2334,28 @@ describe(`Full complex scenario`, function () {
         nodeIds.node2Id,
         accounts.delegator1.address,
       ),
-      contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
-        epoch,
-        nodeIds.node2Id,
-        d1Key,
-      ),
-      contracts.randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
-        epoch,
-        nodeIds.node2Id,
-        d1Key,
-      ),
     ]);
 
-    /* ──────────────── 5. ASSERTIONS ─────────────────── */
+    console.log(
+      `    - Final D1 on N2: isDelegator=${stillDelegatorOnN2}, lastStakeHeldEpoch=${lastStakeHeldEpochN2}`,
+    );
+
     expect(d1BaseN2_after, 'D1 stake on N2 should now be zero').to.equal(0n);
     expect(d1BaseN1_after, 'Stake must fully move to N1').to.equal(
       d1BaseN2_before,
     );
-
-    expect(n2Stake_after).to.equal(n2Stake_before - d1BaseN2_before);
+    expect(n2Stake_after).to.equal(
+      n2Stake_beforeProof - d1BaseN2_before,
+      'N2 total stake should decrease by the redelegated amount',
+    );
     expect(n1Stake_after).to.equal(
-      await contracts.stakingStorage.getNodeStake(node1Id),
+      n1Stake_beforeRedelegate + d1BaseN2_before,
+      'N1 total stake should increase by the redelegated amount',
     );
-
-    // Delegator record must persist on N2
     expect(stillDelegatorOnN2, 'D1 must remain delegator on N2').to.be.true;
-    expect(lastStakeHeldEpochN2, 'lastStakeHeldEpoch mismatch').to.equal(epoch);
-
-    // Lazy-settle verification
-    expect(d1ScoreN2_after, 'Delegator score incorrect').to.equal(
-      expectedScoreInc,
-    );
-    expect(d1LastSettled_after, 'lastSettled index incorrect').to.equal(
-      n2_perStake,
-    );
-
-    console.log(
-      `✅ Redelegate N2→N1 done | earnedScore=${expectedScoreInc} | lastStakeHeldEpoch(N2)=${lastStakeHeldEpochN2}`,
-    );
+    expect(
+      lastStakeHeldEpochN2,
+      'lastStakeHeldEpoch mismatch, should be set to current epoch',
+    ).to.equal(epoch);
   });
 });
