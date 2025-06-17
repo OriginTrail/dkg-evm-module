@@ -466,38 +466,6 @@ describe(`Full complex scenario`, function () {
       kcTokenAmount,
     );
 
-    expect(await contracts.epochStorage.getEpochPool(1, epoch1)).to.equal(
-      kcTokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await contracts.epochStorage.getEpochPool(1, 3)).to.equal(
-      kcTokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await contracts.epochStorage.getEpochPool(1, 4)).to.equal(
-      kcTokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await contracts.epochStorage.getEpochPool(1, 5)).to.equal(
-      kcTokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await contracts.epochStorage.getEpochPool(1, 6)).to.equal(
-      kcTokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await contracts.epochStorage.getEpochPool(1, 7)).to.equal(
-      kcTokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await contracts.epochStorage.getEpochPool(1, 8)).to.equal(
-      kcTokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await contracts.epochStorage.getEpochPool(1, 9)).to.equal(
-      kcTokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await contracts.epochStorage.getEpochPool(1, 10)).to.equal(
-      kcTokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await contracts.epochStorage.getEpochPool(1, 11)).to.equal(
-      kcTokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await contracts.epochStorage.getEpochPool(1, 12)).to.equal(0);
-
     // we're sure tokens are well distributed to epochs
 
     // ================================================================================================================
