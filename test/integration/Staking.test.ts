@@ -416,7 +416,9 @@ describe(`Full complex scenario`, function () {
     console.log(`\n🏁 Starting test in epoch ${epoch1}`);
     console.log(`\n🏁 Epoch length ${epochLength}`);
     console.log(`\n🏁 Time until next epoch ${leftUntilNextEpoch}`);
-    console.log(`\n🏁 Remaining percentage of time until next epoch ${leftUntilNextEpoch/epochLength}`);
+    console.log(
+      `\n🏁 Remaining percentage of time until next epoch ${leftUntilNextEpoch / epochLength}`,
+    );
     // Create delegator keys for state verification
     d1Key = ethers.keccak256(
       ethers.solidityPacked(['address'], [accounts.delegator1.address]),
@@ -446,7 +448,9 @@ describe(`Full complex scenario`, function () {
 
     const kcTokenAmount = toTRAC(48_000);
     const numberOfEpochs = 10;
-    console.log(`\n📚 Reward pool = ${ethers.formatUnits(kcTokenAmount, 18)} TRAC, for ${numberOfEpochs} epochs =  ${kcTokenAmount/BigInt(numberOfEpochs)} per epoch`);
+    console.log(
+      `\n📚 Reward pool = ${ethers.formatUnits(kcTokenAmount, 18)} TRAC, for ${numberOfEpochs} epochs =  ${kcTokenAmount / BigInt(numberOfEpochs)} per epoch`,
+    );
     await createKnowledgeCollection(
       accounts.kcCreator,
       accounts.node1,
@@ -462,16 +466,36 @@ describe(`Full complex scenario`, function () {
       kcTokenAmount,
     );
 
-    expect(await contracts.epochStorage.getEpochPool(1, epoch1)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
-    expect(await contracts.epochStorage.getEpochPool(1, 3)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
-    expect(await contracts.epochStorage.getEpochPool(1, 4)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
-    expect(await contracts.epochStorage.getEpochPool(1, 5)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
-    expect(await contracts.epochStorage.getEpochPool(1, 6)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
-    expect(await contracts.epochStorage.getEpochPool(1, 7)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
-    expect(await contracts.epochStorage.getEpochPool(1, 8)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
-    expect(await contracts.epochStorage.getEpochPool(1, 9)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
-    expect(await contracts.epochStorage.getEpochPool(1, 10)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
-    expect(await contracts.epochStorage.getEpochPool(1, 11)).to.equal(kcTokenAmount/BigInt(numberOfEpochs));
+    expect(await contracts.epochStorage.getEpochPool(1, epoch1)).to.equal(
+      kcTokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await contracts.epochStorage.getEpochPool(1, 3)).to.equal(
+      kcTokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await contracts.epochStorage.getEpochPool(1, 4)).to.equal(
+      kcTokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await contracts.epochStorage.getEpochPool(1, 5)).to.equal(
+      kcTokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await contracts.epochStorage.getEpochPool(1, 6)).to.equal(
+      kcTokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await contracts.epochStorage.getEpochPool(1, 7)).to.equal(
+      kcTokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await contracts.epochStorage.getEpochPool(1, 8)).to.equal(
+      kcTokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await contracts.epochStorage.getEpochPool(1, 9)).to.equal(
+      kcTokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await contracts.epochStorage.getEpochPool(1, 10)).to.equal(
+      kcTokenAmount / BigInt(numberOfEpochs),
+    );
+    expect(await contracts.epochStorage.getEpochPool(1, 11)).to.equal(
+      kcTokenAmount / BigInt(numberOfEpochs),
+    );
     expect(await contracts.epochStorage.getEpochPool(1, 12)).to.equal(0);
 
     // we're sure tokens are well distributed to epochs
@@ -499,7 +523,7 @@ describe(`Full complex scenario`, function () {
     );
     expect(totalStakeAfterStep1).to.equal(toTRAC(10_000));
     const totalDelegatorStakeAfterStep1 =
-      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d1Key); 
+      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d1Key);
     console.log(
       `    ✅ Delegator1 total stake: ${ethers.formatUnits(totalDelegatorStakeAfterStep1, 18)} TRAC`,
     );
@@ -524,7 +548,7 @@ describe(`Full complex scenario`, function () {
     );
     expect(totalStakeAfterStep2).to.equal(toTRAC(30_000));
     const totalDelegatorStakeAfterStep2 =
-      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d2Key); 
+      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d2Key);
     console.log(
       `    ✅ Delegator2 total stake: ${ethers.formatUnits(totalDelegatorStakeAfterStep2, 18)} TRAC`,
     );
@@ -547,9 +571,9 @@ describe(`Full complex scenario`, function () {
     console.log(
       `    ✅ Node1 total stake: ${ethers.formatUnits(totalStakeAfterStep3, 18)} TRAC`,
     );
-    expect(totalStakeAfterStep3).to.equal(toTRAC(60_000));  
+    expect(totalStakeAfterStep3).to.equal(toTRAC(60_000));
     const totalDelegatorStakeAfterStep3 =
-      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d3Key); 
+      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d3Key);
     console.log(
       `    ✅ Delegator3 total stake: ${ethers.formatUnits(totalDelegatorStakeAfterStep3, 18)} TRAC`,
     );
@@ -609,7 +633,7 @@ describe(`Full complex scenario`, function () {
     );
     expect(totalStakeAfterStep5).to.equal(toTRAC(70_000));
     const totalDelegator1StakeAfterStep5 =
-      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d1Key); 
+      await contracts.stakingStorage.getDelegatorStakeBase(node1Id, d1Key);
     console.log(
       `    ✅ Delegator1 total stake: ${ethers.formatUnits(totalDelegator1StakeAfterStep5, 18)} TRAC`,
     );
@@ -868,26 +892,33 @@ describe(`Full complex scenario`, function () {
     // verifying that delegator3 value should be netreward - d2ActualReward - d1ActualReward
 
     const d3ScorePrev =
-    await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
-      previousEpoch,
-      node1Id,
-      d3Key,
-    );
+      await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+        previousEpoch,
+        node1Id,
+        d3Key,
+      );
     const d3ExpectedReward = (d3ScorePrev * netRewardsPrev) / nodeScorePrev;
     const d1ScorePrev =
-    await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
-      previousEpoch,
-      node1Id,
-      d1Key,
-    );
-  const d1ExpectedReward = (d1ScorePrev * netRewardsPrev) / nodeScorePrev; 
+      await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+        previousEpoch,
+        node1Id,
+        d1Key,
+      );
+    const d1ExpectedReward = (d1ScorePrev * netRewardsPrev) / nodeScorePrev;
 
-  
-  console.log(`    [CHECK] Delegator1 expected reward: ${ethers.formatUnits(d1ExpectedReward, 18)} TRAC`);
-  console.log(`    [CHECK] Delegator2 expected reward: ${ethers.formatUnits(d2ExpectedReward, 18)} TRAC`);
-  console.log(`    [CHECK] Delegator3 expected reward: ${ethers.formatUnits(d3ExpectedReward, 18)} TRAC (BECAUSE HE DID NOT CLAIM)`);
-  console.log(`    [CHECK] Net reward: ${ethers.formatUnits(netRewardsPrev, 18)} TRAC`);
-  
+    console.log(
+      `    [CHECK] Delegator1 expected reward: ${ethers.formatUnits(d1ExpectedReward, 18)} TRAC`,
+    );
+    console.log(
+      `    [CHECK] Delegator2 expected reward: ${ethers.formatUnits(d2ExpectedReward, 18)} TRAC`,
+    );
+    console.log(
+      `    [CHECK] Delegator3 expected reward: ${ethers.formatUnits(d3ExpectedReward, 18)} TRAC (BECAUSE HE DID NOT CLAIM)`,
+    );
+    console.log(
+      `    [CHECK] Net reward: ${ethers.formatUnits(netRewardsPrev, 18)} TRAC`,
+    );
+
     /**********************************************************************
      * STEP 9 – Delegator3 attempts withdrawal before claim → revert       *
      **********************************************************************/
@@ -1905,7 +1936,7 @@ describe(`Full complex scenario`, function () {
       1, // holders
       10, // chunks
       1, // replicas
-      toTRAC(1), // минимална такса
+      toTRAC(1), //
     );
 
     expect(await contracts.epochStorage.lastFinalizedEpoch(1)).to.equal(
@@ -2024,127 +2055,69 @@ describe(`Full complex scenario`, function () {
       `\n    ✅ Node1.totalStake remains ${ethers.formatUnits(nodeStakeAfter21, 18)} TRAC\n`,
     );
   });
+
   /* ------------------------------------------------------------------
-   *  STEP A-1 – G
+   *  STEP A  (Claim, Redelegate, Proof)
    * ------------------------------------------------------------------ */
-  it('Redelegate steps – Step A1-G', async function () {
-    const claimEpoch = 4n; // 📌 epoch to claim
-    const SCALE18 = ethers.parseUnits('1', 18); // 1e18 helper
-
-    /* ───────────────────── BEFORE snapshot ───────────────────── */
-    const d1BaseBefore = await contracts.stakingStorage.getDelegatorStakeBase(
-      node1Id,
-      d1Key,
-    );
-    const nodeStakeBefore =
-      await contracts.stakingStorage.getNodeStake(node1Id);
+  it('Redelegate steps – Step A (D1 claims, redelegates N1->N2, then N1 submits proof)', async function () {
+    /* ------------------------------------------------------------------
+     * 1. PRE-CONDITION: CLAIM PENDING REWARDS
+     * ------------------------------------------------------------------ */
     console.log(
-      `\n🔎  BEFORE  |  D1.base = ${ethers.formatUnits(d1BaseBefore, 18)}  |  Node.totalStake = ${ethers.formatUnits(nodeStakeBefore, 18)} TRAC`,
+      '\n⏳ STEP A.1: Delegator1 claiming pending rewards for epoch 4...',
     );
 
-    /* ───────────── Manual reward calculation for assertions ───────────── */
-    const nodeScore = await contracts.randomSamplingStorage.getNodeEpochScore(
-      claimEpoch,
-      node1Id,
-    );
-    const perStake =
-      await contracts.randomSamplingStorage.getNodeEpochScorePerStake(
-        claimEpoch,
-        node1Id,
-      );
-    const d1Settled =
-      await contracts.randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
-        claimEpoch,
-        node1Id,
-        d1Key,
-      );
-    const d1Stored =
-      await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
-        claimEpoch,
-        node1Id,
-        d1Key,
-      );
+    // From previous tests, we know epoch 4 is the last finalized one,
+    // and D1's last claim was for epoch 2. So, epochs 3 and 4 are pending.
 
-    const earnedScore = (d1BaseBefore * (perStake - d1Settled)) / SCALE18;
-    const d1TotalScore = d1Stored + earnedScore;
-    const netDelegatorRewards = await contracts.stakingKPI.getNetNodeRewards(
-      node1Id,
-      claimEpoch,
-    );
-    const expectedReward =
-      nodeScore === 0n ? 0n : (d1TotalScore * netDelegatorRewards) / nodeScore;
-
-    /* ───────────────────────── CLAIM TX ───────────────────────── */
     await contracts.staking
       .connect(accounts.delegator1)
-      .claimDelegatorRewards(node1Id, claimEpoch, accounts.delegator1.address);
+      .claimDelegatorRewards(node1Id, 4n, accounts.delegator1.address);
 
-    /* ───────────────────── AFTER snapshot ───────────────────── */
-    const d1BaseAfter = await contracts.stakingStorage.getDelegatorStakeBase(
-      node1Id,
-      d1Key,
-    );
-    const nodeStakeAfter = await contracts.stakingStorage.getNodeStake(node1Id);
-    const lastClaimedEpoch = await contracts.delegatorsInfo.getLastClaimedEpoch(
+    const d1LastClaimed = await contracts.delegatorsInfo.getLastClaimedEpoch(
       node1Id,
       accounts.delegator1.address,
     );
-
+    expect(d1LastClaimed).to.be.gte(
+      4n,
+      'Delegator1 should have claimed all pending rewards up to epoch 4',
+    );
     console.log(
-      `\n✅  AFTER   |  D1.base = ${ethers.formatUnits(d1BaseAfter, 18)}  |  Node.totalStake = ${ethers.formatUnits(nodeStakeAfter, 18)} TRAC\n` +
-        `   • reward actually restaked = ${ethers.formatUnits(d1BaseAfter - d1BaseBefore, 18)} TRAC\n` +
-        `   • lastClaimedEpoch updated = ${lastClaimedEpoch}`,
+      `    ✅ Pending rewards claimed. D1 last claimed epoch is now ${d1LastClaimed}.`,
     );
 
-    /* ───────────────────────── ASSERTS ───────────────────────── */
-    expect(d1BaseAfter - d1BaseBefore, 'reward mismatch').to.equal(
-      expectedReward,
+    /* ------------------------------------------------------------------
+     * 2. REDELEGATE N1 -> N2 (with checks and logs)
+     * ------------------------------------------------------------------ */
+    console.log(
+      '\n✈️ STEP A.2: Delegator1 redelegating from Node1 to Node2...',
     );
-    expect(nodeStakeAfter, 'nodeStake not increased by reward').to.equal(
-      nodeStakeBefore + expectedReward,
-    );
-    expect(lastClaimedEpoch, 'lastClaimedEpoch not updated').to.equal(
-      claimEpoch,
-    );
-  });
 
-  /* ------------------------------------------------------------------
-   *  STEP A-2 – D1 redelegates entire stake N1 → N2, then N2 submits a proof
-   * ------------------------------------------------------------------ */
-  it('Redelegate steps – Step A2', async function () {
-    // No proofs have been submitted in epoch 5 → node score is zero
-    const curEpoch = await contracts.chronos.getCurrentEpoch(); // should be 5
-    expect(curEpoch).to.equal(5n, 'expected to be in epoch 5');
-
-    /* 1️⃣  Snapshot before redelegation -------------------------------- */
-    const stakeMoved = await contracts.stakingStorage.getDelegatorStakeBase(
+    // Snapshot BEFORE
+    const stakeToMove = await contracts.stakingStorage.getDelegatorStakeBase(
       node1Id,
       d1Key,
-    ); // D1 stake on N1
-
+    );
     const n1StakeBefore = await contracts.stakingStorage.getNodeStake(node1Id);
     const n2StakeBefore = await contracts.stakingStorage.getNodeStake(
       nodeIds.node2Id,
     );
+    console.log(
+      `    [BEFORE] N1.total=${ethers.formatUnits(
+        n1StakeBefore,
+        18,
+      )} | N2.total=${ethers.formatUnits(
+        n2StakeBefore,
+        18,
+      )} | D1.stake=${ethers.formatUnits(stakeToMove, 18)}`,
+    );
 
-    console.log(
-      `\n[BEFORE] N1.totalStake=${ethers.formatUnits(n1StakeBefore, 18)} ` +
-        `| N2.totalStake=${ethers.formatUnits(n2StakeBefore, 18)} ` +
-        `| D1.base(N1)=${ethers.formatUnits(stakeMoved, 18)}`,
-    );
-    const d1BaseN1before = await contracts.stakingStorage.getDelegatorStakeBase(
-      node1Id,
-      d1Key,
-    );
-    console.log(
-      `   👉  D1.base on Node2 = ${ethers.formatUnits(d1BaseN1before, 18)} TRAC`,
-    );
-    /* 2️⃣  Redelegate the full stake N1 → N2 --------------------------- */
+    // Perform Redelegate
     await contracts.staking
       .connect(accounts.delegator1)
-      .redelegate(node1Id, nodeIds.node2Id, stakeMoved);
+      .redelegate(node1Id, nodeIds.node2Id, stakeToMove);
 
-    /* 3️⃣  Snapshot after redelegation + assertions -------------------- */
+    // Snapshot AFTER
     const n1StakeAfter = await contracts.stakingStorage.getNodeStake(node1Id);
     const n2StakeAfter = await contracts.stakingStorage.getNodeStake(
       nodeIds.node2Id,
@@ -2157,66 +2130,245 @@ describe(`Full complex scenario`, function () {
       nodeIds.node2Id,
       d1Key,
     );
-
     const d1StillOnN1 = await contracts.delegatorsInfo.isNodeDelegator(
       node1Id,
       accounts.delegator1.address,
     );
-    console.log(`   👉  DelegatorOnOldNode = ${d1StillOnN1}`);
-
     const d1OnN2 = await contracts.delegatorsInfo.isNodeDelegator(
       nodeIds.node2Id,
       accounts.delegator1.address,
     );
+
+    console.log(
+      `    [AFTER]  N1.total=${ethers.formatUnits(
+        n1StakeAfter,
+        18,
+      )} | N2.total=${ethers.formatUnits(
+        n2StakeAfter,
+        18,
+      )} | D1.base(N1)=${d1BaseN1} | D1.base(N2)=${d1BaseN2}`,
+    );
+
+    // Assertions
+    expect(d1BaseN1).to.equal(0n, 'D1 should have 0 stake on N1');
+    expect(d1BaseN2).to.equal(stakeToMove, 'Stake should be moved to N2');
+    expect(n1StakeAfter).to.equal(n1StakeBefore - stakeToMove);
+    expect(n2StakeAfter).to.equal(n2StakeBefore + stakeToMove);
+    expect(d1StillOnN1).to.be.false;
+    expect(d1OnN2).to.be.true;
+
+    // Log the crucial state for debugging Step B
     const lastStakeHeldEpochN1 =
       await contracts.delegatorsInfo.getLastStakeHeldEpoch(
         node1Id,
         accounts.delegator1.address,
       );
-
-    expect(d1BaseN1).to.equal(0n, 'D1 should have 0 stake on N1');
-    expect(d1BaseN2).to.equal(stakeMoved, 'stake should be moved to N2');
-    expect(n1StakeAfter).to.equal(n1StakeBefore - stakeMoved);
-    expect(n2StakeAfter).to.equal(n2StakeBefore + stakeMoved);
-    expect(d1StillOnN1).to.be.false;
-    expect(d1OnN2).to.be.true;
-    expect(lastStakeHeldEpochN1).to.equal(
-      0n,
-      'no pending rewards tracker expected',
+    console.log(
+      `    [DEBUG] D1 on N1: isDelegator=${d1StillOnN1}, lastStakeHeldEpoch=${lastStakeHeldEpochN1}`,
     );
 
-    console.log('✅ Redelegation successful – D1 fully moved to N2');
+    console.log('    ✅ Redelegation successful.');
 
-    /* 4️⃣  Advance to a new proof period and let N2 submit its first proof */
+    /* ------------------------------------------------------------------
+     * 3. NODE 1 SUBMITS PROOF
+     * ------------------------------------------------------------------ */
+    console.log('\n🔬 STEP A.3: Node1 submitting proof for current epoch...');
+    const curEpoch = await contracts.chronos.getCurrentEpoch(); // Should be epoch 5
+    expect(curEpoch).to.equal(5n);
+
+    // Create KC for Node1 in the current epoch so it can submit a proof
+    await createKnowledgeCollection(
+      accounts.kcCreator,
+      accounts.node1,
+      Number(node1Id),
+      receivingNodes,
+      receivingNodesIdentityIds,
+      { KnowledgeCollection: contracts.kc, Token: contracts.token },
+      merkleRoot,
+      'test-op-id-node1-epoch5',
+      10,
+      1000,
+      10,
+      toTRAC(1000),
+    );
+    await advanceToNextProofingPeriod(contracts);
+
+    const n1StakeNow = await contracts.stakingStorage.getNodeStake(node1Id);
+    await submitProofAndVerifyScore(
+      node1Id,
+      accounts.node1,
+      contracts,
+      curEpoch,
+      n1StakeNow,
+    );
+    console.log('    ✅ Node1 proof submitted.');
+
+    console.log(
+      `    [DEBUG2] D1 on N1: isDelegator=${d1StillOnN1}, lastStakeHeldEpoch=${lastStakeHeldEpochN1}`,
+    );
+
+    /* ------------------------------------------------------------------
+     * 4. ADVANCE TO NEXT EPOCH
+     * ------------------------------------------------------------------ */
+    console.log('\n⏭️ STEP A.4: Advancing to the next epoch...');
+    const ttn5 = await contracts.chronos.timeUntilNextEpoch();
+    await time.increase(ttn5 + 1n); // → epoch-6
+    const epoch6 = await contracts.chronos.getCurrentEpoch();
+
+    await createKnowledgeCollection(
+      accounts.kcCreator,
+      accounts.node2,
+      Number(nodeIds.node2Id),
+      receivingNodes,
+      receivingNodesIdentityIds,
+      { KnowledgeCollection: contracts.kc, Token: contracts.token },
+      merkleRoot,
+      'test-op-id-node2-proof-stepA4',
+      10,
+      1000,
+      10,
+      toTRAC(1000),
+    );
+
+    /* Verify epoch-5 is now finalised so its rewards can be claimed */
+    expect(
+      await contracts.epochStorage.lastFinalizedEpoch(1),
+      'epoch-5 should now be finalised',
+    ).to.equal(5n);
+
+    expect(epoch6).to.equal(6n);
+    console.log(`    ✅ Advanced to epoch ${epoch6}.`);
+  });
+
+  /* ------------------------------------------------------------------
+   *  STEP B  –  redelegate all stake N2 → N1  (D1 ostaje delegator N2)
+   * ------------------------------------------------------------------ */
+  it('Redelegate steps – Step B (N2 → N1, D1 kept as N2 delegator)', async function () {
+    /* ──────────────── 1. PREPARATION ───────────────── */
+    const epoch = await contracts.chronos.getCurrentEpoch();
+
+    // 1.2  Snapshot of stake before the proof
+    const d1BaseN2_before =
+      await contracts.stakingStorage.getDelegatorStakeBase(
+        nodeIds.node2Id,
+        d1Key,
+      );
+    expect(d1BaseN2_before).to.be.gt(0n, 'D1 must have stake on N2');
+
+    const n2Stake_before = await contracts.stakingStorage.getNodeStake(
+      nodeIds.node2Id,
+    );
+
+    /* ──────────────── 2. NODE-2 SUBMITS PROOF ───────── */
+    // Ensure Node2 has enough KCs for the current epoch BEFORE submitting proof
+    await createKnowledgeCollection(
+      accounts.kcCreator,
+      accounts.node2,
+      Number(nodeIds.node2Id),
+      receivingNodes,
+      receivingNodesIdentityIds,
+      { KnowledgeCollection: contracts.kc, Token: contracts.token },
+      merkleRoot,
+      'test-op-id-node2-proof-stepB',
+      10,
+      1000,
+      10,
+      toTRAC(1000),
+    );
+
     await advanceToNextProofingPeriod(contracts);
 
     await submitProofAndVerifyScore(
       nodeIds.node2Id,
       accounts.node2,
       contracts,
-      curEpoch, // epoch 5
-      n2StakeAfter,
+      epoch,
+      n2Stake_before,
     );
 
-    /* ── Delegator score check ───────────────────────────────────────── */
-    /* Immediately after the proof the delegator score on N2 must
-   still be zero – nothing has been settled for the delegator yet. */
-
-    const d1ScoreN2 =
-      await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
-        curEpoch,
+    const n2_perStake =
+      await contracts.randomSamplingStorage.getNodeEpochScorePerStake(
+        epoch,
+        nodeIds.node2Id,
+      );
+    const d1_lastSettled_before =
+      await contracts.randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
+        epoch,
         nodeIds.node2Id,
         d1Key,
       );
+
+    const expectedScoreInc = calculateExpectedDelegatorScore(
+      d1BaseN2_before,
+      n2_perStake,
+      d1_lastSettled_before,
+    );
+
+    /* ──────────────── 3. REDELEGATE N2 → N1 ─────────── */
+    await contracts.staking
+      .connect(accounts.delegator1)
+      .redelegate(nodeIds.node2Id, node1Id, d1BaseN2_before);
+
+    /* ──────────────── 4. POST-SNAPSHOT ──────────────── */
+    const [
+      d1BaseN2_after,
+      d1BaseN1_after,
+      n2Stake_after,
+      n1Stake_after,
+      stillDelegatorOnN2,
+      lastStakeHeldEpochN2,
+      d1ScoreN2_after,
+      d1LastSettled_after,
+    ] = await Promise.all([
+      contracts.stakingStorage.getDelegatorStakeBase(nodeIds.node2Id, d1Key),
+      contracts.stakingStorage.getDelegatorStakeBase(node1Id, d1Key),
+      contracts.stakingStorage.getNodeStake(nodeIds.node2Id),
+      contracts.stakingStorage.getNodeStake(node1Id),
+      contracts.delegatorsInfo.isNodeDelegator(
+        nodeIds.node2Id,
+        accounts.delegator1.address,
+      ),
+      contracts.delegatorsInfo.getLastStakeHeldEpoch(
+        nodeIds.node2Id,
+        accounts.delegator1.address,
+      ),
+      contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+        epoch,
+        nodeIds.node2Id,
+        d1Key,
+      ),
+      contracts.randomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
+        epoch,
+        nodeIds.node2Id,
+        d1Key,
+      ),
+    ]);
+
+    /* ──────────────── 5. ASSERTIONS ─────────────────── */
+    expect(d1BaseN2_after, 'D1 stake on N2 should now be zero').to.equal(0n);
+    expect(d1BaseN1_after, 'Stake must fully move to N1').to.equal(
+      d1BaseN2_before,
+    );
+
+    expect(n2Stake_after).to.equal(n2Stake_before - d1BaseN2_before);
+    expect(n1Stake_after).to.equal(
+      await contracts.stakingStorage.getNodeStake(node1Id),
+    );
+
+    // Delegator record must persist on N2
+    expect(stillDelegatorOnN2, 'D1 must remain delegator on N2').to.be.true;
+    expect(lastStakeHeldEpochN2, 'lastStakeHeldEpoch mismatch').to.equal(epoch);
+
+    // Lazy-settle verification
+    expect(d1ScoreN2_after, 'Delegator score incorrect').to.equal(
+      expectedScoreInc,
+    );
+    expect(d1LastSettled_after, 'lastSettled index incorrect').to.equal(
+      n2_perStake,
+    );
+
     console.log(
-      `   👉  D1.base on Node2 = ${ethers.formatUnits(d1BaseN2, 18)} TRAC`,
+      `✅ Redelegate N2→N1 done | earnedScore=${expectedScoreInc} | lastStakeHeldEpoch(N2)=${lastStakeHeldEpochN2}`,
     );
-
-    expect(d1ScoreN2).to.equal(
-      0n,
-      'Delegator score should still be zero right after the first proof on N2',
-    );
-
-    console.log('📈  N2 proof OK – Step A2 finished (delegator score still 0)');
   });
 });
