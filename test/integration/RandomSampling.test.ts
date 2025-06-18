@@ -350,7 +350,7 @@ describe('@integration RandomSampling', () => {
       // Setup
       const currentEpoch = await Chronos.getCurrentEpoch();
       const initialDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+        await RandomSampling.getActiveProofingPeriodDurationInBlocks();
       const newDuration = initialDuration + 10n;
       const expectedEffectiveEpoch = currentEpoch + 1n;
       const hubOwner = accounts[0];
@@ -358,7 +358,7 @@ describe('@integration RandomSampling', () => {
       // Ensure no pending change initially
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(
-        await RandomSamplingStorage.isPendingProofingPeriodDuration(),
+        await RandomSampling.isPendingProofingPeriodDuration(),
         'Should be no pending duration initially',
       ).to.be.false;
 
@@ -377,13 +377,13 @@ describe('@integration RandomSampling', () => {
       // 2. Pending state updated
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(
-        await RandomSamplingStorage.isPendingProofingPeriodDuration(),
+        await RandomSampling.isPendingProofingPeriodDuration(),
         'Should be a pending duration after setting',
       ).to.be.true;
 
       // 3. Active duration remains unchanged in the current epoch
       expect(
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
+        await RandomSampling.getActiveProofingPeriodDurationInBlocks(),
         'Active duration should remain unchanged in current epoch',
       ).to.equal(initialDuration);
     });
@@ -394,7 +394,7 @@ describe('@integration RandomSampling', () => {
       const avgBlockTimeInSeconds =
         await RandomSamplingStorage.avgBlockTimeInSeconds();
       const initialDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+        await RandomSampling.getActiveProofingPeriodDurationInBlocks();
       const firstNewDuration = initialDuration + 10n;
       const secondNewDuration = firstNewDuration + 10n;
       const expectedEffectiveEpoch = currentEpoch + 1n;
@@ -406,7 +406,7 @@ describe('@integration RandomSampling', () => {
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(
-        await RandomSamplingStorage.isPendingProofingPeriodDuration(),
+        await RandomSampling.isPendingProofingPeriodDuration(),
         'Should have pending duration after first set',
       ).to.be.true;
 
@@ -425,13 +425,13 @@ describe('@integration RandomSampling', () => {
       // 2. Pending state remains true
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(
-        await RandomSamplingStorage.isPendingProofingPeriodDuration(),
+        await RandomSampling.isPendingProofingPeriodDuration(),
         'Should still have pending duration after replace',
       ).to.be.true;
 
       // 3. Active duration remains unchanged in the current epoch
       expect(
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
+        await RandomSampling.getActiveProofingPeriodDurationInBlocks(),
         'Active duration should remain unchanged',
       ).to.equal(initialDuration);
 
@@ -449,7 +449,7 @@ describe('@integration RandomSampling', () => {
         'Should be in the next epoch',
       ).to.equal(expectedEffectiveEpoch);
       expect(
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
+        await RandomSampling.getActiveProofingPeriodDurationInBlocks(),
         'Active duration should be updated in effective epoch',
       ).to.equal(secondNewDuration);
     });
@@ -459,7 +459,7 @@ describe('@integration RandomSampling', () => {
       const currentEpoch = await Chronos.getCurrentEpoch();
       const effectiveEpoch = currentEpoch + 1n;
       const initialDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+        await RandomSampling.getActiveProofingPeriodDurationInBlocks();
       const newDuration = initialDuration + 20n; // Different new duration
       const hubOwner = accounts[0];
       const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
@@ -470,19 +470,18 @@ describe('@integration RandomSampling', () => {
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(
-        await RandomSamplingStorage.isPendingProofingPeriodDuration(),
+        await RandomSampling.isPendingProofingPeriodDuration(),
         'Duration change should be pending',
       ).to.be.true;
 
       // Ensure activeProofPeriodStartBlock is initialized if needed
       let initialStartBlockE = (
-        await RandomSamplingStorage.getActiveProofPeriodStatus()
+        await RandomSampling.getActiveProofPeriodStatus()
       ).activeProofPeriodStartBlock;
       if (initialStartBlockE === 0n) {
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-        initialStartBlockE = (
-          await RandomSamplingStorage.getActiveProofPeriodStatus()
-        ).activeProofPeriodStartBlock;
+        await RandomSampling.updateAndGetActiveProofPeriodStartBlock();
+        initialStartBlockE = (await RandomSampling.getActiveProofPeriodStatus())
+          .activeProofPeriodStartBlock;
       }
       expect(initialStartBlockE).to.be.greaterThan(
         0n,
@@ -491,7 +490,7 @@ describe('@integration RandomSampling', () => {
 
       // --- Verification in Current Epoch (Epoch E) ---
       expect(
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
+        await RandomSampling.getActiveProofingPeriodDurationInBlocks(),
         'Active duration should be initial in Epoch E',
       ).to.equal(initialDuration);
 
@@ -501,9 +500,9 @@ describe('@integration RandomSampling', () => {
       }
 
       // Update period and check if it used the initial duration
-      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await RandomSampling.updateAndGetActiveProofPeriodStartBlock();
       const updatedStartBlockE = (
-        await RandomSamplingStorage.getActiveProofPeriodStatus()
+        await RandomSampling.getActiveProofPeriodStatus()
       ).activeProofPeriodStartBlock;
       expect(updatedStartBlockE).to.equal(
         initialStartBlockE + initialDuration,
@@ -527,16 +526,15 @@ describe('@integration RandomSampling', () => {
 
       // --- Verification in Effective Epoch (Epoch E+1) ---
       expect(
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
+        await RandomSampling.getActiveProofingPeriodDurationInBlocks(),
         'Active duration should be new in Epoch E+1',
       ).to.equal(newDuration);
 
       // Get the start block relevant for this new epoch
       // It might have carried over or been updated by the block advance
-      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      const startBlockE1 = (
-        await RandomSamplingStorage.getActiveProofPeriodStatus()
-      ).activeProofPeriodStartBlock;
+      await RandomSampling.updateAndGetActiveProofPeriodStartBlock();
+      const startBlockE1 = (await RandomSampling.getActiveProofPeriodStatus())
+        .activeProofPeriodStartBlock;
 
       // Advance blocks within Epoch E+1 by the *new* duration
       for (let i = 0; i < Number(newDuration); i++) {
@@ -544,9 +542,9 @@ describe('@integration RandomSampling', () => {
       }
 
       // Update period and check if it used the new duration
-      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await RandomSampling.updateAndGetActiveProofPeriodStartBlock();
       const updatedStartBlockE1 = (
-        await RandomSamplingStorage.getActiveProofPeriodStatus()
+        await RandomSampling.getActiveProofPeriodStatus()
       ).activeProofPeriodStartBlock;
       expect(updatedStartBlockE1).to.equal(
         startBlockE1 + newDuration,
@@ -607,7 +605,7 @@ describe('@integration RandomSampling', () => {
 
       // Mine some blocks but stay within the period
       const duration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+        await RandomSampling.getActiveProofingPeriodDurationInBlocks();
       if (Number(duration) > 2) {
         await hre.network.provider.send('evm_mine');
       }
@@ -783,12 +781,11 @@ describe('@integration RandomSampling', () => {
       );
 
       // Update and get the new active proof period
-      const tx =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      const tx = await RandomSampling.updateAndGetActiveProofPeriodStartBlock();
       await tx.wait();
 
       const proofPeriodStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
+        await RandomSampling.getActiveProofPeriodStatus();
       const proofPeriodStartBlock =
         proofPeriodStatus.activeProofPeriodStartBlock;
       // Create challenge
@@ -814,7 +811,7 @@ describe('@integration RandomSampling', () => {
         );
 
       const proofPeriodDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+        await RandomSampling.getActiveProofingPeriodDurationInBlocks();
 
       // Verify challenge properties
       expect(challenge.knowledgeCollectionId)
@@ -1105,7 +1102,7 @@ describe('@integration RandomSampling', () => {
       );
 
       // Update and get the new active proof period
-      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await RandomSampling.updateAndGetActiveProofPeriodStartBlock();
 
       // Create challenge
       const challengeTx = await RandomSampling.connect(
@@ -1185,7 +1182,7 @@ describe('@integration RandomSampling', () => {
       );
 
       // Update and get the new active proof period
-      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await RandomSampling.updateAndGetActiveProofPeriodStartBlock();
 
       // Create challenge
       await RandomSampling.connect(
@@ -1268,7 +1265,7 @@ describe('@integration RandomSampling', () => {
       );
 
       // Update and get the new active proof period
-      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await RandomSampling.updateAndGetActiveProofPeriodStartBlock();
 
       // Create challenge
       await RandomSampling.connect(
@@ -1351,7 +1348,7 @@ describe('@integration RandomSampling', () => {
       );
 
       // Update and get the new active proof period
-      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await RandomSampling.updateAndGetActiveProofPeriodStartBlock();
 
       // Create challenge
       await RandomSampling.connect(
@@ -1648,7 +1645,7 @@ describe('@integration RandomSampling', () => {
       );
 
       // Update and get the new active proof period
-      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+      await RandomSampling.updateAndGetActiveProofPeriodStartBlock();
 
       // Create challenge
       await RandomSampling.connect(
@@ -2345,7 +2342,7 @@ describe('@integration RandomSampling', () => {
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         // Move to next proof period to allow new challenge
         const duration =
-          await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+          await RandomSampling.getActiveProofingPeriodDurationInBlocks();
         for (let i = 0; i < Number(duration); i++) {
           await hre.network.provider.send('evm_mine');
         }
@@ -2527,7 +2524,7 @@ describe('@integration RandomSampling', () => {
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         // Move to next proof period
         const duration =
-          await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+          await RandomSampling.getActiveProofingPeriodDurationInBlocks();
         for (let i = 0; i < Number(duration); i++) {
           await hre.network.provider.send('evm_mine');
         }
@@ -2611,7 +2608,7 @@ describe('@integration RandomSampling', () => {
 
       for (let attempt = 0; attempt < 10; attempt++) {
         const duration =
-          await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+          await RandomSampling.getActiveProofingPeriodDurationInBlocks();
         for (let i = 0; i < Number(duration); i++) {
           await hre.network.provider.send('evm_mine');
         }
