@@ -284,6 +284,44 @@ async function advanceToNextProofingPeriod(
 }
 
 /**
+ * Ensures a node has at least one knowledge chunk in the current epoch.
+ * If not, it creates a small knowledge collection to facilitate proof submission.
+ */
+async function ensureNodeHasChunksThisEpoch(
+  nodeId: bigint,
+  node: { operational: SignerWithAddress; admin: SignerWithAddress },
+  contracts: TestContracts,
+  accounts: TestAccounts,
+  receivingNodes: {
+    operational: SignerWithAddress;
+    admin: SignerWithAddress;
+  }[],
+  receivingNodesIdentityIds: number[],
+) {
+  const produced =
+    await contracts.epochStorage.getNodeCurrentEpochProducedKnowledgeValue(
+      nodeId,
+    );
+
+  if (produced === 0n) {
+    await createKnowledgeCollection(
+      accounts.kcCreator,
+      node, // <- node that will prove
+      Number(nodeId),
+      receivingNodes,
+      receivingNodesIdentityIds,
+      { KnowledgeCollection: contracts.kc, Token: contracts.token },
+      merkleRoot,
+      `ensure-chunks-${Date.now()}`, // unique op-id
+      1,
+      4,
+      1,
+      toTRAC(1), // 1-chunk, 1 TRAC KC
+    );
+  }
+}
+
+/**
  * Setup initial test environment with accounts and contracts
  */
 async function setupTestEnvironment(): Promise<{
@@ -2237,26 +2275,20 @@ describe(`Full complex scenario`, function () {
     /* ------------------------------------------------------------------
      * 3. NODE 1 SUBMITS PROOF
      * ------------------------------------------------------------------ */
-    /*  console.log('\n🔬 STEP A.3: Node1 submitting proof for current epoch...');
+    console.log('\n🔬 STEP A.3: Node1 submitting proof for current epoch...');
     const curEpoch = await contracts.chronos.getCurrentEpoch(); // Should be epoch 5
     expect(curEpoch).to.equal(5n);
 
-    // Create KC for Node1 in the current epoch so it can submit a proof
-    await createKnowledgeCollection(
-      accounts.kcCreator,
+    await advanceToNextProofingPeriod(contracts);
+
+    await ensureNodeHasChunksThisEpoch(
+      node1Id,
       accounts.node1,
-      Number(node1Id),
+      contracts,
+      accounts,
       receivingNodes,
       receivingNodesIdentityIds,
-      { KnowledgeCollection: contracts.kc, Token: contracts.token },
-      merkleRoot,
-      'test-op-id-node1-epoch5',
-      10,
-      1000,
-      10,
-      toTRAC(1000),
     );
-    await advanceToNextProofingPeriod(contracts);
 
     const n1StakeNow = await contracts.stakingStorage.getNodeStake(node1Id);
     await submitProofAndVerifyScore(
@@ -2267,7 +2299,7 @@ describe(`Full complex scenario`, function () {
       n1StakeNow,
     );
     console.log('    ✅ Node1 proof submitted.');
- */
+
     console.log(
       `    [DEBUG2] D1 on N1: isDelegator=${d1StillOnN1}, lastStakeHeldEpoch=${lastStakeHeldEpochN1}`,
     );
@@ -2339,22 +2371,18 @@ describe(`Full complex scenario`, function () {
 
     /* ──────────────── 2. NODE-2 SUBMITS PROOF ───────── */
     console.log(`🔬 [B.2] Node2 submitting proof...`);
-    await createKnowledgeCollection(
-      accounts.kcCreator,
-      accounts.node2,
-      Number(nodeIds.node2Id),
-      receivingNodes,
-      receivingNodesIdentityIds,
-      { KnowledgeCollection: contracts.kc, Token: contracts.token },
-      merkleRoot,
-      'test-op-id-node2-epoch6',
-      10,
-      1000,
-      10,
-      toTRAC(1000),
-    );
 
     await advanceToNextProofingPeriod(contracts);
+
+    await ensureNodeHasChunksThisEpoch(
+      nodeIds.node2Id,
+      accounts.node2,
+      contracts,
+      accounts,
+      receivingNodes,
+      receivingNodesIdentityIds,
+    );
+
     const n2Stake_beforeProof = await contracts.stakingStorage.getNodeStake(
       nodeIds.node2Id,
     );
