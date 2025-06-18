@@ -1101,14 +1101,12 @@ describe('Staking contract', function () {
       delegatorKey,
       2,
     );
-    const delegatorsInfo = await hre.ethers.getContract('DelegatorsInfo');
 
     // Fast-forward 3 epochs
     const len = await Chronos.epochLength();
     await time.increase(len * 3n + 3n);
     // @ts-ignore
     const curEp = await Chronos.getCurrentEpoch();
-    const prev = curEp - 1n; // 3
 
     // Claim rewards for initial epoch
     await Staking.claimDelegatorRewards(
@@ -1251,8 +1249,6 @@ describe('Staking contract', function () {
     // fast-forward 3 epochs
     await time.increase(epochLen * 3n + 3n);
     // @ts-ignore
-    const curEpoch = await Chronos.getCurrentEpoch();
-    const prevEp = curEpoch - 1n; // 3
 
     // Pretend all rewards claimed up to prevEp
     await Staking.claimDelegatorRewards(
@@ -2080,8 +2076,6 @@ describe('Staking contract', function () {
       identityId,
       dKey,
     );
-    const stakeBefore = await StakingStorage.getNodeStake(identityId);
-    const totalBefore = await StakingStorage.getTotalStake();
 
     // Sanity – pending equals requested amount
     expect(pendingBefore).to.equal(
@@ -2403,11 +2397,7 @@ describe('Staking contract', function () {
 
     // Request withdrawal of 60
     const withdrawAmt = hre.ethers.parseEther('60');
-    const delay = await ParametersStorage.stakeWithdrawalDelay();
-    const tx = await Staking.requestOperatorFeeWithdrawal(
-      identityId,
-      withdrawAmt,
-    );
+    await Staking.requestOperatorFeeWithdrawal(identityId, withdrawAmt);
     // capture request release timestamp from storage
     // @ts-ignore
     const [, , releaseTs] =
@@ -2456,9 +2446,6 @@ describe('Staking contract', function () {
     );
     await Staking.stake(identityId, stakeAmt);
 
-    // Get current epoch E1
-    // @ts-ignore
-    const epoch1 = await Chronos.getCurrentEpoch();
     // Move to next epoch E2
     let inc = await Chronos.timeUntilNextEpoch();
     await time.increase(inc + 1n);
@@ -2560,5 +2547,227 @@ describe('Staking contract', function () {
     await expect(tx)
       .to.emit(StakingStorage, 'DelegatorBaseStakeUpdated')
       .withArgs(identityId, delegatorKey, baseBefore + restakeAmt);
+  });
+
+  /**********************************************************************
+   * Events & sharding‑table transition on redelegate
+   **********************************************************************/
+  it('emits StakeRedelegated and moves both nodes in sharding table', async () => {
+    const nodeA = await createProfile();
+    const nodeB = await createProfile(accounts[0], accounts[2]);
+
+    // make nodeA eligible for the table
+    const minStake = await ParametersStorage.minimumStake();
+    await Token.mint(accounts[0].address, minStake);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      minStake,
+    );
+    await Staking.stake(nodeA.identityId, minStake);
+
+    expect(await ShardingTableStorage.nodeExists(nodeA.identityId)).to.be.true;
+
+    await expect(
+      Staking.redelegate(nodeA.identityId, nodeB.identityId, minStake),
+    )
+      .to.emit(Staking, 'StakeRedelegated')
+      .withArgs(
+        nodeA.identityId,
+        nodeB.identityId,
+        accounts[0].address,
+        minStake,
+      );
+
+    expect(await ShardingTableStorage.nodeExists(nodeA.identityId)).to.be.false;
+    expect(await ShardingTableStorage.nodeExists(nodeB.identityId)).to.be.true;
+  });
+
+  /**********************************************************************
+   * Withdrawal “fast‑path” when node is above new maximumStake
+   **********************************************************************/
+  it('requestWithdrawal transfers immediately when newStake ≥ lowered maximumStake', async () => {
+    const { identityId } = await createProfile();
+    const stakeAmt = hre.ethers.parseEther('100');
+    await Token.mint(accounts[0].address, stakeAmt);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      stakeAmt,
+    );
+    await Staking.stake(identityId, stakeAmt);
+
+    // Governance lowers the cap below current stake – makes the branch reachable
+    const newMax = stakeAmt - hre.ethers.parseEther('10');
+    await ParametersStorage.setMaximumStake(newMax);
+
+    const balBefore = await Token.balanceOf(accounts[0].address);
+    const withdraw = hre.ethers.parseEther('5');
+
+    await Staking.requestWithdrawal(identityId, withdraw);
+    const balAfter = await Token.balanceOf(accounts[0].address);
+
+    expect(balAfter - balBefore).to.equal(
+      withdraw,
+      'payout should be immediate',
+    );
+
+    const [pending] = await StakingStorage.getDelegatorWithdrawalRequest(
+      identityId,
+      hre.ethers.keccak256(
+        hre.ethers.solidityPacked(['address'], [accounts[0].address]),
+      ),
+    );
+    expect(pending).to.equal(0n, 'no pending request stored');
+  });
+
+  /**********************************************************************
+   * Operator‑fee withdrawal: merge‑then‑exceed should revert
+   **********************************************************************/
+  it('requestOperatorFeeWithdrawal amount exceeds operator fee balance reverts', async () => {
+    const { identityId } = await createProfile();
+    const feeBal = hre.ethers.parseEther('100');
+    await StakingStorage.setOperatorFeeBalance(identityId, feeBal);
+
+    await Staking.requestOperatorFeeWithdrawal(
+      identityId,
+      hre.ethers.parseEther('80'),
+    ); // existing request
+
+    await expect(
+      Staking.requestOperatorFeeWithdrawal(
+        identityId,
+        hre.ethers.parseEther('30'),
+      ), // 80+30 > 100
+    ).to.be.revertedWithCustomError(Staking, 'AmountExceedsOperatorFeeBalance');
+  });
+
+  /**********************************************************************
+   * restakeOperatorFee updates cumulativePaidOut bookkeeping
+   **********************************************************************/
+  it('restakeOperatorFee bumps cumulativePaidOut', async () => {
+    const { identityId } = await createProfile();
+    const feeBal = hre.ethers.parseEther('50');
+    await StakingStorage.setOperatorFeeBalance(identityId, feeBal);
+
+    const before =
+      await StakingStorage.getOperatorFeeCumulativePaidOutRewards(identityId);
+    const restake = hre.ethers.parseEther('20');
+    await Staking.restakeOperatorFee(identityId, restake);
+    const after =
+      await StakingStorage.getOperatorFeeCumulativePaidOutRewards(identityId);
+
+    expect(after - before).to.equal(restake);
+  });
+
+  /**********************************************************************
+   * _validateDelegatorEpochClaims: must‑claim‑before‑re‑stake guard
+   **********************************************************************/
+  it('Re-stake after full exit with unclaimed score reverts', async () => {
+    const { identityId } = await createProfile();
+    const stakeAmt = hre.ethers.parseEther('100');
+    await Token.mint(accounts[0].address, stakeAmt);
+    await Token.connect(accounts[0]).approve(
+      await Staking.getAddress(),
+      stakeAmt,
+    );
+    await Staking.stake(identityId, stakeAmt);
+
+    // give delegator some score in the current epoch
+    const curEp = await Chronos.getCurrentEpoch();
+    const dKey = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [accounts[0].address]),
+    );
+    const SCALE18 = hre.ethers.parseUnits('1', 18);
+    await RandomSamplingStorage.addToEpochNodeDelegatorScore(
+      curEp,
+      identityId,
+      dKey,
+      SCALE18,
+    );
+
+    // withdraw everything and finalise
+    await Staking.requestWithdrawal(identityId, stakeAmt);
+    const [, , ts] = await StakingStorage.getDelegatorWithdrawalRequest(
+      identityId,
+      dKey,
+    );
+    expect(curEp).to.equal(
+      await DelegatorsInfo.getLastStakeHeldEpoch(
+        identityId,
+        accounts[0].address,
+      ),
+    );
+    await time.increaseTo(BigInt(ts));
+    await Staking.finalizeWithdrawal(identityId);
+
+    // hop to next epoch – the rewards are now claimable
+    await time.increase((await Chronos.timeUntilNextEpoch()) + 1n);
+
+    await Token.mint(accounts[0].address, 1n);
+    await Token.connect(accounts[0]).approve(await Staking.getAddress(), 1n);
+    await expect(Staking.stake(identityId, 1n)).to.be.revertedWith(
+      'Must claim rewards up to the lastStakeHeldEpoch before changing stake',
+    );
+  });
+
+  /**********************************************************************
+   * claimDelegatorRewards basic guards
+   **********************************************************************/
+  it('claimDelegatorRewards reverts for non-finalised epoch & unknown delegator', async () => {
+    const { identityId } = await createProfile();
+    // epoch not finalised
+    await expect(
+      Staking.claimDelegatorRewards(
+        identityId,
+        await Chronos.getCurrentEpoch(),
+        accounts[0].address,
+      ),
+    ).to.be.revertedWith('Epoch not finalised');
+
+    // move one epoch forward; now previous epoch is finalised
+    await time.increase((await Chronos.timeUntilNextEpoch()) + 1n);
+    await expect(
+      Staking.claimDelegatorRewards(
+        identityId,
+        (await Chronos.getCurrentEpoch()) - 1n,
+        accounts[5].address,
+      ),
+    ).to.be.revertedWith('Delegator not found');
+  });
+
+  it('reverts when claiming rewards for currentEpoch + 1', async () => {
+    const { identityId } = await createProfile();
+    const epochPlus = (await Chronos.getCurrentEpoch()) + 1n;
+    await expect(
+      Staking.claimDelegatorRewards(identityId, epochPlus, accounts[0].address),
+    ).to.be.revertedWith('Epoch not finalised');
+  });
+
+  it('handles claim when node score is zero (no rewards)', async () => {
+    const { identityId } = await createProfile();
+    await Token.mint(accounts[0].address, 1000);
+    await Token.connect(accounts[0]).approve(await Staking.getAddress(), 1000);
+    await Staking.stake(identityId, 1000);
+
+    const epoch = await Chronos.getCurrentEpoch();
+    // finalise epoch without adding scores
+    await time.increase((await Chronos.timeUntilNextEpoch()) + 1n);
+
+    const dKey = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [accounts[0].address]),
+    );
+    const balBefore = await StakingStorage.getDelegatorStakeBase(
+      identityId,
+      dKey,
+    );
+    await Staking.claimDelegatorRewards(identityId, epoch, accounts[0].address);
+    const balAfter = await StakingStorage.getDelegatorStakeBase(
+      identityId,
+      dKey,
+    );
+    expect(balAfter).to.equal(balBefore); // stake unchanged
+    // pointer advanced
+    expect(
+      await DelegatorsInfo.getLastClaimedEpoch(identityId, accounts[0].address),
+    ).to.equal(epoch);
   });
 });
