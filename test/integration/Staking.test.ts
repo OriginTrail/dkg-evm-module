@@ -287,6 +287,11 @@ async function advanceToNextProofingPeriod(
  * Ensures a node has at least one knowledge chunk in the current epoch.
  * If not, it creates a small knowledge collection to facilitate proof submission.
  */
+/**
+ * Ensure da node ima bar jedan chunk u tekućem epoch-u.
+ * Ako nema – sam node (kao publisher) objavi mini-KC (1 chunk, 1 TRAC),
+ * pa odmah osvežimo proof-period tako da chunk uđe u aktivni skup.
+ */
 async function ensureNodeHasChunksThisEpoch(
   nodeId: bigint,
   node: { operational: SignerWithAddress; admin: SignerWithAddress },
@@ -297,38 +302,41 @@ async function ensureNodeHasChunksThisEpoch(
     admin: SignerWithAddress;
   }[],
   receivingNodesIdentityIds: number[],
-) {
+): Promise<void> {
   const produced =
     await contracts.epochStorage.getNodeCurrentEpochProducedKnowledgeValue(
       nodeId,
     );
 
-  // If the node has not published anything in this epoch,
-  // and it is NOT already in the 'receivingNodes' list, add it to ensure it gets at least one replica.
   if (produced === 0n) {
-    const selfAlreadyListed = receivingNodes.some(
-      (r) => r.operational.address === node.operational.address,
-    );
-
-    if (!selfAlreadyListed) {
-      receivingNodes.unshift(node); // prepend - order doesn't matter
+    /* dodaj self u listu primaoca (ako već nije tu) */
+    if (
+      !receivingNodes.some(
+        (r) => r.operational.address === node.operational.address,
+      )
+    ) {
+      receivingNodes.unshift(node);
       receivingNodesIdentityIds.unshift(Number(nodeId));
     }
 
+    /* ► samo-objavljena KC: publisher == node  ← ovde je ključ! */
     await createKnowledgeCollection(
-      accounts.kcCreator,
-      node, // <- node that will prove
+      node.operational, // signer = node.operational
+      node, // publisher-node
       Number(nodeId),
       receivingNodes,
       receivingNodesIdentityIds,
       { KnowledgeCollection: contracts.kc, Token: contracts.token },
       merkleRoot,
-      `ensure-chunks-${Date.now()}`, // unique op-id
-      1,
-      4,
-      1,
-      toTRAC(1), // 1-chunk, 1 TRAC KC
+      `ensure-chunks-${Date.now()}`,
+      1, // holders
+      4, // chunks
+      1, // replicas
+      toTRAC(1),
     );
+
+    /* odmah pomeri start proof-perioda da KC postane aktivna */
+    await contracts.randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
   }
 }
 
