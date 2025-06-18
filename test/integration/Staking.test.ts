@@ -2463,7 +2463,7 @@ describe(`Full complex scenario`, function () {
   /**
    * STEP C – Move to the next epoch, explicitly call
    *          _validateDelegatorEpochClaims twice (N1 ✓, N2 ✗),
-   *          then try the real redelegate which must revert.
+   *          then try the redelegate which must revert.
    */
   it('STEP C – validate twice, cancelWithdrawal, then failed redelegate', async function () {
     /* ──────────────────────────────────────────────────────────────
@@ -2590,9 +2590,7 @@ describe(`Full complex scenario`, function () {
   /******************************************************************************************
    *  STEP D – two un-claimed epochs, claim one, redelegate half, check rolling
   /* ------------------------------------------------------------------
- *  STEP D – epoch-8: claim epoch-6 on N2 (→ goes to rollingRewards),
- *           redelegate half of live stake N1 → N2, verify state
- * ------------------------------------------------------------------ */
+  */
   it('STEP D – claim one on N2, redelegate half, check rolling', async function () {
     const delegator = accounts.delegator1;
     const SCALE18 = ethers.parseUnits('1', 18);
