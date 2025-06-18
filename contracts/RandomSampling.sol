@@ -107,6 +107,14 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     /**
+     * @dev Checks if there is a pending proofing period duration that hasn't taken effect yet
+     * @return True if there is a pending duration change, false otherwise
+     */
+    function isPendingProofingPeriodDuration() public view returns (bool) {
+        return chronos.getCurrentEpoch() < randomSamplingStorage.getLatestProofingPeriodDurationEffectiveEpoch();
+    }
+
+    /**
      * @dev Sets the duration of proofing periods in blocks with a one-epoch delay
      * Only contracts registered in the Hub can call this function
      * If a pending change exists, replaces it; otherwise adds a new duration
@@ -120,7 +128,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 effectiveEpoch = chronos.getCurrentEpoch() + 1;
 
         // Check if there's a pending change
-        if (randomSamplingStorage.isPendingProofingPeriodDuration()) {
+        if (isPendingProofingPeriodDuration()) {
             randomSamplingStorage.replacePendingProofingPeriodDuration(durationInBlocks, effectiveEpoch);
         } else {
             randomSamplingStorage.addProofingPeriodDuration(durationInBlocks, effectiveEpoch);
@@ -139,9 +147,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
 
         RandomSamplingLib.Challenge memory nodeChallenge = randomSamplingStorage.getNodeChallenge(identityId);
 
-        if (
-            nodeChallenge.activeProofPeriodStartBlock == randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock()
-        ) {
+        if (nodeChallenge.activeProofPeriodStartBlock == updateAndGetActiveProofPeriodStartBlock()) {
             // Revert if node has already solved the challenge for this period
             if (nodeChallenge.solved) {
                 revert("The challenge for this proof period has already been solved");
@@ -183,7 +189,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             revert("This challenge has already been solved");
         }
 
-        uint256 activeProofPeriodStartBlock = randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+        uint256 activeProofPeriodStartBlock = updateAndGetActiveProofPeriodStartBlock();
 
         // verify that the challengeId matches the current challenge
         if (challenge.activeProofPeriodStartBlock != activeProofPeriodStartBlock) {
@@ -211,7 +217,6 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
                 identityId,
                 score18
             );
-            randomSamplingStorage.addToAllNodesEpochProofPeriodScore(epoch, activeProofPeriodStartBlock, score18);
             randomSamplingStorage.addToNodeEpochScore(epoch, identityId, score18);
             randomSamplingStorage.addToAllNodesEpochScore(epoch, score18);
 
@@ -308,7 +313,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint88 chunksCount = knowledgeCollectionStorage.getKnowledgeCollection(knowledgeCollectionId).byteSize /
             randomSamplingStorage.CHUNK_BYTE_SIZE();
         uint256 chunkId = uint256(pseudoRandomVariable) % chunksCount;
-        uint256 activeProofPeriodStartBlock = randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+        uint256 activeProofPeriodStartBlock = updateAndGetActiveProofPeriodStartBlock();
 
         emit ChallengeCreated(
             identityId,
@@ -316,7 +321,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             knowledgeCollectionId,
             chunkId,
             activeProofPeriodStartBlock,
-            randomSamplingStorage.getActiveProofingPeriodDurationInBlocks()
+            getActiveProofingPeriodDurationInBlocks()
         );
 
         return
@@ -326,7 +331,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
                 address(knowledgeCollectionStorage),
                 currentEpoch,
                 activeProofPeriodStartBlock,
-                randomSamplingStorage.getActiveProofingPeriodDurationInBlocks(),
+                getActiveProofingPeriodDurationInBlocks(),
                 false
             );
     }
@@ -448,6 +453,79 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 nodePublishingFactor18 = (nodeStakeFactor18 * pubRatio18) / SCALE18;
 
         return nodeStakeFactor18 + nodeAskFactor18 + nodePublishingFactor18;
+    }
+
+    /**
+     * @dev Updates and returns the current active proof period start block
+     * Automatically advances to the next period if the current one has ended
+     * @return Current active proof period start block number
+     */
+    function updateAndGetActiveProofPeriodStartBlock() public returns (uint256) {
+        uint256 activeProofingPeriodDurationInBlocks = getActiveProofingPeriodDurationInBlocks();
+
+        if (activeProofingPeriodDurationInBlocks == 0) {
+            revert("Active proofing period duration in blocks should not be 0");
+        }
+
+        uint256 activeProofPeriodStartBlock = randomSamplingStorage.getActiveProofPeriodStartBlock();
+
+        if (block.number > activeProofPeriodStartBlock + activeProofingPeriodDurationInBlocks - 1) {
+            // Calculate how many complete periods have passed since the last active period started
+            uint256 blocksSinceLastStart = block.number - activeProofPeriodStartBlock;
+            uint256 completePeriodsPassed = blocksSinceLastStart / activeProofingPeriodDurationInBlocks;
+
+            uint256 newActiveProofPeriodStartBlock = activeProofPeriodStartBlock +
+                completePeriodsPassed *
+                activeProofingPeriodDurationInBlocks;
+
+            randomSamplingStorage.setActiveProofPeriodStartBlock(newActiveProofPeriodStartBlock);
+
+            return newActiveProofPeriodStartBlock;
+        }
+
+        return activeProofPeriodStartBlock;
+    }
+
+    /**
+     * @dev Returns the status of the current active proof period including start block and whether it's still active
+     * @return ProofPeriodStatus struct containing start block and active status
+     */
+    function getActiveProofPeriodStatus() external view returns (RandomSamplingLib.ProofPeriodStatus memory) {
+        uint256 activeProofPeriodStartBlock = randomSamplingStorage.getActiveProofPeriodStartBlock();
+        return
+            RandomSamplingLib.ProofPeriodStatus(
+                activeProofPeriodStartBlock,
+                block.number < activeProofPeriodStartBlock + getActiveProofingPeriodDurationInBlocks()
+            );
+    }
+
+    /**
+     * @dev Calculates the start block of a historical proof period based on current period and offset
+     * Used to determine proof periods from the past for validation purposes
+     * @param proofPeriodStartBlock Start block of a valid proof period (must be > 0 and aligned to period boundaries)
+     * @param offset Number of periods to go back (must be > 0)
+     * @return Start block of the historical proof period
+     */
+    function getHistoricalProofPeriodStartBlock(
+        uint256 proofPeriodStartBlock,
+        uint256 offset
+    ) external view returns (uint256) {
+        require(proofPeriodStartBlock > 0, "Proof period start block must be greater than 0");
+        require(
+            proofPeriodStartBlock % getActiveProofingPeriodDurationInBlocks() == 0,
+            "Proof period start block is not valid"
+        );
+        require(offset > 0, "Offset must be greater than 0");
+        return proofPeriodStartBlock - offset * getActiveProofingPeriodDurationInBlocks();
+    }
+
+    /**
+     * @dev Returns the currently active proofing period duration in blocks
+     * Automatically selects the appropriate duration based on current epoch
+     * @return Duration in blocks of the currently active proofing period
+     */
+    function getActiveProofingPeriodDurationInBlocks() public view returns (uint16) {
+        return randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(chronos.getCurrentEpoch());
     }
 
     /**

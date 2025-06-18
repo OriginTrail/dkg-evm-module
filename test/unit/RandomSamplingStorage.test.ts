@@ -6,10 +6,6 @@ import hre, { ethers } from 'hardhat';
 
 import parameters from '../../deployments/parameters.json';
 import {
-  mineBlocks,
-  mineProofPeriodBlocks,
-} from '../../test/helpers/blockchain-helpers';
-import {
   Hub,
   RandomSamplingStorage,
   Chronos,
@@ -22,16 +18,16 @@ const HUNDRED_ETH = ethers.parseEther('100');
 
 // Helper functions for random sampling
 async function createMockChallenge(
-  randomSamplingStorage: RandomSamplingStorage,
+  randomSampling: RandomSampling,
   knowledgeCollectionStorage: KnowledgeCollectionStorage,
   chronos: Chronos,
 ): Promise<RandomSamplingLib.ChallengeStruct> {
   const currentEpoch = await chronos.getCurrentEpoch();
-  await randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+  await randomSampling.updateAndGetActiveProofPeriodStartBlock();
   const { activeProofPeriodStartBlock } =
-    await randomSamplingStorage.getActiveProofPeriodStatus();
+    await randomSampling.getActiveProofPeriodStatus();
   const proofingPeriodDuration =
-    await randomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+    await randomSampling.getActiveProofingPeriodDurationInBlocks();
 
   return {
     knowledgeCollectionId: 1n,
@@ -52,8 +48,6 @@ type RandomStorageFixture = {
   Chronos: Chronos;
   RandomSampling: RandomSampling;
 };
-
-const PANIC_ARITHMETIC_OVERFLOW = 0x11;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function impersonateAndFund(contract: any) {
@@ -135,12 +129,12 @@ describe('@unit RandomSamplingStorage', function () {
     };
   }
 
-  async function updateAndGetActiveProofPeriod() {
-    const tx =
-      await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-    await tx.wait();
-    return await RandomSamplingStorage.getActiveProofPeriodStatus();
-  }
+  // async function updateAndGetActiveProofPeriod() {
+  //   const tx =
+  //     await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+  //   await tx.wait();
+  //   return await RandomSamplingStorage.getActiveProofPeriodStatus();
+  // }
 
   beforeEach(async () => {
     hre.helpers.resetDeploymentsJson();
@@ -149,7 +143,7 @@ describe('@unit RandomSamplingStorage', function () {
     ));
 
     MockChallenge = await createMockChallenge(
-      RandomSamplingStorage,
+      RandomSampling,
       KnowledgeCollectionStorage,
       Chronos,
     );
@@ -208,7 +202,7 @@ describe('@unit RandomSamplingStorage', function () {
       await tx.wait();
 
       await expect(tx)
-        .to.emit(RandomSamplingStorage, 'AvgBlockTimeUpdated')
+        .to.emit(RandomSamplingStorage, 'AvgBlockTimeSet')
         .withArgs(BigInt(newAvg));
 
       expect(await RandomSamplingStorage.avgBlockTimeInSeconds()).to.equal(
@@ -246,10 +240,11 @@ describe('@unit RandomSamplingStorage', function () {
       await tx.wait();
 
       await expect(tx)
-        .to.emit(RandomSamplingStorage, 'W1Updated')
+        .to.emit(RandomSamplingStorage, 'W1Set')
         .withArgs(oldW1, newW1);
 
-      expect(await RandomSamplingStorage.w1()).to.equal(newW1);
+      // Test getW1() function
+      expect(await RandomSamplingStorage.getW1()).to.equal(newW1);
 
       // // TODO: Fails because the hubOwner is not a multisig, but an individual account
       // // Test revert for non-owner
@@ -269,10 +264,11 @@ describe('@unit RandomSamplingStorage', function () {
       await tx.wait();
 
       await expect(tx)
-        .to.emit(RandomSamplingStorage, 'W2Updated')
+        .to.emit(RandomSamplingStorage, 'W2Set')
         .withArgs(oldW2, newW2);
 
-      expect(await RandomSamplingStorage.w2()).to.equal(newW2);
+      // Test getW2() function
+      expect(await RandomSamplingStorage.getW2()).to.equal(newW2);
 
       // TODO: This test fails because the hubOwner is not a multisig, but an individual account
       // await expect(RandomSamplingStorage.connect(accounts[1]).setW2(newW2))
@@ -358,34 +354,19 @@ describe('@unit RandomSamplingStorage', function () {
           ),
         ).to.equal(0n, `Node ${nodeId} should start with 0 score`);
       }
-      expect(
-        await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
-          currentEpoch,
-          proofPeriodIndex,
-        ),
-      ).to.equal(0n, 'Global score should start at 0');
 
       // Add scores to different nodes
       const scores = [100n, 200n, 300n];
-      let expectedGlobalScore = 0n;
 
       for (let i = 0; i < nodeIds.length; i++) {
         const nodeId = nodeIds[i];
         const score = scores[i];
-        expectedGlobalScore += score;
 
         // Add score to node
         await RandomSamplingStorage.addToNodeEpochProofPeriodScore(
           currentEpoch,
           proofPeriodIndex,
           nodeId,
-          score,
-        );
-
-        // Add to global score
-        await RandomSamplingStorage.addToAllNodesEpochProofPeriodScore(
-          currentEpoch,
-          proofPeriodIndex,
           score,
         );
 
@@ -400,17 +381,6 @@ describe('@unit RandomSamplingStorage', function () {
           score,
           `Node ${nodeId} should have score ${score}`,
         );
-
-        // Verify global score
-        const globalScore =
-          await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
-            currentEpoch,
-            proofPeriodIndex,
-          );
-        expect(globalScore).to.equal(
-          expectedGlobalScore,
-          `Global score should be ${expectedGlobalScore} after adding ${score} to node ${nodeId}`,
-        );
       }
 
       // Test adding more score to existing node
@@ -419,13 +389,6 @@ describe('@unit RandomSamplingStorage', function () {
         currentEpoch,
         proofPeriodIndex,
         nodeIds[0],
-        additionalScore,
-      );
-
-      // Add to global score
-      await RandomSamplingStorage.addToAllNodesEpochProofPeriodScore(
-        currentEpoch,
-        proofPeriodIndex,
         additionalScore,
       );
 
@@ -439,17 +402,6 @@ describe('@unit RandomSamplingStorage', function () {
       expect(updatedNodeScore).to.equal(
         scores[0] + additionalScore,
         'Node score should be updated with additional score',
-      );
-
-      // Verify updated global score
-      const updatedGlobalScore =
-        await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
-          currentEpoch,
-          proofPeriodIndex,
-        );
-      expect(updatedGlobalScore).to.equal(
-        expectedGlobalScore + additionalScore,
-        'Global score should be updated with additional score',
       );
     });
 
@@ -522,7 +474,7 @@ describe('@unit RandomSamplingStorage', function () {
           scorePerStakeToAdd,
         ),
       )
-        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeUpdated')
+        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeAdded')
         .withArgs(
           currentEpoch,
           nodeId,
@@ -552,7 +504,7 @@ describe('@unit RandomSamplingStorage', function () {
           anotherScorePerStakeToAdd,
         ),
       )
-        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeUpdated')
+        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeAdded')
         .withArgs(
           currentEpoch,
           nodeId,
@@ -579,7 +531,7 @@ describe('@unit RandomSamplingStorage', function () {
           scorePerStakeToAdd,
         ),
       )
-        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeUpdated')
+        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeAdded')
         .withArgs(
           currentEpoch,
           anotherNodeId,
@@ -603,7 +555,7 @@ describe('@unit RandomSamplingStorage', function () {
           scorePerStakeToAdd,
         ),
       )
-        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeUpdated')
+        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeAdded')
         .withArgs(
           nextEpoch,
           nodeId,
@@ -926,410 +878,6 @@ describe('@unit RandomSamplingStorage', function () {
     });
   });
 
-  describe('Proofing Period Management', () => {
-    it('Should return the correct proofing period status', async () => {
-      const { activeProofPeriodStartBlock } =
-        await updateAndGetActiveProofPeriod();
-      const duration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-
-      // Initial check
-      const status = await RandomSamplingStorage.getActiveProofPeriodStatus();
-      expect(status.activeProofPeriodStartBlock).to.be.a('bigint');
-      expect(status.isValid).to.be.a('boolean');
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(status.isValid).to.be.true;
-
-      // Test at middle of period
-      const middleBlock = activeProofPeriodStartBlock + duration / 2n;
-      await mineBlocks(
-        Number(
-          middleBlock - BigInt(await hre.ethers.provider.getBlockNumber()),
-        ),
-      );
-      const middleStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(middleStatus.isValid).to.be.true;
-
-      // Test at end of period
-      const endBlock = activeProofPeriodStartBlock + duration - 1n;
-      await mineBlocks(
-        Number(endBlock - BigInt(await hre.ethers.provider.getBlockNumber())),
-      );
-      const endStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(endStatus.isValid).to.be.true;
-
-      // Test after period ends
-      await mineBlocks(1);
-      const afterStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(afterStatus.isValid).to.be.false;
-    });
-
-    it('Should update start block correctly for different period scenarios', async () => {
-      // Test when no period has passed
-      const { activeProofPeriodStartBlock: initialBlock } =
-        await updateAndGetActiveProofPeriod();
-      const statusNoPeriod =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      expect(statusNoPeriod.activeProofPeriodStartBlock).to.equal(initialBlock);
-
-      // Test when 1 full period has passed
-      const duration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      await mineBlocks(Number(duration));
-      const { activeProofPeriodStartBlock: onePeriodBlock } =
-        await updateAndGetActiveProofPeriod();
-      expect(onePeriodBlock).to.equal(initialBlock + duration);
-
-      // Test when 2 full periods have passed
-      await mineBlocks(Number(duration));
-      const { activeProofPeriodStartBlock: twoPeriodBlock } =
-        await updateAndGetActiveProofPeriod();
-      expect(twoPeriodBlock).to.equal(initialBlock + duration * 2n);
-
-      // Test when n full periods have passed (using n=5 as example)
-      const n = 5;
-      for (let i = 0; i < n - 2; i++) {
-        await mineBlocks(Number(duration));
-      }
-      const { activeProofPeriodStartBlock: nPeriodBlock } =
-        await updateAndGetActiveProofPeriod();
-      expect(nPeriodBlock).to.equal(initialBlock + duration * BigInt(n));
-    });
-
-    it('Should return correct historical proofing period start', async () => {
-      const { activeProofPeriodStartBlock } =
-        await updateAndGetActiveProofPeriod();
-      const duration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-
-      // Test invalid inputs
-      await expect(
-        RandomSamplingStorage.getHistoricalProofPeriodStartBlock(0, 1),
-      ).to.be.revertedWith('Proof period start block must be greater than 0');
-
-      await expect(
-        RandomSamplingStorage.getHistoricalProofPeriodStartBlock(100, 0),
-      ).to.be.revertedWith('Offset must be greater than 0');
-
-      await expect(
-        RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
-          activeProofPeriodStartBlock + 10n,
-          1,
-        ),
-      ).to.be.revertedWith('Proof period start block is not valid');
-
-      await expect(
-        RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
-          activeProofPeriodStartBlock,
-          999,
-        ),
-      ).to.be.revertedWithPanic(PANIC_ARITHMETIC_OVERFLOW);
-
-      // Test valid historical blocks
-      await mineProofPeriodBlocks(
-        activeProofPeriodStartBlock,
-        RandomSamplingStorage,
-      );
-      const { activeProofPeriodStartBlock: newPeriodStartBlock } =
-        await updateAndGetActiveProofPeriod();
-
-      // Test offset 1
-      const onePeriodBack =
-        await RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
-          newPeriodStartBlock,
-          1,
-        );
-      expect(onePeriodBack).to.equal(newPeriodStartBlock - duration);
-
-      // Test offset 2
-      const twoPeriodsBack =
-        await RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
-          newPeriodStartBlock,
-          2,
-        );
-      expect(twoPeriodsBack).to.equal(newPeriodStartBlock - duration * 2n);
-
-      // Test offset 3
-      const threePeriodsBack =
-        await RandomSamplingStorage.getHistoricalProofPeriodStartBlock(
-          newPeriodStartBlock,
-          3,
-        );
-      expect(threePeriodsBack).to.equal(newPeriodStartBlock - duration * 3n);
-
-      // Test that returned block is aligned with period start
-      expect(threePeriodsBack % duration).to.equal(
-        0n,
-        'Historical block should be aligned with period start',
-      );
-    });
-
-    it('Should return correct active proof period', async () => {
-      const { activeProofPeriodStartBlock, isValid } =
-        await updateAndGetActiveProofPeriod();
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(isValid).to.be.equal(true, 'Period should be valid');
-
-      // Mine blocks up to the last block of the current period
-      const currentBlock = await hre.ethers.provider.getBlockNumber();
-      const blocksToMine =
-        Number(activeProofPeriodStartBlock) +
-        Number(proofingPeriodDurationInBlocks) -
-        currentBlock -
-        1;
-      await mineBlocks(blocksToMine);
-
-      let statusAfterUpdate =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(statusAfterUpdate.isValid).to.be.equal(
-        true,
-        'Period should still be valid',
-      );
-
-      // Mine one more block to reach the end of the period
-      await mineBlocks(1);
-      statusAfterUpdate =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(statusAfterUpdate.isValid).to.be.equal(
-        false,
-        'Period should not be valid',
-      );
-
-      // Update the period and mine blocks for the new period
-      await updateAndGetActiveProofPeriod();
-      const newStatus =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      const blocksToMineNew =
-        Number(newStatus.activeProofPeriodStartBlock) +
-        Number(proofingPeriodDurationInBlocks) -
-        (await hre.ethers.provider.getBlockNumber()) -
-        1;
-      await mineBlocks(blocksToMineNew);
-
-      statusAfterUpdate =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(statusAfterUpdate.isValid).to.be.equal(
-        true,
-        'New period should be valid',
-      );
-    });
-
-    it('Should pick correct proofing period duration based on epoch', async () => {
-      const initialDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      const epochLength = await Chronos.epochLength();
-
-      // Test initial duration
-      expect(initialDuration).to.equal(BigInt(proofingPeriodDurationInBlocks));
-
-      // Test duration in middle of epoch
-      await time.increase(Number(epochLength) / 2);
-      const midEpochDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      expect(midEpochDuration).to.equal(
-        initialDuration,
-        'Duration should not change mid-epoch',
-      );
-
-      // Set new duration for next epoch
-      const newDuration = 1000;
-      await RandomSampling.setProofingPeriodDurationInBlocks(newDuration);
-
-      // Verify duration hasn't changed yet
-      const beforeEpochEndDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      expect(beforeEpochEndDuration).to.equal(
-        initialDuration,
-        'Duration should not change before epoch end',
-      );
-
-      // Move to next epoch
-      await time.increase(Number(epochLength) + 1);
-      const nextEpochDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      expect(nextEpochDuration).to.equal(
-        BigInt(newDuration),
-        'Duration should change in next epoch',
-      );
-
-      // Set another duration for future epoch
-      const futureDuration = 2000;
-      await RandomSampling.setProofingPeriodDurationInBlocks(futureDuration);
-
-      // Verify current epoch still has previous duration
-      const currentEpochDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      expect(currentEpochDuration).to.equal(
-        BigInt(newDuration),
-        'Current epoch should keep previous duration',
-      );
-
-      // Move to future epoch
-      await time.increase(Number(epochLength));
-      const futureEpochDuration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-      expect(futureEpochDuration).to.equal(
-        BigInt(futureDuration),
-        'Future epoch should have new duration',
-      );
-    });
-
-    it('Should return correct proofing period duration based on epoch history', async () => {
-      const baseDuration = 100;
-      const testEpochs = 5;
-      const currentEpoch = await Chronos.getCurrentEpoch();
-      const epochLength = await Chronos.epochLength();
-
-      // Set up multiple durations with different effective epochs
-      const durations = [];
-      for (let i = 0; i < testEpochs; i++) {
-        const duration = baseDuration + i * 100;
-        durations.push(duration);
-
-        await RandomSampling.setProofingPeriodDurationInBlocks(duration);
-
-        await time.increase(Number(epochLength));
-      }
-
-      const finalEpoch = await Chronos.getCurrentEpoch();
-      expect(finalEpoch).to.equal(currentEpoch + BigInt(testEpochs));
-
-      // Test invalid epoch (before first duration)
-      await expect(
-        RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(
-          currentEpoch - 1n,
-        ),
-      ).to.be.revertedWith('No applicable duration found');
-
-      // Test each epoch's duration
-      for (let i = 0; i < testEpochs; i++) {
-        const targetEpoch = finalEpoch - BigInt(i);
-        const expectedDuration = durations[testEpochs - 1 - i];
-
-        const actual =
-          await RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(
-            targetEpoch,
-          );
-        expect(actual).to.equal(
-          expectedDuration,
-          `Epoch ${targetEpoch} should have duration ${expectedDuration}`,
-        );
-      }
-
-      // Test edge case - current epoch
-      const currentEpochDuration =
-        await RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(
-          finalEpoch,
-        );
-      expect(currentEpochDuration).to.equal(
-        durations[durations.length - 1],
-        'Current epoch should have the latest duration',
-      );
-
-      // Test edge case - first epoch with duration
-      const firstEpochWithDuration = currentEpoch;
-      const firstEpochDuration =
-        await RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(
-          firstEpochWithDuration,
-        );
-      expect(firstEpochDuration).to.equal(
-        durations[0],
-        'First epoch should have the first duration',
-      );
-    });
-
-    it('Should return same block when no period has passed', async () => {
-      const { activeProofPeriodStartBlock: initialBlock } =
-        await updateAndGetActiveProofPeriod();
-
-      // Mine blocks up to the last block of the current period
-      const currentBlock = await hre.ethers.provider.getBlockNumber();
-      const blocksToMine =
-        Number(initialBlock) +
-        Number(proofingPeriodDurationInBlocks) -
-        currentBlock -
-        2;
-      await mineBlocks(blocksToMine);
-
-      const tx =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await tx.wait();
-      const { activeProofPeriodStartBlock: newBlock } =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-
-      // Should return the same block since we haven't reached the end of the period
-      expect(newBlock).to.equal(initialBlock);
-
-      // Mine one more block to reach the end of the period
-      await mineBlocks(1);
-
-      const tx2 =
-        await RandomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-      await tx2.wait();
-      const { activeProofPeriodStartBlock: finalBlock } =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-
-      // Should update the block since we've reached the end of the period
-      expect(finalBlock).to.be.greaterThan(initialBlock);
-    });
-
-    it('Should return correct status for different block numbers', async () => {
-      const { activeProofPeriodStartBlock } =
-        await updateAndGetActiveProofPeriod();
-      const duration =
-        await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-
-      // Test at start block
-      const statusAtStart =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(statusAtStart.isValid).to.be.true;
-      expect(statusAtStart.activeProofPeriodStartBlock).to.equal(
-        activeProofPeriodStartBlock,
-      );
-
-      // Test at middle block
-      const middleBlock = activeProofPeriodStartBlock + duration / 2n;
-      await mineBlocks(
-        Number(
-          middleBlock - BigInt(await hre.ethers.provider.getBlockNumber()),
-        ),
-      );
-      const statusAtMiddle =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(statusAtMiddle.isValid).to.be.true;
-
-      // Test at last valid block
-      const lastValidBlock = activeProofPeriodStartBlock + duration - 1n;
-      await mineBlocks(
-        Number(
-          lastValidBlock - BigInt(await hre.ethers.provider.getBlockNumber()),
-        ),
-      );
-      const statusAtLastValid =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(statusAtLastValid.isValid).to.be.true;
-
-      // Test at first invalid block
-      await mineBlocks(1);
-      const statusAtInvalid =
-        await RandomSamplingStorage.getActiveProofPeriodStatus();
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(statusAtInvalid.isValid).to.be.false;
-    });
-  });
-
   describe('Challenge Handling', () => {
     it('Should set and get challenge correctly', async () => {
       const publishingNodeIdentityId = 1n;
@@ -1420,8 +968,8 @@ describe('@unit RandomSamplingStorage', function () {
 
       // Initially should be false
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(await RandomSamplingStorage.isPendingProofingPeriodDuration()).to
-        .be.false;
+      expect(await RandomSampling.isPendingProofingPeriodDuration()).to.be
+        .false;
 
       // Add a new duration
       await RandomSamplingStorage.addProofingPeriodDuration(
@@ -1429,8 +977,7 @@ describe('@unit RandomSamplingStorage', function () {
         currentEpoch + 1n,
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(await RandomSamplingStorage.isPendingProofingPeriodDuration()).to
-        .be.true;
+      expect(await RandomSampling.isPendingProofingPeriodDuration()).to.be.true;
 
       // Replace pending duration
       await RandomSamplingStorage.replacePendingProofingPeriodDuration(
@@ -1438,14 +985,13 @@ describe('@unit RandomSamplingStorage', function () {
         currentEpoch + 1n,
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(await RandomSamplingStorage.isPendingProofingPeriodDuration()).to
-        .be.true;
+      expect(await RandomSampling.isPendingProofingPeriodDuration()).to.be.true;
 
       // Move to next epoch
       await time.increase(Number(await Chronos.epochLength()));
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(await RandomSamplingStorage.isPendingProofingPeriodDuration()).to
-        .be.false;
+      expect(await RandomSampling.isPendingProofingPeriodDuration()).to.be
+        .false;
     });
 
     it('Should handle multiple proofing period durations correctly', async () => {
@@ -1459,8 +1005,8 @@ describe('@unit RandomSamplingStorage', function () {
           currentEpoch + BigInt(i + 1),
         );
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        expect(await RandomSamplingStorage.isPendingProofingPeriodDuration()).to
-          .be.true;
+        expect(await RandomSampling.isPendingProofingPeriodDuration()).to.be
+          .true;
       }
 
       // Verify durations are set correctly
@@ -1483,8 +1029,7 @@ describe('@unit RandomSamplingStorage', function () {
         currentEpoch + 1n,
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(await RandomSamplingStorage.isPendingProofingPeriodDuration()).to
-        .be.true;
+      expect(await RandomSampling.isPendingProofingPeriodDuration()).to.be.true;
 
       // Replace with new duration
       const newDuration = 2000;
@@ -1565,137 +1110,560 @@ describe('@unit RandomSamplingStorage', function () {
     });
   });
 
-  describe('Delegator Rewards Management', () => {
-    it('Should track delegator rewards claimed status correctly', async () => {
-      const publishingNodeIdentityId = 1n;
-      const signer = await ethers.getSigner(accounts[0].address);
-      const currentEpoch = await Chronos.getCurrentEpoch();
-      const delegatorKey = ethers.encodeBytes32String('delegator1');
+  describe('Active Proof Period Management', () => {
+    it('Should set and get active proof period start block correctly and emit event', async () => {
+      const newActiveProofPeriodStartBlock = 12345n;
 
-      // Initially should be false
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(
-        await RandomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
-          currentEpoch,
-          publishingNodeIdentityId,
-          delegatorKey,
-        ),
-      ).to.be.false;
-
-      // Set as claimed
-      await RandomSamplingStorage.connect(
-        signer,
-      ).setEpochNodeDelegatorRewardsClaimed(
-        currentEpoch,
-        publishingNodeIdentityId,
-        delegatorKey,
-        true,
+      // Impersonate RandomSampling contract to call onlyContracts function
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(
+        await RandomSampling.getAddress(),
       );
 
-      // Verify claimed status
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(
-        await RandomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
-          currentEpoch,
-          publishingNodeIdentityId,
-          delegatorKey,
+      // Set active proof period start block and check event
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setActiveProofPeriodStartBlock(
+          newActiveProofPeriodStartBlock,
         ),
-      ).to.be.true;
+      )
+        .to.emit(RandomSamplingStorage, 'ActiveProofPeriodStartBlockSet')
+        .withArgs(newActiveProofPeriodStartBlock);
 
-      // Set as not claimed
-      await RandomSamplingStorage.connect(
-        signer,
-      ).setEpochNodeDelegatorRewardsClaimed(
-        currentEpoch,
-        publishingNodeIdentityId,
-        delegatorKey,
-        false,
+      // Verify stored value
+      expect(
+        await RandomSamplingStorage.getActiveProofPeriodStartBlock(),
+      ).to.equal(
+        newActiveProofPeriodStartBlock,
+        `Active proof period start block should be ${newActiveProofPeriodStartBlock}`,
       );
 
-      // Verify not claimed status
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(
-        await RandomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
-          currentEpoch,
-          publishingNodeIdentityId,
-          delegatorKey,
+      // Test updating to new value
+      const anotherBlockNumber = 67890n;
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setActiveProofPeriodStartBlock(
+          anotherBlockNumber,
         ),
-      ).to.be.false;
+      )
+        .to.emit(RandomSamplingStorage, 'ActiveProofPeriodStartBlockSet')
+        .withArgs(anotherBlockNumber);
+
+      expect(
+        await RandomSamplingStorage.getActiveProofPeriodStartBlock(),
+      ).to.equal(
+        anotherBlockNumber,
+        `Active proof period start block should be updated to ${anotherBlockNumber}`,
+      );
+
+      await stopImpersonate(RandomSampling);
     });
 
-    it('Should handle multiple delegators rewards claimed status', async () => {
-      const publishingNodeIdentityId = 1n;
-      const signer = await ethers.getSigner(accounts[0].address);
-      const currentEpoch = await Chronos.getCurrentEpoch();
-      const delegatorKeys = [
-        ethers.encodeBytes32String('delegator1'),
-        ethers.encodeBytes32String('delegator2'),
-        ethers.encodeBytes32String('delegator3'),
-      ];
-
-      // Set different statuses for different delegators
-      for (let i = 0; i < delegatorKeys.length; i++) {
-        const claimed = i % 2 === 0; // Alternate between true and false
-        await RandomSamplingStorage.connect(
-          signer,
-        ).setEpochNodeDelegatorRewardsClaimed(
-          currentEpoch,
-          publishingNodeIdentityId,
-          delegatorKeys[i],
-          claimed,
-        );
-
-        // Verify status
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        expect(
-          await RandomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
-            currentEpoch,
-            publishingNodeIdentityId,
-            delegatorKeys[i],
-          ),
-        ).to.equal(claimed);
-      }
+    it('Should revert if not called by contracts', async () => {
+      await expect(
+        RandomSamplingStorage.connect(
+          accounts[1],
+        ).setActiveProofPeriodStartBlock(123),
+      )
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
     });
+  });
 
-    it('Should maintain separate claimed status for different epochs', async () => {
-      const publishingNodeIdentityId = 1n;
-      const signer = await ethers.getSigner(accounts[0].address);
-      const currentEpoch = await Chronos.getCurrentEpoch();
-      const delegatorKey = ethers.encodeBytes32String('delegator1');
-
-      // Set claimed status for current epoch
-      await RandomSamplingStorage.connect(
-        signer,
-      ).setEpochNodeDelegatorRewardsClaimed(
-        currentEpoch,
-        publishingNodeIdentityId,
-        delegatorKey,
-        true,
+  describe('Proofing Period Duration Helper Functions', () => {
+    beforeEach(async () => {
+      // Add some test durations
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(
+        await RandomSampling.getAddress(),
       );
 
-      // Move to next epoch
-      await time.increase(Number(await Chronos.epochLength()));
-      const nextEpoch = await Chronos.getCurrentEpoch();
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      await RandomSamplingStorage.connect(rsSigner).addProofingPeriodDuration(
+        1000,
+        currentEpoch + 1n,
+      );
+      await RandomSamplingStorage.connect(rsSigner).addProofingPeriodDuration(
+        2000,
+        currentEpoch + 2n,
+      );
 
-      // Verify current epoch is still claimed
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      await stopImpersonate(RandomSampling);
+    });
+
+    it('Should return correct proofing period durations length', async () => {
+      // Should have initial duration + 2 added durations = 3 total
       expect(
-        await RandomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
+        await RandomSamplingStorage.getProofingPeriodDurationsLength(),
+      ).to.equal(3);
+    });
+
+    it('Should return latest proofing period duration effective epoch', async () => {
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      expect(
+        await RandomSamplingStorage.getLatestProofingPeriodDurationEffectiveEpoch(),
+      ).to.equal(currentEpoch + 2n);
+    });
+
+    it('Should return latest proofing period duration in blocks', async () => {
+      expect(
+        await RandomSamplingStorage.getLatestProofingPeriodDurationInBlocks(),
+      ).to.equal(2000);
+    });
+
+    it('Should return proofing period duration from specific index', async () => {
+      const currentEpoch = await Chronos.getCurrentEpoch();
+
+      // Test index 0 (initial duration)
+      const duration0 =
+        await RandomSamplingStorage.getProofingPeriodDurationFromIndex(0);
+      expect(duration0.durationInBlocks).to.equal(
+        proofingPeriodDurationInBlocks,
+      );
+      expect(duration0.effectiveEpoch).to.equal(currentEpoch);
+
+      // Test index 1 (first added duration)
+      const duration1 =
+        await RandomSamplingStorage.getProofingPeriodDurationFromIndex(1);
+      expect(duration1.durationInBlocks).to.equal(1000);
+      expect(duration1.effectiveEpoch).to.equal(currentEpoch + 1n);
+
+      // Test index 2 (second added duration)
+      const duration2 =
+        await RandomSamplingStorage.getProofingPeriodDurationFromIndex(2);
+      expect(duration2.durationInBlocks).to.equal(2000);
+      expect(duration2.effectiveEpoch).to.equal(currentEpoch + 2n);
+    });
+
+    it('Should revert when accessing invalid index', async () => {
+      const length =
+        await RandomSamplingStorage.getProofingPeriodDurationsLength();
+      await expect(
+        RandomSamplingStorage.getProofingPeriodDurationFromIndex(length),
+      ).to.be.reverted; // Array out of bounds
+    });
+  });
+
+  describe('Node Epoch Valid Proofs Count Management', () => {
+    it('Should set epoch node valid proofs count and emit event', async () => {
+      const nodeId = 1n;
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const countToSet = 5n;
+
+      // Impersonate RandomSampling contract
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(
+        await RandomSampling.getAddress(),
+      );
+
+      // Set count and check event
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setEpochNodeValidProofsCount(
           currentEpoch,
-          publishingNodeIdentityId,
-          delegatorKey,
+          nodeId,
+          countToSet,
         ),
-      ).to.be.true;
+      )
+        .to.emit(RandomSamplingStorage, 'EpochNodeValidProofsCountSet')
+        .withArgs(currentEpoch, nodeId, countToSet);
 
-      // Verify next epoch is not claimed
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      // Verify stored value
       expect(
-        await RandomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
-          nextEpoch,
-          publishingNodeIdentityId,
+        await RandomSamplingStorage.getEpochNodeValidProofsCount(
+          currentEpoch,
+          nodeId,
+        ),
+      ).to.equal(countToSet);
+
+      // Test overwriting
+      const newCount = 10n;
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setEpochNodeValidProofsCount(
+          currentEpoch,
+          nodeId,
+          newCount,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'EpochNodeValidProofsCountSet')
+        .withArgs(currentEpoch, nodeId, newCount);
+
+      expect(
+        await RandomSamplingStorage.getEpochNodeValidProofsCount(
+          currentEpoch,
+          nodeId,
+        ),
+      ).to.equal(newCount);
+
+      await stopImpersonate(RandomSampling);
+    });
+  });
+
+  describe('Node Epoch Score Management', () => {
+    it('Should add to node epoch score and emit event', async () => {
+      const nodeId = 1n;
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const scoreToAdd = 1000n;
+      const expectedTotalScore = 1000n;
+
+      // Impersonate RandomSampling contract
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(
+        await RandomSampling.getAddress(),
+      );
+
+      // Initial state
+      expect(
+        await RandomSamplingStorage.getNodeEpochScore(currentEpoch, nodeId),
+      ).to.equal(0n);
+
+      // Add score and check event
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addToNodeEpochScore(
+          currentEpoch,
+          nodeId,
+          scoreToAdd,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'NodeEpochScoreAdded')
+        .withArgs(currentEpoch, nodeId, scoreToAdd, expectedTotalScore);
+
+      // Verify stored value
+      expect(
+        await RandomSamplingStorage.getNodeEpochScore(currentEpoch, nodeId),
+      ).to.equal(expectedTotalScore);
+
+      // Add more score and verify accumulation
+      const anotherScore = 500n;
+      const newExpectedTotal = expectedTotalScore + anotherScore;
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addToNodeEpochScore(
+          currentEpoch,
+          nodeId,
+          anotherScore,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'NodeEpochScoreAdded')
+        .withArgs(currentEpoch, nodeId, anotherScore, newExpectedTotal);
+
+      expect(
+        await RandomSamplingStorage.getNodeEpochScore(currentEpoch, nodeId),
+      ).to.equal(newExpectedTotal);
+
+      await stopImpersonate(RandomSampling);
+    });
+
+    it('Should set node epoch score and emit event', async () => {
+      const nodeId = 1n;
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const scoreToSet = 2500n;
+
+      // Impersonate RandomSampling contract
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(
+        await RandomSampling.getAddress(),
+      );
+
+      // Set score and check event
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setNodeEpochScore(
+          currentEpoch,
+          nodeId,
+          scoreToSet,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'NodeEpochScoreSet')
+        .withArgs(currentEpoch, nodeId, scoreToSet);
+
+      // Verify stored value
+      expect(
+        await RandomSamplingStorage.getNodeEpochScore(currentEpoch, nodeId),
+      ).to.equal(scoreToSet);
+
+      // Test overwriting
+      const newScore = 3000n;
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setNodeEpochScore(
+          currentEpoch,
+          nodeId,
+          newScore,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'NodeEpochScoreSet')
+        .withArgs(currentEpoch, nodeId, newScore);
+
+      expect(
+        await RandomSamplingStorage.getNodeEpochScore(currentEpoch, nodeId),
+      ).to.equal(newScore);
+
+      await stopImpersonate(RandomSampling);
+    });
+  });
+
+  describe('All Nodes Epoch Score Management', () => {
+    it('Should add to all nodes epoch score and emit event', async () => {
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const scoreToAdd = 5000n;
+      const expectedTotalScore = 5000n;
+
+      // Impersonate RandomSampling contract
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(
+        await RandomSampling.getAddress(),
+      );
+
+      // Initial state
+      expect(
+        await RandomSamplingStorage.getAllNodesEpochScore(currentEpoch),
+      ).to.equal(0n);
+
+      // Add score and check event
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addToAllNodesEpochScore(
+          currentEpoch,
+          scoreToAdd,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'AllNodesEpochScoreAdded')
+        .withArgs(currentEpoch, scoreToAdd, expectedTotalScore);
+
+      // Verify stored value
+      expect(
+        await RandomSamplingStorage.getAllNodesEpochScore(currentEpoch),
+      ).to.equal(expectedTotalScore);
+
+      // Add more score and verify accumulation
+      const anotherScore = 2000n;
+      const newExpectedTotal = expectedTotalScore + anotherScore;
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addToAllNodesEpochScore(
+          currentEpoch,
+          anotherScore,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'AllNodesEpochScoreAdded')
+        .withArgs(currentEpoch, anotherScore, newExpectedTotal);
+
+      expect(
+        await RandomSamplingStorage.getAllNodesEpochScore(currentEpoch),
+      ).to.equal(newExpectedTotal);
+
+      await stopImpersonate(RandomSampling);
+    });
+
+    it('Should set all nodes epoch score and emit event', async () => {
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const scoreToSet = 10000n;
+
+      // Impersonate RandomSampling contract
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(
+        await RandomSampling.getAddress(),
+      );
+
+      // Set score and check event
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setAllNodesEpochScore(
+          currentEpoch,
+          scoreToSet,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'AllNodesEpochScoreSet')
+        .withArgs(currentEpoch, scoreToSet);
+
+      // Verify stored value
+      expect(
+        await RandomSamplingStorage.getAllNodesEpochScore(currentEpoch),
+      ).to.equal(scoreToSet);
+
+      // Test overwriting
+      const newScore = 15000n;
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setAllNodesEpochScore(
+          currentEpoch,
+          newScore,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'AllNodesEpochScoreSet')
+        .withArgs(currentEpoch, newScore);
+
+      expect(
+        await RandomSamplingStorage.getAllNodesEpochScore(currentEpoch),
+      ).to.equal(newScore);
+
+      await stopImpersonate(RandomSampling);
+    });
+  });
+
+  describe('Node Epoch Proof Period Score Setting', () => {
+    it('Should set node epoch proof period score and emit event', async () => {
+      const nodeId = 1n;
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const proofPeriodStartBlock = 100n;
+      const scoreToSet = 3500n;
+
+      // Impersonate RandomSampling contract
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(
+        await RandomSampling.getAddress(),
+      );
+
+      // Set score and check event
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setNodeEpochProofPeriodScore(
+          currentEpoch,
+          proofPeriodStartBlock,
+          nodeId,
+          scoreToSet,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'NodeEpochProofPeriodScoreSet')
+        .withArgs(currentEpoch, proofPeriodStartBlock, nodeId, scoreToSet);
+
+      // Verify stored value
+      expect(
+        await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+          nodeId,
+          currentEpoch,
+          proofPeriodStartBlock,
+        ),
+      ).to.equal(scoreToSet);
+
+      // Test overwriting
+      const newScore = 4000n;
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setNodeEpochProofPeriodScore(
+          currentEpoch,
+          proofPeriodStartBlock,
+          nodeId,
+          newScore,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'NodeEpochProofPeriodScoreSet')
+        .withArgs(currentEpoch, proofPeriodStartBlock, nodeId, newScore);
+
+      expect(
+        await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+          nodeId,
+          currentEpoch,
+          proofPeriodStartBlock,
+        ),
+      ).to.equal(newScore);
+
+      await stopImpersonate(RandomSampling);
+    });
+  });
+
+  describe('Epoch Node Delegator Score Management', () => {
+    it('Should set epoch node delegator score and emit event', async () => {
+      const nodeId = 1n;
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const delegatorKey = ethers.encodeBytes32String('delegatorTest');
+      const scoreToSet = 750n;
+
+      // Impersonate RandomSampling contract
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(
+        await RandomSampling.getAddress(),
+      );
+
+      // Set score and check event
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setEpochNodeDelegatorScore(
+          currentEpoch,
+          nodeId,
+          delegatorKey,
+          scoreToSet,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'EpochNodeDelegatorScoreSet')
+        .withArgs(currentEpoch, nodeId, delegatorKey, scoreToSet);
+
+      // Verify stored value
+      expect(
+        await RandomSamplingStorage.getEpochNodeDelegatorScore(
+          currentEpoch,
+          nodeId,
           delegatorKey,
         ),
-      ).to.be.false;
+      ).to.equal(scoreToSet);
+
+      // Test overwriting
+      const newScore = 1200n;
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setEpochNodeDelegatorScore(
+          currentEpoch,
+          nodeId,
+          delegatorKey,
+          newScore,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'EpochNodeDelegatorScoreSet')
+        .withArgs(currentEpoch, nodeId, delegatorKey, newScore);
+
+      expect(
+        await RandomSamplingStorage.getEpochNodeDelegatorScore(
+          currentEpoch,
+          nodeId,
+          delegatorKey,
+        ),
+      ).to.equal(newScore);
+
+      await stopImpersonate(RandomSampling);
+    });
+  });
+
+  describe('Node Epoch Score Per Stake Setting', () => {
+    it('Should set node epoch score per stake and emit event', async () => {
+      const nodeId = 1n;
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const scorePerStakeToSet = 25000n;
+
+      // Impersonate RandomSampling contract
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(
+        await RandomSampling.getAddress(),
+      );
+
+      // Set score per stake and check event
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setNodeEpochScorePerStake(
+          currentEpoch,
+          nodeId,
+          scorePerStakeToSet,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeSet')
+        .withArgs(currentEpoch, nodeId, scorePerStakeToSet);
+
+      // Verify stored value
+      expect(
+        await RandomSamplingStorage.getNodeEpochScorePerStake(
+          currentEpoch,
+          nodeId,
+        ),
+      ).to.equal(scorePerStakeToSet);
+
+      // Test overwriting
+      const newScorePerStake = 35000n;
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setNodeEpochScorePerStake(
+          currentEpoch,
+          nodeId,
+          newScorePerStake,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'NodeEpochScorePerStakeSet')
+        .withArgs(currentEpoch, nodeId, newScorePerStake);
+
+      expect(
+        await RandomSamplingStorage.getNodeEpochScorePerStake(
+          currentEpoch,
+          nodeId,
+        ),
+      ).to.equal(newScorePerStake);
+
+      await stopImpersonate(RandomSampling);
     });
   });
 
@@ -1705,6 +1673,12 @@ describe('@unit RandomSamplingStorage', function () {
       const delegatorKey = ethers.encodeBytes32String('delegatorTest');
       const currentEpoch = await Chronos.getCurrentEpoch();
       const scorePerStakeToSet = 12345n;
+
+      // Impersonate RandomSampling contract
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(
+        await RandomSampling.getAddress(),
+      );
 
       // Initial state
       expect(
@@ -1718,9 +1692,11 @@ describe('@unit RandomSamplingStorage', function () {
         'Initial delegatorLastSettledNodeEpochScorePerStake should be 0',
       );
 
-      // Set scorePerStake and check event
+      // Set score per stake and check event
       await expect(
-        RandomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
+        RandomSamplingStorage.connect(
+          rsSigner,
+        ).setDelegatorLastSettledNodeEpochScorePerStake(
           currentEpoch,
           nodeId,
           delegatorKey,
@@ -1729,7 +1705,7 @@ describe('@unit RandomSamplingStorage', function () {
       )
         .to.emit(
           RandomSamplingStorage,
-          'DelegatorLastSettledNodeEpochScorePerStakeUpdated',
+          'DelegatorLastSettledNodeEpochScorePerStakeSet',
         )
         .withArgs(currentEpoch, nodeId, delegatorKey, scorePerStakeToSet);
 
@@ -1745,21 +1721,23 @@ describe('@unit RandomSamplingStorage', function () {
         `delegatorLastSettledNodeEpochScorePerStake should be ${scorePerStakeToSet}`,
       );
 
-      // Set again to test overwrite
-      const newScorePerStakeToSet = 54321n;
+      // Test overwriting
+      const newScorePerStake = 54321n;
       await expect(
-        RandomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
+        RandomSamplingStorage.connect(
+          rsSigner,
+        ).setDelegatorLastSettledNodeEpochScorePerStake(
           currentEpoch,
           nodeId,
           delegatorKey,
-          newScorePerStakeToSet,
+          newScorePerStake,
         ),
       )
         .to.emit(
           RandomSamplingStorage,
-          'DelegatorLastSettledNodeEpochScorePerStakeUpdated',
+          'DelegatorLastSettledNodeEpochScorePerStakeSet',
         )
-        .withArgs(currentEpoch, nodeId, delegatorKey, newScorePerStakeToSet);
+        .withArgs(currentEpoch, nodeId, delegatorKey, newScorePerStake);
 
       expect(
         await RandomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
@@ -1768,14 +1746,16 @@ describe('@unit RandomSamplingStorage', function () {
           delegatorKey,
         ),
       ).to.equal(
-        newScorePerStakeToSet,
-        `delegatorLastSettledNodeEpochScorePerStake should be ${newScorePerStakeToSet} after overwrite`,
+        newScorePerStake,
+        `delegatorLastSettledNodeEpochScorePerStake should be ${newScorePerStake} after overwrite`,
       );
 
-      // Test different delegatorKey
+      // Test different delegator key
       const anotherDelegatorKey = ethers.encodeBytes32String('delegatorTest2');
       await expect(
-        RandomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
+        RandomSamplingStorage.connect(
+          rsSigner,
+        ).setDelegatorLastSettledNodeEpochScorePerStake(
           currentEpoch,
           nodeId,
           anotherDelegatorKey,
@@ -1784,7 +1764,7 @@ describe('@unit RandomSamplingStorage', function () {
       )
         .to.emit(
           RandomSamplingStorage,
-          'DelegatorLastSettledNodeEpochScorePerStakeUpdated',
+          'DelegatorLastSettledNodeEpochScorePerStakeSet',
         )
         .withArgs(
           currentEpoch,
@@ -1792,6 +1772,7 @@ describe('@unit RandomSamplingStorage', function () {
           anotherDelegatorKey,
           scorePerStakeToSet,
         );
+
       expect(
         await RandomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
           currentEpoch,
@@ -1803,7 +1784,9 @@ describe('@unit RandomSamplingStorage', function () {
       // Test different node
       const anotherNodeId = 2n;
       await expect(
-        RandomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
+        RandomSamplingStorage.connect(
+          rsSigner,
+        ).setDelegatorLastSettledNodeEpochScorePerStake(
           currentEpoch,
           anotherNodeId,
           delegatorKey,
@@ -1812,7 +1795,7 @@ describe('@unit RandomSamplingStorage', function () {
       )
         .to.emit(
           RandomSamplingStorage,
-          'DelegatorLastSettledNodeEpochScorePerStakeUpdated',
+          'DelegatorLastSettledNodeEpochScorePerStakeSet',
         )
         .withArgs(
           currentEpoch,
@@ -1820,6 +1803,7 @@ describe('@unit RandomSamplingStorage', function () {
           delegatorKey,
           scorePerStakeToSet,
         );
+
       expect(
         await RandomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
           currentEpoch,
@@ -1832,7 +1816,9 @@ describe('@unit RandomSamplingStorage', function () {
       await time.increase(Number(await Chronos.epochLength()));
       const nextEpoch = await Chronos.getCurrentEpoch();
       await expect(
-        RandomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
+        RandomSamplingStorage.connect(
+          rsSigner,
+        ).setDelegatorLastSettledNodeEpochScorePerStake(
           nextEpoch,
           nodeId,
           delegatorKey,
@@ -1841,9 +1827,10 @@ describe('@unit RandomSamplingStorage', function () {
       )
         .to.emit(
           RandomSamplingStorage,
-          'DelegatorLastSettledNodeEpochScorePerStakeUpdated',
+          'DelegatorLastSettledNodeEpochScorePerStakeSet',
         )
         .withArgs(nextEpoch, nodeId, delegatorKey, scorePerStakeToSet);
+
       expect(
         await RandomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
           nextEpoch,
@@ -1851,48 +1838,431 @@ describe('@unit RandomSamplingStorage', function () {
           delegatorKey,
         ),
       ).to.equal(scorePerStakeToSet);
+
+      await stopImpersonate(RandomSampling);
+    });
+
+    it('Should maintain separate delegator last settled values for different combinations', async () => {
+      const nodeIds = [1n, 2n];
+      const delegatorKeys = [
+        ethers.encodeBytes32String('delegator1'),
+        ethers.encodeBytes32String('delegator2'),
+      ];
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const baseScorePerStake = 1000n;
+
+      // Impersonate RandomSampling contract
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(
+        await RandomSampling.getAddress(),
+      );
+
+      // Set different values for each combination
+      let expectedValue = baseScorePerStake;
+      for (let i = 0; i < nodeIds.length; i++) {
+        for (let j = 0; j < delegatorKeys.length; j++) {
+          const nodeId = nodeIds[i];
+          const delegatorKey = delegatorKeys[j];
+          expectedValue += BigInt(i * 10 + j);
+
+          await RandomSamplingStorage.connect(
+            rsSigner,
+          ).setDelegatorLastSettledNodeEpochScorePerStake(
+            currentEpoch,
+            nodeId,
+            delegatorKey,
+            expectedValue,
+          );
+
+          // Verify the value was set correctly
+          expect(
+            await RandomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
+              currentEpoch,
+              nodeId,
+              delegatorKey,
+            ),
+          ).to.equal(
+            expectedValue,
+            `Value should be ${expectedValue} for node ${nodeId} and delegator ${j}`,
+          );
+        }
+      }
+
+      // Verify all values are still correctly stored
+      expectedValue = baseScorePerStake;
+      for (let i = 0; i < nodeIds.length; i++) {
+        for (let j = 0; j < delegatorKeys.length; j++) {
+          const nodeId = nodeIds[i];
+          const delegatorKey = delegatorKeys[j];
+          expectedValue += BigInt(i * 10 + j);
+
+          expect(
+            await RandomSamplingStorage.getDelegatorLastSettledNodeEpochScorePerStake(
+              currentEpoch,
+              nodeId,
+              delegatorKey,
+            ),
+          ).to.equal(
+            expectedValue,
+            `Final verification: Value should be ${expectedValue} for node ${nodeId} and delegator ${j}`,
+          );
+        }
+      }
+
+      await stopImpersonate(RandomSampling);
+    });
+
+    it('Should revert when not called by contracts', async () => {
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const nodeId = 1n;
+      const delegatorKey = ethers.encodeBytes32String('test');
+
+      await expect(
+        RandomSamplingStorage.connect(
+          accounts[1],
+        ).setDelegatorLastSettledNodeEpochScorePerStake(
+          currentEpoch,
+          nodeId,
+          delegatorKey,
+          1000,
+        ),
+      )
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
     });
   });
 
-  describe('Edge Cases', () => {
-    it('Should revert if no matching duration in blocks found', async () => {
-      // Add a new duration that will be effective in the next epoch
-      const newDuration = 1000;
-      await RandomSampling.setProofingPeriodDurationInBlocks(newDuration);
+  describe('Enhanced Access Control Tests', () => {
+    it('Should revert all new setter functions when not called by contracts', async () => {
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const nodeId = 1n;
+      const delegatorKey = ethers.encodeBytes32String('test');
 
-      // Move to next epoch
-      await time.increase(Number(await Chronos.epochLength()));
-
-      // Try to get duration for an epoch before the first duration was set
+      // Test all new setter functions for proper access control
       await expect(
-        RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(0n),
-      ).to.be.revertedWith('No applicable duration found');
+        RandomSamplingStorage.connect(accounts[1]).setEpochNodeValidProofsCount(
+          currentEpoch,
+          nodeId,
+          5,
+        ),
+      )
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
+
+      await expect(
+        RandomSamplingStorage.connect(accounts[1]).addToNodeEpochScore(
+          currentEpoch,
+          nodeId,
+          1000,
+        ),
+      )
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
+
+      await expect(
+        RandomSamplingStorage.connect(accounts[1]).setNodeEpochScore(
+          currentEpoch,
+          nodeId,
+          1000,
+        ),
+      )
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
+
+      await expect(
+        RandomSamplingStorage.connect(accounts[1]).addToAllNodesEpochScore(
+          currentEpoch,
+          1000,
+        ),
+      )
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
+
+      await expect(
+        RandomSamplingStorage.connect(accounts[1]).setAllNodesEpochScore(
+          currentEpoch,
+          1000,
+        ),
+      )
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
+
+      await expect(
+        RandomSamplingStorage.connect(accounts[1]).setNodeEpochProofPeriodScore(
+          currentEpoch,
+          100,
+          nodeId,
+          1000,
+        ),
+      )
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
+
+      await expect(
+        RandomSamplingStorage.connect(accounts[1]).setEpochNodeDelegatorScore(
+          currentEpoch,
+          nodeId,
+          delegatorKey,
+          1000,
+        ),
+      )
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
+
+      await expect(
+        RandomSamplingStorage.connect(accounts[1]).setNodeEpochScorePerStake(
+          currentEpoch,
+          nodeId,
+          1000,
+        ),
+      )
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
+
+      await expect(
+        RandomSamplingStorage.connect(
+          accounts[1],
+        ).setDelegatorLastSettledNodeEpochScorePerStake(
+          currentEpoch,
+          nodeId,
+          delegatorKey,
+          1000,
+        ),
+      )
+        .to.be.revertedWithCustomError(
+          RandomSamplingStorage,
+          'UnauthorizedAccess',
+        )
+        .withArgs('Only Contracts in Hub');
+    });
+  });
+
+  describe('Missing Event Assertions (Adder/Setter Helpers)', () => {
+    let rsSigner: SignerWithAddress;
+    const nodeId = 1n;
+    const delegatorKey = ethers.encodeBytes32String('delegatorEvent');
+
+    beforeEach(async () => {
+      // Impersonate RandomSampling (registered in Hub) for onlyContracts funcs
+      await impersonateAndFund(RandomSampling);
+      rsSigner = await ethers.getSigner(await RandomSampling.getAddress());
     });
 
-    it('Should handle large number of proofing durations correctly', async () => {
-      const baseDuration = 100;
-      const numDurations = 50; // Large number of durations
+    afterEach(async () => {
+      await stopImpersonate(RandomSampling);
+    });
+
+    it('emits NodeChallengeSet when a challenge is stored', async () => {
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).setNodeChallenge(
+          nodeId,
+          MockChallenge,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'NodeChallengeSet')
+        .withArgs(nodeId, Object.values(MockChallenge)); // Struct is indexed as tuple
+    });
+
+    it('emits EpochNodeValidProofsCountIncremented on increment', async () => {
       const currentEpoch = await Chronos.getCurrentEpoch();
+      await expect(
+        RandomSamplingStorage.connect(
+          rsSigner,
+        ).incrementEpochNodeValidProofsCount(currentEpoch, nodeId),
+      )
+        .to.emit(RandomSamplingStorage, 'EpochNodeValidProofsCountIncremented')
+        .withArgs(currentEpoch, nodeId, 1n);
+    });
 
-      // Add multiple durations with different epochs
-      for (let i = 0; i < numDurations; i++) {
-        const duration = baseDuration + i;
-        await RandomSamplingStorage.connect(
-          await ethers.getSigner(accounts[0].address),
-        ).addProofingPeriodDuration(duration, currentEpoch + BigInt(i));
-        await time.increase(Number(await Chronos.epochLength()));
-      }
+    it('emits NodeEpochProofPeriodScoreAdded', async () => {
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const proofPeriodStartBlock = 777n;
+      const score = 1234n;
 
-      // Verify each duration is accessible and correct
-      for (let i = 0; i < numDurations; i++) {
-        const targetEpoch = currentEpoch + BigInt(i);
-        const expectedDuration = baseDuration + i;
-        const actualDuration =
-          await RandomSamplingStorage.getEpochProofingPeriodDurationInBlocks(
-            targetEpoch,
-          );
-        expect(actualDuration).to.equal(expectedDuration);
-      }
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addToNodeEpochProofPeriodScore(
+          currentEpoch,
+          proofPeriodStartBlock,
+          nodeId,
+          score,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'NodeEpochProofPeriodScoreAdded')
+        .withArgs(
+          currentEpoch,
+          proofPeriodStartBlock,
+          nodeId,
+          score,
+          score, // total after first add
+        );
+    });
+
+    it('emits EpochNodeDelegatorScoreAdded when delegator score is accumulated', async () => {
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const score = 555n;
+
+      await expect(
+        RandomSamplingStorage.connect(rsSigner).addToEpochNodeDelegatorScore(
+          currentEpoch,
+          nodeId,
+          delegatorKey,
+          score,
+        ),
+      )
+        .to.emit(RandomSamplingStorage, 'EpochNodeDelegatorScoreAdded')
+        .withArgs(
+          currentEpoch,
+          nodeId,
+          delegatorKey,
+          score,
+          score, // first accumulation
+        );
+    });
+  });
+
+  describe('getEpochProofingPeriodDurationInBlocks() Edge-Case Reverts', () => {
+    it('reverts when epoch precedes the earliest effectiveEpoch', async () => {
+      // Advance Chronos one epoch so the earliest effectiveEpoch will be > 0
+      await time.increase(Number(await Chronos.epochLength()));
+
+      // Deploy a fresh storage instance *after* epoch advanced
+      const RSFactory = await hre.ethers.getContractFactory(
+        'RandomSamplingStorage',
+      );
+      const freshStorage = await RSFactory.deploy(
+        Hub.target,
+        proofingPeriodDurationInBlocks,
+        avgBlockTimeInSeconds,
+        w1,
+        w2,
+      );
+
+      // Earliest effectiveEpoch is now 1; querying 0 must revert
+      await expect(
+        freshStorage.getEpochProofingPeriodDurationInBlocks(0n),
+      ).to.be.revertedWith('No applicable duration found');
+    });
+  });
+
+  describe('Cross-Function Integration Tests', () => {
+    it('Should handle complex scoring scenarios with multiple functions', async () => {
+      const nodeId = 1n;
+      const currentEpoch = await Chronos.getCurrentEpoch();
+      const proofPeriodStartBlock = 200n;
+      const delegatorKey = ethers.encodeBytes32String('integrationTest');
+
+      // Impersonate RandomSampling contract
+      await impersonateAndFund(RandomSampling);
+      const rsSigner = await ethers.getSigner(
+        await RandomSampling.getAddress(),
+      );
+
+      // Set up a complete scoring scenario
+      // 1. Set valid proofs count
+      await RandomSamplingStorage.connect(
+        rsSigner,
+      ).setEpochNodeValidProofsCount(currentEpoch, nodeId, 10);
+
+      // 2. Add node epoch score
+      await RandomSamplingStorage.connect(rsSigner).addToNodeEpochScore(
+        currentEpoch,
+        nodeId,
+        5000,
+      );
+
+      // 3. Add to all nodes score
+      await RandomSamplingStorage.connect(rsSigner).addToAllNodesEpochScore(
+        currentEpoch,
+        5000,
+      );
+
+      // 4. Set proof period specific score
+      await RandomSamplingStorage.connect(
+        rsSigner,
+      ).setNodeEpochProofPeriodScore(
+        currentEpoch,
+        proofPeriodStartBlock,
+        nodeId,
+        2000,
+      );
+
+      // 5. Set delegator score
+      await RandomSamplingStorage.connect(rsSigner).setEpochNodeDelegatorScore(
+        currentEpoch,
+        nodeId,
+        delegatorKey,
+        1500,
+      );
+
+      // 6. Set score per stake
+      await RandomSamplingStorage.connect(rsSigner).setNodeEpochScorePerStake(
+        currentEpoch,
+        nodeId,
+        50000,
+      );
+
+      // Verify all values are set correctly
+      expect(
+        await RandomSamplingStorage.getEpochNodeValidProofsCount(
+          currentEpoch,
+          nodeId,
+        ),
+      ).to.equal(10);
+      expect(
+        await RandomSamplingStorage.getNodeEpochScore(currentEpoch, nodeId),
+      ).to.equal(5000);
+      expect(
+        await RandomSamplingStorage.getAllNodesEpochScore(currentEpoch),
+      ).to.equal(5000);
+      expect(
+        await RandomSamplingStorage.getNodeEpochProofPeriodScore(
+          nodeId,
+          currentEpoch,
+          proofPeriodStartBlock,
+        ),
+      ).to.equal(2000);
+      expect(
+        await RandomSamplingStorage.getEpochNodeDelegatorScore(
+          currentEpoch,
+          nodeId,
+          delegatorKey,
+        ),
+      ).to.equal(1500);
+      expect(
+        await RandomSamplingStorage.getNodeEpochScorePerStake(
+          currentEpoch,
+          nodeId,
+        ),
+      ).to.equal(50000);
+
+      await stopImpersonate(RandomSampling);
     });
   });
 });
