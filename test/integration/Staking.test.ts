@@ -303,7 +303,18 @@ async function ensureNodeHasChunksThisEpoch(
       nodeId,
     );
 
+  // If the node has not published anything in this epoch,
+  // and it is NOT already in the 'receivingNodes' list, add it to ensure it gets at least one replica.
   if (produced === 0n) {
+    const selfAlreadyListed = receivingNodes.some(
+      (r) => r.operational.address === node.operational.address,
+    );
+
+    if (!selfAlreadyListed) {
+      receivingNodes.unshift(node); // prepend - order doesn't matter
+      receivingNodesIdentityIds.unshift(Number(nodeId));
+    }
+
     await createKnowledgeCollection(
       accounts.kcCreator,
       node, // <- node that will prove
