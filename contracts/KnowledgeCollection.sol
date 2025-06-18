@@ -72,39 +72,6 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         return _VERSION;
     }
 
-    function _distributeTokens(EpochStorage es, uint96 tokenAmount, uint256 epochs, uint40 currentEpoch) internal {
-        require(epochs > 0, "epochs must be > 0");
-
-        uint256 epochLen = chronos.epochLength();
-        uint256 timeLeft = chronos.timeUntilNextEpoch(); // seconds remaining in current epoch
-        uint256 basePer = tokenAmount / epochs; // nominal amount for a full epoch
-        uint256 curPart = (basePer * timeLeft) / epochLen;
-        uint256 tailPart = basePer - curPart; // goes to the final fractional epoch
-        uint256 fullEpCnt = epochs - 1; // number of full middle epochs
-        uint256 allocFull = basePer * fullEpCnt;
-
-        // Add any rounding remainder to the tail so total == tokenAmount
-        uint256 allocated = curPart + allocFull + tailPart;
-        if (allocated < tokenAmount) {
-            tailPart += tokenAmount - allocated;
-        }
-
-        // 1) Current (fractional) epoch
-        if (curPart > 0) {
-            es.addTokensToEpochRange(1, currentEpoch, currentEpoch, uint96(curPart));
-        }
-
-        // 2) Full epochs between current and final
-        if (fullEpCnt > 0 && allocFull > 0) {
-            es.addTokensToEpochRange(1, currentEpoch + 1, currentEpoch + uint40(fullEpCnt), uint96(allocFull));
-        }
-
-        // 3) Final (fractional) epoch
-        if (tailPart > 0) {
-            es.addTokensToEpochRange(1, currentEpoch + uint40(epochs), currentEpoch + uint40(epochs), uint96(tailPart));
-        }
-    }
-
     function createKnowledgeCollection(
         string calldata publishOperationId,
         bytes32 merkleRoot,
@@ -146,9 +113,9 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
             isImmutable
         );
 
-        _validateTokenAmount(byteSize, epochs, tokenAmount, /* includeCurrentEpoch = */ false);
-        _distributeTokens(es, tokenAmount, epochs, currentEpoch);
-        es.addEpochProducedKnowledgeValue(publisherNodeIdentityId, currentEpoch, tokenAmount);
+        _validateTokenAmount(byteSize, epochs, tokenAmount, true);
+        _distributeTokens(tokenAmount, epochs, currentEpoch);
+        epochStorage.addEpochProducedKnowledgeValue(publisherNodeIdentityId, currentEpoch, tokenAmount);
 
         _addTokens(tokenAmount, paymaster);
 
@@ -353,6 +320,49 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
             if (!token.transferFrom(msg.sender, address(hub.getContractAddress("StakingStorage")), tokenAmount)) {
                 revert TokenLib.TransferFailed();
             }
+        }
+    }
+
+    function _distributeTokens(uint96 tokenAmount, uint256 epochs, uint40 currentEpoch) internal {
+        require(epochs > 0, "epochs must be > 0");
+
+        uint256 epochLengthInSeconds = chronos.epochLength();
+        uint256 timeRemainingInCurrentEpoch = chronos.timeUntilNextEpoch(); // seconds remaining in current epoch
+        uint256 baseTokensPerFullEpoch = tokenAmount / epochs; // nominal amount for a full epoch
+        uint256 currentEpochAllocation = (baseTokensPerFullEpoch * timeRemainingInCurrentEpoch) / epochLengthInSeconds;
+        uint256 finalEpochAllocation = baseTokensPerFullEpoch - currentEpochAllocation; // goes to the final fractional epoch
+        uint256 numberOfFullEpochs = epochs - 1; // number of full middle epochs
+        uint256 totalTokensForFullEpochs = baseTokensPerFullEpoch * numberOfFullEpochs;
+
+        // Add any rounding remainder to the final epoch so total == tokenAmount
+        uint256 totalAllocated = currentEpochAllocation + totalTokensForFullEpochs + finalEpochAllocation;
+        if (totalAllocated < tokenAmount) {
+            finalEpochAllocation += tokenAmount - totalAllocated;
+        }
+
+        // 1) Current (fractional) epoch
+        if (currentEpochAllocation > 0) {
+            epochStorage.addTokensToEpochRange(1, currentEpoch, currentEpoch, uint96(currentEpochAllocation));
+        }
+
+        // 2) Full epochs between current and final
+        if (numberOfFullEpochs > 0 && totalTokensForFullEpochs > 0) {
+            epochStorage.addTokensToEpochRange(
+                1,
+                currentEpoch + 1,
+                currentEpoch + uint40(numberOfFullEpochs),
+                uint96(totalTokensForFullEpochs)
+            );
+        }
+
+        // 3) Final (fractional) epoch
+        if (finalEpochAllocation > 0) {
+            epochStorage.addTokensToEpochRange(
+                1,
+                currentEpoch + uint40(epochs),
+                currentEpoch + uint40(epochs),
+                uint96(finalEpochAllocation)
+            );
         }
     }
 }
