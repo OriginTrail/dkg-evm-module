@@ -1308,7 +1308,7 @@ describe('@integration RandomSampling', () => {
         );
     });
 
-    it('Should submit a valid proof and successfully and add score to nodeEpochProofPeriodScore and allNodesEpochProofPeriodScore', async () => {
+    it('Should submit a valid proof and successfully and add score to nodeEpochProofPeriodScore', async () => {
       const kcCreator = getDefaultKCCreator(accounts);
       const minStake = await ParametersStorage.minimumStake();
       const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
@@ -1397,14 +1397,6 @@ describe('@integration RandomSampling', () => {
         await RandomSamplingStorage.getNodeEpochProofPeriodScore(
           publishingNodeIdentityId,
           challenge.epoch,
-          challenge.activeProofPeriodStartBlock,
-        ),
-      ).to.equal(expectedScore);
-
-      expect(
-        await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
-          challenge.epoch,
-
           challenge.activeProofPeriodStartBlock,
         ),
       ).to.equal(expectedScore);

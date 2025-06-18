@@ -354,34 +354,19 @@ describe('@unit RandomSamplingStorage', function () {
           ),
         ).to.equal(0n, `Node ${nodeId} should start with 0 score`);
       }
-      expect(
-        await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
-          currentEpoch,
-          proofPeriodIndex,
-        ),
-      ).to.equal(0n, 'Global score should start at 0');
 
       // Add scores to different nodes
       const scores = [100n, 200n, 300n];
-      let expectedGlobalScore = 0n;
 
       for (let i = 0; i < nodeIds.length; i++) {
         const nodeId = nodeIds[i];
         const score = scores[i];
-        expectedGlobalScore += score;
 
         // Add score to node
         await RandomSamplingStorage.addToNodeEpochProofPeriodScore(
           currentEpoch,
           proofPeriodIndex,
           nodeId,
-          score,
-        );
-
-        // Add to global score
-        await RandomSamplingStorage.addToAllNodesEpochProofPeriodScore(
-          currentEpoch,
-          proofPeriodIndex,
           score,
         );
 
@@ -396,17 +381,6 @@ describe('@unit RandomSamplingStorage', function () {
           score,
           `Node ${nodeId} should have score ${score}`,
         );
-
-        // Verify global score
-        const globalScore =
-          await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
-            currentEpoch,
-            proofPeriodIndex,
-          );
-        expect(globalScore).to.equal(
-          expectedGlobalScore,
-          `Global score should be ${expectedGlobalScore} after adding ${score} to node ${nodeId}`,
-        );
       }
 
       // Test adding more score to existing node
@@ -415,13 +389,6 @@ describe('@unit RandomSamplingStorage', function () {
         currentEpoch,
         proofPeriodIndex,
         nodeIds[0],
-        additionalScore,
-      );
-
-      // Add to global score
-      await RandomSamplingStorage.addToAllNodesEpochProofPeriodScore(
-        currentEpoch,
-        proofPeriodIndex,
         additionalScore,
       );
 
@@ -435,17 +402,6 @@ describe('@unit RandomSamplingStorage', function () {
       expect(updatedNodeScore).to.equal(
         scores[0] + additionalScore,
         'Node score should be updated with additional score',
-      );
-
-      // Verify updated global score
-      const updatedGlobalScore =
-        await RandomSamplingStorage.getEpochAllNodesProofPeriodScore(
-          currentEpoch,
-          proofPeriodIndex,
-        );
-      expect(updatedGlobalScore).to.equal(
-        expectedGlobalScore + additionalScore,
-        'Global score should be updated with additional score',
       );
     });
 
@@ -2145,7 +2101,7 @@ describe('@unit RandomSamplingStorage', function () {
         .withArgs(currentEpoch, nodeId, 1n);
     });
 
-    it('emits NodeEpochProofPeriodScoreAdded & AllNodesEpochProofPeriodScoreAdded', async () => {
+    it('emits NodeEpochProofPeriodScoreAdded', async () => {
       const currentEpoch = await Chronos.getCurrentEpoch();
       const proofPeriodStartBlock = 777n;
       const score = 1234n;
@@ -2163,23 +2119,6 @@ describe('@unit RandomSamplingStorage', function () {
           currentEpoch,
           proofPeriodStartBlock,
           nodeId,
-          score,
-          score, // total after first add
-        );
-
-      await expect(
-        RandomSamplingStorage.connect(
-          rsSigner,
-        ).addToAllNodesEpochProofPeriodScore(
-          currentEpoch,
-          proofPeriodStartBlock,
-          score,
-        ),
-      )
-        .to.emit(RandomSamplingStorage, 'AllNodesEpochProofPeriodScoreAdded')
-        .withArgs(
-          currentEpoch,
-          proofPeriodStartBlock,
           score,
           score, // total after first add
         );

@@ -217,7 +217,6 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
                 identityId,
                 score18
             );
-            randomSamplingStorage.addToAllNodesEpochProofPeriodScore(epoch, activeProofPeriodStartBlock, score18);
             randomSamplingStorage.addToNodeEpochScore(epoch, identityId, score18);
             randomSamplingStorage.addToAllNodesEpochScore(epoch, score18);
 

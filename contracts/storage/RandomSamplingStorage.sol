@@ -30,8 +30,6 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
     mapping(uint256 => mapping(uint72 => uint256)) public epochNodeValidProofsCount;
     // identityId => epoch => proofPeriodStartBlock => score
     mapping(uint72 => mapping(uint256 => mapping(uint256 => uint256))) public nodeEpochProofPeriodScore;
-    // epoch => proofPeriodStartBlock => score
-    mapping(uint256 => mapping(uint256 => uint256)) public allNodesEpochProofPeriodScore;
     // identityId => epoch => score
     mapping(uint72 => mapping(uint256 => uint256)) public nodeEpochScore;
     // epoch => score
@@ -67,12 +65,6 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         uint256 indexed proofPeriodStartBlock,
         uint72 indexed identityId,
         uint256 newScore
-    );
-    event AllNodesEpochProofPeriodScoreAdded(
-        uint256 indexed epoch,
-        uint256 indexed proofPeriodStartBlock,
-        uint256 scoreAdded,
-        uint256 totalScore
     );
     event NodeEpochScorePerStakeAdded(
         uint256 indexed epoch,
@@ -373,19 +365,6 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
     }
 
     /**
-     * @dev Returns the total score of all nodes during a specific epoch and proof period
-     * @param epoch The epoch to get the total score for
-     * @param proofPeriodStartBlock The start block of the proof period
-     * @return Total score of all nodes in the specified epoch and proof period, scaled by 10^18
-     */
-    function getEpochAllNodesProofPeriodScore(
-        uint256 epoch,
-        uint256 proofPeriodStartBlock
-    ) external view returns (uint256) {
-        return allNodesEpochProofPeriodScore[epoch][proofPeriodStartBlock];
-    }
-
-    /**
      * @dev Increments the count of valid proofs submitted by a node in an epoch
      * Can only be called by contracts registered in the Hub
      * @param epoch The epoch to increment the count for
@@ -516,27 +495,6 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
     ) external onlyContracts {
         nodeEpochProofPeriodScore[identityId][epoch][proofPeriodStartBlock] = score;
         emit NodeEpochProofPeriodScoreSet(epoch, proofPeriodStartBlock, identityId, score);
-    }
-
-    /**
-     * @dev Adds to the total score of all nodes for a specific epoch and proof period
-     * Can only be called by contracts registered in the Hub
-     * @param epoch The epoch to add the score to
-     * @param proofPeriodStartBlock The start block of the proof period
-     * @param score The score amount to add to the total, scaled by 10^18
-     */
-    function addToAllNodesEpochProofPeriodScore(
-        uint256 epoch,
-        uint256 proofPeriodStartBlock,
-        uint256 score
-    ) external onlyContracts {
-        allNodesEpochProofPeriodScore[epoch][proofPeriodStartBlock] += score;
-        emit AllNodesEpochProofPeriodScoreAdded(
-            epoch,
-            proofPeriodStartBlock,
-            score,
-            allNodesEpochProofPeriodScore[epoch][proofPeriodStartBlock]
-        );
     }
 
     /**
