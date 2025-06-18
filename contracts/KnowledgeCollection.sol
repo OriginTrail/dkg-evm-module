@@ -113,8 +113,13 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
             isImmutable
         );
 
+        // Validate that the provided token amount is sufficient
         _validateTokenAmount(byteSize, epochs, tokenAmount, true);
+
+        // Distribute time-weight tokenAmount across current, full, and final fractional epochs
         _distributeTokens(tokenAmount, epochs, currentEpoch);
+
+        // Record the knowledge value produced by the publisher in the current epoch
         epochStorage.addEpochProducedKnowledgeValue(publisherNodeIdentityId, currentEpoch, tokenAmount);
 
         _addTokens(tokenAmount, paymaster);
@@ -323,6 +328,14 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         }
     }
 
+    /**
+     * @dev Distributes tokens across epochs using time-weighted allocation
+     * Allocates tokens proportionally based on time remaining in current epoch and distributes
+     * the remainder across full epochs and final fractional epoch
+     * @param tokenAmount Total amount of tokens to distribute across epochs
+     * @param epochs Number of epochs to distribute tokens over
+     * @param currentEpoch The current epoch number where distribution starts
+     */
     function _distributeTokens(uint96 tokenAmount, uint256 epochs, uint40 currentEpoch) internal {
         require(epochs > 0, "epochs must be > 0");
 
