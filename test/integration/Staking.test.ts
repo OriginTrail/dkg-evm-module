@@ -283,15 +283,6 @@ async function advanceToNextProofingPeriod(
   await contracts.randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
 }
 
-/**
- * Ensures a node has at least one knowledge chunk in the current epoch.
- * If not, it creates a small knowledge collection to facilitate proof submission.
- */
-/**
- * Ensure da node ima bar jedan chunk u tekućem epoch-u.
- * Ako nema – sam node (kao publisher) objavi mini-KC (1 chunk, 1 TRAC),
- * pa odmah osvežimo proof-period tako da chunk uđe u aktivni skup.
- */
 async function ensureNodeHasChunksThisEpoch(
   nodeId: bigint,
   node: { operational: SignerWithAddress; admin: SignerWithAddress },
@@ -309,7 +300,6 @@ async function ensureNodeHasChunksThisEpoch(
     );
 
   if (produced === 0n) {
-    /* dodaj self u listu primaoca (ako već nije tu) */
     if (
       !receivingNodes.some(
         (r) => r.operational.address === node.operational.address,
@@ -319,7 +309,6 @@ async function ensureNodeHasChunksThisEpoch(
       receivingNodesIdentityIds.unshift(Number(nodeId));
     }
 
-    /* ► samo-objavljena KC: publisher == node  ← ovde je ključ! */
     await createKnowledgeCollection(
       node.operational, // signer = node.operational
       node, // publisher-node
@@ -335,7 +324,6 @@ async function ensureNodeHasChunksThisEpoch(
       toTRAC(1),
     );
 
-    /* odmah pomeri start proof-perioda da KC postane aktivna */
     await contracts.randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
   }
 }
