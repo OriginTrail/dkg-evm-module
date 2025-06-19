@@ -98,7 +98,6 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         _verifySignatures(identityIds, ECDSA.toEthSignedMessageHash(merkleRoot), r, vs);
 
         KnowledgeCollectionStorage kcs = knowledgeCollectionStorage;
-        EpochStorage es = epochStorage;
         uint40 currentEpoch = uint40(chronos.getCurrentEpoch());
 
         uint256 id = kcs.createKnowledgeCollection(
@@ -114,7 +113,8 @@ contract KnowledgeCollection is INamed, IVersioned, ContractStatus, IInitializab
         );
 
         // Validate that the provided token amount is sufficient
-        _validateTokenAmount(byteSize, epochs, tokenAmount, true);
+        // false argument suggests that the user who published the KC pays for the number of epochs
+        _validateTokenAmount(byteSize, epochs, tokenAmount, false);
 
         // Distribute time-weight tokenAmount across current, full, and final fractional epochs
         _distributeTokens(tokenAmount, epochs, currentEpoch);
