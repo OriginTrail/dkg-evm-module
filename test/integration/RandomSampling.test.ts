@@ -3381,15 +3381,24 @@ describe('@integration RandomSampling', () => {
       );
       nodeIdCounter += 2;
 
-      // Verify the score calculation reverts
-      await expect(
-        RandomSampling.calculateNodeScore(identityId),
-      ).to.be.revertedWith('max publish is 0');
-
       // Verify the max publishing value is indeed > 0 in our setup
       const maxNodePub =
         await EpochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue();
       expect(maxNodePub).to.be.equal(0n);
+
+      const actualNodeScore =
+        await RandomSampling.calculateNodeScore(identityId);
+      const expectedNodeScore = await calculateExpectedNodeScore(
+        BigInt(identityId),
+        nodeStake,
+        {
+          ParametersStorage,
+          ProfileStorage,
+          AskStorage,
+          EpochStorage,
+        },
+      );
+      expect(actualNodeScore).to.be.equal(expectedNodeScore);
     });
 
     it('Should handle identical nodes with identical scores', async () => {
