@@ -15,6 +15,11 @@ contract Paymaster is Ownable {
 
     mapping(address => bool) public allowedAddresses;
 
+    event AllowedAddressAdded(address _address);
+    event AllowedAddressRemoved(address _address);
+    event FundsAdded(address sender, uint256 amount);
+    event WhitdrawalMade(address recipient, uint256 amount);
+
     modifier onlyAllowed(address _originalSender) {
         if (!allowedAddresses[_originalSender]) {
             revert NotAllowed();
@@ -29,10 +34,12 @@ contract Paymaster is Ownable {
 
     function addAllowedAddress(address _address) external onlyOwner {
         allowedAddresses[_address] = true;
+        emit AllowedAddressAdded(_address);
     }
 
     function removeAllowedAddress(address _address) external onlyOwner {
         allowedAddresses[_address] = false;
+        emit AllowedAddressRemoved(_address);
     }
 
     function fundPaymaster(uint256 amount) external {
@@ -53,10 +60,13 @@ contract Paymaster is Ownable {
         if (!tokenContract.transferFrom(msg.sender, address(this), amount)) {
             revert TokenLib.TransferFailed();
         }
+
+        emit FundsAdded(msg.sender, amount);
     }
 
     function withdraw(address recipient, uint256 amount) external onlyOwner {
         _transferTokens(recipient, amount);
+        emit WhitdrawalMade(recipient, amount);
     }
 
     function coverCost(uint256 amount, address _originalSender) external onlyAllowed(_originalSender) {
