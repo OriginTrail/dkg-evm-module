@@ -20,6 +20,9 @@ jobs:
       - name: Set up environment
         uses: ./.github/actions/setup
 
+      - name: Build typechain for linting
+        run: npx hardhat typechain
+
       - name: Run Solidity and Typescript linters
         run: npm run lint
 
@@ -47,6 +50,13 @@ jobs:
       - name: Run tests
         run: npm run test:parallel
 
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up environment
+        uses: ./.github/actions/setup
       - name: Generate test coverage
         run: npm run coverage
 
