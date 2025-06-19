@@ -266,9 +266,9 @@ async function advanceToNextProofingPeriod(
   contracts: TestContracts,
 ): Promise<void> {
   const proofingPeriodDuration =
-    await contracts.randomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+    await contracts.randomSampling.getActiveProofingPeriodDurationInBlocks();
   const { activeProofPeriodStartBlock, isValid } =
-    await contracts.randomSamplingStorage.getActiveProofPeriodStatus();
+    await contracts.randomSampling.getActiveProofPeriodStatus();
   if (isValid) {
     // Find out how many blocks are left in the current proofing period
     const blocksLeft =
@@ -280,7 +280,7 @@ async function advanceToNextProofingPeriod(
       await hre.network.provider.send('evm_mine');
     }
   }
-  await contracts.randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+  await contracts.randomSampling.updateAndGetActiveProofPeriodStartBlock();
 }
 
 async function ensureNodeHasChunksThisEpoch(
@@ -324,7 +324,7 @@ async function ensureNodeHasChunksThisEpoch(
       toTRAC(1),
     );
 
-    await contracts.randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+    await contracts.randomSampling.updateAndGetActiveProofPeriodStartBlock();
   }
 }
 
@@ -630,7 +630,7 @@ describe(`Full complex scenario`, function () {
     // ================================================================================================================
     console.log(`\n🔬 STEP 4: Node1 submits first proof`);
 
-    await contracts.randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
+    await contracts.randomSampling.updateAndGetActiveProofPeriodStartBlock();
     const {
       nodeScore: scoreAfter1,
       nodeScorePerStake: nodeScorePerStakeAfter1,
@@ -2595,7 +2595,6 @@ describe(`Full complex scenario`, function () {
  * ------------------------------------------------------------------ */
   it('STEP D – claim one on N2, redelegate half, check rolling', async function () {
     const delegator = accounts.delegator1;
-    const SCALE18 = ethers.parseUnits('1', 18);
     const fmt = (x: bigint) => ethers.formatUnits(x, 18);
 
     /* ── 0. Move to epoch-8 and finalise epoch-7 ────────────────────── */
