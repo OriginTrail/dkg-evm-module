@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
-import hre from 'hardhat';
+import hre, { ethers } from 'hardhat';
 
 import {
   Token,
@@ -73,7 +73,7 @@ async function deployStakingFixture(): Promise<StakingFixture> {
   };
 }
 
-describe('DelegatorsInfo contract', function () {
+describe('DelegatorsInfo contract', function() {
   let accounts: SignerWithAddress[];
   // let Token: Token;
   let Profile: Profile;
@@ -256,4 +256,97 @@ describe('DelegatorsInfo contract', function () {
     const delegators = await DelegatorsInfo.getDelegators(999);
     expect(delegators.length).to.equal(0);
   });
+
+  it('Should set and get lastClaimedEpoch, emit DelegatorLastClaimedEpochUpdated', async () => {
+    const { identityId } = await createProfile();
+
+    const delegator = accounts[1].address;
+    const epoch = 1;
+
+    await expect(
+      DelegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch)
+    ).to.emit(DelegatorsInfo, 'DelegatorLastClaimedEpochUpdated')
+      .withArgs(identityId, delegator, epoch);
+
+    expect(await DelegatorsInfo.getLastClaimedEpoch(identityId, delegator)).to.equal(1);
+  });
+
+  it('Should set and get DelegatorRollingRewards, emit DelegatorRollingRewardsUpdated', async () => {
+    const { identityId } = await createProfile();
+
+    const delegator = accounts[1].address;
+    const amount = 500;
+
+    await expect(
+      DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount)
+    ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+      .withArgs(identityId, delegator, amount, amount);
+
+    expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(amount);
+  });
+
+  it('Should set IsOperatorFeeClaimedForEpoch and emit IsOperatorFeeClaimedForEpochUpdated', async () => {
+    const { identityId } = await createProfile();
+
+    const delegator = accounts[1].address;
+    const isClaimed = false;
+
+    await expect(
+      DelegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, delegator, isClaimed)
+    ).to.emit(DelegatorsInfo, 'IsOperatorFeeClaimedForEpochUpdated')
+      .withArgs(identityId, delegator, isClaimed);
+  });
+
+  it('Should set and get NetNodeEpochRewards, emit NetNodeEpochRewardsSet', async () => {
+    const { identityId } = await createProfile();
+
+    const amount = 500;
+    const epoch = 1;
+
+    await expect(
+      DelegatorsInfo.setNetNodeEpochRewards(identityId, epoch, amount)
+    ).to.emit(DelegatorsInfo, 'NetNodeEpochRewardsSet')
+      .withArgs(identityId, epoch, amount);
+
+    expect(await DelegatorsInfo.getNetNodeEpochRewards(identityId, epoch)).to.equal(amount);
+  });
+
+  it('Should set HasDelegatorClaimedEpochRewards and emit HasDelegatorClaimedEpochRewardsUpdated', async () => {
+    const { identityId } = await createProfile();
+
+    const claimed = false;
+    const epoch = 1;
+    const delegatorKey = ethers.encodeBytes32String('delegator1');
+
+    await expect(
+      DelegatorsInfo.setHasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey, claimed)
+    ).to.emit(DelegatorsInfo, 'HasDelegatorClaimedEpochRewardsUpdated')
+      .withArgs(epoch, identityId, delegatorKey, claimed);
+  });
+
+  it('Should set setHasEverDelegatedToNode and emit HasEverDelegatedToNodeUpdated', async () => {
+    const { identityId } = await createProfile();
+
+    const claimed = false;
+    const delegator = accounts[1].address;
+
+    await expect(
+      DelegatorsInfo.setHasEverDelegatedToNode(identityId, delegator, claimed)
+    ).to.emit(DelegatorsInfo, 'HasEverDelegatedToNodeUpdated')
+      .withArgs(identityId, delegator, claimed);
+  });
+
+  it('Should set and get setLastStakeHeldEpoch, emit LastStakeHeldEpochUpdated', async () => {
+    const { identityId } = await createProfile();
+
+    const epoch = 1;
+    const delegator = accounts[1].address;
+
+    await expect(
+      DelegatorsInfo.setLastStakeHeldEpoch(identityId, delegator, epoch)
+    ).to.emit(DelegatorsInfo, 'LastStakeHeldEpochUpdated')
+
+    expect(await DelegatorsInfo.getLastStakeHeldEpoch(identityId, delegator)).to.equal(epoch);
+  });
+
 });
