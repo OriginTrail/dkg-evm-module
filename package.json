@@ -80,7 +80,7 @@
     "clean": "hardhat clean",
     "compile:size": "hardhat size-contracts",
     "compile": "hardhat compile --config hardhat.node.config.ts",
-    "coverage": "cross-env COVERAGE_REPORT=true HARDHAT_DEPLOY_FIXTURE=true hardhat coverage --network hardhat --solcoverjs ./.solcover.js --temp artifacts --testfiles './test/**/*.test.ts'",
+    "coverage": "cross-env SOLIDITY_COVERAGE=true HARDHAT_DEPLOY_FIXTURE=true hardhat coverage --solcoverjs ./.solcover.js --testfiles './test/**/*.test.ts'",
     "deploy:base_sepolia_dev": "hardhat deploy --network base_sepolia_dev",
     "deploy:base_sepolia_stable_dev_prod": "hardhat deploy --network base_sepolia_stable_dev_prod",
     "deploy:base_sepolia_stable_dev_staging": "hardhat deploy --network base_sepolia_stable_dev_staging",

@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 concurrency:
   group: checks-${{ github.ref }}
@@ -45,3 +46,14 @@ jobs:
 
       - name: Run tests
         run: npm run test:parallel
+
+      - name: Generate test coverage
+        run: npm run coverage
+
+      - name: Upload artifact of tests
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v4
+        with:
+          name: solidity-test-coverage
+          path: ./coverage/
+          retention-days: 7
