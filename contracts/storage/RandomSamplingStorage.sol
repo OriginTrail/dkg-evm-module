@@ -19,7 +19,6 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
 
     uint256 public w1;
     uint256 public w2;
-    uint8 public avgBlockTimeInSeconds;
 
     RandomSamplingLib.ProofingPeriodDuration[] public proofingPeriodDurations;
 
@@ -44,7 +43,6 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
 
     event W1Set(uint256 oldW1, uint256 newW1);
     event W2Set(uint256 oldW2, uint256 newW2);
-    event AvgBlockTimeSet(uint8 avgBlockTimeInSeconds);
     event ProofingPeriodDurationAdded(uint16 durationInBlocks, uint256 indexed effectiveEpoch);
     event PendingProofingPeriodDurationReplaced(
         uint16 oldDurationInBlocks,
@@ -104,19 +102,16 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
      * Sets up proofing period duration, block time, and weight parameters for random sampling
      * @param hubAddress Address of the Hub contract for access control and contract dependencies
      * @param _proofingPeriodDurationInBlocks Initial duration of proofing periods in blocks
-     * @param _avgBlockTimeInSeconds Average time between blocks in seconds for timing calculations
      * @param _w1 First weight parameter used in rewards calculations
      * @param _w2 Second weight parameter used in rewards calculations
      */
     constructor(
         address hubAddress,
         uint16 _proofingPeriodDurationInBlocks,
-        uint8 _avgBlockTimeInSeconds,
         uint256 _w1,
         uint256 _w2
     ) ContractStatus(hubAddress) {
         require(_proofingPeriodDurationInBlocks > 0, "Proofing period duration in blocks must be greater than 0");
-        require(_avgBlockTimeInSeconds > 0, "Average block time in seconds must be greater than 0");
 
         Chronos c = Chronos(hub.getContractAddress("Chronos"));
 
@@ -126,12 +121,10 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
                 effectiveEpoch: c.getCurrentEpoch()
             })
         );
-        avgBlockTimeInSeconds = _avgBlockTimeInSeconds;
         w1 = _w1;
         w2 = _w2;
 
         emit ProofingPeriodDurationAdded(_proofingPeriodDurationInBlocks, c.getCurrentEpoch());
-        emit AvgBlockTimeSet(_avgBlockTimeInSeconds);
         emit W1Set(0, _w1);
         emit W2Set(0, _w2);
     }
@@ -202,17 +195,6 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
      */
     function getW2() external view returns (uint256) {
         return w2;
-    }
-
-    /**
-     * @dev Updates the average block time used for timing calculations
-     * Can only be called by the hub owner or multisig owners
-     * @param blockTimeInSeconds New average block time in seconds (must be > 0)
-     */
-    function setAvgBlockTimeInSeconds(uint8 blockTimeInSeconds) external onlyOwnerOrMultiSigOwner {
-        require(blockTimeInSeconds > 0, "Block time in seconds must be greater than 0");
-        avgBlockTimeInSeconds = blockTimeInSeconds;
-        emit AvgBlockTimeSet(blockTimeInSeconds);
     }
 
     /**

@@ -12,11 +12,6 @@
         "type": "uint16"
       },
       {
-        "internalType": "uint8",
-        "name": "_avgBlockTimeInSeconds",
-        "type": "uint8"
-      },
-      {
         "internalType": "uint256",
         "name": "_w1",
         "type": "uint256"
@@ -101,19 +96,6 @@
       }
     ],
     "name": "AllNodesEpochScoreSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "avgBlockTimeInSeconds",
-        "type": "uint8"
-      }
-    ],
-    "name": "AvgBlockTimeSet",
     "type": "event"
   },
   {
@@ -748,19 +730,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "avgBlockTimeInSeconds",
-    "outputs": [
-      {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -1469,19 +1438,6 @@
       }
     ],
     "name": "setAllNodesEpochScore",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint8",
-        "name": "blockTimeInSeconds",
-        "type": "uint8"
-      }
-    ],
-    "name": "setAvgBlockTimeInSeconds",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

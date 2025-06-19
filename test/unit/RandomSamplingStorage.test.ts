@@ -82,8 +82,6 @@ describe('@unit RandomSamplingStorage', function () {
   const proofingPeriodDurationInBlocks =
     parameters.development.RandomSamplingStorage.hardhat
       .proofingPeriodDurationInBlocks;
-  const avgBlockTimeInSeconds =
-    parameters.development.RandomSamplingStorage.hardhat.avgBlockTimeInSeconds;
   const w1 = parameters.development.RandomSamplingStorage.hardhat.W1;
   const w2 = parameters.development.RandomSamplingStorage.hardhat.W2;
 
@@ -152,9 +150,10 @@ describe('@unit RandomSamplingStorage', function () {
   describe('constructor', () => {
     it('Should set correct initial values', async () => {
       // Check initial values set in constructor
-      expect(await RandomSamplingStorage.avgBlockTimeInSeconds()).to.equal(
-        BigInt(avgBlockTimeInSeconds),
-      );
+      expect(await RandomSamplingStorage.hub()).to.equal(Hub.target);
+      expect(
+        await RandomSamplingStorage.getLatestProofingPeriodDurationInBlocks(),
+      ).to.equal(proofingPeriodDurationInBlocks);
       expect(await RandomSamplingStorage.w1()).to.equal(w1);
       expect(await RandomSamplingStorage.w2()).to.equal(w2);
     });
@@ -164,69 +163,10 @@ describe('@unit RandomSamplingStorage', function () {
         'RandomSamplingStorage',
       );
       await expect(
-        RandomSamplingStorageFactory.deploy(
-          Hub.target,
-          0,
-          avgBlockTimeInSeconds,
-          w1,
-          w2,
-        ),
+        RandomSamplingStorageFactory.deploy(Hub.target, 0, w1, w2),
       ).to.be.revertedWith(
         'Proofing period duration in blocks must be greater than 0',
       );
-    });
-
-    it('Should revert if avgBlockTimeInSeconds is 0', async () => {
-      const RandomSamplingStorageFactory = await hre.ethers.getContractFactory(
-        'RandomSamplingStorage',
-      );
-      await expect(
-        RandomSamplingStorageFactory.deploy(
-          Hub.target,
-          proofingPeriodDurationInBlocks,
-          0,
-          w1,
-          w2,
-        ),
-      ).to.be.revertedWith(
-        'Average block time in seconds must be greater than 0',
-      );
-    });
-  });
-
-  describe('setAvgBlockTimeInSeconds()', () => {
-    it('Should update avgBlockTimeInSeconds and revert for non-owners', async () => {
-      // Test successful update by owner
-      const newAvg = 15;
-      const tx = await RandomSamplingStorage.setAvgBlockTimeInSeconds(newAvg);
-      await tx.wait();
-
-      await expect(tx)
-        .to.emit(RandomSamplingStorage, 'AvgBlockTimeSet')
-        .withArgs(BigInt(newAvg));
-
-      expect(await RandomSamplingStorage.avgBlockTimeInSeconds()).to.equal(
-        BigInt(newAvg),
-      );
-
-      // TODO: Fails because the hubOwner is not a multisig, but an individual account
-      // // Test revert for non-owner
-      // await expect(
-      //   RandomSamplingStorage.connect(accounts[1]).setAvgBlockTimeInSeconds(
-      //     newAvg,
-      //   ),
-      // )
-      //   .to.be.revertedWithCustomError(
-      //     RandomSamplingStorage,
-      //     'UnauthorizedAccess',
-      //   )
-      //   .withArgs('Only Hub Owner');
-    });
-
-    it('Should revert if blockTimeInSeconds is 0', async () => {
-      await expect(
-        RandomSamplingStorage.setAvgBlockTimeInSeconds(0),
-      ).to.be.revertedWith('Block time in seconds must be greater than 0');
     });
   });
 
@@ -609,7 +549,6 @@ describe('@unit RandomSamplingStorage', function () {
         await RandomSamplingStorageFactory.deploy(
           Hub.target,
           proofingPeriodDurationInBlocks,
-          avgBlockTimeInSeconds,
           w1,
           w2,
         );
@@ -2159,7 +2098,6 @@ describe('@unit RandomSamplingStorage', function () {
       const freshStorage = await RSFactory.deploy(
         Hub.target,
         proofingPeriodDurationInBlocks,
-        avgBlockTimeInSeconds,
         w1,
         w2,
       );
