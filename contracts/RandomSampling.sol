@@ -446,9 +446,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
 
         // 3. Node publishing factor calculation
         // Original: nodeStakeFactor * (nodePublishingFactor / MAX(allNodesPublishingFactors))
-        uint256 nodePub = uint256(epochStorage.getNodeCurrentEpochProducedKnowledgeValue(identityId));
         uint256 maxNodePub = uint256(epochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue());
-        require(maxNodePub > 0, "max publish is 0");
+        if (maxNodePub == 0) {
+            return nodeStakeFactor18 + nodeAskFactor18;
+        }
+        uint256 nodePub = uint256(epochStorage.getNodeCurrentEpochProducedKnowledgeValue(identityId));
         uint256 pubRatio18 = (nodePub * SCALE18) / maxNodePub;
         uint256 nodePublishingFactor18 = (nodeStakeFactor18 * pubRatio18) / SCALE18;
 
