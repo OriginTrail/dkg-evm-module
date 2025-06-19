@@ -262,13 +262,22 @@ describe('DelegatorsInfo contract', function() {
 
     const delegator = accounts[1].address;
     const epoch = 1;
+    const epoch2 = 2;
 
     await expect(
       DelegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch)
     ).to.emit(DelegatorsInfo, 'DelegatorLastClaimedEpochUpdated')
       .withArgs(identityId, delegator, epoch);
 
-    expect(await DelegatorsInfo.getLastClaimedEpoch(identityId, delegator)).to.equal(1);
+    expect(await DelegatorsInfo.getLastClaimedEpoch(identityId, delegator)).to.equal(epoch);
+
+    // Make sure it updates the value
+    await expect(
+      DelegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch2)
+    ).to.emit(DelegatorsInfo, 'DelegatorLastClaimedEpochUpdated')
+      .withArgs(identityId, delegator, epoch2);
+
+    expect(await DelegatorsInfo.getLastClaimedEpoch(identityId, delegator)).to.equal(epoch2);
   });
 
   it('Should set and get DelegatorRollingRewards, emit DelegatorRollingRewardsUpdated', async () => {
@@ -276,6 +285,7 @@ describe('DelegatorsInfo contract', function() {
 
     const delegator = accounts[1].address;
     const amount = 500;
+    const amount2 = 500;
 
     await expect(
       DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount)
@@ -283,18 +293,27 @@ describe('DelegatorsInfo contract', function() {
       .withArgs(identityId, delegator, amount, amount);
 
     expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(amount);
+
+
+    // Make sure it updates the value
+    await expect(
+      DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount2)
+    ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+      .withArgs(identityId, delegator, amount2, amount2);
+
+    expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(amount2);
   });
 
   it('Should set IsOperatorFeeClaimedForEpoch and emit IsOperatorFeeClaimedForEpochUpdated', async () => {
     const { identityId } = await createProfile();
 
-    const delegator = accounts[1].address;
+    const epoch = 1;
     const isClaimed = false;
 
     await expect(
-      DelegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, delegator, isClaimed)
+      DelegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, isClaimed)
     ).to.emit(DelegatorsInfo, 'IsOperatorFeeClaimedForEpochUpdated')
-      .withArgs(identityId, delegator, isClaimed);
+      .withArgs(identityId, epoch, isClaimed);
   });
 
   it('Should set and get NetNodeEpochRewards, emit NetNodeEpochRewardsSet', async () => {
