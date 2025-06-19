@@ -55,16 +55,14 @@ async function ensureNodeHasChunksThisEpoch(
     admin: SignerWithAddress;
   }[],
   receivingNodesIdentityIds: number[],
+  chunkSize: number,
 ): Promise<void> {
-  console.log(`   🔍 Checking if Node-${nodeId} has chunks this epoch...`);
   const produced =
     await contracts.epochStorage.getNodeCurrentEpochProducedKnowledgeValue(
       nodeId,
     );
-  console.log(`   📊 Node-${nodeId} produced value: ${produced}`);
 
   if (produced === 0n) {
-    console.log(`   🏗️  Creating KC to give Node-${nodeId} chunks...`);
     if (
       !receivingNodes.some(
         (r) => r.operational.address === node.operational.address,
@@ -87,15 +85,12 @@ async function ensureNodeHasChunksThisEpoch(
       merkleRoot,
       `ensure-chunks-${Date.now()}`,
       1, // knowledgeAssetsAmount
-      1000, // byteSize
+      chunkSize, // byteSize - must be >= CHUNK_BYTE_SIZE to avoid division by zero
       1, // epochs
       toTRAC(1),
     );
 
     await contracts.randomSamplingStorage.updateAndGetActiveProofPeriodStartBlock();
-    console.log(`   ✅ KC created for Node-${nodeId}`);
-  } else {
-    console.log(`   ✅ Node-${nodeId} already has chunks`);
   }
 }
 
@@ -127,8 +122,6 @@ async function submitProofAndLogScore(
   epoch: bigint,
   nodeName: string,
 ) {
-  console.log(`\n🔬 ${nodeName} submitting proof for epoch ${epoch}...`);
-
   // Get score before proof
   const scoreBefore = await contracts.randomSamplingStorage.getNodeEpochScore(
     epoch,
@@ -162,11 +155,6 @@ async function submitProofAndLogScore(
       epoch,
       nodeId,
     );
-
-  console.log(
-    `   📊 ${nodeName} Score: ${scoreBefore} → ${scoreAfter} (gained ${scoreAfter - scoreBefore})`,
-  );
-  console.log(`   📊 ${nodeName} Score per stake: ${scorePerStake}`);
 
   return { scoreBefore, scoreAfter, scorePerStake };
 }
@@ -202,6 +190,11 @@ export async function buildInitialRewardsState() {
     profileStorage:
       await hre.ethers.getContract<ProfileStorage>('ProfileStorage'),
   };
+
+  // Get chunk size to avoid division by zero in challenge generation
+  const chunkSize = Number(
+    await contracts.randomSamplingStorage.CHUNK_BYTE_SIZE(),
+  );
 
   const accounts = {
     owner: signers[0],
@@ -337,7 +330,7 @@ export async function buildInitialRewardsState() {
     merkleRoot,
     'epoch-2-reward-pool',
     10,
-    1000,
+    chunkSize * 10, // byteSize - use multiple of chunkSize for better testing
     numberOfEpochs,
     kcTokenAmount,
   );
@@ -345,7 +338,15 @@ export async function buildInitialRewardsState() {
   // EPOCH-2 STAKES:
   // Node-1: D1→10k, D2→20k
   // Node-2: D3→10k, D4→20k (same pattern as Node-1)
-  console.log('\n📊 EPOCH-2 STAKING:');
+  console.log(
+    '\n╔══════════════════════════════════════════════════════════════════════════════════╗',
+  );
+  console.log(
+    '║                                EPOCH-2 STAKING                                  ║',
+  );
+  console.log(
+    '╠══════════════════════════════════════════════════════════════════════════════════╣',
+  );
 
   // Node-1 delegators
   await contracts.token
@@ -354,7 +355,9 @@ export async function buildInitialRewardsState() {
   await contracts.staking
     .connect(accounts.delegators[0])
     .stake(node1Id, toTRAC(10_000));
-  console.log('  D1 → 10k TRAC on Node-1');
+  console.log(
+    '║  📍 D1  →  10,000 TRAC  →  Node-1                                               ║',
+  );
 
   await contracts.token
     .connect(accounts.delegators[1])
@@ -362,7 +365,9 @@ export async function buildInitialRewardsState() {
   await contracts.staking
     .connect(accounts.delegators[1])
     .stake(node1Id, toTRAC(20_000));
-  console.log('  D2 → 20k TRAC on Node-1');
+  console.log(
+    '║  📍 D2  →  20,000 TRAC  →  Node-1                                               ║',
+  );
 
   // Node-2 delegators (same pattern)
   await contracts.token
@@ -371,7 +376,9 @@ export async function buildInitialRewardsState() {
   await contracts.staking
     .connect(accounts.delegators[2])
     .stake(node2Id, toTRAC(10_000));
-  console.log('  D3 → 10k TRAC on Node-2');
+  console.log(
+    '║  📍 D3  →  10,000 TRAC  →  Node-2                                               ║',
+  );
 
   await contracts.token
     .connect(accounts.delegators[3])
@@ -379,7 +386,12 @@ export async function buildInitialRewardsState() {
   await contracts.staking
     .connect(accounts.delegators[3])
     .stake(node2Id, toTRAC(20_000));
-  console.log('  D4 → 20k TRAC on Node-2');
+  console.log(
+    '║  📍 D4  →  20,000 TRAC  →  Node-2                                               ║',
+  );
+  console.log(
+    '╚══════════════════════════════════════════════════════════════════════════════════╝',
+  );
 
   // Submit proofs at end of epoch-2
   await advanceToNextProofingPeriod(contracts);
@@ -392,6 +404,7 @@ export async function buildInitialRewardsState() {
     accounts,
     receivingNodes,
     receivingNodesIdentityIds,
+    chunkSize,
   );
   await ensureNodeHasChunksThisEpoch(
     node2Id,
@@ -400,21 +413,30 @@ export async function buildInitialRewardsState() {
     accounts,
     receivingNodes,
     receivingNodesIdentityIds,
+    chunkSize,
   );
 
-  await submitProofAndLogScore(
+  console.log('\n🔬 EPOCH-2 PROOFS SUBMITTED:');
+  const node1Proof2 = await submitProofAndLogScore(
     node1Id,
     accounts.node1,
     contracts,
     2n,
     'Node-1',
   );
-  await submitProofAndLogScore(
+  console.log(
+    `   ✅ Node-1: Score ${node1Proof2.scoreBefore} → ${node1Proof2.scoreAfter} (gain: ${node1Proof2.scoreAfter - node1Proof2.scoreBefore})`,
+  );
+
+  const node2Proof2 = await submitProofAndLogScore(
     node2Id,
     accounts.node2,
     contracts,
     2n,
     'Node-2',
+  );
+  console.log(
+    `   ✅ Node-2: Score ${node2Proof2.scoreBefore} → ${node2Proof2.scoreAfter} (gain: ${node2Proof2.scoreAfter - node2Proof2.scoreBefore})`,
   );
 
   // → EPOCH-3
@@ -428,10 +450,10 @@ export async function buildInitialRewardsState() {
     [accounts.node1, accounts.node3, accounts.node4],
     [node1Id, node3Id, node4Id],
     { KnowledgeCollection: contracts.kc, Token: contracts.token },
-    '0x' + randomBytes(32).toString('hex'),
+    merkleRoot, // Use consistent merkleRoot from quads
     'epoch-3-reward-pool',
     1,
-    1,
+    chunkSize * 5, // byteSize - use multiple of chunkSize
     1,
     toTRAC(100),
   );
@@ -440,7 +462,15 @@ export async function buildInitialRewardsState() {
   // Node-1: D5→30k, D6→40k, D7→50k
   // Node-2: D8→30k, D9→40k, D10→50k (same pattern as Node-1)
   // Node-3: D11→60k, D12→50k (original Node-2 pattern from your request)
-  console.log('\n📊 EPOCH-3 STAKING:');
+  console.log(
+    '\n╔══════════════════════════════════════════════════════════════════════════════════╗',
+  );
+  console.log(
+    '║                                EPOCH-3 STAKING                                  ║',
+  );
+  console.log(
+    '╠══════════════════════════════════════════════════════════════════════════════════╣',
+  );
 
   // Node-1 additional delegators
   await contracts.token
@@ -449,7 +479,9 @@ export async function buildInitialRewardsState() {
   await contracts.staking
     .connect(accounts.delegators[4])
     .stake(node1Id, toTRAC(30_000));
-  console.log('  D5 → 30k TRAC on Node-1');
+  console.log(
+    '║  📍 D5  →  30,000 TRAC  →  Node-1                                               ║',
+  );
 
   await contracts.token
     .connect(accounts.delegators[5])
@@ -457,7 +489,9 @@ export async function buildInitialRewardsState() {
   await contracts.staking
     .connect(accounts.delegators[5])
     .stake(node1Id, toTRAC(40_000));
-  console.log('  D6 → 40k TRAC on Node-1');
+  console.log(
+    '║  📍 D6  →  40,000 TRAC  →  Node-1                                               ║',
+  );
 
   await contracts.token
     .connect(accounts.delegators[6])
@@ -465,7 +499,9 @@ export async function buildInitialRewardsState() {
   await contracts.staking
     .connect(accounts.delegators[6])
     .stake(node1Id, toTRAC(50_000));
-  console.log('  D7 → 50k TRAC on Node-1');
+  console.log(
+    '║  📍 D7  →  50,000 TRAC  →  Node-1                                               ║',
+  );
 
   // Node-2 additional delegators (same pattern as Node-1)
   await contracts.token
@@ -474,7 +510,9 @@ export async function buildInitialRewardsState() {
   await contracts.staking
     .connect(accounts.delegators[7])
     .stake(node2Id, toTRAC(30_000));
-  console.log('  D8 → 30k TRAC on Node-2');
+  console.log(
+    '║  📍 D8  →  30,000 TRAC  →  Node-2                                               ║',
+  );
 
   await contracts.token
     .connect(accounts.delegators[8])
@@ -482,7 +520,9 @@ export async function buildInitialRewardsState() {
   await contracts.staking
     .connect(accounts.delegators[8])
     .stake(node2Id, toTRAC(40_000));
-  console.log('  D9 → 40k TRAC on Node-2');
+  console.log(
+    '║  📍 D9  →  40,000 TRAC  →  Node-2                                               ║',
+  );
 
   await contracts.token
     .connect(accounts.delegators[9])
@@ -490,7 +530,9 @@ export async function buildInitialRewardsState() {
   await contracts.staking
     .connect(accounts.delegators[9])
     .stake(node2Id, toTRAC(50_000));
-  console.log('  D10 → 50k TRAC on Node-2');
+  console.log(
+    '║  📍 D10 →  50,000 TRAC  →  Node-2                                               ║',
+  );
 
   // Node-3 delegators (your original Node-2 pattern)
   await contracts.token
@@ -499,7 +541,9 @@ export async function buildInitialRewardsState() {
   await contracts.staking
     .connect(accounts.delegators[10])
     .stake(node3Id, toTRAC(60_000));
-  console.log('  D11 → 60k TRAC on Node-3');
+  console.log(
+    '║  📍 D11 →  60,000 TRAC  →  Node-3                                               ║',
+  );
 
   await contracts.token
     .connect(accounts.delegators[11])
@@ -507,7 +551,12 @@ export async function buildInitialRewardsState() {
   await contracts.staking
     .connect(accounts.delegators[11])
     .stake(node3Id, toTRAC(50_000));
-  console.log('  D12 → 50k TRAC on Node-3');
+  console.log(
+    '║  📍 D12 →  50,000 TRAC  →  Node-3                                               ║',
+  );
+  console.log(
+    '╚══════════════════════════════════════════════════════════════════════════════════╝',
+  );
 
   // Submit proofs at end of epoch-3
   await advanceToNextProofingPeriod(contracts);
@@ -520,6 +569,7 @@ export async function buildInitialRewardsState() {
     accounts,
     receivingNodes,
     receivingNodesIdentityIds,
+    chunkSize,
   );
   await ensureNodeHasChunksThisEpoch(
     node2Id,
@@ -528,6 +578,7 @@ export async function buildInitialRewardsState() {
     accounts,
     receivingNodes,
     receivingNodesIdentityIds,
+    chunkSize,
   );
   await ensureNodeHasChunksThisEpoch(
     node3Id,
@@ -536,28 +587,41 @@ export async function buildInitialRewardsState() {
     accounts,
     receivingNodes,
     receivingNodesIdentityIds,
+    chunkSize,
   );
 
-  await submitProofAndLogScore(
+  console.log('\n🔬 EPOCH-3 PROOFS SUBMITTED:');
+  const node1Proof3 = await submitProofAndLogScore(
     node1Id,
     accounts.node1,
     contracts,
     3n,
     'Node-1',
   );
-  await submitProofAndLogScore(
+  console.log(
+    `   ✅ Node-1: Score ${node1Proof3.scoreBefore} → ${node1Proof3.scoreAfter} (gain: ${node1Proof3.scoreAfter - node1Proof3.scoreBefore})`,
+  );
+
+  const node2Proof3 = await submitProofAndLogScore(
     node2Id,
     accounts.node2,
     contracts,
     3n,
     'Node-2',
   );
-  await submitProofAndLogScore(
+  console.log(
+    `   ✅ Node-2: Score ${node2Proof3.scoreBefore} → ${node2Proof3.scoreAfter} (gain: ${node2Proof3.scoreAfter - node2Proof3.scoreBefore})`,
+  );
+
+  const node3Proof3 = await submitProofAndLogScore(
     node3Id,
     accounts.node3,
     contracts,
     3n,
     'Node-3',
+  );
+  console.log(
+    `   ✅ Node-3: Score ${node3Proof3.scoreBefore} → ${node3Proof3.scoreAfter} (gain: ${node3Proof3.scoreAfter - node3Proof3.scoreBefore})`,
   );
 
   // → EPOCH-4 (to finalize epoch-3)
@@ -571,30 +635,55 @@ export async function buildInitialRewardsState() {
     [accounts.node1, accounts.node2, accounts.node3],
     [node1Id, node2Id, node3Id],
     { KnowledgeCollection: contracts.kc, Token: contracts.token },
-    '0x' + randomBytes(32).toString('hex'),
+    merkleRoot, // Use consistent merkleRoot from quads
     'finalize-epoch-3',
     10,
-    1000,
+    chunkSize * 20, // byteSize - use multiple of chunkSize
     10,
     toTRAC(50_000),
   );
 
   // Print detailed snapshot
-  console.log('\n══════════  INITIAL SYSTEM STATE  ══════════');
+  console.log('\n');
+  console.log(
+    '═══════════════════════════════════════════════════════════════════════════════════════════════',
+  );
+  console.log(
+    '                                 🎯 FINAL SYSTEM STATE 🎯                                      ',
+  );
+  console.log(
+    '═══════════════════════════════════════════════════════════════════════════════════════════════',
+  );
+
   const currentEpoch = await contracts.chronos.getCurrentEpoch();
   const lastFinalizedEpoch = await contracts.epochStorage.lastFinalizedEpoch(1);
   console.log(
-    `Current epoch: ${currentEpoch} (epoch-${lastFinalizedEpoch} finalized)\n`,
+    `📅 Current Epoch: ${currentEpoch} | Last Finalized: ${lastFinalizedEpoch}`,
   );
+  console.log('');
 
-  console.log('📊 FINAL STAKING DISTRIBUTION:');
   console.log(
-    '  EPOCH-2: D1→10k, D2→20k TRAC (Node-1) | D3→10k, D4→20k TRAC (Node-2)',
+    '┌─────────────────────────────────────────────────────────────────────────────────────────────┐',
   );
   console.log(
-    '  EPOCH-3: D5→30k, D6→40k, D7→50k TRAC (Node-1) | D8→30k, D9→40k, D10→50k TRAC (Node-2)',
+    '│                                     📊 STAKING TIMELINE                                     │',
   );
-  console.log('           D11→60k, D12→50k TRAC (Node-3)\n');
+  console.log(
+    '├─────────────────────────────────────────────────────────────────────────────────────────────┤',
+  );
+  console.log(
+    '│  EPOCH-2: D1→10k, D2→20k (Node-1)  │  D3→10k, D4→20k (Node-2)                           │',
+  );
+  console.log(
+    '│  EPOCH-3: D5→30k, D6→40k, D7→50k (Node-1)  │  D8→30k, D9→40k, D10→50k (Node-2)         │',
+  );
+  console.log(
+    '│           D11→60k, D12→50k (Node-3)                                                      │',
+  );
+  console.log(
+    '└─────────────────────────────────────────────────────────────────────────────────────────────┘',
+  );
+  console.log('');
 
   for (const [i, node] of nodes.entries()) {
     const totalStake = await contracts.stakingStorage.getNodeStake(
@@ -609,16 +698,15 @@ export async function buildInitialRewardsState() {
       node.identityId,
     );
 
+    console.log(`🚀 Node-${i + 1} (ID: ${node.identityId})`);
     console.log(
-      `Node-${i + 1} (id ${node.identityId}) totalStake = ${hre.ethers.formatUnits(
-        totalStake,
-        18,
-      )} TRAC | operatorFee = 10%`,
+      `   💰 Total Stake: ${hre.ethers.formatUnits(totalStake, 18)} TRAC | 🎯 Operator Fee: 10%`,
     );
     console.log(
-      `   📊 Epoch-2 Score: ${nodeScore2} | Epoch-3 Score: ${nodeScore3}`,
+      `   📊 Scores → Epoch-2: ${nodeScore2} | Epoch-3: ${nodeScore3}`,
     );
 
+    const delegatorStakes = [];
     for (let d = 0; d < accounts.delegators.length; d++) {
       const key = hre.ethers.keccak256(
         hre.ethers.solidityPacked(
@@ -631,13 +719,19 @@ export async function buildInitialRewardsState() {
         key,
       );
       if (stake > 0n) {
-        console.log(`   ↳ D${d + 1} ${hre.ethers.formatUnits(stake, 18)} TRAC`);
+        delegatorStakes.push(`D${d + 1}: ${hre.ethers.formatUnits(stake, 18)}`);
       }
+    }
+
+    if (delegatorStakes.length > 0) {
+      console.log(`   👥 Delegators: ${delegatorStakes.join(' | ')}`);
     }
     console.log('');
   }
 
-  console.log('════════════════════════════════════════════\n');
+  console.log(
+    '═══════════════════════════════════════════════════════════════════════════════════════════════\n',
+  );
 
   // Return environment for tests
   return {

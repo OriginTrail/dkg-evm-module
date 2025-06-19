@@ -293,6 +293,7 @@ async function ensureNodeHasChunksThisEpoch(
     admin: SignerWithAddress;
   }[],
   receivingNodesIdentityIds: number[],
+  chunkSize: number,
 ): Promise<void> {
   const produced =
     await contracts.epochStorage.getNodeCurrentEpochProducedKnowledgeValue(
@@ -319,7 +320,7 @@ async function ensureNodeHasChunksThisEpoch(
       merkleRoot,
       `ensure-chunks-${Date.now()}`,
       1, // holders
-      4, // chunks
+      chunkSize, // byteSize - must be >= CHUNK_BYTE_SIZE to avoid division by zero
       1, // replicas
       toTRAC(1),
     );
@@ -335,6 +336,7 @@ async function setupTestEnvironment(): Promise<{
   accounts: TestAccounts;
   contracts: TestContracts;
   nodeIds: { node1Id: bigint; node2Id: bigint };
+  chunkSize: number;
 }> {
   await hre.deployments.fixture();
 
@@ -379,6 +381,11 @@ async function setupTestEnvironment(): Promise<{
     askStorage: await hre.ethers.getContract<AskStorage>('AskStorage'),
     ask: await hre.ethers.getContract<Ask>('Ask'),
   };
+
+  // Get chunk size to avoid division by zero in challenge generation
+  const chunkSize = Number(
+    await contracts.randomSamplingStorage.CHUNK_BYTE_SIZE(),
+  );
 
   await contracts.hub.setContractAddress('HubOwner', accounts.owner.address);
 
@@ -459,6 +466,7 @@ async function setupTestEnvironment(): Promise<{
     accounts,
     contracts,
     nodeIds: { node1Id: BigInt(node1Id), node2Id: BigInt(node2Id) },
+    chunkSize,
   };
 }
 
@@ -475,6 +483,7 @@ describe(`Full complex scenario`, function () {
   }[];
   let receivingNodesIdentityIds: number[];
   let TOKEN_DECIMALS = 18;
+  let chunkSize: number;
 
   it('Should execute steps 1-7 with detailed score calculations and verification', async function () {
     // ================================================================================================================
@@ -484,6 +493,7 @@ describe(`Full complex scenario`, function () {
     accounts = setup.accounts;
     contracts = setup.contracts;
     nodeIds = setup.nodeIds;
+    chunkSize = setup.chunkSize;
     node1Id = nodeIds.node1Id;
 
     TOKEN_DECIMALS = Number(await contracts.token.decimals());
@@ -539,7 +549,7 @@ describe(`Full complex scenario`, function () {
       merkleRoot,
       'test-op-id',
       10,
-      1000,
+      chunkSize * 10, // byteSize - use multiple of chunkSize for proper chunk generation
       numberOfEpochs,
       kcTokenAmount,
     );
@@ -754,6 +764,10 @@ describe(`Full complex scenario`, function () {
       { KnowledgeCollection: contracts.kc, Token: contracts.token },
       merkleRoot,
       'dummy-op-id-2',
+      1, // holders
+      chunkSize * 5, // byteSize - use multiple of chunkSize
+      1, // replicas
+      toTRAC(10), // small fee for finalization
     );
 
     expect(await contracts.epochStorage.lastFinalizedEpoch(1)).to.be.gte(
@@ -1270,7 +1284,7 @@ describe(`Full complex scenario`, function () {
       merkleRoot,
       'finalise-epoch',
       10, // holders
-      1_000, // chunks
+      chunkSize * 15, // byteSize - use multiple of chunkSize for proper chunk generation
       10, // replicas
       toTRAC(50_000), // <-- epoch fee identical to the diagram
     );
@@ -2012,7 +2026,7 @@ describe(`Full complex scenario`, function () {
       merkleRoot,
       'finalise-epoch4',
       1, // holders
-      10, // chunks
+      chunkSize * 2, // byteSize - use multiple of chunkSize for proper chunk generation
       1, // replicas
       toTRAC(1), //
     );
@@ -2295,6 +2309,7 @@ describe(`Full complex scenario`, function () {
       accounts,
       receivingNodes,
       receivingNodesIdentityIds,
+      chunkSize,
     );
 
     const n1StakeNow = await contracts.stakingStorage.getNodeStake(node1Id);
@@ -2329,7 +2344,7 @@ describe(`Full complex scenario`, function () {
       merkleRoot,
       'test-op-id-node2-proof-stepA4',
       10,
-      1000,
+      chunkSize * 8, // byteSize - use multiple of chunkSize for proper chunk generation
       10,
       toTRAC(1000),
     );
@@ -2388,6 +2403,7 @@ describe(`Full complex scenario`, function () {
       accounts,
       receivingNodes,
       receivingNodesIdentityIds,
+      chunkSize,
     );
 
     const n2Stake_beforeProof = await contracts.stakingStorage.getNodeStake(
@@ -2495,7 +2511,7 @@ describe(`Full complex scenario`, function () {
       merkleRoot,
       'finalise-stepC',
       1, // holders
-      10, // chunks
+      chunkSize * 2, // byteSize - use multiple of chunkSize for proper chunk generation
       1, // replicas
       toTRAC(1), // 1 TRAC fee – enough to finalise
     );
@@ -2611,7 +2627,7 @@ describe(`Full complex scenario`, function () {
       merkleRoot,
       'finalise-ep7',
       1,
-      10,
+      chunkSize * 2, // byteSize - use multiple of chunkSize for proper chunk generation
       1,
       toTRAC(1),
     );
