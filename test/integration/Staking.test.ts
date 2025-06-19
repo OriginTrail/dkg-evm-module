@@ -11,6 +11,7 @@ import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import {
   Token,
   Profile,
+  ProfileStorage,
   Staking,
   Chronos,
   RandomSamplingStorage,
@@ -198,6 +199,8 @@ export async function buildInitialRewardsState() {
     askStorage: await hre.ethers.getContract<AskStorage>('AskStorage'),
     parametersStorage:
       await hre.ethers.getContract<ParametersStorage>('ParametersStorage'),
+    profileStorage:
+      await hre.ethers.getContract<ProfileStorage>('ProfileStorage'),
   };
 
   const accounts = {
@@ -640,6 +643,7 @@ export async function buildInitialRewardsState() {
   return {
     Token: contracts.token,
     Profile: contracts.profile,
+    ProfileStorage: contracts.profileStorage,
     Staking: contracts.staking,
     Chronos: contracts.chronos,
     RandomSamplingStorage: contracts.randomSamplingStorage,
@@ -678,9 +682,9 @@ describe('rewards tests', () => {
 
   /* 2️⃣  Operator-fee sanity (all nodes @ 1000 ‱). */
   it('every node stores 10 % operator fee', async () => {
-    const { Profile, nodes } = env;
+    const { ProfileStorage, nodes } = env;
     for (const n of nodes) {
-      const opFee = await Profile.getOperatorFee(n.identityId);
+      const opFee = await ProfileStorage.getOperatorFee(n.identityId);
       expect(opFee).to.equal(1000); // 1000 ‱  ==  10 %
     }
   });
