@@ -155,12 +155,12 @@
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0xE9c4Deb43A50371Fa3d50fc4c0Ac9a989a6eeC02",
+      "evmAddress": "0xC448740F566AEbcCf22EF22a43d313A5E3bdbC99",
       "version": "1.0.1",
       "gitBranch": "release/reworked-staking",
-      "gitCommitHash": "e660b9adf0736cb63f25ad66a57c67dda84351c3",
-      "deploymentBlock": 27158852,
-      "deploymentTimestamp": 1750085995775,
+      "gitCommitHash": "67ad1cd45d09aa6603a881d83ade56f17fac6fb7",
+      "deploymentBlock": 27343725,
+      "deploymentTimestamp": 1750455742292,
       "deployed": true
     },
     "Profile": {
