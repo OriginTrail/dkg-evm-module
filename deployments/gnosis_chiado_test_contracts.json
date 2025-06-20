@@ -299,12 +299,12 @@
       "deployed": true
     },
     "MigratorM1V8": {
-      "evmAddress": "0x1670Ae201b1D988B11313c3E7b01f92A37899527",
+      "evmAddress": "0xB46A7bF33fD34a710Cf497196bEb7c17a0af56Fc",
       "version": null,
       "gitBranch": "feature/m1-v8-migrator",
-      "gitCommitHash": "a2c35fde09b3a1ba9fd1ae289c44fb5cb8f0be30",
-      "deploymentBlock": 16357836,
-      "deploymentTimestamp": 1750427379023,
+      "gitCommitHash": "e65e131489c038790ca6117c757dce4783d6dfc5",
+      "deploymentBlock": 16357950,
+      "deploymentTimestamp": 1750427976240,
       "deployed": true
     }
   }

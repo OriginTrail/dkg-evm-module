@@ -226,7 +226,7 @@ contract MigratorM1V8 is ContractStatus {
 
     function _checkOwnerOrMultiSigOwner() internal view virtual {
         address hubOwner = hub.owner();
-        if (msg.sender != hubOwner && msg.sender != address(hub) && !_isMultiSigOwner(msg.sender)) {
+        if (msg.sender != hubOwner && msg.sender != address(hub) && !_isMultiSigOwner(hubOwner)) {
             revert("Only Hub Owner, Hub, or Multisig Owner can call");
         }
     }
