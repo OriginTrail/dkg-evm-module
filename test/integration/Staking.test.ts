@@ -23,6 +23,7 @@ import {
   Ask,
   AskStorage,
   ParametersStorage,
+  DelegatorsInfo,
 } from '../../typechain';
 import { createKnowledgeCollection } from '../helpers/kc-helpers';
 import { createProfile } from '../helpers/profile-helpers';
@@ -174,6 +175,8 @@ export async function buildInitialRewardsState() {
     staking: await hre.ethers.getContract<Staking>('Staking'),
     stakingStorage:
       await hre.ethers.getContract<StakingStorage>('StakingStorage'),
+    delegatorsInfo:
+      await hre.ethers.getContract<DelegatorsInfo>('DelegatorsInfo'),
     randomSamplingStorage: await hre.ethers.getContract<RandomSamplingStorage>(
       'RandomSamplingStorage',
     ),
@@ -314,26 +317,33 @@ export async function buildInitialRewardsState() {
     await time.increase((await contracts.chronos.timeUntilNextEpoch()) + 1n);
   }
 
-  // Create reward pool for epoch-2
-  const kcTokenAmount = toTRAC(1_000);
+  // Create identical reward pools for epoch-2 (each node publishes same amount)
+  const kcTokenAmount = toTRAC(250); // Split total among 4 nodes
   const numberOfEpochs = 5;
   const { kcTools } = await import('assertion-tools');
   const merkleRoot = kcTools.calculateMerkleRoot(quads, 32);
 
-  await createKnowledgeCollection(
-    accounts.kcCreator,
-    accounts.node1,
-    node1Id,
-    receivingNodes,
-    receivingNodesIdentityIds,
-    { KnowledgeCollection: contracts.kc, Token: contracts.token },
-    merkleRoot,
-    'epoch-2-reward-pool',
-    10,
-    chunkSize * 10, // byteSize - use multiple of chunkSize for better testing
-    numberOfEpochs,
-    kcTokenAmount,
-  );
+  // Create identical KC for each node to ensure equal publishing values
+  for (let i = 0; i < nodes.length; i++) {
+    const publisherNode = nodes[i];
+    const otherNodes = nodes.filter((_, idx) => idx !== i);
+    const otherNodeIds = otherNodes.map((n) => n.identityId);
+
+    await createKnowledgeCollection(
+      accounts.kcCreator,
+      publisherNode,
+      publisherNode.identityId,
+      otherNodes,
+      otherNodeIds,
+      { KnowledgeCollection: contracts.kc, Token: contracts.token },
+      merkleRoot,
+      `epoch-2-node-${i + 1}-kc`,
+      3, // Same knowledge assets amount for all
+      chunkSize * 3, // Same byte size for all
+      numberOfEpochs,
+      kcTokenAmount, // Same token amount for all
+    );
+  }
 
   // EPOCH-2 STAKES:
   // Node-1: D1→10k, D2→20k
@@ -396,25 +406,8 @@ export async function buildInitialRewardsState() {
   // Submit proofs at end of epoch-2
   await advanceToNextProofingPeriod(contracts);
 
-  // Ensure nodes have chunks before submitting proofs
-  await ensureNodeHasChunksThisEpoch(
-    node1Id,
-    accounts.node1,
-    contracts,
-    accounts,
-    receivingNodes,
-    receivingNodesIdentityIds,
-    chunkSize,
-  );
-  await ensureNodeHasChunksThisEpoch(
-    node2Id,
-    accounts.node2,
-    contracts,
-    accounts,
-    receivingNodes,
-    receivingNodesIdentityIds,
-    chunkSize,
-  );
+  // All nodes already have equal KC chunks from the identical KC creation above
+  // No need for ensureNodeHasChunksThisEpoch() since each node published identical KC
 
   console.log('\n🔬 EPOCH-2 PROOFS SUBMITTED:');
   const node1Proof2 = await submitProofAndLogScore(
@@ -439,24 +432,56 @@ export async function buildInitialRewardsState() {
     `   ✅ Node-2: Score ${node2Proof2.scoreBefore} → ${node2Proof2.scoreAfter} (gain: ${node2Proof2.scoreAfter - node2Proof2.scoreBefore})`,
   );
 
+  const node3Proof2 = await submitProofAndLogScore(
+    node3Id,
+    accounts.node3,
+    contracts,
+    2n,
+    'Node-3',
+  );
+  console.log(
+    `   ✅ Node-3: Score ${node3Proof2.scoreBefore} → ${node3Proof2.scoreAfter} (gain: ${node3Proof2.scoreAfter - node3Proof2.scoreBefore})`,
+  );
+
+  const node4Proof2 = await submitProofAndLogScore(
+    node4Id,
+    accounts.node4,
+    contracts,
+    2n,
+    'Node-4',
+  );
+  console.log(
+    `   ✅ Node-4: Score ${node4Proof2.scoreBefore} → ${node4Proof2.scoreAfter} (gain: ${node4Proof2.scoreAfter - node4Proof2.scoreBefore})`,
+  );
+
   // → EPOCH-3
   await time.increase((await contracts.chronos.timeUntilNextEpoch()) + 1n);
 
-  // Create reward pool for epoch-3
-  await createKnowledgeCollection(
-    accounts.kcCreator,
-    accounts.node2,
-    node2Id,
-    [accounts.node1, accounts.node3, accounts.node4],
-    [node1Id, node3Id, node4Id],
-    { KnowledgeCollection: contracts.kc, Token: contracts.token },
-    merkleRoot, // Use consistent merkleRoot from quads
-    'epoch-3-reward-pool',
-    1,
-    chunkSize * 5, // byteSize - use multiple of chunkSize
-    1,
-    toTRAC(100),
-  );
+  // Create identical reward pools for epoch-3 (each node publishes same amount)
+  const kcTokenAmountEpoch3 = toTRAC(100); // Split total among 4 nodes
+  const numberOfEpochsEpoch3 = 1;
+
+  // Create identical KC for each node to ensure equal publishing values
+  for (let i = 0; i < nodes.length; i++) {
+    const publisherNode = nodes[i];
+    const otherNodes = nodes.filter((_, idx) => idx !== i);
+    const otherNodeIds = otherNodes.map((n) => n.identityId);
+
+    await createKnowledgeCollection(
+      accounts.kcCreator,
+      publisherNode,
+      publisherNode.identityId,
+      otherNodes,
+      otherNodeIds,
+      { KnowledgeCollection: contracts.kc, Token: contracts.token },
+      merkleRoot,
+      `epoch-3-node-${i + 1}-kc`,
+      1, // Same knowledge assets amount for all
+      chunkSize * 5, // Same byte size for all
+      numberOfEpochsEpoch3,
+      kcTokenAmountEpoch3, // Same token amount for all
+    );
+  }
 
   // EPOCH-3 STAKES:
   // Node-1: D5→30k, D6→40k, D7→50k
@@ -561,34 +586,8 @@ export async function buildInitialRewardsState() {
   // Submit proofs at end of epoch-3
   await advanceToNextProofingPeriod(contracts);
 
-  // Ensure nodes have chunks before submitting proofs
-  await ensureNodeHasChunksThisEpoch(
-    node1Id,
-    accounts.node1,
-    contracts,
-    accounts,
-    receivingNodes,
-    receivingNodesIdentityIds,
-    chunkSize,
-  );
-  await ensureNodeHasChunksThisEpoch(
-    node2Id,
-    accounts.node2,
-    contracts,
-    accounts,
-    receivingNodes,
-    receivingNodesIdentityIds,
-    chunkSize,
-  );
-  await ensureNodeHasChunksThisEpoch(
-    node3Id,
-    accounts.node3,
-    contracts,
-    accounts,
-    receivingNodes,
-    receivingNodesIdentityIds,
-    chunkSize,
-  );
+  // All nodes already have equal KC chunks from the identical KC creation above
+  // No need for ensureNodeHasChunksThisEpoch() since each node published identical KC
 
   console.log('\n🔬 EPOCH-3 PROOFS SUBMITTED:');
   const node1Proof3 = await submitProofAndLogScore(
@@ -624,6 +623,17 @@ export async function buildInitialRewardsState() {
     `   ✅ Node-3: Score ${node3Proof3.scoreBefore} → ${node3Proof3.scoreAfter} (gain: ${node3Proof3.scoreAfter - node3Proof3.scoreBefore})`,
   );
 
+  const node4Proof3 = await submitProofAndLogScore(
+    node4Id,
+    accounts.node4,
+    contracts,
+    3n,
+    'Node-4',
+  );
+  console.log(
+    `   ✅ Node-4: Score ${node4Proof3.scoreBefore} → ${node4Proof3.scoreAfter} (gain: ${node4Proof3.scoreAfter - node4Proof3.scoreBefore})`,
+  );
+
   // → EPOCH-4 (to finalize epoch-3)
   await time.increase((await contracts.chronos.timeUntilNextEpoch()) + 1n);
 
@@ -642,6 +652,203 @@ export async function buildInitialRewardsState() {
     10,
     toTRAC(50_000),
   );
+
+  // Submit proofs at end of epoch-4
+  await advanceToNextProofingPeriod(contracts);
+
+  // Ensure all nodes have chunks before submitting proofs for epoch-4
+  await ensureNodeHasChunksThisEpoch(
+    node1Id,
+    accounts.node1,
+    contracts,
+    accounts,
+    receivingNodes,
+    receivingNodesIdentityIds,
+    chunkSize,
+  );
+  await ensureNodeHasChunksThisEpoch(
+    node2Id,
+    accounts.node2,
+    contracts,
+    accounts,
+    receivingNodes,
+    receivingNodesIdentityIds,
+    chunkSize,
+  );
+  await ensureNodeHasChunksThisEpoch(
+    node3Id,
+    accounts.node3,
+    contracts,
+    accounts,
+    receivingNodes,
+    receivingNodesIdentityIds,
+    chunkSize,
+  );
+  await ensureNodeHasChunksThisEpoch(
+    node4Id,
+    accounts.node4,
+    contracts,
+    accounts,
+    receivingNodes,
+    receivingNodesIdentityIds,
+    chunkSize,
+  );
+
+  console.log('\n🔬 EPOCH-4 PROOFS SUBMITTED:');
+  const node1Proof4 = await submitProofAndLogScore(
+    node1Id,
+    accounts.node1,
+    contracts,
+    4n,
+    'Node-1',
+  );
+  console.log(
+    `   ✅ Node-1: Score ${node1Proof4.scoreBefore} → ${node1Proof4.scoreAfter} (gain: ${node1Proof4.scoreAfter - node1Proof4.scoreBefore})`,
+  );
+
+  const node2Proof4 = await submitProofAndLogScore(
+    node2Id,
+    accounts.node2,
+    contracts,
+    4n,
+    'Node-2',
+  );
+  console.log(
+    `   ✅ Node-2: Score ${node2Proof4.scoreBefore} → ${node2Proof4.scoreAfter} (gain: ${node2Proof4.scoreAfter - node2Proof4.scoreBefore})`,
+  );
+
+  const node3Proof4 = await submitProofAndLogScore(
+    node3Id,
+    accounts.node3,
+    contracts,
+    4n,
+    'Node-3',
+  );
+  console.log(
+    `   ✅ Node-3: Score ${node3Proof4.scoreBefore} → ${node3Proof4.scoreAfter} (gain: ${node3Proof4.scoreAfter - node3Proof4.scoreBefore})`,
+  );
+
+  const node4Proof4 = await submitProofAndLogScore(
+    node4Id,
+    accounts.node4,
+    contracts,
+    4n,
+    'Node-4',
+  );
+  console.log(
+    `   ✅ Node-4: Score ${node4Proof4.scoreBefore} → ${node4Proof4.scoreAfter} (gain: ${node4Proof4.scoreAfter - node4Proof4.scoreBefore})`,
+  );
+
+  // → EPOCH-5
+  await time.increase((await contracts.chronos.timeUntilNextEpoch()) + 1n);
+
+  // Create KC for epoch-5 to ensure there's activity
+  await createKnowledgeCollection(
+    accounts.kcCreator,
+    accounts.node1,
+    node1Id,
+    [accounts.node2, accounts.node3, accounts.node4],
+    [node2Id, node3Id, node4Id],
+    { KnowledgeCollection: contracts.kc, Token: contracts.token },
+    merkleRoot, // Use consistent merkleRoot from quads
+    'epoch-5-no-proofs',
+    5,
+    chunkSize * 15, // byteSize - use multiple of chunkSize
+    3,
+    toTRAC(2_000),
+  );
+
+  // EPOCH-5 STAKES:
+  // Add delegator 13 and 14 with 35k TRAC each
+  console.log(
+    '\n╔══════════════════════════════════════════════════════════════════════════════════╗',
+  );
+  console.log(
+    '║                                EPOCH-5 STAKING                                  ║',
+  );
+  console.log(
+    '╠══════════════════════════════════════════════════════════════════════════════════╣',
+  );
+
+  // Need to add more delegators to accounts since we only had 12 before
+  if (accounts.delegators.length < 14) {
+    const additionalDelegators = signers.slice(22, 24); // Get signers 22 and 23 for D13 and D14
+    accounts.delegators.push(...additionalDelegators);
+
+    // Mint tokens for new delegators
+    for (const delegator of additionalDelegators) {
+      await contracts.token.mint(delegator.address, toTRAC(1_000_000));
+    }
+  }
+
+  // D13 stakes 35k to Node-1
+  await contracts.token
+    .connect(accounts.delegators[12])
+    .approve(await contracts.staking.getAddress(), toTRAC(35_000));
+  await contracts.staking
+    .connect(accounts.delegators[12])
+    .stake(node1Id, toTRAC(35_000));
+  console.log(
+    '║  📍 D13 →  35,000 TRAC  →  Node-1                                               ║',
+  );
+
+  // D14 stakes 35k to Node-2
+  await contracts.token
+    .connect(accounts.delegators[13])
+    .approve(await contracts.staking.getAddress(), toTRAC(35_000));
+  await contracts.staking
+    .connect(accounts.delegators[13])
+    .stake(node2Id, toTRAC(35_000));
+  console.log(
+    '║  📍 D14 →  35,000 TRAC  →  Node-2                                               ║',
+  );
+  console.log(
+    '╚══════════════════════════════════════════════════════════════════════════════════╝',
+  );
+
+  console.log('\n🚫 EPOCH-5: NO PROOFS SUBMITTED');
+
+  // → EPOCH-6 (to finalize epoch-5)
+  await time.increase((await contracts.chronos.timeUntilNextEpoch()) + 1n);
+
+  // Create KC for epoch-6 to finalize epoch-5
+  await createKnowledgeCollection(
+    accounts.kcCreator,
+    accounts.node3,
+    node3Id,
+    [accounts.node1, accounts.node2, accounts.node4],
+    [node1Id, node2Id, node4Id],
+    { KnowledgeCollection: contracts.kc, Token: contracts.token },
+    merkleRoot, // Use consistent merkleRoot from quads
+    'finalize-epoch-5',
+    8,
+    chunkSize * 25, // byteSize - use multiple of chunkSize
+    5,
+    toTRAC(10_000),
+  );
+
+  console.log('\n🚫 EPOCH-6: NO PROOFS SUBMITTED');
+
+  // → EPOCH-7 (to finalize epoch-6)
+  await time.increase((await contracts.chronos.timeUntilNextEpoch()) + 1n);
+
+  // Create KC for epoch-7 to finalize epoch-6
+  await createKnowledgeCollection(
+    accounts.kcCreator,
+    accounts.node4,
+    node4Id,
+    [accounts.node1, accounts.node2, accounts.node3],
+    [node1Id, node2Id, node3Id],
+    { KnowledgeCollection: contracts.kc, Token: contracts.token },
+    merkleRoot, // Use consistent merkleRoot from quads
+    'finalize-epoch-6',
+    12,
+    chunkSize * 30, // byteSize - use multiple of chunkSize
+    8,
+    toTRAC(15_000),
+  );
+
+  console.log('\n📝 EPOCH-7: System ready for comprehensive testing');
 
   // Print detailed snapshot
   console.log('\n');
@@ -672,13 +879,25 @@ export async function buildInitialRewardsState() {
     '├─────────────────────────────────────────────────────────────────────────────────────────────┤',
   );
   console.log(
-    '│  EPOCH-2: D1→10k, D2→20k (Node-1)  │  D3→10k, D4→20k (Node-2)                           │',
+    '│  EPOCH-2: D1→10k, D2→20k (Node-1)  │  D3→10k, D4→20k (Node-2)  │  All nodes proofs    │',
   );
   console.log(
     '│  EPOCH-3: D5→30k, D6→40k, D7→50k (Node-1)  │  D8→30k, D9→40k, D10→50k (Node-2)         │',
   );
   console.log(
-    '│           D11→60k, D12→50k (Node-3)                                                      │',
+    '│           D11→60k, D12→50k (Node-3)  │  All nodes submitted proofs                     │',
+  );
+  console.log(
+    '│  EPOCH-4: All nodes submitted proofs                                                     │',
+  );
+  console.log(
+    '│  EPOCH-5: D13→35k (Node-1)  │  D14→35k (Node-2)  │  NO PROOFS SUBMITTED               │',
+  );
+  console.log(
+    '│  EPOCH-6: NO PROOFS SUBMITTED (finalization epoch for epoch-5)                          │',
+  );
+  console.log(
+    '│  EPOCH-7: Current epoch (finalization epoch for epoch-6)                                │',
   );
   console.log(
     '└─────────────────────────────────────────────────────────────────────────────────────────────┘',
@@ -697,13 +916,21 @@ export async function buildInitialRewardsState() {
       3n,
       node.identityId,
     );
+    const nodeScore4 = await contracts.randomSamplingStorage.getNodeEpochScore(
+      4n,
+      node.identityId,
+    );
+    const nodeScore5 = await contracts.randomSamplingStorage.getNodeEpochScore(
+      5n,
+      node.identityId,
+    );
 
     console.log(`🚀 Node-${i + 1} (ID: ${node.identityId})`);
     console.log(
       `   💰 Total Stake: ${hre.ethers.formatUnits(totalStake, 18)} TRAC | 🎯 Operator Fee: 10%`,
     );
     console.log(
-      `   📊 Scores → Epoch-2: ${nodeScore2} | Epoch-3: ${nodeScore3}`,
+      `   📊 Scores → E2: ${nodeScore2} | E3: ${nodeScore3} | E4: ${nodeScore4} | E5: ${nodeScore5}`,
     );
 
     const delegatorStakes = [];
@@ -739,6 +966,8 @@ export async function buildInitialRewardsState() {
     Profile: contracts.profile,
     ProfileStorage: contracts.profileStorage,
     Staking: contracts.staking,
+    StakingStorage: contracts.stakingStorage,
+    DelegatorsInfo: contracts.delegatorsInfo,
     Chronos: contracts.chronos,
     RandomSamplingStorage: contracts.randomSamplingStorage,
     EpochStorage: contracts.epochStorage,
@@ -784,4 +1013,1065 @@ describe('rewards tests', () => {
   });
 
   /* Add more `it()` tests below using env.* contracts & objects. */
+});
+
+describe('Claim order enforcement tests', () => {
+  /* fixture state visible to all tests in this describe-block */
+  let env: Awaited<ReturnType<typeof buildInitialRewardsState>>;
+
+  before(async () => {
+    env = await buildInitialRewardsState();
+  });
+
+  it('D1, D3 attempt to claim epoch 3 rewards - should revert (must claim epoch 2 first)', async () => {
+    const { Staking, delegators, nodes } = env;
+
+    console.log(
+      '\n⛔ TEST 1: D1, D3 attempting to claim epoch 3 - should revert',
+    );
+
+    // D1 attempts to claim epoch 3
+    await expect(
+      Staking.connect(delegators[0]).claimDelegatorRewards(
+        nodes[0].identityId, // Node-1
+        3n, // epoch 3
+        delegators[0].address,
+      ),
+    ).to.be.revertedWith('Must claim older epochs first');
+
+    console.log('    ✅ D1 claim for epoch 3 reverted as expected');
+
+    // D3 attempts to claim epoch 3
+    await expect(
+      Staking.connect(delegators[2]).claimDelegatorRewards(
+        nodes[1].identityId, // Node-2
+        3n, // epoch 3
+        delegators[2].address,
+      ),
+    ).to.be.revertedWith('Must claim older epochs first');
+
+    console.log('    ✅ D3 claim for epoch 3 reverted as expected');
+  });
+
+  it('D1, D3 attempt to claim epoch 4 rewards - should revert (must claim epoch 2 first)', async () => {
+    const { Staking, delegators, nodes } = env;
+
+    console.log(
+      '\n⛔ TEST 2: D1, D3 attempting to claim epoch 4 - should revert',
+    );
+
+    // D1 attempts to claim epoch 4
+    await expect(
+      Staking.connect(delegators[0]).claimDelegatorRewards(
+        nodes[0].identityId, // Node-1
+        4n, // epoch 4
+        delegators[0].address,
+      ),
+    ).to.be.revertedWith('Must claim older epochs first');
+
+    console.log('    ✅ D1 claim for epoch 4 reverted as expected');
+
+    // D3 attempts to claim epoch 4
+    await expect(
+      Staking.connect(delegators[2]).claimDelegatorRewards(
+        nodes[1].identityId, // Node-2
+        4n, // epoch 4
+        delegators[2].address,
+      ),
+    ).to.be.revertedWith('Must claim older epochs first');
+
+    console.log('    ✅ D3 claim for epoch 4 reverted as expected');
+  });
+
+  it('D1, D3 attempt to claim epoch 5 rewards - should revert (must claim epoch 2 first)', async () => {
+    const { Staking, delegators, nodes } = env;
+
+    console.log(
+      '\n⛔ TEST 3: D1, D3 attempting to claim epoch 5 - should revert',
+    );
+
+    // D1 attempts to claim epoch 5
+    await expect(
+      Staking.connect(delegators[0]).claimDelegatorRewards(
+        nodes[0].identityId, // Node-1
+        5n, // epoch 5
+        delegators[0].address,
+      ),
+    ).to.be.revertedWith('Must claim older epochs first');
+
+    console.log('    ✅ D1 claim for epoch 5 reverted as expected');
+
+    // D3 attempts to claim epoch 5
+    await expect(
+      Staking.connect(delegators[2]).claimDelegatorRewards(
+        nodes[1].identityId, // Node-2
+        5n, // epoch 5
+        delegators[2].address,
+      ),
+    ).to.be.revertedWith('Must claim older epochs first');
+
+    console.log('    ✅ D3 claim for epoch 5 reverted as expected');
+  });
+
+  it('D5, D8, D10 attempt to claim epoch 2 rewards - should revert (were not delegators in that epoch)', async () => {
+    const { Staking, delegators, nodes } = env;
+
+    console.log(
+      '\n⛔ TEST 4: D5, D8, D10 attempting to claim epoch 2 - should revert (not delegators then)',
+    );
+
+    // D5 attempts to claim epoch 2 (but was not delegator in epoch 2)
+    await expect(
+      Staking.connect(delegators[4]).claimDelegatorRewards(
+        nodes[0].identityId, // Node-1
+        2n, // epoch 2
+        delegators[4].address,
+      ),
+    ).to.be.revertedWith('Epoch already claimed');
+
+    console.log(
+      '    ✅ D5 claim for epoch 2 reverted as expected (was not delegator)',
+    );
+
+    // D8 attempts to claim epoch 2 (but was not delegator in epoch 2)
+    await expect(
+      Staking.connect(delegators[7]).claimDelegatorRewards(
+        nodes[1].identityId, // Node-2
+        2n, // epoch 2
+        delegators[7].address,
+      ),
+    ).to.be.revertedWith('Epoch already claimed');
+
+    console.log(
+      '    ✅ D8 claim for epoch 2 reverted as expected (was not delegator)',
+    );
+
+    // D10 attempts to claim epoch 2 (but was not delegator in epoch 2)
+    await expect(
+      Staking.connect(delegators[9]).claimDelegatorRewards(
+        nodes[1].identityId, // Node-2
+        2n, // epoch 2
+        delegators[9].address,
+      ),
+    ).to.be.revertedWith('Epoch already claimed');
+
+    console.log(
+      '    ✅ D10 claim for epoch 2 reverted as expected (was not delegator)',
+    );
+  });
+
+  it('D1, D3 successfully claim epoch 2 rewards - should succeed with equal rewards', async () => {
+    const {
+      Staking,
+      StakingStorage,
+      DelegatorsInfo,
+      RandomSamplingStorage,
+      delegators,
+      nodes,
+    } = env;
+
+    console.log('\n✅ TEST 5: D1, D3 successfully claiming epoch 2 rewards');
+
+    // Get initial state
+    const d1Key = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [delegators[0].address]),
+    );
+    const d3Key = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [delegators[2].address]),
+    );
+
+    const d1StakeBaseBefore = await StakingStorage.getDelegatorStakeBase(
+      nodes[0].identityId,
+      d1Key,
+    );
+    const d3StakeBaseBefore = await StakingStorage.getDelegatorStakeBase(
+      nodes[1].identityId,
+      d3Key,
+    );
+
+    const d1RollingBefore = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[0].identityId,
+      delegators[0].address,
+    );
+    const d3RollingBefore = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[1].identityId,
+      delegators[2].address,
+    );
+
+    // Verify nodes have equal scores (due to identical KC setup)
+    const node1Score2 = await RandomSamplingStorage.getNodeEpochScore(
+      2n,
+      nodes[0].identityId,
+    );
+    const node2Score2 = await RandomSamplingStorage.getNodeEpochScore(
+      2n,
+      nodes[1].identityId,
+    );
+
+    expect(node1Score2).to.equal(
+      node2Score2,
+      'Node-1 and Node-2 should have equal scores',
+    );
+    console.log(`    📊 Both nodes have equal score: ${node1Score2}`);
+
+    // D1 claims epoch 2 rewards
+    await Staking.connect(delegators[0]).claimDelegatorRewards(
+      nodes[0].identityId, // Node-1
+      2n, // epoch 2
+      delegators[0].address,
+    );
+
+    console.log('    ✅ D1 successfully claimed epoch 2 rewards');
+
+    // D3 claims epoch 2 rewards
+    await Staking.connect(delegators[2]).claimDelegatorRewards(
+      nodes[1].identityId, // Node-2
+      2n, // epoch 2
+      delegators[2].address,
+    );
+
+    console.log('    ✅ D3 successfully claimed epoch 2 rewards');
+
+    // Get final state
+    const d1StakeBaseAfter = await StakingStorage.getDelegatorStakeBase(
+      nodes[0].identityId,
+      d1Key,
+    );
+    const d3StakeBaseAfter = await StakingStorage.getDelegatorStakeBase(
+      nodes[1].identityId,
+      d3Key,
+    );
+
+    const d1RollingAfter = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[0].identityId,
+      delegators[0].address,
+    );
+    const d3RollingAfter = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[1].identityId,
+      delegators[2].address,
+    );
+
+    // Calculate rewards and stake changes
+    const d1Reward = d1RollingAfter - d1RollingBefore;
+    const d3Reward = d3RollingAfter - d3RollingBefore;
+    const d1StakeChange = d1StakeBaseAfter - d1StakeBaseBefore;
+    const d3StakeChange = d3StakeBaseAfter - d3StakeBaseBefore;
+
+    console.log(
+      `    💰 D1 rolling reward: ${hre.ethers.formatUnits(d1Reward, 18)} TRAC`,
+    );
+    console.log(
+      `    💰 D3 rolling reward: ${hre.ethers.formatUnits(d3Reward, 18)} TRAC`,
+    );
+
+    // Verify equal rewards (since equal stakes and equal node scores)
+    expect(d1Reward).to.equal(
+      d3Reward,
+      'D1 and D3 should receive equal rewards',
+    );
+
+    // StakeBase should not change (future epochs remain to claim)
+    expect(d1StakeChange).to.equal(
+      0n,
+      'D1 stakeBase should not change (rolling rewards)',
+    );
+    expect(d3StakeChange).to.equal(
+      0n,
+      'D3 stakeBase should not change (rolling rewards)',
+    );
+
+    // Both should receive positive rewards
+    expect(d1Reward).to.be.gt(0n, 'D1 rolling rewards should be positive');
+    expect(d3Reward).to.be.gt(0n, 'D3 rolling rewards should be positive');
+
+    console.log('    ✅ Both delegators received equal rolling rewards');
+    console.log(
+      '    ✅ StakeBase remained unchanged - rewards went to rolling rewards',
+    );
+    console.log(
+      '    📝 Note: Equal stakes + equal node performance = equal rewards',
+    );
+  });
+
+  it('Node scores verification - Node-1 and Node-2 should have identical scores in epoch 2', async () => {
+    const { RandomSamplingStorage, nodes } = env;
+
+    console.log('\n✅ TEST 6: Verifying equal node scores in epoch 2');
+
+    // Get node scores for epoch 2
+    const node1Score = await RandomSamplingStorage.getNodeEpochScore(
+      2n,
+      nodes[0].identityId,
+    );
+    const node2Score = await RandomSamplingStorage.getNodeEpochScore(
+      2n,
+      nodes[1].identityId,
+    );
+    const node3Score = await RandomSamplingStorage.getNodeEpochScore(
+      2n,
+      nodes[2].identityId,
+    );
+    const node4Score = await RandomSamplingStorage.getNodeEpochScore(
+      2n,
+      nodes[3].identityId,
+    );
+
+    // Get score per stake
+    const node1ScorePerStake =
+      await RandomSamplingStorage.getNodeEpochScorePerStake(
+        2n,
+        nodes[0].identityId,
+      );
+    const node2ScorePerStake =
+      await RandomSamplingStorage.getNodeEpochScorePerStake(
+        2n,
+        nodes[1].identityId,
+      );
+
+    console.log(`    📊 Node-1 score: ${node1Score}`);
+    console.log(`    📊 Node-2 score: ${node2Score}`);
+    console.log(`    📊 Node-3 score: ${node3Score} (should be 0 - no stake)`);
+    console.log(`    📊 Node-4 score: ${node4Score} (should be 0 - no stake)`);
+    console.log(`    📈 Node-1 score per stake: ${node1ScorePerStake}`);
+    console.log(`    📈 Node-2 score per stake: ${node2ScorePerStake}`);
+
+    // Verify equal scores for nodes with stakes
+    expect(node1Score).to.equal(
+      node2Score,
+      'Node-1 and Node-2 should have equal total scores',
+    );
+    expect(node1ScorePerStake).to.equal(
+      node2ScorePerStake,
+      'Node-1 and Node-2 should have equal score per stake',
+    );
+
+    // Verify zero scores for nodes without stakes
+    expect(node3Score).to.equal(
+      0n,
+      'Node-3 should have zero score (no stake in epoch 2)',
+    );
+    expect(node4Score).to.equal(
+      0n,
+      'Node-4 should have zero score (no stake in epoch 2)',
+    );
+
+    // Both nodes should have positive scores
+    expect(node1Score).to.be.gt(0n, 'Node-1 should have positive score');
+    expect(node2Score).to.be.gt(0n, 'Node-2 should have positive score');
+
+    console.log(
+      '    ✅ Node-1 and Node-2 have identical scores and score per stake',
+    );
+    console.log(
+      '    ✅ Node-3 and Node-4 have zero scores (no stakes in epoch 2)',
+    );
+    console.log(
+      '    📝 Note: Equal KC setup resulted in equal node performance',
+    );
+  });
+
+  it('D1, D3 claim epoch 3 rewards - rolling rewards should accumulate', async () => {
+    const {
+      Staking,
+      DelegatorsInfo,
+      RandomSamplingStorage,
+      delegators,
+      nodes,
+    } = env;
+
+    console.log(
+      '\n✅ TEST 7: D1, D3 claiming epoch 3 rewards - rolling accumulation',
+    );
+
+    // Get rolling rewards after epoch 2 claims (from previous test)
+    const d1RollingAfterEpoch2 =
+      await DelegatorsInfo.getDelegatorRollingRewards(
+        nodes[0].identityId,
+        delegators[0].address,
+      );
+    const d3RollingAfterEpoch2 =
+      await DelegatorsInfo.getDelegatorRollingRewards(
+        nodes[1].identityId,
+        delegators[2].address,
+      );
+
+    console.log(
+      `    🔄 D1 rolling after epoch 2: ${hre.ethers.formatUnits(d1RollingAfterEpoch2, 18)} TRAC`,
+    );
+    console.log(
+      `    🔄 D3 rolling after epoch 2: ${hre.ethers.formatUnits(d3RollingAfterEpoch2, 18)} TRAC`,
+    );
+
+    // Verify both have some rolling rewards from epoch 2
+    expect(d1RollingAfterEpoch2).to.be.gt(
+      0n,
+      'D1 should have rolling rewards from epoch 2',
+    );
+    expect(d3RollingAfterEpoch2).to.be.gt(
+      0n,
+      'D3 should have rolling rewards from epoch 2',
+    );
+
+    // Check epoch 3 node scores (these will be different due to different stakes)
+    const node1Score3 = await RandomSamplingStorage.getNodeEpochScore(
+      3n,
+      nodes[0].identityId,
+    );
+    const node2Score3 = await RandomSamplingStorage.getNodeEpochScore(
+      3n,
+      nodes[1].identityId,
+    );
+
+    console.log(`    📊 Node-1 epoch 3 score: ${node1Score3}`);
+    console.log(`    📊 Node-2 epoch 3 score: ${node2Score3}`);
+
+    // D1 claims epoch 3 rewards
+    await Staking.connect(delegators[0]).claimDelegatorRewards(
+      nodes[0].identityId, // Node-1
+      3n, // epoch 3
+      delegators[0].address,
+    );
+
+    console.log('    ✅ D1 successfully claimed epoch 3 rewards');
+
+    // D3 claims epoch 3 rewards
+    await Staking.connect(delegators[2]).claimDelegatorRewards(
+      nodes[1].identityId, // Node-2
+      3n, // epoch 3
+      delegators[2].address,
+    );
+
+    console.log('    ✅ D3 successfully claimed epoch 3 rewards');
+
+    // Get rolling rewards after epoch 3 claims
+    const d1RollingAfterEpoch3 =
+      await DelegatorsInfo.getDelegatorRollingRewards(
+        nodes[0].identityId,
+        delegators[0].address,
+      );
+    const d3RollingAfterEpoch3 =
+      await DelegatorsInfo.getDelegatorRollingRewards(
+        nodes[1].identityId,
+        delegators[2].address,
+      );
+
+    // Calculate epoch 3 rewards
+    const d1Epoch3Reward = d1RollingAfterEpoch3 - d1RollingAfterEpoch2;
+    const d3Epoch3Reward = d3RollingAfterEpoch3 - d3RollingAfterEpoch2;
+
+    console.log(
+      `    💰 D1 epoch 3 reward: ${hre.ethers.formatUnits(d1Epoch3Reward, 18)} TRAC`,
+    );
+    console.log(
+      `    💰 D3 epoch 3 reward: ${hre.ethers.formatUnits(d3Epoch3Reward, 18)} TRAC`,
+    );
+    console.log(
+      `    🔄 D1 total rolling after epoch 3: ${hre.ethers.formatUnits(d1RollingAfterEpoch3, 18)} TRAC`,
+    );
+    console.log(
+      `    🔄 D3 total rolling after epoch 3: ${hre.ethers.formatUnits(d3RollingAfterEpoch3, 18)} TRAC`,
+    );
+
+    // Verify rolling rewards increased (accumulated)
+    expect(d1RollingAfterEpoch3).to.be.gt(
+      d1RollingAfterEpoch2,
+      'D1 rolling rewards should increase after epoch 3 claim',
+    );
+    expect(d3RollingAfterEpoch3).to.be.gt(
+      d3RollingAfterEpoch2,
+      'D3 rolling rewards should increase after epoch 3 claim',
+    );
+
+    // Both should receive positive epoch 3 rewards
+    expect(d1Epoch3Reward).to.be.gt(
+      0n,
+      'D1 should receive positive epoch 3 rewards',
+    );
+    expect(d3Epoch3Reward).to.be.gt(
+      0n,
+      'D3 should receive positive epoch 3 rewards',
+    );
+
+    // Verify accumulation: total = epoch2 + epoch3
+    expect(d1RollingAfterEpoch3).to.equal(
+      d1RollingAfterEpoch2 + d1Epoch3Reward,
+      'D1 total rolling should equal epoch 2 + epoch 3 rewards',
+    );
+    expect(d3RollingAfterEpoch3).to.equal(
+      d3RollingAfterEpoch2 + d3Epoch3Reward,
+      'D3 total rolling should equal epoch 2 + epoch 3 rewards',
+    );
+
+    console.log(
+      '    ✅ Rolling rewards successfully accumulated from both epochs',
+    );
+    console.log('    ✅ Both delegators received positive epoch 3 rewards');
+    console.log(
+      '    📝 Note: Rolling rewards = Epoch 2 rewards + Epoch 3 rewards',
+    );
+  });
+
+  it('D1, D3 attempt to claim epoch 5 rewards - should revert (must claim epoch 4 first)', async () => {
+    const { Staking, delegators, nodes } = env;
+
+    console.log(
+      '\n⛔ TEST 8: D1, D3 attempting to claim epoch 5 - should revert (must claim epoch 4 first)',
+    );
+
+    // D1 attempts to claim epoch 5 (but hasn't claimed epoch 4 yet)
+    await expect(
+      Staking.connect(delegators[0]).claimDelegatorRewards(
+        nodes[0].identityId, // Node-1
+        5n, // epoch 5
+        delegators[0].address,
+      ),
+    ).to.be.revertedWith('Must claim older epochs first');
+
+    console.log(
+      '    ✅ D1 claim for epoch 5 reverted as expected (must claim epoch 4 first)',
+    );
+
+    // D3 attempts to claim epoch 5 (but hasn't claimed epoch 4 yet)
+    await expect(
+      Staking.connect(delegators[2]).claimDelegatorRewards(
+        nodes[1].identityId, // Node-2
+        5n, // epoch 5
+        delegators[2].address,
+      ),
+    ).to.be.revertedWith('Must claim older epochs first');
+
+    console.log(
+      '    ✅ D3 claim for epoch 5 reverted as expected (must claim epoch 4 first)',
+    );
+    console.log(
+      '    📝 Note: Sequential claiming enforced - cannot skip epoch 4',
+    );
+  });
+
+  it('D1, D3 claim epoch 4 rewards - should succeed with equal rewards (equal stakes + all nodes submitted proofs)', async () => {
+    const {
+      Staking,
+      DelegatorsInfo,
+      RandomSamplingStorage,
+      delegators,
+      nodes,
+    } = env;
+
+    console.log(
+      '\n✅ TEST 9: D1, D3 claiming epoch 4 rewards - should get equal rewards',
+    );
+
+    // Get rolling rewards before epoch 4 claims (should have epoch 2 + epoch 3 rewards)
+    const d1RollingBefore = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[0].identityId,
+      delegators[0].address,
+    );
+    const d3RollingBefore = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[1].identityId,
+      delegators[2].address,
+    );
+
+    console.log(
+      `    🔄 D1 rolling before epoch 4: ${hre.ethers.formatUnits(d1RollingBefore, 18)} TRAC`,
+    );
+    console.log(
+      `    🔄 D3 rolling before epoch 4: ${hre.ethers.formatUnits(d3RollingBefore, 18)} TRAC`,
+    );
+
+    // Check epoch 4 node scores (should be positive since all nodes submitted proofs)
+    const node1Score4 = await RandomSamplingStorage.getNodeEpochScore(
+      4n,
+      nodes[0].identityId,
+    );
+    const node2Score4 = await RandomSamplingStorage.getNodeEpochScore(
+      4n,
+      nodes[1].identityId,
+    );
+
+    console.log(`    📊 Node-1 epoch 4 score: ${node1Score4}`);
+    console.log(`    📊 Node-2 epoch 4 score: ${node2Score4}`);
+
+    // Both nodes should have positive scores (all submitted proofs)
+    expect(node1Score4).to.be.gt(
+      0n,
+      'Node-1 should have positive score in epoch 4',
+    );
+    expect(node2Score4).to.be.gt(
+      0n,
+      'Node-2 should have positive score in epoch 4',
+    );
+
+    // D1 claims epoch 4 rewards
+    await Staking.connect(delegators[0]).claimDelegatorRewards(
+      nodes[0].identityId, // Node-1
+      4n, // epoch 4
+      delegators[0].address,
+    );
+
+    console.log('    ✅ D1 successfully claimed epoch 4 rewards');
+
+    // D3 claims epoch 4 rewards
+    await Staking.connect(delegators[2]).claimDelegatorRewards(
+      nodes[1].identityId, // Node-2
+      4n, // epoch 4
+      delegators[2].address,
+    );
+
+    console.log('    ✅ D3 successfully claimed epoch 4 rewards');
+
+    // Get rolling rewards after epoch 4 claims
+    const d1RollingAfter = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[0].identityId,
+      delegators[0].address,
+    );
+    const d3RollingAfter = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[1].identityId,
+      delegators[2].address,
+    );
+
+    // Calculate epoch 4 rewards
+    const d1Epoch4Reward = d1RollingAfter - d1RollingBefore;
+    const d3Epoch4Reward = d3RollingAfter - d3RollingBefore;
+
+    console.log(
+      `    💰 D1 epoch 4 reward: ${hre.ethers.formatUnits(d1Epoch4Reward, 18)} TRAC`,
+    );
+    console.log(
+      `    💰 D3 epoch 4 reward: ${hre.ethers.formatUnits(d3Epoch4Reward, 18)} TRAC`,
+    );
+    console.log(
+      `    🔄 D1 total rolling after epoch 4: ${hre.ethers.formatUnits(d1RollingAfter, 18)} TRAC`,
+    );
+    console.log(
+      `    🔄 D3 total rolling after epoch 4: ${hre.ethers.formatUnits(d3RollingAfter, 18)} TRAC`,
+    );
+
+    // Verify rolling rewards increased (accumulated)
+    expect(d1RollingAfter).to.be.gt(
+      d1RollingBefore,
+      'D1 rolling rewards should increase after epoch 4 claim',
+    );
+    expect(d3RollingAfter).to.be.gt(
+      d3RollingBefore,
+      'D3 rolling rewards should increase after epoch 4 claim',
+    );
+
+    // Both should receive positive epoch 4 rewards
+    expect(d1Epoch4Reward).to.be.gt(
+      0n,
+      'D1 should receive positive epoch 4 rewards',
+    );
+    expect(d3Epoch4Reward).to.be.gt(
+      0n,
+      'D3 should receive positive epoch 4 rewards',
+    );
+
+    // Verify equal rewards (equal stakes in epoch 4, all nodes submitted proofs)
+    expect(d1Epoch4Reward).to.equal(
+      d3Epoch4Reward,
+      'D1 and D3 should receive equal epoch 4 rewards (equal stakes)',
+    );
+
+    console.log(
+      '    ✅ Rolling rewards successfully accumulated (epochs 2+3+4)',
+    );
+    console.log('    ✅ Both delegators received equal epoch 4 rewards');
+    console.log(
+      '    📝 Note: Equal stakes + all nodes submitted proofs = equal rewards',
+    );
+  });
+
+  it('D1, D3 attempt to claim epoch 6 rewards - should revert (must claim epoch 5 first)', async () => {
+    const { Staking, delegators, nodes } = env;
+
+    console.log(
+      '\n⛔ TEST 10: D1, D3 attempting to claim epoch 6 - should revert (must claim epoch 5 first)',
+    );
+
+    // D1 attempts to claim epoch 6 (but hasn't claimed epoch 5 yet)
+    await expect(
+      Staking.connect(delegators[0]).claimDelegatorRewards(
+        nodes[0].identityId, // Node-1
+        6n, // epoch 6
+        delegators[0].address,
+      ),
+    ).to.be.revertedWith('Must claim older epochs first');
+
+    console.log(
+      '    ✅ D1 claim for epoch 6 reverted as expected (must claim epoch 5 first)',
+    );
+
+    // D3 attempts to claim epoch 6 (but hasn't claimed epoch 5 yet)
+    await expect(
+      Staking.connect(delegators[2]).claimDelegatorRewards(
+        nodes[1].identityId, // Node-2
+        6n, // epoch 6
+        delegators[2].address,
+      ),
+    ).to.be.revertedWith('Must claim older epochs first');
+
+    console.log(
+      '    ✅ D3 claim for epoch 6 reverted as expected (must claim epoch 5 first)',
+    );
+    console.log(
+      '    📝 Note: Sequential claiming enforced - cannot skip epoch 5',
+    );
+  });
+
+  it('D1, D3 claim epoch 5 rewards - should succeed with 0 rewards (no proofs submitted)', async () => {
+    const {
+      Staking,
+      DelegatorsInfo,
+      RandomSamplingStorage,
+      delegators,
+      nodes,
+    } = env;
+
+    console.log(
+      '\n✅ TEST 11: D1, D3 claiming epoch 5 rewards - should get 0 rewards (no proofs)',
+    );
+
+    // Get rolling rewards before epoch 5 claims (should have epoch 2+3+4 rewards)
+    const d1RollingBefore = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[0].identityId,
+      delegators[0].address,
+    );
+    const d3RollingBefore = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[1].identityId,
+      delegators[2].address,
+    );
+
+    console.log(
+      `    🔄 D1 rolling before epoch 5: ${hre.ethers.formatUnits(d1RollingBefore, 18)} TRAC`,
+    );
+    console.log(
+      `    🔄 D3 rolling before epoch 5: ${hre.ethers.formatUnits(d3RollingBefore, 18)} TRAC`,
+    );
+
+    // Check epoch 5 node scores (should be 0 since no proofs were submitted)
+    const node1Score5 = await RandomSamplingStorage.getNodeEpochScore(
+      5n,
+      nodes[0].identityId,
+    );
+    const node2Score5 = await RandomSamplingStorage.getNodeEpochScore(
+      5n,
+      nodes[1].identityId,
+    );
+
+    console.log(`    📊 Node-1 epoch 5 score: ${node1Score5} (should be 0)`);
+    console.log(`    📊 Node-2 epoch 5 score: ${node2Score5} (should be 0)`);
+
+    // Verify scores are 0 (no proofs submitted)
+    expect(node1Score5).to.equal(0n, 'Node-1 should have 0 score in epoch 5');
+    expect(node2Score5).to.equal(0n, 'Node-2 should have 0 score in epoch 5');
+
+    // D1 claims epoch 5 rewards (should succeed but get 0 rewards)
+    await Staking.connect(delegators[0]).claimDelegatorRewards(
+      nodes[0].identityId, // Node-1
+      5n, // epoch 5
+      delegators[0].address,
+    );
+
+    console.log('    ✅ D1 successfully claimed epoch 5 rewards (0 TRAC)');
+
+    // D3 claims epoch 5 rewards (should succeed but get 0 rewards)
+    await Staking.connect(delegators[2]).claimDelegatorRewards(
+      nodes[1].identityId, // Node-2
+      5n, // epoch 5
+      delegators[2].address,
+    );
+
+    console.log('    ✅ D3 successfully claimed epoch 5 rewards (0 TRAC)');
+
+    // Get rolling rewards after epoch 5 claims
+    const d1RollingAfter = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[0].identityId,
+      delegators[0].address,
+    );
+    const d3RollingAfter = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[1].identityId,
+      delegators[2].address,
+    );
+
+    // Calculate epoch 5 rewards (should be 0)
+    const d1Epoch5Reward = d1RollingAfter - d1RollingBefore;
+    const d3Epoch5Reward = d3RollingAfter - d3RollingBefore;
+
+    console.log(
+      `    💰 D1 epoch 5 reward: ${hre.ethers.formatUnits(d1Epoch5Reward, 18)} TRAC`,
+    );
+    console.log(
+      `    💰 D3 epoch 5 reward: ${hre.ethers.formatUnits(d3Epoch5Reward, 18)} TRAC`,
+    );
+    console.log(
+      `    🔄 D1 total rolling after epoch 5: ${hre.ethers.formatUnits(d1RollingAfter, 18)} TRAC`,
+    );
+    console.log(
+      `    🔄 D3 total rolling after epoch 5: ${hre.ethers.formatUnits(d3RollingAfter, 18)} TRAC`,
+    );
+
+    // Verify rolling rewards didn't change (no rewards from epoch 5)
+    expect(d1RollingAfter).to.equal(
+      d1RollingBefore,
+      'D1 rolling rewards should not change (no epoch 5 rewards)',
+    );
+    expect(d3RollingAfter).to.equal(
+      d3RollingBefore,
+      'D3 rolling rewards should not change (no epoch 5 rewards)',
+    );
+
+    // Verify epoch 5 rewards are 0
+    expect(d1Epoch5Reward).to.equal(
+      0n,
+      'D1 should receive 0 rewards from epoch 5',
+    );
+    expect(d3Epoch5Reward).to.equal(
+      0n,
+      'D3 should receive 0 rewards from epoch 5',
+    );
+
+    // Verify both have same rolling rewards (should be equal after epochs 2+3+4)
+    expect(d1RollingAfter).to.equal(
+      d3RollingAfter,
+      'D1 and D3 should have equal rolling rewards (equal stakes in all claimed epochs)',
+    );
+
+    console.log(
+      '    ✅ Both delegators successfully claimed epoch 5 with 0 rewards',
+    );
+    console.log('    ✅ Rolling rewards remained unchanged (no new rewards)');
+    console.log('    ✅ Both delegators have equal rolling rewards');
+    console.log('    📝 Note: No proofs in epoch 5 = no rewards to distribute');
+  });
+
+  it('D1, D3 attempt to claim epoch 5 rewards again - should revert (already claimed)', async () => {
+    const { Staking, delegators, nodes } = env;
+
+    console.log(
+      '\n⛔ TEST 12: D1, D3 attempting to claim epoch 5 again - should revert (already claimed)',
+    );
+
+    // D1 attempts to claim epoch 5 again (but already claimed it)
+    await expect(
+      Staking.connect(delegators[0]).claimDelegatorRewards(
+        nodes[0].identityId, // Node-1
+        5n, // epoch 5
+        delegators[0].address,
+      ),
+    ).to.be.revertedWith('Epoch already claimed');
+
+    console.log(
+      '    ✅ D1 claim for epoch 5 reverted as expected (already claimed)',
+    );
+
+    // D3 attempts to claim epoch 5 again (but already claimed it)
+    await expect(
+      Staking.connect(delegators[2]).claimDelegatorRewards(
+        nodes[1].identityId, // Node-2
+        5n, // epoch 5
+        delegators[2].address,
+      ),
+    ).to.be.revertedWith('Epoch already claimed');
+
+    console.log(
+      '    ✅ D3 claim for epoch 5 reverted as expected (already claimed)',
+    );
+    console.log(
+      '    📝 Note: Cannot claim the same epoch twice - double claiming prevented',
+    );
+  });
+
+  it('D1, D3 attempt to claim epoch 7 rewards - should revert (epoch not finalized)', async () => {
+    const { Staking, delegators, nodes } = env;
+
+    console.log(
+      '\n⛔ TEST 13: D1, D3 attempting to claim epoch 7 - should revert (epoch not finalized)',
+    );
+
+    // D1 attempts to claim epoch 7 (but epoch 7 is not finalized yet)
+    await expect(
+      Staking.connect(delegators[0]).claimDelegatorRewards(
+        nodes[0].identityId, // Node-1
+        7n, // epoch 7
+        delegators[0].address,
+      ),
+    ).to.be.revertedWith('Epoch not finalised');
+
+    console.log(
+      '    ✅ D1 claim for epoch 7 reverted as expected (epoch not finalized)',
+    );
+
+    // D3 attempts to claim epoch 7 (but epoch 7 is not finalized yet)
+    await expect(
+      Staking.connect(delegators[2]).claimDelegatorRewards(
+        nodes[1].identityId, // Node-2
+        7n, // epoch 7
+        delegators[2].address,
+      ),
+    ).to.be.revertedWith('Epoch not finalised');
+
+    console.log(
+      '    ✅ D3 claim for epoch 7 reverted as expected (epoch not finalized)',
+    );
+    console.log('    📝 Note: Cannot claim rewards for non-finalized epochs');
+  });
+
+  it('D1, D3 claim epoch 6 rewards - should succeed with 0 rewards (no proofs submitted)', async () => {
+    const {
+      Staking,
+      DelegatorsInfo,
+      RandomSamplingStorage,
+      delegators,
+      nodes,
+    } = env;
+
+    console.log(
+      '\n✅ TEST 14: D1, D3 claiming epoch 6 rewards - should get 0 rewards (no proofs)',
+    );
+
+    // Get rolling rewards before epoch 6 claims (should have epoch 2+3+4+5 rewards)
+    const d1RollingBefore = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[0].identityId,
+      delegators[0].address,
+    );
+    const d3RollingBefore = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[1].identityId,
+      delegators[2].address,
+    );
+
+    console.log(
+      `    🔄 D1 rolling before epoch 6: ${hre.ethers.formatUnits(d1RollingBefore, 18)} TRAC`,
+    );
+    console.log(
+      `    🔄 D3 rolling before epoch 6: ${hre.ethers.formatUnits(d3RollingBefore, 18)} TRAC`,
+    );
+
+    // Check epoch 6 node scores (should be 0 since no proofs were submitted)
+    const node1Score6 = await RandomSamplingStorage.getNodeEpochScore(
+      6n,
+      nodes[0].identityId,
+    );
+    const node2Score6 = await RandomSamplingStorage.getNodeEpochScore(
+      6n,
+      nodes[1].identityId,
+    );
+
+    console.log(`    📊 Node-1 epoch 6 score: ${node1Score6} (should be 0)`);
+    console.log(`    📊 Node-2 epoch 6 score: ${node2Score6} (should be 0)`);
+
+    // Verify scores are 0 (no proofs submitted)
+    expect(node1Score6).to.equal(0n, 'Node-1 should have 0 score in epoch 6');
+    expect(node2Score6).to.equal(0n, 'Node-2 should have 0 score in epoch 6');
+
+    // D1 claims epoch 6 rewards (should succeed but get 0 rewards)
+    await Staking.connect(delegators[0]).claimDelegatorRewards(
+      nodes[0].identityId, // Node-1
+      6n, // epoch 6
+      delegators[0].address,
+    );
+
+    console.log('    ✅ D1 successfully claimed epoch 6 rewards (0 TRAC)');
+
+    // D3 claims epoch 6 rewards (should succeed but get 0 rewards)
+    await Staking.connect(delegators[2]).claimDelegatorRewards(
+      nodes[1].identityId, // Node-2
+      6n, // epoch 6
+      delegators[2].address,
+    );
+
+    console.log('    ✅ D3 successfully claimed epoch 6 rewards (0 TRAC)');
+
+    // Get rolling rewards after epoch 6 claims
+    const d1RollingAfter = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[0].identityId,
+      delegators[0].address,
+    );
+    const d3RollingAfter = await DelegatorsInfo.getDelegatorRollingRewards(
+      nodes[1].identityId,
+      delegators[2].address,
+    );
+
+    // Calculate epoch 6 rewards (should be 0)
+    const d1Epoch6Reward = d1RollingAfter - d1RollingBefore;
+    const d3Epoch6Reward = d3RollingAfter - d3RollingBefore;
+
+    console.log(
+      `    💰 D1 epoch 6 reward: ${hre.ethers.formatUnits(d1Epoch6Reward, 18)} TRAC`,
+    );
+    console.log(
+      `    💰 D3 epoch 6 reward: ${hre.ethers.formatUnits(d3Epoch6Reward, 18)} TRAC`,
+    );
+    console.log(
+      `    🔄 D1 total rolling after epoch 6: ${hre.ethers.formatUnits(d1RollingAfter, 18)} TRAC`,
+    );
+    console.log(
+      `    🔄 D3 total rolling after epoch 6: ${hre.ethers.formatUnits(d3RollingAfter, 18)} TRAC`,
+    );
+
+    // Get stakeBase after epoch 6 claims to check if rolling rewards were transferred
+    const d1StakeBaseAfter = await env.StakingStorage.getDelegatorStakeBase(
+      nodes[0].identityId,
+      hre.ethers.keccak256(
+        hre.ethers.solidityPacked(['address'], [delegators[0].address]),
+      ),
+    );
+    const d3StakeBaseAfter = await env.StakingStorage.getDelegatorStakeBase(
+      nodes[1].identityId,
+      hre.ethers.keccak256(
+        hre.ethers.solidityPacked(['address'], [delegators[2].address]),
+      ),
+    );
+
+    console.log(
+      `    💎 D1 stakeBase after epoch 6: ${hre.ethers.formatUnits(d1StakeBaseAfter, 18)} TRAC`,
+    );
+    console.log(
+      `    💎 D3 stakeBase after epoch 6: ${hre.ethers.formatUnits(d3StakeBaseAfter, 18)} TRAC`,
+    );
+
+    // Verify epoch 6 rewards are 0 (no new rewards added)
+    expect(d1Epoch6Reward).to.equal(
+      0n,
+      'D1 should receive 0 rewards from epoch 6',
+    );
+    expect(d3Epoch6Reward).to.equal(
+      0n,
+      'D3 should receive 0 rewards from epoch 6',
+    );
+
+    // Since epoch 6 is the last claimable epoch (epoch 7 is current and not finalized),
+    // rolling rewards should have been transferred to stakeBase
+    expect(d1RollingAfter).to.equal(
+      0n,
+      'D1 rolling rewards should be 0 (transferred to stakeBase as last epoch)',
+    );
+    expect(d3RollingAfter).to.equal(
+      0n,
+      'D3 rolling rewards should be 0 (transferred to stakeBase as last epoch)',
+    );
+
+    // StakeBase should now include the original stake + all accumulated rewards
+    const expectedD1StakeBase = toTRAC(10_000) + d1RollingBefore; // 10k original + rolling rewards
+    const expectedD3StakeBase = toTRAC(10_000) + d3RollingBefore; // 10k original + rolling rewards
+
+    expect(d1StakeBaseAfter).to.equal(
+      expectedD1StakeBase,
+      'D1 stakeBase should equal original stake + accumulated rolling rewards',
+    );
+    expect(d3StakeBaseAfter).to.equal(
+      expectedD3StakeBase,
+      'D3 stakeBase should equal original stake + accumulated rolling rewards',
+    );
+
+    console.log(
+      '    ✅ Both delegators successfully claimed epoch 6 with 0 rewards',
+    );
+    console.log(
+      '    ✅ Rolling rewards transferred to stakeBase (last claimable epoch)',
+    );
+    console.log('    ✅ Both delegators have equal final stakeBase');
+    console.log(
+      '    📝 Note: Last epoch claim transfers rolling rewards to stakeBase',
+    );
+  });
 });
