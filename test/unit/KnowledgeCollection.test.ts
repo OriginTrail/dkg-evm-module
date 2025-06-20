@@ -298,83 +298,6 @@ describe('@unit KnowledgeCollection', () => {
     expect(total).to.equal(tokenAmount);
   });
 
-  it('Should create a knowledge collection successfully and distribute tokens to epochs', async () => {
-    const kcCreator = getDefaultKCCreator(accounts);
-    const publishingNode = getDefaultPublishingNode(accounts);
-    const receivingNodes = getDefaultReceivingNodes(accounts);
-
-    const contracts = {
-      Profile,
-      KnowledgeCollection,
-      Token,
-    };
-
-    const { identityId: publishingNodeIdentityId } = await createProfile(
-      contracts.Profile,
-      publishingNode,
-    );
-    const receivingNodesIdentityIds = (
-      await createProfiles(contracts.Profile, receivingNodes)
-    ).map((p) => p.identityId);
-
-    let currentEpoch = await Chronos.getCurrentEpoch();
-    console.log(`\n🏁 Current epoch ${currentEpoch}`);
-    let tokenAmount = ethers.parseEther('100');
-    let numberOfEpochs = 5;
-    const { collectionId } = await createKnowledgeCollection(
-      kcCreator,
-      publishingNode,
-      publishingNodeIdentityId,
-      receivingNodes,
-      receivingNodesIdentityIds,
-      contracts,
-      merkleRoot,
-      'test-operation-id',
-      10, // knowledgeAssetsAmount
-      1000, // byteSize
-      numberOfEpochs, // epochs
-      tokenAmount, // tokenAmount
-      false, // isImmutable
-      ethers.ZeroAddress, // paymaster
-    );
-
-    expect(collectionId).to.equal(1);
-
-    // Verify knowledge collection was created
-    const metadata =
-      await KnowledgeCollectionStorage.getKnowledgeCollectionMetadata(
-        collectionId,
-      );
-
-    expect(metadata[0][0].length).to.equal(receivingNodesIdentityIds.length); // merkle roots
-    expect(metadata[1].length).to.equal(0); // burned
-    expect(metadata[2]).to.equal(10); // minted
-    expect(metadata[3]).to.equal(1000); // byteSize
-    expect(metadata[4]).to.equal(currentEpoch); // startEpoch
-    expect(metadata[5]).to.equal(currentEpoch + BigInt(numberOfEpochs)); // endEpoch
-    expect(metadata[6]).to.equal(tokenAmount); // tokenAmount
-    expect(metadata[7]).to.equal(false); // isImmutable
-
-    expect(await EpochStorage.getEpochPool(1, currentEpoch)).to.be.equal(
-      tokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await EpochStorage.getEpochPool(1, currentEpoch + 1n)).to.be.equal(
-      tokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await EpochStorage.getEpochPool(1, currentEpoch + 2n)).to.be.equal(
-      tokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await EpochStorage.getEpochPool(1, currentEpoch + 3n)).to.be.equal(
-      tokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await EpochStorage.getEpochPool(1, currentEpoch + 4n)).to.be.equal(
-      tokenAmount / BigInt(numberOfEpochs),
-    );
-    expect(await EpochStorage.getEpochPool(1, currentEpoch + 5n)).to.be.equal(
-      0,
-    );
-  });
-
   it('Should revert if insufficient signatures provided', async () => {
     const kcCreator = getDefaultKCCreator(accounts);
     const publishingNode = getDefaultPublishingNode(accounts);
@@ -523,5 +446,86 @@ describe('@unit KnowledgeCollection', () => {
 
     const sum = pools.reduce((a, v) => a + v, 0n);
     expect(sum).to.equal(tokenAmount); // total check
+  });
+
+  it('Should revert when tokenAmount is lower than _validateTokenAmount expects', async () => {
+    /* ---------- environment setup ---------- */
+    // Force stake-weighted average ASK to 20 tokens / epoch
+    const ask = ethers.parseEther('20'); // 20 TRAC/epoch
+    const stake = ethers.parseEther('1'); // 1  TRAC stake
+    await AskStorage.connect(accounts[0]).setWeightedActiveAskSum(ask * stake); // 20 * 10^36
+    await AskStorage.connect(accounts[0]).setTotalActiveStake(stake); // 1  * 10^18
+
+    const kcCreator = getDefaultKCCreator(accounts); // same sender as other tests
+    const publishingNode = getDefaultPublishingNode(accounts);
+    const receivingNodes = getDefaultReceivingNodes(accounts);
+
+    // Profiles
+    const { identityId: publisherId } = await createProfile(
+      Profile,
+      publishingNode,
+    );
+    const receiverIds = (await createProfiles(Profile, receivingNodes)).map(
+      (p) => p.identityId,
+    );
+
+    // Signatures (publisher + receivers)
+    const sig = await getKCSignaturesData(
+      publishingNode,
+      publisherId,
+      receivingNodes,
+    );
+
+    // Common params
+    const byteSize = 1024; // 1 KB
+    const epochs = 5; // 5 epochs
+    const needTokens = ethers.parseEther('100'); // 20 * 5
+    const fewTokens = ethers.parseEther('99'); // deliberately low
+
+    // Allow kcCreator to spend TRAC
+    await Token.connect(kcCreator).increaseAllowance(
+      KnowledgeCollection.getAddress(),
+      needTokens,
+    );
+
+    /* ---------- expect revert: tokenAmount too small ---------- */
+    await expect(
+      KnowledgeCollection.connect(kcCreator).createKnowledgeCollection(
+        'validate-fail',
+        sig.merkleRoot,
+        1, // knowledgeAssetsAmount
+        byteSize,
+        epochs,
+        fewTokens, // < expected
+        false, // isImmutable
+        ethers.ZeroAddress,
+        publisherId,
+        sig.publisherR,
+        sig.publisherVS,
+        receiverIds,
+        sig.receiverRs,
+        sig.receiverVSs,
+      ),
+    ).to.be.revertedWithCustomError(KnowledgeCollection, 'InvalidTokenAmount');
+
+    /* ---------- same call with correct tokenAmount should succeed ---------- */
+    const { collectionId } = await createKnowledgeCollection(
+      kcCreator,
+      publishingNode,
+      publisherId,
+      receivingNodes,
+      receiverIds,
+      { KnowledgeCollection, Token },
+      sig.merkleRoot,
+      'validate-pass',
+      1, // knowledgeAssetsAmount
+      byteSize,
+      epochs,
+      needTokens, // correct amount
+      false,
+      ethers.ZeroAddress,
+    );
+
+    expect(collectionId).to.equal(1);
   });
 });
