@@ -297,6 +297,15 @@
       "deploymentBlock": 16355925,
       "deploymentTimestamp": 1750417209469,
       "deployed": true
+    },
+    "MigratorM1V8": {
+      "evmAddress": "0x1670Ae201b1D988B11313c3E7b01f92A37899527",
+      "version": null,
+      "gitBranch": "feature/m1-v8-migrator",
+      "gitCommitHash": "a2c35fde09b3a1ba9fd1ae289c44fb5cb8f0be30",
+      "deploymentBlock": 16357836,
+      "deploymentTimestamp": 1750427379023,
+      "deployed": true
     }
   }
 }
