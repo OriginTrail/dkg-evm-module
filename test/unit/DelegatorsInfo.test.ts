@@ -399,4 +399,82 @@ describe('DelegatorsInfo contract', function() {
     expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(0);
   });
 
+  // Access control
+  it('Should return zero rolling rewards for non-delegator', async () => {
+    const { identityId } = await createProfile();
+    const delegator = accounts[1].address;
+
+    expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(0);
+  });
+
+  it('Should revert when non-contract calls addDelegator', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      DelegatorsInfo.connect(accounts[1]).addDelegator(identityId, accounts[2].address)
+    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+  });
+
+  it('Should revert when non-contract calls removeDelegator', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      DelegatorsInfo.connect(accounts[1]).removeDelegator(identityId, accounts[2].address)
+    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+  });
+
+  it('Should revert when non-contract calls setLastClaimedEpoch', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      DelegatorsInfo.connect(accounts[1]).setLastClaimedEpoch(identityId, accounts[2].address, 1)
+    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+  });
+
+  it('Should revert when non-contract calls setDelegatorRollingRewards', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      DelegatorsInfo.connect(accounts[1]).setDelegatorRollingRewards(identityId, accounts[2].address, 100)
+    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+  });
+
+  it('Should revert when non-contract calls addDelegatorRollingRewards', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      DelegatorsInfo.connect(accounts[1]).addDelegatorRollingRewards(identityId, accounts[2].address, 100)
+    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+  });
+
+  it('Should revert when non-contract calls setIsOperatorFeeClaimedForEpoch', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      DelegatorsInfo.connect(accounts[1]).setIsOperatorFeeClaimedForEpoch(identityId, 1, true)
+    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+  });
+
+  it('Should revert when non-contract calls setNetNodeEpochRewards', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      DelegatorsInfo.connect(accounts[1]).setNetNodeEpochRewards(identityId, 1, 1000)
+    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+  });
+
+  it('Should revert when non-contract calls setHasDelegatorClaimedEpochRewards', async () => {
+    const { identityId } = await createProfile();
+    const delegatorKey = ethers.encodeBytes32String('testKey');
+    await expect(
+      DelegatorsInfo.connect(accounts[1]).setHasDelegatorClaimedEpochRewards(1, identityId, delegatorKey, true)
+    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+  });
+
+  it('Should revert when non-contract calls setHasEverDelegatedToNode', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      DelegatorsInfo.connect(accounts[1]).setHasEverDelegatedToNode(identityId, accounts[2].address, true)
+    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+  });
+
+  it('Should revert when non-contract calls setLastStakeHeldEpoch', async () => {
+    const { identityId } = await createProfile();
+    await expect(
+      DelegatorsInfo.connect(accounts[1]).setLastStakeHeldEpoch(identityId, accounts[2].address, 1)
+    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+  });
 });
