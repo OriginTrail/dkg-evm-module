@@ -18,24 +18,16 @@
       "knowledgeCollectionSize": "1000000",
       "uriBase": "did:dkg"
     },
-    "RandomSampling": {
-      "hardhat": {
-        "avgBlockTimeInSeconds": "1",
-        "W1": "0",
-        "W2": "2"
-      },
-      "localhost": {
-        "avgBlockTimeInSeconds": "1",
-        "W1": "0",
-        "W2": "2"
-      }
-    },
     "RandomSamplingStorage": {
       "hardhat": {
-        "proofingPeriodDurationInBlocks": "100"
+        "proofingPeriodDurationInBlocks": "100",
+        "W1": "0",
+        "W2": "2"
       },
       "localhost": {
-        "proofingPeriodDurationInBlocks": "100"
+        "proofingPeriodDurationInBlocks": "100",
+        "W1": "0",
+        "W2": "2"
       }
     }
   },
@@ -59,32 +51,21 @@
       "knowledgeCollectionSize": "1000000",
       "uriBase": "did:dkg"
     },
-    "RandomSampling": {
-      "base_sepolia_dev": {
-        "avgBlockTimeInSeconds": "2",
-        "W1": "0",
-        "W2": "2"
-      },
-      "base_sepolia_stable_dev_staging": {
-        "avgBlockTimeInSeconds": "2",
-        "W1": "0",
-        "W2": "2"
-      },
-      "base_sepolia_stable_dev_prod": {
-        "avgBlockTimeInSeconds": "2",
-        "W1": "0",
-        "W2": "2"
-      }
-    },
     "RandomSamplingStorage": {
       "base_sepolia_dev": {
-        "proofingPeriodDurationInBlocks": "900"
+        "proofingPeriodDurationInBlocks": "900",
+        "W1": "0",
+        "W2": "2"
       },
       "base_sepolia_stable_dev_staging": {
-        "proofingPeriodDurationInBlocks": "900"
+        "proofingPeriodDurationInBlocks": "900",
+        "W1": "0",
+        "W2": "2"
       },
       "base_sepolia_stable_dev_prod": {
-        "proofingPeriodDurationInBlocks": "900"
+        "proofingPeriodDurationInBlocks": "900",
+        "W1": "0",
+        "W2": "2"
       }
     }
   },
@@ -109,32 +90,21 @@
       "knowledgeCollectionSize": "1000000",
       "uriBase": "did:dkg"
     },
-    "RandomSampling": {
-      "neuroweb_testnet": {
-        "avgBlockTimeInSeconds": "7",
-        "W1": "0",
-        "W2": "2"
-      },
-      "gnosis_chiado_test": {
-        "avgBlockTimeInSeconds": "5",
-        "W1": "0",
-        "W2": "2"
-      },
-      "base_sepolia_test": {
-        "avgBlockTimeInSeconds": "2",
-        "W1": "0",
-        "W2": "2"
-      }
-    },
     "RandomSamplingStorage": {
       "neuroweb_testnet": {
-        "proofingPeriodDurationInBlocks": "257"
+        "proofingPeriodDurationInBlocks": "257",
+        "W1": "0",
+        "W2": "2"
       },
       "gnosis_chiado_test": {
-        "proofingPeriodDurationInBlocks": "360"
+        "proofingPeriodDurationInBlocks": "360",
+        "W1": "0",
+        "W2": "2"
       },
       "base_sepolia_test": {
-        "proofingPeriodDurationInBlocks": "900"
+        "proofingPeriodDurationInBlocks": "900",
+        "W1": "0",
+        "W2": "2"
       }
     }
   },
@@ -159,32 +129,21 @@
       "knowledgeCollectionSize": "1000000",
       "uriBase": "did:dkg"
     },
-    "RandomSampling": {
-      "neuroweb_mainnet": {
-        "avgBlockTimeInSeconds": "6",
-        "W1": "0",
-        "W2": "2"
-      },
-      "gnosis_mainnet": {
-        "avgBlockTimeInSeconds": "5",
-        "W1": "0",
-        "W2": "2"
-      },
-      "base_mainnet": {
-        "avgBlockTimeInSeconds": "2",
-        "W1": "0",
-        "W2": "2"
-      }
-    },
     "RandomSamplingStorage": {
       "neuroweb_mainnet": {
-        "proofingPeriodDurationInBlocks": "300"
+        "proofingPeriodDurationInBlocks": "300",
+        "W1": "0",
+        "W2": "2"
       },
       "gnosis_mainnet": {
-        "proofingPeriodDurationInBlocks": "360"
+        "proofingPeriodDurationInBlocks": "360",
+        "W1": "0",
+        "W2": "2"
       },
       "base_mainnet": {
-        "proofingPeriodDurationInBlocks": "900"
+        "proofingPeriodDurationInBlocks": "900",
+        "W1": "0",
+        "W2": "2"
       }
     }
   }

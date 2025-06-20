@@ -155,30 +155,30 @@
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0xC2EAbF33d9F44a901251B12515d5e4f75E92831c",
+      "evmAddress": "0xc0372fBE1765578B2071A5B9C5280f6130Ae8195",
       "version": "1.0.1",
-      "gitBranch": "feature/random-sampling",
-      "gitCommitHash": "3eeb7a88bd40f213ae2b4fc428c94e2b572207e0",
-      "deploymentBlock": 15609993,
-      "deploymentTimestamp": 1746436357435,
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "67ad1cd45d09aa6603a881d83ade56f17fac6fb7",
+      "deploymentBlock": 16363121,
+      "deploymentTimestamp": 1750455757392,
       "deployed": true
     },
     "Profile": {
-      "evmAddress": "0x222C3a2b2A7c2E714771bFc099C8b5B9Be56872F",
+      "evmAddress": "0x0a569BF13CA78FC1672ef679e4c7276A6516849F",
       "version": "1.0.0",
-      "gitBranch": "v8-contracts",
-      "gitCommitHash": "ddb3f9e1ef7c2f9f7ca8554b19fae7d521a5507f",
-      "deploymentBlock": 13494296,
-      "deploymentTimestamp": 1735137963842,
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "e660b9adf0736cb63f25ad66a57c67dda84351c3",
+      "deploymentBlock": 16294025,
+      "deploymentTimestamp": 1750086032601,
       "deployed": true
     },
     "KnowledgeCollection": {
-      "evmAddress": "0x27F52c0d7289A982D76F74De1adeFBFCB1EB8ed8",
+      "evmAddress": "0x3DCf196341d450Fb9Fb4a3Fea9894f7473002399",
       "version": "1.0.0",
-      "gitBranch": "v8-paranet-update",
-      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
-      "deploymentBlock": 13947424,
-      "deploymentTimestamp": 1737552337932,
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "aa7aec7036926a6f988949f04f883858a5b9b4ca",
+      "deploymentBlock": 16355927,
+      "deploymentTimestamp": 1750417218270,
       "deployed": true
     },
     "Migrator": {
@@ -263,30 +263,39 @@
       "deployed": true
     },
     "DelegatorsInfo": {
-      "evmAddress": "0xdBB1114F0979a8f326Eb170d5cb6416572f056DD",
+      "evmAddress": "0xB168292cA0E05A75d1A0590eb1dd3a94dBDBb7e4",
       "version": "1.0.0",
-      "gitBranch": "release/v8.0.7-testnet",
-      "gitCommitHash": "9086d672d83a3d011ad9e0f68c080d91ef69b515",
-      "deploymentBlock": 15339076,
-      "deploymentTimestamp": 1744987709380,
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "e660b9adf0736cb63f25ad66a57c67dda84351c3",
+      "deploymentBlock": 16294020,
+      "deploymentTimestamp": 1750086005918,
       "deployed": true
     },
     "RandomSamplingStorage": {
-      "evmAddress": "0x617F50b951f9CD0bD5C40D4666b47FD70E4142Fc",
+      "evmAddress": "0x26485ff2E548ACA1AF4B50f765AF6Bc26dBE64E6",
       "version": "1.0.0",
-      "gitBranch": "feature/random-sampling",
-      "gitCommitHash": "01b72351e11a9b45bc82e5a9bea8fe3e9a08610e",
-      "deploymentBlock": 15883810,
-      "deploymentTimestamp": 1747904828069,
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "aa7aec7036926a6f988949f04f883858a5b9b4ca",
+      "deploymentBlock": 16355924,
+      "deploymentTimestamp": 1750417196279,
       "deployed": true
     },
     "RandomSampling": {
-      "evmAddress": "0xa61AEA9F1fF55E5C3aAC628922630173f03EF309",
+      "evmAddress": "0xe0a3fD8C3C701b19C6601aF9824174AaA5A051A2",
       "version": "1.0.0",
-      "gitBranch": "feature/random-sampling",
-      "gitCommitHash": "18c4b1845b5a0a0db1a1f288e49b89dbbb6317cc",
-      "deploymentBlock": 16095153,
-      "deploymentTimestamp": 1749038800888,
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "aa7aec7036926a6f988949f04f883858a5b9b4ca",
+      "deploymentBlock": 16355929,
+      "deploymentTimestamp": 1750417226924,
+      "deployed": true
+    },
+    "StakingKPI": {
+      "evmAddress": "0x58bf70BcEc83E41bC15aB92f0A0AF44CD34889a6",
+      "version": "1.0.0",
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "aa7aec7036926a6f988949f04f883858a5b9b4ca",
+      "deploymentBlock": 16355925,
+      "deploymentTimestamp": 1750417209469,
       "deployed": true
     }
   }

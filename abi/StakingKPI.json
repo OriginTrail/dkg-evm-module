@@ -13,22 +13,6 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "computedMerkleRoot",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "expectedMerkleRoot",
-        "type": "bytes32"
-      }
-    ],
-    "name": "MerkleRootMismatchError",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint72",
         "name": "identityId",
         "type": "uint72"
@@ -68,58 +52,6 @@
   },
   {
     "inputs": [],
-    "name": "askStorage",
-    "outputs": [
-      {
-        "internalType": "contract AskStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      }
-    ],
-    "name": "calculateNodeScore",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "chronos",
-    "outputs": [
-      {
-        "internalType": "contract Chronos",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "createChallenge",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "delegatorsInfo",
     "outputs": [
       {
@@ -145,38 +77,29 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getActiveProofPeriodStatus",
-    "outputs": [
+    "inputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "activeProofPeriodStartBlock",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "isValid",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct RandomSamplingLib.ProofPeriodStatus",
-        "name": "",
-        "type": "tuple"
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "delegator",
+        "type": "address"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getActiveProofingPeriodDurationInBlocks",
+    "name": "getDelegatorReward",
     "outputs": [
       {
-        "internalType": "uint16",
+        "internalType": "uint256",
         "name": "",
-        "type": "uint16"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -185,22 +108,103 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "proofPeriodStartBlock",
-        "type": "uint256"
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "address",
+        "name": "delegator",
+        "type": "address"
+      }
+    ],
+    "name": "getDelegatorStats",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
       },
       {
         "internalType": "uint256",
-        "name": "offset",
+        "name": "epoch",
         "type": "uint256"
       }
     ],
-    "name": "getHistoricalProofPeriodStartBlock",
+    "name": "getNetNodeRewards",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getNodeStats",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getOperatorFeeStats",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      }
+    ],
+    "name": "getOperatorStats",
+    "outputs": [
+      {
+        "internalType": "uint96",
+        "name": "",
+        "type": "uint96"
       }
     ],
     "stateMutability": "view",
@@ -237,32 +241,6 @@
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "isPendingProofingPeriodDuration",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "knowledgeCollectionStorage",
-    "outputs": [
-      {
-        "internalType": "contract KnowledgeCollectionStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -320,19 +298,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint16",
-        "name": "durationInBlocks",
-        "type": "uint16"
-      }
-    ],
-    "name": "setProofingPeriodDurationInBlocks",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bool",
         "name": "_status",
         "type": "bool"
@@ -341,19 +306,6 @@
     "name": "setStatus",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "shardingTableStorage",
-    "outputs": [
-      {
-        "internalType": "contract ShardingTableStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -380,37 +332,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "chunk",
-        "type": "string"
-      },
-      {
-        "internalType": "bytes32[]",
-        "name": "merkleProof",
-        "type": "bytes32[]"
-      }
-    ],
-    "name": "submitProof",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "updateAndGetActiveProofPeriodStartBlock",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

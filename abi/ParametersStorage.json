@@ -86,6 +86,19 @@
   },
   {
     "inputs": [],
+    "name": "maxOperatorFee",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "maximumStake",
     "outputs": [
       {
@@ -197,6 +210,19 @@
       }
     ],
     "name": "setAskUpperBoundFactor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "maxOperatorFee_",
+        "type": "uint16"
+      }
+    ],
+    "name": "setMaxOperatorFee",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
