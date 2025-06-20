@@ -35,7 +35,7 @@ type StakingFixture = {
 };
 
 async function deployStakingFixture(): Promise<StakingFixture> {
-  await hre.deployments.fixture(['Profile', 'Staking']);
+  await hre.deployments.fixture(['Profile', 'Staking','EpochStorage']);
   const Staking = await hre.ethers.getContract<Staking>('Staking');
   const Profile = await hre.ethers.getContract<Profile>('Profile');
   const Token = await hre.ethers.getContract<Token>('Token');

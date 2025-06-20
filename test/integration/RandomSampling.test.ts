@@ -1,5 +1,5 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 // @ts-expect-error: No type definitions available for assertion-tools
 import { kcTools } from 'assertion-tools';
 import { expect } from 'chai';
@@ -39,7 +39,6 @@ import {
 } from '../helpers/setup-helpers';
 
 // Sample values for tests
-const avgBlockTimeInSeconds = 1; // Average block time
 const SCALING_FACTOR = 10n ** 18n;
 const quads = [
   '<urn:us-cities:info:new-york> <http://schema.org/area> "468.9 sq mi" .',
@@ -298,11 +297,6 @@ describe('@integration RandomSampling', () => {
       expect(version).to.equal('1.0.0');
     });
 
-    it('Should have the correct avgBlockTimeInSeconds after initialization', async () => {
-      const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
-      expect(avgBlockTime).to.equal(avgBlockTimeInSeconds);
-    });
-
     it('Should have the correct W1 after initialization', async () => {
       const W1 = await RandomSamplingStorage.getW1();
       expect(W1).to.equal(0);
@@ -391,8 +385,6 @@ describe('@integration RandomSampling', () => {
     it('Should replace pending proofing period duration if one exists', async () => {
       // Setup
       const currentEpoch = await Chronos.getCurrentEpoch();
-      const avgBlockTimeInSeconds =
-        await RandomSamplingStorage.avgBlockTimeInSeconds();
       const initialDuration =
         await RandomSampling.getActiveProofingPeriodDurationInBlocks();
       const firstNewDuration = initialDuration + 10n;
@@ -438,11 +430,7 @@ describe('@integration RandomSampling', () => {
       // 4. Check the actual pending value
       // Advance to the effective epoch
       const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
-      const blocksUntilNextEpoch =
-        Number(timeUntilNextEpoch) / Number(avgBlockTimeInSeconds) + 10;
-      for (let i = 0; i < blocksUntilNextEpoch; i++) {
-        await hre.network.provider.send('evm_mine');
-      }
+      await time.increase(Number(timeUntilNextEpoch) + 10);
 
       expect(
         await Chronos.getCurrentEpoch(),
@@ -462,7 +450,6 @@ describe('@integration RandomSampling', () => {
         await RandomSampling.getActiveProofingPeriodDurationInBlocks();
       const newDuration = initialDuration + 20n; // Different new duration
       const hubOwner = accounts[0];
-      const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
 
       // Schedule change for next epoch
       await RandomSampling.connect(hubOwner).setProofingPeriodDurationInBlocks(
@@ -511,13 +498,11 @@ describe('@integration RandomSampling', () => {
 
       // --- Advance to Next Epoch (Epoch E+1) ---
       const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
-      const blocksUntilNextEpoch =
-        timeUntilNextEpoch > 0n
-          ? Number(timeUntilNextEpoch / avgBlockTime) + 1 // Ensure we pass the epoch boundary
-          : 1; // If already at boundary, just mine one block
-      for (let i = 0; i < blocksUntilNextEpoch; i++) {
-        await hre.network.provider.send('evm_mine');
-      }
+      await time.increase(Number(timeUntilNextEpoch) + 5);
+      expect(
+        await Chronos.getCurrentEpoch(),
+        'Should now be in the effective epoch',
+      ).to.equal(effectiveEpoch);
 
       expect(
         await Chronos.getCurrentEpoch(),
@@ -800,15 +785,8 @@ describe('@integration RandomSampling', () => {
       );
 
       await expect(receipt)
-        .to.emit(RandomSampling, 'ChallengeCreated')
-        .withArgs(
-          publishingNodeIdentityId,
-          challenge.epoch,
-          challenge.knowledgeCollectionId,
-          challenge.chunkId,
-          proofPeriodStartBlock,
-          challenge.proofingPeriodDurationInBlocks,
-        );
+        .to.emit(RandomSamplingStorage, 'NodeChallengeSet')
+        .withArgs(publishingNodeIdentityId, challenge);
 
       const proofPeriodDuration =
         await RandomSampling.getActiveProofingPeriodDurationInBlocks();
@@ -873,11 +851,7 @@ describe('@integration RandomSampling', () => {
       // Advance to epochs + 10
       for (let i = 0; i < epochs + 10; i++) {
         const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
-        const blocksUntilNextEpoch =
-          Number(timeUntilNextEpoch) / Number(avgBlockTimeInSeconds) + 5;
-        for (let i = 0; i < blocksUntilNextEpoch; i++) {
-          await hre.network.provider.send('evm_mine');
-        }
+        await time.increase(Number(timeUntilNextEpoch) + 5);
       }
 
       // Action: Call createChallenge
@@ -1225,7 +1199,7 @@ describe('@integration RandomSampling', () => {
       expect(epochNodeValidProofsCount).to.equal(1n);
     });
 
-    it('Should submit a valid proof and successfully emit ValidProofSubmitted event with correct parameters', async () => {
+    it('Should submit a valid proof and successfully emit NodeEpochScoreAdded event with correct parameters', async () => {
       const kcCreator = getDefaultKCCreator(accounts);
       const minStake = await ParametersStorage.minimumStake();
       const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
@@ -1298,13 +1272,26 @@ describe('@integration RandomSampling', () => {
         publishingNodeIdentityId,
       );
 
+      const expectedScore = await calculateExpectedNodeScore(
+        BigInt(publishingNodeIdentityId),
+        BigInt(minStake),
+        {
+          ParametersStorage,
+          ProfileStorage,
+          AskStorage,
+          EpochStorage,
+        },
+      );
+
       // Verify that epochNodeValidProofsCount was incremented
       await expect(receipt)
-        .to.emit(RandomSampling, 'ValidProofSubmitted')
+        .to.emit(RandomSamplingStorage, 'NodeEpochScoreAdded')
         .withArgs(
-          publishingNodeIdentityId,
           challenge.epoch,
-          (score: bigint) => score > 0,
+          publishingNodeIdentityId,
+          (score: bigint) => score.toString() === expectedScore.toString(),
+          (totalScore: bigint) =>
+            totalScore.toString() === expectedScore.toString(),
         );
     });
 
@@ -1507,11 +1494,13 @@ describe('@integration RandomSampling', () => {
       ).to.equal(expectedScore);
 
       await expect(submitTx)
-        .to.emit(RandomSampling, 'ValidProofSubmitted')
+        .to.emit(RandomSamplingStorage, 'NodeEpochScoreAdded')
         .withArgs(
-          publishingNodeIdentityId,
           challenge.epoch,
+          publishingNodeIdentityId,
           (score: bigint) => score.toString() === expectedScore.toString(),
+          (totalScore: bigint) =>
+            totalScore.toString() === expectedScore.toString(),
         );
     });
 
@@ -1678,531 +1667,6 @@ describe('@integration RandomSampling', () => {
     });
   });
 
-  describe('Admin Functions', () => {
-    it('Should allow only hub owner to update average block time', async () => {
-      const newAvgBlockTime = 15;
-
-      // Non-hub owner should fail
-      await expect(
-        RandomSamplingStorage.connect(accounts[1]).setAvgBlockTimeInSeconds(
-          newAvgBlockTime,
-        ),
-      ).to.be.reverted;
-
-      // Hub owner should succeed
-      await RandomSamplingStorage.connect(accounts[0]).setAvgBlockTimeInSeconds(
-        newAvgBlockTime,
-      );
-      expect(await RandomSamplingStorage.avgBlockTimeInSeconds()).to.equal(
-        newAvgBlockTime,
-      );
-    });
-  });
-
-  // describe('Reward Claiming', () => {
-  //   let publishingNode: {
-  //     operational: SignerWithAddress;
-  //     admin: SignerWithAddress;
-  //   };
-  //   let publishingNodeIdentityId: number;
-  //   let delegatorAccount: SignerWithAddress;
-  //   let delegatorKey: string;
-  //   let epochToClaim: bigint;
-  //   let deps: {
-  //     accounts: SignerWithAddress[];
-  //     Profile: Profile;
-  //     Token: Token;
-  //     Staking: Staking;
-  //     Ask: Ask;
-  //     KnowledgeCollection: KnowledgeCollection;
-  //     ParametersStorage: ParametersStorage;
-  //     RandomSampling: RandomSampling;
-  //     RandomSamplingStorage: RandomSamplingStorage;
-  //     EpochStorage: EpochStorage;
-  //     Chronos: Chronos;
-  //     StakingStorage: StakingStorage;
-  //     IdentityStorage: IdentityStorage;
-  //     ShardingTableStorage: ShardingTableStorage;
-  //   };
-
-  //   // Helper function to advance to the next epoch
-  //   const advanceToNextEpoch = async () => {
-  //     const timeUntil = await Chronos.timeUntilNextEpoch();
-  //     const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
-  //     const blocksToMine =
-  //       timeUntil > 0n ? Number(timeUntil / BigInt(avgBlockTime)) + 2 : 2; // Add buffer
-  //     for (let i = 0; i < blocksToMine; i++) {
-  //       await hre.network.provider.send('evm_mine');
-  //     }
-  //   };
-
-  //   // Setup common scenario for reward claiming tests
-  //   beforeEach(async () => {
-  //     delegatorAccount = accounts[1];
-  //     delegatorKey = hre.ethers.keccak256(
-  //       hre.ethers.solidityPacked(['address'], [delegatorAccount.address]),
-  //     );
-
-  //     // Dependencies for setup
-  //     deps = {
-  //       accounts,
-  //       Profile,
-  //       Token,
-  //       Staking,
-  //       Ask,
-  //       KnowledgeCollection,
-  //       ParametersStorage,
-  //       RandomSampling,
-  //       RandomSamplingStorage,
-  //       EpochStorage,
-  //       Chronos,
-  //       StakingStorage,
-  //       IdentityStorage,
-  //       ShardingTableStorage,
-  //     };
-
-  //     const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
-  //     const nodeStake = (await ParametersStorage.minimumStake()) * 2n; // Stake more than min
-  //     const delegatorStake = nodeStake / 10n; // Delegate a tenth of node's stake
-
-  //     // 1. Setup Node
-  //     ({ node: publishingNode, identityId: publishingNodeIdentityId } =
-  //       await setupNodeWithStakeAndAsk(
-  //         2, // Account index offset for setup helper
-  //         nodeStake,
-  //         nodeAsk,
-  //         deps,
-  //       ));
-
-  //     // 2. Setup Receiving Nodes
-  //     const receivingNodes = [];
-  //     const receivingNodesIdentityIds = [];
-  //     for (let i = 0; i < 5; i++) {
-  //       const { node, identityId } = await setupNodeWithStakeAndAsk(
-  //         i + 3,
-  //         await ParametersStorage.minimumStake(),
-  //         nodeAsk,
-  //         deps,
-  //       );
-  //       receivingNodes.push(node);
-  //       receivingNodesIdentityIds.push(identityId);
-  //     }
-
-  //     // 3. Setup Delegator
-  //     await Token.mint(delegatorAccount.address, delegatorStake * 2n);
-  //     await Token.connect(delegatorAccount).approve(
-  //       await Staking.getAddress(),
-  //       delegatorStake,
-  //     );
-  //     await Staking.connect(delegatorAccount).stake(
-  //       publishingNodeIdentityId,
-  //       delegatorStake,
-  //     );
-
-  //     // Verify delegation
-  //     expect(
-  //       await StakingStorage.getDelegatorTotalStake(
-  //         publishingNodeIdentityId,
-  //         delegatorKey,
-  //       ),
-  //     ).to.equal(delegatorStake);
-
-  //     const stakingStorageAmount = await Token.balanceOf(
-  //       await StakingStorage.getAddress(),
-  //     );
-
-  //     const tokenAmount = ethers.parseEther('100');
-
-  //     // 3. Create Knowledge Collection (generates fees for rewards)
-  //     const kcCreator = getDefaultKCCreator(accounts);
-  //     await createKnowledgeCollection(
-  //       kcCreator,
-  //       publishingNode,
-  //       publishingNodeIdentityId,
-  //       receivingNodes,
-  //       receivingNodesIdentityIds,
-  //       deps,
-  //       merkleRoot, // Use predefined merkleRoot
-  //       'test-operation-id',
-  //       10,
-  //       1000,
-  //       10, // epochsDuration
-  //       tokenAmount,
-  //     );
-
-  //     const stakingStorageAmountAfter = await Token.balanceOf(
-  //       await StakingStorage.getAddress(),
-  //     );
-
-  //     // Verify that the staking storage received the token amount
-  //     expect(stakingStorageAmountAfter).to.equal(
-  //       stakingStorageAmount + tokenAmount,
-  //     );
-
-  //     // 4. Node submits a proof in the current epoch
-  //     epochToClaim = await Chronos.getCurrentEpoch();
-
-  //     await RandomSampling.connect(
-  //       publishingNode.operational,
-  //     ).createChallenge();
-  //     let challenge = await RandomSamplingStorage.getNodeChallenge(
-  //       publishingNodeIdentityId,
-  //     );
-  //     let chunks = kcTools.splitIntoChunks(quads, 32);
-  //     let challengeChunk = chunks[challenge.chunkId];
-  //     const { proof } = kcTools.calculateMerkleProof(
-  //       quads,
-  //       32,
-  //       Number(challenge.chunkId),
-  //     );
-  //     await RandomSampling.connect(publishingNode.operational).submitProof(
-  //       challengeChunk,
-  //       proof,
-  //     );
-
-  //     // Verify proof was counted
-  //     expect(
-  //       await RandomSamplingStorage.getEpochNodeValidProofsCount(
-  //         epochToClaim,
-  //         publishingNodeIdentityId,
-  //       ),
-  //     ).to.equal(1n);
-
-  //     // Advance to the next proofing period
-  //     const proofingPeriodDurationInBlocks =
-  //       await RandomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
-  //     for (let i = 0; i < Number(proofingPeriodDurationInBlocks); i++) {
-  //       await hre.network.provider.send('evm_mine');
-  //     }
-  //     await RandomSampling.connect(
-  //       publishingNode.operational,
-  //     ).createChallenge();
-  //     challenge = await RandomSamplingStorage.getNodeChallenge(
-  //       publishingNodeIdentityId,
-  //     );
-  //     chunks = kcTools.splitIntoChunks(quads, 32);
-  //     challengeChunk = chunks[challenge.chunkId];
-  //     const { proof: proof2 } = kcTools.calculateMerkleProof(
-  //       quads,
-  //       32,
-  //       Number(challenge.chunkId),
-  //     );
-  //     await RandomSampling.connect(publishingNode.operational).submitProof(
-  //       challengeChunk,
-  //       proof2,
-  //     );
-
-  //     // 5. Advance time past the epoch and finalize it
-  //     await advanceToNextEpoch(); // Advance to epoch + 1
-  //     await advanceToNextEpoch(); // Advance to epoch + 2 to ensure epoch is finalizable
-
-  //     await expect(
-  //       RandomSampling.connect(delegatorAccount).claimRewards(
-  //         publishingNodeIdentityId,
-  //         epochToClaim,
-  //       ),
-  //     ).to.be.revertedWith('Epoch is not finalized yet');
-
-  //     // Create another KC to initialize the lazy finalization
-  //     await createKnowledgeCollection(
-  //       kcCreator,
-  //       publishingNode,
-  //       publishingNodeIdentityId,
-  //       receivingNodes,
-  //       receivingNodesIdentityIds,
-  //       deps,
-  //     );
-
-  //     // Check finalization (using pool 1 as per RandomSampling logic)
-  //     expect(
-  //       await EpochStorage.lastFinalizedEpoch(1),
-  //       'Epoch should be finalized',
-  //     ).to.be.gte(epochToClaim);
-  //   });
-
-  //   it('Should allow a delegator to successfully claim their rewards', async () => {
-  //     // Arrange
-  //     const expectedReward = await Staking.connect(
-  //       delegatorAccount,
-  //     ).getDelegatorEpochRewardsAmount(
-  //       publishingNodeIdentityId,
-  //       epochToClaim,
-  //       delegatorAccount.address,
-  //     );
-  //     expect(expectedReward).to.be.greaterThan(
-  //       0n,
-  //       'Expected reward should be positive',
-  //     );
-
-  //     const delegatorInitialBalance = await Token.balanceOf(
-  //       delegatorAccount.address,
-  //     );
-  //     const stakingStorageInitialBalance = await Token.balanceOf(
-  //       await StakingStorage.getAddress(),
-  //     );
-
-  //     // Act
-  //     const claimTx = await RandomSampling.connect(
-  //       delegatorAccount,
-  //     ).claimRewards(publishingNodeIdentityId, epochToClaim);
-  //     await claimTx.wait();
-
-  //     // Assert
-  //     // 1. Event Emission
-  //     await expect(claimTx)
-  //       .to.emit(RandomSampling, 'RewardsClaimed')
-  //       .withArgs(
-  //         publishingNodeIdentityId,
-  //         epochToClaim,
-  //         delegatorAccount.address,
-  //         expectedReward,
-  //       );
-
-  //     // 2. Balance Check
-  //     const delegatorFinalBalance = await Token.balanceOf(
-  //       delegatorAccount.address,
-  //     );
-  //     const stakingStorageFinalBalance = await Token.balanceOf(
-  //       await StakingStorage.getAddress(),
-  //     );
-  //     expect(delegatorFinalBalance).to.equal(
-  //       delegatorInitialBalance + expectedReward,
-  //     );
-  //     expect(stakingStorageFinalBalance).to.equal(
-  //       stakingStorageInitialBalance - expectedReward,
-  //     );
-
-  //     // 3. Claim Status Update
-  //     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  //     expect(
-  //       await RandomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
-  //         epochToClaim,
-  //         publishingNodeIdentityId,
-  //         delegatorKey,
-  //       ),
-  //     ).to.be.true;
-  //   });
-
-  //   it('Should revert if the epoch to claim is not yet over', async () => {
-  //     // Arrange: Need a scenario where epoch is *not* over. Let's setup again without advancing time.
-  //     await hre.deployments.fixture(['RandomSampling']); // Redeploy for clean state relative to time
-  //     ({
-  //       accounts,
-  //       IdentityStorage,
-  //       StakingStorage,
-  //       ProfileStorage,
-  //       EpochStorage,
-  //       Chronos,
-  //       AskStorage,
-  //       DelegatorsInfo,
-  //       Profile,
-  //       Hub,
-  //       RandomSampling,
-  //       RandomSamplingStorage,
-  //       ParanetKnowledgeMinersRegistry,
-  //       ParanetKnowledgeCollectionsRegistry,
-  //       Staking,
-  //       ShardingTableStorage,
-  //       ShardingTable,
-  //       ParametersStorage,
-  //       Ask,
-  //       Token,
-  //       KnowledgeCollection,
-  //     } = await loadFixture(deployRandomSamplingFixture)); // Reload all contracts
-
-  //     // Redo minimal setup for node and KC within the current epoch
-  //     publishingNode = { operational: accounts[1], admin: accounts[1] };
-  //     delegatorAccount = accounts[2];
-  //     deps = {
-  //       accounts,
-  //       Profile,
-  //       Token,
-  //       Staking,
-  //       Ask,
-  //       KnowledgeCollection,
-  //       ParametersStorage,
-  //       RandomSampling,
-  //       RandomSamplingStorage,
-  //       EpochStorage,
-  //       Chronos,
-  //       StakingStorage,
-  //       IdentityStorage,
-  //       ShardingTableStorage,
-  //     };
-  //     const nodeStake = await ParametersStorage.minimumStake();
-  //     const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
-
-  //     ({ identityId: publishingNodeIdentityId } =
-  //       await setupNodeWithStakeAndAsk(1, nodeStake, nodeAsk, deps));
-
-  //     const receivingNodes = [];
-  //     const receivingNodesIdentityIds = [];
-  //     for (let i = 0; i < 5; i++) {
-  //       const { node, identityId } = await setupNodeWithStakeAndAsk(
-  //         i + 3,
-  //         await ParametersStorage.minimumStake(),
-  //         nodeAsk,
-  //         deps,
-  //       );
-  //       receivingNodes.push(node);
-  //       receivingNodesIdentityIds.push(identityId);
-  //     }
-
-  //     const kcCreator = getDefaultKCCreator(accounts);
-  //     await createKnowledgeCollection(
-  //       kcCreator,
-  //       publishingNode,
-  //       publishingNodeIdentityId,
-  //       receivingNodes,
-  //       receivingNodesIdentityIds,
-  //       deps,
-  //       merkleRoot,
-  //       'test-operation-id',
-  //       10,
-  //       1000,
-  //       10,
-  //     );
-  //     const currentEpoch = await Chronos.getCurrentEpoch();
-
-  //     // Act & Assert
-  //     await expect(
-  //       RandomSampling.connect(delegatorAccount).claimRewards(
-  //         publishingNodeIdentityId,
-  //         currentEpoch, // Try claiming for the *current*, not-yet-over epoch
-  //       ),
-  //     ).to.be.revertedWith('Epoch is not over yet');
-  //   });
-
-  //   it('Should revert if rewards have already been claimed', async () => {
-  //     // Arrange: Claim rewards once successfully first
-  //     const expectedReward = await RandomSampling.connect(
-  //       delegatorAccount,
-  //     ).getDelegatorEpochRewardsAmount(
-  //       publishingNodeIdentityId,
-  //       epochToClaim,
-  //       delegatorAccount.address,
-  //     );
-  //     expect(expectedReward).to.be.greaterThan(0n);
-  //     await RandomSampling.connect(delegatorAccount).claimRewards(
-  //       publishingNodeIdentityId,
-  //       epochToClaim,
-  //     );
-
-  //     // Verify claimed status
-  //     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  //     expect(
-  //       await RandomSamplingStorage.getEpochNodeDelegatorRewardsClaimed(
-  //         epochToClaim,
-  //         publishingNodeIdentityId,
-  //         delegatorKey,
-  //       ),
-  //     ).to.be.true;
-
-  //     // Act & Assert: Try claiming again
-  //     await expect(
-  //       RandomSampling.connect(delegatorAccount).claimRewards(
-  //         publishingNodeIdentityId,
-  //         epochToClaim,
-  //       ),
-  //     ).to.be.revertedWith('Rewards already claimed');
-  //   });
-
-  //   it('Should revert if the delegator has no score for the given epoch (e.g., node submitted no proofs)', async () => {
-  //     const nodeStake = await ParametersStorage.minimumStake();
-  //     const nodeAsk = 200000000000000000n; // Same as 0.2 ETH
-  //     const delegatorStake = nodeStake / 2n;
-  //     ({ node: publishingNode, identityId: publishingNodeIdentityId } =
-  //       await setupNodeWithStakeAndAsk(15, nodeStake, nodeAsk, deps));
-
-  //     // Setup receiving nodes
-  //     const receivingNodes = [];
-  //     const receivingNodesIdentityIds = [];
-  //     for (let i = 0; i < 5; i++) {
-  //       const { node, identityId } = await setupNodeWithStakeAndAsk(
-  //         i + 20,
-  //         await ParametersStorage.minimumStake(),
-  //         nodeAsk,
-  //         deps,
-  //       );
-  //       receivingNodes.push(node);
-  //       receivingNodesIdentityIds.push(identityId);
-  //     }
-
-  //     await Token.connect(accounts[0]).transfer(
-  //       delegatorAccount.address,
-  //       delegatorStake * 2n,
-  //     );
-  //     await Token.connect(delegatorAccount).approve(
-  //       await Staking.getAddress(),
-  //       delegatorStake,
-  //     );
-  //     await Staking.connect(delegatorAccount).stake(
-  //       publishingNodeIdentityId,
-  //       delegatorStake,
-  //     );
-  //     const kcCreator = getDefaultKCCreator(accounts);
-  //     await createKnowledgeCollection(
-  //       kcCreator,
-  //       publishingNode,
-  //       publishingNodeIdentityId,
-  //       receivingNodes,
-  //       receivingNodesIdentityIds,
-  //       deps,
-  //       merkleRoot,
-  //       'test-operation-id',
-  //       10,
-  //       1000,
-  //       10,
-  //     );
-  //     epochToClaim = await Chronos.getCurrentEpoch();
-
-  //     // *** Crucially, DO NOT submit proof ***
-
-  //     // Advance past epoch and finalize
-  //     await advanceToNextEpoch();
-  //     await advanceToNextEpoch();
-  //     await createKnowledgeCollection(
-  //       kcCreator,
-  //       publishingNode,
-  //       publishingNodeIdentityId,
-  //       receivingNodes,
-  //       receivingNodesIdentityIds,
-  //       deps,
-  //       merkleRoot,
-  //       'test-operation-id',
-  //       10,
-  //       1000,
-  //       10,
-  //     );
-
-  //     // Verify no proofs were counted
-  //     expect(
-  //       await RandomSamplingStorage.getEpochNodeValidProofsCount(
-  //         epochToClaim,
-  //         publishingNodeIdentityId,
-  //       ),
-  //     ).to.equal(0n);
-
-  //     // Check expected reward is zero
-  //     const expectedReward = await RandomSampling.connect(
-  //       delegatorAccount,
-  //     ).getDelegatorEpochRewardsAmount(
-  //       publishingNodeIdentityId,
-  //       epochToClaim,
-  //       delegatorAccount.address,
-  //     );
-  //     expect(expectedReward).to.equal(0n);
-
-  //     // Act & Assert
-  //     await expect(
-  //       RandomSampling.connect(delegatorAccount).claimRewards(
-  //         publishingNodeIdentityId,
-  //         epochToClaim,
-  //       ),
-  //     ).to.be.revertedWith('Delegator has no score for the given epoch');
-  //   });
-  // });
-
   describe('Optimized Knowledge Collection Search', () => {
     let publishingNode: {
       operational: SignerWithAddress;
@@ -2299,14 +1763,9 @@ describe('@integration RandomSampling', () => {
       }
 
       // Advance to epoch 5 (so first 15 collections are expired, last 5 are active)
-      const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
       for (let epoch = Number(initialEpoch); epoch < 5; epoch++) {
         const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
-        const blocksToMine =
-          Number(timeUntilNextEpoch / BigInt(avgBlockTime)) + 2;
-        for (let i = 0; i < blocksToMine; i++) {
-          await hre.network.provider.send('evm_mine');
-        }
+        await time.increase(Number(timeUntilNextEpoch) + 5);
       }
 
       const currentEpoch = await Chronos.getCurrentEpoch();
@@ -2396,14 +1855,9 @@ describe('@integration RandomSampling', () => {
       }
 
       // Advance to epoch 5 (all collections expired)
-      const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
       for (let epoch = 1; epoch < 5; epoch++) {
         const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
-        const blocksToMine =
-          Number(timeUntilNextEpoch / BigInt(avgBlockTime)) + 2;
-        for (let i = 0; i < blocksToMine; i++) {
-          await hre.network.provider.send('evm_mine');
-        }
+        await time.increase(Number(timeUntilNextEpoch) + 5);
       }
 
       // Verify all collections are expired
@@ -2455,14 +1909,9 @@ describe('@integration RandomSampling', () => {
       );
 
       // Advance to epoch 4 (first 9 expired, last 1 active)
-      const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
       for (let epoch = 1; epoch < 4; epoch++) {
         const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
-        const blocksToMine =
-          Number(timeUntilNextEpoch / BigInt(avgBlockTime)) + 2;
-        for (let i = 0; i < blocksToMine; i++) {
-          await hre.network.provider.send('evm_mine');
-        }
+        await time.increase(Number(timeUntilNextEpoch) + 5);
       }
 
       // Verify only the last collection is active
@@ -2585,14 +2034,9 @@ describe('@integration RandomSampling', () => {
       }
 
       // Advance to epoch 4 (expired ones are expired, active ones are active)
-      const avgBlockTime = await RandomSamplingStorage.avgBlockTimeInSeconds();
       for (let epoch = 1; epoch < 4; epoch++) {
         const timeUntilNextEpoch = await Chronos.timeUntilNextEpoch();
-        const blocksToMine =
-          Number(timeUntilNextEpoch / BigInt(avgBlockTime)) + 2;
-        for (let i = 0; i < blocksToMine; i++) {
-          await hre.network.provider.send('evm_mine');
-        }
+        await time.increase(Number(timeUntilNextEpoch) + 5);
       }
 
       // Test multiple challenges to ensure it finds active collections (1, 3, 5)
@@ -3381,15 +2825,24 @@ describe('@integration RandomSampling', () => {
       );
       nodeIdCounter += 2;
 
-      // Verify the score calculation reverts
-      await expect(
-        RandomSampling.calculateNodeScore(identityId),
-      ).to.be.revertedWith('max publish is 0');
-
       // Verify the max publishing value is indeed > 0 in our setup
       const maxNodePub =
         await EpochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue();
       expect(maxNodePub).to.be.equal(0n);
+
+      const actualNodeScore =
+        await RandomSampling.calculateNodeScore(identityId);
+      const expectedNodeScore = await calculateExpectedNodeScore(
+        BigInt(identityId),
+        nodeStake,
+        {
+          ParametersStorage,
+          ProfileStorage,
+          AskStorage,
+          EpochStorage,
+        },
+      );
+      expect(actualNodeScore).to.be.equal(expectedNodeScore);
     });
 
     it('Should handle identical nodes with identical scores', async () => {
