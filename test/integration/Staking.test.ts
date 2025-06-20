@@ -137,7 +137,6 @@ async function calculateExpectedNodeScore(
 /**
  * Calculate expected delegator score earned during a period
  */
-// TODO: Does this make sense?
 function calculateExpectedDelegatorScore(
   delegatorStake: bigint,
   nodeScorePerStake: bigint,
@@ -266,20 +265,24 @@ async function advanceToNextProofingPeriod(
   contracts: TestContracts,
 ): Promise<void> {
   const proofingPeriodDuration =
-    await contracts.randomSampling.getActiveProofingPeriodDurationInBlocks();
-  const { activeProofPeriodStartBlock, isValid } =
-    await contracts.randomSampling.getActiveProofPeriodStatus();
-  if (isValid) {
-    // Find out how many blocks are left in the current proofing period
-    const blocksLeft =
-      Number(activeProofPeriodStartBlock) +
-      Number(proofingPeriodDuration) -
-      Number(await hre.network.provider.send('eth_blockNumber')) +
-      1;
-    for (let i = 0; i < blocksLeft; i++) {
-      await hre.network.provider.send('evm_mine');
-    }
+    await contracts.randomSamplingStorage.getLatestProofingPeriodDurationInBlocks();
+  const activeProofPeriodStartBlock =
+    await contracts.randomSamplingStorage.getActiveProofPeriodStartBlock();
+
+  // Find out how many blocks are left in the current proofing period
+  const currentBlock = Number(
+    await hre.network.provider.send('eth_blockNumber'),
+  );
+  const blocksLeft =
+    Number(activeProofPeriodStartBlock) +
+    Number(proofingPeriodDuration) -
+    currentBlock +
+    1;
+
+  for (let i = 0; i < blocksLeft; i++) {
+    await hre.network.provider.send('evm_mine');
   }
+
   await contracts.randomSampling.updateAndGetActiveProofPeriodStartBlock();
 }
 
@@ -293,6 +296,7 @@ async function ensureNodeHasChunksThisEpoch(
     admin: SignerWithAddress;
   }[],
   receivingNodesIdentityIds: number[],
+  chunkSize: number,
 ): Promise<void> {
   const produced =
     await contracts.epochStorage.getNodeCurrentEpochProducedKnowledgeValue(
@@ -319,7 +323,7 @@ async function ensureNodeHasChunksThisEpoch(
       merkleRoot,
       `ensure-chunks-${Date.now()}`,
       1, // holders
-      4, // chunks
+      chunkSize, // byteSize - must be >= CHUNK_BYTE_SIZE to avoid division by zero
       1, // replicas
       toTRAC(1),
     );
@@ -335,6 +339,7 @@ async function setupTestEnvironment(): Promise<{
   accounts: TestAccounts;
   contracts: TestContracts;
   nodeIds: { node1Id: bigint; node2Id: bigint };
+  chunkSize: number;
 }> {
   await hre.deployments.fixture();
 
@@ -379,6 +384,11 @@ async function setupTestEnvironment(): Promise<{
     askStorage: await hre.ethers.getContract<AskStorage>('AskStorage'),
     ask: await hre.ethers.getContract<Ask>('Ask'),
   };
+
+  // Get chunk size to avoid division by zero in challenge generation
+  const chunkSize = Number(
+    await contracts.randomSamplingStorage.CHUNK_BYTE_SIZE(),
+  );
 
   await contracts.hub.setContractAddress('HubOwner', accounts.owner.address);
 
@@ -435,22 +445,6 @@ async function setupTestEnvironment(): Promise<{
   // Initialize ask system (required to prevent division by zero in RandomSampling)
   await contracts.parametersStorage.setMinimumStake(toTRAC(100));
 
-  // Set operator fee to 0% for testing purposes
-
-  // TODO: is this needed?
-  // await contracts.token
-  //   .connect(accounts.node1.operational)
-  //   .approve(await contracts.staking.getAddress(), toTRAC(100));
-  // await contracts.staking
-  //   .connect(accounts.node1.operational)
-  //   .stake(node1Id, toTRAC(100));
-
-  // const nodeAsk = ethers.parseUnits('0.2', 18);
-  // await contracts.profile
-  //   .connect(accounts.node1.operational)
-  //   .updateAsk(node1Id, nodeAsk);
-  // await contracts.ask.connect(accounts.owner).recalculateActiveSet();
-
   // Jump to clean epoch start
   const timeUntilNextEpoch = await contracts.chronos.timeUntilNextEpoch();
   await time.increase(timeUntilNextEpoch + 1n);
@@ -459,6 +453,7 @@ async function setupTestEnvironment(): Promise<{
     accounts,
     contracts,
     nodeIds: { node1Id: BigInt(node1Id), node2Id: BigInt(node2Id) },
+    chunkSize,
   };
 }
 
@@ -475,6 +470,7 @@ describe(`Full complex scenario`, function () {
   }[];
   let receivingNodesIdentityIds: number[];
   let TOKEN_DECIMALS = 18;
+  let chunkSize: number;
 
   it('Should execute steps 1-7 with detailed score calculations and verification', async function () {
     // ================================================================================================================
@@ -484,6 +480,7 @@ describe(`Full complex scenario`, function () {
     accounts = setup.accounts;
     contracts = setup.contracts;
     nodeIds = setup.nodeIds;
+    chunkSize = setup.chunkSize;
     node1Id = nodeIds.node1Id;
 
     TOKEN_DECIMALS = Number(await contracts.token.decimals());
@@ -539,7 +536,7 @@ describe(`Full complex scenario`, function () {
       merkleRoot,
       'test-op-id',
       10,
-      1000,
+      chunkSize * 10, // byteSize - use multiple of chunkSize for proper chunk generation
       numberOfEpochs,
       kcTokenAmount,
     );
@@ -754,6 +751,10 @@ describe(`Full complex scenario`, function () {
       { KnowledgeCollection: contracts.kc, Token: contracts.token },
       merkleRoot,
       'dummy-op-id-2',
+      1, // holders
+      chunkSize * 5, // byteSize - use multiple of chunkSize
+      1, // replicas
+      toTRAC(10), // small fee for finalization
     );
 
     expect(await contracts.epochStorage.lastFinalizedEpoch(1)).to.be.gte(
@@ -1270,7 +1271,7 @@ describe(`Full complex scenario`, function () {
       merkleRoot,
       'finalise-epoch',
       10, // holders
-      1_000, // chunks
+      chunkSize * 15, // byteSize - use multiple of chunkSize for proper chunk generation
       10, // replicas
       toTRAC(50_000), // <-- epoch fee identical to the diagram
     );
@@ -2012,7 +2013,7 @@ describe(`Full complex scenario`, function () {
       merkleRoot,
       'finalise-epoch4',
       1, // holders
-      10, // chunks
+      chunkSize * 2, // byteSize - use multiple of chunkSize for proper chunk generation
       1, // replicas
       toTRAC(1), //
     );
@@ -2295,6 +2296,7 @@ describe(`Full complex scenario`, function () {
       accounts,
       receivingNodes,
       receivingNodesIdentityIds,
+      chunkSize,
     );
 
     const n1StakeNow = await contracts.stakingStorage.getNodeStake(node1Id);
@@ -2329,7 +2331,7 @@ describe(`Full complex scenario`, function () {
       merkleRoot,
       'test-op-id-node2-proof-stepA4',
       10,
-      1000,
+      chunkSize * 8, // byteSize - use multiple of chunkSize for proper chunk generation
       10,
       toTRAC(1000),
     );
@@ -2388,6 +2390,7 @@ describe(`Full complex scenario`, function () {
       accounts,
       receivingNodes,
       receivingNodesIdentityIds,
+      chunkSize,
     );
 
     const n2Stake_beforeProof = await contracts.stakingStorage.getNodeStake(
@@ -2463,7 +2466,7 @@ describe(`Full complex scenario`, function () {
   /**
    * STEP C – Move to the next epoch, explicitly call
    *          _validateDelegatorEpochClaims twice (N1 ✓, N2 ✗),
-   *          then try the redelegate which must revert.
+   *          then try the real redelegate which must revert.
    */
   it('STEP C – validate twice, cancelWithdrawal, then failed redelegate', async function () {
     /* ──────────────────────────────────────────────────────────────
@@ -2495,7 +2498,7 @@ describe(`Full complex scenario`, function () {
       merkleRoot,
       'finalise-stepC',
       1, // holders
-      10, // chunks
+      chunkSize * 2, // byteSize - use multiple of chunkSize for proper chunk generation
       1, // replicas
       toTRAC(1), // 1 TRAC fee – enough to finalise
     );
@@ -2590,7 +2593,9 @@ describe(`Full complex scenario`, function () {
   /******************************************************************************************
    *  STEP D – two un-claimed epochs, claim one, redelegate half, check rolling
   /* ------------------------------------------------------------------
-  */
+ *  STEP D – epoch-8: claim epoch-6 on N2 (→ goes to rollingRewards),
+ *           redelegate half of live stake N1 → N2, verify state
+ * ------------------------------------------------------------------ */
   it('STEP D – claim one on N2, redelegate half, check rolling', async function () {
     const delegator = accounts.delegator1;
     const fmt = (x: bigint) => ethers.formatUnits(x, 18);
@@ -2609,7 +2614,7 @@ describe(`Full complex scenario`, function () {
       merkleRoot,
       'finalise-ep7',
       1,
-      10,
+      chunkSize * 2, // byteSize - use multiple of chunkSize for proper chunk generation
       1,
       toTRAC(1),
     );
