@@ -368,4 +368,35 @@ describe('DelegatorsInfo contract', function() {
     expect(await DelegatorsInfo.getLastStakeHeldEpoch(identityId, delegator)).to.equal(epoch);
   });
 
+  it('Should set delegator rolling rewards', async () => {
+    const { identityId } = await createProfile();
+    const delegator = accounts[1].address;
+    const amount = 500;
+
+    await DelegatorsInfo.addDelegator(identityId, delegator);
+    await DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount);
+
+    expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(amount);
+  });
+
+  it('Should add to delegator rolling rewards', async () => {
+    const { identityId } = await createProfile();
+    const delegator = accounts[1].address;
+    const amount = 500;
+    const amount2 = 1000;
+
+    await DelegatorsInfo.addDelegator(identityId, delegator);
+    await DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount);
+    await DelegatorsInfo.addDelegatorRollingRewards(identityId, delegator, amount2);
+
+    expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(amount + amount2);
+  });
+
+  it('Should return zero rolling rewards for non-delegator', async () => {
+    const { identityId } = await createProfile();
+    const delegator = accounts[1].address;
+
+    expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(0);
+  });
+
 });
