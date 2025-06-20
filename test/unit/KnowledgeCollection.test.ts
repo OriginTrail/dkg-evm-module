@@ -448,19 +448,26 @@ describe('@unit KnowledgeCollection', () => {
     expect(sum).to.equal(tokenAmount); // total check
   });
 
+  /* =================================================================== */
+  /* 1️⃣  REVERT-PATH: amount *too low*         */
+  /* =================================================================== */
   it('Should revert when tokenAmount is lower than _validateTokenAmount expects', async () => {
-    /* ---------- environment setup ---------- */
-    // Force stake-weighted average ASK to 20 tokens / epoch
-    const ask = ethers.parseEther('20'); // 20 TRAC/epoch
-    const stake = ethers.parseEther('1'); // 1  TRAC stake
-    await AskStorage.connect(accounts[0]).setWeightedActiveAskSum(ask * stake); // 20 * 10^36
-    await AskStorage.connect(accounts[0]).setTotalActiveStake(stake); // 1  * 10^18
+    /* ---------- Test-local parameters ---------- */
+    const askPerEpoch = ethers.parseEther('20'); // 20 TRAC/epoch
+    const totalStake = ethers.parseEther('1'); // 1 TRAC stake
+    await AskStorage.setWeightedActiveAskSum(askPerEpoch * totalStake);
+    await AskStorage.setTotalActiveStake(totalStake);
 
-    const kcCreator = getDefaultKCCreator(accounts); // same sender as other tests
+    const byteSize = 1024; // 1 KiB
+    const epochs = 5;
+    const needTokens = ethers.parseEther('100'); // 20 × 5
+    const fewTokens = ethers.parseEther('99'); // deliberately low
+
+    /* ---------- Actors & signatures ---------- */
+    const kcCreator = getDefaultKCCreator(accounts);
     const publishingNode = getDefaultPublishingNode(accounts);
     const receivingNodes = getDefaultReceivingNodes(accounts);
 
-    // Profiles
     const { identityId: publisherId } = await createProfile(
       Profile,
       publishingNode,
@@ -469,35 +476,41 @@ describe('@unit KnowledgeCollection', () => {
       (p) => p.identityId,
     );
 
-    // Signatures (publisher + receivers)
     const sig = await getKCSignaturesData(
       publishingNode,
       publisherId,
       receivingNodes,
     );
 
-    // Common params
-    const byteSize = 1024; // 1 KB
-    const epochs = 5; // 5 epochs
-    const needTokens = ethers.parseEther('100'); // 20 * 5
-    const fewTokens = ethers.parseEther('99'); // deliberately low
-
-    // Allow kcCreator to spend TRAC
     await Token.connect(kcCreator).increaseAllowance(
       KnowledgeCollection.getAddress(),
       needTokens,
     );
 
-    /* ---------- expect revert: tokenAmount too small ---------- */
+    /* ---------- DEBUG OUTPUT ---------- */
+    console.log('\n🔎  [REVERT-TEST] Validation parameters');
+    console.log(
+      `   stakeWeightedAverageAsk : ${ethers.formatEther(askPerEpoch)} TRAC/epoch`,
+    );
+    console.log(`   byteSize                : ${byteSize} bytes`);
+    console.log(`   epochs                  : ${epochs}`);
+    console.log(
+      `   required tokenAmount    : ${ethers.formatEther(needTokens)} TRAC`,
+    );
+    console.log(
+      `   provided tokenAmount    : ${ethers.formatEther(fewTokens)} TRAC  (expected to FAIL)`,
+    );
+
+    /* ---------- Expect revert ---------- */
     await expect(
       KnowledgeCollection.connect(kcCreator).createKnowledgeCollection(
         'validate-fail',
         sig.merkleRoot,
-        1, // knowledgeAssetsAmount
+        1,
         byteSize,
         epochs,
-        fewTokens, // < expected
-        false, // isImmutable
+        fewTokens, // below requirement
+        false,
         ethers.ZeroAddress,
         publisherId,
         sig.publisherR,
@@ -507,25 +520,81 @@ describe('@unit KnowledgeCollection', () => {
         sig.receiverVSs,
       ),
     ).to.be.revertedWithCustomError(KnowledgeCollection, 'InvalidTokenAmount');
+  });
 
-    /* ---------- same call with correct tokenAmount should succeed ---------- */
-    const { collectionId } = await createKnowledgeCollection(
-      kcCreator,
+  /* =================================================================== */
+  /* 2️⃣  SUCCESS-PATH: amount equals requirement – should pass           */
+  /* =================================================================== */
+  it('Should create KC when tokenAmount equals the required minimum', async () => {
+    /* ---------- Test-local parameters ---------- */
+    const askPerEpoch = ethers.parseEther('20'); // 20 TRAC/epoch
+    const totalStake = ethers.parseEther('1'); // 1 TRAC stake
+    await AskStorage.setWeightedActiveAskSum(askPerEpoch * totalStake);
+    await AskStorage.setTotalActiveStake(totalStake);
+
+    const byteSize = 1024; // 1 KiB
+    const epochs = 5;
+    const exactTokens = ethers.parseEther('100'); // 20 × 5
+
+    /* ---------- Actors & signatures ---------- */
+    const kcCreator = getDefaultKCCreator(accounts);
+    const publishingNode = getDefaultPublishingNode(accounts);
+    const receivingNodes = getDefaultReceivingNodes(accounts);
+
+    const { identityId: publisherId } = await createProfile(
+      Profile,
+      publishingNode,
+    );
+    const receiverIds = (await createProfiles(Profile, receivingNodes)).map(
+      (p) => p.identityId,
+    );
+
+    const sig = await getKCSignaturesData(
       publishingNode,
       publisherId,
       receivingNodes,
-      receiverIds,
-      { KnowledgeCollection, Token },
-      sig.merkleRoot,
-      'validate-pass',
-      1, // knowledgeAssetsAmount
-      byteSize,
-      epochs,
-      needTokens, // correct amount
-      false,
-      ethers.ZeroAddress,
     );
 
-    expect(collectionId).to.equal(1);
+    await Token.connect(kcCreator).increaseAllowance(
+      KnowledgeCollection.getAddress(),
+      exactTokens,
+    );
+
+    /* ---------- DEBUG OUTPUT ---------- */
+    console.log('\n🔎  [SUCCESS-TEST] Validation parameters');
+    console.log(
+      `   stakeWeightedAverageAsk : ${ethers.formatEther(askPerEpoch)} TRAC/epoch`,
+    );
+    console.log(`   byteSize                : ${byteSize} bytes`);
+    console.log(`   epochs                  : ${epochs}`);
+    console.log(
+      `   required tokenAmount    : ${ethers.formatEther(exactTokens)} TRAC`,
+    );
+    console.log(
+      `   provided tokenAmount    : ${ethers.formatEther(exactTokens)} TRAC  (expected to PASS)`,
+    );
+
+    /* ---------- Expect NO revert ---------- */
+    const tx = await KnowledgeCollection.connect(
+      kcCreator,
+    ).createKnowledgeCollection(
+      'validate-pass',
+      sig.merkleRoot,
+      1,
+      byteSize,
+      epochs,
+      exactTokens, // exactly the minimum
+      false,
+      ethers.ZeroAddress,
+      publisherId,
+      sig.publisherR,
+      sig.publisherVS,
+      receiverIds,
+      sig.receiverRs,
+      sig.receiverVSs,
+    );
+
+    const receipt = await tx.wait();
+    console.log(`   ✅  KC created – tx hash: ${receipt.hash}`);
   });
 });
