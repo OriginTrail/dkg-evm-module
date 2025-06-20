@@ -16,6 +16,6 @@ func.dependencies = [
   'StakingStorage',
   'DelegatorsInfo',
   'RandomSamplingStorage',
-  'EpochStorageV8',
+  'EpochStorage',
   'ParametersStorage',
 ];
