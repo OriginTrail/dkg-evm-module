@@ -1,12 +1,14 @@
 import hre from 'hardhat';
 
+import { RandomSampling } from '../../typechain';
+
 /**
  * Mines a specified number of blocks
  * @param blocks Number of blocks to mine
  */
 export async function mineBlocks(blocks: number) {
   for (let i = 0; i < blocks; i++) {
-    await hre.network.provider.send("evm_mine");
+    await hre.network.provider.send('evm_mine');
   }
 }
 
@@ -29,10 +31,10 @@ export async function mineToBlock(targetBlockNumber: number) {
  * @returns The number of blocks mined
  */
 export async function mineProofPeriodBlocks(
-  startBlock: bigint,
-  randomSamplingStorage: any
+  randomSampling: RandomSampling,
 ): Promise<bigint> {
-  const proofingPeriodDuration = await randomSamplingStorage.getActiveProofingPeriodDurationInBlocks();
+  const proofingPeriodDuration =
+    await randomSampling.getActiveProofingPeriodDurationInBlocks();
   await mineBlocks(Number(proofingPeriodDuration));
   return BigInt(proofingPeriodDuration);
-} 
+}
