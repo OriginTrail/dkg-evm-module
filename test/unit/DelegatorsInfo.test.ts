@@ -577,4 +577,145 @@ describe('DelegatorsInfo contract', function() {
       ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
     });
   });
+
+  // Migration tests
+  describe('Migration', function() {
+    it('Should migrate new addresses to delegators for their nodes', async () => {
+      const { identityId } = await createProfile();
+      const { identityId: identityId2 } = await createProfile(undefined, accounts[2]); // Use different operational account
+
+      // Get StakingStorage contract to set up test data
+      const stakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
+
+      // Create delegator keys for the addresses we want to migrate
+      const delegator1 = accounts[3].address;
+      const delegator2 = accounts[4].address;
+      const delegatorKey1 = ethers.keccak256(ethers.solidityPacked(['address'], [delegator1]));
+      const delegatorKey2 = ethers.keccak256(ethers.solidityPacked(['address'], [delegator2]));
+
+      // Set up delegator data in StakingStorage to simulate existing delegations
+      // We need to make the delegators active in StakingStorage first
+      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId, delegatorKey1, 1000);
+      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId, delegatorKey2, 2000);
+      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId2, delegatorKey1, 1500);
+
+      // Verify the delegators are not yet in DelegatorsInfo
+      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator1)).to.equal(false);
+      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator2)).to.equal(false);
+      expect(await DelegatorsInfo.isNodeDelegator(identityId2, delegator1)).to.equal(false);
+
+      // Migrate the addresses
+      const newAddresses = [delegator1, delegator2];
+      await expect(DelegatorsInfo.migrate(newAddresses))
+        .to.emit(DelegatorsInfo, 'DelegatorAdded')
+        .withArgs(identityId, delegator1)
+        .and.to.emit(DelegatorsInfo, 'DelegatorAdded')
+        .withArgs(identityId, delegator2)
+        .and.to.emit(DelegatorsInfo, 'DelegatorAdded')
+        .withArgs(identityId2, delegator1);
+
+      // Verify the delegators are now in DelegatorsInfo
+      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator1)).to.equal(true);
+      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator2)).to.equal(true);
+      expect(await DelegatorsInfo.isNodeDelegator(identityId2, delegator1)).to.equal(true);
+
+      // Verify delegator2 is not in identityId2 (since it wasn't staking there)
+      expect(await DelegatorsInfo.isNodeDelegator(identityId2, delegator2)).to.equal(false);
+
+      // Verify the delegator lists are correct
+      const delegators1 = await DelegatorsInfo.getDelegators(identityId);
+      const delegators2 = await DelegatorsInfo.getDelegators(identityId2);
+
+      expect(delegators1).to.include(delegator1);
+      expect(delegators1).to.include(delegator2);
+      expect(delegators2).to.include(delegator1);
+      expect(delegators2).to.not.include(delegator2);
+    });
+
+    it('Should handle duplicate migration gracefully', async () => {
+      const { identityId } = await createProfile();
+
+      const stakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
+      const delegator = accounts[3].address;
+      const delegatorKey = ethers.keccak256(ethers.solidityPacked(['address'], [delegator]));
+
+      // Set up delegator data in StakingStorage
+      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId, delegatorKey, 1000);
+
+      // First migration
+      await DelegatorsInfo.migrate([delegator]);
+      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator)).to.equal(true);
+
+      // Second migration of the same address should not add duplicates
+      await DelegatorsInfo.migrate([delegator]);
+
+      // Verify the delegator is still there and no duplicates
+      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator)).to.equal(true);
+      const delegators = await DelegatorsInfo.getDelegators(identityId);
+      expect(delegators.filter(d => d === delegator).length).to.equal(1);
+    });
+
+    it('Should handle empty address array', async () => {
+      // Should not revert with empty array
+      await expect(DelegatorsInfo.migrate([])).to.not.be.reverted;
+    });
+
+    it('Should handle addresses with no delegator nodes', async () => {
+      const { identityId } = await createProfile();
+
+      // Use an address that has no delegator nodes in StakingStorage
+      const addressWithNoNodes = accounts[5].address;
+
+      // Should not revert and should not add the address as a delegator
+      await expect(DelegatorsInfo.migrate([addressWithNoNodes])).to.not.be.reverted;
+      expect(await DelegatorsInfo.isNodeDelegator(identityId, addressWithNoNodes)).to.equal(false);
+    });
+
+    it('Should handle mixed addresses (some with nodes, some without)', async () => {
+      const { identityId } = await createProfile();
+
+      const stakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
+      const delegator = accounts[3].address;
+      const delegatorKey = ethers.keccak256(ethers.solidityPacked(['address'], [delegator]));
+      const addressWithNoNodes = accounts[5].address;
+
+      // Set up delegator data for only one address
+      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId, delegatorKey, 1000);
+
+      // Migrate both addresses
+      await expect(DelegatorsInfo.migrate([delegator, addressWithNoNodes]))
+        .to.emit(DelegatorsInfo, 'DelegatorAdded')
+        .withArgs(identityId, delegator);
+
+      // Verify only the address with nodes was added
+      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator)).to.equal(true);
+      expect(await DelegatorsInfo.isNodeDelegator(identityId, addressWithNoNodes)).to.equal(false);
+    });
+
+    it('Should maintain correct delegator indices after migration', async () => {
+      const { identityId } = await createProfile();
+
+      const stakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
+      const delegator1 = accounts[3].address;
+      const delegator2 = accounts[4].address;
+      const delegatorKey1 = ethers.keccak256(ethers.solidityPacked(['address'], [delegator1]));
+      const delegatorKey2 = ethers.keccak256(ethers.solidityPacked(['address'], [delegator2]));
+
+      // Set up delegator data in StakingStorage
+      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId, delegatorKey1, 1000);
+      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId, delegatorKey2, 2000);
+
+      // Migrate the addresses
+      await DelegatorsInfo.migrate([delegator1, delegator2]);
+
+      // Verify indices are correct
+      expect(await DelegatorsInfo.getDelegatorIndex(identityId, delegator1)).to.equal(0);
+      expect(await DelegatorsInfo.getDelegatorIndex(identityId, delegator2)).to.equal(1);
+
+      // Verify delegator list order
+      const delegators = await DelegatorsInfo.getDelegators(identityId);
+      expect(delegators[0]).to.equal(delegator1);
+      expect(delegators[1]).to.equal(delegator2);
+    });
+  });
 });
