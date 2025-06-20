@@ -155,30 +155,30 @@
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0x2eC494A12542F18cA783BB53eFf228aBc76E920b",
+      "evmAddress": "0x621B09042c498238E61b0960820DDc0b19353f6E",
       "version": "1.0.1",
       "gitBranch": "release/reworked-staking",
-      "gitCommitHash": "c368d3117855eea9f24dfc8a9b83624afac069bd",
-      "deploymentBlock": 16226183,
-      "deploymentTimestamp": 1749723513285,
+      "gitCommitHash": "e660b9adf0736cb63f25ad66a57c67dda84351c3",
+      "deploymentBlock": 16294022,
+      "deploymentTimestamp": 1750086015445,
       "deployed": true
     },
     "Profile": {
-      "evmAddress": "0xCfc21f99D38206A695d5d39DdB30A3D6C2f8Aa28",
+      "evmAddress": "0x0a569BF13CA78FC1672ef679e4c7276A6516849F",
       "version": "1.0.0",
       "gitBranch": "release/reworked-staking",
-      "gitCommitHash": "7a489bac60a752cbfa8ae52a2ee23a561db4557c",
-      "deploymentBlock": 16129138,
-      "deploymentTimestamp": 1749221244566,
+      "gitCommitHash": "e660b9adf0736cb63f25ad66a57c67dda84351c3",
+      "deploymentBlock": 16294025,
+      "deploymentTimestamp": 1750086032601,
       "deployed": true
     },
     "KnowledgeCollection": {
-      "evmAddress": "0x27F52c0d7289A982D76F74De1adeFBFCB1EB8ed8",
+      "evmAddress": "0x4e5B3F7F9a1dAb26451e201FC472cA032cC8A05b",
       "version": "1.0.0",
-      "gitBranch": "v8-paranet-update",
-      "gitCommitHash": "b3ce1bc042e3c5f28f93758e750f9f0e1cbcdee5",
-      "deploymentBlock": 13947424,
-      "deploymentTimestamp": 1737552337932,
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "ff29c5b541d67cf3e9a1ae3511e7f9642074400a",
+      "deploymentBlock": 16341560,
+      "deploymentTimestamp": 1750340288857,
       "deployed": true
     },
     "Migrator": {
@@ -263,39 +263,39 @@
       "deployed": true
     },
     "DelegatorsInfo": {
-      "evmAddress": "0xb710fF8d747a17EfF67375A568300bc2fb2BDc47",
+      "evmAddress": "0xB168292cA0E05A75d1A0590eb1dd3a94dBDBb7e4",
       "version": "1.0.0",
       "gitBranch": "release/reworked-staking",
-      "gitCommitHash": "7a489bac60a752cbfa8ae52a2ee23a561db4557c",
-      "deploymentBlock": 16129133,
-      "deploymentTimestamp": 1749221215933,
+      "gitCommitHash": "e660b9adf0736cb63f25ad66a57c67dda84351c3",
+      "deploymentBlock": 16294020,
+      "deploymentTimestamp": 1750086005918,
       "deployed": true
     },
     "RandomSamplingStorage": {
-      "evmAddress": "0xDCFb92EFfd31202C17f37e5d79Ef4040489A7155",
+      "evmAddress": "0x7864f7B82c028605EF40fA0B715442317429f520",
       "version": "1.0.0",
       "gitBranch": "release/reworked-staking",
-      "gitCommitHash": "7a489bac60a752cbfa8ae52a2ee23a561db4557c",
-      "deploymentBlock": 16129135,
-      "deploymentTimestamp": 1749221229002,
+      "gitCommitHash": "ff29c5b541d67cf3e9a1ae3511e7f9642074400a",
+      "deploymentBlock": 16341559,
+      "deploymentTimestamp": 1750340280210,
       "deployed": true
     },
     "RandomSampling": {
-      "evmAddress": "0xBCb17b97100a243a8F31D2e18B3b220A3a361959",
+      "evmAddress": "0x371f3bf37Ba40607797628702Ad3b70962aC097c",
       "version": "1.0.0",
       "gitBranch": "release/reworked-staking",
-      "gitCommitHash": "cf73272bf135db799a8688c1cdb5fe42781e0723",
-      "deploymentBlock": 16195404,
-      "deploymentTimestamp": 1749563912821,
+      "gitCommitHash": "ff29c5b541d67cf3e9a1ae3511e7f9642074400a",
+      "deploymentBlock": 16341561,
+      "deploymentTimestamp": 1750340293529,
       "deployed": true
     },
     "StakingKPI": {
-      "evmAddress": "0x69F24d1ab0ED3eBe7e2265169109526B671024e9",
+      "evmAddress": "0xF5F59870c9eBe8B8942Fd3C234EA5f46980d650f",
       "version": "1.0.0",
       "gitBranch": "release/reworked-staking",
-      "gitCommitHash": "c368d3117855eea9f24dfc8a9b83624afac069bd",
-      "deploymentBlock": 16226185,
-      "deploymentTimestamp": 1749723522083,
+      "gitCommitHash": "e660b9adf0736cb63f25ad66a57c67dda84351c3",
+      "deploymentBlock": 16294024,
+      "deploymentTimestamp": 1750086028005,
       "deployed": true
     }
   }

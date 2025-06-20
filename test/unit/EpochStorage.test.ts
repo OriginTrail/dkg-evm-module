@@ -90,7 +90,7 @@ describe('@unit EpochStorage', () => {
     expect(await EpochStorage.getEpochPool(1, 108)).to.be.equal(10);
     expect(await EpochStorage.getEpochPool(1, 109)).to.be.equal(10);
     expect(await EpochStorage.getEpochPool(1, 110)).to.be.equal(0);
-    expect(await EpochStorage.getEpochPool(1, 111)).to.be.equal(0);// expect(await EpochStorage.getEpochPool(1, 9)).to.be.gt(0);
+    expect(await EpochStorage.getEpochPool(1, 111)).to.be.equal(0); // expect(await EpochStorage.getEpochPool(1, 9)).to.be.gt(0);
   });
 
   it('Pay out epoch tokens, verify distribution and nodePaidOut', async () => {

@@ -10,6 +10,21 @@
         "internalType": "uint16",
         "name": "_proofingPeriodDurationInBlocks",
         "type": "uint16"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_avgBlockTimeInSeconds",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_w1",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_w2",
+        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
@@ -37,29 +52,11 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "epoch",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "proofPeriodStartBlock",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "scoreAdded",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "totalScore",
+        "name": "activeProofPeriodStartBlock",
         "type": "uint256"
       }
     ],
-    "name": "AllNodesEpochProofPeriodScoreAdded",
+    "name": "ActiveProofPeriodStartBlockSet",
     "type": "event"
   },
   {
@@ -97,6 +94,38 @@
         "type": "uint256"
       },
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newScore",
+        "type": "uint256"
+      }
+    ],
+    "name": "AllNodesEpochScoreSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "avgBlockTimeInSeconds",
+        "type": "uint8"
+      }
+    ],
+    "name": "AvgBlockTimeSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
         "indexed": true,
         "internalType": "uint72",
         "name": "identityId",
@@ -115,7 +144,7 @@
         "type": "uint256"
       }
     ],
-    "name": "DelegatorLastSettledNodeEpochScorePerStakeUpdated",
+    "name": "DelegatorLastSettledNodeEpochScorePerStakeSet",
     "type": "event"
   },
   {
@@ -166,6 +195,143 @@
       },
       {
         "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newScore",
+        "type": "uint256"
+      }
+    ],
+    "name": "EpochNodeDelegatorScoreSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newCount",
+        "type": "uint256"
+      }
+    ],
+    "name": "EpochNodeValidProofsCountIncremented",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newCount",
+        "type": "uint256"
+      }
+    ],
+    "name": "EpochNodeValidProofsCountSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "knowledgeCollectionId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chunkId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "knowledgeCollectionStorageContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "epoch",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "activeProofPeriodStartBlock",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "proofingPeriodDurationInBlocks",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "solved",
+            "type": "bool"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct RandomSamplingLib.Challenge",
+        "name": "challenge",
+        "type": "tuple"
+      }
+    ],
+    "name": "NodeChallengeSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
         "internalType": "uint256",
         "name": "proofPeriodStartBlock",
         "type": "uint256"
@@ -181,9 +347,46 @@
         "internalType": "uint256",
         "name": "scoreAdded",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalScore",
+        "type": "uint256"
       }
     ],
     "name": "NodeEpochProofPeriodScoreAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "proofPeriodStartBlock",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newScore",
+        "type": "uint256"
+      }
+    ],
+    "name": "NodeEpochProofPeriodScoreSet",
     "type": "event"
   },
   {
@@ -235,7 +438,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "scoreAdded",
+        "name": "scorePerStakeToAdd",
         "type": "uint256"
       },
       {
@@ -245,7 +448,57 @@
         "type": "uint256"
       }
     ],
-    "name": "NodeEpochScorePerStakeUpdated",
+    "name": "NodeEpochScorePerStakeAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newScorePerStake",
+        "type": "uint256"
+      }
+    ],
+    "name": "NodeEpochScorePerStakeSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newScore",
+        "type": "uint256"
+      }
+    ],
+    "name": "NodeEpochScoreSet",
     "type": "event"
   },
   {
@@ -293,6 +546,44 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldW1",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newW1",
+        "type": "uint256"
+      }
+    ],
+    "name": "W1Set",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldW2",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newW2",
+        "type": "uint256"
+      }
+    ],
+    "name": "W2Set",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "CHUNK_BYTE_SIZE",
     "outputs": [
@@ -319,29 +610,6 @@
       }
     ],
     "name": "addProofingPeriodDuration",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "epoch",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "proofPeriodStartBlock",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "score",
-        "type": "uint256"
-      }
-    ],
-    "name": "addToAllNodesEpochProofPeriodScore",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -472,14 +740,9 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
-    "name": "allNodesEpochProofPeriodScore",
+    "name": "allNodesEpochScore",
     "outputs": [
       {
         "internalType": "uint256",
@@ -491,19 +754,13 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "allNodesEpochScore",
+    "inputs": [],
+    "name": "avgBlockTimeInSeconds",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint8",
         "name": "",
-        "type": "uint256"
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -606,37 +863,12 @@
   },
   {
     "inputs": [],
-    "name": "getActiveProofPeriodStatus",
+    "name": "getActiveProofPeriodStartBlock",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "activeProofPeriodStartBlock",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "isValid",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct RandomSamplingLib.ProofPeriodStatus",
+        "internalType": "uint256",
         "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getActiveProofingPeriodDurationInBlocks",
-    "outputs": [
-      {
-        "internalType": "uint16",
-        "name": "",
-        "type": "uint16"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -680,30 +912,6 @@
       }
     ],
     "name": "getDelegatorLastSettledNodeEpochScorePerStake",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "epoch",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "proofPeriodStartBlock",
-        "type": "uint256"
-      }
-    ],
-    "name": "getEpochAllNodesProofPeriodScore",
     "outputs": [
       {
         "internalType": "uint256",
@@ -787,24 +995,26 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "proofPeriodStartBlock",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "offset",
-        "type": "uint256"
-      }
-    ],
-    "name": "getHistoricalProofPeriodStartBlock",
+    "inputs": [],
+    "name": "getLatestProofingPeriodDurationEffectiveEpoch",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getLatestProofingPeriodDurationInBlocks",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -944,6 +1154,76 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getProofingPeriodDurationFromIndex",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "durationInBlocks",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "effectiveEpoch",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct RandomSamplingLib.ProofingPeriodDuration",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getProofingPeriodDurationsLength",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getW1",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getW2",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "hub",
     "outputs": [
@@ -979,19 +1259,6 @@
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "isPendingProofingPeriodDuration",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1179,6 +1446,50 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "newActiveProofPeriodStartBlock",
+        "type": "uint256"
+      }
+    ],
+    "name": "setActiveProofPeriodStartBlock",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "score",
+        "type": "uint256"
+      }
+    ],
+    "name": "setAllNodesEpochScore",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "blockTimeInSeconds",
+        "type": "uint8"
+      }
+    ],
+    "name": "setAvgBlockTimeInSeconds",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "epoch",
         "type": "uint256"
       },
@@ -1199,6 +1510,57 @@
       }
     ],
     "name": "setDelegatorLastSettledNodeEpochScorePerStake",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "delegatorKey",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "score",
+        "type": "uint256"
+      }
+    ],
+    "name": "setEpochNodeDelegatorScore",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "count",
+        "type": "uint256"
+      }
+    ],
+    "name": "setEpochNodeValidProofsCount",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1261,12 +1623,112 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "proofPeriodStartBlock",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "score",
+        "type": "uint256"
+      }
+    ],
+    "name": "setNodeEpochProofPeriodScore",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "score",
+        "type": "uint256"
+      }
+    ],
+    "name": "setNodeEpochScore",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "scorePerStake",
+        "type": "uint256"
+      }
+    ],
+    "name": "setNodeEpochScorePerStake",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bool",
         "name": "_status",
         "type": "bool"
       }
     ],
     "name": "setStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_w1",
+        "type": "uint256"
+      }
+    ],
+    "name": "setW1",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_w2",
+        "type": "uint256"
+      }
+    ],
+    "name": "setW2",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1286,19 +1748,6 @@
   },
   {
     "inputs": [],
-    "name": "updateAndGetActiveProofPeriodStartBlock",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "version",
     "outputs": [
       {
@@ -1308,6 +1757,32 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "w1",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "w2",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]
