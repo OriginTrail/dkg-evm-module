@@ -41,16 +41,6 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
 
     error MerkleRootMismatchError(bytes32 computedMerkleRoot, bytes32 expectedMerkleRoot);
 
-    event ChallengeCreated(
-        uint256 indexed identityId,
-        uint256 indexed epoch,
-        uint256 knowledgeCollectionId,
-        uint256 chunkId,
-        uint256 indexed activeProofPeriodBlock,
-        uint256 proofingPeriodDurationInBlocks
-    );
-    event ValidProofSubmitted(uint72 indexed identityId, uint256 indexed epoch, uint256 score);
-
     /**
      * @dev Constructor initializes the contract with essential parameters for random sampling
      * Only called once during deployment
@@ -139,7 +129,6 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
      * @dev Creates a new challenge for the calling node in the current proofing period
      * Caller must have a registered profile and cannot have an active unsolved challenge
      * Generates a random knowledge collection and chunk to be proven
-     * Emits ChallengeCreated event with challenge details
      * Can only create one challenge per proofing period
      */
     function createChallenge() external profileExists(identityStorage.getIdentityId(msg.sender)) {
@@ -160,7 +149,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         // Generate a new challenge
-        RandomSamplingLib.Challenge memory challenge = _generateChallenge(identityId, msg.sender);
+        RandomSamplingLib.Challenge memory challenge = _generateChallenge(msg.sender);
 
         // Store the new challenge in the storage contract
         randomSamplingStorage.setNodeChallenge(identityId, challenge);
@@ -171,7 +160,6 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
      * Validates the submitted chunk and merkle proof against the expected Merkle root
      * On successful proof: marks challenge as solved, increments valid proofs count,
      * calculates and adds node score, and updates epoch scoring data
-     * Emits ValidProofSubmitted event on success
      * @param chunk The data chunk being proven (must match challenge requirements)
      * @param merkleProof Array of hashes for Merkle proof verification
      */
@@ -226,7 +214,6 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
                 uint256 nodeScorePerStake36 = (score18 * SCALE18) / totalNodeStake;
                 randomSamplingStorage.addToNodeEpochScorePerStake(epoch, identityId, nodeScorePerStake36);
             }
-            emit ValidProofSubmitted(identityId, epoch, score18);
         } else {
             revert MerkleRootMismatchError(computedMerkleRoot, expectedMerkleRoot);
         }
@@ -269,33 +256,25 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
      * Uses blockchain properties (block hash, difficulty, timestamp, gas price) for randomness
      * Selects a random active knowledge collection and chunk within it
      * Creates challenge with current epoch and active proof period information
-     * Emits ChallengeCreated event with all challenge details
-     * @param identityId The node identity receiving the challenge
      * @param originalSender The original caller address for randomness seed
      * @return challenge The generated challenge struct
      */
-    function _generateChallenge(
-        uint72 identityId,
-        address originalSender
-    ) internal returns (RandomSamplingLib.Challenge memory) {
-        // +1 to avoid blockhash(block.number) situation
-        bytes32 myBlockHash = blockhash(block.number - ((identityId % 256) + 1));
+    function _generateChallenge(address originalSender) internal returns (RandomSamplingLib.Challenge memory) {
+        uint256 knowledgeCollectionsCount = knowledgeCollectionStorage.getLatestKnowledgeCollectionId();
+        if (knowledgeCollectionsCount == 0) {
+            revert("No knowledge collections exist");
+        }
 
         bytes32 pseudoRandomVariable = keccak256(
             abi.encodePacked(
                 block.difficulty,
-                myBlockHash,
+                blockhash(block.number - ((block.difficulty % 256) + 1)), // +1 to avoid blockhash(block.number) situation
                 originalSender,
                 block.timestamp,
                 tx.gasprice,
                 uint8(1) // sector = 1 by default
             )
         );
-        uint256 knowledgeCollectionsCount = knowledgeCollectionStorage.getLatestKnowledgeCollectionId();
-        if (knowledgeCollectionsCount == 0) {
-            revert("No knowledge collections exist");
-        }
-
         uint256 currentEpoch = chronos.getCurrentEpoch();
 
         // Optimized binary search approach for finding active knowledge collection
@@ -310,19 +289,17 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             revert("Failed to find a knowledge collection that is active in the current epoch");
         }
 
-        uint88 chunksCount = knowledgeCollectionStorage.getKnowledgeCollection(knowledgeCollectionId).byteSize /
-            randomSamplingStorage.CHUNK_BYTE_SIZE();
-        uint256 chunkId = uint256(pseudoRandomVariable) % chunksCount;
-        uint256 activeProofPeriodStartBlock = updateAndGetActiveProofPeriodStartBlock();
+        uint88 kcByteSize = knowledgeCollectionStorage.getByteSize(knowledgeCollectionId);
+        if (kcByteSize == 0) {
+            revert("Knowledge collection byte size is 0");
+        }
 
-        emit ChallengeCreated(
-            identityId,
-            currentEpoch,
-            knowledgeCollectionId,
-            chunkId,
-            activeProofPeriodStartBlock,
-            getActiveProofingPeriodDurationInBlocks()
-        );
+        uint256 chunkId;
+        uint256 chunkByteSize = randomSamplingStorage.CHUNK_BYTE_SIZE();
+        // KC with byteSize < chunkByteSize will always have chunkId = 0
+        if (kcByteSize > chunkByteSize) {
+            chunkId = uint256(pseudoRandomVariable) % (kcByteSize / chunkByteSize);
+        }
 
         return
             RandomSamplingLib.Challenge(
@@ -330,7 +307,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
                 chunkId,
                 address(knowledgeCollectionStorage),
                 currentEpoch,
-                activeProofPeriodStartBlock,
+                updateAndGetActiveProofPeriodStartBlock(),
                 getActiveProofingPeriodDurationInBlocks(),
                 false
             );
