@@ -607,9 +607,9 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             }
         }
 
-        if (reward == 0) return;
-
         uint256 rolling = delegatorsInfo.getDelegatorRollingRewards(identityId, delegator);
+
+        if (reward == 0 && rolling == 0) return;
 
         // if there are still older epochs pending, accumulate; otherwise restake immediately
         if ((currentEpoch - 1) - lastClaimedEpoch > 1) {
