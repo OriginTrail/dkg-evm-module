@@ -928,7 +928,6 @@ describe('Staking contract', function () {
     );
   });
 
-  //TODO: Fix contracts to behave like this!
   it('finalizeOperatorFeeWithdrawal second call reverts', async () => {
     const { identityId } = await createProfile();
     const feeBal = hre.ethers.parseEther('20');
@@ -1255,7 +1254,7 @@ describe('Staking contract', function () {
       identityId,
       initialEpoch,
       accounts[0].address,
-    ); // TODO: check! claiming even though there's no rewards in first epoch!
+    );
     await Staking.claimDelegatorRewards(
       identityId,
       initialEpoch + 1n,
@@ -1319,8 +1318,6 @@ describe('Staking contract', function () {
   /**********************************************************************
    * rollingRewards & cumulativeEarned / cumulativePaidOut
    **********************************************************************/
-
-  //TODO: update this test to check exact rolling rewards. Leaving failing in this PR to make sure we don't miss it
 
   it('📊 rollingRewards accumulate & auto-restake; earned / paidOut updated', async () => {
     const { identityId } = await createProfile();
