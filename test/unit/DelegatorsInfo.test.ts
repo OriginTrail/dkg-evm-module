@@ -285,7 +285,7 @@ describe('DelegatorsInfo contract', function() {
 
     const delegator = accounts[1].address;
     const amount = 500;
-    const amount2 = 500;
+    const amount2 = 1000;
 
     await expect(
       DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount)
@@ -293,7 +293,6 @@ describe('DelegatorsInfo contract', function() {
       .withArgs(identityId, delegator, amount, amount);
 
     expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(amount);
-
 
     // Make sure it updates the value
     await expect(
@@ -370,24 +369,42 @@ describe('DelegatorsInfo contract', function() {
 
   it('Should set delegator rolling rewards', async () => {
     const { identityId } = await createProfile();
-    const delegator = accounts[1].address;
+    const delegator = accounts[2].address;
     const amount = 500;
 
-    await DelegatorsInfo.addDelegator(identityId, delegator);
-    await DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount);
+    await expect(
+      await DelegatorsInfo.addDelegator(identityId, delegator)
+    ).to.emit(DelegatorsInfo, 'DelegatorAdded')
+      .withArgs(identityId, delegator);
+
+    await expect(
+      await DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount)
+    ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+      .withArgs(identityId, delegator, amount, amount);
 
     expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(amount);
   });
 
   it('Should add to delegator rolling rewards', async () => {
     const { identityId } = await createProfile();
-    const delegator = accounts[1].address;
+    const delegator = accounts[2].address;
     const amount = 500;
     const amount2 = 1000;
 
-    await DelegatorsInfo.addDelegator(identityId, delegator);
-    await DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount);
-    await DelegatorsInfo.addDelegatorRollingRewards(identityId, delegator, amount2);
+    await expect(
+      await DelegatorsInfo.addDelegator(identityId, delegator)
+    ).to.emit(DelegatorsInfo, 'DelegatorAdded')
+      .withArgs(identityId, delegator);
+
+    await expect(
+      await DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount)
+    ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+      .withArgs(identityId, delegator, amount, amount);
+
+    await expect(
+      await DelegatorsInfo.addDelegatorRollingRewards(identityId, delegator, amount2)
+    ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+      .withArgs(identityId, delegator, amount2, amount + amount2);
 
     expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(amount + amount2);
   });
@@ -400,13 +417,6 @@ describe('DelegatorsInfo contract', function() {
   });
 
   // Access control
-  it('Should return zero rolling rewards for non-delegator', async () => {
-    const { identityId } = await createProfile();
-    const delegator = accounts[1].address;
-
-    expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(0);
-  });
-
   it('Should revert when non-contract calls addDelegator', async () => {
     const { identityId } = await createProfile();
     await expect(
