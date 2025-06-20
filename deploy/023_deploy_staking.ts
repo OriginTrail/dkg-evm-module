@@ -23,5 +23,5 @@ func.dependencies = [
   'DelegatorsInfo',
   'Chronos',
   'RandomSamplingStorage',
-  'EpochStorageV8',
+  'EpochStorage',
 ];
