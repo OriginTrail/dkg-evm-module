@@ -83,6 +83,7 @@ describe('DelegatorsInfo contract', function() {
   // let ParametersStorage: ParametersStorage;
   // let ProfileStorage: ProfileStorage;
   let DelegatorsInfo: DelegatorsInfo;
+  let stakingSigner: any;
   const createProfile = async (
     admin?: SignerWithAddress,
     operational?: SignerWithAddress,
@@ -113,6 +114,17 @@ describe('DelegatorsInfo contract', function() {
       // ProfileStorage,
       DelegatorsInfo,
     } = await loadFixture(deployStakingFixture));
+
+    // Create a signer from the Staking contract address
+    const stakingContract = await hre.ethers.getContract<Staking>('Staking');
+    const stakingAddress = stakingContract.target.toString();
+    stakingSigner = await hre.ethers.getImpersonatedSigner(stakingAddress);
+
+    // Fund the Staking contract address with some ETH for gas
+    await hre.network.provider.send("hardhat_setBalance", [
+      stakingAddress,
+      "0x" + hre.ethers.parseEther('1.0').toString(16)
+    ]);
   });
 
   it('Should have correct name and version', async () => {
@@ -416,75 +428,153 @@ describe('DelegatorsInfo contract', function() {
     expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(0);
   });
 
-  // Access control
-  it('Should revert when non-contract calls addDelegator', async () => {
-    const { identityId } = await createProfile();
-    await expect(
-      DelegatorsInfo.connect(accounts[1]).addDelegator(identityId, accounts[2].address)
-    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
-  });
+  // Access control tests
+  describe('Access control', function() {
+    it('Should allow Staking contract to call addDelegator but revert for unauthorized', async () => {
+      const { identityId } = await createProfile();
 
-  it('Should revert when non-contract calls removeDelegator', async () => {
-    const { identityId } = await createProfile();
-    await expect(
-      DelegatorsInfo.connect(accounts[1]).removeDelegator(identityId, accounts[2].address)
-    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
-  });
+      await expect(
+        DelegatorsInfo.connect(stakingSigner).addDelegator(identityId, accounts[1].address)
+      ).to.emit(DelegatorsInfo, 'DelegatorAdded')
+        .withArgs(identityId, accounts[1].address);
 
-  it('Should revert when non-contract calls setLastClaimedEpoch', async () => {
-    const { identityId } = await createProfile();
-    await expect(
-      DelegatorsInfo.connect(accounts[1]).setLastClaimedEpoch(identityId, accounts[2].address, 1)
-    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
-  });
+      await expect(
+        DelegatorsInfo.connect(accounts[2]).addDelegator(identityId, accounts[3].address)
+      ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+    });
 
-  it('Should revert when non-contract calls setDelegatorRollingRewards', async () => {
-    const { identityId } = await createProfile();
-    await expect(
-      DelegatorsInfo.connect(accounts[1]).setDelegatorRollingRewards(identityId, accounts[2].address, 100)
-    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
-  });
+    it('Should allow Staking contract to call removeDelegator but revert for unauthorized', async () => {
+      const { identityId } = await createProfile();
 
-  it('Should revert when non-contract calls addDelegatorRollingRewards', async () => {
-    const { identityId } = await createProfile();
-    await expect(
-      DelegatorsInfo.connect(accounts[1]).addDelegatorRollingRewards(identityId, accounts[2].address, 100)
-    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
-  });
+      await DelegatorsInfo.connect(stakingSigner).addDelegator(identityId, accounts[1].address);
 
-  it('Should revert when non-contract calls setIsOperatorFeeClaimedForEpoch', async () => {
-    const { identityId } = await createProfile();
-    await expect(
-      DelegatorsInfo.connect(accounts[1]).setIsOperatorFeeClaimedForEpoch(identityId, 1, true)
-    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
-  });
+      await expect(
+        DelegatorsInfo.connect(stakingSigner).removeDelegator(identityId, accounts[1].address)
+      ).to.emit(DelegatorsInfo, 'DelegatorRemoved')
+        .withArgs(identityId, accounts[1].address);
 
-  it('Should revert when non-contract calls setNetNodeEpochRewards', async () => {
-    const { identityId } = await createProfile();
-    await expect(
-      DelegatorsInfo.connect(accounts[1]).setNetNodeEpochRewards(identityId, 1, 1000)
-    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
-  });
+      await expect(
+        DelegatorsInfo.connect(accounts[2]).removeDelegator(identityId, accounts[3].address)
+      ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+    });
 
-  it('Should revert when non-contract calls setHasDelegatorClaimedEpochRewards', async () => {
-    const { identityId } = await createProfile();
-    const delegatorKey = ethers.encodeBytes32String('testKey');
-    await expect(
-      DelegatorsInfo.connect(accounts[1]).setHasDelegatorClaimedEpochRewards(1, identityId, delegatorKey, true)
-    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
-  });
+    it('Should allow Staking contract to call setLastClaimedEpoch but revert for unauthorized', async () => {
+      const { identityId } = await createProfile();
+      const epoch = 5;
 
-  it('Should revert when non-contract calls setHasEverDelegatedToNode', async () => {
-    const { identityId } = await createProfile();
-    await expect(
-      DelegatorsInfo.connect(accounts[1]).setHasEverDelegatedToNode(identityId, accounts[2].address, true)
-    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
-  });
+      await expect(
+        DelegatorsInfo.connect(stakingSigner).setLastClaimedEpoch(identityId, accounts[1].address, epoch)
+      ).to.emit(DelegatorsInfo, 'DelegatorLastClaimedEpochUpdated')
+        .withArgs(identityId, accounts[1].address, epoch);
 
-  it('Should revert when non-contract calls setLastStakeHeldEpoch', async () => {
-    const { identityId } = await createProfile();
-    await expect(
-      DelegatorsInfo.connect(accounts[1]).setLastStakeHeldEpoch(identityId, accounts[2].address, 1)
-    ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+      await expect(
+        DelegatorsInfo.connect(accounts[2]).setLastClaimedEpoch(identityId, accounts[1].address, epoch)
+      ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+    });
+
+    it('Should allow Staking contract to call setDelegatorRollingRewards but revert for unauthorized', async () => {
+      const { identityId } = await createProfile();
+      const amount = 1000;
+
+      await expect(
+        DelegatorsInfo.connect(stakingSigner).setDelegatorRollingRewards(identityId, accounts[1].address, amount)
+      ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+        .withArgs(identityId, accounts[1].address, amount, amount);
+
+      await expect(
+        DelegatorsInfo.connect(accounts[2]).setDelegatorRollingRewards(identityId, accounts[1].address, amount)
+      ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+    });
+
+    it('Should allow Staking contract to call addDelegatorRollingRewards but revert for unauthorized', async () => {
+      const { identityId } = await createProfile();
+      const initialAmount = 500;
+      const additionalAmount = 300;
+
+      await DelegatorsInfo.connect(stakingSigner).setDelegatorRollingRewards(identityId, accounts[1].address, initialAmount);
+
+      await expect(
+        DelegatorsInfo.connect(stakingSigner).addDelegatorRollingRewards(identityId, accounts[1].address, additionalAmount)
+      ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+        .withArgs(identityId, accounts[1].address, additionalAmount, initialAmount + additionalAmount);
+
+      await expect(
+        DelegatorsInfo.connect(accounts[2]).addDelegatorRollingRewards(identityId, accounts[1].address, additionalAmount)
+      ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+    });
+
+    it('Should allow Staking contract to call setIsOperatorFeeClaimedForEpoch but revert for unauthorized', async () => {
+      const { identityId } = await createProfile();
+      const epoch = 3;
+      const isClaimed = true;
+
+      await expect(
+        DelegatorsInfo.connect(stakingSigner).setIsOperatorFeeClaimedForEpoch(identityId, epoch, isClaimed)
+      ).to.emit(DelegatorsInfo, 'IsOperatorFeeClaimedForEpochUpdated')
+        .withArgs(identityId, epoch, isClaimed);
+
+      await expect(
+        DelegatorsInfo.connect(accounts[2]).setIsOperatorFeeClaimedForEpoch(identityId, epoch, isClaimed)
+      ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+    });
+
+    it('Should allow Staking contract to call setNetNodeEpochRewards but revert for unauthorized', async () => {
+      const { identityId } = await createProfile();
+      const epoch = 2;
+      const amount = 2000;
+
+      await expect(
+        DelegatorsInfo.connect(stakingSigner).setNetNodeEpochRewards(identityId, epoch, amount)
+      ).to.emit(DelegatorsInfo, 'NetNodeEpochRewardsSet')
+        .withArgs(identityId, epoch, amount);
+
+      await expect(
+        DelegatorsInfo.connect(accounts[2]).setNetNodeEpochRewards(identityId, epoch, amount)
+      ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+    });
+
+    it('Should allow Staking contract to call setHasDelegatorClaimedEpochRewards but revert for unauthorized', async () => {
+      const { identityId } = await createProfile();
+      const epoch = 1;
+      const delegatorKey = ethers.encodeBytes32String('testDelegatorKey');
+      const claimed = true;
+
+      await expect(
+        DelegatorsInfo.connect(stakingSigner).setHasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey, claimed)
+      ).to.emit(DelegatorsInfo, 'HasDelegatorClaimedEpochRewardsUpdated')
+        .withArgs(epoch, identityId, delegatorKey, claimed);
+
+      await expect(
+        DelegatorsInfo.connect(accounts[2]).setHasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey, claimed)
+      ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+    });
+
+    it('Should allow Staking contract to call setHasEverDelegatedToNode but revert for unauthorized', async () => {
+      const { identityId } = await createProfile();
+      const hasEverDelegated = true;
+
+      await expect(
+        DelegatorsInfo.connect(stakingSigner).setHasEverDelegatedToNode(identityId, accounts[1].address, hasEverDelegated)
+      ).to.emit(DelegatorsInfo, 'HasEverDelegatedToNodeUpdated')
+        .withArgs(identityId, accounts[1].address, hasEverDelegated);
+
+      await expect(
+        DelegatorsInfo.connect(accounts[2]).setHasEverDelegatedToNode(identityId, accounts[1].address, hasEverDelegated)
+      ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+    });
+
+    it('Should allow Staking contract to call setLastStakeHeldEpoch but revert for unauthorized', async () => {
+      const { identityId } = await createProfile();
+      const epoch = 4;
+
+      await expect(
+        DelegatorsInfo.connect(stakingSigner).setLastStakeHeldEpoch(identityId, accounts[1].address, epoch)
+      ).to.emit(DelegatorsInfo, 'LastStakeHeldEpochUpdated')
+        .withArgs(identityId, accounts[1].address, epoch);
+
+      await expect(
+        DelegatorsInfo.connect(accounts[2]).setLastStakeHeldEpoch(identityId, accounts[1].address, epoch)
+      ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
+    });
   });
 });
