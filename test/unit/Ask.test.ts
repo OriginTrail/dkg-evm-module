@@ -179,7 +179,7 @@ describe('@unit Ask', () => {
 
     const reward = hre.ethers.parseUnits('10000', 18);
     await Token.mint(accounts[0].address, reward);
-    await Staking.distributeRewards(identityId, BigInt(reward));
+    await StakingStorage.increaseOperatorFeeBalance(identityId, BigInt(reward));
 
     const restake = hre.ethers.parseUnits('500', 18);
     await Staking.connect(accounts[0]).restakeOperatorFee(identityId, restake);
@@ -271,7 +271,11 @@ describe('@unit Ask', () => {
     const total = await AskStorage.totalActiveStake();
     expect(weighted).to.be.eq(stakeVal * 1000n);
     expect(total).to.be.eq(stakeVal);
-    await Staking.distributeRewards(
+    await StakingStorage.increaseOperatorFeeBalance(
+      identityId,
+      hre.ethers.parseUnits('10000', 18),
+    );
+    await Staking.connect(accounts[0]).restakeOperatorFee(
       identityId,
       hre.ethers.parseUnits('10000', 18),
     );
@@ -279,7 +283,11 @@ describe('@unit Ask', () => {
     let stakeAfterRewards = await AskStorage.totalActiveStake();
     expect(sumAfterRewards).to.be.gte(0n);
     expect(stakeAfterRewards).to.be.gte(stakeVal);
-    await Staking.distributeRewards(
+    await StakingStorage.increaseOperatorFeeBalance(
+      identityId,
+      hre.ethers.parseUnits('5000', 18),
+    );
+    await Staking.connect(accounts[0]).restakeOperatorFee(
       identityId,
       hre.ethers.parseUnits('5000', 18),
     );
@@ -343,7 +351,7 @@ describe('@unit Ask', () => {
     await Token.mint(accounts[2].address, stVal);
     await Token.connect(accounts[2]).approve(Staking.getAddress(), stVal);
     await Staking.connect(accounts[2]).stake(identityId, stVal);
-    await Staking.distributeRewards(
+    await StakingStorage.increaseOperatorFeeBalance(
       identityId,
       hre.ethers.parseUnits('30000', 18),
     );
