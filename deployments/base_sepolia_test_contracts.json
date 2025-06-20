@@ -182,12 +182,12 @@
       "deployed": true
     },
     "KnowledgeCollection": {
-      "evmAddress": "0x7864f7B82c028605EF40fA0B715442317429f520",
+      "evmAddress": "0x58bf70BcEc83E41bC15aB92f0A0AF44CD34889a6",
       "version": "1.0.0",
       "gitBranch": "release/reworked-staking",
-      "gitCommitHash": "ff29c5b541d67cf3e9a1ae3511e7f9642074400a",
-      "deploymentBlock": 27285983,
-      "deploymentTimestamp": 1750340259138,
+      "gitCommitHash": "aa7aec7036926a6f988949f04f883858a5b9b4ca",
+      "deploymentBlock": 27324442,
+      "deploymentTimestamp": 1750417175913,
       "deployed": true
     },
     "ParanetsRegistry": {
@@ -272,30 +272,30 @@
       "deployed": true
     },
     "RandomSamplingStorage": {
-      "evmAddress": "0xa15f3402CdA1fe1016C9Bf194725D13A7C55F650",
+      "evmAddress": "0xdf00326263B0aBA1975D64e516887F913EcE4c3B",
       "version": "1.0.0",
       "gitBranch": "release/reworked-staking",
-      "gitCommitHash": "ff29c5b541d67cf3e9a1ae3511e7f9642074400a",
-      "deploymentBlock": 27285980,
-      "deploymentTimestamp": 1750340252741,
+      "gitCommitHash": "aa7aec7036926a6f988949f04f883858a5b9b4ca",
+      "deploymentBlock": 27324436,
+      "deploymentTimestamp": 1750417163610,
       "deployed": true
     },
     "RandomSampling": {
-      "evmAddress": "0x4e5B3F7F9a1dAb26451e201FC472cA032cC8A05b",
+      "evmAddress": "0x3DCf196341d450Fb9Fb4a3Fea9894f7473002399",
       "version": "1.0.0",
       "gitBranch": "release/reworked-staking",
-      "gitCommitHash": "ff29c5b541d67cf3e9a1ae3511e7f9642074400a",
-      "deploymentBlock": 27285987,
-      "deploymentTimestamp": 1750340265308,
+      "gitCommitHash": "aa7aec7036926a6f988949f04f883858a5b9b4ca",
+      "deploymentBlock": 27324445,
+      "deploymentTimestamp": 1750417182102,
       "deployed": true
     },
     "StakingKPI": {
-      "evmAddress": "0x621B09042c498238E61b0960820DDc0b19353f6E",
+      "evmAddress": "0x26485ff2E548ACA1AF4B50f765AF6Bc26dBE64E6",
       "version": "1.0.0",
       "gitBranch": "release/reworked-staking",
-      "gitCommitHash": "e660b9adf0736cb63f25ad66a57c67dda84351c3",
-      "deploymentBlock": 27158855,
-      "deploymentTimestamp": 1750086002852,
+      "gitCommitHash": "aa7aec7036926a6f988949f04f883858a5b9b4ca",
+      "deploymentBlock": 27324439,
+      "deploymentTimestamp": 1750417169758,
       "deployed": true
     }
   }
