@@ -14,6 +14,7 @@ import {ProfileLib} from "./libraries/ProfileLib.sol";
 import {IdentityLib} from "./libraries/IdentityLib.sol";
 import {EpochStorage} from "./storage/EpochStorage.sol";
 import {RandomSamplingStorage} from "./storage/RandomSamplingStorage.sol";
+import {ParametersStorage} from "./storage/ParametersStorage.sol";
 
 contract StakingKPI is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "StakingKPI";
@@ -26,6 +27,7 @@ contract StakingKPI is INamed, IVersioned, ContractStatus, IInitializable {
     DelegatorsInfo public delegatorsInfo;
     RandomSamplingStorage public randomSamplingStorage;
     EpochStorage public epochStorage;
+    ParametersStorage public parametersStorage;
 
     /**
      * @dev Initializes the StakingKPI contract with the Hub address for access control
@@ -51,6 +53,7 @@ contract StakingKPI is INamed, IVersioned, ContractStatus, IInitializable {
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
         randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
         epochStorage = EpochStorage(hub.getContractAddress("EpochStorageV8"));
+        parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
     }
 
     /**
@@ -176,7 +179,9 @@ contract StakingKPI is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 totalNodeRewards = (epocRewardsPool * nodeScore18) / allNodesScore18;
 
         uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
-        uint96 operatorFeeAmount = uint96((totalNodeRewards * feePercentageForEpoch) / 10_000);
+        uint96 operatorFeeAmount = uint96(
+            (totalNodeRewards * feePercentageForEpoch) / parametersStorage.maxOperatorFee()
+        );
 
         return totalNodeRewards - operatorFeeAmount;
     }
