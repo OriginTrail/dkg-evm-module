@@ -1,12 +1,11 @@
 // test/rewards.initial-state.spec.ts
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import hre from 'hardhat';
-import { randomBytes } from 'crypto';
-import { time } from '@nomicfoundation/hardhat-network-helpers';
-import { expect } from 'chai';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
+import { time } from '@nomicfoundation/hardhat-network-helpers';
+import { kcTools } from 'assertion-tools';
+import { expect } from 'chai';
+import hre from 'hardhat';
 
 import {
   Token,
@@ -49,8 +48,8 @@ const quads = [
 async function ensureNodeHasChunksThisEpoch(
   nodeId: number,
   node: { operational: SignerWithAddress; admin: SignerWithAddress },
-  contracts: any,
-  accounts: any,
+  contracts: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  accounts: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   receivingNodes: {
     operational: SignerWithAddress;
     admin: SignerWithAddress;
@@ -73,7 +72,6 @@ async function ensureNodeHasChunksThisEpoch(
       receivingNodesIdentityIds.unshift(Number(nodeId));
     }
 
-    const { kcTools } = await import('assertion-tools');
     const merkleRoot = kcTools.calculateMerkleRoot(quads, 32);
 
     await createKnowledgeCollection(
@@ -96,7 +94,9 @@ async function ensureNodeHasChunksThisEpoch(
 }
 
 // Helper function to advance to next proofing period
-async function advanceToNextProofingPeriod(contracts: any): Promise<void> {
+async function advanceToNextProofingPeriod(
+  contracts: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+): Promise<void> {
   const proofingPeriodDuration =
     await contracts.randomSampling.getActiveProofingPeriodDurationInBlocks();
   const { activeProofPeriodStartBlock, isValid } =
@@ -119,9 +119,8 @@ async function advanceToNextProofingPeriod(contracts: any): Promise<void> {
 async function submitProofAndLogScore(
   nodeId: number,
   nodeAccount: { operational: SignerWithAddress; admin: SignerWithAddress },
-  contracts: any,
+  contracts: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   epoch: bigint,
-  nodeName: string,
 ) {
   // Get score before proof
   const scoreBefore = await contracts.randomSamplingStorage.getNodeEpochScore(
@@ -137,7 +136,6 @@ async function submitProofAndLogScore(
     await contracts.randomSamplingStorage.getNodeChallenge(nodeId);
 
   // Calculate merkle proof for the challenge
-  const { kcTools } = await import('assertion-tools');
   const chunks = kcTools.splitIntoChunks(quads, 32);
   const chunkId = Number(challenge[1]);
   const { proof } = kcTools.calculateMerkleProof(quads, 32, chunkId);

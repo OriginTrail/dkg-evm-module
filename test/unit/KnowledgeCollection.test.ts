@@ -1,9 +1,9 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { kcTools } from 'assertion-tools';
 import { expect } from 'chai';
 import { ethers } from 'ethers';
 import hre from 'hardhat';
-import { kcTools } from 'assertion-tools';
 
 import {
   KnowledgeCollection,
@@ -31,38 +31,6 @@ import {
   getDefaultReceivingNodes,
   getDefaultKCCreator,
 } from '../helpers/setup-helpers';
-
-// Sample data for KC
-const quads = [
-  '<urn:us-cities:info:new-york> <http://schema.org/area> "468.9 sq mi" .',
-  '<urn:us-cities:info:new-york> <http://schema.org/name> "New York" .',
-  '<urn:us-cities:info:new-york> <http://schema.org/population> "8,336,817" .',
-  '<urn:us-cities:info:new-york> <http://schema.org/state> "New York" .',
-  '<urn:us-cities:info:new-york> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/City> .',
-  '<uuid:a1a241ad-9f62-4dcc-94b6-f59b299dee0a> <https://ontology.origintrail.io/dkg/1.0#privateMerkleRoot> "0xaac2a420672a1eb77506c544ff01beed2be58c0ee3576fe037c846f97481cefd" .',
-  '<https://ontology.origintrail.io/dkg/1.0#metadata-hash:0x5cb6421dd41c7a62a84c223779303919e7293753d8a1f6f49da2e598013fe652> <https://ontology.origintrail.io/dkg/1.0#representsPrivateResource> <uuid:396b91f8-977b-4f5d-8658-bc4bc195ba3c> .',
-  '<https://ontology.origintrail.io/dkg/1.0#metadata-hash:0x6a2292b30c844d2f8f2910bf11770496a3a79d5a6726d1b2fd3ddd18e09b5850> <https://ontology.origintrail.io/dkg/1.0#representsPrivateResource> <uuid:7eab0ccb-dd6c-4f81-a342-3c22e6276ec5> .',
-  '<https://ontology.origintrail.io/dkg/1.0#metadata-hash:0xc1f682b783b1b93c9d5386eb1730c9647cf4b55925ec24f5e949e7457ba7bfac> <https://ontology.origintrail.io/dkg/1.0#representsPrivateResource> <uuid:8b843b0c-33d8-4546-9a6d-207fd22c793c> .',
-  // Add more quads to ensure we have enough chunks
-  ...Array(1000).fill(
-    '<urn:fake:quad> <urn:fake:predicate> <urn:fake:object> .',
-  ),
-];
-const merkleRoot = kcTools.calculateMerkleRoot(quads, 32);
-
-// Helper function for distribution calculation
-function calcDistribution(
-  tokenAmount: bigint,
-  numberOfEpochs: bigint,
-  epochLen: bigint,
-  timeLeft: bigint,
-) {
-  const basePer = tokenAmount / numberOfEpochs;
-  const curPart = (basePer * timeLeft) / epochLen;
-  const tailPart = basePer - curPart;
-  const allocated = curPart + basePer * (numberOfEpochs - 1n) + tailPart;
-  return { curPart, basePer, tailPart, allocated };
-}
 
 type KnowledgeCollectionFixture = {
   accounts: SignerWithAddress[];
@@ -416,7 +384,7 @@ describe('@unit KnowledgeCollection', () => {
     const curPart = (basePer * timeLeft1) / epochLen;
     let tailPart = basePer - curPart;
     const fullCnt = numberOfEpochs - 1n;
-    let alloc = curPart + basePer * fullCnt + tailPart;
+    const alloc = curPart + basePer * fullCnt + tailPart;
     if (alloc < tokenAmount) tailPart += tokenAmount - alloc; // crumbs
 
     console.log('\n🧮  Expected split (half-epoch)');
@@ -595,6 +563,6 @@ describe('@unit KnowledgeCollection', () => {
     );
 
     const receipt = await tx.wait();
-    console.log(`   ✅  KC created – tx hash: ${receipt.hash}`);
+    console.log(`   ✅  KC created – tx hash: ${receipt?.hash}`);
   });
 });

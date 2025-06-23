@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { randomBytes } from 'crypto';
 
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
@@ -804,7 +803,6 @@ describe('Staking contract', function () {
       identityId,
       withdrawalAmount,
     );
-    // @ts-ignore – provider getBlock returns null only for future blocks which cannot happen here
     const tsReq = (await hre.ethers.provider.getBlock(
       (await tx.wait()).blockNumber,
     ))!.timestamp;
@@ -1061,7 +1059,6 @@ describe('Staking contract', function () {
     // Fast-forward 3 epochs ➡️ currentEpoch = 4
     const tlen = await Chronos.epochLength();
     await time.increase(tlen * 3n + 3n);
-    // @ts-ignore
     currentEpoch = await Chronos.getCurrentEpoch();
 
     // Attempt to stake +1 wei without having claimed
@@ -1075,7 +1072,7 @@ describe('Staking contract', function () {
   it('⛔️ Should revert adding stake when only some epochs are claimed', async () => {
     const { identityId } = await createProfile();
     const amount = hre.ethers.parseEther('500');
-    let initialEpoch = await Chronos.getCurrentEpoch();
+    const initialEpoch = await Chronos.getCurrentEpoch();
     // mint and stake
     await Token.mint(accounts[0].address, amount);
     await Token.connect(accounts[0]).approve(
@@ -1104,8 +1101,6 @@ describe('Staking contract', function () {
     // Fast-forward 3 epochs
     const len = await Chronos.epochLength();
     await time.increase(len * 3n + 3n);
-    // @ts-ignore
-    const curEp = await Chronos.getCurrentEpoch();
 
     // Claim rewards for initial epoch
     await Staking.claimDelegatorRewards(
@@ -1247,7 +1242,6 @@ describe('Staking contract', function () {
     const epochLen = await Chronos.epochLength();
     // fast-forward 3 epochs
     await time.increase(epochLen * 3n + 3n);
-    // @ts-ignore
 
     // Pretend all rewards claimed up to prevEp
     await Staking.claimDelegatorRewards(
@@ -1355,10 +1349,8 @@ describe('Staking contract', function () {
     await EpochStorage.addTokensToEpochRange(1, epoch1, epoch1, tokenRewards1);
 
     /* 2️⃣  Produce rewards for epoch-2 and epoch-3 */
-    // @ts-ignore
     const len = await Chronos.epochLength();
     await time.increase(len + 2n); // -> epoch-2
-    // @ts-ignore
     const epoch2 = await Chronos.getCurrentEpoch();
     await RandomSamplingStorage.addToNodeEpochScore(
       epoch2,
@@ -1376,7 +1368,6 @@ describe('Staking contract', function () {
     await EpochStorage.addTokensToEpochRange(1, epoch2, epoch2, tokenRewards2);
 
     await time.increase(len + 2n); // -> epoch-3
-    // @ts-ignore
     const epoch3 = await Chronos.getCurrentEpoch();
     await RandomSamplingStorage.addToNodeEpochScore(
       epoch3,
@@ -1395,7 +1386,6 @@ describe('Staking contract', function () {
 
     /* 3️⃣  Move to epoch-4 so gap > 1 and claim epoch-3-1 (= epoch-3?) Actually previousEpoch will be 3 */
     await time.increase(len + 2n); // -> epoch-4
-    // @ts-ignore
     const epoch4 = await Chronos.getCurrentEpoch(); // claim epoch-1 first (oldest unclaimed)
 
     await Staking.claimDelegatorRewards(
@@ -1679,7 +1669,9 @@ describe('Staking contract', function () {
     );
     const other = accounts[2];
 
-    const expectOnlyAdmin = async (promise: Promise<any>) =>
+    const expectOnlyAdmin = async (
+      promise: Promise<any>, // eslint-disable-line @typescript-eslint/no-explicit-any
+    ) =>
       expect(promise).to.be.revertedWithCustomError(
         Staking,
         'OnlyProfileAdminFunction',
@@ -1715,7 +1707,6 @@ describe('Staking contract', function () {
     }
     // 2️⃣ create rewards for current epoch
     const SCALE18 = hre.ethers.parseUnits('1', 18);
-    // @ts-ignore
     const epochNow = await Chronos.getCurrentEpoch();
     const dKey1 = hre.ethers.keccak256(
       hre.ethers.solidityPacked(['address'], [deleg1.address]),
@@ -1764,6 +1755,7 @@ describe('Staking contract', function () {
       'Operator-fee balance should increase by 10% of pool',
     );
     // flag must be set
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(
       await DelegatorsInfo.isOperatorFeeClaimedForEpoch(identityId, epochNow),
     ).to.be.true;
@@ -1804,7 +1796,6 @@ describe('Staking contract', function () {
 
     // produce rewards for epoch E
     const SCALE18 = hre.ethers.parseUnits('1', 18);
-    // @ts-ignore
     const epochE = await Chronos.getCurrentEpoch();
     const dKey = hre.ethers.keccak256(
       hre.ethers.solidityPacked(['address'], [deleg.address]),
@@ -1862,7 +1853,6 @@ describe('Staking contract', function () {
     }
     const SCALE18 = hre.ethers.parseUnits('1', 18);
     // epochs E1 and E2
-    // @ts-ignore
     const epoch1 = await Chronos.getCurrentEpoch();
     const epoch2 = epoch1 + 1n;
 
@@ -2189,16 +2179,15 @@ describe('Staking contract', function () {
     await Staking.stake(identityId, amount);
 
     // Snapshot lastClaimedEpoch after initial stake
-    let lastClaimedBefore = await DelegatorsInfo.getLastClaimedEpoch(
+    const lastClaimedBefore = await DelegatorsInfo.getLastClaimedEpoch(
       identityId,
       accounts[0].address,
     );
 
     // Advance to the next epoch WITHOUT adding any scores
-    let inc = await Chronos.timeUntilNextEpoch();
+    const inc = await Chronos.timeUntilNextEpoch();
     await time.increase(inc + 1n);
     // Current and previous epoch values
-    // @ts-ignore – getCurrentEpoch returns bigint
     const currentEpoch = await Chronos.getCurrentEpoch();
     const prevEpoch = currentEpoch - 1n;
 
@@ -2242,7 +2231,6 @@ describe('Staking contract', function () {
     await Staking.stake(identityId, stakeAmt);
 
     // Add some score for the current epoch so delegatorEpochScore18 > 0
-    // @ts-ignore – getCurrentEpoch returns bigint
     const epoch = await Chronos.getCurrentEpoch();
     const dKey = hre.ethers.keccak256(
       hre.ethers.solidityPacked(['address'], [accounts[0].address]),
@@ -2340,9 +2328,8 @@ describe('Staking contract', function () {
     ).to.equal(0n, 'Delegator stake should be 0');
 
     // Move to next epoch
-    let inc = await Chronos.timeUntilNextEpoch();
+    const inc = await Chronos.timeUntilNextEpoch();
     await time.increase(inc + 1n);
-    // @ts-ignore
     const epoch = await Chronos.getCurrentEpoch();
 
     // Manually set a non-zero nodeScorePerStake so prepare branches
@@ -2396,7 +2383,6 @@ describe('Staking contract', function () {
     const withdrawAmt = hre.ethers.parseEther('60');
     await Staking.requestOperatorFeeWithdrawal(identityId, withdrawAmt);
     // capture request release timestamp from storage
-    // @ts-ignore
     const [, , releaseTs] =
       await StakingStorage.getOperatorFeeWithdrawalRequest(identityId);
 
@@ -2446,7 +2432,6 @@ describe('Staking contract', function () {
     // Move to next epoch E2
     let inc = await Chronos.timeUntilNextEpoch();
     await time.increase(inc + 1n);
-    // @ts-ignore
     const epoch2 = await Chronos.getCurrentEpoch();
     // Advance to E3 so both previous epochs are claimable
     inc = await Chronos.timeUntilNextEpoch();
@@ -2562,6 +2547,7 @@ describe('Staking contract', function () {
     );
     await Staking.stake(nodeA.identityId, minStake);
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(await ShardingTableStorage.nodeExists(nodeA.identityId)).to.be.true;
 
     await expect(
@@ -2575,7 +2561,9 @@ describe('Staking contract', function () {
         minStake,
       );
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(await ShardingTableStorage.nodeExists(nodeA.identityId)).to.be.false;
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(await ShardingTableStorage.nodeExists(nodeB.identityId)).to.be.true;
   });
 
