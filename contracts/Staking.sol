@@ -589,6 +589,12 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             reward = (delegatorScore18 * netNodeRewards) / nodeScore18;
         }
 
+        // If the operator fee flag has not been set for the epoch (because it had no score), set it now.
+        // This ensures that Profile.updateOperatorFee is not blocked by rewardless epochs.
+        if (!delegatorsInfo.isOperatorFeeClaimedForEpoch(identityId, epoch)) {
+            delegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, true);
+        }
+
         // update state even when reward is zero
         // Mark the delegator's rewards as claimed for this epoch
         delegatorsInfo.setHasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey, true);
