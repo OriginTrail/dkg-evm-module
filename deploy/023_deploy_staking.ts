@@ -20,4 +20,8 @@ func.dependencies = [
   'StakingStorage',
   'NodeOperatorFeesStorage',
   'Ask',
+  'DelegatorsInfo',
+  'Chronos',
+  'RandomSamplingStorage',
+  'EpochStorage',
 ];

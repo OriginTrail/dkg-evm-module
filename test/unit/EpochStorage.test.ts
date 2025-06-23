@@ -76,11 +76,21 @@ describe('@unit EpochStorage', () => {
     ).to.equal(0);
   });
 
-  it('Add tokens to epoch range, check pool and remainder', async () => {
-    await EpochStorage.addTokensToEpochRange(1, 5, 9, 1000);
-    expect(await EpochStorage.accumulatedRemainder(1)).to.be.lte(100); // some remainder left
-    expect(await EpochStorage.getEpochPool(1, 5)).to.be.gt(0);
-    expect(await EpochStorage.getEpochPool(1, 9)).to.be.gt(0);
+  it('Add tokens to epoch range, check if distributed pool is correct', async () => {
+    await EpochStorage.addTokensToEpochRange(1, 100, 109, 100);
+
+    expect(await EpochStorage.getEpochPool(1, 99)).to.be.equal(0);
+    expect(await EpochStorage.getEpochPool(1, 101)).to.be.equal(10);
+    expect(await EpochStorage.getEpochPool(1, 102)).to.be.equal(10);
+    expect(await EpochStorage.getEpochPool(1, 103)).to.be.equal(10);
+    expect(await EpochStorage.getEpochPool(1, 104)).to.be.equal(10);
+    expect(await EpochStorage.getEpochPool(1, 105)).to.be.equal(10);
+    expect(await EpochStorage.getEpochPool(1, 106)).to.be.equal(10);
+    expect(await EpochStorage.getEpochPool(1, 107)).to.be.equal(10);
+    expect(await EpochStorage.getEpochPool(1, 108)).to.be.equal(10);
+    expect(await EpochStorage.getEpochPool(1, 109)).to.be.equal(10);
+    expect(await EpochStorage.getEpochPool(1, 110)).to.be.equal(0);
+    expect(await EpochStorage.getEpochPool(1, 111)).to.be.equal(0); // expect(await EpochStorage.getEpochPool(1, 9)).to.be.gt(0);
   });
 
   it('Pay out epoch tokens, verify distribution and nodePaidOut', async () => {

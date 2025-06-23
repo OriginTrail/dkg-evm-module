@@ -146,30 +146,30 @@
       "deployed": true
     },
     "Ask": {
-      "evmAddress": "0x55c8d5AB131286Fc09bD586131449756a69C4e8E",
+      "evmAddress": "0xeBc4766278a8fAfAa930e309BC7523a0e71aC138",
       "version": "1.0.0",
-      "gitBranch": "v8-contracts",
-      "gitCommitHash": "ddb3f9e1ef7c2f9f7ca8554b19fae7d521a5507f",
-      "deploymentBlock": 19684794,
-      "deploymentTimestamp": 1735137882248,
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "7a489bac60a752cbfa8ae52a2ee23a561db4557c",
+      "deploymentBlock": 26725269,
+      "deploymentTimestamp": 1749218830084,
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0x53206d344C47c4A8b3AACF99273342331928cb06",
-      "version": "1.0.0",
-      "gitBranch": "v8-contracts",
-      "gitCommitHash": "ddb3f9e1ef7c2f9f7ca8554b19fae7d521a5507f",
-      "deploymentBlock": 19684799,
-      "deploymentTimestamp": 1735137892397,
+      "evmAddress": "0xC448740F566AEbcCf22EF22a43d313A5E3bdbC99",
+      "version": "1.0.1",
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "67ad1cd45d09aa6603a881d83ade56f17fac6fb7",
+      "deploymentBlock": 27343725,
+      "deploymentTimestamp": 1750455742292,
       "deployed": true
     },
     "Profile": {
-      "evmAddress": "0x13Af909944f34AeF37bf5bEb542Df94fF51c23cD",
+      "evmAddress": "0xF5F59870c9eBe8B8942Fd3C234EA5f46980d650f",
       "version": "1.0.0",
-      "gitBranch": "v8-contracts",
-      "gitCommitHash": "ddb3f9e1ef7c2f9f7ca8554b19fae7d521a5507f",
-      "deploymentBlock": 19684804,
-      "deploymentTimestamp": 1735137901423,
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "e660b9adf0736cb63f25ad66a57c67dda84351c3",
+      "deploymentBlock": 27158859,
+      "deploymentTimestamp": 1750086011529,
       "deployed": true
     },
     "Migrator": {
@@ -182,12 +182,12 @@
       "deployed": true
     },
     "KnowledgeCollection": {
-      "evmAddress": "0xAF09267e228E5D529732497BF20d652d10278a6e",
+      "evmAddress": "0x58bf70BcEc83E41bC15aB92f0A0AF44CD34889a6",
       "version": "1.0.0",
-      "gitBranch": "fix/remove-kc-update",
-      "gitCommitHash": "59a62815b3d8c5deffdf8da44dd5ace4655052ed",
-      "deploymentBlock": 20972223,
-      "deploymentTimestamp": 1737712739031,
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "aa7aec7036926a6f988949f04f883858a5b9b4ca",
+      "deploymentBlock": 27324442,
+      "deploymentTimestamp": 1750417175913,
       "deployed": true
     },
     "ParanetsRegistry": {
@@ -260,6 +260,42 @@
       "gitCommitHash": "6c323e37b26e28fd7c25bc01a6e4d1711d7d4ac2",
       "deploymentBlock": 22788786,
       "deploymentTimestamp": 1741345864175,
+      "deployed": true
+    },
+    "DelegatorsInfo": {
+      "evmAddress": "0x2bDb37901cBF74a404c891ea5AF1a0f8E439c114",
+      "version": "1.0.0",
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "e660b9adf0736cb63f25ad66a57c67dda84351c3",
+      "deploymentBlock": 27158845,
+      "deploymentTimestamp": 1750085983302,
+      "deployed": true
+    },
+    "RandomSamplingStorage": {
+      "evmAddress": "0xdf00326263B0aBA1975D64e516887F913EcE4c3B",
+      "version": "1.0.0",
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "aa7aec7036926a6f988949f04f883858a5b9b4ca",
+      "deploymentBlock": 27324436,
+      "deploymentTimestamp": 1750417163610,
+      "deployed": true
+    },
+    "RandomSampling": {
+      "evmAddress": "0x3DCf196341d450Fb9Fb4a3Fea9894f7473002399",
+      "version": "1.0.0",
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "aa7aec7036926a6f988949f04f883858a5b9b4ca",
+      "deploymentBlock": 27324445,
+      "deploymentTimestamp": 1750417182102,
+      "deployed": true
+    },
+    "StakingKPI": {
+      "evmAddress": "0x26485ff2E548ACA1AF4B50f765AF6Bc26dBE64E6",
+      "version": "1.0.0",
+      "gitBranch": "release/reworked-staking",
+      "gitCommitHash": "aa7aec7036926a6f988949f04f883858a5b9b4ca",
+      "deploymentBlock": 27324439,
+      "deploymentTimestamp": 1750417169758,
       "deployed": true
     }
   }

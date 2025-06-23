@@ -1,6 +1,6 @@
 {
   "name": "dkg-evm-module",
-  "version": "8.0.4",
+  "version": "8.0.5",
   "description": "Smart contracts for OriginTrail V8",
   "main": "index.ts",
   "files": [
@@ -28,6 +28,7 @@
   "author": "",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@nomicfoundation/ethereumjs-util": "^9.0.4",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.12",
     "@nomiclabs/hardhat-solhint": "^4.0.1",
@@ -38,7 +39,7 @@
     "@types/node": "^22.10.2",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
     "@typescript-eslint/parser": "^8.18.1",
-    "assertion-tools": "^2.2.1",
+    "assertion-tools": "^8.0.3",
     "chai": "^4.5.0",
     "cross-env": "^7.0.3",
     "eslint": "^8.17.0",
@@ -116,7 +117,7 @@
     "test:parallel": "hardhat test --network hardhat --parallel",
     "test:trace": "hardhat test --network hardhat --trace",
     "test:unit": "hardhat test --network hardhat --grep '@unit'",
-    "test": "hardhat test --network hardhat",
+    "test": "bash test/scripts/run-tests-with-summary.sh",
     "typechain": "hardhat typechain"
   }
 }

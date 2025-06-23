@@ -17,6 +17,18 @@
     "KnowledgeCollectionStorage": {
       "knowledgeCollectionSize": "1000000",
       "uriBase": "did:dkg"
+    },
+    "RandomSamplingStorage": {
+      "hardhat": {
+        "proofingPeriodDurationInBlocks": "100",
+        "W1": "0",
+        "W2": "2"
+      },
+      "localhost": {
+        "proofingPeriodDurationInBlocks": "100",
+        "W1": "0",
+        "W2": "2"
+      }
     }
   },
   "devnet": {
@@ -38,6 +50,23 @@
     "KnowledgeCollectionStorage": {
       "knowledgeCollectionSize": "1000000",
       "uriBase": "did:dkg"
+    },
+    "RandomSamplingStorage": {
+      "base_sepolia_dev": {
+        "proofingPeriodDurationInBlocks": "900",
+        "W1": "0",
+        "W2": "2"
+      },
+      "base_sepolia_stable_dev_staging": {
+        "proofingPeriodDurationInBlocks": "900",
+        "W1": "0",
+        "W2": "2"
+      },
+      "base_sepolia_stable_dev_prod": {
+        "proofingPeriodDurationInBlocks": "900",
+        "W1": "0",
+        "W2": "2"
+      }
     }
   },
   "testnet": {
@@ -60,6 +89,23 @@
     "KnowledgeCollectionStorage": {
       "knowledgeCollectionSize": "1000000",
       "uriBase": "did:dkg"
+    },
+    "RandomSamplingStorage": {
+      "neuroweb_testnet": {
+        "proofingPeriodDurationInBlocks": "257",
+        "W1": "0",
+        "W2": "2"
+      },
+      "gnosis_chiado_test": {
+        "proofingPeriodDurationInBlocks": "360",
+        "W1": "0",
+        "W2": "2"
+      },
+      "base_sepolia_test": {
+        "proofingPeriodDurationInBlocks": "900",
+        "W1": "0",
+        "W2": "2"
+      }
     }
   },
   "mainnet": {
@@ -82,6 +128,23 @@
     "KnowledgeCollectionStorage": {
       "knowledgeCollectionSize": "1000000",
       "uriBase": "did:dkg"
+    },
+    "RandomSamplingStorage": {
+      "neuroweb_mainnet": {
+        "proofingPeriodDurationInBlocks": "300",
+        "W1": "0",
+        "W2": "2"
+      },
+      "gnosis_mainnet": {
+        "proofingPeriodDurationInBlocks": "360",
+        "W1": "0",
+        "W2": "2"
+      },
+      "base_mainnet": {
+        "proofingPeriodDurationInBlocks": "900",
+        "W1": "0",
+        "W2": "2"
+      }
     }
   }
 }

@@ -1,9 +1,6 @@
 name: checks
 
-on:
-  pull_request:
-    branches:
-      - main
+on: [pull_request]
 
 concurrency:
   group: checks-${{ github.ref }}
@@ -44,4 +41,4 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Run tests
-        run: npm run test:parallel
+        run: npm run test

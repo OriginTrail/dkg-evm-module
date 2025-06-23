@@ -16,6 +16,8 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Ask";
     string private constant _VERSION = "1.0.0";
 
+    uint256 public constant ASK_SCALING_FACTOR = 1e18;
+
     AskStorage public askStorage;
     ShardingTableStorage public shardingTableStorage;
     ParametersStorage public parametersStorage;
@@ -76,9 +78,9 @@ contract Ask is INamed, IVersioned, ContractStatus, IInitializable {
             }
 
             stake = stake > maximumStake ? maximumStake : stake;
-            uint256 nodeAskScaled = uint256(ps.getAsk(nodeIdentityId)) * 1e18;
+            uint256 nodeAskScaled = uint256(ps.getAsk(nodeIdentityId)) * ASK_SCALING_FACTOR;
             if (nodeAskScaled >= askLowerBound && nodeAskScaled <= askUpperBound) {
-                newWeightedActiveAskSum += (nodeAskScaled / 1e18) * stake;
+                newWeightedActiveAskSum += (nodeAskScaled / ASK_SCALING_FACTOR) * stake;
                 newTotalActiveStake += stake;
             }
         }
