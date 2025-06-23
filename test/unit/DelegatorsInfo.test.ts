@@ -35,7 +35,7 @@ type StakingFixture = {
 };
 
 async function deployStakingFixture(): Promise<StakingFixture> {
-  await hre.deployments.fixture(['Profile', 'Staking','EpochStorage']);
+  await hre.deployments.fixture(['Profile', 'Staking', 'EpochStorage']);
   const Staking = await hre.ethers.getContract<Staking>('Staking');
   const Profile = await hre.ethers.getContract<Profile>('Profile');
   const Token = await hre.ethers.getContract<Token>('Token');
@@ -73,17 +73,11 @@ async function deployStakingFixture(): Promise<StakingFixture> {
   };
 }
 
-describe('DelegatorsInfo contract', function() {
+describe('DelegatorsInfo contract', function () {
   let accounts: SignerWithAddress[];
-  // let Token: Token;
   let Profile: Profile;
-  // let Staking: Staking;
-  // let StakingStorage: StakingStorage;
-  // let ShardingTableStorage: ShardingTableStorage;
-  // let ParametersStorage: ParametersStorage;
-  // let ProfileStorage: ProfileStorage;
   let DelegatorsInfo: DelegatorsInfo;
-  let stakingSigner: any;
+  let stakingSigner: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   const createProfile = async (
     admin?: SignerWithAddress,
     operational?: SignerWithAddress,
@@ -103,17 +97,8 @@ describe('DelegatorsInfo contract', function() {
   };
 
   beforeEach(async () => {
-    ({
-      accounts,
-      // Token,
-      Profile,
-      // Staking,
-      // StakingStorage,
-      // ShardingTableStorage,
-      // ParametersStorage,
-      // ProfileStorage,
-      DelegatorsInfo,
-    } = await loadFixture(deployStakingFixture));
+    ({ accounts, Profile, DelegatorsInfo } =
+      await loadFixture(deployStakingFixture));
 
     // Create a signer from the Staking contract address
     const stakingContract = await hre.ethers.getContract<Staking>('Staking');
@@ -121,9 +106,9 @@ describe('DelegatorsInfo contract', function() {
     stakingSigner = await hre.ethers.getImpersonatedSigner(stakingAddress);
 
     // Fund the Staking contract address with some ETH for gas
-    await hre.network.provider.send("hardhat_setBalance", [
+    await hre.network.provider.send('hardhat_setBalance', [
       stakingAddress,
-      "0x" + hre.ethers.parseEther('1.0').toString(16)
+      '0x' + hre.ethers.parseEther('1.0').toString(16),
     ]);
   });
 
@@ -277,19 +262,25 @@ describe('DelegatorsInfo contract', function() {
     const epoch2 = 2;
 
     await expect(
-      DelegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch)
-    ).to.emit(DelegatorsInfo, 'DelegatorLastClaimedEpochUpdated')
+      DelegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch),
+    )
+      .to.emit(DelegatorsInfo, 'DelegatorLastClaimedEpochUpdated')
       .withArgs(identityId, delegator, epoch);
 
-    expect(await DelegatorsInfo.getLastClaimedEpoch(identityId, delegator)).to.equal(epoch);
+    expect(
+      await DelegatorsInfo.getLastClaimedEpoch(identityId, delegator),
+    ).to.equal(epoch);
 
     // Make sure it updates the value
     await expect(
-      DelegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch2)
-    ).to.emit(DelegatorsInfo, 'DelegatorLastClaimedEpochUpdated')
+      DelegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch2),
+    )
+      .to.emit(DelegatorsInfo, 'DelegatorLastClaimedEpochUpdated')
       .withArgs(identityId, delegator, epoch2);
 
-    expect(await DelegatorsInfo.getLastClaimedEpoch(identityId, delegator)).to.equal(epoch2);
+    expect(
+      await DelegatorsInfo.getLastClaimedEpoch(identityId, delegator),
+    ).to.equal(epoch2);
   });
 
   it('Should set and get DelegatorRollingRewards, emit DelegatorRollingRewardsUpdated', async () => {
@@ -300,19 +291,25 @@ describe('DelegatorsInfo contract', function() {
     const amount2 = 1000;
 
     await expect(
-      DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount)
-    ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+      DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount),
+    )
+      .to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
       .withArgs(identityId, delegator, amount, amount);
 
-    expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(amount);
+    expect(
+      await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator),
+    ).to.equal(amount);
 
     // Make sure it updates the value
     await expect(
-      DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount2)
-    ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+      DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount2),
+    )
+      .to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
       .withArgs(identityId, delegator, amount2, amount2);
 
-    expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(amount2);
+    expect(
+      await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator),
+    ).to.equal(amount2);
   });
 
   it('Should set IsOperatorFeeClaimedForEpoch and emit IsOperatorFeeClaimedForEpochUpdated', async () => {
@@ -322,8 +319,13 @@ describe('DelegatorsInfo contract', function() {
     const isClaimed = false;
 
     await expect(
-      DelegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, isClaimed)
-    ).to.emit(DelegatorsInfo, 'IsOperatorFeeClaimedForEpochUpdated')
+      DelegatorsInfo.setIsOperatorFeeClaimedForEpoch(
+        identityId,
+        epoch,
+        isClaimed,
+      ),
+    )
+      .to.emit(DelegatorsInfo, 'IsOperatorFeeClaimedForEpochUpdated')
       .withArgs(identityId, epoch, isClaimed);
   });
 
@@ -334,11 +336,14 @@ describe('DelegatorsInfo contract', function() {
     const epoch = 1;
 
     await expect(
-      DelegatorsInfo.setNetNodeEpochRewards(identityId, epoch, amount)
-    ).to.emit(DelegatorsInfo, 'NetNodeEpochRewardsSet')
+      DelegatorsInfo.setNetNodeEpochRewards(identityId, epoch, amount),
+    )
+      .to.emit(DelegatorsInfo, 'NetNodeEpochRewardsSet')
       .withArgs(identityId, epoch, amount);
 
-    expect(await DelegatorsInfo.getNetNodeEpochRewards(identityId, epoch)).to.equal(amount);
+    expect(
+      await DelegatorsInfo.getNetNodeEpochRewards(identityId, epoch),
+    ).to.equal(amount);
   });
 
   it('Should set HasDelegatorClaimedEpochRewards and emit HasDelegatorClaimedEpochRewardsUpdated', async () => {
@@ -349,8 +354,14 @@ describe('DelegatorsInfo contract', function() {
     const delegatorKey = ethers.encodeBytes32String('delegator1');
 
     await expect(
-      DelegatorsInfo.setHasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey, claimed)
-    ).to.emit(DelegatorsInfo, 'HasDelegatorClaimedEpochRewardsUpdated')
+      DelegatorsInfo.setHasDelegatorClaimedEpochRewards(
+        epoch,
+        identityId,
+        delegatorKey,
+        claimed,
+      ),
+    )
+      .to.emit(DelegatorsInfo, 'HasDelegatorClaimedEpochRewardsUpdated')
       .withArgs(epoch, identityId, delegatorKey, claimed);
   });
 
@@ -361,8 +372,9 @@ describe('DelegatorsInfo contract', function() {
     const delegator = accounts[1].address;
 
     await expect(
-      DelegatorsInfo.setHasEverDelegatedToNode(identityId, delegator, claimed)
-    ).to.emit(DelegatorsInfo, 'HasEverDelegatedToNodeUpdated')
+      DelegatorsInfo.setHasEverDelegatedToNode(identityId, delegator, claimed),
+    )
+      .to.emit(DelegatorsInfo, 'HasEverDelegatedToNodeUpdated')
       .withArgs(identityId, delegator, claimed);
   });
 
@@ -373,10 +385,12 @@ describe('DelegatorsInfo contract', function() {
     const delegator = accounts[1].address;
 
     await expect(
-      DelegatorsInfo.setLastStakeHeldEpoch(identityId, delegator, epoch)
-    ).to.emit(DelegatorsInfo, 'LastStakeHeldEpochUpdated')
+      DelegatorsInfo.setLastStakeHeldEpoch(identityId, delegator, epoch),
+    ).to.emit(DelegatorsInfo, 'LastStakeHeldEpochUpdated');
 
-    expect(await DelegatorsInfo.getLastStakeHeldEpoch(identityId, delegator)).to.equal(epoch);
+    expect(
+      await DelegatorsInfo.getLastStakeHeldEpoch(identityId, delegator),
+    ).to.equal(epoch);
   });
 
   it('Should set delegator rolling rewards', async () => {
@@ -384,17 +398,23 @@ describe('DelegatorsInfo contract', function() {
     const delegator = accounts[2].address;
     const amount = 500;
 
-    await expect(
-      await DelegatorsInfo.addDelegator(identityId, delegator)
-    ).to.emit(DelegatorsInfo, 'DelegatorAdded')
+    await expect(await DelegatorsInfo.addDelegator(identityId, delegator))
+      .to.emit(DelegatorsInfo, 'DelegatorAdded')
       .withArgs(identityId, delegator);
 
     await expect(
-      await DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount)
-    ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+      await DelegatorsInfo.setDelegatorRollingRewards(
+        identityId,
+        delegator,
+        amount,
+      ),
+    )
+      .to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
       .withArgs(identityId, delegator, amount, amount);
 
-    expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(amount);
+    expect(
+      await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator),
+    ).to.equal(amount);
   });
 
   it('Should add to delegator rolling rewards', async () => {
@@ -403,58 +423,88 @@ describe('DelegatorsInfo contract', function() {
     const amount = 500;
     const amount2 = 1000;
 
-    await expect(
-      await DelegatorsInfo.addDelegator(identityId, delegator)
-    ).to.emit(DelegatorsInfo, 'DelegatorAdded')
+    await expect(await DelegatorsInfo.addDelegator(identityId, delegator))
+      .to.emit(DelegatorsInfo, 'DelegatorAdded')
       .withArgs(identityId, delegator);
 
     await expect(
-      await DelegatorsInfo.setDelegatorRollingRewards(identityId, delegator, amount)
-    ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+      await DelegatorsInfo.setDelegatorRollingRewards(
+        identityId,
+        delegator,
+        amount,
+      ),
+    )
+      .to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
       .withArgs(identityId, delegator, amount, amount);
 
     await expect(
-      await DelegatorsInfo.addDelegatorRollingRewards(identityId, delegator, amount2)
-    ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+      await DelegatorsInfo.addDelegatorRollingRewards(
+        identityId,
+        delegator,
+        amount2,
+      ),
+    )
+      .to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
       .withArgs(identityId, delegator, amount2, amount + amount2);
 
-    expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(amount + amount2);
+    expect(
+      await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator),
+    ).to.equal(amount + amount2);
   });
 
   it('Should return zero rolling rewards for non-delegator', async () => {
     const { identityId } = await createProfile();
     const delegator = accounts[1].address;
 
-    expect(await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator)).to.equal(0);
+    expect(
+      await DelegatorsInfo.getDelegatorRollingRewards(identityId, delegator),
+    ).to.equal(0);
   });
 
   // Access control tests
-  describe('Access control', function() {
+  describe('Access control', function () {
     it('Should allow Staking contract to call addDelegator but revert for unauthorized', async () => {
       const { identityId } = await createProfile();
 
       await expect(
-        DelegatorsInfo.connect(stakingSigner).addDelegator(identityId, accounts[1].address)
-      ).to.emit(DelegatorsInfo, 'DelegatorAdded')
+        DelegatorsInfo.connect(stakingSigner).addDelegator(
+          identityId,
+          accounts[1].address,
+        ),
+      )
+        .to.emit(DelegatorsInfo, 'DelegatorAdded')
         .withArgs(identityId, accounts[1].address);
 
       await expect(
-        DelegatorsInfo.connect(accounts[2]).addDelegator(identityId, accounts[3].address)
+        DelegatorsInfo.connect(accounts[2]).addDelegator(
+          identityId,
+          accounts[3].address,
+        ),
       ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
     });
 
     it('Should allow Staking contract to call removeDelegator but revert for unauthorized', async () => {
       const { identityId } = await createProfile();
 
-      await DelegatorsInfo.connect(stakingSigner).addDelegator(identityId, accounts[1].address);
+      await DelegatorsInfo.connect(stakingSigner).addDelegator(
+        identityId,
+        accounts[1].address,
+      );
 
       await expect(
-        DelegatorsInfo.connect(stakingSigner).removeDelegator(identityId, accounts[1].address)
-      ).to.emit(DelegatorsInfo, 'DelegatorRemoved')
+        DelegatorsInfo.connect(stakingSigner).removeDelegator(
+          identityId,
+          accounts[1].address,
+        ),
+      )
+        .to.emit(DelegatorsInfo, 'DelegatorRemoved')
         .withArgs(identityId, accounts[1].address);
 
       await expect(
-        DelegatorsInfo.connect(accounts[2]).removeDelegator(identityId, accounts[3].address)
+        DelegatorsInfo.connect(accounts[2]).removeDelegator(
+          identityId,
+          accounts[3].address,
+        ),
       ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
     });
 
@@ -463,12 +513,21 @@ describe('DelegatorsInfo contract', function() {
       const epoch = 5;
 
       await expect(
-        DelegatorsInfo.connect(stakingSigner).setLastClaimedEpoch(identityId, accounts[1].address, epoch)
-      ).to.emit(DelegatorsInfo, 'DelegatorLastClaimedEpochUpdated')
+        DelegatorsInfo.connect(stakingSigner).setLastClaimedEpoch(
+          identityId,
+          accounts[1].address,
+          epoch,
+        ),
+      )
+        .to.emit(DelegatorsInfo, 'DelegatorLastClaimedEpochUpdated')
         .withArgs(identityId, accounts[1].address, epoch);
 
       await expect(
-        DelegatorsInfo.connect(accounts[2]).setLastClaimedEpoch(identityId, accounts[1].address, epoch)
+        DelegatorsInfo.connect(accounts[2]).setLastClaimedEpoch(
+          identityId,
+          accounts[1].address,
+          epoch,
+        ),
       ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
     });
 
@@ -477,12 +536,21 @@ describe('DelegatorsInfo contract', function() {
       const amount = 1000;
 
       await expect(
-        DelegatorsInfo.connect(stakingSigner).setDelegatorRollingRewards(identityId, accounts[1].address, amount)
-      ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+        DelegatorsInfo.connect(stakingSigner).setDelegatorRollingRewards(
+          identityId,
+          accounts[1].address,
+          amount,
+        ),
+      )
+        .to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
         .withArgs(identityId, accounts[1].address, amount, amount);
 
       await expect(
-        DelegatorsInfo.connect(accounts[2]).setDelegatorRollingRewards(identityId, accounts[1].address, amount)
+        DelegatorsInfo.connect(accounts[2]).setDelegatorRollingRewards(
+          identityId,
+          accounts[1].address,
+          amount,
+        ),
       ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
     });
 
@@ -491,15 +559,33 @@ describe('DelegatorsInfo contract', function() {
       const initialAmount = 500;
       const additionalAmount = 300;
 
-      await DelegatorsInfo.connect(stakingSigner).setDelegatorRollingRewards(identityId, accounts[1].address, initialAmount);
+      await DelegatorsInfo.connect(stakingSigner).setDelegatorRollingRewards(
+        identityId,
+        accounts[1].address,
+        initialAmount,
+      );
 
       await expect(
-        DelegatorsInfo.connect(stakingSigner).addDelegatorRollingRewards(identityId, accounts[1].address, additionalAmount)
-      ).to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
-        .withArgs(identityId, accounts[1].address, additionalAmount, initialAmount + additionalAmount);
+        DelegatorsInfo.connect(stakingSigner).addDelegatorRollingRewards(
+          identityId,
+          accounts[1].address,
+          additionalAmount,
+        ),
+      )
+        .to.emit(DelegatorsInfo, 'DelegatorRollingRewardsUpdated')
+        .withArgs(
+          identityId,
+          accounts[1].address,
+          additionalAmount,
+          initialAmount + additionalAmount,
+        );
 
       await expect(
-        DelegatorsInfo.connect(accounts[2]).addDelegatorRollingRewards(identityId, accounts[1].address, additionalAmount)
+        DelegatorsInfo.connect(accounts[2]).addDelegatorRollingRewards(
+          identityId,
+          accounts[1].address,
+          additionalAmount,
+        ),
       ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
     });
 
@@ -509,12 +595,21 @@ describe('DelegatorsInfo contract', function() {
       const isClaimed = true;
 
       await expect(
-        DelegatorsInfo.connect(stakingSigner).setIsOperatorFeeClaimedForEpoch(identityId, epoch, isClaimed)
-      ).to.emit(DelegatorsInfo, 'IsOperatorFeeClaimedForEpochUpdated')
+        DelegatorsInfo.connect(stakingSigner).setIsOperatorFeeClaimedForEpoch(
+          identityId,
+          epoch,
+          isClaimed,
+        ),
+      )
+        .to.emit(DelegatorsInfo, 'IsOperatorFeeClaimedForEpochUpdated')
         .withArgs(identityId, epoch, isClaimed);
 
       await expect(
-        DelegatorsInfo.connect(accounts[2]).setIsOperatorFeeClaimedForEpoch(identityId, epoch, isClaimed)
+        DelegatorsInfo.connect(accounts[2]).setIsOperatorFeeClaimedForEpoch(
+          identityId,
+          epoch,
+          isClaimed,
+        ),
       ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
     });
 
@@ -524,12 +619,21 @@ describe('DelegatorsInfo contract', function() {
       const amount = 2000;
 
       await expect(
-        DelegatorsInfo.connect(stakingSigner).setNetNodeEpochRewards(identityId, epoch, amount)
-      ).to.emit(DelegatorsInfo, 'NetNodeEpochRewardsSet')
+        DelegatorsInfo.connect(stakingSigner).setNetNodeEpochRewards(
+          identityId,
+          epoch,
+          amount,
+        ),
+      )
+        .to.emit(DelegatorsInfo, 'NetNodeEpochRewardsSet')
         .withArgs(identityId, epoch, amount);
 
       await expect(
-        DelegatorsInfo.connect(accounts[2]).setNetNodeEpochRewards(identityId, epoch, amount)
+        DelegatorsInfo.connect(accounts[2]).setNetNodeEpochRewards(
+          identityId,
+          epoch,
+          amount,
+        ),
       ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
     });
 
@@ -540,12 +644,25 @@ describe('DelegatorsInfo contract', function() {
       const claimed = true;
 
       await expect(
-        DelegatorsInfo.connect(stakingSigner).setHasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey, claimed)
-      ).to.emit(DelegatorsInfo, 'HasDelegatorClaimedEpochRewardsUpdated')
+        DelegatorsInfo.connect(
+          stakingSigner,
+        ).setHasDelegatorClaimedEpochRewards(
+          epoch,
+          identityId,
+          delegatorKey,
+          claimed,
+        ),
+      )
+        .to.emit(DelegatorsInfo, 'HasDelegatorClaimedEpochRewardsUpdated')
         .withArgs(epoch, identityId, delegatorKey, claimed);
 
       await expect(
-        DelegatorsInfo.connect(accounts[2]).setHasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey, claimed)
+        DelegatorsInfo.connect(accounts[2]).setHasDelegatorClaimedEpochRewards(
+          epoch,
+          identityId,
+          delegatorKey,
+          claimed,
+        ),
       ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
     });
 
@@ -554,12 +671,21 @@ describe('DelegatorsInfo contract', function() {
       const hasEverDelegated = true;
 
       await expect(
-        DelegatorsInfo.connect(stakingSigner).setHasEverDelegatedToNode(identityId, accounts[1].address, hasEverDelegated)
-      ).to.emit(DelegatorsInfo, 'HasEverDelegatedToNodeUpdated')
+        DelegatorsInfo.connect(stakingSigner).setHasEverDelegatedToNode(
+          identityId,
+          accounts[1].address,
+          hasEverDelegated,
+        ),
+      )
+        .to.emit(DelegatorsInfo, 'HasEverDelegatedToNodeUpdated')
         .withArgs(identityId, accounts[1].address, hasEverDelegated);
 
       await expect(
-        DelegatorsInfo.connect(accounts[2]).setHasEverDelegatedToNode(identityId, accounts[1].address, hasEverDelegated)
+        DelegatorsInfo.connect(accounts[2]).setHasEverDelegatedToNode(
+          identityId,
+          accounts[1].address,
+          hasEverDelegated,
+        ),
       ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
     });
 
@@ -568,41 +694,70 @@ describe('DelegatorsInfo contract', function() {
       const epoch = 4;
 
       await expect(
-        DelegatorsInfo.connect(stakingSigner).setLastStakeHeldEpoch(identityId, accounts[1].address, epoch)
-      ).to.emit(DelegatorsInfo, 'LastStakeHeldEpochUpdated')
+        DelegatorsInfo.connect(stakingSigner).setLastStakeHeldEpoch(
+          identityId,
+          accounts[1].address,
+          epoch,
+        ),
+      )
+        .to.emit(DelegatorsInfo, 'LastStakeHeldEpochUpdated')
         .withArgs(identityId, accounts[1].address, epoch);
 
       await expect(
-        DelegatorsInfo.connect(accounts[2]).setLastStakeHeldEpoch(identityId, accounts[1].address, epoch)
+        DelegatorsInfo.connect(accounts[2]).setLastStakeHeldEpoch(
+          identityId,
+          accounts[1].address,
+          epoch,
+        ),
       ).to.be.revertedWithCustomError(DelegatorsInfo, 'UnauthorizedAccess');
     });
   });
 
   // Migration tests
-  describe('Migration', function() {
+  describe('Migration', function () {
     it('Should migrate new addresses to delegators for their nodes', async () => {
       const { identityId } = await createProfile();
-      const { identityId: identityId2 } = await createProfile(undefined, accounts[2]); // Use different operational account
+      const { identityId: identityId2 } = await createProfile(
+        undefined,
+        accounts[2],
+      ); // Use different operational account
 
       // Get StakingStorage contract to set up test data
-      const stakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
+      const stakingStorage =
+        await hre.ethers.getContract<StakingStorage>('StakingStorage');
 
       // Create delegator keys for the addresses we want to migrate
       const delegator1 = accounts[3].address;
       const delegator2 = accounts[4].address;
-      const delegatorKey1 = ethers.keccak256(ethers.solidityPacked(['address'], [delegator1]));
-      const delegatorKey2 = ethers.keccak256(ethers.solidityPacked(['address'], [delegator2]));
+      const delegatorKey1 = ethers.keccak256(
+        ethers.solidityPacked(['address'], [delegator1]),
+      );
+      const delegatorKey2 = ethers.keccak256(
+        ethers.solidityPacked(['address'], [delegator2]),
+      );
 
       // Set up delegator data in StakingStorage to simulate existing delegations
       // We need to make the delegators active in StakingStorage first
-      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId, delegatorKey1, 1000);
-      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId, delegatorKey2, 2000);
-      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId2, delegatorKey1, 1500);
+      await stakingStorage
+        .connect(stakingSigner)
+        .setDelegatorStakeBase(identityId, delegatorKey1, 1000);
+      await stakingStorage
+        .connect(stakingSigner)
+        .setDelegatorStakeBase(identityId, delegatorKey2, 2000);
+      await stakingStorage
+        .connect(stakingSigner)
+        .setDelegatorStakeBase(identityId2, delegatorKey1, 1500);
 
       // Verify the delegators are not yet in DelegatorsInfo
-      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator1)).to.equal(false);
-      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator2)).to.equal(false);
-      expect(await DelegatorsInfo.isNodeDelegator(identityId2, delegator1)).to.equal(false);
+      expect(
+        await DelegatorsInfo.isNodeDelegator(identityId, delegator1),
+      ).to.equal(false);
+      expect(
+        await DelegatorsInfo.isNodeDelegator(identityId, delegator2),
+      ).to.equal(false);
+      expect(
+        await DelegatorsInfo.isNodeDelegator(identityId2, delegator1),
+      ).to.equal(false);
 
       // Migrate the addresses
       const newAddresses = [delegator1, delegator2];
@@ -615,12 +770,20 @@ describe('DelegatorsInfo contract', function() {
         .withArgs(identityId2, delegator1);
 
       // Verify the delegators are now in DelegatorsInfo
-      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator1)).to.equal(true);
-      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator2)).to.equal(true);
-      expect(await DelegatorsInfo.isNodeDelegator(identityId2, delegator1)).to.equal(true);
+      expect(
+        await DelegatorsInfo.isNodeDelegator(identityId, delegator1),
+      ).to.equal(true);
+      expect(
+        await DelegatorsInfo.isNodeDelegator(identityId, delegator2),
+      ).to.equal(true);
+      expect(
+        await DelegatorsInfo.isNodeDelegator(identityId2, delegator1),
+      ).to.equal(true);
 
       // Verify delegator2 is not in identityId2 (since it wasn't staking there)
-      expect(await DelegatorsInfo.isNodeDelegator(identityId2, delegator2)).to.equal(false);
+      expect(
+        await DelegatorsInfo.isNodeDelegator(identityId2, delegator2),
+      ).to.equal(false);
 
       // Verify the delegator lists are correct
       const delegators1 = await DelegatorsInfo.getDelegators(identityId);
@@ -635,24 +798,33 @@ describe('DelegatorsInfo contract', function() {
     it('Should handle duplicate migration gracefully', async () => {
       const { identityId } = await createProfile();
 
-      const stakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
+      const stakingStorage =
+        await hre.ethers.getContract<StakingStorage>('StakingStorage');
       const delegator = accounts[3].address;
-      const delegatorKey = ethers.keccak256(ethers.solidityPacked(['address'], [delegator]));
+      const delegatorKey = ethers.keccak256(
+        ethers.solidityPacked(['address'], [delegator]),
+      );
 
       // Set up delegator data in StakingStorage
-      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId, delegatorKey, 1000);
+      await stakingStorage
+        .connect(stakingSigner)
+        .setDelegatorStakeBase(identityId, delegatorKey, 1000);
 
       // First migration
       await DelegatorsInfo.migrate([delegator]);
-      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator)).to.equal(true);
+      expect(
+        await DelegatorsInfo.isNodeDelegator(identityId, delegator),
+      ).to.equal(true);
 
       // Second migration of the same address should not add duplicates
       await DelegatorsInfo.migrate([delegator]);
 
       // Verify the delegator is still there and no duplicates
-      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator)).to.equal(true);
+      expect(
+        await DelegatorsInfo.isNodeDelegator(identityId, delegator),
+      ).to.equal(true);
       const delegators = await DelegatorsInfo.getDelegators(identityId);
-      expect(delegators.filter(d => d === delegator).length).to.equal(1);
+      expect(delegators.filter((d) => d === delegator).length).to.equal(1);
     });
 
     it('Should handle empty address array', async () => {
@@ -667,20 +839,28 @@ describe('DelegatorsInfo contract', function() {
       const addressWithNoNodes = accounts[5].address;
 
       // Should not revert and should not add the address as a delegator
-      await expect(DelegatorsInfo.migrate([addressWithNoNodes])).to.not.be.reverted;
-      expect(await DelegatorsInfo.isNodeDelegator(identityId, addressWithNoNodes)).to.equal(false);
+      await expect(DelegatorsInfo.migrate([addressWithNoNodes])).to.not.be
+        .reverted;
+      expect(
+        await DelegatorsInfo.isNodeDelegator(identityId, addressWithNoNodes),
+      ).to.equal(false);
     });
 
     it('Should handle mixed addresses (some with nodes, some without)', async () => {
       const { identityId } = await createProfile();
 
-      const stakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
+      const stakingStorage =
+        await hre.ethers.getContract<StakingStorage>('StakingStorage');
       const delegator = accounts[3].address;
-      const delegatorKey = ethers.keccak256(ethers.solidityPacked(['address'], [delegator]));
+      const delegatorKey = ethers.keccak256(
+        ethers.solidityPacked(['address'], [delegator]),
+      );
       const addressWithNoNodes = accounts[5].address;
 
       // Set up delegator data for only one address
-      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId, delegatorKey, 1000);
+      await stakingStorage
+        .connect(stakingSigner)
+        .setDelegatorStakeBase(identityId, delegatorKey, 1000);
 
       // Migrate both addresses
       await expect(DelegatorsInfo.migrate([delegator, addressWithNoNodes]))
@@ -688,29 +868,46 @@ describe('DelegatorsInfo contract', function() {
         .withArgs(identityId, delegator);
 
       // Verify only the address with nodes was added
-      expect(await DelegatorsInfo.isNodeDelegator(identityId, delegator)).to.equal(true);
-      expect(await DelegatorsInfo.isNodeDelegator(identityId, addressWithNoNodes)).to.equal(false);
+      expect(
+        await DelegatorsInfo.isNodeDelegator(identityId, delegator),
+      ).to.equal(true);
+      expect(
+        await DelegatorsInfo.isNodeDelegator(identityId, addressWithNoNodes),
+      ).to.equal(false);
     });
 
     it('Should maintain correct delegator indices after migration', async () => {
       const { identityId } = await createProfile();
 
-      const stakingStorage = await hre.ethers.getContract<StakingStorage>('StakingStorage');
+      const stakingStorage =
+        await hre.ethers.getContract<StakingStorage>('StakingStorage');
       const delegator1 = accounts[3].address;
       const delegator2 = accounts[4].address;
-      const delegatorKey1 = ethers.keccak256(ethers.solidityPacked(['address'], [delegator1]));
-      const delegatorKey2 = ethers.keccak256(ethers.solidityPacked(['address'], [delegator2]));
+      const delegatorKey1 = ethers.keccak256(
+        ethers.solidityPacked(['address'], [delegator1]),
+      );
+      const delegatorKey2 = ethers.keccak256(
+        ethers.solidityPacked(['address'], [delegator2]),
+      );
 
       // Set up delegator data in StakingStorage
-      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId, delegatorKey1, 1000);
-      await stakingStorage.connect(stakingSigner).setDelegatorStakeBase(identityId, delegatorKey2, 2000);
+      await stakingStorage
+        .connect(stakingSigner)
+        .setDelegatorStakeBase(identityId, delegatorKey1, 1000);
+      await stakingStorage
+        .connect(stakingSigner)
+        .setDelegatorStakeBase(identityId, delegatorKey2, 2000);
 
       // Migrate the addresses
       await DelegatorsInfo.migrate([delegator1, delegator2]);
 
       // Verify indices are correct
-      expect(await DelegatorsInfo.getDelegatorIndex(identityId, delegator1)).to.equal(0);
-      expect(await DelegatorsInfo.getDelegatorIndex(identityId, delegator2)).to.equal(1);
+      expect(
+        await DelegatorsInfo.getDelegatorIndex(identityId, delegator1),
+      ).to.equal(0);
+      expect(
+        await DelegatorsInfo.getDelegatorIndex(identityId, delegator2),
+      ).to.equal(1);
 
       // Verify delegator list order
       const delegators = await DelegatorsInfo.getDelegators(identityId);

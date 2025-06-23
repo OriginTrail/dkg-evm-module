@@ -35,7 +35,13 @@ describe('@unit Ask', () => {
   let Token: Token;
 
   async function deployAll(): Promise<FullIntegrationFixture> {
-    await hre.deployments.fixture(['Profile', 'Ask', 'Staking', 'Token','EpochStorage']);
+    await hre.deployments.fixture([
+      'Profile',
+      'Ask',
+      'Staking',
+      'Token',
+      'EpochStorage',
+    ]);
 
     Profile = await hre.ethers.getContract<Profile>('Profile');
     AskStorage = await hre.ethers.getContract<AskStorage>('AskStorage');
