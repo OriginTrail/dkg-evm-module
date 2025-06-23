@@ -115,10 +115,9 @@
     "test:gas": "cross-env GAS_REPORT=true hardhat test --network hardhat",
     "test:integration": "hardhat test --network hardhat --grep '@integration'",
     "test:parallel": "hardhat test --network hardhat --parallel",
-    "test:all": "bash test/scripts/run-tests-with-summary.sh",
     "test:trace": "hardhat test --network hardhat --trace",
     "test:unit": "hardhat test --network hardhat --grep '@unit'",
-    "test": "hardhat test --network hardhat",
+    "test": "bash test/scripts/run-tests-with-summary.sh",
     "typechain": "hardhat typechain"
   }
 }
