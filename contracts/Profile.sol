@@ -21,7 +21,6 @@ import {Permissions} from "./libraries/Permissions.sol";
 contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Profile";
     string private constant _VERSION = "1.0.0";
-    uint256 private constant HALF_EPOCH_DURATION = 15 days;
 
     Ask public askContract;
     Identity public identityContract;
@@ -153,7 +152,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epochLength = chronos.epochLength();
         uint256 nextEpochStart = epochStart + epochLength;
 
-        uint256 effectiveStart = block.timestamp <= epochStart + HALF_EPOCH_DURATION
+        uint256 effectiveStart = block.timestamp <= epochStart + epochLength / 2
             ? nextEpochStart
             : nextEpochStart + epochLength;
 
