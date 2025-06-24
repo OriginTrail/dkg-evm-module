@@ -290,6 +290,26 @@
       "deploymentBlock": 8242676,
       "deploymentTimestamp": 1741264280939,
       "deployed": true
+    },
+    "MigratorM1V8": {
+      "evmAddress": "0x061Aa2f6a7dAc2AEB32d17cafF4CBA901671f530",
+      "substrateAddress": "5EMjsczMQ4xFQHMZgYDjr9xCn1Pne9eJbVc3L7fjQMHoYzs9",
+      "version": null,
+      "gitBranch": "main",
+      "gitCommitHash": "2adb14a072438559a57c10baa8bccd3a96cd3b62",
+      "deploymentBlock": 9777791,
+      "deploymentTimestamp": 1750689208302,
+      "deployed": true
+    },
+    "MigratorM1V8_1": {
+      "evmAddress": "0xc651Da42db2496AeD67A3f08B87D9A214921Fc22",
+      "substrateAddress": "5EMjsd11uvsQzoHAV6RASEsGYZX49EP93n53KwC24qRaZApM",
+      "version": null,
+      "gitBranch": "main",
+      "gitCommitHash": "9b20f049a2602b40eb93af1833e0d35564d2d487",
+      "deploymentBlock": 9788698,
+      "deploymentTimestamp": 1750755493929,
+      "deployed": true
     }
   }
 }

@@ -265,6 +265,24 @@
       "deploymentBlock": 27232205,
       "deploymentTimestamp": 1741253761713,
       "deployed": true
+    },
+    "MigratorM1V8": {
+      "evmAddress": "0xF596158d084befFF3a21B7bBB90366364bEd742F",
+      "version": null,
+      "gitBranch": "main",
+      "gitCommitHash": "2adb14a072438559a57c10baa8bccd3a96cd3b62",
+      "deploymentBlock": 31949959,
+      "deploymentTimestamp": 1750689269245,
+      "deployed": true
+    },
+    "MigratorM1V8_1": {
+      "evmAddress": "0xfF7Fab2ba3C9B07d26a951195F4e2809c2F6d4C0",
+      "version": null,
+      "gitBranch": "main",
+      "gitCommitHash": "9b20f049a2602b40eb93af1833e0d35564d2d487",
+      "deploymentBlock": 31983030,
+      "deploymentTimestamp": 1750755411443,
+      "deployed": true
     }
   }
 }
