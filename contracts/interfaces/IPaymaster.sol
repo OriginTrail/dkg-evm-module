@@ -9,5 +9,5 @@ interface IPaymaster {
 
     function fundPaymaster(uint256 amount) external;
 
-    function coverCost(uint256 amount) external;
+    function coverCost(uint256 amount, address originalSender) external;
 }
