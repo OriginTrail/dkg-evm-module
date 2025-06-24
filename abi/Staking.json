@@ -165,37 +165,6 @@
     "type": "error"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint72",
-        "name": "fromIdentityId",
-        "type": "uint72"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint72",
-        "name": "toIdentityId",
-        "type": "uint72"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "delegator",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint96",
-        "name": "amount",
-        "type": "uint96"
-      }
-    ],
-    "name": "StakeRedelegated",
-    "type": "event"
-  },
-  {
     "inputs": [],
     "name": "SCALE18",
     "outputs": [

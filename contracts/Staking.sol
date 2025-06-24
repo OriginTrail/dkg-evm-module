@@ -29,13 +29,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Staking";
     string private constant _VERSION = "1.0.1";
     uint256 public constant SCALE18 = 1e18;
-
-    event StakeRedelegated(
-        uint72 indexed fromIdentityId,
-        uint72 indexed toIdentityId,
-        address indexed delegator,
-        uint96 amount
-    );
+    uint256 private constant EPOCH_POOL_INDEX = 1;
 
     Ask public askContract;
     ShardingTableStorage public shardingTableStorage;
@@ -124,7 +118,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         // Validate that all claims have been settled for the node before changing stake
         _validateDelegatorEpochClaims(identityId, msg.sender);
 
-        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+        bytes32 delegatorKey = _getDelegatorKey(msg.sender);
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
@@ -175,7 +169,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert TokenLib.ZeroTokenAmount();
         }
 
-        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+        bytes32 delegatorKey = _getDelegatorKey(msg.sender);
         uint256 currentEpoch = chronos.getCurrentEpoch();
 
         // Validate that all claims have been settled for the source and destination nodes before changing stake
@@ -229,8 +223,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         _manageDelegatorStatus(toIdentityId, msg.sender);
-
-        emit StakeRedelegated(fromIdentityId, toIdentityId, msg.sender, stakeAmount);
     }
 
     /**
@@ -253,7 +245,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         // Validate that all claims have been settled for the node before changing stake
         _validateDelegatorEpochClaims(identityId, msg.sender);
 
-        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+        bytes32 delegatorKey = _getDelegatorKey(msg.sender);
         uint256 currentEpoch = chronos.getCurrentEpoch();
 
         // settle all pending score changes for the node's delegator
@@ -303,7 +295,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     function finalizeWithdrawal(uint72 identityId) external profileExists(identityId) {
         StakingStorage ss = stakingStorage;
 
-        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+        bytes32 delegatorKey = _getDelegatorKey(msg.sender);
         (uint96 withdrawalAmount, , uint256 withdrawalReleaseTimestamp) = ss.getDelegatorWithdrawalRequest(
             identityId,
             delegatorKey
@@ -331,7 +323,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     function cancelWithdrawal(uint72 identityId) external profileExists(identityId) {
         StakingStorage ss = stakingStorage;
 
-        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+        bytes32 delegatorKey = _getDelegatorKey(msg.sender);
         (uint96 prevDelegatorWithdrawalAmount /*unused*/, , uint256 withdrawalReleaseTimestamp) = ss
             .getDelegatorWithdrawalRequest(identityId, delegatorKey);
         if (prevDelegatorWithdrawalAmount == 0) revert StakingLib.WithdrawalWasntInitiated();
@@ -405,7 +397,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Validate that all claims have been settled for the node before changing stake
         _validateDelegatorEpochClaims(identityId, msg.sender);
-        bytes32 delegatorKey = keccak256(abi.encodePacked(msg.sender));
+        bytes32 delegatorKey = _getDelegatorKey(msg.sender);
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
@@ -550,7 +542,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             revert("Must claim older epochs first");
         }
 
-        bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
+        bytes32 delegatorKey = _getDelegatorKey(delegator);
         require(
             !delegatorsInfo.hasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey),
             "Already claimed rewards for this epoch"
@@ -569,7 +561,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
                 // Operator fee has not been claimed for this epoch, calculate it
                 uint256 allNodesScore18 = randomSamplingStorage.getAllNodesEpochScore(epoch);
                 if (allNodesScore18 > 0) {
-                    uint256 grossNodeRewards = (epochStorage.getEpochPool(1, epoch) * nodeScore18) / allNodesScore18;
+                    uint256 grossNodeRewards = (epochStorage.getEpochPool(EPOCH_POOL_INDEX, epoch) * nodeScore18) /
+                        allNodesScore18;
                     uint96 operatorFeeAmount = uint96(
                         (grossNodeRewards * profileStorage.getLatestOperatorFeePercentage(identityId)) /
                             parametersStorage.maxOperatorFee()
@@ -661,7 +654,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
      * @param delegator Address of delegator to validate
      */
     function _validateDelegatorEpochClaims(uint72 identityId, address delegator) internal {
-        bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
+        bytes32 delegatorKey = _getDelegatorKey(delegator);
         uint256 currentEpoch = chronos.getCurrentEpoch();
         uint256 previousEpoch = currentEpoch - 1;
 
@@ -763,8 +756,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             return currentDelegatorScore18;
         }
         // 4. Newly earned score for this delegator in the epoch
-        uint256 diff36 = nodeScorePerStake36 - delegatorLastSettledNodeEpochScorePerStake36;
-        uint256 scoreEarned18 = (uint256(stakeBase) * diff36) / SCALE18;
+        uint256 scorePerStakeDiff36 = nodeScorePerStake36 - delegatorLastSettledNodeEpochScorePerStake36;
+        uint256 scoreEarned18 = (uint256(stakeBase) * scorePerStakeDiff36) / SCALE18;
 
         // 5. Persist results
         if (scoreEarned18 > 0) {
@@ -841,9 +834,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
      * @param identityId Node identity to check admin rights for
      */
     function _checkAdmin(uint72 identityId) internal view virtual {
-        if (
-            !identityStorage.keyHasPurpose(identityId, keccak256(abi.encodePacked(msg.sender)), IdentityLib.ADMIN_KEY)
-        ) {
+        if (!identityStorage.keyHasPurpose(identityId, _getDelegatorKey(msg.sender), IdentityLib.ADMIN_KEY)) {
             revert Permissions.OnlyProfileAdminFunction(msg.sender);
         }
     }
@@ -883,5 +874,14 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             // No score earned in current epoch, safe to remove immediately
             delegatorsInfo.removeDelegator(identityId, delegator);
         }
+    }
+
+    /**
+     * @dev Helper function to get delegator key from address
+     * @param delegator Address to convert to key
+     * @return bytes32 hash of the delegator address
+     */
+    function _getDelegatorKey(address delegator) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(delegator));
     }
 }
