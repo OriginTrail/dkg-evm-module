@@ -45,7 +45,7 @@ interface IOldServiceAgreementStorage {
     function transferAgreementTokens(address, uint96) external;
 }
 
-contract MigratorM1V8 is ContractStatus {
+contract MigratorM1V8_1 is ContractStatus {
     error DelegatorsMigrationNotInitiated();
     error DelegatorAlreadyMigrated(uint72 identityId, address delegator);
     error InvalidTotalStake(uint96 expected, uint96 received);
