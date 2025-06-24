@@ -19,7 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`  Old Hub: ${oldHubAddress}`);
 
   const MigratorM1V8 = await hre.helpers.deploy({
-    newContractName: 'MigratorM1V8',
+    newContractName: 'MigratorM1V8_1',
     passHubInConstructor: false,
     additionalArgs: [V8HubAddress, oldHubAddress],
   });
@@ -27,7 +27,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // Set up initialization calls for the migrator
   // These will be executed after deployment to connect to old and new contract systems
   hre.helpers.setParametersEncodedData.push({
-    contractName: 'MigratorM1V8',
+    contractName: 'MigratorM1V8_1',
     encodedData: [
       MigratorM1V8.interface.encodeFunctionData('initializeOldContracts', []),
       MigratorM1V8.interface.encodeFunctionData('initializeNewContracts', []),
