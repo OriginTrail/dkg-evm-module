@@ -1,12 +1,7 @@
-// test/rewards.initial-state.spec.ts
-// @ts-nocheck
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
-import hre from 'hardhat';
-import { randomBytes } from 'crypto';
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
-import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
+import hre from 'hardhat';
 
 import {
   Token,
@@ -49,8 +44,8 @@ const quads = [
 async function ensureNodeHasChunksThisEpoch(
   nodeId: number,
   node: { operational: SignerWithAddress; admin: SignerWithAddress },
-  contracts: any,
-  accounts: any,
+  contracts: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  accounts: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   receivingNodes: {
     operational: SignerWithAddress;
     admin: SignerWithAddress;
@@ -96,7 +91,9 @@ async function ensureNodeHasChunksThisEpoch(
 }
 
 // Helper function to advance to next proofing period
-async function advanceToNextProofingPeriod(contracts: any): Promise<void> {
+async function advanceToNextProofingPeriod(
+  contracts: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+): Promise<void> {
   const proofingPeriodDuration =
     await contracts.randomSampling.getActiveProofingPeriodDurationInBlocks();
   const { activeProofPeriodStartBlock, isValid } =
@@ -119,9 +116,8 @@ async function advanceToNextProofingPeriod(contracts: any): Promise<void> {
 async function submitProofAndLogScore(
   nodeId: number,
   nodeAccount: { operational: SignerWithAddress; admin: SignerWithAddress },
-  contracts: any,
+  contracts: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   epoch: bigint,
-  nodeName: string,
 ) {
   // Get score before proof
   const scoreBefore = await contracts.randomSamplingStorage.getNodeEpochScore(
@@ -3128,7 +3124,7 @@ describe('Withdrawal request tests after further epochs', () => {
     // --- Epoch 7 ---
     console.log('\n⏳ Advancing through epoch 7 with proofs...');
     await advanceToNextProofingPeriod({ randomSampling: RandomSampling });
-    for (const [i, node] of nodes.entries()) {
+    for (const [, node] of nodes.entries()) {
       await submitProofAndLogScore(
         node.identityId,
         { operational: node.operational, admin: node.admin },
@@ -3158,7 +3154,7 @@ describe('Withdrawal request tests after further epochs', () => {
       toTRAC(1000),
     );
     await advanceToNextProofingPeriod({ randomSampling: RandomSampling });
-    for (const [i, node] of nodes.entries()) {
+    for (const [, node] of nodes.entries()) {
       await submitProofAndLogScore(
         node.identityId,
         { operational: node.operational, admin: node.admin },
