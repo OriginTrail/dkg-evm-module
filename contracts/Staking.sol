@@ -561,8 +561,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 nodeScore18 = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
         uint256 reward;
 
-        // If delegatorScore18 = 0 or nodeScore18 = 0, rewards are 0 too
-        if (delegatorScore18 != 0 && nodeScore18 != 0) {
+        // If nodeScore18 = 0, rewards are 0 too
+        if (nodeScore18 > 0) {
             // netNodeRewards (rewards for node's delegators) = grossNodeRewards - operator fee
             uint256 netNodeRewards;
             if (!delegatorsInfo.isOperatorFeeClaimedForEpoch(identityId, epoch)) {
@@ -575,11 +575,11 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
                             parametersStorage.maxOperatorFee()
                     );
                     netNodeRewards = grossNodeRewards - operatorFeeAmount;
-                    stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
                     // Mark the operator fee as claimed for this epoch
                     delegatorsInfo.setIsOperatorFeeClaimedForEpoch(identityId, epoch, true);
                     // Set node's delegators net rewards for this epoch so we don't have to calculate it again
                     delegatorsInfo.setNetNodeEpochRewards(identityId, epoch, netNodeRewards);
+                    stakingStorage.increaseOperatorFeeBalance(identityId, operatorFeeAmount);
                 }
             } else {
                 // Operator fee has been claimed for this epoch already, use the previously calculated node's delegators net rewards for this epoch
