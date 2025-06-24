@@ -132,7 +132,7 @@ contract MigratorM1V8 is ContractStatus {
     }
 
     // migrate the delegator data
-    function migrateDelegatorData(uint72 identityId, address delegator, uint96 tracBalance) external onlyOwnerOrMultiSigOwner {
+    function migrateDelegatorData(uint72 identityId, address delegator) external onlyOwnerOrMultiSigOwner {
         if (!delegatorsMigrationInitiated) {
             revert DelegatorsMigrationNotInitiated();
         }
@@ -140,9 +140,15 @@ contract MigratorM1V8 is ContractStatus {
             revert DelegatorAlreadyMigrated(identityId, delegator);
         }
 
-        newStakingStorage.setDelegatorStakeBase(identityId, keccak256(abi.encodePacked(delegator)), tracBalance);        
-        newStakingStorage.decreaseNodeStake(identityId, tracBalance);
-        newStakingStorage.decreaseTotalStake(tracBalance);
+        IERC20Metadata shares = IERC20Metadata(oldProfileStorage.getSharesContractAddress(identityId));
+
+        uint256 sharesTotalSupply = shares.totalSupply();
+        uint256 delegatorSharesAmount = shares.balanceOf(delegator);
+        oldNodeStakes[identityId] = oldStakingStorage.totalStakes(identityId);
+        uint96 delegatorStakeBase = uint96((oldNodeStakes[identityId] * delegatorSharesAmount) / sharesTotalSupply);
+
+        newStakingStorage.decreaseNodeStake(identityId, delegatorStakeBase);
+        newStakingStorage.decreaseTotalStake(delegatorStakeBase);
         delegatorMigrated[identityId][delegator] = true;
     }
 
