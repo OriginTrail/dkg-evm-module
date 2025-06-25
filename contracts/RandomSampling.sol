@@ -53,6 +53,17 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         _;
     }
 
+    /**
+     * @dev Modifier to check if a node exists in the sharding table
+     * Used by functions to ensure operations target valid nodes
+     * Reverts with NodeDoesntExist error if node is not found
+     * @param identityId Node identity to check existence for
+     */
+    modifier nodeExistsInShardingTable(uint72 identityId) {
+        _checkNodeExistsInShardingTable(identityId);
+        _;
+    }
+
     // @dev Only transactions by HubController owner or one of the owners of the MultiSig Wallet
     modifier onlyOwnerOrMultiSigOwner() {
         _checkOwnerOrMultiSigOwner();
@@ -131,7 +142,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
      * Generates a random knowledge collection and chunk to be proven
      * Can only create one challenge per proofing period
      */
-    function createChallenge() external profileExists(identityStorage.getIdentityId(msg.sender)) {
+    function createChallenge()
+        external
+        profileExists(identityStorage.getIdentityId(msg.sender))
+        nodeExistsInShardingTable(identityStorage.getIdentityId(msg.sender))
+    {
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
         RandomSamplingLib.Challenge memory nodeChallenge = randomSamplingStorage.getNodeChallenge(identityId);
@@ -166,7 +181,11 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     function submitProof(
         string memory chunk,
         bytes32[] calldata merkleProof
-    ) external profileExists(identityStorage.getIdentityId(msg.sender)) {
+    )
+        external
+        profileExists(identityStorage.getIdentityId(msg.sender))
+        nodeExistsInShardingTable(identityStorage.getIdentityId(msg.sender))
+    {
         // Get node identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
 
@@ -516,6 +535,18 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     function _checkProfileExists(uint72 identityId) internal view virtual {
         if (!profileStorage.profileExists(identityId)) {
             revert ProfileLib.ProfileDoesntExist(identityId);
+        }
+    }
+
+    /**
+     * @dev Internal function to validate that a node exists in the sharding table
+     * Used by modifiers and functions to ensure operations target valid nodes
+     * Reverts with NodeDoesntExist error if node is not found
+     * @param identityId Node identity to check existence for
+     */
+    function _checkNodeExistsInShardingTable(uint72 identityId) internal view virtual {
+        if (!shardingTableStorage.nodeExists(identityId)) {
+            revert("Node does not exist in sharding table");
         }
     }
 
