@@ -1,9 +1,6 @@
-// test/rewards.initial-state.spec.ts
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
-import { kcTools } from 'assertion-tools';
 import { expect } from 'chai';
 import hre from 'hardhat';
 
@@ -23,6 +20,7 @@ import {
   AskStorage,
   ParametersStorage,
   DelegatorsInfo,
+  ShardingTable,
 } from '../../typechain';
 import { createKnowledgeCollection } from '../helpers/kc-helpers';
 import { createProfile } from '../helpers/profile-helpers';
@@ -72,6 +70,8 @@ async function ensureNodeHasChunksThisEpoch(
       receivingNodesIdentityIds.unshift(Number(nodeId));
     }
 
+    // @ts-expect-error – dynamic CJS import of assertion-tools
+    const { kcTools } = await import('assertion-tools');
     const merkleRoot = kcTools.calculateMerkleRoot(quads, 32);
 
     await createKnowledgeCollection(
@@ -136,6 +136,8 @@ async function submitProofAndLogScore(
     await contracts.randomSamplingStorage.getNodeChallenge(nodeId);
 
   // Calculate merkle proof for the challenge
+  // @ts-expect-error – dynamic CJS import of assertion-tools
+  const { kcTools } = await import('assertion-tools');
   const chunks = kcTools.splitIntoChunks(quads, 32);
   const chunkId = Number(challenge[1]);
   const { proof } = kcTools.calculateMerkleProof(quads, 32, chunkId);
@@ -190,6 +192,7 @@ export async function buildInitialRewardsState() {
       await hre.ethers.getContract<ParametersStorage>('ParametersStorage'),
     profileStorage:
       await hre.ethers.getContract<ProfileStorage>('ProfileStorage'),
+    shardingTable: await hre.ethers.getContract<ShardingTable>('ShardingTable'),
   };
 
   // Get chunk size to avoid division by zero in challenge generation
@@ -249,6 +252,16 @@ export async function buildInitialRewardsState() {
     contracts.profile,
     accounts.node4,
   );
+
+  // Add nodes to sharding table
+  // @ts-expect-error – intentional direct insertNode for test setup
+  await contracts.shardingTable.connect(accounts.owner).insertNode(node1Id);
+  // @ts-expect-error – intentional direct insertNode for test setup
+  await contracts.shardingTable.connect(accounts.owner).insertNode(node2Id);
+  // @ts-expect-error – intentional direct insertNode for test setup
+  await contracts.shardingTable.connect(accounts.owner).insertNode(node3Id);
+  // @ts-expect-error – intentional direct insertNode for test setup
+  await contracts.shardingTable.connect(accounts.owner).insertNode(node4Id);
 
   // Set operator fees to 10%
   await contracts.profile
@@ -318,6 +331,7 @@ export async function buildInitialRewardsState() {
   // Create identical reward pools for epoch-2 (each node publishes same amount)
   const kcTokenAmount = toTRAC(250); // Split total among 4 nodes
   const numberOfEpochs = 5;
+  // @ts-expect-error – dynamic CJS import of assertion-tools
   const { kcTools } = await import('assertion-tools');
   const merkleRoot = kcTools.calculateMerkleRoot(quads, 32);
 
@@ -413,7 +427,6 @@ export async function buildInitialRewardsState() {
     accounts.node1,
     contracts,
     2n,
-    'Node-1',
   );
   console.log(
     `   ✅ Node-1: Score ${node1Proof2.scoreBefore} → ${node1Proof2.scoreAfter} (gain: ${node1Proof2.scoreAfter - node1Proof2.scoreBefore})`,
@@ -424,7 +437,6 @@ export async function buildInitialRewardsState() {
     accounts.node2,
     contracts,
     2n,
-    'Node-2',
   );
   console.log(
     `   ✅ Node-2: Score ${node2Proof2.scoreBefore} → ${node2Proof2.scoreAfter} (gain: ${node2Proof2.scoreAfter - node2Proof2.scoreBefore})`,
@@ -435,7 +447,6 @@ export async function buildInitialRewardsState() {
     accounts.node3,
     contracts,
     2n,
-    'Node-3',
   );
   console.log(
     `   ✅ Node-3: Score ${node3Proof2.scoreBefore} → ${node3Proof2.scoreAfter} (gain: ${node3Proof2.scoreAfter - node3Proof2.scoreBefore})`,
@@ -967,13 +978,13 @@ export async function buildInitialRewardsState() {
     StakingStorage: contracts.stakingStorage,
     DelegatorsInfo: contracts.delegatorsInfo,
     Chronos: contracts.chronos,
+    RandomSampling: contracts.randomSampling,
     RandomSamplingStorage: contracts.randomSamplingStorage,
     EpochStorage: contracts.epochStorage,
+    ParametersStorage: contracts.parametersStorage,
     KC: contracts.kc,
     delegators: accounts.delegators,
     nodes,
-    receivingNodes,
-    receivingNodesIdentityIds,
     accounts,
   };
 }
@@ -3077,5 +3088,721 @@ describe('Proportional rewards tests - Double stake = Double rewards', () => {
     console.log(
       '    📝 Note: Proportional rewards successfully transferred to permanent stakeBase',
     );
+  });
+});
+
+describe('Withdrawal request tests after further epochs', () => {
+  let env: Awaited<ReturnType<typeof buildInitialRewardsState>>;
+  let Staking: Staking,
+    Chronos: Chronos,
+    EpochStorage: EpochStorage,
+    RandomSampling: RandomSampling,
+    KC: KnowledgeCollection,
+    Token: Token,
+    RandomSamplingStorage: RandomSamplingStorage,
+    StakingStorage: StakingStorage,
+    ParametersStorage: ParametersStorage;
+  let accounts: any, nodes: any[], delegators: SignerWithAddress[];
+  let node1Id: number, node2Id: number, node3Id: number, node4Id: number;
+  let chunkSize: number;
+  let merkleRoot: string;
+
+  before(async () => {
+    env = await buildInitialRewardsState();
+    // Unpack env
+    ({
+      Staking,
+      Chronos,
+      EpochStorage,
+      RandomSampling,
+      KC,
+      Token,
+      RandomSamplingStorage,
+      StakingStorage,
+      ParametersStorage,
+      accounts,
+      nodes,
+      delegators,
+    } = env);
+    node1Id = nodes[0].identityId;
+    node2Id = nodes[1].identityId;
+    node3Id = nodes[2].identityId;
+    node4Id = nodes[3].identityId;
+    chunkSize = Number(await RandomSamplingStorage.CHUNK_BYTE_SIZE());
+    // @ts-expect-error – dynamic CJS import of assertion-tools
+    const { kcTools } = await import('assertion-tools');
+    merkleRoot = kcTools.calculateMerkleRoot(quads, 32);
+
+    // Initial state: current epoch is 7, last finalized is 6.
+
+    // --- Epoch 7 ---
+    console.log('\n⏳ Advancing through epoch 7 with proofs...');
+    await advanceToNextProofingPeriod({ randomSampling: RandomSampling });
+    for (const [, node] of nodes.entries()) {
+      await submitProofAndLogScore(
+        node.identityId,
+        { operational: node.operational, admin: node.admin },
+        {
+          randomSampling: RandomSampling,
+          randomSamplingStorage: RandomSamplingStorage,
+        },
+        7n,
+      );
+    }
+    await time.increase((await Chronos.timeUntilNextEpoch()) + 1n); // Move to epoch 8
+
+    // --- Epoch 8 ---
+    console.log('\n⏳ Advancing through epoch 8 with proofs...');
+    await createKnowledgeCollection(
+      accounts.kcCreator,
+      accounts.node1,
+      node1Id,
+      [accounts.node2, accounts.node3, accounts.node4],
+      [node2Id, node3Id, node4Id],
+      { KnowledgeCollection: KC, Token },
+      merkleRoot,
+      'epoch-8-kc',
+      10,
+      chunkSize * 10,
+      1,
+      toTRAC(1000),
+    );
+    await advanceToNextProofingPeriod({ randomSampling: RandomSampling });
+    for (const [, node] of nodes.entries()) {
+      await submitProofAndLogScore(
+        node.identityId,
+        { operational: node.operational, admin: node.admin },
+        {
+          randomSampling: RandomSampling,
+          randomSamplingStorage: RandomSamplingStorage,
+        },
+        8n,
+      );
+    }
+    await time.increase((await Chronos.timeUntilNextEpoch()) + 1n); // Move to epoch 9
+
+    // --- Epoch 9 (No proofs) ---
+    console.log('\n⏳ Advancing through epoch 9 without proofs...');
+    await createKnowledgeCollection(
+      accounts.kcCreator,
+      accounts.node2,
+      node2Id,
+      [accounts.node1, accounts.node3, accounts.node4],
+      [node1Id, node3Id, node4Id],
+      { KnowledgeCollection: KC, Token },
+      merkleRoot,
+      'epoch-9-kc',
+      10,
+      chunkSize * 10,
+      1,
+      toTRAC(1000),
+    );
+    console.log(
+      `\n✅ Initial setup complete. Current epoch: ${await Chronos.getCurrentEpoch()}, Last finalized: ${await EpochStorage.lastFinalizedEpoch(1)}`,
+    );
+  });
+
+  it('D1 withdrawal request flow: must claim all reward epochs (2-8)', async () => {
+    const d1 = delegators[0];
+    const d1Address = d1.address;
+    const node1 = nodes[0];
+
+    console.log(
+      `\n🔒 TEST D1: Starting in Epoch ${await Chronos.getCurrentEpoch()}. Last Finalized: ${await EpochStorage.lastFinalizedEpoch(
+        1,
+      )}`,
+    );
+
+    console.log(
+      '🔒 TEST D1: Claiming all epochs except 7 & 8, then attempting withdrawal...',
+    );
+    for (const epoch of [2n, 3n, 4n, 5n, 6n]) {
+      await Staking.connect(d1).claimDelegatorRewards(
+        node1.identityId,
+        epoch,
+        d1Address,
+      );
+    }
+    console.log('  ✅ D1 claimed epochs 2-6.');
+    await expect(
+      Staking.connect(d1).requestWithdrawal(node1.identityId, toTRAC(10000)),
+    ).to.be.revertedWith(
+      'Must claim all previous epoch rewards before changing stake',
+    );
+    console.log('  ❌ D1 withdrawal failed as expected (epoch 7 not claimed).');
+
+    console.log(
+      '\n🔒 TEST D1: Claiming epoch 7, then attempting withdrawal...',
+    );
+    await Staking.connect(d1).claimDelegatorRewards(
+      node1.identityId,
+      7n,
+      d1Address,
+    );
+    console.log('  ✅ D1 claimed epoch 7.');
+    await expect(
+      Staking.connect(d1).requestWithdrawal(node1.identityId, toTRAC(10000)),
+    ).to.be.revertedWith(
+      'Must claim the previous epoch rewards before changing stake',
+    );
+    console.log('  ❌ D1 withdrawal failed as expected (epoch 8 not claimed).');
+
+    console.log(
+      '\n🔒 TEST D1: Claiming epoch 8, then attempting withdrawal...',
+    );
+    await Staking.connect(d1).claimDelegatorRewards(
+      node1.identityId,
+      8n,
+      d1Address,
+    );
+    console.log('  ✅ D1 claimed epoch 8.');
+
+    const d1Key = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [d1.address]),
+    );
+    const d1StakeBaseBefore = await StakingStorage.getDelegatorStakeBase(
+      node1.identityId,
+      d1Key,
+    );
+    const d1WithdrawalAmount = toTRAC(10000);
+
+    await expect(
+      Staking.connect(d1).requestWithdrawal(
+        node1.identityId,
+        d1WithdrawalAmount,
+      ),
+    ).to.not.be.reverted;
+    console.log('  ✅ D1 withdrawal succeeded as expected.');
+
+    const d1StakeBaseAfter = await StakingStorage.getDelegatorStakeBase(
+      node1.identityId,
+      d1Key,
+    );
+    expect(d1StakeBaseBefore - d1StakeBaseAfter).to.equal(d1WithdrawalAmount);
+    console.log(
+      `  ✅ D1 stakeBase correctly reduced by ${hre.ethers.formatUnits(d1WithdrawalAmount, 18)} TRAC.`,
+    );
+  });
+
+  it('D2 withdrawal request flow: must claim reward epochs (2-8), can skip no-reward epoch (9)', async () => {
+    const d2 = delegators[1];
+    const d2Address = d2.address;
+    const node1 = nodes[0];
+
+    console.log(
+      `\n⏳ TEST D2: Starting in Epoch ${await Chronos.getCurrentEpoch()}. Advancing to Epoch 10 and finalizing epoch 9...`,
+    );
+    await time.increase((await Chronos.timeUntilNextEpoch()) + 1n); // Move to epoch 10
+    // Create a KC in epoch 10 to trigger finalization of epoch 9
+    await createKnowledgeCollection(
+      accounts.kcCreator,
+      accounts.node3, // any node
+      node3Id,
+      [accounts.node1, accounts.node2, accounts.node4],
+      [node1Id, node2Id, node4Id],
+      { KnowledgeCollection: KC, Token },
+      merkleRoot,
+      'finalize-epoch-9',
+      1,
+      chunkSize,
+      1,
+      toTRAC(1),
+    );
+    console.log(
+      `✅ TEST D2: Now in Epoch ${await Chronos.getCurrentEpoch()}. Last Finalized: ${await EpochStorage.lastFinalizedEpoch(
+        1,
+      )}`,
+    );
+
+    console.log(
+      '🔒 TEST D2: Claiming all epochs except 8 & 9, then attempting withdrawal...',
+    );
+    for (const epoch of [2n, 3n, 4n, 5n, 6n, 7n]) {
+      await Staking.connect(d2).claimDelegatorRewards(
+        node1.identityId,
+        epoch,
+        d2Address,
+      );
+    }
+    console.log('  ✅ D2 claimed epochs 2-7.');
+    await expect(
+      Staking.connect(d2).requestWithdrawal(node1.identityId, toTRAC(20000)),
+    ).to.be.revertedWith(
+      'Must claim all previous epoch rewards before changing stake',
+    );
+    console.log('  ❌ D2 withdrawal failed as expected (epoch 8 not claimed).');
+
+    console.log(
+      '\n🔒 TEST D2: Claiming epoch 8, then attempting withdrawal...',
+    );
+    await Staking.connect(d2).claimDelegatorRewards(
+      node1.identityId,
+      8n,
+      d2Address,
+    );
+    console.log('  ✅ D2 claimed epoch 8.');
+
+    const d2Key = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [d2.address]),
+    );
+    const d2StakeBaseBefore = await StakingStorage.getDelegatorStakeBase(
+      node1.identityId,
+      d2Key,
+    );
+    const d2WithdrawalAmount = toTRAC(20000);
+
+    await expect(
+      Staking.connect(d2).requestWithdrawal(
+        node1.identityId,
+        d2WithdrawalAmount,
+      ),
+    ).to.not.be.reverted;
+    console.log(
+      '  ✅ D2 withdrawal succeeded as expected (epoch 9 had no rewards and could be skipped for withdrawal).',
+    );
+
+    const d2StakeBaseAfter = await StakingStorage.getDelegatorStakeBase(
+      node1.identityId,
+      d2Key,
+    );
+    expect(d2StakeBaseBefore - d2StakeBaseAfter).to.equal(d2WithdrawalAmount);
+    console.log(
+      `  ✅ D2 stakeBase correctly reduced by ${hre.ethers.formatUnits(d2WithdrawalAmount, 18)} TRAC.`,
+    );
+
+    console.log(
+      '  ❌ Attempting to finalize D2 withdrawal immediately (should fail)...',
+    );
+    await expect(
+      Staking.connect(d2).finalizeWithdrawal(node1.identityId),
+    ).to.be.revertedWithCustomError(Staking, 'WithdrawalPeriodPending');
+    console.log('  ✅ Reverted as expected (delay not passed).');
+  });
+
+  it('D1 withdrawal cancellation flow', async () => {
+    // This test continues from the state left by previous tests
+    const d1 = delegators[0];
+    const node1 = nodes[0];
+
+    console.log(
+      '\n🔒 TEST D1 Cancel: Setting up epoch 10 with rewards for Node-1...',
+    );
+    await createKnowledgeCollection(
+      accounts.kcCreator,
+      accounts.node1,
+      node1Id,
+      [accounts.node2, accounts.node3, accounts.node4],
+      [node2Id, node3Id, node4Id],
+      { KnowledgeCollection: KC, Token },
+      merkleRoot,
+      'epoch-10-kc',
+      10,
+      chunkSize * 10,
+      1,
+      toTRAC(1000),
+    );
+    await advanceToNextProofingPeriod({ randomSampling: RandomSampling });
+    await submitProofAndLogScore(
+      node1.identityId,
+      {
+        operational: accounts.node1.operational,
+        admin: accounts.node1.admin,
+      },
+      {
+        randomSampling: RandomSampling,
+        randomSamplingStorage: RandomSamplingStorage,
+      },
+      10n,
+    );
+
+    console.log('  ⏳ Advancing to Epoch 11 and finalizing Epoch 10...');
+    await time.increase((await Chronos.timeUntilNextEpoch()) + 1n); // Move to epoch 11
+    // Create a KC in epoch 11 to trigger finalization of epoch 10
+    await createKnowledgeCollection(
+      accounts.kcCreator,
+      accounts.node4, // any node
+      node4Id,
+      [accounts.node1, accounts.node2, accounts.node3],
+      [node1Id, node2Id, node3Id],
+      { KnowledgeCollection: KC, Token },
+      merkleRoot,
+      'finalize-epoch-10',
+      1,
+      chunkSize,
+      1,
+      toTRAC(1),
+    );
+    console.log(
+      `  ✅ Now in Epoch ${await Chronos.getCurrentEpoch()}, Last Finalized: ${await EpochStorage.lastFinalizedEpoch(1)}.`,
+    );
+
+    console.log(
+      '  Attempting to cancel withdrawal before claiming epoch 10...',
+    );
+    await expect(
+      Staking.connect(d1).cancelWithdrawal(node1.identityId),
+    ).to.be.revertedWith(
+      'Must claim all previous epoch rewards before changing stake',
+    );
+    console.log('  ✅ Reverted as expected.');
+
+    console.log('  Claiming epoch 9 (no rewards) and 10 for D1...');
+    await Staking.connect(d1).claimDelegatorRewards(
+      node1.identityId,
+      9n,
+      d1.address,
+    );
+    console.log('  ✅ Claimed epoch 9 successfully.');
+    await Staking.connect(d1).claimDelegatorRewards(
+      node1.identityId,
+      10n,
+      d1.address,
+    );
+    console.log('  ✅ Claimed epoch 10 successfully.');
+
+    console.log('  Attempting to cancel withdrawal again...');
+    const d1Key = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [d1.address]),
+    );
+    const stakeBaseBeforeCancel = await StakingStorage.getDelegatorStakeBase(
+      node1.identityId,
+      d1Key,
+    );
+    const { 0: withdrawalAmount } =
+      await StakingStorage.getDelegatorWithdrawalRequest(
+        node1.identityId,
+        d1Key,
+      );
+
+    expect(withdrawalAmount).to.be.gt(0, 'Withdrawal request should exist');
+
+    await expect(Staking.connect(d1).cancelWithdrawal(node1.identityId)).to.not
+      .be.reverted;
+    console.log('  ✅ Withdrawal cancelled successfully.');
+
+    const stakeBaseAfterCancel = await StakingStorage.getDelegatorStakeBase(
+      node1.identityId,
+      d1Key,
+    );
+    expect(stakeBaseAfterCancel).to.equal(
+      stakeBaseBeforeCancel + withdrawalAmount,
+    );
+    console.log(
+      `  ✅ Stake base correctly restored by ${hre.ethers.formatUnits(withdrawalAmount, 18)} TRAC.`,
+    );
+
+    const { 0: finalWithdrawalAmount } =
+      await StakingStorage.getDelegatorWithdrawalRequest(
+        node1.identityId,
+        d1Key,
+      );
+    expect(finalWithdrawalAmount).to.equal(
+      0,
+      'Withdrawal request should be deleted',
+    );
+  });
+
+  it('D2 finalizes withdrawal after delay', async () => {
+    const d2 = delegators[1];
+    const node1 = nodes[0];
+    const d2Key = hre.ethers.keccak256(
+      hre.ethers.solidityPacked(['address'], [d2.address]),
+    );
+
+    console.log(
+      '\n🔒 TEST Finalize: Advancing time beyond withdrawal delay...',
+    );
+    const delay = await ParametersStorage.stakeWithdrawalDelay();
+    await time.increase(delay + 1n);
+    console.log(`  ✅ Time advanced by ${delay + 1n} seconds.`);
+
+    const { 0: withdrawalAmount } =
+      await StakingStorage.getDelegatorWithdrawalRequest(
+        node1.identityId,
+        d2Key,
+      );
+    expect(withdrawalAmount).to.be.gt(0, 'D2 should have a pending withdrawal');
+
+    const balanceBefore = await Token.balanceOf(d2.address);
+    console.log(
+      `  D2 wallet balance before finalization: ${hre.ethers.formatUnits(balanceBefore, 18)} TRAC.`,
+    );
+
+    console.log('  Attempting to finalize withdrawal...');
+    await expect(Staking.connect(d2).finalizeWithdrawal(node1.identityId)).to
+      .not.be.reverted;
+    console.log('  ✅ D2 withdrawal finalized successfully.');
+
+    const balanceAfter = await Token.balanceOf(d2.address);
+    console.log(
+      `  D2 wallet balance after finalization: ${hre.ethers.formatUnits(balanceAfter, 18)} TRAC.`,
+    );
+    expect(balanceAfter - balanceBefore).to.equal(withdrawalAmount);
+    console.log(
+      `  ✅ D2 wallet balance increased by ${hre.ethers.formatUnits(withdrawalAmount, 18)} TRAC.`,
+    );
+
+    const { 0: finalWithdrawalAmountAfter } =
+      await StakingStorage.getDelegatorWithdrawalRequest(
+        node1.identityId,
+        d2Key,
+      );
+    expect(finalWithdrawalAmountAfter).to.equal(
+      0,
+      'Withdrawal request should be deleted after finalization',
+    );
+    console.log('  ✅ Withdrawal request removed from storage.');
+  });
+});
+
+describe('Operator fee withdrawal tests', () => {
+  let env: Awaited<ReturnType<typeof buildInitialRewardsState>>;
+  let Staking: Staking,
+    StakingStorage: StakingStorage,
+    Token: Token,
+    ParametersStorage: ParametersStorage;
+  let delegators: SignerWithAddress[], nodes: any[];
+
+  before(async () => {
+    env = await buildInitialRewardsState();
+    // Unpack env
+    ({ Staking, StakingStorage, Token, ParametersStorage, delegators, nodes } =
+      env);
+
+    console.log('\n🎯 OPERATOR FEE WITHDRAWAL TESTS - Simple flow test');
+
+    // D1 claims epochs 2,3 for Node-1
+    console.log('  📍 D1 claiming epochs 2,3 for Node-1...');
+    await Staking.connect(delegators[0]).claimDelegatorRewards(
+      nodes[0].identityId,
+      2n,
+      delegators[0].address,
+    );
+    await Staking.connect(delegators[0]).claimDelegatorRewards(
+      nodes[0].identityId,
+      3n,
+      delegators[0].address,
+    );
+
+    // D2 claims epochs 2,3,4 for Node-1
+    console.log('  📍 D2 claiming epochs 2,3,4 for Node-1...');
+    await Staking.connect(delegators[1]).claimDelegatorRewards(
+      nodes[0].identityId,
+      2n,
+      delegators[1].address,
+    );
+    await Staking.connect(delegators[1]).claimDelegatorRewards(
+      nodes[0].identityId,
+      3n,
+      delegators[1].address,
+    );
+    await Staking.connect(delegators[1]).claimDelegatorRewards(
+      nodes[0].identityId,
+      4n,
+      delegators[1].address,
+    );
+
+    // D3 claims epochs 2,3 for Node-2
+    console.log('  📍 D3 claiming epochs 2,3 for Node-2...');
+    await Staking.connect(delegators[2]).claimDelegatorRewards(
+      nodes[1].identityId,
+      2n,
+      delegators[2].address,
+    );
+    await Staking.connect(delegators[2]).claimDelegatorRewards(
+      nodes[1].identityId,
+      3n,
+      delegators[2].address,
+    );
+
+    // D4 claims epochs 2,3,4 for Node-2
+    console.log('  📍 D4 claiming epochs 2,3,4 for Node-2...');
+    await Staking.connect(delegators[3]).claimDelegatorRewards(
+      nodes[1].identityId,
+      2n,
+      delegators[3].address,
+    );
+    await Staking.connect(delegators[3]).claimDelegatorRewards(
+      nodes[1].identityId,
+      3n,
+      delegators[3].address,
+    );
+    await Staking.connect(delegators[3]).claimDelegatorRewards(
+      nodes[1].identityId,
+      4n,
+      delegators[3].address,
+    );
+
+    console.log('  ✅ Claims completed');
+  });
+
+  it('Both nodes request operator fee withdrawal - amounts should be equal', async () => {
+    console.log(
+      '\n💰 Checking operator fee balances and requesting withdrawals',
+    );
+
+    // Check operator fee balances
+    const node1FeeBalance = await StakingStorage.getOperatorFeeBalance(
+      nodes[0].identityId,
+    );
+    const node2FeeBalance = await StakingStorage.getOperatorFeeBalance(
+      nodes[1].identityId,
+    );
+
+    console.log(
+      `  💎 Node-1 operator fee balance: ${hre.ethers.formatUnits(node1FeeBalance, 18)} TRAC`,
+    );
+    console.log(
+      `  💎 Node-2 operator fee balance: ${hre.ethers.formatUnits(node2FeeBalance, 18)} TRAC`,
+    );
+
+    // Both nodes should have positive and equal operator fees (since they're identical)
+    expect(node1FeeBalance).to.be.gt(0n, 'Node-1 should have operator fees');
+    expect(node2FeeBalance).to.be.gt(0n, 'Node-2 should have operator fees');
+    expect(node1FeeBalance).to.equal(
+      node2FeeBalance,
+      'Node-1 and Node-2 should have equal operator fees',
+    );
+
+    // Request full withdrawal for both nodes
+    console.log('  🔄 Requesting full withdrawal for both nodes...');
+
+    await Staking.connect(nodes[0].admin).requestOperatorFeeWithdrawal(
+      nodes[0].identityId,
+      node1FeeBalance,
+    );
+
+    await Staking.connect(nodes[1].admin).requestOperatorFeeWithdrawal(
+      nodes[1].identityId,
+      node2FeeBalance,
+    );
+
+    // Verify withdrawal requests
+    const [node1RequestAmount] =
+      await StakingStorage.getOperatorFeeWithdrawalRequest(nodes[0].identityId);
+    const [node2RequestAmount] =
+      await StakingStorage.getOperatorFeeWithdrawalRequest(nodes[1].identityId);
+
+    expect(node1RequestAmount).to.equal(
+      node1FeeBalance,
+      'Node-1 withdrawal request should match balance',
+    );
+    expect(node2RequestAmount).to.equal(
+      node2FeeBalance,
+      'Node-2 withdrawal request should match balance',
+    );
+    expect(node1RequestAmount).to.equal(
+      node2RequestAmount,
+      'Both withdrawal requests should be equal',
+    );
+
+    console.log('  ✅ Both nodes have equal withdrawal requests');
+  });
+
+  it('Node-1 finalizes withdrawal, Node-2 cancels - verify wallet and state changes', async () => {
+    console.log('\n🔄 Node-1 finalize vs Node-2 cancel');
+
+    // Advance time to pass withdrawal delay
+    const delay = await ParametersStorage.stakeWithdrawalDelay();
+    await time.increase(delay + 1n);
+    console.log(`  ⏰ Advanced time by ${delay + 1n} seconds`);
+
+    // Get wallet balances before
+    const node1WalletBefore = await Token.balanceOf(nodes[0].admin.address);
+    const node2WalletBefore = await Token.balanceOf(nodes[1].admin.address);
+
+    console.log(
+      `  💳 Node-1 admin wallet before: ${hre.ethers.formatUnits(node1WalletBefore, 18)} TRAC`,
+    );
+    console.log(
+      `  💳 Node-2 admin wallet before: ${hre.ethers.formatUnits(node2WalletBefore, 18)} TRAC`,
+    );
+
+    // Get withdrawal amounts
+    const [node1WithdrawalAmount] =
+      await StakingStorage.getOperatorFeeWithdrawalRequest(nodes[0].identityId);
+    const [node2WithdrawalAmount] =
+      await StakingStorage.getOperatorFeeWithdrawalRequest(nodes[1].identityId);
+
+    // Node-1 finalizes withdrawal
+    console.log('  ✅ Node-1 finalizing withdrawal...');
+    await Staking.connect(nodes[0].admin).finalizeOperatorFeeWithdrawal(
+      nodes[0].identityId,
+    );
+
+    // Node-2 cancels withdrawal
+    console.log('  ❌ Node-2 canceling withdrawal...');
+    await Staking.connect(nodes[1].admin).cancelOperatorFeeWithdrawal(
+      nodes[1].identityId,
+    );
+
+    // Check wallet balances after
+    const node1WalletAfter = await Token.balanceOf(nodes[0].admin.address);
+    const node2WalletAfter = await Token.balanceOf(nodes[1].admin.address);
+
+    console.log(
+      `  💳 Node-1 admin wallet after: ${hre.ethers.formatUnits(node1WalletAfter, 18)} TRAC`,
+    );
+    console.log(
+      `  💳 Node-2 admin wallet after: ${hre.ethers.formatUnits(node2WalletAfter, 18)} TRAC`,
+    );
+
+    // Verify Node-1 received tokens
+    expect(node1WalletAfter - node1WalletBefore).to.equal(
+      node1WithdrawalAmount,
+      'Node-1 admin should receive withdrawal amount',
+    );
+
+    // Verify Node-2 wallet didn't change
+    expect(node2WalletAfter).to.equal(
+      node2WalletBefore,
+      'Node-2 admin wallet should not change',
+    );
+
+    // Check operator fee balances after
+    const node1FeeBalanceAfter = await StakingStorage.getOperatorFeeBalance(
+      nodes[0].identityId,
+    );
+    const node2FeeBalanceAfter = await StakingStorage.getOperatorFeeBalance(
+      nodes[1].identityId,
+    );
+
+    console.log(
+      `  💎 Node-1 operator fee balance after: ${hre.ethers.formatUnits(node1FeeBalanceAfter, 18)} TRAC`,
+    );
+    console.log(
+      `  💎 Node-2 operator fee balance after: ${hre.ethers.formatUnits(node2FeeBalanceAfter, 18)} TRAC`,
+    );
+
+    // Node-1 should have 0 operator fees (finalized)
+    expect(node1FeeBalanceAfter).to.equal(
+      0n,
+      'Node-1 should have 0 operator fees after finalization',
+    );
+
+    // Node-2 should have restored operator fees (cancelled)
+    expect(node2FeeBalanceAfter).to.equal(
+      node2WithdrawalAmount,
+      'Node-2 should have restored operator fees after cancellation',
+    );
+
+    // Verify withdrawal requests are cleared
+    const [node1FinalRequest] =
+      await StakingStorage.getOperatorFeeWithdrawalRequest(nodes[0].identityId);
+    const [node2FinalRequest] =
+      await StakingStorage.getOperatorFeeWithdrawalRequest(nodes[1].identityId);
+
+    expect(node1FinalRequest).to.equal(
+      0n,
+      'Node-1 withdrawal request should be cleared',
+    );
+    expect(node2FinalRequest).to.equal(
+      0n,
+      'Node-2 withdrawal request should be cleared',
+    );
+
+    console.log('  ✅ Finalize/cancel flows completed successfully');
+    console.log('  📝 Node-1: Received tokens, fees cleared');
+    console.log('  📝 Node-2: No tokens, fees restored');
   });
 });
