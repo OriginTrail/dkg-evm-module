@@ -1,9 +1,5 @@
-// test/rewards.initial-state.spec.ts
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
-import { time, loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-// @ts-ignore
+import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { kcTools } from 'assertion-tools';
 import { expect } from 'chai';
 import hre, { deployments } from 'hardhat';
@@ -122,7 +118,6 @@ async function submitProofAndLogScore(
   nodeAccount: { operational: SignerWithAddress; admin: SignerWithAddress },
   contracts: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   epoch: bigint,
-  nodeName: string,
 ) {
   // Get score before proof
   const scoreBefore = await contracts.randomSamplingStorage.getNodeEpochScore(
@@ -320,7 +315,6 @@ export async function buildInitialRewardsState() {
   // Create identical reward pools for epoch-2 (each node publishes same amount)
   const kcTokenAmount = toTRAC(250); // Split total among 4 nodes
   const numberOfEpochs = 5;
-  // @ts-ignore
   const { kcTools } = await import('assertion-tools');
   const merkleRoot = kcTools.calculateMerkleRoot(quads, 32);
 
@@ -416,7 +410,6 @@ export async function buildInitialRewardsState() {
     accounts.node1,
     contracts,
     2n,
-    'Node-1',
   );
   console.log(
     `   ✅ Node-1: Score ${node1Proof2.scoreBefore} → ${node1Proof2.scoreAfter} (gain: ${node1Proof2.scoreAfter - node1Proof2.scoreBefore})`,
@@ -427,7 +420,6 @@ export async function buildInitialRewardsState() {
     accounts.node2,
     contracts,
     2n,
-    'Node-2',
   );
   console.log(
     `   ✅ Node-2: Score ${node2Proof2.scoreBefore} → ${node2Proof2.scoreAfter} (gain: ${node2Proof2.scoreAfter - node2Proof2.scoreBefore})`,
@@ -438,7 +430,6 @@ export async function buildInitialRewardsState() {
     accounts.node3,
     contracts,
     2n,
-    'Node-3',
   );
   console.log(
     `   ✅ Node-3: Score ${node3Proof2.scoreBefore} → ${node3Proof2.scoreAfter} (gain: ${node3Proof2.scoreAfter - node3Proof2.scoreBefore})`,
@@ -449,7 +440,6 @@ export async function buildInitialRewardsState() {
     accounts.node4,
     contracts,
     2n,
-    'Node-4',
   );
   console.log(
     `   ✅ Node-4: Score ${node4Proof2.scoreBefore} → ${node4Proof2.scoreAfter} (gain: ${node4Proof2.scoreAfter - node4Proof2.scoreBefore})`,
@@ -596,7 +586,6 @@ export async function buildInitialRewardsState() {
     accounts.node1,
     contracts,
     3n,
-    'Node-1',
   );
   console.log(
     `   ✅ Node-1: Score ${node1Proof3.scoreBefore} → ${node1Proof3.scoreAfter} (gain: ${node1Proof3.scoreAfter - node1Proof3.scoreBefore})`,
@@ -607,7 +596,6 @@ export async function buildInitialRewardsState() {
     accounts.node2,
     contracts,
     3n,
-    'Node-2',
   );
   console.log(
     `   ✅ Node-2: Score ${node2Proof3.scoreBefore} → ${node2Proof3.scoreAfter} (gain: ${node2Proof3.scoreAfter - node2Proof3.scoreBefore})`,
@@ -618,7 +606,6 @@ export async function buildInitialRewardsState() {
     accounts.node3,
     contracts,
     3n,
-    'Node-3',
   );
   console.log(
     `   ✅ Node-3: Score ${node3Proof3.scoreBefore} → ${node3Proof3.scoreAfter} (gain: ${node3Proof3.scoreAfter - node3Proof3.scoreBefore})`,
@@ -629,7 +616,6 @@ export async function buildInitialRewardsState() {
     accounts.node4,
     contracts,
     3n,
-    'Node-4',
   );
   console.log(
     `   ✅ Node-4: Score ${node4Proof3.scoreBefore} → ${node4Proof3.scoreAfter} (gain: ${node4Proof3.scoreAfter - node4Proof3.scoreBefore})`,
@@ -701,7 +687,6 @@ export async function buildInitialRewardsState() {
     accounts.node1,
     contracts,
     4n,
-    'Node-1',
   );
   console.log(
     `   ✅ Node-1: Score ${node1Proof4.scoreBefore} → ${node1Proof4.scoreAfter} (gain: ${node1Proof4.scoreAfter - node1Proof4.scoreBefore})`,
@@ -712,7 +697,6 @@ export async function buildInitialRewardsState() {
     accounts.node2,
     contracts,
     4n,
-    'Node-2',
   );
   console.log(
     `   ✅ Node-2: Score ${node2Proof4.scoreBefore} → ${node2Proof4.scoreAfter} (gain: ${node2Proof4.scoreAfter - node2Proof4.scoreBefore})`,
@@ -723,7 +707,6 @@ export async function buildInitialRewardsState() {
     accounts.node3,
     contracts,
     4n,
-    'Node-3',
   );
   console.log(
     `   ✅ Node-3: Score ${node3Proof4.scoreBefore} → ${node3Proof4.scoreAfter} (gain: ${node3Proof4.scoreAfter - node3Proof4.scoreBefore})`,
@@ -734,7 +717,6 @@ export async function buildInitialRewardsState() {
     accounts.node4,
     contracts,
     4n,
-    'Node-4',
   );
   console.log(
     `   ✅ Node-4: Score ${node4Proof4.scoreBefore} → ${node4Proof4.scoreAfter} (gain: ${node4Proof4.scoreAfter - node4Proof4.scoreBefore})`,
@@ -988,13 +970,6 @@ const fixtureInitialRewardsState = deployments.createFixture(
 /* ───────────────────────────── tests ───────────────────────────── */
 
 describe('Profile Contract', () => {
-  let initialRewardsState: Awaited<ReturnType<typeof buildInitialRewardsState>>;
-
-  before(async function () {
-    this.timeout(400000);
-    initialRewardsState = await fixtureInitialRewardsState();
-  });
-
   describe('Operator Fee Management', () => {
     let fixtures: Awaited<ReturnType<typeof buildInitialRewardsState>>;
     let node1: {
@@ -1003,7 +978,6 @@ describe('Profile Contract', () => {
       admin: SignerWithAddress;
     };
     const newFee = 2000; // 20%
-    const evenNewerFee = 2500; // 25%
 
     beforeEach(async function () {
       this.timeout(400000);
@@ -1054,14 +1028,7 @@ describe('Profile Contract', () => {
     });
 
     it('should handle the full operator fee update lifecycle correctly', async () => {
-      const {
-        Staking,
-        Profile,
-        ProfileStorage,
-        Chronos,
-        accounts,
-        delegators,
-      } = fixtures;
+      const { Staking, Profile, ProfileStorage, delegators } = fixtures;
 
       const newFee = 2000; // 20%
       const d1 = delegators[0];
@@ -1135,14 +1102,8 @@ describe('Profile Contract', () => {
     });
 
     it('should allow replacing pending operator fee before it becomes active', async () => {
-      const {
-        Staking,
-        Profile,
-        ProfileStorage,
-        Chronos,
-        accounts,
-        delegators,
-      } = fixtures;
+      const { Staking, Profile, ProfileStorage, Chronos, delegators } =
+        fixtures;
 
       const firstFee = 2000; // 20%
       const secondFee = 3000; // 30%
@@ -1278,6 +1239,7 @@ describe('Profile Contract', () => {
       const pendingUpdate1 = await ProfileStorage.getLatestOperatorFee(
         node1.identityId,
       );
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       await expect(tx1)
         .to.emit(ProfileStorage, 'OperatorFeeAdded')
         .withArgs(node1.identityId, fee1, pendingUpdate1.effectiveDate);
@@ -1295,6 +1257,7 @@ describe('Profile Contract', () => {
       const pendingUpdate2 = await ProfileStorage.getLatestOperatorFee(
         node1.identityId,
       );
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       await expect(tx2)
         .to.emit(ProfileStorage, 'OperatorFeesReplaced')
         .withArgs(
@@ -1375,6 +1338,7 @@ describe('Profile Contract', () => {
         const nonAdmin = accounts.node2.admin; // Not the admin for node1
         const newFee = 1500; // 15%
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         await expect(
           Profile.connect(nonAdmin).updateOperatorFee(node1.identityId, newFee),
         ).to.be.revertedWithCustomError(Profile, 'OnlyProfileAdminFunction');
@@ -1386,6 +1350,7 @@ describe('Profile Contract', () => {
         const operational = accounts.node1.operational; // Correct identity, wrong key
         const newFee = 1500; // 15%
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         await expect(
           Profile.connect(operational).updateOperatorFee(
             node1.identityId,
