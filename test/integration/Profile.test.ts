@@ -2,10 +2,11 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
-import { time } from '@nomicfoundation/hardhat-network-helpers';
+import { time, loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+// @ts-ignore
 import { kcTools } from 'assertion-tools';
 import { expect } from 'chai';
-import hre from 'hardhat';
+import hre, { deployments } from 'hardhat';
 
 import {
   Token,
@@ -121,6 +122,7 @@ async function submitProofAndLogScore(
   nodeAccount: { operational: SignerWithAddress; admin: SignerWithAddress },
   contracts: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   epoch: bigint,
+  nodeName: string,
 ) {
   // Get score before proof
   const scoreBefore = await contracts.randomSamplingStorage.getNodeEpochScore(
@@ -318,6 +320,7 @@ export async function buildInitialRewardsState() {
   // Create identical reward pools for epoch-2 (each node publishes same amount)
   const kcTokenAmount = toTRAC(250); // Split total among 4 nodes
   const numberOfEpochs = 5;
+  // @ts-ignore
   const { kcTools } = await import('assertion-tools');
   const merkleRoot = kcTools.calculateMerkleRoot(quads, 32);
 
@@ -978,6 +981,10 @@ export async function buildInitialRewardsState() {
   };
 }
 
+const fixtureInitialRewardsState = deployments.createFixture(
+  buildInitialRewardsState,
+);
+
 /* ───────────────────────────── tests ───────────────────────────── */
 
 describe('Profile Contract', () => {
@@ -985,7 +992,7 @@ describe('Profile Contract', () => {
 
   before(async function () {
     this.timeout(400000);
-    initialRewardsState = await buildInitialRewardsState();
+    initialRewardsState = await fixtureInitialRewardsState();
   });
 
   describe('Operator Fee Management', () => {
@@ -998,8 +1005,9 @@ describe('Profile Contract', () => {
     const newFee = 2000; // 20%
     const evenNewerFee = 2500; // 25%
 
-    before(async function () {
-      fixtures = initialRewardsState;
+    beforeEach(async function () {
+      this.timeout(400000);
+      fixtures = await fixtureInitialRewardsState();
       node1 = fixtures.nodes[0];
     });
 
@@ -1024,15 +1032,13 @@ describe('Profile Contract', () => {
       // Claim rewards for some older epochs (e.g., 2, 3, 4).
       // This will not satisfy the condition for epoch 6.
       for (const epoch of [2, 3, 4]) {
-        try {
-          await Staking.connect(delegatorForNode1).claimDelegatorRewards(
+        await Staking.connect(delegatorForNode1)
+          .claimDelegatorRewards(
             node1.identityId,
             epoch,
             delegatorForNode1.address,
-          );
-        } catch (e) {
-          // Ignore if no rewards, the point is to trigger the claim logic.
-        }
+          )
+          .catch(() => {});
       }
 
       // We are still in epoch 7, and rewards for epoch 6 are still not claimed.
@@ -1074,15 +1080,13 @@ describe('Profile Contract', () => {
       ];
 
       for (const claim of claims) {
-        try {
-          await Staking.connect(claim.delegator).claimDelegatorRewards(
+        await Staking.connect(claim.delegator)
+          .claimDelegatorRewards(
             node1.identityId,
             claim.epoch,
             claim.delegator.address,
-          );
-        } catch (error) {
-          // Some claims might fail, that's expected
-        }
+          )
+          .catch(() => {});
       }
 
       // STEP 2: Update operator fee and read when it should become effective
@@ -1158,15 +1162,13 @@ describe('Profile Contract', () => {
         }
 
         for (const claim of claims) {
-          try {
-            await Staking.connect(claim.delegator).claimDelegatorRewards(
+          await Staking.connect(claim.delegator)
+            .claimDelegatorRewards(
               node1.identityId,
               claim.epoch,
               claim.delegator.address,
-            );
-          } catch (error) {
-            // Some claims might fail, that's expected
-          }
+            )
+            .catch(() => {});
         }
       }
 
@@ -1237,6 +1239,306 @@ describe('Profile Contract', () => {
       console.log(
         `  Checked at time: ${afterCheckTime} (second effective was: ${secondEffectiveTime})`,
       );
+    });
+
+    it('should correctly manage storage, flags, and events during fee updates', async () => {
+      const { Staking, Profile, ProfileStorage, accounts, delegators } =
+        fixtures;
+      const node1 = fixtures.nodes[0];
+      const admin = accounts.node1.admin;
+      const fee1 = 1500; // 15%
+      const fee2 = 2500; // 25%
+
+      // Claim rewards to enable fee updates
+      await hre.ethers.provider.send('evm_setAutomine', [false]);
+      for (let epoch = 2; epoch <= 6; epoch++) {
+        for (const delegator of delegators) {
+          await Staking.connect(delegator).claimDelegatorRewards(
+            node1.identityId,
+            epoch,
+            delegator.address,
+          );
+        }
+      }
+      await hre.ethers.provider.send('evm_mine');
+      await hre.ethers.provider.send('evm_setAutomine', [true]);
+
+      // 1. Initial State Check
+      const initialLength = await ProfileStorage.getOperatorFeesLength(
+        node1.identityId,
+      );
+      expect(await ProfileStorage.isOperatorFeeChangePending(node1.identityId))
+        .to.be.false;
+
+      // 2. First Update (ADD)
+      const tx1 = await Profile.connect(admin).updateOperatorFee(
+        node1.identityId,
+        fee1,
+      );
+      const pendingUpdate1 = await ProfileStorage.getLatestOperatorFee(
+        node1.identityId,
+      );
+      await expect(tx1)
+        .to.emit(ProfileStorage, 'OperatorFeeAdded')
+        .withArgs(node1.identityId, fee1, pendingUpdate1.effectiveDate);
+      expect(
+        await ProfileStorage.getOperatorFeesLength(node1.identityId),
+      ).to.equal(initialLength + 1n);
+      expect(await ProfileStorage.isOperatorFeeChangePending(node1.identityId))
+        .to.be.true;
+
+      // 3. Second Update (REPLACE)
+      const tx2 = await Profile.connect(admin).updateOperatorFee(
+        node1.identityId,
+        fee2,
+      );
+      const pendingUpdate2 = await ProfileStorage.getLatestOperatorFee(
+        node1.identityId,
+      );
+      await expect(tx2)
+        .to.emit(ProfileStorage, 'OperatorFeesReplaced')
+        .withArgs(
+          node1.identityId,
+          fee1, // oldFeePercentage
+          fee2, // newFeePercentage
+          pendingUpdate2.effectiveDate,
+        );
+      expect(
+        await ProfileStorage.getOperatorFeesLength(node1.identityId),
+      ).to.equal(
+        initialLength + 1n, // Length should not change
+      );
+      expect(await ProfileStorage.isOperatorFeeChangePending(node1.identityId))
+        .to.be.true; // Still pending
+
+      // 4. Finalize and check flag
+      await time.increaseTo(pendingUpdate2.effectiveDate + 1n);
+      await ProfileStorage.getOperatorFee(node1.identityId); // This call finalizes the fee
+      expect(await ProfileStorage.isOperatorFeeChangePending(node1.identityId))
+        .to.be.false;
+    });
+
+    it('should not apply the new fee exactly at the effective time boundary', async () => {
+      const { Staking, Profile, ProfileStorage, accounts, delegators } =
+        fixtures;
+      const node1 = fixtures.nodes[0];
+      const newFee = 5000; // 50%
+
+      // Claim all rewards to enable the fee update
+      await hre.ethers.provider.send('evm_setAutomine', [false]);
+      for (let epoch = 2; epoch <= 6; epoch++) {
+        for (const delegator of delegators) {
+          await Staking.connect(delegator).claimDelegatorRewards(
+            node1.identityId,
+            epoch,
+            delegator.address,
+          );
+        }
+      }
+      await hre.ethers.provider.send('evm_mine');
+      await hre.ethers.provider.send('evm_setAutomine', [true]);
+
+      // Update the fee and get its effective time
+      const oldFee = await ProfileStorage.getOperatorFee(node1.identityId);
+      await Profile.connect(accounts.node1.admin).updateOperatorFee(
+        node1.identityId,
+        newFee,
+      );
+      const pendingUpdate = await ProfileStorage.getLatestOperatorFee(
+        node1.identityId,
+      );
+      const effectiveTime = pendingUpdate.effectiveDate;
+
+      // Advance time to EXACTLY the boundary
+      await time.increaseTo(effectiveTime);
+
+      // Check the fee - it should still be the OLD one because of the '>' check
+      const feeOnBoundary = await ProfileStorage.getOperatorFee(
+        node1.identityId,
+      );
+      expect(feeOnBoundary).to.equal(oldFee);
+
+      // Advance time by one more second to cross the boundary
+      await time.increase(1);
+
+      // Check the fee again - it should now be the NEW one
+      const feeAfterBoundary = await ProfileStorage.getOperatorFee(
+        node1.identityId,
+      );
+      expect(feeAfterBoundary).to.equal(newFee);
+    });
+
+    describe('Access Control and Identity Validation', () => {
+      it('should REVERT if a non-admin tries to update the operator fee', async () => {
+        const { Profile, accounts, nodes } = fixtures;
+        const node1 = nodes[0];
+        const nonAdmin = accounts.node2.admin; // Not the admin for node1
+        const newFee = 1500; // 15%
+
+        await expect(
+          Profile.connect(nonAdmin).updateOperatorFee(node1.identityId, newFee),
+        ).to.be.revertedWithCustomError(Profile, 'OnlyProfileAdminFunction');
+      });
+
+      it('should REVERT if the operational wallet of the same identity tries to update the fee', async () => {
+        const { Profile, accounts, nodes } = fixtures;
+        const node1 = nodes[0];
+        const operational = accounts.node1.operational; // Correct identity, wrong key
+        const newFee = 1500; // 15%
+
+        await expect(
+          Profile.connect(operational).updateOperatorFee(
+            node1.identityId,
+            newFee,
+          ),
+        ).to.be.revertedWithCustomError(Profile, 'OnlyProfileAdminFunction');
+      });
+    });
+
+    describe('Operator Fee Validation', () => {
+      beforeEach(async function () {
+        this.timeout(400000);
+
+        // We need to claim rewards for all previous epochs (2-6) for node 1
+        // before we can update the operator fee.
+        const { Staking, delegators } = fixtures;
+
+        // Disable automining to bundle claims and speed up the process
+        await hre.ethers.provider.send('evm_setAutomine', [false]);
+
+        for (let epoch = 2; epoch <= 6; epoch++) {
+          for (const delegator of delegators) {
+            // No need for try-catch, just send the transactions
+            await Staking.connect(delegator).claimDelegatorRewards(
+              node1.identityId,
+              epoch,
+              delegator.address,
+            );
+          }
+        }
+        // Mine all the pending transactions in one block
+        await hre.ethers.provider.send('evm_mine');
+
+        // Re-enable automining for the actual tests
+        await hre.ethers.provider.send('evm_setAutomine', [true]);
+      });
+
+      it('should allow a valid admin to update the operator fee', async () => {
+        const { Profile, accounts } = fixtures;
+        const admin = accounts.node1.admin;
+        const newFee = 1500; // 15%
+
+        await expect(
+          Profile.connect(admin).updateOperatorFee(node1.identityId, newFee),
+        ).to.not.be.reverted;
+      });
+
+      it('should REVERT if the fee is set above the maximum (100%)', async () => {
+        const { Profile, accounts } = fixtures;
+        const admin = accounts.node1.admin;
+        const invalidFee = 10001; // > 100%
+
+        await expect(
+          Profile.connect(admin).updateOperatorFee(
+            node1.identityId,
+            invalidFee,
+          ),
+        ).to.be.revertedWithCustomError(Profile, 'InvalidOperatorFee');
+      });
+    });
+  });
+
+  describe('Edge Case Fee Scenarios', () => {
+    describe('When in Epoch 1', () => {
+      const fixtureEpoch1 = deployments.createFixture(async () => {
+        await hre.deployments.fixture([
+          'Chronos',
+          'Profile',
+          'ParametersStorage',
+        ]);
+        const signers = await hre.ethers.getSigners();
+        const contracts = {
+          profile: await hre.ethers.getContract<Profile>('Profile'),
+          chronos: await hre.ethers.getContract<Chronos>('Chronos'),
+          parametersStorage:
+            await hre.ethers.getContract<ParametersStorage>(
+              'ParametersStorage',
+            ),
+        };
+        const accounts = {
+          node1: { operational: signers[1], admin: signers[2] },
+        };
+
+        await contracts.parametersStorage
+          .connect(signers[0])
+          .setOperatorFeeUpdateDelay(0);
+
+        const { identityId } = await createProfile(
+          contracts.profile,
+          accounts.node1,
+        );
+
+        // Fast-forward to epoch-1 if we are in epoch 0
+        if ((await contracts.chronos.getCurrentEpoch()) < 1n) {
+          await time.increase(
+            (await contracts.chronos.timeUntilNextEpoch()) + 1n,
+          );
+        }
+        return { ...contracts, ...accounts, identityId };
+      });
+
+      it('should allow fee update without checking previous epochs', async () => {
+        const { profile, chronos, node1, identityId } = await fixtureEpoch1();
+
+        expect(await chronos.getCurrentEpoch()).to.equal(1n);
+
+        // The check for previous epoch claims should not apply in epoch 1
+        await expect(
+          profile.connect(node1.admin).updateOperatorFee(identityId, 1000), // 10%
+        ).to.not.be.reverted;
+      });
+    });
+
+    describe('When using a large (negative-like) fee value', () => {
+      let fixtures: Awaited<ReturnType<typeof buildInitialRewardsState>>;
+
+      beforeEach(async function () {
+        this.timeout(400000);
+        fixtures = await fixtureInitialRewardsState();
+        const { Staking, delegators, nodes } = fixtures;
+        const node1 = nodes[0];
+
+        // Claim rewards to allow fee updates in this describe block
+        await hre.ethers.provider.send('evm_setAutomine', [false]);
+        for (let epoch = 2; epoch <= 6; epoch++) {
+          for (const delegator of delegators) {
+            await Staking.connect(delegator).claimDelegatorRewards(
+              node1.identityId,
+              epoch,
+              delegator.address,
+            );
+          }
+        }
+        await hre.ethers.provider.send('evm_mine');
+        await hre.ethers.provider.send('evm_setAutomine', [true]);
+      });
+
+      it('should REVERT, as it exceeds the maximum fee', async () => {
+        const { Profile, accounts, nodes } = fixtures;
+        const node1 = nodes[0];
+        const admin = accounts.node1.admin;
+
+        // A negative number will cause an error in ethers.js before the transaction is sent.
+        // We test with a very large uint16 value instead, which should be caught by the > 100% check.
+        const invalidFee = 65535; // Max uint16
+
+        await expect(
+          Profile.connect(admin).updateOperatorFee(
+            node1.identityId,
+            invalidFee,
+          ),
+        ).to.be.revertedWithCustomError(Profile, 'InvalidOperatorFee');
+      });
     });
   });
 });
