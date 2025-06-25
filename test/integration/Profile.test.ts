@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
+// @ts-expect-error – assertion-tools nema definicije tipova
 import { kcTools } from 'assertion-tools';
 import { expect } from 'chai';
 import hre, { deployments } from 'hardhat';
@@ -315,6 +318,7 @@ export async function buildInitialRewardsState() {
   // Create identical reward pools for epoch-2 (each node publishes same amount)
   const kcTokenAmount = toTRAC(250); // Split total among 4 nodes
   const numberOfEpochs = 5;
+  // @ts-expect-error – dynamic import JS biblioteke bez tipova
   const { kcTools } = await import('assertion-tools');
   const merkleRoot = kcTools.calculateMerkleRoot(quads, 32);
 
@@ -1239,7 +1243,6 @@ describe('Profile Contract', () => {
       const pendingUpdate1 = await ProfileStorage.getLatestOperatorFee(
         node1.identityId,
       );
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       await expect(tx1)
         .to.emit(ProfileStorage, 'OperatorFeeAdded')
         .withArgs(node1.identityId, fee1, pendingUpdate1.effectiveDate);
@@ -1257,7 +1260,6 @@ describe('Profile Contract', () => {
       const pendingUpdate2 = await ProfileStorage.getLatestOperatorFee(
         node1.identityId,
       );
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       await expect(tx2)
         .to.emit(ProfileStorage, 'OperatorFeesReplaced')
         .withArgs(
@@ -1338,7 +1340,6 @@ describe('Profile Contract', () => {
         const nonAdmin = accounts.node2.admin; // Not the admin for node1
         const newFee = 1500; // 15%
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         await expect(
           Profile.connect(nonAdmin).updateOperatorFee(node1.identityId, newFee),
         ).to.be.revertedWithCustomError(Profile, 'OnlyProfileAdminFunction');
@@ -1350,7 +1351,6 @@ describe('Profile Contract', () => {
         const operational = accounts.node1.operational; // Correct identity, wrong key
         const newFee = 1500; // 15%
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         await expect(
           Profile.connect(operational).updateOperatorFee(
             node1.identityId,
