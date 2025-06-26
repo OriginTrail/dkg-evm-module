@@ -22,13 +22,13 @@
       "deployed": true
     },
     "ParametersStorage": {
-      "evmAddress": "0x8aA667303c37CD1EF4e7C102140879e10A4F233c",
-      "substrateAddress": "5EMjsczoxUCi3DZNFW9CsxXLz11aZ6mXGc817RmZB3gzyppc",
+      "evmAddress": "0xa35195779eA99240acC8a0a95ae78E5424d739b9",
+      "substrateAddress": "5EMjscztuAF2aZdwYYpe3skA6oDyS95ks3bkRJ9dhwAe2Z1L",
       "version": "1.0.0",
       "gitBranch": "main",
-      "gitCommitHash": "926644c7a81783b1fab1bd28e850968c295ff80a",
-      "deploymentBlock": 9791075,
-      "deploymentTimestamp": 1750770213265,
+      "gitCommitHash": "39b15d4ca8613442ded7fc928aedfd928b6f059e",
+      "deploymentBlock": 9819201,
+      "deploymentTimestamp": 1750941665182,
       "deployed": true
     },
     "WhitelistStorage": {
@@ -172,23 +172,23 @@
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0xa9F363FE928752dc3d8Aa3F52c1E00416d464919",
-      "substrateAddress": "5EMjsczvEEcXHLgYjiHoBW6oHR7kaxo5wGcf2gnJeAY4bEZF",
+      "evmAddress": "0xADf1382CAE65Cb81EF5bd889c49d4576Ea610413",
+      "substrateAddress": "5EMjsczw2d7gCog6QY29psAm2gmdSi148HogEWqw6VMtigKi",
       "version": "1.0.1",
       "gitBranch": "main",
-      "gitCommitHash": "926644c7a81783b1fab1bd28e850968c295ff80a",
-      "deploymentBlock": 9791080,
-      "deploymentTimestamp": 1750770241663,
+      "gitCommitHash": "39b15d4ca8613442ded7fc928aedfd928b6f059e",
+      "deploymentBlock": 9819203,
+      "deploymentTimestamp": 1750941674990,
       "deployed": true
     },
     "Profile": {
-      "evmAddress": "0xbf947E912685453068080BE05126A707F183871A",
-      "substrateAddress": "5EMjsczzZbxPR32eaXzasGtvGRLN4HFdfzDo2qfyCJK1uEx4",
+      "evmAddress": "0x23C891843637aBC722C47BB417EC1D3de4b63547",
+      "substrateAddress": "5EMjsczTLzWc9sacjY6pf7ywZtKyKqnq7y5NeQX4JoYbotBj",
       "version": "1.0.0",
       "gitBranch": "main",
-      "gitCommitHash": "53bb3671c2fff3e82293fd119aeb63e68bb19377",
-      "deploymentBlock": 9818014,
-      "deploymentTimestamp": 1750934287227,
+      "gitCommitHash": "39b15d4ca8613442ded7fc928aedfd928b6f059e",
+      "deploymentBlock": 9819204,
+      "deploymentTimestamp": 1750941679769,
       "deployed": true
     },
     "Migrator": {
