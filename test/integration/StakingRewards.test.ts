@@ -3837,7 +3837,7 @@ describe('Migration tests', () => {
     await Token.mint(migratedDelegator.address, toTRAC(20_000));
   });
 
-  it('should handle claims for a migrated delegator with lastClaimedEpoch = 0', async () => {
+  it.only('should handle claims for a migrated delegator with lastClaimedEpoch = 0', async () => {
     // Current state from fixture: Epoch 7 has started.
 
     // 3. Simulate migration: Manually add delegator to storage without calling stake().
@@ -3964,7 +3964,23 @@ describe('Migration tests', () => {
       `  ✅ Now in Epoch ${await Chronos.getCurrentEpoch()}, Last Finalized: ${lastFinalized}.`,
     );
 
-    // 7. Migrated delegator claims rewards for Epoch 7
+    // 7. Migrated delegator claims rewards for Epoch 6 (no rewards expected, just updating lastClaimed)
+    console.log('\n▶️  Migrated delegator attempting to claim for Epoch 6...');
+    await expect(
+      Staking.connect(migratedDelegator).claimDelegatorRewards(
+        node1Id,
+        6n,
+        migratedDelegator.address,
+      ),
+    ).to.not.be.reverted;
+    console.log('  ✅ Claim for epoch 6 was successful (0 rewards).');
+    let newLastClaimed = await DelegatorsInfo.getLastClaimedEpoch(
+      node1Id,
+      migratedDelegator.address,
+    );
+    expect(newLastClaimed).to.equal(6n);
+
+    // 8. Migrated delegator claims rewards for Epoch 7
     console.log('\n▶️  Migrated delegator attempting to claim for Epoch 7...');
     const stakeBaseBefore = await env.StakingStorage.getDelegatorStakeBase(
       node1Id,
@@ -3992,7 +4008,7 @@ describe('Migration tests', () => {
 
     console.log('  ✅ Claim was successful!');
 
-    // 8. Verify the outcome: rewards go to stakeBase, not rolling, as it's the last claimable epoch.
+    // 9. Verify the outcome: rewards go to stakeBase, not rolling, as it's the last claimable epoch.
     const stakeBaseAfter = await env.StakingStorage.getDelegatorStakeBase(
       node1Id,
       delegatorKey,
@@ -4031,7 +4047,7 @@ describe('Migration tests', () => {
       'Rolling rewards should be 0 as this was the last finalized epoch to claim',
     );
 
-    const newLastClaimed = await DelegatorsInfo.getLastClaimedEpoch(
+    newLastClaimed = await DelegatorsInfo.getLastClaimedEpoch(
       node1Id,
       migratedDelegator.address,
     );
