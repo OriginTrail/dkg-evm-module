@@ -30,6 +30,9 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _VERSION = "1.0.1";
     uint256 public constant SCALE18 = 1e18;
     uint256 private constant EPOCH_POOL_INDEX = 1;
+    // Epoch when v8.1 was released on mainnet - Change if you ever redeploy delegatorsInfo contract
+    // Same needs to be done when redeploying delegatorsInfo contract on testnet
+    uint256 public constant V8_1_RELEASE_EPOCH = 6;
 
     Ask public askContract;
     ShardingTableStorage public shardingTableStorage;
@@ -530,6 +533,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         require(delegatorsInfo.isNodeDelegator(identityId, delegator), "Delegator not found");
 
         uint256 lastClaimed = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+        if (lastClaimed == 0) {
+            delegatorsInfo.setLastClaimedEpoch(identityId, delegator, V8_1_RELEASE_EPOCH - 1);
+        }
+
         if (lastClaimed == currentEpoch - 1) {
             revert("Already claimed all finalised epochs");
         }
@@ -672,6 +679,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             }
         } else {
             // delegator is delegating to a node for the first time ever, set the last claimed epoch to the previous epoch
+            delegatorsInfo.setHasEverDelegatedToNode(identityId, delegator, true);
             delegatorsInfo.setLastClaimedEpoch(identityId, delegator, previousEpoch);
         }
 
@@ -785,9 +793,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     function _manageDelegatorStatus(uint72 identityId, address delegator) internal {
         if (!delegatorsInfo.isNodeDelegator(identityId, delegator)) {
             delegatorsInfo.addDelegator(identityId, delegator);
-        }
-        if (!delegatorsInfo.hasEverDelegatedToNode(identityId, delegator)) {
-            delegatorsInfo.setHasEverDelegatedToNode(identityId, delegator, true);
         }
         // If operator was inactive and is now restaking fees, reset their lastStakeHeldEpoch
         uint256 lastStakeHeldEpoch = delegatorsInfo.getLastStakeHeldEpoch(identityId, delegator);
