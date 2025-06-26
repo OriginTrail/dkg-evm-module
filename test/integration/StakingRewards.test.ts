@@ -457,7 +457,6 @@ export async function buildInitialRewardsState() {
     accounts.node4,
     contracts,
     2n,
-    'Node-4',
   );
   console.log(
     `   ✅ Node-4: Score ${node4Proof2.scoreBefore} → ${node4Proof2.scoreAfter} (gain: ${node4Proof2.scoreAfter - node4Proof2.scoreBefore})`,
@@ -604,7 +603,6 @@ export async function buildInitialRewardsState() {
     accounts.node1,
     contracts,
     3n,
-    'Node-1',
   );
   console.log(
     `   ✅ Node-1: Score ${node1Proof3.scoreBefore} → ${node1Proof3.scoreAfter} (gain: ${node1Proof3.scoreAfter - node1Proof3.scoreBefore})`,
@@ -615,7 +613,6 @@ export async function buildInitialRewardsState() {
     accounts.node2,
     contracts,
     3n,
-    'Node-2',
   );
   console.log(
     `   ✅ Node-2: Score ${node2Proof3.scoreBefore} → ${node2Proof3.scoreAfter} (gain: ${node2Proof3.scoreAfter - node2Proof3.scoreBefore})`,
@@ -626,7 +623,6 @@ export async function buildInitialRewardsState() {
     accounts.node3,
     contracts,
     3n,
-    'Node-3',
   );
   console.log(
     `   ✅ Node-3: Score ${node3Proof3.scoreBefore} → ${node3Proof3.scoreAfter} (gain: ${node3Proof3.scoreAfter - node3Proof3.scoreBefore})`,
@@ -637,7 +633,6 @@ export async function buildInitialRewardsState() {
     accounts.node4,
     contracts,
     3n,
-    'Node-4',
   );
   console.log(
     `   ✅ Node-4: Score ${node4Proof3.scoreBefore} → ${node4Proof3.scoreAfter} (gain: ${node4Proof3.scoreAfter - node4Proof3.scoreBefore})`,
@@ -709,7 +704,6 @@ export async function buildInitialRewardsState() {
     accounts.node1,
     contracts,
     4n,
-    'Node-1',
   );
   console.log(
     `   ✅ Node-1: Score ${node1Proof4.scoreBefore} → ${node1Proof4.scoreAfter} (gain: ${node1Proof4.scoreAfter - node1Proof4.scoreBefore})`,
@@ -720,7 +714,6 @@ export async function buildInitialRewardsState() {
     accounts.node2,
     contracts,
     4n,
-    'Node-2',
   );
   console.log(
     `   ✅ Node-2: Score ${node2Proof4.scoreBefore} → ${node2Proof4.scoreAfter} (gain: ${node2Proof4.scoreAfter - node2Proof4.scoreBefore})`,
@@ -731,7 +724,6 @@ export async function buildInitialRewardsState() {
     accounts.node3,
     contracts,
     4n,
-    'Node-3',
   );
   console.log(
     `   ✅ Node-3: Score ${node3Proof4.scoreBefore} → ${node3Proof4.scoreAfter} (gain: ${node3Proof4.scoreAfter - node3Proof4.scoreBefore})`,
@@ -742,7 +734,6 @@ export async function buildInitialRewardsState() {
     accounts.node4,
     contracts,
     4n,
-    'Node-4',
   );
   console.log(
     `   ✅ Node-4: Score ${node4Proof4.scoreBefore} → ${node4Proof4.scoreAfter} (gain: ${node4Proof4.scoreAfter - node4Proof4.scoreBefore})`,
