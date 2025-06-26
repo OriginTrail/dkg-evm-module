@@ -3807,7 +3807,8 @@ describe('Migration tests', () => {
     EpochStorage: EpochStorage,
     RandomSampling: RandomSampling,
     RandomSamplingStorage: RandomSamplingStorage,
-    KC: KnowledgeCollection;
+    KC: KnowledgeCollection,
+    ParametersStorage: ParametersStorage;
   let accounts: any, nodes: any[];
   let node1Id: number;
   let migratedDelegator: SignerWithAddress;
@@ -3824,10 +3825,13 @@ describe('Migration tests', () => {
       RandomSampling,
       RandomSamplingStorage,
       KC,
+      ParametersStorage,
       accounts,
       nodes,
     } = env);
     node1Id = nodes[0].identityId;
+
+    await ParametersStorage.connect(accounts.owner).setV81ReleaseEpoch(6);
 
     // 1. Get a new delegator from the list of signers
     const signers = await hre.ethers.getSigners();
