@@ -168,12 +168,12 @@
       "deployed": true
     },
     "Profile": {
-      "evmAddress": "0x8fB4CAAcAD93fDA58F9DAee4E3E2685871dDd392",
+      "evmAddress": "0xdB4f04BA9d051A93b561af6995526C23fA4208bb",
       "version": "1.0.0",
       "gitBranch": "main",
-      "gitCommitHash": "926644c7a81783b1fab1bd28e850968c295ff80a",
-      "deploymentBlock": 31989604,
-      "deploymentTimestamp": 1750768557897,
+      "gitCommitHash": "53bb3671c2fff3e82293fd119aeb63e68bb19377",
+      "deploymentBlock": 32072441,
+      "deploymentTimestamp": 1750934230860,
       "deployed": true
     },
     "Migrator": {
