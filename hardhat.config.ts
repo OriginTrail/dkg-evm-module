@@ -62,6 +62,7 @@ config.networks = {
   gnosis_mainnet: {
     environment: 'mainnet',
     chainId: 100,
+    gasPrice: 2_000_000_000,
     url: rpc('gnosis_mainnet'),
     accounts: accounts('gnosis_mainnet'),
     saveDeployments: false,
