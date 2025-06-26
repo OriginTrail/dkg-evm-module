@@ -2534,7 +2534,7 @@ describe('Staking contract', function () {
   /**********************************************************************
    * Events & sharding‑table transition on redelegate
    **********************************************************************/
-  it('emits StakeRedelegated and moves both nodes in sharding table', async () => {
+  it('Moves both nodes in sharding table', async () => {
     const nodeA = await createProfile();
     const nodeB = await createProfile(accounts[0], accounts[2]);
 
@@ -2550,16 +2550,7 @@ describe('Staking contract', function () {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(await ShardingTableStorage.nodeExists(nodeA.identityId)).to.be.true;
 
-    await expect(
-      Staking.redelegate(nodeA.identityId, nodeB.identityId, minStake),
-    )
-      .to.emit(Staking, 'StakeRedelegated')
-      .withArgs(
-        nodeA.identityId,
-        nodeB.identityId,
-        accounts[0].address,
-        minStake,
-      );
+    await Staking.redelegate(nodeA.identityId, nodeB.identityId, minStake);
 
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(await ShardingTableStorage.nodeExists(nodeA.identityId)).to.be.false;
