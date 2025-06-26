@@ -10,7 +10,7 @@
       "shardingTableSizeLimit": "500",
       "askUpperBoundFactor": "1467000000000000000",
       "askLowerBoundFactor": "533000000000000000",
-      "v81ReleaseEpoch": "0"
+      "v81ReleaseEpoch": "1"
     },
     "Chronos": {
       "epochLength": "3600"
@@ -44,7 +44,7 @@
       "shardingTableSizeLimit": "500",
       "askUpperBoundFactor": "1467000000000000000",
       "askLowerBoundFactor": "533000000000000000",
-      "v81ReleaseEpoch": "0"
+      "v81ReleaseEpoch": "1"
     },
     "Chronos": {
       "epochLength": "3600"
