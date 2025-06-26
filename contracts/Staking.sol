@@ -531,7 +531,9 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         uint256 lastClaimed = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
         if (lastClaimed == 0) {
-            delegatorsInfo.setLastClaimedEpoch(identityId, delegator, parametersStorage.v81ReleaseEpoch() - 1);
+            uint256 v81ReleaseEpoch = parametersStorage.v81ReleaseEpoch();
+            delegatorsInfo.setLastClaimedEpoch(identityId, delegator, v81ReleaseEpoch - 1);
+            lastClaimed = v81ReleaseEpoch - 1;
         }
 
         if (lastClaimed == currentEpoch - 1) {
