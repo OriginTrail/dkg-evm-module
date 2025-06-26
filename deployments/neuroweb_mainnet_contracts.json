@@ -182,13 +182,13 @@
       "deployed": true
     },
     "Profile": {
-      "evmAddress": "0x14E11E9117545704474437B910a9350edBdB54CF",
-      "substrateAddress": "5EMjsczQMnLChY3ZYnLqYaXtfJcFeQieA5TNfBgRx7D9ya9p",
+      "evmAddress": "0xbf947E912685453068080BE05126A707F183871A",
+      "substrateAddress": "5EMjsczzZbxPR32eaXzasGtvGRLN4HFdfzDo2qfyCJK1uEx4",
       "version": "1.0.0",
       "gitBranch": "main",
-      "gitCommitHash": "926644c7a81783b1fab1bd28e850968c295ff80a",
-      "deploymentBlock": 9791083,
-      "deploymentTimestamp": 1750770259205,
+      "gitCommitHash": "53bb3671c2fff3e82293fd119aeb63e68bb19377",
+      "deploymentBlock": 9818014,
+      "deploymentTimestamp": 1750934287227,
       "deployed": true
     },
     "Migrator": {
