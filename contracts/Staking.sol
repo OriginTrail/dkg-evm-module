@@ -530,6 +530,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         require(delegatorsInfo.isNodeDelegator(identityId, delegator), "Delegator not found");
 
         uint256 lastClaimed = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+        if (lastClaimed == 0) {
+            delegatorsInfo.setLastClaimedEpoch(identityId, delegator, parametersStorage.v81ReleaseEpoch() - 1);
+        }
+
         if (lastClaimed == currentEpoch - 1) {
             revert("Already claimed all finalised epochs");
         }
@@ -672,6 +676,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             }
         } else {
             // delegator is delegating to a node for the first time ever, set the last claimed epoch to the previous epoch
+            delegatorsInfo.setHasEverDelegatedToNode(identityId, delegator, true);
             delegatorsInfo.setLastClaimedEpoch(identityId, delegator, previousEpoch);
         }
 
@@ -785,9 +790,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     function _manageDelegatorStatus(uint72 identityId, address delegator) internal {
         if (!delegatorsInfo.isNodeDelegator(identityId, delegator)) {
             delegatorsInfo.addDelegator(identityId, delegator);
-        }
-        if (!delegatorsInfo.hasEverDelegatedToNode(identityId, delegator)) {
-            delegatorsInfo.setHasEverDelegatedToNode(identityId, delegator, true);
         }
         // If operator was inactive and is now restaking fees, reset their lastStakeHeldEpoch
         uint256 lastStakeHeldEpoch = delegatorsInfo.getLastStakeHeldEpoch(identityId, delegator);

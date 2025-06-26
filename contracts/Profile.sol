@@ -31,10 +31,6 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     Chronos public chronos;
     DelegatorsInfo public delegatorsInfo;
 
-    // Epoch when v8.1 was released on mainnet - Change if you ever redeploy delegatorsInfo contract
-    // Same needs to be done when redeploying delegatorsInfo contract on testnet
-    uint256 public constant V8_1_RELEASE_EPOCH = 6;
-
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
 
@@ -137,7 +133,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     function updateOperatorFee(uint72 identityId, uint16 newOperatorFee) external onlyAdmin(identityId) {
         uint256 currentEpoch = chronos.getCurrentEpoch();
 
-        if (currentEpoch > 1 && currentEpoch > V8_1_RELEASE_EPOCH) {
+        if (currentEpoch > 1 && currentEpoch > parametersStorage.v81ReleaseEpoch()) {
             // All operator fees for previous epochs must be calculated and claimed before updating the operator fee
             if (!delegatorsInfo.isOperatorFeeClaimedForEpoch(identityId, currentEpoch - 1)) {
                 revert(
