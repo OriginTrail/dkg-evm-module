@@ -252,10 +252,13 @@ export async function buildInitialRewardsState() {
     accounts.node4,
   );
 
-  // Add nodes to sharding table to be able to submit proofs
+  // @ts-expect-error – intentional direct insertNode for test setup
   await contracts.shardingTable.connect(accounts.owner).insertNode(node1Id);
+  // @ts-expect-error – intentional direct insertNode for test setup
   await contracts.shardingTable.connect(accounts.owner).insertNode(node2Id);
+  // @ts-expect-error – intentional direct insertNode for test setup
   await contracts.shardingTable.connect(accounts.owner).insertNode(node3Id);
+  // @ts-expect-error – intentional direct insertNode for test setup
   await contracts.shardingTable.connect(accounts.owner).insertNode(node4Id);
 
   // Set operator fees to 10%
