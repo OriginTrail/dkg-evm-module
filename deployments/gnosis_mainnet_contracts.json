@@ -20,12 +20,12 @@
       "deployed": true
     },
     "ParametersStorage": {
-      "evmAddress": "0x8aA667303c37CD1EF4e7C102140879e10A4F233c",
+      "evmAddress": "0xa35195779eA99240acC8a0a95ae78E5424d739b9",
       "version": "1.0.0",
       "gitBranch": "main",
-      "gitCommitHash": "926644c7a81783b1fab1bd28e850968c295ff80a",
-      "deploymentBlock": 40748106,
-      "deploymentTimestamp": 1750770669324,
+      "gitCommitHash": "39b15d4ca8613442ded7fc928aedfd928b6f059e",
+      "deploymentBlock": 40781170,
+      "deploymentTimestamp": 1750941629566,
       "deployed": true
     },
     "WhitelistStorage": {
@@ -155,21 +155,21 @@
       "deployed": true
     },
     "Staking": {
-      "evmAddress": "0xa9F363FE928752dc3d8Aa3F52c1E00416d464919",
+      "evmAddress": "0xADf1382CAE65Cb81EF5bd889c49d4576Ea610413",
       "version": "1.0.1",
       "gitBranch": "main",
-      "gitCommitHash": "926644c7a81783b1fab1bd28e850968c295ff80a",
-      "deploymentBlock": 40748113,
-      "deploymentTimestamp": 1750770703052,
+      "gitCommitHash": "39b15d4ca8613442ded7fc928aedfd928b6f059e",
+      "deploymentBlock": 40781172,
+      "deploymentTimestamp": 1750941636109,
       "deployed": true
     },
     "Profile": {
-      "evmAddress": "0xbf947E912685453068080BE05126A707F183871A",
+      "evmAddress": "0x23C891843637aBC722C47BB417EC1D3de4b63547",
       "version": "1.0.0",
       "gitBranch": "main",
-      "gitCommitHash": "53bb3671c2fff3e82293fd119aeb63e68bb19377",
-      "deploymentBlock": 40779737,
-      "deploymentTimestamp": 1750934257286,
+      "gitCommitHash": "39b15d4ca8613442ded7fc928aedfd928b6f059e",
+      "deploymentBlock": 40781173,
+      "deploymentTimestamp": 1750941641427,
       "deployed": true
     },
     "Migrator": {
