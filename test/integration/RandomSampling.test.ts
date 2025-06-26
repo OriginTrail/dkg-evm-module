@@ -737,7 +737,7 @@ describe('@integration RandomSampling', () => {
       );
     });
 
-    it.only('Should set the node challenge successfully and emit ChallengeCreated event', async () => {
+    it('Should set the node challenge successfully and emit ChallengeCreated event', async () => {
       const kcCreator = getDefaultKCCreator(accounts);
       const publishingNode = getDefaultPublishingNode(accounts);
       const receivingNodes = getDefaultReceivingNodes(accounts);
