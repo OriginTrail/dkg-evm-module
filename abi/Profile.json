@@ -162,19 +162,6 @@
   },
   {
     "inputs": [],
-    "name": "V8_1_RELEASE_EPOCH",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "askContract",
     "outputs": [
       {
