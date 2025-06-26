@@ -3837,7 +3837,7 @@ describe('Migration tests', () => {
     await Token.mint(migratedDelegator.address, toTRAC(20_000));
   });
 
-  it.only('should handle claims for a migrated delegator with lastClaimedEpoch = 0', async () => {
+  it('should handle claims for a migrated delegator with lastClaimedEpoch = 0', async () => {
     // Current state from fixture: Epoch 7 has started.
 
     // 3. Simulate migration: Manually add delegator to storage without calling stake().
