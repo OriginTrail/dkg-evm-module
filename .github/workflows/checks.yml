@@ -16,6 +16,9 @@ jobs:
       - name: Set up environment
         uses: ./.github/actions/setup
 
+      - name: Build typechain for linting
+        run: npx hardhat typechain
+
       - name: Run Solidity and Typescript linters
         run: npm run lint
 
