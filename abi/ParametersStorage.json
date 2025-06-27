@@ -5,6 +5,11 @@
         "internalType": "address",
         "name": "hubAddress",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_v81ReleaseEpoch",
+        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
@@ -332,6 +337,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_v81ReleaseEpoch",
+        "type": "uint256"
+      }
+    ],
+    "name": "setV81ReleaseEpoch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "shardingTableSizeLimit",
     "outputs": [
@@ -347,6 +365,19 @@
   {
     "inputs": [],
     "name": "stakeWithdrawalDelay",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "v81ReleaseEpoch",
     "outputs": [
       {
         "internalType": "uint256",

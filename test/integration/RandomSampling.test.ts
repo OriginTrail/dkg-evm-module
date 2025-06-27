@@ -3,6 +3,7 @@ import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 // @ts-expect-error: No type definitions available for assertion-tools
 import { kcTools } from 'assertion-tools';
 import { expect } from 'chai';
+import { parseEther } from 'ethers';
 import hre, { network } from 'hardhat';
 
 import {
@@ -751,6 +752,16 @@ describe('@integration RandomSampling', () => {
       const { identityId: publishingNodeIdentityId } = await createProfile(
         contracts.Profile,
         publishingNode,
+      );
+      await setNodeStake(
+        publishingNode,
+        BigInt(publishingNodeIdentityId),
+        BigInt(parseEther('100000')),
+        {
+          Token,
+          Staking,
+          Ask,
+        },
       );
       const receivingNodesIdentityIds = (
         await createProfiles(contracts.Profile, receivingNodes)
