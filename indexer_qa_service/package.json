@@ -1,0 +1,31 @@
+{
+  "name": "indexer-qa-service",
+  "version": "1.0.0",
+  "description": "IndexerQAService for validating indexer data against on-chain contract values",
+  "main": "indexerQAService.js",
+  "scripts": {
+    "start": "node runValidation.js",
+    "test": "node debugContract.js",
+    "validate": "node runValidation.js",
+    "check-stakes": "node checkNodeStake.js",
+    "check-kc": "node checkKnowledgeCollections.js",
+    "fetch-data": "node fetchContractData.js",
+    "find-staking": "node findStakingAddresses.js",
+    "simple-qa": "node runSimpleValidation.js",
+    "complete-qa": "node completeQAService.js"
+  },
+  "dependencies": {
+    "ethers": "^6.13.5",
+    "mysql2": "^3.14.1",
+    "pg": "^8.16.3"
+  },
+  "keywords": [
+    "indexer",
+    "qa",
+    "validation",
+    "blockchain",
+    "ethereum"
+  ],
+  "author": "QA Team",
+  "license": "MIT"
+}

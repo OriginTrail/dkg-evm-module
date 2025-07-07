@@ -1,0 +1,88 @@
+[
+    {
+      "inputs": [
+        {
+          "internalType": "uint72",
+          "name": "identityId",
+          "type": "uint72"
+        }
+      ],
+      "name": "getNodeStake",
+      "outputs": [
+        {
+          "internalType": "uint96",
+          "name": "",
+          "type": "uint96"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getTotalStake",
+      "outputs": [
+        {
+          "internalType": "uint96",
+          "name": "",
+          "type": "uint96"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint72",
+          "name": "identityId",
+          "type": "uint72"
+        }
+      ],
+      "name": "getNodeData",
+      "outputs": [
+        {
+          "internalType": "uint96",
+          "name": "stake",
+          "type": "uint96"
+        },
+        {
+          "internalType": "uint256",
+          "name": "rewardIndex",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint96",
+          "name": "cumulativeEarnedRewards",
+          "type": "uint96"
+        },
+        {
+          "internalType": "uint96",
+          "name": "cumulativePaidOutRewards",
+          "type": "uint96"
+        },
+        {
+          "internalType": "uint96",
+          "name": "operatorFeeBalance",
+          "type": "uint96"
+        },
+        {
+          "internalType": "uint96",
+          "name": "operatorFeeCumulativeEarnedRewards",
+          "type": "uint96"
+        },
+        {
+          "internalType": "uint96",
+          "name": "operatorFeeCumulativePaidOutRewards",
+          "type": "uint96"
+        },
+        {
+          "internalType": "uint256",
+          "name": "delegatorCount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]  
