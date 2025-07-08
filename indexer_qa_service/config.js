@@ -1,5 +1,5 @@
 module.exports = {
-    HOURS: 7 * 24, // 7 dana
+    HOURS: 7 * 24,
     networks: [
       {
         name: 'Gnosis',

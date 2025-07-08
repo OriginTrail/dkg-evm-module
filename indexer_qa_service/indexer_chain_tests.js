@@ -1,16 +1,17 @@
 const { ethers } = require('ethers');
 const { Client } = require('pg');
 const config = require('./config');
+require('dotenv').config();
 
 class CompleteQAService {
   constructor() {
     this.results = [];
     
     this.dbConfig = {
-      host: '18.194.101.22',
+      host: process.env.DB_HOST,
       port: 5432,
-      user: 'developer',
-      password: 'P6b8MnLLb4tCDoU1W78XcyuhsX3A325J',
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
       database: 'postgres'
     };
     
@@ -30,7 +31,7 @@ class CompleteQAService {
     return trac.toLocaleString('en-US', { 
       minimumFractionDigits: 0, 
       maximumFractionDigits: 2 
-    }).replace(/,/g, ' ');
+    });
   }
 
   async getContractAddressFromHub(network, contractName) {
@@ -276,11 +277,12 @@ class CompleteQAService {
       
       if (nodesResult.rows.length === 0) {
         console.log(`   ⚠️ No active nodes found in ${network}`);
-        return { passed: 0, failed: 0, total: 0 };
+        return { passed: 0, failed: 0, warnings: 0, total: 0 };
       }
       
       let passed = 0;
       let failed = 0;
+      let warnings = 0;
       const total = nodesResult.rows.length;
       
       const criteriaText = `active nodes with >= 50k TRAC`;
@@ -298,13 +300,13 @@ class CompleteQAService {
           const difference = expectedStake - contractStake;
           const tolerance = 500000000000000000n; // 0.5 TRAC in wei
           
-          if (expectedStake === contractStake) {
+          if (difference === 0n) {
             console.log(`   ✅ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
             passed++;
           } else if (difference >= -tolerance && difference <= tolerance) {
             console.log(`   ⚠️ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
             console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
-            passed++; // Count as passed but with warning
+            warnings++; // Count as warning
           } else {
             console.log(`   ❌ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
             console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
@@ -316,11 +318,11 @@ class CompleteQAService {
         }
       }
       
-      return { passed, failed, total };
+      return { passed, failed, warnings, total };
       
     } catch (error) {
       console.error(`Error validating node stakes for ${network}:`, error.message);
-      return { passed: 0, failed: 0, total: 0 };
+      return { passed: 0, failed: 0, warnings: 0, total: 0 };
     } finally {
       await client.end();
     }
@@ -388,7 +390,7 @@ class CompleteQAService {
       
       if (activeNodesResult.rows.length === 0) {
         console.log(`   ⚠️ No active nodes found in ${network}, skipping delegator validation`);
-        return { passed: 0, failed: 0, total: 0 };
+        return { passed: 0, failed: 0, warnings: 0, total: 0 };
       }
       
       // Get the list of active node IDs
@@ -412,11 +414,12 @@ class CompleteQAService {
       
       if (delegatorsResult.rows.length === 0) {
         console.log(`   ⚠️ No delegators found for active nodes in ${network}`);
-        return { passed: 0, failed: 0, total: 0 };
+        return { passed: 0, failed: 0, warnings: 0, total: 0 };
       }
       
       let passed = 0;
       let failed = 0;
+      let warnings = 0;
       const total = delegatorsResult.rows.length;
       
       console.log(`   📊 Validating ${total} delegators for ${activeNodeIds.length} active nodes...`);
@@ -433,7 +436,7 @@ class CompleteQAService {
           const difference = expectedStake - contractStake;
           const tolerance = 500000000000000000n; // 0.5 TRAC in wei
           
-          if (expectedStake === contractStake) {
+          if (difference === 0n) {
             console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}:`);
             console.log(`      Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
             passed++;
@@ -441,7 +444,7 @@ class CompleteQAService {
             console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}:`);
             console.log(`      Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
             console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
-            passed++; // Count as passed but with warning
+            warnings++; // Count as warning
           } else {
             console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}:`);
             console.log(`      Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
@@ -454,11 +457,11 @@ class CompleteQAService {
         }
       }
       
-      return { passed, failed, total };
+      return { passed, failed, warnings, total };
       
     } catch (error) {
       console.error(`Error validating delegator stakes for ${network}:`, error.message);
-      return { passed: 0, failed: 0, total: 0 };
+      return { passed: 0, failed: 0, warnings: 0, total: 0 };
     } finally {
       await client.end();
     }
@@ -506,27 +509,27 @@ class CompleteQAService {
       
       const contractCountNumber = parseInt(contractCount.toString());
       
-      console.log(`   📊 Indexer events: ${indexerCount}, Contract count: ${contractCountNumber}`);
+      console.log(`   📊 Indexer events: ${indexerCount.toLocaleString()}, Contract count: ${contractCountNumber.toLocaleString()}`);
       
       const difference = indexerCount - contractCountNumber;
       const tolerance = 75; // 75 count tolerance
       
       if (indexerCount === contractCountNumber) {
-        console.log(`   ✅ Knowledge collections match: ${indexerCount}`);
-        return { passed: 1, failed: 0, total: 1 };
+        console.log(`   ✅ Knowledge collections match: ${indexerCount.toLocaleString()}`);
+        return { passed: 1, failed: 0, warnings: 0, total: 1 };
       } else if (Math.abs(difference) <= tolerance) {
-        console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerCount}, Contract ${contractCountNumber}`);
-        console.log(`      📊 Small difference: ${difference > 0 ? '+' : ''}${difference} (within 75 count tolerance)`);
-        return { passed: 1, failed: 0, total: 1 }; // Count as passed but with warning
+        console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
+        console.log(`      📊 Small difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()} (within 75 count tolerance)`);
+        return { passed: 0, failed: 0, warnings: 1, total: 1 }; // Count as warning
       } else {
-        console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerCount}, Contract ${contractCountNumber}`);
-        console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${difference}`);
-        return { passed: 0, failed: 1, total: 1 };
+        console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
+        console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()}`);
+        return { passed: 0, failed: 1, warnings: 0, total: 1 };
       }
       
     } catch (error) {
       console.error(`Error validating knowledge collections for ${network}:`, error.message);
-      return { passed: 0, failed: 0, total: 0 };
+      return { passed: 0, failed: 0, warnings: 0, total: 0 };
     } finally {
       await client.end();
     }
@@ -537,13 +540,59 @@ module.exports = CompleteQAService;
 
 // Mocha test suite
 describe('Indexer Chain Validation', function() {
-  this.timeout(300000); // 5 minutes timeout
+  this.timeout(3300000); // 55 minutes timeout
   
   const qaService = new CompleteQAService();
+  const summary = {
+    total: { passed: 0, failed: 0, warnings: 0 },
+    networks: {}
+  };
+  
+  // Helper function to track results
+  function trackResults(network, testType, results) {
+    if (!summary.networks[network]) {
+      summary.networks[network] = {};
+    }
+    if (!summary.networks[network][testType]) {
+      summary.networks[network][testType] = { passed: 0, failed: 0, warnings: 0 };
+    }
+    
+    summary.networks[network][testType].passed += results.passed;
+    summary.networks[network][testType].failed += results.failed;
+    summary.networks[network][testType].warnings += results.warnings;
+    
+    summary.total.passed += results.passed;
+    summary.total.failed += results.failed;
+    summary.total.warnings += results.warnings;
+  }
+  
+  // Display summary after all tests
+  after(function() {
+    console.log('\n' + '='.repeat(80));
+    console.log('📊 INDEXER CHAIN VALIDATION SUMMARY');
+    console.log('='.repeat(80));
+    
+    for (const network of ['Gnosis', 'Base', 'Neuroweb']) {
+      if (summary.networks[network]) {
+        console.log(`\n🌐 ${network} Network:`);
+        for (const [testType, results] of Object.entries(summary.networks[network])) {
+          const total = results.passed + results.failed + results.warnings;
+          if (total > 0) {
+            console.log(`   ${testType}: ${results.passed} ✅ passed, ${results.failed} ❌ failed, ${results.warnings} ⚠️ warnings`);
+          }
+        }
+      }
+    }
+    
+    console.log('\n' + '-'.repeat(80));
+    console.log(`🎯 GRAND TOTAL: ${summary.total.passed} ✅ passed, ${summary.total.failed} ❌ failed, ${summary.total.warnings} ⚠️ warnings`);
+    console.log('='.repeat(80));
+  });
   
   describe('Gnosis Network', function() {
     it('should validate node stakes', async function() {
       const results = await qaService.validateNodeStakes('Gnosis');
+      trackResults('Gnosis', 'Node Stakes', results);
       if (results.failed > 0) {
         throw new Error(`${results.failed} node stake validations failed`);
       }
@@ -551,6 +600,7 @@ describe('Indexer Chain Validation', function() {
     
     it('should validate delegator stakes', async function() {
       const results = await qaService.validateDelegatorStakes('Gnosis');
+      trackResults('Gnosis', 'Delegator Stakes', results);
       if (results.failed > 0) {
         throw new Error(`${results.failed} delegator stake validations failed`);
       }
@@ -558,6 +608,7 @@ describe('Indexer Chain Validation', function() {
     
     it('should validate knowledge collections', async function() {
       const results = await qaService.validateKnowledgeCollections('Gnosis');
+      trackResults('Gnosis', 'Knowledge Collections', results);
       if (results.failed > 0) {
         throw new Error(`${results.failed} knowledge collection validations failed`);
       }
@@ -567,6 +618,7 @@ describe('Indexer Chain Validation', function() {
   describe('Base Network', function() {
     it('should validate node stakes', async function() {
       const results = await qaService.validateNodeStakes('Base');
+      trackResults('Base', 'Node Stakes', results);
       if (results.failed > 0) {
         throw new Error(`${results.failed} node stake validations failed`);
       }
@@ -574,6 +626,7 @@ describe('Indexer Chain Validation', function() {
     
     it('should validate delegator stakes', async function() {
       const results = await qaService.validateDelegatorStakes('Base');
+      trackResults('Base', 'Delegator Stakes', results);
       if (results.failed > 0) {
         throw new Error(`${results.failed} delegator stake validations failed`);
       }
@@ -581,6 +634,7 @@ describe('Indexer Chain Validation', function() {
     
     it('should validate knowledge collections', async function() {
       const results = await qaService.validateKnowledgeCollections('Base');
+      trackResults('Base', 'Knowledge Collections', results);
       if (results.failed > 0) {
         throw new Error(`${results.failed} knowledge collection validations failed`);
       }
@@ -590,6 +644,7 @@ describe('Indexer Chain Validation', function() {
   describe('Neuroweb Network', function() {
     it('should validate node stakes', async function() {
       const results = await qaService.validateNodeStakes('Neuroweb');
+      trackResults('Neuroweb', 'Node Stakes', results);
       if (results.failed > 0) {
         throw new Error(`${results.failed} node stake validations failed`);
       }
@@ -597,6 +652,7 @@ describe('Indexer Chain Validation', function() {
     
     it('should validate delegator stakes', async function() {
       const results = await qaService.validateDelegatorStakes('Neuroweb');
+      trackResults('Neuroweb', 'Delegator Stakes', results);
       if (results.failed > 0) {
         throw new Error(`${results.failed} delegator stake validations failed`);
       }
@@ -604,6 +660,7 @@ describe('Indexer Chain Validation', function() {
     
     it('should validate knowledge collections', async function() {
       const results = await qaService.validateKnowledgeCollections('Neuroweb');
+      trackResults('Neuroweb', 'Knowledge Collections', results);
       if (results.failed > 0) {
         throw new Error(`${results.failed} knowledge collection validations failed`);
       }

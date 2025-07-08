@@ -27,7 +27,7 @@ const config = defineConfig({
                 links: [
                   {
                     text: 'HTML Report',
-                    url: 'https://titan.dplcenter.xyz/view/Tests/job/dkg.js-Mainnet-Publish-Query-Get-Knowledge-Asset/Base_20Mainnet_20Report/*zip*/Base_20Mainnet_20Report.zip',
+                    url: 'https://titan.dplcenter.xyz/view/Tests/job/Indexer_Chain_Tests/Indexer_20Chain_20Tests/*zip*/Indexer_20Chain_20Tests.zip',
                   },
                 ],
               },
