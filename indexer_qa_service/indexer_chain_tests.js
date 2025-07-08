@@ -300,12 +300,17 @@ class CompleteQAService {
           const difference = expectedStake - contractStake;
           const tolerance = 500000000000000000n; // 0.5 TRAC in wei
           
-          if (difference === 0n) {
+          if (difference === 0n || difference === 0) {
             console.log(`   ✅ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
             passed++;
           } else if (difference >= -tolerance && difference <= tolerance) {
             console.log(`   ⚠️ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
-            console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+            if (Math.abs(Number(difference)) < 1000000000000000000) { // Less than 1 TRAC
+              const tracDifference = Number(difference) / Math.pow(10, 18);
+              console.log(`      📊 Small difference: ${tracDifference.toFixed(18)} TRAC (within 0.5 TRAC tolerance)`);
+            } else {
+              console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+            }
             warnings++; // Count as warning
           } else {
             console.log(`   ❌ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
@@ -436,14 +441,19 @@ class CompleteQAService {
           const difference = expectedStake - contractStake;
           const tolerance = 500000000000000000n; // 0.5 TRAC in wei
           
-          if (difference === 0n) {
+          if (difference === 0n || difference === 0) {
             console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}:`);
             console.log(`      Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
             passed++;
           } else if (difference >= -tolerance && difference <= tolerance) {
             console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}:`);
             console.log(`      Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
-            console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+            if (Math.abs(Number(difference)) < 1000000000000000000) { // Less than 1 TRAC
+              const tracDifference = Number(difference) / Math.pow(10, 18);
+              console.log(`      📊 Small difference: ${tracDifference.toFixed(18)} TRAC (within 0.5 TRAC tolerance)`);
+            } else {
+              console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+            }
             warnings++; // Count as warning
           } else {
             console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}:`);
