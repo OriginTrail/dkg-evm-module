@@ -6,7 +6,7 @@
  *   • Requires TS 4.7+ with "module" set to "es2020" (or "nodenext") in tsconfig.json.
  *   • Slightly looser typing around csv‑parser stream.
  */
-
+require('dotenv').config();
 /* eslint-disable @typescript-eslint/no-var-requires */
 const fs = require('fs');
 const path = require('path');
@@ -26,11 +26,13 @@ const ABIS_FOLDER = path.join(PROJECT_ROOT, 'abi'); // ./abi  (already in repo)
 
 const DEFAULT_CSV = path.join(DATA_FOLDER, 'base_mainnet.csv');
 
-const RPC_URL = process.env.RPC_URL ?? 'https://base-rpc.publicnode.com';
+const RPC_URL = process.env.RPC_URL;
 const INPUT_CSV = process.argv[2]
   ? path.resolve(process.cwd(), process.argv[2])
   : DEFAULT_CSV;
 const OUTPUT_CSV = path.join(DATA_FOLDER, 'decoded_base.csv');
+
+console.log(`[DEBUG] Koristi se RPC URL: "${RPC_URL}"`);
 
 /* ------------------------------------------------------------------ */
 /* 1. Ethers provider                                                 */
