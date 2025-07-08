@@ -34,6 +34,27 @@ class CompleteQAService {
     });
   }
 
+  /**
+   * Format TRAC difference with smart precision
+   */
+  formatTRACDifference(tracAmount) {
+    const absAmount = Math.abs(tracAmount);
+    
+    if (absAmount >= 0.01) {
+      // For amounts >= 0.01 TRAC, show 2 decimal places
+      return tracAmount.toFixed(2);
+    } else if (absAmount >= 0.0001) {
+      // For amounts >= 0.0001 TRAC, show 4 decimal places
+      return tracAmount.toFixed(4);
+    } else if (absAmount >= 0.000001) {
+      // For amounts >= 0.000001 TRAC, show 6 decimal places
+      return tracAmount.toFixed(6);
+    } else {
+      // For very small amounts, show full precision
+      return tracAmount.toFixed(18);
+    }
+  }
+
   async getContractAddressFromHub(network, contractName) {
     try {
       const networkConfig = config.networks.find(n => n.name === network);
@@ -307,7 +328,7 @@ class CompleteQAService {
             console.log(`   ⚠️ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
             if (Math.abs(Number(difference)) < 1000000000000000000) { // Less than 1 TRAC
               const tracDifference = Number(difference) / Math.pow(10, 18);
-              console.log(`      📊 Small difference: ${tracDifference.toFixed(18)} TRAC (within 0.5 TRAC tolerance)`);
+              console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
             } else {
               console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
             }
@@ -450,7 +471,7 @@ class CompleteQAService {
             console.log(`      Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
             if (Math.abs(Number(difference)) < 1000000000000000000) { // Less than 1 TRAC
               const tracDifference = Number(difference) / Math.pow(10, 18);
-              console.log(`      📊 Small difference: ${tracDifference.toFixed(18)} TRAC (within 0.5 TRAC tolerance)`);
+              console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
             } else {
               console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
             }
