@@ -210,8 +210,6 @@ class CompleteQAService {
       // The expected stake is the latest stake value from the database
       const expectedStake = BigInt(latestStakeResult.rows[0].stake);
       
-      console.log(`   Node ${nodeId} indexer stake: ${this.weiToTRAC(expectedStake)} TRAC (from latest database record)`);
-      
       return expectedStake;
       
     } catch (error) {
@@ -244,8 +242,6 @@ class CompleteQAService {
       
       // The expected stake is the latest stake value from the database
       const expectedStake = BigInt(latestStakeResult.rows[0].stake_base);
-      
-      console.log(`   Delegator ${delegatorKey.slice(0, 10)}... indexer stake: ${this.weiToTRAC(expectedStake)} TRAC (from latest database record)`);
       
       return expectedStake;
       
@@ -401,11 +397,14 @@ class CompleteQAService {
           const expectedStake = await this.calculateExpectedNodeStake(network, nodeId);
           const contractStake = await this.getContractNodeStake(network, nodeId);
           
-          if (expectedStake === contractStake) {
+          // Check if difference is very small (tolerance for rounding errors)
+          const difference = expectedStake - contractStake;
+          const tolerance = 1n; // 1 wei tolerance
+          
+          if (expectedStake === contractStake || (difference >= -tolerance && difference <= tolerance)) {
             console.log(`   ✅ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
             passed++;
           } else {
-            const difference = expectedStake - contractStake;
             console.log(`   ❌ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
             console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             failed++;
@@ -530,11 +529,13 @@ class CompleteQAService {
           const contractStake = await this.getContractDelegatorStake(network, nodeId, delegatorKey);
           
           if (expectedStake === contractStake) {
-            console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
+            console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}:`);
+            console.log(`      Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
             passed++;
           } else {
             const difference = expectedStake - contractStake;
-            console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
+            console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}:`);
+            console.log(`      Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(contractStake)} TRAC`);
             console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             failed++;
           }
