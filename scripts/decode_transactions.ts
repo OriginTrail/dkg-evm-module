@@ -65,19 +65,15 @@ console.log(`🔍 Loaded ${interfaces.length} ABI files from ${ABIS_FOLDER}`);
 const csvWriter = createObjectCsvWriter({
   path: OUTPUT_CSV,
   header: [
-    'txHash',
-    'blockNumber',
-    'timestamp',
-    'from',
-    'to',
-    'valueEth',
-    'gasUsed',
-    'gasPriceGwei',
-    'txFeeEth',
-    'status',
-    'method',
-    'paramsJSON',
-    'contractAbiName',
+    'block_number',
+    'tx_index',
+    'msg_sender',
+    'transaction_hash',
+    'contract_name',
+    'function_name',
+    'function_inputs',
+    'processed',
+    'error',
   ].map((id) => ({ id, title: id })),
 });
 
@@ -157,20 +153,20 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
       const replacer = (key: unknown, value: unknown) =>
         typeof value === 'bigint' ? value.toString() : value;
 
+      const contract_name = matchedAbiName
+        ? path.basename(matchedAbiName, '.json')
+        : 'unknown';
+
       outputRows.push({
-        txHash,
-        blockNumber: receipt.blockNumber,
-        timestamp: new Date(Number(block.timestamp) * 1000).toISOString(),
-        from: tx.from,
-        to: tx.to,
-        valueEth: Number(ethers.formatEther(tx.value)),
-        gasUsed: receipt.gasUsed.toString(),
-        gasPriceGwei,
-        txFeeEth,
-        status: receipt.status,
-        method: decodedMethod,
-        paramsJSON: JSON.stringify(decodedParams, replacer),
-        contractAbiName: matchedAbiName,
+        block_number: receipt.blockNumber,
+        tx_index: tx.transactionIndex,
+        msg_sender: tx.from,
+        transaction_hash: txHash,
+        contract_name,
+        function_name: decodedMethod,
+        function_inputs: JSON.stringify(decodedParams, replacer),
+        processed: false,
+        error: '',
       });
 
       /* Throttle to avoid exhausting RPC rate limits            */
@@ -181,8 +177,16 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
   }
 
   /* ---------------------------------------------------------------- */
-  /* 7. Write results to disk                                         */
+  /* 7. Sort and write results to disk                                */
   /* ---------------------------------------------------------------- */
+  // Ensure chronological order: first by block_number, then tx_index
+  outputRows.sort((a, b) => {
+    const bnDiff = (a.block_number as number) - (b.block_number as number);
+    return bnDiff !== 0
+      ? bnDiff
+      : (a.tx_index as number) - (b.tx_index as number);
+  });
+
   await csvWriter.writeRecords(outputRows);
   console.log(`✅  Saved ${outputRows.length} rows → ${OUTPUT_CSV}`);
 })();
