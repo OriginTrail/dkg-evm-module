@@ -24,13 +24,13 @@ const PROJECT_ROOT = path.resolve(SCRIPT_DIR, '..'); // repository root
 const DATA_FOLDER = path.join(PROJECT_ROOT, 'data'); // ./data (create manually)
 const ABIS_FOLDER = path.join(PROJECT_ROOT, 'abi'); // ./abi  (already in repo)
 
-const DEFAULT_CSV = path.join(DATA_FOLDER, 'base_mainnet.csv');
+const DEFAULT_CSV = path.join(DATA_FOLDER, 'indexer_input.csv');
 
 const RPC_URL = process.env.RPC_URL;
 const INPUT_CSV = process.argv[2]
   ? path.resolve(process.cwd(), process.argv[2])
   : DEFAULT_CSV;
-const OUTPUT_CSV = path.join(DATA_FOLDER, 'decoded_base.csv');
+const OUTPUT_CSV = path.join(DATA_FOLDER, 'decoded_transactions.csv');
 
 console.log(`[DEBUG] Koristi se RPC URL: "${RPC_URL}"`);
 
