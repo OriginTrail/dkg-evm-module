@@ -8,10 +8,10 @@ class CompleteQAService {
     this.results = [];
     
     this.dbConfig = {
-      host: process.env.DB_HOST,
+      host: process.env.DB_HOST_INDEXER,
       port: 5432,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
+      user: process.env.DB_USER_INDEXER,
+      password: process.env.DB_PASSWORD_INDEXER,
       database: 'postgres'
     };
     
