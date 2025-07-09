@@ -112,19 +112,14 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
         uint256 _w2
     ) ContractStatus(hubAddress) {
         require(_proofingPeriodDurationInBlocks > 0, "Proofing period duration in blocks must be greater than 0");
-
-        Chronos c = Chronos(hub.getContractAddress("Chronos"));
-
+        w1 = _w1;
+        w2 = _w2;
         proofingPeriodDurations.push(
             RandomSamplingLib.ProofingPeriodDuration({
                 durationInBlocks: _proofingPeriodDurationInBlocks,
-                effectiveEpoch: c.getCurrentEpoch()
+                effectiveEpoch: 0
             })
         );
-        w1 = _w1;
-        w2 = _w2;
-
-        emit ProofingPeriodDurationAdded(_proofingPeriodDurationInBlocks, c.getCurrentEpoch());
         emit W1Set(0, _w1);
         emit W2Set(0, _w2);
     }
@@ -141,6 +136,11 @@ contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractSt
      */
     function initialize() external onlyHub {
         chronos = Chronos(hub.getContractAddress("Chronos"));
+        proofingPeriodDurations[0].effectiveEpoch = chronos.getCurrentEpoch();
+        emit ProofingPeriodDurationAdded(
+            proofingPeriodDurations[0].durationInBlocks,
+            proofingPeriodDurations[0].effectiveEpoch
+        );
     }
 
     /**

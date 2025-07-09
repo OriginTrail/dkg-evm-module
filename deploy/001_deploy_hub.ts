@@ -4,8 +4,15 @@ import { DeployFunction } from 'hardhat-deploy/types';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
 
-  if (!hre.helpers.isDeployed('Hub')) {
-    if (hre.network.config.environment === 'development') {
+  let isDeployed = hre.helpers.isDeployed('Hub');
+  isDeployed = false;
+
+  if (!isDeployed) {
+    if (
+      hre.network.config.environment === 'development' ||
+      hre.network.name === 'localhost' ||
+      hre.network.name === 'hardhat'
+    ) {
       hre.helpers.resetDeploymentsJson();
       console.log('Hardhat deployments config reset.');
     }
