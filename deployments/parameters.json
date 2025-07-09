@@ -83,7 +83,7 @@
       "shardingTableSizeLimit": "500",
       "askUpperBoundFactor": "1467000000000000000",
       "askLowerBoundFactor": "533000000000000000",
-      "v81ReleaseEpoch": ""
+      "v81ReleaseEpoch": "162"
     },
     "Chronos": {
       "startTime": "1736812800",
