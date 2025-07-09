@@ -1,7 +1,7 @@
 const { publish, defineConfig } = require('test-results-reporter');
 require('dotenv').config();
 
-const teamsHookBaseURL = process.env.TEAMS_HOOK;
+const teamsHookBaseURL = process.env.TEAMS_HOOK_INDEXER;
 
 const config = defineConfig({
   reports: [
