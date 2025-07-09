@@ -46,8 +46,10 @@ const config: HardhatUserConfig = {
       throwOnCallFailures: true,
       loggingEnabled: false,
       mining: {
-        auto: true, // Enable auto-mining for deployments
-        interval: [3000, 5000], // Mine a block every 5 seconds
+        auto: true, // Enable auto-mining for deployments, but no interval for simulation control
+        mempool: {
+          order: 'fifo',
+        },
       },
       hardfork: 'shanghai',
       saveDeployments: false,
@@ -72,8 +74,10 @@ const config: HardhatUserConfig = {
       throwOnCallFailures: true,
       loggingEnabled: false,
       mining: {
-        auto: true, // Enable auto-mining for deployments
-        interval: [3000, 5000], // Mine a block every 5 seconds
+        auto: true, // Enable auto-mining for deployments, but no interval for simulation control
+        mempool: {
+          order: 'fifo',
+        },
       },
       hardfork: 'shanghai',
       saveDeployments: false,
@@ -98,8 +102,10 @@ const config: HardhatUserConfig = {
       throwOnCallFailures: true,
       loggingEnabled: false,
       mining: {
-        auto: true, // Enable auto-mining for deployments
-        interval: [3000, 5000], // Mine a block every 5 seconds
+        auto: true, // Enable auto-mining for deployments, but no interval for simulation control
+        mempool: {
+          order: 'fifo',
+        },
       },
       hardfork: 'shanghai',
       saveDeployments: false,
@@ -120,8 +126,10 @@ const config: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
       saveDeployments: false,
       mining: {
-        auto: true, // Enable auto-mining for deployments
-        interval: [3000, 5000], // Mine a block every 5 seconds
+        auto: true, // Enable auto-mining for deployments, but no interval for simulation control
+        mempool: {
+          order: 'fifo',
+        },
       },
       // Support for forking from command line
       forking: process.env.HARDHAT_FORK_URL
