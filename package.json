@@ -70,6 +70,7 @@
     "@polkadot/util": "^13.2.3",
     "@polkadot/util-crypto": "^13.2.3",
     "@prb/math": "^4.1.0",
+    "better-sqlite3": "^11.10.0",
     "csv-parser": "^3.2.0",
     "csv-writer": "^1.6.0",
     "glob": "^10.4.5",

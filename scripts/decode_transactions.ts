@@ -24,6 +24,36 @@ const PROJECT_ROOT = path.resolve(SCRIPT_DIR, '..'); // repository root
 const DATA_FOLDER = path.join(PROJECT_ROOT, 'data'); // ./data (create manually)
 const ABIS_FOLDER = path.join(PROJECT_ROOT, 'abi'); // ./abi  (already in repo)
 
+/* ------------------------------------------------------------------ */
+/* 0a. Lightweight SQLite database (better-sqlite3)                    */
+/* ------------------------------------------------------------------ */
+const Database = require('better-sqlite3');
+const DB_PATH = path.join(DATA_FOLDER, 'decoded_transactions.db');
+const db = new Database(DB_PATH); // Creates the file if it does not exist
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS enriched_events (
+    block_number      INTEGER,
+    tx_index          INTEGER,
+    msg_sender        TEXT,
+    transaction_hash  TEXT PRIMARY KEY,
+    contract_name     TEXT,
+    function_name     TEXT,
+    function_inputs   TEXT,
+    processed         BOOLEAN,
+    error             TEXT
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_block_tx ON enriched_events (block_number, tx_index);
+`);
+
+const insertStmt = db.prepare(`
+  INSERT OR REPLACE INTO enriched_events (
+    block_number, tx_index, msg_sender, transaction_hash,
+    contract_name, function_name, function_inputs, processed, error
+  ) VALUES (?,?,?,?,?,?,?,?,?);
+`);
+
 const DEFAULT_CSV = path.join(DATA_FOLDER, 'indexer_input.csv');
 
 const RPC_URL = process.env.RPC_URL;
@@ -157,9 +187,14 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
         ? path.basename(matchedAbiName, '.json')
         : 'unknown';
 
-      outputRows.push({
+      const rowForCsv = {
         block_number: receipt.blockNumber,
-        tx_index: tx.transactionIndex,
+        tx_index:
+          receipt.index ??
+          tx.index ??
+          receipt.transactionIndex ??
+          tx.transactionIndex ??
+          null,
         msg_sender: tx.from,
         transaction_hash: txHash,
         contract_name,
@@ -167,7 +202,23 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
         function_inputs: JSON.stringify(decodedParams, replacer),
         processed: false,
         error: '',
-      });
+      } as const;
+
+      // Write to in-memory array for CSV output
+      outputRows.push(rowForCsv);
+
+      // Persist immediately into SQLite (UPSERT semantics)
+      insertStmt.run(
+        rowForCsv.block_number,
+        rowForCsv.tx_index,
+        rowForCsv.msg_sender,
+        rowForCsv.transaction_hash,
+        rowForCsv.contract_name,
+        rowForCsv.function_name,
+        rowForCsv.function_inputs,
+        rowForCsv.processed ? 1 : 0,
+        rowForCsv.error,
+      );
 
       /* Throttle to avoid exhausting RPC rate limits            */
       await new Promise((r) => setTimeout(r, 200));
@@ -189,4 +240,7 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
 
   await csvWriter.writeRecords(outputRows);
   console.log(`✅  Saved ${outputRows.length} rows → ${OUTPUT_CSV}`);
+
+  // Close DB handle to flush changes
+  db.close();
 })();
