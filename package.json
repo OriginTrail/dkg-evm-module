@@ -69,6 +69,8 @@
     "@polkadot/util": "^13.2.3",
     "@polkadot/util-crypto": "^13.2.3",
     "@prb/math": "^4.1.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.2.0",
     "dotenv": "^16.4.7",
     "hardhat": "^2.22.17",
     "hardhat-deploy": "^0.12.4",
