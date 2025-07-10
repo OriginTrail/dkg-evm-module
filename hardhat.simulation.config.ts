@@ -11,6 +11,7 @@ import { getChainConfig } from './constants/simulation-constants';
 import { Helpers } from './utils/helpers';
 import { rpc } from './utils/network';
 import './utils/type-extensions';
+import './simulation/test-foundation';
 
 extendEnvironment((hre: HardhatRuntimeEnvironment) => {
   hre.helpers = lazyObject(() => new Helpers(hre));
