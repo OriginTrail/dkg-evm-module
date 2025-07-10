@@ -79,45 +79,4 @@ export class MiningController {
       timestamp: block.timestamp,
     };
   }
-
-  /**
-   * Validate mining control functionality
-   */
-  async validateMiningControl(): Promise<boolean> {
-    console.log('🧪 Testing Mining Control...');
-
-    const initialBlock = await this.getCurrentBlock();
-    const initialTimestamp = await this.getCurrentTimestamp();
-
-    console.log(`   Initial block: ${initialBlock}`);
-    console.log(`   Initial timestamp: ${initialTimestamp}`);
-
-    // Test time increase
-    console.log('   Increasing time by 1 hour...');
-    await this.increaseTime(3600);
-
-    // Test mining
-    console.log('   Mining a block...');
-    await this.mineBlock();
-
-    const newBlock = await this.getCurrentBlock();
-    const newTimestamp = await this.getCurrentTimestamp();
-
-    console.log(`   New block: ${newBlock}`);
-    console.log(`   New timestamp: ${newTimestamp}`);
-    console.log(
-      `   Time difference: ${newTimestamp - initialTimestamp} seconds`,
-    );
-
-    const success =
-      newBlock > initialBlock && newTimestamp >= initialTimestamp + 3600;
-
-    if (success) {
-      console.log('✅ Mining control test passed');
-    } else {
-      console.log('❌ Mining control test failed');
-    }
-
-    return success;
-  }
 }
