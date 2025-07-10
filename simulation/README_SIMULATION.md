@@ -100,11 +100,132 @@ npx hardhat test-simulation-foundation --config hardhat.simulation.config.ts --n
 npx hardhat run simulation/historical-rewards-simulation.ts --config hardhat.simulation.config.ts --network localhost
 ```
 
-## 🧪 Testing Foundation
+## 🧪 Testing Foundation (Cleaned Up!)
+
+### **Main Testing Entry Point**
+
+- **`test-foundation.ts`** - The **PRIMARY** test suite
+  - Tests database operations
+  - Tests mining control
+  - Tests time control
+  - Tests network setup
+  - **This is the ONLY test file you need to run**
+
+### **Core Components**
+
+- **`db-helpers.ts`** - Database operations and utilities
+- **`mining-controller.ts`** - Mining and time control (focused on core functionality)
+- **`historical-rewards-simulation.ts`** - Main simulation runner
+
+### **How to Run Tests**
+
+#### **Option 1: Database-Only Tests (Quick)**
 
 ```bash
-# Test database helpers and mining controller
+npx hardhat test-simulation-foundation --network hardhat
+```
+
+**Tests:** ✅ Database operations only
+
+#### **Option 2: Full Test Suite (Comprehensive)**
+
+```bash
+# Terminal 1: Start forked node
+./scripts/start-forked-nodes.sh base
+
+# Terminal 2: Run all tests
 npx hardhat test-simulation-foundation --config hardhat.simulation.config.ts --network localhost
+```
+
+**Tests:** ✅ Database + Mining + Time + Network
+
+### **What Each Test Does**
+
+#### **Database Tests**
+
+- ✅ Loads and queries 513 historical transactions
+- ✅ Tests transaction ordering by block
+- ✅ Validates database schema
+- ✅ Shows transaction statistics
+
+#### **Network Tests** _(requires forked node)_
+
+- ✅ Verifies network connection
+- ✅ Checks forked block height
+- ✅ Shows account balances
+- ✅ Tests chain ID
+
+#### **Mining Tests** _(requires forked node)_
+
+- ✅ Auto-mining disable/enable
+- ✅ Manual block mining
+- ✅ Block progression validation
+
+#### **Time Tests** _(requires forked node)_
+
+- ✅ EVM time manipulation
+- ✅ Timestamp increase validation
+- ✅ Time + mining coordination
+
+### **Expected Test Output**
+
+#### **Database-Only (--network hardhat)**
+
+```
+🧪 Testing Simulation Foundation Components
+Network: hardhat
+Provider: hardhat
+
+🧪 Testing Database Operations...
+   Database file: ./decoded_transactions_base_mainnet.db
+   ✅ Database loaded successfully
+   📊 Total transactions: 513
+   📦 Unique blocks: 452
+   🔢 Block range: 24,223,289 to 32,075,071
+   ✅ Database operations test completed
+
+⚠️  Skipping network tests (running on hardhat network)
+   To test mining/network features, run against localhost with forked node
+
+🎯 All foundation tests completed successfully!
+```
+
+#### **Full Test Suite (--network localhost)**
+
+```
+🧪 Testing Simulation Foundation Components
+Network: localhost
+Provider: http://127.0.0.1:8545
+
+🧪 Testing Database Operations...
+   ✅ Database operations test completed
+
+🧪 Testing Network Setup...
+   Chain ID: 8453
+   Current Block: 32,075,071
+   Block Timestamp: 1734566447
+   Available Accounts: 10
+   First Account Balance: 10000.0 ETH
+   ✅ Network setup test completed
+
+🧪 Testing Mining Control...
+   Initial block: 32,075,071
+   ✅ Auto-mining control working
+   ✅ Manual mining working
+   ✅ Mining control test completed
+
+🧪 Testing Time Control...
+   Initial timestamp: 1734566447
+   ✅ Time control working (increased by 3600 seconds)
+   ✅ Time control test completed
+
+🎯 All foundation tests completed successfully!
+
+📋 Summary:
+   ✅ Database operations working
+   ✅ Network connection working
+   ✅ Mining control working
+   ✅ Time control working
 ```
 
 ## Overview
@@ -127,7 +248,6 @@ The simulation setup allows you to:
 5. **`simulation/mining-controller.ts`** - Mining and time control utilities
 6. **`simulation/test-foundation.ts`** - Foundation testing and validation
 7. **`scripts/start-forked-nodes.sh`** - Helper script to easily start forked nodes
-8. **`docs/simulation-setup.md`** - This documentation file
 
 ## Simulation Structure
 
@@ -222,17 +342,6 @@ npx hardhat test-simulation-foundation --config hardhat.simulation.config.ts --n
 # Test just database helpers (without network connection)
 npx hardhat test-simulation-foundation --config hardhat.simulation.config.ts --network hardhat
 ```
-
-### Expected Test Output
-
-The foundation test will verify:
-
-- ✅ Database connection and transaction loading (513 transactions from Base)
-- ✅ Block range validation (24,223,289 to 32,075,071)
-- ✅ Contract function breakdown (stake, redelegate, updateAsk, etc.)
-- ✅ Mining controller functionality (auto-mining disable/enable)
-- ✅ Time manipulation (increase time, mine blocks)
-- ✅ All foundation components working correctly
 
 ## Quick Start Commands
 
@@ -461,6 +570,20 @@ All other contract addresses are available in the `deployments/` directory.
 2. **Checkpointing**: Save state periodically during long simulations
 3. **Parallel Processing**: Use multiple networks simultaneously where possible
 4. **Memory Management**: Monitor memory usage and implement cleanup
+
+## 🔧 Development Notes
+
+- **Database file must exist:** `./decoded_transactions_base_mainnet.db`
+- **Forked node required** for network/mining/time tests
+- **Test order matters:** Database → Network → Mining → Time
+- **Comprehensive logging** for easy debugging
+- **Graceful error handling** with clear error messages
+
+## 🧹 Files Removed During Cleanup
+
+- ❌ `test.js` - Redundant standalone test (functionality moved to test-foundation.ts)
+- ❌ `mining-controller.validateMiningControl()` - Moved to test-foundation.ts
+- ❌ Various scattered test functions - Consolidated into single test suite
 
 ## Next Steps
 
