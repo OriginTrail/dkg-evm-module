@@ -10,7 +10,9 @@ require('dotenv').config();
 /* eslint-disable @typescript-eslint/no-var-requires */
 import * as fs from 'fs';
 import * as path from 'path';
+import HubABI from '../abi/Hub.json';
 import IdentityABI from '../abi/Identity.json';
+import MigratorABI from '../abi/MigratorM1V8.json';
 
 const csvParser = require('csv-parser');
 const glob = require('glob');
@@ -135,6 +137,26 @@ const MANUAL_OVERRIDES = new Map<
   ],
 ]);
 
+// Additional override: map specific tx hashes to a custom msg.sender value
+const MSG_SENDER_OVERRIDES = new Map<string, string>([
+  [
+    '0xfcf2c531ec4a362ef6f8fd614d946f5159663928308c2a30890564eabeeaaf4d',
+    '0x047d912410759a0824cfad69a134df0172dbc067',
+  ],
+  [
+    '0xf80a131a93d357c0879b9d53760c03c10caf9b4c592f33b0c6d6d8892223747c',
+    '0x047d912410759a0824cfad69a134df0172dbc067',
+  ],
+  [
+    '0x7335bf4031abf0d4cebefe4471acfeae1c4f9213287dbcf62915d859ff96df4a',
+    '0x047d912410759a0824cfad69a134df0172dbc067',
+  ],
+  [
+    '0x25511cbe5e040e818638cf15cba2b6ba68b0c4cf3b1770db8d879c3f1aa757c0',
+    '0x047d912410759a0824cfad69a134df0172dbc067',
+  ],
+]);
+
 for (const file of glob.sync(path.join(ABIS_FOLDER, '**/*.json'))) {
   try {
     const abiJSON = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -235,6 +257,10 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
       ]);
       if (!tx || !receipt) throw new Error('Transaction not found on chain');
 
+      // Determine the effective sender (may be overridden for specific txs)
+      const effectiveSender =
+        MSG_SENDER_OVERRIDES.get(txHash.toLowerCase()) ?? tx.from;
+
       const block = await provider.getBlock(receipt.blockNumber);
       if (!block) throw new Error('Block not found on chain');
 
@@ -288,36 +314,62 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
 
       // Validate delegatorKey if provided in CSV
       let errorMsg = '';
-      if (delegatorKeyCsv && !MANUAL_OVERRIDES.has(txHash.toLowerCase())) {
-        const computedKey = getDelegatorKey(tx.from).toLowerCase();
+      let delegatorAddress = effectiveSender;
+      let resolutionMethod = 'Direct';
 
-        if (computedKey === delegatorKeyCsv) {
-          console.log(
-            `➡️  [${txHash.slice(
-              0,
-              10,
-            )}…] Direct call check: Keys match. Found direct delegator call from ${
-              tx.from
-            }.`,
-          );
-        } else if (tx.to && tx.to.toLowerCase() === MIGRATOR_CONTRACT_ADDRESS) {
-          console.log(
-            `✅ [${txHash.slice(
-              0,
-              10,
-            )}…] Migration call check: Keys do not match tx.from, but transaction is to the Migrator. Assuming valid migration.`,
-          );
-        } else {
-          errorMsg = `delegatorKey mismatch (csv=${delegatorKeyCsv} computed=${computedKey})`;
-          console.error(
-            `❌ [${txHash.slice(
-              0,
-              10,
-            )}…] Mismatch: Unknown transaction type. csv=${delegatorKeyCsv} computed=${computedKey} to=${
-              tx.to
-            }`,
-          );
+      if (delegatorKeyCsv) {
+        const computedKey = getDelegatorKey(effectiveSender).toLowerCase();
+
+        if (computedKey !== delegatorKeyCsv) {
+          if (tx.to && tx.to.toLowerCase() === MIGRATOR_CONTRACT_ADDRESS) {
+            try {
+              const migratorInterface = new ethers.Interface(MigratorABI);
+              const decodedMigratorData = migratorInterface.parseTransaction({
+                data: tx.data,
+              });
+
+              if (
+                decodedMigratorData &&
+                decodedMigratorData.name === 'migrateDelegatorData'
+              ) {
+                const realDelegatorAddress = decodedMigratorData.args[1];
+                const realDelegatorKey =
+                  getDelegatorKey(realDelegatorAddress).toLowerCase();
+
+                if (realDelegatorKey === delegatorKeyCsv) {
+                  delegatorAddress = realDelegatorAddress;
+                  resolutionMethod = 'Migration';
+                } else {
+                  errorMsg = `Key mismatch in migration (csv=${delegatorKeyCsv} computed=${realDelegatorKey})`;
+                }
+              } else {
+                errorMsg = `Could not decode migrator data: ${
+                  decodedMigratorData?.name ?? 'unknown function'
+                }`;
+              }
+            } catch (e: any) {
+              errorMsg = `Error decoding migrator data: ${e.message}`;
+            }
+          } else {
+            errorMsg = `Key mismatch (csv=${delegatorKeyCsv} computed=${computedKey})`;
+          }
         }
+      }
+
+      if (errorMsg) {
+        console.error(
+          `❌ [${txHash.slice(
+            0,
+            10,
+          )}…] Mismatch: ${errorMsg} To: ${tx.to?.toLowerCase()}`,
+        );
+      } else if (delegatorKeyCsv) {
+        console.log(
+          `✅ [${txHash.slice(
+            0,
+            10,
+          )}…] Key validated. Method: ${resolutionMethod}. Delegator: ${delegatorAddress}`,
+        );
       }
 
       const rowForCsv = {
@@ -329,13 +381,15 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
           receipt.transactionIndex ??
           tx.transactionIndex ??
           null,
-        msg_sender: tx.from,
+        msg_sender: effectiveSender,
         transaction_hash: txHash,
         contract_name,
         function_name: decodedMethod,
         function_inputs: JSON.stringify(decodedParams, replacer),
         processed: false,
         error: errorMsg,
+        delegator_key: delegatorKeyCsv || 'NULL',
+        real_delegator_address: delegatorAddress,
       } as const;
 
       // Write to in-memory array for CSV output
