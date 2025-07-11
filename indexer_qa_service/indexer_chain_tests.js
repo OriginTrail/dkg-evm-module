@@ -208,7 +208,7 @@ class CompleteQAService {
       return expectedStake;
       
     } catch (error) {
-      console.error(`Error calculating expected delegator stake for node ${nodeId}, delegator ${delegatorKey.slice(0, 10)}... on ${network}:`, error.message);
+      console.error(`Error calculating expected delegator stake for node ${nodeId}, delegator ${delegatorKey} on ${network}:`, error.message);
       return 0n;
     } finally {
       await client.end();
@@ -269,7 +269,7 @@ class CompleteQAService {
       } catch (error) {
         retries--;
         if (retries === 0) {
-          console.error(`Error getting contract delegator stake for node ${nodeId}, delegator ${delegatorKey.slice(0, 10)}... on ${network}:`, error.message);
+          console.error(`Error getting contract delegator stake for node ${nodeId}, delegator ${delegatorKey}... on ${network}:`, error.message);
           return 0n;
         }
         
@@ -526,7 +526,7 @@ class CompleteQAService {
             failed++;
           }
         } catch (error) {
-          console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...: Error - ${error.message}`);
+          console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}...: Error - ${error.message}`);
           failed++;
         }
       }
@@ -704,7 +704,7 @@ class CompleteQAService {
             } catch (error) {
               retries--;
               if (retries === 0) {
-                console.log(`   ⚠️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...: RPC Error - ${error.message}`);
+                console.log(`   ⚠️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
                 rpcErrors++;
                 skippedDueToRPC++;
                 break; // Exit retry loop, skip this event
@@ -723,7 +723,7 @@ class CompleteQAService {
           const eventHash = this.generateEventHash(network, nodeId, delegatorKey, blockNumber, expectedOldStake, actualOldStake);
           const prevStatus = this.validatedEvents[eventHash];
           if (prevStatus === 'passed' || prevStatus === 'warning') {
-            console.log(`   ⏭️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...: Already validated as ${prevStatus}, skipping`);
+            console.log(`   ⏭️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}: Already validated as ${prevStatus}, skipping`);
             skippedAlreadyValidated++;
             continue;
           }
@@ -733,12 +733,12 @@ class CompleteQAService {
           const tolerance = 500000000000000000n; // 0.5 TRAC in wei
           
           if (difference === 0n || difference === 0) {
-            console.log(`   ✅ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...`);
+            console.log(`   ✅ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}`);
             console.log(`      Indexer old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
             passed++;
             this.validatedEvents[eventHash] = 'passed';
           } else if (difference >= -tolerance && difference <= tolerance) {
-            console.log(`   ⚠️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...`);
+            console.log(`   ⚠️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}`);
             console.log(`      Indexer old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
             if (Math.abs(Number(difference)) < 1000000000000000000) {
               const tracDifference = Number(difference) / Math.pow(10, 18);
@@ -749,7 +749,7 @@ class CompleteQAService {
             warnings++;
             this.validatedEvents[eventHash] = 'warning';
           } else {
-            console.log(`   ❌ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...`);
+            console.log(`   ❌ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}`);
             console.log(`      Indexer old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
             console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             failed++;
@@ -757,7 +757,7 @@ class CompleteQAService {
           }
           
         } catch (error) {
-          console.log(`   ⚠️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...: Error - ${error.message}`);
+          console.log(`   ⚠️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
           failed++;
         }
       }
@@ -960,8 +960,6 @@ module.exports = CompleteQAService;
 
 // Mocha test suite
 describe('Indexer Chain Validation', function() {
-  this.timeout(3300000); // 55 minutes timeout
-  
   const qaService = new CompleteQAService();
   const summary = {
     total: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0 },
