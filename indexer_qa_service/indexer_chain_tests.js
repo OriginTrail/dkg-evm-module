@@ -918,7 +918,7 @@ class CompleteQAService {
           
           // Compare delegator sum with node total stake
           const difference = delegatorStakeSum - contractNodeStake;
-          const tolerance = 1000000000000000000n; // 1 TRAC in wei
+          const tolerance = 500000000000000000n; // 0.5 TRAC in wei
           
           if (difference === 0n || difference === 0) {
             console.log(`   ✅ Node ${nodeId}: Delegator sum ${this.weiToTRAC(delegatorStakeSum)} TRAC, Node total ${this.weiToTRAC(contractNodeStake)} TRAC`);
@@ -927,9 +927,9 @@ class CompleteQAService {
             console.log(`   ⚠️ Node ${nodeId}: Delegator sum ${this.weiToTRAC(delegatorStakeSum)} TRAC, Node total ${this.weiToTRAC(contractNodeStake)} TRAC`);
             if (Math.abs(Number(difference)) < 1000000000000000000) {
               const tracDifference = Number(difference) / Math.pow(10, 18);
-              console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 1 TRAC tolerance)`);
+              console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
             } else {
-              console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 1 TRAC tolerance)`);
+              console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
             }
             warnings++;
           } else {
