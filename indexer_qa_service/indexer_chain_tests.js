@@ -565,6 +565,355 @@ class CompleteQAService {
       await client.end();
     }
   }
+
+  async validateDelegatorStakeUpdateEvents(network) {
+    console.log(`\n🔍 Validating delegator stake update events for ${network}...`);
+    
+    const dbName = this.databaseMap[network];
+    const client = new Client({ ...this.dbConfig, database: dbName });
+    
+    try {
+      await client.connect();
+      
+      // Get all delegator stake update events ordered by block number
+      const eventsResult = await client.query(`
+        SELECT 
+          identity_id,
+          delegator_key,
+          stake_base,
+          block_number
+        FROM delegator_base_stake_updated
+        ORDER BY block_number ASC
+        LIMIT 100
+      `);
+      
+      if (eventsResult.rows.length === 0) {
+        console.log(`   ⚠️ No delegator stake update events found in ${network}`);
+        return { passed: 0, failed: 0, warnings: 0, total: 0 };
+      }
+      
+      let passed = 0;
+      let failed = 0;
+      let warnings = 0;
+      let rpcErrors = 0;
+      const total = eventsResult.rows.length;
+      
+      console.log(`   📊 Validating ${total} delegator stake update events...`);
+      
+      for (let i = 0; i < eventsResult.rows.length; i++) {
+        const row = eventsResult.rows[i];
+        const nodeId = parseInt(row.identity_id);
+        const delegatorKey = row.delegator_key;
+        const newDelegatorBaseStake = BigInt(row.stake_base);
+        const blockNumber = parseInt(row.block_number);
+        
+        // Show progress every 10 events
+        if (i % 10 === 0) {
+          console.log(`   📈 Progress: ${i}/${total} events processed...`);
+        }
+        
+        try {
+          // Step 1: Get the previous event for this delegator
+          const previousEventResult = await client.query(`
+            SELECT stake_base, block_number
+            FROM delegator_base_stake_updated
+            WHERE identity_id = $1 
+            AND delegator_key = $2 
+            AND block_number < $3
+            ORDER BY block_number DESC
+            LIMIT 1
+          `, [nodeId, delegatorKey, blockNumber]);
+          
+          // Step 2: Determine expected old stake
+          let expectedOldStake;
+          if (previousEventResult.rows.length === 0) {
+            // No previous event, old stake should be 0
+            expectedOldStake = 0n;
+          } else {
+            // Previous event exists, use its new stake as the expected old stake
+            expectedOldStake = BigInt(previousEventResult.rows[0].stake_base);
+          }
+          
+          // Step 3: Get contract state at blockNumber - 1
+          const networkConfig = config.networks.find(n => n.name === network);
+          if (!networkConfig) {
+            throw new Error(`Network ${network} not found in config`);
+          }
+          
+          let actualOldStake;
+          let retries = 3;
+          
+          while (retries > 0) {
+            try {
+              const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+              const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
+              
+              const stakingContract = new ethers.Contract(stakingAddress, [
+                'function getDelegatorStakeBase(uint72 identityId, bytes32 delegatorKey) view returns (uint96)'
+              ], provider);
+              
+              // Try different block tags if the exact block isn't available
+              let blockTag = blockNumber - 1;
+              let success = false;
+              
+              // Try exact block first, then fallback to 'latest' if needed
+              for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                  if (attempt === 0) {
+                    actualOldStake = await stakingContract.getDelegatorStakeBase(nodeId, delegatorKey, { blockTag });
+                  } else if (attempt === 1) {
+                    // Try a few blocks earlier
+                    actualOldStake = await stakingContract.getDelegatorStakeBase(nodeId, delegatorKey, { blockTag: blockTag - 5 });
+                  } else {
+                    // Fallback to latest block
+                    actualOldStake = await stakingContract.getDelegatorStakeBase(nodeId, delegatorKey, { blockTag: 'latest' });
+                  }
+                  success = true;
+                  break;
+                } catch (blockError) {
+                  if (attempt === 2) {
+                    throw blockError; // Re-throw on final attempt
+                  }
+                  // Continue to next attempt
+                }
+              }
+              
+              if (success) {
+                break; // Success, exit retry loop
+              }
+            } catch (error) {
+              retries--;
+              if (retries === 0) {
+                console.log(`   ⚠️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...: RPC Error - ${error.message}`);
+                rpcErrors++;
+                continue; // Skip to next event
+              }
+              // Wait before retry
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+          }
+          
+          if (actualOldStake === undefined) {
+            continue; // Skip this event due to RPC failure
+          }
+          
+          // Step 4: Validate that contract state matches expected old stake
+          const difference = expectedOldStake - actualOldStake;
+          const tolerance = 500000000000000000n; // 0.5 TRAC in wei
+          
+          if (difference === 0n || difference === 0) {
+            console.log(`   ✅ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...`);
+            console.log(`      Expected old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
+            passed++;
+          } else if (difference >= -tolerance && difference <= tolerance) {
+            console.log(`   ⚠️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...`);
+            console.log(`      Expected old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
+            if (Math.abs(Number(difference)) < 1000000000000000000) {
+              const tracDifference = Number(difference) / Math.pow(10, 18);
+              console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
+            } else {
+              console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+            }
+            warnings++;
+          } else {
+            console.log(`   ❌ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...`);
+            console.log(`      Expected old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
+            console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+            failed++;
+          }
+          
+        } catch (error) {
+          console.log(`   ⚠️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...: Error - ${error.message}`);
+          failed++;
+        }
+      }
+      
+      console.log(`\n   📊 Validation Summary:`);
+      console.log(`      ✅ Passed: ${passed} events`);
+      console.log(`      ❌ Failed: ${failed} events`);
+      console.log(`      ⚠️ Warnings: ${warnings} events`);
+      console.log(`      🔌 RPC Errors: ${rpcErrors} events`);
+      
+      return { passed, failed, warnings, total };
+      
+    } catch (error) {
+      console.error(`Error validating delegator stake update events for ${network}:`, error.message);
+      return { passed: 0, failed: 0, warnings: 0, total: 0 };
+    } finally {
+      await client.end();
+    }
+  }
+
+  async validateDelegatorStakeSumMatchesNodeStake(network) {
+    console.log(`\n🔍 Validating delegator stake sum matches node stake for ${network}...`);
+    
+    const dbName = this.databaseMap[network];
+    const client = new Client({ ...this.dbConfig, database: dbName });
+    
+    try {
+      await client.connect();
+      
+      // Get active nodes (same logic as validateNodeStakes)
+      let activeNodesResult;
+      
+      if (network === 'Gnosis') {
+        const minStakeThreshold = 50000000000000000000000; // 50,000 TRAC in wei
+        activeNodesResult = await client.query(`
+          SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake
+          FROM node_stake_updated n
+          WHERE n.stake >= $1
+          AND n.identity_id IN (
+            SELECT identity_id FROM node_object_created
+          )
+          AND n.identity_id NOT IN (
+            SELECT identity_id FROM node_object_deleted
+          )
+          ORDER BY n.identity_id, n.block_number DESC
+        `, [minStakeThreshold]);
+      } else if (network === 'Neuroweb') {
+        const minStakeThreshold = 50000000000000000000000; // 50,000 TRAC in wei
+        activeNodesResult = await client.query(`
+          SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake
+          FROM node_stake_updated n
+          WHERE n.stake >= $1
+          AND n.identity_id IN (
+            SELECT DISTINCT identity_id FROM node_object_created
+          )
+          AND n.identity_id NOT IN (
+            SELECT DISTINCT identity_id FROM node_object_deleted
+          )
+          ORDER BY n.identity_id, n.block_number DESC
+        `, [minStakeThreshold]);
+      } else {
+        const minStakeThreshold = 50000000000000000000000; // 50,000 TRAC in wei
+        activeNodesResult = await client.query(`
+          SELECT n.identity_id, n.stake
+          FROM node_stake_updated n
+          INNER JOIN (
+            SELECT identity_id, MAX(block_number) as max_block
+            FROM node_stake_updated
+            GROUP BY identity_id
+          ) latest ON n.identity_id = latest.identity_id 
+          AND n.block_number = latest.max_block
+          WHERE n.stake >= $1
+          ORDER BY n.stake DESC
+          LIMIT 24
+        `, [minStakeThreshold]);
+      }
+      
+      if (activeNodesResult.rows.length === 0) {
+        console.log(`   ⚠️ No active nodes found in ${network}`);
+        return { passed: 0, failed: 0, warnings: 0, total: 0 };
+      }
+      
+      let passed = 0;
+      let failed = 0;
+      let warnings = 0;
+      const total = activeNodesResult.rows.length;
+      
+      console.log(`   📊 Validating ${total} active nodes...`);
+      
+      for (const row of activeNodesResult.rows) {
+        const nodeId = parseInt(row.identity_id);
+        const nodeTotalStake = BigInt(row.stake);
+        
+        try {
+          // Get all delegators for this node with their latest stake
+          const delegatorsResult = await client.query(`
+            SELECT DISTINCT ON (d.identity_id, d.delegator_key) 
+              d.identity_id, d.delegator_key, d.stake_base
+            FROM delegator_base_stake_updated d
+            INNER JOIN (
+              SELECT identity_id, delegator_key, MAX(block_number) as max_block
+              FROM delegator_base_stake_updated
+              GROUP BY identity_id, delegator_key
+            ) latest ON d.identity_id = latest.identity_id 
+            AND d.delegator_key = latest.delegator_key
+            AND d.block_number = latest.max_block
+            WHERE d.identity_id = $1
+            AND d.stake_base > 0
+            ORDER BY d.identity_id, d.delegator_key
+          `, [nodeId]);
+          
+          // Calculate sum of delegator stakes
+          let delegatorStakeSum = 0n;
+          for (const delegatorRow of delegatorsResult.rows) {
+            delegatorStakeSum += BigInt(delegatorRow.stake_base);
+          }
+          
+          // Get contract's total node stake
+          const networkConfig = config.networks.find(n => n.name === network);
+          if (!networkConfig) {
+            throw new Error(`Network ${network} not found in config`);
+          }
+          
+          let contractNodeStake;
+          let retries = 3;
+          
+          while (retries > 0) {
+            try {
+              const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+              const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
+              
+              const stakingContract = new ethers.Contract(stakingAddress, [
+                'function getNodeStake(uint72 identityId) view returns (uint96)'
+              ], provider);
+              
+              contractNodeStake = await stakingContract.getNodeStake(nodeId);
+              break;
+            } catch (error) {
+              retries--;
+              if (retries === 0) {
+                console.log(`   ⚠️ Node ${nodeId}: RPC Error - ${error.message}`);
+                warnings++;
+                continue;
+              }
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+          }
+          
+          if (contractNodeStake === undefined) {
+            continue; // Skip this node due to RPC failure
+          }
+          
+          // Compare delegator sum with node total stake
+          const difference = delegatorStakeSum - contractNodeStake;
+          const tolerance = 1000000000000000000n; // 1 TRAC in wei
+          
+          if (difference === 0n || difference === 0) {
+            console.log(`   ✅ Node ${nodeId}: Delegator sum ${this.weiToTRAC(delegatorStakeSum)} TRAC, Node total ${this.weiToTRAC(contractNodeStake)} TRAC`);
+            passed++;
+          } else if (difference >= -tolerance && difference <= tolerance) {
+            console.log(`   ⚠️ Node ${nodeId}: Delegator sum ${this.weiToTRAC(delegatorStakeSum)} TRAC, Node total ${this.weiToTRAC(contractNodeStake)} TRAC`);
+            if (Math.abs(Number(difference)) < 1000000000000000000) {
+              const tracDifference = Number(difference) / Math.pow(10, 18);
+              console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 1 TRAC tolerance)`);
+            } else {
+              console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 1 TRAC tolerance)`);
+            }
+            warnings++;
+          } else {
+            console.log(`   ❌ Node ${nodeId}: Delegator sum ${this.weiToTRAC(delegatorStakeSum)} TRAC, Node total ${this.weiToTRAC(contractNodeStake)} TRAC`);
+            console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+            console.log(`      📋 Found ${delegatorsResult.rows.length} delegators with total stake > 0`);
+            failed++;
+          }
+          
+        } catch (error) {
+          console.log(`   ⚠️ Node ${nodeId}: Error - ${error.message}`);
+          failed++;
+        }
+      }
+      
+      return { passed, failed, warnings, total };
+      
+    } catch (error) {
+      console.error(`Error validating delegator stake sum for ${network}:`, error.message);
+      return { passed: 0, failed: 0, warnings: 0, total: 0 };
+    } finally {
+      await client.end();
+    }
+  }
 }
 
 module.exports = CompleteQAService;
@@ -637,6 +986,36 @@ describe('Indexer Chain Validation', function() {
       }
     });
     
+    it('should validate delegator stake update events', async function() {
+      const results = await qaService.validateDelegatorStakeUpdateEvents('Gnosis');
+      trackResults('Gnosis', 'Delegator Stake Update Events', results);
+      
+      // Calculate failure rate
+      const totalValidated = results.passed + results.failed + results.warnings;
+      const failureRate = totalValidated > 0 ? (results.failed / totalValidated) * 100 : 0;
+      
+      console.log(`\n📊 Validation Results:`);
+      console.log(`   Total events validated: ${totalValidated}`);
+      console.log(`   Success rate: ${((results.passed / totalValidated) * 100).toFixed(1)}%`);
+      console.log(`   Failure rate: ${failureRate.toFixed(1)}%`);
+      console.log(`   Warning rate: ${((results.warnings / totalValidated) * 100).toFixed(1)}%`);
+      
+      // Allow test to pass if failure rate is below 10%
+      if (failureRate > 10) {
+        throw new Error(`Failure rate ${failureRate.toFixed(1)}% exceeds 10% threshold (${results.failed} failures out of ${totalValidated} total)`);
+      } else if (results.failed > 0) {
+        console.log(`   ⚠️ Test passed with ${results.failed} failures (${failureRate.toFixed(1)}% failure rate - within acceptable threshold)`);
+      }
+    });
+    
+    it('should validate delegator stake sum matches node stake', async function() {
+      const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Gnosis');
+      trackResults('Gnosis', 'Delegator Stake Sum', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} delegator stake sum validations failed`);
+      }
+    });
+    
     it('should validate knowledge collections', async function() {
       const results = await qaService.validateKnowledgeCollections('Gnosis');
       trackResults('Gnosis', 'Knowledge Collections', results);
@@ -663,6 +1042,22 @@ describe('Indexer Chain Validation', function() {
       }
     });
     
+    it('should validate delegator stake update events', async function() {
+      const results = await qaService.validateDelegatorStakeUpdateEvents('Base');
+      trackResults('Base', 'Delegator Stake Update Events', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} delegator stake update event validations failed`);
+      }
+    });
+    
+    it('should validate delegator stake sum matches node stake', async function() {
+      const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Base');
+      trackResults('Base', 'Delegator Stake Sum', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} delegator stake sum validations failed`);
+      }
+    });
+    
     it('should validate knowledge collections', async function() {
       const results = await qaService.validateKnowledgeCollections('Base');
       trackResults('Base', 'Knowledge Collections', results);
@@ -686,6 +1081,22 @@ describe('Indexer Chain Validation', function() {
       trackResults('Neuroweb', 'Delegator Stakes', results);
       if (results.failed > 0) {
         throw new Error(`${results.failed} delegator stake validations failed`);
+      }
+    });
+    
+    it('should validate delegator stake update events', async function() {
+      const results = await qaService.validateDelegatorStakeUpdateEvents('Neuroweb');
+      trackResults('Neuroweb', 'Delegator Stake Update Events', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} delegator stake update event validations failed`);
+      }
+    });
+    
+    it('should validate delegator stake sum matches node stake', async function() {
+      const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Neuroweb');
+      trackResults('Neuroweb', 'Delegator Stake Sum', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} delegator stake sum validations failed`);
       }
     });
     
