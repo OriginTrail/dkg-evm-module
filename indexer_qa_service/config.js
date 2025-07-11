@@ -3,7 +3,7 @@ module.exports = {
     networks: [
       {
         name: 'Gnosis',
-        rpcUrl: 'https://rpc.gnosischain.com',
+        rpcUrl: 'https://api-gnosis-mainnet.n.dwellir.com/ce0b9180-f868-4142-a4c7-6265641cfb49',
         hubAddress: '0x882D0BF07F956b1b94BBfe9E77F47c6fc7D4EC8f',
         // Direct contract addresses (fallback)
         stakingStorageAddress: '0x03DbaBD10C2e99C9F4cb5f18a6635545Ef526386',

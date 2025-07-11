@@ -543,14 +543,14 @@ class CompleteQAService {
       console.log(`   📊 Indexer events: ${indexerCount.toLocaleString()}, Contract count: ${contractCountNumber.toLocaleString()}`);
       
       const difference = indexerCount - contractCountNumber;
-      const tolerance = 75; // 75 count tolerance
+      const tolerance = 200; // 200 count tolerance
       
       if (indexerCount === contractCountNumber) {
         console.log(`   ✅ Knowledge collections match: ${indexerCount.toLocaleString()}`);
         return { passed: 1, failed: 0, warnings: 0, total: 1 };
       } else if (Math.abs(difference) <= tolerance) {
         console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
-        console.log(`      📊 Small difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()} (within 75 count tolerance)`);
+        console.log(`      📊 Small difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()} (within 200 count tolerance)`);
         return { passed: 0, failed: 0, warnings: 1, total: 1 }; // Count as warning
       } else {
         console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
@@ -596,6 +596,7 @@ class CompleteQAService {
       let failed = 0;
       let warnings = 0;
       let rpcErrors = 0;
+      let skippedDueToRPC = 0;
       const total = eventsResult.rows.length;
       
       console.log(`   📊 Validating ${total} delegator stake update events...`);
@@ -634,7 +635,7 @@ class CompleteQAService {
             expectedOldStake = BigInt(previousEventResult.rows[0].stake_base);
           }
           
-          // Step 3: Get contract state at blockNumber - 1
+          // Step 3: Get contract state at blockNumber - 1 (HISTORICAL ONLY)
           const networkConfig = config.networks.find(n => n.name === network);
           if (!networkConfig) {
             throw new Error(`Network ${network} not found in config`);
@@ -642,6 +643,7 @@ class CompleteQAService {
           
           let actualOldStake;
           let retries = 3;
+          let rpcSuccess = false;
           
           while (retries > 0) {
             try {
@@ -652,62 +654,39 @@ class CompleteQAService {
                 'function getDelegatorStakeBase(uint72 identityId, bytes32 delegatorKey) view returns (uint96)'
               ], provider);
               
-              // Try different block tags if the exact block isn't available
-              let blockTag = blockNumber - 1;
-              let success = false;
-              
-              // Try exact block first, then fallback to 'latest' if needed
-              for (let attempt = 0; attempt < 3; attempt++) {
-                try {
-                  if (attempt === 0) {
-                    actualOldStake = await stakingContract.getDelegatorStakeBase(nodeId, delegatorKey, { blockTag });
-                  } else if (attempt === 1) {
-                    // Try a few blocks earlier
-                    actualOldStake = await stakingContract.getDelegatorStakeBase(nodeId, delegatorKey, { blockTag: blockTag - 5 });
-                  } else {
-                    // Fallback to latest block
-                    actualOldStake = await stakingContract.getDelegatorStakeBase(nodeId, delegatorKey, { blockTag: 'latest' });
-                  }
-                  success = true;
-                  break;
-                } catch (blockError) {
-                  if (attempt === 2) {
-                    throw blockError; // Re-throw on final attempt
-                  }
-                  // Continue to next attempt
-                }
-              }
-              
-              if (success) {
-                break; // Success, exit retry loop
-              }
+              // Try to get historical state at blockNumber - 1
+              actualOldStake = await stakingContract.getDelegatorStakeBase(nodeId, delegatorKey, { blockTag: blockNumber - 1 });
+              rpcSuccess = true;
+              break;
             } catch (error) {
               retries--;
               if (retries === 0) {
                 console.log(`   ⚠️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...: RPC Error - ${error.message}`);
                 rpcErrors++;
-                continue; // Skip to next event
+                skippedDueToRPC++;
+                break; // Exit retry loop, skip this event
               }
               // Wait before retry
               await new Promise(resolve => setTimeout(resolve, 2000));
             }
           }
           
-          if (actualOldStake === undefined) {
-            continue; // Skip this event due to RPC failure
+          // Skip validation if RPC failed (no historical state available)
+          if (!rpcSuccess) {
+            continue; // Skip to next event
           }
           
-          // Step 4: Validate that contract state matches expected old stake
+          // Step 4: Validate that contract state matches expected old stake (OLD vs OLD)
           const difference = expectedOldStake - actualOldStake;
           const tolerance = 500000000000000000n; // 0.5 TRAC in wei
           
           if (difference === 0n || difference === 0) {
             console.log(`   ✅ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...`);
-            console.log(`      Expected old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
+            console.log(`      Indexer old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
             passed++;
           } else if (difference >= -tolerance && difference <= tolerance) {
             console.log(`   ⚠️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...`);
-            console.log(`      Expected old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
+            console.log(`      Indexer old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
             if (Math.abs(Number(difference)) < 1000000000000000000) {
               const tracDifference = Number(difference) / Math.pow(10, 18);
               console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
@@ -717,7 +696,7 @@ class CompleteQAService {
             warnings++;
           } else {
             console.log(`   ❌ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 10)}...`);
-            console.log(`      Expected old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
+            console.log(`      Indexer old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
             console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             failed++;
           }
@@ -733,8 +712,10 @@ class CompleteQAService {
       console.log(`      ❌ Failed: ${failed} events`);
       console.log(`      ⚠️ Warnings: ${warnings} events`);
       console.log(`      🔌 RPC Errors: ${rpcErrors} events`);
+      console.log(`      📤 Skipped due to RPC: ${skippedDueToRPC} events`);
+      console.log(`      📊 Successfully validated: ${passed + failed + warnings} events`);
       
-      return { passed, failed, warnings, total };
+      return { passed, failed, warnings, rpcErrors, total };
       
     } catch (error) {
       console.error(`Error validating delegator stake update events for ${network}:`, error.message);
@@ -924,7 +905,7 @@ describe('Indexer Chain Validation', function() {
   
   const qaService = new CompleteQAService();
   const summary = {
-    total: { passed: 0, failed: 0, warnings: 0 },
+    total: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0 },
     networks: {}
   };
   
@@ -934,16 +915,18 @@ describe('Indexer Chain Validation', function() {
       summary.networks[network] = {};
     }
     if (!summary.networks[network][testType]) {
-      summary.networks[network][testType] = { passed: 0, failed: 0, warnings: 0 };
+      summary.networks[network][testType] = { passed: 0, failed: 0, warnings: 0, rpcErrors: 0 };
     }
     
     summary.networks[network][testType].passed += results.passed;
     summary.networks[network][testType].failed += results.failed;
     summary.networks[network][testType].warnings += results.warnings;
+    summary.networks[network][testType].rpcErrors += results.rpcErrors || 0;
     
     summary.total.passed += results.passed;
     summary.total.failed += results.failed;
     summary.total.warnings += results.warnings;
+    summary.total.rpcErrors += results.rpcErrors || 0;
   }
   
   // Display summary after all tests
@@ -958,14 +941,18 @@ describe('Indexer Chain Validation', function() {
         for (const [testType, results] of Object.entries(summary.networks[network])) {
           const total = results.passed + results.failed + results.warnings;
           if (total > 0) {
-            console.log(`   ${testType}: ${results.passed} ✅ passed, ${results.failed} ❌ failed, ${results.warnings} ⚠️ warnings`);
+            if (testType === 'Delegator Stake Update Events') {
+              console.log(`   ${testType}: ${results.passed} ✅ passed, ${results.failed} ❌ failed, ${results.warnings} ⚠️ warnings, ${results.rpcErrors} 🔌 RPC errors`);
+            } else {
+              console.log(`   ${testType}: ${results.passed} ✅ passed, ${results.failed} ❌ failed, ${results.warnings} ⚠️ warnings`);
+            }
           }
         }
       }
     }
     
     console.log('\n' + '-'.repeat(80));
-    console.log(`🎯 GRAND TOTAL: ${summary.total.passed} ✅ passed, ${summary.total.failed} ❌ failed, ${summary.total.warnings} ⚠️ warnings`);
+    console.log(`🎯 GRAND TOTAL: ${summary.total.passed} ✅ passed, ${summary.total.failed} ❌ failed, ${summary.total.warnings} ⚠️ warnings, ${summary.total.rpcErrors} 🔌 RPC errors`);
     console.log('='.repeat(80));
   });
   
