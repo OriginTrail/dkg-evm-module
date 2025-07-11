@@ -15,3 +15,4 @@ coverage/*
 metadata/*
 coverage.json
 mochawesome-report
+indexer_qa_service/validation_results.json

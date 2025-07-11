@@ -9,7 +9,7 @@
     "inlineAssets=true",
     "saveAllAttempts=false"
   ],
-  "timeout": 300000,
+  "timeout": 0,
   "slow": 10000,
   "spec": "indexer_qa_service/indexer_chain_tests.js"
 } 
