@@ -749,6 +749,7 @@ class CompleteQAService {
           if (difference === 0n || difference === 0) {
             console.log(`   ✅ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}`);
             console.log(`      Indexer old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
+            console.log(`      🔍 One block before current: ${blockNumber - 1} (current block: ${blockNumber})`);
             passed++;
             this.validatedEvents[eventHash] = 'passed';
           } else if (difference >= -tolerance && difference <= tolerance) {
@@ -760,12 +761,14 @@ class CompleteQAService {
             } else {
               console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
             }
+            console.log(`      🔍 One block before current: ${blockNumber - 1} (current block: ${blockNumber})`);
             warnings++;
             this.validatedEvents[eventHash] = 'warning';
           } else {
             console.log(`   ❌ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}`);
             console.log(`      Indexer old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
             console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+            console.log(`      🔍 One block before current: ${blockNumber - 1} (current block: ${blockNumber})`);
             failed++;
             this.validatedEvents[eventHash] = 'failed';
           }
@@ -1015,14 +1018,7 @@ describe('Indexer Chain Validation', function() {
       if (summary.networks[network]) {
         console.log(`\n🌐 ${network} Network:`);
         for (const [testType, results] of Object.entries(summary.networks[network])) {
-          const total = results.passed + results.failed + results.warnings;
-          if (total > 0) {
-            if (testType === 'Delegator Stake Update Events') {
-              console.log(`   ${testType}: ${results.passed} ✅ passed, ${results.failed} ❌ failed, ${results.warnings} ⚠️ warnings, ${results.rpcErrors} 🔌 RPC errors`);
-            } else {
-              console.log(`   ${testType}: ${results.passed} ✅ passed, ${results.failed} ❌ failed, ${results.warnings} ⚠️ warnings`);
-            }
-          }
+          console.log(`   ${testType}: ${results.passed} ✅ passed, ${results.failed} ❌ failed, ${results.warnings} ⚠️ warnings, ${results.rpcErrors} 🔌 RPC errors`);
         }
       }
     }
