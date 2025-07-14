@@ -737,7 +737,11 @@ class CompleteQAService {
           const eventHash = this.generateEventHash(network, nodeId, delegatorKey, blockNumber, expectedOldStake, actualOldStake);
           const prevStatus = this.validatedEvents[eventHash];
           if (prevStatus === 'passed' || prevStatus === 'warning') {
+            const differenceSkipped = expectedOldStake - actualOldStake;
             console.log(`   ⏭️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}: Already validated as ${prevStatus}, skipping`);
+            console.log(`      Indexer old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
+            console.log(`      📊 Difference: ${differenceSkipped > 0 ? '+' : ''}${this.weiToTRAC(differenceSkipped > 0 ? differenceSkipped : -differenceSkipped)} TRAC`);
+            console.log(`      🔍 One block before current: ${blockNumber - 1} (current block: ${blockNumber})`);
             skippedAlreadyValidated++;
             continue;
           }
