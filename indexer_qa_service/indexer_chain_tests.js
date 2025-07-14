@@ -341,12 +341,13 @@ class CompleteQAService {
       
       if (nodesResult.rows.length === 0) {
         console.log(`   ⚠️ No active nodes found in ${network}`);
-        return { passed: 0, failed: 0, warnings: 0, total: 0 };
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
       }
       
       let passed = 0;
       let failed = 0;
       let warnings = 0;
+      let rpcErrors = 0;
       const total = nodesResult.rows.length;
       
       const criteriaText = `active nodes with >= 50k TRAC`;
@@ -372,7 +373,7 @@ class CompleteQAService {
             if (Math.abs(Number(difference)) < 1000000000000000000) { // Less than 1 TRAC
               const tracDifference = Number(difference) / Math.pow(10, 18);
               console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
-            } else {
+          } else {
               console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
             }
             warnings++; // Count as warning
@@ -383,15 +384,19 @@ class CompleteQAService {
           }
         } catch (error) {
           console.log(`   ⚠️ Node ${nodeId}: Error - ${error.message}`);
-          failed++;
+          if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+            rpcErrors++;
+          } else {
+            failed++;
+          }
         }
       }
       
-      return { passed, failed, warnings, total };
+      return { passed, failed, warnings, rpcErrors, total };
       
     } catch (error) {
       console.error(`Error validating node stakes for ${network}:`, error.message);
-      return { passed: 0, failed: 0, warnings: 0, total: 0 };
+      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
     } finally {
       await client.end();
     }
@@ -459,7 +464,7 @@ class CompleteQAService {
       
       if (activeNodesResult.rows.length === 0) {
         console.log(`   ⚠️ No active nodes found in ${network}, skipping delegator validation`);
-        return { passed: 0, failed: 0, warnings: 0, total: 0 };
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
       }
       
       // Get the list of active node IDs
@@ -483,12 +488,13 @@ class CompleteQAService {
       
       if (delegatorsResult.rows.length === 0) {
         console.log(`   ⚠️ No delegators found for active nodes in ${network}`);
-        return { passed: 0, failed: 0, warnings: 0, total: 0 };
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
       }
       
       let passed = 0;
       let failed = 0;
       let warnings = 0;
+      let rpcErrors = 0;
       const total = delegatorsResult.rows.length;
       
       console.log(`   📊 Validating ${total} delegators for ${activeNodeIds.length} active nodes...`);
@@ -515,7 +521,7 @@ class CompleteQAService {
             if (Math.abs(Number(difference)) < 1000000000000000000) { // Less than 1 TRAC
               const tracDifference = Number(difference) / Math.pow(10, 18);
               console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
-            } else {
+          } else {
               console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
             }
             warnings++; // Count as warning
@@ -526,16 +532,20 @@ class CompleteQAService {
             failed++;
           }
         } catch (error) {
-          console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}...: Error - ${error.message}`);
-          failed++;
+          console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
+          if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+            rpcErrors++;
+          } else {
+            failed++;
+          }
         }
       }
       
-      return { passed, failed, warnings, total };
+      return { passed, failed, warnings, rpcErrors, total };
       
     } catch (error) {
       console.error(`Error validating delegator stakes for ${network}:`, error.message);
-      return { passed: 0, failed: 0, warnings: 0, total: 0 };
+      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
     } finally {
       await client.end();
     }
@@ -590,20 +600,24 @@ class CompleteQAService {
       
       if (indexerCount === contractCountNumber) {
         console.log(`   ✅ Knowledge collections match: ${indexerCount.toLocaleString()}`);
-        return { passed: 1, failed: 0, warnings: 0, total: 1 };
+        return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
       } else if (Math.abs(difference) <= tolerance) {
         console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
         console.log(`      📊 Small difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()} (within 200 count tolerance)`);
-        return { passed: 0, failed: 0, warnings: 1, total: 1 }; // Count as warning
+        return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 }; // Count as warning
       } else {
         console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
         console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()}`);
-        return { passed: 0, failed: 1, warnings: 0, total: 1 };
+        return { passed: 0, failed: 1, warnings: 0, rpcErrors: 0, total: 1 };
       }
       
     } catch (error) {
       console.error(`Error validating knowledge collections for ${network}:`, error.message);
-      return { passed: 0, failed: 0, warnings: 0, total: 0 };
+      if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 1, total: 0 };
+      } else {
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+      }
     } finally {
       await client.end();
     }
@@ -843,12 +857,13 @@ class CompleteQAService {
       
       if (activeNodesResult.rows.length === 0) {
         console.log(`   ⚠️ No active nodes found in ${network}`);
-        return { passed: 0, failed: 0, warnings: 0, total: 0 };
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
       }
       
       let passed = 0;
       let failed = 0;
       let warnings = 0;
+      let rpcErrors = 0;
       const total = activeNodesResult.rows.length;
       
       console.log(`   📊 Validating ${total} active nodes...`);
@@ -905,7 +920,7 @@ class CompleteQAService {
               retries--;
               if (retries === 0) {
                 console.log(`   ⚠️ Node ${nodeId}: RPC Error - ${error.message}`);
-                warnings++;
+                rpcErrors++;
                 continue;
               }
               await new Promise(resolve => setTimeout(resolve, 2000));
@@ -941,15 +956,19 @@ class CompleteQAService {
           
         } catch (error) {
           console.log(`   ⚠️ Node ${nodeId}: Error - ${error.message}`);
-          failed++;
+          if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+            rpcErrors++;
+          } else {
+            failed++;
+          }
         }
       }
       
-      return { passed, failed, warnings, total };
+      return { passed, failed, warnings, rpcErrors, total };
       
     } catch (error) {
       console.error(`Error validating delegator stake sum for ${network}:`, error.message);
-      return { passed: 0, failed: 0, warnings: 0, total: 0 };
+      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
     } finally {
       await client.end();
     }
@@ -1017,7 +1036,6 @@ describe('Indexer Chain Validation', function() {
     console.log(`\n💾 Validation Tracking:`);
     console.log(`   📁 Storage file: ${qaService.validationStorageFile}`);
     console.log(`   📊 Total events tracked: ${totalTrackedEvents}`);
-    console.log(`   ℹ️ Next run will only re-test failed events`);
     console.log('='.repeat(80));
   });
   
