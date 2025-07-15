@@ -632,7 +632,7 @@ class CompleteQAService {
     try {
       await client.connect();
       
-      // Get all delegator stake update events ordered by block number
+      // Get all delegator stake update events ordered by block number DESC (newest first)
       const eventsResult = await client.query(`
         SELECT 
           identity_id,
@@ -640,7 +640,7 @@ class CompleteQAService {
           stake_base,
           block_number
         FROM delegator_base_stake_updated
-        ORDER BY block_number ASC
+        ORDER BY block_number DESC
       `);
       
       if (eventsResult.rows.length === 0) {
@@ -677,20 +677,20 @@ class CompleteQAService {
             FROM delegator_base_stake_updated
             WHERE identity_id = $1 
             AND delegator_key = $2 
-            ORDER BY block_number ASC
+            ORDER BY block_number DESC
           `, [nodeId, delegatorKey]);
           
           // Step 2: Find the previous event for this specific delegator
           let previousEventBlockNumber = null;
           let expectedOldStake = 0n;
           
-          // Find the event that comes before the current event
+          // Find the event that comes before the current event (current is the latest)
           for (let j = 0; j < allEventsForDelegatorResult.rows.length; j++) {
             if (allEventsForDelegatorResult.rows[j].block_number === blockNumber) {
-              // Found current event, get the previous one
-              if (j > 0) {
-                previousEventBlockNumber = allEventsForDelegatorResult.rows[j - 1].block_number;
-                expectedOldStake = BigInt(allEventsForDelegatorResult.rows[j - 1].stake_base);
+              // Found current event, get the previous one (next in the DESC ordered list)
+              if (j < allEventsForDelegatorResult.rows.length - 1) {
+                previousEventBlockNumber = allEventsForDelegatorResult.rows[j + 1].block_number;
+                expectedOldStake = BigInt(allEventsForDelegatorResult.rows[j + 1].stake_base);
               }
               break;
             }
