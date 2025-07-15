@@ -198,6 +198,19 @@ class CompleteQAService {
         LIMIT 1
       `, [nodeId, delegatorKey]);
       
+      // DEBUG: Log the query and result for specific delegator
+      if (nodeId === 1 && delegatorKey === '0xd491e9497cb6b20b1d7ee1fb733a01974f82f8104a5c447bfaa90ec9abde36ac') {
+        console.log(`   🔍 DEBUG for Node ${nodeId}, Delegator ${delegatorKey}:`);
+        console.log(`      Database: ${dbName}`);
+        console.log(`      Query result rows: ${latestStakeResult.rows.length}`);
+        if (latestStakeResult.rows.length > 0) {
+          console.log(`      Latest stake: ${latestStakeResult.rows[0].stake_base} wei`);
+          console.log(`      Latest block: ${latestStakeResult.rows[0].block_number}`);
+        } else {
+          console.log(`      No events found`);
+        }
+      }
+      
       if (latestStakeResult.rows.length === 0) {
         return 0n; // No events found, stake should be 0
       }
@@ -503,9 +516,21 @@ class CompleteQAService {
         const nodeId = parseInt(row.identity_id);
         const delegatorKey = row.delegator_key;
         
+        // DEBUG: Log specific delegator
+        if (nodeId === 1 && delegatorKey === '0xd491e9497cb6b20b1d7ee1fb733a01974f82f8104a5c447bfaa90ec9abde36ac') {
+          console.log(`   🔍 DEBUG: Processing Node ${nodeId}, Delegator ${delegatorKey}`);
+        }
+        
         try {
           const expectedStake = await this.calculateExpectedDelegatorStake(network, nodeId, delegatorKey);
           const contractStake = await this.getContractDelegatorStake(network, nodeId, delegatorKey);
+          
+          // DEBUG: Log specific delegator results
+          if (nodeId === 1 && delegatorKey === '0xd491e9497cb6b20b1d7ee1fb733a01974f82f8104a5c447bfaa90ec9abde36ac') {
+            console.log(`   🔍 DEBUG: Node ${nodeId}, Delegator ${delegatorKey}:`);
+            console.log(`      Expected stake (indexer): ${expectedStake} wei (${this.weiToTRAC(expectedStake)} TRAC)`);
+            console.log(`      Contract stake: ${contractStake} wei (${this.weiToTRAC(contractStake)} TRAC)`);
+          }
           
           // Check if difference is very small (tolerance for rounding errors)
           const difference = expectedStake - contractStake;
@@ -702,6 +727,12 @@ class CompleteQAService {
             throw new Error(`Network ${network} not found in config`);
           }
           
+          // Skip validation if there's no previous event (can't validate first event)
+          if (!previousEventBlockNumber) {
+            console.log(`   ⏭️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}: No previous event found, skipping validation`);
+            continue;
+          }
+          
           let actualOldStake;
           let retries = 3;
           let rpcSuccess = false;
@@ -715,8 +746,8 @@ class CompleteQAService {
                 'function getDelegatorStakeBase(uint72 identityId, bytes32 delegatorKey) view returns (uint96)'
               ], provider);
               
-              // Use the previous event's block number, or blockNumber - 1 if no previous event
-              const contractBlockNumber = previousEventBlockNumber || (blockNumber - 1);
+              // Use the previous event's block number
+              const contractBlockNumber = previousEventBlockNumber;
               
               // Try to get historical state at the correct block
               actualOldStake = await stakingContract.getDelegatorStakeBase(nodeId, delegatorKey, { blockTag: contractBlockNumber });
