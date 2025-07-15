@@ -705,6 +705,17 @@ class CompleteQAService {
             ORDER BY block_number DESC
           `, [nodeId, delegatorKey]);
           
+          // DEBUG: Log events for this specific delegator
+          if (nodeId === 32 && delegatorKey === '0x7c7a44f1fb4ada548aaccc55425b08543a56968415182ba8f046ee0a89b1873f') {
+            console.log(`   🔍 DEBUG for Node ${nodeId}, Delegator ${delegatorKey}:`);
+            console.log(`      Found ${allEventsForDelegatorResult.rows.length} events:`);
+            for (let k = 0; k < allEventsForDelegatorResult.rows.length; k++) {
+              const event = allEventsForDelegatorResult.rows[k];
+              console.log(`         Event ${k}: Block ${event.block_number}, Stake ${event.stake_base}`);
+            }
+            console.log(`      Current event block: ${blockNumber}`);
+          }
+          
           // Step 2: Find the previous event for this specific delegator
           let previousEventBlockNumber = null;
           let expectedOldStake = 0n;
@@ -719,6 +730,12 @@ class CompleteQAService {
               }
               break;
             }
+          }
+          
+          // DEBUG: Log previous event detection
+          if (nodeId === 32 && delegatorKey === '0x7c7a44f1fb4ada548aaccc55425b08543a56968415182ba8f046ee0a89b1873f') {
+            console.log(`      Previous event block: ${previousEventBlockNumber || 'none'}`);
+            console.log(`      Expected old stake: ${expectedOldStake} wei`);
           }
           
           // Step 3: Get contract state at the previous event's block number (or blockNumber - 1 if no previous event)
