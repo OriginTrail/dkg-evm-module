@@ -14,7 +14,7 @@ export type ChainSimulationConfig = {
 export const SIMULATION_CHAINS: Record<string, ChainSimulationConfig> = {
   base_mainnet: {
     chainId: 8453,
-    v8_0StartBlock: 24189831, // Hub deployment block (V8.0 start)
+    v8_0StartBlock: 24450127, // 1.1.2025 (V8.0 start after all migrations)
     v8_1StartBlock: 32076123, // Staking deployment block (V8.1 start)
     gasPrice: 1_000_000_000, // 1 gwei
     gasLimit: 30_000_000,

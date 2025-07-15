@@ -63,7 +63,7 @@ start_forked_node() {
 # Parse command line argument  
 if [ "$1" = "base" ]; then
     echo -e "${GREEN}Starting Base mainnet fork only${NC}"
-    start_forked_node "Base Mainnet" "$RPC_BASE_MAINNET" "24189831" "8545"
+    start_forked_node "Base Mainnet" "$RPC_BASE_MAINNET" "24450127" "8545"
 elif [ "$1" = "neuroweb" ]; then
     echo -e "${GREEN}Starting Neuroweb mainnet fork only${NC}"
     start_forked_node "Neuroweb Mainnet" "$RPC_NEUROWEB_MAINNET" "7237897" "8546"
@@ -79,6 +79,6 @@ else
     echo "  $0 gnosis    # Start Gnosis mainnet fork on port 8547"
     echo ""
     echo "Or run manually:"
-    echo "  HARDHAT_FORK_URL=\$RPC_BASE_MAINNET HARDHAT_FORK_BLOCK=24189831 npx hardhat node --config hardhat.simulation.config.ts --port 8545"
+    echo "  HARDHAT_FORK_URL=\$RPC_BASE_MAINNET HARDHAT_FORK_BLOCK=24450127 npx hardhat node --config hardhat.simulation.config.ts --port 8545"
     echo ""
 fi 
