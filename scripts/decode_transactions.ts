@@ -15,6 +15,7 @@ import IdentityABI from '../abi/Identity.json';
 import MigratorABI from '../abi/MigratorM1V8.json';
 import StakingStorageABI from '../abi/StakingStorage.json';
 import DelegatorsInfoABI from '../abi/DelegatorsInfo.json';
+import IdentityStorageABI from '../abi/IdentityStorage.json';
 
 const csvParser = require('csv-parser');
 const glob = require('glob');
@@ -31,6 +32,8 @@ const STAKING_STORAGE_CONTRACT_ADDRESS =
   deployments.contracts.StakingStorage.evmAddress.toLowerCase();
 const DELEGATORS_INFO_CONTRACT_ADDRESS =
   deployments.contracts.DelegatorsInfo.evmAddress.toLowerCase();
+const IDENTITY_STORAGE_CONTRACT_ADDRESS =
+  deployments.contracts.IdentityStorage.evmAddress.toLowerCase();
 
 const stakingStorageInterface = new ethers.Interface(StakingStorageABI);
 // delegatorsInfoContract requires provider, will be created after provider is defined
@@ -97,6 +100,12 @@ const provider = new ethers.JsonRpcProvider(RPC_URL);
 const delegatorsInfoContract = new ethers.Contract(
   DELEGATORS_INFO_CONTRACT_ADDRESS,
   DelegatorsInfoABI,
+  provider,
+);
+// NEW: Instantiate IdentityStorage contract for operator/admin checks
+const identityStorageContract = new ethers.Contract(
+  IDENTITY_STORAGE_CONTRACT_ADDRESS,
+  IdentityStorageABI,
   provider,
 );
 
@@ -295,6 +304,8 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
 
       // NEW: flag to track removed-delegator cases within this tx
       let delegatorCheckFailed = false;
+      // NEW: flag to track operator/admin check failures
+      let operatorCheckFailed = false;
 
       // Determine the effective sender (may be overridden for specific txs)
       const effectiveSender =
@@ -449,6 +460,36 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
         }
       }
 
+      /* ----------- Operator/Admin verification for updateOperatorFee -- */
+      if (decodedMethod === 'updateOperatorFee') {
+        try {
+          // extract identityId (first param) – handle array & named args
+          const identityIdParam = ((decodedParams as any)[0] ??
+            (decodedParams as any).identityId ??
+            null) as bigint | null;
+          if (identityIdParam !== null) {
+            const senderKey = getDelegatorKey(effectiveSender);
+            const isAdmin = await identityStorageContract.keyHasPurpose(
+              identityIdParam,
+              senderKey,
+              1, // IdentityLib.ADMIN_KEY
+            );
+            if (isAdmin) {
+              console.log(
+                `✅ Operator CHECK passed – identityId=${identityIdParam.toString()} sender=${effectiveSender}`,
+              );
+            } else {
+              operatorCheckFailed = true;
+              console.warn(
+                `⚠️  Operator CHECK WARNING – sender ${effectiveSender} is NOT admin on node ${identityIdParam.toString()} while updating operator fee`,
+              );
+            }
+          }
+        } catch (e: any) {
+          console.error(`❌ Operator check error: ${e.message}`);
+        }
+      }
+
       const rowForCsv = {
         block_number: receipt.blockNumber,
         block_timestamp: block.timestamp,
@@ -474,6 +515,12 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
       // NEW: also persist to deletedRows if delegator was removed
       if (delegatorCheckFailed) {
         deletedRows.push(rowForCsv);
+      }
+      // NEW: append operator check failure to errorMsg if any
+      if (operatorCheckFailed) {
+        errorMsg = errorMsg
+          ? `${errorMsg}; Operator check failed`
+          : 'Operator check failed';
       }
 
       // Persist immediately into SQLite (UPSERT semantics)
