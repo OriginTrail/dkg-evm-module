@@ -1,6 +1,11 @@
+import { expect } from 'chai';
 import hre from 'hardhat';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
+import {
+  getDeployedContracts,
+  verifyContractDeployments,
+} from './blockchain-helpers';
 import { PROOF_PERIOD_SECONDS } from './constants';
 import { SimulationDatabase, TransactionData, BlockData } from './db-helpers';
 import { MiningController } from './mining-controller';
@@ -59,7 +64,11 @@ class HistoricalRewardsSimulation {
       `   Current timestamp: ${currentTimestamp} (${new Date(currentTimestamp * 1000).toISOString()})`,
     );
 
-    // Step 4: Initialize proofing timestamp
+    // Step 4: Verify contract deployments
+    console.log('\n🔍 Verifying contract deployments...');
+    await verifyContractDeployments(this.hre);
+
+    // Step 5: Initialize proofing timestamp
     // TODO: This should be loaded from epoch metadata
     this.lastProofingTimestamp = currentTimestamp;
 
@@ -142,9 +151,112 @@ class HistoricalRewardsSimulation {
     if (currentTime - this.lastProofingTimestamp >= PROOF_PERIOD_SECONDS) {
       console.log('⏰ Proof period elapsed - calculating rewards...');
 
-      // TODO: Implement reward calculation logic
+      await this.calculateScoresForActiveNodes(
+        this.lastProofingTimestamp + PROOF_PERIOD_SECONDS,
+      );
 
       this.lastProofingTimestamp = currentTime;
+    }
+  }
+
+  /**
+   * Calculate scores for all active nodes in the sharding table
+   * This implements the core scoring logic from the V8.1 Random Sampling system
+   */
+  async calculateScoresForActiveNodes(
+    proofingTimestamp: number,
+  ): Promise<void> {
+    console.log(
+      `📊 Calculating scores for active nodes at timestamp ${proofingTimestamp}`,
+    );
+
+    try {
+      // Get contract instances from the deployed contracts
+      const deployments = await getDeployedContracts(this.hre);
+
+      const profileStorage = deployments.ProfileStorage;
+      const shardingTableStorage = deployments.ShardingTableStorage;
+      const randomSampling = deployments.RandomSampling;
+      const randomSamplingStorage = deployments.RandomSamplingStorage;
+      const stakingStorage = deployments.StakingStorage;
+      const chronos = deployments.Chronos;
+
+      // Get current epoch and proof period start block
+      const currentEpoch = await chronos.getCurrentEpoch();
+
+      // Get the total number of nodes to iterate through
+      // We'll use a reasonable upper bound and check each identity ID
+      const maxIdentityId = await profileStorage.lastIdentityId();
+
+      let activeNodesCount = 0;
+
+      // Iterate through all possible identity IDs
+      for (let identityId = 1; identityId <= maxIdentityId; identityId++) {
+        try {
+          // Check if profile exists
+          const profileExists = await profileStorage.profileExists(identityId);
+          if (!profileExists) {
+            continue;
+          }
+
+          // Check if node is active in sharding table
+          const nodeExists = await shardingTableStorage.nodeExists(identityId);
+          if (!nodeExists) {
+            continue;
+          }
+
+          // Node is active - calculate score
+          const score18 = await randomSampling.calculateNodeScore(identityId);
+
+          if (score18 > 0) {
+            // Add to node epoch score
+            await randomSamplingStorage.addToNodeEpochScore(
+              currentEpoch,
+              identityId,
+              score18,
+            );
+
+            // Add to all nodes epoch score
+            await randomSamplingStorage.addToAllNodesEpochScore(
+              currentEpoch,
+              score18,
+            );
+
+            // Calculate and add score per stake
+            const totalNodeStake =
+              await stakingStorage.getNodeStake(identityId);
+            if (totalNodeStake > 0) {
+              // score18 * SCALE18 / totalNodeStake = nodeScorePerStake36
+              const SCALE18 = BigInt('1000000000000000000'); // 10^18
+              const nodeScorePerStake36 = (score18 * SCALE18) / totalNodeStake;
+
+              await randomSamplingStorage.addToNodeEpochScorePerStake(
+                currentEpoch,
+                identityId,
+                nodeScorePerStake36,
+              );
+            }
+
+            activeNodesCount++;
+
+            console.log(
+              `   ✅ Node ${identityId}: score=${this.hre.ethers.formatEther(score18)}`,
+            );
+          }
+        } catch (error) {
+          console.error(`   ⚠️  Error processing node ${identityId}: ${error}`);
+          // Continue with next node
+        }
+      }
+
+      console.log(`   📈 Processed ${activeNodesCount} active nodes`);
+      expect(activeNodesCount).to.equal(
+        await shardingTableStorage.nodesCount(),
+        `Active nodes count ${activeNodesCount} should match the number of nodes in the sharding table ${await shardingTableStorage.nodesCount()}`,
+      );
+    } catch (error) {
+      console.error(`❌ Error calculating scores for active nodes: ${error}`);
+      throw error;
     }
   }
 
