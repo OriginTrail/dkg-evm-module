@@ -671,28 +671,32 @@ class CompleteQAService {
         }
         
         try {
-          // Step 1: Get the previous event for this delegator
-          const previousEventResult = await client.query(`
+          // Step 1: Get all events for this specific node and delegator to find the previous event
+          const allEventsForDelegatorResult = await client.query(`
             SELECT stake_base, block_number
             FROM delegator_base_stake_updated
             WHERE identity_id = $1 
             AND delegator_key = $2 
-            AND block_number < $3
-            ORDER BY block_number DESC
-            LIMIT 1
-          `, [nodeId, delegatorKey, blockNumber]);
+            ORDER BY block_number ASC
+          `, [nodeId, delegatorKey]);
           
-          // Step 2: Determine expected old stake
-          let expectedOldStake;
-          if (previousEventResult.rows.length === 0) {
-            // No previous event, old stake should be 0
-            expectedOldStake = 0n;
-          } else {
-            // Previous event exists, use its new stake as the expected old stake
-            expectedOldStake = BigInt(previousEventResult.rows[0].stake_base);
+          // Step 2: Find the previous event for this specific delegator
+          let previousEventBlockNumber = null;
+          let expectedOldStake = 0n;
+          
+          // Find the event that comes before the current event
+          for (let j = 0; j < allEventsForDelegatorResult.rows.length; j++) {
+            if (allEventsForDelegatorResult.rows[j].block_number === blockNumber) {
+              // Found current event, get the previous one
+              if (j > 0) {
+                previousEventBlockNumber = allEventsForDelegatorResult.rows[j - 1].block_number;
+                expectedOldStake = BigInt(allEventsForDelegatorResult.rows[j - 1].stake_base);
+              }
+              break;
+            }
           }
           
-          // Step 3: Get contract state at blockNumber - 1 (HISTORICAL ONLY)
+          // Step 3: Get contract state at the previous event's block number (or blockNumber - 1 if no previous event)
           const networkConfig = config.networks.find(n => n.name === network);
           if (!networkConfig) {
             throw new Error(`Network ${network} not found in config`);
@@ -711,8 +715,11 @@ class CompleteQAService {
                 'function getDelegatorStakeBase(uint72 identityId, bytes32 delegatorKey) view returns (uint96)'
               ], provider);
               
-              // Try to get historical state at blockNumber - 1
-              actualOldStake = await stakingContract.getDelegatorStakeBase(nodeId, delegatorKey, { blockTag: blockNumber - 1 });
+              // Use the previous event's block number, or blockNumber - 1 if no previous event
+              const contractBlockNumber = previousEventBlockNumber || (blockNumber - 1);
+              
+              // Try to get historical state at the correct block
+              actualOldStake = await stakingContract.getDelegatorStakeBase(nodeId, delegatorKey, { blockTag: contractBlockNumber });
               rpcSuccess = true;
               break;
             } catch (error) {
@@ -741,7 +748,7 @@ class CompleteQAService {
             console.log(`   ⏭️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}: Already validated as ${prevStatus}, skipping`);
             console.log(`      Indexer old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
             console.log(`      📊 Difference: ${differenceSkipped > 0 ? '+' : ''}${this.weiToTRAC(differenceSkipped > 0 ? differenceSkipped : -differenceSkipped)} TRAC`);
-            console.log(`      🔍 One block before current: ${blockNumber - 1} (current block: ${blockNumber})`);
+            console.log(`      🔍 Previous event block: ${previousEventBlockNumber || 'none'} (current block: ${blockNumber})`);
             skippedAlreadyValidated++;
             continue;
           }
@@ -753,7 +760,7 @@ class CompleteQAService {
           if (difference === 0n || difference === 0) {
             console.log(`   ✅ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}`);
             console.log(`      Indexer old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
-            console.log(`      🔍 One block before current: ${blockNumber - 1} (current block: ${blockNumber})`);
+            console.log(`      🔍 Previous event block: ${previousEventBlockNumber || 'none'} (current block: ${blockNumber})`);
             passed++;
             this.validatedEvents[eventHash] = 'passed';
           } else if (difference >= -tolerance && difference <= tolerance) {
@@ -765,14 +772,14 @@ class CompleteQAService {
             } else {
               console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
             }
-            console.log(`      🔍 One block before current: ${blockNumber - 1} (current block: ${blockNumber})`);
+            console.log(`      🔍 Previous event block: ${previousEventBlockNumber || 'none'} (current block: ${blockNumber})`);
             warnings++;
             this.validatedEvents[eventHash] = 'warning';
           } else {
             console.log(`   ❌ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}`);
             console.log(`      Indexer old stake: ${this.weiToTRAC(expectedOldStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualOldStake)} TRAC`);
             console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            console.log(`      🔍 One block before current: ${blockNumber - 1} (current block: ${blockNumber})`);
+            console.log(`      🔍 Previous event block: ${previousEventBlockNumber || 'none'} (current block: ${blockNumber})`);
             failed++;
             this.validatedEvents[eventHash] = 'failed';
           }
