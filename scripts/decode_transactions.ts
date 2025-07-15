@@ -306,6 +306,8 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
       let delegatorCheckFailed = false;
       // NEW: flag to track operator/admin check failures
       let operatorCheckFailed = false;
+      // flag for createProfile access check failures
+      let profileCreateCheckFailed = false;
 
       // Determine the effective sender (may be overridden for specific txs)
       const effectiveSender =
@@ -523,6 +525,75 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
         }
       }
 
+      /* ----------- Admin/Operational verification for createProfile -- */
+      if (decodedMethod === 'createProfile') {
+        try {
+          const senderKey = getDelegatorKey(effectiveSender);
+          // First, try to resolve identityId via operational mapping
+          let identityIdProfile = (await identityStorageContract.identityIds(
+            senderKey,
+          )) as bigint;
+
+          if (identityIdProfile === 0n) {
+            // Fall back: parse IdentityCreated logs in this tx where adminKey matches senderKey
+            const identityInterface = new ethers.Interface(IdentityABI);
+            for (const log of receipt.logs) {
+              if (
+                log.address.toLowerCase() !==
+                IDENTITY_CONTRACT_ADDRESS.toLowerCase()
+              )
+                continue;
+              try {
+                const parsedLog = identityInterface.parseLog(log);
+                if (parsedLog.name === 'IdentityCreated') {
+                  const idFromLog = parsedLog.args[0] as bigint;
+                  const adminKeyFromLog = parsedLog.args[2] as string;
+                  if (
+                    adminKeyFromLog.toLowerCase() === senderKey.toLowerCase()
+                  ) {
+                    identityIdProfile = idFromLog;
+                    break;
+                  }
+                }
+              } catch {
+                /* not the event we need */
+              }
+            }
+          }
+
+          if (identityIdProfile !== 0n) {
+            const isAdminNow = await identityStorageContract.keyHasPurpose(
+              identityIdProfile,
+              senderKey,
+              1, // ADMIN_KEY
+            );
+            const isOperationalNow =
+              await identityStorageContract.keyHasPurpose(
+                identityIdProfile,
+                senderKey,
+                2, // OPERATIONAL_KEY
+              );
+            if (isAdminNow || isOperationalNow) {
+              console.log(
+                `✅ Profile CREATE CHECK passed – identityId=${identityIdProfile.toString()} sender=${effectiveSender}`,
+              );
+            } else {
+              profileCreateCheckFailed = true;
+              console.warn(
+                `⚠️  Profile CREATE CHECK WARNING – sender ${effectiveSender} is not currently admin/operational for identity ${identityIdProfile.toString()}`,
+              );
+            }
+          } else {
+            profileCreateCheckFailed = true;
+            console.warn(
+              `⚠️  Profile CREATE CHECK WARNING – could not resolve identityId for sender ${effectiveSender}`,
+            );
+          }
+        } catch (e: any) {
+          console.error(`❌ Profile create check error: ${e.message}`);
+        }
+      }
+
       const rowForCsv = {
         block_number: receipt.blockNumber,
         block_timestamp: block.timestamp,
@@ -554,6 +625,11 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
         errorMsg = errorMsg
           ? `${errorMsg}; Operator check failed`
           : 'Operator check failed';
+      }
+      if (profileCreateCheckFailed) {
+        errorMsg = errorMsg
+          ? `${errorMsg}; Profile create check failed`
+          : 'Profile create check failed';
       }
 
       // Persist immediately into SQLite (UPSERT semantics)
