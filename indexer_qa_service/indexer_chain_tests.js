@@ -730,6 +730,7 @@ class CompleteQAService {
           // Skip validation if there's no previous event (can't validate first event)
           if (!previousEventBlockNumber) {
             console.log(`   ⏭️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}: No previous event found, skipping validation`);
+            console.log(`      🔍 Previous event block: none (current block: ${blockNumber})`);
             continue;
           }
           
@@ -757,6 +758,7 @@ class CompleteQAService {
               retries--;
               if (retries === 0) {
                 console.log(`   ⚠️ Event at block ${blockNumber}: Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
+                console.log(`      🔍 Previous event block: ${previousEventBlockNumber || 'none'} (current block: ${blockNumber})`);
                 rpcErrors++;
                 skippedDueToRPC++;
                 break; // Exit retry loop, skip this event
