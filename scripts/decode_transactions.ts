@@ -13,6 +13,8 @@ import * as path from 'path';
 import HubABI from '../abi/Hub.json';
 import IdentityABI from '../abi/Identity.json';
 import MigratorABI from '../abi/MigratorM1V8.json';
+import StakingStorageABI from '../abi/StakingStorage.json';
+import DelegatorsInfoABI from '../abi/DelegatorsInfo.json';
 
 const csvParser = require('csv-parser');
 const glob = require('glob');
@@ -25,6 +27,13 @@ const deployments = JSON.parse(
 const IDENTITY_CONTRACT_ADDRESS = deployments.contracts.Identity.evmAddress;
 const MIGRATOR_CONTRACT_ADDRESS =
   deployments.contracts.MigratorM1V8.evmAddress.toLowerCase();
+const STAKING_STORAGE_CONTRACT_ADDRESS =
+  deployments.contracts.StakingStorage.evmAddress.toLowerCase();
+const DELEGATORS_INFO_CONTRACT_ADDRESS =
+  deployments.contracts.DelegatorsInfo.evmAddress.toLowerCase();
+
+const stakingStorageInterface = new ethers.Interface(StakingStorageABI);
+// delegatorsInfoContract requires provider, will be created after provider is defined
 
 /* ------------------------------------------------------------------ */
 /* 0. Centralised path configuration                                  */
@@ -73,6 +82,8 @@ const INPUT_CSV = process.argv[2]
   ? path.resolve(process.cwd(), process.argv[2])
   : DEFAULT_CSV;
 const OUTPUT_CSV = path.join(DATA_FOLDER, 'decoded_transactions.csv');
+// NEW: path for removed-delegator CSV
+const DELETED_DELEGATORS_CSV = path.join(DATA_FOLDER, 'deleted_delegators.csv');
 
 console.log(`[DEBUG] Koristi se RPC URL: "${RPC_URL}"`);
 
@@ -81,6 +92,13 @@ console.log(`[DEBUG] Koristi se RPC URL: "${RPC_URL}"`);
 /* ------------------------------------------------------------------ */
 // Auto-detect the network from the RPC URL (e.g. Gnosis = 100, Base = 8453)
 const provider = new ethers.JsonRpcProvider(RPC_URL);
+
+// Instantiate DelegatorsInfo contract now that provider exists
+const delegatorsInfoContract = new ethers.Contract(
+  DELEGATORS_INFO_CONTRACT_ADDRESS,
+  DelegatorsInfoABI,
+  provider,
+);
 
 /* ------------------------------------------------------------------ */
 /* 2. Load every ABI from ./abi                                       */
@@ -188,6 +206,22 @@ const csvWriter = createObjectCsvWriter({
     'error',
   ].map((id) => ({ id, title: id })),
 });
+// NEW: writer for "deleted_delegators.csv" – same header structure
+const csvWriterDeleted = createObjectCsvWriter({
+  path: DELETED_DELEGATORS_CSV,
+  header: [
+    'block_number',
+    'block_timestamp',
+    'tx_index',
+    'msg_sender',
+    'transaction_hash',
+    'contract_name',
+    'function_name',
+    'function_inputs',
+    'processed',
+    'error',
+  ].map((id) => ({ id, title: id })),
+});
 
 /* ------------------------------------------------------------------ */
 /* 4. Type describing one input row from the CSV                      */
@@ -236,6 +270,8 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
 /* ------------------------------------------------------------------ */
 (async () => {
   const outputRows: Record<string, unknown>[] = [];
+  // NEW: collect rows where delegator check fails
+  const deletedRows: Record<string, unknown>[] = [];
 
   for await (const row of csvStream(INPUT_CSV)) {
     const txHash = (row.transaction_hash || row.txHash) as string | undefined;
@@ -256,6 +292,9 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
         provider.getTransactionReceipt(txHash),
       ]);
       if (!tx || !receipt) throw new Error('Transaction not found on chain');
+
+      // NEW: flag to track removed-delegator cases within this tx
+      let delegatorCheckFailed = false;
 
       // Determine the effective sender (may be overridden for specific txs)
       const effectiveSender =
@@ -372,6 +411,44 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
         );
       }
 
+      /* ----------- DelegatorBaseStakeUpdated verification ------------- */
+      for (const log of receipt.logs) {
+        if (log.address.toLowerCase() !== STAKING_STORAGE_CONTRACT_ADDRESS)
+          continue;
+
+        try {
+          const parsedLog = stakingStorageInterface.parseLog(log);
+          if (parsedLog.name === 'DelegatorBaseStakeUpdated') {
+            const identityId = parsedLog.args[0] as bigint;
+            const stakeBase = parsedLog.args[2] as bigint;
+
+            if (stakeBase > 0n) {
+              const isDelegator = await delegatorsInfoContract.isNodeDelegator(
+                identityId,
+                effectiveSender,
+              );
+              if (isDelegator) {
+                console.log(
+                  `✅ Delegator CHECK passed – identityId=${identityId.toString()} sender=${effectiveSender}`,
+                );
+              } else {
+                // NEW: mark as removed-delegator case and log with yellow exclamation
+                delegatorCheckFailed = true;
+                console.warn(
+                  `⚠️  Delegator CHECK WARNING – sender ${effectiveSender} is NOT delegator on node ${identityId.toString()} (stakeBase=${stakeBase.toString()})`,
+                );
+              }
+            } else {
+              console.log(
+                `ℹ️ StakeBase == 0 for identityId ${identityId.toString()} – skipping delegator check`,
+              );
+            }
+          }
+        } catch {
+          /* Not a DelegatorBaseStakeUpdated log – ignore */
+        }
+      }
+
       const rowForCsv = {
         block_number: receipt.blockNumber,
         block_timestamp: block.timestamp,
@@ -394,6 +471,10 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
 
       // Write to in-memory array for CSV output
       outputRows.push(rowForCsv);
+      // NEW: also persist to deletedRows if delegator was removed
+      if (delegatorCheckFailed) {
+        deletedRows.push(rowForCsv);
+      }
 
       // Persist immediately into SQLite (UPSERT semantics)
       insertStmt.run(
@@ -429,6 +510,14 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
 
   await csvWriter.writeRecords(outputRows);
   console.log(`✅  Saved ${outputRows.length} rows → ${OUTPUT_CSV}`);
+
+  // NEW: persist removed-delegator rows (if any)
+  if (deletedRows.length > 0) {
+    await csvWriterDeleted.writeRecords(deletedRows);
+    console.log(
+      `⚠️  Saved ${deletedRows.length} rows → ${DELETED_DELEGATORS_CSV}`,
+    );
+  }
 
   // Close DB handle to flush changes
   db.close();
