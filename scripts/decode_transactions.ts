@@ -490,6 +490,39 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
         }
       }
 
+      /* ----------- Admin or Operational verification for updateAsk ---- */
+      if (decodedMethod === 'updateAsk') {
+        try {
+          const identityIdParam = ((decodedParams as any)[0] ??
+            (decodedParams as any).identityId ??
+            null) as bigint | null;
+          if (identityIdParam !== null) {
+            const senderKey = getDelegatorKey(effectiveSender);
+            const isAdmin = await identityStorageContract.keyHasPurpose(
+              identityIdParam,
+              senderKey,
+              1, // ADMIN_KEY
+            );
+            const isOperational = await identityStorageContract.keyHasPurpose(
+              identityIdParam,
+              senderKey,
+              2, // OPERATIONAL_KEY
+            );
+            if (isAdmin || isOperational) {
+              console.log(
+                `✅ Ask CHECK passed – identityId=${identityIdParam.toString()} sender=${effectiveSender}`,
+              );
+            } else {
+              console.warn(
+                `⚠️  Ask CHECK WARNING – sender ${effectiveSender} is NOT admin/operational on node ${identityIdParam.toString()} while updating ask`,
+              );
+            }
+          }
+        } catch (e: any) {
+          console.error(`❌ Ask check error: ${e.message}`);
+        }
+      }
+
       const rowForCsv = {
         block_number: receipt.blockNumber,
         block_timestamp: block.timestamp,
