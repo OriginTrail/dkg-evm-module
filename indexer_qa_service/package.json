@@ -27,5 +27,8 @@
     "ethereum"
   ],
   "author": "QA Team",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "mocha": "^11.7.1"
+  }
 }

@@ -8,7 +8,7 @@ artifacts
 npm-debug.log
 /.idea/*
 /.vscode/*
-/node_modules/*
+node_modules/
 *typechain*/
 cache/*
 coverage/*
