@@ -49,6 +49,12 @@ export const HUB_OWNERS = {
     '0xBF92638301f5d4c98c0B06750181B99E20F87F17',
 } as const;
 
+export const NETWORK_HUBS = {
+  '0x99Aa571fD5e681c2D27ee08A7b7989DB02541d13': 'base_mainnet',
+  '0x0957e25BD33034948abc28204ddA54b6E1142D6F': 'neuroweb_mainnet',
+  '0x882D0BF07F956b1b94BBfe9E77F47c6fc7D4EC8f': 'gnosis_mainnet',
+} as const;
+
 /**
  * Simulation-specific constants
  */
