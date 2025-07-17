@@ -54,10 +54,10 @@ start_forked_node() {
     echo "   RPC: $rpc_url"
     echo "   Fork Block: $fork_block"
     echo "   Port: $port"
-    echo "   Note: Will deploy fresh contracts (including new Hub)"
+    echo "   Note: Will deploy fresh V8.1. contracts"
     echo ""
     
-    HARDHAT_FORK_URL=$rpc_url HARDHAT_FORK_BLOCK=$fork_block npx hardhat node --config hardhat.simulation.config.ts --port $port
+    npx hardhat node --fork $rpc_url --fork-block-number $fork_block --config hardhat.simulation.config.ts --port $port 
 }
 
 # Parse command line argument  
