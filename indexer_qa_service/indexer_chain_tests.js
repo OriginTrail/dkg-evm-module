@@ -604,14 +604,14 @@ class CompleteQAService {
               comparisonBlock = indexerLatest;
               
               console.log(`      ✅ Both have same latest event block: ${comparisonBlock}`);
-              console.log(`      📊 Latest event (block ${comparisonBlock}):`);
-              console.log(`         Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
-              console.log(`         Contract: ${this.weiToTRAC(actualStake)} TRAC`);
+              console.log(`         📊 Latest event (block ${comparisonBlock}):`);
+              console.log(`            Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
+              console.log(`            Contract: ${this.weiToTRAC(actualStake)} TRAC`);
             } else {
-              console.log(`      ❌ Latest event block mismatch`);
+              console.log(`         ❌ Latest event block mismatch`);
             }
           } else {
-            console.log(`   ⚠️ Node ${nodeId}: Cannot compare: Indexer has ${indexerEventCount} events, Contract has ${contractEventCount} events`);
+            console.log(`      ⚠️ Cannot compare: Indexer has ${indexerEventCount} events, Contract has ${contractEventCount} events`);
           }
           
           // Skip validation if comparison failed
@@ -1004,7 +1004,7 @@ class CompleteQAService {
               actualStake = contractEvents[0].stake;
               comparisonBlock = indexerBlock;
               console.log(`         ✅ Both have same block number: ${comparisonBlock}`);
-              console.log(`         📝 Both indexer and contract don't have events before the current one`);
+              console.log(`         📝 Both indexer and contract have the same single event`);
             } else {
               console.log(`         ❌ Block number mismatch`);
             }
@@ -1089,11 +1089,11 @@ class CompleteQAService {
             if (indexerEventCount === 1 && contractEventCount === 1) {
               console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}`);
               console.log(`      📊 Single event validation passed`);
-              console.log(`      📝 Both indexer and contract don't have events before the current one`);
+              console.log(`      📝 Both indexer and contract have the same single event`);
             } else {
               console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      Indexer old stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      🔍 Previous event block: ${comparisonBlock} (current block: ${comparisonBlock})`);
+              console.log(`      Indexer stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract stake: ${this.weiToTRAC(actualStake)} TRAC`);
+              console.log(`      🔍 Latest event block: ${comparisonBlock}`);
               console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             }
             passed++;
@@ -1102,11 +1102,11 @@ class CompleteQAService {
             if (indexerEventCount === 1 && contractEventCount === 1) {
               console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}`);
               console.log(`      📊 Single event validation passed with small tolerance`);
-              console.log(`      📝 Both indexer and contract don't have events before the current one`);
+              console.log(`      📝 Both indexer and contract have the same single event`);
             } else {
               console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      Indexer old stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      🔍 Previous event block: ${comparisonBlock} (current block: ${comparisonBlock})`);
+              console.log(`      Indexer stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract stake: ${this.weiToTRAC(actualStake)} TRAC`);
+              console.log(`      🔍 Latest event block: ${comparisonBlock}`);
               console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             }
             if (Math.abs(Number(difference)) < 1000000000000000000) {
@@ -1121,11 +1121,11 @@ class CompleteQAService {
             if (indexerEventCount === 1 && contractEventCount === 1) {
               console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}`);
               console.log(`      📊 Single event validation failed`);
-              console.log(`      📝 Both indexer and contract don't have events before the current one`);
+              console.log(`      📝 Both indexer and contract have the same single event`);
             } else {
               console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      Indexer old stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      🔍 Previous event block: ${comparisonBlock} (current block: ${comparisonBlock})`);
+              console.log(`      Indexer stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract stake: ${this.weiToTRAC(actualStake)} TRAC`);
+              console.log(`      🔍 Latest event block: ${comparisonBlock}`);
               console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             }
             console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
@@ -1238,25 +1238,40 @@ class CompleteQAService {
         try {
           // Get all delegators for this node with their latest stake from indexer
           const delegatorsResult = await client.query(`
-            SELECT DISTINCT ON (d.identity_id, d.delegator_key) 
-              d.identity_id, d.delegator_key, d.stake_base
+            SELECT d.identity_id, d.delegator_key, d.stake_base, d.block_number
             FROM delegator_base_stake_updated d
-            INNER JOIN (
-              SELECT identity_id, delegator_key, MAX(block_number) as max_block
-              FROM delegator_base_stake_updated
-              GROUP BY identity_id, delegator_key
-            ) latest ON d.identity_id = latest.identity_id 
-            AND d.delegator_key = latest.delegator_key
-            AND d.block_number = latest.max_block
             WHERE d.identity_id = $1
             AND d.stake_base > 0
-            ORDER BY d.identity_id, d.delegator_key
+            ORDER BY d.identity_id, d.delegator_key, d.block_number DESC
           `, [nodeId]);
           
-          // Calculate sum of delegator stakes from indexer
+          // Group delegator events by block number and sort by stake (highest first)
+          const delegatorEventsByBlock = {};
+          for (const event of delegatorsResult.rows) {
+            const blockNum = event.block_number;
+            if (!delegatorEventsByBlock[blockNum]) {
+              delegatorEventsByBlock[blockNum] = [];
+            }
+            delegatorEventsByBlock[blockNum].push({
+              blockNumber: blockNum,
+              stake: BigInt(event.stake_base)
+            });
+          }
+          
+          // Sort each block's events by stake (highest first) and keep only the highest
+          const processedDelegatorEvents = [];
+          for (const [blockNum, events] of Object.entries(delegatorEventsByBlock)) {
+            events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+            processedDelegatorEvents.push(events[0]); // Keep only the highest stake
+          }
+          
+          // Sort processed events by block number (newest first)
+          processedDelegatorEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+          
+          // Calculate sum of delegator stakes from indexer (using processed events)
           let indexerDelegatorStakeSum = 0n;
-          for (const delegatorRow of delegatorsResult.rows) {
-            indexerDelegatorStakeSum += BigInt(delegatorRow.stake_base);
+          for (const event of processedDelegatorEvents) {
+            indexerDelegatorStakeSum += event.stake;
           }
           
           // Get contract's total node stake (current state)
@@ -1711,7 +1726,7 @@ class CompleteQAService {
               actualStake = contractEvents[0].stake;
               comparisonBlock = indexerBlock;
               console.log(`         ✅ Both have same block number: ${comparisonBlock}`);
-              console.log(`         📝 Both indexer and contract don't have events before the current one`);
+              console.log(`         📝 Both indexer and contract have the same single event`);
             } else {
               console.log(`         ❌ Block number mismatch`);
             }
@@ -1796,11 +1811,11 @@ class CompleteQAService {
             if (indexerEventCount === 1 && contractEventCount === 1) {
               console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}`);
               console.log(`      📊 Single event validation passed`);
-              console.log(`      📝 Both indexer and contract don't have events before the current one`);
+              console.log(`      📝 Both indexer and contract have the same single event`);
             } else {
               console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      Indexer old stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      🔍 Previous event block: ${comparisonBlock} (current block: ${comparisonBlock})`);
+              console.log(`      Indexer stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract stake: ${this.weiToTRAC(actualStake)} TRAC`);
+              console.log(`      🔍 Latest event block: ${comparisonBlock}`);
               console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             }
             passed++;
@@ -1809,11 +1824,11 @@ class CompleteQAService {
             if (indexerEventCount === 1 && contractEventCount === 1) {
               console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}`);
               console.log(`      📊 Single event validation passed with small tolerance`);
-              console.log(`      📝 Both indexer and contract don't have events before the current one`);
+              console.log(`      📝 Both indexer and contract have the same single event`);
             } else {
               console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      Indexer old stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      🔍 Previous event block: ${comparisonBlock} (current block: ${comparisonBlock})`);
+              console.log(`      Indexer stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract stake: ${this.weiToTRAC(actualStake)} TRAC`);
+              console.log(`      🔍 Latest event block: ${comparisonBlock}`);
               console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             }
             if (Math.abs(Number(difference)) < 1000000000000000000) {
@@ -1828,11 +1843,11 @@ class CompleteQAService {
             if (indexerEventCount === 1 && contractEventCount === 1) {
               console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}`);
               console.log(`      📊 Single event validation failed`);
-              console.log(`      📝 Both indexer and contract don't have events before the current one`);
+              console.log(`      📝 Both indexer and contract have the same single event`);
             } else {
               console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      Indexer old stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      🔍 Previous event block: ${comparisonBlock} (current block: ${comparisonBlock})`);
+              console.log(`      Indexer stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract stake: ${this.weiToTRAC(actualStake)} TRAC`);
+              console.log(`      🔍 Latest event block: ${comparisonBlock}`);
               console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             }
             console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
