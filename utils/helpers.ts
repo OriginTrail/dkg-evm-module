@@ -11,6 +11,7 @@ import { KeypairType } from '@polkadot/util-crypto/types';
 import { AddressLike, Contract } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
+import { NETWORK_HUBS } from '../constants/simulation-constants';
 import { HubLib } from '../typechain/contracts/storage/Hub';
 
 type AbiEntry = {
@@ -102,6 +103,20 @@ export class Helpers {
   newHashFunctions: Array<string>;
   newScoreFunctions: Array<string>;
 
+  private async detectHubChain(): Promise<string | null> {
+    for (const [address, chain] of Object.entries(NETWORK_HUBS)) {
+      try {
+        const testHub = await this.hre.ethers.getContractAt('Hub', address);
+        const hubName = await testHub.name();
+        if (hubName === 'Hub') {
+          console.log(`[HELPERS] Found active Hub at ${address} for ${chain}`);
+          return chain;
+        }
+      } catch {} // eslint-disable-line no-empty
+    }
+    return null;
+  }
+
   constructor(hre: HardhatRuntimeEnvironment) {
     this.hre = hre;
     const endpoint = process.env[`RPC_${this.hre.network.name.toUpperCase()}`];
@@ -109,7 +124,10 @@ export class Helpers {
 
     this.repositoryPath = this._getGitRepositoryPath();
 
-    const deploymentsConfig = `./deployments/${this.hre.network.name}_contracts.json`;
+    // Use consistent filename for simulation networks
+    const detectedChain = this.detectHubChain();
+    const networkName = `${detectedChain}_simulation`;
+    const deploymentsConfig = `./deployments/${networkName}_contracts.json`;
 
     if (fs.existsSync(deploymentsConfig)) {
       this.contractDeployments = JSON.parse(
@@ -193,7 +211,7 @@ export class Helpers {
       });
     } catch (error) {
       if (this.hre.network.config.environment !== 'development') {
-        this.saveDeploymentsJson('deployments');
+        await this.saveDeploymentsJson('deployments');
       }
       let message;
       if (error instanceof Error) message = error.message;
@@ -250,7 +268,7 @@ export class Helpers {
     );
 
     if (this.hre.network.config.environment !== 'development') {
-      this.saveDeploymentsJson('deployments');
+      await this.saveDeploymentsJson('deployments');
     }
 
     return this.hre.ethers.getContractAt(
@@ -430,7 +448,7 @@ export class Helpers {
     };
   }
 
-  public saveDeploymentsJson(folder: string) {
+  public async saveDeploymentsJson(folder: string) {
     console.log(
       `New or redeployed contracts: ${JSON.stringify(this.newContracts)}`,
     );
@@ -450,8 +468,12 @@ export class Helpers {
       `Encoded data for parameters settings: ${JSON.stringify(this.setParametersEncodedData)}`,
     );
 
+    // Use consistent filename for simulation networks
+    const detectedChain = await this.detectHubChain();
+    const networkName = `${detectedChain}_simulation`;
+
     fs.writeFileSync(
-      `${folder}/${this.hre.network.name}_contracts.json`,
+      `${folder}/${networkName}_contracts.json`,
       JSON.stringify(this.contractDeployments, null, 4),
     );
   }

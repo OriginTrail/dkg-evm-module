@@ -8,7 +8,7 @@ async function main() {
       hre.helpers.convertEvmWallet(evmAddress);
   }
 
-  hre.helpers.saveDeploymentsJson('deployments');
+  await hre.helpers.saveDeploymentsJson('deployments');
 }
 
 main()
