@@ -530,11 +530,11 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         require(delegatorsInfo.isNodeDelegator(identityId, delegator), "Delegator not found");
 
         uint256 lastClaimed = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
-        if (lastClaimed == 0) {
-            uint256 v81ReleaseEpoch = parametersStorage.v81ReleaseEpoch();
-            delegatorsInfo.setLastClaimedEpoch(identityId, delegator, v81ReleaseEpoch - 1);
-            lastClaimed = v81ReleaseEpoch - 1;
-        }
+        // if (lastClaimed == 0) {
+        //     uint256 v81ReleaseEpoch = parametersStorage.v81ReleaseEpoch();
+        //     delegatorsInfo.setLastClaimedEpoch(identityId, delegator, v81ReleaseEpoch - 1);
+        //     lastClaimed = v81ReleaseEpoch - 1;
+        // }
 
         if (lastClaimed == currentEpoch - 1) {
             revert("Already claimed all finalised epochs");
@@ -570,8 +570,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
                     uint256 grossNodeRewards = (epochStorage.getEpochPool(EPOCH_POOL_INDEX, epoch) * nodeScore18) /
                         allNodesScore18;
                     uint96 operatorFeeAmount = uint96(
-                        (grossNodeRewards * profileStorage.getLatestOperatorFeePercentage(identityId)) /
-                            parametersStorage.maxOperatorFee()
+                        (grossNodeRewards * profileStorage.getLatestOperatorFeePercentage(identityId)) / 10_000
                     );
                     netNodeRewards = grossNodeRewards - operatorFeeAmount;
                     // Mark the operator fee as claimed for this epoch

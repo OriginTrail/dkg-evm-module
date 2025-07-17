@@ -105,7 +105,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         if (ps.nodeIdsList(nodeId)) {
             revert ProfileLib.NodeIdAlreadyExists(nodeId);
         }
-        if (initialOperatorFee > parametersStorage.maxOperatorFee()) {
+        if (initialOperatorFee > 10_000) {
             revert ProfileLib.OperatorFeeOutOfRange(initialOperatorFee);
         }
         uint72 identityId = id.createIdentity(msg.sender, adminWallet);
@@ -133,7 +133,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     function updateOperatorFee(uint72 identityId, uint16 newOperatorFee) external onlyAdmin(identityId) {
         uint256 currentEpoch = chronos.getCurrentEpoch();
 
-        if (currentEpoch > 1 && currentEpoch > parametersStorage.v81ReleaseEpoch()) {
+        if (currentEpoch > 1) {
             // All operator fees for previous epochs must be calculated and claimed before updating the operator fee
             if (!delegatorsInfo.isOperatorFeeClaimedForEpoch(identityId, currentEpoch - 1)) {
                 revert(
@@ -142,7 +142,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
             }
         }
 
-        if (newOperatorFee > parametersStorage.maxOperatorFee()) {
+        if (newOperatorFee > 10_000) {
             revert ProfileLib.InvalidOperatorFee();
         }
 

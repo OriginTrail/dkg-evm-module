@@ -27,11 +27,12 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
     uint256 public askUpperBoundFactor;
     uint256 public askLowerBoundFactor;
 
-    uint16 public maxOperatorFee;
+    // uint16 public maxOperatorFee;
 
-    uint256 public v81ReleaseEpoch;
+    // uint256 public v81ReleaseEpoch;
 
-    constructor(address hubAddress, uint256 _v81ReleaseEpoch) HubDependent(hubAddress) {
+    // constructor(address hubAddress, uint256 _v81ReleaseEpoch) HubDependent(hubAddress) {
+    constructor(address hubAddress) HubDependent(hubAddress) {
         minimumStake = 50_000 ether;
         maximumStake = 2_000_000 ether;
 
@@ -47,11 +48,11 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         askUpperBoundFactor = 1467000000000000000;
         askLowerBoundFactor = 533000000000000000;
 
-        maxOperatorFee = 10_000;
+        // maxOperatorFee = 10_000;
 
-        // Epoch when v8.1 was released on mainnet/testnet
-        // Change if you ever redeploy delegatorsInfo contract on either network
-        v81ReleaseEpoch = _v81ReleaseEpoch;
+        // // Epoch when v8.1 was released on mainnet/testnet
+        // // Change if you ever redeploy delegatorsInfo contract on either network
+        // v81ReleaseEpoch = _v81ReleaseEpoch;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -118,15 +119,14 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         emit ParameterChanged("shardingTableSizeLimit", shardingTableSizeLimit);
     }
 
-    function setMaxOperatorFee(uint16 maxOperatorFee_) external onlyHub {
-        maxOperatorFee = maxOperatorFee_;
+    // function setMaxOperatorFee(uint16 maxOperatorFee_) external onlyHub {
+    //     maxOperatorFee = maxOperatorFee_;
 
-        emit ParameterChanged("maxOperatorFee", maxOperatorFee);
-    }
+    //     emit ParameterChanged("maxOperatorFee", maxOperatorFee);
 
-    function setV81ReleaseEpoch(uint256 _v81ReleaseEpoch) external onlyHub {
-        v81ReleaseEpoch = _v81ReleaseEpoch;
+    // function setV81ReleaseEpoch(uint256 _v81ReleaseEpoch) external onlyHub {
+    //     v81ReleaseEpoch = _v81ReleaseEpoch;
 
-        emit ParameterChanged("v81ReleaseEpoch", _v81ReleaseEpoch);
-    }
+    //     emit ParameterChanged("v81ReleaseEpoch", _v81ReleaseEpoch);
+    // }
 }

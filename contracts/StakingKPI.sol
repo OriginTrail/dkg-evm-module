@@ -179,9 +179,7 @@ contract StakingKPI is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 totalNodeRewards = (epocRewardsPool * nodeScore18) / allNodesScore18;
 
         uint256 feePercentageForEpoch = profileStorage.getLatestOperatorFeePercentage(identityId);
-        uint96 operatorFeeAmount = uint96(
-            (totalNodeRewards * feePercentageForEpoch) / parametersStorage.maxOperatorFee()
-        );
+        uint96 operatorFeeAmount = uint96((totalNodeRewards * feePercentageForEpoch) / 10_000);
 
         return totalNodeRewards - operatorFeeAmount;
     }
