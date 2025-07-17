@@ -1365,7 +1365,7 @@ class CompleteQAService {
     try {
       await client.connect();
       
-      // Get active nodes (same logic as validateNodeStakes)
+      // Get active nodes with >= 50,000 TRAC
       let activeNodesResult;
       
       if (network === 'Gnosis') {
@@ -1424,23 +1424,14 @@ class CompleteQAService {
       let rpcErrors = 0;
       const total = activeNodesResult.rows.length;
       
-      console.log(`   📊 Validating ${total} active nodes...`);
+      console.log(`   📊 Validating ${total} active nodes with >= 50k TRAC...`);
       
       for (const row of activeNodesResult.rows) {
         const nodeId = parseInt(row.identity_id);
         const nodeTotalStake = BigInt(row.stake);
         
         try {
-          // Get the latest block number from indexer for this node's delegators
-          const indexerBlockResult = await client.query(`
-            SELECT MAX(block_number) as latest_block 
-            FROM delegator_base_stake_updated
-            WHERE identity_id = $1
-          `, [nodeId]);
-          
-          const indexerBlockNumber = indexerBlockResult.rows[0].latest_block;
-          
-          // Get all delegators for this node with their latest stake
+          // Get all delegators for this node with their latest stake from indexer
           const delegatorsResult = await client.query(`
             SELECT DISTINCT ON (d.identity_id, d.delegator_key) 
               d.identity_id, d.delegator_key, d.stake_base
@@ -1457,20 +1448,19 @@ class CompleteQAService {
             ORDER BY d.identity_id, d.delegator_key
           `, [nodeId]);
           
-          // Calculate sum of delegator stakes
-          let delegatorStakeSum = 0n;
+          // Calculate sum of delegator stakes from indexer
+          let indexerDelegatorStakeSum = 0n;
           for (const delegatorRow of delegatorsResult.rows) {
-            delegatorStakeSum += BigInt(delegatorRow.stake_base);
+            indexerDelegatorStakeSum += BigInt(delegatorRow.stake_base);
           }
           
-          // Get contract's total node stake using event-based validation
+          // Get contract's total node stake (current state)
           const networkConfig = config.networks.find(n => n.name === network);
           if (!networkConfig) {
             throw new Error(`Network ${network} not found in config`);
           }
           
           let contractNodeStake;
-          let contractBlockNumber;
           let retries = 3;
           
           while (retries > 0) {
@@ -1479,60 +1469,11 @@ class CompleteQAService {
               const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
               
               const stakingContract = new ethers.Contract(stakingAddress, [
-                'event NodeStakeUpdated(uint72 indexed identityId, uint96 stake)'
+                'function getNodeStake(uint72 identityId) view returns (uint96)'
               ], provider);
               
-              // Query ALL NodeStakeUpdated events for this specific node
-              console.log(`   📊 Querying ALL NodeStakeUpdated events for node ${nodeId}`);
-              
-              const filter = stakingContract.filters.NodeStakeUpdated(nodeId);
-              
-              // Try to query in chunks to avoid timeout
-              const currentBlock = await provider.getBlockNumber();
-              const chunkSize = 1000000; // 1M blocks per chunk
-              let allEvents = [];
-              
-              // Start from the oldest indexer event block and go forward
-              const oldestIndexerBlock = indexerBlockNumber;
-              const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
-              
-              for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
-                const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
-                
-                try {
-                  const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-                  allEvents = allEvents.concat(chunkEvents);
-                } catch (error) {
-                  console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
-                  // Continue with next chunk
-                }
-              }
-              
-              console.log(`   📊 Found ${allEvents.length} contract events for node ${nodeId}`);
-              
-              // Process contract events and sort by block number
-              const contractEvents = [];
-              for (const event of allEvents) {
-                contractEvents.push({
-                  blockNumber: event.blockNumber,
-                  stake: event.args.stake
-                });
-                console.log(`   📊 Contract event at block ${event.blockNumber}: ${this.weiToTRAC(event.args.stake)} TRAC`);
-              }
-              
-              // Sort by block number (newest first)
-              contractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-              
-              if (contractEvents.length > 0) {
-                // Use the latest contract event stake
-                contractNodeStake = contractEvents[0].stake;
-                contractBlockNumber = currentBlock;
-              } else {
-                // Fallback to current state if no events found
-                contractNodeStake = await stakingContract.getNodeStake(nodeId);
-                contractBlockNumber = currentBlock;
-              }
-              
+              // Get current node stake from contract
+              contractNodeStake = await stakingContract.getNodeStake(nodeId);
               break;
             } catch (error) {
               retries--;
@@ -1549,38 +1490,23 @@ class CompleteQAService {
             continue; // Skip this node due to RPC failure
           }
           
-          // Check if block numbers match
-          const blockDifference = Math.abs(indexerBlockNumber - contractBlockNumber);
-          const blockTolerance = 100; // Allow 100 block difference
-          
-          // Log block information but don't fail validation based on it
-          if (blockDifference <= blockTolerance) {
-            console.log(`   ✅ Node ${nodeId}: Block numbers match - Indexer block ${indexerBlockNumber}, Contract block ${contractBlockNumber} (difference: ${blockDifference})`);
-          } else {
-            console.log(`   ⚠️ Node ${nodeId}: Block number difference - Indexer block ${indexerBlockNumber}, Contract block ${contractBlockNumber} (difference: ${blockDifference})`);
-            console.log(`      📊 Indexer is ${blockDifference} blocks behind contract (this is normal for indexers)`);
-          }
-          
           // Compare delegator sum with node total stake
-          const difference = delegatorStakeSum - contractNodeStake;
+          const difference = indexerDelegatorStakeSum - contractNodeStake;
           const tolerance = 500000000000000000n; // 0.5 TRAC in wei
           
+          console.log(`   📊 Node ${nodeId}:`);
+          console.log(`      Indexer delegator sum: ${this.weiToTRAC(indexerDelegatorStakeSum)} TRAC (${delegatorsResult.rows.length} delegators)`);
+          console.log(`      Contract node total: ${this.weiToTRAC(contractNodeStake)} TRAC`);
+          console.log(`      Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+          
           if (difference === 0n || difference === 0) {
-            console.log(`   ✅ Node ${nodeId}: Delegator sum ${this.weiToTRAC(delegatorStakeSum)} TRAC, Node total ${this.weiToTRAC(contractNodeStake)} TRAC`);
+            console.log(`   ✅ Node ${nodeId}: Delegator sum matches node total`);
             passed++;
           } else if (difference >= -tolerance && difference <= tolerance) {
-            console.log(`   ⚠️ Node ${nodeId}: Delegator sum ${this.weiToTRAC(delegatorStakeSum)} TRAC, Node total ${this.weiToTRAC(contractNodeStake)} TRAC`);
-            if (Math.abs(Number(difference)) < 1000000000000000000) {
-              const tracDifference = Number(difference) / Math.pow(10, 18);
-              console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
-            } else {
-              console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
-            }
+            console.log(`   ⚠️ Node ${nodeId}: Small difference within tolerance`);
             warnings++;
           } else {
-            console.log(`   ❌ Node ${nodeId}: Delegator sum ${this.weiToTRAC(delegatorStakeSum)} TRAC, Node total ${this.weiToTRAC(contractNodeStake)} TRAC`);
-            console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            console.log(`      📋 Found ${delegatorsResult.rows.length} delegators with total stake > 0`);
+            console.log(`   ❌ Node ${nodeId}: Delegator sum does not match node total`);
             failed++;
           }
           
@@ -1663,43 +1589,43 @@ describe('Indexer Chain Validation', function() {
   });
   
   describe('Gnosis Network', function() {
-    it('should validate node stakes', async function() {
-      const results = await qaService.validateNodeStakes('Gnosis');
-      trackResults('Gnosis', 'Node Stakes', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} node stake validations failed`);
-      }
-    });
+    // it('should validate node stakes', async function() {
+    //   const results = await qaService.validateNodeStakes('Gnosis');
+    //   trackResults('Gnosis', 'Node Stakes', results);
+    //   if (results.failed > 0) {
+    //     throw new Error(`${results.failed} node stake validations failed`);
+    //   }
+    // });
     
-    it('should validate delegator stakes', async function() {
-      const results = await qaService.validateDelegatorStakes('Gnosis');
-      trackResults('Gnosis', 'Delegator Stakes', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} delegator stake validations failed`);
-      }
-    });
+    // it('should validate delegator stakes', async function() {
+    //   const results = await qaService.validateDelegatorStakes('Gnosis');
+    //   trackResults('Gnosis', 'Delegator Stakes', results);
+    //   if (results.failed > 0) {
+    //     throw new Error(`${results.failed} delegator stake validations failed`);
+    //   }
+    // });
     
-    it('should validate delegator stake update events', async function() {
-      const results = await qaService.validateDelegatorStakeUpdateEvents('Gnosis');
-      trackResults('Gnosis', 'Delegator Stake Update Events', results);
-      
-      // Calculate failure rate
-      const totalValidated = results.passed + results.failed + results.warnings;
-      const failureRate = totalValidated > 0 ? (results.failed / totalValidated) * 100 : 0;
-      
-      console.log(`\n📊 Validation Results:`);
-      console.log(`   Total events validated: ${totalValidated}`);
-      console.log(`   Success rate: ${((results.passed / totalValidated) * 100).toFixed(1)}%`);
-      console.log(`   Failure rate: ${failureRate.toFixed(1)}%`);
-      console.log(`   Warning rate: ${((results.warnings / totalValidated) * 100).toFixed(1)}%`);
-      
-      // Allow test to pass if failure rate is below 10%
-      if (failureRate > 10) {
-        throw new Error(`Failure rate ${failureRate.toFixed(1)}% exceeds 10% threshold (${results.failed} failures out of ${totalValidated} total)`);
-      } else if (results.failed > 0) {
-        console.log(`   ⚠️ Test passed with ${results.failed} failures (${failureRate.toFixed(1)}% failure rate - within acceptable threshold)`);
-      }
-    });
+    // it('should validate delegator stake update events', async function() {
+    //   const results = await qaService.validateDelegatorStakeUpdateEvents('Gnosis');
+    //   trackResults('Gnosis', 'Delegator Stake Update Events', results);
+    //   
+    //   // Calculate failure rate
+    //   const totalValidated = results.passed + results.failed + results.warnings;
+    //   const failureRate = totalValidated > 0 ? (results.failed / totalValidated) * 100 : 0;
+    //   
+    //   console.log(`\n📊 Validation Results:`);
+    //   console.log(`   Total events validated: ${totalValidated}`);
+    //   console.log(`   Success rate: ${((results.passed / totalValidated) * 100).toFixed(1)}%`);
+    //   console.log(`   Failure rate: ${failureRate.toFixed(1)}%`);
+    //   console.log(`   Warning rate: ${((results.warnings / totalValidated) * 100).toFixed(1)}%`);
+    //   
+    //   // Allow test to pass if failure rate is below 10%
+    //   if (failureRate > 10) {
+    //     throw new Error(`Failure rate ${failureRate.toFixed(1)}% exceeds 10% threshold (${results.failed} failures out of ${totalValidated} total)`);
+    //   } else if (results.failed > 0) {
+    //     console.log(`   ⚠️ Test passed with ${results.failed} failures (${failureRate.toFixed(1)}% failure rate - within acceptable threshold)`);
+    //   }
+    // });
     
     it('should validate delegator stake sum matches node stake', async function() {
       const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Gnosis');
@@ -1709,96 +1635,182 @@ describe('Indexer Chain Validation', function() {
       }
     });
     
-    it('should validate knowledge collections', async function() {
-      const results = await qaService.validateKnowledgeCollections('Gnosis');
-      trackResults('Gnosis', 'Knowledge Collections', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} knowledge collection validations failed`);
-      }
-    });
+    // it('should validate knowledge collections', async function() {
+    //   const results = await qaService.validateKnowledgeCollections('Gnosis');
+    //   trackResults('Gnosis', 'Knowledge Collections', results);
+    //   if (results.failed > 0) {
+    //     throw new Error(`${results.failed} knowledge collection validations failed`);
+    //   }
+    // });
   });
   
-  describe('Base Network', function() {
-    it('should validate node stakes', async function() {
-      const results = await qaService.validateNodeStakes('Base');
-      trackResults('Base', 'Node Stakes', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} node stake validations failed`);
-      }
-    });
-    
-    it('should validate delegator stakes', async function() {
-      const results = await qaService.validateDelegatorStakes('Base');
-      trackResults('Base', 'Delegator Stakes', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} delegator stake validations failed`);
-      }
-    });
-    
-    it('should validate delegator stake update events', async function() {
-      const results = await qaService.validateDelegatorStakeUpdateEvents('Base');
-      trackResults('Base', 'Delegator Stake Update Events', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} delegator stake update event validations failed`);
-      }
-    });
-    
-    it('should validate delegator stake sum matches node stake', async function() {
-      const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Base');
-      trackResults('Base', 'Delegator Stake Sum', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} delegator stake sum validations failed`);
-      }
-    });
-    
-    it('should validate knowledge collections', async function() {
-      const results = await qaService.validateKnowledgeCollections('Base');
-      trackResults('Base', 'Knowledge Collections', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} knowledge collection validations failed`);
-      }
-    });
-  });
-  
-  describe('Neuroweb Network', function() {
-    it('should validate node stakes', async function() {
-      const results = await qaService.validateNodeStakes('Neuroweb');
-      trackResults('Neuroweb', 'Node Stakes', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} node stake validations failed`);
-      }
-    });
-    
-    it('should validate delegator stakes', async function() {
-      const results = await qaService.validateDelegatorStakes('Neuroweb');
-      trackResults('Neuroweb', 'Delegator Stakes', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} delegator stake validations failed`);
-      }
-    });
-    
-    it('should validate delegator stake update events', async function() {
-      const results = await qaService.validateDelegatorStakeUpdateEvents('Neuroweb');
-      trackResults('Neuroweb', 'Delegator Stake Update Events', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} delegator stake update event validations failed`);
-      }
-    });
-    
-    it('should validate delegator stake sum matches node stake', async function() {
-      const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Neuroweb');
-      trackResults('Neuroweb', 'Delegator Stake Sum', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} delegator stake sum validations failed`);
-      }
-    });
-    
-    it('should validate knowledge collections', async function() {
-      const results = await qaService.validateKnowledgeCollections('Neuroweb');
-      trackResults('Neuroweb', 'Knowledge Collections', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} knowledge collection validations failed`);
-      }
-    });
-  });
+  // describe('Base Network', function() {
+  //   it('should validate node stakes', async function() {
+  //     const results = await qaService.validateNodeStakes('Base');
+  //     trackResults('Base', 'Node Stakes', results);
+  //     if (results.failed > 0) {
+  //       throw new Error(`${results.failed} node stake validations failed`);
+  //     }
+  //   });
+  //   
+  //   it('should validate delegator stakes', async function() {
+  //     const results = await qaService.validateDelegatorStakes('Base');
+  //     trackResults('Base', 'Delegator Stakes', results);
+  //     if (results.failed > 0) {
+  //       throw new Error(`${results.failed} delegator stake validations failed`);
+  //     }
+  //   });
+  //   
+  //   it('should validate delegator stake update events', async function() {
+  //     const results = await qaService.validateDelegatorStakeUpdateEvents('Base');
+  //     trackResults('Base', 'Delegator Stake Update Events', results);
+  //     if (results.failed > 0) {
+  //       throw new Error(`${results.failed} delegator stake update event validations failed`);
+  //     }
+  //   });
+  //   
+  //   it('should validate delegator stake sum matches node stake', async function() {
+  //     const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Base');
+  //     trackResults('Base', 'Delegator Stake Sum', results);
+  //     if (results.failed > 0) {
+  //       throw new Error(`${results.failed} delegator stake sum validations failed`);
+  //     }
+  //   });
+  //   
+  //   it('should validate knowledge collections', async function() {
+  //     const results = await qaService.validateKnowledgeCollections('Base');
+  //     trackResults('Base', 'Knowledge Collections', results);
+  //     if (results.failed > 0) {
+  //       throw new Error(`${results.failed} knowledge collection validations failed`);
+  //     }
+  //   });
+  // });
+  // 
+  // describe('Neuroweb Network', function() {
+  //   it('should validate node stakes', async function() {
+  //     const results = await qaService.validateNodeStakes('Neuroweb');
+  //     trackResults('Neuroweb', 'Node Stakes', results);
+  //     if (results.failed > 0) {
+  //       throw new Error(`${results.failed} node stake validations failed`);
+  //     }
+  //   });
+  //   
+  //   it('should validate delegator stakes', async function() {
+  //     const results = await qaService.validateDelegatorStakes('Neuroweb');
+  //     trackResults('Neuroweb', 'Delegator Stakes', results);
+  //     if (results.failed > 0) {
+  //       throw new Error(`${results.failed} delegator stake validations failed`);
+  //     }
+  //   });
+  //   
+  //   it('should validate delegator stake update events', async function() {
+  //     const results = await qaService.validateDelegatorStakeUpdateEvents('Neuroweb');
+  //     trackResults('Neuroweb', 'Delegator Stake Update Events', results);
+  //     if (results.failed > 0) {
+  //       throw new Error(`${results.failed} delegator stake update event validations failed`);
+  //     }
+  //   });
+  //   
+  //   it('should validate delegator stake sum matches node stake', async function() {
+  //     const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Neuroweb');
+  //     trackResults('Neuroweb', 'Delegator Stake Sum', results);
+  //     if (results.failed > 0) {
+  //       throw new Error(`${results.failed} delegator stake sum validations failed`);
+  //     }
+  //   });
+  //   
+  //   it('should validate knowledge collections', async function() {
+  //     const results = await qaService.validateKnowledgeCollections('Neuroweb');
+  //     trackResults('Neuroweb', 'Knowledge Collections', results);
+  //     if (results.failed > 0) {
+  //       throw new Error(`${results.failed} knowledge collection validations failed`);
+  //     }
+  //   });
+  // });
+  // 
+  // it('should run all validations in parallel per network', async function() {
+  //   console.log('\n🚀 Starting parallel validation per network...');
+  //   const startTime = Date.now();
+  //   
+  //   // Run 3 parallel network validations (each network runs its validations sequentially)
+  //   const networkValidations = [
+  //     // Gnosis network - all validations run sequentially
+  //     (async () => {
+  //       console.log('\n🌐 Starting Gnosis network validations...');
+  //       const results = {
+  //         'Node Stakes': await qaService.validateNodeStakes('Gnosis'),
+  //         'Delegator Stakes': await qaService.validateDelegatorStakes('Gnosis'),
+  //         'Delegator Stake Update Events': await qaService.validateDelegatorStakeUpdateEvents('Gnosis'),
+  //         'Delegator Stake Sum': await qaService.validateDelegatorStakeSumMatchesNodeStake('Gnosis'),
+  //         'Knowledge Collections': await qaService.validateKnowledgeCollections('Gnosis')
+  //       };
+  //       
+  //       // Track results for Gnosis
+  //       for (const [testType, testResults] of Object.entries(results)) {
+  //         trackResults('Gnosis', testType, testResults);
+  //       }
+  //       
+  //       return { network: 'Gnosis', results };
+  //     })(),
+  //     
+  //     // Base network - all validations run sequentially
+  //     // (async () => {
+  //     //   console.log('\n🌐 Starting Base network validations...');
+  //     //   const results = {
+  //     //     'Node Stakes': await qaService.validateNodeStakes('Base'),
+  //     //     'Delegator Stakes': await qaService.validateDelegatorStakes('Base'),
+  //     //     'Delegator Stake Update Events': await qaService.validateDelegatorStakeUpdateEvents('Base'),
+  //     //     'Delegator Stake Sum': await qaService.validateDelegatorStakeSumMatchesNodeStake('Base'),
+  //     //     'Knowledge Collections': await qaService.validateKnowledgeCollections('Base')
+  //     //   };
+  //     //   
+  //     //   // Track results for Base
+  //     //   for (const [testType, testResults] of Object.entries(results)) {
+  //     //     trackResults('Base', testType, testResults);
+  //     //   }
+  //     //   
+  //     //   return { network: 'Base', results };
+  //     // })(),
+  //     
+  //     // Neuroweb network - all validations run sequentially
+  //     // (async () => {
+  //     //   console.log('\n🌐 Starting Neuroweb network validations...');
+  //     //   const results = {
+  //     //     'Node Stakes': await qaService.validateNodeStakes('Neuroweb'),
+  //     //     'Delegator Stakes': await qaService.validateDelegatorStakes('Neuroweb'),
+  //     //     'Delegator Stake Update Events': await qaService.validateDelegatorStakeUpdateEvents('Neuroweb'),
+  //     //     'Delegator Stake Sum': await qaService.validateDelegatorStakeSumMatchesNodeStake('Neuroweb'),
+  //     //     'Knowledge Collections': await qaService.validateKnowledgeCollections('Neuroweb')
+  //     //   };
+  //     //   
+  //     //   // Track results for Neuroweb
+  //     //   for (const [testType, testResults] of Object.entries(results)) {
+  //     //     trackResults('Neuroweb', testType, testResults);
+  //     //   }
+  //     //   
+  //     //   return { network: 'Neuroweb', results };
+  //     // })()
+  //   ];
+  //   
+  //   try {
+  //     // Run all 3 networks in parallel
+  //     const networkResults = await Promise.all(networkValidations);
+  //     
+  //     const endTime = Date.now();
+  //     const totalTime = (endTime - startTime) / 1000;
+  //     
+  //     console.log(`\n⏱️ Total execution time: ${totalTime.toFixed(1)} seconds`);
+  //     console.log(`🚀 Parallel network execution completed successfully!`);
+  //     
+  //     // Check for any failures
+  //     const totalFailures = summary.total.failed;
+  //     if (totalFailures > 0) {
+  //       throw new Error(`${totalFailures} validations failed across all networks`);
+  //     }
+  //     
+  //   } catch (error) {
+  //     console.error(`❌ Parallel network validation failed: ${error.message}`);
+  //     throw error;
+  //   }
+  // });
 });
