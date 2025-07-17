@@ -1186,42 +1186,26 @@ class CompleteQAService {
         const nodeTotalStake = BigInt(row.stake);
         
         try {
-          // Get all delegators for this node with their latest stake from indexer
+          // Get ONLY the latest delegator stakes for this node from indexer
           const delegatorsResult = await client.query(`
             SELECT d.identity_id, d.delegator_key, d.stake_base, d.block_number
             FROM delegator_base_stake_updated d
+            INNER JOIN (
+              SELECT identity_id, delegator_key, MAX(block_number) as max_block
+              FROM delegator_base_stake_updated
+              GROUP BY identity_id, delegator_key
+            ) latest ON d.identity_id = latest.identity_id 
+            AND d.delegator_key = latest.delegator_key
+            AND d.block_number = latest.max_block
             WHERE d.identity_id = $1
             AND d.stake_base > 0
-            ORDER BY d.identity_id, d.delegator_key, d.block_number DESC
+            ORDER BY d.identity_id, d.delegator_key
           `, [nodeId]);
           
-          // Group delegator events by block number and sort by stake (highest first)
-          const delegatorEventsByBlock = {};
-          for (const event of delegatorsResult.rows) {
-            const blockNum = event.block_number;
-            if (!delegatorEventsByBlock[blockNum]) {
-              delegatorEventsByBlock[blockNum] = [];
-            }
-            delegatorEventsByBlock[blockNum].push({
-              blockNumber: blockNum,
-              stake: BigInt(event.stake_base)
-            });
-          }
-          
-          // Sort each block's events by stake (highest first) and keep only the highest
-          const processedDelegatorEvents = [];
-          for (const [blockNum, events] of Object.entries(delegatorEventsByBlock)) {
-            events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
-            processedDelegatorEvents.push(events[0]); // Keep only the highest stake
-          }
-          
-          // Sort processed events by block number (newest first)
-          processedDelegatorEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-          
-          // Calculate sum of delegator stakes from indexer (using processed events)
+          // Calculate sum of latest delegator stakes from indexer
           let indexerDelegatorStakeSum = 0n;
-          for (const event of processedDelegatorEvents) {
-            indexerDelegatorStakeSum += event.stake;
+          for (const event of delegatorsResult.rows) {
+            indexerDelegatorStakeSum += BigInt(event.stake_base);
           }
           
           // Get contract's total node stake (current state)
