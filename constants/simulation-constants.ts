@@ -21,19 +21,33 @@ export const SIMULATION_CHAINS: Record<string, ChainSimulationConfig> = {
   },
   neuroweb_mainnet: {
     chainId: 2043,
-    v8_0StartBlock: 7237897, // Hub deployment block (V8.0 start)
+    v8_0StartBlock: 7323300, // 1.1.2025
     v8_1StartBlock: 9819203, // Staking deployment block (V8.1 start)
     gasPrice: 100, // Lower gas price for Neuroweb
     gasLimit: 10_000_000,
   },
   gnosis_mainnet: {
     chainId: 100,
-    v8_0StartBlock: 37713034, // Hub deployment block (V8.0 start)
+    v8_0StartBlock: 37812700, // 1.1.2025
     v8_1StartBlock: 40781172, // Staking deployment block (V8.1 start)
     gasPrice: 2_000_000_000, // 2 gwei
     gasLimit: 17_000_000,
   },
 };
+
+/**
+ * Hub owner addresses for each chain (multisig wallets)
+ * These are needed for impersonating hub owner during simulation setup
+ * hub address -> hub owner address
+ */
+export const HUB_OWNERS = {
+  '0x99Aa571fD5e681c2D27ee08A7b7989DB02541d13':
+    '0x4Cd6467b797846E63a27c92350d040C428394068',
+  '0x0957e25BD33034948abc28204ddA54b6E1142D6F':
+    '0xDafb0Abaf750B97fB323c61Ec90cB038026eC6C1',
+  '0x882D0BF07F956b1b94BBfe9E77F47c6fc7D4EC8f':
+    '0xBF92638301f5d4c98c0B06750181B99E20F87F17',
+} as const;
 
 /**
  * Simulation-specific constants

@@ -66,10 +66,10 @@ if [ "$1" = "base" ]; then
     start_forked_node "Base Mainnet" "$RPC_BASE_MAINNET" "24450127" "8545"
 elif [ "$1" = "neuroweb" ]; then
     echo -e "${GREEN}Starting Neuroweb mainnet fork only${NC}"
-    start_forked_node "Neuroweb Mainnet" "$RPC_NEUROWEB_MAINNET" "7237897" "8546"
+    start_forked_node "Neuroweb Mainnet" "$RPC_NEUROWEB_MAINNET" "7323300" "8546"
 elif [ "$1" = "gnosis" ]; then
     echo -e "${GREEN}Starting Gnosis mainnet fork only${NC}"
-    start_forked_node "Gnosis Mainnet" "$RPC_GNOSIS_MAINNET" "37713034" "8547"
+    start_forked_node "Gnosis Mainnet" "$RPC_GNOSIS_MAINNET" "37812700" "8547"
 else
     echo -e "${YELLOW}Usage: $0 [base|neuroweb|gnosis]${NC}"
     echo ""
