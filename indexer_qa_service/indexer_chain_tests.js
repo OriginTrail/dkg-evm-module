@@ -9,8 +9,6 @@ require('dotenv').config();
 class CompleteQAService {
   constructor() {
     this.results = [];
-    this.validationStorageFile = path.join(__dirname, 'validation_results.json');
-    this.validatedEvents = this.loadValidationResults();
     
     this.dbConfig = {
       host: process.env.DB_HOST_INDEXER,
@@ -25,44 +23,6 @@ class CompleteQAService {
       'Base': 'base-mainnet-db', 
       'Neuroweb': 'nw-mainnet-db'
     };
-  }
-
-  /**
-   * Load validation results from JSON file
-   */
-  loadValidationResults() {
-    try {
-      if (fs.existsSync(this.validationStorageFile)) {
-        const data = fs.readFileSync(this.validationStorageFile, 'utf8');
-        const parsed = JSON.parse(data);
-        console.log(`📁 Loaded ${Object.keys(parsed).length} previously validated events from ${this.validationStorageFile}`);
-        return parsed;
-      }
-    } catch (error) {
-      console.log(`⚠️ Could not load validation results: ${error.message}`);
-    }
-    return {};
-  }
-
-  /**
-   * Save validation results to JSON file
-   */
-  saveValidationResults() {
-    try {
-      fs.writeFileSync(this.validationStorageFile, JSON.stringify(this.validatedEvents, null, 2));
-      console.log(`💾 Saved ${Object.keys(this.validatedEvents).length} validation results to ${this.validationStorageFile}`);
-    } catch (error) {
-      console.log(`⚠️ Could not save validation results: ${error.message}`);
-    }
-  }
-
-  /**
-   * Generate a unique hash for an event to track validation
-   */
-  generateEventHash(network, nodeId, delegatorKey, blockNumber, expectedOldStake, actualOldStake) {
-    return crypto.createHash('sha256')
-      .update(`${network}-${nodeId}-${delegatorKey}-${blockNumber}-${expectedOldStake}-${actualOldStake}`)
-      .digest('hex');
   }
 
   /**
@@ -762,7 +722,8 @@ class CompleteQAService {
       let warnings = 0;
       let rpcErrors = 0;
       let skippedDueToRPC = 0;
-      let skippedAlreadyValidated = 0;
+      // Remove skippedAlreadyValidated tracking
+      // let skippedAlreadyValidated = 0;
       const total = delegatorsResult.rows.length;
       
       console.log(`   📊 Validating ${total} delegators for ${activeNodeIds.length} active nodes...`);
@@ -1045,22 +1006,23 @@ class CompleteQAService {
             continue;
           }
           
+          // Remove validation tracking logic
           // Step 4: Check if event was already validated and its status
-          const eventHash = this.generateEventHash(network, nodeId, delegatorKey, comparisonBlock, expectedStake, actualStake);
-          const prevStatus = this.validatedEvents[eventHash];
-          if (prevStatus === 'passed' || prevStatus === 'warning') {
-            const differenceSkipped = expectedStake - actualStake;
-            console.log(`   ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Already validated as ${prevStatus}, skipping`);
-            if (indexerEventCount === 1 && contractEventCount === 1) {
-              console.log(`      📊 Single event - no stake comparison needed`);
-            } else {
-              console.log(`      Indexer old stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      📊 Difference: ${differenceSkipped > 0 ? '+' : ''}${this.weiToTRAC(differenceSkipped > 0 ? differenceSkipped : -differenceSkipped)} TRAC`);
-            }
-            console.log(`      🔍 Previous event block: ${comparisonBlock} (current block: ${comparisonBlock})`);
-            skippedAlreadyValidated++;
-            continue;
-          }
+          // const eventHash = this.generateEventHash(network, nodeId, delegatorKey, comparisonBlock, expectedStake, actualStake);
+          // const prevStatus = this.validatedEvents[eventHash];
+          // if (prevStatus === 'passed' || prevStatus === 'warning') {
+          //   const differenceSkipped = expectedStake - actualStake;
+          //   console.log(`   ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Already validated as ${prevStatus}, skipping`);
+          //   if (indexerEventCount === 1 && contractEventCount === 1) {
+          //     console.log(`      📊 Single event - no stake comparison needed`);
+          //   } else {
+          //     console.log(`      Indexer old stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualStake)} TRAC`);
+          //     console.log(`      📊 Difference: ${differenceSkipped > 0 ? '+' : ''}${this.weiToTRAC(differenceSkipped > 0 ? differenceSkipped : -differenceSkipped)} TRAC`);
+          //   }
+          //   console.log(`      🔍 Previous event block: ${comparisonBlock} (current block: ${comparisonBlock})`);
+          //   skippedAlreadyValidated++;
+          //   continue;
+          // }
           
           // Step 5: Validate that contract state matches expected stake
           const difference = expectedStake - actualStake;
@@ -1079,7 +1041,8 @@ class CompleteQAService {
               console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             }
             passed++;
-            this.validatedEvents[eventHash] = 'passed';
+            // Remove validation tracking
+            // this.validatedEvents[eventHash] = 'passed';
           } else if (difference >= -tolerance && difference <= tolerance) {
             if (indexerEventCount === 1 && contractEventCount === 1) {
               console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}`);
@@ -1098,7 +1061,8 @@ class CompleteQAService {
               console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
             }
             warnings++;
-            this.validatedEvents[eventHash] = 'warning';
+            // Remove validation tracking
+            // this.validatedEvents[eventHash] = 'warning';
           } else {
             if (indexerEventCount === 1 && contractEventCount === 1) {
               console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}`);
@@ -1112,7 +1076,8 @@ class CompleteQAService {
             }
             console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             failed++;
-            this.validatedEvents[eventHash] = 'failed';
+            // Remove validation tracking
+            // this.validatedEvents[eventHash] = 'failed';
           }
           
         } catch (error) {
@@ -1121,7 +1086,8 @@ class CompleteQAService {
         }
       }
       
-      this.saveValidationResults(); // Save validated events after each run
+      // Remove validation results saving
+      // this.saveValidationResults(); // Save validated events after each run
       
       console.log(`\n   📊 Validation Summary:`);
       console.log(`      ✅ Passed: ${passed} events`);
@@ -1129,9 +1095,11 @@ class CompleteQAService {
       console.log(`      ⚠️ Warnings: ${warnings} events`);
       console.log(`      🔌 RPC Errors: ${rpcErrors} events`);
       console.log(`      📤 Skipped due to RPC: ${skippedDueToRPC} events`);
-      console.log(`      ⏭️ Skipped already validated: ${skippedAlreadyValidated} events`);
+      // Remove skippedAlreadyValidated tracking
+      // console.log(`      ⏭️ Skipped already validated: ${skippedAlreadyValidated} events`);
       console.log(`      📊 Successfully validated: ${passed + failed + warnings} events`);
-      console.log(`      💾 Total validated events tracked: ${Object.keys(this.validatedEvents).length} events`);
+      // Remove validation tracking info
+      // console.log(`      💾 Total validated events tracked: ${Object.keys(this.validatedEvents).length} events`);
       
       return { passed, failed, warnings, rpcErrors, total };
       
@@ -1457,7 +1425,8 @@ class CompleteQAService {
       let warnings = 0;
       let rpcErrors = 0;
       let skippedDueToRPC = 0;
-      let skippedAlreadyValidated = 0;
+      // Remove skippedAlreadyValidated tracking
+      // let skippedAlreadyValidated = 0;
       const total = eventsResult.rows.length;
       
       console.log(`   📊 Validating ${total} delegator stake update events...`);
@@ -1759,22 +1728,23 @@ class CompleteQAService {
             continue;
           }
           
+          // Remove validation tracking logic
           // Step 4: Check if event was already validated and its status
-          const eventHash = this.generateEventHash(network, nodeId, delegatorKey, comparisonBlock, expectedStake, actualStake);
-          const prevStatus = this.validatedEvents[eventHash];
-          if (prevStatus === 'passed' || prevStatus === 'warning') {
-            const differenceSkipped = expectedStake - actualStake;
-            console.log(`   ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Already validated as ${prevStatus}, skipping`);
-            if (indexerEventCount === 1 && contractEventCount === 1) {
-              console.log(`      📊 Single event - no stake comparison needed`);
-            } else {
-              console.log(`      Indexer old stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      📊 Difference: ${differenceSkipped > 0 ? '+' : ''}${this.weiToTRAC(differenceSkipped > 0 ? differenceSkipped : -differenceSkipped)} TRAC`);
-            }
-            console.log(`      🔍 Previous event block: ${comparisonBlock} (current block: ${comparisonBlock})`);
-            skippedAlreadyValidated++;
-            continue;
-          }
+          // const eventHash = this.generateEventHash(network, nodeId, delegatorKey, comparisonBlock, expectedStake, actualStake);
+          // const prevStatus = this.validatedEvents[eventHash];
+          // if (prevStatus === 'passed' || prevStatus === 'warning') {
+          //   const differenceSkipped = expectedStake - actualStake;
+          //   console.log(`   ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Already validated as ${prevStatus}, skipping`);
+          //   if (indexerEventCount === 1 && contractEventCount === 1) {
+          //     console.log(`      📊 Single event - no stake comparison needed`);
+          //   } else {
+          //     console.log(`      Indexer old stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualStake)} TRAC`);
+          //     console.log(`      📊 Difference: ${differenceSkipped > 0 ? '+' : ''}${this.weiToTRAC(differenceSkipped > 0 ? differenceSkipped : -differenceSkipped)} TRAC`);
+          //   }
+          //   console.log(`      🔍 Previous event block: ${comparisonBlock} (current block: ${comparisonBlock})`);
+          //   skippedAlreadyValidated++;
+          //   continue;
+          // }
           
           // Step 5: Validate that contract state matches expected stake
           const difference = expectedStake - actualStake;
@@ -1793,7 +1763,8 @@ class CompleteQAService {
               console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             }
             passed++;
-            this.validatedEvents[eventHash] = 'passed';
+            // Remove validation tracking
+            // this.validatedEvents[eventHash] = 'passed';
           } else if (difference >= -tolerance && difference <= tolerance) {
             if (indexerEventCount === 1 && contractEventCount === 1) {
               console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}`);
@@ -1812,7 +1783,8 @@ class CompleteQAService {
               console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
             }
             warnings++;
-            this.validatedEvents[eventHash] = 'warning';
+            // Remove validation tracking
+            // this.validatedEvents[eventHash] = 'warning';
           } else {
             if (indexerEventCount === 1 && contractEventCount === 1) {
               console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}`);
@@ -1826,7 +1798,8 @@ class CompleteQAService {
             }
             console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             failed++;
-            this.validatedEvents[eventHash] = 'failed';
+            // Remove validation tracking
+            // this.validatedEvents[eventHash] = 'failed';
           }
           
         } catch (error) {
@@ -1835,7 +1808,8 @@ class CompleteQAService {
         }
       }
       
-      this.saveValidationResults(); // Save validated events after each run
+      // Remove validation results saving
+      // this.saveValidationResults(); // Save validated events after each run
       
       console.log(`\n   📊 Validation Summary:`);
       console.log(`      ✅ Passed: ${passed} events`);
@@ -1843,9 +1817,11 @@ class CompleteQAService {
       console.log(`      ⚠️ Warnings: ${warnings} events`);
       console.log(`      🔌 RPC Errors: ${rpcErrors} events`);
       console.log(`      📤 Skipped due to RPC: ${skippedDueToRPC} events`);
-      console.log(`      ⏭️ Skipped already validated: ${skippedAlreadyValidated} events`);
+      // Remove skippedAlreadyValidated tracking
+      // console.log(`      ⏭️ Skipped already validated: ${skippedAlreadyValidated} events`);
       console.log(`      📊 Successfully validated: ${passed + failed + warnings} events`);
-      console.log(`      💾 Total validated events tracked: ${Object.keys(this.validatedEvents).length} events`);
+      // Remove validation tracking info
+      // console.log(`      💾 Total validated events tracked: ${Object.keys(this.validatedEvents).length} events`);
       
       return { passed, failed, warnings, rpcErrors, total };
       
@@ -1907,12 +1883,13 @@ describe('Indexer Chain Validation', function() {
     console.log(`🎯 GRAND TOTAL: ${summary.total.passed} ✅ passed, ${summary.total.failed} ❌ failed, ${summary.total.warnings} ⚠️ warnings, ${summary.total.rpcErrors} 🔌 RPC errors`);
     console.log('='.repeat(80));
     
+    // Remove validation tracking info
     // Show file-based tracking info
-    const totalTrackedEvents = Object.keys(qaService.validatedEvents).length;
-    console.log(`\n💾 Validation Tracking:`);
-    console.log(`   📁 Storage file: ${qaService.validationStorageFile}`);
-    console.log(`   📊 Total events tracked: ${totalTrackedEvents}`);
-    console.log('='.repeat(80));
+    // const totalTrackedEvents = Object.keys(qaService.validatedEvents).length;
+    // console.log(`\n💾 Validation Tracking:`);
+    // console.log(`   📁 Storage file: ${qaService.validationStorageFile}`);
+    // console.log(`   📊 Total events tracked: ${totalTrackedEvents}`);
+    // console.log('='.repeat(80));
   });
   
   describe('Gnosis Network', function() {
