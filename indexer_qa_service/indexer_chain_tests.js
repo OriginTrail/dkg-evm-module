@@ -1932,90 +1932,90 @@ describe('Indexer Chain Validation', function() {
     });
   });
   
-  // describe('Base Network', function() {
-  //   it('should validate node stakes', async function() {
-  //     const results = await qaService.validateNodeStakes('Base');
-  //     trackResults('Base', 'Node Stakes', results);
-  //     if (results.failed > 0) {
-  //       throw new Error(`${results.failed} node stake validations failed`);
-  //     }
-  //   });
-  //   
-  //   it('should validate delegator stakes', async function() {
-  //     const results = await qaService.validateDelegatorStakes('Base');
-  //     trackResults('Base', 'Delegator Stakes', results);
-  //     if (results.failed > 0) {
-  //       throw new Error(`${results.failed} delegator stake validations failed`);
-  //     }
-  //   });
-  //   
-  //   it('should validate delegator stake update events', async function() {
-  //     const results = await qaService.validateDelegatorStakeUpdateEvents('Base');
-  //     trackResults('Base', 'Delegator Stake Update Events', results);
-  //     if (results.failed > 0) {
-  //       throw new Error(`${results.failed} delegator stake update event validations failed`);
-  //     }
-  //   });
-  //   
-  //   it('should validate delegator stake sum matches node stake', async function() {
-  //     const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Base');
-  //     trackResults('Base', 'Delegator Stake Sum', results);
-  //     if (results.failed > 0) {
-  //       throw new Error(`${results.failed} delegator stake sum validations failed`);
-  //     }
-  //   });
-  //   
-  //   it('should validate knowledge collections', async function() {
-  //     const results = await qaService.validateKnowledgeCollections('Base');
-  //     trackResults('Base', 'Knowledge Collections', results);
-  //     if (results.failed > 0) {
-  //       throw new Error(`${results.failed} knowledge collection validations failed`);
-  //     }
-  //   });
-  // });
-  // 
-  // describe('Neuroweb Network', function() {
-  //   it('should validate node stakes', async function() {
-  //     const results = await qaService.validateNodeStakes('Neuroweb');
-  //     trackResults('Neuroweb', 'Node Stakes', results);
-  //     if (results.failed > 0) {
-  //       throw new Error(`${results.failed} node stake validations failed`);
-  //     }
-  //   });
-  //   
-  //   it('should validate delegator stakes', async function() {
-  //     const results = await qaService.validateDelegatorStakes('Neuroweb');
-  //     trackResults('Neuroweb', 'Delegator Stakes', results);
-  //     if (results.failed > 0) {
-  //       throw new Error(`${results.failed} delegator stake validations failed`);
-  //     }
-  //   });
-  //   
-  //   it('should validate delegator stake update events', async function() {
-  //     const results = await qaService.validateDelegatorStakeUpdateEvents('Neuroweb');
-  //     trackResults('Neuroweb', 'Delegator Stake Update Events', results);
-  //     if (results.failed > 0) {
-  //       throw new Error(`${results.failed} delegator stake update event validations failed`);
-  //     }
-  //   });
-  //   
-  //   it('should validate delegator stake sum matches node stake', async function() {
-  //     const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Neuroweb');
-  //     trackResults('Neuroweb', 'Delegator Stake Sum', results);
-  //     if (results.failed > 0) {
-  //       throw new Error(`${results.failed} delegator stake sum validations failed`);
-  //     }
-  //   });
-  //   
-  //   it('should validate knowledge collections', async function() {
-  //     const results = await qaService.validateKnowledgeCollections('Neuroweb');
-  //     trackResults('Neuroweb', 'Knowledge Collections', results);
-  //     if (results.failed > 0) {
-  //       throw new Error(`${results.failed} knowledge collection validations failed`);
-  //     }
-  //   });
-  // });
-  // 
+  describe.skip('Base Network', function() {
+    it('should validate node stakes', async function() {
+      const results = await qaService.validateNodeStakes('Base');
+      trackResults('Base', 'Node Stakes', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} node stake validations failed`);
+      }
+    });
+    
+    it('should validate delegator stakes', async function() {
+      const results = await qaService.validateDelegatorStakes('Base');
+      trackResults('Base', 'Delegator Stakes', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} delegator stake validations failed`);
+      }
+    });
+    
+    it('should validate delegator stake update events', async function() {
+      const results = await qaService.validateDelegatorStakeUpdateEvents('Base');
+      trackResults('Base', 'Delegator Stake Update Events', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} delegator stake update event validations failed`);
+      }
+    });
+    
+    it('should validate delegator stake sum matches node stake', async function() {
+      const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Base');
+      trackResults('Base', 'Delegator Stake Sum', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} delegator stake sum validations failed`);
+      }
+    });
+    
+    it('should validate knowledge collections', async function() {
+      const results = await qaService.validateKnowledgeCollections('Base');
+      trackResults('Base', 'Knowledge Collections', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} knowledge collection validations failed`);
+      }
+    });
+  });
+  
+  describe.skip('Neuroweb Network', function() {
+    it('should validate node stakes', async function() {
+      const results = await qaService.validateNodeStakes('Neuroweb');
+      trackResults('Neuroweb', 'Node Stakes', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} node stake validations failed`);
+      }
+    });
+    
+    it('should validate delegator stakes', async function() {
+      const results = await qaService.validateDelegatorStakes('Neuroweb');
+      trackResults('Neuroweb', 'Delegator Stakes', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} delegator stake validations failed`);
+      }
+    });
+    
+    it('should validate delegator stake update events', async function() {
+      const results = await qaService.validateDelegatorStakeUpdateEvents('Neuroweb');
+      trackResults('Neuroweb', 'Delegator Stake Update Events', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} delegator stake update event validations failed`);
+      }
+    });
+    
+    it('should validate delegator stake sum matches node stake', async function() {
+      const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Neuroweb');
+      trackResults('Neuroweb', 'Delegator Stake Sum', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} delegator stake sum validations failed`);
+      }
+    });
+    
+    it('should validate knowledge collections', async function() {
+      const results = await qaService.validateKnowledgeCollections('Neuroweb');
+      trackResults('Neuroweb', 'Knowledge Collections', results);
+      if (results.failed > 0) {
+        throw new Error(`${results.failed} knowledge collection validations failed`);
+      }
+    });
+  });
+  
   // it('should run all validations in parallel per network', async function() {
   //   console.log('\n🚀 Starting parallel validation per network...');
   //   const startTime = Date.now();
