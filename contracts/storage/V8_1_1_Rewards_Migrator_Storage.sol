@@ -10,8 +10,8 @@ import {ContractStatus} from "../abstract/ContractStatus.sol";
  * @title DelegatorRewardsMigrationStorage
  * @notice Same functionality as original DelegatorRewardsStorage; file renamed to reflect migration purpose.
  */
-contract DelegatorRewardsMigrationStorage is INamed, IVersioned, ContractStatus, IInitializable {
-    string private constant _NAME = "DelegatorRewardsMigrationStorage";
+contract V8_1_1_Rewards_Migrator_Storage is INamed, IVersioned, ContractStatus, IInitializable {
+    string private constant _NAME = "V8_1_1_Rewards_Migrator_Storage";
     string private constant _VERSION = "1.0.0";
 
     struct RewardInfo {
