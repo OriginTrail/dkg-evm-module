@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {StakingStorage} from "../storage/StakingStorage.sol";
-import {DelegatorRewardsStorage} from "../storage/DelegatorRewardsStorage.sol";
+import {DelegatorRewardsMigrationStorage} from "../storage/DelegatorRewardsMigrationStorage.sol";
 import {ShardingTableStorage} from "../storage/ShardingTableStorage.sol";
 import {ParametersStorage} from "../storage/ParametersStorage.sol";
 import {Ask} from "../Ask.sol";
@@ -41,7 +41,7 @@ contract DelegatorRewardsMigrator is INamed, IVersioned, ContractStatus {
     string private constant _NAME = "DelegatorRewardsMigrator";
     string private constant _VERSION = "1.0.0";
 
-    DelegatorRewardsStorage public rewardsStorage;
+    DelegatorRewardsMigrationStorage public rewardsStorage;
     StakingStorage public stakingStorage;
     ShardingTableStorage public shardingTableStorage;
     ShardingTable public shardingTable;
@@ -62,7 +62,7 @@ contract DelegatorRewardsMigrator is INamed, IVersioned, ContractStatus {
      *      called once by the Hub immediately after deployment.
      */
     function initialize() external onlyHub {
-        rewardsStorage = DelegatorRewardsStorage(hub.getContractAddress("DelegatorRewardsStorage"));
+        rewardsStorage = DelegatorRewardsMigrationStorage(hub.getContractAddress("DelegatorRewardsMigrationStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
