@@ -185,21 +185,39 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     '[000 DEPLOYMENT] All Hub contracts registered with hardhat-deploy',
   );
 
-  // Explicitly register the Hub contract itself too
+  // Explicitly register the Hub contract itself with both systems
   try {
     const hubAbi = JSON.parse(fs.readFileSync('./abi/Hub.json', 'utf-8'));
+
+    // Register with hardhat-deploy
     await hre.deployments.save('Hub', {
       address: hubAddress,
       abi: hubAbi,
       bytecode: '0x',
       deployedBytecode: '0x',
     });
+
+    // Also register with helpers system so it appears in simulation_contracts.json
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const hubDeploymentContract = (deploymentContracts as any)['Hub'];
+    hre.helpers.contractDeployments.contracts['Hub'] = {
+      evmAddress: hubAddress,
+      version: hubDeploymentContract?.version || '1.0.0',
+      gitBranch:
+        hubDeploymentContract?.gitBranch ||
+        'feature/historical-rewards-simulation-script',
+      gitCommitHash: hubDeploymentContract?.gitCommitHash || 'forked-mainnet',
+      deploymentBlock: hubDeploymentContract?.deploymentBlock,
+      deploymentTimestamp: Date.now(),
+      deployed: true,
+    };
+
     console.log(
-      `[000 DEPLOYMENT] Hub contract explicitly registered: ${hubAddress}`,
+      `[000 DEPLOYMENT] Hub contract registered with both systems: ${hubAddress}`,
     );
   } catch (error) {
     console.log(
-      `[000 DEPLOYMENT] ⚠️  Failed to explicitly register Hub: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `[000 DEPLOYMENT] ⚠️  Failed to register Hub: ${error instanceof Error ? error.message : 'Unknown error'}`,
     );
   }
 
