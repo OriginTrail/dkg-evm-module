@@ -82,17 +82,17 @@ contract DelegatorRewardsMigrator is INamed, IVersioned, ContractStatus {
      *         restakes it for the given node.
      * @param identityId The node identifier the caller is delegating to.
      */
-    function increaseDelegatorStakeBase(uint72 identityId) external {
-        (uint96 addedStake, bool claimed) = rewardsStorage.getReward(identityId, msg.sender);
+    function increaseDelegatorStakeBase(uint72 identityId, address delegator) external {
+        (uint96 addedStake, bool claimed) = rewardsStorage.getReward(identityId, delegator);
         require(addedStake > 0, "No reward");
         require(!claimed, "Already claimed");
 
         // ────────────────────────────────────────────────────────
         // Replicate Staking.stake logic (without token transfer)
         // ────────────────────────────────────────────────────────
-        _validateDelegatorEpochClaims(identityId, msg.sender);
+        _validateDelegatorEpochClaims(identityId, delegator);
 
-        bytes32 delegatorKey = _getDelegatorKey(msg.sender);
+        bytes32 delegatorKey = _getDelegatorKey(delegator);
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         uint96 currentDelegatorStakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
@@ -110,60 +110,9 @@ contract DelegatorRewardsMigrator is INamed, IVersioned, ContractStatus {
         _addNodeToShardingTable(identityId, totalNodeStakeAfter);
         askContract.recalculateActiveSet();
 
-        _manageDelegatorStatus(identityId, msg.sender);
+        _manageDelegatorStatus(identityId, delegator);
 
         // Mark reward as processed
-        rewardsStorage.markClaimed(identityId, msg.sender);
-    }
-
-    /**
-     * @notice Processes all still unclaimed rewards in a single transaction.
-     *         Callable by Hub owner to ensure migration completeness.
-     *         WARNING: Might run out of gas if dataset is large – use with care.
-     */
-    function batchClaimAll() external onlyHubOwner {
-        uint72[] memory identityIds = rewardsStorage.getIdentityIds();
-        for (uint256 i = 0; i < identityIds.length; i++) {
-            uint72 identityId = identityIds[i];
-            address[] memory delegators = rewardsStorage.getDelegators(identityId);
-            for (uint256 j = 0; j < delegators.length; j++) {
-                (uint96 amount, bool claimed) = rewardsStorage.getReward(identityId, delegators[j]);
-                if (amount == 0 || claimed) continue;
-                _processReward(identityId, delegators[j], amount);
-            }
-        }
-    }
-
-    // ---------------------------------------------------------------------------------------------
-    // Internal helpers
-    // ---------------------------------------------------------------------------------------------
-
-    function _processReward(uint72 identityId, address delegator, uint96 amount) internal {
-        // 1. Ensure delegator is up-to-date with reward claims
-        _validateDelegatorEpochClaims(identityId, delegator);
-
-        bytes32 delegatorKey = _getDelegatorKey(delegator);
-
-        // 2. Settle score changes for current epoch
-        _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
-
-        // 3. Enforce maximum stake per node
-        uint96 totalNodeStakeBefore = stakingStorage.getNodeStake(identityId);
-        uint96 totalNodeStakeAfter = totalNodeStakeBefore + amount;
-        require(totalNodeStakeAfter <= parametersStorage.maximumStake(), "Max stake exceeded");
-
-        // 4. Update staking balances
-        uint96 currentDelegatorStakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
-        stakingStorage.setDelegatorStakeBase(identityId, delegatorKey, currentDelegatorStakeBase + amount);
-        stakingStorage.setNodeStake(identityId, totalNodeStakeAfter);
-        stakingStorage.increaseTotalStake(amount);
-
-        // 5. Delegator tracking, sharding table and ASK
-        _manageDelegatorStatus(identityId, delegator);
-        _addNodeToShardingTable(identityId, totalNodeStakeAfter);
-        askContract.recalculateActiveSet();
-
-        // 6. Mark reward as processed so it can't be reused
         rewardsStorage.markClaimed(identityId, delegator);
     }
 
