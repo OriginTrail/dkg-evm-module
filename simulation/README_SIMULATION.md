@@ -279,8 +279,9 @@ The simulation setup allows you to:
 3. **`simulation/historical-rewards-simulation.ts`** - Main simulation script
 4. **`simulation/helpers/db-helpers.ts`** - Database operations and transaction processing
 5. **`simulation/helpers/mining-controller.ts`** - Mining and time control utilities
-6. **`simulation/tests/test-hardhat-setup.ts`** - Contract validation and setup verification
-7. **`simulation/start-forked-nodes.sh`** - Helper script to easily start forked nodes
+6. **`simulation/helpers/simulation-helpers.ts`** - Simulation-specific logic (scoring, validation)
+7. **`simulation/tests/test-hardhat-setup.ts`** - Contract validation and setup verification
+8. **`simulation/start-forked-nodes.sh`** - Helper script to easily start forked nodes
 
 ## Simulation Structure
 
@@ -294,6 +295,7 @@ simulation/
 │   ├── blockchain-helpers.ts   # Contract deployment and verification
 │   ├── db-helpers.ts          # Database operations and transaction processing
 │   ├── mining-controller.ts   # Mining and time control utilities
+│   ├── simulation-helpers.ts  # Simulation-specific logic (scoring, validation)
 │   └── constants.ts           # Configuration values and constants
 ├── tests/                     # Testing and validation scripts
 │   ├── test-foundation.ts     # Foundation testing (database, mining, time)
@@ -310,6 +312,7 @@ simulation/
 - **`SimulationDatabase`** - Database operations in `simulation/helpers/db-helpers.ts`
 - **`MiningController`** - Mining and time control in `simulation/helpers/mining-controller.ts`
 - **`ContractValidator`** - Contract validation in `simulation/tests/test-hardhat-setup.ts`
+- **Simulation Helpers** - Scoring calculations and validation in `simulation/helpers/simulation-helpers.ts`
 - **Constants** - Configuration values in `simulation/helpers/constants.ts`
 
 Each component is focused on a specific responsibility, making the code easy to review and maintain.

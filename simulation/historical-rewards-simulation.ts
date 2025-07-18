@@ -1,11 +1,7 @@
-import { expect } from 'chai';
 import hre from 'hardhat';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import {
-  getDeployedContracts,
-  verifyContractDeployments,
-} from './helpers/blockchain-helpers';
+import { verifyContractDeployments } from './helpers/blockchain-helpers';
 import { PROOF_PERIOD_SECONDS } from './helpers/constants';
 import {
   SimulationDatabase,
@@ -13,6 +9,7 @@ import {
   BlockData,
 } from './helpers/db-helpers';
 import { MiningController } from './helpers/mining-controller';
+import { calculateScoresForActiveNodes } from './helpers/simulation-helpers';
 
 /**
  * DKG V8.0 to V8.1 Historical Rewards Simulation
@@ -45,14 +42,14 @@ class HistoricalRewardsSimulation {
     );
 
     // Step 1: Disable auto-mining
-    console.log('🛑 Disabling auto-mining...');
+    console.log('[INIT] Disabling auto-mining...');
     await this.mining.disableAutoMining();
 
     // Step 2: Get simulation status
     const unprocessedCount = this.db.getUnprocessedCount();
     const blockRange = this.db.getUnprocessedBlockRange();
 
-    console.log(`📊 Simulation Status:`);
+    console.log(`[INIT] Simulation Status:`);
     console.log(`   Unprocessed transactions: ${unprocessedCount}`);
     console.log(
       `   Block range: ${blockRange.minBlock} - ${blockRange.maxBlock}`,
@@ -62,7 +59,7 @@ class HistoricalRewardsSimulation {
     const currentBlock = await this.mining.getCurrentBlock();
     const currentTimestamp = await this.mining.getCurrentTimestamp();
 
-    console.log(`\n🔗 Fork Status:`);
+    console.log(`\n[INIT] Fork Status:`);
     console.log(`   Current block: ${currentBlock}`);
     console.log(
       `   Current timestamp: ${currentTimestamp} (${new Date(currentTimestamp * 1000).toISOString()})`,
@@ -70,10 +67,11 @@ class HistoricalRewardsSimulation {
 
     // Step 4: Verify contract deployments
     console.log('\n🔍 Verifying contract deployments...');
+    // TODO: Make this verify all contracts with expected values
     await verifyContractDeployments(this.hre);
 
     // Step 5: Initialize proofing timestamp
-    // TODO: This should be loaded from epoch metadata
+    // TODO: Make sure this has the timestamp of the first block in the simulation - not today's timestamp
     this.lastProofingTimestamp = currentTimestamp;
 
     console.log(`\n✅ Simulation initialized successfully!`);
@@ -84,7 +82,7 @@ class HistoricalRewardsSimulation {
    * Replays historical transactions and calculates rewards
    */
   async runSimulation(): Promise<void> {
-    console.log('\n🚀 Starting Historical Transaction Replay...');
+    console.log('\n[SIM] Starting Historical Transaction Replay...');
 
     // TODO: Implement main simulation logic
     // 1. Load transactions in chronological order
@@ -92,16 +90,14 @@ class HistoricalRewardsSimulation {
     // 3. Replay transactions with proper timing
     // 4. Calculate rewards after each proof period
     // 5. Generate final report
-
-    console.log('💡 Core simulation logic to be implemented...');
   }
 
   /**
-   * Process a batch of transactions
-   * Replays transactions and manages state
+   * Process a batch of blocks
+   * Replays blocks and manages state
    */
-  async processTransactionBatch(blockBatch: BlockData[]): Promise<void> {
-    console.log(`📦 Processing batch of ${blockBatch.length} blocks...`);
+  async processBlockBatch(blockBatch: BlockData[]): Promise<void> {
+    console.log(`[SIM] Processing batch of ${blockBatch.length} blocks...`);
 
     for (const block of blockBatch) {
       await this.processBlock(block);
@@ -133,7 +129,7 @@ class HistoricalRewardsSimulation {
    */
   async processTransaction(tx: TransactionData): Promise<void> {
     console.log(
-      `📋 Processing ${tx.contract}.${tx.functionName}() tx: ${tx.hash}`,
+      `[TX PROCESSING] Processing ${tx.contract}.${tx.functionName}(${tx.args}) tx: ${tx.hash}`,
     );
 
     // TODO: Implement transaction replay logic
@@ -153,114 +149,16 @@ class HistoricalRewardsSimulation {
     const currentTime = await this.mining.getCurrentTimestamp();
 
     if (currentTime - this.lastProofingTimestamp >= PROOF_PERIOD_SECONDS) {
-      console.log('⏰ Proof period elapsed - calculating rewards...');
+      console.log(
+        '[PROOFING] Proof period elapsed - calculating scores for active nodes...',
+      );
 
-      await this.calculateScoresForActiveNodes(
+      await calculateScoresForActiveNodes(
+        this.hre,
         this.lastProofingTimestamp + PROOF_PERIOD_SECONDS,
       );
 
       this.lastProofingTimestamp = currentTime;
-    }
-  }
-
-  /**
-   * Calculate scores for all active nodes in the sharding table
-   * This implements the core scoring logic from the V8.1 Random Sampling system
-   */
-  async calculateScoresForActiveNodes(
-    proofingTimestamp: number,
-  ): Promise<void> {
-    console.log(
-      `📊 Calculating scores for active nodes at timestamp ${proofingTimestamp}`,
-    );
-
-    try {
-      // Get contract instances from the deployed contracts
-      const deployments = await getDeployedContracts(this.hre);
-
-      const profileStorage = deployments.ProfileStorage;
-      const shardingTableStorage = deployments.ShardingTableStorage;
-      const randomSampling = deployments.RandomSampling;
-      const randomSamplingStorage = deployments.RandomSamplingStorage;
-      const stakingStorage = deployments.StakingStorage;
-      const chronos = deployments.Chronos;
-
-      // Get current epoch and proof period start block
-      const currentEpoch = await chronos.getCurrentEpoch();
-
-      // Get the total number of nodes to iterate through
-      // We'll use a reasonable upper bound and check each identity ID
-      const maxIdentityId = await profileStorage.lastIdentityId();
-
-      let activeNodesCount = 0;
-
-      // Iterate through all possible identity IDs
-      for (let identityId = 1; identityId <= maxIdentityId; identityId++) {
-        try {
-          // Check if profile exists
-          const profileExists = await profileStorage.profileExists(identityId);
-          if (!profileExists) {
-            continue;
-          }
-
-          // Check if node is active in sharding table
-          const nodeExists = await shardingTableStorage.nodeExists(identityId);
-          if (!nodeExists) {
-            continue;
-          }
-
-          // Node is active - calculate score
-          const score18 = await randomSampling.calculateNodeScore(identityId);
-
-          if (score18 > 0) {
-            // Add to node epoch score
-            await randomSamplingStorage.addToNodeEpochScore(
-              currentEpoch,
-              identityId,
-              score18,
-            );
-
-            // Add to all nodes epoch score
-            await randomSamplingStorage.addToAllNodesEpochScore(
-              currentEpoch,
-              score18,
-            );
-
-            // Calculate and add score per stake
-            const totalNodeStake =
-              await stakingStorage.getNodeStake(identityId);
-            if (totalNodeStake > 0) {
-              // score18 * SCALE18 / totalNodeStake = nodeScorePerStake36
-              const SCALE18 = BigInt('1000000000000000000'); // 10^18
-              const nodeScorePerStake36 = (score18 * SCALE18) / totalNodeStake;
-
-              await randomSamplingStorage.addToNodeEpochScorePerStake(
-                currentEpoch,
-                identityId,
-                nodeScorePerStake36,
-              );
-            }
-
-            activeNodesCount++;
-
-            console.log(
-              `   ✅ Node ${identityId}: score=${this.hre.ethers.formatEther(score18)}`,
-            );
-          }
-        } catch (error) {
-          console.error(`   ⚠️  Error processing node ${identityId}: ${error}`);
-          // Continue with next node
-        }
-      }
-
-      console.log(`   📈 Processed ${activeNodesCount} active nodes`);
-      expect(activeNodesCount).to.equal(
-        await shardingTableStorage.nodesCount(),
-        `Active nodes count ${activeNodesCount} should match the number of nodes in the sharding table ${await shardingTableStorage.nodesCount()}`,
-      );
-    } catch (error) {
-      console.error(`❌ Error calculating scores for active nodes: ${error}`);
-      throw error;
     }
   }
 

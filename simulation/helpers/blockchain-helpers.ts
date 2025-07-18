@@ -232,6 +232,8 @@ export async function getDeployedContracts(hre: HardhatRuntimeEnvironment) {
   // Get contract factories (needed for ABIs)
   const Hub = await hre.ethers.getContractFactory('Hub');
   const ProfileStorage = await hre.ethers.getContractFactory('ProfileStorage');
+  const IdentityStorage =
+    await hre.ethers.getContractFactory('IdentityStorage');
   const ShardingTableStorage = await hre.ethers.getContractFactory(
     'ShardingTableStorage',
   );
@@ -251,6 +253,7 @@ export async function getDeployedContracts(hre: HardhatRuntimeEnvironment) {
   try {
     const [
       profileStorageAddress,
+      identityStorageAddress,
       shardingTableStorageAddress,
       randomSamplingAddress,
       randomSamplingStorageAddress,
@@ -258,6 +261,7 @@ export async function getDeployedContracts(hre: HardhatRuntimeEnvironment) {
       chronosAddress,
     ] = await Promise.all([
       hub.getContractAddress('ProfileStorage'),
+      hub.getContractAddress('IdentityStorage'),
       hub.getContractAddress('ShardingTableStorage'),
       hub.getContractAddress('RandomSampling'),
       hub.getContractAddress('RandomSamplingStorage'),
@@ -266,6 +270,7 @@ export async function getDeployedContracts(hre: HardhatRuntimeEnvironment) {
     ]);
 
     console.log(`   ProfileStorage: ${profileStorageAddress}`);
+    console.log(`   IdentityStorage: ${identityStorageAddress}`);
     console.log(`   ShardingTableStorage: ${shardingTableStorageAddress}`);
     console.log(`   RandomSampling: ${randomSamplingAddress}`);
     console.log(`   RandomSamplingStorage: ${randomSamplingStorageAddress}`);
@@ -276,6 +281,7 @@ export async function getDeployedContracts(hre: HardhatRuntimeEnvironment) {
     return {
       Hub: hub,
       ProfileStorage: ProfileStorage.attach(profileStorageAddress),
+      IdentityStorage: IdentityStorage.attach(identityStorageAddress),
       ShardingTableStorage: ShardingTableStorage.attach(
         shardingTableStorageAddress,
       ),
@@ -327,6 +333,8 @@ async function getContractsFromHardhatDeployments(
 
   // Get contract factories (needed for ABIs)
   const Hub = await hre.ethers.getContractFactory('Hub');
+  const IdentityStorage =
+    await hre.ethers.getContractFactory('IdentityStorage');
   const ProfileStorage = await hre.ethers.getContractFactory('ProfileStorage');
   const ShardingTableStorage = await hre.ethers.getContractFactory(
     'ShardingTableStorage',
@@ -343,6 +351,7 @@ async function getContractsFromHardhatDeployments(
 
   console.log('📂 Loading contract addresses from hardhat_contracts.json:');
   console.log(`   Hub: ${contracts.Hub?.evmAddress}`);
+  console.log(`   IdentityStorage: ${contracts.IdentityStorage?.evmAddress}`);
   console.log(`   ProfileStorage: ${contracts.ProfileStorage?.evmAddress}`);
   console.log(
     `   ShardingTableStorage: ${contracts.ShardingTableStorage?.evmAddress}`,
@@ -357,6 +366,7 @@ async function getContractsFromHardhatDeployments(
   // Check required contracts exist
   const requiredContracts = [
     'Hub',
+    'IdentityStorage',
     'ProfileStorage',
     'ShardingTableStorage',
     'RandomSampling',
@@ -375,6 +385,9 @@ async function getContractsFromHardhatDeployments(
   // Return contract instances (we know they exist now)
   return {
     Hub: Hub.attach(contracts.Hub.evmAddress),
+    IdentityStorage: IdentityStorage.attach(
+      contracts.IdentityStorage.evmAddress,
+    ),
     ProfileStorage: ProfileStorage.attach(contracts.ProfileStorage.evmAddress),
     ShardingTableStorage: ShardingTableStorage.attach(
       contracts.ShardingTableStorage.evmAddress,
