@@ -7,7 +7,7 @@ echo "=========================================="
 if ! nc -z localhost 8545 2>/dev/null; then
     echo "❌ Error: Hardhat forked network is not running on port 8545"
     echo "   Please start the forked network first with:"
-    echo "   ./scripts/start-forked-nodes.sh base"
+    echo "   ./simulation/start-forked-nodes.sh CHAIN_NAME"
     exit 1
 fi
 
@@ -15,7 +15,7 @@ echo "✅ Hardhat forked network detected on port 8545"
 echo ""
 
 # Run the validation script
-npx hardhat run scripts/validate-simulation-setup.ts --network localhost
+npx hardhat run simulation/tests/test-hardhat-setup.ts --network localhost
 
 echo ""
 echo "🎯 Validation completed!"

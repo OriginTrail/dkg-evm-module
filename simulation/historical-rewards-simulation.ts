@@ -5,10 +5,14 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
   getDeployedContracts,
   verifyContractDeployments,
-} from './blockchain-helpers';
-import { PROOF_PERIOD_SECONDS } from './constants';
-import { SimulationDatabase, TransactionData, BlockData } from './db-helpers';
-import { MiningController } from './mining-controller';
+} from './helpers/blockchain-helpers';
+import { PROOF_PERIOD_SECONDS } from './helpers/constants';
+import {
+  SimulationDatabase,
+  TransactionData,
+  BlockData,
+} from './helpers/db-helpers';
+import { MiningController } from './helpers/mining-controller';
 
 /**
  * DKG V8.0 to V8.1 Historical Rewards Simulation

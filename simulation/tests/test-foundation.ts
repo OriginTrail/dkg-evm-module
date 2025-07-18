@@ -59,7 +59,9 @@ task(
 async function testDatabaseHelpers(dbPath: string): Promise<void> {
   console.log('🧪 Testing Database Helpers...');
 
-  const db = new (await import('./db-helpers')).SimulationDatabase(dbPath);
+  const db = new (await import('../helpers/db-helpers')).SimulationDatabase(
+    dbPath,
+  );
 
   try {
     // Test database stats
@@ -138,9 +140,9 @@ async function testNetworkSetup(hre: any): Promise<void> {
 async function testMiningControl(hre: any): Promise<void> {
   console.log('🧪 Testing Mining Control...');
 
-  const mining = new (await import('./mining-controller')).MiningController(
-    hre,
-  );
+  const mining = new (
+    await import('../helpers/mining-controller')
+  ).MiningController(hre);
 
   const initialBlock = await mining.getCurrentBlock();
   console.log(`   Initial block: ${initialBlock}`);
@@ -177,9 +179,9 @@ async function testMiningControl(hre: any): Promise<void> {
 async function testTimeControl(hre: any): Promise<void> {
   console.log('🧪 Testing Time Control...');
 
-  const mining = new (await import('./mining-controller')).MiningController(
-    hre,
-  );
+  const mining = new (
+    await import('../helpers/mining-controller')
+  ).MiningController(hre);
 
   try {
     const initialTimestamp = await mining.getCurrentTimestamp();

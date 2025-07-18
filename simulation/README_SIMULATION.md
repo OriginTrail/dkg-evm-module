@@ -94,28 +94,40 @@ npx hardhat test-simulation-foundation --config hardhat.simulation.config.ts --n
 
 ```bash
 # Terminal 1: Start forked node
-./scripts/start-forked-nodes.sh base
+./simulation/start-forked-nodes.sh base
 
 # Terminal 2: Run simulation
 npx hardhat run simulation/historical-rewards-simulation.ts --config hardhat.simulation.config.ts --network localhost
 ```
 
-## 🧪 Testing Foundation (Cleaned Up!)
+## 🧪 Testing & Validation
 
-### **Main Testing Entry Point**
+### **Testing Components**
 
-- **`test-foundation.ts`** - The **PRIMARY** test suite
+The simulation includes two main testing approaches:
+
+#### **1. Foundation Testing**
+
+- **`simulation/tests/test-foundation.ts`** - Tests core simulation components
   - Tests database operations
   - Tests mining control
   - Tests time control
   - Tests network setup
-  - **This is the ONLY test file you need to run**
+
+#### **2. Contract Validation**
+
+- **`simulation/tests/test-hardhat-setup.ts`** - Validates contract deployments and setup
+  - Verifies all contracts are deployed correctly
+  - Checks contract functionality and data
+  - Validates storage contracts have migration data
+  - Tests Hub registry and contract relationships
 
 ### **Core Components**
 
-- **`db-helpers.ts`** - Database operations and utilities
-- **`mining-controller.ts`** - Mining and time control (focused on core functionality)
-- **`historical-rewards-simulation.ts`** - Main simulation runner
+- **`simulation/helpers/db-helpers.ts`** - Database operations and utilities
+- **`simulation/helpers/mining-controller.ts`** - Mining and time control (focused on core functionality)
+- **`simulation/helpers/blockchain-helpers.ts`** - Contract deployment and verification
+- **`simulation/historical-rewards-simulation.ts`** - Main simulation runner
 
 ### **How to Run Tests**
 
@@ -131,13 +143,25 @@ npx hardhat test-simulation-foundation --network hardhat
 
 ```bash
 # Terminal 1: Start forked node
-./scripts/start-forked-nodes.sh base
+./simulation/start-forked-nodes.sh base
 
 # Terminal 2: Run all tests
 npx hardhat test-simulation-foundation --config hardhat.simulation.config.ts --network localhost
 ```
 
 **Tests:** ✅ Database + Mining + Time + Network
+
+#### **Option 3: Contract Validation (Recommended after setup)**
+
+```bash
+# Terminal 1: Start forked node
+./simulation/start-forked-nodes.sh base
+
+# Terminal 2: Run validation
+./simulation/tests/run-hardhat-setup-test.sh
+```
+
+**Tests:** ✅ Contract deployments + Functionality + Data validation
 
 ### **What Each Test Does**
 
@@ -166,6 +190,15 @@ npx hardhat test-simulation-foundation --config hardhat.simulation.config.ts --n
 - ✅ EVM time manipulation
 - ✅ Timestamp increase validation
 - ✅ Time + mining coordination
+
+#### **Contract Validation Tests** _(requires forked node)_
+
+- ✅ Hub registry and contract relationships
+- ✅ Token contract functionality and balances
+- ✅ Storage contracts (StakingStorage, ProfileStorage, IdentityStorage, etc.)
+- ✅ Contract data validation (identities, profiles, staking data)
+- ✅ Paranet contracts and registries
+- ✅ Random sampling and knowledge collection contracts
 
 ### **Expected Test Output**
 
@@ -244,19 +277,40 @@ The simulation setup allows you to:
 1. **`constants/simulation-constants.ts`** - Block numbers, timestamps, and chain configurations
 2. **`hardhat.simulation.config.ts`** - Specialized hardhat configuration for simulation
 3. **`simulation/historical-rewards-simulation.ts`** - Main simulation script
-4. **`simulation/db-helpers.ts`** - Database operations and transaction processing
-5. **`simulation/mining-controller.ts`** - Mining and time control utilities
-6. **`simulation/test-foundation.ts`** - Foundation testing and validation
-7. **`scripts/start-forked-nodes.sh`** - Helper script to easily start forked nodes
+4. **`simulation/helpers/db-helpers.ts`** - Database operations and transaction processing
+5. **`simulation/helpers/mining-controller.ts`** - Mining and time control utilities
+6. **`simulation/tests/test-hardhat-setup.ts`** - Contract validation and setup verification
+7. **`simulation/start-forked-nodes.sh`** - Helper script to easily start forked nodes
 
 ## Simulation Structure
 
-The simulation is organized into modular components:
+The simulation is organized into modular components with a clear folder structure:
+
+### Folder Organization
+
+```
+simulation/
+├── helpers/                    # Core helper modules
+│   ├── blockchain-helpers.ts   # Contract deployment and verification
+│   ├── db-helpers.ts          # Database operations and transaction processing
+│   ├── mining-controller.ts   # Mining and time control utilities
+│   └── constants.ts           # Configuration values and constants
+├── tests/                     # Testing and validation scripts
+│   ├── test-foundation.ts     # Foundation testing (database, mining, time)
+│   ├── test-hardhat-setup.ts  # Contract validation and setup verification
+│   └── run-hardhat-setup-test.sh  # Validation script runner
+├── start-forked-nodes.sh      # Helper script to start forked nodes
+├── historical-rewards-simulation.ts  # Main simulation script
+└── README_SIMULATION.md       # This documentation
+```
+
+### Component Responsibilities
 
 - **`HistoricalRewardsSimulation`** - Main simulation class in `simulation/historical-rewards-simulation.ts`
-- **`SimulationDatabase`** - Database operations in `simulation/db-helpers.ts`
-- **`MiningController`** - Mining and time control in `simulation/mining-controller.ts`
-- **Constants** - Configuration values in `simulation/constants.ts`
+- **`SimulationDatabase`** - Database operations in `simulation/helpers/db-helpers.ts`
+- **`MiningController`** - Mining and time control in `simulation/helpers/mining-controller.ts`
+- **`ContractValidator`** - Contract validation in `simulation/tests/test-hardhat-setup.ts`
+- **Constants** - Configuration values in `simulation/helpers/constants.ts`
 
 Each component is focused on a specific responsibility, making the code easy to review and maintain.
 
@@ -299,13 +353,13 @@ This approach lets you run a forked node in the terminal and connect to it from 
 
 ```bash
 # Start Base mainnet fork
-./scripts/start-forked-nodes.sh base
+./simulation/start-forked-nodes.sh base
 
 # Start Neuroweb mainnet fork (different terminal)
-./scripts/start-forked-nodes.sh neuroweb
+./simulation/start-forked-nodes.sh neuroweb
 
 # Start Gnosis mainnet fork (different terminal)
-./scripts/start-forked-nodes.sh gnosis
+./simulation/start-forked-nodes.sh gnosis
 ```
 
 **Manual Commands:**
@@ -372,7 +426,7 @@ npx hardhat test-simulation-foundation --config hardhat.simulation.config.ts --n
 
 ```bash
 # Terminal 1
-./scripts/start-forked-nodes.sh neuroweb
+./simulation/start-forked-nodes.sh neuroweb
 
 # Terminal 2 (update dbPath in simulation script to neuroweb database)
 npx hardhat run simulation/historical-rewards-simulation.ts --config hardhat.simulation.config.ts --network localhost
@@ -382,7 +436,7 @@ npx hardhat run simulation/historical-rewards-simulation.ts --config hardhat.sim
 
 ```bash
 # Terminal 1
-./scripts/start-forked-nodes.sh gnosis
+./simulation/start-forked-nodes.sh gnosis
 
 # Terminal 2 (update dbPath in simulation script to gnosis database)
 npx hardhat run simulation/historical-rewards-simulation.ts --config hardhat.simulation.config.ts --network localhost
