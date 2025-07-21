@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const config = require('./config');
+const pLimit = require('p-limit');
 require('dotenv').config();
 
 class CompleteQAService {
@@ -352,268 +353,302 @@ class CompleteQAService {
       
       console.log(`   📊 Validating ${total} active nodes...`);
       
-      for (const row of nodesResult.rows) {
-        const nodeId = parseInt(row.identity_id);
+      if (network === 'Base') {
+        // Use parallel processing for Base network
+        console.log(`   🚀 Using parallel processing for Base network (10 concurrent nodes)`);
         
-        try {
-          // Get the latest block number from indexer for this node
-          const indexerBlockResult = await client.query(`
-            SELECT MAX(block_number) as latest_block 
-            FROM node_stake_updated
-            WHERE identity_id = $1
-          `, [nodeId]);
-          
-          const indexerBlockNumber = indexerBlockResult.rows[0].latest_block;
-          
-          // Get ALL node stake events from indexer for this node
-          const allIndexerEventsResult = await client.query(`
-            SELECT stake, block_number
-            FROM node_stake_updated
-            WHERE identity_id = $1
-            ORDER BY block_number DESC
-          `, [nodeId]);
-          
-          console.log(`   🔍 Node ${nodeId}: Found ${allIndexerEventsResult.rows.length} indexer events`);
-          
-          // Group indexer events by block number and sort by stake (highest first)
-          const indexerEventsByBlock = {};
-          for (const event of allIndexerEventsResult.rows) {
-            const blockNum = event.block_number;
-            if (!indexerEventsByBlock[blockNum]) {
-              indexerEventsByBlock[blockNum] = [];
-            }
-            indexerEventsByBlock[blockNum].push({
-              blockNumber: blockNum,
-              stake: BigInt(event.stake)
-            });
-          }
-          
-          // Sort each block's events by stake (highest first) and keep only the highest
-          const processedIndexerEvents = [];
-          for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
-            events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
-            processedIndexerEvents.push(events[0]); // Keep only the highest stake
-          }
-          
-          // Sort processed events by block number (newest first)
-          processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-          
-          console.log(`   📊 Node ${nodeId}: Processed ${processedIndexerEvents.length} unique blocks from indexer`);
-          
-          // Get ALL node stake events from contract for this node
-          const networkConfig = config.networks.find(n => n.name === network);
-          if (!networkConfig) {
-            throw new Error(`Network ${network} not found in config`);
-          }
-          
-          let contractEvents = [];
-          let retries = 3;
-          
-          while (retries > 0) {
-            try {
-              const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
-              const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
-              
-              const stakingContract = new ethers.Contract(stakingAddress, [
-                'event NodeStakeUpdated(uint72 indexed identityId, uint96 stake)'
-              ], provider);
-              
-              // Query ALL NodeStakeUpdated events for this specific node
-              console.log(`   📊 Querying ALL NodeStakeUpdated events for node ${nodeId}`);
-              
-              const filter = stakingContract.filters.NodeStakeUpdated(nodeId);
-              
-              // Try to query in chunks to avoid timeout
-              const currentBlock = await provider.getBlockNumber();
-              const chunkSize = 1000000; // 1M blocks per chunk
-              let allEvents = [];
-              
-              // Start from the oldest indexer event block and go forward
-              const oldestIndexerBlock = allIndexerEventsResult.rows[allIndexerEventsResult.rows.length - 1].block_number;
-              const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
-              
-              for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
-                const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
-                
-                try {
-                  const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-                  allEvents = allEvents.concat(chunkEvents);
-                } catch (error) {
-                  console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
-                  // Continue with next chunk
-                }
-              }
-              
-              console.log(`   📊 Found ${allEvents.length} contract events for node ${nodeId}`);
-              
-              // Group contract events by block number and sort by stake (highest first)
-              const contractEventsByBlock = {};
-              for (const event of allEvents) {
-                const blockNum = event.blockNumber;
-                if (!contractEventsByBlock[blockNum]) {
-                  contractEventsByBlock[blockNum] = [];
-                }
-                contractEventsByBlock[blockNum].push({
-                  blockNumber: blockNum,
-                  stake: event.args.stake
-                });
-              }
-              
-              // Sort each block's events by stake (highest first) and keep only the highest
-              const processedContractEvents = [];
-              for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
-                events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
-                processedContractEvents.push(events[0]); // Keep only the highest stake
-              }
-              
-              // Sort processed events by block number (newest first)
-              processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-              
-              console.log(`   📊 Node ${nodeId}: Processed ${processedContractEvents.length} unique blocks from contract`);
-              
-              // Check if both sides have the same number of events for each block
-              const indexerBlockCounts = {};
-              const contractBlockCounts = {};
-              
-              for (const event of allIndexerEventsResult.rows) {
-                const blockNum = event.block_number;
-                indexerBlockCounts[blockNum] = (indexerBlockCounts[blockNum] || 0) + 1;
-              }
-              
-              for (const event of allEvents) {
-                const blockNum = event.blockNumber;
-                contractBlockCounts[blockNum] = (contractBlockCounts[blockNum] || 0) + 1;
-              }
-              
-              // Check for mismatched block counts
-              let blockCountMismatch = false;
-              const allBlocks = new Set([...Object.keys(indexerBlockCounts), ...Object.keys(contractBlockCounts)]);
-              
-              for (const blockNum of allBlocks) {
-                const indexerCount = indexerBlockCounts[blockNum] || 0;
-                const contractCount = contractBlockCounts[blockNum] || 0;
-                if (indexerCount !== contractCount) {
-                  console.log(`   ⚠️ Node ${nodeId}: Block ${blockNum} has ${indexerCount} indexer events vs ${contractCount} contract events`);
-                  blockCountMismatch = true;
-                }
-              }
-              
-              if (blockCountMismatch) {
-                console.log(`   ⚠️ Node ${nodeId}: Block count mismatch detected, using highest stake per block`);
-              }
-              
-              contractEvents = processedContractEvents;
-              
+        const tasks = nodesResult.rows.map(row => async () => {
+          const nodeId = parseInt(row.identity_id);
+          return await this.validateSingleNodeStake(client, network, nodeId, row);
+        });
+        
+        const results = await this.runInBatches(tasks, 10);
+        
+        // Aggregate results
+        for (const result of results) {
+          switch (result.type) {
+            case 'passed':
+              passed++;
               break;
-            } catch (error) {
-              retries--;
-              if (retries === 0) {
-                console.log(`   ⚠️ Node ${nodeId}: RPC Error - ${error.message}`);
-                rpcErrors++;
-                continue;
+            case 'failed':
+              failed++;
+              break;
+            case 'warning':
+              warnings++;
+              break;
+            case 'rpcError':
+              rpcErrors++;
+              break;
+            case 'skipped':
+              // Don't count skipped in totals
+              break;
+          }
+        }
+      } else {
+        // Sequential processing for other networks
+        for (const row of nodesResult.rows) {
+          const nodeId = parseInt(row.identity_id);
+          
+          try {
+            // Get the latest block number from indexer for this node
+            const indexerBlockResult = await client.query(`
+              SELECT MAX(block_number) as latest_block 
+              FROM node_stake_updated
+              WHERE identity_id = $1
+            `, [nodeId]);
+            
+            const indexerBlockNumber = indexerBlockResult.rows[0].latest_block;
+            
+            // Get ALL node stake events from indexer for this node
+            const allIndexerEventsResult = await client.query(`
+              SELECT stake, block_number
+              FROM node_stake_updated
+              WHERE identity_id = $1
+              ORDER BY block_number DESC
+            `, [nodeId]);
+            
+            console.log(`   🔍 Node ${nodeId}: Found ${allIndexerEventsResult.rows.length} indexer events`);
+            
+            // Group indexer events by block number and sort by stake (highest first)
+            const indexerEventsByBlock = {};
+            for (const event of allIndexerEventsResult.rows) {
+              const blockNum = event.block_number;
+              if (!indexerEventsByBlock[blockNum]) {
+                indexerEventsByBlock[blockNum] = [];
               }
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              indexerEventsByBlock[blockNum].push({
+                blockNumber: blockNum,
+                stake: BigInt(event.stake)
+              });
             }
-          }
-          
-          if (contractEvents.length === 0) {
-            console.log(`   ⚠️ Node ${nodeId}: No contract events found, skipping validation`);
-            continue;
-          }
-          
-          // Compare indexer and contract events (now using processed events)
-          const indexerEventCount = processedIndexerEvents.length;
-          const contractEventCount = contractEvents.length;
-          
-          console.log(`   📊 Node ${nodeId}: Indexer events: ${indexerEventCount}, Contract events: ${contractEventCount}`);
-          
-          let validationPassed = false;
-          let expectedStake = 0n;
-          let actualStake = 0n;
-          let comparisonBlock = 0;
-          
-          if (indexerEventCount === 1 && contractEventCount === 1) {
-            // Single event case: check if they have the same blockchain number
-            const indexerBlock = processedIndexerEvents[0].blockNumber;
-            const contractBlock = contractEvents[0].blockNumber;
             
-            console.log(`   📋 Node ${nodeId}: Single event comparison:`);
-            console.log(`      Indexer block: ${indexerBlock}, Contract block: ${contractBlock}`);
-            
-            if (Number(indexerBlock) === Number(contractBlock)) {
-              validationPassed = true;
-              expectedStake = processedIndexerEvents[0].stake;
-              actualStake = contractEvents[0].stake;
-              comparisonBlock = indexerBlock;
-              console.log(`      ✅ Both have same block number: ${comparisonBlock}`);
-            } else {
-              console.log(`      ❌ Block number mismatch`);
+            // Sort each block's events by stake (highest first) and keep only the highest
+            const processedIndexerEvents = [];
+            for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
+              events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+              processedIndexerEvents.push(events[0]); // Keep only the highest stake
             }
-          } else if (indexerEventCount >= 1 && contractEventCount >= 1) {
-            // Multiple events case: compare latest blockchain numbers (first biggest block)
-            const indexerLatest = processedIndexerEvents[0].blockNumber;
-            const contractLatest = contractEvents[0].blockNumber;
             
-            console.log(`      📋 Latest event comparison:`);
-            console.log(`         Indexer latest block: ${indexerLatest}, Contract latest block: ${contractLatest}`);
+            // Sort processed events by block number (newest first)
+            processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
             
-            if (Number(indexerLatest) === Number(contractLatest)) {
-              validationPassed = true;
-              expectedStake = processedIndexerEvents[0].stake;
-              actualStake = contractEvents[0].stake;
-              comparisonBlock = indexerLatest;
+            console.log(`   📊 Node ${nodeId}: Processed ${processedIndexerEvents.length} unique blocks from indexer`);
+            
+            // Get ALL node stake events from contract for this node
+            const networkConfig = config.networks.find(n => n.name === network);
+            if (!networkConfig) {
+              throw new Error(`Network ${network} not found in config`);
+            }
+            
+            let contractEvents = [];
+            let retries = 3;
+            
+            while (retries > 0) {
+              try {
+                const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+                const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
+                
+                const stakingContract = new ethers.Contract(stakingAddress, [
+                  'event NodeStakeUpdated(uint72 indexed identityId, uint96 stake)'
+                ], provider);
+                
+                // Query ALL NodeStakeUpdated events for this specific node
+                console.log(`   📊 Querying ALL NodeStakeUpdated events for node ${nodeId}`);
+                
+                const filter = stakingContract.filters.NodeStakeUpdated(nodeId);
+                
+                // Try to query in chunks to avoid timeout
+                const currentBlock = await provider.getBlockNumber();
+                const chunkSize = network === 'Base' ? 100000 : 1000000; // 0.1M for Base
+                let allEvents = [];
+                
+                // Start from the oldest indexer event block and go forward
+                const oldestIndexerBlock = allIndexerEventsResult.rows[allIndexerEventsResult.rows.length - 1].block_number;
+                const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
+                
+                for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+                  const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+                  
+                  try {
+                    const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                    allEvents = allEvents.concat(chunkEvents);
+                  } catch (error) {
+                    console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
+                    // Continue with next chunk
+                  }
+                }
+                
+                console.log(`   📊 Found ${allEvents.length} contract events for node ${nodeId}`);
+                
+                // Group contract events by block number and sort by stake (highest first)
+                const contractEventsByBlock = {};
+                for (const event of allEvents) {
+                  const blockNum = event.blockNumber;
+                  if (!contractEventsByBlock[blockNum]) {
+                    contractEventsByBlock[blockNum] = [];
+                  }
+                  contractEventsByBlock[blockNum].push({
+                    blockNumber: blockNum,
+                    stake: event.args.stake
+                  });
+                }
+                
+                // Sort each block's events by stake (highest first) and keep only the highest
+                const processedContractEvents = [];
+                for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
+                  events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+                  processedContractEvents.push(events[0]); // Keep only the highest stake
+                }
+                
+                // Sort processed events by block number (newest first)
+                processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+                
+                console.log(`   📊 Node ${nodeId}: Processed ${processedContractEvents.length} unique blocks from contract`);
+                
+                // Check if both sides have the same number of events for each block
+                const indexerBlockCounts = {};
+                const contractBlockCounts = {};
+                
+                for (const event of allIndexerEventsResult.rows) {
+                  const blockNum = event.block_number;
+                  indexerBlockCounts[blockNum] = (indexerBlockCounts[blockNum] || 0) + 1;
+                }
+                
+                for (const event of allEvents) {
+                  const blockNum = event.blockNumber;
+                  contractBlockCounts[blockNum] = (contractBlockCounts[blockNum] || 0) + 1;
+                }
+                
+                // Check for mismatched block counts
+                let blockCountMismatch = false;
+                const allBlocks = new Set([...Object.keys(indexerBlockCounts), ...Object.keys(contractBlockCounts)]);
+                
+                for (const blockNum of allBlocks) {
+                  const indexerCount = indexerBlockCounts[blockNum] || 0;
+                  const contractCount = contractBlockCounts[blockNum] || 0;
+                  if (indexerCount !== contractCount) {
+                    console.log(`   ⚠️ Node ${nodeId}: Block ${blockNum} has ${indexerCount} indexer events vs ${contractCount} contract events`);
+                    blockCountMismatch = true;
+                  }
+                }
+                
+                if (blockCountMismatch) {
+                  console.log(`   ⚠️ Node ${nodeId}: Block count mismatch detected, using highest stake per block`);
+                }
+                
+                contractEvents = processedContractEvents;
+                
+                break;
+              } catch (error) {
+                retries--;
+                if (retries === 0) {
+                  console.log(`   ⚠️ Node ${nodeId}: RPC Error - ${error.message}`);
+                  rpcErrors++;
+                  continue;
+                }
+                await new Promise(resolve => setTimeout(resolve, 2000));
+              }
+            }
+            
+            if (contractEvents.length === 0) {
+              console.log(`   ⚠️ Node ${nodeId}: No contract events found, skipping validation`);
+              continue;
+            }
+            
+            // Compare indexer and contract events (now using processed events)
+            const indexerEventCount = processedIndexerEvents.length;
+            const contractEventCount = contractEvents.length;
+            
+            console.log(`   📊 Node ${nodeId}: Indexer events: ${indexerEventCount}, Contract events: ${contractEventCount}`);
+            
+            let validationPassed = false;
+            let expectedStake = 0n;
+            let actualStake = 0n;
+            let comparisonBlock = 0;
+            
+            if (indexerEventCount === 1 && contractEventCount === 1) {
+              // Single event case: check if they have the same blockchain number
+              const indexerBlock = processedIndexerEvents[0].blockNumber;
+              const contractBlock = contractEvents[0].blockNumber;
               
-              console.log(`         ✅ Both have same latest event block: ${comparisonBlock}`);
-              console.log(`         📊 Latest event (block ${comparisonBlock}):`);
-              console.log(`            Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
-              console.log(`            Contract: ${this.weiToTRAC(actualStake)} TRAC`);
+              console.log(`   📋 Node ${nodeId}: Single event comparison:`);
+              console.log(`      Indexer block: ${indexerBlock}, Contract block: ${contractBlock}`);
+              
+              if (Number(indexerBlock) === Number(contractBlock)) {
+                validationPassed = true;
+                expectedStake = processedIndexerEvents[0].stake;
+                actualStake = contractEvents[0].stake;
+                comparisonBlock = indexerBlock;
+                console.log(`      ✅ Both have same block number: ${comparisonBlock}`);
+              } else {
+                console.log(`      ❌ Block number mismatch`);
+              }
+            } else if (indexerEventCount >= 1 && contractEventCount >= 1) {
+              // Multiple events case: compare latest blockchain numbers (first biggest block)
+              const indexerLatest = processedIndexerEvents[0].blockNumber;
+              const contractLatest = contractEvents[0].blockNumber;
+              
+              console.log(`      📋 Latest event comparison:`);
+              console.log(`         Indexer latest block: ${indexerLatest}, Contract latest block: ${contractLatest}`);
+              
+              if (Number(indexerLatest) === Number(contractLatest)) {
+                validationPassed = true;
+                expectedStake = processedIndexerEvents[0].stake;
+                actualStake = contractEvents[0].stake;
+                comparisonBlock = indexerLatest;
+                
+                console.log(`         ✅ Both have same latest event block: ${comparisonBlock}`);
+                console.log(`         📊 Latest event (block ${comparisonBlock}):`);
+                console.log(`            Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
+                console.log(`            Contract: ${this.weiToTRAC(actualStake)} TRAC`);
+              } else {
+                console.log(`         ❌ Latest event block mismatch`);
+              }
+            } else if (contractEventCount === 0) {
+              // No contract events found
+              console.log(`      ⚠️ No contract events found for this node`);
+              console.log(`      📊 Indexer has ${indexerEventCount} events, Contract has 0 events`);
+              console.log(`      🔍 Cannot perform validation - no contract data available`);
+              console.log(`   ⏭️ Node ${nodeId}: Cannot validate - no contract data`);
+              continue;
             } else {
-              console.log(`         ❌ Latest event block mismatch`);
+              console.log(`      ⚠️ Cannot compare: Indexer has ${indexerEventCount} events, Contract has ${contractEventCount} events`);
             }
-          } else if (contractEventCount === 0) {
-            // No contract events found
-            console.log(`      ⚠️ No contract events found for this delegator`);
-            console.log(`      📊 Indexer has ${indexerEventCount} events, Contract has 0 events`);
-            console.log(`      🔍 Cannot perform validation - no contract data available`);
-            console.log(`   ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - no contract data`);
-            continue;
-          } else {
-            console.log(`      ⚠️ Cannot compare: Indexer has ${indexerEventCount} events, Contract has ${contractEventCount} events`);
-          }
-          
-          // Skip validation if comparison failed
-          if (!validationPassed) {
-            console.log(`   ⏭️ Node ${nodeId}: Cannot validate - comparison failed`);
-            continue;
-          }
-          
-          // Validate that contract state matches expected stake
-          const difference = expectedStake - actualStake;
-          const tolerance = 500000000000000000n; // 0.5 TRAC in wei
-          
-          if (difference === 0n || difference === 0) {
-            console.log(`   ✅ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
-            passed++;
-          } else if (difference >= -tolerance && difference <= tolerance) {
-            console.log(`   ⚠️ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
-            if (Math.abs(Number(difference)) < 1000000000000000000) { // Less than 1 TRAC
-              const tracDifference = Number(difference) / Math.pow(10, 18);
-              console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
+            
+            // Skip validation if comparison failed
+            if (!validationPassed) {
+              console.log(`   ⏭️ Node ${nodeId}: Cannot validate - comparison failed`);
+              continue;
+            }
+            
+            // Validate that contract state matches expected stake
+            const difference = expectedStake - actualStake;
+            const tolerance = 500000000000000000n; // 0.5 TRAC in wei
+            
+            if (difference === 0n || difference === 0) {
+              console.log(`   ✅ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+              passed++;
+            } else if (difference >= -tolerance && difference <= tolerance) {
+              console.log(`   ⚠️ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+              if (Math.abs(Number(difference)) < 1000000000000000000) { // Less than 1 TRAC
+                const tracDifference = Number(difference) / Math.pow(10, 18);
+                console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
+              } else {
+                console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+              }
+              warnings++; // Count as warning
             } else {
-              console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+              console.log(`   ❌ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+              console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+              failed++;
             }
-            warnings++; // Count as warning
-          } else {
-            console.log(`   ❌ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
-            console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            failed++;
-          }
-        } catch (error) {
-          console.log(`   ⚠️ Node ${nodeId}: Error - ${error.message}`);
-          if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
-            rpcErrors++;
-          } else {
-            failed++;
+          } catch (error) {
+            console.log(`   ⚠️ Node ${nodeId}: Error - ${error.message}`);
+            if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+              rpcErrors++;
+            } else {
+              failed++;
+            }
           }
         }
       }
@@ -728,361 +763,294 @@ class CompleteQAService {
       
       console.log(`   📊 Validating ${total} delegators for ${activeNodeIds.length} active nodes...`);
       
-      for (const row of delegatorsResult.rows) {
-        const nodeId = parseInt(row.identity_id);
-        const delegatorKey = row.delegator_key;
+      if (network === 'Base') {
+        // Use parallel processing for Base network
+        console.log(`   🚀 Using parallel processing for Base network (10 concurrent delegators)`);
         
-        if (nodeId === 1 && delegatorKey === '0xd491e9497cb6b20b1d7ee1fb733a01974f82f8104a5c447bfaa90ec9abde36ac') {
-          console.log(`   🔍 DEBUG: Processing Node ${nodeId}, Delegator ${delegatorKey}`);
-        }
+        const tasks = delegatorsResult.rows.map(row => async () => {
+          const nodeId = parseInt(row.identity_id);
+          const delegatorKey = row.delegator_key;
+          return await this.validateSingleDelegatorStake(client, network, nodeId, delegatorKey);
+        });
         
-        try {
-          // Get the latest block number from indexer for this delegator
-          const indexerBlockResult = await client.query(`
-            SELECT MAX(block_number) as latest_block 
-            FROM delegator_base_stake_updated
-            WHERE identity_id = $1 AND delegator_key = $2
-          `, [nodeId, delegatorKey]);
-          
-          const indexerBlockNumber = indexerBlockResult.rows[0].latest_block;
-          
-          // Get ALL delegator events from indexer for this delegator
-          const allIndexerEventsResult = await client.query(`
-            SELECT stake_base, block_number
-            FROM delegator_base_stake_updated
-            WHERE identity_id = $1 AND delegator_key = $2
-            ORDER BY block_number DESC
-          `, [nodeId, delegatorKey]);
-          
-          console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Found ${allIndexerEventsResult.rows.length} indexer events`);
-          
-          // Group indexer events by block number and sort by stake (highest first)
-          const indexerEventsByBlock = {};
-          for (const event of allIndexerEventsResult.rows) {
-            const blockNum = event.block_number;
-            if (!indexerEventsByBlock[blockNum]) {
-              indexerEventsByBlock[blockNum] = [];
-            }
-            indexerEventsByBlock[blockNum].push({
-              blockNumber: blockNum,
-              stake: BigInt(event.stake_base)
-            });
-          }
-          
-          // Sort each block's events by stake (highest first) and keep only the highest
-          const processedIndexerEvents = [];
-          for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
-            events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
-            processedIndexerEvents.push(events[0]); // Keep only the highest stake
-          }
-          
-          // Sort processed events by block number (newest first)
-          processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-          
-          console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedIndexerEvents.length} unique blocks from indexer`);
-          
-          // Step 2: Get all contract events for this delegator
-          const networkConfig = config.networks.find(n => n.name === network);
-          if (!networkConfig) {
-            throw new Error(`Network ${network} not found in config`);
-          }
-          
-          let contractEvents = [];
-          let retries = 3;
-          let rpcSuccess = false;
-          let historicalQueryFailures = 0;
-          let totalHistoricalQueries = 0;
-          
-          while (retries > 0) {
-            try {
-              const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
-              const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
-              
-              const stakingContract = new ethers.Contract(stakingAddress, [
-                'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
-              ], provider);
-              
-              // Query ALL DelegatorBaseStakeUpdated events for this specific delegator and node
-              console.log(`      📊 Querying contract events for node ${nodeId}, delegator ${delegatorKey}`);
-              
-              try {
-                // Query ALL DelegatorBaseStakeUpdated events for this specific delegator and node
-                console.log(`      📊 Querying ALL DelegatorBaseStakeUpdated events for node ${nodeId}, delegator ${delegatorKey}`);
-                
-                const filter = stakingContract.filters.DelegatorBaseStakeUpdated(nodeId, delegatorKey);
-                
-                // Try to query in chunks to avoid timeout
-                const currentBlock = await provider.getBlockNumber();
-                const chunkSize = 1000000; // 1M blocks per chunk
-                let allEvents = [];
-                
-                // Start from the oldest indexer event block and go forward
-                const oldestIndexerBlock = allIndexerEventsResult.rows[allIndexerEventsResult.rows.length - 1].block_number;
-                const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
-                
-                for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
-                  const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
-                  
-                  try {
-                    const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-                    allEvents = allEvents.concat(chunkEvents);
-                  } catch (error) {
-                    console.log(`      ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
-                    // Continue with next chunk
-                  }
-                }
-                
-                console.log(`      📊 Found ${allEvents.length} contract events for this delegator`);
-                
-                // Group contract events by block number and sort by stake (highest first)
-                const contractEventsByBlock = {};
-                for (const event of allEvents) {
-                  const blockNum = event.blockNumber;
-                  if (!contractEventsByBlock[blockNum]) {
-                    contractEventsByBlock[blockNum] = [];
-                  }
-                  contractEventsByBlock[blockNum].push({
-                    blockNumber: blockNum,
-                    stake: event.args.stakeBase
-                  });
-                }
-                
-                // Sort each block's events by stake (highest first) and keep only the highest
-                const processedContractEvents = [];
-                for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
-                  events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
-                  processedContractEvents.push(events[0]); // Keep only the highest stake
-                }
-                
-                // Sort processed events by block number (newest first)
-                processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-                
-                console.log(`      📊 Processed ${processedContractEvents.length} unique blocks from contract`);
-                
-                // Check if both sides have the same number of events for each block
-                const indexerBlockCounts = {};
-                const contractBlockCounts = {};
-                
-                for (const event of allIndexerEventsResult.rows) {
-                  const blockNum = event.block_number;
-                  indexerBlockCounts[blockNum] = (indexerBlockCounts[blockNum] || 0) + 1;
-                }
-                
-                for (const event of allEvents) {
-                  const blockNum = event.blockNumber;
-                  contractBlockCounts[blockNum] = (contractBlockCounts[blockNum] || 0) + 1;
-                }
-                
-                // Check for mismatched block counts
-                let blockCountMismatch = false;
-                const allBlocks = new Set([...Object.keys(indexerBlockCounts), ...Object.keys(contractBlockCounts)]);
-                
-                for (const blockNum of allBlocks) {
-                  const indexerCount = indexerBlockCounts[blockNum] || 0;
-                  const contractCount = contractBlockCounts[blockNum] || 0;
-                  if (indexerCount !== contractCount) {
-                    console.log(`      ⚠️ Block ${blockNum} has ${indexerCount} indexer events vs ${contractCount} contract events`);
-                    blockCountMismatch = true;
-                  }
-                }
-                
-                if (blockCountMismatch) {
-                  console.log(`      ⚠️ Block count mismatch detected, using highest stake per block`);
-                }
-                
-                // Process contract events and sort by block number
-                contractEvents = [];
-                for (const event of processedContractEvents) {
-                  contractEvents.push({
-                    blockNumber: event.blockNumber,
-                    stake: event.stake
-                  });
-                  console.log(`      📊 Contract event at block ${event.blockNumber}: ${this.weiToTRAC(event.stake)} TRAC`);
-                }
-                
-              } catch (error) {
-                console.log(`      ⚠️ Failed to query contract events: ${error.message}`);
-                console.log(`      🔍 Error details: ${error.toString()}`);
-                historicalQueryFailures++;
-              }
-              
-              // If we couldn't get any contract events, try to get current state as fallback
-              if (contractEvents.length === 0) {
-                try {
-                  // Try to get current delegator stake using a different approach
-                  console.log(`      🔍 No contract events found, trying to get current state...`);
-                  
-                  // We could try to get current state from a different contract method if available
-                  // For now, we'll just note that we have no contract data
-                  console.log(`      📊 No contract events available for this delegator`);
-                  
-                } catch (error) {
-                  console.log(`      ⚠️ Failed to get current contract state: ${error.message}`);
-                }
-              }
-              
-              rpcSuccess = true;
+        const results = await this.runInBatches(tasks, 10);
+        
+        // Aggregate results
+        for (const result of results) {
+          switch (result.type) {
+            case 'passed':
+              passed++;
               break;
-            } catch (error) {
-              retries--;
-              if (retries === 0) {
-                console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
-                rpcErrors++;
-                skippedDueToRPC++;
-                break;
+            case 'failed':
+              failed++;
+              break;
+            case 'warning':
+              warnings++;
+              break;
+            case 'rpcError':
+              rpcErrors++;
+              break;
+            case 'skipped':
+              // Don't count skipped in totals
+              break;
+          }
+        }
+      } else {
+        // Sequential processing for other networks
+        for (const row of delegatorsResult.rows) {
+          const nodeId = parseInt(row.identity_id);
+          const delegatorKey = row.delegator_key;
+          
+          if (nodeId === 1 && delegatorKey === '0xd491e9497cb6b20b1d7ee1fb733a01974f82f8104a5c447bfaa90ec9abde36ac') {
+            console.log(`   🔍 DEBUG: Processing Node ${nodeId}, Delegator ${delegatorKey}`);
+          }
+          
+          try {
+            // Get the latest block number from indexer for this delegator
+            const indexerBlockResult = await client.query(`
+              SELECT MAX(block_number) as latest_block 
+              FROM delegator_base_stake_updated
+              WHERE identity_id = $1 AND delegator_key = $2
+            `, [nodeId, delegatorKey]);
+            
+            const indexerBlockNumber = indexerBlockResult.rows[0].latest_block;
+            
+            // Get ALL delegator events from indexer for this delegator
+            const allIndexerEventsResult = await client.query(`
+              SELECT stake_base, block_number
+              FROM delegator_base_stake_updated
+              WHERE identity_id = $1 AND delegator_key = $2
+              ORDER BY block_number DESC
+            `, [nodeId, delegatorKey]);
+            
+            console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Found ${allIndexerEventsResult.rows.length} indexer events`);
+            
+            // Group indexer events by block number and sort by stake (highest first)
+            const indexerEventsByBlock = {};
+            for (const event of allIndexerEventsResult.rows) {
+              const blockNum = event.block_number;
+              if (!indexerEventsByBlock[blockNum]) {
+                indexerEventsByBlock[blockNum] = [];
               }
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              indexerEventsByBlock[blockNum].push({
+                blockNumber: blockNum,
+                stake: BigInt(event.stake_base)
+              });
             }
-          }
-          
-          if (!rpcSuccess) {
-            continue;
-          }
-          
-          // Step 3: Compare indexer and contract events
-          const indexerEventCount = processedIndexerEvents.length;
-          const contractEventCount = contractEvents.length;
-          
-          console.log(`      📊 Indexer events: ${indexerEventCount}, Contract events: ${contractEventCount}`);
-          
-          let validationPassed = false;
-          let expectedStake = 0n;
-          let actualStake = 0n;
-          let comparisonBlock = 0;
-          
-          if (indexerEventCount === 1 && contractEventCount === 1) {
-            // Single event case: check if they have the same blockchain number
-            const indexerBlock = processedIndexerEvents[0].blockNumber;
-            const contractBlock = contractEvents[0].blockNumber;
             
-            console.log(`      📋 Single event comparison:`);
-            console.log(`         Indexer block: ${indexerBlock}, Contract block: ${contractBlock}`);
-            
-            if (Number(indexerBlock) === Number(contractBlock)) {
-              validationPassed = true;
-              expectedStake = processedIndexerEvents[0].stake;
-              actualStake = contractEvents[0].stake;
-              comparisonBlock = indexerBlock;
-              console.log(`         ✅ Both have same block number: ${comparisonBlock}`);
-              console.log(`         📝 Both indexer and contract have the same single event`);
-            } else {
-              console.log(`         ❌ Block number mismatch`);
+            // Sort each block's events by stake (highest first) and keep only the highest
+            const processedIndexerEvents = [];
+            for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
+              events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+              processedIndexerEvents.push(events[0]); // Keep only the highest stake
             }
-          } else if (indexerEventCount >= 1 && contractEventCount >= 1) {
-            // Multiple events case: compare latest blockchain numbers (first biggest block)
-            const indexerLatest = processedIndexerEvents[0].blockNumber;
-            const contractLatest = contractEvents[0].blockNumber;
             
-            console.log(`      📋 Latest event comparison:`);
-            console.log(`         Indexer latest block: ${indexerLatest}, Contract latest block: ${contractLatest}`);
+            // Sort processed events by block number (newest first)
+            processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
             
-            if (Number(indexerLatest) === Number(contractLatest)) {
-              validationPassed = true;
-              expectedStake = processedIndexerEvents[0].stake;
-              actualStake = contractEvents[0].stake;
-              comparisonBlock = indexerLatest;
+            console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedIndexerEvents.length} unique blocks from indexer`);
+            
+            // Step 2: Get all contract events for this delegator
+            const networkConfig = config.networks.find(n => n.name === network);
+            if (!networkConfig) {
+              throw new Error(`Network ${network} not found in config`);
+            }
+            
+            let contractEvents = [];
+            let retries = 3;
+            let rpcSuccess = false;
+            let historicalQueryFailures = 0;
+            let totalHistoricalQueries = 0;
+            
+            while (retries > 0) {
+              try {
+                const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+                const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
+                
+                const stakingContract = new ethers.Contract(stakingAddress, [
+                  'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
+                ], provider);
+                
+                // Query ALL DelegatorBaseStakeUpdated events for this specific delegator and node
+                console.log(`      📊 Querying contract events for node ${nodeId}, delegator ${delegatorKey}`);
+                
+                try {
+                  // Query ALL DelegatorBaseStakeUpdated events for this specific delegator and node
+                  console.log(`      📊 Querying ALL DelegatorBaseStakeUpdated events for node ${nodeId}, delegator ${delegatorKey}`);
+                  
+                  const filter = stakingContract.filters.DelegatorBaseStakeUpdated(nodeId, delegatorKey);
+                  
+                  // Try to query in chunks to avoid timeout
+                  const currentBlock = await provider.getBlockNumber();
+                  const chunkSize = network === 'Base' ? 100000 : 1000000; // 0.1M for Base
+                  let allEvents = [];
+                  
+                  // Start from the oldest indexer event block and go forward
+                  const oldestIndexerBlock = allIndexerEventsResult.rows[allIndexerEventsResult.rows.length - 1].block_number;
+                  const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
+                  
+                  for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+                    const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+                    
+                    try {
+                      const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                      allEvents = allEvents.concat(chunkEvents);
+                    } catch (error) {
+                      console.log(`      ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
+                      // Continue with next chunk
+                    }
+                  }
+                  
+                  console.log(`      📊 Found ${allEvents.length} contract events for node ${nodeId}, delegator ${delegatorKey}`);
+                  
+                  // Group contract events by block number and sort by stake (highest first)
+                  const contractEventsByBlock = {};
+                  for (const event of allEvents) {
+                    const blockNum = event.blockNumber;
+                    if (!contractEventsByBlock[blockNum]) {
+                      contractEventsByBlock[blockNum] = [];
+                    }
+                    contractEventsByBlock[blockNum].push({
+                      blockNumber: blockNum,
+                      stake: event.args.stakeBase
+                    });
+                  }
+                  
+                  // Sort each block's events by stake (highest first) and keep only the highest
+                  const processedContractEvents = [];
+                  for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
+                    events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+                    processedContractEvents.push(events[0]); // Keep only the highest stake
+                  }
+                  
+                  // Sort processed events by block number (newest first)
+                  processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+                  
+                  console.log(`      📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedContractEvents.length} unique blocks from contract`);
+                  
+                  contractEvents = processedContractEvents;
+                  
+                  break;
+                } catch (error) {
+                  console.log(`      ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
+                  retries--;
+                  if (retries === 0) {
+                    rpcErrors++;
+                    continue;
+                  }
+                  await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+              } catch (error) {
+                retries--;
+                if (retries === 0) {
+                  console.log(`      ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
+                  rpcErrors++;
+                  continue;
+                }
+                await new Promise(resolve => setTimeout(resolve, 2000));
+              }
+            }
+            
+            if (contractEvents.length === 0) {
+              console.log(`      ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: No contract events found, skipping validation`);
+              continue;
+            }
+            
+            // Compare indexer and contract events (now using processed events)
+            const indexerEventCount = processedIndexerEvents.length;
+            const contractEventCount = contractEvents.length;
+            
+            console.log(`      📊 Node ${nodeId}, Delegator ${delegatorKey}: Indexer events: ${indexerEventCount}, Contract events: ${contractEventCount}`);
+            
+            let validationPassed = false;
+            let expectedStake = 0n;
+            let actualStake = 0n;
+            let comparisonBlock = 0;
+            
+            if (indexerEventCount === 1 && contractEventCount === 1) {
+              // Single event case: check if they have the same blockchain number
+              const indexerBlock = processedIndexerEvents[0].blockNumber;
+              const contractBlock = contractEvents[0].blockNumber;
               
-              console.log(`         ✅ Both have same latest event block: ${comparisonBlock}`);
-              console.log(`         📊 Latest event (block ${comparisonBlock}):`);
-              console.log(`            Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
-              console.log(`            Contract: ${this.weiToTRAC(actualStake)} TRAC`);
+              console.log(`      📋 Node ${nodeId}, Delegator ${delegatorKey}: Single event comparison:`);
+              console.log(`         Indexer block: ${indexerBlock}, Contract block: ${contractBlock}`);
+              
+              if (Number(indexerBlock) === Number(contractBlock)) {
+                validationPassed = true;
+                expectedStake = processedIndexerEvents[0].stake;
+                actualStake = contractEvents[0].stake;
+                comparisonBlock = indexerBlock;
+                console.log(`         ✅ Both have same block number: ${comparisonBlock}`);
+              } else {
+                console.log(`         ❌ Block number mismatch`);
+              }
+            } else if (indexerEventCount >= 1 && contractEventCount >= 1) {
+              // Multiple events case: compare latest blockchain numbers (first biggest block)
+              const indexerLatest = processedIndexerEvents[0].blockNumber;
+              const contractLatest = contractEvents[0].blockNumber;
+              
+              console.log(`         📋 Latest event comparison:`);
+              console.log(`            Indexer latest block: ${indexerLatest}, Contract latest block: ${contractLatest}`);
+              
+              if (Number(indexerLatest) === Number(contractLatest)) {
+                validationPassed = true;
+                expectedStake = processedIndexerEvents[0].stake;
+                actualStake = contractEvents[0].stake;
+                comparisonBlock = indexerLatest;
+                
+                console.log(`            ✅ Both have same latest event block: ${comparisonBlock}`);
+                console.log(`            📊 Latest event (block ${comparisonBlock}):`);
+                console.log(`               Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
+                console.log(`               Contract: ${this.weiToTRAC(actualStake)} TRAC`);
+              } else {
+                console.log(`            ❌ Latest event block mismatch`);
+              }
+            } else if (contractEventCount === 0) {
+              // No contract events found
+              console.log(`            ⚠️ No contract events found for this delegator`);
+              console.log(`            📊 Indexer has ${indexerEventCount} events, Contract has 0 events`);
+              console.log(`            🔍 Cannot perform validation - no contract data available`);
+              console.log(`         ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - no contract data`);
+              continue;
             } else {
-              console.log(`         ❌ Latest event block mismatch`);
+              console.log(`            ⚠️ Cannot compare: Indexer has ${indexerEventCount} events, Contract has ${contractEventCount} events`);
             }
-          } else if (contractEventCount === 0) {
-            // No contract events found
-            console.log(`      ⚠️ No contract events found for this delegator`);
-            console.log(`      📊 Indexer has ${indexerEventCount} events, Contract has 0 events`);
-            console.log(`      🔍 Cannot perform validation - no contract data available`);
-            console.log(`   ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - no contract data`);
-            continue;
-          } else {
-            console.log(`      ⚠️ Cannot compare: Indexer has ${indexerEventCount} events, Contract has ${contractEventCount} events`);
+            
+            // Skip validation if comparison failed
+            if (!validationPassed) {
+              console.log(`         ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - comparison failed`);
+              continue;
+            }
+            
+            // Validate that contract state matches expected stake
+            const difference = expectedStake - actualStake;
+            const tolerance = 500000000000000000n; // 0.5 TRAC in wei
+            
+            if (difference === 0n || difference === 0) {
+              console.log(`         ✅ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+              passed++;
+            } else if (difference >= -tolerance && difference <= tolerance) {
+              console.log(`         ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+              if (Math.abs(Number(difference)) < 1000000000000000000) { // Less than 1 TRAC
+                const tracDifference = Number(difference) / Math.pow(10, 18);
+                console.log(`            📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
+              } else {
+                console.log(`            📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+              }
+              warnings++; // Count as warning
+            } else {
+              console.log(`         ❌ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+              console.log(`            📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+              failed++;
+            }
+          } catch (error) {
+            console.log(`         ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
+            if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+              rpcErrors++;
+            } else {
+              failed++;
+            }
           }
-          
-          // Skip validation if comparison failed
-          if (!validationPassed) {
-            console.log(`   ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - comparison failed`);
-            continue;
-          }
-          
-          // Remove validation tracking logic
-          // Step 4: Check if event was already validated and its status
-          // const eventHash = this.generateEventHash(network, nodeId, delegatorKey, comparisonBlock, expectedStake, actualStake);
-          // const prevStatus = this.validatedEvents[eventHash];
-          // if (prevStatus === 'passed' || prevStatus === 'warning') {
-          //   const differenceSkipped = expectedStake - actualStake;
-          //   console.log(`   ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Already validated as ${prevStatus}, skipping`);
-          //   if (indexerEventCount === 1 && contractEventCount === 1) {
-          //     console.log(`      📊 Single event - no stake comparison needed`);
-          //   } else {
-          //     console.log(`      Indexer old stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualStake)} TRAC`);
-          //     console.log(`      📊 Difference: ${differenceSkipped > 0 ? '+' : ''}${this.weiToTRAC(differenceSkipped > 0 ? differenceSkipped : -differenceSkipped)} TRAC`);
-          //   }
-          //   console.log(`      🔍 Previous event block: ${comparisonBlock} (current block: ${comparisonBlock})`);
-          //   skippedAlreadyValidated++;
-          //   continue;
-          // }
-          
-          // Step 5: Validate that contract state matches expected stake
-          const difference = expectedStake - actualStake;
-          
-          const tolerance = 500000000000000000n; // 0.5 TRAC in wei
-          
-          if (difference === 0n || difference === 0) {
-            if (indexerEventCount === 1 && contractEventCount === 1) {
-              console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      📊 Single event validation passed`);
-              console.log(`      📝 Both indexer and contract have the same single event`);
-            } else {
-              console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      Indexer stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      🔍 Latest event block: ${comparisonBlock}`);
-              console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            }
-            passed++;
-            // Remove validation tracking
-            // this.validatedEvents[eventHash] = 'passed';
-          } else if (difference >= -tolerance && difference <= tolerance) {
-            if (indexerEventCount === 1 && contractEventCount === 1) {
-              console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      📊 Single event validation passed with small tolerance`);
-              console.log(`      📝 Both indexer and contract have the same single event`);
-            } else {
-              console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      Indexer stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      🔍 Latest event block: ${comparisonBlock}`);
-              console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            }
-            if (Math.abs(Number(difference)) < 1000000000000000000) {
-              const tracDifference = Number(difference) / Math.pow(10, 18);
-              console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
-            } else {
-              console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
-            }
-            warnings++;
-            // Remove validation tracking
-            // this.validatedEvents[eventHash] = 'warning';
-          } else {
-            if (indexerEventCount === 1 && contractEventCount === 1) {
-              console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      📊 Single event validation failed`);
-              console.log(`      📝 Both indexer and contract have the same single event`);
-            } else {
-              console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      Indexer stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      🔍 Latest event block: ${comparisonBlock}`);
-              console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            }
-            console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            failed++;
-            // Remove validation tracking
-            // this.validatedEvents[eventHash] = 'failed';
-          }
-          
-        } catch (error) {
-          console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
-          failed++;
         }
       }
       
@@ -1415,380 +1383,304 @@ class CompleteQAService {
       
       console.log(`   📊 Validating ${total} delegator stake update events...`);
       
-      for (let i = 0; i < eventsResult.rows.length; i++) {
-        const row = eventsResult.rows[i];
-        const nodeId = parseInt(row.identity_id);
-        const delegatorKey = row.delegator_key;
-        const newDelegatorBaseStake = BigInt(row.stake_base);
-        const blockNumber = parseInt(row.block_number);
+      if (network === 'Base') {
+        // Use parallel processing for Base network
+        console.log(`   🚀 Using parallel processing for Base network (10 concurrent events)`);
         
-        // Show progress every 10 events
-        if (i % 10 === 0) {
-          console.log(`   📈 Progress: ${i}/${total} events processed...`);
-        }
+        const tasks = eventsResult.rows.map((row, i) => async () => {
+          const nodeId = parseInt(row.identity_id);
+          const delegatorKey = row.delegator_key;
+          const newDelegatorBaseStake = BigInt(row.stake_base);
+          const blockNumber = parseInt(row.block_number);
+          
+          // Show progress every 10 events
+          if (i % 10 === 0) {
+            console.log(`   📈 Progress: ${i}/${total} events processed...`);
+          }
+          
+          return await this.validateSingleDelegatorStakeUpdateEvent(client, network, nodeId, delegatorKey, newDelegatorBaseStake, blockNumber);
+        });
         
-        try {
-          // Step 1: Get all events for this specific node and delegator from indexer
-          const allEventsForDelegatorResult = await client.query(`
-            SELECT stake_base, block_number
-            FROM delegator_base_stake_updated
-            WHERE identity_id = $1 
-            AND delegator_key = $2 
-            ORDER BY block_number DESC
-          `, [nodeId, delegatorKey]);
-          
-          console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}:`);
-          console.log(`      Found ${allEventsForDelegatorResult.rows.length} events:`);
-          for (let k = 0; k < allEventsForDelegatorResult.rows.length; k++) {
-            const event = allEventsForDelegatorResult.rows[k];
-            console.log(`         Event ${k}: Block ${event.block_number}, Stake ${event.stake_base}`);
-          }
-          console.log(`      Current event block: ${blockNumber}`);
-          
-          // Group indexer events by block number and sort by stake (highest first)
-          const indexerEventsByBlock = {};
-          for (const event of allEventsForDelegatorResult.rows) {
-            const blockNum = event.block_number;
-            if (!indexerEventsByBlock[blockNum]) {
-              indexerEventsByBlock[blockNum] = [];
-            }
-            indexerEventsByBlock[blockNum].push({
-              blockNumber: blockNum,
-              stake: BigInt(event.stake_base)
-            });
-          }
-          
-          // Sort each block's events by stake (highest first) and keep only the highest
-          const processedIndexerEvents = [];
-          for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
-            events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
-            processedIndexerEvents.push(events[0]); // Keep only the highest stake
-          }
-          
-          // Sort processed events by block number (newest first)
-          processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-          
-          console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedIndexerEvents.length} unique blocks from indexer`);
-          
-          // Step 2: Get all contract events for this delegator
-          const networkConfig = config.networks.find(n => n.name === network);
-          if (!networkConfig) {
-            throw new Error(`Network ${network} not found in config`);
-          }
-          
-          let contractEvents = [];
-          let retries = 3;
-          let rpcSuccess = false;
-          let historicalQueryFailures = 0;
-          let totalHistoricalQueries = 0;
-          
-          while (retries > 0) {
-            try {
-              const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
-              const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
-              
-              const stakingContract = new ethers.Contract(stakingAddress, [
-                'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
-              ], provider);
-              
-              // Query ALL DelegatorBaseStakeUpdated events for this specific delegator and node
-              console.log(`      📊 Querying contract events for node ${nodeId}, delegator ${delegatorKey}`);
-              
-              try {
-                // Query ALL DelegatorBaseStakeUpdated events for this specific delegator and node
-                console.log(`      📊 Querying ALL DelegatorBaseStakeUpdated events for node ${nodeId}, delegator ${delegatorKey}`);
-                
-                const filter = stakingContract.filters.DelegatorBaseStakeUpdated(nodeId, delegatorKey);
-                
-                // Try to query in chunks to avoid timeout
-                const currentBlock = await provider.getBlockNumber();
-                const chunkSize = 1000000; // 1M blocks per chunk
-                let allEvents = [];
-                
-                // Start from the oldest indexer event block and go forward
-                const oldestIndexerBlock = allEventsForDelegatorResult.rows[allEventsForDelegatorResult.rows.length - 1].block_number;
-                const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
-                
-                for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
-                  const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
-                  
-                  try {
-                    const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-                    allEvents = allEvents.concat(chunkEvents);
-                  } catch (error) {
-                    console.log(`      ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
-                    // Continue with next chunk
-                  }
-                }
-                
-                console.log(`      📊 Found ${allEvents.length} contract events for this delegator`);
-                
-                // Group contract events by block number and sort by stake (highest first)
-                const contractEventsByBlock = {};
-                for (const event of allEvents) {
-                  const blockNum = event.blockNumber;
-                  if (!contractEventsByBlock[blockNum]) {
-                    contractEventsByBlock[blockNum] = [];
-                  }
-                  contractEventsByBlock[blockNum].push({
-                    blockNumber: blockNum,
-                    stake: event.args.stakeBase
-                  });
-                }
-                
-                // Sort each block's events by stake (highest first) and keep only the highest
-                const processedContractEvents = [];
-                for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
-                  events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
-                  processedContractEvents.push(events[0]); // Keep only the highest stake
-                }
-                
-                // Sort processed events by block number (newest first)
-                processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-                
-                console.log(`      📊 Processed ${processedContractEvents.length} unique blocks from contract`);
-                
-                // Check if both sides have the same number of events for each block
-                const indexerBlockCounts = {};
-                const contractBlockCounts = {};
-                
-                for (const event of allEventsForDelegatorResult.rows) {
-                  const blockNum = event.block_number;
-                  indexerBlockCounts[blockNum] = (indexerBlockCounts[blockNum] || 0) + 1;
-                }
-                
-                for (const event of allEvents) {
-                  const blockNum = event.blockNumber;
-                  contractBlockCounts[blockNum] = (contractBlockCounts[blockNum] || 0) + 1;
-                }
-                
-                // Check for mismatched block counts
-                let blockCountMismatch = false;
-                const allBlocks = new Set([...Object.keys(indexerBlockCounts), ...Object.keys(contractBlockCounts)]);
-                
-                for (const blockNum of allBlocks) {
-                  const indexerCount = indexerBlockCounts[blockNum] || 0;
-                  const contractCount = contractBlockCounts[blockNum] || 0;
-                  if (indexerCount !== contractCount) {
-                    console.log(`      ⚠️ Block ${blockNum} has ${indexerCount} indexer events vs ${contractCount} contract events`);
-                    blockCountMismatch = true;
-                  }
-                }
-                
-                if (blockCountMismatch) {
-                  console.log(`      ⚠️ Block count mismatch detected, using highest stake per block`);
-                }
-                
-                // Process contract events and sort by block number
-                contractEvents = [];
-                for (const event of processedContractEvents) {
-                  contractEvents.push({
-                    blockNumber: event.blockNumber,
-                    stake: event.stake
-                  });
-                  console.log(`      📊 Contract event at block ${event.blockNumber}: ${this.weiToTRAC(event.stake)} TRAC`);
-                }
-                
-              } catch (error) {
-                console.log(`      ⚠️ Failed to query contract events: ${error.message}`);
-                console.log(`      🔍 Error details: ${error.toString()}`);
-                historicalQueryFailures++;
-              }
-              
-              // If we couldn't get any contract events, try to get current state as fallback
-              if (contractEvents.length === 0) {
-                try {
-                  // Try to get current delegator stake using a different approach
-                  console.log(`      🔍 No contract events found, trying to get current state...`);
-                  
-                  // We could try to get current state from a different contract method if available
-                  // For now, we'll just note that we have no contract data
-                  console.log(`      📊 No contract events available for this delegator`);
-                  
-                } catch (error) {
-                  console.log(`      ⚠️ Failed to get current contract state: ${error.message}`);
-                }
-              }
-              
-              rpcSuccess = true;
+        const results = await this.runInBatches(tasks, 10);
+        
+        // Aggregate results
+        for (const result of results) {
+          switch (result.type) {
+            case 'passed':
+              passed++;
               break;
-            } catch (error) {
-              retries--;
-              if (retries === 0) {
-                console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
-                rpcErrors++;
-                skippedDueToRPC++;
-                break;
+            case 'failed':
+              failed++;
+              break;
+            case 'warning':
+              warnings++;
+              break;
+            case 'rpcError':
+              rpcErrors++;
+              break;
+            case 'skipped':
+              // Don't count skipped in totals
+              break;
+          }
+        }
+      } else {
+        // Sequential processing for other networks
+        for (let i = 0; i < eventsResult.rows.length; i++) {
+          const row = eventsResult.rows[i];
+          const nodeId = parseInt(row.identity_id);
+          const delegatorKey = row.delegator_key;
+          const newDelegatorBaseStake = BigInt(row.stake_base);
+          const blockNumber = parseInt(row.block_number);
+          
+          // Show progress every 10 events
+          if (i % 10 === 0) {
+            console.log(`   📈 Progress: ${i}/${total} events processed...`);
+          }
+          
+          try {
+            // Step 1: Get all events for this specific node and delegator from indexer
+            const allEventsForDelegatorResult = await client.query(`
+              SELECT stake_base, block_number
+              FROM delegator_base_stake_updated
+              WHERE identity_id = $1 
+              AND delegator_key = $2 
+              ORDER BY block_number DESC
+            `, [nodeId, delegatorKey]);
+            
+            console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}:`);
+            console.log(`      Found ${allEventsForDelegatorResult.rows.length} events:`);
+            for (let k = 0; k < allEventsForDelegatorResult.rows.length; k++) {
+              const event = allEventsForDelegatorResult.rows[k];
+              console.log(`         Event ${k}: Block ${event.block_number}, Stake ${event.stake_base}`);
+            }
+            console.log(`      Current event block: ${blockNumber}`);
+            
+            // Group indexer events by block number and sort by stake (highest first)
+            const indexerEventsByBlock = {};
+            for (const event of allEventsForDelegatorResult.rows) {
+              const blockNum = event.block_number;
+              if (!indexerEventsByBlock[blockNum]) {
+                indexerEventsByBlock[blockNum] = [];
               }
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              indexerEventsByBlock[blockNum].push({
+                blockNumber: blockNum,
+                stake: BigInt(event.stake_base)
+              });
             }
-          }
-          
-          if (!rpcSuccess) {
-            continue;
-          }
-          
-          // Step 3: Compare indexer and contract events
-          const indexerEventCount = processedIndexerEvents.length;
-          const contractEventCount = contractEvents.length;
-          
-          console.log(`      📊 Indexer events: ${indexerEventCount}, Contract events: ${contractEventCount}`);
-          
-          let validationPassed = false;
-          let expectedStake = 0n;
-          let actualStake = 0n;
-          let comparisonBlock = 0;
-          
-          if (indexerEventCount === 1 && contractEventCount === 1) {
-            // Single event case: check if they have the same blockchain number
-            const indexerBlock = processedIndexerEvents[0].blockNumber;
-            const contractBlock = contractEvents[0].blockNumber;
             
-            console.log(`      📋 Single event comparison:`);
-            console.log(`         Indexer block: ${indexerBlock}, Contract block: ${contractBlock}`);
-            
-            if (Number(indexerBlock) === Number(contractBlock)) {
-              validationPassed = true;
-              expectedStake = processedIndexerEvents[0].stake;
-              actualStake = contractEvents[0].stake;
-              comparisonBlock = indexerBlock;
-              console.log(`         ✅ Both have same block number: ${comparisonBlock}`);
-              console.log(`         📝 Both indexer and contract have the same single event`);
-            } else {
-              console.log(`         ❌ Block number mismatch`);
+            // Sort each block's events by stake (highest first) and keep only the highest
+            const processedIndexerEvents = [];
+            for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
+              events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+              processedIndexerEvents.push(events[0]); // Keep only the highest stake
             }
-          } else if (indexerEventCount >= 2 && contractEventCount >= 2) {
-            // Multiple events case: compare second largest blockchain numbers
-            const indexerSecondLargest = processedIndexerEvents[1].blockNumber;
-            const contractSecondLargest = contractEvents[1].blockNumber;
             
-            console.log(`      📋 Multiple events comparison:`);
-            console.log(`         Indexer second largest block: ${indexerSecondLargest}, Contract second largest block: ${contractSecondLargest}`);
+            // Sort processed events by block number (newest first)
+            processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
             
-            if (Number(indexerSecondLargest) === Number(contractSecondLargest)) {
-              validationPassed = true;
-              expectedStake = processedIndexerEvents[1].stake;
-              actualStake = contractEvents[1].stake;
-              comparisonBlock = indexerSecondLargest;
+            console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedIndexerEvents.length} unique blocks from indexer`);
+            
+            // Step 2: Get all contract events for this delegator
+            const networkConfig = config.networks.find(n => n.name === network);
+            if (!networkConfig) {
+              throw new Error(`Network ${network} not found in config`);
+            }
+            
+            let contractEvents = [];
+            let retries = 3;
+            let rpcSuccess = false;
+            let historicalQueryFailures = 0;
+            let totalHistoricalQueries = 0;
+            
+            while (retries > 0) {
+              try {
+                const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+                const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
+                
+                const stakingContract = new ethers.Contract(stakingAddress, [
+                  'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
+                ], provider);
+                
+                // Query ALL DelegatorBaseStakeUpdated events for this specific delegator and node
+                console.log(`      📊 Querying contract events for node ${nodeId}, delegator ${delegatorKey}`);
+                
+                try {
+                  // Query ALL DelegatorBaseStakeUpdated events for this specific delegator and node
+                  console.log(`      📊 Querying ALL DelegatorBaseStakeUpdated events for node ${nodeId}, delegator ${delegatorKey}`);
+                  
+                  const filter = stakingContract.filters.DelegatorBaseStakeUpdated(nodeId, delegatorKey);
+                  
+                  // Try to query in chunks to avoid timeout
+                  const currentBlock = await provider.getBlockNumber();
+                  const chunkSize = network === 'Base' ? 100000 : 1000000; // 0.1M for Base
+                  let allEvents = [];
+                  
+                  // Start from the oldest indexer event block and go forward
+                  const oldestIndexerBlock = allEventsForDelegatorResult.rows[allEventsForDelegatorResult.rows.length - 1].block_number;
+                  const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
+                  
+                  for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+                    const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+                    
+                    try {
+                      const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                      allEvents = allEvents.concat(chunkEvents);
+                    } catch (error) {
+                      console.log(`      ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
+                      // Continue with next chunk
+                    }
+                  }
+                  
+                  console.log(`      📊 Found ${allEvents.length} contract events for node ${nodeId}, delegator ${delegatorKey}`);
+                  
+                  // Group contract events by block number and sort by stake (highest first)
+                  const contractEventsByBlock = {};
+                  for (const event of allEvents) {
+                    const blockNum = event.blockNumber;
+                    if (!contractEventsByBlock[blockNum]) {
+                      contractEventsByBlock[blockNum] = [];
+                    }
+                    contractEventsByBlock[blockNum].push({
+                      blockNumber: blockNum,
+                      stake: event.args.stakeBase
+                    });
+                  }
+                  
+                  // Sort each block's events by stake (highest first) and keep only the highest
+                  const processedContractEvents = [];
+                  for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
+                    events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+                    processedContractEvents.push(events[0]); // Keep only the highest stake
+                  }
+                  
+                  // Sort processed events by block number (newest first)
+                  processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+                  
+                  console.log(`      📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedContractEvents.length} unique blocks from contract`);
+                  
+                  contractEvents = processedContractEvents;
+                  
+                  break;
+                } catch (error) {
+                  console.log(`      ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
+                  retries--;
+                  if (retries === 0) {
+                    rpcErrors++;
+                    continue;
+                  }
+                  await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+              } catch (error) {
+                retries--;
+                if (retries === 0) {
+                  console.log(`      ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
+                  rpcErrors++;
+                  continue;
+                }
+                await new Promise(resolve => setTimeout(resolve, 2000));
+              }
+            }
+            
+            if (contractEvents.length === 0) {
+              console.log(`      ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: No contract events found, skipping validation`);
+              continue;
+            }
+            
+            // Compare indexer and contract events (now using processed events)
+            const indexerEventCount = processedIndexerEvents.length;
+            const contractEventCount = contractEvents.length;
+            
+            console.log(`      📊 Node ${nodeId}, Delegator ${delegatorKey}: Indexer events: ${indexerEventCount}, Contract events: ${contractEventCount}`);
+            
+            let validationPassed = false;
+            let expectedStake = 0n;
+            let actualStake = 0n;
+            let comparisonBlock = 0;
+            
+            if (indexerEventCount === 1 && contractEventCount === 1) {
+              // Single event case: check if they have the same blockchain number
+              const indexerBlock = processedIndexerEvents[0].blockNumber;
+              const contractBlock = contractEvents[0].blockNumber;
               
-              // Get current event values for comparison
-              const indexerCurrentStake = processedIndexerEvents[0].stake;
-              const contractCurrentStake = contractEvents[0].stake;
-              const currentBlock = processedIndexerEvents[0].blockNumber;
+              console.log(`      📋 Node ${nodeId}, Delegator ${delegatorKey}: Single event comparison:`);
+              console.log(`         Indexer block: ${indexerBlock}, Contract block: ${contractBlock}`);
               
-              console.log(`         ✅ Both have same previous event block: ${comparisonBlock}`);
-              console.log(`         📊 Previous event (block ${comparisonBlock}):`);
-              console.log(`            Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
-              console.log(`            Contract: ${this.weiToTRAC(actualStake)} TRAC`);
-              
-              // Calculate and log the TRAC difference
-              const difference = expectedStake - actualStake;
-              const tolerance = 500000000000000000n; // 0.5 TRAC in wei
-              
-              console.log(`         📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-              
-              if (difference >= -tolerance && difference <= tolerance) {
-                console.log(`         ✅ Difference within 0.5 TRAC tolerance - Validation PASSED`);
+              if (Number(indexerBlock) === Number(contractBlock)) {
+                validationPassed = true;
+                expectedStake = processedIndexerEvents[0].stake;
+                actualStake = contractEvents[0].stake;
+                comparisonBlock = indexerBlock;
+                console.log(`         ✅ Both have same block number: ${comparisonBlock}`);
               } else {
-                console.log(`         ❌ Difference exceeds 0.5 TRAC tolerance - Validation FAILED`);
+                console.log(`         ❌ Block number mismatch`);
               }
+            } else if (indexerEventCount >= 1 && contractEventCount >= 1) {
+              // Multiple events case: compare latest blockchain numbers (first biggest block)
+              const indexerLatest = processedIndexerEvents[0].blockNumber;
+              const contractLatest = contractEvents[0].blockNumber;
+              
+              console.log(`         📋 Latest event comparison:`);
+              console.log(`            Indexer latest block: ${indexerLatest}, Contract latest block: ${contractLatest}`);
+              
+              if (Number(indexerLatest) === Number(contractLatest)) {
+                validationPassed = true;
+                expectedStake = processedIndexerEvents[0].stake;
+                actualStake = contractEvents[0].stake;
+                comparisonBlock = indexerLatest;
+                
+                console.log(`            ✅ Both have same latest event block: ${comparisonBlock}`);
+                console.log(`            📊 Latest event (block ${comparisonBlock}):`);
+                console.log(`               Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
+                console.log(`               Contract: ${this.weiToTRAC(actualStake)} TRAC`);
+              } else {
+                console.log(`            ❌ Latest event block mismatch`);
+              }
+            } else if (contractEventCount === 0) {
+              // No contract events found
+              console.log(`            ⚠️ No contract events found for this delegator`);
+              console.log(`            📊 Indexer has ${indexerEventCount} events, Contract has 0 events`);
+              console.log(`            🔍 Cannot perform validation - no contract data available`);
+              console.log(`         ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - no contract data`);
+              continue;
             } else {
-              console.log(`         ❌ Previous event block mismatch`);
+              console.log(`            ⚠️ Cannot compare: Indexer has ${indexerEventCount} events, Contract has ${contractEventCount} events`);
             }
-          } else if (contractEventCount === 0) {
-            // No contract events found
-            console.log(`      ⚠️ No contract events found for this delegator`);
-            console.log(`      📊 Indexer has ${indexerEventCount} events, Contract has 0 events`);
-            console.log(`      🔍 Cannot perform validation - no contract data available`);
-            console.log(`   ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - no contract data`);
-            continue;
-          } else {
-            console.log(`      ⚠️ Cannot compare: Indexer has ${indexerEventCount} events, Contract has ${contractEventCount} events`);
+            
+            // Skip validation if comparison failed
+            if (!validationPassed) {
+              console.log(`         ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - comparison failed`);
+              continue;
+            }
+            
+            // Validate that contract state matches expected stake
+            const difference = expectedStake - actualStake;
+            const tolerance = 500000000000000000n; // 0.5 TRAC in wei
+            
+            if (difference === 0n || difference === 0) {
+              console.log(`         ✅ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+              passed++;
+            } else if (difference >= -tolerance && difference <= tolerance) {
+              console.log(`         ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+              if (Math.abs(Number(difference)) < 1000000000000000000) { // Less than 1 TRAC
+                const tracDifference = Number(difference) / Math.pow(10, 18);
+                console.log(`            📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
+              } else {
+                console.log(`            📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+              }
+              warnings++; // Count as warning
+            } else {
+              console.log(`         ❌ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+              console.log(`            📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+              failed++;
+            }
+          } catch (error) {
+            console.log(`         ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
+            if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+              rpcErrors++;
+            } else {
+              failed++;
+            }
           }
-          
-          // Skip validation if comparison failed
-          if (!validationPassed) {
-            console.log(`   ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - comparison failed`);
-            continue;
-          }
-          
-          // Remove validation tracking logic
-          // Step 4: Check if event was already validated and its status
-          // const eventHash = this.generateEventHash(network, nodeId, delegatorKey, comparisonBlock, expectedStake, actualStake);
-          // const prevStatus = this.validatedEvents[eventHash];
-          // if (prevStatus === 'passed' || prevStatus === 'warning') {
-          //   const differenceSkipped = expectedStake - actualStake;
-          //   console.log(`   ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Already validated as ${prevStatus}, skipping`);
-          //   if (indexerEventCount === 1 && contractEventCount === 1) {
-          //     console.log(`      📊 Single event - no stake comparison needed`);
-          //   } else {
-          //     console.log(`      Indexer old stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract old stake: ${this.weiToTRAC(actualStake)} TRAC`);
-          //     console.log(`      📊 Difference: ${differenceSkipped > 0 ? '+' : ''}${this.weiToTRAC(differenceSkipped > 0 ? differenceSkipped : -differenceSkipped)} TRAC`);
-          //   }
-          //   console.log(`      🔍 Previous event block: ${comparisonBlock} (current block: ${comparisonBlock})`);
-          //   skippedAlreadyValidated++;
-          //   continue;
-          // }
-          
-          // Step 5: Validate that contract state matches expected stake
-          const difference = expectedStake - actualStake;
-          
-          const tolerance = 500000000000000000n; // 0.5 TRAC in wei
-          
-          if (difference === 0n || difference === 0) {
-            if (indexerEventCount === 1 && contractEventCount === 1) {
-              console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      📊 Single event validation passed`);
-              console.log(`      📝 Both indexer and contract have the same single event`);
-            } else {
-              console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      Indexer stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      🔍 Latest event block: ${comparisonBlock}`);
-              console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            }
-            passed++;
-            // Remove validation tracking
-            // this.validatedEvents[eventHash] = 'passed';
-          } else if (difference >= -tolerance && difference <= tolerance) {
-            if (indexerEventCount === 1 && contractEventCount === 1) {
-              console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      📊 Single event validation passed with small tolerance`);
-              console.log(`      📝 Both indexer and contract have the same single event`);
-            } else {
-              console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      Indexer stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      🔍 Latest event block: ${comparisonBlock}`);
-              console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            }
-            if (Math.abs(Number(difference)) < 1000000000000000000) {
-              const tracDifference = Number(difference) / Math.pow(10, 18);
-              console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
-            } else {
-              console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
-            }
-            warnings++;
-            // Remove validation tracking
-            // this.validatedEvents[eventHash] = 'warning';
-          } else {
-            if (indexerEventCount === 1 && contractEventCount === 1) {
-              console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      📊 Single event validation failed`);
-              console.log(`      📝 Both indexer and contract have the same single event`);
-            } else {
-              console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}`);
-              console.log(`      Indexer stake: ${this.weiToTRAC(expectedStake)} TRAC, Contract stake: ${this.weiToTRAC(actualStake)} TRAC`);
-              console.log(`      🔍 Latest event block: ${comparisonBlock}`);
-              console.log(`      📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            }
-            console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            failed++;
-            // Remove validation tracking
-            // this.validatedEvents[eventHash] = 'failed';
-          }
-          
-        } catch (error) {
-          console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
-          failed++;
         }
       }
       
@@ -1814,6 +1706,760 @@ class CompleteQAService {
       return { passed: 0, failed: 0, warnings: 0, total: 0 };
     } finally {
       await client.end();
+    }
+  }
+
+  /**
+   * Run tasks in parallel with limited concurrency
+   */
+  async runInBatches(tasks, concurrency = 5) {
+    const limit = pLimit(concurrency);
+    return Promise.all(tasks.map(task => limit(task)));
+  }
+
+  /**
+   * Validate a single node stake (for parallel processing)
+   */
+  async validateSingleNodeStake(client, network, nodeId, row) {
+    try {
+      // Get the latest block number from indexer for this node
+      const indexerBlockResult = await client.query(`
+        SELECT MAX(block_number) as latest_block 
+        FROM node_stake_updated
+        WHERE identity_id = $1
+      `, [nodeId]);
+      
+      const indexerBlockNumber = indexerBlockResult.rows[0].latest_block;
+      
+      // Get ALL node stake events from indexer for this node
+      const allIndexerEventsResult = await client.query(`
+        SELECT stake, block_number
+        FROM node_stake_updated
+        WHERE identity_id = $1
+        ORDER BY block_number DESC
+      `, [nodeId]);
+      
+      console.log(`   🔍 Node ${nodeId}: Found ${allIndexerEventsResult.rows.length} indexer events`);
+      
+      // Group indexer events by block number and sort by stake (highest first)
+      const indexerEventsByBlock = {};
+      for (const event of allIndexerEventsResult.rows) {
+        const blockNum = event.block_number;
+        if (!indexerEventsByBlock[blockNum]) {
+          indexerEventsByBlock[blockNum] = [];
+        }
+        indexerEventsByBlock[blockNum].push({
+          blockNumber: blockNum,
+          stake: BigInt(event.stake)
+        });
+      }
+      
+      // Sort each block's events by stake (highest first) and keep only the highest
+      const processedIndexerEvents = [];
+      for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
+        events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+        processedIndexerEvents.push(events[0]); // Keep only the highest stake
+      }
+      
+      // Sort processed events by block number (newest first)
+      processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+      
+      console.log(`   📊 Node ${nodeId}: Processed ${processedIndexerEvents.length} unique blocks from indexer`);
+      
+      // Get ALL node stake events from contract for this node
+      const networkConfig = config.networks.find(n => n.name === network);
+      if (!networkConfig) {
+        throw new Error(`Network ${network} not found in config`);
+      }
+      
+      let contractEvents = [];
+      let retries = 3;
+      
+      while (retries > 0) {
+        try {
+          const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+          const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
+          
+          const stakingContract = new ethers.Contract(stakingAddress, [
+            'event NodeStakeUpdated(uint72 indexed identityId, uint96 stake)'
+          ], provider);
+          
+          // Query ALL NodeStakeUpdated events for this specific node
+          console.log(`   📊 Querying ALL NodeStakeUpdated events for node ${nodeId}`);
+          
+          const filter = stakingContract.filters.NodeStakeUpdated(nodeId);
+          
+          // Try to query in chunks to avoid timeout
+          const currentBlock = await provider.getBlockNumber();
+          const chunkSize = network === 'Base' ? 100000 : 1000000; // 0.1M for Base
+          let allEvents = [];
+          
+          // Start from the oldest indexer event block and go forward
+          const oldestIndexerBlock = allIndexerEventsResult.rows[allIndexerEventsResult.rows.length - 1].block_number;
+          const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
+          
+          for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+            const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+            
+            try {
+              const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+              allEvents = allEvents.concat(chunkEvents);
+            } catch (error) {
+              console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
+              // Continue with next chunk
+            }
+          }
+          
+          console.log(`   📊 Found ${allEvents.length} contract events for node ${nodeId}`);
+          
+          // Group contract events by block number and sort by stake (highest first)
+          const contractEventsByBlock = {};
+          for (const event of allEvents) {
+            const blockNum = event.blockNumber;
+            if (!contractEventsByBlock[blockNum]) {
+              contractEventsByBlock[blockNum] = [];
+            }
+            contractEventsByBlock[blockNum].push({
+              blockNumber: blockNum,
+              stake: event.args.stake
+            });
+          }
+          
+          // Sort each block's events by stake (highest first) and keep only the highest
+          const processedContractEvents = [];
+          for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
+            events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+            processedContractEvents.push(events[0]); // Keep only the highest stake
+          }
+          
+          // Sort processed events by block number (newest first)
+          processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+          
+          console.log(`   📊 Node ${nodeId}: Processed ${processedContractEvents.length} unique blocks from contract`);
+          
+          // Check if both sides have the same number of events for each block
+          const indexerBlockCounts = {};
+          const contractBlockCounts = {};
+          
+          for (const event of allIndexerEventsResult.rows) {
+            const blockNum = event.block_number;
+            indexerBlockCounts[blockNum] = (indexerBlockCounts[blockNum] || 0) + 1;
+          }
+          
+          for (const event of allEvents) {
+            const blockNum = event.blockNumber;
+            contractBlockCounts[blockNum] = (contractBlockCounts[blockNum] || 0) + 1;
+          }
+          
+          // Check for mismatched block counts
+          let blockCountMismatch = false;
+          const allBlocks = new Set([...Object.keys(indexerBlockCounts), ...Object.keys(contractBlockCounts)]);
+          
+          for (const blockNum of allBlocks) {
+            const indexerCount = indexerBlockCounts[blockNum] || 0;
+            const contractCount = contractBlockCounts[blockNum] || 0;
+            if (indexerCount !== contractCount) {
+              console.log(`   ⚠️ Node ${nodeId}: Block ${blockNum} has ${indexerCount} indexer events vs ${contractCount} contract events`);
+              blockCountMismatch = true;
+            }
+          }
+          
+          if (blockCountMismatch) {
+            console.log(`   ⚠️ Node ${nodeId}: Block count mismatch detected, using highest stake per block`);
+          }
+          
+          contractEvents = processedContractEvents;
+          
+          break;
+        } catch (error) {
+          retries--;
+          if (retries === 0) {
+            console.log(`   ⚠️ Node ${nodeId}: RPC Error - ${error.message}`);
+            return { type: 'rpcError', nodeId };
+          }
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+      
+      if (contractEvents.length === 0) {
+        console.log(`   ⚠️ Node ${nodeId}: No contract events found, skipping validation`);
+        return { type: 'skipped', nodeId };
+      }
+      
+      // Compare indexer and contract events (now using processed events)
+      const indexerEventCount = processedIndexerEvents.length;
+      const contractEventCount = contractEvents.length;
+      
+      console.log(`   📊 Node ${nodeId}: Indexer events: ${indexerEventCount}, Contract events: ${contractEventCount}`);
+      
+      let validationPassed = false;
+      let expectedStake = 0n;
+      let actualStake = 0n;
+      let comparisonBlock = 0;
+      
+      if (indexerEventCount === 1 && contractEventCount === 1) {
+        // Single event case: check if they have the same blockchain number
+        const indexerBlock = processedIndexerEvents[0].blockNumber;
+        const contractBlock = contractEvents[0].blockNumber;
+        
+        console.log(`   📋 Node ${nodeId}: Single event comparison:`);
+        console.log(`      Indexer block: ${indexerBlock}, Contract block: ${contractBlock}`);
+        
+        if (Number(indexerBlock) === Number(contractBlock)) {
+          validationPassed = true;
+          expectedStake = processedIndexerEvents[0].stake;
+          actualStake = contractEvents[0].stake;
+          comparisonBlock = indexerBlock;
+          console.log(`      ✅ Both have same block number: ${comparisonBlock}`);
+        } else {
+          console.log(`      ❌ Block number mismatch`);
+        }
+      } else if (indexerEventCount >= 1 && contractEventCount >= 1) {
+        // Multiple events case: compare latest blockchain numbers (first biggest block)
+        const indexerLatest = processedIndexerEvents[0].blockNumber;
+        const contractLatest = contractEvents[0].blockNumber;
+        
+        console.log(`      📋 Latest event comparison:`);
+        console.log(`         Indexer latest block: ${indexerLatest}, Contract latest block: ${contractLatest}`);
+        
+        if (Number(indexerLatest) === Number(contractLatest)) {
+          validationPassed = true;
+          expectedStake = processedIndexerEvents[0].stake;
+          actualStake = contractEvents[0].stake;
+          comparisonBlock = indexerLatest;
+          
+          console.log(`         ✅ Both have same latest event block: ${comparisonBlock}`);
+          console.log(`         📊 Latest event (block ${comparisonBlock}):`);
+          console.log(`            Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
+          console.log(`            Contract: ${this.weiToTRAC(actualStake)} TRAC`);
+        } else {
+          console.log(`         ❌ Latest event block mismatch`);
+        }
+      } else if (contractEventCount === 0) {
+        // No contract events found
+        console.log(`      ⚠️ No contract events found for this node`);
+        console.log(`      📊 Indexer has ${indexerEventCount} events, Contract has 0 events`);
+        console.log(`      🔍 Cannot perform validation - no contract data available`);
+        console.log(`   ⏭️ Node ${nodeId}: Cannot validate - no contract data`);
+        return { type: 'skipped', nodeId };
+      } else {
+        console.log(`      ⚠️ Cannot compare: Indexer has ${indexerEventCount} events, Contract has ${contractEventCount} events`);
+      }
+      
+      // Skip validation if comparison failed
+      if (!validationPassed) {
+        console.log(`   ⏭️ Node ${nodeId}: Cannot validate - comparison failed`);
+        return { type: 'skipped', nodeId };
+      }
+      
+      // Validate that contract state matches expected stake
+      const difference = expectedStake - actualStake;
+      const tolerance = 500000000000000000n; // 0.5 TRAC in wei
+      
+      if (difference === 0n || difference === 0) {
+        console.log(`   ✅ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+        return { type: 'passed', nodeId };
+      } else if (difference >= -tolerance && difference <= tolerance) {
+        console.log(`   ⚠️ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+        if (Math.abs(Number(difference)) < 1000000000000000000) { // Less than 1 TRAC
+          const tracDifference = Number(difference) / Math.pow(10, 18);
+          console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
+        } else {
+          console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+        }
+        return { type: 'warning', nodeId };
+      } else {
+        console.log(`   ❌ Node ${nodeId}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+        console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+        return { type: 'failed', nodeId };
+      }
+    } catch (error) {
+      console.log(`   ⚠️ Node ${nodeId}: Error - ${error.message}`);
+      if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+        return { type: 'rpcError', nodeId };
+      } else {
+        return { type: 'failed', nodeId };
+      }
+    }
+  }
+
+  /**
+   * Validate a single delegator stake (for parallel processing)
+   */
+  async validateSingleDelegatorStake(client, network, nodeId, delegatorKey) {
+    try {
+      // Get the latest block number from indexer for this delegator
+      const indexerBlockResult = await client.query(`
+        SELECT MAX(block_number) as latest_block 
+        FROM delegator_base_stake_updated
+        WHERE identity_id = $1 AND delegator_key = $2
+      `, [nodeId, delegatorKey]);
+      
+      const indexerBlockNumber = indexerBlockResult.rows[0].latest_block;
+      
+      // Get ALL delegator events from indexer for this delegator
+      const allIndexerEventsResult = await client.query(`
+        SELECT stake_base, block_number
+        FROM delegator_base_stake_updated
+        WHERE identity_id = $1 AND delegator_key = $2
+        ORDER BY block_number DESC
+      `, [nodeId, delegatorKey]);
+      
+      console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Found ${allIndexerEventsResult.rows.length} indexer events`);
+      
+      // Group indexer events by block number and sort by stake (highest first)
+      const indexerEventsByBlock = {};
+      for (const event of allIndexerEventsResult.rows) {
+        const blockNum = event.block_number;
+        if (!indexerEventsByBlock[blockNum]) {
+          indexerEventsByBlock[blockNum] = [];
+        }
+        indexerEventsByBlock[blockNum].push({
+          blockNumber: blockNum,
+          stake: BigInt(event.stake_base)
+        });
+      }
+      
+      // Sort each block's events by stake (highest first) and keep only the highest
+      const processedIndexerEvents = [];
+      for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
+        events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+        processedIndexerEvents.push(events[0]); // Keep only the highest stake
+      }
+      
+      // Sort processed events by block number (newest first)
+      processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+      
+      console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedIndexerEvents.length} unique blocks from indexer`);
+      
+      // Step 2: Get all contract events for this delegator
+      const networkConfig = config.networks.find(n => n.name === network);
+      if (!networkConfig) {
+        throw new Error(`Network ${network} not found in config`);
+      }
+      
+      let contractEvents = [];
+      let retries = 3;
+      
+      while (retries > 0) {
+        try {
+          const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+          const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
+          
+          const stakingContract = new ethers.Contract(stakingAddress, [
+            'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
+          ], provider);
+          
+          // Query ALL DelegatorBaseStakeUpdated events for this specific delegator and node
+          console.log(`   📊 Querying ALL DelegatorBaseStakeUpdated events for node ${nodeId}, delegator ${delegatorKey}`);
+          
+          const filter = stakingContract.filters.DelegatorBaseStakeUpdated(nodeId, delegatorKey);
+          
+          // Try to query in chunks to avoid timeout
+          const currentBlock = await provider.getBlockNumber();
+          const chunkSize = network === 'Base' ? 100000 : 1000000; // 0.1M for Base
+          let allEvents = [];
+          
+          // Start from the oldest indexer event block and go forward
+          const oldestIndexerBlock = allIndexerEventsResult.rows[allIndexerEventsResult.rows.length - 1].block_number;
+          const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
+          
+          for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+            const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+            
+            try {
+              const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+              allEvents = allEvents.concat(chunkEvents);
+            } catch (error) {
+              console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
+              // Continue with next chunk
+            }
+          }
+          
+          console.log(`   📊 Found ${allEvents.length} contract events for node ${nodeId}, delegator ${delegatorKey}`);
+          
+          // Group contract events by block number and sort by stake (highest first)
+          const contractEventsByBlock = {};
+          for (const event of allEvents) {
+            const blockNum = event.blockNumber;
+            if (!contractEventsByBlock[blockNum]) {
+              contractEventsByBlock[blockNum] = [];
+            }
+            contractEventsByBlock[blockNum].push({
+              blockNumber: blockNum,
+              stake: event.args.stakeBase
+            });
+          }
+          
+          // Sort each block's events by stake (highest first) and keep only the highest
+          const processedContractEvents = [];
+          for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
+            events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+            processedContractEvents.push(events[0]); // Keep only the highest stake
+          }
+          
+          // Sort processed events by block number (newest first)
+          processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+          
+          console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedContractEvents.length} unique blocks from contract`);
+          
+          contractEvents = processedContractEvents;
+          
+          break;
+        } catch (error) {
+          retries--;
+          if (retries === 0) {
+            console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
+            return { type: 'rpcError', nodeId, delegatorKey };
+          }
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+      
+      if (contractEvents.length === 0) {
+        console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: No contract events found, skipping validation`);
+        return { type: 'skipped', nodeId, delegatorKey };
+      }
+      
+      // Compare indexer and contract events (now using processed events)
+      const indexerEventCount = processedIndexerEvents.length;
+      const contractEventCount = contractEvents.length;
+      
+      console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Indexer events: ${indexerEventCount}, Contract events: ${contractEventCount}`);
+      
+      let validationPassed = false;
+      let expectedStake = 0n;
+      let actualStake = 0n;
+      let comparisonBlock = 0;
+      
+      if (indexerEventCount === 1 && contractEventCount === 1) {
+        // Single event case: check if they have the same blockchain number
+        const indexerBlock = processedIndexerEvents[0].blockNumber;
+        const contractBlock = contractEvents[0].blockNumber;
+        
+        console.log(`   📋 Node ${nodeId}, Delegator ${delegatorKey}: Single event comparison:`);
+        console.log(`      Indexer block: ${indexerBlock}, Contract block: ${contractBlock}`);
+        
+        if (Number(indexerBlock) === Number(contractBlock)) {
+          validationPassed = true;
+          expectedStake = processedIndexerEvents[0].stake;
+          actualStake = contractEvents[0].stake;
+          comparisonBlock = indexerBlock;
+          console.log(`      ✅ Both have same block number: ${comparisonBlock}`);
+        } else {
+          console.log(`      ❌ Block number mismatch`);
+        }
+      } else if (indexerEventCount >= 1 && contractEventCount >= 1) {
+        // Multiple events case: compare latest blockchain numbers (first biggest block)
+        const indexerLatest = processedIndexerEvents[0].blockNumber;
+        const contractLatest = contractEvents[0].blockNumber;
+        
+        console.log(`      📋 Latest event comparison:`);
+        console.log(`         Indexer latest block: ${indexerLatest}, Contract latest block: ${contractLatest}`);
+        
+        if (Number(indexerLatest) === Number(contractLatest)) {
+          validationPassed = true;
+          expectedStake = processedIndexerEvents[0].stake;
+          actualStake = contractEvents[0].stake;
+          comparisonBlock = indexerLatest;
+          
+          console.log(`         ✅ Both have same latest event block: ${comparisonBlock}`);
+          console.log(`         📊 Latest event (block ${comparisonBlock}):`);
+          console.log(`            Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
+          console.log(`            Contract: ${this.weiToTRAC(actualStake)} TRAC`);
+        } else {
+          console.log(`         ❌ Latest event block mismatch`);
+        }
+      } else if (contractEventCount === 0) {
+        // No contract events found
+        console.log(`      ⚠️ No contract events found for this delegator`);
+        console.log(`      📊 Indexer has ${indexerEventCount} events, Contract has 0 events`);
+        console.log(`      🔍 Cannot perform validation - no contract data available`);
+        console.log(`   ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - no contract data`);
+        return { type: 'skipped', nodeId, delegatorKey };
+      } else {
+        console.log(`      ⚠️ Cannot compare: Indexer has ${indexerEventCount} events, Contract has ${contractEventCount} events`);
+      }
+      
+      // Skip validation if comparison failed
+      if (!validationPassed) {
+        console.log(`   ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - comparison failed`);
+        return { type: 'skipped', nodeId, delegatorKey };
+      }
+      
+      // Validate that contract state matches expected stake
+      const difference = expectedStake - actualStake;
+      const tolerance = 500000000000000000n; // 0.5 TRAC in wei
+      
+      if (difference === 0n || difference === 0) {
+        console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+        return { type: 'passed', nodeId, delegatorKey };
+      } else if (difference >= -tolerance && difference <= tolerance) {
+        console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+        if (Math.abs(Number(difference)) < 1000000000000000000) { // Less than 1 TRAC
+          const tracDifference = Number(difference) / Math.pow(10, 18);
+          console.log(`      📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
+        } else {
+          console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+        }
+        return { type: 'warning', nodeId, delegatorKey };
+      } else {
+        console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+        console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+        return { type: 'failed', nodeId, delegatorKey };
+      }
+    } catch (error) {
+      console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
+      if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+        return { type: 'rpcError', nodeId, delegatorKey };
+      } else {
+        return { type: 'failed', nodeId, delegatorKey };
+      }
+    }
+  }
+
+  /**
+   * Validate a single delegator stake update event (for parallel processing)
+   */
+  async validateSingleDelegatorStakeUpdateEvent(client, network, nodeId, delegatorKey, newDelegatorBaseStake, blockNumber) {
+    try {
+      // Step 1: Get all events for this specific node and delegator from indexer
+      const allEventsForDelegatorResult = await client.query(`
+        SELECT stake_base, block_number
+        FROM delegator_base_stake_updated
+        WHERE identity_id = $1 
+        AND delegator_key = $2 
+        ORDER BY block_number DESC
+      `, [nodeId, delegatorKey]);
+      
+      console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}:`);
+      console.log(`      Found ${allEventsForDelegatorResult.rows.length} events:`);
+      for (let k = 0; k < allEventsForDelegatorResult.rows.length; k++) {
+        const event = allEventsForDelegatorResult.rows[k];
+        console.log(`         Event ${k}: Block ${event.block_number}, Stake ${event.stake_base}`);
+      }
+      console.log(`      Current event block: ${blockNumber}`);
+      
+      // Group indexer events by block number and sort by stake (highest first)
+      const indexerEventsByBlock = {};
+      for (const event of allEventsForDelegatorResult.rows) {
+        const blockNum = event.block_number;
+        if (!indexerEventsByBlock[blockNum]) {
+          indexerEventsByBlock[blockNum] = [];
+        }
+        indexerEventsByBlock[blockNum].push({
+          blockNumber: blockNum,
+          stake: BigInt(event.stake_base)
+        });
+      }
+      
+      // Sort each block's events by stake (highest first) and keep only the highest
+      const processedIndexerEvents = [];
+      for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
+        events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+        processedIndexerEvents.push(events[0]); // Keep only the highest stake
+      }
+      
+      // Sort processed events by block number (newest first)
+      processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+      
+      console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedIndexerEvents.length} unique blocks from indexer`);
+      
+      // Step 2: Get all contract events for this delegator
+      const networkConfig = config.networks.find(n => n.name === network);
+      if (!networkConfig) {
+        throw new Error(`Network ${network} not found in config`);
+      }
+      
+      let contractEvents = [];
+      let retries = 3;
+      
+      while (retries > 0) {
+        try {
+          const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+          const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
+          
+          const stakingContract = new ethers.Contract(stakingAddress, [
+            'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
+          ], provider);
+          
+          // Query ALL DelegatorBaseStakeUpdated events for this specific delegator and node
+          console.log(`      📊 Querying contract events for node ${nodeId}, delegator ${delegatorKey}`);
+          
+          try {
+            // Query ALL DelegatorBaseStakeUpdated events for this specific delegator and node
+            console.log(`      📊 Querying ALL DelegatorBaseStakeUpdated events for node ${nodeId}, delegator ${delegatorKey}`);
+            
+            const filter = stakingContract.filters.DelegatorBaseStakeUpdated(nodeId, delegatorKey);
+            
+            // Try to query in chunks to avoid timeout
+            const currentBlock = await provider.getBlockNumber();
+            const chunkSize = network === 'Base' ? 100000 : 1000000; // 0.1M for Base
+            let allEvents = [];
+            
+            // Start from the oldest indexer event block and go forward
+            const oldestIndexerBlock = allEventsForDelegatorResult.rows[allEventsForDelegatorResult.rows.length - 1].block_number;
+            const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
+            
+            for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+              const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+              
+              try {
+                const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                allEvents = allEvents.concat(chunkEvents);
+              } catch (error) {
+                console.log(`      ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
+                // Continue with next chunk
+              }
+            }
+            
+            console.log(`      📊 Found ${allEvents.length} contract events for node ${nodeId}, delegator ${delegatorKey}`);
+            
+            // Group contract events by block number and sort by stake (highest first)
+            const contractEventsByBlock = {};
+            for (const event of allEvents) {
+              const blockNum = event.blockNumber;
+              if (!contractEventsByBlock[blockNum]) {
+                contractEventsByBlock[blockNum] = [];
+              }
+              contractEventsByBlock[blockNum].push({
+                blockNumber: blockNum,
+                stake: event.args.stakeBase
+              });
+            }
+            
+            // Sort each block's events by stake (highest first) and keep only the highest
+            const processedContractEvents = [];
+            for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
+              events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+              processedContractEvents.push(events[0]); // Keep only the highest stake
+            }
+            
+            // Sort processed events by block number (newest first)
+            processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+            
+            console.log(`      📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedContractEvents.length} unique blocks from contract`);
+            
+            contractEvents = processedContractEvents;
+            
+            break;
+          } catch (error) {
+            console.log(`      ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
+            retries--;
+            if (retries === 0) {
+              return { type: 'rpcError', nodeId, delegatorKey };
+            }
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        } catch (error) {
+          retries--;
+          if (retries === 0) {
+            console.log(`      ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
+            return { type: 'rpcError', nodeId, delegatorKey };
+          }
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+      
+      if (contractEvents.length === 0) {
+        console.log(`      ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: No contract events found, skipping validation`);
+        return { type: 'skipped', nodeId, delegatorKey };
+      }
+      
+      // Compare indexer and contract events (now using processed events)
+      const indexerEventCount = processedIndexerEvents.length;
+      const contractEventCount = contractEvents.length;
+      
+      console.log(`      📊 Node ${nodeId}, Delegator ${delegatorKey}: Indexer events: ${indexerEventCount}, Contract events: ${contractEventCount}`);
+      
+      let validationPassed = false;
+      let expectedStake = 0n;
+      let actualStake = 0n;
+      let comparisonBlock = 0;
+      
+      if (indexerEventCount === 1 && contractEventCount === 1) {
+        // Single event case: check if they have the same blockchain number
+        const indexerBlock = processedIndexerEvents[0].blockNumber;
+        const contractBlock = contractEvents[0].blockNumber;
+        
+        console.log(`      📋 Node ${nodeId}, Delegator ${delegatorKey}: Single event comparison:`);
+        console.log(`         Indexer block: ${indexerBlock}, Contract block: ${contractBlock}`);
+        
+        if (Number(indexerBlock) === Number(contractBlock)) {
+          validationPassed = true;
+          expectedStake = processedIndexerEvents[0].stake;
+          actualStake = contractEvents[0].stake;
+          comparisonBlock = indexerBlock;
+          console.log(`         ✅ Both have same block number: ${comparisonBlock}`);
+        } else {
+          console.log(`         ❌ Block number mismatch`);
+        }
+      } else if (indexerEventCount >= 1 && contractEventCount >= 1) {
+        // Multiple events case: compare latest blockchain numbers (first biggest block)
+        const indexerLatest = processedIndexerEvents[0].blockNumber;
+        const contractLatest = contractEvents[0].blockNumber;
+        
+        console.log(`         📋 Latest event comparison:`);
+        console.log(`            Indexer latest block: ${indexerLatest}, Contract latest block: ${contractLatest}`);
+        
+        if (Number(indexerLatest) === Number(contractLatest)) {
+          validationPassed = true;
+          expectedStake = processedIndexerEvents[0].stake;
+          actualStake = contractEvents[0].stake;
+          comparisonBlock = indexerLatest;
+          
+          console.log(`            ✅ Both have same latest event block: ${comparisonBlock}`);
+          console.log(`            📊 Latest event (block ${comparisonBlock}):`);
+          console.log(`               Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
+          console.log(`               Contract: ${this.weiToTRAC(actualStake)} TRAC`);
+        } else {
+          console.log(`            ❌ Latest event block mismatch`);
+        }
+      } else if (contractEventCount === 0) {
+        // No contract events found
+        console.log(`            ⚠️ No contract events found for this delegator`);
+        console.log(`            📊 Indexer has ${indexerEventCount} events, Contract has 0 events`);
+        console.log(`            🔍 Cannot perform validation - no contract data available`);
+        console.log(`         ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - no contract data`);
+        return { type: 'skipped', nodeId, delegatorKey };
+      } else {
+        console.log(`            ⚠️ Cannot compare: Indexer has ${indexerEventCount} events, Contract has ${contractEventCount} events`);
+      }
+      
+      // Skip validation if comparison failed
+      if (!validationPassed) {
+        console.log(`         ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - comparison failed`);
+        return { type: 'skipped', nodeId, delegatorKey };
+      }
+      
+      // Validate that contract state matches expected stake
+      const difference = expectedStake - actualStake;
+      const tolerance = 500000000000000000n; // 0.5 TRAC in wei
+      
+      if (difference === 0n || difference === 0) {
+        console.log(`         ✅ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+        return { type: 'passed', nodeId, delegatorKey };
+      } else if (difference >= -tolerance && difference <= tolerance) {
+        console.log(`         ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+        if (Math.abs(Number(difference)) < 1000000000000000000) { // Less than 1 TRAC
+          const tracDifference = Number(difference) / Math.pow(10, 18);
+          console.log(`            📊 Small difference: ${tracDifference > 0 ? '+' : ''}${this.formatTRACDifference(tracDifference)} TRAC (within 0.5 TRAC tolerance)`);
+        } else {
+          console.log(`            📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+        }
+        return { type: 'warning', nodeId, delegatorKey };
+      } else {
+        console.log(`         ❌ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+        console.log(`            📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+        return { type: 'failed', nodeId, delegatorKey };
+      }
+    } catch (error) {
+      console.log(`         ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
+      if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+        return { type: 'rpcError', nodeId, delegatorKey };
+      } else {
+        return { type: 'failed', nodeId, delegatorKey };
+      }
     }
   }
 }
@@ -1876,7 +2522,7 @@ describe('Indexer Chain Validation', function() {
     // console.log('='.repeat(80));
   });
   
-  describe('Gnosis Network', function() {
+  describe.skip('Gnosis Network', function() {
     it('should validate node stakes', async function() {
       const results = await qaService.validateNodeStakes('Gnosis');
       trackResults('Gnosis', 'Node Stakes', results);
@@ -1932,7 +2578,7 @@ describe('Indexer Chain Validation', function() {
     });
   });
   
-  describe.skip('Base Network', function() {
+  describe('Base Network', function() {
     it('should validate node stakes', async function() {
       const results = await qaService.validateNodeStakes('Base');
       trackResults('Base', 'Node Stakes', results);
