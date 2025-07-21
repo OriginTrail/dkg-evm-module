@@ -38,15 +38,12 @@ const config: HardhatUserConfig = {
         blockNumber: getChainConfig('base_mainnet').v8_0StartBlock,
         enabled: true,
       },
-      gas: getChainConfig('base_mainnet').gasLimit,
-      gasPrice: getChainConfig('base_mainnet').gasPrice,
-      blockGasLimit: getChainConfig('base_mainnet').gasLimit,
+      gas: 'auto',
       allowUnlimitedContractSize: true,
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       loggingEnabled: false,
       mining: {
-        auto: true, // Enable auto-mining for deployments, but no interval for simulation control
         mempool: {
           order: 'fifo',
         },
@@ -66,15 +63,12 @@ const config: HardhatUserConfig = {
         blockNumber: getChainConfig('neuroweb_mainnet').v8_0StartBlock,
         enabled: true,
       },
-      gas: getChainConfig('neuroweb_mainnet').gasLimit,
-      gasPrice: getChainConfig('neuroweb_mainnet').gasPrice,
-      blockGasLimit: getChainConfig('neuroweb_mainnet').gasLimit,
+      gas: 'auto',
       allowUnlimitedContractSize: true,
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       loggingEnabled: false,
       mining: {
-        auto: true, // Enable auto-mining for deployments, but no interval for simulation control
         mempool: {
           order: 'fifo',
         },
@@ -94,15 +88,12 @@ const config: HardhatUserConfig = {
         blockNumber: getChainConfig('gnosis_mainnet').v8_0StartBlock,
         enabled: true,
       },
-      gas: getChainConfig('gnosis_mainnet').gasLimit,
-      gasPrice: getChainConfig('gnosis_mainnet').gasPrice,
-      blockGasLimit: getChainConfig('gnosis_mainnet').gasLimit,
+      gas: 'auto',
       allowUnlimitedContractSize: true,
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       loggingEnabled: false,
       mining: {
-        auto: true, // Enable auto-mining for deployments, but no interval for simulation control
         mempool: {
           order: 'fifo',
         },
