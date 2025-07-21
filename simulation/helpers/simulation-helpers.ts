@@ -1,7 +1,13 @@
 import { expect } from 'chai';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { getDeployedContracts } from './blockchain-helpers';
+import {
+  getDeployedContract,
+  getHubAddress,
+  impersonateAccount,
+  stopImpersonatingAccount,
+} from './blockchain-helpers';
+import { HUB_OWNERS } from './simulation-constants';
 
 /**
  * Simulation Helpers
@@ -19,20 +25,28 @@ export async function calculateScoresForActiveNodes(
   proofingTimestamp: number,
 ): Promise<void> {
   console.log(
-    `📊 Calculating scores for active nodes at timestamp ${proofingTimestamp}`,
+    `[CALCULATE SCORES] Calculating scores for active nodes at timestamp ${proofingTimestamp}`,
   );
 
   try {
-    // Get contract instances from the deployed contracts
-    const deployments = await getDeployedContracts(hre);
-
-    const identityStorage = deployments.IdentityStorage;
-    const profileStorage = deployments.ProfileStorage;
-    const shardingTableStorage = deployments.ShardingTableStorage;
-    const randomSampling = deployments.RandomSampling;
-    const randomSamplingStorage = deployments.RandomSamplingStorage;
-    const stakingStorage = deployments.StakingStorage;
-    const chronos = deployments.Chronos;
+    // Load all contracts in parallel for better performance
+    const [
+      identityStorage,
+      profileStorage,
+      shardingTableStorage,
+      randomSampling,
+      randomSamplingStorage,
+      stakingStorage,
+      chronos,
+    ] = await Promise.all([
+      getDeployedContract(hre, 'IdentityStorage'),
+      getDeployedContract(hre, 'ProfileStorage'),
+      getDeployedContract(hre, 'ShardingTableStorage'),
+      getDeployedContract(hre, 'RandomSampling'),
+      getDeployedContract(hre, 'RandomSamplingStorage'),
+      getDeployedContract(hre, 'StakingStorage'),
+      getDeployedContract(hre, 'Chronos'),
+    ]);
 
     // Get current epoch and proof period start block
     const currentEpoch = await chronos.getCurrentEpoch();
@@ -61,15 +75,21 @@ export async function calculateScoresForActiveNodes(
         const score18 = await randomSampling.calculateNodeScore(identityId);
 
         if (score18 > 0) {
+          const hubAddress = await getHubAddress(hre);
+          const hubOwner = HUB_OWNERS[hubAddress as keyof typeof HUB_OWNERS];
+          const hubOwnerSigner = await hre.ethers.getSigner(hubOwner);
+          await impersonateAccount(hre, hubOwner);
+          const randomSamplingStorageWithSigner =
+            randomSamplingStorage.connect(hubOwnerSigner);
           // Add to node epoch score
-          await randomSamplingStorage.addToNodeEpochScore(
+          await randomSamplingStorageWithSigner.addToNodeEpochScore(
             currentEpoch,
             identityId,
             score18,
           );
 
           // Add to all nodes epoch score
-          await randomSamplingStorage.addToAllNodesEpochScore(
+          await randomSamplingStorageWithSigner.addToAllNodesEpochScore(
             currentEpoch,
             score18,
           );
@@ -81,12 +101,14 @@ export async function calculateScoresForActiveNodes(
             const SCALE18 = BigInt(10 ** 18);
             const nodeScorePerStake36 = (score18 * SCALE18) / totalNodeStake;
 
-            await randomSamplingStorage.addToNodeEpochScorePerStake(
+            await randomSamplingStorageWithSigner.addToNodeEpochScorePerStake(
               currentEpoch,
               identityId,
               nodeScorePerStake36,
             );
           }
+
+          await stopImpersonatingAccount(hre, hubOwner);
 
           activeNodesCount++;
 
@@ -100,13 +122,17 @@ export async function calculateScoresForActiveNodes(
       }
     }
 
-    console.log(`   📈 Processed ${activeNodesCount} active nodes`);
+    console.log(
+      `[CALCULATE SCORES] Processed ${activeNodesCount} active nodes`,
+    );
     expect(activeNodesCount).to.equal(
       await shardingTableStorage.nodesCount(),
-      `Active nodes count ${activeNodesCount} should match the number of nodes in the sharding table ${await shardingTableStorage.nodesCount()}`,
+      `[CALCULATE SCORES] Active nodes count ${activeNodesCount} should match the number of nodes in the sharding table ${await shardingTableStorage.nodesCount()}`,
     );
   } catch (error) {
-    console.error(`❌ Error calculating scores for active nodes: ${error}`);
+    console.error(
+      `[CALCULATE SCORES] Error calculating scores for active nodes: ${error}`,
+    );
     throw error;
   }
 }
