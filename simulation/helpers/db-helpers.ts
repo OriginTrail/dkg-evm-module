@@ -6,7 +6,7 @@ export type TransactionData = {
   from: string;
   contract: string;
   functionName: string;
-  args: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+  functionInputs: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
 export type BlockData = {
@@ -105,7 +105,7 @@ export class SimulationDatabase {
         from: tx.msg_sender,
         contract: tx.contract_name,
         functionName: tx.function_name,
-        args: JSON.parse(tx.function_inputs),
+        functionInputs: JSON.parse(tx.function_inputs),
       });
     }
 
