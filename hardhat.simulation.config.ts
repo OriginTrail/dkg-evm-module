@@ -7,7 +7,7 @@ import { extendEnvironment } from 'hardhat/config';
 import { lazyObject } from 'hardhat/plugins';
 import { HardhatRuntimeEnvironment, HardhatUserConfig } from 'hardhat/types';
 
-import { getChainConfig } from './constants/simulation-constants';
+import { getChainConfig } from './simulation/helpers/simulation-constants';
 import { Helpers } from './utils/helpers';
 import { rpc } from './utils/network';
 import './utils/type-extensions';

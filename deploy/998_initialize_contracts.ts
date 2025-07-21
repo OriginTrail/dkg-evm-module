@@ -1,7 +1,10 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { HUB_OWNERS, NETWORK_HUBS } from '../constants/simulation-constants';
+import {
+  HUB_OWNERS,
+  NETWORK_HUBS,
+} from '../simulation/helpers/simulation-constants';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {

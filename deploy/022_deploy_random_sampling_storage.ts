@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { NETWORK_HUBS } from '../constants/simulation-constants';
+import { NETWORK_HUBS } from '../simulation/helpers/simulation-constants';
 
 type RandomSamplingStorageNetworkConfig = {
   proofingPeriodDurationInBlocks: string;

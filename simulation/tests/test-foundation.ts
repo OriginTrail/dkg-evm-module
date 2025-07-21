@@ -1,5 +1,7 @@
 import { task } from 'hardhat/config';
 
+import { DEFAULT_DB_PATHS } from '../helpers/simulation-constants';
+
 /**
  * Comprehensive Test Suite for Simulation Foundation
  *
@@ -22,7 +24,7 @@ task(
 
   try {
     // Path to the database file
-    const dbPath = './decoded_transactions_base_mainnet.db';
+    const dbPath = DEFAULT_DB_PATHS.base_mainnet;
 
     // Always test database helpers
     await testDatabaseHelpers(dbPath);

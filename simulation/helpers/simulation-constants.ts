@@ -74,3 +74,19 @@ export function getChainConfig(chainName: string): ChainSimulationConfig {
   }
   return config;
 }
+
+// Timing constants
+export const PROOF_PERIOD_SECONDS = 30 * 60; // 30 minutes
+
+// Batch processing constants
+export const DEFAULT_BATCH_SIZE = 50;
+
+// Database file paths (these can be overridden)
+export const DEFAULT_DB_PATHS = {
+  base_mainnet: './simulation/db/decoded_transactions_base_mainnet.db',
+  neuroweb_mainnet: './simulation/db/decoded_transactions_neuroweb_mainnet.db',
+  gnosis_mainnet: './simulation/db/decoded_transactions_gnosis_mainnet.db',
+} as const;
+
+// Export type for supported chains
+export type SupportedChain = keyof typeof DEFAULT_DB_PATHS;

@@ -4,7 +4,7 @@ import * as helpers from '@nomicfoundation/hardhat-network-helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { NETWORK_HUBS } from '../constants/simulation-constants';
+import { NETWORK_HUBS } from '../simulation/helpers/simulation-constants';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // Workaround for hardfork issue on forked networks: mine a block to initialize hardfork history

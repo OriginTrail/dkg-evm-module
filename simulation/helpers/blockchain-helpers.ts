@@ -152,7 +152,7 @@ async function findHubFromRecentDeployments(
 ): Promise<string | null> {
   try {
     const currentBlock = await hre.ethers.provider.getBlockNumber();
-    console.log(`🔍 Scanning last 100 blocks for Hub deployment...`);
+    console.log(`[FIND HUB] Scanning last 100 blocks for Hub deployment...`);
 
     // Scan last 100 blocks for Hub deployment
     const startBlock = Math.max(currentBlock - 100, 0);

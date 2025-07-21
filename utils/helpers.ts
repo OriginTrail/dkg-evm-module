@@ -11,7 +11,7 @@ import { KeypairType } from '@polkadot/util-crypto/types';
 import { AddressLike, Contract } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { NETWORK_HUBS } from '../constants/simulation-constants';
+import { NETWORK_HUBS } from '../simulation/helpers/simulation-constants';
 import { HubLib } from '../typechain/contracts/storage/Hub';
 
 type AbiEntry = {
