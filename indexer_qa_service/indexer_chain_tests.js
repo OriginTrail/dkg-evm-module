@@ -2462,7 +2462,7 @@ describe('Indexer Chain Validation', function() {
       }
     });
     
-    it.only('should validate delegator stake update events', async function() {
+    it('should validate delegator stake update events', async function() {
       const results = await qaService.validateDelegatorStakeUpdateEvents('Base');
       trackResults('Base', 'Delegator Stake Update Events', results);
       if (results.failed > 0) {
