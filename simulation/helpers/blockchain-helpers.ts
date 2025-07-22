@@ -89,78 +89,26 @@ export async function getDeployedContract(
  */
 export async function ensureSufficientGasFunds(
   hre: HardhatRuntimeEnvironment,
-  contract: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-  functionName: string,
-  args: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
   fromAddress: string,
 ): Promise<void> {
   try {
-    // Get the impersonated signer for gas estimation
-    const signer = await hre.ethers.getSigner(fromAddress);
-    const contractWithSigner = contract.connect(signer);
-
-    // Estimate gas for the specific transaction
-    const estimatedGas = await contractWithSigner[functionName].estimateGas(
-      ...args,
-    );
-
-    // Get current gas price (or use a reasonable default)
-    const gasPrice =
-      (await hre.ethers.provider.getFeeData()).gasPrice ||
-      hre.ethers.parseUnits('20', 'gwei');
-
-    // Calculate total gas cost with a 50% safety margin
-    const estimatedGasCost = estimatedGas * gasPrice;
-    const gasCostWithMargin = (BigInt(estimatedGasCost) * 150n) / 100n; // 50% safety margin
-
-    // Check current balance
+    // For simulation, always ensure accounts have generous ETH balance since gas estimation is unreliable
     const currentBalance = await hre.ethers.provider.getBalance(fromAddress);
+    const requiredBalance = hre.ethers.parseEther('1.0'); // 1 ETH should cover any transaction
 
-    // Only add funds if current balance is insufficient for this transaction
-    if (currentBalance < gasCostWithMargin) {
-      const fundsNeeded = gasCostWithMargin - currentBalance;
-      const newBalance = currentBalance + fundsNeeded;
-
+    if (currentBalance < requiredBalance) {
       await hre.network.provider.request({
         method: 'hardhat_setBalance',
-        params: [fromAddress, '0x' + newBalance.toString(16)],
+        params: [fromAddress, '0x' + requiredBalance.toString(16)],
       });
 
-      console.log(
-        `[GAS ESTIMATION] Added ${hre.ethers.formatEther(BigInt(fundsNeeded))} ETH for gas to ${fromAddress}`,
-      );
+      console.log(`[GAS ESTIMATION] Set balance to 1.0 ETH for ${fromAddress}`);
     }
   } catch (error) {
-    // If gas estimation fails, fall back to adding a small amount
-    console.log(
-      `[GAS ESTIMATION] ⚠️ Gas estimation failed for ${fromAddress}, adding default gas funds`,
+    console.error(
+      `[GAS ESTIMATION] ❌ Failed to ensure sufficient gas funds: ${error}`,
     );
-    console.log(`[GAS ESTIMATION] Gas estimation error: ${error}`);
-
-    try {
-      const currentBalance = await hre.ethers.provider.getBalance(fromAddress);
-      const defaultGasFunds = hre.ethers.parseEther('0.05'); // 0.05 ETH fallback
-
-      if (currentBalance < defaultGasFunds) {
-        const newBalance = currentBalance + defaultGasFunds;
-        await hre.network.provider.request({
-          method: 'hardhat_setBalance',
-          params: [fromAddress, '0x' + newBalance.toString(16)],
-        });
-        console.log(
-          `[GAS ESTIMATION] Added ${hre.ethers.formatEther(defaultGasFunds)} ETH default gas funds to ${fromAddress}`,
-        );
-      } else {
-        console.log(
-          `[GAS ESTIMATION] ${fromAddress} already has sufficient balance: ${hre.ethers.formatEther(currentBalance)} ETH`,
-        );
-      }
-    } catch (balanceError) {
-      console.error(
-        `[GAS ESTIMATION] ❌ Failed to set balance: ${balanceError}`,
-      );
-      throw balanceError;
-    }
+    throw error;
   }
 }
 
