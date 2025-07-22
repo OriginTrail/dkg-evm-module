@@ -1,15 +1,31 @@
 import hre from 'hardhat';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { verifyContractDeployments } from './helpers/blockchain-helpers';
-import { PROOF_PERIOD_SECONDS } from './helpers/constants';
+import {
+  getDeployedContract,
+  impersonateAccount,
+  stopImpersonatingAccount,
+  ensureSufficientGasFunds,
+  getHubContract,
+} from './helpers/blockchain-helpers';
 import {
   SimulationDatabase,
   TransactionData,
   BlockData,
 } from './helpers/db-helpers';
 import { MiningController } from './helpers/mining-controller';
-import { calculateScoresForActiveNodes } from './helpers/simulation-helpers';
+import {
+  PROOF_PERIOD_SECONDS,
+  DEFAULT_BATCH_SIZE,
+  DEFAULT_DB_PATHS,
+} from './helpers/simulation-constants';
+import {
+  calculateScoresForActiveNodes,
+  setupStakingAllowances,
+  setupMigratorAllowances,
+  loadEpochMetadata,
+} from './helpers/simulation-helpers';
+import { EpochMetadata } from './helpers/types';
 
 /**
  * DKG V8.0 to V8.1 Historical Rewards Simulation
@@ -26,6 +42,9 @@ class HistoricalRewardsSimulation {
   private mining: MiningController;
   private hre: HardhatRuntimeEnvironment;
   private lastProofingTimestamp: number = 0;
+  private lastClaimedEpoch: number = 0;
+  private epochMetadata: EpochMetadata[] = [];
+  private contracts: { [key: string]: any } = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
 
   constructor(hre: HardhatRuntimeEnvironment, dbPath: string) {
     this.hre = hre;
@@ -41,18 +60,40 @@ class HistoricalRewardsSimulation {
       '🚀 Initializing DKG V8.0 to V8.1 Historical Rewards Simulation\n',
     );
 
+    // Load contracts
+    this.contracts = {
+      staking: await getDeployedContract(this.hre, 'Staking'),
+      stakingStorage: await getDeployedContract(this.hre, 'StakingStorage'),
+      token: await getDeployedContract(this.hre, 'Token'),
+      migrator: await getDeployedContract(this.hre, 'Migrator'),
+      delegatorsInfo: await getDeployedContract(this.hre, 'DelegatorsInfo'),
+      hub: await getHubContract(this.hre),
+      chronos: await getDeployedContract(this.hre, 'Chronos'),
+      identityStorage: await getDeployedContract(this.hre, 'IdentityStorage'),
+      profileStorage: await getDeployedContract(this.hre, 'ProfileStorage'),
+      shardingTableStorage: await getDeployedContract(
+        this.hre,
+        'ShardingTableStorage',
+      ),
+      randomSampling: await getDeployedContract(this.hre, 'RandomSampling'),
+      randomSamplingStorage: await getDeployedContract(
+        this.hre,
+        'RandomSamplingStorage',
+      ),
+    };
+
     // Step 1: Disable auto-mining
-    console.log('[INIT] Disabling auto-mining...');
-    await this.mining.disableAutoMining();
+    // console.log('[INIT] Disabling auto-mining...');
+    // await this.mining.disableAutoMining();
 
     // Step 2: Get simulation status
     const unprocessedCount = this.db.getUnprocessedCount();
     const blockRange = this.db.getUnprocessedBlockRange();
 
     console.log(`[INIT] Simulation Status:`);
-    console.log(`   Unprocessed transactions: ${unprocessedCount}`);
+    console.log(`[INIT] Unprocessed transactions: ${unprocessedCount}`);
     console.log(
-      `   Block range: ${blockRange.minBlock} - ${blockRange.maxBlock}`,
+      `[INIT] Block range: ${blockRange.minBlock} - ${blockRange.maxBlock}`,
     );
 
     // Step 3: Get current fork status
@@ -60,21 +101,20 @@ class HistoricalRewardsSimulation {
     const currentTimestamp = await this.mining.getCurrentTimestamp();
 
     console.log(`\n[INIT] Fork Status:`);
-    console.log(`   Current block: ${currentBlock}`);
+    console.log(`[INIT] Current block: ${currentBlock}`);
     console.log(
-      `   Current timestamp: ${currentTimestamp} (${new Date(currentTimestamp * 1000).toISOString()})`,
+      `[INIT] Current timestamp: ${currentTimestamp} (${new Date(currentTimestamp * 1000).toISOString()})`,
     );
 
-    // Step 4: Verify contract deployments
-    console.log('\n🔍 Verifying contract deployments...');
-    // TODO: Make this verify all contracts with expected values
-    await verifyContractDeployments(this.hre);
+    // Step 5: Load epoch metadata
+    console.log('\n[INIT] Loading epoch metadata...');
+    this.epochMetadata = await loadEpochMetadata(this.hre, this.contracts);
 
-    // Step 5: Initialize proofing timestamp
+    // Step 6: Initialize proofing timestamp
     // TODO: Make sure this has the timestamp of the first block in the simulation - not today's timestamp
     this.lastProofingTimestamp = currentTimestamp;
 
-    console.log(`\n✅ Simulation initialized successfully!`);
+    console.log(`\n[INIT] Simulation initialized successfully!`);
   }
 
   /**
@@ -82,25 +122,56 @@ class HistoricalRewardsSimulation {
    * Replays historical transactions and calculates rewards
    */
   async runSimulation(): Promise<void> {
-    console.log('\n[SIM] Starting Historical Transaction Replay...');
+    console.log('\n[RUN SIMULATION] Starting Historical Transaction Replay...');
 
-    // TODO: Implement main simulation logic
-    // 1. Load transactions in chronological order
-    // 2. Set up initial state at V8.0
-    // 3. Replay transactions with proper timing
-    // 4. Calculate rewards after each proof period
-    // 5. Generate final report
-  }
+    try {
+      let processedBlocks = 0;
+      let totalTransactions = 0;
 
-  /**
-   * Process a batch of blocks
-   * Replays blocks and manages state
-   */
-  async processBlockBatch(blockBatch: BlockData[]): Promise<void> {
-    console.log(`[SIM] Processing batch of ${blockBatch.length} blocks...`);
+      // Main replay loop - process blocks in batches
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        // Get next batch of blocks with transactions
+        const blockBatch =
+          this.db.getOrderedTxsByBlockBatch(DEFAULT_BATCH_SIZE);
 
-    for (const block of blockBatch) {
-      await this.processBlock(block);
+        if (blockBatch.length === 0) {
+          console.log('\n[SIMULATION END] No more blocks to process');
+          break;
+        }
+
+        console.log(
+          `\n[RUN SIMULATION] Processing batch: ${blockBatch.length} blocks`,
+        );
+
+        // Process each block in the batch
+        for (const block of blockBatch) {
+          await this.processBlock(block);
+          processedBlocks++;
+          totalTransactions += block.txs.length;
+        }
+
+        // Progress update
+        console.log(
+          `\n[RUN SIMULATION] Progress: ${processedBlocks} blocks, ${totalTransactions} transactions processed`,
+        );
+      }
+
+      // Final wrap-up
+      await this.wrapUpSimulation();
+
+      console.log(
+        '\n[SIMULATION END] Historical replay completed successfully!',
+      );
+      console.log(
+        `[SIMULATION END] Total blocks processed: ${processedBlocks}`,
+      );
+      console.log(
+        `[SIMULATION END] Total transactions processed: ${totalTransactions}`,
+      );
+    } catch (error) {
+      console.error('[RUN SIMULATION] Simulation failed:', error);
+      throw error;
     }
   }
 
@@ -109,56 +180,286 @@ class HistoricalRewardsSimulation {
    */
   async processBlock(block: BlockData): Promise<void> {
     console.log(
-      `🔗 Processing block ${block.blockNumber} with ${block.txs.length} transactions`,
+      `[PROCESS BLOCK] Processing block ${block.blockNumber} (${new Date(block.timestamp * 1000).toISOString()}) with ${block.txs.length} transactions`,
     );
 
-    // Set EVM time to block timestamp
-    await this.mining.setTime(block.timestamp);
+    try {
+      // 1. Catch up on missing 30-min proof periods
+      await this.catchUpProofPeriods(block.timestamp);
 
-    // Process each transaction in the block
-    for (const tx of block.txs) {
-      await this.processTransaction(tx);
+      // 2. Check for epoch transitions and distribute rewards
+      await this.handleEpochTransitions(block.timestamp);
+
+      // 3. Warp VM clock to this block's timestamp
+      await this.mining.setTime(block.timestamp);
+      console.log(
+        `[PROCESS BLOCK] Advanced time to ${new Date(block.timestamp * 1000).toISOString()}`,
+      );
+
+      // 4. Process all transactions in the block
+      let successfulTxs = 0;
+      let failedTxs = 0;
+
+      for (const tx of block.txs) {
+        try {
+          await this.processTransaction(tx);
+          successfulTxs++;
+        } catch (error) {
+          console.error(
+            `[PROCESS BLOCK] ❌ Failed to process tx ${tx.hash}: ${error}`,
+          );
+          this.db.recordTxError(tx.hash, String(error));
+          failedTxs++;
+        }
+      }
+
+      // 5. Mine the block
+      await this.mining.mineBlock();
+
+      console.log(
+        `[PROCESS BLOCK] Block processed: ${successfulTxs} successful, ${failedTxs} failed transactions`,
+      );
+    } catch (error) {
+      console.error(
+        `[PROCESS BLOCK] ❌ Failed to process block ${block.blockNumber}:`,
+        error,
+      );
+      throw error;
     }
+  }
 
-    // Mine the block
-    await this.mining.mineBlock();
+  /**
+   * Catch up on missing 30-minute proof periods
+   */
+  private async catchUpProofPeriods(blockTimestamp: number): Promise<void> {
+    while (
+      blockTimestamp >=
+      this.lastProofingTimestamp + PROOF_PERIOD_SECONDS
+    ) {
+      const proofingTime = this.lastProofingTimestamp + PROOF_PERIOD_SECONDS;
+
+      // If proofing time is in a new epoch, handle epoch transitions
+      await this.handleEpochTransitions(proofingTime);
+
+      console.log(
+        `[CATCH UP PROOF PERIODS] Calculating scores for proof period ending at ${new Date(proofingTime * 1000).toISOString()}`,
+      );
+
+      try {
+        await calculateScoresForActiveNodes(
+          this.hre,
+          this.contracts,
+          proofingTime,
+        );
+        this.lastProofingTimestamp = proofingTime;
+        // TODO: Evaluate this
+        await this.mining.mineBlock();
+      } catch (error) {
+        console.error(
+          `[CATCH UP PROOF PERIODS] ❌ Failed to calculate scores for timestamp ${proofingTime}:`,
+          error,
+        );
+        // Continue with next proof period rather than stopping simulation
+        this.lastProofingTimestamp = proofingTime;
+      }
+    }
+  }
+
+  /**
+   * Handle epoch transitions and distribute rewards
+   */
+  private async handleEpochTransitions(timestamp: number): Promise<void> {
+    try {
+      const chronos = this.contracts.chronos;
+
+      // If the timestamp is in a new epoch, move to the start of the new epoch and mine a block to make the timestamp effective
+      let currentEpoch = await chronos.getCurrentEpoch();
+      const epochAtTimestamp = await chronos.epochAtTimestamp(timestamp);
+      if (epochAtTimestamp > currentEpoch) {
+        await this.mining.setTime(
+          await chronos.timestampForEpoch(epochAtTimestamp),
+        );
+        await this.mining.mineBlock();
+        currentEpoch = epochAtTimestamp;
+      }
+
+      while (this.lastClaimedEpoch + 1 < currentEpoch) {
+        const epochToDistribute = this.lastClaimedEpoch + 1;
+        console.log(
+          `[EPOCH TRANSITION] Distributing rewards for epoch ${epochToDistribute}`,
+        );
+
+        await this.distributeRewards(epochToDistribute);
+        this.lastClaimedEpoch = epochToDistribute;
+      }
+    } catch (error) {
+      console.error(
+        `[EPOCH TRANSITION] ❌ Failed to handle epoch transitions:`,
+        error,
+      );
+      // Continue simulation even if epoch handling fails
+    }
   }
 
   /**
    * Process a single transaction
    */
   async processTransaction(tx: TransactionData): Promise<void> {
+    // Check if already processed
+    if (this.db.isProcessedTx(tx.hash)) {
+      return;
+    }
+
     console.log(
-      `[TX PROCESSING] Processing ${tx.contract}.${tx.functionName}(${tx.args}) tx: ${tx.hash}`,
+      `[PROCESS TRANSACTION] ${tx.contract}.${tx.functionName}(${tx.functionInputs
+        .map((input) => JSON.stringify(input))
+        .join(', ')}) - tx: ${tx.hash}`,
     );
 
-    // TODO: Implement transaction replay logic
-    // 1. Call the contract function with historical args
-    // 2. Update state tracking
-    // 3. Mark transaction as processed
-    // 4. Check if proof period has elapsed
+    try {
+      // Get the contract instance
+      const contract = await getDeployedContract(this.hre, tx.contract);
 
-    // Mark as processed for now
-    this.db.markTxAsProcessed(tx.hash);
+      if (!contract) {
+        throw new Error(
+          `[PROCESS TRANSACTION] Contract ${tx.contract} not found`,
+        );
+      }
+
+      // Impersonate the original transaction sender FIRST
+      await impersonateAccount(this.hre, tx.from);
+
+      // Estimate gas cost and ensure sufficient funds for this specific transaction
+      await ensureSufficientGasFunds(this.hre, tx.from);
+
+      // Special handling for transactions that need token allowances
+      // (Must be done AFTER impersonation and gas funding)
+      if (
+        tx.contract === 'Migrator' &&
+        tx.functionName === 'migrateDelegatorData'
+      ) {
+        await setupMigratorAllowances(
+          this.hre,
+          this.contracts,
+          tx.from,
+          tx.functionInputs[0],
+        );
+      } else if (tx.contract === 'Staking' && tx.functionName === 'stake') {
+        await setupStakingAllowances(
+          this.hre,
+          this.contracts,
+          tx.from,
+          tx.functionInputs[1],
+        ); // Amount is second parameter
+      }
+
+      // Get the signer for the transaction sender
+      const signer = await this.hre.ethers.getSigner(tx.from);
+      const contractWithSigner = contract.connect(signer);
+
+      // Execute the transaction with original arguments
+      try {
+        const txResponse = await contractWithSigner[tx.functionName](
+          ...tx.functionInputs,
+        );
+
+        // Mine a block to confirm the transaction since auto-mining is disabled
+        // await this.mining.mineBlock();
+
+        await txResponse.wait();
+
+        if (
+          tx.contract === 'Migrator' &&
+          tx.functionName === 'migrateDelegatorData'
+        ) {
+          // Add the new address to the DelegatorsInfo contract
+          const identityId = tx.functionInputs[0];
+          const hub = await getHubContract(this.hre);
+          const hubOwner = await hub.owner();
+          await impersonateAccount(this.hre, hubOwner);
+          const signer = await this.hre.ethers.getSigner(hubOwner);
+          const delegatorsInfoWithSigner =
+            this.contracts.delegatorsInfo.connect(signer);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (delegatorsInfoWithSigner as any).addDelegator(
+            identityId,
+            tx.from,
+          );
+          await stopImpersonatingAccount(this.hre, hubOwner);
+        }
+
+        console.log(
+          `[PROCESS TRANSACTION] ✅ Transaction confirmed: ${txResponse.hash}`,
+        );
+
+        // Mark as successfully processed
+        this.db.markTxAsProcessed(tx.hash, true);
+
+        // Stop impersonating
+        await stopImpersonatingAccount(this.hre, tx.from);
+      } catch (error) {
+        // Mark as failed and record error
+        this.db.markTxAsProcessed(tx.hash, false);
+        throw error;
+      }
+    } catch (error) {
+      console.error(
+        `[PROCESS TRANSACTION] ❌ Failed to process transaction ${tx.hash}:`,
+        error,
+      );
+      throw error;
+    }
   }
 
   /**
-   * Check if a proof period has elapsed and calculate rewards
+   * Distribute rewards for a completed epoch
    */
-  async checkProofPeriod(): Promise<void> {
-    const currentTime = await this.mining.getCurrentTimestamp();
+  private async distributeRewards(epochId: number): Promise<void> {
+    try {
+      // For MVP, just log the reward distribution
+      // TODO: Implement actual reward distribution logic
+      const epochMeta = this.epochMetadata.find((e) => e.id === epochId);
+      if (epochMeta) {
+        console.log(
+          `[DISTRIBUTE REWARDS] Epoch ${epochId} rewards: ${this.hre.ethers.formatEther(epochMeta.rewardPool)} TRAC`,
+        );
+      } else {
+        console.log(
+          `[DISTRIBUTE REWARDS] Epoch ${epochId} rewards: (metadata not found)`,
+        );
+      }
+    } catch (error) {
+      console.error(
+        `[DISTRIBUTE REWARDS] ❌ Failed to distribute rewards for epoch ${epochId}:`,
+        error,
+      );
+    }
+  }
 
-    if (currentTime - this.lastProofingTimestamp >= PROOF_PERIOD_SECONDS) {
+  /**
+   * Wrap up the simulation with final calculations
+   */
+  private async wrapUpSimulation(): Promise<void> {
+    console.log('\n[SIMULATION END] Wrapping up simulation...');
+
+    try {
+      // Final proof period calculations
+      // TODO: Check if current timestamp is the timestamp now or the timestamp of the last block
+      const currentTime = await this.mining.getCurrentTimestamp();
+      await this.catchUpProofPeriods(currentTime);
+
+      // Final epoch reward distribution
+      await this.handleEpochTransitions(currentTime);
+
+      // TODO: Export V8.json, V6.json, and globals.json
       console.log(
-        '[PROOFING] Proof period elapsed - calculating scores for active nodes...',
+        '[SIMULATION END] Exporting results (TODO: implement export logic)',
       );
 
-      await calculateScoresForActiveNodes(
-        this.hre,
-        this.lastProofingTimestamp + PROOF_PERIOD_SECONDS,
-      );
-
-      this.lastProofingTimestamp = currentTime;
+      console.log('[SIMULATION END] Simulation wrap-up completed');
+    } catch (error) {
+      console.error('[SIMULATION END] ❌ Failed to wrap up simulation:', error);
+      throw error;
     }
   }
 
@@ -166,9 +467,9 @@ class HistoricalRewardsSimulation {
    * Cleanup resources
    */
   async cleanup(): Promise<void> {
-    console.log('\n🧹 Cleaning up...');
+    console.log('\n[CLEANUP] Cleaning up...');
     this.db.close();
-    console.log('✅ Database connection closed');
+    console.log('[CLEANUP] Database connection closed');
   }
 }
 
@@ -176,10 +477,7 @@ class HistoricalRewardsSimulation {
  * Main function to run the simulation
  */
 async function main() {
-  // Path to the database file
-  const dbPath = './decoded_transactions_base_mainnet.db';
-
-  // Initialize simulation
+  const dbPath = DEFAULT_DB_PATHS.base_mainnet;
   const simulation = new HistoricalRewardsSimulation(hre, dbPath);
 
   try {
@@ -187,9 +485,9 @@ async function main() {
     await simulation.initialize();
     await simulation.runSimulation();
 
-    console.log('\n🎯 Simulation completed successfully!');
+    console.log('\n[MAIN] ✅ Simulation completed successfully!');
   } catch (error) {
-    console.error('❌ Simulation failed:', error);
+    console.error('[MAIN] ❌ Simulation failed:', error);
     process.exit(1);
   } finally {
     await simulation.cleanup();
@@ -201,6 +499,6 @@ export { HistoricalRewardsSimulation };
 
 // Run the simulation
 main().catch((error) => {
-  console.error('Fatal error:', error);
+  console.error('[MAIN] Fatal error:', error);
   process.exit(1);
 });
