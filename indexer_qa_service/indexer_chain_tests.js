@@ -469,12 +469,24 @@ class CompleteQAService {
                 for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
                   const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
                   
-                  try {
-                    const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-                    allEvents = allEvents.concat(chunkEvents);
-                  } catch (error) {
-                    console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
-                    // Continue with next chunk
+                  let chunkRetries = 3;
+                  let chunkEvents = [];
+                  
+                  while (chunkRetries > 0) {
+                    try {
+                      chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                      allEvents = allEvents.concat(chunkEvents);
+                      break; // Success, exit retry loop
+                    } catch (error) {
+                      chunkRetries--;
+                      if (chunkRetries === 0) {
+                        console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock} after 3 attempts: ${error.message}`);
+                        // Continue with next chunk instead of failing completely
+                      } else {
+                        console.log(`   ⏳ Chunk ${startBlock}-${endBlock} failed, retrying in 2.5 minutes... (${chunkRetries} attempts left)`);
+                        await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+                      }
+                    }
                   }
                 }
                 
@@ -1327,12 +1339,24 @@ class CompleteQAService {
                   for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
                     const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
                     
-                    try {
-                      const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-                      allEvents = allEvents.concat(chunkEvents);
-                    } catch (error) {
-                      console.log(`      ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
-                      // Continue with next chunk
+                    let chunkRetries = 3;
+                    let chunkEvents = [];
+                    
+                    while (chunkRetries > 0) {
+                      try {
+                        chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                        allEvents = allEvents.concat(chunkEvents);
+                        break; // Success, exit retry loop
+                      } catch (error) {
+                        chunkRetries--;
+                        if (chunkRetries === 0) {
+                          console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock} after 3 attempts: ${error.message}`);
+                          // Continue with next chunk instead of failing completely
+                        } else {
+                          console.log(`   ⏳ Chunk ${startBlock}-${endBlock} failed, retrying in 2.5 minutes... (${chunkRetries} attempts left)`);
+                          await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+                        }
+                      }
                     }
                   }
                   
@@ -1641,12 +1665,24 @@ class CompleteQAService {
           for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
             const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
             
-            try {
-              const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-              allEvents = allEvents.concat(chunkEvents);
-            } catch (error) {
-              console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
-              // Continue with next chunk
+            let chunkRetries = 3;
+            let chunkEvents = [];
+            
+            while (chunkRetries > 0) {
+              try {
+                chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                allEvents = allEvents.concat(chunkEvents);
+                break; // Success, exit retry loop
+              } catch (error) {
+                chunkRetries--;
+                if (chunkRetries === 0) {
+                  console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock} after 3 attempts: ${error.message}`);
+                  // Continue with next chunk instead of failing completely
+                } else {
+                  console.log(`   ⏳ Chunk ${startBlock}-${endBlock} failed, retrying in 2.5 minutes... (${chunkRetries} attempts left)`);
+                  await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+                }
+              }
             }
           }
           
@@ -1898,12 +1934,24 @@ class CompleteQAService {
           for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
             const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
             
-            try {
-              const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-              allEvents = allEvents.concat(chunkEvents);
-            } catch (error) {
-              console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
-              // Continue with next chunk
+            let chunkRetries = 3;
+            let chunkEvents = [];
+            
+            while (chunkRetries > 0) {
+              try {
+                chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                allEvents = allEvents.concat(chunkEvents);
+                break; // Success, exit retry loop
+              } catch (error) {
+                chunkRetries--;
+                if (chunkRetries === 0) {
+                  console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock} after 3 attempts: ${error.message}`);
+                  // Continue with next chunk instead of failing completely
+                } else {
+                  console.log(`   ⏳ Chunk ${startBlock}-${endBlock} failed, retrying in 2.5 minutes... (${chunkRetries} attempts left)`);
+                  await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+                }
+              }
             }
           }
           
@@ -2136,12 +2184,24 @@ class CompleteQAService {
             for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
               const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
               
-              try {
-                const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-                allEvents = allEvents.concat(chunkEvents);
-              } catch (error) {
-                console.log(`      ⚠️ Failed to query chunk ${startBlock}-${endBlock}: ${error.message}`);
-                // Continue with next chunk
+              let chunkRetries = 3;
+              let chunkEvents = [];
+              
+              while (chunkRetries > 0) {
+                try {
+                  chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                  allEvents = allEvents.concat(chunkEvents);
+                  break; // Success, exit retry loop
+                } catch (error) {
+                  chunkRetries--;
+                  if (chunkRetries === 0) {
+                    console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock} after 3 attempts: ${error.message}`);
+                    // Continue with next chunk instead of failing completely
+                  } else {
+                    console.log(`   ⏳ Chunk ${startBlock}-${endBlock} failed, retrying in 2.5 minutes... (${chunkRetries} attempts left)`);
+                    await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+                  }
+                }
               }
             }
             
@@ -2379,14 +2439,6 @@ describe('Indexer Chain Validation', function() {
     console.log('\n' + '-'.repeat(80));
     console.log(`🎯 GRAND TOTAL: ${summary.total.passed} ✅ passed, ${summary.total.failed} ❌ failed, ${summary.total.warnings} ⚠️ warnings, ${summary.total.rpcErrors} 🔌 RPC errors`);
     console.log('='.repeat(80));
-    
-    // Remove validation tracking info
-    // Show file-based tracking info
-    // const totalTrackedEvents = Object.keys(qaService.validatedEvents).length;
-    // console.log(`\n💾 Validation Tracking:`);
-    // console.log(`   📁 Storage file: ${qaService.validationStorageFile}`);
-    // console.log(`   📊 Total events tracked: ${totalTrackedEvents}`);
-    // console.log('='.repeat(80));
   });
   
   describe.skip('Gnosis Network', function() {
@@ -2445,7 +2497,7 @@ describe('Indexer Chain Validation', function() {
     });
   });
   
-  describe('Base Network', function() {
+  describe.skip('Base Network', function() {
     it('should validate node stakes', async function() {
       const results = await qaService.validateNodeStakes('Base');
       trackResults('Base', 'Node Stakes', results);
@@ -2487,7 +2539,7 @@ describe('Indexer Chain Validation', function() {
     });
   });
   
-  describe.skip('Neuroweb Network', function() {
+  describe('Neuroweb Network', function() {
     it('should validate node stakes', async function() {
       const results = await qaService.validateNodeStakes('Neuroweb');
       trackResults('Neuroweb', 'Node Stakes', results);
@@ -2528,90 +2580,4 @@ describe('Indexer Chain Validation', function() {
       }
     });
   });
-  
-  // it('should run all validations in parallel per network', async function() {
-  //   console.log('\n🚀 Starting parallel validation per network...');
-  //   const startTime = Date.now();
-  //   
-  //   // Run 3 parallel network validations (each network runs its validations sequentially)
-  //   const networkValidations = [
-  //     // Gnosis network - all validations run sequentially
-  //     (async () => {
-  //       console.log('\n🌐 Starting Gnosis network validations...');
-  //       const results = {
-  //         'Node Stakes': await qaService.validateNodeStakes('Gnosis'),
-  //         'Delegator Stakes': await qaService.validateDelegatorStakes('Gnosis'),
-  //         'Delegator Stake Update Events': await qaService.validateDelegatorStakeUpdateEvents('Gnosis'),
-  //         'Delegator Stake Sum': await qaService.validateDelegatorStakeSumMatchesNodeStake('Gnosis'),
-  //         'Knowledge Collections': await qaService.validateKnowledgeCollections('Gnosis')
-  //       };
-  //       
-  //       // Track results for Gnosis
-  //       for (const [testType, testResults] of Object.entries(results)) {
-  //         trackResults('Gnosis', testType, testResults);
-  //       }
-  //       
-  //       return { network: 'Gnosis', results };
-  //     })(),
-  //     
-  //     // Base network - all validations run sequentially
-  //     // (async () => {
-  //     //   console.log('\n🌐 Starting Base network validations...');
-  //     //   const results = {
-  //     //     'Node Stakes': await qaService.validateNodeStakes('Base'),
-  //     //     'Delegator Stakes': await qaService.validateDelegatorStakes('Base'),
-  //     //     'Delegator Stake Update Events': await qaService.validateDelegatorStakeUpdateEvents('Base'),
-  //     //     'Delegator Stake Sum': await qaService.validateDelegatorStakeSumMatchesNodeStake('Base'),
-  //     //     'Knowledge Collections': await qaService.validateKnowledgeCollections('Base')
-  //     //   };
-  //     //   
-  //     //   // Track results for Base
-  //     //   for (const [testType, testResults] of Object.entries(results)) {
-  //     //     trackResults('Base', testType, testResults);
-  //     //   }
-  //     //   
-  //     //   return { network: 'Base', results };
-  //     // })(),
-  //     
-  //     // Neuroweb network - all validations run sequentially
-  //     // (async () => {
-  //     //   console.log('\n🌐 Starting Neuroweb network validations...');
-  //     //   const results = {
-  //     //     'Node Stakes': await qaService.validateNodeStakes('Neuroweb'),
-  //     //     'Delegator Stakes': await qaService.validateDelegatorStakes('Neuroweb'),
-  //     //     'Delegator Stake Update Events': await qaService.validateDelegatorStakeUpdateEvents('Neuroweb'),
-  //     //     'Delegator Stake Sum': await qaService.validateDelegatorStakeSumMatchesNodeStake('Neuroweb'),
-  //     //     'Knowledge Collections': await qaService.validateKnowledgeCollections('Neuroweb')
-  //     //   };
-  //     //   
-  //     //   // Track results for Neuroweb
-  //     //   for (const [testType, testResults] of Object.entries(results)) {
-  //     //     trackResults('Neuroweb', testType, testResults);
-  //     //   }
-  //     //   
-  //     //   return { network: 'Neuroweb', results };
-  //     // })()
-  //   ];
-  //   
-  //   try {
-  //     // Run all 3 networks in parallel
-  //     const networkResults = await Promise.all(networkValidations);
-  //     
-  //     const endTime = Date.now();
-  //     const totalTime = (endTime - startTime) / 1000;
-  //     
-  //     console.log(`\n⏱️ Total execution time: ${totalTime.toFixed(1)} seconds`);
-  //     console.log(`🚀 Parallel network execution completed successfully!`);
-  //     
-  //     // Check for any failures
-  //     const totalFailures = summary.total.failed;
-  //     if (totalFailures > 0) {
-  //       throw new Error(`${totalFailures} validations failed across all networks`);
-  //     }
-  //     
-  //   } catch (error) {
-  //     console.error(`❌ Parallel network validation failed: ${error.message}`);
-  //     throw error;
-  //   }
-  // });
 });
