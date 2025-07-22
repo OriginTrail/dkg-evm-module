@@ -37,8 +37,8 @@ import {Chronos} from "../storage/Chronos.sol";
  *         3. Governance can call `batchClaimAll` to process any unclaimed
  *            rewards in bulk (e.g., if some delegators never claim).
  */
-contract DelegatorRewardsMigrator is INamed, IVersioned, ContractStatus {
-    string private constant _NAME = "DelegatorRewardsMigrator";
+contract V8_1_1_Rewards_Migrator is INamed, IVersioned, ContractStatus {
+    string private constant _NAME = "V8_1_1_Rewards_Migrator";
     string private constant _VERSION = "1.0.0";
 
     V8_1_1_Rewards_Migrator_Storage public rewardsStorage;
