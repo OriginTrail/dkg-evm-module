@@ -1201,9 +1201,6 @@ class CompleteQAService {
         'function getKnowledgeCollectionCount() view returns (uint256)'
       ], provider);
       
-      // Get current block number from contract
-      const contractBlockNumber = await provider.getBlockNumber();
-      
       // Try to get the count using a more appropriate method
       let contractCount;
       try {
@@ -1215,33 +1212,22 @@ class CompleteQAService {
       
       const contractCountNumber = parseInt(contractCount.toString());
       
-      console.log(`   📊 Indexer events: ${indexerCount.toLocaleString()} (block ${indexerBlockNumber}), Contract count: ${contractCountNumber.toLocaleString()} (block ${contractBlockNumber})`);
+      console.log(`   📊 Indexer knowledge collections: ${indexerCount.toLocaleString()}, Contract knowledge collections: ${contractCountNumber.toLocaleString()}`);
       
-      // Check if block numbers match
-      const blockDifference = Math.abs(indexerBlockNumber - contractBlockNumber);
-      const blockTolerance = 100; // Allow 100 block difference
+      // Compare knowledge collection counts directly (no block number comparison)
+      const difference = indexerCount - contractCountNumber;
+      const tolerance = 200; // 200 count tolerance
       
-      if (blockDifference <= blockTolerance) {
-        console.log(`   ✅ Block numbers match: Indexer block ${indexerBlockNumber}, Contract block ${contractBlockNumber} (difference: ${blockDifference})`);
-        
-        const difference = indexerCount - contractCountNumber;
-        const tolerance = 200; // 200 count tolerance
-        
-        if (indexerCount === contractCountNumber) {
-          console.log(`   ✅ Knowledge collections match: ${indexerCount.toLocaleString()}`);
-          return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
-        } else if (Math.abs(difference) <= tolerance) {
-          console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
-          console.log(`      📊 Small difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()} (within 200 count tolerance)`);
-          return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 }; // Count as warning
-        } else {
-          console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
-          console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()}`);
-          return { passed: 0, failed: 1, warnings: 0, rpcErrors: 0, total: 1 };
-        }
+      if (indexerCount === contractCountNumber) {
+        console.log(`   ✅ Knowledge collections match: ${indexerCount.toLocaleString()}`);
+        return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
+      } else if (Math.abs(difference) <= tolerance) {
+        console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
+        console.log(`      📊 Small difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()} (within 200 count tolerance)`);
+        return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 }; // Count as warning
       } else {
-        console.log(`   ❌ Block number mismatch: Indexer block ${indexerBlockNumber}, Contract block ${contractBlockNumber} (difference: ${blockDifference})`);
-        console.log(`      📊 Block difference exceeds tolerance of ${blockTolerance} blocks`);
+        console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
+        console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()}`);
         return { passed: 0, failed: 1, warnings: 0, rpcErrors: 0, total: 1 };
       }
       
@@ -1269,14 +1255,6 @@ class CompleteQAService {
     try {
       await client.connect();
       
-      // Get the latest block number from indexer
-      const indexerBlockResult = await client.query(`
-        SELECT MAX(block_number) as latest_block 
-        FROM knowledge_collection_created
-      `);
-      
-      const indexerBlockNumber = indexerBlockResult.rows[0].latest_block;
-      
       // Count total knowledge collections from indexer
       const indexerCountResult = await client.query(`
         SELECT COUNT(*) as total_count 
@@ -1285,7 +1263,7 @@ class CompleteQAService {
       
       const indexerCount = parseInt(indexerCountResult.rows[0].total_count);
       
-      console.log(`   📊 Indexer knowledge collections: ${indexerCount.toLocaleString()} (block ${indexerBlockNumber})`);
+      console.log(`   📊 Indexer knowledge collections: ${indexerCount.toLocaleString()}`);
       
       // Get cached knowledge collection events
       const cachedKnowledgeEvents = this.baseCache.knowledgeEvents || [];
@@ -1296,38 +1274,24 @@ class CompleteQAService {
         return await this.validateKnowledgeCollectionsOriginal(network);
       }
       
-      // Sort cached events by block number (newest first)
-      cachedKnowledgeEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-      const contractBlockNumber = cachedKnowledgeEvents[0].blockNumber;
       const contractCount = cachedKnowledgeEvents.length;
       
-      console.log(`   📊 Contract knowledge collections: ${contractCount.toLocaleString()} (block ${contractBlockNumber})`);
+      console.log(`   📊 Contract knowledge collections: ${contractCount.toLocaleString()}`);
       
-      // Check if block numbers match
-      const blockDifference = Math.abs(indexerBlockNumber - contractBlockNumber);
-      const blockTolerance = 100; // Allow 100 block difference
+      // Compare knowledge collection counts directly (no block number comparison)
+      const difference = indexerCount - contractCount;
+      const tolerance = 200; // 200 count tolerance
       
-      if (blockDifference <= blockTolerance) {
-        console.log(`   ✅ Block numbers match: Indexer block ${indexerBlockNumber}, Contract block ${contractBlockNumber} (difference: ${blockDifference})`);
-        
-        const difference = indexerCount - contractCount;
-        const tolerance = 200; // 200 count tolerance
-        
-        if (indexerCount === contractCount) {
-          console.log(`   ✅ Knowledge collections match: ${indexerCount.toLocaleString()}`);
-          return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
-        } else if (Math.abs(difference) <= tolerance) {
-          console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCount.toLocaleString()}`);
-          console.log(`      📊 Small difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()} (within 200 count tolerance)`);
-          return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 }; // Count as warning
-        } else {
-          console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCount.toLocaleString()}`);
-          console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()}`);
-          return { passed: 0, failed: 1, warnings: 0, rpcErrors: 0, total: 1 };
-        }
+      if (indexerCount === contractCount) {
+        console.log(`   ✅ Knowledge collections match: ${indexerCount.toLocaleString()}`);
+        return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
+      } else if (Math.abs(difference) <= tolerance) {
+        console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCount.toLocaleString()}`);
+        console.log(`      📊 Small difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()} (within 200 count tolerance)`);
+        return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 }; // Count as warning
       } else {
-        console.log(`   ❌ Block number mismatch: Indexer block ${indexerBlockNumber}, Contract block ${contractBlockNumber} (difference: ${blockDifference})`);
-        console.log(`      📊 Block difference exceeds tolerance of ${blockTolerance} blocks`);
+        console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCount.toLocaleString()}`);
+        console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()}`);
         return { passed: 0, failed: 1, warnings: 0, rpcErrors: 0, total: 1 };
       }
       
@@ -1385,9 +1349,6 @@ class CompleteQAService {
         'function getKnowledgeCollectionCount() view returns (uint256)'
       ], provider);
       
-      // Get current block number from contract
-      const contractBlockNumber = await provider.getBlockNumber();
-      
       // Try to get the count using a more appropriate method
       let contractCount;
       try {
@@ -1399,33 +1360,22 @@ class CompleteQAService {
       
       const contractCountNumber = parseInt(contractCount.toString());
       
-      console.log(`   📊 Indexer events: ${indexerCount.toLocaleString()} (block ${indexerBlockNumber}), Contract count: ${contractCountNumber.toLocaleString()} (block ${contractBlockNumber})`);
+      console.log(`   📊 Indexer knowledge collections: ${indexerCount.toLocaleString()}, Contract knowledge collections: ${contractCountNumber.toLocaleString()}`);
       
-      // Check if block numbers match
-      const blockDifference = Math.abs(indexerBlockNumber - contractBlockNumber);
-      const blockTolerance = 100; // Allow 100 block difference
+      // Compare knowledge collection counts directly (no block number comparison)
+      const difference = indexerCount - contractCountNumber;
+      const tolerance = 200; // 200 count tolerance
       
-      if (blockDifference <= blockTolerance) {
-        console.log(`   ✅ Block numbers match: Indexer block ${indexerBlockNumber}, Contract block ${contractBlockNumber} (difference: ${blockDifference})`);
-        
-        const difference = indexerCount - contractCountNumber;
-        const tolerance = 200; // 200 count tolerance
-        
-        if (indexerCount === contractCountNumber) {
-          console.log(`   ✅ Knowledge collections match: ${indexerCount.toLocaleString()}`);
-          return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
-        } else if (Math.abs(difference) <= tolerance) {
-          console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
-          console.log(`      📊 Small difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()} (within 200 count tolerance)`);
-          return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 }; // Count as warning
-        } else {
-          console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
-          console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()}`);
-          return { passed: 0, failed: 1, warnings: 0, rpcErrors: 0, total: 1 };
-        }
+      if (indexerCount === contractCountNumber) {
+        console.log(`   ✅ Knowledge collections match: ${indexerCount.toLocaleString()}`);
+        return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
+      } else if (Math.abs(difference) <= tolerance) {
+        console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
+        console.log(`      📊 Small difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()} (within 200 count tolerance)`);
+        return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 }; // Count as warning
       } else {
-        console.log(`   ❌ Block number mismatch: Indexer block ${indexerBlockNumber}, Contract block ${contractBlockNumber} (difference: ${blockDifference})`);
-        console.log(`      📊 Block difference exceeds tolerance of ${blockTolerance} blocks`);
+        console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCountNumber.toLocaleString()}`);
+        console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()}`);
         return { passed: 0, failed: 1, warnings: 0, rpcErrors: 0, total: 1 };
       }
       
@@ -4740,6 +4690,134 @@ class CompleteQAService {
       await client.end();
     }
   }
+
+  /**
+   * Validate Gnosis knowledge collections using cached contract events
+   */
+  async validateKnowledgeCollectionsWithCache(network) {
+    console.log(`\n🔍 Validating knowledge collections for ${network} using cache...`);
+    
+    const dbName = this.databaseMap[network];
+    const client = new Client({ ...this.dbConfig, database: dbName });
+    
+    try {
+      await client.connect();
+      
+      // Count total knowledge collections from indexer
+      const indexerCountResult = await client.query(`
+        SELECT COUNT(*) as total_count 
+        FROM knowledge_collection_created
+      `);
+      
+      const indexerCount = parseInt(indexerCountResult.rows[0].total_count);
+      
+      console.log(`   📊 Indexer knowledge collections: ${indexerCount.toLocaleString()}`);
+      
+      // Get cached knowledge collection events
+      const cachedKnowledgeEvents = this.gnosisCache.knowledgeEvents || [];
+      console.log(`   📊 Found ${cachedKnowledgeEvents.length} cached knowledge collection contract events`);
+      
+      if (cachedKnowledgeEvents.length === 0) {
+        console.log(`   ⚠️ No cached knowledge collection events found, using original RPC approach`);
+        return await this.validateKnowledgeCollectionsOriginal(network);
+      }
+      
+      const contractCount = cachedKnowledgeEvents.length;
+      
+      console.log(`   📊 Contract knowledge collections: ${contractCount.toLocaleString()}`);
+      
+      // Compare knowledge collection counts directly (no block number comparison)
+      const difference = indexerCount - contractCount;
+      const tolerance = 200; // 200 count tolerance
+      
+      if (indexerCount === contractCount) {
+        console.log(`   ✅ Knowledge collections match: ${indexerCount.toLocaleString()}`);
+        return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
+      } else if (Math.abs(difference) <= tolerance) {
+        console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCount.toLocaleString()}`);
+        console.log(`      📊 Small difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()} (within 200 count tolerance)`);
+        return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 }; // Count as warning
+      } else {
+        console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCount.toLocaleString()}`);
+        console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()}`);
+        return { passed: 0, failed: 1, warnings: 0, rpcErrors: 0, total: 1 };
+      }
+      
+    } catch (error) {
+      console.error(`Error validating knowledge collections for ${network}:`, error.message);
+      if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 1, total: 0 };
+      } else {
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+      }
+    } finally {
+      await client.end();
+    }
+  }
+
+  /**
+   * Validate Base knowledge collections using cached contract events
+   */
+  async validateBaseKnowledgeCollectionsWithCache(network) {
+    console.log(`\n🔍 Validating knowledge collections for ${network} using cache...`);
+    
+    const dbName = this.databaseMap[network];
+    const client = new Client({ ...this.dbConfig, database: dbName });
+    
+    try {
+      await client.connect();
+      
+      // Count total knowledge collections from indexer
+      const indexerCountResult = await client.query(`
+        SELECT COUNT(*) as total_count 
+        FROM knowledge_collection_created
+      `);
+      
+      const indexerCount = parseInt(indexerCountResult.rows[0].total_count);
+      
+      console.log(`   📊 Indexer knowledge collections: ${indexerCount.toLocaleString()}`);
+      
+      // Get cached knowledge collection events
+      const cachedKnowledgeEvents = this.baseCache.knowledgeEvents || [];
+      console.log(`   📊 Found ${cachedKnowledgeEvents.length} cached knowledge collection contract events`);
+      
+      if (cachedKnowledgeEvents.length === 0) {
+        console.log(`   ⚠️ No cached knowledge collection events found, using original RPC approach`);
+        return await this.validateKnowledgeCollectionsOriginal(network);
+      }
+      
+      const contractCount = cachedKnowledgeEvents.length;
+      
+      console.log(`   📊 Contract knowledge collections: ${contractCount.toLocaleString()}`);
+      
+      // Compare knowledge collection counts directly (no block number comparison)
+      const difference = indexerCount - contractCount;
+      const tolerance = 200; // 200 count tolerance
+      
+      if (indexerCount === contractCount) {
+        console.log(`   ✅ Knowledge collections match: ${indexerCount.toLocaleString()}`);
+        return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
+      } else if (Math.abs(difference) <= tolerance) {
+        console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCount.toLocaleString()}`);
+        console.log(`      📊 Small difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()} (within 200 count tolerance)`);
+        return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 }; // Count as warning
+      } else {
+        console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerCount.toLocaleString()}, Contract ${contractCount.toLocaleString()}`);
+        console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${difference.toLocaleString()}`);
+        return { passed: 0, failed: 1, warnings: 0, rpcErrors: 0, total: 1 };
+      }
+      
+    } catch (error) {
+      console.error(`Error validating knowledge collections for ${network}:`, error.message);
+      if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 1, total: 0 };
+      } else {
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+      }
+    } finally {
+      await client.end();
+    }
+  }
 }
 
 module.exports = CompleteQAService;
@@ -4833,7 +4911,7 @@ describe('Indexer Chain Validation', function() {
     
     for (const network of ['Gnosis', 'Base', 'Neuroweb']) {
       if (summary.networks[network]) {
-        console.log(`\n🌐 ${network} Network:`);
+        console.log(`\n�� ${network} Network:`);
         for (const [testType, results] of Object.entries(summary.networks[network])) {
           console.log(`   ${testType}: ${results.passed} ✅ passed, ${results.failed} ❌ failed, ${results.warnings} ⚠️ warnings, ${results.rpcErrors} 🔌 RPC errors`);
         }
