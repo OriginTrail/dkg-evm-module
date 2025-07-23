@@ -4863,6 +4863,30 @@ describe('Indexer Chain Validation', function() {
     this.timeout(0); // No timeout for cache building
     console.log('\n🚀 Building contract events caches...');
     
+    // Build Gnosis cache with infinite retry until success
+    const buildGnosisCache = async () => {
+      let retryCount = 0;
+      while (true) {
+        try {
+          console.log(`\n🔍 Building Gnosis cache (attempt ${retryCount + 1})...`);
+          await qaService.queryAllGnosisContractEvents();
+          gnosisCache = qaService.gnosisCache;
+          console.log(`✅ Gnosis cache ready for all validations`);
+          console.log(`📊 Cache details: ${qaService.gnosisCache ? 'Available' : 'Not available'}`);
+          if (qaService.gnosisCache) {
+            console.log(`   📊 Total node events: ${qaService.gnosisCache.totalNodeEvents?.toLocaleString() || 'N/A'}`);
+            console.log(`   📊 Total delegator events: ${qaService.gnosisCache.totalDelegatorEvents?.toLocaleString() || 'N/A'}`);
+          }
+          return true;
+        } catch (error) {
+          retryCount++;
+          console.log(`❌ Gnosis cache building failed (attempt ${retryCount}): ${error.message}`);
+          console.log('⏳ Retrying in 5 seconds...');
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+      }
+    };
+    
     // Build Base cache with infinite retry until success
     const buildBaseCache = async () => {
       let retryCount = 0;
@@ -4887,15 +4911,19 @@ describe('Indexer Chain Validation', function() {
       }
     };
     
-    // Only build Base cache since Gnosis is skipped
-    console.log('📊 Building Base cache only (Gnosis tests skipped)');
+    // Build both Gnosis and Base caches
+    console.log('📊 Building both Gnosis and Base caches...');
     
-    // Start Base cache build and wait for completion
-    console.log('📊 Building Base cache and waiting for completion...');
+    // Start both cache builds and wait for completion
+    console.log('📊 Building caches and waiting for completion...');
     
-    // Wait for cache to complete (no timeout)
-    return buildBaseCache().then(() => {
+    // Wait for both caches to complete (no timeout)
+    return Promise.all([
+      buildGnosisCache(),
+      buildBaseCache()
+    ]).then(() => {
       console.log('📊 Cache building completed successfully');
+      console.log('   ✅ Gnosis cache: Ready');
       console.log('   ✅ Base cache: Ready');
     }).catch(error => {
       console.log('❌ Cache building failed, starting tests anyway');
@@ -4923,7 +4951,7 @@ describe('Indexer Chain Validation', function() {
     console.log('='.repeat(80));
   });
   
-  describe.skip('Gnosis Network', function() {
+  describe('Gnosis Network', function() {
     it('should validate node stakes', async function() {
       const results = await qaService.validateNodeStakes('Gnosis');
       trackResults('Gnosis', 'Node Stakes', results);
