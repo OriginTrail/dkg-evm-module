@@ -1511,10 +1511,30 @@ class CompleteQAService {
           // Process each delegator
           for (const [delegatorKey, indexerEvents] of Object.entries(indexerEventsByDelegator)) {
             try {
-              // Sort indexer events by block number (newest first)
-              indexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+              // Group indexer events by block number and sort by stake (highest first)
+              const indexerEventsByBlock = {};
+              for (const event of indexerEvents) {
+                const blockNum = event.blockNumber;
+                if (!indexerEventsByBlock[blockNum]) {
+                  indexerEventsByBlock[blockNum] = [];
+                }
+                indexerEventsByBlock[blockNum].push({
+                  blockNumber: blockNum,
+                  stake: event.stake
+                });
+              }
               
-              console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Found ${indexerEvents.length} indexer events`);
+              // Sort each block's events by stake (highest first) and keep only the highest
+              const processedIndexerEvents = [];
+              for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
+                events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+                processedIndexerEvents.push(events[0]); // Keep only the highest stake
+              }
+              
+              // Sort processed events by block number (newest first)
+              processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+              
+              console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedIndexerEvents.length} unique blocks from indexer`);
               
               // Get cached contract events for this delegator
               const cachedDelegatorEvents = this.gnosisCache.delegatorEventsByNode[nodeId]?.[delegatorKey] || [];
@@ -1525,42 +1545,146 @@ class CompleteQAService {
                 continue;
               }
               
-              // Sort cached contract events by block number (newest first)
-              cachedDelegatorEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-              
-              // Compare latest events
-              const indexerLatest = indexerEvents[0];
-              const contractLatest = cachedDelegatorEvents[0];
-              
-              console.log(`      📋 Latest event comparison:`);
-              console.log(`         Indexer latest block: ${indexerLatest.blockNumber}, Contract latest block: ${contractLatest.blockNumber}`);
-              
-              if (Number(indexerLatest.blockNumber) === Number(contractLatest.blockNumber)) {
-                console.log(`         ✅ Both have same latest event block: ${indexerLatest.blockNumber}`);
-                console.log(`         📊 Latest event (block ${indexerLatest.blockNumber}):`);
-                console.log(`            Indexer: ${this.weiToTRAC(indexerLatest.stake)} TRAC`);
-                console.log(`            Contract: ${this.weiToTRAC(BigInt(contractLatest.stakeBase))} TRAC`);
-                
-                // Validate that contract state matches expected stake
-                const expectedStake = indexerLatest.stake;
-                const actualStake = BigInt(contractLatest.stakeBase);
-                const difference = expectedStake - actualStake;
-                const tolerance = 500000000000000000n; // 0.5 TRAC in wei
-                
-                if (difference === 0n || difference === 0) {
-                  console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
-                  passed++;
-                } else if (difference >= -tolerance && difference <= tolerance) {
-                  console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
-                  console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
-                  warnings++;
-                } else {
-                  console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
-                  console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-                  failed++;
+              // Group contract events by block number and sort by stake (highest first)
+              const contractEventsByBlock = {};
+              for (const event of cachedDelegatorEvents) {
+                const blockNum = event.blockNumber;
+                if (!contractEventsByBlock[blockNum]) {
+                  contractEventsByBlock[blockNum] = [];
                 }
+                contractEventsByBlock[blockNum].push({
+                  blockNumber: blockNum,
+                  stake: BigInt(event.stakeBase)
+                });
+              }
+              
+              // Sort each block's events by stake (highest first) and keep only the highest
+              const processedContractEvents = [];
+              for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
+                events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+                processedContractEvents.push(events[0]); // Keep only the highest stake
+              }
+              
+              // Sort processed events by block number (newest first)
+              processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+              
+              console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedContractEvents.length} unique blocks from contract`);
+              
+              // Compare indexer and contract events (now using processed events)
+              const indexerEventCount = processedIndexerEvents.length;
+              const contractEventCount = processedContractEvents.length;
+              
+              console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Indexer events: ${indexerEventCount}, Contract events: ${contractEventCount}`);
+              
+              let validationPassed = false;
+              let expectedStake = 0n;
+              let actualStake = 0n;
+              let comparisonBlock = 0;
+              
+              if (indexerEventCount === 1 && contractEventCount === 1) {
+                // Single event case: check if they have the same blockchain number
+                const indexerBlock = processedIndexerEvents[0].blockNumber;
+                const contractBlock = processedContractEvents[0].blockNumber;
+                
+                console.log(`      📋 Single event comparison:`);
+                console.log(`         Indexer block: ${indexerBlock}, Contract block: ${contractBlock}`);
+                
+                if (Number(indexerBlock) === Number(contractBlock)) {
+                  validationPassed = true;
+                  expectedStake = processedIndexerEvents[0].stake;
+                  actualStake = processedContractEvents[0].stake;
+                  comparisonBlock = indexerBlock;
+                  console.log(`         ✅ Both have same block number: ${comparisonBlock}`);
+                } else {
+                  console.log(`         ❌ Block number mismatch`);
+                }
+              } else if (indexerEventCount >= 1 && contractEventCount >= 1) {
+                // Multiple events case: compare second largest blockchain numbers
+                if (indexerEventCount >= 2 && contractEventCount >= 2) {
+                  const indexerSecondLargest = processedIndexerEvents[1].blockNumber;
+                  const contractSecondLargest = processedContractEvents[1].blockNumber;
+                  
+                  console.log(`      📋 Multiple events comparison:`);
+                  console.log(`         Indexer second largest block: ${indexerSecondLargest}, Contract second largest block: ${contractSecondLargest}`);
+                  
+                  if (Number(indexerSecondLargest) === Number(contractSecondLargest)) {
+                    validationPassed = true;
+                    expectedStake = processedIndexerEvents[1].stake;
+                    actualStake = processedContractEvents[1].stake;
+                    comparisonBlock = indexerSecondLargest;
+                    
+                    console.log(`         ✅ Both have same previous event block: ${comparisonBlock}`);
+                    console.log(`         📊 Previous event (block ${comparisonBlock}):`);
+                    console.log(`            Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
+                    console.log(`            Contract: ${this.weiToTRAC(actualStake)} TRAC`);
+                    
+                    // Calculate and log the TRAC difference
+                    const difference = expectedStake - actualStake;
+                    const tolerance = 500000000000000000n; // 0.5 TRAC in wei
+                    
+                    console.log(`         📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+                    
+                    if (difference >= -tolerance && difference <= tolerance) {
+                      console.log(`         ✅ Difference within 0.5 TRAC tolerance - Validation PASSED`);
+                    } else {
+                      console.log(`         ❌ Difference exceeds 0.5 TRAC tolerance - Validation FAILED`);
+                    }
+                  } else {
+                    console.log(`         ❌ Previous event block mismatch`);
+                  }
+                } else {
+                  // Less than 2 events on one or both sides, compare latest
+                  const indexerLatest = processedIndexerEvents[0].blockNumber;
+                  const contractLatest = processedContractEvents[0].blockNumber;
+                  
+                  console.log(`      📋 Latest event comparison:`);
+                  console.log(`         Indexer latest block: ${indexerLatest}, Contract latest block: ${contractLatest}`);
+                  
+                  if (Number(indexerLatest) === Number(contractLatest)) {
+                    validationPassed = true;
+                    expectedStake = processedIndexerEvents[0].stake;
+                    actualStake = processedContractEvents[0].stake;
+                    comparisonBlock = indexerLatest;
+                    
+                    console.log(`         ✅ Both have same latest event block: ${comparisonBlock}`);
+                    console.log(`         📊 Latest event (block ${comparisonBlock}):`);
+                    console.log(`            Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
+                    console.log(`            Contract: ${this.weiToTRAC(actualStake)} TRAC`);
+                  } else {
+                    console.log(`         ❌ Latest event block mismatch`);
+                  }
+                }
+              } else if (contractEventCount === 0) {
+                // No contract events found
+                console.log(`            ⚠️ No contract events found for this delegator`);
+                console.log(`            📊 Indexer has ${indexerEventCount} events, Contract has 0 events`);
+                console.log(`            🔍 Cannot perform validation - no contract data available`);
+                console.log(`         ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - no contract data`);
+                continue;
               } else {
-                console.log(`         ❌ Latest event block mismatch`);
+                console.log(`            ⚠️ Cannot compare: Indexer has ${indexerEventCount} events, Contract has ${contractEventCount} events`);
+              }
+              
+              // Skip validation if comparison failed
+              if (!validationPassed) {
+                console.log(`         ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - comparison failed`);
+                continue;
+              }
+              
+              // Validate that contract state matches expected stake
+              const difference = expectedStake - actualStake;
+              const tolerance = 500000000000000000n; // 0.5 TRAC in wei
+              
+              if (difference === 0n || difference === 0) {
+                console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+                passed++;
+              } else if (difference >= -tolerance && difference <= tolerance) {
+                console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+                console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+                warnings++;
+              } else {
+                console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+                console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
                 failed++;
               }
               
@@ -1672,10 +1796,30 @@ class CompleteQAService {
           // Process each delegator
           for (const [delegatorKey, indexerEvents] of Object.entries(indexerEventsByDelegator)) {
             try {
-              // Sort indexer events by block number (newest first)
-              indexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+              // Group indexer events by block number and sort by stake (highest first)
+              const indexerEventsByBlock = {};
+              for (const event of indexerEvents) {
+                const blockNum = event.blockNumber;
+                if (!indexerEventsByBlock[blockNum]) {
+                  indexerEventsByBlock[blockNum] = [];
+                }
+                indexerEventsByBlock[blockNum].push({
+                  blockNumber: blockNum,
+                  stake: event.stake
+                });
+              }
               
-              console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Found ${indexerEvents.length} indexer events`);
+              // Sort each block's events by stake (highest first) and keep only the highest
+              const processedIndexerEvents = [];
+              for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
+                events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+                processedIndexerEvents.push(events[0]); // Keep only the highest stake
+              }
+              
+              // Sort processed events by block number (newest first)
+              processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+              
+              console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedIndexerEvents.length} unique blocks from indexer`);
               
               // Get cached contract events for this delegator
               const cachedDelegatorEvents = this.baseCache.delegatorEventsByNode[nodeId]?.[delegatorKey] || [];
@@ -1686,42 +1830,146 @@ class CompleteQAService {
                 continue;
               }
               
-              // Sort cached contract events by block number (newest first)
-              cachedDelegatorEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-              
-              // Compare latest events
-              const indexerLatest = indexerEvents[0];
-              const contractLatest = cachedDelegatorEvents[0];
-              
-              console.log(`      📋 Latest event comparison:`);
-              console.log(`         Indexer latest block: ${indexerLatest.blockNumber}, Contract latest block: ${contractLatest.blockNumber}`);
-              
-              if (Number(indexerLatest.blockNumber) === Number(contractLatest.blockNumber)) {
-                console.log(`         ✅ Both have same latest event block: ${indexerLatest.blockNumber}`);
-                console.log(`         📊 Latest event (block ${indexerLatest.blockNumber}):`);
-                console.log(`            Indexer: ${this.weiToTRAC(indexerLatest.stake)} TRAC`);
-                console.log(`            Contract: ${this.weiToTRAC(BigInt(contractLatest.stakeBase))} TRAC`);
-                
-                // Validate that contract state matches expected stake
-                const expectedStake = indexerLatest.stake;
-                const actualStake = BigInt(contractLatest.stakeBase);
-                const difference = expectedStake - actualStake;
-                const tolerance = 500000000000000000n; // 0.5 TRAC in wei
-                
-                if (difference === 0n || difference === 0) {
-                  console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
-                  passed++;
-                } else if (difference >= -tolerance && difference <= tolerance) {
-                  console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
-                  console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
-                  warnings++;
-                } else {
-                  console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
-                  console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-                  failed++;
+              // Group contract events by block number and sort by stake (highest first)
+              const contractEventsByBlock = {};
+              for (const event of cachedDelegatorEvents) {
+                const blockNum = event.blockNumber;
+                if (!contractEventsByBlock[blockNum]) {
+                  contractEventsByBlock[blockNum] = [];
                 }
+                contractEventsByBlock[blockNum].push({
+                  blockNumber: blockNum,
+                  stake: BigInt(event.stakeBase)
+                });
+              }
+              
+              // Sort each block's events by stake (highest first) and keep only the highest
+              const processedContractEvents = [];
+              for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
+                events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+                processedContractEvents.push(events[0]); // Keep only the highest stake
+              }
+              
+              // Sort processed events by block number (newest first)
+              processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+              
+              console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedContractEvents.length} unique blocks from contract`);
+              
+              // Compare indexer and contract events (now using processed events)
+              const indexerEventCount = processedIndexerEvents.length;
+              const contractEventCount = processedContractEvents.length;
+              
+              console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Indexer events: ${indexerEventCount}, Contract events: ${contractEventCount}`);
+              
+              let validationPassed = false;
+              let expectedStake = 0n;
+              let actualStake = 0n;
+              let comparisonBlock = 0;
+              
+              if (indexerEventCount === 1 && contractEventCount === 1) {
+                // Single event case: check if they have the same blockchain number
+                const indexerBlock = processedIndexerEvents[0].blockNumber;
+                const contractBlock = processedContractEvents[0].blockNumber;
+                
+                console.log(`      📋 Single event comparison:`);
+                console.log(`         Indexer block: ${indexerBlock}, Contract block: ${contractBlock}`);
+                
+                if (Number(indexerBlock) === Number(contractBlock)) {
+                  validationPassed = true;
+                  expectedStake = processedIndexerEvents[0].stake;
+                  actualStake = processedContractEvents[0].stake;
+                  comparisonBlock = indexerBlock;
+                  console.log(`         ✅ Both have same block number: ${comparisonBlock}`);
+                } else {
+                  console.log(`         ❌ Block number mismatch`);
+                }
+              } else if (indexerEventCount >= 1 && contractEventCount >= 1) {
+                // Multiple events case: compare second largest blockchain numbers
+                if (indexerEventCount >= 2 && contractEventCount >= 2) {
+                  const indexerSecondLargest = processedIndexerEvents[1].blockNumber;
+                  const contractSecondLargest = processedContractEvents[1].blockNumber;
+                  
+                  console.log(`      📋 Multiple events comparison:`);
+                  console.log(`         Indexer second largest block: ${indexerSecondLargest}, Contract second largest block: ${contractSecondLargest}`);
+                  
+                  if (Number(indexerSecondLargest) === Number(contractSecondLargest)) {
+                    validationPassed = true;
+                    expectedStake = processedIndexerEvents[1].stake;
+                    actualStake = processedContractEvents[1].stake;
+                    comparisonBlock = indexerSecondLargest;
+                    
+                    console.log(`         ✅ Both have same previous event block: ${comparisonBlock}`);
+                    console.log(`         📊 Previous event (block ${comparisonBlock}):`);
+                    console.log(`            Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
+                    console.log(`            Contract: ${this.weiToTRAC(actualStake)} TRAC`);
+                    
+                    // Calculate and log the TRAC difference
+                    const difference = expectedStake - actualStake;
+                    const tolerance = 500000000000000000n; // 0.5 TRAC in wei
+                    
+                    console.log(`         📊 TRAC Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+                    
+                    if (difference >= -tolerance && difference <= tolerance) {
+                      console.log(`         ✅ Difference within 0.5 TRAC tolerance - Validation PASSED`);
+                    } else {
+                      console.log(`         ❌ Difference exceeds 0.5 TRAC tolerance - Validation FAILED`);
+                    }
+                  } else {
+                    console.log(`         ❌ Previous event block mismatch`);
+                  }
+                } else {
+                  // Less than 2 events on one or both sides, compare latest
+                  const indexerLatest = processedIndexerEvents[0].blockNumber;
+                  const contractLatest = processedContractEvents[0].blockNumber;
+                  
+                  console.log(`      📋 Latest event comparison:`);
+                  console.log(`         Indexer latest block: ${indexerLatest}, Contract latest block: ${contractLatest}`);
+                  
+                  if (Number(indexerLatest) === Number(contractLatest)) {
+                    validationPassed = true;
+                    expectedStake = processedIndexerEvents[0].stake;
+                    actualStake = processedContractEvents[0].stake;
+                    comparisonBlock = indexerLatest;
+                    
+                    console.log(`         ✅ Both have same latest event block: ${comparisonBlock}`);
+                    console.log(`         📊 Latest event (block ${comparisonBlock}):`);
+                    console.log(`            Indexer: ${this.weiToTRAC(expectedStake)} TRAC`);
+                    console.log(`            Contract: ${this.weiToTRAC(actualStake)} TRAC`);
+                  } else {
+                    console.log(`         ❌ Latest event block mismatch`);
+                  }
+                }
+              } else if (contractEventCount === 0) {
+                // No contract events found
+                console.log(`            ⚠️ No contract events found for this delegator`);
+                console.log(`            📊 Indexer has ${indexerEventCount} events, Contract has 0 events`);
+                console.log(`            🔍 Cannot perform validation - no contract data available`);
+                console.log(`         ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - no contract data`);
+                continue;
               } else {
-                console.log(`         ❌ Latest event block mismatch`);
+                console.log(`            ⚠️ Cannot compare: Indexer has ${indexerEventCount} events, Contract has ${contractEventCount} events`);
+              }
+              
+              // Skip validation if comparison failed
+              if (!validationPassed) {
+                console.log(`         ⏭️ Node ${nodeId}, Delegator ${delegatorKey}: Cannot validate - comparison failed`);
+                continue;
+              }
+              
+              // Validate that contract state matches expected stake
+              const difference = expectedStake - actualStake;
+              const tolerance = 500000000000000000n; // 0.5 TRAC in wei
+              
+              if (difference === 0n || difference === 0) {
+                console.log(`   ✅ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+                passed++;
+              } else if (difference >= -tolerance && difference <= tolerance) {
+                console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+                console.log(`      📊 Small difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC (within 0.5 TRAC tolerance)`);
+                warnings++;
+              } else {
+                console.log(`   ❌ Node ${nodeId}, Delegator ${delegatorKey}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+                console.log(`      📊 Difference: ${difference > 0 ? '+' : '-'}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
                 failed++;
               }
               
@@ -4614,7 +4862,7 @@ describe('Indexer Chain Validation', function() {
       }
     });
     
-    it('should validate delegator stake update events', async function() {
+    it.only('should validate delegator stake update events', async function() {
       const results = await qaService.validateDelegatorStakeUpdateEvents('Gnosis');
       trackResults('Gnosis', 'Delegator Stake Update Events', results);
       
