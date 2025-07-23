@@ -68,19 +68,21 @@ class CompleteQAService {
       
       // Add retry logic for RPC connection
       let provider;
-      let retries = 3;
+      let retryCount = 0;
       
-      while (retries > 0) {
+      while (true) { // Infinite retry loop
         try {
           provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
           await provider.getNetwork(); // Test the connection
+          if (retryCount > 0) {
+            console.log(`   ✅ RPC connection succeeded after ${retryCount} retries`);
+          }
           break;
         } catch (error) {
-          retries--;
-          if (retries === 0) throw error;
-          
-          console.log(`   ⏳ RPC connection failed, waiting 2.5 minutes before retrying... (${retries} attempts left)`);
-          await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+          retryCount++;
+          console.log(`   ⚠️ RPC connection failed (attempt ${retryCount}): ${error.message}`);
+          console.log(`   ⏳ Retrying in 3 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
         }
       }
       
@@ -189,9 +191,9 @@ class CompleteQAService {
   }
 
   async getContractNodeStake(network, nodeId, blockNumber = null) {
-    let retries = 3;
+    let retryCount = 0;
     
-    while (retries > 0) {
+    while (true) { // Infinite retry loop
       try {
         const networkConfig = config.networks.find(n => n.name === network);
         if (!networkConfig) {
@@ -219,24 +221,23 @@ class CompleteQAService {
           // Query current state
           stake = await stakingContract.getNodeStake(nodeId);
         }
+        if (retryCount > 0) {
+          console.log(`   ✅ Contract call succeeded after ${retryCount} retries`);
+        }
         return stake;
       } catch (error) {
-        retries--;
-        if (retries === 0) {
-          console.error(`Error getting contract node stake for node ${nodeId} on ${network}:`, error.message);
-          return 0n;
-        }
-        
-        console.log(`   ⏳ Contract call failed, waiting 2.5 minutes before retrying... (${retries} attempts left)`);
-        await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+        retryCount++;
+        console.log(`   ⚠️ Contract call failed (attempt ${retryCount}): ${error.message}`);
+        console.log(`   ⏳ Retrying in 3 seconds...`);
+        await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
       }
     }
   }
 
   async getContractDelegatorStake(network, nodeId, delegatorKey, blockNumber = null) {
-    let retries = 3;
+    let retryCount = 0;
     
-    while (retries > 0) {
+    while (true) { // Infinite retry loop
       try {
         const networkConfig = config.networks.find(n => n.name === network);
         if (!networkConfig) {
@@ -264,16 +265,15 @@ class CompleteQAService {
           // Query current state
           stake = await stakingContract.getDelegatorStakeBase(nodeId, delegatorKey);
         }
+        if (retryCount > 0) {
+          console.log(`   ✅ Contract call succeeded after ${retryCount} retries`);
+        }
         return stake;
       } catch (error) {
-        retries--;
-        if (retries === 0) {
-          console.error(`Error getting contract delegator stake for node ${nodeId}, delegator ${delegatorKey}... on ${network}:`, error.message);
-          return 0n;
-        }
-        
-        console.log(`   ⏳ Contract call failed, waiting 2.5 minutes before retrying... (${retries} attempts left)`);
-        await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+        retryCount++;
+        console.log(`   ⚠️ Contract call failed (attempt ${retryCount}): ${error.message}`);
+        console.log(`   ⏳ Retrying in 3 seconds...`);
+        await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
       }
     }
   }
@@ -441,9 +441,9 @@ class CompleteQAService {
             }
             
             let contractEvents = [];
-            let retries = 3;
+            let retryCount = 0;
             
-            while (retries > 0) {
+            while (true) { // Infinite retry loop
               try {
                 const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
                 const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
@@ -459,32 +459,37 @@ class CompleteQAService {
                 
                 // Try to query in chunks to avoid timeout
                 const currentBlock = await provider.getBlockNumber();
-                const chunkSize = network === 'Base' ? 100000 : 1000000; // 0.1M for Base
+                const chunkSize = network === 'Base' ? 100000 : (network === 'Neuroweb' ? 10000 : 1000000); // 10k for Neuroweb, 0.1M for Base, 1M for Gnosis
                 let allEvents = [];
                 
                 // Start from the oldest indexer event block and go forward
                 const oldestIndexerBlock = allIndexerEventsResult.rows[allIndexerEventsResult.rows.length - 1].block_number;
                 const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
                 
-                for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
-                  const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
-                  
-                  let chunkRetries = 3;
-                  let chunkEvents = [];
-                  
-                  while (chunkRetries > 0) {
-                    try {
-                      chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-                      allEvents = allEvents.concat(chunkEvents);
-                      break; // Success, exit retry loop
-                    } catch (error) {
-                      chunkRetries--;
-                      if (chunkRetries === 0) {
-                        console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock} after 3 attempts: ${error.message}`);
-                        // Continue with next chunk instead of failing completely
-                      } else {
-                        console.log(`   ⏳ Chunk ${startBlock}-${endBlock} failed, retrying in 2.5 minutes... (${chunkRetries} attempts left)`);
-                        await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+                if (network === 'Neuroweb') {
+                  // Use parallel chunk processing for Neuroweb
+                  allEvents = await this.processChunksInParallel(stakingContract, filter, fromBlock, currentBlock, chunkSize, 10);
+                } else {
+                  // Use sequential processing for other networks
+                  for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+                    const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+                    
+                    let chunkRetryCount = 0;
+                    let chunkEvents = [];
+                    
+                    while (true) { // Infinite retry loop
+                      try {
+                        chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                        if (chunkRetryCount > 0) {
+                          console.log(`   ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
+                        }
+                        allEvents = allEvents.concat(chunkEvents);
+                        break; // Success, exit retry loop
+                      } catch (error) {
+                        chunkRetryCount++;
+                        console.log(`   ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
+                        console.log(`   ⏳ Retrying in 3 seconds...`);
+                        await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
                       }
                     }
                   }
@@ -550,15 +555,15 @@ class CompleteQAService {
                 
                 contractEvents = processedContractEvents;
                 
-                break;
-              } catch (error) {
-                retries--;
-                if (retries === 0) {
-                  console.log(`   ⚠️ Node ${nodeId}: RPC Error - ${error.message}`);
-                  rpcErrors++;
-                  continue;
+                if (retryCount > 0) {
+                  console.log(`   ✅ RPC query succeeded after ${retryCount} retries`);
                 }
-                await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+                break; // Success, exit retry loop
+              } catch (error) {
+                retryCount++;
+                console.log(`   ⚠️ RPC query failed (attempt ${retryCount}): ${error.message}`);
+                console.log(`   ⏳ Retrying in 3 seconds...`);
+                await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
               }
             }
             
@@ -834,9 +839,9 @@ class CompleteQAService {
             }
             
             let contractStake;
-            let retries = 3;
+            let retryCount = 0;
             
-            while (retries > 0) {
+            while (true) { // Infinite retry loop
               try {
                 const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
                 const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
@@ -847,15 +852,15 @@ class CompleteQAService {
                 
                 // Get current delegator stake from contract
                 contractStake = await stakingContract.getDelegatorStakeBase(nodeId, delegatorKey);
+                if (retryCount > 0) {
+                  console.log(`   ✅ Contract call succeeded after ${retryCount} retries`);
+                }
                 break;
               } catch (error) {
-                retries--;
-                if (retries === 0) {
-                  console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
-                  rpcErrors++;
-                  continue;
-                }
-                await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+                retryCount++;
+                console.log(`   ⚠️ Contract call failed (attempt ${retryCount}): ${error.message}`);
+                console.log(`   ⏳ Retrying in 3 seconds...`);
+                await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
               }
             }
             
@@ -1015,9 +1020,9 @@ class CompleteQAService {
           }
           
           let contractNodeStake;
-          let retries = 3;
+          let retryCount = 0;
           
-          while (retries > 0) {
+          while (true) { // Infinite retry loop
             try {
               const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
               const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
@@ -1028,15 +1033,15 @@ class CompleteQAService {
               
               // Get current node stake from contract
               contractNodeStake = await stakingContract.getNodeStake(nodeId);
+              if (retryCount > 0) {
+                console.log(`   ✅ Contract call succeeded after ${retryCount} retries`);
+              }
               break;
             } catch (error) {
-              retries--;
-              if (retries === 0) {
-                console.log(`   ⚠️ Node ${nodeId}: RPC Error - ${error.message}`);
-                rpcErrors++;
-                continue;
-              }
-              await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+              retryCount++;
+              console.log(`   ⚠️ Contract call failed (attempt ${retryCount}): ${error.message}`);
+              console.log(`   ⏳ Retrying in 3 seconds...`);
+              await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
             }
           }
           
@@ -1304,12 +1309,9 @@ class CompleteQAService {
             }
             
             let contractEvents = [];
-            let retries = 3;
-            let rpcSuccess = false;
-            let historicalQueryFailures = 0;
-            let totalHistoricalQueries = 0;
+            let retryCount = 0;
             
-            while (retries > 0) {
+            while (true) { // Infinite retry loop
               try {
                 const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
                 const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
@@ -1329,32 +1331,37 @@ class CompleteQAService {
                   
                   // Try to query in chunks to avoid timeout
                   const currentBlock = await provider.getBlockNumber();
-                  const chunkSize = network === 'Base' ? 100000 : 1000000; // 0.1M for Base
+                  const chunkSize = network === 'Base' ? 100000 : (network === 'Neuroweb' ? 10000 : 1000000); // 10k for Neuroweb, 0.1M for Base, 1M for Gnosis
                   let allEvents = [];
                   
                   // Start from the oldest indexer event block and go forward
                   const oldestIndexerBlock = allEventsForDelegatorResult.rows[allEventsForDelegatorResult.rows.length - 1].block_number;
                   const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
                   
-                  for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
-                    const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
-                    
-                    let chunkRetries = 3;
-                    let chunkEvents = [];
-                    
-                    while (chunkRetries > 0) {
-                      try {
-                        chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-                        allEvents = allEvents.concat(chunkEvents);
-                        break; // Success, exit retry loop
-                      } catch (error) {
-                        chunkRetries--;
-                        if (chunkRetries === 0) {
-                          console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock} after 3 attempts: ${error.message}`);
-                          // Continue with next chunk instead of failing completely
-                        } else {
-                          console.log(`   ⏳ Chunk ${startBlock}-${endBlock} failed, retrying in 2.5 minutes... (${chunkRetries} attempts left)`);
-                          await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+                  if (network === 'Neuroweb') {
+                    // Use parallel chunk processing for Neuroweb
+                    allEvents = await this.processChunksInParallel(stakingContract, filter, fromBlock, currentBlock, chunkSize, 10);
+                  } else {
+                    // Use sequential processing for other networks
+                    for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+                      const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+                      
+                      let chunkRetryCount = 0;
+                      let chunkEvents = [];
+                      
+                      while (true) { // Infinite retry loop
+                        try {
+                          chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                          if (chunkRetryCount > 0) {
+                            console.log(`   ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
+                          }
+                          allEvents = allEvents.concat(chunkEvents);
+                          break; // Success, exit retry loop
+                        } catch (error) {
+                          chunkRetryCount++;
+                          console.log(`   ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
+                          console.log(`   ⏳ Retrying in 3 seconds...`);
+                          await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
                         }
                       }
                     }
@@ -1389,19 +1396,22 @@ class CompleteQAService {
                   
                   contractEvents = processedContractEvents;
                   
-                  break;
+                  if (retryCount > 0) {
+                    console.log(`      ✅ RPC query succeeded after ${retryCount} retries`);
+                  }
+                  break; // Success, exit retry loop
                 } catch (error) {
                   console.log(`      ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
-                  retries--;
-                  if (retries === 0) {
+                  retryCount++;
+                  if (retryCount === 0) {
                     rpcErrors++;
                     continue;
                   }
                   await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
                 }
               } catch (error) {
-                retries--;
-                if (retries === 0) {
+                retryCount++;
+                if (retryCount === 0) {
                   console.log(`      ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
                   rpcErrors++;
                   continue;
@@ -1637,9 +1647,9 @@ class CompleteQAService {
       }
       
       let contractEvents = [];
-      let retries = 3;
+      let retryCount = 0;
       
-      while (retries > 0) {
+      while (true) { // Infinite retry loop
         try {
           const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
           const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
@@ -1655,32 +1665,37 @@ class CompleteQAService {
           
           // Try to query in chunks to avoid timeout
           const currentBlock = await provider.getBlockNumber();
-          const chunkSize = network === 'Base' ? 100000 : 1000000; // 0.1M for Base
+          const chunkSize = network === 'Base' ? 100000 : (network === 'Neuroweb' ? 10000 : 1000000); // 10k for Neuroweb, 0.1M for Base, 1M for Gnosis
           let allEvents = [];
           
           // Start from the oldest indexer event block and go forward
           const oldestIndexerBlock = allIndexerEventsResult.rows[allIndexerEventsResult.rows.length - 1].block_number;
           const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
           
-          for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
-            const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
-            
-            let chunkRetries = 3;
-            let chunkEvents = [];
-            
-            while (chunkRetries > 0) {
-              try {
-                chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-                allEvents = allEvents.concat(chunkEvents);
-                break; // Success, exit retry loop
-              } catch (error) {
-                chunkRetries--;
-                if (chunkRetries === 0) {
-                  console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock} after 3 attempts: ${error.message}`);
-                  // Continue with next chunk instead of failing completely
-                } else {
-                  console.log(`   ⏳ Chunk ${startBlock}-${endBlock} failed, retrying in 2.5 minutes... (${chunkRetries} attempts left)`);
-                  await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+          if (network === 'Neuroweb') {
+            // Use parallel chunk processing for Neuroweb
+            allEvents = await this.processChunksInParallel(stakingContract, filter, fromBlock, currentBlock, chunkSize, 10);
+          } else {
+            // Use sequential processing for other networks
+            for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+              const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+              
+              let chunkRetryCount = 0;
+              let chunkEvents = [];
+              
+              while (true) { // Infinite retry loop
+                try {
+                  chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                  if (chunkRetryCount > 0) {
+                    console.log(`   ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
+                  }
+                  allEvents = allEvents.concat(chunkEvents);
+                  break; // Success, exit retry loop
+                } catch (error) {
+                  chunkRetryCount++;
+                  console.log(`   ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
+                  console.log(`   ⏳ Retrying in 3 seconds...`);
+                  await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
                 }
               }
             }
@@ -1746,14 +1761,15 @@ class CompleteQAService {
           
           contractEvents = processedContractEvents;
           
-          break;
-        } catch (error) {
-          retries--;
-          if (retries === 0) {
-            console.log(`   ⚠️ Node ${nodeId}: RPC Error - ${error.message}`);
-            return { type: 'rpcError', nodeId };
+          if (retryCount > 0) {
+            console.log(`   ✅ RPC query succeeded after ${retryCount} retries`);
           }
-          await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+          break; // Success, exit retry loop
+        } catch (error) {
+          retryCount++;
+          console.log(`   ⚠️ RPC query failed (attempt ${retryCount}): ${error.message}`);
+          console.log(`   ⏳ Retrying in 3 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
         }
       }
       
@@ -1906,9 +1922,9 @@ class CompleteQAService {
       }
       
       let contractEvents = [];
-      let retries = 3;
+      let retryCount = 0;
       
-      while (retries > 0) {
+      while (true) { // Infinite retry loop
         try {
           const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
           const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
@@ -1924,32 +1940,37 @@ class CompleteQAService {
           
           // Try to query in chunks to avoid timeout
           const currentBlock = await provider.getBlockNumber();
-          const chunkSize = network === 'Base' ? 100000 : 1000000; // 0.1M for Base
+          const chunkSize = network === 'Base' ? 100000 : (network === 'Neuroweb' ? 10000 : 1000000); // 10k for Neuroweb, 0.1M for Base, 1M for Gnosis
           let allEvents = [];
           
           // Start from the oldest indexer event block and go forward
           const oldestIndexerBlock = allIndexerEventsResult.rows[allIndexerEventsResult.rows.length - 1].block_number;
           const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
           
-          for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
-            const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
-            
-            let chunkRetries = 3;
-            let chunkEvents = [];
-            
-            while (chunkRetries > 0) {
-              try {
-                chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-                allEvents = allEvents.concat(chunkEvents);
-                break; // Success, exit retry loop
-              } catch (error) {
-                chunkRetries--;
-                if (chunkRetries === 0) {
-                  console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock} after 3 attempts: ${error.message}`);
-                  // Continue with next chunk instead of failing completely
-                } else {
-                  console.log(`   ⏳ Chunk ${startBlock}-${endBlock} failed, retrying in 2.5 minutes... (${chunkRetries} attempts left)`);
-                  await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+          if (network === 'Neuroweb') {
+            // Use parallel chunk processing for Neuroweb
+            allEvents = await this.processChunksInParallel(stakingContract, filter, fromBlock, currentBlock, chunkSize, 10);
+          } else {
+            // Use sequential processing for other networks
+            for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+              const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+              
+              let chunkRetryCount = 0;
+              let chunkEvents = [];
+              
+              while (true) { // Infinite retry loop
+                try {
+                  chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                  if (chunkRetryCount > 0) {
+                    console.log(`   ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
+                  }
+                  allEvents = allEvents.concat(chunkEvents);
+                  break; // Success, exit retry loop
+                } catch (error) {
+                  chunkRetryCount++;
+                  console.log(`   ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
+                  console.log(`   ⏳ Retrying in 3 seconds...`);
+                  await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
                 }
               }
             }
@@ -1984,10 +2005,13 @@ class CompleteQAService {
           
           contractEvents = processedContractEvents;
           
-          break;
+          if (retryCount > 0) {
+            console.log(`      ✅ RPC query succeeded after ${retryCount} retries`);
+          }
+          break; // Success, exit retry loop
         } catch (error) {
-          retries--;
-          if (retries === 0) {
+          retryCount++;
+          if (retryCount === 0) {
             console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
             return { type: 'rpcError' };
           }
@@ -2152,9 +2176,9 @@ class CompleteQAService {
       }
       
       let contractEvents = [];
-      let retries = 3;
+      let retryCount = 0;
       
-      while (retries > 0) {
+      while (true) { // Infinite retry loop
         try {
           const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
           const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
@@ -2174,32 +2198,37 @@ class CompleteQAService {
             
             // Try to query in chunks to avoid timeout
             const currentBlock = await provider.getBlockNumber();
-            const chunkSize = network === 'Base' ? 100000 : 1000000; // 0.1M for Base
+            const chunkSize = network === 'Base' ? 100000 : (network === 'Neuroweb' ? 10000 : 1000000); // 10k for Neuroweb, 0.1M for Base, 1M for Gnosis
             let allEvents = [];
             
             // Start from the oldest indexer event block and go forward
             const oldestIndexerBlock = allEventsForDelegatorResult.rows[allEventsForDelegatorResult.rows.length - 1].block_number;
             const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
             
-            for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
-              const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
-              
-              let chunkRetries = 3;
-              let chunkEvents = [];
-              
-              while (chunkRetries > 0) {
-                try {
-                  chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
-                  allEvents = allEvents.concat(chunkEvents);
-                  break; // Success, exit retry loop
-                } catch (error) {
-                  chunkRetries--;
-                  if (chunkRetries === 0) {
-                    console.log(`   ⚠️ Failed to query chunk ${startBlock}-${endBlock} after 3 attempts: ${error.message}`);
-                    // Continue with next chunk instead of failing completely
-                  } else {
-                    console.log(`   ⏳ Chunk ${startBlock}-${endBlock} failed, retrying in 2.5 minutes... (${chunkRetries} attempts left)`);
-                    await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
+            if (network === 'Neuroweb') {
+              // Use parallel chunk processing for Neuroweb
+              allEvents = await this.processChunksInParallel(stakingContract, filter, fromBlock, currentBlock, chunkSize, 10);
+            } else {
+              // Use sequential processing for other networks
+              for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+                const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+                
+                let chunkRetryCount = 0;
+                let chunkEvents = [];
+                
+                while (true) { // Infinite retry loop
+                  try {
+                    chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+                    if (chunkRetryCount > 0) {
+                      console.log(`   ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
+                    }
+                    allEvents = allEvents.concat(chunkEvents);
+                    break; // Success, exit retry loop
+                  } catch (error) {
+                    chunkRetryCount++;
+                    console.log(`   ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
+                    console.log(`   ⏳ Retrying in 3 seconds...`);
+                    await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
                   }
                 }
               }
@@ -2234,18 +2263,21 @@ class CompleteQAService {
             
             contractEvents = processedContractEvents;
             
-            break;
+            if (retryCount > 0) {
+              console.log(`      ✅ RPC query succeeded after ${retryCount} retries`);
+            }
+            break; // Success, exit retry loop
           } catch (error) {
             console.log(`      ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
-            retries--;
-            if (retries === 0) {
+            retryCount++;
+            if (retryCount === 0) {
               return { type: 'rpcError', nodeId, delegatorKey };
             }
             await new Promise(resolve => setTimeout(resolve, 2.5 * 60 * 1000)); // 2.5 minutes
           }
         } catch (error) {
-          retries--;
-          if (retries === 0) {
+          retryCount++;
+          if (retryCount === 0) {
             console.log(`      ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: RPC Error - ${error.message}`);
             return { type: 'rpcError', nodeId, delegatorKey };
           }
@@ -2389,6 +2421,56 @@ class CompleteQAService {
       }
     }
   }
+
+  /**
+   * Process chunks in parallel for Neuroweb network
+   */
+  async processChunksInParallel(stakingContract, filter, fromBlock, currentBlock, chunkSize, maxConcurrency = 10) {
+    const chunks = [];
+    for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+      const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+      chunks.push({ startBlock, endBlock });
+    }
+    
+    console.log(`   📊 Processing ${chunks.length} chunks in parallel (${maxConcurrency} concurrent)...`);
+    
+    const chunkTasks = chunks.map(({ startBlock, endBlock }) => async () => {
+      let retryCount = 0;
+      while (true) { // Infinite retry loop
+        try {
+          const chunkEvents = await stakingContract.queryFilter(filter, startBlock, endBlock);
+          if (retryCount > 0) {
+            console.log(`   ✅ Chunk ${startBlock}-${endBlock} succeeded after ${retryCount} retries`);
+          }
+          return { success: true, events: chunkEvents, startBlock, endBlock };
+        } catch (error) {
+          retryCount++;
+          console.log(`   ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${retryCount}): ${error.message}`);
+          console.log(`   ⏳ Retrying in 3 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
+        }
+      }
+    });
+    
+    const results = await this.runInBatches(chunkTasks, maxConcurrency);
+    
+    let allEvents = [];
+    let failedChunks = 0;
+    
+    for (const result of results) {
+      if (result.success) {
+        allEvents = allEvents.concat(result.events);
+      } else {
+        failedChunks++;
+      }
+    }
+    
+    if (failedChunks > 0) {
+      console.log(`   ⚠️ ${failedChunks} chunks failed out of ${chunks.length} total chunks`);
+    }
+    
+    return allEvents;
+  }
 }
 
 module.exports = CompleteQAService;
@@ -2441,7 +2523,7 @@ describe('Indexer Chain Validation', function() {
     console.log('='.repeat(80));
   });
   
-  describe.skip('Gnosis Network', function() {
+  describe('Gnosis Network', function() {
     it('should validate node stakes', async function() {
       const results = await qaService.validateNodeStakes('Gnosis');
       trackResults('Gnosis', 'Node Stakes', results);
@@ -2497,7 +2579,7 @@ describe('Indexer Chain Validation', function() {
     });
   });
   
-  describe.skip('Base Network', function() {
+  describe('Base Network', function() {
     it('should validate node stakes', async function() {
       const results = await qaService.validateNodeStakes('Base');
       trackResults('Base', 'Node Stakes', results);
