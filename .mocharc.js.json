@@ -13,5 +13,6 @@
   "timeout": 3300000,
   "slow": 10000,
   "spec": "indexer_qa_service/indexer_chain_tests.js",
-  "ignore": ["**/*.ts", "tasks/**/*", "scripts/**/*"]
+  "ignore": ["**/*.ts", "tasks/**/*", "scripts/**/*"],
+  "no-parallel": true
 } 

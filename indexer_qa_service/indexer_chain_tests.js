@@ -4543,10 +4543,14 @@ describe('Indexer Chain Validation', function() {
       while (true) {
         try {
           console.log(`\n🔍 Building Base cache (attempt ${retryCount + 1})...`);
-          const cache = await qaService.queryAllBaseContractEvents();
-          baseCache = cache;
-          qaService.baseCache = cache;
-          console.log('✅ Base cache ready for all validations');
+          await qaService.queryAllBaseContractEvents();
+          baseCache = qaService.baseCache;
+          console.log(`✅ Base cache ready for all validations`);
+          console.log(`📊 Cache details: ${qaService.baseCache ? 'Available' : 'Not available'}`);
+          if (qaService.baseCache) {
+            console.log(`   📊 Total node events: ${qaService.baseCache.totalNodeEvents?.toLocaleString() || 'N/A'}`);
+            console.log(`   📊 Total delegator events: ${qaService.baseCache.totalDelegatorEvents?.toLocaleString() || 'N/A'}`);
+          }
           return true;
         } catch (error) {
           retryCount++;
@@ -4651,6 +4655,7 @@ describe('Indexer Chain Validation', function() {
   
   describe('Base Network', function() {
     it('should validate node stakes', async function() {
+      console.log('\n📊 Cache status: Gnosis=' + (qaService.gnosisCache ? 'true' : 'false') + ', Base=' + (qaService.baseCache ? 'true' : 'false'));
       const results = await qaService.validateNodeStakes('Base');
       trackResults('Base', 'Node Stakes', results);
       if (results.failed > 0) {
@@ -4659,6 +4664,7 @@ describe('Indexer Chain Validation', function() {
     });
     
     it('should validate delegator stakes', async function() {
+      console.log('\n📊 Cache status: Gnosis=' + (qaService.gnosisCache ? 'true' : 'false') + ', Base=' + (qaService.baseCache ? 'true' : 'false'));
       const results = await qaService.validateDelegatorStakes('Base');
       trackResults('Base', 'Delegator Stakes', results);
       if (results.failed > 0) {
@@ -4667,6 +4673,7 @@ describe('Indexer Chain Validation', function() {
     });
     
     it('should validate delegator stake update events', async function() {
+      console.log('\n📊 Cache status: Gnosis=' + (qaService.gnosisCache ? 'true' : 'false') + ', Base=' + (qaService.baseCache ? 'true' : 'false'));
       const results = await qaService.validateDelegatorStakeUpdateEvents('Base');
       trackResults('Base', 'Delegator Stake Update Events', results);
       if (results.failed > 0) {
@@ -4675,6 +4682,7 @@ describe('Indexer Chain Validation', function() {
     });
     
     it('should validate delegator stake sum matches node stake', async function() {
+      console.log('\n📊 Cache status: Gnosis=' + (qaService.gnosisCache ? 'true' : 'false') + ', Base=' + (qaService.baseCache ? 'true' : 'false'));
       const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Base');
       trackResults('Base', 'Delegator Stake Sum', results);
       if (results.failed > 0) {
@@ -4683,6 +4691,7 @@ describe('Indexer Chain Validation', function() {
     });
     
     it('should validate knowledge collections', async function() {
+      console.log('\n📊 Cache status: Gnosis=' + (qaService.gnosisCache ? 'true' : 'false') + ', Base=' + (qaService.baseCache ? 'true' : 'false'));
       const results = await qaService.validateKnowledgeCollections('Base');
       trackResults('Base', 'Knowledge Collections', results);
       if (results.failed > 0) {
