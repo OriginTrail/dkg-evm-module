@@ -95,6 +95,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const contractName = hubContract.name;
     const contractAddress = hubContract.address;
 
+    const contractsToSkip = [
+      'Ask',
+      'DelegatorsInfo',
+      'RandomSamplingStorage',
+      'Staking',
+      'StakingKPI',
+      'Profile',
+      'RandomSampling',
+    ];
+
+    if (contractsToSkip.includes(contractName)) {
+      continue;
+    }
+
     try {
       // Handle special contract name mappings
       let abiFileName = contractName;

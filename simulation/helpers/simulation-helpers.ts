@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { ethers } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import {
@@ -6,8 +7,11 @@ import {
   impersonateAccount,
   stopImpersonatingAccount,
 } from './blockchain-helpers';
-import { HUB_OWNERS } from './simulation-constants';
-import { EpochMetadata } from './types';
+import {
+  DELEGATORS_INFO_MAINNET_ADDRESSES,
+  HUB_OWNERS,
+  RPC_URLS,
+} from './simulation-constants';
 
 /**
  * Simulation Helpers
@@ -541,44 +545,45 @@ export async function setupMigratorAllowances(
   }
 }
 
-/**
- * Load epoch metadata for reward distribution
- */
-export async function loadEpochMetadata(
-  hre: HardhatRuntimeEnvironment,
+export async function getV6ActiveNodesAndDelegators(
   contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
-): Promise<EpochMetadata[]> {
-  try {
-    const chronos = contracts.chronos;
+  chain: string,
+): Promise<{
+  v6ActiveNodes: number[];
+  v6NodeDelegators: { [key: number]: string[] };
+}> {
+  const v6ActiveNodes: number[] = [];
+  const v6NodeDelegators: { [key: number]: string[] } = {};
 
-    // For MVP, we'll use current epoch as a starting point
-    // TODO: Load actual epoch metadata from V8.0 contracts
-    const currentEpoch = await chronos.getCurrentEpoch();
-    const epochLength = await chronos.epochLength();
+  // Initialize mainnet delegatorsInfo contract
+  const provider = new ethers.JsonRpcProvider(RPC_URLS[chain]);
+  const delegatorsInfo = new ethers.Contract(
+    DELEGATORS_INFO_MAINNET_ADDRESSES[chain],
+    [
+      'function getDelegators(uint72 identityId) external view returns (address[] memory)',
+    ],
+    provider,
+  );
 
-    console.log(`[LOAD EPOCH METADATA] Current epoch: ${currentEpoch}`);
-    console.log(`[LOAD EPOCH METADATA] Epoch length: ${epochLength} seconds`);
-
-    // Create some placeholder epoch metadata
-    const epochMetadata = [
-      {
-        id: Number(currentEpoch),
-        startTs: Number(await chronos.timestampForEpoch(currentEpoch)),
-        endTs: Number(
-          await chronos.timestampForEpoch(BigInt(Number(currentEpoch) + 1)),
-        ),
-        rewardPool: BigInt('1000000000000000000000'), // 1000 TRAC placeholder
-      },
-    ];
-
-    console.log(`[LOAD EPOCH METADATA] Loaded ${epochMetadata.length} epochs`);
-
-    return epochMetadata;
-  } catch (error) {
-    console.error(
-      `[LOAD EPOCH METADATA] ❌ Failed to load epoch metadata:`,
-      error,
+  // Migrate mainnet delegators to the forked delegatorsInfo contract
+  const maxIdentityId = await contracts.identityStorage.lastIdentityId();
+  for (let identityId = 1; identityId <= maxIdentityId; identityId++) {
+    const delegators = await delegatorsInfo.getDelegators(identityId);
+    const delegatorsArray = Array.from(delegators);
+    console.log(
+      `[MIGRATE V6 NODE DELEGATORS] Migrating ${delegatorsArray.length} delegators for identity ${identityId}`,
     );
-    throw error;
+    await contracts.delegatorsInfo.migrate(delegatorsArray);
+    const migratedDelegators =
+      await contracts.delegatorsInfo.getDelegators(identityId);
+    console.log(
+      `[INIT] Migrated ${migratedDelegators.length} delegators for identity ${identityId}`,
+    );
+    v6NodeDelegators[identityId] = Array.from(migratedDelegators);
+    if (await contracts.shardingTableStorage.nodeExists(identityId)) {
+      v6ActiveNodes.push(identityId);
+    }
   }
+
+  return { v6ActiveNodes, v6NodeDelegators };
 }

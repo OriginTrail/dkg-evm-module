@@ -53,7 +53,7 @@ This document explains how to configure and use the hardhat simulation environme
 **If you see these during setup, STOP and fix before proceeding:**
 
 - **Database not found**: `Error: ENOENT: no such file or directory` → Check database file location
-- **RPC returns null**: Block 24450127 returns `null` → Your RPC doesn't support archival data
+- **RPC returns null**: Block 24277327 returns `null` → Your RPC doesn't support archival data
 - **Environment variable missing**: `RPC_BASE_MAINNET environment variable not set` → Check `.env` file
 - **Port conflicts**: `address already in use` → Kill existing processes or use different port
 - **Module not found**: `Cannot find module` → Run `npm install`
@@ -69,7 +69,7 @@ curl -X POST $RPC_BASE_MAINNET \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["0x1754C7F", false],"id":1}'
 
-# Should return block data for 24450127, not null
+# Should return block data for 24277327, not null
 ```
 
 **Check database file:**
@@ -369,7 +369,7 @@ This approach lets you run a forked node in the terminal and connect to it from 
 
 ```bash
 # Start Base mainnet fork
-HARDHAT_FORK_URL=$RPC_BASE_MAINNET HARDHAT_FORK_BLOCK=24450127 npx hardhat node --config hardhat.simulation.config.ts --port 8545
+HARDHAT_FORK_URL=$RPC_BASE_MAINNET HARDHAT_FORK_BLOCK=24277327 npx hardhat node --config hardhat.simulation.config.ts --port 8545
 
 # Start Neuroweb mainnet fork (different terminal)
 HARDHAT_FORK_URL=$RPC_NEUROWEB_MAINNET HARDHAT_FORK_BLOCK=7237897 npx hardhat node --config hardhat.simulation.config.ts --port 8546

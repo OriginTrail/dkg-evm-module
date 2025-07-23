@@ -2,8 +2,8 @@
  * Epoch metadata for reward distribution
  */
 export type EpochMetadata = {
-  id: number;
+  epoch: number;
   startTs: number;
   endTs: number;
-  rewardPool: bigint;
+  rewardPool: string | bigint;
 };
