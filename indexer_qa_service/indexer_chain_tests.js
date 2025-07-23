@@ -2538,7 +2538,7 @@ class CompleteQAService {
           
           try {
             // Query ALL DelegatorBaseStakeUpdated events for this specific delegator and node
-            console.log(`      📊 Querying ALL DelegatorBaseStakeUpdated events for node ${nodeId}, delegator ${delegatorKey}`);
+            console.log(`      📊  for node ${nodeId}, delegator ${delegatorKey}`);
             
             const filter = stakingContract.filters.DelegatorBaseStakeUpdated(nodeId, delegatorKey);
             
@@ -4984,7 +4984,7 @@ class CompleteQAService {
           await Promise.all(chunkPromises);
         }
         
-        console.log(`\n📊 Querying all DelegatorBaseStakeUpdated events in parallel chunks...`);
+        console.log(`\n📊 Querying all DelegatorBaseStakeUpdated events in sequential chunks...`);
         const delegatorStakeFilter = stakingContract.filters.DelegatorBaseStakeUpdated();
         const delegatorChunkSize = 10000; // 10k blocks per chunk
         
