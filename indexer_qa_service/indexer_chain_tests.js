@@ -4907,7 +4907,7 @@ class CompleteQAService {
         console.log(`\n📊 Querying all NodeStakeUpdated events in parallel chunks...`);
         const nodeStakeFilter = stakingContract.filters.NodeStakeUpdated();
         const nodeChunkSize = 10000; // 10k blocks per chunk
-        const maxConcurrency = 5; // 5 chunks in parallel
+        const maxConcurrency = 1; // 1 chunk at a time (sequential)
         
         const nodeChunks = [];
         for (let startChunk = startBlock; startChunk <= currentBlock; startChunk += nodeChunkSize) {
