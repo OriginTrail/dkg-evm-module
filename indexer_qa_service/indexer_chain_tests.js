@@ -4818,6 +4818,746 @@ class CompleteQAService {
       await client.end();
     }
   }
+
+  async queryAllNeurowebContractEvents() {
+    console.log(`\n📊 Querying all Neuroweb contract events for caching...`);
+    
+    const fs = require('fs');
+    const path = require('path');
+    const cacheFile = path.join(__dirname, 'neuroweb_cache.json');
+    
+    try {
+      const networkConfig = config.networks.find(n => n.name === 'Neuroweb');
+      if (!networkConfig) {
+        throw new Error('Neuroweb network not found in config');
+      }
+      
+      const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+      const stakingAddress = await this.getContractAddressFromHub('Neuroweb', 'StakingStorage');
+      
+      const stakingContract = new ethers.Contract(stakingAddress, [
+        'event NodeStakeUpdated(uint72 indexed identityId, uint96 stake)',
+        'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
+      ], provider);
+      
+      // Get current block number
+      const currentBlock = await provider.getBlockNumber();
+      console.log(`   📊 Current Neuroweb block: ${currentBlock.toLocaleString()}`);
+      
+      // Load existing cache from JSON file
+      let existingCache = {
+        nodeEvents: [],
+        delegatorEvents: [],
+        nodeEventsByNode: {},
+        delegatorEventsByNode: {},
+        totalNodeEvents: 0,
+        totalDelegatorEvents: 0,
+        lastProcessedBlock: 0
+      };
+      
+      if (fs.existsSync(cacheFile)) {
+        try {
+          const cacheData = fs.readFileSync(cacheFile, 'utf8');
+          existingCache = JSON.parse(cacheData);
+          console.log(`   📊 Loaded existing cache from ${cacheFile}`);
+          console.log(`   📊 Existing cache: ${existingCache.totalNodeEvents.toLocaleString()} node events, ${existingCache.totalDelegatorEvents.toLocaleString()} delegator events`);
+          console.log(`   📊 Last processed block: ${existingCache.lastProcessedBlock.toLocaleString()}`);
+        } catch (error) {
+          console.log(`   ⚠️ Failed to load existing cache: ${error.message}`);
+          console.log(`   📊 Starting fresh cache...`);
+        }
+      } else {
+        console.log(`   📊 No existing cache found, starting fresh...`);
+      }
+      
+      // Start from the oldest indexer event block and go forward
+      const dbName = this.databaseMap['Neuroweb'];
+      const client = new Client({ ...this.dbConfig, database: dbName });
+      
+      try {
+        await client.connect();
+        
+        // Get oldest block from indexer
+        const oldestBlockResult = await client.query(`
+          SELECT MIN(block_number) as oldest_block 
+          FROM node_stake_updated 
+          WHERE block_number IS NOT NULL
+        `);
+        
+        const oldestIndexerBlock = oldestBlockResult.rows[0].oldest_block || 0;
+        const fromBlock = Math.max(0, oldestIndexerBlock - 1000); // Start 1000 blocks before oldest indexer event
+        
+        // Use existing cache's last processed block if it's higher than fromBlock
+        const startBlock = Math.max(fromBlock, existingCache.lastProcessedBlock + 1);
+        
+        console.log(`   📊 Querying from block ${startBlock.toLocaleString()} to ${currentBlock.toLocaleString()}`);
+        console.log(`   📊 Total blocks to query: ${(currentBlock - startBlock).toLocaleString()}`);
+        
+        // Initialize cache structure with existing data
+        this.neurowebCache = {
+          nodeEvents: [...existingCache.nodeEvents],
+          delegatorEvents: [...existingCache.delegatorEvents],
+          nodeEventsByNode: { ...existingCache.nodeEventsByNode },
+          delegatorEventsByNode: { ...existingCache.delegatorEventsByNode },
+          totalNodeEvents: existingCache.totalNodeEvents,
+          totalDelegatorEvents: existingCache.totalDelegatorEvents
+        };
+        
+        // Query NodeStakeUpdated events in parallel chunks
+        console.log(`\n📊 Querying all NodeStakeUpdated events in parallel chunks...`);
+        const nodeStakeFilter = stakingContract.filters.NodeStakeUpdated();
+        const nodeChunkSize = 10000; // 10k blocks per chunk
+        const maxConcurrency = 5; // 5 chunks in parallel
+        
+        const nodeChunks = [];
+        for (let startChunk = startBlock; startChunk <= currentBlock; startChunk += nodeChunkSize) {
+          const endChunk = Math.min(startChunk + nodeChunkSize - 1, currentBlock);
+          nodeChunks.push({ start: startChunk, end: endChunk });
+        }
+        
+        console.log(`   📊 Processing ${nodeChunks.length} chunks in parallel (max ${maxConcurrency} concurrent)...`);
+        
+        // Process chunks in parallel with concurrency control
+        for (let i = 0; i < nodeChunks.length; i += maxConcurrency) {
+          const chunkBatch = nodeChunks.slice(i, i + maxConcurrency);
+          const chunkPromises = chunkBatch.map(async (chunk) => {
+            const { start: startBlock, end: endBlock } = chunk;
+            
+            console.log(`   📊 Querying chunk ${startBlock.toLocaleString()}-${endBlock.toLocaleString()}...`);
+            
+            let chunkRetryCount = 0;
+            let chunkEvents = [];
+            
+            while (true) { // Infinite retry loop with no timeout
+              try {
+                const queryPromise = stakingContract.queryFilter(nodeStakeFilter, startBlock, endBlock);
+                chunkEvents = await queryPromise; // No timeout
+                
+                if (chunkRetryCount > 0) {
+                  console.log(`   ✅ Chunk ${startBlock.toLocaleString()}-${endBlock.toLocaleString()}: Found ${chunkEvents.length} events (succeeded after ${chunkRetryCount} retries)`);
+                } else {
+                  console.log(`   ✅ Chunk ${startBlock.toLocaleString()}-${endBlock.toLocaleString()}: Found ${chunkEvents.length} events`);
+                }
+                
+                // Process events
+                for (const event of chunkEvents) {
+                  const nodeId = parseInt(event.args.identityId);
+                  const stake = event.args.stake;
+                  const blockNumber = event.blockNumber;
+                  
+                  if (!this.neurowebCache.nodeEventsByNode[nodeId]) {
+                    this.neurowebCache.nodeEventsByNode[nodeId] = [];
+                  }
+                  
+                  this.neurowebCache.nodeEventsByNode[nodeId].push({
+                    nodeId: nodeId,
+                    stake: stake.toString(),
+                    blockNumber: blockNumber
+                  });
+                  
+                  this.neurowebCache.nodeEvents.push({
+                    nodeId: nodeId,
+                    stake: stake.toString(),
+                    blockNumber: blockNumber
+                  });
+                }
+                
+                this.neurowebCache.totalNodeEvents += chunkEvents.length;
+                break; // Success, exit retry loop
+                
+              } catch (error) {
+                chunkRetryCount++;
+                console.log(`   ⚠️ Chunk ${startBlock.toLocaleString()}-${endBlock.toLocaleString()} failed (attempt ${chunkRetryCount}): ${error.message}`);
+                
+                if (chunkRetryCount >= 30) {
+                  console.log(`   ❌ Chunk ${startBlock.toLocaleString()}-${endBlock.toLocaleString()}: Giving up after ${chunkRetryCount} attempts`);
+                  console.log(`   ⏭️ Skipping this chunk and continuing...`);
+                  break; // Give up on this chunk and continue
+                }
+                
+                console.log(`   ⏳ Retrying in 3 seconds...`);
+                await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
+              }
+            }
+          });
+          
+          await Promise.all(chunkPromises);
+        }
+        
+        console.log(`\n📊 Querying all DelegatorBaseStakeUpdated events in parallel chunks...`);
+        const delegatorStakeFilter = stakingContract.filters.DelegatorBaseStakeUpdated();
+        const delegatorChunkSize = 10000; // 10k blocks per chunk
+        
+        const delegatorChunks = [];
+        for (let startChunk = startBlock; startChunk <= currentBlock; startChunk += delegatorChunkSize) {
+          const endChunk = Math.min(startChunk + delegatorChunkSize - 1, currentBlock);
+          delegatorChunks.push({ start: startChunk, end: endChunk });
+        }
+        
+        console.log(`   📊 Processing ${delegatorChunks.length} chunks in parallel (max ${maxConcurrency} concurrent)...`);
+        
+        // Process chunks in parallel with concurrency control
+        for (let i = 0; i < delegatorChunks.length; i += maxConcurrency) {
+          const chunkBatch = delegatorChunks.slice(i, i + maxConcurrency);
+          const chunkPromises = chunkBatch.map(async (chunk) => {
+            const { start: startBlock, end: endBlock } = chunk;
+            
+            console.log(`   📊 Querying chunk ${startBlock.toLocaleString()}-${endBlock.toLocaleString()}...`);
+            
+            let chunkRetryCount = 0;
+            let chunkEvents = [];
+            
+            while (true) { // Infinite retry loop with no timeout
+              try {
+                const queryPromise = stakingContract.queryFilter(delegatorStakeFilter, startBlock, endBlock);
+                chunkEvents = await queryPromise; // No timeout
+                
+                if (chunkRetryCount > 0) {
+                  console.log(`   ✅ Chunk ${startBlock.toLocaleString()}-${endBlock.toLocaleString()}: Found ${chunkEvents.length} events (succeeded after ${chunkRetryCount} retries)`);
+                } else {
+                  console.log(`   ✅ Chunk ${startBlock.toLocaleString()}-${endBlock.toLocaleString()}: Found ${chunkEvents.length} events`);
+                }
+                
+                // Process events
+                for (const event of chunkEvents) {
+                  const nodeId = parseInt(event.args.identityId);
+                  const delegatorKey = event.args.delegatorKey;
+                  const stakeBase = event.args.stakeBase;
+                  const blockNumber = event.blockNumber;
+                  
+                  if (!this.neurowebCache.delegatorEventsByNode[nodeId]) {
+                    this.neurowebCache.delegatorEventsByNode[nodeId] = {};
+                  }
+                  
+                  if (!this.neurowebCache.delegatorEventsByNode[nodeId][delegatorKey]) {
+                    this.neurowebCache.delegatorEventsByNode[nodeId][delegatorKey] = [];
+                  }
+                  
+                  this.neurowebCache.delegatorEventsByNode[nodeId][delegatorKey].push({
+                    nodeId: nodeId,
+                    delegatorKey: delegatorKey,
+                    stakeBase: stakeBase.toString(),
+                    blockNumber: blockNumber
+                  });
+                  
+                  this.neurowebCache.delegatorEvents.push({
+                    nodeId: nodeId,
+                    delegatorKey: delegatorKey,
+                    stakeBase: stakeBase.toString(),
+                    blockNumber: blockNumber
+                  });
+                }
+                
+                this.neurowebCache.totalDelegatorEvents += chunkEvents.length;
+                break; // Success, exit retry loop
+                
+              } catch (error) {
+                chunkRetryCount++;
+                console.log(`   ⚠️ Chunk ${startBlock.toLocaleString()}-${endBlock.toLocaleString()} failed (attempt ${chunkRetryCount}): ${error.message}`);
+                
+                if (chunkRetryCount >= 30) {
+                  console.log(`   ❌ Chunk ${startBlock.toLocaleString()}-${endBlock.toLocaleString()}: Giving up after ${chunkRetryCount} attempts`);
+                  console.log(`   ⏭️ Skipping this chunk and continuing...`);
+                  break; // Give up on this chunk and continue
+                }
+                
+                console.log(`   ⏳ Retrying in 3 seconds...`);
+                await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds
+              }
+            }
+          });
+          
+          await Promise.all(chunkPromises);
+        }
+        
+        // Save cache to JSON file
+        const cacheToSave = {
+          ...this.neurowebCache,
+          lastProcessedBlock: currentBlock
+        };
+        
+        fs.writeFileSync(cacheFile, JSON.stringify(cacheToSave, null, 2));
+        
+        console.log(`\n✅ Neuroweb cache building completed!`);
+        console.log(`   📊 Total node events: ${this.neurowebCache.totalNodeEvents.toLocaleString()}`);
+        console.log(`   📊 Total delegator events: ${this.neurowebCache.totalDelegatorEvents.toLocaleString()}`);
+        console.log(`   📊 Nodes with events: ${Object.keys(this.neurowebCache.nodeEventsByNode).length}`);
+        console.log(`   📊 Nodes with delegator events: ${Object.keys(this.neurowebCache.delegatorEventsByNode).length}`);
+        console.log(`   💾 Cache saved to: ${cacheFile}`);
+        
+      } catch (error) {
+        console.error(`❌ Database connection error during Neuroweb cache building:`, error.message);
+        console.log(`   ⏭️ Falling back to recent blocks only...`);
+        
+        // Fallback: query only recent blocks
+        const recentBlocks = 100000; // Last 100k blocks
+        const fromBlock = Math.max(0, currentBlock - recentBlocks);
+        
+        console.log(`   📊 Querying recent blocks ${fromBlock.toLocaleString()}-${currentBlock.toLocaleString()}...`);
+        
+        // Initialize cache structure with existing data
+        this.neurowebCache = {
+          nodeEvents: [...existingCache.nodeEvents],
+          delegatorEvents: [...existingCache.delegatorEvents],
+          nodeEventsByNode: { ...existingCache.nodeEventsByNode },
+          delegatorEventsByNode: { ...existingCache.delegatorEventsByNode },
+          totalNodeEvents: existingCache.totalNodeEvents,
+          totalDelegatorEvents: existingCache.totalDelegatorEvents
+        };
+        
+        // Query recent events
+        try {
+          const nodeStakeFilter = stakingContract.filters.NodeStakeUpdated();
+          const nodeEvents = await stakingContract.queryFilter(nodeStakeFilter, fromBlock, currentBlock);
+          
+          for (const event of nodeEvents) {
+            const nodeId = parseInt(event.args.identityId);
+            const stake = event.args.stake;
+            const blockNumber = event.blockNumber;
+            
+            if (!this.neurowebCache.nodeEventsByNode[nodeId]) {
+              this.neurowebCache.nodeEventsByNode[nodeId] = [];
+            }
+            
+            this.neurowebCache.nodeEventsByNode[nodeId].push({
+              nodeId: nodeId,
+              stake: stake.toString(),
+              blockNumber: blockNumber
+            });
+            
+            this.neurowebCache.nodeEvents.push({
+              nodeId: nodeId,
+              stake: stake.toString(),
+              blockNumber: blockNumber
+            });
+          }
+          
+          this.neurowebCache.totalNodeEvents += nodeEvents.length;
+          
+          const delegatorStakeFilter = stakingContract.filters.DelegatorBaseStakeUpdated();
+          const delegatorEvents = await stakingContract.queryFilter(delegatorStakeFilter, fromBlock, currentBlock);
+          
+          for (const event of delegatorEvents) {
+            const nodeId = parseInt(event.args.identityId);
+            const delegatorKey = event.args.delegatorKey;
+            const stakeBase = event.args.stakeBase;
+            const blockNumber = event.blockNumber;
+            
+            if (!this.neurowebCache.delegatorEventsByNode[nodeId]) {
+              this.neurowebCache.delegatorEventsByNode[nodeId] = {};
+            }
+            
+            if (!this.neurowebCache.delegatorEventsByNode[nodeId][delegatorKey]) {
+              this.neurowebCache.delegatorEventsByNode[nodeId][delegatorKey] = [];
+            }
+            
+            this.neurowebCache.delegatorEventsByNode[nodeId][delegatorKey].push({
+              nodeId: nodeId,
+              delegatorKey: delegatorKey,
+              stakeBase: stakeBase.toString(),
+              blockNumber: blockNumber
+            });
+            
+            this.neurowebCache.delegatorEvents.push({
+              nodeId: nodeId,
+              delegatorKey: delegatorKey,
+              stakeBase: stakeBase.toString(),
+              blockNumber: blockNumber
+            });
+          }
+          
+          this.neurowebCache.totalDelegatorEvents += delegatorEvents.length;
+          
+          // Save cache to JSON file
+          const cacheToSave = {
+            ...this.neurowebCache,
+            lastProcessedBlock: currentBlock
+          };
+          
+          fs.writeFileSync(cacheFile, JSON.stringify(cacheToSave, null, 2));
+          
+          console.log(`   ✅ Fallback cache completed!`);
+          console.log(`   📊 Total node events: ${this.neurowebCache.totalNodeEvents.toLocaleString()}`);
+          console.log(`   📊 Total delegator events: ${this.neurowebCache.totalDelegatorEvents.toLocaleString()}`);
+          console.log(`   💾 Cache saved to: ${cacheFile}`);
+          
+        } catch (fallbackError) {
+          console.error(`❌ Fallback cache building also failed:`, fallbackError.message);
+          console.log(`   ⏭️ Proceeding without cache...`);
+          this.neurowebCache = null;
+        }
+      }
+      
+    } catch (error) {
+      console.error(`❌ Neuroweb cache building failed:`, error.message);
+      console.log(`   ⏭️ Proceeding without cache...`);
+      this.neurowebCache = null;
+    }
+  }
+
+  async validateNeurowebNodeStakesWithCache(network) {
+    console.log(`\n🔍 Validating ${network} node stakes using cached contract events...`);
+    
+    if (!this.neurowebCache) {
+      console.log(`   ⚠️ No Neuroweb cache available, falling back to original method`);
+      return await this.validateNodeStakes(network);
+    }
+    
+    const results = { passed: 0, failed: 0, warnings: 0 };
+    
+    try {
+      const dbName = this.databaseMap[network];
+      const client = new Client({ ...this.dbConfig, database: dbName });
+      
+      await client.connect();
+      
+      // Get all nodes from indexer
+      const nodesResult = await client.query(`
+        SELECT DISTINCT node_id, block_number, stake_amount
+        FROM node_stake_updated 
+        WHERE node_id IS NOT NULL 
+        ORDER BY node_id, block_number DESC
+      `);
+      
+      console.log(`   📊 Found ${nodesResult.rows.length} node stake records from indexer`);
+      console.log(`   📊 Using cached contract events: ${this.neurowebCache.totalNodeEvents.toLocaleString()} events`);
+      
+      for (const row of nodesResult.rows) {
+        const nodeId = parseInt(row.node_id);
+        const indexerStake = BigInt(row.stake_amount);
+        const blockNumber = parseInt(row.block_number);
+        
+        // Find the most recent contract event for this node at or before the indexer block
+        const nodeEvents = this.neurowebCache.nodeEventsByNode[nodeId] || [];
+        const relevantEvents = nodeEvents.filter(event => event.blockNumber <= blockNumber);
+        
+        if (relevantEvents.length === 0) {
+          console.log(`   ⚠️ Node ${nodeId}: No cached contract events found at or before block ${blockNumber}`);
+          results.warnings++;
+          continue;
+        }
+        
+        // Get the most recent event (highest block number)
+        const mostRecentEvent = relevantEvents.reduce((latest, event) => 
+          event.blockNumber > latest.blockNumber ? event : latest
+        );
+        
+        const contractStake = BigInt(mostRecentEvent.stake);
+        const difference = indexerStake > contractStake ? indexerStake - contractStake : contractStake - indexerStake;
+        const tolerance = BigInt(1000000000000000000); // 1 TRAC tolerance
+        
+        if (difference <= tolerance) {
+          console.log(`   ✅ Node ${nodeId}: Match (Indexer: ${this.weiToTRAC(indexerStake)} TRAC, Contract: ${this.weiToTRAC(contractStake)} TRAC, Block: ${blockNumber})`);
+          results.passed++;
+        } else {
+          console.log(`   ❌ Node ${nodeId}: Mismatch (Indexer: ${this.weiToTRAC(indexerStake)} TRAC, Contract: ${this.weiToTRAC(contractStake)} TRAC, Diff: ${this.formatTRACDifference(difference)} TRAC, Block: ${blockNumber})`);
+          results.failed++;
+        }
+      }
+      
+      await client.end();
+      
+    } catch (error) {
+      console.log(`   ❌ Database connection failed: ${error.message}`);
+      results.failed = nodesResult?.rows?.length || 0;
+    }
+    
+    return results;
+  }
+
+  async validateNeurowebDelegatorStakesWithCache(network) {
+    console.log(`\n🔍 Validating ${network} delegator stakes using cached contract events...`);
+    
+    if (!this.neurowebCache) {
+      console.log(`   ⚠️ No Neuroweb cache available, falling back to original method`);
+      return await this.validateDelegatorStakes(network);
+    }
+    
+    const results = { passed: 0, failed: 0, warnings: 0 };
+    
+    try {
+      const dbName = this.databaseMap[network];
+      const client = new Client({ ...this.dbConfig, database: dbName });
+      
+      await client.connect();
+      
+      // Get all delegator stakes from indexer
+      const delegatorsResult = await client.query(`
+        SELECT DISTINCT node_id, delegator_key, block_number, stake_amount
+        FROM delegator_stake_updated 
+        WHERE node_id IS NOT NULL AND delegator_key IS NOT NULL
+        ORDER BY node_id, delegator_key, block_number DESC
+      `);
+      
+      console.log(`   📊 Found ${delegatorsResult.rows.length} delegator stake records from indexer`);
+      console.log(`   📊 Using cached contract events: ${this.neurowebCache.totalDelegatorEvents.toLocaleString()} events`);
+      
+      for (const row of delegatorsResult.rows) {
+        const nodeId = parseInt(row.node_id);
+        const delegatorKey = row.delegator_key;
+        const indexerStake = BigInt(row.stake_amount);
+        const blockNumber = parseInt(row.block_number);
+        
+        // Find the most recent contract event for this node/delegator at or before the indexer block
+        const nodeDelegatorEvents = this.neurowebCache.delegatorEventsByNode[nodeId]?.[delegatorKey] || [];
+        const relevantEvents = nodeDelegatorEvents.filter(event => event.blockNumber <= blockNumber);
+        
+        if (relevantEvents.length === 0) {
+          console.log(`   ⚠️ Node ${nodeId} Delegator ${delegatorKey}: No cached contract events found at or before block ${blockNumber}`);
+          results.warnings++;
+          continue;
+        }
+        
+        // Get the most recent event (highest block number)
+        const mostRecentEvent = relevantEvents.reduce((latest, event) => 
+          event.blockNumber > latest.blockNumber ? event : latest
+        );
+        
+        const contractStake = BigInt(mostRecentEvent.stakeBase);
+        const difference = indexerStake > contractStake ? indexerStake - contractStake : contractStake - indexerStake;
+        const tolerance = BigInt(1000000000000000000); // 1 TRAC tolerance
+        
+        if (difference <= tolerance) {
+          console.log(`   ✅ Node ${nodeId} Delegator ${delegatorKey}: Match (Indexer: ${this.weiToTRAC(indexerStake)} TRAC, Contract: ${this.weiToTRAC(contractStake)} TRAC, Block: ${blockNumber})`);
+          results.passed++;
+        } else {
+          console.log(`   ❌ Node ${nodeId} Delegator ${delegatorKey}: Mismatch (Indexer: ${this.weiToTRAC(indexerStake)} TRAC, Contract: ${this.weiToTRAC(contractStake)} TRAC, Diff: ${this.formatTRACDifference(difference)} TRAC, Block: ${blockNumber})`);
+          results.failed++;
+        }
+      }
+      
+      await client.end();
+      
+    } catch (error) {
+      console.log(`   ❌ Database connection failed: ${error.message}`);
+      results.failed = delegatorsResult?.rows?.length || 0;
+    }
+    
+    return results;
+  }
+
+  async validateNeurowebDelegatorStakeUpdateEventsWithCache(network) {
+    console.log(`\n🔍 Validating ${network} delegator stake update events using cached contract events...`);
+    
+    if (!this.neurowebCache) {
+      console.log(`   ⚠️ No Neuroweb cache available, falling back to original method`);
+      return await this.validateDelegatorStakeUpdateEvents(network);
+    }
+    
+    const results = { passed: 0, failed: 0, warnings: 0 };
+    
+    try {
+      const dbName = this.databaseMap[network];
+      const client = new Client({ ...this.dbConfig, database: dbName });
+      
+      await client.connect();
+      
+      // Get all delegator stake update events from indexer
+      const eventsResult = await client.query(`
+        SELECT node_id, delegator_key, block_number, stake_amount
+        FROM delegator_stake_updated 
+        WHERE node_id IS NOT NULL AND delegator_key IS NOT NULL
+        ORDER BY block_number DESC
+        LIMIT 1000
+      `);
+      
+      console.log(`   📊 Found ${eventsResult.rows.length} delegator stake update events from indexer`);
+      console.log(`   📊 Using cached contract events: ${this.neurowebCache.totalDelegatorEvents.toLocaleString()} events`);
+      
+      for (const row of eventsResult.rows) {
+        const nodeId = parseInt(row.node_id);
+        const delegatorKey = row.delegator_key;
+        const indexerStake = BigInt(row.stake_amount);
+        const blockNumber = parseInt(row.block_number);
+        
+        // Find the contract event for this specific block
+        const nodeDelegatorEvents = this.neurowebCache.delegatorEventsByNode[nodeId]?.[delegatorKey] || [];
+        const contractEvent = nodeDelegatorEvents.find(event => event.blockNumber === blockNumber);
+        
+        if (!contractEvent) {
+          console.log(`   ⚠️ Node ${nodeId} Delegator ${delegatorKey}: No cached contract event found for block ${blockNumber}`);
+          results.warnings++;
+          continue;
+        }
+        
+        const contractStake = BigInt(contractEvent.stakeBase);
+        const difference = indexerStake > contractStake ? indexerStake - contractStake : contractStake - indexerStake;
+        const tolerance = BigInt(1000000000000000000); // 1 TRAC tolerance
+        
+        if (difference <= tolerance) {
+          console.log(`   ✅ Node ${nodeId} Delegator ${delegatorKey}: Match (Indexer: ${this.weiToTRAC(indexerStake)} TRAC, Contract: ${this.weiToTRAC(contractStake)} TRAC, Block: ${blockNumber})`);
+          results.passed++;
+        } else {
+          console.log(`   ❌ Node ${nodeId} Delegator ${delegatorKey}: Mismatch (Indexer: ${this.weiToTRAC(indexerStake)} TRAC, Contract: ${this.weiToTRAC(contractStake)} TRAC, Diff: ${this.formatTRACDifference(difference)} TRAC, Block: ${blockNumber})`);
+          results.failed++;
+        }
+      }
+      
+      await client.end();
+      
+    } catch (error) {
+      console.log(`   ❌ Database connection failed: ${error.message}`);
+      results.failed = eventsResult?.rows?.length || 0;
+    }
+    
+    return results;
+  }
+
+  async validateNeurowebDelegatorStakeSumMatchesNodeStakeWithCache(network) {
+    console.log(`\n🔍 Validating ${network} delegator stake sum matches node stake using cached contract events...`);
+    
+    if (!this.neurowebCache) {
+      console.log(`   ⚠️ No Neuroweb cache available, falling back to original method`);
+      return await this.validateDelegatorStakeSumMatchesNodeStake(network);
+    }
+    
+    const results = { passed: 0, failed: 0, warnings: 0 };
+    
+    try {
+      const dbName = this.databaseMap[network];
+      const client = new Client({ ...this.dbConfig, database: dbName });
+      
+      await client.connect();
+      
+      // Get all nodes with their latest stake from indexer
+      const nodesResult = await client.query(`
+        SELECT DISTINCT ON (node_id) node_id, block_number, stake_amount
+        FROM node_stake_updated 
+        WHERE node_id IS NOT NULL 
+        ORDER BY node_id, block_number DESC
+      `);
+      
+      console.log(`   📊 Found ${nodesResult.rows.length} nodes from indexer`);
+      console.log(`   📊 Using cached contract events: ${this.neurowebCache.totalNodeEvents.toLocaleString()} node events, ${this.neurowebCache.totalDelegatorEvents.toLocaleString()} delegator events`);
+      
+      for (const row of nodesResult.rows) {
+        const nodeId = parseInt(row.node_id);
+        const indexerNodeStake = BigInt(row.stake_amount);
+        const blockNumber = parseInt(row.block_number);
+        
+        // Get the most recent contract node event at or before the indexer block
+        const nodeEvents = this.neurowebCache.nodeEventsByNode[nodeId] || [];
+        const relevantNodeEvents = nodeEvents.filter(event => event.blockNumber <= blockNumber);
+        
+        if (relevantNodeEvents.length === 0) {
+          console.log(`   ⚠️ Node ${nodeId}: No cached contract node events found at or before block ${blockNumber}`);
+          results.warnings++;
+          continue;
+        }
+        
+        const mostRecentNodeEvent = relevantNodeEvents.reduce((latest, event) => 
+          event.blockNumber > latest.blockNumber ? event : latest
+        );
+        const contractNodeStake = BigInt(mostRecentNodeEvent.stake);
+        
+        // Calculate delegator sum from cached events
+        const nodeDelegatorEvents = this.neurowebCache.delegatorEventsByNode[nodeId] || {};
+        let contractDelegatorSum = BigInt(0);
+        
+        for (const delegatorKey in nodeDelegatorEvents) {
+          const delegatorEvents = nodeDelegatorEvents[delegatorKey];
+          const relevantDelegatorEvents = delegatorEvents.filter(event => event.blockNumber <= blockNumber);
+          
+          if (relevantDelegatorEvents.length > 0) {
+            const mostRecentDelegatorEvent = relevantDelegatorEvents.reduce((latest, event) => 
+              event.blockNumber > latest.blockNumber ? event : latest
+            );
+            contractDelegatorSum += BigInt(mostRecentDelegatorEvent.stakeBase);
+          }
+        }
+        
+        const nodeStakeDifference = indexerNodeStake > contractNodeStake ? indexerNodeStake - contractNodeStake : contractNodeStake - indexerNodeStake;
+        const delegatorSumDifference = indexerNodeStake > contractDelegatorSum ? indexerNodeStake - contractDelegatorSum : contractDelegatorSum - indexerNodeStake;
+        const tolerance = BigInt(1000000000000000000); // 1 TRAC tolerance
+        
+        if (nodeStakeDifference <= tolerance && delegatorSumDifference <= tolerance) {
+          console.log(`   ✅ Node ${nodeId}: Match (Node Stake: ${this.weiToTRAC(contractNodeStake)} TRAC, Delegator Sum: ${this.weiToTRAC(contractDelegatorSum)} TRAC)`);
+          results.passed++;
+        } else {
+          console.log(`   ❌ Node ${nodeId}: Mismatch (Node Stake: ${this.weiToTRAC(contractNodeStake)} TRAC, Delegator Sum: ${this.weiToTRAC(contractDelegatorSum)} TRAC, Node Diff: ${this.formatTRACDifference(nodeStakeDifference)} TRAC, Sum Diff: ${this.formatTRACDifference(delegatorSumDifference)} TRAC)`);
+          results.failed++;
+        }
+      }
+      
+      await client.end();
+      
+    } catch (error) {
+      console.log(`   ❌ Database connection failed: ${error.message}`);
+      results.failed = nodesResult?.rows?.length || 0;
+    }
+    
+    return results;
+  }
+
+  async validateNeurowebKnowledgeCollectionsWithCache(network) {
+    console.log(`\n🔍 Validating ${network} knowledge collections using cached contract events...`);
+    
+    if (!this.neurowebCache) {
+      console.log(`   ⚠️ No Neuroweb cache available, falling back to original method`);
+      return await this.validateKnowledgeCollections(network);
+    }
+    
+    const results = { passed: 0, failed: 0, warnings: 0 };
+    
+    try {
+      const dbName = this.databaseMap[network];
+      const client = new Client({ ...this.dbConfig, database: dbName });
+      
+      await client.connect();
+      
+      // Get all knowledge collections from indexer
+      const collectionsResult = await client.query(`
+        SELECT node_id, collection_id, block_number, stake_amount
+        FROM knowledge_collection_created 
+        WHERE node_id IS NOT NULL AND collection_id IS NOT NULL
+        ORDER BY block_number DESC
+        LIMIT 1000
+      `);
+      
+      console.log(`   📊 Found ${collectionsResult.rows.length} knowledge collection records from indexer`);
+      console.log(`   📊 Using cached contract events for validation context`);
+      
+      for (const row of collectionsResult.rows) {
+        const nodeId = parseInt(row.node_id);
+        const collectionId = row.collection_id;
+        const indexerStake = BigInt(row.stake_amount);
+        const blockNumber = parseInt(row.block_number);
+        
+        // For knowledge collections, we validate that the node has sufficient stake
+        // Get the most recent contract node event at or before the collection block
+        const nodeEvents = this.neurowebCache.nodeEventsByNode[nodeId] || [];
+        const relevantNodeEvents = nodeEvents.filter(event => event.blockNumber <= blockNumber);
+        
+        if (relevantNodeEvents.length === 0) {
+          console.log(`   ⚠️ Node ${nodeId} Collection ${collectionId}: No cached contract node events found at or before block ${blockNumber}`);
+          results.warnings++;
+          continue;
+        }
+        
+        const mostRecentNodeEvent = relevantNodeEvents.reduce((latest, event) => 
+          event.blockNumber > latest.blockNumber ? event : latest
+        );
+        const contractNodeStake = BigInt(mostRecentNodeEvent.stake);
+        
+        // Validate that the collection stake doesn't exceed the node's total stake
+        if (indexerStake <= contractNodeStake) {
+          console.log(`   ✅ Node ${nodeId} Collection ${collectionId}: Valid (Collection: ${this.weiToTRAC(indexerStake)} TRAC, Node Total: ${this.weiToTRAC(contractNodeStake)} TRAC, Block: ${blockNumber})`);
+          results.passed++;
+        } else {
+          console.log(`   ❌ Node ${nodeId} Collection ${collectionId}: Invalid (Collection: ${this.weiToTRAC(indexerStake)} TRAC, Node Total: ${this.weiToTRAC(contractNodeStake)} TRAC, Block: ${blockNumber})`);
+          results.failed++;
+        }
+      }
+      
+      await client.end();
+      
+    } catch (error) {
+      console.log(`   ❌ Database connection failed: ${error.message}`);
+      results.failed = collectionsResult?.rows?.length || 0;
+    }
+    
+    return results;
+  }
 }
 
 module.exports = CompleteQAService;
@@ -4831,12 +5571,6 @@ describe('Indexer Chain Validation', function() {
     total: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0 },
     networks: {}
   };
-  
-  // Cache for Gnosis contract events
-  let gnosisCache = null;
-  
-  // Cache for Base contract events
-  let baseCache = null;
   
   // Helper function to track results
   function trackResults(network, testType, results) {
@@ -4858,23 +5592,23 @@ describe('Indexer Chain Validation', function() {
     summary.total.rpcErrors += results.rpcErrors || 0;
   }
   
-  // Query Gnosis and Base caches before all tests
+  // Build caches for all networks before all tests
   before(function() {
     this.timeout(0); // No timeout for cache building
-    console.log('\n🚀 Building contract events caches...');
+    console.log('\n🚀 Building contract events caches for all networks...');
     
-    // Build Gnosis cache with infinite retry until success
+    // Build caches for all three networks
     const buildGnosisCache = async () => {
       let retryCount = 0;
       while (true) {
         try {
           console.log(`\n🔍 Building Gnosis cache (attempt ${retryCount + 1})...`);
           await qaService.queryAllGnosisContractEvents();
-          gnosisCache = qaService.gnosisCache;
+          
           console.log(`✅ Gnosis cache ready for all validations`);
           console.log(`📊 Cache details: ${qaService.gnosisCache ? 'Available' : 'Not available'}`);
           if (qaService.gnosisCache) {
-            console.log(`   📊 Total node events: ${qaService.gnosisCache.totalNodeEvents?.toLocaleString() || 'N/A'}`);
+            console.log(`   �� Total node events: ${qaService.gnosisCache.totalNodeEvents?.toLocaleString() || 'N/A'}`);
             console.log(`   📊 Total delegator events: ${qaService.gnosisCache.totalDelegatorEvents?.toLocaleString() || 'N/A'}`);
           }
           return true;
@@ -4887,14 +5621,13 @@ describe('Indexer Chain Validation', function() {
       }
     };
     
-    // Build Base cache with infinite retry until success
     const buildBaseCache = async () => {
       let retryCount = 0;
       while (true) {
         try {
           console.log(`\n🔍 Building Base cache (attempt ${retryCount + 1})...`);
           await qaService.queryAllBaseContractEvents();
-          baseCache = qaService.baseCache;
+          
           console.log(`✅ Base cache ready for all validations`);
           console.log(`📊 Cache details: ${qaService.baseCache ? 'Available' : 'Not available'}`);
           if (qaService.baseCache) {
@@ -4911,24 +5644,57 @@ describe('Indexer Chain Validation', function() {
       }
     };
     
-    // Build both Gnosis and Base caches
-    console.log('📊 Building both Gnosis and Base caches...');
+    const buildNeurowebCache = async () => {
+      let retryCount = 0;
+      while (true) {
+        try {
+          console.log(`\n🔍 Building Neuroweb cache (attempt ${retryCount + 1})...`);
+          await qaService.queryAllNeurowebContractEvents();
+          
+          console.log(`✅ Neuroweb cache ready for all validations`);
+          console.log(`📊 Cache details: ${qaService.neurowebCache ? 'Available' : 'Not available'}`);
+          if (qaService.neurowebCache) {
+            console.log(`   📊 Total node events: ${qaService.neurowebCache.totalNodeEvents?.toLocaleString() || 'N/A'}`);
+            console.log(`   📊 Total delegator events: ${qaService.neurowebCache.totalDelegatorEvents?.toLocaleString() || 'N/A'}`);
+          }
+          return true;
+        } catch (error) {
+          retryCount++;
+          console.log(`❌ Neuroweb cache building failed (attempt ${retryCount}): ${error.message}`);
+          console.log('⏳ Retrying in 5 seconds...');
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+      }
+    };
     
-    // Start both cache builds and wait for completion
-    console.log('📊 Building caches and waiting for completion...');
+    // Build all caches in parallel
+    console.log('📊 Building caches for all networks...');
     
-    // Wait for both caches to complete (no timeout)
+    // Wait for all caches to complete (no timeout)
     return Promise.all([
-      buildGnosisCache(),
-      buildBaseCache()
+      buildGnosisCache().catch(error => {
+        console.log('❌ Gnosis cache building failed, continuing without cache');
+        return false;
+      }),
+      buildBaseCache().catch(error => {
+        console.log('❌ Base cache building failed, continuing without cache');
+        return false;
+      }),
+      buildNeurowebCache().catch(error => {
+        console.log('❌ Neuroweb cache building failed, continuing without cache');
+        return false;
+      })
     ]).then(() => {
-      console.log('📊 Cache building completed successfully');
-      console.log('   ✅ Gnosis cache: Ready');
-      console.log('   ✅ Base cache: Ready');
+      console.log('📊 Cache building completed');
+      console.log('   ✅ Gnosis cache: ' + (qaService.gnosisCache ? 'Ready' : 'Not available'));
+      console.log('   ✅ Base cache: ' + (qaService.baseCache ? 'Ready' : 'Not available'));
+      console.log('   ✅ Neuroweb cache: ' + (qaService.neurowebCache ? 'Ready with JSON persistence' : 'Not available'));
     }).catch(error => {
       console.log('❌ Cache building failed, starting tests anyway');
       console.log('   Tests will use original RPC approach');
     });
+    
+    
   });
   
   // Display summary after all tests
@@ -4939,7 +5705,7 @@ describe('Indexer Chain Validation', function() {
     
     for (const network of ['Gnosis', 'Base', 'Neuroweb']) {
       if (summary.networks[network]) {
-        console.log(`\n�� ${network} Network:`);
+        console.log(`\n🌐 ${network} Network:`);
         for (const [testType, results] of Object.entries(summary.networks[network])) {
           console.log(`   ${testType}: ${results.passed} ✅ passed, ${results.failed} ❌ failed, ${results.warnings} ⚠️ warnings, ${results.rpcErrors} 🔌 RPC errors`);
         }
@@ -5009,7 +5775,6 @@ describe('Indexer Chain Validation', function() {
   
   describe('Base Network', function() {
     it('should validate node stakes', async function() {
-      console.log('\n📊 Cache status: Gnosis=' + (qaService.gnosisCache ? 'true' : 'false') + ', Base=' + (qaService.baseCache ? 'true' : 'false'));
       const results = await qaService.validateNodeStakes('Base');
       trackResults('Base', 'Node Stakes', results);
       if (results.failed > 0) {
@@ -5018,7 +5783,6 @@ describe('Indexer Chain Validation', function() {
     });
     
     it('should validate delegator stakes', async function() {
-      console.log('\n📊 Cache status: Gnosis=' + (qaService.gnosisCache ? 'true' : 'false') + ', Base=' + (qaService.baseCache ? 'true' : 'false'));
       const results = await qaService.validateDelegatorStakes('Base');
       trackResults('Base', 'Delegator Stakes', results);
       if (results.failed > 0) {
@@ -5027,7 +5791,6 @@ describe('Indexer Chain Validation', function() {
     });
     
     it('should validate delegator stake update events', async function() {
-      console.log('\n📊 Cache status: Gnosis=' + (qaService.gnosisCache ? 'true' : 'false') + ', Base=' + (qaService.baseCache ? 'true' : 'false'));
       const results = await qaService.validateDelegatorStakeUpdateEvents('Base');
       trackResults('Base', 'Delegator Stake Update Events', results);
       if (results.failed > 0) {
@@ -5036,7 +5799,6 @@ describe('Indexer Chain Validation', function() {
     });
     
     it('should validate delegator stake sum matches node stake', async function() {
-      console.log('\n📊 Cache status: Gnosis=' + (qaService.gnosisCache ? 'true' : 'false') + ', Base=' + (qaService.baseCache ? 'true' : 'false'));
       const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Base');
       trackResults('Base', 'Delegator Stake Sum', results);
       if (results.failed > 0) {
@@ -5045,7 +5807,6 @@ describe('Indexer Chain Validation', function() {
     });
     
     it('should validate knowledge collections', async function() {
-      console.log('\n📊 Cache status: Gnosis=' + (qaService.gnosisCache ? 'true' : 'false') + ', Base=' + (qaService.baseCache ? 'true' : 'false'));
       const results = await qaService.validateKnowledgeCollections('Base');
       trackResults('Base', 'Knowledge Collections', results);
       if (results.failed > 0) {
@@ -5054,44 +5815,114 @@ describe('Indexer Chain Validation', function() {
     });
   });
   
-  describe.skip('Neuroweb Network', function() {
-    it('should validate node stakes', async function() {
-      const results = await qaService.validateNodeStakes('Neuroweb');
-      trackResults('Neuroweb', 'Node Stakes', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} node stake validations failed`);
+  describe('Neuroweb Network', function() {
+    it('should validate node stakes using JSON cache', async function() {
+      console.log('\n📊 Cache status: Neuroweb=' + (qaService.neurowebCache ? 'true' : 'false'));
+      
+      // Use cached data for Neuroweb if available
+      if (qaService.neurowebCache) {
+        console.log(`   📊 Using cached Neuroweb contract events (${qaService.neurowebCache.totalNodeEvents} events)`);
+        const results = await qaService.validateNeurowebNodeStakesWithCache('Neuroweb');
+        trackResults('Neuroweb', 'Node Stakes', results);
+        if (results.failed > 0) {
+          throw new Error(`${results.failed} node stake validations failed`);
+        }
+      } else {
+        // Cache not available, using original approach
+        console.log(`   📊 Cache not available for Neuroweb, using original RPC approach`);
+        const results = await qaService.validateNodeStakes('Neuroweb');
+        trackResults('Neuroweb', 'Node Stakes', results);
+        if (results.failed > 0) {
+          throw new Error(`${results.failed} node stake validations failed`);
+        }
       }
     });
     
-    it('should validate delegator stakes', async function() {
-      const results = await qaService.validateDelegatorStakes('Neuroweb');
-      trackResults('Neuroweb', 'Delegator Stakes', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} delegator stake validations failed`);
+    it('should validate delegator stakes using JSON cache', async function() {
+      console.log('\n📊 Cache status: Neuroweb=' + (qaService.neurowebCache ? 'true' : 'false'));
+      
+      // Use cached data for Neuroweb if available
+      if (qaService.neurowebCache) {
+        console.log(`   📊 Using cached Neuroweb contract events (${qaService.neurowebCache.totalDelegatorEvents} events)`);
+        const results = await qaService.validateNeurowebDelegatorStakesWithCache('Neuroweb');
+        trackResults('Neuroweb', 'Delegator Stakes', results);
+        if (results.failed > 0) {
+          throw new Error(`${results.failed} delegator stake validations failed`);
+        }
+      } else {
+        // Cache not available, using original approach
+        console.log(`   📊 Cache not available for Neuroweb, using original RPC approach`);
+        const results = await qaService.validateDelegatorStakes('Neuroweb');
+        trackResults('Neuroweb', 'Delegator Stakes', results);
+        if (results.failed > 0) {
+          throw new Error(`${results.failed} delegator stake validations failed`);
+        }
       }
     });
     
-    it('should validate delegator stake update events', async function() {
-      const results = await qaService.validateDelegatorStakeUpdateEvents('Neuroweb');
-      trackResults('Neuroweb', 'Delegator Stake Update Events', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} delegator stake update event validations failed`);
+    it('should validate delegator stake update events using JSON cache', async function() {
+      console.log('\n📊 Cache status: Neuroweb=' + (qaService.neurowebCache ? 'true' : 'false'));
+      
+      // Use cached data for Neuroweb if available
+      if (qaService.neurowebCache) {
+        console.log(`   📊 Using cached Neuroweb contract events (${qaService.neurowebCache.totalDelegatorEvents} events)`);
+        const results = await qaService.validateNeurowebDelegatorStakeUpdateEventsWithCache('Neuroweb');
+        trackResults('Neuroweb', 'Delegator Stake Update Events', results);
+        if (results.failed > 0) {
+          throw new Error(`${results.failed} delegator stake update event validations failed`);
+        }
+      } else {
+        // Cache not available, using original approach
+        console.log(`   📊 Cache not available for Neuroweb, using original RPC approach`);
+        const results = await qaService.validateDelegatorStakeUpdateEvents('Neuroweb');
+        trackResults('Neuroweb', 'Delegator Stake Update Events', results);
+        if (results.failed > 0) {
+          throw new Error(`${results.failed} delegator stake update event validations failed`);
+        }
       }
     });
     
-    it('should validate delegator stake sum matches node stake', async function() {
-      const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Neuroweb');
-      trackResults('Neuroweb', 'Delegator Stake Sum', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} delegator stake sum validations failed`);
+    it('should validate delegator stake sum matches node stake using JSON cache', async function() {
+      console.log('\n📊 Cache status: Neuroweb=' + (qaService.neurowebCache ? 'true' : 'false'));
+      
+      // Use cached data for Neuroweb if available
+      if (qaService.neurowebCache) {
+        console.log(`   📊 Using cached Neuroweb contract events (${qaService.neurowebCache.totalDelegatorEvents} events)`);
+        const results = await qaService.validateNeurowebDelegatorStakeSumMatchesNodeStakeWithCache('Neuroweb');
+        trackResults('Neuroweb', 'Delegator Stake Sum', results);
+        if (results.failed > 0) {
+          throw new Error(`${results.failed} delegator stake sum validations failed`);
+        }
+      } else {
+        // Cache not available, using original approach
+        console.log(`   📊 Cache not available for Neuroweb, using original RPC approach`);
+        const results = await qaService.validateDelegatorStakeSumMatchesNodeStake('Neuroweb');
+        trackResults('Neuroweb', 'Delegator Stake Sum', results);
+        if (results.failed > 0) {
+          throw new Error(`${results.failed} delegator stake sum validations failed`);
+        }
       }
     });
     
-    it('should validate knowledge collections', async function() {
-      const results = await qaService.validateKnowledgeCollections('Neuroweb');
-      trackResults('Neuroweb', 'Knowledge Collections', results);
-      if (results.failed > 0) {
-        throw new Error(`${results.failed} knowledge collection validations failed`);
+    it('should validate knowledge collections using JSON cache', async function() {
+      console.log('\n📊 Cache status: Neuroweb=' + (qaService.neurowebCache ? 'true' : 'false'));
+      
+      // Use cached data for Neuroweb if available
+      if (qaService.neurowebCache) {
+        console.log(`   📊 Using cached Neuroweb contract events`);
+        const results = await qaService.validateNeurowebKnowledgeCollectionsWithCache('Neuroweb');
+        trackResults('Neuroweb', 'Knowledge Collections', results);
+        if (results.failed > 0) {
+          throw new Error(`${results.failed} knowledge collection validations failed`);
+        }
+      } else {
+        // Cache not available, using original approach
+        console.log(`   📊 Cache not available for Neuroweb, using original RPC approach`);
+        const results = await qaService.validateKnowledgeCollections('Neuroweb');
+        trackResults('Neuroweb', 'Knowledge Collections', results);
+        if (results.failed > 0) {
+          throw new Error(`${results.failed} knowledge collection validations failed`);
+        }
       }
     });
   });
