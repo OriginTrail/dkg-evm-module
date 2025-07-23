@@ -2691,7 +2691,7 @@ class CompleteQAService {
             try {
               // Add timeout protection
               const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('RPC timeout after 30 seconds')), 30000)
+                setTimeout(() => reject(new Error('RPC timeout after 60 seconds')), 60000)
               );
               
               const queryPromise = stakingContract.queryFilter(nodeStakeFilter, startBlock, endBlock);
@@ -2761,7 +2761,7 @@ class CompleteQAService {
             try {
               // Add timeout protection
               const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('RPC timeout after 30 seconds')), 30000)
+                setTimeout(() => reject(new Error('RPC timeout after 60 seconds')), 60000)
               );
               
               const queryPromise = stakingContract.queryFilter(delegatorStakeFilter, startBlock, endBlock);
@@ -3000,7 +3000,7 @@ class CompleteQAService {
             try {
               // Add timeout protection
               const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('RPC timeout after 30 seconds')), 30000)
+                setTimeout(() => reject(new Error('RPC timeout after 60 seconds')), 60000)
               );
               
               const queryPromise = stakingContract.queryFilter(nodeStakeFilter, startBlock, endBlock);
@@ -3070,7 +3070,7 @@ class CompleteQAService {
             try {
               // Add timeout protection
               const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('RPC timeout after 30 seconds')), 30000)
+                setTimeout(() => reject(new Error('RPC timeout after 60 seconds')), 60000)
               );
               
               const queryPromise = stakingContract.queryFilter(delegatorStakeFilter, startBlock, endBlock);
