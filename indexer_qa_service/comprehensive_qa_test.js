@@ -1691,8 +1691,8 @@ class ComprehensiveQAService {
       }
       
       // Find common blocks between indexer and contract events
-      const indexerBlocks = new Set(processedIndexerEvents.map(e => e.blockNumber));
-      const contractBlocks = new Set(processedContractEvents.map(e => e.blockNumber));
+      const indexerBlocks = new Set(processedIndexerEvents.map(e => Number(e.blockNumber)));
+      const contractBlocks = new Set(processedContractEvents.map(e => Number(e.blockNumber)));
       const commonBlocks = [...indexerBlocks].filter(block => contractBlocks.has(block));
       
       console.log(`   🔍 Node ${nodeId}: Found ${commonBlocks.length} common blocks`);
@@ -1717,8 +1717,8 @@ class ComprehensiveQAService {
       
       // Validate each common block in descending order
       for (const blockNumber of commonBlocks) {
-        const indexerEvent = processedIndexerEvents.find(e => e.blockNumber === blockNumber);
-        const contractEvent = processedContractEvents.find(e => e.blockNumber === blockNumber);
+        const indexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === blockNumber);
+        const contractEvent = processedContractEvents.find(e => Number(e.blockNumber) === blockNumber);
         
         if (indexerEvent && contractEvent) {
           expectedStake = indexerEvent.stake;
@@ -1828,8 +1828,8 @@ class ComprehensiveQAService {
       processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
       
       // Find common blocks between indexer and contract events
-      const indexerBlocks = new Set(processedIndexerEvents.map(e => e.blockNumber));
-      const contractBlocks = new Set(processedContractEvents.map(e => e.blockNumber));
+      const indexerBlocks = new Set(processedIndexerEvents.map(e => Number(e.blockNumber)));
+      const contractBlocks = new Set(processedContractEvents.map(e => Number(e.blockNumber)));
       const commonBlocks = [...indexerBlocks].filter(block => contractBlocks.has(block));
       
       if (commonBlocks.length === 0) {
@@ -1849,8 +1849,8 @@ class ComprehensiveQAService {
       
       // Validate each common block in descending order
       for (const blockNumber of commonBlocks) {
-        const indexerEvent = processedIndexerEvents.find(e => e.blockNumber === blockNumber);
-        const contractEvent = processedContractEvents.find(e => e.blockNumber === blockNumber);
+        const indexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === blockNumber);
+        const contractEvent = processedContractEvents.find(e => Number(e.blockNumber) === blockNumber);
         
         if (indexerEvent && contractEvent) {
           expectedStake = indexerEvent.stakeBase;
