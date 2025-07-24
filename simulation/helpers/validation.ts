@@ -10,6 +10,7 @@ export async function validateStakingTransaction(
   fromNodeStake: bigint,
   toNodeStake: bigint,
   nodeStake: bigint,
+  requestWithdrawalAmount: bigint,
 ): Promise<void> {
   if (tx.contract === 'Staking') {
     if (tx.functionName === 'redelegate') {
@@ -45,7 +46,35 @@ export async function validateStakingTransaction(
         await contracts.stakingStorage.getNodeStake(tx.functionInputs[0]),
       );
     } else if (tx.functionName === 'cancelWithdrawal') {
-      // TODO: implement validation
+      // For cancelWithdrawal, we need to implement the same logic as the contract
+      const identityId = tx.functionInputs[0];
+
+      console.log(
+        `[CANCEL WITHDRAWAL VALIDATION] Withdrawal amount: ${requestWithdrawalAmount.toString()}, node stake before: ${nodeStake.toString()}`,
+      );
+
+      // Implement the same logic as Staking.sol cancelWithdrawal
+      const maxStake = await contracts.parametersStorage.maximumStake();
+      let restakeAmount: bigint;
+
+      if (nodeStake + requestWithdrawalAmount > maxStake) {
+        restakeAmount = maxStake - nodeStake; // might be zero
+      } else {
+        restakeAmount = requestWithdrawalAmount;
+      }
+
+      const expectedNodeStake = nodeStake + restakeAmount;
+      const actualNodeStake =
+        await contracts.stakingStorage.getNodeStake(identityId);
+
+      console.log(
+        `[CANCEL WITHDRAWAL VALIDATION] Expected restake: ${restakeAmount.toString()}, expected node stake: ${expectedNodeStake.toString()}, actual: ${actualNodeStake.toString()}`,
+      );
+
+      expect(expectedNodeStake).to.equal(
+        actualNodeStake,
+        `Node stake should be ${expectedNodeStake.toString()} but is ${actualNodeStake.toString()}`,
+      );
     }
   }
 }
