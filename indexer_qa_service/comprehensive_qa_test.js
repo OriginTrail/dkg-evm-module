@@ -1779,6 +1779,8 @@ class ComprehensiveQAService {
         return { type: 'skipped' };
       }
       
+      console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Found ${allIndexerEventsResult.rows.length} indexer events`);
+      
       // Group indexer events by block number and sort by stake (highest first)
       const indexerEventsByBlock = {};
       for (const event of allIndexerEventsResult.rows) {
@@ -1799,13 +1801,35 @@ class ComprehensiveQAService {
       // Sort processed events by block number (newest first)
       processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
       
+      console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedIndexerEvents.length} unique indexer blocks`);
+      if (processedIndexerEvents.length > 0) {
+        console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Indexer blocks range: ${processedIndexerEvents[processedIndexerEvents.length - 1].blockNumber} to ${processedIndexerEvents[0].blockNumber}`);
+      }
+      
       // Get cached contract events for this delegator
       const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId]?.[delegatorKey] || [];
       
       if (cachedDelegatorEvents.length === 0) {
         console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: No cached contract events found, skipping`);
+        
+        // Debug: Check if the node exists in cache at all
+        const nodeExists = cache.delegatorEventsByNode?.[nodeId];
+        if (nodeExists) {
+          console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Node exists in cache with ${Object.keys(nodeExists).length} delegators`);
+          console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Available delegators: ${Object.keys(nodeExists).slice(0, 5).join(', ')}${Object.keys(nodeExists).length > 5 ? '...' : ''}`);
+        } else {
+          console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Node does not exist in cache at all`);
+        }
+        
+        // Debug: Check cache statistics
+        const totalNodes = Object.keys(cache.delegatorEventsByNode || {}).length;
+        const totalDelegators = Object.values(cache.delegatorEventsByNode || {}).reduce((sum, node) => sum + Object.keys(node).length, 0);
+        console.log(`   🔍 Cache stats: ${totalNodes} nodes, ${totalDelegators} total delegators`);
+        
         return { type: 'skipped' };
       }
+      
+      console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Found ${cachedDelegatorEvents.length} cached contract events`);
       
       // Group contract events by block number and sort by stake (highest first)
       const contractEventsByBlock = {};
@@ -1827,10 +1851,20 @@ class ComprehensiveQAService {
       // Sort processed events by block number (newest first)
       processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
       
+      console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedContractEvents.length} unique contract blocks`);
+      if (processedContractEvents.length > 0) {
+        console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Contract blocks range: ${processedContractEvents[processedContractEvents.length - 1].blockNumber} to ${processedContractEvents[0].blockNumber}`);
+      }
+      
       // Find common blocks between indexer and contract events
       const indexerBlocks = new Set(processedIndexerEvents.map(e => Number(e.blockNumber)));
       const contractBlocks = new Set(processedContractEvents.map(e => Number(e.blockNumber)));
       const commonBlocks = [...indexerBlocks].filter(block => contractBlocks.has(block));
+      
+      console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Found ${commonBlocks.length} common blocks`);
+      if (commonBlocks.length > 0) {
+        console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}: Common blocks: ${commonBlocks.slice(0, 5).join(', ')}${commonBlocks.length > 5 ? '...' : ''}`);
+      }
       
       if (commonBlocks.length === 0) {
         console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: No common blocks found between indexer and contract`);
