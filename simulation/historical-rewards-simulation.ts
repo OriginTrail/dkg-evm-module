@@ -28,6 +28,7 @@ import {
   setupStakingAllowances,
   setupMigratorAllowances,
   addDelegator,
+  initializeProofingTimestamp,
 } from './helpers/simulation-helpers';
 import {
   validateDelegatorsCount,
@@ -124,16 +125,25 @@ class HistoricalRewardsSimulation {
       '🚀 Initializing DKG V8.0 to V8.1 Historical Rewards Simulation\n',
     );
 
-    // Initialize proofing timestamp
-    // TODO: Add start block timestamp
+    const hubAddress = await getHubAddress(this.hre);
+    this.chain = NETWORK_HUBS[hubAddress];
+
+    this.lastProofingTimestamp = await initializeProofingTimestamp(this.chain);
+
     const currentTimestamp = await this.mining.getCurrentTimestamp();
-    this.lastProofingTimestamp = currentTimestamp;
+    expect(this.lastProofingTimestamp).to.be.lessThanOrEqual(
+      currentTimestamp,
+      `[INIT] ❌ Start block timestamp ${this.lastProofingTimestamp} is greater than current timestamp ${currentTimestamp}`,
+    );
 
     // Get current fork status
     console.log(`\n[INIT] Fork Status:`);
     console.log(`[INIT] Current block: ${await this.mining.getCurrentBlock()}`);
     console.log(
       `[INIT] Current timestamp: ${currentTimestamp} (${new Date(currentTimestamp * 1000).toISOString()})`,
+    );
+    console.log(
+      `[INIT] Last proofing timestamp: ${this.lastProofingTimestamp} (${new Date(this.lastProofingTimestamp * 1000).toISOString()})`,
     );
 
     // Load contracts
@@ -157,12 +167,13 @@ class HistoricalRewardsSimulation {
         this.hre,
         'RandomSamplingStorage',
       ),
+      parametersStorage: await getDeployedContract(
+        this.hre,
+        'ParametersStorage',
+      ),
     };
 
     await validateStartTimeAndEpochLength(this.contracts, 1736812800, 2592000);
-
-    const hubAddress = await getHubAddress(this.hre);
-    this.chain = NETWORK_HUBS[hubAddress];
 
     // Disable auto-mining
     // console.log('[INIT] Disabling auto-mining...');

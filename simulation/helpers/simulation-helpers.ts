@@ -12,6 +12,7 @@ import {
   DELEGATORS_INFO_MAINNET_ADDRESSES,
   HUB_OWNERS,
   RPC_URLS,
+  SIMULATION_CHAINS,
 } from './simulation-constants';
 
 /**
@@ -596,4 +597,24 @@ export async function addDelegator(
   const delegatorsInfoWithSigner = contracts.delegatorsInfo.connect(signer);
   await delegatorsInfoWithSigner.addDelegator(identityId, delegatorAddress);
   await stopImpersonatingAccount(hre, hubOwner);
+}
+
+export async function initializeProofingTimestamp(
+  chain: string,
+): Promise<number> {
+  // Initialize proofing timestamp
+  const rpc = new ethers.JsonRpcProvider(RPC_URLS[chain]);
+  const startBlock = SIMULATION_CHAINS[chain].v8_0StartBlock;
+  const startBlockTimestamp = await rpc
+    .getBlock(startBlock)
+    .then((block) => block?.timestamp);
+
+  if (!startBlockTimestamp) {
+    console.error(
+      `[INIT] ❌ Failed to get start block timestamp for chain ${chain}`,
+    );
+    process.exit(1);
+  }
+
+  return startBlockTimestamp;
 }
