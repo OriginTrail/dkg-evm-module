@@ -39,7 +39,7 @@ class ComprehensiveQAService {
       return trac.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     }
     
-    // For amounts < 1, show precision up to last non-zero decimal
+    // For amounts < 1, round to the last non-zero decimal
     const tracString = trac.toString();
     
     // If it's in scientific notation (e.g., 4.87584576e-9), convert it
@@ -49,21 +49,20 @@ class ComprehensiveQAService {
       return trac.toFixed(decimalPlaces);
     }
     
-    // For regular decimal notation, find the last non-zero digit
+    // For regular decimal notation, find the last non-zero digit and round to that position
     if (tracString.includes('.')) {
       const [wholePart, decimalPart] = tracString.split('.');
       
       // Find the last non-zero digit in the decimal part
       let lastNonZeroIndex = -1;
-      for (let i = decimalPart.length - 1; i >= 0; i--) {
+      for (let i = 0; i < decimalPart.length; i++) {
         if (decimalPart[i] !== '0') {
           lastNonZeroIndex = i;
-          break;
         }
       }
       
       if (lastNonZeroIndex !== -1) {
-        // Show up to the last non-zero decimal
+        // Round to the last non-zero decimal position
         return trac.toFixed(lastNonZeroIndex + 1);
       }
     }
