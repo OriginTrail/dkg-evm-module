@@ -29,7 +29,17 @@ class ComprehensiveQAService {
   weiToTRAC(weiAmount) {
     const wei = BigInt(weiAmount);
     const trac = Number(wei) / Math.pow(10, 18);
-    return trac.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    
+    // For very small amounts, show more precision
+    if (trac < 0.01 && trac > 0) {
+      // Show up to 6 decimal places for amounts less than 0.01 TRAC
+      return trac.toFixed(6).replace(/\.?0+$/, ''); // Remove trailing zeros
+    } else if (trac === 0) {
+      return '0';
+    } else {
+      // For larger amounts, show up to 2 decimal places
+      return trac.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
   }
 
   async getContractAddressFromHub(network, contractName) {
