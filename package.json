@@ -117,6 +117,7 @@
     "slither": "slither .",
     "check-collections": "node indexer_qa_service/checkKnowledgeCollections.js",
     "check-stake": "node indexer_qa_service/checkNodeStake.js",
+    "comprehensive-qa": "node indexer_qa_service/comprehensive_qa_test.js",
     "test:indexer:chain": "mocha --config .mocharc.js.json",
     "generate:indexer:chain:report": "node report-Indexer-Chain-config.js",
     "test:fulltrace": "hardhat test --network hardhat --fulltrace",

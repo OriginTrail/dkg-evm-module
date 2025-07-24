@@ -12,7 +12,8 @@
     "fetch-data": "node fetchContractData.js",
     "find-staking": "node findStakingAddresses.js",
     "simple-qa": "node runSimpleValidation.js",
-    "complete-qa": "node completeQAService.js"
+    "complete-qa": "node completeQAService.js",
+    "comprehensive-qa": "node comprehensive_qa_test.js"
   },
   "dependencies": {
     "ethers": "^6.13.5",
