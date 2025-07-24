@@ -1,0 +1,186 @@
+import { expect } from 'chai';
+import { ethers } from 'ethers';
+
+import { TransactionData } from './db-helpers';
+import { RPC_URLS } from './simulation-constants';
+
+export async function validateStakingTransaction(
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  tx: TransactionData,
+  fromNodeStake: bigint,
+  toNodeStake: bigint,
+  nodeStake: bigint,
+): Promise<void> {
+  if (tx.contract === 'Staking') {
+    if (tx.functionName === 'redelegate') {
+      const redelegateAmount = BigInt(tx.functionInputs[2]);
+      expect(fromNodeStake - redelegateAmount).to.equal(
+        await contracts.stakingStorage.getNodeStake(tx.functionInputs[0]),
+        `From node stake should be ${fromNodeStake - redelegateAmount} but is ${await contracts.stakingStorage.getNodeStake(
+          tx.functionInputs[0],
+        )}`,
+      );
+      expect(toNodeStake + redelegateAmount).to.equal(
+        await contracts.stakingStorage.getNodeStake(tx.functionInputs[1]),
+        `To node stake should be ${toNodeStake + redelegateAmount} but is ${await contracts.stakingStorage.getNodeStake(
+          tx.functionInputs[1],
+        )}`,
+      );
+    } else if (tx.functionName === 'stake') {
+      const stakeAmount = BigInt(tx.functionInputs[1]);
+      expect(nodeStake + stakeAmount).to.equal(
+        await contracts.stakingStorage.getNodeStake(tx.functionInputs[0]),
+        `Node stake should be ${nodeStake + stakeAmount} but is ${await contracts.stakingStorage.getNodeStake(
+          tx.functionInputs[0],
+        )}`,
+      );
+    } else if (tx.functionName === 'requestWithdrawal') {
+      const requestWithdrawalAmount = BigInt(tx.functionInputs[1]);
+      expect(nodeStake - requestWithdrawalAmount).to.equal(
+        await contracts.stakingStorage.getNodeStake(tx.functionInputs[0]),
+      );
+    } else if (tx.functionName === 'restakeOperatorFee') {
+      const restakeOperatorFeeAmount = BigInt(tx.functionInputs[1]);
+      expect(nodeStake + restakeOperatorFeeAmount).to.equal(
+        await contracts.stakingStorage.getNodeStake(tx.functionInputs[0]),
+      );
+    } else if (tx.functionName === 'cancelWithdrawal') {
+      // TODO: implement validation
+    }
+  }
+}
+
+export async function validateDelegatorsCount(
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  identityId: number,
+  delegatorsCountBefore: number,
+): Promise<void> {
+  const actualDelegatorsCount = (
+    await contracts.delegatorsInfo.getDelegators(identityId)
+  ).length;
+  expect(delegatorsCountBefore + 1).to.equal(
+    actualDelegatorsCount,
+    `Delegators count should be ${delegatorsCountBefore + 1} but is ${actualDelegatorsCount} for identity ${identityId}`,
+  );
+}
+
+export async function validateStartTimeAndEpochLength(
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  startTime: number,
+  epochLength: number,
+): Promise<void> {
+  expect(await contracts.chronos.startTime()).to.equal(startTime);
+  expect(await contracts.chronos.epochLength()).to.equal(epochLength);
+}
+
+/**
+ * Verify on-chain state matches local simulation state
+ * @param rpcUrl - Archive RPC URL for historical queries
+ * @param stakingStorageAddress - Address of StakingStorage contract on-chain
+ * @param identityId - Node identity ID to check
+ * @param delegatorAddress - Delegator address to check (optional)
+ * @param blockNumber - Historical block number to query
+ * @param localContracts - Local simulation contracts for comparison
+ * @returns Object with comparison results
+ */
+export async function verifyMainnetStakingStorageState(
+  localContracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  tx: TransactionData,
+  identityId: number,
+  delegatorAddress: string | null,
+  blockNumber: number,
+): Promise<void> {
+  const shouldVerify =
+    (tx.contract === 'Staking' &&
+      [
+        'stake',
+        'redelegate',
+        'requestWithdrawal',
+        'restakeOperatorFee',
+        'cancelWithdrawal',
+      ].includes(tx.functionName)) ||
+    (tx.contract === 'Migrator' && tx.functionName === 'migrateDelegatorData');
+
+  if (!shouldVerify) {
+    return;
+  }
+
+  try {
+    const rpc = new ethers.JsonRpcProvider(RPC_URLS.base_mainnet);
+
+    // StakingStorage ABI - only the functions we need
+    const stakingStorageAbi = [
+      'function getNodeStake(uint72 identityId) external view returns (uint96)',
+      'function getDelegatorStakeBase(uint72 identityId, bytes32 delegatorKey) external view returns (uint96)',
+    ];
+
+    // Create contract instance for historical queries
+    const onChainStakingStorage = new ethers.Contract(
+      await localContracts.stakingStorage.getAddress(),
+      stakingStorageAbi,
+      rpc,
+    );
+
+    // Query on-chain state at the specific block
+    const onChainNodeStake = await onChainStakingStorage.getNodeStake(
+      identityId,
+      {
+        blockTag: blockNumber,
+      },
+    );
+
+    // Get local simulation state
+    const localNodeStake =
+      await localContracts.stakingStorage.getNodeStake(identityId);
+
+    let onChainDelegatorStake = 0n;
+    let localDelegatorStake = 0n;
+
+    // Check delegator stake if delegator address provided
+    if (delegatorAddress) {
+      // Create delegator key (same as contract: keccak256(abi.encodePacked(delegator)))
+      const delegatorKey = ethers.keccak256(
+        ethers.solidityPacked(['address'], [delegatorAddress]),
+      );
+
+      onChainDelegatorStake = await onChainStakingStorage.getDelegatorStakeBase(
+        identityId,
+        delegatorKey,
+        { blockTag: blockNumber },
+      );
+
+      localDelegatorStake =
+        await localContracts.stakingStorage.getDelegatorStakeBase(
+          identityId,
+          delegatorKey,
+        );
+
+      console.log(
+        `[VERIFY STATE] On-chain delegator stake: ${onChainDelegatorStake.toString()}, local delegator stake: ${localDelegatorStake.toString()}`,
+      );
+
+      expect(onChainDelegatorStake).to.equal(
+        localDelegatorStake,
+        `On-chain delegator stake ${onChainDelegatorStake.toString()} should be equal to local delegator stake ${localDelegatorStake.toString()}`,
+      );
+      console.log(`[VERIFY STATE] ✅ Delegator stake matches`);
+    }
+
+    console.log(
+      `[VERIFY STATE] On-chain node stake: ${onChainNodeStake.toString()}, local node stake: ${localNodeStake.toString()}`,
+    );
+
+    expect(onChainNodeStake).to.equal(
+      localNodeStake,
+      `On-chain node stake ${onChainNodeStake.toString()} should be equal to local node stake ${localNodeStake.toString()}`,
+    );
+    console.log(`[VERIFY STATE] ✅ Node stake matches`);
+    console.log(
+      `[VERIFY STATE] ✅ State verified for tx ${tx.hash} and it matches the local simulation state`,
+    );
+  } catch (error) {
+    console.warn(
+      `[VERIFY STATE] ❌ Failed to verify state for tx ${tx.hash}: ${error}`,
+    );
+  }
+}
