@@ -1063,7 +1063,11 @@ class ComprehensiveQAService {
       console.log(`      Indexer:   ${indexerCount} collections (block ${indexerBlock})`);
       console.log(`      Contract:  ${contractCount} collections (block ${currentBlock})`);
       
-      const countDifference = Math.abs(indexerCount - contractCount);
+      // Convert both values to numbers for comparison
+      const indexerCountNum = Number(indexerCount);
+      const contractCountNum = Number(contractCount);
+      
+      const countDifference = Math.abs(indexerCountNum - contractCountNum);
       const blockDifference = Math.abs(indexerBlock - currentBlock);
       
       let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
