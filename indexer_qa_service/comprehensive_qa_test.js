@@ -76,6 +76,30 @@ class ComprehensiveQAService {
         console.log(`      Node events: ${cacheData.totalNodeEvents || cacheData.nodeEvents?.length || 0}`);
         console.log(`      Delegator events: ${cacheData.totalDelegatorEvents || cacheData.delegatorEvents?.length || 0}`);
         
+        // Debug: Show cache structure if it has processed data
+        if (cacheData.delegatorEventsByNode) {
+          const totalNodes = Object.keys(cacheData.delegatorEventsByNode).length;
+          const totalDelegators = Object.values(cacheData.delegatorEventsByNode).reduce((sum, node) => sum + Object.keys(node).length, 0);
+          console.log(`      Processed structure: ${totalNodes} nodes, ${totalDelegators} delegators`);
+          
+          // Show some sample delegators from cache
+          const sampleDelegators = [];
+          for (const [nodeId, delegators] of Object.entries(cacheData.delegatorEventsByNode)) {
+            for (const [delegatorKey, events] of Object.entries(delegators)) {
+              sampleDelegators.push({ nodeId, delegatorKey, eventCount: events.length });
+              if (sampleDelegators.length >= 3) break;
+            }
+            if (sampleDelegators.length >= 3) break;
+          }
+          
+          if (sampleDelegators.length > 0) {
+            console.log(`      Sample delegators in cache:`);
+            sampleDelegators.forEach(({ nodeId, delegatorKey, eventCount }) => {
+              console.log(`         Node ${nodeId}: ${delegatorKey.slice(0, 20)}... (${eventCount} events)`);
+            });
+          }
+        }
+        
         // If cache doesn't have processed structure, process it
         if (!cacheData.nodeEventsByNode) {
           console.log(`   📊 Processing existing cache data...`);
@@ -235,6 +259,21 @@ class ComprehensiveQAService {
       }
       
       console.log(`   📊 Total events found: ${nodeEvents.length} node events, ${delegatorEvents.length} delegator events`);
+      
+      // Debug: Show some sample delegator events to verify coverage
+      if (delegatorEvents.length > 0) {
+        const sampleEvents = delegatorEvents.slice(0, 5);
+        console.log(`   📊 Sample delegator events found:`);
+        sampleEvents.forEach((event, index) => {
+          console.log(`      ${index + 1}. Node ${event.args.identityId}, Block ${event.blockNumber}, Key: ${event.args.delegatorKey.slice(0, 20)}...`);
+        });
+        
+        // Show block range of found events
+        const delegatorBlockNumbers = delegatorEvents.map(e => e.blockNumber);
+        const minBlock = Math.min(...delegatorBlockNumbers);
+        const maxBlock = Math.max(...delegatorBlockNumbers);
+        console.log(`   📊 Delegator events block range: ${minBlock.toLocaleString()} to ${maxBlock.toLocaleString()}`);
+      }
       
       // Convert BigInt to string for JSON serialization
       const processedNodeEvents = nodeEvents.map(event => ({
