@@ -30,16 +30,41 @@ class ComprehensiveQAService {
     const wei = BigInt(weiAmount);
     const trac = Number(wei) / Math.pow(10, 18);
     
-    // For very small amounts, show more precision
-    if (trac < 0.01 && trac > 0) {
-      // Show up to 6 decimal places for amounts less than 0.01 TRAC
-      return trac.toFixed(6).replace(/\.?0+$/, ''); // Remove trailing zeros
-    } else if (trac === 0) {
+    if (trac === 0) {
       return '0';
-    } else {
-      // For larger amounts, show up to 2 decimal places
-      return trac.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     }
+    
+    // Convert to string to find the last non-zero decimal
+    const tracString = trac.toString();
+    
+    // If it's in scientific notation (e.g., 5.041871105e-11), convert it
+    if (tracString.includes('e-')) {
+      const [base, exponent] = tracString.split('e-');
+      const decimalPlaces = parseInt(exponent);
+      return trac.toFixed(decimalPlaces);
+    }
+    
+    // For regular decimal notation, find the last non-zero digit
+    if (tracString.includes('.')) {
+      const [wholePart, decimalPart] = tracString.split('.');
+      
+      // Find the last non-zero digit in the decimal part
+      let lastNonZeroIndex = -1;
+      for (let i = decimalPart.length - 1; i >= 0; i--) {
+        if (decimalPart[i] !== '0') {
+          lastNonZeroIndex = i;
+          break;
+        }
+      }
+      
+      if (lastNonZeroIndex !== -1) {
+        // Show up to the last non-zero decimal
+        return trac.toFixed(lastNonZeroIndex + 1);
+      }
+    }
+    
+    // Fallback for whole numbers
+    return trac.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   }
 
   async getContractAddressFromHub(network, contractName) {
