@@ -64,13 +64,12 @@ class ComprehensiveQAService {
       
       if (rightmostNonZeroIndex !== -1) {
         // Round to the rightmost non-zero decimal position
-        const rounded = trac.toFixed(rightmostNonZeroIndex + 1);
-        return rounded;
+        return trac.toFixed(rightmostNonZeroIndex + 1);
       }
     }
     
-    // Fallback - just round to 2 decimal places for small amounts
-    return trac.toFixed(2);
+    // Fallback
+    return trac.toString();
   }
 
   async getContractAddressFromHub(network, contractName) {
@@ -1031,7 +1030,33 @@ class ComprehensiveQAService {
         'function getKnowledgeCollectionCount() view returns (uint256)'
       ], provider);
       
-      const contractCount = await knowledgeContract.getKnowledgeCollectionCount();
+      // Add retry logic for contract call
+      let contractCount;
+      let contractRetryCount = 0;
+      const maxContractRetries = 5;
+      
+      while (contractRetryCount < maxContractRetries) {
+        try {
+          contractCount = await knowledgeContract.getKnowledgeCollectionCount();
+          break;
+        } catch (error) {
+          contractRetryCount++;
+          console.log(`   ⚠️ [${network}] Contract call failed (attempt ${contractRetryCount}/${maxContractRetries}): ${error.message}`);
+          
+          if (contractRetryCount >= maxContractRetries) {
+            console.log(`   ❌ [${network}] Failed to get contract knowledge collection count after ${maxContractRetries} attempts`);
+            console.log(`   📊 Knowledge Collections (Indexer only):`);
+            console.log(`      Indexer:   ${indexerCount} collections (block ${indexerBlock})`);
+            console.log(`      Contract:  Unable to query (contract call failed)`);
+            console.log(`   ⚠️ [${network}] Knowledge collection validation skipped due to contract errors`);
+            return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 };
+          }
+          
+          console.log(`   ⏳ Retrying contract call in 3 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      }
+      
       const currentBlock = await provider.getBlockNumber();
       
       console.log(`   📊 Knowledge Collections:`);
@@ -1044,24 +1069,24 @@ class ComprehensiveQAService {
       let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
       
       if (countDifference === 0 && blockDifference <= 10) {
-        console.log(`      ✅ KNOWLEDGE COLLECTIONS MATCH`);
-        passed++;
+        console.log(`   ✅ KNOWLEDGE COLLECTIONS MATCH`);
+        passed = 1;
       } else if (countDifference <= 1 && blockDifference <= 50) {
-        console.log(`      ⚠️ KNOWLEDGE COLLECTIONS MATCH (within tolerance)`);
-        console.log(`      📊 Count difference: ${countDifference}, Block difference: ${blockDifference}`);
-        warnings++;
+        console.log(`   ⚠️ KNOWLEDGE COLLECTIONS MATCH (within tolerance)`);
+        console.log(`   📊 Count difference: ${countDifference}, Block difference: ${blockDifference}`);
+        warnings = 1;
       } else {
-        console.log(`      ❌ KNOWLEDGE COLLECTIONS DO NOT MATCH`);
-        console.log(`      📊 Count difference: ${countDifference}, Block difference: ${blockDifference}`);
-        failed++;
+        console.log(`   ❌ KNOWLEDGE COLLECTIONS DO NOT MATCH`);
+        console.log(`   📊 Count difference: ${countDifference}, Block difference: ${blockDifference}`);
+        failed = 1;
       }
       
       console.log(`   📊 Knowledge Collections Summary: ✅ ${passed} ❌ ${failed} ⚠️ ${warnings} 🔌 ${rpcErrors}`);
       return { passed, failed, warnings, rpcErrors, total: 1 };
       
     } catch (error) {
-      console.error(`Error validating knowledge collections: ${error.message}`);
-      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+      console.error(`Error validating knowledge collections for ${network}: ${error.message}`);
+      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 1, total: 1 };
     } finally {
       await client.end();
     }
