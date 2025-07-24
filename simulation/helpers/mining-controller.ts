@@ -16,7 +16,7 @@ export class MiningController {
    */
   async disableAutoMining(): Promise<void> {
     await this.hre.network.provider.send('evm_setAutomine', [false]);
-    console.log('✅ Auto-mining disabled for precise block control');
+    console.log('Auto-mining disabled for precise block control');
   }
 
   /**
@@ -24,7 +24,7 @@ export class MiningController {
    */
   async enableAutoMining(): Promise<void> {
     await this.hre.network.provider.send('evm_setAutomine', [true]);
-    console.log('✅ Auto-mining enabled');
+    console.log('Auto-mining enabled');
   }
 
   /**

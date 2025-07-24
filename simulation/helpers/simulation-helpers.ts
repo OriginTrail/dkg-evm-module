@@ -4,6 +4,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import {
   ensureSufficientGasFunds,
+  getHubContract,
   impersonateAccount,
   stopImpersonatingAccount,
 } from './blockchain-helpers';
@@ -105,7 +106,7 @@ export async function calculateScoresForActiveNodes(
           activeNodesCount++;
 
           console.log(
-            `   ✅ Node ${identityId}: score=${hre.ethers.formatEther(score18)}`,
+            `   🖥️  Node ${identityId}: score=${hre.ethers.formatEther(score18)}`,
           );
         }
       } catch (error) {
@@ -384,7 +385,7 @@ export async function setupMigratorAllowances(
     }
 
     console.log(
-      `[MIGRATOR ALLOWANCE] ✅ Shares contract verified at ${sharesContractAddress}`,
+      `[MIGRATOR ALLOWANCE] Shares contract verified at ${sharesContractAddress}`,
     );
 
     // ERC20 ABI for approve function
@@ -433,10 +434,10 @@ export async function setupMigratorAllowances(
         '0x' + gasAmount.toString(16),
       ]);
 
-      console.log(`[MIGRATOR ALLOWANCE] 🚀 Executing approval transaction...`);
+      console.log(`[MIGRATOR ALLOWANCE] Executing approval transaction...`);
 
       try {
-        console.log(`[MIGRATOR ALLOWANCE] 🎯 About to call approve() with:`);
+        console.log(`[MIGRATOR ALLOWANCE] About to call approve() with:`);
         console.log(`[MIGRATOR ALLOWANCE]   - Spender: ${migratorAddress}`);
         console.log(`[MIGRATOR ALLOWANCE]   - Amount: ${balance.toString()}`);
         console.log(`[MIGRATOR ALLOWANCE]   - From: ${delegatorAddress}`);
@@ -450,26 +451,22 @@ export async function setupMigratorAllowances(
           },
         );
 
-        console.log(`[MIGRATOR ALLOWANCE] ✅ Approve call succeeded`);
+        console.log(`[MIGRATOR ALLOWANCE] Approve call succeeded`);
 
+        console.log(`[MIGRATOR ALLOWANCE] Approval tx sent: ${approveTx.hash}`);
         console.log(
-          `[MIGRATOR ALLOWANCE] 📋 Approval tx sent: ${approveTx.hash}`,
-        );
-        console.log(
-          `[MIGRATOR ALLOWANCE] ⏳ Waiting for approval confirmation...`,
+          `[MIGRATOR ALLOWANCE] Waiting for approval confirmation...`,
         );
 
         // Mine a block to confirm the approval transaction (auto-mining is disabled)
-        console.log(
-          `[MIGRATOR ALLOWANCE] 📦 Mining block to confirm approval...`,
-        );
+        console.log(`[MIGRATOR ALLOWANCE] Mining block to confirm approval...`);
         await hre.network.provider.request({
           method: 'evm_mine',
           params: [],
         });
 
         console.log(
-          `[MIGRATOR ALLOWANCE] 🔍 Block mined, checking transaction status...`,
+          `[MIGRATOR ALLOWANCE] Block mined, checking transaction status...`,
         );
 
         // Check if transaction was included in the block
@@ -483,7 +480,7 @@ export async function setupMigratorAllowances(
 
         if (txStatus && txStatus.blockNumber) {
           console.log(
-            `[MIGRATOR ALLOWANCE] ✅ Transaction included in block ${txStatus.blockNumber}`,
+            `[MIGRATOR ALLOWANCE] Transaction included in block ${txStatus.blockNumber}`,
           );
         } else {
           console.log(
@@ -491,7 +488,7 @@ export async function setupMigratorAllowances(
           );
         }
 
-        console.log(`[MIGRATOR ALLOWANCE] ⏳ Calling txResponse.wait()...`);
+        console.log(`[MIGRATOR ALLOWANCE] Calling txResponse.wait()...`);
 
         // Add timeout to prevent infinite hanging
         const receiptPromise = approveTx.wait();
@@ -510,7 +507,7 @@ export async function setupMigratorAllowances(
         console.log(`[MIGRATOR ALLOWANCE] 🎉 Wait completed!`);
 
         console.log(
-          `[MIGRATOR ALLOWANCE] ✅ Approval confirmed in block ${receipt.blockNumber}`,
+          `[MIGRATOR ALLOWANCE] Approval confirmed in block ${receipt.blockNumber}`,
         );
 
         // Verify the allowance was set correctly
@@ -535,9 +532,7 @@ export async function setupMigratorAllowances(
         throw approvalError;
       }
     } else {
-      console.log(
-        `[MIGRATOR ALLOWANCE] ✅ Sufficient allowance already exists`,
-      );
+      console.log(`[MIGRATOR ALLOWANCE] Sufficient allowance already exists`);
     }
   } catch (error) {
     console.error(`[MIGRATOR ALLOWANCE] ❌ Failed to setup allowances:`, error);
@@ -586,4 +581,51 @@ export async function getV6ActiveNodesAndDelegators(
   }
 
   return { v6ActiveNodes, v6NodeDelegators };
+}
+
+export async function addDelegator(
+  hre: HardhatRuntimeEnvironment,
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  identityId: number,
+  delegatorAddress: string,
+): Promise<void> {
+  const hub = await getHubContract(hre);
+  const hubOwner = await hub.owner();
+  await impersonateAccount(hre, hubOwner);
+  const signer = await hre.ethers.getSigner(hubOwner);
+  const delegatorsInfoWithSigner = contracts.delegatorsInfo.connect(signer);
+  await delegatorsInfoWithSigner.addDelegator(identityId, delegatorAddress);
+  await stopImpersonatingAccount(hre, hubOwner);
+}
+
+/**
+ * Process and claim delegator rewards for a specific epoch
+ * @param contracts - Contract instances
+ * @param identityId - Node identity ID
+ * @param epoch - Epoch to process rewards for
+ * @param delegator - Delegator address
+ * @returns The reward amount (0n if no reward)
+ */
+export async function processAndClaimDelegatorReward(
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  identityId: number,
+  epoch: number,
+  delegator: string,
+): Promise<bigint> {
+  // Get delegator reward for this epoch
+  const reward = await contracts.stakingKPI.getDelegatorReward(
+    identityId,
+    epoch,
+    delegator,
+  );
+
+  // Skip if no reward
+  if (reward === 0n) {
+    return 0n;
+  }
+
+  // Claim the reward
+  await contracts.staking.claimDelegatorRewards(identityId, epoch, delegator);
+
+  return reward;
 }

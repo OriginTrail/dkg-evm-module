@@ -89,9 +89,9 @@ export const DEFAULT_DB_PATHS = {
 } as const;
 
 export const RPC_URLS = {
-  base_mainnet: 'https://mainnet.base.org',
-  neuroweb_mainnet: 'https://astrosat-parachain-rpc.origin-trail.network/',
-  gnosis_mainnet: 'https://rpc.gnosischain.com',
+  base_mainnet: process.env.RPC_BASE_MAINNET,
+  neuroweb_mainnet: process.env.RPC_NEUROWEB_MAINNET,
+  gnosis_mainnet: process.env.RPC_GNOSIS_MAINNET,
 } as const;
 
 export const DELEGATORS_INFO_MAINNET_ADDRESSES = {
@@ -103,6 +103,8 @@ export const DELEGATORS_INFO_MAINNET_ADDRESSES = {
 // Export type for supported chains
 export type SupportedChain = keyof typeof DEFAULT_DB_PATHS;
 
+// TODO: populate for neuroweb and gnosis
+// TODO: add v6 epoch metadata
 export const EPOCH_METADATA = {
   base_mainnet: [
     {
