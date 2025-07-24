@@ -1628,6 +1628,8 @@ class ComprehensiveQAService {
         return { type: 'skipped' };
       }
       
+      console.log(`   🔍 Node ${nodeId}: Found ${allIndexerEventsResult.rows.length} indexer events`);
+      
       // Group indexer events by block number and sort by stake (highest first)
       const indexerEventsByBlock = {};
       for (const event of allIndexerEventsResult.rows) {
@@ -1648,6 +1650,11 @@ class ComprehensiveQAService {
       // Sort processed events by block number (newest first)
       processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
       
+      console.log(`   🔍 Node ${nodeId}: Processed ${processedIndexerEvents.length} unique indexer blocks`);
+      if (processedIndexerEvents.length > 0) {
+        console.log(`   🔍 Node ${nodeId}: Indexer blocks range: ${processedIndexerEvents[processedIndexerEvents.length - 1].blockNumber} to ${processedIndexerEvents[0].blockNumber}`);
+      }
+      
       // Get cached contract events for this node
       const cachedNodeEvents = cache.nodeEventsByNode?.[nodeId] || [];
       
@@ -1655,6 +1662,8 @@ class ComprehensiveQAService {
         console.log(`   ⚠️ Node ${nodeId}: No cached contract events found, skipping`);
         return { type: 'skipped' };
       }
+      
+      console.log(`   🔍 Node ${nodeId}: Found ${cachedNodeEvents.length} cached contract events`);
       
       // Group contract events by block number and sort by stake (highest first)
       const contractEventsByBlock = {};
@@ -1676,10 +1685,20 @@ class ComprehensiveQAService {
       // Sort processed events by block number (newest first)
       processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
       
+      console.log(`   🔍 Node ${nodeId}: Processed ${processedContractEvents.length} unique contract blocks`);
+      if (processedContractEvents.length > 0) {
+        console.log(`   🔍 Node ${nodeId}: Contract blocks range: ${processedContractEvents[processedContractEvents.length - 1].blockNumber} to ${processedContractEvents[0].blockNumber}`);
+      }
+      
       // Find common blocks between indexer and contract events
       const indexerBlocks = new Set(processedIndexerEvents.map(e => e.blockNumber));
       const contractBlocks = new Set(processedContractEvents.map(e => e.blockNumber));
       const commonBlocks = [...indexerBlocks].filter(block => contractBlocks.has(block));
+      
+      console.log(`   🔍 Node ${nodeId}: Found ${commonBlocks.length} common blocks`);
+      if (commonBlocks.length > 0) {
+        console.log(`   🔍 Node ${nodeId}: Common blocks: ${commonBlocks.slice(0, 5).join(', ')}${commonBlocks.length > 5 ? '...' : ''}`);
+      }
       
       if (commonBlocks.length === 0) {
         console.log(`   ⚠️ Node ${nodeId}: No common blocks found between indexer and contract`);
@@ -1986,4 +2005,4 @@ async function testAllValidations() {
   console.log(`\n🎯 All validations completed for all networks!`);
 }
 
-testAllValidations().catch(console.error); 
+testAllValidations().catch(console.error);
