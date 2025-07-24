@@ -66,11 +66,7 @@ class ComprehensiveQAService {
 
   // Load cache from JSON files
   async loadCache(network) {
-    // Only Neuroweb uses JSON file caching
-    if (network !== 'Neuroweb') {
-      return null; // Base and Gnosis don't use JSON files
-    }
-    
+    // All networks now use JSON file caching
     const cacheFile = path.join(__dirname, `${network.toLowerCase()}_cache.json`);
     
     try {
@@ -95,13 +91,8 @@ class ComprehensiveQAService {
     return null;
   }
 
-  // Save cache to JSON files (only for Neuroweb)
+  // Save cache to JSON files (for all networks)
   async saveCache(network, cacheData) {
-    // Only Neuroweb uses JSON file caching
-    if (network !== 'Neuroweb') {
-      return; // Base and Gnosis don't save to JSON files
-    }
-    
     const cacheFile = path.join(__dirname, `${network.toLowerCase()}_cache.json`);
     
     try {
@@ -450,39 +441,37 @@ class ComprehensiveQAService {
   async buildCache(network) {
     console.log(`\n🔍 Building cache for ${network}...`);
     
+    // Check if existing cache exists first (for all networks)
+    const existingCache = await this.loadCache(network);
+    
     let cacheData;
-    if (network === 'Neuroweb') {
-      // Neuroweb: Check if existing cache exists first
-      const existingCache = await this.loadCache(network);
+    if (existingCache && existingCache.nodeEventsByNode) {
+      console.log(`   📊 Using existing ${network} cache from file`);
+      console.log(`      Node events: ${existingCache.totalNodeEvents || 0}`);
+      console.log(`      Delegator events: ${existingCache.totalDelegatorEvents || 0}`);
       
-      if (existingCache && existingCache.nodeEventsByNode) {
-        console.log(`   📊 Using existing Neuroweb cache from file`);
-        console.log(`      Node events: ${existingCache.totalNodeEvents || 0}`);
-        console.log(`      Delegator events: ${existingCache.totalDelegatorEvents || 0}`);
-        
-        // Check if we need to add new blocks
-        const needsUpdate = await this.checkNeurowebCacheNeedsUpdate(existingCache);
-        if (needsUpdate) {
-          console.log(`   📊 Neuroweb cache needs update, querying new blocks...`);
-          const newEvents = await this.queryNewNeurowebEvents(existingCache);
-          if (newEvents.nodeEvents.length > 0 || newEvents.delegatorEvents.length > 0) {
-            console.log(`   📊 Found ${newEvents.nodeEvents.length} new node events and ${newEvents.delegatorEvents.length} new delegator events`);
-            return await this.mergeCacheWithNewEvents(network, existingCache, newEvents);
-          } else {
-            console.log(`   📊 No new events found, using existing cache`);
-          }
+      // Check if we need to add new blocks (for all networks)
+      const needsUpdate = await this.checkCacheNeedsUpdate(network, existingCache);
+      if (needsUpdate) {
+        console.log(`   📊 ${network} cache needs update, querying new blocks...`);
+        const newEvents = await this.queryNewEvents(network, existingCache);
+        if (newEvents.nodeEvents.length > 0 || newEvents.delegatorEvents.length > 0) {
+          console.log(`   📊 Found ${newEvents.nodeEvents.length} new node events and ${newEvents.delegatorEvents.length} new delegator events`);
+          return await this.mergeCacheWithNewEvents(network, existingCache, newEvents);
+        } else {
+          console.log(`   📊 No new events found, using existing cache`);
         }
-        
-        return existingCache; // Return existing cache
-      } else {
-        // No existing cache, query all events
-        console.log(`   📊 No existing Neuroweb cache found, querying all events...`);
-        cacheData = await this.queryAllNeurowebContractEvents();
       }
+      
+      return existingCache; // Return existing cache
     } else {
-      // Base and Gnosis: Always query fresh data (no JSON persistence)
-      console.log(`   📊 Querying fresh contract events for ${network} (in-memory cache only)`);
-      cacheData = await this.queryAllContractEvents(network);
+      // No existing cache, query all events
+      console.log(`   📊 No existing ${network} cache found, querying all events...`);
+      if (network === 'Neuroweb') {
+        cacheData = await this.queryAllNeurowebContractEvents();
+      } else {
+        cacheData = await this.queryAllContractEvents(network);
+      }
     }
     
     // Process cache data to organize events by node/delegator
@@ -531,17 +520,13 @@ class ComprehensiveQAService {
     
     console.log(`   📊 Processed cache: ${Object.keys(nodeEventsByNode).length} nodes, ${Object.keys(delegatorEventsByNode).length} nodes with delegators`);
     
-    // Save processed cache (only for Neuroweb)
-    if (network === 'Neuroweb') {
-      await this.saveCache(network, processedCacheData);
-    } else {
-      console.log(`   📊 ${network} cache stored in memory (no JSON file)`);
-    }
+    // Save processed cache (for all networks)
+    await this.saveCache(network, processedCacheData);
     
     return processedCacheData;
   }
 
-  // Merge new events with existing cache (only for Neuroweb)
+  // Merge new events with existing cache (for all networks)
   async mergeCacheWithNewEvents(network, existingCache, newEvents) {
     console.log(`   📊 Merging new events with existing cache for ${network}...`);
     
@@ -613,7 +598,7 @@ class ComprehensiveQAService {
     
     console.log(`   📊 Merged cache: ${Object.keys(nodeEventsByNode).length} nodes, ${Object.keys(delegatorEventsByNode).length} nodes with delegators`);
     
-    // Save merged cache (only for Neuroweb)
+    // Save merged cache (for all networks)
     await this.saveCache(network, mergedCacheData);
     
     return mergedCacheData;
@@ -657,6 +642,335 @@ class ComprehensiveQAService {
     }
     
     return results;
+  }
+
+  // Validate node stakes with provided cache
+  async validateNodeStakesWithCache(network, cache) {
+    console.log(`\n🔍 1. Validating node stakes comprehensively for ${network} (all blocks)...`);
+    
+    const dbName = this.databaseMap[network];
+    const client = new Client({ ...this.dbConfig, database: dbName });
+    
+    try {
+      await client.connect();
+      
+      const minStakeThreshold = 50000000000000000000000; // 50,000 TRAC
+      let nodesResult;
+      
+      if (network === 'Base') {
+        nodesResult = await client.query(`
+          SELECT n.identity_id, n.stake FROM node_stake_updated n
+          INNER JOIN (SELECT identity_id, MAX(block_number) as max_block FROM node_stake_updated GROUP BY identity_id) latest 
+          ON n.identity_id = latest.identity_id AND n.block_number = latest.max_block
+          WHERE n.stake >= $1 ORDER BY n.stake DESC LIMIT 24
+        `, [minStakeThreshold]);
+      } else {
+        nodesResult = await client.query(`
+          SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake FROM node_stake_updated n
+          WHERE n.stake >= $1 AND n.identity_id IN (SELECT identity_id FROM node_object_created)
+          AND n.identity_id NOT IN (SELECT identity_id FROM node_object_deleted)
+          ORDER BY n.identity_id, n.block_number DESC
+        `, [minStakeThreshold]);
+      }
+      
+      if (nodesResult.rows.length === 0) {
+        console.log(`   ⚠️ No active nodes found in ${network}`);
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+      }
+      
+      let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
+      const total = nodesResult.rows.length;
+      
+      console.log(`   📊 Validating ${total} active nodes comprehensively (all blocks)...`);
+      
+      for (const row of nodesResult.rows) {
+        const nodeId = parseInt(row.identity_id);
+        const result = await this.validateSingleNodeComprehensiveWithCache(client, network, nodeId, cache);
+        
+        switch (result.type) {
+          case 'passed': passed++; break;
+          case 'failed': failed++; break;
+          case 'warning': warnings++; break;
+          case 'rpcError': rpcErrors++; break;
+          case 'skipped': break; // Don't count skipped
+        }
+      }
+      
+      console.log(`   📊 Node Stakes Summary: ✅ ${passed} ❌ ${failed} ⚠️ ${warnings} 🔌 ${rpcErrors}`);
+      return { passed, failed, warnings, rpcErrors, total };
+      
+    } catch (error) {
+      console.error(`Error validating node stakes: ${error.message}`);
+      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+    } finally {
+      await client.end();
+    }
+  }
+
+  // Validate delegator stakes with provided cache
+  async validateDelegatorStakesComprehensiveWithCache(network, cache) {
+    console.log(`\n🔍 2. Validating delegator stakes comprehensively for ${network} (all blocks)...`);
+    
+    const dbName = this.databaseMap[network];
+    const client = new Client({ ...this.dbConfig, database: dbName });
+    
+    try {
+      await client.connect();
+      
+      // Get active nodes first
+      const minStakeThreshold = 50000000000000000000000; // 50,000 TRAC
+      let activeNodesResult;
+      
+      if (network === 'Base') {
+        activeNodesResult = await client.query(`
+          SELECT n.identity_id, n.stake FROM node_stake_updated n
+          INNER JOIN (SELECT identity_id, MAX(block_number) as max_block FROM node_stake_updated GROUP BY identity_id) latest 
+          ON n.identity_id = latest.identity_id AND n.block_number = latest.max_block
+          WHERE n.stake >= $1 ORDER BY n.stake DESC LIMIT 24
+        `, [minStakeThreshold]);
+      } else {
+        activeNodesResult = await client.query(`
+          SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake FROM node_stake_updated n
+          WHERE n.stake >= $1 AND n.identity_id IN (SELECT identity_id FROM node_object_created)
+          AND n.identity_id NOT IN (SELECT identity_id FROM node_object_deleted)
+          ORDER BY n.identity_id, n.block_number DESC
+        `, [minStakeThreshold]);
+      }
+      
+      if (activeNodesResult.rows.length === 0) {
+        console.log(`   ⚠️ No active nodes found in ${network}, skipping delegator validation`);
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+      }
+      
+      const activeNodeIds = activeNodesResult.rows.map(row => row.identity_id);
+      const delegatorsResult = await client.query(`
+        SELECT DISTINCT d.identity_id, d.delegator_key FROM delegator_base_stake_updated d
+        INNER JOIN (SELECT identity_id, delegator_key, MAX(block_number) as max_block FROM delegator_base_stake_updated GROUP BY identity_id, delegator_key) latest 
+        ON d.identity_id = latest.identity_id AND d.delegator_key = latest.delegator_key AND d.block_number = latest.max_block
+        WHERE d.identity_id = ANY($1) AND d.stake_base > 0 ORDER BY d.identity_id, d.delegator_key
+      `, [activeNodeIds]);
+      
+      if (delegatorsResult.rows.length === 0) {
+        console.log(`   ⚠️ No delegators found for active nodes in ${network}`);
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+      }
+      
+      let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
+      const total = delegatorsResult.rows.length;
+      
+      console.log(`   📊 Validating ${total} delegators comprehensively (all blocks)...`);
+      
+      for (const row of delegatorsResult.rows) {
+        const nodeId = parseInt(row.identity_id);
+        const delegatorKey = row.delegator_key;
+        const result = await this.validateSingleDelegatorComprehensiveWithCache(client, network, nodeId, delegatorKey, cache);
+        
+        switch (result.type) {
+          case 'passed': passed++; break;
+          case 'failed': failed++; break;
+          case 'warning': warnings++; break;
+          case 'rpcError': rpcErrors++; break;
+          case 'skipped': break; // Don't count skipped
+        }
+      }
+      
+      console.log(`   📊 Delegator Stakes Summary: ✅ ${passed} ❌ ${failed} ⚠️ ${warnings} 🔌 ${rpcErrors}`);
+      return { passed, failed, warnings, rpcErrors, total };
+      
+    } catch (error) {
+      console.error(`Error validating delegator stakes: ${error.message}`);
+      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+    } finally {
+      await client.end();
+    }
+  }
+
+  // Validate delegator sum with provided cache
+  async validateDelegatorStakeSumWithCache(network, cache) {
+    console.log(`\n🔍 3. Validating delegator sum matches node stake for ${network}...`);
+    
+    const dbName = this.databaseMap[network];
+    const client = new Client({ ...this.dbConfig, database: dbName });
+    
+    try {
+      await client.connect();
+      
+      const minStakeThreshold = 50000000000000000000000; // 50,000 TRAC
+      let nodesResult;
+      
+      if (network === 'Base') {
+        nodesResult = await client.query(`
+          SELECT n.identity_id, n.stake FROM node_stake_updated n
+          INNER JOIN (SELECT identity_id, MAX(block_number) as max_block FROM node_stake_updated GROUP BY identity_id) latest 
+          ON n.identity_id = latest.identity_id AND n.block_number = latest.max_block
+          WHERE n.stake >= $1 ORDER BY n.stake DESC LIMIT 24
+        `, [minStakeThreshold]);
+      } else {
+        nodesResult = await client.query(`
+          SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake FROM node_stake_updated n
+          WHERE n.stake >= $1 AND n.identity_id IN (SELECT identity_id FROM node_object_created)
+          AND n.identity_id NOT IN (SELECT identity_id FROM node_object_deleted)
+          ORDER BY n.identity_id, n.block_number DESC
+        `, [minStakeThreshold]);
+      }
+      
+      if (nodesResult.rows.length === 0) {
+        console.log(`   ⚠️ No active nodes found in ${network}`);
+        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+      }
+      
+      let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
+      const total = nodesResult.rows.length;
+      
+      console.log(`   📊 Validating ${total} nodes for delegator sum...`);
+      
+      for (const row of nodesResult.rows) {
+        const nodeId = parseInt(row.identity_id);
+        
+        try {
+          // Get delegator sum from indexer
+          const delegatorSumResult = await client.query(`
+            SELECT SUM(stake_base) as total_delegator_stake FROM delegator_base_stake_updated d
+            INNER JOIN (SELECT identity_id, delegator_key, MAX(block_number) as max_block FROM delegator_base_stake_updated GROUP BY identity_id, delegator_key) latest 
+            ON d.identity_id = latest.identity_id AND d.delegator_key = latest.delegator_key AND d.block_number = latest.max_block
+            WHERE d.identity_id = $1 AND d.stake_base > 0
+          `, [nodeId]);
+          
+          const indexerDelegatorSum = BigInt(delegatorSumResult.rows[0]?.total_delegator_stake || 0);
+          
+          // Get node stake from contract (using cache)
+          const cachedNodeEvents = cache.nodeEventsByNode?.[nodeId] || [];
+          if (cachedNodeEvents.length === 0) {
+            console.log(`   ⚠️ Node ${nodeId}: No cached contract events found, skipping`);
+            continue;
+          }
+          
+          // Get the latest node stake from cache
+          const latestContractStake = BigInt(cachedNodeEvents[0].stake);
+          
+          console.log(`   📊 Node ${nodeId}:`);
+          console.log(`      Indexer delegator sum: ${this.weiToTRAC(indexerDelegatorSum)} TRAC`);
+          console.log(`      Contract node stake:   ${this.weiToTRAC(latestContractStake)} TRAC`);
+          
+          const difference = indexerDelegatorSum - latestContractStake;
+          const tolerance = 500000000000000000n; // 0.5 TRAC
+          
+          if (difference === 0n) {
+            console.log(`      ✅ DELEGATOR SUM MATCHES NODE STAKE`);
+            passed++;
+          } else if (difference >= -tolerance && difference <= tolerance) {
+            console.log(`      ⚠️ DELEGATOR SUM MATCHES NODE STAKE (within tolerance)`);
+            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+            warnings++;
+          } else {
+            console.log(`      ❌ DELEGATOR SUM DOES NOT MATCH NODE STAKE`);
+            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+            failed++;
+          }
+          
+        } catch (error) {
+          console.log(`   ⚠️ Node ${nodeId}: Error - ${error.message}`);
+          if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+            rpcErrors++;
+          } else {
+            failed++;
+          }
+        }
+      }
+      
+      console.log(`   📊 Delegator Sum Summary: ✅ ${passed} ❌ ${failed} ⚠️ ${warnings} 🔌 ${rpcErrors}`);
+      return { passed, failed, warnings, rpcErrors, total };
+      
+    } catch (error) {
+      console.error(`Error validating delegator sum: ${error.message}`);
+      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+    } finally {
+      await client.end();
+    }
+  }
+
+  // Validate knowledge collections with provided cache
+  async validateKnowledgeCollectionsWithCache(network, cache) {
+    console.log(`\n🔍 4. Validating knowledge collections for ${network}...`);
+    
+    const dbName = this.databaseMap[network];
+    const client = new Client({ ...this.dbConfig, database: dbName });
+    
+    try {
+      await client.connect();
+      
+      // Get knowledge collections from indexer
+      const indexerResult = await client.query(`
+        SELECT COUNT(*) as count FROM knowledge_collection_created
+      `);
+      
+      const indexerCount = parseInt(indexerResult.rows[0].count);
+      const indexerBlockResult = await client.query(`
+        SELECT MAX(block_number) as latest_block FROM knowledge_collection_created
+      `);
+      const indexerBlock = indexerBlockResult.rows[0]?.latest_block || 0;
+      
+      // Get knowledge collections from contract
+      const networkConfig = config.networks.find(n => n.name === network);
+      if (!networkConfig) {
+        throw new Error(`Network ${network} not found in config`);
+      }
+      
+      let provider;
+      let retryCount = 0;
+      while (true) {
+        try {
+          provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+          await provider.getNetwork();
+          break;
+        } catch (error) {
+          retryCount++;
+          if (retryCount >= 10) {
+            throw new Error(`Failed to connect to ${network} RPC after 10 attempts`);
+          }
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      }
+      
+      const knowledgeAddress = await this.getContractAddressFromHub(network, 'KnowledgeCollectionStorage');
+      const knowledgeContract = new ethers.Contract(knowledgeAddress, [
+        'function getKnowledgeCollectionCount() view returns (uint256)'
+      ], provider);
+      
+      const contractCount = await knowledgeContract.getKnowledgeCollectionCount();
+      const currentBlock = await provider.getBlockNumber();
+      
+      console.log(`   📊 Knowledge Collections:`);
+      console.log(`      Indexer:   ${indexerCount} collections (block ${indexerBlock})`);
+      console.log(`      Contract:  ${contractCount} collections (block ${currentBlock})`);
+      
+      const countDifference = Math.abs(indexerCount - contractCount);
+      const blockDifference = Math.abs(indexerBlock - currentBlock);
+      
+      let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
+      
+      if (countDifference === 0 && blockDifference <= 10) {
+        console.log(`      ✅ KNOWLEDGE COLLECTIONS MATCH`);
+        passed++;
+      } else if (countDifference <= 1 && blockDifference <= 50) {
+        console.log(`      ⚠️ KNOWLEDGE COLLECTIONS MATCH (within tolerance)`);
+        console.log(`      📊 Count difference: ${countDifference}, Block difference: ${blockDifference}`);
+        warnings++;
+      } else {
+        console.log(`      ❌ KNOWLEDGE COLLECTIONS DO NOT MATCH`);
+        console.log(`      📊 Count difference: ${countDifference}, Block difference: ${blockDifference}`);
+        failed++;
+      }
+      
+      console.log(`   📊 Knowledge Collections Summary: ✅ ${passed} ❌ ${failed} ⚠️ ${warnings} 🔌 ${rpcErrors}`);
+      return { passed, failed, warnings, rpcErrors, total: 1 };
+      
+    } catch (error) {
+      console.error(`Error validating knowledge collections: ${error.message}`);
+      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+    } finally {
+      await client.end();
+    }
   }
 
   // 1. VALIDATE NODE STAKES (ALL BLOCKS) - WITH CACHE
@@ -731,137 +1045,6 @@ class ComprehensiveQAService {
       return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
     } finally {
       await client.end();
-    }
-  }
-
-  // Helper function for comprehensive node validation
-  async validateSingleNodeComprehensiveWithCache(client, network, nodeId, cache) {
-    try {
-      // Get ALL node stake events from indexer for this node
-      const allIndexerEventsResult = await client.query(`
-        SELECT stake, block_number FROM node_stake_updated WHERE identity_id = $1 ORDER BY block_number DESC
-      `, [nodeId]);
-      
-      if (allIndexerEventsResult.rows.length === 0) {
-        console.log(`   ⚠️ Node ${nodeId}: No indexer events found, skipping`);
-        return { type: 'skipped' };
-      }
-      
-      // Group indexer events by block number and sort by stake (highest first)
-      const indexerEventsByBlock = {};
-      for (const event of allIndexerEventsResult.rows) {
-        const blockNum = event.block_number;
-        if (!indexerEventsByBlock[blockNum]) {
-          indexerEventsByBlock[blockNum] = [];
-        }
-        indexerEventsByBlock[blockNum].push({ blockNumber: blockNum, stake: BigInt(event.stake) });
-      }
-      
-      // Sort each block's events by stake (highest first) and keep only the highest
-      const processedIndexerEvents = [];
-      for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
-        events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
-        processedIndexerEvents.push(events[0]); // Keep only the highest stake
-      }
-      
-      // Sort processed events by block number (newest first)
-      processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-      
-      // Get cached contract events for this node
-      const cachedNodeEvents = cache.nodeEventsByNode?.[nodeId] || [];
-      
-      if (cachedNodeEvents.length === 0) {
-        console.log(`   ⚠️ Node ${nodeId}: No cached contract events found, skipping`);
-        return { type: 'skipped' };
-      }
-      
-      // Group contract events by block number and sort by stake (highest first)
-      const contractEventsByBlock = {};
-      for (const event of cachedNodeEvents) {
-        const blockNum = event.blockNumber;
-        if (!contractEventsByBlock[blockNum]) {
-          contractEventsByBlock[blockNum] = [];
-        }
-        contractEventsByBlock[blockNum].push({ blockNumber: blockNum, stake: BigInt(event.stake) });
-      }
-      
-      // Sort each block's events by stake (highest first) and keep only the highest
-      const processedContractEvents = [];
-      for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
-        events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
-        processedContractEvents.push(events[0]); // Keep only the highest stake
-      }
-      
-      // Sort processed events by block number (newest first)
-      processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-      
-      // Find common blocks between indexer and contract events
-      const indexerBlocks = new Set(processedIndexerEvents.map(e => e.blockNumber));
-      const contractBlocks = new Set(processedContractEvents.map(e => e.blockNumber));
-      const commonBlocks = [...indexerBlocks].filter(block => contractBlocks.has(block));
-      
-      if (commonBlocks.length === 0) {
-        console.log(`   ⚠️ Node ${nodeId}: No common blocks found between indexer and contract`);
-        return { type: 'skipped' };
-      }
-      
-      // Sort common blocks in descending order (newest first)
-      commonBlocks.sort((a, b) => b - a);
-      
-      console.log(`   📊 Node ${nodeId}: Found ${commonBlocks.length} common blocks to validate`);
-      
-      let validationPassed = false;
-      let expectedStake = 0n;
-      let actualStake = 0n;
-      let comparisonBlock = 0;
-      
-      // Validate each common block in descending order
-      for (const blockNumber of commonBlocks) {
-        const indexerEvent = processedIndexerEvents.find(e => e.blockNumber === blockNumber);
-        const contractEvent = processedContractEvents.find(e => e.blockNumber === blockNumber);
-        
-        if (indexerEvent && contractEvent) {
-          expectedStake = indexerEvent.stake;
-          actualStake = contractEvent.stake;
-          comparisonBlock = blockNumber;
-          
-          console.log(`   📊 Node ${nodeId} (Block ${blockNumber}):`);
-          console.log(`      Indexer:   ${this.weiToTRAC(expectedStake)} TRAC`);
-          console.log(`      Contract:  ${this.weiToTRAC(actualStake)} TRAC`);
-          
-          const difference = expectedStake - actualStake;
-          const tolerance = 500000000000000000n; // 0.5 TRAC
-          
-          if (difference === 0n) {
-            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH`);
-            validationPassed = true;
-            break; // Found a match, stop checking
-          } else if (difference >= -tolerance && difference <= tolerance) {
-            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH (within tolerance)`);
-            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            validationPassed = true;
-            break; // Found a match within tolerance, stop checking
-          } else {
-            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES DIFFER`);
-            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            // Continue to next block if this one doesn't match
-          }
-        }
-      }
-      
-      if (validationPassed) {
-        return { type: 'passed' };
-      } else {
-        return { type: 'failed' };
-      }
-      
-    } catch (error) {
-      console.log(`   ⚠️ Node ${nodeId}: Error - ${error.message}`);
-      if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
-        return { type: 'rpcError' };
-      } else {
-        return { type: 'failed' };
-      }
     }
   }
 
@@ -1216,11 +1399,15 @@ class ComprehensiveQAService {
   async runAllValidations(network) {
     console.log(`\n🚀 Running all validations for ${network}...`);
     
+    // Build cache once for all validations
+    console.log(`\n🔍 Building cache for ${network}...`);
+    const cache = await this.buildCache(network);
+    
     const results = {
-      nodeStakes: await this.validateNodeStakes(network),
-      delegatorStakes: await this.validateDelegatorStakesComprehensive(network),
-      delegatorSum: await this.validateDelegatorStakeSum(network),
-      knowledgeCollections: await this.validateKnowledgeCollections(network)
+      nodeStakes: await this.validateNodeStakesWithCache(network, cache),
+      delegatorStakes: await this.validateDelegatorStakesComprehensiveWithCache(network, cache),
+      delegatorSum: await this.validateDelegatorStakeSumWithCache(network, cache),
+      knowledgeCollections: await this.validateKnowledgeCollectionsWithCache(network, cache)
     };
     
     console.log(`\n📊 FINAL SUMMARY FOR ${network}:`);
@@ -1233,9 +1420,9 @@ class ComprehensiveQAService {
   }
 
   // Check if Neuroweb cache needs updates by comparing latest block
-  async checkNeurowebCacheNeedsUpdate(existingCache) {
-    const networkConfig = config.networks.find(n => n.name === 'Neuroweb');
-    if (!networkConfig) throw new Error(`Network Neuroweb not found in config`);
+  async checkCacheNeedsUpdate(network, existingCache) {
+    const networkConfig = config.networks.find(n => n.name === network);
+    if (!networkConfig) throw new Error(`Network ${network} not found in config`);
 
     let provider;
     let retryCount = 0;
@@ -1277,10 +1464,10 @@ class ComprehensiveQAService {
     return needsUpdate;
   }
 
-  // Query only new Neuroweb events (after the latest cached block)
-  async queryNewNeurowebEvents(existingCache) {
-    const networkConfig = config.networks.find(n => n.name === 'Neuroweb');
-    if (!networkConfig) throw new Error(`Network Neuroweb not found in config`);
+  // Query only new events (after the latest cached block)
+  async queryNewEvents(network, existingCache) {
+    const networkConfig = config.networks.find(n => n.name === network);
+    if (!networkConfig) throw new Error(`Network ${network} not found in config`);
 
     let provider;
     let retryCount = 0;
@@ -1292,13 +1479,13 @@ class ComprehensiveQAService {
       } catch (error) {
         retryCount++;
         if (retryCount >= 10) {
-          throw new Error(`Failed to connect to Neuroweb RPC after 10 attempts`);
+          throw new Error(`Failed to connect to ${network} RPC after 10 attempts`);
         }
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
     }
 
-    const stakingAddress = await this.getContractAddressFromHub('Neuroweb', 'StakingStorage');
+    const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
     const stakingContract = new ethers.Contract(stakingAddress, [
       'event NodeStakeUpdated(uint72 indexed identityId, uint96 stake)',
       'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
@@ -1326,8 +1513,10 @@ class ComprehensiveQAService {
       return { nodeEvents: [], delegatorEvents: [] };
     }
     
-    // Use 10,000 chunks for Neuroweb
-    const chunkSize = 10000;
+    // Set chunk size based on network
+    const chunkSize = network === 'Base' ? 100000 : network === 'Gnosis' ? 1000000 : 10000; // Base: 100k, Gnosis: 1M, Neuroweb: 10k
+    console.log(`   📊 Using chunk size: ${chunkSize.toLocaleString()}`);
+    
     let allNodeEvents = [];
     let allDelegatorEvents = [];
     
@@ -1342,7 +1531,7 @@ class ComprehensiveQAService {
       const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
       processedChunks++;
       
-      console.log(`   📊 Neuroweb New Node Events: Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+      console.log(`   📊 ${network} New Node Events: Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
       
       let chunkRetryCount = 0;
       while (true) {
@@ -1379,7 +1568,7 @@ class ComprehensiveQAService {
       const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
       processedChunks++;
       
-      console.log(`   📊 Neuroweb New Delegator Events: Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+      console.log(`   📊 ${network} New Delegator Events: Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
       
       let chunkRetryCount = 0;
       while (true) {
@@ -1426,7 +1615,268 @@ class ComprehensiveQAService {
     return newEvents;
   }
 
-  // Merge new events with existing cache (only for Neuroweb)
+  // Helper function for comprehensive node validation
+  async validateSingleNodeComprehensiveWithCache(client, network, nodeId, cache) {
+    try {
+      // Get ALL node stake events from indexer for this node
+      const allIndexerEventsResult = await client.query(`
+        SELECT stake, block_number FROM node_stake_updated WHERE identity_id = $1 ORDER BY block_number DESC
+      `, [nodeId]);
+      
+      if (allIndexerEventsResult.rows.length === 0) {
+        console.log(`   ⚠️ Node ${nodeId}: No indexer events found, skipping`);
+        return { type: 'skipped' };
+      }
+      
+      // Group indexer events by block number and sort by stake (highest first)
+      const indexerEventsByBlock = {};
+      for (const event of allIndexerEventsResult.rows) {
+        const blockNum = event.block_number;
+        if (!indexerEventsByBlock[blockNum]) {
+          indexerEventsByBlock[blockNum] = [];
+        }
+        indexerEventsByBlock[blockNum].push({ blockNumber: blockNum, stake: BigInt(event.stake) });
+      }
+      
+      // Sort each block's events by stake (highest first) and keep only the highest
+      const processedIndexerEvents = [];
+      for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
+        events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+        processedIndexerEvents.push(events[0]); // Keep only the highest stake
+      }
+      
+      // Sort processed events by block number (newest first)
+      processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+      
+      // Get cached contract events for this node
+      const cachedNodeEvents = cache.nodeEventsByNode?.[nodeId] || [];
+      
+      if (cachedNodeEvents.length === 0) {
+        console.log(`   ⚠️ Node ${nodeId}: No cached contract events found, skipping`);
+        return { type: 'skipped' };
+      }
+      
+      // Group contract events by block number and sort by stake (highest first)
+      const contractEventsByBlock = {};
+      for (const event of cachedNodeEvents) {
+        const blockNum = event.blockNumber;
+        if (!contractEventsByBlock[blockNum]) {
+          contractEventsByBlock[blockNum] = [];
+        }
+        contractEventsByBlock[blockNum].push({ blockNumber: blockNum, stake: BigInt(event.stake) });
+      }
+      
+      // Sort each block's events by stake (highest first) and keep only the highest
+      const processedContractEvents = [];
+      for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
+        events.sort((a, b) => Number(b.stake - a.stake)); // Sort by stake descending
+        processedContractEvents.push(events[0]); // Keep only the highest stake
+      }
+      
+      // Sort processed events by block number (newest first)
+      processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+      
+      // Find common blocks between indexer and contract events
+      const indexerBlocks = new Set(processedIndexerEvents.map(e => e.blockNumber));
+      const contractBlocks = new Set(processedContractEvents.map(e => e.blockNumber));
+      const commonBlocks = [...indexerBlocks].filter(block => contractBlocks.has(block));
+      
+      if (commonBlocks.length === 0) {
+        console.log(`   ⚠️ Node ${nodeId}: No common blocks found between indexer and contract`);
+        return { type: 'skipped' };
+      }
+      
+      // Sort common blocks in descending order (newest first)
+      commonBlocks.sort((a, b) => b - a);
+      
+      console.log(`   📊 Node ${nodeId}: Found ${commonBlocks.length} common blocks to validate`);
+      
+      let validationPassed = false;
+      let expectedStake = 0n;
+      let actualStake = 0n;
+      let comparisonBlock = 0;
+      
+      // Validate each common block in descending order
+      for (const blockNumber of commonBlocks) {
+        const indexerEvent = processedIndexerEvents.find(e => e.blockNumber === blockNumber);
+        const contractEvent = processedContractEvents.find(e => e.blockNumber === blockNumber);
+        
+        if (indexerEvent && contractEvent) {
+          expectedStake = indexerEvent.stake;
+          actualStake = contractEvent.stake;
+          comparisonBlock = blockNumber;
+          
+          console.log(`   📊 Node ${nodeId} (Block ${blockNumber}):`);
+          console.log(`      Indexer:   ${this.weiToTRAC(expectedStake)} TRAC`);
+          console.log(`      Contract:  ${this.weiToTRAC(actualStake)} TRAC`);
+          
+          const difference = expectedStake - actualStake;
+          const tolerance = 500000000000000000n; // 0.5 TRAC
+          
+          if (difference === 0n) {
+            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH`);
+            validationPassed = true;
+            break; // Found a match, stop checking
+          } else if (difference >= -tolerance && difference <= tolerance) {
+            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH (within tolerance)`);
+            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+            validationPassed = true;
+            break; // Found a match within tolerance, stop checking
+          } else {
+            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES DIFFER`);
+            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+            // Continue to next block if this one doesn't match
+          }
+        }
+      }
+      
+      if (validationPassed) {
+        return { type: 'passed' };
+      } else {
+        return { type: 'failed' };
+      }
+      
+    } catch (error) {
+      console.log(`   ⚠️ Node ${nodeId}: Error - ${error.message}`);
+      if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+        return { type: 'rpcError' };
+      } else {
+        return { type: 'failed' };
+      }
+    }
+  }
+
+  // Helper function for comprehensive delegator validation
+  async validateSingleDelegatorComprehensiveWithCache(client, network, nodeId, delegatorKey, cache) {
+    try {
+      // Get ALL delegator stake events from indexer for this delegator
+      const allIndexerEventsResult = await client.query(`
+        SELECT stake_base, block_number FROM delegator_base_stake_updated 
+        WHERE identity_id = $1 AND delegator_key = $2 ORDER BY block_number DESC
+      `, [nodeId, delegatorKey]);
+      
+      if (allIndexerEventsResult.rows.length === 0) {
+        console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: No indexer events found, skipping`);
+        return { type: 'skipped' };
+      }
+      
+      // Group indexer events by block number and sort by stake (highest first)
+      const indexerEventsByBlock = {};
+      for (const event of allIndexerEventsResult.rows) {
+        const blockNum = event.block_number;
+        if (!indexerEventsByBlock[blockNum]) {
+          indexerEventsByBlock[blockNum] = [];
+        }
+        indexerEventsByBlock[blockNum].push({ blockNumber: blockNum, stakeBase: BigInt(event.stake_base) });
+      }
+      
+      // Sort each block's events by stake (highest first) and keep only the highest
+      const processedIndexerEvents = [];
+      for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
+        events.sort((a, b) => Number(b.stakeBase - a.stakeBase)); // Sort by stake descending
+        processedIndexerEvents.push(events[0]); // Keep only the highest stake
+      }
+      
+      // Sort processed events by block number (newest first)
+      processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+      
+      // Get cached contract events for this delegator
+      const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId]?.[delegatorKey] || [];
+      
+      if (cachedDelegatorEvents.length === 0) {
+        console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: No cached contract events found, skipping`);
+        return { type: 'skipped' };
+      }
+      
+      // Group contract events by block number and sort by stake (highest first)
+      const contractEventsByBlock = {};
+      for (const event of cachedDelegatorEvents) {
+        const blockNum = event.blockNumber;
+        if (!contractEventsByBlock[blockNum]) {
+          contractEventsByBlock[blockNum] = [];
+        }
+        contractEventsByBlock[blockNum].push({ blockNumber: blockNum, stakeBase: BigInt(event.stakeBase) });
+      }
+      
+      // Sort each block's events by stake (highest first) and keep only the highest
+      const processedContractEvents = [];
+      for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
+        events.sort((a, b) => Number(b.stakeBase - a.stakeBase)); // Sort by stake descending
+        processedContractEvents.push(events[0]); // Keep only the highest stake
+      }
+      
+      // Sort processed events by block number (newest first)
+      processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+      
+      // Find common blocks between indexer and contract events
+      const indexerBlocks = new Set(processedIndexerEvents.map(e => e.blockNumber));
+      const contractBlocks = new Set(processedContractEvents.map(e => e.blockNumber));
+      const commonBlocks = [...indexerBlocks].filter(block => contractBlocks.has(block));
+      
+      if (commonBlocks.length === 0) {
+        console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: No common blocks found between indexer and contract`);
+        return { type: 'skipped' };
+      }
+      
+      // Sort common blocks in descending order (newest first)
+      commonBlocks.sort((a, b) => b - a);
+      
+      console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey}: Found ${commonBlocks.length} common blocks to validate`);
+      
+      let validationPassed = false;
+      let expectedStake = 0n;
+      let actualStake = 0n;
+      let comparisonBlock = 0;
+      
+      // Validate each common block in descending order
+      for (const blockNumber of commonBlocks) {
+        const indexerEvent = processedIndexerEvents.find(e => e.blockNumber === blockNumber);
+        const contractEvent = processedContractEvents.find(e => e.blockNumber === blockNumber);
+        
+        if (indexerEvent && contractEvent) {
+          expectedStake = indexerEvent.stakeBase;
+          actualStake = contractEvent.stakeBase;
+          comparisonBlock = blockNumber;
+          
+          console.log(`   📊 Node ${nodeId}, Delegator ${delegatorKey} (Block ${blockNumber}):`);
+          console.log(`      Indexer:   ${this.weiToTRAC(expectedStake)} TRAC`);
+          console.log(`      Contract:  ${this.weiToTRAC(actualStake)} TRAC`);
+          
+          const difference = expectedStake - actualStake;
+          const tolerance = 500000000000000000n; // 0.5 TRAC
+          
+          if (difference === 0n) {
+            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH`);
+            validationPassed = true;
+            break; // Found a match, stop checking
+          } else if (difference >= -tolerance && difference <= tolerance) {
+            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH (within tolerance)`);
+            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+            validationPassed = true;
+            break; // Found a match within tolerance, stop checking
+          } else {
+            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES DIFFER`);
+            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+            // Continue to next block if this one doesn't match
+          }
+        }
+      }
+      
+      if (validationPassed) {
+        return { type: 'passed' };
+      } else {
+        return { type: 'failed' };
+      }
+      
+    } catch (error) {
+      console.log(`   ⚠️ Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
+      if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+        return { type: 'rpcError' };
+      } else {
+        return { type: 'failed' };
+      }
+    }
+  }
 }
 
 // Test all validations
