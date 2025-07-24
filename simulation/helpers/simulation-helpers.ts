@@ -597,36 +597,3 @@ export async function addDelegator(
   await delegatorsInfoWithSigner.addDelegator(identityId, delegatorAddress);
   await stopImpersonatingAccount(hre, hubOwner);
 }
-
-/**
- * Process and claim delegator rewards for a specific epoch
- * @param contracts - Contract instances
- * @param identityId - Node identity ID
- * @param epoch - Epoch to process rewards for
- * @param delegator - Delegator address
- * @returns The reward amount (0n if no reward)
- */
-export async function processAndClaimDelegatorReward(
-  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
-  identityId: number,
-  epoch: number,
-  delegator: string,
-): Promise<bigint> {
-  // Get delegator reward for this epoch
-  const reward = await contracts.stakingKPI.getDelegatorReward(
-    identityId,
-    epoch,
-    delegator,
-  );
-
-  // Skip if no reward
-  if (reward === 0n) {
-    return 0n;
-  }
-
-  // // Commented out because it could break the mainnet integrity of stake
-  // // If we distribute rewards at the end of an epoch, we risk going above 2mil in TRAC stake which might break later stake, redelegate, etc. transactions
-  // await contracts.staking.claimDelegatorRewards(identityId, epoch, delegator);
-
-  return reward;
-}
