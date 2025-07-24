@@ -49,21 +49,22 @@ class ComprehensiveQAService {
       return trac.toFixed(decimalPlaces);
     }
     
-    // For regular decimal notation, find the last non-zero digit and round to that position
+    // For regular decimal notation, find the rightmost non-zero digit
     if (tracString.includes('.')) {
       const [wholePart, decimalPart] = tracString.split('.');
       
-      // Find the last non-zero digit in the decimal part
-      let lastNonZeroIndex = -1;
-      for (let i = 0; i < decimalPart.length; i++) {
+      // Find the rightmost non-zero digit in the decimal part
+      let rightmostNonZeroIndex = -1;
+      for (let i = decimalPart.length - 1; i >= 0; i--) {
         if (decimalPart[i] !== '0') {
-          lastNonZeroIndex = i;
+          rightmostNonZeroIndex = i;
+          break;
         }
       }
       
-      if (lastNonZeroIndex !== -1) {
-        // Round to the last non-zero decimal position
-        return trac.toFixed(lastNonZeroIndex + 1);
+      if (rightmostNonZeroIndex !== -1) {
+        // Round to the rightmost non-zero decimal position
+        return trac.toFixed(rightmostNonZeroIndex + 1);
       }
     }
     
