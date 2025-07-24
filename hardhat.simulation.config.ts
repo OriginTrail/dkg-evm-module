@@ -106,9 +106,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       environment: 'mainnet',
       chainId: 31337,
-      gas: 30_000_000,
-      gasMultiplier: 1,
-      blockGasLimit: 30_000_000,
+      gas: 'auto',
       hardfork: 'shanghai',
       accounts: { count: 200 },
       throwOnTransactionFailures: true,
@@ -117,7 +115,6 @@ const config: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
       saveDeployments: false,
       mining: {
-        auto: true, // Enable auto-mining for deployments, but no interval for simulation control
         mempool: {
           order: 'fifo',
         },
