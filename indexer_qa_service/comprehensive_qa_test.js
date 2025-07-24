@@ -141,99 +141,123 @@ class ComprehensiveQAService {
     const currentBlock = await provider.getBlockNumber();
     console.log(`   📊 Current block: ${currentBlock}`);
     
-    // Determine chunk size based on network
-    const chunkSize = network === 'Base' ? 100000 : 1000000;
-    console.log(`   📊 Using chunk size: ${chunkSize.toLocaleString()} blocks`);
+    // Get oldest indexer block to determine start point
+    const dbName = this.databaseMap[network];
+    const client = new Client({ ...this.dbConfig, database: dbName });
     
-    // Query from a reasonable starting point (e.g., 1000 blocks ago)
-    const fromBlock = Math.max(0, currentBlock - 1000);
-    console.log(`   📊 Querying from block ${fromBlock.toLocaleString()} to ${currentBlock.toLocaleString()}`);
-    
-    const nodeEvents = [];
-    const delegatorEvents = [];
-    
-    // Process chunks
-    let totalChunks = Math.ceil((currentBlock - fromBlock) / chunkSize);
-    let processedChunks = 0;
-    
-    for (let startBlock = fromBlock; startBlock < currentBlock; startBlock += chunkSize) {
-      const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
-      processedChunks++;
+    try {
+      await client.connect();
       
-      console.log(`   📊 Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+      const oldestNodeResult = await client.query(`
+        SELECT MIN(block_number) as oldest_block FROM node_stake_updated
+      `);
+      const oldestDelegatorResult = await client.query(`
+        SELECT MIN(block_number) as oldest_block FROM delegator_base_stake_updated
+      `);
       
-      // Query NodeStakeUpdated events with retry logic
-      let nodeFilter;
-      let delegatorFilter;
-      let nodeEventsChunk = [];
-      let delegatorEventsChunk = [];
+      const oldestNodeBlock = oldestNodeResult.rows[0]?.oldest_block || currentBlock;
+      const oldestDelegatorBlock = oldestDelegatorResult.rows[0]?.oldest_block || currentBlock;
+      const oldestBlock = Math.min(oldestNodeBlock, oldestDelegatorBlock);
       
-      // Retry logic for chunk queries
-      let chunkRetryCount = 0;
-      const maxChunkRetries = 10;
+      console.log(`   📊 Oldest indexer block: ${oldestBlock.toLocaleString()}`);
       
-      while (chunkRetryCount < maxChunkRetries) {
-        try {
-          nodeFilter = stakingContract.filters.NodeStakeUpdated();
-          delegatorFilter = stakingContract.filters.DelegatorBaseStakeUpdated();
-          
-          const [nodeEventsResult, delegatorEventsResult] = await Promise.all([
-            stakingContract.queryFilter(nodeFilter, startBlock, endBlock),
-            stakingContract.queryFilter(delegatorFilter, startBlock, endBlock)
-          ]);
-          
-          nodeEventsChunk = nodeEventsResult;
-          delegatorEventsChunk = delegatorEventsResult;
-          
-          console.log(`   📊 Chunk ${processedChunks}: Found ${nodeEventsChunk.length} node events, ${delegatorEventsChunk.length} delegator events`);
-          
-          // Debug: Show some delegator keys found in this chunk
-          if (delegatorEventsChunk.length > 0) {
-            const sampleKeys = delegatorEventsChunk.slice(0, 3).map(e => e.args.delegatorKey);
-            console.log(`   📊 Sample delegator keys in chunk: ${sampleKeys.join(', ')}`);
+      // Query from the oldest indexer block (with some buffer)
+      const fromBlock = Math.max(0, oldestBlock - 1000);
+      console.log(`   📊 Querying from block ${fromBlock.toLocaleString()} to ${currentBlock.toLocaleString()}`);
+      
+      // Determine chunk size based on network
+      const chunkSize = network === 'Base' ? 100000 : 1000000;
+      console.log(`   📊 Using chunk size: ${chunkSize.toLocaleString()} blocks`);
+      
+      const nodeEvents = [];
+      const delegatorEvents = [];
+      
+      // Process chunks
+      let totalChunks = Math.ceil((currentBlock - fromBlock) / chunkSize);
+      let processedChunks = 0;
+      
+      for (let startBlock = fromBlock; startBlock < currentBlock; startBlock += chunkSize) {
+        const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+        processedChunks++;
+        
+        console.log(`   📊 Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+        
+        // Query NodeStakeUpdated events with retry logic
+        let nodeFilter;
+        let delegatorFilter;
+        let nodeEventsChunk = [];
+        let delegatorEventsChunk = [];
+        
+        // Retry logic for chunk queries
+        let chunkRetryCount = 0;
+        const maxChunkRetries = 10;
+        
+        while (chunkRetryCount < maxChunkRetries) {
+          try {
+            nodeFilter = stakingContract.filters.NodeStakeUpdated();
+            delegatorFilter = stakingContract.filters.DelegatorBaseStakeUpdated();
+            
+            const [nodeEventsResult, delegatorEventsResult] = await Promise.all([
+              stakingContract.queryFilter(nodeFilter, startBlock, endBlock),
+              stakingContract.queryFilter(delegatorFilter, startBlock, endBlock)
+            ]);
+            
+            nodeEventsChunk = nodeEventsResult;
+            delegatorEventsChunk = delegatorEventsResult;
+            
+            console.log(`   📊 Chunk ${processedChunks}: Found ${nodeEventsChunk.length} node events, ${delegatorEventsChunk.length} delegator events`);
+            
+            // Debug: Show some delegator keys found in this chunk
+            if (delegatorEventsChunk.length > 0) {
+              const sampleKeys = delegatorEventsChunk.slice(0, 3).map(e => e.args.delegatorKey);
+              console.log(`   📊 Sample delegator keys in chunk: ${sampleKeys.join(', ')}`);
+            }
+            
+            break; // Success, exit retry loop
+            
+          } catch (error) {
+            chunkRetryCount++;
+            console.log(`   ⚠️ Chunk ${processedChunks} failed (attempt ${chunkRetryCount}/${maxChunkRetries}): ${error.message}`);
+            
+            if (chunkRetryCount >= maxChunkRetries) {
+              console.log(`   ❌ Chunk ${processedChunks} failed after ${maxChunkRetries} attempts, skipping...`);
+              break;
+            }
+            
+            console.log(`   ⏳ Retrying chunk in 3 seconds...`);
+            await new Promise(resolve => setTimeout(resolve, 3000));
           }
-          
-          break; // Success, exit retry loop
-          
-        } catch (error) {
-          chunkRetryCount++;
-          console.log(`   ⚠️ Chunk ${processedChunks} failed (attempt ${chunkRetryCount}/${maxChunkRetries}): ${error.message}`);
-          
-          if (chunkRetryCount >= maxChunkRetries) {
-            console.log(`   ❌ Chunk ${processedChunks} failed after ${maxChunkRetries} attempts, skipping...`);
-            break;
-          }
-          
-          console.log(`   ⏳ Retrying chunk in 3 seconds...`);
-          await new Promise(resolve => setTimeout(resolve, 3000));
         }
+        
+        // Add events to main arrays
+        nodeEvents.push(...nodeEventsChunk);
+        delegatorEvents.push(...delegatorEventsChunk);
       }
       
-      // Add events to main arrays
-      nodeEvents.push(...nodeEventsChunk);
-      delegatorEvents.push(...delegatorEventsChunk);
+      console.log(`   📊 Total events found: ${nodeEvents.length} node events, ${delegatorEvents.length} delegator events`);
+      
+      // Convert BigInt to string for JSON serialization
+      const processedNodeEvents = nodeEvents.map(event => ({
+        identityId: event.args.identityId.toString(),
+        stake: event.args.stake.toString(),
+        blockNumber: event.blockNumber
+      }));
+      
+      const processedDelegatorEvents = delegatorEvents.map(event => ({
+        identityId: event.args.identityId.toString(),
+        delegatorKey: event.args.delegatorKey,
+        stakeBase: event.args.stakeBase.toString(),
+        blockNumber: event.blockNumber
+      }));
+      
+      return {
+        nodeEvents: processedNodeEvents,
+        delegatorEvents: processedDelegatorEvents
+      };
+      
+    } finally {
+      await client.end();
     }
-    
-    console.log(`   📊 Total events found: ${nodeEvents.length} node events, ${delegatorEvents.length} delegator events`);
-    
-    // Convert BigInt to string for JSON serialization
-    const processedNodeEvents = nodeEvents.map(event => ({
-      identityId: event.args.identityId.toString(),
-      stake: event.args.stake.toString(),
-      blockNumber: event.blockNumber
-    }));
-    
-    const processedDelegatorEvents = delegatorEvents.map(event => ({
-      identityId: event.args.identityId.toString(),
-      delegatorKey: event.args.delegatorKey,
-      stakeBase: event.args.stakeBase.toString(),
-      blockNumber: event.blockNumber
-    }));
-    
-    return {
-      nodeEvents: processedNodeEvents,
-      delegatorEvents: processedDelegatorEvents
-    };
   }
 
   // Query all contract events for Neuroweb (chunked approach)
