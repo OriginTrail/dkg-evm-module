@@ -1191,86 +1191,119 @@ class ComprehensiveQAService {
 
   async validateSingleDelegatorComprehensiveWithCache(client, network, nodeId, delegatorKey, cache) {
     try {
-      console.log(`   🔍 Node ${nodeId}, Delegator ${delegatorKey}:`);
-      
-      // Get all indexer events
-      const indexerEvents = await client.query(`
-        SELECT stake_base, block_number FROM delegator_base_stake_updated
+      // Get ALL delegator stake events from indexer for this delegator
+      const allIndexerEventsResult = await client.query(`
+        SELECT stake_base, block_number FROM delegator_base_stake_updated 
         WHERE identity_id = $1 AND delegator_key = $2 ORDER BY block_number DESC
       `, [nodeId, delegatorKey]);
       
-      if (indexerEvents.rows.length === 0) {
-        console.log(`      ⚠️ No indexer events found`);
-        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, totalValidations: 0 };
+      if (allIndexerEventsResult.rows.length === 0) {
+        return { type: 'skipped' };
       }
       
-      // Get contract events from cache
-      const contractEvents = cache.delegatorEvents.filter(event => 
-        event.identityId === nodeId && event.delegatorKey === delegatorKey
-      );
-      
-      console.log(`      📊 Found ${indexerEvents.rows.length} indexer events and ${contractEvents.length} contract events`);
-      
-      // Process events
-      const indexerBlocks = new Map();
-      for (const event of indexerEvents.rows) {
+      // Group indexer events by block number and sort by stake (highest first)
+      const indexerEventsByBlock = {};
+      for (const event of allIndexerEventsResult.rows) {
         const blockNum = event.block_number;
-        const stake = BigInt(event.stake_base);
-        if (!indexerBlocks.has(blockNum) || stake > indexerBlocks.get(blockNum)) {
-          indexerBlocks.set(blockNum, stake);
+        if (!indexerEventsByBlock[blockNum]) {
+          indexerEventsByBlock[blockNum] = [];
         }
+        indexerEventsByBlock[blockNum].push({ blockNumber: blockNum, stakeBase: BigInt(event.stake_base) });
       }
       
-      const contractBlocks = new Map();
-      for (const event of contractEvents) {
+      // Sort each block's events by stake (highest first) and keep only the highest
+      const processedIndexerEvents = [];
+      for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
+        events.sort((a, b) => Number(b.stakeBase - a.stakeBase)); // Sort by stake descending
+        processedIndexerEvents.push(events[0]); // Keep only the highest stake
+      }
+      
+      // Sort processed events by block number (newest first)
+      processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+      
+      // Get cached contract events for this delegator
+      const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId]?.[delegatorKey] || [];
+      
+      if (cachedDelegatorEvents.length === 0) {
+        return { type: 'skipped' };
+      }
+      
+      // Group contract events by block number and sort by stake (highest first)
+      const contractEventsByBlock = {};
+      for (const event of cachedDelegatorEvents) {
         const blockNum = event.blockNumber;
-        const stake = BigInt(event.stakeBase);
-        if (!contractBlocks.has(blockNum) || stake > contractBlocks.get(blockNum)) {
-          contractBlocks.set(blockNum, stake);
+        if (!contractEventsByBlock[blockNum]) {
+          contractEventsByBlock[blockNum] = [];
+        }
+        contractEventsByBlock[blockNum].push({ blockNumber: blockNum, stakeBase: BigInt(event.stakeBase) });
+      }
+      
+      // Sort each block's events by stake (highest first) and keep only the highest
+      const processedContractEvents = [];
+      for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
+        events.sort((a, b) => Number(b.stakeBase - a.stakeBase)); // Sort by stake descending
+        processedContractEvents.push(events[0]); // Keep only the highest stake
+      }
+      
+      // Sort processed events by block number (newest first)
+      processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+      
+      // Find common blocks between indexer and contract events
+      const indexerBlocks = new Set(processedIndexerEvents.map(e => Number(e.blockNumber)));
+      const contractBlocks = new Set(processedContractEvents.map(e => Number(e.blockNumber)));
+      const commonBlocks = [...indexerBlocks].filter(block => contractBlocks.has(block));
+      
+      if (commonBlocks.length === 0) {
+        return { type: 'skipped' };
+      }
+      
+      // Sort common blocks in descending order (newest first)
+      commonBlocks.sort((a, b) => b - a);
+      
+      console.log(`🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: ${commonBlocks.length} blocks to validate`);
+      
+      let validationPassed = true;
+      
+      // Validate each common block in descending order
+      for (const blockNumber of commonBlocks) {
+        const indexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === blockNumber);
+        const contractEvent = processedContractEvents.find(e => Number(e.blockNumber) === blockNumber);
+        
+        if (indexerEvent && contractEvent) {
+          const expectedStake = indexerEvent.stakeBase;
+          const actualStake = contractEvent.stakeBase;
+          
+          console.log(`   📊 Block ${blockNumber}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+          
+          const difference = expectedStake - actualStake;
+          const tolerance = 500000000000000000n; // 0.5 TRAC
+          
+          if (difference === 0n) {
+            console.log(`      ✅ MATCH`);
+          } else if (difference >= -tolerance && difference <= tolerance) {
+            console.log(`      ✅ MATCH (within tolerance: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC)`);
+          } else {
+            console.log(`      ❌ DIFFER: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+            validationPassed = false;
+          }
         }
       }
       
-      // Find common blocks
-      const commonBlocks = [...indexerBlocks.keys()].filter(block => contractBlocks.has(block));
-      commonBlocks.sort((a, b) => b - a); // Descending order
-      
-      console.log(`      📊 Found ${commonBlocks.length} common blocks to validate`);
-      
-      let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
-      const totalValidations = commonBlocks.length;
-      
-      for (let i = 0; i < commonBlocks.length; i++) {
-        const blockNumber = commonBlocks[i];
-        const indexerStake = indexerBlocks.get(blockNumber);
-        const contractStake = contractBlocks.get(blockNumber);
-        const difference = indexerStake - contractStake;
-        const tolerance = 500000000000000000n; // 0.5 TRAC
-        
-        console.log(`         📊 Block ${blockNumber} (${i + 1}/${totalValidations}):`);
-        console.log(`            Indexer Block:   ${blockNumber}`);
-        console.log(`            Contract Block:  ${blockNumber}`);
-        console.log(`            Indexer TRAC:    ${this.weiToTRAC(indexerStake)} TRAC`);
-        console.log(`            Contract TRAC:   ${this.weiToTRAC(contractStake)} TRAC`);
-        
-        if (difference === 0n) {
-          console.log(`            ✅ BLOCKS MATCH - TRAC VALUES MATCH`);
-          passed++;
-        } else if (difference >= -tolerance && difference <= tolerance) {
-          console.log(`            ✅ BLOCKS MATCH - TRAC VALUES MATCH (within tolerance)`);
-          console.log(`            📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-          warnings++;
-        } else {
-          console.log(`            ✅ BLOCKS MATCH - TRAC VALUES DIFFER`);
-          console.log(`            📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-          failed++;
-        }
+      if (validationPassed) {
+        console.log(`   ✅ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: All ${commonBlocks.length} blocks validated successfully`);
+      } else {
+        console.log(`   ❌ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Validation failed for some blocks`);
       }
       
-      return { passed, failed, warnings, rpcErrors, totalValidations };
+      return { type: validationPassed ? 'passed' : 'failed' };
       
     } catch (error) {
-      console.log(`      ⚠️ Error: ${error.message}`);
-      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 1, totalValidations: 0 };
+      console.log(`   ⚠️ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
+      if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+        return { type: 'rpcError' };
+      } else {
+        return { type: 'failed' };
+      }
     }
   }
 
@@ -1673,15 +1706,13 @@ class ComprehensiveQAService {
     try {
       // Get ALL node stake events from indexer for this node
       const allIndexerEventsResult = await client.query(`
-        SELECT stake, block_number FROM node_stake_updated WHERE identity_id = $1 ORDER BY block_number DESC
+        SELECT stake, block_number FROM node_stake_updated 
+        WHERE identity_id = $1 ORDER BY block_number DESC
       `, [nodeId]);
       
       if (allIndexerEventsResult.rows.length === 0) {
-        console.log(`   ⚠️ Node ${nodeId}: No indexer events found, skipping`);
         return { type: 'skipped' };
       }
-      
-      console.log(`   🔍 Node ${nodeId}: Found ${allIndexerEventsResult.rows.length} indexer events`);
       
       // Group indexer events by block number and sort by stake (highest first)
       const indexerEventsByBlock = {};
@@ -1703,20 +1734,12 @@ class ComprehensiveQAService {
       // Sort processed events by block number (newest first)
       processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
       
-      console.log(`   🔍 Node ${nodeId}: Processed ${processedIndexerEvents.length} unique indexer blocks`);
-      if (processedIndexerEvents.length > 0) {
-        console.log(`   🔍 Node ${nodeId}: Indexer blocks range: ${processedIndexerEvents[processedIndexerEvents.length - 1].blockNumber} to ${processedIndexerEvents[0].blockNumber}`);
-      }
-      
       // Get cached contract events for this node
       const cachedNodeEvents = cache.nodeEventsByNode?.[nodeId] || [];
       
       if (cachedNodeEvents.length === 0) {
-        console.log(`   ⚠️ Node ${nodeId}: No cached contract events found, skipping`);
         return { type: 'skipped' };
       }
-      
-      console.log(`   🔍 Node ${nodeId}: Found ${cachedNodeEvents.length} cached contract events`);
       
       // Group contract events by block number and sort by stake (highest first)
       const contractEventsByBlock = {};
@@ -1738,35 +1761,21 @@ class ComprehensiveQAService {
       // Sort processed events by block number (newest first)
       processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
       
-      console.log(`   🔍 Node ${nodeId}: Processed ${processedContractEvents.length} unique contract blocks`);
-      if (processedContractEvents.length > 0) {
-        console.log(`   🔍 Node ${nodeId}: Contract blocks range: ${processedContractEvents[processedContractEvents.length - 1].blockNumber} to ${processedContractEvents[0].blockNumber}`);
-      }
-      
       // Find common blocks between indexer and contract events
       const indexerBlocks = new Set(processedIndexerEvents.map(e => Number(e.blockNumber)));
       const contractBlocks = new Set(processedContractEvents.map(e => Number(e.blockNumber)));
       const commonBlocks = [...indexerBlocks].filter(block => contractBlocks.has(block));
       
-      console.log(`   🔍 Node ${nodeId}: Found ${commonBlocks.length} common blocks`);
-      if (commonBlocks.length > 0) {
-        console.log(`   🔍 Node ${nodeId}: Common blocks: ${commonBlocks.slice(0, 5).join(', ')}${commonBlocks.length > 5 ? '...' : ''}`);
-      }
-      
       if (commonBlocks.length === 0) {
-        console.log(`   ⚠️ Node ${nodeId}: No common blocks found between indexer and contract`);
         return { type: 'skipped' };
       }
       
       // Sort common blocks in descending order (newest first)
       commonBlocks.sort((a, b) => b - a);
       
-      console.log(`   📊 Node ${nodeId}: Found ${commonBlocks.length} common blocks to validate`);
+      console.log(`🔍 [${network}] Node ${nodeId}: ${commonBlocks.length} blocks to validate`);
       
-      let validationPassed = false;
-      let expectedStake = 0n;
-      let actualStake = 0n;
-      let comparisonBlock = 0;
+      let validationPassed = true;
       
       // Validate each common block in descending order
       for (const blockNumber of commonBlocks) {
@@ -1774,212 +1783,35 @@ class ComprehensiveQAService {
         const contractEvent = processedContractEvents.find(e => Number(e.blockNumber) === blockNumber);
         
         if (indexerEvent && contractEvent) {
-          expectedStake = indexerEvent.stake;
-          actualStake = contractEvent.stake;
-          comparisonBlock = blockNumber;
+          const expectedStake = indexerEvent.stake;
+          const actualStake = contractEvent.stake;
           
-          console.log(`   📊 Node ${nodeId} (Block ${blockNumber}):`);
-          console.log(`      Indexer:   ${this.weiToTRAC(expectedStake)} TRAC`);
-          console.log(`      Contract:  ${this.weiToTRAC(actualStake)} TRAC`);
+          console.log(`   📊 Block ${blockNumber}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
           
           const difference = expectedStake - actualStake;
           const tolerance = 500000000000000000n; // 0.5 TRAC
           
           if (difference === 0n) {
-            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH`);
-            validationPassed = true;
-            break; // Found a match, stop checking
+            console.log(`      ✅ MATCH`);
           } else if (difference >= -tolerance && difference <= tolerance) {
-            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH (within tolerance)`);
-            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            validationPassed = true;
-            break; // Found a match within tolerance, stop checking
+            console.log(`      ✅ MATCH (within tolerance: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC)`);
           } else {
-            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES DIFFER`);
-            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            // Continue to next block if this one doesn't match
-          }
-        }
-      }
-      
-      if (validationPassed) {
-        return { type: 'passed' };
-      } else {
-        return { type: 'failed' };
-      }
-      
-    } catch (error) {
-      console.log(`   ⚠️ Node ${nodeId}: Error - ${error.message}`);
-      if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
-        return { type: 'rpcError' };
-      } else {
-        return { type: 'failed' };
-      }
-    }
-  }
-
-  // Helper function for comprehensive delegator validation
-  async validateSingleDelegatorComprehensiveWithCache(client, network, nodeId, delegatorKey, cache) {
-    try {
-      // Get ALL delegator stake events from indexer for this delegator
-      const allIndexerEventsResult = await client.query(`
-        SELECT stake_base, block_number FROM delegator_base_stake_updated 
-        WHERE identity_id = $1 AND delegator_key = $2 ORDER BY block_number DESC
-      `, [nodeId, delegatorKey]);
-      
-      if (allIndexerEventsResult.rows.length === 0) {
-        console.log(`   ⚠️ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: No indexer events found, skipping`);
-        return { type: 'skipped' };
-      }
-      
-      console.log(`   🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Found ${allIndexerEventsResult.rows.length} indexer events`);
-      
-      // Group indexer events by block number and sort by stake (highest first)
-      const indexerEventsByBlock = {};
-      for (const event of allIndexerEventsResult.rows) {
-        const blockNum = event.block_number;
-        if (!indexerEventsByBlock[blockNum]) {
-          indexerEventsByBlock[blockNum] = [];
-        }
-        indexerEventsByBlock[blockNum].push({ blockNumber: blockNum, stakeBase: BigInt(event.stake_base) });
-      }
-      
-      // Sort each block's events by stake (highest first) and keep only the highest
-      const processedIndexerEvents = [];
-      for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
-        events.sort((a, b) => Number(b.stakeBase - a.stakeBase)); // Sort by stake descending
-        processedIndexerEvents.push(events[0]); // Keep only the highest stake
-      }
-      
-      // Sort processed events by block number (newest first)
-      processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-      
-      console.log(`   🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedIndexerEvents.length} unique indexer blocks`);
-      if (processedIndexerEvents.length > 0) {
-        console.log(`   🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Indexer blocks range: ${processedIndexerEvents[processedIndexerEvents.length - 1].blockNumber} to ${processedIndexerEvents[0].blockNumber}`);
-      }
-      
-      // Get cached contract events for this delegator
-      const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId]?.[delegatorKey] || [];
-      
-      if (cachedDelegatorEvents.length === 0) {
-        console.log(`   ⚠️ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: No cached contract events found, skipping`);
-        
-        // Debug: Check if the node exists in cache at all
-        const nodeExists = cache.delegatorEventsByNode?.[nodeId];
-        if (nodeExists) {
-          console.log(`   🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Node exists in cache with ${Object.keys(nodeExists).length} delegators`);
-          console.log(`   🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Available delegators: ${Object.keys(nodeExists).slice(0, 5).join(', ')}${Object.keys(nodeExists).length > 5 ? '...' : ''}`);
-        } else {
-          console.log(`   🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Node does not exist in cache at all`);
-        }
-        
-        // Debug: Check cache statistics
-        const totalNodes = Object.keys(cache.delegatorEventsByNode || {}).length;
-        const totalDelegators = Object.values(cache.delegatorEventsByNode || {}).reduce((sum, node) => sum + Object.keys(node).length, 0);
-        console.log(`   🔍 [${network}] Cache stats: ${totalNodes} nodes, ${totalDelegators} total delegators`);
-        
-        return { type: 'skipped' };
-      }
-      
-      console.log(`   🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Found ${cachedDelegatorEvents.length} cached contract events`);
-      
-      // Group contract events by block number and sort by stake (highest first)
-      const contractEventsByBlock = {};
-      for (const event of cachedDelegatorEvents) {
-        const blockNum = event.blockNumber;
-        if (!contractEventsByBlock[blockNum]) {
-          contractEventsByBlock[blockNum] = [];
-        }
-        contractEventsByBlock[blockNum].push({ blockNumber: blockNum, stakeBase: BigInt(event.stakeBase) });
-      }
-      
-      // Sort each block's events by stake (highest first) and keep only the highest
-      const processedContractEvents = [];
-      for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
-        events.sort((a, b) => Number(b.stakeBase - a.stakeBase)); // Sort by stake descending
-        processedContractEvents.push(events[0]); // Keep only the highest stake
-      }
-      
-      // Sort processed events by block number (newest first)
-      processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-      
-      console.log(`   🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Processed ${processedContractEvents.length} unique contract blocks`);
-      if (processedContractEvents.length > 0) {
-        console.log(`   🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Contract blocks range: ${processedContractEvents[processedContractEvents.length - 1].blockNumber} to ${processedContractEvents[0].blockNumber}`);
-      }
-      
-      // Find common blocks between indexer and contract events
-      const indexerBlocks = new Set(processedIndexerEvents.map(e => Number(e.blockNumber)));
-      const contractBlocks = new Set(processedContractEvents.map(e => Number(e.blockNumber)));
-      const commonBlocks = [...indexerBlocks].filter(block => contractBlocks.has(block));
-      
-      console.log(`   🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Found ${commonBlocks.length} common blocks`);
-      if (commonBlocks.length > 0) {
-        console.log(`   🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Common blocks: ${commonBlocks.slice(0, 5).join(', ')}${commonBlocks.length > 5 ? '...' : ''}`);
-      }
-      
-      if (commonBlocks.length === 0) {
-        console.log(`   ⚠️ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: No common blocks found between indexer and contract`);
-        return { type: 'skipped' };
-      }
-      
-      // Sort common blocks in descending order (newest first)
-      commonBlocks.sort((a, b) => b - a);
-      
-      console.log(`   📊 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Found ${commonBlocks.length} common blocks to validate`);
-      
-      let validationPassed = false;
-      let expectedStake = 0n;
-      let actualStake = 0n;
-      let comparisonBlock = 0;
-      
-      // Validate each common block in descending order
-      for (const blockNumber of commonBlocks) {
-        const indexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === blockNumber);
-        const contractEvent = processedContractEvents.find(e => Number(e.blockNumber) === blockNumber);
-        
-        if (indexerEvent && contractEvent) {
-          expectedStake = indexerEvent.stakeBase;
-          actualStake = contractEvent.stakeBase;
-          comparisonBlock = blockNumber;
-          
-          console.log(`   📊 [${network}] Node ${nodeId}, Delegator ${delegatorKey} (Block ${blockNumber}):`);
-          console.log(`      Indexer:   ${this.weiToTRAC(expectedStake)} TRAC`);
-          console.log(`      Contract:  ${this.weiToTRAC(actualStake)} TRAC`);
-          
-          const difference = expectedStake - actualStake;
-          const tolerance = 500000000000000000n; // 0.5 TRAC
-          
-          if (difference === 0n) {
-            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH`);
-            validationPassed = true;
-            // Don't break here - continue checking all blocks
-          } else if (difference >= -tolerance && difference <= tolerance) {
-            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH (within tolerance)`);
-            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            validationPassed = true;
-            // Don't break here - continue checking all blocks
-          } else {
-            console.log(`      ❌ BLOCKS MATCH - TRAC VALUES DIFFER`);
-            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+            console.log(`      ❌ DIFFER: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             validationPassed = false;
-            // Continue checking other blocks even if this one fails
           }
         }
       }
       
-      // Summary of validation
       if (validationPassed) {
-        console.log(`   ✅ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: All ${commonBlocks.length} blocks validated successfully`);
+        console.log(`   ✅ [${network}] Node ${nodeId}: All ${commonBlocks.length} blocks validated successfully`);
       } else {
-        console.log(`   ❌ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Validation failed for some blocks`);
+        console.log(`   ❌ [${network}] Node ${nodeId}: Validation failed for some blocks`);
       }
       
       return { type: validationPassed ? 'passed' : 'failed' };
       
     } catch (error) {
-      console.log(`   ⚠️ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
+      console.log(`   ⚠️ [${network}] Node ${nodeId}: Error - ${error.message}`);
       if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
         return { type: 'rpcError' };
       } else {
