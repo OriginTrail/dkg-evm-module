@@ -4052,7 +4052,7 @@ class CompleteQAService {
           stake_base,
           block_number
         FROM delegator_base_stake_updated
-        ORDER BY identity_id, delegator_key, block_number DESC
+        
       `);
       
       if (eventsResult.rows.length === 0) {
@@ -5224,7 +5224,7 @@ class CompleteQAService {
       
       for (const row of nodesResult.rows) {
         const nodeId = parseInt(row.identity_id);
-        const indexerStake = BigInt(row.stake_base);
+        const indexerStake = BigInt(row.stake);
         const blockNumber = parseInt(row.block_number);
         
         // Find the most recent contract event for this node at or before the indexer block
@@ -5241,6 +5241,13 @@ class CompleteQAService {
         const mostRecentEvent = relevantEvents.reduce((latest, event) => 
           event.blockNumber > latest.blockNumber ? event : latest
         );
+        
+        // Safety check to ensure the event has the required stake property
+        if (!mostRecentEvent || !mostRecentEvent.stake) {
+          console.log(`   ⚠️ Node ${nodeId}: Invalid cached event data at block ${blockNumber}`);
+          results.warnings++;
+          continue;
+        }
         
         const contractStake = BigInt(mostRecentEvent.stake);
         const difference = indexerStake > contractStake ? indexerStake - contractStake : contractStake - indexerStake;
@@ -5283,10 +5290,10 @@ class CompleteQAService {
       
       // Get all delegator stakes from indexer
       const delegatorsResult = await client.query(`
-        SELECT DISTINCT identity_id, delegator_key, block_number, stake_base
+        SELECT identity_id, delegator_key, block_number, stake_base
         FROM delegator_base_stake_updated 
         WHERE identity_id IS NOT NULL AND delegator_key IS NOT NULL
-        ORDER BY identity_id, delegator_key, block_number DESC
+        
       `);
       
       console.log(`   📊 Found ${delegatorsResult.rows.length} delegator stake records from indexer`);
@@ -5295,7 +5302,7 @@ class CompleteQAService {
       for (const row of delegatorsResult.rows) {
         const nodeId = parseInt(row.identity_id);
         const delegatorKey = row.delegator_key;
-        const indexerStake = BigInt(row.stake_base);
+        const indexerStake = BigInt(row.stake);
         const blockNumber = parseInt(row.block_number);
         
         // Find the most recent contract event for this node/delegator at or before the indexer block
@@ -5312,6 +5319,13 @@ class CompleteQAService {
         const mostRecentEvent = relevantEvents.reduce((latest, event) => 
           event.blockNumber > latest.blockNumber ? event : latest
         );
+        
+        // Safety check to ensure the event has the required stakeBase property
+        if (!mostRecentEvent || !mostRecentEvent.stakeBase) {
+          console.log(`   ⚠️ Node ${nodeId} Delegator ${delegatorKey}: Invalid cached event data at block ${blockNumber}`);
+          results.warnings++;
+          continue;
+        }
         
         const contractStake = BigInt(mostRecentEvent.stakeBase);
         const difference = indexerStake > contractStake ? indexerStake - contractStake : contractStake - indexerStake;
@@ -5367,7 +5381,7 @@ class CompleteQAService {
       for (const row of eventsResult.rows) {
         const nodeId = parseInt(row.identity_id);
         const delegatorKey = row.delegator_key;
-        const indexerStake = BigInt(row.stake_base);
+        const indexerStake = BigInt(row.stake);
         const blockNumber = parseInt(row.block_number);
         
         // Find the contract event for this specific block
@@ -5376,6 +5390,13 @@ class CompleteQAService {
         
         if (!contractEvent) {
           console.log(`   ⚠️ Node ${nodeId} Delegator ${delegatorKey}: No cached contract event found for block ${blockNumber}`);
+          results.warnings++;
+          continue;
+        }
+        
+        // Safety check to ensure the event has the required stakeBase property
+        if (!contractEvent || !contractEvent.stakeBase) {
+          console.log(`   ⚠️ Node ${nodeId} Delegator ${delegatorKey}: Invalid cached event data at block ${blockNumber}`);
           results.warnings++;
           continue;
         }
