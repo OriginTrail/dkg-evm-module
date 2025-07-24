@@ -1954,25 +1954,29 @@ class ComprehensiveQAService {
           if (difference === 0n) {
             console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH`);
             validationPassed = true;
-            break; // Found a match, stop checking
+            // Don't break here - continue checking all blocks
           } else if (difference >= -tolerance && difference <= tolerance) {
             console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH (within tolerance)`);
             console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             validationPassed = true;
-            break; // Found a match within tolerance, stop checking
+            // Don't break here - continue checking all blocks
           } else {
-            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES DIFFER`);
+            console.log(`      ❌ BLOCKS MATCH - TRAC VALUES DIFFER`);
             console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            // Continue to next block if this one doesn't match
+            validationPassed = false;
+            // Continue checking other blocks even if this one fails
           }
         }
       }
       
+      // Summary of validation
       if (validationPassed) {
-        return { type: 'passed' };
+        console.log(`   ✅ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: All ${commonBlocks.length} blocks validated successfully`);
       } else {
-        return { type: 'failed' };
+        console.log(`   ❌ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Validation failed for some blocks`);
       }
+      
+      return { type: validationPassed ? 'passed' : 'failed' };
       
     } catch (error) {
       console.log(`   ⚠️ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
