@@ -66,6 +66,11 @@ class ComprehensiveQAService {
 
   // Load cache from JSON files
   async loadCache(network) {
+    // Only Neuroweb uses JSON file caching
+    if (network !== 'Neuroweb') {
+      return null; // Base and Gnosis don't use JSON files
+    }
+    
     const cacheFile = path.join(__dirname, `${network.toLowerCase()}_cache.json`);
     
     try {
@@ -90,8 +95,13 @@ class ComprehensiveQAService {
     return null;
   }
 
-  // Save cache to JSON files
+  // Save cache to JSON files (only for Neuroweb)
   async saveCache(network, cacheData) {
+    // Only Neuroweb uses JSON file caching
+    if (network !== 'Neuroweb') {
+      return; // Base and Gnosis don't save to JSON files
+    }
+    
     const cacheFile = path.join(__dirname, `${network.toLowerCase()}_cache.json`);
     
     try {
@@ -248,12 +258,12 @@ class ComprehensiveQAService {
       const cacheData = {
         nodeEvents: allNodeEvents.map(event => ({
           blockNumber: event.blockNumber,
-          identityId: event.args.identityId,
+          identityId: event.args.identityId.toString(),
           stake: event.args.stake.toString()
         })),
         delegatorEvents: allDelegatorEvents.map(event => ({
           blockNumber: event.blockNumber,
-          identityId: event.args.identityId,
+          identityId: event.args.identityId.toString(),
           delegatorKey: event.args.delegatorKey,
           stakeBase: event.args.stakeBase.toString()
         })),
@@ -261,9 +271,6 @@ class ComprehensiveQAService {
         totalDelegatorEvents: allDelegatorEvents.length,
         lastUpdated: new Date().toISOString()
       };
-      
-      // Save cache
-      await this.saveCache(network, cacheData);
       
       return cacheData;
       
@@ -418,12 +425,12 @@ class ComprehensiveQAService {
       const cacheData = {
         nodeEvents: allNodeEvents.map(event => ({
           blockNumber: event.blockNumber,
-          identityId: event.args.identityId,
+          identityId: event.args.identityId.toString(),
           stake: event.args.stake.toString()
         })),
         delegatorEvents: allDelegatorEvents.map(event => ({
           blockNumber: event.blockNumber,
-          identityId: event.args.identityId,
+          identityId: event.args.identityId.toString(),
           delegatorKey: event.args.delegatorKey,
           stakeBase: event.args.stakeBase.toString()
         })),
@@ -431,9 +438,6 @@ class ComprehensiveQAService {
         totalDelegatorEvents: allDelegatorEvents.length,
         lastUpdated: new Date().toISOString()
       };
-      
-      // Save cache
-      await this.saveCache('Neuroweb', cacheData);
       
       return cacheData;
       
@@ -446,20 +450,39 @@ class ComprehensiveQAService {
   async buildCache(network) {
     console.log(`\n🔍 Building cache for ${network}...`);
     
-    // Check if existing cache exists
-    const existingCache = await this.loadCache(network);
-    
     let cacheData;
     if (network === 'Neuroweb') {
-      cacheData = await this.queryAllNeurowebContractEvents();
+      // Neuroweb: Check if existing cache exists first
+      const existingCache = await this.loadCache(network);
+      
+      if (existingCache && existingCache.nodeEventsByNode) {
+        console.log(`   📊 Using existing Neuroweb cache from file`);
+        console.log(`      Node events: ${existingCache.totalNodeEvents || 0}`);
+        console.log(`      Delegator events: ${existingCache.totalDelegatorEvents || 0}`);
+        
+        // Check if we need to add new blocks
+        const needsUpdate = await this.checkNeurowebCacheNeedsUpdate(existingCache);
+        if (needsUpdate) {
+          console.log(`   📊 Neuroweb cache needs update, querying new blocks...`);
+          const newEvents = await this.queryNewNeurowebEvents(existingCache);
+          if (newEvents.nodeEvents.length > 0 || newEvents.delegatorEvents.length > 0) {
+            console.log(`   📊 Found ${newEvents.nodeEvents.length} new node events and ${newEvents.delegatorEvents.length} new delegator events`);
+            return await this.mergeCacheWithNewEvents(network, existingCache, newEvents);
+          } else {
+            console.log(`   📊 No new events found, using existing cache`);
+          }
+        }
+        
+        return existingCache; // Return existing cache
+      } else {
+        // No existing cache, query all events
+        console.log(`   📊 No existing Neuroweb cache found, querying all events...`);
+        cacheData = await this.queryAllNeurowebContractEvents();
+      }
     } else {
+      // Base and Gnosis: Always query fresh data (no JSON persistence)
+      console.log(`   📊 Querying fresh contract events for ${network} (in-memory cache only)`);
       cacheData = await this.queryAllContractEvents(network);
-    }
-    
-    // If we have existing cache, merge with new events
-    if (existingCache && existingCache.nodeEventsByNode) {
-      console.log(`   📊 Merging new events with existing cache for ${network}...`);
-      return await this.mergeCacheWithNewEvents(network, existingCache, cacheData);
     }
     
     // Process cache data to organize events by node/delegator
@@ -508,13 +531,17 @@ class ComprehensiveQAService {
     
     console.log(`   📊 Processed cache: ${Object.keys(nodeEventsByNode).length} nodes, ${Object.keys(delegatorEventsByNode).length} nodes with delegators`);
     
-    // Save processed cache
-    await this.saveCache(network, processedCacheData);
+    // Save processed cache (only for Neuroweb)
+    if (network === 'Neuroweb') {
+      await this.saveCache(network, processedCacheData);
+    } else {
+      console.log(`   📊 ${network} cache stored in memory (no JSON file)`);
+    }
     
     return processedCacheData;
   }
 
-  // Merge new events with existing cache
+  // Merge new events with existing cache (only for Neuroweb)
   async mergeCacheWithNewEvents(network, existingCache, newEvents) {
     console.log(`   📊 Merging new events with existing cache for ${network}...`);
     
@@ -543,10 +570,7 @@ class ComprehensiveQAService {
     const mergedNodeEvents = [...existingNodeEvents, ...newNodeEvents];
     const mergedDelegatorEvents = [...existingDelegatorEvents, ...newDelegatorEvents];
     
-    // Process merged cache data
-    console.log(`   📊 Processing merged cache data...`);
-    
-    // Organize node events by node ID
+    // Process merged events into organized structure
     const nodeEventsByNode = {};
     for (const event of mergedNodeEvents) {
       const nodeId = event.identityId;
@@ -559,7 +583,6 @@ class ComprehensiveQAService {
       });
     }
     
-    // Organize delegator events by node ID and delegator key
     const delegatorEventsByNode = {};
     for (const event of mergedDelegatorEvents) {
       const nodeId = event.identityId;
@@ -590,7 +613,7 @@ class ComprehensiveQAService {
     
     console.log(`   📊 Merged cache: ${Object.keys(nodeEventsByNode).length} nodes, ${Object.keys(delegatorEventsByNode).length} nodes with delegators`);
     
-    // Save merged cache
+    // Save merged cache (only for Neuroweb)
     await this.saveCache(network, mergedCacheData);
     
     return mergedCacheData;
@@ -1208,6 +1231,202 @@ class ComprehensiveQAService {
     
     return results;
   }
+
+  // Check if Neuroweb cache needs updates by comparing latest block
+  async checkNeurowebCacheNeedsUpdate(existingCache) {
+    const networkConfig = config.networks.find(n => n.name === 'Neuroweb');
+    if (!networkConfig) throw new Error(`Network Neuroweb not found in config`);
+
+    let provider;
+    let retryCount = 0;
+    while (true) {
+      try {
+        provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+        await provider.getNetwork();
+        break;
+      } catch (error) {
+        retryCount++;
+        if (retryCount >= 10) {
+          console.log(`   ⚠️ Cannot check for updates, using existing cache`);
+          return false;
+        }
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+    }
+
+    const currentBlock = await provider.getBlockNumber();
+    
+    // Get the latest block from existing cache
+    const existingNodeEvents = existingCache.nodeEvents || [];
+    const existingDelegatorEvents = existingCache.delegatorEvents || [];
+    
+    let latestExistingBlock = 0;
+    if (existingNodeEvents.length > 0) {
+      latestExistingBlock = Math.max(...existingNodeEvents.map(e => e.blockNumber));
+    }
+    if (existingDelegatorEvents.length > 0) {
+      latestExistingBlock = Math.max(latestExistingBlock, ...existingDelegatorEvents.map(e => e.blockNumber));
+    }
+    
+    console.log(`   📊 Latest cache block: ${latestExistingBlock.toLocaleString()}`);
+    console.log(`   📊 Current blockchain block: ${currentBlock.toLocaleString()}`);
+    
+    const needsUpdate = currentBlock > latestExistingBlock;
+    console.log(`   📊 Cache ${needsUpdate ? 'needs' : 'does not need'} update`);
+    
+    return needsUpdate;
+  }
+
+  // Query only new Neuroweb events (after the latest cached block)
+  async queryNewNeurowebEvents(existingCache) {
+    const networkConfig = config.networks.find(n => n.name === 'Neuroweb');
+    if (!networkConfig) throw new Error(`Network Neuroweb not found in config`);
+
+    let provider;
+    let retryCount = 0;
+    while (true) {
+      try {
+        provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+        await provider.getNetwork();
+        break;
+      } catch (error) {
+        retryCount++;
+        if (retryCount >= 10) {
+          throw new Error(`Failed to connect to Neuroweb RPC after 10 attempts`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+    }
+
+    const stakingAddress = await this.getContractAddressFromHub('Neuroweb', 'StakingStorage');
+    const stakingContract = new ethers.Contract(stakingAddress, [
+      'event NodeStakeUpdated(uint72 indexed identityId, uint96 stake)',
+      'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
+    ], provider);
+
+    const currentBlock = await provider.getBlockNumber();
+    
+    // Get the latest block from existing cache
+    const existingNodeEvents = existingCache.nodeEvents || [];
+    const existingDelegatorEvents = existingCache.delegatorEvents || [];
+    
+    let latestExistingBlock = 0;
+    if (existingNodeEvents.length > 0) {
+      latestExistingBlock = Math.max(...existingNodeEvents.map(e => e.blockNumber));
+    }
+    if (existingDelegatorEvents.length > 0) {
+      latestExistingBlock = Math.max(latestExistingBlock, ...existingDelegatorEvents.map(e => e.blockNumber));
+    }
+    
+    const fromBlock = latestExistingBlock + 1;
+    console.log(`   📊 Querying new events from block ${fromBlock.toLocaleString()} to ${currentBlock.toLocaleString()}`);
+    
+    if (fromBlock > currentBlock) {
+      console.log(`   📊 No new blocks to query`);
+      return { nodeEvents: [], delegatorEvents: [] };
+    }
+    
+    // Use 10,000 chunks for Neuroweb
+    const chunkSize = 10000;
+    let allNodeEvents = [];
+    let allDelegatorEvents = [];
+    
+    // Query node events
+    console.log(`   📊 Querying new NodeStakeUpdated events...`);
+    const nodeFilter = stakingContract.filters.NodeStakeUpdated();
+    
+    let totalChunks = Math.ceil((currentBlock - fromBlock + 1) / chunkSize);
+    let processedChunks = 0;
+    
+    for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+      const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+      processedChunks++;
+      
+      console.log(`   📊 Neuroweb New Node Events: Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+      
+      let chunkRetryCount = 0;
+      while (true) {
+        try {
+          const chunkEvents = await stakingContract.queryFilter(nodeFilter, startBlock, endBlock);
+          allNodeEvents = allNodeEvents.concat(chunkEvents);
+          
+          console.log(`      ✅ Found ${chunkEvents.length} new node events in chunk ${processedChunks}`);
+          
+          if (chunkRetryCount > 0) {
+            console.log(`      ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
+          }
+          break;
+        } catch (error) {
+          chunkRetryCount++;
+          console.log(`      ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
+          if (chunkRetryCount >= 10) {
+            console.log(`      ❌ Skipping chunk ${startBlock}-${endBlock} after 10 failed attempts`);
+            break;
+          }
+          console.log(`      ⏳ Retrying in 3 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      }
+    }
+    
+    // Query delegator events
+    console.log(`   📊 Querying new DelegatorBaseStakeUpdated events...`);
+    const delegatorFilter = stakingContract.filters.DelegatorBaseStakeUpdated();
+    
+    processedChunks = 0;
+    
+    for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
+      const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
+      processedChunks++;
+      
+      console.log(`   📊 Neuroweb New Delegator Events: Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+      
+      let chunkRetryCount = 0;
+      while (true) {
+        try {
+          const chunkEvents = await stakingContract.queryFilter(delegatorFilter, startBlock, endBlock);
+          allDelegatorEvents = allDelegatorEvents.concat(chunkEvents);
+          
+          console.log(`      ✅ Found ${chunkEvents.length} new delegator events in chunk ${processedChunks}`);
+          
+          if (chunkRetryCount > 0) {
+            console.log(`      ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
+          }
+          break;
+        } catch (error) {
+          chunkRetryCount++;
+          console.log(`      ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
+          if (chunkRetryCount >= 10) {
+            console.log(`      ❌ Skipping chunk ${startBlock}-${endBlock} after 10 failed attempts`);
+            break;
+          }
+          console.log(`      ⏳ Retrying in 3 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      }
+    }
+    
+    console.log(`   📊 Found ${allNodeEvents.length} new node events and ${allDelegatorEvents.length} new delegator events`);
+    
+    // Process new events into cache format
+    const newEvents = {
+      nodeEvents: allNodeEvents.map(event => ({
+        blockNumber: event.blockNumber,
+        identityId: event.args.identityId.toString(),
+        stake: event.args.stake.toString()
+      })),
+      delegatorEvents: allDelegatorEvents.map(event => ({
+        blockNumber: event.blockNumber,
+        identityId: event.args.identityId.toString(),
+        delegatorKey: event.args.delegatorKey,
+        stakeBase: event.args.stakeBase.toString()
+      }))
+    };
+    
+    return newEvents;
+  }
+
+  // Merge new events with existing cache (only for Neuroweb)
 }
 
 // Test all validations
