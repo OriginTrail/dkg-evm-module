@@ -260,6 +260,19 @@ export class SimulationDatabase {
   }
 
   /**
+   * Get block number for a transaction
+   */
+  getTxBlockNumber(txHash: string): number {
+    const result = this.db
+      .prepare(
+        'SELECT block_number FROM enriched_events WHERE transaction_hash = ?',
+      )
+      .get(txHash) as { block_number: number };
+
+    return result.block_number;
+  }
+
+  /**
    * Close database connection
    */
   close(): void {
