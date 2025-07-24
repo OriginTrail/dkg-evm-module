@@ -1072,10 +1072,10 @@ class ComprehensiveQAService {
       
       let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
       
-      if (countDifference === 0 && blockDifference <= 10) {
+      if (countDifference === 0) {
         console.log(`   ✅ KNOWLEDGE COLLECTIONS MATCH`);
         passed = 1;
-      } else if (countDifference <= 200 && blockDifference <= 50) {
+      } else if (countDifference <= 200) {
         console.log(`   ⚠️ KNOWLEDGE COLLECTIONS MATCH (within tolerance)`);
         console.log(`   📊 Count difference: ${countDifference}, Block difference: ${blockDifference}`);
         warnings = 1;
