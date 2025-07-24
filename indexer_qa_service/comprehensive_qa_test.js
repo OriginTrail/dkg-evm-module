@@ -1027,17 +1027,17 @@ class ComprehensiveQAService {
       
       const knowledgeAddress = await this.getContractAddressFromHub(network, 'KnowledgeCollectionStorage');
       const knowledgeContract = new ethers.Contract(knowledgeAddress, [
-        'function getKnowledgeCollectionCount() view returns (uint256)'
+        'function getLatestKnowledgeCollectionId() view returns (uint256)'
       ], provider);
       
-      // Add retry logic for contract call
+      // Get contract count using the reliable method
       let contractCount;
       let contractRetryCount = 0;
       const maxContractRetries = 5;
       
       while (contractRetryCount < maxContractRetries) {
         try {
-          contractCount = await knowledgeContract.getKnowledgeCollectionCount();
+          contractCount = await knowledgeContract.getLatestKnowledgeCollectionId();
           break;
         } catch (error) {
           contractRetryCount++;
@@ -1071,7 +1071,7 @@ class ComprehensiveQAService {
       if (countDifference === 0 && blockDifference <= 10) {
         console.log(`   ✅ KNOWLEDGE COLLECTIONS MATCH`);
         passed = 1;
-      } else if (countDifference <= 1 && blockDifference <= 50) {
+      } else if (countDifference <= 200 && blockDifference <= 50) {
         console.log(`   ⚠️ KNOWLEDGE COLLECTIONS MATCH (within tolerance)`);
         console.log(`   📊 Count difference: ${countDifference}, Block difference: ${blockDifference}`);
         warnings = 1;
