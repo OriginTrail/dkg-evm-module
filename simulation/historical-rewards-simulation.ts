@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import hre from 'hardhat';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
@@ -7,6 +8,7 @@ import {
   stopImpersonatingAccount,
   ensureSufficientGasFunds,
   getHubContract,
+  getHubAddress,
 } from './helpers/blockchain-helpers';
 import {
   SimulationDatabase,
@@ -18,14 +20,21 @@ import {
   PROOF_PERIOD_SECONDS,
   DEFAULT_BATCH_SIZE,
   DEFAULT_DB_PATHS,
+  EPOCH_METADATA,
+  NETWORK_HUBS,
 } from './helpers/simulation-constants';
 import {
   calculateScoresForActiveNodes,
   setupStakingAllowances,
   setupMigratorAllowances,
-  loadEpochMetadata,
+  addDelegator,
 } from './helpers/simulation-helpers';
-import { EpochMetadata } from './helpers/types';
+import {
+  validateDelegatorsCount,
+  validateStakingTransaction,
+  validateStartTimeAndEpochLength,
+  verifyMainnetStakingStorageState,
+} from './helpers/validation';
 
 /**
  * DKG V8.0 to V8.1 Historical Rewards Simulation
@@ -42,14 +51,69 @@ class HistoricalRewardsSimulation {
   private mining: MiningController;
   private hre: HardhatRuntimeEnvironment;
   private lastProofingTimestamp: number = 0;
-  private lastClaimedEpoch: number = 0;
-  private epochMetadata: EpochMetadata[] = [];
   private contracts: { [key: string]: any } = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
+  private chain: string;
+  private v8nodeEpochDelegatorRewards: {
+    [key: number]: { [key: number]: { [key: string]: bigint } };
+  } = {};
+  private v8NodeDelegatorTotalRewards: { [key: number]: bigint } = {};
+  private v8DelegatorEpochRewards: {
+    [key: string]: { [key: number]: bigint };
+  } = {};
+  private v8DelegatorTotalRewards: { [key: string]: bigint } = {};
+  private verifyMainnetState: boolean = false;
 
   constructor(hre: HardhatRuntimeEnvironment, dbPath: string) {
     this.hre = hre;
     this.db = new SimulationDatabase(dbPath);
     this.mining = new MiningController(hre);
+    this.verifyMainnetState = true;
+  }
+
+  /**
+   * Helper methods for auto-initializing nested reward objects
+   */
+  private setV8NodeEpochDelegatorReward(
+    identityId: number,
+    epoch: number,
+    delegator: string,
+    reward: bigint,
+  ): void {
+    if (!this.v8nodeEpochDelegatorRewards[identityId]) {
+      this.v8nodeEpochDelegatorRewards[identityId] = {};
+    }
+    if (!this.v8nodeEpochDelegatorRewards[identityId][epoch]) {
+      this.v8nodeEpochDelegatorRewards[identityId][epoch] = {};
+    }
+    this.v8nodeEpochDelegatorRewards[identityId][epoch][delegator] = reward;
+  }
+
+  private addV8NodeDelegatorTotalReward(
+    identityId: number,
+    reward: bigint,
+  ): void {
+    if (!this.v8NodeDelegatorTotalRewards[identityId]) {
+      this.v8NodeDelegatorTotalRewards[identityId] = 0n;
+    }
+    this.v8NodeDelegatorTotalRewards[identityId] += reward;
+  }
+
+  private setV8DelegatorEpochReward(
+    delegator: string,
+    epoch: number,
+    reward: bigint,
+  ): void {
+    if (!this.v8DelegatorEpochRewards[delegator]) {
+      this.v8DelegatorEpochRewards[delegator] = {};
+    }
+    this.v8DelegatorEpochRewards[delegator][epoch] = reward;
+  }
+
+  private addV8DelegatorTotalReward(delegator: string, reward: bigint): void {
+    if (!this.v8DelegatorTotalRewards[delegator]) {
+      this.v8DelegatorTotalRewards[delegator] = 0n;
+    }
+    this.v8DelegatorTotalRewards[delegator] += reward;
   }
 
   /**
@@ -60,10 +124,23 @@ class HistoricalRewardsSimulation {
       '🚀 Initializing DKG V8.0 to V8.1 Historical Rewards Simulation\n',
     );
 
+    // Initialize proofing timestamp
+    // TODO: Add start block timestamp
+    const currentTimestamp = await this.mining.getCurrentTimestamp();
+    this.lastProofingTimestamp = currentTimestamp;
+
+    // Get current fork status
+    console.log(`\n[INIT] Fork Status:`);
+    console.log(`[INIT] Current block: ${await this.mining.getCurrentBlock()}`);
+    console.log(
+      `[INIT] Current timestamp: ${currentTimestamp} (${new Date(currentTimestamp * 1000).toISOString()})`,
+    );
+
     // Load contracts
     this.contracts = {
       staking: await getDeployedContract(this.hre, 'Staking'),
       stakingStorage: await getDeployedContract(this.hre, 'StakingStorage'),
+      stakingKPI: await getDeployedContract(this.hre, 'StakingKPI'),
       token: await getDeployedContract(this.hre, 'Token'),
       migrator: await getDeployedContract(this.hre, 'Migrator'),
       delegatorsInfo: await getDeployedContract(this.hre, 'DelegatorsInfo'),
@@ -82,11 +159,16 @@ class HistoricalRewardsSimulation {
       ),
     };
 
-    // Step 1: Disable auto-mining
+    await validateStartTimeAndEpochLength(this.contracts, 1736812800, 2592000);
+
+    const hubAddress = await getHubAddress(this.hre);
+    this.chain = NETWORK_HUBS[hubAddress];
+
+    // Disable auto-mining
     // console.log('[INIT] Disabling auto-mining...');
     // await this.mining.disableAutoMining();
 
-    // Step 2: Get simulation status
+    // Get simulation status
     const unprocessedCount = this.db.getUnprocessedCount();
     const blockRange = this.db.getUnprocessedBlockRange();
 
@@ -95,24 +177,6 @@ class HistoricalRewardsSimulation {
     console.log(
       `[INIT] Block range: ${blockRange.minBlock} - ${blockRange.maxBlock}`,
     );
-
-    // Step 3: Get current fork status
-    const currentBlock = await this.mining.getCurrentBlock();
-    const currentTimestamp = await this.mining.getCurrentTimestamp();
-
-    console.log(`\n[INIT] Fork Status:`);
-    console.log(`[INIT] Current block: ${currentBlock}`);
-    console.log(
-      `[INIT] Current timestamp: ${currentTimestamp} (${new Date(currentTimestamp * 1000).toISOString()})`,
-    );
-
-    // Step 5: Load epoch metadata
-    console.log('\n[INIT] Loading epoch metadata...');
-    this.epochMetadata = await loadEpochMetadata(this.hre, this.contracts);
-
-    // Step 6: Initialize proofing timestamp
-    // TODO: Make sure this has the timestamp of the first block in the simulation - not today's timestamp
-    this.lastProofingTimestamp = currentTimestamp;
 
     console.log(`\n[INIT] Simulation initialized successfully!`);
   }
@@ -252,8 +316,6 @@ class HistoricalRewardsSimulation {
           proofingTime,
         );
         this.lastProofingTimestamp = proofingTime;
-        // TODO: Evaluate this
-        await this.mining.mineBlock();
       } catch (error) {
         console.error(
           `[CATCH UP PROOF PERIODS] ❌ Failed to calculate scores for timestamp ${proofingTime}:`,
@@ -277,27 +339,18 @@ class HistoricalRewardsSimulation {
       const epochAtTimestamp = await chronos.epochAtTimestamp(timestamp);
       if (epochAtTimestamp > currentEpoch) {
         await this.mining.setTime(
-          await chronos.timestampForEpoch(epochAtTimestamp),
+          Number(await chronos.timestampForEpoch(epochAtTimestamp)),
         );
         await this.mining.mineBlock();
         currentEpoch = epochAtTimestamp;
       }
-
-      while (this.lastClaimedEpoch + 1 < currentEpoch) {
-        const epochToDistribute = this.lastClaimedEpoch + 1;
-        console.log(
-          `[EPOCH TRANSITION] Distributing rewards for epoch ${epochToDistribute}`,
-        );
-
-        await this.distributeRewards(epochToDistribute);
-        this.lastClaimedEpoch = epochToDistribute;
-      }
+      expect(currentEpoch).to.equal(await chronos.getCurrentEpoch());
     } catch (error) {
       console.error(
         `[EPOCH TRANSITION] ❌ Failed to handle epoch transitions:`,
         error,
       );
-      // Continue simulation even if epoch handling fails
+      process.exit(1);
     }
   }
 
@@ -332,8 +385,54 @@ class HistoricalRewardsSimulation {
       // Estimate gas cost and ensure sufficient funds for this specific transaction
       await ensureSufficientGasFunds(this.hre, tx.from);
 
+      // Validation variables
+      let delegatorsCount = 0;
+      let isNodeDelegator = false;
+      let fromNodeStake = 0n;
+      let toNodeStake = 0n;
+      let nodeStake = 0n;
+      let requestWithdrawalAmount = 0n;
+
+      // TODO: export this into a helper function
+      if (tx.contract === 'Staking') {
+        if (tx.functionName === 'redelegate') {
+          fromNodeStake = BigInt(
+            await this.contracts.stakingStorage.getNodeStake(
+              tx.functionInputs[0],
+            ),
+          );
+          toNodeStake = BigInt(
+            await this.contracts.stakingStorage.getNodeStake(
+              tx.functionInputs[1],
+            ),
+          );
+        } else if (tx.functionName === 'cancelWithdrawal') {
+          nodeStake = BigInt(
+            await this.contracts.stakingStorage.getNodeStake(
+              tx.functionInputs[0],
+            ),
+          );
+          // Get withdrawal request amount BEFORE the transaction executes
+          const delegatorKey = this.hre.ethers.keccak256(
+            this.hre.ethers.solidityPacked(['address'], [tx.from]),
+          );
+          [requestWithdrawalAmount] =
+            await this.contracts.stakingStorage.getDelegatorWithdrawalRequest(
+              tx.functionInputs[0],
+              delegatorKey,
+            );
+        } else {
+          nodeStake = BigInt(
+            await this.contracts.stakingStorage.getNodeStake(
+              tx.functionInputs[0],
+            ),
+          );
+        }
+      }
+
       // Special handling for transactions that need token allowances
       // (Must be done AFTER impersonation and gas funding)
+      // TODO: add this to if else above
       if (
         tx.contract === 'Migrator' &&
         tx.functionName === 'migrateDelegatorData'
@@ -344,6 +443,11 @@ class HistoricalRewardsSimulation {
           tx.from,
           tx.functionInputs[0],
         );
+        delegatorsCount = (
+          await this.contracts.delegatorsInfo.getDelegators(
+            tx.functionInputs[0],
+          )
+        ).length;
       } else if (tx.contract === 'Staking' && tx.functionName === 'stake') {
         await setupStakingAllowances(
           this.hre,
@@ -351,6 +455,20 @@ class HistoricalRewardsSimulation {
           tx.from,
           tx.functionInputs[1],
         ); // Amount is second parameter
+        isNodeDelegator = await this.contracts.delegatorsInfo.isNodeDelegator(
+          tx.functionInputs[0],
+          tx.from,
+        );
+        console.log(
+          `[PROCESS TRANSACTION] isNodeDelegator: ${isNodeDelegator} for identity ${tx.functionInputs[0]}`,
+        );
+        if (!isNodeDelegator) {
+          delegatorsCount = (
+            await this.contracts.delegatorsInfo.getDelegators(
+              tx.functionInputs[0],
+            )
+          ).length;
+        }
       }
 
       // Get the signer for the transaction sender
@@ -368,28 +486,50 @@ class HistoricalRewardsSimulation {
 
         await txResponse.wait();
 
+        await validateStakingTransaction(
+          this.contracts,
+          tx,
+          fromNodeStake,
+          toNodeStake,
+          nodeStake,
+          requestWithdrawalAmount,
+        );
+
+        // Verify on-chain state after stake-changing transactions
+        if (this.verifyMainnetState) {
+          await verifyMainnetStakingStorageState(
+            this.contracts,
+            tx,
+            tx.functionInputs[0],
+            tx.from,
+            this.db.getTxBlockNumber(tx.hash) as number,
+          );
+        }
+
         if (
           tx.contract === 'Migrator' &&
           tx.functionName === 'migrateDelegatorData'
         ) {
           // Add the new address to the DelegatorsInfo contract
           const identityId = tx.functionInputs[0];
-          const hub = await getHubContract(this.hre);
-          const hubOwner = await hub.owner();
-          await impersonateAccount(this.hre, hubOwner);
-          const signer = await this.hre.ethers.getSigner(hubOwner);
-          const delegatorsInfoWithSigner =
-            this.contracts.delegatorsInfo.connect(signer);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (delegatorsInfoWithSigner as any).addDelegator(
+          await addDelegator(this.hre, this.contracts, identityId, tx.from);
+          await validateDelegatorsCount(
+            this.contracts,
             identityId,
-            tx.from,
+            delegatorsCount,
           );
-          await stopImpersonatingAccount(this.hre, hubOwner);
+        } else if (tx.contract === 'Staking' && tx.functionName === 'stake') {
+          if (!isNodeDelegator && !this.verifyMainnetState) {
+            await validateDelegatorsCount(
+              this.contracts,
+              tx.functionInputs[0],
+              delegatorsCount,
+            );
+          }
         }
 
         console.log(
-          `[PROCESS TRANSACTION] ✅ Transaction confirmed: ${txResponse.hash}`,
+          `[PROCESS TRANSACTION] Transaction confirmed: ${txResponse.hash}`,
         );
 
         // Mark as successfully processed
@@ -412,25 +552,71 @@ class HistoricalRewardsSimulation {
   }
 
   /**
-   * Distribute rewards for a completed epoch
+   * Distribute rewards for all epochs at the end of the simulation
    */
-  private async distributeRewards(epochId: number): Promise<void> {
+  private async distributeRewards(): Promise<void> {
     try {
-      // For MVP, just log the reward distribution
-      // TODO: Implement actual reward distribution logic
-      const epochMeta = this.epochMetadata.find((e) => e.id === epochId);
-      if (epochMeta) {
+      const epochMetadata = EPOCH_METADATA[this.chain];
+      const epochs = epochMetadata.map((e) => e.epoch);
+      for (const epoch of epochs) {
+        let totalNodeRewards = 0n;
+
+        const epochMeta = epochMetadata.find((e) => e.epoch === epoch);
+        if (!epochMeta) {
+          throw new Error(
+            `[DISTRIBUTE REWARDS] ❌ Epoch metadata not found for epoch ${epoch}`,
+          );
+        }
+        const rewardPool = BigInt(epochMeta.rewardPool);
         console.log(
-          `[DISTRIBUTE REWARDS] Epoch ${epochId} rewards: ${this.hre.ethers.formatEther(epochMeta.rewardPool)} TRAC`,
+          `[DISTRIBUTE REWARDS] Epoch ${epoch} rewards: ${this.hre.ethers.formatEther(rewardPool)} TRAC`,
         );
-      } else {
-        console.log(
-          `[DISTRIBUTE REWARDS] Epoch ${epochId} rewards: (metadata not found)`,
+
+        const maxIdentityId = Number(
+          await this.contracts.identityStorage.lastIdentityId(),
+        );
+
+        for (let identityId = 1; identityId <= maxIdentityId; identityId++) {
+          const nodeRewards = BigInt(
+            await this.contracts.stakingKPI.getNetNodeRewards(
+              identityId,
+              epoch,
+            ),
+          );
+          totalNodeRewards += nodeRewards;
+
+          const delegators =
+            await this.contracts.delegatorsInfo.getDelegators(identityId);
+
+          for (const delegator of delegators) {
+            const reward = await this.contracts.stakingKPI.getDelegatorReward(
+              identityId,
+              epoch,
+              delegator,
+            );
+
+            if (reward > 0n) {
+              // Set rewards using helper methods that auto-initialize
+              this.setV8NodeEpochDelegatorReward(
+                identityId,
+                epoch,
+                delegator,
+                reward,
+              );
+              this.addV8NodeDelegatorTotalReward(identityId, reward);
+              this.setV8DelegatorEpochReward(delegator, epoch, reward);
+              this.addV8DelegatorTotalReward(delegator, reward);
+            }
+          }
+        }
+        expect(totalNodeRewards).to.equal(
+          rewardPool,
+          `Total node rewards for epoch ${epoch} do not match the reward pool`,
         );
       }
     } catch (error) {
       console.error(
-        `[DISTRIBUTE REWARDS] ❌ Failed to distribute rewards for epoch ${epochId}:`,
+        `[DISTRIBUTE REWARDS] ❌ Failed to distribute rewards for epoch ${epoch}:`,
         error,
       );
     }
@@ -444,17 +630,16 @@ class HistoricalRewardsSimulation {
 
     try {
       // Final proof period calculations
-      // TODO: Check if current timestamp is the timestamp now or the timestamp of the last block
       const currentTime = await this.mining.getCurrentTimestamp();
       await this.catchUpProofPeriods(currentTime);
 
       // Final epoch reward distribution
       await this.handleEpochTransitions(currentTime);
 
-      // TODO: Export V8.json, V6.json, and globals.json
-      console.log(
-        '[SIMULATION END] Exporting results (TODO: implement export logic)',
-      );
+      await this.distributeRewards();
+
+      // TODO: Export V8.json, and globals.json
+      console.log('[SIMULATION END] Exporting results');
 
       console.log('[SIMULATION END] Simulation wrap-up completed');
     } catch (error) {
@@ -477,7 +662,14 @@ class HistoricalRewardsSimulation {
  * Main function to run the simulation
  */
 async function main() {
-  const dbPath = DEFAULT_DB_PATHS.base_mainnet;
+  // Record start time
+  const startTime = Date.now();
+  console.log(
+    `[MAIN] Starting simulation at ${new Date(startTime).toISOString()}`,
+  );
+
+  const chain = NETWORK_HUBS[await getHubAddress(hre)];
+  const dbPath = DEFAULT_DB_PATHS[chain];
   const simulation = new HistoricalRewardsSimulation(hre, dbPath);
 
   try {
@@ -488,10 +680,23 @@ async function main() {
     console.log('\n[MAIN] ✅ Simulation completed successfully!');
   } catch (error) {
     console.error('[MAIN] ❌ Simulation failed:', error);
+    // Record end time
+    const endTime = Date.now();
+    const duration = (endTime - startTime) / 1000;
+    console.log(
+      `[MAIN] Simulation completed in ${duration / 3600} hours at ${new Date(endTime).toISOString()}`,
+    );
     process.exit(1);
   } finally {
     await simulation.cleanup();
   }
+
+  // Record end time
+  const endTime = Date.now();
+  const duration = (endTime - startTime) / 1000;
+  console.log(
+    `[MAIN] Simulation completed in ${duration / 3600} hours at ${new Date(endTime).toISOString()}`,
+  );
 }
 
 // Export for use in other scripts
@@ -500,5 +705,8 @@ export { HistoricalRewardsSimulation };
 // Run the simulation
 main().catch((error) => {
   console.error('[MAIN] Fatal error:', error);
+  // Record end time
+  const endTime = Date.now();
+  console.log(`[MAIN] Simulation ended at ${new Date(endTime).toISOString()}`);
   process.exit(1);
 });
