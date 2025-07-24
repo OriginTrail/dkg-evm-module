@@ -64,12 +64,13 @@ class ComprehensiveQAService {
       
       if (rightmostNonZeroIndex !== -1) {
         // Round to the rightmost non-zero decimal position
-        return trac.toFixed(rightmostNonZeroIndex + 1);
+        const rounded = trac.toFixed(rightmostNonZeroIndex + 1);
+        return rounded;
       }
     }
     
-    // Fallback
-    return trac.toString();
+    // Fallback - just round to 2 decimal places for small amounts
+    return trac.toFixed(2);
   }
 
   async getContractAddressFromHub(network, contractName) {
