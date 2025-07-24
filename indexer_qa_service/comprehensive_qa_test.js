@@ -34,10 +34,15 @@ class ComprehensiveQAService {
       return '0';
     }
     
-    // Convert to string to find the last non-zero decimal
+    // For amounts >= 1, round to 2 decimal places
+    if (trac >= 1) {
+      return trac.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+    
+    // For amounts < 1, show precision up to last non-zero decimal
     const tracString = trac.toString();
     
-    // If it's in scientific notation (e.g., 5.041871105e-11), convert it
+    // If it's in scientific notation (e.g., 4.87584576e-9), convert it
     if (tracString.includes('e-')) {
       const [base, exponent] = tracString.split('e-');
       const decimalPlaces = parseInt(exponent);
@@ -63,8 +68,8 @@ class ComprehensiveQAService {
       }
     }
     
-    // Fallback for whole numbers
-    return trac.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    // Fallback
+    return trac.toString();
   }
 
   async getContractAddressFromHub(network, contractName) {
