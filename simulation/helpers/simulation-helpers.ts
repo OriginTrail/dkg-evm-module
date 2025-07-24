@@ -624,8 +624,9 @@ export async function processAndClaimDelegatorReward(
     return 0n;
   }
 
-  // Claim the reward
-  await contracts.staking.claimDelegatorRewards(identityId, epoch, delegator);
+  // // Commented out because it could break the mainnet integrity of stake
+  // // If we distribute rewards at the end of an epoch, we risk going above 2mil in TRAC stake which might break later stake, redelegate, etc. transactions
+  // await contracts.staking.claimDelegatorRewards(identityId, epoch, delegator);
 
   return reward;
 }
