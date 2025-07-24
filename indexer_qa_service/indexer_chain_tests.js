@@ -5229,7 +5229,7 @@ class CompleteQAService {
         
         // Find the most recent contract event for this node at or before the indexer block
         const nodeEvents = this.neurowebCache.nodeEventsByNode[nodeId] || [];
-        const relevantEvents = nodeEvents.filter(event => event.blockNumber <= blockNumber);
+        const relevantEvents = nodeEvents.filter(event => event.blockNumber <= Number(blockNumber));
         
         if (relevantEvents.length === 0) {
           console.log(`   ⚠️ Node ${nodeId}: No cached contract events found at or before block ${blockNumber}`);
@@ -5300,7 +5300,7 @@ class CompleteQAService {
         
         // Find the most recent contract event for this node/delegator at or before the indexer block
         const nodeDelegatorEvents = this.neurowebCache.delegatorEventsByNode[nodeId]?.[delegatorKey] || [];
-        const relevantEvents = nodeDelegatorEvents.filter(event => event.blockNumber <= blockNumber);
+        const relevantEvents = nodeDelegatorEvents.filter(event => event.blockNumber <= Number(blockNumber));
         
         if (relevantEvents.length === 0) {
           console.log(`   ⚠️ Node ${nodeId} Delegator ${delegatorKey}: No cached contract events found at or before block ${blockNumber}`);
@@ -5437,7 +5437,7 @@ class CompleteQAService {
         
         // Get the most recent contract node event at or before the indexer block
         const nodeEvents = this.neurowebCache.nodeEventsByNode[nodeId] || [];
-        const relevantNodeEvents = nodeEvents.filter(event => event.blockNumber <= blockNumber);
+        const relevantNodeEvents = nodeEvents.filter(event => event.blockNumber <= Number(blockNumber));
         
         if (relevantNodeEvents.length === 0) {
           console.log(`   ⚠️ Node ${nodeId}: No cached contract node events found at or before block ${blockNumber}`);
@@ -5456,7 +5456,7 @@ class CompleteQAService {
         
         for (const delegatorKey in nodeDelegatorEvents) {
           const delegatorEvents = nodeDelegatorEvents[delegatorKey];
-          const relevantDelegatorEvents = delegatorEvents.filter(event => event.blockNumber <= blockNumber);
+          const relevantDelegatorEvents = delegatorEvents.filter(event => event.blockNumber <= Number(blockNumber));
           
           if (relevantDelegatorEvents.length > 0) {
             const mostRecentDelegatorEvent = relevantDelegatorEvents.reduce((latest, event) => 
