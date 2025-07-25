@@ -948,16 +948,10 @@ class ComprehensiveQAService {
             continue;
           }
           
-          // Find the contract node event with the same block number as indexer
-          const contractNodeEvent = cachedNodeEvents.find(event => event.blockNumber === indexerNodeBlock);
-          
-          if (!contractNodeEvent) {
-            console.log(`   ⚠️ Node ${nodeId}: No contract event found for block ${indexerNodeBlock}, skipping`);
-            continue;
-          }
-          
-          const contractNodeStake = BigInt(contractNodeEvent.stake);
-          const contractNodeBlock = contractNodeEvent.blockNumber;
+          // Get the latest contract node stake (like in node stake validation)
+          const latestContractNodeEvent = cachedNodeEvents[0]; // First one is the latest
+          const contractNodeStake = BigInt(latestContractNodeEvent.stake);
+          const contractNodeBlock = latestContractNodeEvent.blockNumber;
           
           // Calculate sum of ALL delegations from contract
           let contractTotalDelegations = 0n;
