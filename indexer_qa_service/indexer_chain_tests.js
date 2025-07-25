@@ -283,7 +283,7 @@ class ComprehensiveQAService {
             
             break; // Success, exit retry loop
             
-          } catch (error) {
+      } catch (error) {
             chunkRetryCount++;
             console.log(`   ⚠️ Chunk ${processedChunks} failed (attempt ${chunkRetryCount}/${maxChunkRetries}): ${error.message}`);
             
@@ -333,9 +333,99 @@ class ComprehensiveQAService {
         blockNumber: event.blockNumber
       }));
       
+      // Now build all blocks cache from oldest block to current block
+      console.log(`   📊 Building all blocks cache from ${oldestBlock.toLocaleString()} to ${currentBlock.toLocaleString()}...`);
+      
+      const allBlocksCache = {};
+      const totalBlocksToCache = currentBlock - oldestBlock + 1;
+      console.log(`   📊 Caching ${totalBlocksToCache.toLocaleString()} blocks...`);
+      
+      // Process in smaller chunks to avoid memory issues
+      const cacheChunkSize = 10000;
+      let processedCacheChunks = 0;
+      const totalCacheChunks = Math.ceil(totalBlocksToCache / cacheChunkSize);
+      
+      for (let startBlock = oldestBlock; startBlock <= currentBlock; startBlock += cacheChunkSize) {
+        const endBlock = Math.min(startBlock + cacheChunkSize - 1, currentBlock);
+        processedCacheChunks++;
+        
+        console.log(`   📊 Building cache chunk ${processedCacheChunks}/${totalCacheChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+        
+        // Get all active nodes for this network
+        const activeNodesResult = await client.query(`
+          SELECT DISTINCT identity_id FROM node_stake_updated 
+          WHERE block_number >= $1 AND block_number <= $2
+          AND identity_id IN (SELECT identity_id FROM node_object_created)
+          AND identity_id NOT IN (SELECT identity_id FROM node_object_deleted)
+        `, [startBlock, endBlock]);
+        
+        const activeNodeIds = activeNodesResult.rows.map(row => parseInt(row.identity_id));
+        console.log(`   📊 Found ${activeNodeIds.length} active nodes in chunk`);
+        
+        // For each block in this chunk, get the state
+        for (let blockNumber = startBlock; blockNumber <= endBlock; blockNumber++) {
+          const blockKey = blockNumber.toString();
+          allBlocksCache[blockKey] = {
+            nodeStakes: {},
+            delegatorStakes: {}
+          };
+          
+          // Get node stakes for this block
+          for (const nodeId of activeNodeIds) {
+            try {
+              const nodeStake = await stakingContract.getNodeStake(nodeId, { blockTag: blockNumber });
+              allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = nodeStake.toString();
+            } catch (error) {
+              console.log(`   ⚠️ Error getting node ${nodeId} stake at block ${blockNumber}: ${error.message}`);
+              allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = "0";
+            }
+          }
+          
+          // Get delegator stakes for this block (only for active nodes)
+          for (const nodeId of activeNodeIds) {
+            try {
+              // Get all delegators for this node
+              const delegatorsResult = await client.query(`
+                SELECT DISTINCT delegator_key FROM delegator_base_stake_updated 
+                WHERE identity_id = $1 AND block_number <= $2
+              `, [nodeId, blockNumber]);
+              
+              for (const row of delegatorsResult.rows) {
+                const delegatorKey = row.delegator_key;
+                try {
+                  const delegatorStake = await stakingContract.getDelegatorStake(nodeId, delegatorKey, { blockTag: blockNumber });
+                  if (!allBlocksCache[blockKey].delegatorStakes[nodeId.toString()]) {
+                    allBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
+                  }
+                  allBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = delegatorStake.toString();
+                } catch (error) {
+                  console.log(`   ⚠️ Error getting delegator ${delegatorKey} stake for node ${nodeId} at block ${blockNumber}: ${error.message}`);
+                  if (!allBlocksCache[blockKey].delegatorStakes[nodeId.toString()]) {
+                    allBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
+                  }
+                  allBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = "0";
+                }
+              }
+            } catch (error) {
+              console.log(`   ⚠️ Error getting delegators for node ${nodeId} at block ${blockNumber}: ${error.message}`);
+            }
+          }
+          
+          // Show progress every 1000 blocks
+          if ((blockNumber - startBlock + 1) % 1000 === 0) {
+            console.log(`   📊 Progress: ${blockNumber - startBlock + 1}/${endBlock - startBlock + 1} blocks in chunk`);
+          }
+        }
+      }
+      
+      console.log(`   📊 Completed building all blocks cache`);
+      
       return {
         nodeEvents: processedNodeEvents,
-        delegatorEvents: processedDelegatorEvents
+        delegatorEvents: processedDelegatorEvents,
+        allBlocks: allBlocksCache,
+        oldestBlock: oldestBlock,
+        currentBlock: currentBlock
       };
       
     } finally {
@@ -477,6 +567,93 @@ class ComprehensiveQAService {
       
       console.log(`   📊 Found ${allNodeEvents.length} node events and ${allDelegatorEvents.length} delegator events`);
       
+      // Now build all blocks cache from oldest block to current block
+      console.log(`   📊 Building all blocks cache from ${oldestBlock.toLocaleString()} to ${currentBlock.toLocaleString()}...`);
+      
+      const allBlocksCache = {};
+      const totalBlocksToCache = currentBlock - oldestBlock + 1;
+      console.log(`   📊 Caching ${totalBlocksToCache.toLocaleString()} blocks...`);
+      
+      // Process in smaller chunks to avoid memory issues
+      const cacheChunkSize = 10000;
+      let processedCacheChunks = 0;
+      const totalCacheChunks = Math.ceil(totalBlocksToCache / cacheChunkSize);
+      
+      for (let startBlock = oldestBlock; startBlock <= currentBlock; startBlock += cacheChunkSize) {
+        const endBlock = Math.min(startBlock + cacheChunkSize - 1, currentBlock);
+        processedCacheChunks++;
+        
+        console.log(`   📊 Building cache chunk ${processedCacheChunks}/${totalCacheChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+        
+        // Get all active nodes for this network
+        const activeNodesResult = await client.query(`
+          SELECT DISTINCT identity_id FROM node_stake_updated 
+          WHERE block_number >= $1 AND block_number <= $2
+          AND identity_id IN (SELECT identity_id FROM node_object_created)
+          AND identity_id NOT IN (SELECT identity_id FROM node_object_deleted)
+        `, [startBlock, endBlock]);
+        
+        const activeNodeIds = activeNodesResult.rows.map(row => parseInt(row.identity_id));
+        console.log(`   📊 Found ${activeNodeIds.length} active nodes in chunk`);
+        
+        // For each block in this chunk, get the state
+        for (let blockNumber = startBlock; blockNumber <= endBlock; blockNumber++) {
+          const blockKey = blockNumber.toString();
+          allBlocksCache[blockKey] = {
+            nodeStakes: {},
+            delegatorStakes: {}
+          };
+          
+          // Get node stakes for this block
+          for (const nodeId of activeNodeIds) {
+            try {
+              const nodeStake = await stakingContract.getNodeStake(nodeId, { blockTag: blockNumber });
+              allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = nodeStake.toString();
+            } catch (error) {
+              console.log(`   ⚠️ Error getting node ${nodeId} stake at block ${blockNumber}: ${error.message}`);
+              allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = "0";
+            }
+          }
+          
+          // Get delegator stakes for this block (only for active nodes)
+          for (const nodeId of activeNodeIds) {
+            try {
+              // Get all delegators for this node
+              const delegatorsResult = await client.query(`
+                SELECT DISTINCT delegator_key FROM delegator_base_stake_updated 
+                WHERE identity_id = $1 AND block_number <= $2
+              `, [nodeId, blockNumber]);
+              
+              for (const row of delegatorsResult.rows) {
+                const delegatorKey = row.delegator_key;
+                try {
+                  const delegatorStake = await stakingContract.getDelegatorStake(nodeId, delegatorKey, { blockTag: blockNumber });
+                  if (!allBlocksCache[blockKey].delegatorStakes[nodeId.toString()]) {
+                    allBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
+                  }
+                  allBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = delegatorStake.toString();
+                } catch (error) {
+                  console.log(`   ⚠️ Error getting delegator ${delegatorKey} stake for node ${nodeId} at block ${blockNumber}: ${error.message}`);
+                  if (!allBlocksCache[blockKey].delegatorStakes[nodeId.toString()]) {
+                    allBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
+                  }
+                  allBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = "0";
+                }
+              }
+            } catch (error) {
+              console.log(`   ⚠️ Error getting delegators for node ${nodeId} at block ${blockNumber}: ${error.message}`);
+            }
+          }
+          
+          // Show progress every 1000 blocks
+          if ((blockNumber - startBlock + 1) % 1000 === 0) {
+            console.log(`   📊 Progress: ${blockNumber - startBlock + 1}/${endBlock - startBlock + 1} blocks in chunk`);
+          }
+        }
+      }
+      
+      console.log(`   📊 Completed building all blocks cache`);
+      
       // Process events into cache format
       const cacheData = {
         nodeEvents: allNodeEvents.map(event => ({
@@ -490,6 +667,9 @@ class ComprehensiveQAService {
           delegatorKey: event.args.delegatorKey,
           stakeBase: event.args.stakeBase.toString()
         })),
+        allBlocks: allBlocksCache,
+        oldestBlock: oldestBlock,
+        currentBlock: currentBlock,
         totalNodeEvents: allNodeEvents.length,
         totalDelegatorEvents: allDelegatorEvents.length,
         lastUpdated: new Date().toISOString()
@@ -698,7 +878,7 @@ class ComprehensiveQAService {
     console.log(`\n🚀 Building caches for all networks in parallel...`);
     
     // Comment out Neuroweb for testing missing events detection
-    const networks = ['Base', 'Gnosis']; // Removed 'Neuroweb' for testing
+    const networks = ['Base', 'Gnosis', 'Neuroweb']; // Added back 'Neuroweb'
     const cachePromises = networks.map(async (network) => {
       try {
         console.log(`\n${'='.repeat(40)}`);
@@ -1369,41 +1549,42 @@ class ComprehensiveQAService {
               // Use the stake from the current block as the expected value for intermediate blocks
               const expectedStakeForIntermediateBlocks = indexerEvent.stake;
               
-              // Stage 1: Quick check - check the block right before the next event
-              const quickCheckBlock = nextBlockNumber - 1;
-              console.log(`   📊 Quick check: Block ${quickCheckBlock} (${nextBlockNumber} - 1) for missing events...`);
+              // Scan all blocks between the two events using cache
+              const totalBlocksToScan = nextBlockNumber - blockNumber - 1;
+              console.log(`   📊 Scanning ${totalBlocksToScan} blocks for missing events...`);
               
-              // Only check contract side since if event is missing from indexer, there's nothing to check there
-              const actualContractStake = await this.getNodeStakeAtBlock(network, nodeId, quickCheckBlock);
+              let missingEventFound = false;
               
-              if (actualContractStake !== null && actualContractStake !== expectedStakeForIntermediateBlocks) {
-                console.log(`   ❌ MISSING EVENT DETECTED: Block ${quickCheckBlock} has state ${this.weiToTRAC(actualContractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
-                console.log(`   🔍 Scanning all blocks between ${blockNumber} and ${nextBlockNumber} to find exact missing event...`);
+              // Scan all blocks between the two events using cache
+              for (let checkBlock = blockNumber + 1; checkBlock < nextBlockNumber; checkBlock++) {
+                const checkBlockData = cache.allBlocks?.[checkBlock.toString()];
+                let blockStake = null;
                 
-                // Stage 2: Detailed scan - check all blocks between the two events
-                const totalBlocksToScan = nextBlockNumber - blockNumber - 1;
-                console.log(`   📊 Scanning ${totalBlocksToScan} blocks to find missing event...`);
-                
-                // Scan all blocks between the two events
-                for (let checkBlock = blockNumber + 1; checkBlock < nextBlockNumber; checkBlock++) {
-                  const blockStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
-                  
-                  if (blockStake !== null && blockStake !== expectedStakeForIntermediateBlocks) {
-                    console.log(`   ❌ MISSING EVENT FOUND: Block ${checkBlock} has state ${this.weiToTRAC(blockStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
-                    console.log(`   📍 This is likely the block where the missing event occurred`);
-                    break; // Found the missing event, stop scanning
-                  }
-                  
-                  // Show progress every 1000 blocks
-                  if ((checkBlock - blockNumber) % 1000 === 0) {
-                    console.log(`   📊 Progress: ${checkBlock - blockNumber}/${totalBlocksToScan} blocks scanned`);
-                  }
+                if (checkBlockData && checkBlockData.nodeStakes[nodeId.toString()]) {
+                  blockStake = BigInt(checkBlockData.nodeStakes[nodeId.toString()]);
+                } else {
+                  // Fallback to RPC if not in cache
+                  blockStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
                 }
                 
-                console.log(`   ✅ Completed missing event scan`);
-              } else {
-                console.log(`   ✅ Block ${quickCheckBlock} has expected stake value (${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC), no missing events detected`);
+                if (blockStake !== null && blockStake !== expectedStakeForIntermediateBlocks) {
+                  console.log(`   ❌ MISSING EVENT FOUND: Block ${checkBlock} has state ${this.weiToTRAC(blockStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                  console.log(`   📍 This is likely the block where the missing event occurred`);
+                  missingEventFound = true;
+                  break; // Found the missing event, stop scanning
+                }
+                
+                // Show progress every 1000 blocks
+                if ((checkBlock - blockNumber) % 1000 === 0) {
+                  console.log(`   📊 Progress: ${checkBlock - blockNumber}/${totalBlocksToScan} blocks scanned`);
+                }
               }
+              
+              if (!missingEventFound) {
+                console.log(`   ✅ No missing events detected between blocks ${blockNumber} and ${nextBlockNumber}`);
+              }
+              
+              console.log(`   ✅ Completed missing event scan`);
             }
           }
         }
@@ -1981,41 +2162,42 @@ class ComprehensiveQAService {
               // Use the stake from the current block as the expected value for intermediate blocks
               const expectedStakeForIntermediateBlocks = indexerEvent.stake;
               
-              // Stage 1: Quick check - check the block right before the next event
-              const quickCheckBlock = nextBlockNumber - 1;
-              console.log(`   📊 Quick check: Block ${quickCheckBlock} (${nextBlockNumber} - 1) for missing events...`);
+              // Scan all blocks between the two events using cache
+              const totalBlocksToScan = nextBlockNumber - blockNumber - 1;
+              console.log(`   📊 Scanning ${totalBlocksToScan} blocks for missing events...`);
               
-              // Only check contract side since if event is missing from indexer, there's nothing to check there
-              const actualContractStake = await this.getNodeStakeAtBlock(network, nodeId, quickCheckBlock);
+              let missingEventFound = false;
               
-              if (actualContractStake !== null && actualContractStake !== expectedStakeForIntermediateBlocks) {
-                console.log(`   ❌ MISSING EVENT DETECTED: Block ${quickCheckBlock} has state ${this.weiToTRAC(actualContractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
-                console.log(`   🔍 Scanning all blocks between ${blockNumber} and ${nextBlockNumber} to find exact missing event...`);
+              // Scan all blocks between the two events using cache
+              for (let checkBlock = blockNumber + 1; checkBlock < nextBlockNumber; checkBlock++) {
+                const checkBlockData = cache.allBlocks?.[checkBlock.toString()];
+                let blockStake = null;
                 
-                // Stage 2: Detailed scan - check all blocks between the two events
-                const totalBlocksToScan = nextBlockNumber - blockNumber - 1;
-                console.log(`   📊 Scanning ${totalBlocksToScan} blocks to find missing event...`);
-                
-                // Scan all blocks between the two events
-                for (let checkBlock = blockNumber + 1; checkBlock < nextBlockNumber; checkBlock++) {
-                  const blockStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
-                  
-                  if (blockStake !== null && blockStake !== expectedStakeForIntermediateBlocks) {
-                    console.log(`   ❌ MISSING EVENT FOUND: Block ${checkBlock} has state ${this.weiToTRAC(blockStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
-                    console.log(`   📍 This is likely the block where the missing event occurred`);
-                    break; // Found the missing event, stop scanning
-                  }
-                  
-                  // Show progress every 1000 blocks
-                  if ((checkBlock - blockNumber) % 1000 === 0) {
-                    console.log(`   📊 Progress: ${checkBlock - blockNumber}/${totalBlocksToScan} blocks scanned`);
-                  }
+                if (checkBlockData && checkBlockData.nodeStakes[nodeId.toString()]) {
+                  blockStake = BigInt(checkBlockData.nodeStakes[nodeId.toString()]);
+                } else {
+                  // Fallback to RPC if not in cache
+                  blockStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
                 }
                 
-                console.log(`   ✅ Completed missing event scan`);
-              } else {
-                console.log(`   ✅ Block ${quickCheckBlock} has expected stake value (${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC), no missing events detected`);
+                if (blockStake !== null && blockStake !== expectedStakeForIntermediateBlocks) {
+                  console.log(`   ❌ MISSING EVENT FOUND: Block ${checkBlock} has state ${this.weiToTRAC(blockStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                  console.log(`   📍 This is likely the block where the missing event occurred`);
+                  missingEventFound = true;
+                  break; // Found the missing event, stop scanning
+                }
+                
+                // Show progress every 1000 blocks
+                if ((checkBlock - blockNumber) % 1000 === 0) {
+                  console.log(`   📊 Progress: ${checkBlock - blockNumber}/${totalBlocksToScan} blocks scanned`);
+                }
               }
+              
+              if (!missingEventFound) {
+                console.log(`   ✅ No missing events detected between blocks ${blockNumber} and ${nextBlockNumber}`);
+              }
+              
+              console.log(`   ✅ Completed missing event scan`);
             }
           }
         }
@@ -2218,7 +2400,7 @@ async function testAllValidations() {
   console.log('🧪 Testing all 4 validation functions for all networks...');
   
   // Comment out Neuroweb for testing missing events detection
-  const networks = ['Base', 'Gnosis']; // Removed 'Neuroweb' for testing
+  const networks = ['Base', 'Gnosis', 'Neuroweb']; // Added back 'Neuroweb'
   const allResults = {};
   
   // First, build all caches in parallel
