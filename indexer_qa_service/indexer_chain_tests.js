@@ -1888,6 +1888,12 @@ class ComprehensiveQAService {
       // Sort processed events by block number (newest first)
       processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
       
+      // Create a lookup map for indexer events by block number (for missing events detection)
+      const indexerEventsByBlockNumber = {};
+      for (const event of processedIndexerEvents) {
+        indexerEventsByBlockNumber[event.blockNumber] = event.stake;
+      }
+      
       // Get cached contract events for this node
       const cachedNodeEvents = cache.nodeEventsByNode?.[nodeId] || [];
       
@@ -1914,6 +1920,12 @@ class ComprehensiveQAService {
       
       // Sort processed events by block number (newest first)
       processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+      
+      // Create a lookup map for contract events by block number (for missing events detection)
+      const contractEventsByBlockNumber = {};
+      for (const event of processedContractEvents) {
+        contractEventsByBlockNumber[event.blockNumber] = event.stake;
+      }
       
       // Find common blocks between indexer and contract events
       const indexerBlocks = new Set(processedIndexerEvents.map(e => Number(e.blockNumber)));
@@ -1976,7 +1988,7 @@ class ComprehensiveQAService {
                   const contractStake = contractEventsByBlock[checkBlock] || null;
                   
                   // Check indexer from lookup map
-                  const indexerStake = indexerEventsByBlock[checkBlock] || null;
+                  const indexerStake = indexerEventsByBlockNumber[checkBlock] || null;
                   
                   // Check for missing events: contract has event but indexer doesn't, or vice versa
                   if (contractStake !== null && indexerStake === null) {
