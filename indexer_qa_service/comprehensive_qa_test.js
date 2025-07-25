@@ -948,15 +948,10 @@ class ComprehensiveQAService {
             continue;
           }
           
-          // Find the contract node event with the exact same block number
-          const contractNodeEvent = cachedNodeEvents.find(event => event.blockNumber === indexerNodeBlock);
-          
-          if (!contractNodeEvent) {
-            console.log(`   ⚠️ Node ${nodeId}: No contract event found for block ${indexerNodeBlock}, skipping`);
-            continue;
-          }
-          
-          const contractNodeStake = BigInt(contractNodeEvent.stake);
+          // Get the latest contract node stake (don't require exact block match)
+          const latestContractNodeEvent = cachedNodeEvents[0]; // First one is the latest
+          const contractNodeStake = BigInt(latestContractNodeEvent.stake);
+          const contractNodeBlock = latestContractNodeEvent.blockNumber;
           
           // Calculate sum of ALL delegations from contract
           let contractTotalDelegations = 0n;
@@ -970,7 +965,7 @@ class ComprehensiveQAService {
           console.log(`      Indexer total delegations:     ${this.weiToTRAC(indexerTotalDelegations)} TRAC`);
           console.log(`      Contract total delegations:    ${this.weiToTRAC(contractTotalDelegations)} TRAC`);
           console.log(`      Indexer node stake:            ${this.weiToTRAC(indexerNodeStake)} TRAC (block ${indexerNodeBlock})`);
-          console.log(`      Contract node stake:           ${this.weiToTRAC(contractNodeStake)} TRAC (block ${indexerNodeBlock})`);
+          console.log(`      Contract node stake:           ${this.weiToTRAC(contractNodeStake)} TRAC (block ${contractNodeBlock})`);
           
           // Compare total delegations to node stake
           const indexerDelegationsDifference = indexerTotalDelegations - indexerNodeStake;
