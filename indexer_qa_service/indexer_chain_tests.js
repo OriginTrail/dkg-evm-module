@@ -1360,32 +1360,47 @@ class ComprehensiveQAService {
             const nextContractEvent = processedContractEvents.find(e => Number(e.blockNumber) === nextBlockNumber);
             
             if (nextIndexerEvent && nextContractEvent) {
-              console.log(`   🔍 Checking for missing events between blocks ${blockNumber} and ${nextBlockNumber}...`);
-              
-              // Use the stake from the current block as the expected value for intermediate blocks
-              const expectedStakeForIntermediateBlocks = indexerEvent.stake;
-              
-              // Check each block between current and next in ascending order (oldest to newest)
-              for (let checkBlock = blockNumber + 1; checkBlock <= nextBlockNumber - 1; checkBlock++) {
-                // Check contract from cache
-                const cachedContractEvent = cachedDelegatorEvents.find(e => e.blockNumber === checkBlock);
-                const contractStake = cachedContractEvent ? BigInt(cachedContractEvent.stakeBase) : null;
+              // Only check for missing events if stake values actually changed
+              if (indexerEvent.stake !== nextIndexerEvent.stake) {
+                console.log(`   🔍 Checking for missing events between blocks ${blockNumber} and ${nextBlockNumber}...`);
+                console.log(`   📊 Stake changed from ${this.weiToTRAC(indexerEvent.stake)} TRAC to ${this.weiToTRAC(nextIndexerEvent.stake)} TRAC`);
                 
-                // Check indexer from RPC
-                const indexerStake = await this.getIndexerDelegatorStakeAtBlock(client, nodeId, delegatorKey, checkBlock);
+                // Use the stake from the current block as the expected value for intermediate blocks
+                const expectedStakeForIntermediateBlocks = indexerEvent.stake;
                 
-                // If no event exists at this block, it's a missing event
-                if (contractStake === null && indexerStake === null) {
-                  console.log(`   ❌ MISSING EVENT: Block ${checkBlock} has no events in both indexer and contract`);
-                } else if (contractStake === null) {
-                  console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has no contract event`);
-                } else if (indexerStake === null) {
-                  console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has no indexer event`);
-                } else if (contractStake !== expectedStakeForIntermediateBlocks) {
-                  console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(contractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
-                } else if (indexerStake !== expectedStakeForIntermediateBlocks) {
-                  console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(indexerStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                // Check each block between current and next in ascending order (oldest to newest)
+                for (let checkBlock = blockNumber + 1; checkBlock <= nextBlockNumber - 1; checkBlock++) {
+                  // Check contract from cache lookup
+                  const contractStake = contractEventsByBlock[checkBlock] || null;
+                  
+                  // Check indexer from lookup map
+                  const indexerStake = indexerEventsByBlock[checkBlock] || null;
+                  
+                  // Check for missing events: contract has event but indexer doesn't, or vice versa
+                  if (contractStake !== null && indexerStake === null) {
+                    console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has contract event (${this.weiToTRAC(contractStake)} TRAC) but no indexer event`);
+                  } else if (contractStake === null && indexerStake !== null) {
+                    console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has indexer event (${this.weiToTRAC(indexerStake)} TRAC) but no contract event`);
+                  } else if (contractStake !== null && indexerStake !== null) {
+                    // Both have events, check if values match
+                    if (contractStake !== indexerStake) {
+                      console.log(`   ❌ MISMATCH: Block ${checkBlock} - Contract: ${this.weiToTRAC(contractStake)} TRAC, Indexer: ${this.weiToTRAC(indexerStake)} TRAC`);
+                    }
+                  } else {
+                    // Neither has events, check if the state is correct (should be same as previous event)
+                    const actualContractStake = await this.getDelegatorStakeAtBlock(network, nodeId, delegatorKey, checkBlock);
+                    const actualIndexerStake = await this.getIndexerDelegatorStakeAtBlock(client, nodeId, delegatorKey, checkBlock);
+                    
+                    if (actualContractStake !== expectedStakeForIntermediateBlocks) {
+                      console.log(`   ❌ CONTRACT STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualContractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                    }
+                    if (actualIndexerStake !== expectedStakeForIntermediateBlocks) {
+                      console.log(`   ❌ INDEXER STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualIndexerStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                    }
+                  }
                 }
+              } else {
+                console.log(`   📊 No missing events check needed - stake unchanged between blocks ${blockNumber} and ${nextBlockNumber}`);
               }
             }
           }
@@ -1947,32 +1962,47 @@ class ComprehensiveQAService {
             const nextContractEvent = processedContractEvents.find(e => Number(e.blockNumber) === nextBlockNumber);
             
             if (nextIndexerEvent && nextContractEvent) {
-              console.log(`   🔍 Checking for missing events between blocks ${blockNumber} and ${nextBlockNumber}...`);
-              
-              // Use the stake from the current block as the expected value for intermediate blocks
-              const expectedStakeForIntermediateBlocks = indexerEvent.stake;
-              
-              // Check each block between current and next in ascending order (oldest to newest)
-              for (let checkBlock = blockNumber + 1; checkBlock <= nextBlockNumber - 1; checkBlock++) {
-                // Check contract from cache
-                const cachedContractEvent = cachedNodeEvents.find(e => e.blockNumber === checkBlock);
-                const contractStake = cachedContractEvent ? BigInt(cachedContractEvent.stake) : null;
+              // Only check for missing events if stake values actually changed
+              if (indexerEvent.stake !== nextIndexerEvent.stake) {
+                console.log(`   🔍 Checking for missing events between blocks ${blockNumber} and ${nextBlockNumber}...`);
+                console.log(`   📊 Stake changed from ${this.weiToTRAC(indexerEvent.stake)} TRAC to ${this.weiToTRAC(nextIndexerEvent.stake)} TRAC`);
                 
-                // Check indexer from RPC
-                const indexerStake = await this.getIndexerNodeStakeAtBlock(client, nodeId, checkBlock);
+                // Use the stake from the current block as the expected value for intermediate blocks
+                const expectedStakeForIntermediateBlocks = indexerEvent.stake;
                 
-                // If no event exists at this block, it's a missing event
-                if (contractStake === null && indexerStake === null) {
-                  console.log(`   ❌ MISSING EVENT: Block ${checkBlock} has no events in both indexer and contract`);
-                } else if (contractStake === null) {
-                  console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has no contract event`);
-                } else if (indexerStake === null) {
-                  console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has no indexer event`);
-                } else if (contractStake !== expectedStakeForIntermediateBlocks) {
-                  console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(contractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
-                } else if (indexerStake !== expectedStakeForIntermediateBlocks) {
-                  console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(indexerStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                // Check each block between current and next in ascending order (oldest to newest)
+                for (let checkBlock = blockNumber + 1; checkBlock <= nextBlockNumber - 1; checkBlock++) {
+                  // Check contract from cache lookup
+                  const contractStake = contractEventsByBlock[checkBlock] || null;
+                  
+                  // Check indexer from lookup map
+                  const indexerStake = indexerEventsByBlock[checkBlock] || null;
+                  
+                  // Check for missing events: contract has event but indexer doesn't, or vice versa
+                  if (contractStake !== null && indexerStake === null) {
+                    console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has contract event (${this.weiToTRAC(contractStake)} TRAC) but no indexer event`);
+                  } else if (contractStake === null && indexerStake !== null) {
+                    console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has indexer event (${this.weiToTRAC(indexerStake)} TRAC) but no contract event`);
+                  } else if (contractStake !== null && indexerStake !== null) {
+                    // Both have events, check if values match
+                    if (contractStake !== indexerStake) {
+                      console.log(`   ❌ MISMATCH: Block ${checkBlock} - Contract: ${this.weiToTRAC(contractStake)} TRAC, Indexer: ${this.weiToTRAC(indexerStake)} TRAC`);
+                    }
+                  } else {
+                    // Neither has events, check if the state is correct (should be same as previous event)
+                    const actualContractStake = await this.getDelegatorStakeAtBlock(network, nodeId, delegatorKey, checkBlock);
+                    const actualIndexerStake = await this.getIndexerDelegatorStakeAtBlock(client, nodeId, delegatorKey, checkBlock);
+                    
+                    if (actualContractStake !== expectedStakeForIntermediateBlocks) {
+                      console.log(`   ❌ CONTRACT STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualContractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                    }
+                    if (actualIndexerStake !== expectedStakeForIntermediateBlocks) {
+                      console.log(`   ❌ INDEXER STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualIndexerStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                    }
+                  }
                 }
+              } else {
+                console.log(`   📊 No missing events check needed - stake unchanged between blocks ${blockNumber} and ${nextBlockNumber}`);
               }
             }
           }
