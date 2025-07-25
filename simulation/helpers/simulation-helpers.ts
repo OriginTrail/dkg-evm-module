@@ -10,6 +10,7 @@ import {
 } from './blockchain-helpers';
 import {
   DELEGATORS_INFO_MAINNET_ADDRESSES,
+  EPOCH_METADATA,
   HUB_OWNERS,
   RPC_URLS,
   SIMULATION_CHAINS,
@@ -30,6 +31,7 @@ export async function calculateScoresForActiveNodes(
   hre: HardhatRuntimeEnvironment,
   contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
   proofingTimestamp: number,
+  nodeEpochPublishingFactors: { [key: number]: { [key: number]: bigint } },
 ): Promise<void> {
   console.log(
     `[CALCULATE SCORES] Calculating scores for active nodes at timestamp ${proofingTimestamp}`,
@@ -68,7 +70,8 @@ export async function calculateScoresForActiveNodes(
 
         // Node is in the sharding table - calculate score
         const score18 =
-          await contracts.randomSampling.calculateNodeScore(identityId);
+          (await contracts.randomSampling.calculateNodeScore(identityId)) +
+          nodeEpochPublishingFactors[currentEpoch][identityId];
 
         if (score18 > 0) {
           await impersonateAccount(hre, hubOwner);
@@ -129,6 +132,87 @@ export async function calculateScoresForActiveNodes(
     );
     throw error;
   }
+}
+
+export async function getNodeEpochPublishingFactors(
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  chain: string,
+) {
+  console.log(
+    `[GET NODE EPOCH PUBLISHING FACTORS] Getting node epoch publishing factors for chain ${chain}`,
+  );
+  const epochsList = EPOCH_METADATA[chain];
+  const nodeEpochPublishingFactors: {
+    [epoch: number]: { [identityId: number]: bigint };
+  } = {};
+  epochsList.forEach((epoch) => {
+    nodeEpochPublishingFactors[epoch.epoch] = {};
+  });
+
+  const rpc = new ethers.JsonRpcProvider(RPC_URLS[chain]);
+  // StakingStorage ABI - only the functions we need
+  const epochStorageAbi = [
+    'function getEpochNodeMaxProducedKnowledgeValue(uint256 epoch) external view returns (uint96)',
+    'function getNodeEpochProducedKnowledgeValue(uint72 identityId, uint256 epoch) external view returns (uint96)',
+  ];
+  const mainnetEpochStorage = new ethers.Contract(
+    await contracts.epochStorage.getAddress(),
+    epochStorageAbi,
+    rpc,
+  );
+
+  const mainnetIdentityStorageAbi = [
+    'function lastIdentityId() external view returns (uint72)',
+  ];
+  const mainnetIdentityStorage = new ethers.Contract(
+    await contracts.identityStorage.getAddress(),
+    mainnetIdentityStorageAbi,
+    rpc,
+  );
+
+  const lastIdentityId = await mainnetIdentityStorage.lastIdentityId();
+  for (let epoch = 1; epoch <= epochsList.length; epoch++) {
+    const maxNodePub =
+      await mainnetEpochStorage.getEpochNodeMaxProducedKnowledgeValue(epoch);
+    for (let identityId = 1; identityId <= lastIdentityId; identityId++) {
+      const nodePublishingFactor18 = await calculateNodePublishingFactor(
+        contracts,
+        mainnetEpochStorage,
+        identityId,
+        epoch,
+        maxNodePub,
+      );
+      nodeEpochPublishingFactors[epoch][identityId] = nodePublishingFactor18;
+    }
+  }
+  console.log(
+    `[GET NODE EPOCH PUBLISHING FACTORS] Node epoch publishing factors found for ${epochsList.length} epochs and ${lastIdentityId} identities`,
+  );
+  return nodeEpochPublishingFactors;
+}
+
+export async function calculateNodePublishingFactor(
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  mainnetEpochStorage: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  identityId: number,
+  epoch: number,
+  maxNodePub: bigint,
+) {
+  const maximumStake = await contracts.parametersStorage.maximumStake();
+  let nodeStake = await contracts.stakingStorage.getNodeStake(identityId);
+  nodeStake = nodeStake > maximumStake ? maximumStake : nodeStake;
+  const stakeRatio18 = (nodeStake * BigInt(10 ** 18)) / maximumStake;
+  const nodeStakeFactor18 =
+    (2n * stakeRatio18 * stakeRatio18) / BigInt(10 ** 18);
+
+  const nodePub = await mainnetEpochStorage.getNodeEpochProducedKnowledgeValue(
+    identityId,
+    epoch,
+  );
+  const pubRatio18 = (nodePub * BigInt(10 ** 18)) / maxNodePub;
+  const nodePublishingFactor18 =
+    (nodeStakeFactor18 * pubRatio18) / BigInt(10 ** 18);
+  return nodePublishingFactor18;
 }
 
 /**

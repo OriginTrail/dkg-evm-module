@@ -67,7 +67,14 @@ export async function getDeployedContract(
 ) {
   const hubAddress = await getHubAddress(hre);
   const Hub = await hre.ethers.getContractFactory('Hub');
-  const ContractFactory = await hre.ethers.getContractFactory(contractName);
+
+  // Handle special contract name mappings for artifacts
+  let artifactName = contractName;
+  if (contractName === 'EpochStorageV8') {
+    artifactName = 'EpochStorage'; // EpochStorageV8 uses EpochStorage ABI
+  }
+
+  const ContractFactory = await hre.ethers.getContractFactory(artifactName);
   const hub = Hub.attach(hubAddress);
 
   try {
