@@ -1771,9 +1771,9 @@ class ComprehensiveQAService {
         } catch (error) {
           chunkRetryCount++;
           console.log(`      ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
-          // Base/Gnosis: 10 retries, Neuroweb: Infinite retries
-          if (network !== 'Neuroweb' && chunkRetryCount >= 10) {
-            console.log(`      ❌ Skipping chunk ${startBlock}-${endBlock} after 10 failed attempts`);
+          // Base/Gnosis: 1000 retries, Neuroweb: Infinite retries
+          if (network !== 'Neuroweb' && chunkRetryCount >= 1000) {
+            console.log(`      ❌ Skipping chunk ${startBlock}-${endBlock} after 1000 failed attempts`);
             break;
           }
           console.log(`      ⏳ Retrying in 3 seconds...`);
