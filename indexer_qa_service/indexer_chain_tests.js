@@ -1327,14 +1327,9 @@ class ComprehensiveQAService {
       
       console.log(`🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: ${commonBlocks.length} blocks to validate`);
       
-      // Check for missing events in both indexer and contract data
-      const delegatorId = `${nodeId}_${delegatorKey}`;
-      await this.checkForMissingEvents(delegatorId, processedIndexerEvents, network, 'delegator', client);
-      await this.checkForMissingEvents(delegatorId, processedContractEvents, network, 'delegator');
-      
       let validationPassed = true;
       
-      // Validate each common block in descending order
+      // First: Validate each common block in descending order
       for (const blockNumber of commonBlocks) {
         const indexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === blockNumber);
         const contractEvent = processedContractEvents.find(e => Number(e.blockNumber) === blockNumber);
@@ -1357,6 +1352,13 @@ class ComprehensiveQAService {
             validationPassed = false;
           }
         }
+      }
+      
+      // Second: Check for missing events in both indexer and contract data (only if validation passed)
+      if (validationPassed) {
+        const delegatorId = `${nodeId}_${delegatorKey}`;
+        await this.checkForMissingEvents(delegatorId, processedIndexerEvents, network, 'delegator', client);
+        await this.checkForMissingEvents(delegatorId, processedContractEvents, network, 'delegator');
       }
       
       if (validationPassed) {
@@ -1881,13 +1883,9 @@ class ComprehensiveQAService {
       
       console.log(`🔍 [${network}] Node ${nodeId}: ${commonBlocks.length} blocks to validate`);
       
-      // Check for missing events in both indexer and contract data
-      await this.checkForMissingEvents(nodeId, processedIndexerEvents, network, 'node', client);
-      await this.checkForMissingEvents(nodeId, processedContractEvents, network, 'node');
-      
       let validationPassed = true;
       
-      // Validate each common block in descending order
+      // First: Validate each common block in descending order
       for (const blockNumber of commonBlocks) {
         const indexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === blockNumber);
         const contractEvent = processedContractEvents.find(e => Number(e.blockNumber) === blockNumber);
@@ -1910,6 +1908,12 @@ class ComprehensiveQAService {
             validationPassed = false;
           }
         }
+      }
+      
+      // Second: Check for missing events in both indexer and contract data (only if validation passed)
+      if (validationPassed) {
+        await this.checkForMissingEvents(nodeId, processedIndexerEvents, network, 'node', client);
+        await this.checkForMissingEvents(nodeId, processedContractEvents, network, 'node');
       }
       
       if (validationPassed) {
