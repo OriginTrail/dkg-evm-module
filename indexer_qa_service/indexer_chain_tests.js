@@ -1371,11 +1371,16 @@ class ComprehensiveQAService {
                 // Check indexer from RPC
                 const indexerStake = await this.getIndexerDelegatorStakeAtBlock(client, nodeId, delegatorKey, checkBlock);
                 
-                if (contractStake !== null && contractStake !== expectedStake) {
+                // If no event exists at this block, it's a missing event
+                if (contractStake === null && indexerStake === null) {
+                  console.log(`   ❌ MISSING EVENT: Block ${checkBlock} has no events in both indexer and contract`);
+                } else if (contractStake === null) {
+                  console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has no contract event`);
+                } else if (indexerStake === null) {
+                  console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has no indexer event`);
+                } else if (contractStake !== expectedStake) {
                   console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(contractStake)} TRAC but should be ${this.weiToTRAC(expectedStake)} TRAC`);
-                }
-                
-                if (indexerStake !== null && indexerStake !== expectedStake) {
+                } else if (indexerStake !== expectedStake) {
                   console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(indexerStake)} TRAC but should be ${this.weiToTRAC(expectedStake)} TRAC`);
                 }
               }
@@ -1950,11 +1955,16 @@ class ComprehensiveQAService {
                 // Check indexer from RPC
                 const indexerStake = await this.getIndexerNodeStakeAtBlock(client, nodeId, checkBlock);
                 
-                if (contractStake !== null && contractStake !== expectedStake) {
+                // If no event exists at this block, it's a missing event
+                if (contractStake === null && indexerStake === null) {
+                  console.log(`   ❌ MISSING EVENT: Block ${checkBlock} has no events in both indexer and contract`);
+                } else if (contractStake === null) {
+                  console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has no contract event`);
+                } else if (indexerStake === null) {
+                  console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has no indexer event`);
+                } else if (contractStake !== expectedStake) {
                   console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(contractStake)} TRAC but should be ${this.weiToTRAC(expectedStake)} TRAC`);
-                }
-                
-                if (indexerStake !== null && indexerStake !== expectedStake) {
+                } else if (indexerStake !== expectedStake) {
                   console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(indexerStake)} TRAC but should be ${this.weiToTRAC(expectedStake)} TRAC`);
                 }
               }
