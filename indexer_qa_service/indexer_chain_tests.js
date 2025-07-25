@@ -1010,7 +1010,7 @@ class ComprehensiveQAService {
           break;
         } catch (error) {
           retryCount++;
-          if (retryCount >= 10) {
+          if (retryCount >= 1000) {
             throw new Error(`Failed to connect to ${network} RPC after 10 attempts`);
           }
           await new Promise(resolve => setTimeout(resolve, 3000));
@@ -1647,9 +1647,9 @@ class ComprehensiveQAService {
         break;
       } catch (error) {
         retryCount++;
-        // Base/Gnosis: 10 retries, Neuroweb: Infinite retries
-        if (network !== 'Neuroweb' && retryCount >= 10) {
-          throw new Error(`Failed to connect to ${network} RPC after 10 attempts`);
+        // Base/Gnosis: 1000 retries, Neuroweb: Infinite retries
+        if (network !== 'Neuroweb' && retryCount >= 1000) {
+          throw new Error(`Failed to connect to ${network} RPC after 1000 attempts`);
         }
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
@@ -1733,9 +1733,9 @@ class ComprehensiveQAService {
         } catch (error) {
           chunkRetryCount++;
           console.log(`      ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
-          // Base/Gnosis: 10 retries, Neuroweb: Infinite retries
-          if (network !== 'Neuroweb' && chunkRetryCount >= 10) {
-            console.log(`      ❌ Skipping chunk ${startBlock}-${endBlock} after 10 failed attempts`);
+          // Base/Gnosis: 1000 retries, Neuroweb: Infinite retries
+          if (network !== 'Neuroweb' && chunkRetryCount >= 1000) {
+            console.log(`      ❌ Skipping chunk ${startBlock}-${endBlock} after 1000 failed attempts`);
             break;
           }
           console.log(`      ⏳ Retrying in 3 seconds...`);
