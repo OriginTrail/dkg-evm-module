@@ -1002,19 +1002,60 @@ class ComprehensiveQAService {
             
             // Calculate sum of delegations for this block from indexer
             let indexerDelegationsForBlock = 0n;
+            
+            // Group delegator events by delegator key and find latest value for each up to this block
+            const indexerDelegatorEventsByKey = {};
             for (const event of allIndexerDelegatorEventsResult.rows) {
-              if (Number(event.block_number) <= blockNumber) {
-                indexerDelegationsForBlock += BigInt(event.stake_base);
+              const delegatorKey = event.delegator_key;
+              const blockNum = Number(event.block_number);
+              
+              if (blockNum <= blockNumber) {
+                if (!indexerDelegatorEventsByKey[delegatorKey]) {
+                  indexerDelegatorEventsByKey[delegatorKey] = [];
+                }
+                indexerDelegatorEventsByKey[delegatorKey].push({
+                  blockNumber: blockNum,
+                  stakeBase: BigInt(event.stake_base)
+                });
+              }
+            }
+            
+            // For each delegator, get their latest delegation value up to this block
+            for (const [delegatorKey, events] of Object.entries(indexerDelegatorEventsByKey)) {
+              if (events.length > 0) {
+                // Sort by block number (newest first) and take the latest
+                events.sort((a, b) => b.blockNumber - a.blockNumber);
+                indexerDelegationsForBlock += events[0].stakeBase;
               }
             }
             
             // Calculate sum of delegations for this block from contract
             let contractDelegationsForBlock = 0n;
+            
+            // Group contract delegator events by delegator key and find latest value for each up to this block
+            const contractDelegatorEventsByKey = {};
             for (const [delegatorKey, events] of Object.entries(cachedDelegatorEvents)) {
               for (const event of events) {
-                if (Number(event.blockNumber) <= blockNumber) {
-                  contractDelegationsForBlock += BigInt(event.stakeBase);
+                const blockNum = Number(event.blockNumber);
+                
+                if (blockNum <= blockNumber) {
+                  if (!contractDelegatorEventsByKey[delegatorKey]) {
+                    contractDelegatorEventsByKey[delegatorKey] = [];
+                  }
+                  contractDelegatorEventsByKey[delegatorKey].push({
+                    blockNumber: blockNum,
+                    stakeBase: BigInt(event.stakeBase)
+                  });
                 }
+              }
+            }
+            
+            // For each delegator, get their latest delegation value up to this block
+            for (const [delegatorKey, events] of Object.entries(contractDelegatorEventsByKey)) {
+              if (events.length > 0) {
+                // Sort by block number (newest first) and take the latest
+                events.sort((a, b) => b.blockNumber - a.blockNumber);
+                contractDelegationsForBlock += events[0].stakeBase;
               }
             }
             
