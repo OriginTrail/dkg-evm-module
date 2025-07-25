@@ -16,3 +16,6 @@ metadata/*
 coverage.json
 mochawesome-report
 indexer_qa_service/validation_results.json
+base_cache.json
+gnosis_cache.json
+neuroweb_cache.json

@@ -1591,16 +1591,31 @@ class ComprehensiveQAService {
 
     const currentBlock = await provider.getBlockNumber();
     
-    // Get the latest block from existing cache
-    const existingNodeEvents = existingCache.nodeEvents || [];
-    const existingDelegatorEvents = existingCache.delegatorEvents || [];
-    
+    // Get the latest block from existing cache (using processed structure)
     let latestExistingBlock = 0;
-    if (existingNodeEvents.length > 0) {
-      latestExistingBlock = Math.max(...existingNodeEvents.map(e => e.blockNumber));
+    
+    // Check node events from processed structure
+    if (existingCache.nodeEventsByNode) {
+      for (const [nodeId, events] of Object.entries(existingCache.nodeEventsByNode)) {
+        for (const event of events) {
+          if (event.blockNumber > latestExistingBlock) {
+            latestExistingBlock = event.blockNumber;
+          }
+        }
+      }
     }
-    if (existingDelegatorEvents.length > 0) {
-      latestExistingBlock = Math.max(latestExistingBlock, ...existingDelegatorEvents.map(e => e.blockNumber));
+    
+    // Check delegator events from processed structure
+    if (existingCache.delegatorEventsByNode) {
+      for (const [nodeId, delegators] of Object.entries(existingCache.delegatorEventsByNode)) {
+        for (const [delegatorKey, events] of Object.entries(delegators)) {
+          for (const event of events) {
+            if (event.blockNumber > latestExistingBlock) {
+              latestExistingBlock = event.blockNumber;
+            }
+          }
+        }
+      }
     }
     
     console.log(`   📊 Latest cache block: ${latestExistingBlock.toLocaleString()}`);
@@ -1642,16 +1657,31 @@ class ComprehensiveQAService {
 
     const currentBlock = await provider.getBlockNumber();
     
-    // Get the latest block from existing cache
-    const existingNodeEvents = existingCache.nodeEvents || [];
-    const existingDelegatorEvents = existingCache.delegatorEvents || [];
-    
+    // Get the latest block from existing cache (using processed structure)
     let latestExistingBlock = 0;
-    if (existingNodeEvents.length > 0) {
-      latestExistingBlock = Math.max(...existingNodeEvents.map(e => e.blockNumber));
+    
+    // Check node events from processed structure
+    if (existingCache.nodeEventsByNode) {
+      for (const [nodeId, events] of Object.entries(existingCache.nodeEventsByNode)) {
+        for (const event of events) {
+          if (event.blockNumber > latestExistingBlock) {
+            latestExistingBlock = event.blockNumber;
+          }
+        }
+      }
     }
-    if (existingDelegatorEvents.length > 0) {
-      latestExistingBlock = Math.max(latestExistingBlock, ...existingDelegatorEvents.map(e => e.blockNumber));
+    
+    // Check delegator events from processed structure
+    if (existingCache.delegatorEventsByNode) {
+      for (const [nodeId, delegators] of Object.entries(existingCache.delegatorEventsByNode)) {
+        for (const [delegatorKey, events] of Object.entries(delegators)) {
+          for (const event of events) {
+            if (event.blockNumber > latestExistingBlock) {
+              latestExistingBlock = event.blockNumber;
+            }
+          }
+        }
+      }
     }
     
     const fromBlock = latestExistingBlock + 1;
