@@ -1329,8 +1329,9 @@ class ComprehensiveQAService {
       
       let validationPassed = true;
       
-      // First: Validate each common block in descending order
-      for (const blockNumber of commonBlocks) {
+      // Validate each common block in descending order and check for missing events between consecutive blocks
+      for (let i = 0; i < commonBlocks.length; i++) {
+        const blockNumber = commonBlocks[i];
         const indexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === blockNumber);
         const contractEvent = processedContractEvents.find(e => Number(e.blockNumber) === blockNumber);
         
@@ -1351,14 +1352,32 @@ class ComprehensiveQAService {
             console.log(`      ❌ DIFFER: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             validationPassed = false;
           }
+          
+          // Check for missing events between this block and the next one (if there is a next one)
+          if (i < commonBlocks.length - 1 && validationPassed) {
+            const nextBlockNumber = commonBlocks[i + 1];
+            const nextIndexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === nextBlockNumber);
+            const nextContractEvent = processedContractEvents.find(e => Number(e.blockNumber) === nextBlockNumber);
+            
+            if (nextIndexerEvent && nextContractEvent) {
+              console.log(`   🔍 Checking for missing events between blocks ${blockNumber} and ${nextBlockNumber}...`);
+              
+              // Check each block between current and next
+              for (let checkBlock = blockNumber - 1; checkBlock >= nextBlockNumber + 1; checkBlock--) {
+                const contractStake = await this.getDelegatorStakeAtBlock(network, nodeId, delegatorKey, checkBlock);
+                const indexerStake = await this.getIndexerDelegatorStakeAtBlock(client, nodeId, delegatorKey, checkBlock);
+                
+                if (contractStake !== null && contractStake !== expectedStake) {
+                  console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(contractStake)} TRAC but should be ${this.weiToTRAC(expectedStake)} TRAC`);
+                }
+                
+                if (indexerStake !== null && indexerStake !== expectedStake) {
+                  console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(indexerStake)} TRAC but should be ${this.weiToTRAC(expectedStake)} TRAC`);
+                }
+              }
+            }
+          }
         }
-      }
-      
-      // Second: Check for missing events in both indexer and contract data (only if validation passed)
-      if (validationPassed) {
-        const delegatorId = `${nodeId}_${delegatorKey}`;
-        await this.checkForMissingEvents(delegatorId, processedIndexerEvents, network, 'delegator', client);
-        await this.checkForMissingEvents(delegatorId, processedContractEvents, network, 'delegator');
       }
       
       if (validationPassed) {
@@ -1885,8 +1904,9 @@ class ComprehensiveQAService {
       
       let validationPassed = true;
       
-      // First: Validate each common block in descending order
-      for (const blockNumber of commonBlocks) {
+      // Validate each common block in descending order and check for missing events between consecutive blocks
+      for (let i = 0; i < commonBlocks.length; i++) {
+        const blockNumber = commonBlocks[i];
         const indexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === blockNumber);
         const contractEvent = processedContractEvents.find(e => Number(e.blockNumber) === blockNumber);
         
@@ -1907,13 +1927,32 @@ class ComprehensiveQAService {
             console.log(`      ❌ DIFFER: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
             validationPassed = false;
           }
+          
+          // Check for missing events between this block and the next one (if there is a next one)
+          if (i < commonBlocks.length - 1 && validationPassed) {
+            const nextBlockNumber = commonBlocks[i + 1];
+            const nextIndexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === nextBlockNumber);
+            const nextContractEvent = processedContractEvents.find(e => Number(e.blockNumber) === nextBlockNumber);
+            
+            if (nextIndexerEvent && nextContractEvent) {
+              console.log(`   🔍 Checking for missing events between blocks ${blockNumber} and ${nextBlockNumber}...`);
+              
+              // Check each block between current and next
+              for (let checkBlock = blockNumber - 1; checkBlock >= nextBlockNumber + 1; checkBlock--) {
+                const contractStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
+                const indexerStake = await this.getIndexerNodeStakeAtBlock(client, nodeId, checkBlock);
+                
+                if (contractStake !== null && contractStake !== expectedStake) {
+                  console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(contractStake)} TRAC but should be ${this.weiToTRAC(expectedStake)} TRAC`);
+                }
+                
+                if (indexerStake !== null && indexerStake !== expectedStake) {
+                  console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(indexerStake)} TRAC but should be ${this.weiToTRAC(expectedStake)} TRAC`);
+                }
+              }
+            }
+          }
         }
-      }
-      
-      // Second: Check for missing events in both indexer and contract data (only if validation passed)
-      if (validationPassed) {
-        await this.checkForMissingEvents(nodeId, processedIndexerEvents, network, 'node', client);
-        await this.checkForMissingEvents(nodeId, processedContractEvents, network, 'node');
       }
       
       if (validationPassed) {
