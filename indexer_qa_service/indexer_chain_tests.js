@@ -1550,12 +1550,11 @@ class ComprehensiveQAService {
   }
 
   // RUN ALL VALIDATIONS
-  async runAllValidations(network) {
+  async runAllValidations(network, cache) {
     console.log(`\n🚀 Running all validations for ${network}...`);
     
-    // Build cache once for all validations
-    console.log(`\n🔍 Building cache for ${network}...`);
-    const cache = await this.buildCache(network);
+    // Use provided cache instead of building again
+    console.log(`\n🔍 Using existing cache for ${network}...`);
     
     const results = {
       nodeStakes: await this.validateNodeStakesWithCache(network, cache),
@@ -1949,7 +1948,11 @@ async function testAllValidations() {
     console.log(`${'='.repeat(60)}`);
     
     try {
-      const results = await qaService.runAllValidations(network);
+      // Get the built cache for this network
+      const cacheResult = cacheResults.find(r => r.network === network && r.success);
+      const cache = cacheResult.cache;
+      
+      const results = await qaService.runAllValidations(network, cache);
       allResults[network] = results;
     } catch (error) {
       console.log(`❌ Error running validations for ${network}: ${error.message}`);
