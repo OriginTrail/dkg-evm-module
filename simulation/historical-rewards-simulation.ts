@@ -27,14 +27,15 @@ import {
   calculateScoresForActiveNodes,
   setupStakingAllowances,
   setupMigratorAllowances,
-  addDelegator,
   initializeProofingTimestamp,
+  getNodeEpochPublishingFactors,
 } from './helpers/simulation-helpers';
 import {
   validateDelegatorsCount,
   validateStakingTransaction,
   validateStartTimeAndEpochLength,
   verifyMainnetStakingStorageState,
+  initializeValidationVariables,
 } from './helpers/validation';
 
 /**
@@ -63,6 +64,9 @@ class HistoricalRewardsSimulation {
   } = {};
   private v8DelegatorTotalRewards: { [key: string]: bigint } = {};
   private verifyMainnetState: boolean = false;
+  private nodeEpochPublishingFactors: {
+    [key: number]: { [key: number]: bigint };
+  } = {};
 
   constructor(hre: HardhatRuntimeEnvironment, dbPath: string) {
     this.hre = hre;
@@ -171,7 +175,13 @@ class HistoricalRewardsSimulation {
         this.hre,
         'ParametersStorage',
       ),
+      epochStorage: await getDeployedContract(this.hre, 'EpochStorageV8'),
     };
+
+    this.nodeEpochPublishingFactors = await getNodeEpochPublishingFactors(
+      this.contracts,
+      this.chain,
+    );
 
     await validateStartTimeAndEpochLength(this.contracts, 1736812800, 2592000);
 
@@ -325,6 +335,7 @@ class HistoricalRewardsSimulation {
           this.hre,
           this.contracts,
           proofingTime,
+          this.nodeEpochPublishingFactors,
         );
         this.lastProofingTimestamp = proofingTime;
       } catch (error) {
@@ -349,13 +360,43 @@ class HistoricalRewardsSimulation {
       let currentEpoch = await chronos.getCurrentEpoch();
       const epochAtTimestamp = await chronos.epochAtTimestamp(timestamp);
       if (epochAtTimestamp > currentEpoch) {
+        console.log(
+          `[EPOCH TRANSITION] Epoch transition from ${currentEpoch} to ${epochAtTimestamp}`,
+        );
         await this.mining.setTime(
           Number(await chronos.timestampForEpoch(epochAtTimestamp)),
         );
         await this.mining.mineBlock();
         currentEpoch = epochAtTimestamp;
+        expect(currentEpoch).to.equal(await chronos.getCurrentEpoch());
+
+        // TODO: call _prepareForStakeChange for all nodes and their delegators for currentEpoch - 1 - make it public in Staking contract
+        console.log(
+          `[EPOCH TRANSITION] Calling _prepareForStakeChange for all nodes and their delegators for currentEpoch - 1`,
+        );
+        const maxIdentityId = Number(
+          await this.contracts.identityStorage.lastIdentityId(),
+        );
+
+        for (let identityId = 1; identityId <= maxIdentityId; identityId++) {
+          const delegators =
+            await this.contracts.delegatorsInfo.getDelegators(identityId);
+
+          for (const delegator of delegators) {
+            const delegatorKey = this.hre.ethers.keccak256(
+              this.hre.ethers.solidityPacked(['address'], [delegator]),
+            );
+            await this.contracts.staking._prepareForStakeChange(
+              Number(currentEpoch) - 1,
+              identityId,
+              delegatorKey,
+            );
+          }
+        }
+        console.log(
+          `[EPOCH TRANSITION] _prepareForStakeChange for all nodes and their delegators for currentEpoch - 1 completed`,
+        );
       }
-      expect(currentEpoch).to.equal(await chronos.getCurrentEpoch());
     } catch (error) {
       console.error(
         `[EPOCH TRANSITION] ❌ Failed to handle epoch transitions:`,
@@ -375,7 +416,7 @@ class HistoricalRewardsSimulation {
     }
 
     console.log(
-      `[PROCESS TRANSACTION] ${tx.contract}.${tx.functionName}(${tx.functionInputs
+      `[PROCESS TRANSACTION] msg.sender: ${tx.from} is calling ${tx.contract}.${tx.functionName}(${tx.functionInputs
         .map((input) => JSON.stringify(input))
         .join(', ')}) - tx: ${tx.hash}`,
     );
@@ -390,60 +431,23 @@ class HistoricalRewardsSimulation {
         );
       }
 
+      // Validation variables
+      const {
+        nodeStake,
+        isNodeDelegator,
+        toNodeStake,
+        delegatorsCount,
+        requestWithdrawalAmount,
+      } = await initializeValidationVariables(this.contracts, tx);
+
       // Impersonate the original transaction sender FIRST
       await impersonateAccount(this.hre, tx.from);
 
       // Estimate gas cost and ensure sufficient funds for this specific transaction
       await ensureSufficientGasFunds(this.hre, tx.from);
 
-      // Validation variables
-      let delegatorsCount = 0;
-      let isNodeDelegator = false;
-      let fromNodeStake = 0n;
-      let toNodeStake = 0n;
-      let nodeStake = 0n;
-      let requestWithdrawalAmount = 0n;
-
-      // TODO: export this into a helper function
-      if (tx.contract === 'Staking') {
-        if (tx.functionName === 'redelegate') {
-          fromNodeStake = BigInt(
-            await this.contracts.stakingStorage.getNodeStake(
-              tx.functionInputs[0],
-            ),
-          );
-          toNodeStake = BigInt(
-            await this.contracts.stakingStorage.getNodeStake(
-              tx.functionInputs[1],
-            ),
-          );
-        } else if (tx.functionName === 'cancelWithdrawal') {
-          nodeStake = BigInt(
-            await this.contracts.stakingStorage.getNodeStake(
-              tx.functionInputs[0],
-            ),
-          );
-          // Get withdrawal request amount BEFORE the transaction executes
-          const delegatorKey = this.hre.ethers.keccak256(
-            this.hre.ethers.solidityPacked(['address'], [tx.from]),
-          );
-          [requestWithdrawalAmount] =
-            await this.contracts.stakingStorage.getDelegatorWithdrawalRequest(
-              tx.functionInputs[0],
-              delegatorKey,
-            );
-        } else {
-          nodeStake = BigInt(
-            await this.contracts.stakingStorage.getNodeStake(
-              tx.functionInputs[0],
-            ),
-          );
-        }
-      }
-
       // Special handling for transactions that need token allowances
       // (Must be done AFTER impersonation and gas funding)
-      // TODO: add this to if else above
       if (
         tx.contract === 'Migrator' &&
         tx.functionName === 'migrateDelegatorData'
@@ -454,32 +458,13 @@ class HistoricalRewardsSimulation {
           tx.from,
           tx.functionInputs[0],
         );
-        delegatorsCount = (
-          await this.contracts.delegatorsInfo.getDelegators(
-            tx.functionInputs[0],
-          )
-        ).length;
       } else if (tx.contract === 'Staking' && tx.functionName === 'stake') {
         await setupStakingAllowances(
           this.hre,
           this.contracts,
           tx.from,
           tx.functionInputs[1],
-        ); // Amount is second parameter
-        isNodeDelegator = await this.contracts.delegatorsInfo.isNodeDelegator(
-          tx.functionInputs[0],
-          tx.from,
         );
-        console.log(
-          `[PROCESS TRANSACTION] isNodeDelegator: ${isNodeDelegator} for identity ${tx.functionInputs[0]}`,
-        );
-        if (!isNodeDelegator) {
-          delegatorsCount = (
-            await this.contracts.delegatorsInfo.getDelegators(
-              tx.functionInputs[0],
-            )
-          ).length;
-        }
       }
 
       // Get the signer for the transaction sender
@@ -500,43 +485,29 @@ class HistoricalRewardsSimulation {
         await validateStakingTransaction(
           this.contracts,
           tx,
-          fromNodeStake,
           toNodeStake,
           nodeStake,
           requestWithdrawalAmount,
+        );
+
+        await validateDelegatorsCount(
+          this.hre,
+          this.contracts,
+          tx,
+          isNodeDelegator,
+          delegatorsCount,
         );
 
         // Verify on-chain state after stake-changing transactions
         if (this.verifyMainnetState) {
           await verifyMainnetStakingStorageState(
             this.contracts,
+            this.chain,
             tx,
             tx.functionInputs[0],
             tx.from,
             this.db.getTxBlockNumber(tx.hash) as number,
           );
-        }
-
-        if (
-          tx.contract === 'Migrator' &&
-          tx.functionName === 'migrateDelegatorData'
-        ) {
-          // Add the new address to the DelegatorsInfo contract
-          const identityId = tx.functionInputs[0];
-          await addDelegator(this.hre, this.contracts, identityId, tx.from);
-          await validateDelegatorsCount(
-            this.contracts,
-            identityId,
-            delegatorsCount,
-          );
-        } else if (tx.contract === 'Staking' && tx.functionName === 'stake') {
-          if (!isNodeDelegator && !this.verifyMainnetState) {
-            await validateDelegatorsCount(
-              this.contracts,
-              tx.functionInputs[0],
-              delegatorsCount,
-            );
-          }
         }
 
         console.log(
