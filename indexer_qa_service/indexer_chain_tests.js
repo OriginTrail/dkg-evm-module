@@ -1326,6 +1326,11 @@ class ComprehensiveQAService {
       
       console.log(`🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: ${commonBlocks.length} blocks to validate`);
       
+      // Check for missing events in both indexer and contract data
+      const delegatorId = `${nodeId}_${delegatorKey}`;
+      await this.checkForMissingEvents(delegatorId, processedIndexerEvents, network, 'delegator', client);
+      await this.checkForMissingEvents(delegatorId, processedContractEvents, network, 'delegator');
+      
       let validationPassed = true;
       
       // Validate each common block in descending order
@@ -1875,6 +1880,10 @@ class ComprehensiveQAService {
       
       console.log(`🔍 [${network}] Node ${nodeId}: ${commonBlocks.length} blocks to validate`);
       
+      // Check for missing events in both indexer and contract data
+      await this.checkForMissingEvents(nodeId, processedIndexerEvents, network, 'node', client);
+      await this.checkForMissingEvents(nodeId, processedContractEvents, network, 'node');
+      
       let validationPassed = true;
       
       // Validate each common block in descending order
@@ -1916,6 +1925,141 @@ class ComprehensiveQAService {
         return { type: 'rpcError' };
       } else {
         return { type: 'failed' };
+      }
+    }
+  }
+
+  // Helper function to get node stake at specific block from contract
+  async getNodeStakeAtBlock(network, nodeId, blockNumber) {
+    try {
+      const networkConfig = config.networks.find(n => n.name === network);
+      const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+      const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
+      
+      const stakingContract = new ethers.Contract(stakingAddress, [
+        'function getNodeStake(uint72 identityId) view returns (uint96)'
+      ], provider);
+      
+      const stake = await stakingContract.getNodeStake(nodeId, { blockTag: blockNumber });
+      return BigInt(stake);
+    } catch (error) {
+      console.log(`   ⚠️ Error getting node stake at block ${blockNumber}: ${error.message}`);
+      return null;
+    }
+  }
+
+  // Helper function to get delegator stake at specific block from contract
+  async getDelegatorStakeAtBlock(network, nodeId, delegatorKey, blockNumber) {
+    try {
+      const networkConfig = config.networks.find(n => n.name === network);
+      const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+      const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
+      
+      const stakingContract = new ethers.Contract(stakingAddress, [
+        'function getDelegatorStake(uint72 identityId, bytes32 delegatorKey) view returns (uint96)'
+      ], provider);
+      
+      const stake = await stakingContract.getDelegatorStake(nodeId, delegatorKey, { blockTag: blockNumber });
+      return BigInt(stake);
+    } catch (error) {
+      console.log(`   ⚠️ Error getting delegator stake at block ${blockNumber}: ${error.message}`);
+      return null;
+    }
+  }
+
+  // Helper function to get node stake at specific block from indexer
+  async getIndexerNodeStakeAtBlock(client, nodeId, blockNumber) {
+    try {
+      const result = await client.query(`
+        SELECT stake FROM node_stake_updated 
+        WHERE identity_id = $1 AND block_number <= $2 
+        ORDER BY block_number DESC LIMIT 1
+      `, [nodeId, blockNumber]);
+      
+      if (result.rows.length === 0) {
+        return null;
+      }
+      
+      return BigInt(result.rows[0].stake);
+    } catch (error) {
+      console.log(`   ⚠️ Error getting indexer node stake at block ${blockNumber}: ${error.message}`);
+      return null;
+    }
+  }
+
+  // Helper function to get delegator stake at specific block from indexer
+  async getIndexerDelegatorStakeAtBlock(client, nodeId, delegatorKey, blockNumber) {
+    try {
+      const result = await client.query(`
+        SELECT stake_base FROM delegator_base_stake_updated 
+        WHERE identity_id = $1 AND delegator_key = $2 AND block_number <= $3 
+        ORDER BY block_number DESC LIMIT 1
+      `, [nodeId, delegatorKey, blockNumber]);
+      
+      if (result.rows.length === 0) {
+        return null;
+      }
+      
+      return BigInt(result.rows[0].stake_base);
+    } catch (error) {
+      console.log(`   ⚠️ Error getting indexer delegator stake at block ${blockNumber}: ${error.message}`);
+      return null;
+    }
+  }
+
+  // Check for missing events between consecutive events
+  async checkForMissingEvents(entityId, events, network, entityType, client = null) {
+    if (events.length < 2) {
+      return; // Need at least 2 events to compare
+    }
+    
+    console.log(`   🔍 Checking for missing events for ${entityType} ${entityId}...`);
+    
+    for (let i = 0; i < events.length - 1; i++) {
+      const newerEvent = events[i];
+      const olderEvent = events[i + 1];
+      
+      // Get the correct stake property based on entity type
+      const newerStake = entityType === 'delegator' ? newerEvent.stakeBase : newerEvent.stake;
+      const olderStake = entityType === 'delegator' ? olderEvent.stakeBase : olderEvent.stake;
+      
+      // If stake values are the same, no change occurred
+      if (newerStake === olderStake) {
+        continue;
+      }
+      
+      console.log(`   📊 Checking blocks between ${newerEvent.blockNumber} (stake: ${this.weiToTRAC(newerStake)} TRAC) and ${olderEvent.blockNumber} (stake: ${this.weiToTRAC(olderStake)} TRAC)`);
+      
+      // Check each block between newerEvent.block - 1 and olderEvent.block + 1
+      for (let checkBlock = newerEvent.blockNumber - 1; checkBlock >= olderEvent.blockNumber + 1; checkBlock--) {
+        let stakeAtBlock;
+        
+        if (entityType === 'node') {
+          // Check both contract and indexer
+          const contractStake = await this.getNodeStakeAtBlock(network, entityId, checkBlock);
+          const indexerStake = client ? await this.getIndexerNodeStakeAtBlock(client, entityId, checkBlock) : null;
+          
+          if (contractStake !== null && contractStake !== newerStake) {
+            console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(contractStake)} TRAC but should be ${this.weiToTRAC(newerStake)} TRAC`);
+          }
+          
+          if (indexerStake !== null && indexerStake !== newerStake) {
+            console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(indexerStake)} TRAC but should be ${this.weiToTRAC(newerStake)} TRAC`);
+          }
+        } else if (entityType === 'delegator') {
+          // For delegator, we need nodeId and delegatorKey
+          const [nodeId, delegatorKey] = entityId.split('_');
+          const contractStake = await this.getDelegatorStakeAtBlock(network, nodeId, delegatorKey, checkBlock);
+          const indexerStake = client ? await this.getIndexerDelegatorStakeAtBlock(client, nodeId, delegatorKey, checkBlock) : null;
+          
+          if (contractStake !== null && contractStake !== newerStake) {
+            console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(contractStake)} TRAC but should be ${this.weiToTRAC(newerStake)} TRAC`);
+          }
+          
+          if (indexerStake !== null && indexerStake !== newerStake) {
+            console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(indexerStake)} TRAC but should be ${this.weiToTRAC(newerStake)} TRAC`);
+          }
+        }
       }
     }
   }
