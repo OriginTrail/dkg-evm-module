@@ -1364,7 +1364,11 @@ class ComprehensiveQAService {
               
               // Check each block between current and next
               for (let checkBlock = blockNumber - 1; checkBlock >= nextBlockNumber + 1; checkBlock--) {
-                const contractStake = await this.getDelegatorStakeAtBlock(network, nodeId, delegatorKey, checkBlock);
+                // Check contract from cache
+                const cachedContractEvent = cachedDelegatorEvents.find(e => e.blockNumber === checkBlock);
+                const contractStake = cachedContractEvent ? BigInt(cachedContractEvent.stakeBase) : null;
+                
+                // Check indexer from RPC
                 const indexerStake = await this.getIndexerDelegatorStakeAtBlock(client, nodeId, delegatorKey, checkBlock);
                 
                 if (contractStake !== null && contractStake !== expectedStake) {
@@ -1939,7 +1943,11 @@ class ComprehensiveQAService {
               
               // Check each block between current and next
               for (let checkBlock = blockNumber - 1; checkBlock >= nextBlockNumber + 1; checkBlock--) {
-                const contractStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
+                // Check contract from cache
+                const cachedContractEvent = cachedNodeEvents.find(e => e.blockNumber === checkBlock);
+                const contractStake = cachedContractEvent ? BigInt(cachedContractEvent.stake) : null;
+                
+                // Check indexer from RPC
                 const indexerStake = await this.getIndexerNodeStakeAtBlock(client, nodeId, checkBlock);
                 
                 if (contractStake !== null && contractStake !== expectedStake) {
