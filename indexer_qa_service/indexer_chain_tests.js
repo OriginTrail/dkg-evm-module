@@ -1362,6 +1362,9 @@ class ComprehensiveQAService {
             if (nextIndexerEvent && nextContractEvent) {
               console.log(`   🔍 Checking for missing events between blocks ${blockNumber} and ${nextBlockNumber}...`);
               
+              // Use the stake from the older block (nextBlockNumber) as the expected value for intermediate blocks
+              const expectedStakeForIntermediateBlocks = nextIndexerEvent.stake;
+              
               // Check each block between current and next
               for (let checkBlock = blockNumber - 1; checkBlock >= nextBlockNumber + 1; checkBlock--) {
                 // Check contract from cache
@@ -1378,10 +1381,10 @@ class ComprehensiveQAService {
                   console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has no contract event`);
                 } else if (indexerStake === null) {
                   console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has no indexer event`);
-                } else if (contractStake !== expectedStake) {
-                  console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(contractStake)} TRAC but should be ${this.weiToTRAC(expectedStake)} TRAC`);
-                } else if (indexerStake !== expectedStake) {
-                  console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(indexerStake)} TRAC but should be ${this.weiToTRAC(expectedStake)} TRAC`);
+                } else if (contractStake !== expectedStakeForIntermediateBlocks) {
+                  console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(contractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                } else if (indexerStake !== expectedStakeForIntermediateBlocks) {
+                  console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(indexerStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
                 }
               }
             }
@@ -1946,6 +1949,9 @@ class ComprehensiveQAService {
             if (nextIndexerEvent && nextContractEvent) {
               console.log(`   🔍 Checking for missing events between blocks ${blockNumber} and ${nextBlockNumber}...`);
               
+              // Use the stake from the older block (nextBlockNumber) as the expected value for intermediate blocks
+              const expectedStakeForIntermediateBlocks = nextIndexerEvent.stake;
+              
               // Check each block between current and next
               for (let checkBlock = blockNumber - 1; checkBlock >= nextBlockNumber + 1; checkBlock--) {
                 // Check contract from cache
@@ -1962,10 +1968,10 @@ class ComprehensiveQAService {
                   console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has no contract event`);
                 } else if (indexerStake === null) {
                   console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has no indexer event`);
-                } else if (contractStake !== expectedStake) {
-                  console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(contractStake)} TRAC but should be ${this.weiToTRAC(expectedStake)} TRAC`);
-                } else if (indexerStake !== expectedStake) {
-                  console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(indexerStake)} TRAC but should be ${this.weiToTRAC(expectedStake)} TRAC`);
+                } else if (contractStake !== expectedStakeForIntermediateBlocks) {
+                  console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(contractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                } else if (indexerStake !== expectedStakeForIntermediateBlocks) {
+                  console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has stake ${this.weiToTRAC(indexerStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
                 }
               }
             }
