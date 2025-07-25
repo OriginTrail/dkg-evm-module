@@ -1,13 +1,14 @@
 import { expect } from 'chai';
 import { ethers } from 'ethers';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import { TransactionData } from './db-helpers';
 import { RPC_URLS } from './simulation-constants';
+import { addDelegator } from './simulation-helpers';
 
 export async function validateStakingTransaction(
   contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
   tx: TransactionData,
-  fromNodeStake: bigint,
   toNodeStake: bigint,
   nodeStake: bigint,
   requestWithdrawalAmount: bigint,
@@ -15,9 +16,9 @@ export async function validateStakingTransaction(
   if (tx.contract === 'Staking') {
     if (tx.functionName === 'redelegate') {
       const redelegateAmount = BigInt(tx.functionInputs[2]);
-      expect(fromNodeStake - redelegateAmount).to.equal(
+      expect(nodeStake - redelegateAmount).to.equal(
         await contracts.stakingStorage.getNodeStake(tx.functionInputs[0]),
-        `From node stake should be ${fromNodeStake - redelegateAmount} but is ${await contracts.stakingStorage.getNodeStake(
+        `From node stake should be ${nodeStake - redelegateAmount} but is ${await contracts.stakingStorage.getNodeStake(
           tx.functionInputs[0],
         )}`,
       );
@@ -79,7 +80,7 @@ export async function validateStakingTransaction(
   }
 }
 
-export async function validateDelegatorsCount(
+export async function _validateDelegatorsCount(
   contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
   identityId: number,
   delegatorsCountBefore: number,
@@ -114,6 +115,7 @@ export async function validateStartTimeAndEpochLength(
  */
 export async function verifyMainnetStakingStorageState(
   localContracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  chain: string,
   tx: TransactionData,
   identityId: number,
   delegatorAddress: string | null,
@@ -135,7 +137,7 @@ export async function verifyMainnetStakingStorageState(
   }
 
   try {
-    const rpc = new ethers.JsonRpcProvider(RPC_URLS.base_mainnet);
+    const rpc = new ethers.JsonRpcProvider(RPC_URLS[chain]);
 
     // StakingStorage ABI - only the functions we need
     const stakingStorageAbi = [
@@ -190,7 +192,9 @@ export async function verifyMainnetStakingStorageState(
 
       expect(onChainDelegatorStake).to.equal(
         localDelegatorStake,
-        `On-chain delegator stake ${onChainDelegatorStake.toString()} should be equal to local delegator stake ${localDelegatorStake.toString()}`,
+        `On-chain delegator stake ${onChainDelegatorStake.toString()} should be equal to local delegator stake ${localDelegatorStake.toString()}. Difference: ${ethers.formatEther(
+          onChainDelegatorStake - localDelegatorStake,
+        )} TRAC`,
       );
       console.log(`[VERIFY STATE] ✅ Delegator stake matches`);
     }
@@ -201,7 +205,9 @@ export async function verifyMainnetStakingStorageState(
 
     expect(onChainNodeStake).to.equal(
       localNodeStake,
-      `On-chain node stake ${onChainNodeStake.toString()} should be equal to local node stake ${localNodeStake.toString()}`,
+      `On-chain node stake ${onChainNodeStake.toString()} should be equal to local node stake ${localNodeStake.toString()}. Difference: ${ethers.formatEther(
+        onChainNodeStake - localNodeStake,
+      )} TRAC`,
     );
     console.log(`[VERIFY STATE] ✅ Node stake matches`);
     console.log(
@@ -211,5 +217,114 @@ export async function verifyMainnetStakingStorageState(
     console.warn(
       `[VERIFY STATE] ❌ Failed to verify state for tx ${tx.hash}: ${error}`,
     );
+  }
+}
+
+export async function initializeValidationVariables(
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  tx: TransactionData,
+): Promise<{
+  nodeStake: bigint;
+  isNodeDelegator: boolean;
+  toNodeStake: bigint;
+  delegatorsCount: number;
+  requestWithdrawalAmount: bigint;
+}> {
+  let nodeStake = 0n;
+  let isNodeDelegator = false;
+  let toNodeStake = 0n;
+  let delegatorsCount = 0;
+  let requestWithdrawalAmount = 0n;
+
+  if (tx.contract === 'Staking') {
+    // from node stake in case of redelegate
+    nodeStake = BigInt(
+      await contracts.stakingStorage.getNodeStake(tx.functionInputs[0]),
+    );
+
+    const identityId =
+      tx.functionName === 'redelegate'
+        ? tx.functionInputs[1]
+        : tx.functionInputs[0];
+
+    isNodeDelegator = await contracts.delegatorsInfo.isNodeDelegator(
+      identityId,
+      tx.from,
+    );
+    console.log(
+      `[PROCESS TRANSACTION] isNodeDelegator: ${isNodeDelegator} for identity ${identityId}`,
+    );
+    if (!isNodeDelegator) {
+      delegatorsCount = (
+        await contracts.delegatorsInfo.getDelegators(identityId)
+      ).length;
+    }
+
+    if (tx.functionName === 'redelegate') {
+      toNodeStake = BigInt(
+        await contracts.stakingStorage.getNodeStake(tx.functionInputs[1]),
+      );
+    } else if (tx.functionName === 'cancelWithdrawal') {
+      // Get withdrawal request amount BEFORE the transaction executes
+      const delegatorKey = ethers.keccak256(
+        ethers.solidityPacked(['address'], [tx.from]),
+      );
+      [requestWithdrawalAmount] =
+        await contracts.stakingStorage.getDelegatorWithdrawalRequest(
+          tx.functionInputs[0],
+          delegatorKey,
+        );
+    }
+  } else if (
+    tx.contract === 'Migrator' &&
+    tx.functionName === 'migrateDelegatorData'
+  ) {
+    nodeStake = BigInt(
+      await contracts.stakingStorage.getNodeStake(tx.functionInputs[0]),
+    );
+    delegatorsCount = (
+      await contracts.delegatorsInfo.getDelegators(tx.functionInputs[0])
+    ).length;
+  }
+
+  return {
+    nodeStake,
+    isNodeDelegator,
+    toNodeStake,
+    delegatorsCount,
+    requestWithdrawalAmount,
+  };
+}
+
+export async function validateDelegatorsCount(
+  hre: HardhatRuntimeEnvironment,
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  tx: TransactionData,
+  isNodeDelegator: boolean,
+  delegatorsCount: number,
+) {
+  if (
+    tx.contract === 'Migrator' &&
+    tx.functionName === 'migrateDelegatorData'
+  ) {
+    // Add the new address to the DelegatorsInfo contract
+    const identityId = tx.functionInputs[0];
+    await addDelegator(hre, contracts, identityId, tx.from);
+    await _validateDelegatorsCount(contracts, identityId, delegatorsCount);
+  } else if (tx.contract === 'Staking') {
+    const identityId =
+      tx.functionName === 'redelegate'
+        ? tx.functionInputs[1]
+        : tx.functionInputs[0];
+
+    if (!isNodeDelegator) {
+      if (tx.functionName === 'requestWithdrawal') {
+        console.log(
+          `[VALIDATE DELEGATORS COUNT] Adding delegator ${tx.from} for identity ${tx.functionInputs[0]} - requestWithdrawal (why was this not a delegator before?)`,
+        );
+        await addDelegator(hre, contracts, tx.functionInputs[0], tx.from);
+      }
+      await _validateDelegatorsCount(contracts, identityId, delegatorsCount);
+    }
   }
 }
