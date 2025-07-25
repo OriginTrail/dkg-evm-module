@@ -1372,57 +1372,40 @@ class ComprehensiveQAService {
                 // Use the stake from the current block as the expected value for intermediate blocks
                 const expectedStakeForIntermediateBlocks = indexerEvent.stake;
                 
-                // Check each block between current and next in ascending order (oldest to newest)
-                const totalBlocksToCheck = nextBlockNumber - blockNumber - 1;
+                // Stage 1: Quick check - check the block right before the next event
+                const quickCheckBlock = nextBlockNumber - 1;
+                console.log(`   📊 Quick check: Block ${quickCheckBlock} (${nextBlockNumber} - 1) for missing events...`);
                 
-                // Safety limit: don't check more than 10,000 blocks at once
-                if (totalBlocksToCheck > 10000) {
-                  console.log(`   ⚠️ Skipping missing events check - too many blocks (${totalBlocksToCheck}) between ${blockNumber} and ${nextBlockNumber}`);
-                  console.log(`   📊 This would take too long. Consider checking manually if needed.`);
-                } else {
-                  let checkedBlocks = 0;
+                // Only check contract side since if event is missing from indexer, there's nothing to check there
+                const actualContractStake = await this.getNodeStakeAtBlock(network, nodeId, quickCheckBlock);
+                
+                if (actualContractStake !== null && actualContractStake !== expectedStakeForIntermediateBlocks) {
+                  console.log(`   ❌ MISSING EVENT DETECTED: Block ${quickCheckBlock} has state ${this.weiToTRAC(actualContractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                  console.log(`   🔍 Scanning all blocks between ${blockNumber} and ${nextBlockNumber} to find exact missing event...`);
                   
-                  console.log(`   📊 Checking ${totalBlocksToCheck} intermediate blocks...`);
+                  // Stage 2: Detailed scan - check all blocks between the two events
+                  const totalBlocksToScan = nextBlockNumber - blockNumber - 1;
+                  console.log(`   📊 Scanning ${totalBlocksToScan} blocks to find missing event...`);
                   
-                  for (let checkBlock = blockNumber + 1; checkBlock <= nextBlockNumber - 1; checkBlock++) {
-                    checkedBlocks++;
+                  // Scan all blocks between the two events
+                  for (let checkBlock = blockNumber + 1; checkBlock < nextBlockNumber; checkBlock++) {
+                    const blockStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
                     
-                    // Show progress every 1000 blocks
-                    if (checkedBlocks % 1000 === 0) {
-                      console.log(`   📊 Progress: ${checkedBlocks}/${totalBlocksToCheck} blocks checked (${Math.round(checkedBlocks/totalBlocksToCheck*100)}%)`);
+                    if (blockStake !== null && blockStake !== expectedStakeForIntermediateBlocks) {
+                      console.log(`   ❌ MISSING EVENT FOUND: Block ${checkBlock} has state ${this.weiToTRAC(blockStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                      console.log(`   📍 This is likely the block where the missing event occurred`);
+                      break; // Found the missing event, stop scanning
                     }
                     
-                    // Check contract from cache lookup
-                    const contractStake = contractEventsByBlockNumber[checkBlock] || null;
-                    
-                    // Check indexer from lookup map
-                    const indexerStake = indexerEventsByBlockNumber[checkBlock] || null;
-                    
-                    // Check for missing events: contract has event but indexer doesn't, or vice versa
-                    if (contractStake !== null && indexerStake === null) {
-                      console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has contract event (${this.weiToTRAC(contractStake)} TRAC) but no indexer event`);
-                    } else if (contractStake === null && indexerStake !== null) {
-                      console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has indexer event (${this.weiToTRAC(indexerStake)} TRAC) but no contract event`);
-                    } else if (contractStake !== null && indexerStake !== null) {
-                      // Both have events, check if values match
-                      if (contractStake !== indexerStake) {
-                        console.log(`   ❌ MISMATCH: Block ${checkBlock} - Contract: ${this.weiToTRAC(contractStake)} TRAC, Indexer: ${this.weiToTRAC(indexerStake)} TRAC`);
-                      }
-                    } else {
-                      // Neither has events, check if the state is correct (should be same as previous event)
-                      const actualContractStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
-                      const actualIndexerStake = await this.getIndexerNodeStakeAtBlock(client, nodeId, checkBlock);
-                      
-                      if (actualContractStake !== null && actualContractStake !== expectedStakeForIntermediateBlocks) {
-                        console.log(`   ❌ CONTRACT STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualContractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
-                      }
-                      if (actualIndexerStake !== null && actualIndexerStake !== expectedStakeForIntermediateBlocks) {
-                        console.log(`   ❌ INDEXER STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualIndexerStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
-                      }
+                    // Show progress every 1000 blocks
+                    if ((checkBlock - blockNumber) % 1000 === 0) {
+                      console.log(`   📊 Progress: ${checkBlock - blockNumber}/${totalBlocksToScan} blocks scanned`);
                     }
                   }
                   
-                  console.log(`   ✅ Completed checking ${totalBlocksToCheck} intermediate blocks`);
+                  console.log(`   ✅ Completed missing event scan`);
+                } else {
+                  console.log(`   ✅ Block ${quickCheckBlock} has expected stake value (${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC), no missing events detected`);
                 }
               } else {
                 console.log(`   📊 No missing events check needed - stake unchanged between blocks ${blockNumber} and ${nextBlockNumber}`);
@@ -2007,57 +1990,40 @@ class ComprehensiveQAService {
                 // Use the stake from the current block as the expected value for intermediate blocks
                 const expectedStakeForIntermediateBlocks = indexerEvent.stake;
                 
-                // Check each block between current and next in ascending order (oldest to newest)
-                const totalBlocksToCheck = nextBlockNumber - blockNumber - 1;
+                // Stage 1: Quick check - check the block right before the next event
+                const quickCheckBlock = nextBlockNumber - 1;
+                console.log(`   📊 Quick check: Block ${quickCheckBlock} (${nextBlockNumber} - 1) for missing events...`);
                 
-                // Safety limit: don't check more than 10,000 blocks at once
-                if (totalBlocksToCheck > 10000) {
-                  console.log(`   ⚠️ Skipping missing events check - too many blocks (${totalBlocksToCheck}) between ${blockNumber} and ${nextBlockNumber}`);
-                  console.log(`   📊 This would take too long. Consider checking manually if needed.`);
-                } else {
-                  let checkedBlocks = 0;
+                // Only check contract side since if event is missing from indexer, there's nothing to check there
+                const actualContractStake = await this.getNodeStakeAtBlock(network, nodeId, quickCheckBlock);
+                
+                if (actualContractStake !== null && actualContractStake !== expectedStakeForIntermediateBlocks) {
+                  console.log(`   ❌ MISSING EVENT DETECTED: Block ${quickCheckBlock} has state ${this.weiToTRAC(actualContractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                  console.log(`   🔍 Scanning all blocks between ${blockNumber} and ${nextBlockNumber} to find exact missing event...`);
                   
-                  console.log(`   📊 Checking ${totalBlocksToCheck} intermediate blocks...`);
+                  // Stage 2: Detailed scan - check all blocks between the two events
+                  const totalBlocksToScan = nextBlockNumber - blockNumber - 1;
+                  console.log(`   📊 Scanning ${totalBlocksToScan} blocks to find missing event...`);
                   
-                  for (let checkBlock = blockNumber + 1; checkBlock <= nextBlockNumber - 1; checkBlock++) {
-                    checkedBlocks++;
+                  // Scan all blocks between the two events
+                  for (let checkBlock = blockNumber + 1; checkBlock < nextBlockNumber; checkBlock++) {
+                    const blockStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
                     
-                    // Show progress every 1000 blocks
-                    if (checkedBlocks % 1000 === 0) {
-                      console.log(`   📊 Progress: ${checkedBlocks}/${totalBlocksToCheck} blocks checked (${Math.round(checkedBlocks/totalBlocksToCheck*100)}%)`);
+                    if (blockStake !== null && blockStake !== expectedStakeForIntermediateBlocks) {
+                      console.log(`   ❌ MISSING EVENT FOUND: Block ${checkBlock} has state ${this.weiToTRAC(blockStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
+                      console.log(`   📍 This is likely the block where the missing event occurred`);
+                      break; // Found the missing event, stop scanning
                     }
                     
-                    // Check contract from cache lookup
-                    const contractStake = contractEventsByBlockNumber[checkBlock] || null;
-                    
-                    // Check indexer from lookup map
-                    const indexerStake = indexerEventsByBlockNumber[checkBlock] || null;
-                    
-                    // Check for missing events: contract has event but indexer doesn't, or vice versa
-                    if (contractStake !== null && indexerStake === null) {
-                      console.log(`   ❌ MISSING INDEXER EVENT: Block ${checkBlock} has contract event (${this.weiToTRAC(contractStake)} TRAC) but no indexer event`);
-                    } else if (contractStake === null && indexerStake !== null) {
-                      console.log(`   ❌ MISSING CONTRACT EVENT: Block ${checkBlock} has indexer event (${this.weiToTRAC(indexerStake)} TRAC) but no contract event`);
-                    } else if (contractStake !== null && indexerStake !== null) {
-                      // Both have events, check if values match
-                      if (contractStake !== indexerStake) {
-                        console.log(`   ❌ MISMATCH: Block ${checkBlock} - Contract: ${this.weiToTRAC(contractStake)} TRAC, Indexer: ${this.weiToTRAC(indexerStake)} TRAC`);
-                      }
-                    } else {
-                      // Neither has events, check if the state is correct (should be same as previous event)
-                      const actualContractStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
-                      const actualIndexerStake = await this.getIndexerNodeStakeAtBlock(client, nodeId, checkBlock);
-                      
-                      if (actualContractStake !== null && actualContractStake !== expectedStakeForIntermediateBlocks) {
-                        console.log(`   ❌ CONTRACT STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualContractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
-                      }
-                      if (actualIndexerStake !== null && actualIndexerStake !== expectedStakeForIntermediateBlocks) {
-                        console.log(`   ❌ INDEXER STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualIndexerStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
-                      }
+                    // Show progress every 1000 blocks
+                    if ((checkBlock - blockNumber) % 1000 === 0) {
+                      console.log(`   📊 Progress: ${checkBlock - blockNumber}/${totalBlocksToScan} blocks scanned`);
                     }
                   }
                   
-                  console.log(`   ✅ Completed checking ${totalBlocksToCheck} intermediate blocks`);
+                  console.log(`   ✅ Completed missing event scan`);
+                } else {
+                  console.log(`   ✅ Block ${quickCheckBlock} has expected stake value (${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC), no missing events detected`);
                 }
               } else {
                 console.log(`   📊 No missing events check needed - stake unchanged between blocks ${blockNumber} and ${nextBlockNumber}`);
