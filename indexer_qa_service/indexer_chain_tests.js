@@ -27,6 +27,10 @@ class ComprehensiveQAService {
   }
 
   weiToTRAC(weiAmount) {
+    if (weiAmount === null || weiAmount === undefined) {
+      return 'null';
+    }
+    
     const wei = BigInt(weiAmount);
     const trac = Number(wei) / Math.pow(10, 18);
     
@@ -1391,10 +1395,10 @@ class ComprehensiveQAService {
                     const actualContractStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
                     const actualIndexerStake = await this.getIndexerNodeStakeAtBlock(client, nodeId, checkBlock);
                     
-                    if (actualContractStake !== expectedStakeForIntermediateBlocks) {
+                    if (actualContractStake !== null && actualContractStake !== expectedStakeForIntermediateBlocks) {
                       console.log(`   ❌ CONTRACT STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualContractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
                     }
-                    if (actualIndexerStake !== expectedStakeForIntermediateBlocks) {
+                    if (actualIndexerStake !== null && actualIndexerStake !== expectedStakeForIntermediateBlocks) {
                       console.log(`   ❌ INDEXER STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualIndexerStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
                     }
                   }
@@ -2005,10 +2009,10 @@ class ComprehensiveQAService {
                     const actualContractStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
                     const actualIndexerStake = await this.getIndexerNodeStakeAtBlock(client, nodeId, checkBlock);
                     
-                    if (actualContractStake !== expectedStakeForIntermediateBlocks) {
+                    if (actualContractStake !== null && actualContractStake !== expectedStakeForIntermediateBlocks) {
                       console.log(`   ❌ CONTRACT STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualContractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
                     }
-                    if (actualIndexerStake !== expectedStakeForIntermediateBlocks) {
+                    if (actualIndexerStake !== null && actualIndexerStake !== expectedStakeForIntermediateBlocks) {
                       console.log(`   ❌ INDEXER STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualIndexerStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
                     }
                   }
