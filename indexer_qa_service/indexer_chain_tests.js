@@ -2050,8 +2050,27 @@ class ComprehensiveQAService {
         'function getNodeStake(uint72 identityId) view returns (uint96)'
       ], provider);
       
-      const stake = await stakingContract.getNodeStake(nodeId, { blockTag: blockNumber });
-      return BigInt(stake);
+      // Add retry logic for RPC calls
+      let retryCount = 0;
+      const maxRetries = network === 'Neuroweb' ? 50 : 1000; // Same retry limits as other functions
+      
+      while (retryCount < maxRetries) {
+        try {
+          const stake = await stakingContract.getNodeStake(nodeId, { blockTag: blockNumber });
+          return BigInt(stake);
+        } catch (error) {
+          retryCount++;
+          console.log(`   ⚠️ Error getting node stake at block ${blockNumber} (attempt ${retryCount}/${maxRetries}): ${error.message}`);
+          
+          if (retryCount >= maxRetries) {
+            console.log(`   ❌ Failed to get node stake at block ${blockNumber} after ${maxRetries} attempts`);
+            return null;
+          }
+          
+          console.log(`   ⏳ Retrying in 3 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      }
     } catch (error) {
       console.log(`   ⚠️ Error getting node stake at block ${blockNumber}: ${error.message}`);
       return null;
@@ -2069,8 +2088,27 @@ class ComprehensiveQAService {
         'function getDelegatorStake(uint72 identityId, bytes32 delegatorKey) view returns (uint96)'
       ], provider);
       
-      const stake = await stakingContract.getDelegatorStake(nodeId, delegatorKey, { blockTag: blockNumber });
-      return BigInt(stake);
+      // Add retry logic for RPC calls
+      let retryCount = 0;
+      const maxRetries = network === 'Neuroweb' ? 50 : 1000; // Same retry limits as other functions
+      
+      while (retryCount < maxRetries) {
+        try {
+          const stake = await stakingContract.getDelegatorStake(nodeId, delegatorKey, { blockTag: blockNumber });
+          return BigInt(stake);
+        } catch (error) {
+          retryCount++;
+          console.log(`   ⚠️ Error getting delegator stake at block ${blockNumber} (attempt ${retryCount}/${maxRetries}): ${error.message}`);
+          
+          if (retryCount >= maxRetries) {
+            console.log(`   ❌ Failed to get delegator stake at block ${blockNumber} after ${maxRetries} attempts`);
+            return null;
+          }
+          
+          console.log(`   ⏳ Retrying in 3 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      }
     } catch (error) {
       console.log(`   ⚠️ Error getting delegator stake at block ${blockNumber}: ${error.message}`);
       return null;
