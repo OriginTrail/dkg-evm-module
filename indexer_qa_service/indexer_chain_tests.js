@@ -202,7 +202,9 @@ class ComprehensiveQAService {
     const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
     const stakingContract = new ethers.Contract(stakingAddress, [
       'event NodeStakeUpdated(uint72 indexed identityId, uint96 stake)',
-      'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
+      'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)',
+      'function getNodeStake(uint72 identityId) view returns (uint96)',
+      'function getDelegatorStake(uint72 identityId, bytes32 delegatorKey) view returns (uint96)'
     ], provider);
     
     // Get current block number
@@ -462,7 +464,9 @@ class ComprehensiveQAService {
     const stakingAddress = await this.getContractAddressFromHub('Neuroweb', 'StakingStorage');
     const stakingContract = new ethers.Contract(stakingAddress, [
       'event NodeStakeUpdated(uint72 indexed identityId, uint96 stake)',
-      'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
+      'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)',
+      'function getNodeStake(uint72 identityId) view returns (uint96)',
+      'function getDelegatorStake(uint72 identityId, bytes32 delegatorKey) view returns (uint96)'
     ], provider);
 
     const currentBlock = await provider.getBlockNumber();
@@ -1913,7 +1917,9 @@ class ComprehensiveQAService {
     const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
     const stakingContract = new ethers.Contract(stakingAddress, [
       'event NodeStakeUpdated(uint72 indexed identityId, uint96 stake)',
-      'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
+      'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)',
+      'function getNodeStake(uint72 identityId) view returns (uint96)',
+      'function getDelegatorStake(uint72 identityId, bytes32 delegatorKey) view returns (uint96)'
     ], provider);
 
     const currentBlock = await provider.getBlockNumber();
