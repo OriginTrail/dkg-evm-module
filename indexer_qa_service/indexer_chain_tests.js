@@ -1362,11 +1362,11 @@ class ComprehensiveQAService {
             if (nextIndexerEvent && nextContractEvent) {
               console.log(`   🔍 Checking for missing events between blocks ${blockNumber} and ${nextBlockNumber}...`);
               
-              // Use the stake from the older block (nextBlockNumber) as the expected value for intermediate blocks
-              const expectedStakeForIntermediateBlocks = nextIndexerEvent.stake;
+              // Use the stake from the current block as the expected value for intermediate blocks
+              const expectedStakeForIntermediateBlocks = indexerEvent.stake;
               
-              // Check each block between current and next
-              for (let checkBlock = blockNumber - 1; checkBlock >= nextBlockNumber + 1; checkBlock--) {
+              // Check each block between current and next in ascending order (oldest to newest)
+              for (let checkBlock = blockNumber + 1; checkBlock <= nextBlockNumber - 1; checkBlock++) {
                 // Check contract from cache
                 const cachedContractEvent = cachedDelegatorEvents.find(e => e.blockNumber === checkBlock);
                 const contractStake = cachedContractEvent ? BigInt(cachedContractEvent.stakeBase) : null;
@@ -1949,11 +1949,11 @@ class ComprehensiveQAService {
             if (nextIndexerEvent && nextContractEvent) {
               console.log(`   🔍 Checking for missing events between blocks ${blockNumber} and ${nextBlockNumber}...`);
               
-              // Use the stake from the older block (nextBlockNumber) as the expected value for intermediate blocks
-              const expectedStakeForIntermediateBlocks = nextIndexerEvent.stake;
+              // Use the stake from the current block as the expected value for intermediate blocks
+              const expectedStakeForIntermediateBlocks = indexerEvent.stake;
               
-              // Check each block between current and next
-              for (let checkBlock = blockNumber - 1; checkBlock >= nextBlockNumber + 1; checkBlock--) {
+              // Check each block between current and next in ascending order (oldest to newest)
+              for (let checkBlock = blockNumber + 1; checkBlock <= nextBlockNumber - 1; checkBlock++) {
                 // Check contract from cache
                 const cachedContractEvent = cachedNodeEvents.find(e => e.blockNumber === checkBlock);
                 const contractStake = cachedContractEvent ? BigInt(cachedContractEvent.stake) : null;
