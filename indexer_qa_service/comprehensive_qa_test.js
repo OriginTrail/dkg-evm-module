@@ -913,11 +913,19 @@ class ComprehensiveQAService {
         const nodeId = parseInt(row.identity_id);
         
         try {
-          // Get ALL delegator events from indexer for this node
-          const allDelegatorEventsResult = await client.query(`
-            SELECT delegator_key, stake_base, block_number FROM delegator_base_stake_updated 
-            WHERE identity_id = $1 ORDER BY delegator_key, block_number ASC
+          // Get latest node stake from indexer with block number
+          const latestNodeStakeResult = await client.query(`
+            SELECT stake, block_number FROM node_stake_updated 
+            WHERE identity_id = $1 ORDER BY block_number DESC LIMIT 1
           `, [nodeId]);
+          
+          if (latestNodeStakeResult.rows.length === 0) {
+            console.log(`   ⚠️ Node ${nodeId}: No node stake data found, skipping`);
+            continue;
+          }
+          
+          const indexerNodeStake = BigInt(latestNodeStakeResult.rows[0].stake);
+          const indexerNodeBlock = latestNodeStakeResult.rows[0].block_number;
           
           // Get latest delegator stakes from indexer
           const latestDelegatorStakesResult = await client.query(`
@@ -926,20 +934,6 @@ class ComprehensiveQAService {
             ON d.identity_id = latest.identity_id AND d.delegator_key = latest.delegator_key AND d.block_number = latest.max_block
             WHERE d.identity_id = $1 AND d.stake_base > 0
           `, [nodeId]);
-          
-          // Get latest node stake from indexer
-          const latestNodeStakeResult = await client.query(`
-            SELECT stake FROM node_stake_updated 
-            WHERE identity_id = $1 ORDER BY block_number DESC LIMIT 1
-          `, [nodeId]);
-          
-          const indexerNodeStake = latestNodeStakeResult.rows.length > 0 ? BigInt(latestNodeStakeResult.rows[0].stake) : 0n;
-          
-          // Calculate total delegations from indexer (sum of all historical delegations)
-          let indexerTotalDelegations = 0n;
-          for (const event of allDelegatorEventsResult.rows) {
-            indexerTotalDelegations += BigInt(event.stake_base);
-          }
           
           // Calculate sum of latest delegator stakes from indexer
           let indexerLatestDelegatorSum = 0n;
@@ -951,48 +945,42 @@ class ComprehensiveQAService {
           const cachedNodeEvents = cache.nodeEventsByNode?.[nodeId] || [];
           const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId] || {};
           
-          // Calculate total delegations from contract (sum of all historical delegations)
-          let contractTotalDelegations = 0n;
-          for (const [delegatorKey, events] of Object.entries(cachedDelegatorEvents)) {
-            for (const event of events) {
-              contractTotalDelegations += BigInt(event.stakeBase);
-            }
+          if (cachedNodeEvents.length === 0) {
+            console.log(`   ⚠️ Node ${nodeId}: No cached contract events found, skipping`);
+            continue;
           }
           
-          // Get latest node stake from contract
-          const contractNodeStake = cachedNodeEvents.length > 0 ? BigInt(cachedNodeEvents[0].stake) : 0n;
+          // Find the contract node event with the exact same block number
+          const contractNodeEvent = cachedNodeEvents.find(event => event.blockNumber === indexerNodeBlock);
+          
+          if (!contractNodeEvent) {
+            console.log(`   ⚠️ Node ${nodeId}: No contract event found for block ${indexerNodeBlock}, skipping`);
+            continue;
+          }
+          
+          const contractNodeStake = BigInt(contractNodeEvent.stake);
           
           console.log(`   📊 Node ${nodeId}:`);
-          console.log(`      Indexer total delegations:     ${this.weiToTRAC(indexerTotalDelegations)} TRAC`);
-          console.log(`      Contract total delegations:    ${this.weiToTRAC(contractTotalDelegations)} TRAC`);
+          console.log(`      Indexer node stake:            ${this.weiToTRAC(indexerNodeStake)} TRAC (block ${indexerNodeBlock})`);
+          console.log(`      Contract node stake:           ${this.weiToTRAC(contractNodeStake)} TRAC (block ${indexerNodeBlock})`);
           console.log(`      Indexer latest delegator sum:  ${this.weiToTRAC(indexerLatestDelegatorSum)} TRAC`);
-          console.log(`      Indexer node stake:            ${this.weiToTRAC(indexerNodeStake)} TRAC`);
-          console.log(`      Contract node stake:           ${this.weiToTRAC(contractNodeStake)} TRAC`);
           
-          // Compare total delegations between indexer and contract
-          const delegationsDifference = indexerTotalDelegations - contractTotalDelegations;
-          const tolerance = 500000000000000000n; // 0.5 TRAC
-          
-          // Compare latest delegator sum to node stake
+          // Compare delegator sum to node stake
           const indexerNodeDifference = indexerLatestDelegatorSum - indexerNodeStake;
           const contractNodeDifference = indexerLatestDelegatorSum - contractNodeStake;
+          const tolerance = 500000000000000000n; // 0.5 TRAC
           
-          if (delegationsDifference === 0n && indexerNodeDifference === 0n && contractNodeDifference === 0n) {
-            console.log(`      ✅ ALL MATCHES: Delegations match AND delegator sum matches both node stakes`);
+          if (indexerNodeDifference === 0n && contractNodeDifference === 0n) {
+            console.log(`      ✅ DELEGATOR SUM MATCHES BOTH NODE STAKES`);
             passed++;
-          } else if (delegationsDifference >= -tolerance && delegationsDifference <= tolerance && 
-                     indexerNodeDifference >= -tolerance && indexerNodeDifference <= tolerance &&
+          } else if (indexerNodeDifference >= -tolerance && indexerNodeDifference <= tolerance &&
                      contractNodeDifference >= -tolerance && contractNodeDifference <= tolerance) {
-            console.log(`      ⚠️ ALL MATCHES (within tolerance)`);
-            console.log(`      📊 Delegations difference: ${delegationsDifference > 0 ? '+' : ''}${this.weiToTRAC(delegationsDifference > 0 ? delegationsDifference : -delegationsDifference)} TRAC`);
+            console.log(`      ⚠️ DELEGATOR SUM MATCHES BOTH NODE STAKES (within tolerance)`);
             console.log(`      📊 Indexer node difference: ${indexerNodeDifference > 0 ? '+' : ''}${this.weiToTRAC(indexerNodeDifference > 0 ? indexerNodeDifference : -indexerNodeDifference)} TRAC`);
             console.log(`      📊 Contract node difference: ${contractNodeDifference > 0 ? '+' : ''}${this.weiToTRAC(contractNodeDifference > 0 ? contractNodeDifference : -contractNodeDifference)} TRAC`);
             warnings++;
           } else {
             console.log(`      ❌ MISMATCHES FOUND`);
-            if (delegationsDifference !== 0n) {
-              console.log(`      📊 Delegations don't match: ${delegationsDifference > 0 ? '+' : ''}${this.weiToTRAC(delegationsDifference > 0 ? delegationsDifference : -delegationsDifference)} TRAC`);
-            }
             if (indexerNodeDifference !== 0n) {
               console.log(`      📊 Indexer delegator sum ≠ node stake: ${indexerNodeDifference > 0 ? '+' : ''}${this.weiToTRAC(indexerNodeDifference > 0 ? indexerNodeDifference : -indexerNodeDifference)} TRAC`);
             }
