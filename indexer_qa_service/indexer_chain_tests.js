@@ -1388,8 +1388,8 @@ class ComprehensiveQAService {
                     }
                   } else {
                     // Neither has events, check if the state is correct (should be same as previous event)
-                    const actualContractStake = await this.getDelegatorStakeAtBlock(network, nodeId, delegatorKey, checkBlock);
-                    const actualIndexerStake = await this.getIndexerDelegatorStakeAtBlock(client, nodeId, delegatorKey, checkBlock);
+                    const actualContractStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
+                    const actualIndexerStake = await this.getIndexerNodeStakeAtBlock(client, nodeId, checkBlock);
                     
                     if (actualContractStake !== expectedStakeForIntermediateBlocks) {
                       console.log(`   ❌ CONTRACT STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualContractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
@@ -2002,8 +2002,8 @@ class ComprehensiveQAService {
                     }
                   } else {
                     // Neither has events, check if the state is correct (should be same as previous event)
-                    const actualContractStake = await this.getDelegatorStakeAtBlock(network, nodeId, delegatorKey, checkBlock);
-                    const actualIndexerStake = await this.getIndexerDelegatorStakeAtBlock(client, nodeId, delegatorKey, checkBlock);
+                    const actualContractStake = await this.getNodeStakeAtBlock(network, nodeId, checkBlock);
+                    const actualIndexerStake = await this.getIndexerNodeStakeAtBlock(client, nodeId, checkBlock);
                     
                     if (actualContractStake !== expectedStakeForIntermediateBlocks) {
                       console.log(`   ❌ CONTRACT STATE MISMATCH: Block ${checkBlock} has state ${this.weiToTRAC(actualContractStake)} TRAC but should be ${this.weiToTRAC(expectedStakeForIntermediateBlocks)} TRAC`);
