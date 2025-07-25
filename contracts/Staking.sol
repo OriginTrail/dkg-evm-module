@@ -10,6 +10,7 @@ import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
 import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
+import {V8_1_2_DelegatorsInfo} from "./storage/V8_1_2_DelegatorsInfo.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IInitializable} from "./interfaces/IInitializable.sol";
 import {INamed} from "./interfaces/INamed.sol";
@@ -39,6 +40,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     ProfileStorage public profileStorage;
     StakingStorage public stakingStorage;
     DelegatorsInfo public delegatorsInfo;
+    V8_1_2_DelegatorsInfo public v8_1_2_delegatorsInfo;
     IERC20 public tokenContract;
     RandomSamplingStorage public randomSamplingStorage;
     Chronos public chronos;
@@ -71,6 +73,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
+        v8_1_2_delegatorsInfo = V8_1_2_DelegatorsInfo(hub.getContractAddress("V8_1_2_DelegatorsInfo"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
         randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
         chronos = Chronos(hub.getContractAddress("Chronos"));
@@ -628,6 +631,30 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
         //Should it increase on roling rewards or on stakeBaseIncrease only?
         stakingStorage.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, uint96(reward));
+
+        if (lastClaimedEpoch == currentEpoch - 1) {
+            uint256 lastClaimedV812 = v8_1_2_delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+
+            if (lastClaimedV812 == currentEpoch - 1) {
+                revert("Already claimed all finalised epochs");
+            }
+
+            if (epoch <= lastClaimedV812) {
+                revert("Epoch already claimed");
+            }
+
+            if (epoch > lastClaimedV812 + 1) {
+                revert("Must claim older epochs first");
+            }
+            require(
+                !v8_1_2_delegatorsInfo.hasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey),
+                "Already claimed rewards for this epoch"
+            );
+
+            uint256 delegatorScore18 = _prepareForStakeChange(epoch, identityId, delegatorKey);
+            uint256 nodeScore18 = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
+            uint256 reward;
+        }
     }
 
     /**
