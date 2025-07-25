@@ -797,7 +797,7 @@ class ComprehensiveQAService {
 
   // Merge new events with existing cache (for all networks)
   async mergeCacheWithNewEvents(network, existingCache, newEvents) {
-    console.log(`   📊 Merging new events with existing cache for ${network}...`);
+    console.log(`   �� Merging new events and blocks with existing cache for ${network}...`);
     
     // Get the latest block from existing cache
     const existingNodeEvents = existingCache.nodeEvents || [];
@@ -823,6 +823,13 @@ class ComprehensiveQAService {
     // Merge events
     const mergedNodeEvents = [...existingNodeEvents, ...newNodeEvents];
     const mergedDelegatorEvents = [...existingDelegatorEvents, ...newDelegatorEvents];
+    
+    // Merge allBlocks cache
+    const existingAllBlocks = existingCache.allBlocks || {};
+    const newAllBlocks = newEvents.allBlocks || {};
+    const mergedAllBlocks = { ...existingAllBlocks, ...newAllBlocks };
+    
+    console.log(`   📊 Merged allBlocks: ${Object.keys(existingAllBlocks).length} existing + ${Object.keys(newAllBlocks).length} new = ${Object.keys(mergedAllBlocks).length} total blocks`);
     
     // Process merged events into organized structure
     const nodeEventsByNode = {};
@@ -860,12 +867,13 @@ class ComprehensiveQAService {
       delegatorEvents: mergedDelegatorEvents,
       nodeEventsByNode,
       delegatorEventsByNode,
+      allBlocks: mergedAllBlocks,
       totalNodeEvents: mergedNodeEvents.length,
       totalDelegatorEvents: mergedDelegatorEvents.length,
       lastUpdated: new Date().toISOString()
     };
     
-    console.log(`   📊 Merged cache: ${Object.keys(nodeEventsByNode).length} nodes, ${Object.keys(delegatorEventsByNode).length} nodes with delegators`);
+    console.log(`   📊 Merged cache: ${Object.keys(nodeEventsByNode).length} nodes, ${Object.keys(delegatorEventsByNode).length} nodes with delegators, ${Object.keys(mergedAllBlocks).length} total blocks`);
     
     // Save merged cache (for all networks)
     await this.saveCache(network, mergedCacheData);
@@ -1860,16 +1868,27 @@ class ComprehensiveQAService {
       }
     }
     
-    console.log(`   📊 Latest cache block: ${latestExistingBlock.toLocaleString()}`);
+    // Check allBlocks cache for the latest cached block
+    let latestCachedBlock = 0;
+    if (existingCache.allBlocks) {
+      const cachedBlockNumbers = Object.keys(existingCache.allBlocks).map(Number);
+      if (cachedBlockNumbers.length > 0) {
+        latestCachedBlock = Math.max(...cachedBlockNumbers);
+      }
+    }
+    
+    console.log(`   📊 Latest event block: ${latestExistingBlock.toLocaleString()}`);
+    console.log(`   📊 Latest cached block: ${latestCachedBlock.toLocaleString()}`);
     console.log(`   📊 Current blockchain block: ${currentBlock.toLocaleString()}`);
     
-    const needsUpdate = currentBlock > latestExistingBlock;
+    // Cache needs update if current block is newer than the latest cached block
+    const needsUpdate = currentBlock > latestCachedBlock;
     console.log(`   📊 Cache ${needsUpdate ? 'needs' : 'does not need'} update`);
     
     return needsUpdate;
   }
 
-  // Query only new events (after the latest cached block)
+  // Query only new events and build new blocks (after the latest cached block)
   async queryNewEvents(network, existingCache) {
     const networkConfig = config.networks.find(n => n.name === network);
     if (!networkConfig) throw new Error(`Network ${network} not found in config`);
@@ -1899,39 +1918,21 @@ class ComprehensiveQAService {
 
     const currentBlock = await provider.getBlockNumber();
     
-    // Get the latest block from existing cache (using processed structure)
-    let latestExistingBlock = 0;
-    
-    // Check node events from processed structure
-    if (existingCache.nodeEventsByNode) {
-      for (const [nodeId, events] of Object.entries(existingCache.nodeEventsByNode)) {
-        for (const event of events) {
-          if (event.blockNumber > latestExistingBlock) {
-            latestExistingBlock = event.blockNumber;
-          }
-        }
+    // Get the latest cached block from allBlocks cache
+    let latestCachedBlock = 0;
+    if (existingCache.allBlocks) {
+      const cachedBlockNumbers = Object.keys(existingCache.allBlocks).map(Number);
+      if (cachedBlockNumbers.length > 0) {
+        latestCachedBlock = Math.max(...cachedBlockNumbers);
       }
     }
     
-    // Check delegator events from processed structure
-    if (existingCache.delegatorEventsByNode) {
-      for (const [nodeId, delegators] of Object.entries(existingCache.delegatorEventsByNode)) {
-        for (const [delegatorKey, events] of Object.entries(delegators)) {
-          for (const event of events) {
-            if (event.blockNumber > latestExistingBlock) {
-              latestExistingBlock = event.blockNumber;
-            }
-          }
-        }
-      }
-    }
-    
-    const fromBlock = latestExistingBlock + 1;
-    console.log(`   📊 Querying new events from block ${fromBlock.toLocaleString()} to ${currentBlock.toLocaleString()}`);
+    const fromBlock = latestCachedBlock + 1;
+    console.log(`   📊 Querying new events and building new blocks from ${fromBlock.toLocaleString()} to ${currentBlock.toLocaleString()}`);
     
     if (fromBlock > currentBlock) {
       console.log(`   📊 No new blocks to query`);
-      return { nodeEvents: [], delegatorEvents: [] };
+      return { nodeEvents: [], delegatorEvents: [], allBlocks: {} };
     }
     
     // Set chunk size based on network
@@ -2020,22 +2021,120 @@ class ComprehensiveQAService {
     
     console.log(`   📊 Found ${allNodeEvents.length} new node events and ${allDelegatorEvents.length} new delegator events`);
     
-    // Process new events into cache format
-    const newEvents = {
-      nodeEvents: allNodeEvents.map(event => ({
-        blockNumber: event.blockNumber,
-        identityId: event.args.identityId.toString(),
-        stake: event.args.stake.toString()
-      })),
-      delegatorEvents: allDelegatorEvents.map(event => ({
-        blockNumber: event.blockNumber,
-        identityId: event.args.identityId.toString(),
-        delegatorKey: event.args.delegatorKey,
-        stakeBase: event.args.stakeBase.toString()
-      }))
-    };
+    // Now build new blocks cache from latest cached block to current block
+    console.log(`   📊 Building new blocks cache from ${fromBlock.toLocaleString()} to ${currentBlock.toLocaleString()}...`);
     
-    return newEvents;
+    const dbName = this.databaseMap[network];
+    const client = new Client({ ...this.dbConfig, database: dbName });
+    
+    try {
+      await client.connect();
+      
+      const newAllBlocksCache = {};
+      const totalBlocksToCache = currentBlock - fromBlock + 1;
+      console.log(`   📊 Caching ${totalBlocksToCache.toLocaleString()} new blocks...`);
+      
+      // Process in smaller chunks to avoid memory issues
+      const cacheChunkSize = 10000;
+      let processedCacheChunks = 0;
+      const totalCacheChunks = Math.ceil(totalBlocksToCache / cacheChunkSize);
+      
+      for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += cacheChunkSize) {
+        const endBlock = Math.min(startBlock + cacheChunkSize - 1, currentBlock);
+        processedCacheChunks++;
+        
+        console.log(`   📊 Building new cache chunk ${processedCacheChunks}/${totalCacheChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+        
+        // Get all active nodes for this network
+        const activeNodesResult = await client.query(`
+          SELECT DISTINCT identity_id FROM node_stake_updated 
+          WHERE block_number >= $1 AND block_number <= $2
+          AND identity_id IN (SELECT identity_id FROM node_object_created)
+          AND identity_id NOT IN (SELECT identity_id FROM node_object_deleted)
+        `, [startBlock, endBlock]);
+        
+        const activeNodeIds = activeNodesResult.rows.map(row => parseInt(row.identity_id));
+        console.log(`   📊 Found ${activeNodeIds.length} active nodes in new chunk`);
+        
+        // For each block in this chunk, get the state
+        for (let blockNumber = startBlock; blockNumber <= endBlock; blockNumber++) {
+          const blockKey = blockNumber.toString();
+          newAllBlocksCache[blockKey] = {
+            nodeStakes: {},
+            delegatorStakes: {}
+          };
+          
+          // Get node stakes for this block
+          for (const nodeId of activeNodeIds) {
+            try {
+              const nodeStake = await stakingContract.getNodeStake(nodeId, { blockTag: blockNumber });
+              newAllBlocksCache[blockKey].nodeStakes[nodeId.toString()] = nodeStake.toString();
+            } catch (error) {
+              console.log(`   ⚠️ Error getting node ${nodeId} stake at block ${blockNumber}: ${error.message}`);
+              newAllBlocksCache[blockKey].nodeStakes[nodeId.toString()] = "0";
+            }
+          }
+          
+          // Get delegator stakes for this block (only for active nodes)
+          for (const nodeId of activeNodeIds) {
+            try {
+              // Get all delegators for this node
+              const delegatorsResult = await client.query(`
+                SELECT DISTINCT delegator_key FROM delegator_base_stake_updated 
+                WHERE identity_id = $1 AND block_number <= $2
+              `, [nodeId, blockNumber]);
+              
+              for (const row of delegatorsResult.rows) {
+                const delegatorKey = row.delegator_key;
+                try {
+                  const delegatorStake = await stakingContract.getDelegatorStake(nodeId, delegatorKey, { blockTag: blockNumber });
+                  if (!newAllBlocksCache[blockKey].delegatorStakes[nodeId.toString()]) {
+                    newAllBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
+                  }
+                  newAllBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = delegatorStake.toString();
+                } catch (error) {
+                  console.log(`   ⚠️ Error getting delegator ${delegatorKey} stake for node ${nodeId} at block ${blockNumber}: ${error.message}`);
+                  if (!newAllBlocksCache[blockKey].delegatorStakes[nodeId.toString()]) {
+                    newAllBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
+                  }
+                  newAllBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = "0";
+                }
+              }
+            } catch (error) {
+              console.log(`   ⚠️ Error getting delegators for node ${nodeId} at block ${blockNumber}: ${error.message}`);
+            }
+          }
+          
+          // Show progress every 1000 blocks
+          if ((blockNumber - startBlock + 1) % 1000 === 0) {
+            console.log(`   📊 Progress: ${blockNumber - startBlock + 1}/${endBlock - startBlock + 1} blocks in new chunk`);
+          }
+        }
+      }
+      
+      console.log(`   📊 Completed building new blocks cache`);
+      
+      // Process new events into cache format
+      const newEvents = {
+        nodeEvents: allNodeEvents.map(event => ({
+          blockNumber: event.blockNumber,
+          identityId: event.args.identityId.toString(),
+          stake: event.args.stake.toString()
+        })),
+        delegatorEvents: allDelegatorEvents.map(event => ({
+          blockNumber: event.blockNumber,
+          identityId: event.args.identityId.toString(),
+          delegatorKey: event.args.delegatorKey,
+          stakeBase: event.args.stakeBase.toString()
+        })),
+        allBlocks: newAllBlocksCache
+      };
+      
+      return newEvents;
+      
+    } finally {
+      await client.end();
+    }
   }
 
   // Helper function for comprehensive node validation
