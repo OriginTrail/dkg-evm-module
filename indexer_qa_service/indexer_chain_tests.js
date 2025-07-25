@@ -1322,14 +1322,14 @@ class ComprehensiveQAService {
         return { type: 'skipped' };
       }
       
-      // Sort common blocks in descending order (newest first)
-      commonBlocks.sort((a, b) => b - a);
+      // Sort common blocks in ascending order (oldest first)
+      commonBlocks.sort((a, b) => a - b);
       
       console.log(`🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: ${commonBlocks.length} blocks to validate`);
       
       let validationPassed = true;
       
-      // Validate each common block in descending order and check for missing events between consecutive blocks
+      // Validate each common block in ascending order and check for missing events between consecutive blocks
       for (let i = 0; i < commonBlocks.length; i++) {
         const blockNumber = commonBlocks[i];
         const indexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === blockNumber);
@@ -1909,14 +1909,14 @@ class ComprehensiveQAService {
         return { type: 'skipped' };
       }
       
-      // Sort common blocks in descending order (newest first)
-      commonBlocks.sort((a, b) => b - a);
+      // Sort common blocks in ascending order (oldest first)
+      commonBlocks.sort((a, b) => a - b);
       
       console.log(`🔍 [${network}] Node ${nodeId}: ${commonBlocks.length} blocks to validate`);
       
       let validationPassed = true;
       
-      // Validate each common block in descending order and check for missing events between consecutive blocks
+      // Validate each common block in ascending order and check for missing events between consecutive blocks
       for (let i = 0; i < commonBlocks.length; i++) {
         const blockNumber = commonBlocks[i];
         const indexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === blockNumber);
