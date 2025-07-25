@@ -961,9 +961,22 @@ class ComprehensiveQAService {
           `, [nodeId]);
           
           // Find common blocks between indexer and contract node events
-          const indexerNodeBlocks = new Set(allIndexerNodeEventsResult.rows.map(e => e.block_number));
-          const contractNodeBlocks = new Set(cachedNodeEvents.map(e => e.blockNumber));
+          const indexerNodeBlocks = new Set(allIndexerNodeEventsResult.rows.map(e => Number(e.block_number)));
+          const contractNodeBlocks = new Set(cachedNodeEvents.map(e => Number(e.blockNumber)));
           const commonBlocks = [...indexerNodeBlocks].filter(block => contractNodeBlocks.has(block));
+          
+          // Debug: Show what blocks we found
+          console.log(`   📊 Node ${nodeId}: Debug info:`);
+          console.log(`      Indexer node blocks: ${indexerNodeBlocks.size} blocks`);
+          console.log(`      Contract node blocks: ${contractNodeBlocks.size} blocks`);
+          console.log(`      Common blocks: ${commonBlocks.length} blocks`);
+          
+          if (indexerNodeBlocks.size > 0 && contractNodeBlocks.size > 0) {
+            const sampleIndexerBlocks = Array.from(indexerNodeBlocks).slice(0, 3);
+            const sampleContractBlocks = Array.from(contractNodeBlocks).slice(0, 3);
+            console.log(`      Sample indexer blocks: ${sampleIndexerBlocks.join(', ')}`);
+            console.log(`      Sample contract blocks: ${sampleContractBlocks.join(', ')}`);
+          }
           
           if (commonBlocks.length === 0) {
             console.log(`   ⚠️ Node ${nodeId}: No common blocks found between indexer and contract, skipping`);
@@ -980,17 +993,17 @@ class ComprehensiveQAService {
           // Validate each common block
           for (const blockNumber of commonBlocks) {
             // Get indexer node stake for this block
-            const indexerNodeEvent = allIndexerNodeEventsResult.rows.find(e => e.block_number === blockNumber);
+            const indexerNodeEvent = allIndexerNodeEventsResult.rows.find(e => Number(e.block_number) === blockNumber);
             if (!indexerNodeEvent) continue;
             
             // Get contract node stake for this block
-            const contractNodeEvent = cachedNodeEvents.find(e => e.blockNumber === blockNumber);
+            const contractNodeEvent = cachedNodeEvents.find(e => Number(e.blockNumber) === blockNumber);
             if (!contractNodeEvent) continue;
             
             // Calculate sum of delegations for this block from indexer
             let indexerDelegationsForBlock = 0n;
             for (const event of allIndexerDelegatorEventsResult.rows) {
-              if (event.block_number <= blockNumber) {
+              if (Number(event.block_number) <= blockNumber) {
                 indexerDelegationsForBlock += BigInt(event.stake_base);
               }
             }
@@ -999,7 +1012,7 @@ class ComprehensiveQAService {
             let contractDelegationsForBlock = 0n;
             for (const [delegatorKey, events] of Object.entries(cachedDelegatorEvents)) {
               for (const event of events) {
-                if (event.blockNumber <= blockNumber) {
+                if (Number(event.blockNumber) <= blockNumber) {
                   contractDelegationsForBlock += BigInt(event.stakeBase);
                 }
               }
