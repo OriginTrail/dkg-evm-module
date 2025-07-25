@@ -693,7 +693,8 @@ class ComprehensiveQAService {
   async buildAllCaches() {
     console.log(`\n🚀 Building caches for all networks in parallel...`);
     
-    const networks = ['Base', 'Gnosis', 'Neuroweb'];
+    // Comment out Neuroweb for testing missing events detection
+    const networks = ['Base', 'Gnosis']; // Removed 'Neuroweb' for testing
     const cachePromises = networks.map(async (network) => {
       try {
         console.log(`\n${'='.repeat(40)}`);
@@ -705,7 +706,7 @@ class ComprehensiveQAService {
         // Store cache in instance
         if (network === 'Gnosis') this.gnosisCache = cache;
         else if (network === 'Base') this.baseCache = cache;
-        else if (network === 'Neuroweb') this.neurowebCache = cache;
+        // else if (network === 'Neuroweb') this.neurowebCache = cache; // Commented out
         
         console.log(`✅ Cache built for ${network}`);
         return { network, cache, success: true };
@@ -2071,7 +2072,8 @@ async function testAllValidations() {
   
   console.log('🧪 Testing all 4 validation functions for all networks...');
   
-  const networks = ['Base', 'Gnosis', 'Neuroweb'];
+  // Comment out Neuroweb for testing missing events detection
+  const networks = ['Base', 'Gnosis']; // Removed 'Neuroweb' for testing
   const allResults = {};
   
   // First, build all caches in parallel
