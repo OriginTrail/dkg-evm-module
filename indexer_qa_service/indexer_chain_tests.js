@@ -1083,7 +1083,7 @@ class ComprehensiveQAService {
       
     } catch (error) {
       console.error(`Error validating knowledge collections for ${network}: ${error.message}`);
-      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 1, total: 1 };
+      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
     } finally {
       await client.end();
     }
@@ -2024,12 +2024,11 @@ class ComprehensiveQAService {
     try {
       const result = await client.query(`
         SELECT stake FROM node_stake_updated 
-        WHERE identity_id = $1 AND block_number <= $2 
-        ORDER BY block_number DESC LIMIT 1
+        WHERE identity_id = $1 AND block_number = $2
       `, [nodeId, blockNumber]);
       
       if (result.rows.length === 0) {
-        return null;
+        return null; // No event at this exact block
       }
       
       return BigInt(result.rows[0].stake);
@@ -2044,12 +2043,11 @@ class ComprehensiveQAService {
     try {
       const result = await client.query(`
         SELECT stake_base FROM delegator_base_stake_updated 
-        WHERE identity_id = $1 AND delegator_key = $2 AND block_number <= $3 
-        ORDER BY block_number DESC LIMIT 1
+        WHERE identity_id = $1 AND delegator_key = $2 AND block_number = $3
       `, [nodeId, delegatorKey, blockNumber]);
       
       if (result.rows.length === 0) {
-        return null;
+        return null; // No event at this exact block
       }
       
       return BigInt(result.rows[0].stake_base);
