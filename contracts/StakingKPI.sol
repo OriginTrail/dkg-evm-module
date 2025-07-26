@@ -197,7 +197,7 @@ contract StakingKPI is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epoch,
         uint72 identityId,
         bytes32 delegatorKey
-    ) internal view returns (uint256 delegatorScore18) {
+    ) public view returns (uint256 delegatorScore18) {
         // 1. Current "score-per-stake"
         uint256 nodeScorePerStake36 = randomSamplingStorage.getNodeEpochScorePerStake(epoch, identityId);
 
