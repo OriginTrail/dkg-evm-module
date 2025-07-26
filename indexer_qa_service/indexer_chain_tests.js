@@ -423,17 +423,38 @@ class ComprehensiveQAService {
           };
           
           // Get node stakes for this block
+          let successfulNodeStakes = 0;
+          let expectedNodeErrors = 0;
+          
           for (const nodeId of activeNodeIds) {
             try {
               const nodeStake = await stakingContract.getNodeStake(nodeId, { blockTag: blockNumber });
               allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = nodeStake.toString();
+              successfulNodeStakes++;
             } catch (error) {
-              console.log(`   ⚠️ Error getting node ${nodeId} stake at block ${blockNumber}: ${error.message}`);
-              allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = "0";
+              // Handle different types of errors
+              if (error.message.includes('could not decode result data') || 
+                  error.message.includes('BAD_DATA') ||
+                  error.message.includes('value="0x"')) {
+                // Node doesn't exist at this block, which is normal
+                allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = "0";
+                expectedNodeErrors++;
+              } else {
+                console.log(`   ⚠️ Error getting node ${nodeId} stake at block ${blockNumber}: ${error.message}`);
+                allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = "0";
+              }
             }
           }
           
+          // Show progress for node stakes
+          if (successfulNodeStakes > 0 || expectedNodeErrors > 0) {
+            console.log(`   📊 Block ${blockNumber}: ${successfulNodeStakes} successful node stakes, ${expectedNodeErrors} expected errors (nodes not existing)`);
+          }
+          
           // Get delegator stakes for this block (only for active nodes)
+          let successfulDelegatorStakes = 0;
+          let expectedDelegatorErrors = 0;
+          
           for (const nodeId of activeNodeIds) {
             try {
               // Get all delegators for this node
@@ -450,17 +471,35 @@ class ComprehensiveQAService {
                     allBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
                   }
                   allBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = delegatorStake.toString();
+                  successfulDelegatorStakes++;
                 } catch (error) {
-                  console.log(`   ⚠️ Error getting delegator ${delegatorKey} stake for node ${nodeId} at block ${blockNumber}: ${error.message}`);
-                  if (!allBlocksCache[blockKey].delegatorStakes[nodeId.toString()]) {
-                    allBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
+                  // Handle different types of errors
+                  if (error.message.includes('could not decode result data') || 
+                      error.message.includes('BAD_DATA') ||
+                      error.message.includes('value="0x"')) {
+                    // Delegator doesn't exist at this block, which is normal
+                    if (!allBlocksCache[blockKey].delegatorStakes[nodeId.toString()]) {
+                      allBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
+                    }
+                    allBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = "0";
+                    expectedDelegatorErrors++;
+                  } else {
+                    console.log(`   ⚠️ Error getting delegator ${delegatorKey} stake for node ${nodeId} at block ${blockNumber}: ${error.message}`);
+                    if (!allBlocksCache[blockKey].delegatorStakes[nodeId.toString()]) {
+                      allBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
+                    }
+                    allBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = "0";
                   }
-                  allBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = "0";
                 }
               }
             } catch (error) {
               console.log(`   ⚠️ Error getting delegators for node ${nodeId} at block ${blockNumber}: ${error.message}`);
             }
+          }
+          
+          // Show progress for delegator stakes
+          if (successfulDelegatorStakes > 0 || expectedDelegatorErrors > 0) {
+            console.log(`   📊 Block ${blockNumber}: ${successfulDelegatorStakes} successful delegator stakes, ${expectedDelegatorErrors} expected errors (delegators not existing)`);
           }
           
           // Show progress every 1000 blocks
@@ -666,17 +705,38 @@ class ComprehensiveQAService {
           };
           
           // Get node stakes for this block
+          let successfulNodeStakes = 0;
+          let expectedNodeErrors = 0;
+          
           for (const nodeId of activeNodeIds) {
             try {
               const nodeStake = await stakingContract.getNodeStake(nodeId, { blockTag: blockNumber });
               allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = nodeStake.toString();
+              successfulNodeStakes++;
             } catch (error) {
-              console.log(`   ⚠️ Error getting node ${nodeId} stake at block ${blockNumber}: ${error.message}`);
-              allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = "0";
+              // Handle different types of errors
+              if (error.message.includes('could not decode result data') || 
+                  error.message.includes('BAD_DATA') ||
+                  error.message.includes('value="0x"')) {
+                // Node doesn't exist at this block, which is normal
+                allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = "0";
+                expectedNodeErrors++;
+              } else {
+                console.log(`   ⚠️ Error getting node ${nodeId} stake at block ${blockNumber}: ${error.message}`);
+                allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = "0";
+              }
             }
           }
           
+          // Show progress for node stakes
+          if (successfulNodeStakes > 0 || expectedNodeErrors > 0) {
+            console.log(`   📊 Block ${blockNumber}: ${successfulNodeStakes} successful node stakes, ${expectedNodeErrors} expected errors (nodes not existing)`);
+          }
+          
           // Get delegator stakes for this block (only for active nodes)
+          let successfulDelegatorStakes = 0;
+          let expectedDelegatorErrors = 0;
+          
           for (const nodeId of activeNodeIds) {
             try {
               // Get all delegators for this node
@@ -693,17 +753,35 @@ class ComprehensiveQAService {
                     allBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
                   }
                   allBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = delegatorStake.toString();
+                  successfulDelegatorStakes++;
                 } catch (error) {
-                  console.log(`   ⚠️ Error getting delegator ${delegatorKey} stake for node ${nodeId} at block ${blockNumber}: ${error.message}`);
-                  if (!allBlocksCache[blockKey].delegatorStakes[nodeId.toString()]) {
-                    allBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
+                  // Handle different types of errors
+                  if (error.message.includes('could not decode result data') || 
+                      error.message.includes('BAD_DATA') ||
+                      error.message.includes('value="0x"')) {
+                    // Delegator doesn't exist at this block, which is normal
+                    if (!allBlocksCache[blockKey].delegatorStakes[nodeId.toString()]) {
+                      allBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
+                    }
+                    allBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = "0";
+                    expectedDelegatorErrors++;
+                  } else {
+                    console.log(`   ⚠️ Error getting delegator ${delegatorKey} stake for node ${nodeId} at block ${blockNumber}: ${error.message}`);
+                    if (!allBlocksCache[blockKey].delegatorStakes[nodeId.toString()]) {
+                      allBlocksCache[blockKey].delegatorStakes[nodeId.toString()] = {};
+                    }
+                    allBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = "0";
                   }
-                  allBlocksCache[blockKey].delegatorStakes[nodeId.toString()][delegatorKey] = "0";
                 }
               }
             } catch (error) {
               console.log(`   ⚠️ Error getting delegators for node ${nodeId} at block ${blockNumber}: ${error.message}`);
             }
+          }
+          
+          // Show progress for delegator stakes
+          if (successfulDelegatorStakes > 0 || expectedDelegatorErrors > 0) {
+            console.log(`   📊 Block ${blockNumber}: ${successfulDelegatorStakes} successful delegator stakes, ${expectedDelegatorErrors} expected errors (delegators not existing)`);
           }
           
           // Show progress every 1000 blocks
