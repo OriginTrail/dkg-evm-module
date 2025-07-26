@@ -115,6 +115,67 @@ class ComprehensiveQAService {
     }
   }
 
+  // Helper function to create database connection with retry logic
+  async createDatabaseConnection(network) {
+    const dbName = this.databaseMap[network];
+    const client = new Client({ ...this.dbConfig, database: dbName });
+    
+    let retryCount = 0;
+    const maxRetries = 5;
+    
+    while (retryCount < maxRetries) {
+      try {
+        await client.connect();
+        console.log(`   📊 Database connection established for ${network}`);
+        return client;
+      } catch (error) {
+        retryCount++;
+        console.log(`   ⚠️ Database connection failed for ${network} (attempt ${retryCount}/${maxRetries}): ${error.message}`);
+        
+        if (retryCount >= maxRetries) {
+          throw new Error(`Failed to connect to ${network} database after ${maxRetries} attempts`);
+        }
+        
+        console.log(`   ⏳ Retrying database connection in 5 seconds...`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+    }
+  }
+
+  // Helper function to execute database query with retry logic
+  async executeQuery(client, query, params = []) {
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      try {
+        const result = await client.query(query, params);
+        return result;
+      } catch (error) {
+        retryCount++;
+        console.log(`   ⚠️ Database query failed (attempt ${retryCount}/${maxRetries}): ${error.message}`);
+        
+        if (error.message.includes('Connection terminated') || error.message.includes('connection')) {
+          // Try to reconnect
+          try {
+            await client.end();
+            await client.connect();
+            console.log(`   ✅ Database connection re-established`);
+          } catch (reconnectError) {
+            console.log(`   ❌ Failed to reconnect to database: ${reconnectError.message}`);
+          }
+        }
+        
+        if (retryCount >= maxRetries) {
+          throw new Error(`Database query failed after ${maxRetries} attempts: ${error.message}`);
+        }
+        
+        console.log(`   ⏳ Retrying query in 3 seconds...`);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+    }
+  }
+
   // Load cache from JSON files
   async loadCache(network) {
     // All networks now use JSON file caching
