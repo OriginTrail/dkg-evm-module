@@ -500,9 +500,14 @@ class ComprehensiveQAService {
         `, [startBlock, endBlock]);
         
         const activeNodeIds = activeNodesResult.rows.map(row => parseInt(row.identity_id));
-        console.log(`   📊 Found ${activeNodeIds.length} active nodes in cache chunk`);
+        console.log(`   📊 [${network}] Found ${activeNodeIds.length} active nodes in cache chunk`);
         
         // For each block in this chunk, get the state
+        let processedBlocks = 0;
+        const totalBlocksInChunk = endBlock - startBlock + 1;
+        
+        console.log(`   📊 [${network}] Processing ${totalBlocksInChunk.toLocaleString()} blocks in this chunk...`);
+        
         for (let blockNumber = startBlock; blockNumber <= endBlock; blockNumber++) {
           const blockKey = blockNumber.toString();
           allBlocksCache[blockKey] = {
@@ -532,11 +537,6 @@ class ComprehensiveQAService {
                 allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = "0";
               }
             }
-          }
-          
-          // Show progress for node stakes
-          if (successfulNodeStakes > 0 || expectedNodeErrors > 0) {
-            console.log(`   📊 Block ${blockNumber}: ${successfulNodeStakes} successful node stakes, ${expectedNodeErrors} expected errors (nodes not existing)`);
           }
           
           // Get delegator stakes for this block (only for active nodes)
@@ -585,16 +585,19 @@ class ComprehensiveQAService {
             }
           }
           
-          // Show progress for delegator stakes
-          if (successfulDelegatorStakes > 0 || expectedDelegatorErrors > 0) {
-            console.log(`   📊 Block ${blockNumber}: ${successfulDelegatorStakes} successful delegator stakes, ${expectedDelegatorErrors} expected errors (delegators not existing)`);
-          }
+          processedBlocks++;
           
-          // Show progress every 1000 blocks
-          if ((blockNumber - startBlock + 1) % 1000 === 0) {
-            console.log(`   📊 Progress: ${blockNumber - startBlock + 1}/${endBlock - startBlock + 1} blocks in cache chunk`);
+          // Show progress every 1000 blocks or at the end of each chunk
+          if (processedBlocks % 1000 === 0 || processedBlocks === totalBlocksInChunk) {
+            console.log(`   📊 [${network}] Cache chunk ${processedCacheChunks}: ${processedBlocks}/${totalBlocksInChunk} blocks processed`);
+            console.log(`   📊 [${network}] Block ${blockNumber}: ${successfulNodeStakes} node stakes, ${successfulDelegatorStakes} delegator stakes`);
+            console.log(`   📊 [${network}] Expected errors: ${expectedNodeErrors} nodes, ${expectedDelegatorErrors} delegators`);
           }
         }
+        
+        // Show chunk completion
+        console.log(`   ✅ [${network}] Cache chunk ${processedCacheChunks}/${totalCacheChunks} completed`);
+        console.log(`   📊 [${network}] Total blocks cached so far: ${Object.keys(allBlocksCache).length.toLocaleString()}`);
       }
       
       console.log(`   📊 Completed building allBlocks cache for ${network}`);
@@ -782,9 +785,14 @@ class ComprehensiveQAService {
         `, [startBlock, endBlock]);
         
         const activeNodeIds = activeNodesResult.rows.map(row => parseInt(row.identity_id));
-        console.log(`   📊 Found ${activeNodeIds.length} active nodes in chunk`);
+        console.log(`   📊 [${network}] Found ${activeNodeIds.length} active nodes in cache chunk`);
         
         // For each block in this chunk, get the state
+        let processedBlocks = 0;
+        const totalBlocksInChunk = endBlock - startBlock + 1;
+        
+        console.log(`   📊 [${network}] Processing ${totalBlocksInChunk.toLocaleString()} blocks in this chunk...`);
+        
         for (let blockNumber = startBlock; blockNumber <= endBlock; blockNumber++) {
           const blockKey = blockNumber.toString();
           allBlocksCache[blockKey] = {
@@ -814,11 +822,6 @@ class ComprehensiveQAService {
                 allBlocksCache[blockKey].nodeStakes[nodeId.toString()] = "0";
               }
             }
-          }
-          
-          // Show progress for node stakes
-          if (successfulNodeStakes > 0 || expectedNodeErrors > 0) {
-            console.log(`   📊 Block ${blockNumber}: ${successfulNodeStakes} successful node stakes, ${expectedNodeErrors} expected errors (nodes not existing)`);
           }
           
           // Get delegator stakes for this block (only for active nodes)
@@ -867,16 +870,19 @@ class ComprehensiveQAService {
             }
           }
           
-          // Show progress for delegator stakes
-          if (successfulDelegatorStakes > 0 || expectedDelegatorErrors > 0) {
-            console.log(`   📊 Block ${blockNumber}: ${successfulDelegatorStakes} successful delegator stakes, ${expectedDelegatorErrors} expected errors (delegators not existing)`);
-          }
+          processedBlocks++;
           
-          // Show progress every 1000 blocks
-          if ((blockNumber - startBlock + 1) % 1000 === 0) {
-            console.log(`   📊 Progress: ${blockNumber - startBlock + 1}/${endBlock - startBlock + 1} blocks in chunk`);
+          // Show progress every 1000 blocks or at the end of each chunk
+          if (processedBlocks % 1000 === 0 || processedBlocks === totalBlocksInChunk) {
+            console.log(`   📊 [${network}] Cache chunk ${processedCacheChunks}: ${processedBlocks}/${totalBlocksInChunk} blocks processed`);
+            console.log(`   📊 [${network}] Block ${blockNumber}: ${successfulNodeStakes} node stakes, ${successfulDelegatorStakes} delegator stakes`);
+            console.log(`   📊 [${network}] Expected errors: ${expectedNodeErrors} nodes, ${expectedDelegatorErrors} delegators`);
           }
         }
+        
+        // Show chunk completion
+        console.log(`   ✅ [${network}] Cache chunk ${processedCacheChunks}/${totalCacheChunks} completed`);
+        console.log(`   📊 [${network}] Total blocks cached so far: ${Object.keys(allBlocksCache).length.toLocaleString()}`);
       }
       
       console.log(`   📊 Completed building all blocks cache`);
