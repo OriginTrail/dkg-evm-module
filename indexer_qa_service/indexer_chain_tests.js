@@ -2420,6 +2420,48 @@ class ComprehensiveQAService {
   }
 }
 
+// Main execution function
+async function testAllValidations() {
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`🚀 STARTING COMPREHENSIVE QA VALIDATION SERVICE`);
+  console.log(`${'='.repeat(60)}`);
+  
+  const qaService = new ComprehensiveQAService();
+  
+  try {
+    // Build all caches first
+    console.log(`\n🔍 Building caches for all networks...`);
+    const cacheResults = await qaService.buildAllCaches();
+    
+    // Check if all caches were built successfully
+    const successfulCaches = cacheResults.filter(result => result.success);
+    if (successfulCaches.length === 0) {
+      console.log(`❌ No caches were built successfully. Exiting.`);
+      return;
+    }
+    
+    console.log(`\n✅ Cache building completed. Running validations...`);
+    
+    // Run validations for each network that has a successful cache
+    for (const result of successfulCaches) {
+      const { network, cache } = result;
+      console.log(`\n${'='.repeat(40)}`);
+      console.log(`🔍 Running validations for ${network}...`);
+      console.log(`${'='.repeat(40)}`);
+      
+      await qaService.runAllValidations(network, cache);
+    }
+    
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`✅ COMPREHENSIVE QA VALIDATION COMPLETED`);
+    console.log(`${'='.repeat(60)}`);
+    
+  } catch (error) {
+    console.error(`❌ Error in testAllValidations: ${error.message}`);
+    throw error;
+  }
+}
+
 testAllValidations().catch(console.error);
 
 // Add process-level error handlers to catch unhandled database connection errors
