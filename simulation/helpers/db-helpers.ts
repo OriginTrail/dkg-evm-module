@@ -45,7 +45,7 @@ export class SimulationDatabase {
     try {
       this.db.exec(`
         CREATE INDEX IF NOT EXISTS idx_block_timestamp 
-        ON enriched_events_withoutNodeStakeUpdated_withoutNodeStakeUpdated (block_timestamp);
+        ON enriched_events (block_timestamp);
       `);
     } catch {
       // Index might already exist, ignore error
@@ -62,7 +62,7 @@ export class SimulationDatabase {
       .prepare(
         `
         SELECT DISTINCT block_number 
-        FROM enriched_events_withoutNodeStakeUpdated 
+        FROM enriched_events 
         WHERE processed = 0 
         ORDER BY block_number ASC 
         LIMIT ?
@@ -81,7 +81,7 @@ export class SimulationDatabase {
     const txs = this.db
       .prepare(
         `
-        SELECT * FROM enriched_events_withoutNodeStakeUpdated 
+        SELECT * FROM enriched_events 
         WHERE block_number IN (${placeholders})
         ORDER BY block_number ASC, tx_index ASC
       `,
@@ -118,7 +118,7 @@ export class SimulationDatabase {
   isProcessedTx(txHash: string): boolean {
     const result = this.db
       .prepare(
-        'SELECT processed FROM enriched_events_withoutNodeStakeUpdated WHERE transaction_hash = ?',
+        'SELECT processed FROM enriched_events WHERE transaction_hash = ?',
       )
       .get(txHash) as { processed: boolean } | undefined;
 
@@ -131,7 +131,7 @@ export class SimulationDatabase {
   markTxAsProcessed(txHash: string, success: boolean = true): void {
     this.db
       .prepare(
-        'UPDATE enriched_events_withoutNodeStakeUpdated SET processed = ? WHERE transaction_hash = ?',
+        'UPDATE enriched_events SET processed = ? WHERE transaction_hash = ?',
       )
       .run(success ? 1 : 0, txHash);
   }
@@ -142,7 +142,7 @@ export class SimulationDatabase {
   recordTxError(txHash: string, error: string): void {
     this.db
       .prepare(
-        'UPDATE enriched_events_withoutNodeStakeUpdated SET error = ? WHERE transaction_hash = ?',
+        'UPDATE enriched_events SET error = ? WHERE transaction_hash = ?',
       )
       .run(error, txHash);
   }
@@ -153,7 +153,7 @@ export class SimulationDatabase {
   getUnprocessedCount(): number {
     const result = this.db
       .prepare(
-        'SELECT COUNT(*) as count FROM enriched_events_withoutNodeStakeUpdated WHERE processed = 0',
+        'SELECT COUNT(*) as count FROM enriched_events WHERE processed = 0',
       )
       .get() as { count: number };
 
@@ -170,7 +170,7 @@ export class SimulationDatabase {
         SELECT 
           MIN(block_number) as minBlock, 
           MAX(block_number) as maxBlock 
-        FROM enriched_events_withoutNodeStakeUpdated 
+        FROM enriched_events 
         WHERE processed = 0
       `,
       )
@@ -190,20 +190,18 @@ export class SimulationDatabase {
     blockRange: { minBlock: number; maxBlock: number };
   } {
     const totalTxs = this.db
-      .prepare(
-        'SELECT COUNT(*) as count FROM enriched_events_withoutNodeStakeUpdated',
-      )
+      .prepare('SELECT COUNT(*) as count FROM enriched_events')
       .get() as { count: number };
 
     const processedTxs = this.db
       .prepare(
-        'SELECT COUNT(*) as count FROM enriched_events_withoutNodeStakeUpdated WHERE processed = 1',
+        'SELECT COUNT(*) as count FROM enriched_events WHERE processed = 1',
       )
       .get() as { count: number };
 
     const uniqueBlocks = this.db
       .prepare(
-        'SELECT COUNT(DISTINCT block_number) as count FROM enriched_events_withoutNodeStakeUpdated',
+        'SELECT COUNT(DISTINCT block_number) as count FROM enriched_events',
       )
       .get() as { count: number };
 
@@ -213,7 +211,7 @@ export class SimulationDatabase {
         SELECT 
           MIN(block_number) as minBlock, 
           MAX(block_number) as maxBlock 
-        FROM enriched_events_withoutNodeStakeUpdated
+        FROM enriched_events
       `,
       )
       .get() as { minBlock: number; maxBlock: number };
@@ -232,9 +230,7 @@ export class SimulationDatabase {
    */
   resetProcessedFlags(): void {
     this.db
-      .prepare(
-        'UPDATE enriched_events_withoutNodeStakeUpdated SET processed = 0, error = NULL',
-      )
+      .prepare('UPDATE enriched_events SET processed = 0, error = NULL')
       .run();
   }
 
@@ -253,7 +249,7 @@ export class SimulationDatabase {
           contract_name as contract,
           function_name as function,
           COUNT(*) as count
-        FROM enriched_events_withoutNodeStakeUpdated 
+        FROM enriched_events 
         GROUP BY contract_name, function_name
         ORDER BY count DESC
       `,
@@ -269,7 +265,7 @@ export class SimulationDatabase {
   getTxBlockNumber(txHash: string): number {
     const result = this.db
       .prepare(
-        'SELECT block_number FROM enriched_events_withoutNodeStakeUpdated WHERE transaction_hash = ?',
+        'SELECT block_number FROM enriched_events WHERE transaction_hash = ?',
       )
       .get(txHash) as { block_number: number };
 
