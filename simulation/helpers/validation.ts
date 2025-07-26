@@ -187,7 +187,15 @@ export async function verifyMainnetStakingStorageState(
         );
 
       console.log(
-        `[VERIFY STATE] On-chain delegator stake: ${onChainDelegatorStake.toString()}, local delegator stake: ${localDelegatorStake.toString()}`,
+        `[VERIFY STATE] On-chain delegator stake: ${onChainDelegatorStake.toString()}, local delegator stake: ${localDelegatorStake.toString()}. Difference: ${ethers.formatEther(
+          onChainDelegatorStake - localDelegatorStake,
+        )} TRAC`,
+      );
+
+      console.log(
+        `[VERIFY STATE] On-chain node stake: ${onChainNodeStake.toString()}, local node stake: ${localNodeStake.toString()}. Difference: ${ethers.formatEther(
+          onChainNodeStake - localNodeStake,
+        )} TRAC`,
       );
 
       expect(onChainDelegatorStake).to.equal(
@@ -198,10 +206,6 @@ export async function verifyMainnetStakingStorageState(
       );
       console.log(`[VERIFY STATE] ✅ Delegator stake matches`);
     }
-
-    console.log(
-      `[VERIFY STATE] On-chain node stake: ${onChainNodeStake.toString()}, local node stake: ${localNodeStake.toString()}`,
-    );
 
     expect(onChainNodeStake).to.equal(
       localNodeStake,
@@ -236,7 +240,7 @@ export async function initializeValidationVariables(
   let delegatorsCount = 0;
   let requestWithdrawalAmount = 0n;
 
-  if (tx.contract === 'Staking') {
+  if (tx.contract === 'Staking' && tx.functionName !== 'finalizeWithdrawal') {
     // from node stake in case of redelegate
     nodeStake = BigInt(
       await contracts.stakingStorage.getNodeStake(tx.functionInputs[0]),
@@ -311,7 +315,10 @@ export async function validateDelegatorsCount(
     const identityId = tx.functionInputs[0];
     await addDelegator(hre, contracts, identityId, tx.from);
     await _validateDelegatorsCount(contracts, identityId, delegatorsCount);
-  } else if (tx.contract === 'Staking') {
+  } else if (
+    tx.contract === 'Staking' &&
+    tx.functionName !== 'finalizeWithdrawal'
+  ) {
     const identityId =
       tx.functionName === 'redelegate'
         ? tx.functionInputs[1]

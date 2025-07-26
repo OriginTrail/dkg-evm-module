@@ -4,6 +4,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import {
   ensureSufficientGasFunds,
+  getDeployedContract,
   getHubContract,
   impersonateAccount,
   stopImpersonatingAccount,
@@ -22,6 +23,32 @@ import {
  * Contains helper functions for the DKG V8.0 to V8.1 historical rewards simulation.
  * This includes scoring calculations, node processing, and other simulation-specific logic.
  */
+
+export async function initializeContracts(hre: HardhatRuntimeEnvironment) {
+  return {
+    staking: await getDeployedContract(hre, 'Staking'),
+    stakingStorage: await getDeployedContract(hre, 'StakingStorage'),
+    stakingKPI: await getDeployedContract(hre, 'StakingKPI'),
+    token: await getDeployedContract(hre, 'Token'),
+    migrator: await getDeployedContract(hre, 'Migrator'),
+    delegatorsInfo: await getDeployedContract(hre, 'DelegatorsInfo'),
+    hub: await getHubContract(hre),
+    chronos: await getDeployedContract(hre, 'Chronos'),
+    identityStorage: await getDeployedContract(hre, 'IdentityStorage'),
+    profileStorage: await getDeployedContract(hre, 'ProfileStorage'),
+    shardingTableStorage: await getDeployedContract(
+      hre,
+      'ShardingTableStorage',
+    ),
+    randomSampling: await getDeployedContract(hre, 'RandomSampling'),
+    randomSamplingStorage: await getDeployedContract(
+      hre,
+      'RandomSamplingStorage',
+    ),
+    parametersStorage: await getDeployedContract(hre, 'ParametersStorage'),
+    epochStorage: await getDeployedContract(hre, 'EpochStorageV8'),
+  };
+}
 
 /**
  * Calculate scores for all active nodes in the sharding table
@@ -701,4 +728,118 @@ export async function initializeProofingTimestamp(
   }
 
   return startBlockTimestamp;
+}
+
+export async function getDelegatorReward(
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  identityId: number,
+  epoch: number,
+  delegator: string,
+  epochRewardsPool: bigint,
+): Promise<bigint> {
+  if (
+    !(await contracts.delegatorsInfo.isNodeDelegator(identityId, delegator))
+  ) {
+    throw new Error(
+      `Delegator not found for identity ${identityId} and delegator ${delegator}`,
+    );
+  }
+
+  const delegatorKey = ethers.keccak256(
+    ethers.solidityPacked(['address'], [delegator]),
+  );
+
+  const delegatorScore18 =
+    await contracts.stakingKPI._simulatePrepareForStakeChange(
+      epoch,
+      identityId,
+      delegatorKey,
+    );
+  if (delegatorScore18 == 0n) return 0n;
+
+  const nodeScore18 = await contracts.randomSamplingStorage.getNodeEpochScore(
+    epoch,
+    identityId,
+  );
+  if (nodeScore18 == 0n) return 0n;
+
+  // Calculate the final delegators rewards pool
+  const netNodeRewards = await getNetNodeRewards(
+    contracts,
+    identityId,
+    epoch,
+    epochRewardsPool,
+  );
+
+  if (netNodeRewards == 0n) return 0n;
+
+  return (delegatorScore18 * netNodeRewards) / nodeScore18;
+}
+
+export async function getNetNodeRewards(
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  identityId: number,
+  epoch: number,
+  epochRewardsPool: bigint,
+): Promise<bigint> {
+  // If the operator fee has been claimed, return the net delegators rewards
+  if (
+    await contracts.delegatorsInfo.isOperatorFeeClaimedForEpoch(
+      identityId,
+      epoch,
+    )
+  ) {
+    console.log(
+      `[GET NET NODE REWARDS] Operator fee claimed for identity ${identityId} in epoch ${epoch} - check if this is correct`,
+    );
+    return await contracts.delegatorsInfo.getNetNodeEpochRewards(
+      identityId,
+      epoch,
+    );
+  }
+
+  const nodeScore18 = await contracts.randomSamplingStorage.getNodeEpochScore(
+    epoch,
+    identityId,
+  );
+  if (nodeScore18 == 0n) return 0n;
+
+  const allNodesScore18 =
+    await contracts.randomSamplingStorage.getAllNodesEpochScore(epoch);
+  if (allNodesScore18 == 0n) return 0n;
+
+  const totalNodeRewards = (epochRewardsPool * nodeScore18) / allNodesScore18;
+
+  const feePercentageForEpoch =
+    await contracts.profileStorage.getLatestOperatorFeePercentage(identityId);
+  const operatorFeeAmount =
+    (totalNodeRewards * feePercentageForEpoch) / 10_000n;
+
+  return totalNodeRewards - operatorFeeAmount;
+}
+
+export async function getOperatorRewards(
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  identityId: number,
+  epoch: number,
+  epochRewardsPool: bigint,
+): Promise<bigint> {
+  const nodeScore18 = await contracts.randomSamplingStorage.getNodeEpochScore(
+    epoch,
+    identityId,
+  );
+  if (nodeScore18 == 0n) return 0n;
+
+  const allNodesScore18 =
+    await contracts.randomSamplingStorage.getAllNodesEpochScore(epoch);
+  if (allNodesScore18 == 0n) return 0n;
+
+  const totalNodeRewards = (epochRewardsPool * nodeScore18) / allNodesScore18;
+
+  const feePercentageForEpoch =
+    await contracts.profileStorage.getLatestOperatorFeePercentage(identityId);
+  const operatorFeeAmount =
+    (totalNodeRewards * feePercentageForEpoch) / 10_000n;
+
+  return operatorFeeAmount;
 }
