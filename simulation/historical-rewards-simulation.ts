@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 import { expect } from 'chai';
 import hre from 'hardhat';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
@@ -7,7 +9,6 @@ import {
   impersonateAccount,
   stopImpersonatingAccount,
   ensureSufficientGasFunds,
-  getHubContract,
   getHubAddress,
 } from './helpers/blockchain-helpers';
 import {
@@ -29,6 +30,10 @@ import {
   setupMigratorAllowances,
   initializeProofingTimestamp,
   getNodeEpochPublishingFactors,
+  initializeContracts,
+  getNetNodeRewards,
+  getOperatorRewards,
+  getDelegatorReward,
 } from './helpers/simulation-helpers';
 import {
   validateDelegatorsCount,
@@ -55,18 +60,24 @@ class HistoricalRewardsSimulation {
   private lastProofingTimestamp: number = 0;
   private contracts: { [key: string]: any } = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
   private chain: string;
-  private v8nodeEpochDelegatorRewards: {
+  private nodeEpochDelegatorRewards: {
     [key: number]: { [key: number]: { [key: string]: bigint } };
   } = {};
-  private v8NodeDelegatorTotalRewards: { [key: number]: bigint } = {};
-  private v8DelegatorEpochRewards: {
+  private nodeDelegatorTotalRewards: { [key: number]: bigint } = {};
+  private delegatorEpochRewards: {
     [key: string]: { [key: number]: bigint };
   } = {};
-  private v8DelegatorTotalRewards: { [key: string]: bigint } = {};
+  private delegatorTotalRewards: { [key: string]: bigint } = {};
   private verifyMainnetState: boolean = false;
   private nodeEpochPublishingFactors: {
     [key: number]: { [key: number]: bigint };
   } = {};
+  private nodeOperatorRewards: {
+    [key: number]: { [key: number]: bigint };
+  } = {};
+  private operatorTotalRewards: { [key: number]: bigint } = {};
+  private totalEpochNetNodeRewards: { [key: number]: bigint } = {};
+  private totalEpochOperatorRewards: { [key: number]: bigint } = {};
 
   constructor(hre: HardhatRuntimeEnvironment, dbPath: string) {
     this.hre = hre;
@@ -78,47 +89,82 @@ class HistoricalRewardsSimulation {
   /**
    * Helper methods for auto-initializing nested reward objects
    */
-  private setV8NodeEpochDelegatorReward(
+  private setNodeEpochDelegatorReward(
     identityId: number,
     epoch: number,
     delegator: string,
     reward: bigint,
   ): void {
-    if (!this.v8nodeEpochDelegatorRewards[identityId]) {
-      this.v8nodeEpochDelegatorRewards[identityId] = {};
+    if (!this.nodeEpochDelegatorRewards[identityId]) {
+      this.nodeEpochDelegatorRewards[identityId] = {};
     }
-    if (!this.v8nodeEpochDelegatorRewards[identityId][epoch]) {
-      this.v8nodeEpochDelegatorRewards[identityId][epoch] = {};
+    if (!this.nodeEpochDelegatorRewards[identityId][epoch]) {
+      this.nodeEpochDelegatorRewards[identityId][epoch] = {};
     }
-    this.v8nodeEpochDelegatorRewards[identityId][epoch][delegator] = reward;
+    this.nodeEpochDelegatorRewards[identityId][epoch][delegator] = reward;
   }
 
-  private addV8NodeDelegatorTotalReward(
+  private addNodeDelegatorTotalReward(
     identityId: number,
     reward: bigint,
   ): void {
-    if (!this.v8NodeDelegatorTotalRewards[identityId]) {
-      this.v8NodeDelegatorTotalRewards[identityId] = 0n;
+    if (!this.nodeDelegatorTotalRewards[identityId]) {
+      this.nodeDelegatorTotalRewards[identityId] = 0n;
     }
-    this.v8NodeDelegatorTotalRewards[identityId] += reward;
+    this.nodeDelegatorTotalRewards[identityId] += reward;
   }
 
-  private setV8DelegatorEpochReward(
+  private setDelegatorEpochReward(
     delegator: string,
     epoch: number,
     reward: bigint,
   ): void {
-    if (!this.v8DelegatorEpochRewards[delegator]) {
-      this.v8DelegatorEpochRewards[delegator] = {};
+    if (!this.delegatorEpochRewards[delegator]) {
+      this.delegatorEpochRewards[delegator] = {};
     }
-    this.v8DelegatorEpochRewards[delegator][epoch] = reward;
+    this.delegatorEpochRewards[delegator][epoch] = reward;
   }
 
-  private addV8DelegatorTotalReward(delegator: string, reward: bigint): void {
-    if (!this.v8DelegatorTotalRewards[delegator]) {
-      this.v8DelegatorTotalRewards[delegator] = 0n;
+  private addDelegatorTotalReward(delegator: string, reward: bigint): void {
+    if (!this.delegatorTotalRewards[delegator]) {
+      this.delegatorTotalRewards[delegator] = 0n;
     }
-    this.v8DelegatorTotalRewards[delegator] += reward;
+    this.delegatorTotalRewards[delegator] += reward;
+  }
+
+  private setNodeOperatorReward(
+    identityId: number,
+    epoch: number,
+    reward: bigint,
+  ): void {
+    if (!this.nodeOperatorRewards[identityId]) {
+      this.nodeOperatorRewards[identityId] = {};
+    }
+    if (!this.nodeOperatorRewards[identityId][epoch]) {
+      this.nodeOperatorRewards[identityId][epoch] = 0n;
+    }
+    this.nodeOperatorRewards[identityId][epoch] += reward;
+  }
+
+  private addNodeOperatorTotalReward(identityId: number, reward: bigint): void {
+    if (!this.operatorTotalRewards[identityId]) {
+      this.operatorTotalRewards[identityId] = 0n;
+    }
+    this.operatorTotalRewards[identityId] += reward;
+  }
+
+  private addTotalEpochNetNodeReward(epoch: number, reward: bigint): void {
+    if (!this.totalEpochNetNodeRewards[epoch]) {
+      this.totalEpochNetNodeRewards[epoch] = 0n;
+    }
+    this.totalEpochNetNodeRewards[epoch] += reward;
+  }
+
+  private addTotalEpochOperatorReward(epoch: number, reward: bigint): void {
+    if (!this.totalEpochOperatorRewards[epoch]) {
+      this.totalEpochOperatorRewards[epoch] = 0n;
+    }
+    this.totalEpochOperatorRewards[epoch] += reward;
   }
 
   /**
@@ -126,7 +172,7 @@ class HistoricalRewardsSimulation {
    */
   async initialize(): Promise<void> {
     console.log(
-      '🚀 Initializing DKG V8.0 to V8.1 Historical Rewards Simulation\n',
+      'Initializing DKG V8.0 to V8.1 Historical Rewards Simulation\n',
     );
 
     const hubAddress = await getHubAddress(this.hre);
@@ -151,32 +197,7 @@ class HistoricalRewardsSimulation {
     );
 
     // Load contracts
-    this.contracts = {
-      staking: await getDeployedContract(this.hre, 'Staking'),
-      stakingStorage: await getDeployedContract(this.hre, 'StakingStorage'),
-      stakingKPI: await getDeployedContract(this.hre, 'StakingKPI'),
-      token: await getDeployedContract(this.hre, 'Token'),
-      migrator: await getDeployedContract(this.hre, 'Migrator'),
-      delegatorsInfo: await getDeployedContract(this.hre, 'DelegatorsInfo'),
-      hub: await getHubContract(this.hre),
-      chronos: await getDeployedContract(this.hre, 'Chronos'),
-      identityStorage: await getDeployedContract(this.hre, 'IdentityStorage'),
-      profileStorage: await getDeployedContract(this.hre, 'ProfileStorage'),
-      shardingTableStorage: await getDeployedContract(
-        this.hre,
-        'ShardingTableStorage',
-      ),
-      randomSampling: await getDeployedContract(this.hre, 'RandomSampling'),
-      randomSamplingStorage: await getDeployedContract(
-        this.hre,
-        'RandomSamplingStorage',
-      ),
-      parametersStorage: await getDeployedContract(
-        this.hre,
-        'ParametersStorage',
-      ),
-      epochStorage: await getDeployedContract(this.hre, 'EpochStorageV8'),
-    };
+    this.contracts = await initializeContracts(this.hre);
 
     this.nodeEpochPublishingFactors = await getNodeEpochPublishingFactors(
       this.contracts,
@@ -184,6 +205,8 @@ class HistoricalRewardsSimulation {
     );
 
     await validateStartTimeAndEpochLength(this.contracts, 1736812800, 2592000);
+
+    // TODO: Migrate all delegators to new delegatorsInfo
 
     // Disable auto-mining
     // console.log('[INIT] Disabling auto-mining...');
@@ -370,7 +393,6 @@ class HistoricalRewardsSimulation {
         currentEpoch = epochAtTimestamp;
         expect(currentEpoch).to.equal(await chronos.getCurrentEpoch());
 
-        // TODO: call _prepareForStakeChange for all nodes and their delegators for currentEpoch - 1 - make it public in Staking contract
         console.log(
           `[EPOCH TRANSITION] Calling _prepareForStakeChange for all nodes and their delegators for currentEpoch - 1`,
         );
@@ -541,8 +563,6 @@ class HistoricalRewardsSimulation {
       const epochMetadata = EPOCH_METADATA[this.chain];
       const epochs = epochMetadata.map((e) => e.epoch);
       for (const epoch of epochs) {
-        let totalNodeRewards = 0n;
-
         const epochMeta = epochMetadata.find((e) => e.epoch === epoch);
         if (!epochMeta) {
           throw new Error(
@@ -559,46 +579,77 @@ class HistoricalRewardsSimulation {
         );
 
         for (let identityId = 1; identityId <= maxIdentityId; identityId++) {
-          const nodeRewards = BigInt(
-            await this.contracts.stakingKPI.getNetNodeRewards(
-              identityId,
-              epoch,
-            ),
+          const netNodeRewards = await getNetNodeRewards(
+            this.contracts,
+            identityId,
+            epoch,
+            rewardPool,
           );
-          totalNodeRewards += nodeRewards;
+
+          this.addTotalEpochNetNodeReward(epoch, netNodeRewards);
+
+          const operatorRewards = await getOperatorRewards(
+            this.contracts,
+            identityId,
+            epoch,
+            rewardPool,
+          );
+
+          this.addTotalEpochOperatorReward(epoch, operatorRewards);
+          this.setNodeOperatorReward(identityId, epoch, operatorRewards);
+          this.addNodeOperatorTotalReward(identityId, operatorRewards);
 
           const delegators =
             await this.contracts.delegatorsInfo.getDelegators(identityId);
 
           for (const delegator of delegators) {
-            const reward = await this.contracts.stakingKPI.getDelegatorReward(
+            const reward = await getDelegatorReward(
+              this.contracts,
               identityId,
               epoch,
               delegator,
+              rewardPool,
             );
 
             if (reward > 0n) {
-              // Set rewards using helper methods that auto-initialize
-              this.setV8NodeEpochDelegatorReward(
+              this.setNodeEpochDelegatorReward(
                 identityId,
                 epoch,
                 delegator,
                 reward,
               );
-              this.addV8NodeDelegatorTotalReward(identityId, reward);
-              this.setV8DelegatorEpochReward(delegator, epoch, reward);
-              this.addV8DelegatorTotalReward(delegator, reward);
+              this.addNodeDelegatorTotalReward(identityId, reward);
+              this.setDelegatorEpochReward(delegator, epoch, reward);
+              this.addDelegatorTotalReward(delegator, reward);
             }
           }
+          const tolerance = 1000; // 1000 wei tolerance for rounding differences
+          const difference =
+            netNodeRewards - this.nodeDelegatorTotalRewards[identityId];
+          console.log(
+            `[DISTRIBUTE REWARDS] ⚠️ Difference between net node rewards and delegator rewards for identity ${identityId}: ${difference} wei`,
+          );
+          expect(Number(difference)).to.be.lessThanOrEqual(
+            tolerance,
+            `Total delegator rewards for identity ${identityId} do not match the node rewards within tolerance. Difference: ${difference} wei`,
+          );
         }
-        expect(totalNodeRewards).to.equal(
-          rewardPool,
-          `Total node rewards for epoch ${epoch} do not match the reward pool`,
+        const totalNodeRewards =
+          this.totalEpochNetNodeRewards[epoch] +
+          this.totalEpochOperatorRewards[epoch];
+        const tolerance = 1000; // 1000 wei tolerance for rounding differences
+        const difference = rewardPool - totalNodeRewards;
+        console.log(
+          `[DISTRIBUTE REWARDS] ⚠️ Difference between reward pool and total node rewards: ${difference} wei`,
+        );
+        expect(Number(difference)).to.be.lessThanOrEqual(
+          tolerance,
+          `Total node rewards for epoch ${epoch} do not match the reward pool within tolerance. Difference: ${difference} wei`,
         );
       }
     } catch (error) {
       console.error(
-        `[DISTRIBUTE REWARDS] ❌ Failed to distribute rewards for epoch ${epoch}:`,
+        `[DISTRIBUTE REWARDS] ❌ Failed to distribute rewards:`,
         error,
       );
     }
@@ -622,12 +673,29 @@ class HistoricalRewardsSimulation {
 
       // TODO: Export V8.json, and globals.json
       console.log('[SIMULATION END] Exporting results');
+      await this.exportResults();
 
       console.log('[SIMULATION END] Simulation wrap-up completed');
     } catch (error) {
       console.error('[SIMULATION END] ❌ Failed to wrap up simulation:', error);
       throw error;
     }
+  }
+
+  async exportResults(): Promise<void> {
+    console.log('[SIMULATION END] Exporting results');
+    const results = {
+      nodeEpochDelegatorRewards: this.nodeEpochDelegatorRewards,
+      nodeDelegatorTotalRewards: this.nodeDelegatorTotalRewards,
+      delegatorEpochRewards: this.delegatorEpochRewards,
+      delegatorTotalRewards: this.delegatorTotalRewards,
+      nodeEpochPublishingFactors: this.nodeEpochPublishingFactors,
+      nodeOperatorRewards: this.nodeOperatorRewards,
+      operatorTotalRewards: this.operatorTotalRewards,
+      totalEpochNetNodeRewards: this.totalEpochNetNodeRewards,
+      totalEpochOperatorRewards: this.totalEpochOperatorRewards,
+    };
+    fs.writeFileSync('v8-results.json', JSON.stringify(results, null, 4));
   }
 
   /**
@@ -668,6 +736,7 @@ async function main() {
     console.log(
       `[MAIN] Simulation completed in ${duration / 3600} hours at ${new Date(endTime).toISOString()}`,
     );
+    await simulation.exportResults();
     process.exit(1);
   } finally {
     await simulation.cleanup();
