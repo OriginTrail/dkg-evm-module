@@ -79,7 +79,7 @@ curl -X POST $RPC_BASE_MAINNET \
 ls -la decoded_transactions_base_mainnet.db
 
 # Quick database check (requires sqlite3)
-sqlite3 decoded_transactions_base_mainnet.db "SELECT COUNT(*) FROM enriched_events_withoutNodeStakeUpdated;"
+sqlite3 decoded_transactions_base_mainnet.db "SELECT COUNT(*) FROM enriched_events;"
 # Should show 513 transactions
 ```
 
