@@ -10,7 +10,7 @@ import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
 import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
-import {V8_1_2_DelegatorsInfo} from "./storage/V8_1_2_DelegatorsInfo.sol";
+import {DelegatorsInfo as V8_1_2_DelegatorsInfo} from "./storage/V8_1_2_DelegatorsInfo.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IInitializable} from "./interfaces/IInitializable.sol";
 import {INamed} from "./interfaces/INamed.sol";
@@ -25,6 +25,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {RandomSamplingStorage} from "./storage/RandomSamplingStorage.sol";
 import {Chronos} from "./storage/Chronos.sol";
 import {EpochStorage} from "./storage/EpochStorage.sol";
+import {RandomSamplingStorage as V8_1_2_RandomSamplingStorage} from "./storage/V8_1_2_RandomSamplingStorage.sol";
 
 contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Staking";
@@ -43,6 +44,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     V8_1_2_DelegatorsInfo public v8_1_2_delegatorsInfo;
     IERC20 public tokenContract;
     RandomSamplingStorage public randomSamplingStorage;
+    V8_1_2_RandomSamplingStorage public v8_1_2_randomSamplingStorage;
     Chronos public chronos;
     EpochStorage public epochStorage;
 
@@ -76,6 +78,9 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         v8_1_2_delegatorsInfo = V8_1_2_DelegatorsInfo(hub.getContractAddress("V8_1_2_DelegatorsInfo"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
         randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
+        v8_1_2_randomSamplingStorage = V8_1_2_RandomSamplingStorage(
+            hub.getContractAddress("V8_1_2_RandomSamplingStorage")
+        );
         chronos = Chronos(hub.getContractAddress("Chronos"));
         epochStorage = EpochStorage(hub.getContractAddress("EpochStorageV8"));
     }
@@ -687,29 +692,44 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
      * @param delegator Address of delegator to validate
      */
     function _validateDelegatorEpochClaims(uint72 identityId, address delegator) internal {
+        _validateDelegatorEpochClaimsForStore(identityId, delegator, delegatorsInfo, randomSamplingStorage);
+        _validateDelegatorEpochClaimsForStore(
+            identityId,
+            delegator,
+            DelegatorsInfo(address(v8_1_2_delegatorsInfo)),
+            RandomSamplingStorage(address(v8_1_2_randomSamplingStorage))
+        );
+    }
+
+    function _validateDelegatorEpochClaimsForStore(
+        uint72 identityId,
+        address delegator,
+        DelegatorsInfo store,
+        RandomSamplingStorage rs
+    ) internal {
         bytes32 delegatorKey = _getDelegatorKey(delegator);
         uint256 currentEpoch = chronos.getCurrentEpoch();
         uint256 previousEpoch = currentEpoch - 1;
 
-        if (delegatorsInfo.hasEverDelegatedToNode(identityId, delegator)) {
+        if (store.hasEverDelegatedToNode(identityId, delegator)) {
             // If delegator has delegated to the node before, and has removed all their stake from the node at some point
             if (stakingStorage.getDelegatorStakeBase(identityId, delegatorKey) == 0) {
-                uint256 lastStakeHeldEpoch = delegatorsInfo.getLastStakeHeldEpoch(identityId, delegator);
+                uint256 lastStakeHeldEpoch = store.getLastStakeHeldEpoch(identityId, delegator);
                 // If lastStakeHeldEpoch > 0 and < currentEpoch, delegator has unclaimed rewards for a past epoch
                 if (lastStakeHeldEpoch > 0 && lastStakeHeldEpoch < currentEpoch) {
                     revert("Must claim rewards up to the lastStakeHeldEpoch before changing stake");
                 }
                 // If lastStakeHeldEpoch == currentEpoch, rewards aren't claimable yet - allow operation
                 // If lastStakeHeldEpoch == 0, delegator claimed all rewards they are entitled to
-                delegatorsInfo.setLastClaimedEpoch(identityId, delegator, previousEpoch);
+                store.setLastClaimedEpoch(identityId, delegator, previousEpoch);
             }
         } else {
             // delegator is delegating to a node for the first time ever, set the last claimed epoch to the previous epoch
-            delegatorsInfo.setHasEverDelegatedToNode(identityId, delegator, true);
-            delegatorsInfo.setLastClaimedEpoch(identityId, delegator, previousEpoch);
+            store.setHasEverDelegatedToNode(identityId, delegator, true);
+            store.setLastClaimedEpoch(identityId, delegator, previousEpoch);
         }
 
-        uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+        uint256 lastClaimedEpoch = store.getLastClaimedEpoch(identityId, delegator);
 
         // If delegator is up to date with claims, no validation needed
         if (lastClaimedEpoch == previousEpoch) {
@@ -723,20 +743,18 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Delegator has exactly one unclaimed epoch (previousEpoch)
         // Check if there are actually rewards to claim for that epoch
-        uint256 delegatorScore18 = randomSamplingStorage.getEpochNodeDelegatorScore(
+        uint256 delegatorScore18 = rs.getEpochNodeDelegatorScore(previousEpoch, identityId, delegatorKey);
+        uint256 nodeScorePerStake36 = rs.getNodeEpochScorePerStake(previousEpoch, identityId);
+
+        uint256 delegatorLastSettledScorePerStake36 = rs.getDelegatorLastSettledNodeEpochScorePerStake(
             previousEpoch,
             identityId,
             delegatorKey
         );
 
-        uint256 nodeScorePerStake36 = randomSamplingStorage.getNodeEpochScorePerStake(previousEpoch, identityId);
-
-        uint256 delegatorLastSettledScorePerStake36 = randomSamplingStorage
-            .getDelegatorLastSettledNodeEpochScorePerStake(previousEpoch, identityId, delegatorKey);
-
         // If no rewards exist for this delegator in the previous epoch, auto-advance their claim state
         if (delegatorScore18 == 0 && nodeScorePerStake36 == delegatorLastSettledScorePerStake36) {
-            delegatorsInfo.setLastClaimedEpoch(identityId, delegator, previousEpoch);
+            store.setLastClaimedEpoch(identityId, delegator, previousEpoch);
             return;
         }
 
@@ -799,6 +817,60 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         randomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
+            epoch,
+            identityId,
+            delegatorKey,
+            nodeScorePerStake36
+        );
+
+        return currentDelegatorScore18 + scoreEarned18;
+    }
+
+    function _prepareForStakeChangeV812(
+        uint256 epoch,
+        uint72 identityId,
+        bytes32 delegatorKey
+    ) internal returns (uint256 delegatorEpochScore) {
+        // 1. Current "score-per-stake"
+        uint256 nodeScorePerStake36 = v8_1_2_randomSamplingStorage.getNodeEpochScorePerStake(epoch, identityId);
+
+        uint256 currentDelegatorScore18 = v8_1_2_randomSamplingStorage.getEpochNodeDelegatorScore(
+            epoch,
+            identityId,
+            delegatorKey
+        );
+
+        // 2. Last index at which this delegator was settled
+        uint256 delegatorLastSettledNodeEpochScorePerStake36 = v8_1_2_randomSamplingStorage
+            .getDelegatorLastSettledNodeEpochScorePerStake(epoch, identityId, delegatorKey);
+
+        // Nothing new to settle
+        if (nodeScorePerStake36 == delegatorLastSettledNodeEpochScorePerStake36) {
+            return currentDelegatorScore18;
+        }
+
+        uint96 stakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
+
+        // If the delegator has no stake, just bump the index and exit
+        if (stakeBase == 0) {
+            v8_1_2_randomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
+                epoch,
+                identityId,
+                delegatorKey,
+                nodeScorePerStake36
+            );
+            return currentDelegatorScore18;
+        }
+        // 4. Newly earned score for this delegator in the epoch
+        uint256 scorePerStakeDiff36 = nodeScorePerStake36 - delegatorLastSettledNodeEpochScorePerStake36;
+        uint256 scoreEarned18 = (uint256(stakeBase) * scorePerStakeDiff36) / SCALE18;
+
+        // 5. Persist results
+        if (scoreEarned18 > 0) {
+            v8_1_2_randomSamplingStorage.addToEpochNodeDelegatorScore(epoch, identityId, delegatorKey, scoreEarned18);
+        }
+
+        v8_1_2_randomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
             epoch,
             identityId,
             delegatorKey,
