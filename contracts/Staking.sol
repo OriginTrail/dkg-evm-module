@@ -688,10 +688,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             return;
         }
 
-        // Check if delegator has multiple unclaimed epochs
-        if (lastClaimedEpoch < previousEpoch - 1) {
-            revert("Must claim all previous epoch rewards before changing stake");
-        }
+        // // Check if delegator has multiple unclaimed epochs
+        // if (lastClaimedEpoch < previousEpoch - 1) {
+        //     revert("Must claim all previous epoch rewards before changing stake");
+        // }
 
         // Delegator has exactly one unclaimed epoch (previousEpoch)
         // Check if there are actually rewards to claim for that epoch
@@ -713,7 +713,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         // Delegator has unclaimed rewards that must be claimed first
-        revert("Must claim the previous epoch rewards before changing stake");
+        // revert("Must claim the previous epoch rewards before changing stake");
     }
 
     /**
@@ -730,7 +730,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epoch,
         uint72 identityId,
         bytes32 delegatorKey
-    ) internal returns (uint256 delegatorEpochScore) {
+    ) public returns (uint256 delegatorEpochScore) {
         // 1. Current "score-per-stake"
         uint256 nodeScorePerStake36 = randomSamplingStorage.getNodeEpochScorePerStake(epoch, identityId);
 
