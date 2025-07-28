@@ -1,0 +1,5683 @@
+[
+  {
+    "identityId": 0,
+    "nodeName": "",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 1,
+    "nodeName": "Trace Labs Node 1",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735172652"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d656d71795879767254416d37507772635463466945454678363965666452393247535a316f51707262646a61",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 2,
+    "nodeName": "Trace Labs Node 0",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "500000000000000000",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735172658"]],
+    "nodePower": "154062775331",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a46636e73366547556f734439366265487965764b75316a474a31624135365265673266314a347135394a74",
+    "computedNodeStake": "500000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "500000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 3,
+    "nodeName": "Trace Labs Node 3",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172682"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d514865583966484e6a64425a78485674755551446451445132586e76786178644737593566676942696d4c51",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 4,
+    "nodeName": "Trace Labs Node 4",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172682"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6274364a6b4e7a4b6874784a7a344379424369736a62727a33397162317a695758396b7a657a3664466b4739",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 5,
+    "nodeName": "Trace Labs Node 5",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172706"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5555647348516d5266435058646438346a334a5143466f4a4856476d59333834376b436b4b5371366e37524e",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 6,
+    "nodeName": "Trace Labs Node 19",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "423746485757",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172706"]],
+    "nodePower": "130566",
+    "nodeHealth": "0",
+    "nodeId": "0x516d656179384a79376e4d6669376934796b65456737715253354261344e707753483261515478586d6a4372624c",
+    "computedNodeStake": "423746485756",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "423746485755"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 7,
+    "nodeName": "Trace Labs Node 7",
+    "relativeNodePower": "76",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "1720000000000000",
+    "nodePublishingFactor": "177942378527428978",
+    "delegatorsCount": 8,
+    "nodeOperatorFees": [["0", "1735172712"]],
+    "nodePower": "3479778888820524075",
+    "nodeHealth": "0",
+    "nodeId": "0x516d615375314e54375235585953717659487778506d615042597a4b4d794266455669587442734a673959576165",
+    "computedNodeStake": "1999999999999999999999999",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "566990286185767029230099"
+      },
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "53893625889656782964662"
+      },
+      {
+        "delegatorAddress": "0xD28B3107724E066264F735ffedAAD0d5f35a426c",
+        "delegatorStakeBase": "100000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xCe45174e0FaFAE449652B24719f664eAF3B4677d",
+        "delegatorStakeBase": "29291000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x42925F3b33d315000276F0F6a257e4FC3c06da21",
+        "delegatorStakeBase": "168263788680818864317706"
+      },
+      {
+        "delegatorAddress": "0x4F1442ce0232b5a178D83EC928a796098c43b026",
+        "delegatorStakeBase": "1079061299243757323487531"
+      },
+      {
+        "delegatorAddress": "0x922A00075eDBD3909aaFe75cBc20d4851E984859",
+        "delegatorStakeBase": "2500000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 8,
+    "nodeName": "Trace Labs Node 21",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172718"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d59434358714365354c484869395a785a54773178546359585a343763776b384c6d5452416371575735336531",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 9,
+    "nodeName": "Trace Labs Node 17",
+    "relativeNodePower": "47",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "1830000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 18,
+    "nodeOperatorFees": [["0", "1735172724"]],
+    "nodePower": "2176799952220242089",
+    "nodeHealth": "0",
+    "nodeId": "0x516d565779476f6646376641694b587941517979414b67395945726537787667674d77716a437a317534764a3759",
+    "computedNodeStake": "1999999999999999999999999",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "58901496277926863254497"
+      },
+      {
+        "delegatorAddress": "0x357ebb0290Ea30BF84f011eB0613F152ef06406D",
+        "delegatorStakeBase": "1800000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xD28B3107724E066264F735ffedAAD0d5f35a426c",
+        "delegatorStakeBase": "89000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xe23A6B2ec7954704422afE8C4C422803928408bA",
+        "delegatorStakeBase": "100000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x6c4b96cfCE013C8d63DA25f7227CbBb350fEB6E3",
+        "delegatorStakeBase": "40000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x20BD45E3529E9aa3b59b30bA5F509a4d0F572Ab2",
+        "delegatorStakeBase": "4107786163999999999999"
+      },
+      {
+        "delegatorAddress": "0x7556E6208491Aa331026dd781AdE541cABBFA176",
+        "delegatorStakeBase": "74000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x09F331CDDd8b2A3EAc1169e938133371c3fce528",
+        "delegatorStakeBase": "6947000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xCcA5Ff0B24b3153262ffB7eFbC8a0CE5D635a0dB",
+        "delegatorStakeBase": "1170002087223804500494351"
+      },
+      {
+        "delegatorAddress": "0x8bf4364a5B4f55eeF70F37Ac32Ed26F095b5c011",
+        "delegatorStakeBase": "11100000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xaea88f1AC25c4C752E3E2bB540F4167125525d20",
+        "delegatorStakeBase": "20000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xa4cc91610c3eA93b4684A175A1fd967376B7b03f",
+        "delegatorStakeBase": "17786377000000000000000"
+      },
+      {
+        "delegatorAddress": "0x8E103Fa9Ea1C9B7B591Bb4A87BE840E332787Eeb",
+        "delegatorStakeBase": "2928000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xED85Ace7Cc10b996A84905e5635F25228De8DF6a",
+        "delegatorStakeBase": "20000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x90098Ee8c21E5397e8Ff1978bD40FfcD76174756",
+        "delegatorStakeBase": "11000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x27061B37194e90695589270aa785c14786EF4358",
+        "delegatorStakeBase": "372427253334268636251150"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 10,
+    "nodeName": "Trace Labs Node 6",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "402070419086",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172730"]],
+    "nodePower": "123887",
+    "nodeHealth": "0",
+    "nodeId": "0x516d586b4c3431356a426d6b757a69313833414c746d43736445666d335869554e784c64714b7775556a77437478",
+    "computedNodeStake": "402070419085",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "402070419084"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 11,
+    "nodeName": "Trace Labs Node 18",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "666715763913",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172736"]],
+    "nodePower": "205431",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6561654c7051454e4b356548484d46364b74356971654674714144563876557a6370336a5965536768435179",
+    "computedNodeStake": "666715763912",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "666715763911"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 12,
+    "nodeName": "Trace Labs Node 27",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "9751372307816",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172742"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d61565974465a637261536e564d707a4868647848585a4862366a75584151575a357461536857485751535568",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 13,
+    "nodeName": "Trace Labs Node 20",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "500000000000000003",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 3,
+    "nodeOperatorFees": [["0", "1735172748"]],
+    "nodePower": "154062775331",
+    "nodeHealth": "0",
+    "nodeId": "0x516d64786447576a527174453277646f616f5751464d7172555072736e466f4c4a3351634346444a336650745474",
+    "computedNodeStake": "500000000000000001",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "499999999999999999"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 14,
+    "nodeName": "Trace Labs Node 29",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "9972115489094",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172754"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a636553556737765645587163486e51624b4d69685a344b6e3565744c586248623577537a543852344a314b",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 15,
+    "nodeName": "Trace Labs Node 11",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "24239365974",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172772"]],
+    "nodePower": "7468",
+    "nodeHealth": "0",
+    "nodeId": "0x516d4e6b6d7964577848716a39766f536a576b6356657765667244784575776679426b62476b7768346f5a755759",
+    "computedNodeStake": "24239365973",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "24239365972"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 16,
+    "nodeName": "Trace Labs Node 8",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172772"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6453334e775258716d48707936797a5a396b343953617538456236377a616831434b5a376e4e704c4d486f44",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 17,
+    "nodeName": "Trace Labs Node 9",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "499618934633",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172778"]],
+    "nodePower": "153944",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6255586538634e66767455756d5a7231435a456962476d594875356b426a68753558776d33506547736a5859",
+    "computedNodeStake": "499618934632",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "499618934631"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 18,
+    "nodeName": "Trace Labs Node 22",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172784"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a53466366513944657342345a6a6b5433714a3356794359444c4652596243355531567956504e3437647745",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 19,
+    "nodeName": "Trace Labs Node 26",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "8759497173962",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172790"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d554e6e475763516765617435346e3344704c524d4853487076634744686a6e4c3277644557426e6f39654543",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 20,
+    "nodeName": "Trace Labs Node 14",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "577496898305",
+    "nodeAsk": "1260000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["600", "1735172808"]],
+    "nodePower": "175103",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6237656942776845364a7145574658534a3771784a64485a4745664263666d535a5572387541456276634667",
+    "computedNodeStake": "577496898304",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "577496898303"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 21,
+    "nodeName": "Trace Labs Node 31",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "9700432435920",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172808"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5070747438673162644a6250696338625a50555933547147644450754a43386a745935706a5233476b71616e",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 22,
+    "nodeName": "Trace Labs Node 24",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172814"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d53484e6a47667a6170514c36734e725a5453434c364e4344736a4838693635424771536a6d4a345a44753954",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 23,
+    "nodeName": "Trace Labs Node 30",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "9300025705487",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172820"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a37784d74674a3176426579356966764436794673784834566d53515677744b7258387a4e755a3275694b62",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 24,
+    "nodeName": "Trace Labs Node 25",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172826"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6574643277797136795471596355473744695553694a6d53505656717467365a79654b61374761737466316b",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 25,
+    "nodeName": "Trace Labs Node 15",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172832"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5269574e4e456339575141666a5837744d32736473756e624b4a54697977576473594777365738556f315131",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 26,
+    "nodeName": "Trace Labs Node 23",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172838"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d56516659543963346961426d69465a734e63515a4a4a4a62444b756f6442485558536578666e7775556e7767",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 27,
+    "nodeName": "Trace Labs Node 10",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172844"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d51774132487a387a4e6368566a47583454577671795343503563626b4c4c566a555376527343486851345342",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 28,
+    "nodeName": "Trace Labs Node 2",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172862"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d504d4e505073723469796f544550774b69575566774851454453444c344662663435376b38646567317a7872",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 29,
+    "nodeName": "Trace Labs Node 28",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "9925826810553",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172862"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5445697343766437655969414e7156477648643652477051337275317064373751786e6e3937505a50336935",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 30,
+    "nodeName": "Trace Labs Node 13",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "36894531250000003",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172880"]],
+    "nodePower": "11368139214",
+    "nodeHealth": "0",
+    "nodeId": "0x516d63423342485168557a526d4c4e7a6f3272415a476a4c5046485554654768464c6a69394167655a6665515773",
+    "computedNodeStake": "36894531250000002",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "18447265625000001"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "18447265625000001"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 31,
+    "nodeName": "Trace Labs Node 16",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172880"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d62614847514279585938547642777831523265514c74365858704b65524167346b4562523179446a6d56754d",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 32,
+    "nodeName": "Trace Labs Node 12",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735172886"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d50545437523372774b5561774c4a784558776365725a66714332726b59577232755a6958556f366674466f53",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1ed5ea3035c2A9d3C6E89205516257fB0A8ae6Cd",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 33,
+    "nodeName": "TL_COMMUNITY_NODE",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1000000000000000000",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735172892"]],
+    "nodePower": "500000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d546a31534b4c756950486d66526533504d3139734d397a6e75507962485a5679756553455451784550573678",
+    "computedNodeStake": "1000000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "1000000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 34,
+    "nodeName": "KT",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1000000000000000000",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735172898"]],
+    "nodePower": "500000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6641535236487072445377574555394a44675669787767654b56487750713552597977353361355879324261",
+    "computedNodeStake": "1000000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "1000000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 35,
+    "nodeName": "MNSP Node 01",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1000000000000000000",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735172904"]],
+    "nodePower": "500000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d58576e4a71375a5a333346754763726f526348757375676e47384b5a3269376a52554e32645172365a6f704d",
+    "computedNodeStake": "1000000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "1000000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 36,
+    "nodeName": "Kitty",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1055689258867814363",
+    "nodeAsk": "666666666666666",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["300", "1735172910"]],
+    "nodePower": "557239",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5659347852774a565634773542455372705257387336587631356a396e315a46427732545365733138614d76",
+    "computedNodeStake": "1055689258867814362",
+    "delegators": [
+      {
+        "delegatorAddress": "0x70bB01bb6F05C7E39F0B32A4bE85D977bee59E5B",
+        "delegatorStakeBase": "55666519631766107"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "1000022739236048255"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 37,
+    "nodeName": "COGE_TRAC",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "255849000000011376",
+    "nodeAsk": "3333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["2000", "1735172916"]],
+    "nodePower": "32729",
+    "nodeHealth": "0",
+    "nodeId": "0x516d65386f646b45666948484e7032506134716b554a695773717348386e567272636f684e4e4e34486859706b4a",
+    "computedNodeStake": "255849000000011376",
+    "delegators": [
+      {
+        "delegatorAddress": "0x19eb20A686022608bfdE3D337244e1f364c8EFb7",
+        "delegatorStakeBase": "255849000000011376"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 38,
+    "nodeName": "Branimir Rakic X86",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "25864",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735172928"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5639574c394a38464555455a7a6e6143544b316d5a754b6b6a5033436b52743339373966565a48625856766d",
+    "computedNodeStake": "25864",
+    "delegators": [
+      {
+        "delegatorAddress": "0x7779DB32A942d32C9F2aaf6fF680faa7E1e9F84F",
+        "delegatorStakeBase": "25864"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 39,
+    "nodeName": "carbontracker",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "666666666666666",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735172940"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d65737559333142565a456643597a664566326d78364b536b7945767774436b33725635686f3353506652594a",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 40,
+    "nodeName": "Branimir Rakic X87",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735172946"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d52575233573332413165697157376e577763507850626d4b3638567a587079507253377270636a7259375356",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 41,
+    "nodeName": "Branimir Rakic X88",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735172952"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6161393674657350774a43426a6e684a6750426670466734484b765532424c4532616f346732626739685654",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 42,
+    "nodeName": "Branimir Rakic X",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735172958"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d58344852547156705056756935734c485661784264753454587139327863396a694a66746d53643946636a43",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 43,
+    "nodeName": "Branimir Rakic X89",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735172964"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d64646455764b77636f713746546d6a6f57715a784b69424534697a6578634a396a777a5448724e465570567a",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 44,
+    "nodeName": "kCosmi",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "19253246951196845",
+    "nodeAsk": "333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735172970"]],
+    "nodePower": "185",
+    "nodeHealth": "0",
+    "nodeId": "0x516d536a4c78573534757950544b744a334c5a634e436d6a5a52654b413250796965487575474b6b6b6841357654",
+    "computedNodeStake": "19253246951196845",
+    "delegators": [
+      {
+        "delegatorAddress": "0x840AF7A83c5fEfA87A360FB98c027a40E7e58F1b",
+        "delegatorStakeBase": "19253246951196845"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 45,
+    "nodeName": "Hotnode4",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "99203856969764860806",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735172982"]],
+    "nodePower": "4920702618",
+    "nodeHealth": "0",
+    "nodeId": "0x516d50567852553445794a3252344671744354584b626b565a56514e645342776d764e32623736377a486d653362",
+    "computedNodeStake": "99203856969764860806",
+    "delegators": [
+      {
+        "delegatorAddress": "0xe4dd1F7d2e33406CC5d81165aa2fD9Bb93fC8ba9",
+        "delegatorStakeBase": "99203856969764860806"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 46,
+    "nodeName": "Hotnode5",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "73352549389611930517",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735172988"]],
+    "nodePower": "2690298250",
+    "nodeHealth": "0",
+    "nodeId": "0x516d62516551735079744b6e425662524a734c6f73475a475058635561424d626766654236724b62694244784763",
+    "computedNodeStake": "73352549389611930517",
+    "delegators": [
+      {
+        "delegatorAddress": "0xe4dd1F7d2e33406CC5d81165aa2fD9Bb93fC8ba9",
+        "delegatorStakeBase": "73352549389611930517"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 47,
+    "nodeName": "Hotnode6",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "60613757780198920684",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735172994"]],
+    "nodePower": "1837013816",
+    "nodeHealth": "0",
+    "nodeId": "0x516d536469346d35534266505538566354423364423269314857415636473456645051676f374b38784571465755",
+    "computedNodeStake": "60613757780198920684",
+    "delegators": [
+      {
+        "delegatorAddress": "0xe4dd1F7d2e33406CC5d81165aa2fD9Bb93fC8ba9",
+        "delegatorStakeBase": "60613757780198920684"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 48,
+    "nodeName": "Hotnode8",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "7710123103279284102",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173000"]],
+    "nodePower": "29722999",
+    "nodeHealth": "0",
+    "nodeId": "0x516d585638487661446d6235395a5865654c4b6a5143554b663957544e794157465071374e37594242476572636a",
+    "computedNodeStake": "7710123103279284102",
+    "delegators": [
+      {
+        "delegatorAddress": "0xe4dd1F7d2e33406CC5d81165aa2fD9Bb93fC8ba9",
+        "delegatorStakeBase": "7710123103279284102"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 49,
+    "nodeName": "Hotnode7",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "57498613697671182579",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173006"]],
+    "nodePower": "1653045288",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5750477277786a634650384d4175533850475078576162745152396b63586e794470587255554c706e756364",
+    "computedNodeStake": "57498613697671182579",
+    "delegators": [
+      {
+        "delegatorAddress": "0xe4dd1F7d2e33406CC5d81165aa2fD9Bb93fC8ba9",
+        "delegatorStakeBase": "57498613697671182579"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 50,
+    "nodeName": "MOTP",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "6000000000000000000",
+    "nodeAsk": "1250000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173024"]],
+    "nodePower": "1848769803980",
+    "nodeHealth": "0",
+    "nodeId": "0x516d4e57714b5952757a55396e554e425a65686b744e514d4c52615a3379483634583837487837687751526b4d63",
+    "computedNodeStake": "6000000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x67164C15e2A606f48F829Cb71B1A04db41D47917",
+        "delegatorStakeBase": "6000000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 51,
+    "nodeName": "drMurlly-DKGv6-1",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173024"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d636d735a373659726d337366366a5a7837535838335733436e5777616466595136596572656657415a757548",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 52,
+    "nodeName": "drMurlly-DKGv6-2",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173042"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d57563857626875586a32327462574b6339706e665061434164574b525a704d446e70414b78667043584d3252",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 53,
+    "nodeName": "TRAC02",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173042"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d59546a564e595450464d6952686e66794c424b4d7a6659425464626b7454534d68315a4b707a765a7531736a",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 54,
+    "nodeName": "Weave",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "54630397579332200036686",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173060"]],
+    "nodePower": "1492240169837952",
+    "nodeHealth": "0",
+    "nodeId": "0x516d66475457526e35704a336d485a31695a6e76694c4a65335446484a4d513562465a415572316d6e4432526635",
+    "computedNodeStake": "54630397579332200036686",
+    "delegators": [
+      {
+        "delegatorAddress": "0x0eFE4F1dDbf44443377d05a458451c9cA1bE73b8",
+        "delegatorStakeBase": "54630397579332200036686"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 55,
+    "nodeName": "Hotnode1",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "31127973645350984897",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173060"]],
+    "nodePower": "484475371",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5337714b68776b4755506a34487445546962446d535367753546734e624b78745759726e4c47456768714b35",
+    "computedNodeStake": "31127973645350984897",
+    "delegators": [
+      {
+        "delegatorAddress": "0xC4D83F68F783d9d833813842b006B30af2968Fa5",
+        "delegatorStakeBase": "31127973645350984897"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 56,
+    "nodeName": "Hotnode2",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "31452290852867909473",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173066"]],
+    "nodePower": "494623299",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a46664169554b46535555673565595231717a58696136374c596a6d3634706462523962755254647964384e",
+    "computedNodeStake": "31452290852867909473",
+    "delegators": [
+      {
+        "delegatorAddress": "0xC4D83F68F783d9d833813842b006B30af2968Fa5",
+        "delegatorStakeBase": "31452290852867909473"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 57,
+    "nodeName": "Hotnode3",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "31578949743197332902",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173072"]],
+    "nodePower": "498615033",
+    "nodeHealth": "0",
+    "nodeId": "0x516d65455278764a7666736776536f52795738704e6a516631613165626d7339686e555558486d76483365516e6d",
+    "computedNodeStake": "31578949743197332902",
+    "delegators": [
+      {
+        "delegatorAddress": "0xC4D83F68F783d9d833813842b006B30af2968Fa5",
+        "delegatorStakeBase": "31578949743197332902"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 58,
+    "nodeName": "CVIKI",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3000000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173078"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6132556a4a6d4b526b713273736a507670736d4c466a6e65537965444e71704b6a7555693135387270665656",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 59,
+    "nodeName": "Blockchain22Networks",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "996769735001928559",
+    "nodeAsk": "80333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173084"]],
+    "nodePower": "496774",
+    "nodeHealth": "0",
+    "nodeId": "0x516d664d62376e757a5231327861565461794e534c4a6178394c6551456e6363745a75706e4b4461734b68644578",
+    "computedNodeStake": "996769735001928559",
+    "delegators": [
+      {
+        "delegatorAddress": "0xE19e7c27Df88c8A705d4dF18FEab67030fa9b380",
+        "delegatorStakeBase": "996769735001928559"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 60,
+    "nodeName": "Blockchain22Networks-1",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "7000000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["500", "1735173090"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d4e64376a79526a593851586d504645334d397133377670393369415433357762515665777974724e564a6132",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0xE19e7c27Df88c8A705d4dF18FEab67030fa9b380",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x0A0d8713c3fCfD18ab9bab182142b51A16079Dbc",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 61,
+    "nodeName": "COGE_TRAC03",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "206054547325",
+    "nodeAsk": "333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735173108"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d56437a5658715058466766644e3746587351437143325059663875387057484c374d58394556754c4d734d48",
+    "computedNodeStake": "206054547324",
+    "delegators": [
+      {
+        "delegatorAddress": "0x19eb20A686022608bfdE3D337244e1f364c8EFb7",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "206054547323"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 62,
+    "nodeName": "TRA©VERSE",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "26017122060619368353822",
+    "nodeAsk": "23333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 5,
+    "nodeOperatorFees": [["0", "1735173108"]],
+    "nodePower": "338445320158583",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5467653636484a647a71674d4c326b57414c6e48754d43735843796652627a72353169746539474646687662",
+    "computedNodeStake": "26017122060619368353820",
+    "delegators": [
+      {
+        "delegatorAddress": "0xD28B3107724E066264F735ffedAAD0d5f35a426c",
+        "delegatorStakeBase": "399855197655"
+      },
+      {
+        "delegatorAddress": "0x4c6d2528680C4750F815Ad0912A5540aA1330a4D",
+        "delegatorStakeBase": "9999999999999999999999"
+      },
+      {
+        "delegatorAddress": "0x3A45bae368Dd903074cdA7E08f0f3d8a0A63E6DE",
+        "delegatorStakeBase": "7000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xB6c3FF5539522323DFD6fF1D9F7cff7C4F34d6C6",
+        "delegatorStakeBase": "5174000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xf220a79836Bd4c7FE0F0760b154d955c01c6DD93",
+        "delegatorStakeBase": "3843122060219513156166"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 63,
+    "nodeName": "Watcher",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173126"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d4e57476276396368396d6944636b7a3243694c656d7646774a58444d374570335474796e537071587a625435",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 64,
+    "nodeName": "Trini Zone",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "70030387834983709216",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173126"]],
+    "nodePower": "2452127610",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a696e7239576e59627967734a7657503474577a6e4d455768557a6f716f694461484b594d7a50316f716d61",
+    "computedNodeStake": "70030387834983709216",
+    "delegators": [
+      {
+        "delegatorAddress": "0xf220a79836Bd4c7FE0F0760b154d955c01c6DD93",
+        "delegatorStakeBase": "70030387834983709216"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 65,
+    "nodeName": "CoachPA Node 1",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "28841291512583",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173132"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d503139484e764a4a69355675766b5035747067484c6d4676537270486174354e565a78713754456261664548",
+    "computedNodeStake": "28841291512583",
+    "delegators": [
+      {
+        "delegatorAddress": "0x907B7a9851D372cd301a938799C00A8B464A2419",
+        "delegatorStakeBase": "28841291512583"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 66,
+    "nodeName": "(NLD)OT Node",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "80000000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173138"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d63674356764d365237594255373853354237446a52687742734d655634544164447952684454335364723953",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 67,
+    "nodeName": "CoachPA Node 2",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "269049462601",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173156"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d554e4152463847357865524333566b5641414e70515765566750754d435155754e634d4b7a5a786172653242",
+    "computedNodeStake": "269049462601",
+    "delegators": [
+      {
+        "delegatorAddress": "0x907B7a9851D372cd301a938799C00A8B464A2419",
+        "delegatorStakeBase": "269049462601"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 68,
+    "nodeName": "CoachPA Node 3",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173156"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d4e7a324e383246414b42444b484542536933324e78696b625065777355716b4d446456785a6d6b5a695a6b61",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 69,
+    "nodeName": "DKG Warrior 1",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173198"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d62337969577245394a377477414d5a6b454676674e6f4a7745796b757666433275426a544e50636d43486663",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 70,
+    "nodeName": "LuKu",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1497480048174996984",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173198"]],
+    "nodePower": "1121223",
+    "nodeHealth": "0",
+    "nodeId": "0x516d54394753746b6f61327a41476d726a68393458764d57544d537a6d70354e4b67437753367665763570486572",
+    "computedNodeStake": "1497480048174996984",
+    "delegators": [
+      {
+        "delegatorAddress": "0xE6b6dc9Dd0c0d72CB14476193289D6575444376F",
+        "delegatorStakeBase": "1497480048174996984"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 71,
+    "nodeName": "drMurlly-DKGv6-3",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "80000000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173198"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6371366f5655463634445938683953574a6b705875674578554c77726d6e796f7953516a51323773526a6b74",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 72,
+    "nodeName": "Stunt",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "55448721222343571832753",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173198"]],
+    "nodePower": "1537280342596587",
+    "nodeHealth": "0",
+    "nodeId": "0x516d4e74784e783871783833626241707a6338627a3438644645545366346d3158776e5a37656f3771364d737347",
+    "computedNodeStake": "55448721222343571832753",
+    "delegators": [
+      {
+        "delegatorAddress": "0xEe92C0402b937D955AbEc839Aab42dF4cED716A1",
+        "delegatorStakeBase": "55448721222343571832753"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 73,
+    "nodeName": "JuLen",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "272413194444326",
+    "nodeAsk": "5000000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173204"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d664e4a3674564d5a395a50637646536f37335a6132717458653657747331484154776a48674357754b436f4c",
+    "computedNodeStake": "272413194444326",
+    "delegators": [
+      {
+        "delegatorAddress": "0xA8D21f6B3FBAAC6de2bE1B24E8bB707E0e014DE5",
+        "delegatorStakeBase": "272413194444326"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 74,
+    "nodeName": "Node Jesus 1",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2534746090012124",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173210"]],
+    "nodePower": "3",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6469454d61785331773255543239476835586d56423433794c545847696a3677344a346e444369635a685641",
+    "computedNodeStake": "2534746090012124",
+    "delegators": [
+      {
+        "delegatorAddress": "0x069fEfd6eA464DF8F03fC29A4faFddd0EAaF2601",
+        "delegatorStakeBase": "2534746090012124"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 75,
+    "nodeName": "kitty02",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "112641493664352648",
+    "nodeAsk": "2666666666666666",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["300", "1735173216"]],
+    "nodePower": "6344",
+    "nodeHealth": "0",
+    "nodeId": "0x516d59326d634c5373776d7263716d6a4643534577545954654d4838745a56655276437a5a42684155724c723835",
+    "computedNodeStake": "112641493664352647",
+    "delegators": [
+      {
+        "delegatorAddress": "0xD28B3107724E066264F735ffedAAD0d5f35a426c",
+        "delegatorStakeBase": "309965575405"
+      },
+      {
+        "delegatorAddress": "0x70bB01bb6F05C7E39F0B32A4bE85D977bee59E5B",
+        "delegatorStakeBase": "112641183698777242"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 76,
+    "nodeName": "CoachPA Node 4",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "398",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173234"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a73314a65635069703938637a6e6836323177646842794c46505175456651504d35526f4566567035457a59",
+    "computedNodeStake": "398",
+    "delegators": [
+      {
+        "delegatorAddress": "0x907B7a9851D372cd301a938799C00A8B464A2419",
+        "delegatorStakeBase": "398"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 77,
+    "nodeName": "Amado1",
+    "relativeNodePower": "60",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1953021000000000000000000",
+    "nodeAsk": "1000000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 5,
+    "nodeOperatorFees": [
+      ["0", "1735173234"],
+      ["1600", "1738619724"],
+      ["1000", "1746808218"]
+    ],
+    "nodePower": "2773934045924159580",
+    "nodeHealth": "0",
+    "nodeId": "0x516d51536d786a4a4c33386f5436443855486f794a7a67397a68466d55747465483175657046555a5655504b6744",
+    "computedNodeStake": "1953021000000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3E4c39228BfcBfB98EdbC1905A6C7716cD5303f2",
+        "delegatorStakeBase": "678954000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xF31e8CA84382Bf02D4367905B6Fb536bEb08E11D",
+        "delegatorStakeBase": "135575000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x86dE4D5E5498b0d635c29E187d38C6f0bE76889A",
+        "delegatorStakeBase": "16792000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x17beEDB486Cb8202ea056db3105f564020D7876C",
+        "delegatorStakeBase": "615699000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xd16616dAf37157a3B242998dEE144Fa4Da4c7214",
+        "delegatorStakeBase": "506001000000000000000000"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 78,
+    "nodeName": "Amado3",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "1200000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [
+      ["0", "1735173240"],
+      ["1500", "1747404498"]
+    ],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d555348437878697369476970754d4e7169676355363459677769546a55396e546e765a6b5050745747654279",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 79,
+    "nodeName": "Amado2",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "1200000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [
+      ["0", "1735173246"],
+      ["2000", "1747404456"]
+    ],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d4e7164794b3464415a67393744793858525a3856415570704c4a65424a6470646b5571317538696f77755553",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 80,
+    "nodeName": "Amado4",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1232487185817131423",
+    "nodeAsk": "1100000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [
+      ["10000", "1735173252"],
+      ["1000", "1747404606"]
+    ],
+    "nodePower": "476454392994",
+    "nodeHealth": "0",
+    "nodeId": "0x516d507838674b7141424651757a59544844374b613975766246766d67376866657a553842596355616876565543",
+    "computedNodeStake": "1232487185817131423",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3E4c39228BfcBfB98EdbC1905A6C7716cD5303f2",
+        "delegatorStakeBase": "1232487185817131423"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 81,
+    "nodeName": "drMurlly-DKGv6-4",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173282"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d4e724b766657344d773662677a6b56723535624c794d4e444c686534714b61587a3538596670613243445959",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 82,
+    "nodeName": "SHIFT01",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173282"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d656f424e6f5071346f7952684a72756646366d506b564137734b58396b655945774c4d46624e556671795935",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 83,
+    "nodeName": "2961b8f91e1726913d12a4d8a093bec7da649632132d1bf71eabad0ad22d8c86",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "37851650737847221994",
+    "nodeAsk": "66666666666666666",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173282"]],
+    "nodePower": "716373731",
+    "nodeHealth": "0",
+    "nodeId": "0x516d4e5266736e453445613972476b596b676e7072726532557334447a34473835514b5569335635695242507359",
+    "computedNodeStake": "37851650737847221994",
+    "delegators": [
+      {
+        "delegatorAddress": "0x97cb2aC6009B2A2cC95843db610CA3f27C75BBaC",
+        "delegatorStakeBase": "37851650737847221994"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 84,
+    "nodeName": "Sinoloa1",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "123808693029657846168",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173294"]],
+    "nodePower": "7664296234",
+    "nodeHealth": "0",
+    "nodeId": "0x516d546a73387747533239374e735139423344343245313164555741523850335873696b76754b6b4a7938714644",
+    "computedNodeStake": "123808693029657846168",
+    "delegators": [
+      {
+        "delegatorAddress": "0x4BEA5E7Ec1b3b407aCAc6DA91C20731fBa405B30",
+        "delegatorStakeBase": "123808693029657846168"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 85,
+    "nodeName": "SHIFT02",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173570"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5652394a4d366d7a4a7777455139596b664a67335a7272514b31336a44415252756f796b79687968394e6263",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 86,
+    "nodeName": "Sinaloa2",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "68395959653047104235",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173576"]],
+    "nodePower": "2339003648",
+    "nodeHealth": "0",
+    "nodeId": "0x516d623434484d43596f51506b4e667878564536724474597633756f4b5a4a6b7035326370665169373242587144",
+    "computedNodeStake": "68395959653047104235",
+    "delegators": [
+      {
+        "delegatorAddress": "0x4BEA5E7Ec1b3b407aCAc6DA91C20731fBa405B30",
+        "delegatorStakeBase": "68395959653047104235"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 87,
+    "nodeName": "SHIFT03",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173582"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d536d6b524b59773137316f47563469504a7864364d4453726e4c753741694b6a7361777a35685644705a7874",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 88,
+    "nodeName": "SHIFT04",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1000000003845666",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173588"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d54317359587867666e754e343355753944466b616e4a5355434236576b5753334834655562346252474e414b",
+    "computedNodeStake": "1000000003845666",
+    "delegators": [
+      {
+        "delegatorAddress": "0x34446D2b12bCb468403386Be511EA857e41d5C04",
+        "delegatorStakeBase": "1000000003845666"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 89,
+    "nodeName": "SHIFT05",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "821220623585123",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173594"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5248464a534d6736736f7a37504b656747345757396d5a78426e733846584e7145476b48453955616e50666d",
+    "computedNodeStake": "821220623585123",
+    "delegators": [
+      {
+        "delegatorAddress": "0x34446D2b12bCb468403386Be511EA857e41d5C04",
+        "delegatorStakeBase": "821220623585123"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 90,
+    "nodeName": "SHIFT06",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "936201935487467",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173600"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5739525a4245376764734c56613768687a6a696b3438797a387a446a61424a48336968335170425653454776",
+    "computedNodeStake": "936201935487467",
+    "delegators": [
+      {
+        "delegatorAddress": "0x34446D2b12bCb468403386Be511EA857e41d5C04",
+        "delegatorStakeBase": "936201935487467"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 91,
+    "nodeName": "SHIFT07",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1224498194634728",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173606"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d614d337562454465676338755262376b446e4670324d3159324138365042446458454d793571425256576e66",
+    "computedNodeStake": "1224498194634728",
+    "delegators": [
+      {
+        "delegatorAddress": "0x34446D2b12bCb468403386Be511EA857e41d5C04",
+        "delegatorStakeBase": "1224498194634728"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 92,
+    "nodeName": "PEMA01",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "622447504770619840",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173612"]],
+    "nodePower": "193720",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5542355062325555796548394159684a70797870474637794e7a573938756a4a73566b6f5367417933536347",
+    "computedNodeStake": "622447504770619840",
+    "delegators": [
+      {
+        "delegatorAddress": "0x7AFf692b5d15B94577a59058DC28c4Dd64368c60",
+        "delegatorStakeBase": "622447504770619840"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 93,
+    "nodeName": "PEMA02",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1692689416534044663",
+    "nodeAsk": "333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173618"]],
+    "nodePower": "1432598",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6353784a45386e5a6d525a75664c6f4a4637386a63555473613170653534553258585248616d47427854344e",
+    "computedNodeStake": "1692689416534044663",
+    "delegators": [
+      {
+        "delegatorAddress": "0x828F961B9c4c1d3e7Ac88eBb5A764dd97D02a318",
+        "delegatorStakeBase": "1692689416534044663"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 94,
+    "nodeName": "Kanos",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "367238986116473435",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735173624"]],
+    "nodePower": "67432",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5758464255693545425070555958533843687377796d6763743134447567475141427a7433326d334c793470",
+    "computedNodeStake": "367238986116473434",
+    "delegators": [
+      {
+        "delegatorAddress": "0x49eb60E1b1187430f66131E8663783757740e8D2",
+        "delegatorStakeBase": "367238947334892870"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "38781580564"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 95,
+    "nodeName": "Kwalla",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "182654014240957754617",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173630"]],
+    "nodePower": "16681244459",
+    "nodeHealth": "0",
+    "nodeId": "0x516d59464a565a5271786f4639334c745750755a597235414442567a6b6b4e3962513532705978747434364a7655",
+    "computedNodeStake": "182654014240957754617",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3078C02fdf27A008BFb7eeEA3Cd5776acC892612",
+        "delegatorStakeBase": "182654014240957754617"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 96,
+    "nodeName": "BID",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "60316339421287073204999",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 3,
+    "nodeOperatorFees": [["0", "1735173648"]],
+    "nodePower": "1819030400591954",
+    "nodeHealth": "0",
+    "nodeId": "0x516d663468375745373961716a527345396941344b6e487744487179534a74754458697232476636464361543177",
+    "computedNodeStake": "60316339421287073204999",
+    "delegators": [
+      {
+        "delegatorAddress": "0xd8C8f8E07F779C34aEc474bA1A04E20E792b5c5f",
+        "delegatorStakeBase": "5970000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xd016c9094d63eCA2255a9bb20c021Ea4B16B0a2a",
+        "delegatorStakeBase": "1000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x77f949e0e0a395757BdDE6510D4f4E4bE168bAf4",
+        "delegatorStakeBase": "53346339421287073204999"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 97,
+    "nodeName": "PEMA03",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "305907257358868434",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173648"]],
+    "nodePower": "46789",
+    "nodeHealth": "0",
+    "nodeId": "0x516d563779566974505066476d3641716b694c57514c48707634374b75426d746e73775247573479756e41485a42",
+    "computedNodeStake": "305907257358868434",
+    "delegators": [
+      {
+        "delegatorAddress": "0x018895b05D5ebAe4571db08c0a1472b071B5e66c",
+        "delegatorStakeBase": "305907257358868434"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 98,
+    "nodeName": "4165341117b199642bc9cf8fe8e9ef7246d017dead863ad7d34abf88958b09ba",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "111316962239583333052",
+    "nodeAsk": "80000000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173654"]],
+    "nodePower": "6195733041",
+    "nodeHealth": "0",
+    "nodeId": "0x516d576e6e587a6575655043695338395057736b3661524c47445a55413774514c705639706655696d6f64744251",
+    "computedNodeStake": "111316962239583333052",
+    "delegators": [
+      {
+        "delegatorAddress": "0xdAE4D466150Eb98F456286fF41179ccdb0ADC081",
+        "delegatorStakeBase": "111316962239583333052"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 99,
+    "nodeName": "SOON",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "49084637367382200122",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173660"]],
+    "nodePower": "1204650812",
+    "nodeHealth": "0",
+    "nodeId": "0x516d596e5a597173757a4134507232315965447451536f75447672346e54357773686e5364616136413375764738",
+    "computedNodeStake": "49084637367382200122",
+    "delegators": [
+      {
+        "delegatorAddress": "0x706522d3B7B784B84BCf308d989e50dD3577f5Ba",
+        "delegatorStakeBase": "49084637367382200122"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 100,
+    "nodeName": "SOON2",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "813863124487642950",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173666"]],
+    "nodePower": "331186",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5456384b414c4355693264636f415a33573133666f4b447661794a46696531566f5a546a444c464c55756e4d",
+    "computedNodeStake": "813863124487642950",
+    "delegators": [
+      {
+        "delegatorAddress": "0x706522d3B7B784B84BCf308d989e50dD3577f5Ba",
+        "delegatorStakeBase": "813863124487642950"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 101,
+    "nodeName": "drMurlly-DKGv6-3b",
+    "relativeNodePower": "50",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "1600000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 33,
+    "nodeOperatorFees": [
+      ["400", "1735173684"],
+      ["600", "1741600878"]
+    ],
+    "nodePower": "2319264556835572938",
+    "nodeHealth": "0",
+    "nodeId": "0x516d646f736d544b656a42416879587a716d696465464b5579584d6975634c5857525a76465354396d6b38623337",
+    "computedNodeStake": "1999999999999999999999984",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "860937914027766362267339"
+      },
+      {
+        "delegatorAddress": "0x626713967C0d98A2701C12DE07E2D37A9EED0D5f",
+        "delegatorStakeBase": "5000003492463489838519"
+      },
+      {
+        "delegatorAddress": "0x63d28071c1574277b5Fd8F11886aDe869A660Fc9",
+        "delegatorStakeBase": "5173820000000000000000"
+      },
+      {
+        "delegatorAddress": "0x357ebb0290Ea30BF84f011eB0613F152ef06406D",
+        "delegatorStakeBase": "8169536386344325901835"
+      },
+      {
+        "delegatorAddress": "0xe3324E63cc99f05DC482d2E73B2016143B163EDe",
+        "delegatorStakeBase": "19390826819337888738418"
+      },
+      {
+        "delegatorAddress": "0xfe8c1e0D733815Bdd889144ea721a39b44fdA866",
+        "delegatorStakeBase": "105727904367025848775601"
+      },
+      {
+        "delegatorAddress": "0x2549393a45A63dc08Ecf6CB2C76710DcFC6832fD",
+        "delegatorStakeBase": "7014019587016829199883"
+      },
+      {
+        "delegatorAddress": "0x5EF5D89Ab637D941A82fC30872aBEBEC02D3e3F1",
+        "delegatorStakeBase": "16436492396824577061740"
+      },
+      {
+        "delegatorAddress": "0x497583C2124441CB9387AdC81759fC0950Cb6eD8",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x10E82513D367B7d99157F9f3Cd309080D2a36a97",
+        "delegatorStakeBase": "120157588793571942209368"
+      },
+      {
+        "delegatorAddress": "0x896930E77cdF937b26aD5fA0f8E5957616F496e2",
+        "delegatorStakeBase": "1609871202581265788161"
+      },
+      {
+        "delegatorAddress": "0x3008f3C33FeFB6f0FafD749caC0101F326A7cfb3",
+        "delegatorStakeBase": "12719784808346779801739"
+      },
+      {
+        "delegatorAddress": "0xB598c060EF2b844286ed60e2eB5058dC69A2AD84",
+        "delegatorStakeBase": "404932295094921075532639"
+      },
+      {
+        "delegatorAddress": "0x861202B0693b5cb64f38704795Ee96E71199d737",
+        "delegatorStakeBase": "101233073773730268883158"
+      },
+      {
+        "delegatorAddress": "0xe23A6B2ec7954704422afE8C4C422803928408bA",
+        "delegatorStakeBase": "24068765882233574851543"
+      },
+      {
+        "delegatorAddress": "0x1F70AB7A96554F0cc1F6a4c57f2b244E8cBA2f92",
+        "delegatorStakeBase": "3286168508276575616865"
+      },
+      {
+        "delegatorAddress": "0xAb9Ff3b61c1fbC40D1ac6610b3b1093805165fb9",
+        "delegatorStakeBase": "1508953024640707914197"
+      },
+      {
+        "delegatorAddress": "0x71D7d9836884ab6801160F3F12063B262f44fe7a",
+        "delegatorStakeBase": "8088312135985086442295"
+      },
+      {
+        "delegatorAddress": "0x6c4b96cfCE013C8d63DA25f7227CbBb350fEB6E3",
+        "delegatorStakeBase": "4812207852074613747352"
+      },
+      {
+        "delegatorAddress": "0x5a168ccbC4754fbAF66a2F1d5d3e28acf45a542b",
+        "delegatorStakeBase": "63191004872015987973"
+      },
+      {
+        "delegatorAddress": "0x50D55e6Ed4146425C52c26521FF14be90bd4d1A5",
+        "delegatorStakeBase": "75247223599127842039795"
+      },
+      {
+        "delegatorAddress": "0xAcF01Bd31Fa84c64a8eD6C16c090E0944b108F59",
+        "delegatorStakeBase": "7002878863328781904075"
+      },
+      {
+        "delegatorAddress": "0x7386184B04D79780A25e9eeA8bF4e9374f4b8C92",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xCb18357E0DFEa14b4d84d1d0Ca1687C203D6c62B",
+        "delegatorStakeBase": "98054848699059329264562"
+      },
+      {
+        "delegatorAddress": "0x42925F3b33d315000276F0F6a257e4FC3c06da21",
+        "delegatorStakeBase": "34306479333803822569498"
+      },
+      {
+        "delegatorAddress": "0x07cEae37D0Cff6BaEb729B885e36527Bd123baeb",
+        "delegatorStakeBase": "500000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x922A00075eDBD3909aaFe75cBc20d4851E984859",
+        "delegatorStakeBase": "5132002463212347047250"
+      },
+      {
+        "delegatorAddress": "0x2756301b12DBd300f329F7693839011ECa868c0b",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x86dE4D5E5498b0d635c29E187d38C6f0bE76889A",
+        "delegatorStakeBase": "4130000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "1398351833"
+      },
+      {
+        "delegatorAddress": "0x67164C15e2A606f48F829Cb71B1A04db41D47917",
+        "delegatorStakeBase": "505299397226834705"
+      },
+      {
+        "delegatorAddress": "0xfB013A35c5939ab629E88c2A91E7f4D35ED5BFa7",
+        "delegatorStakeBase": "65295332584056023429637"
+      },
+      {
+        "delegatorAddress": "0x02CC95B317FfFf75878A8508885aE4842c6d2694",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 102,
+    "nodeName": "drMurlly-DKGv6-5",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "1125000000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173684"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d636a3265517259543246516558584b56486b6d4750786b4a6973475578335a544b39766e7738513171736b54",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 103,
+    "nodeName": "LIT",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "51181456136049175971911",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173690"]],
+    "nodePower": "1309770726103162",
+    "nodeHealth": "0",
+    "nodeId": "0x516d595551786b55315a4c58693935455054554d577756646b754663704c5364654d31523461443643364d584448",
+    "computedNodeStake": "51181456136049175971911",
+    "delegators": [
+      {
+        "delegatorAddress": "0x4353FB2AC5924214EF3E23aaddBCA336Ce254447",
+        "delegatorStakeBase": "51181456136049175971911"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 104,
+    "nodeName": "SOON3",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "62188767726334372587",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173696"]],
+    "nodePower": "1933721415",
+    "nodeHealth": "0",
+    "nodeId": "0x516d646155357742544653546b50754132506d71375762717277344e7236773879523634726a6277597042714c31",
+    "computedNodeStake": "62188767726334372587",
+    "delegators": [
+      {
+        "delegatorAddress": "0x706522d3B7B784B84BCf308d989e50dD3577f5Ba",
+        "delegatorStakeBase": "62188767726334372587"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 105,
+    "nodeName": "Two Ravens E&C",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "64107673446462081649",
+    "nodeAsk": "666666666666666",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173702"]],
+    "nodePower": "2054896897",
+    "nodeHealth": "0",
+    "nodeId": "0x516d517244395979684a59316f5a3335664a3843526f33564d387435414251726a533252323341626733334b4a4a",
+    "computedNodeStake": "64107673446462081649",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3D03843F5BBD7007a0937f38Fd72bC0Fbe625398",
+        "delegatorStakeBase": "64107673446462081649"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 106,
+    "nodeName": "SPARK",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "103066343136332559",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173708"]],
+    "nodePower": "5311",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5845754d576b36374248326462764653794542527437324d76336d3937454a68383950567a32596d51627772",
+    "computedNodeStake": "103066343136332559",
+    "delegators": [
+      {
+        "delegatorAddress": "0x8E9C666458788b984EBfc20e00794945e1E7Cdad",
+        "delegatorStakeBase": "103066343136332559"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 107,
+    "nodeName": "SPARK3",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "7672288974086201",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173714"]],
+    "nodePower": "29",
+    "nodeHealth": "0",
+    "nodeId": "0x516d59556970575a53753658414762417736617a354a6733664c396b524a69534c7173485056464d61676e4a6255",
+    "computedNodeStake": "7672288974086201",
+    "delegators": [
+      {
+        "delegatorAddress": "0x8E9C666458788b984EBfc20e00794945e1E7Cdad",
+        "delegatorStakeBase": "7672288974086201"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 108,
+    "nodeName": "SPARK4",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "52863050664545221378",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173720"]],
+    "nodePower": "1397251062",
+    "nodeHealth": "0",
+    "nodeId": "0x516d616e635a3663327a474370756a6868534c487267396e6141593842774147534a56506752554d664734417845",
+    "computedNodeStake": "52863050664545221378",
+    "delegators": [
+      {
+        "delegatorAddress": "0x8E9C666458788b984EBfc20e00794945e1E7Cdad",
+        "delegatorStakeBase": "52863050664545221378"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 109,
+    "nodeName": "SPARK5",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "59818849678283290746",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173726"]],
+    "nodePower": "1789147388",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6447674a57687734365344507547683844514b6f4459524771433551505756477561746e3167677172436172",
+    "computedNodeStake": "59818849678283290746",
+    "delegators": [
+      {
+        "delegatorAddress": "0x8E9C666458788b984EBfc20e00794945e1E7Cdad",
+        "delegatorStakeBase": "59818849678283290746"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 110,
+    "nodeName": "SPARK6",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "69977471927163708333",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173732"]],
+    "nodePower": "2448423288",
+    "nodeHealth": "0",
+    "nodeId": "0x516d62426e384c323765777145413356326d5971557154775771315a6b396a4b584a7374396d65414c564e586b69",
+    "computedNodeStake": "69977471927163708333",
+    "delegators": [
+      {
+        "delegatorAddress": "0x8E9C666458788b984EBfc20e00794945e1E7Cdad",
+        "delegatorStakeBase": "69977471927163708333"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 111,
+    "nodeName": "SPARK2",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "91050313631315505189",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173738"]],
+    "nodePower": "4145079806",
+    "nodeHealth": "0",
+    "nodeId": "0x516d585772594636794266467564597a52783237326a4d4e4b626e5344326773784a584244434d5342645a754b38",
+    "computedNodeStake": "91050313631315505189",
+    "delegators": [
+      {
+        "delegatorAddress": "0x8E9C666458788b984EBfc20e00794945e1E7Cdad",
+        "delegatorStakeBase": "91050313631315505189"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 112,
+    "nodeName": "Pull",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "51802510532372243119320",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173744"]],
+    "nodePower": "1341750048728268",
+    "nodeHealth": "0",
+    "nodeId": "0x516d516f734454623761634e47644341383748374161696f486f5577587a7968544a37737971684364457a61674d",
+    "computedNodeStake": "51802510532372243119320",
+    "delegators": [
+      {
+        "delegatorAddress": "0xE2A3505Aa76B481E00632346a1c235889Ea8f9e6",
+        "delegatorStakeBase": "51802510532372243119320"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 113,
+    "nodeName": "kooltek68",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "80000000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173750"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d534b654251484a44674b794362555a57334d627474373576735736346e334d6e5938634d6f6d356553506a71",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 114,
+    "nodeName": "SDUINODE",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "30000000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173756"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d61554d734d4c684d774332314c39716350753956424e70594175456e47544e554b3274507752676534584839",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 115,
+    "nodeName": "dkgnode1",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "513310785680407665",
+    "nodeAsk": "33333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 3,
+    "nodeOperatorFees": [["0", "1735173774"]],
+    "nodePower": "131743",
+    "nodeHealth": "0",
+    "nodeId": "0x516d57346e6d79386276544e53556b4261484677644278333742625a504163774858355a594b464e716a5536517a",
+    "computedNodeStake": "513310785680407664",
+    "delegators": [
+      {
+        "delegatorAddress": "0x922A00075eDBD3909aaFe75cBc20d4851E984859",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "513310785680407662"
+      },
+      {
+        "delegatorAddress": "0xf5d3Bd875675ADe56ff2B879E3Fc08A85B590584",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 116,
+    "nodeName": "dkgnode2",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "54079780384504117083",
+    "nodeAsk": "3333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 3,
+    "nodeOperatorFees": [["0", "1735173774"]],
+    "nodePower": "1462311323",
+    "nodeHealth": "0",
+    "nodeId": "0x516d635a48444835586e72696646554132466842576d6a7367514677716962765871484d51544239564b4e473379",
+    "computedNodeStake": "54079780384504117081",
+    "delegators": [
+      {
+        "delegatorAddress": "0x626713967C0d98A2701C12DE07E2D37A9EED0D5f",
+        "delegatorStakeBase": "108"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "54079780384504116865"
+      },
+      {
+        "delegatorAddress": "0xf5d3Bd875675ADe56ff2B879E3Fc08A85B590584",
+        "delegatorStakeBase": "108"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 117,
+    "nodeName": "dkg_node_3_token",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173780"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6453705842534c69633343346f4a4b3648704a36717a4559344e69316d48384d5644647a55566554334b7876",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 118,
+    "nodeName": "dkg_node_4_token",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "1666666666666666",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173786"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d50747872795566394c39784c6b546b534d5a615464556a436a5832584155677a476b5a7459706e735666674e",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 119,
+    "nodeName": "dkg_node_5_token",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1000000479952000003",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 3,
+    "nodeOperatorFees": [["0", "1735173792"]],
+    "nodePower": "500000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d51455539794d694552716151455875576f686164446547776b4246316873564537415771437a434a51794876",
+    "computedNodeStake": "1000000479952000002",
+    "delegators": [
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "1000000000000000001"
+      },
+      {
+        "delegatorAddress": "0xf5d3Bd875675ADe56ff2B879E3Fc08A85B590584",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x77D90c6AceB4ff3DcFB00AE719943775BF8331FB",
+        "delegatorStakeBase": "479952000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 120,
+    "nodeName": "BioOne",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "676294722945601460",
+    "nodeAsk": "333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173798"]],
+    "nodePower": "228687",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a59746a5669704c6d6132416848626a5052696139504a446539765837657a6754784e534672536b57544b62",
+    "computedNodeStake": "676294722945601460",
+    "delegators": [
+      {
+        "delegatorAddress": "0x602c0025Fa7B4d7B9DA3851315230f86e7361a60",
+        "delegatorStakeBase": "676294722945601460"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 121,
+    "nodeName": "OTLee",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "76666666666666666",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173804"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d623439505243556d6f747a31354d537968555775777a426732454e74714469555462363935486d666d765644",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 122,
+    "nodeName": "BioTwo",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "7054408034446551991",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173810"]],
+    "nodePower": "24882336",
+    "nodeHealth": "0",
+    "nodeId": "0x516d623534355334423861427a6b6a73554341786a4b695a7075426467733950674a555544366344347167334133",
+    "computedNodeStake": "7054408034446551991",
+    "delegators": [
+      {
+        "delegatorAddress": "0xB66B2b50bA5595105A57306dD01b05D2F843178A",
+        "delegatorStakeBase": "7054408034446551991"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 123,
+    "nodeName": "otl33",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "70000010000000001",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173828"]],
+    "nodePower": "2450",
+    "nodeHealth": "0",
+    "nodeId": "0x516d567a676a647453343678326178444234704a4b446f6968466e65486163357867724c6d545953616458524359",
+    "computedNodeStake": "70000010000000001",
+    "delegators": [
+      {
+        "delegatorAddress": "0xd8A11E406C82c8A85561e6439ceFC713D3782efe",
+        "delegatorStakeBase": "70000010000000001"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 124,
+    "nodeName": "ol33",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173828"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d66536e5364516d4c46794b57624c463838694532736d394c364a697968427769746a6f315941704655444164",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 125,
+    "nodeName": "Frankie",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "998286921809895476",
+    "nodeAsk": "1666666666666666",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173834"]],
+    "nodePower": "136600578913",
+    "nodeHealth": "0",
+    "nodeId": "0x516d635a5557626e594a755a3366416d627a754261414e734b58536477613943574c5a745479776f583354437065",
+    "computedNodeStake": "998286921809895476",
+    "delegators": [
+      {
+        "delegatorAddress": "0x7232Af3552C83E646E4A43368CCDe98c4433533f",
+        "delegatorStakeBase": "998286921809895476"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 126,
+    "nodeName": "lars",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "24282125961221645796",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173840"]],
+    "nodePower": "294810820",
+    "nodeHealth": "0",
+    "nodeId": "0x516d516f6f56334a36634e48337377475a6959654352504c445243777364734a63554e46506a516a583552577773",
+    "computedNodeStake": "24282125961221645796",
+    "delegators": [
+      {
+        "delegatorAddress": "0x13f2ca958dFfD3f313E7352387516B2C6edCf3FB",
+        "delegatorStakeBase": "24282125961221645796"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 127,
+    "nodeName": "SDUII",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "431168776792172195",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173846"]],
+    "nodePower": "92953",
+    "nodeHealth": "0",
+    "nodeId": "0x516d58656a757245735657776d59634870636473427771484354566941585261774d68384b64446d6e7145693368",
+    "computedNodeStake": "431168776792172195",
+    "delegators": [
+      {
+        "delegatorAddress": "0x65b99F6a44B3d513F0656231854813E1810F31E5",
+        "delegatorStakeBase": "431168776792172195"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 128,
+    "nodeName": "Marvel",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "445937302690971841",
+    "nodeAsk": "333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173852"]],
+    "nodePower": "99430",
+    "nodeHealth": "0",
+    "nodeId": "0x516d567357444572356b41426379314646456a5653765855356f6a706f4a58705a4b7036736d544d6d7465744b57",
+    "computedNodeStake": "445937302690971841",
+    "delegators": [
+      {
+        "delegatorAddress": "0xAc68E6edE891f9B314E8E189E81375FF72D02219",
+        "delegatorStakeBase": "445937302690971841"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 129,
+    "nodeName": "Trace Labs Node 31 - Client",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173858"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a72524c697833614468756d53564778714d634d454c786152487835446d38744b62437842364579706a5536",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 130,
+    "nodeName": "Trace Labs Node 32 - Client",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "280420673828125000000",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173864"]],
+    "nodePower": "39317877155",
+    "nodeHealth": "0",
+    "nodeId": "0x516d514e615263455a63386f396b746f525644426e57734e69344b623459433770737a6457347a4a437a70774444",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 131,
+    "nodeName": "Trace Labs Node 33 - Client",
+    "relativeNodePower": "17",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1132224810000000000000002",
+    "nodeAsk": "1642000000000000",
+    "nodePublishingFactor": "17330416152189",
+    "delegatorsCount": 16,
+    "nodeOperatorFees": [["0", "1735173870"]],
+    "nodePower": "805251456701153010",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5839746b4a775348717274457a735a4b4a4d4254394b6d7571544c51626e706d6a5554384844777648534131",
+    "computedNodeStake": "1132224810000000000000001",
+    "delegators": [
+      {
+        "delegatorAddress": "0xfe8c1e0D733815Bdd889144ea721a39b44fdA866",
+        "delegatorStakeBase": "100000000000000000"
+      },
+      {
+        "delegatorAddress": "0x98A96425b337c80bC9E2BD493A65e7546be8DAaE",
+        "delegatorStakeBase": "15000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xa8a809c5B9681617da775E6E16a6eae1792AfB42",
+        "delegatorStakeBase": "137396885000000000000000"
+      },
+      {
+        "delegatorAddress": "0x7386184B04D79780A25e9eeA8bF4e9374f4b8C92",
+        "delegatorStakeBase": "50000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x20BD45E3529E9aa3b59b30bA5F509a4d0F572Ab2",
+        "delegatorStakeBase": "9503816000000000000000"
+      },
+      {
+        "delegatorAddress": "0x922A00075eDBD3909aaFe75cBc20d4851E984859",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x47E920f0379Ca4648dADE5c79BF022c8283efc67",
+        "delegatorStakeBase": "194800000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xd5F95e1910122764E50f7E55bcFFB3B162eeb405",
+        "delegatorStakeBase": "34000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x322b412378EB0e92A1FD510090139F51b97ecE8b",
+        "delegatorStakeBase": "37000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xC93B9eFa79F4d66875B4168C408007b956344467",
+        "delegatorStakeBase": "36098988000000000000000"
+      },
+      {
+        "delegatorAddress": "0xB35629aFA1d947cD954859981FEb0071C9649bE8",
+        "delegatorStakeBase": "285000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x97039C3BCBa43eAEb9551Ebf6CCf50EB481d84d6",
+        "delegatorStakeBase": "20117000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x1f0299942390de72e9E5a0D7aE0ffD09D5007fCb",
+        "delegatorStakeBase": "229550891000000000000000"
+      },
+      {
+        "delegatorAddress": "0x9b2D9121f91A5B647Af8D85cf0b6859e49e86FDe",
+        "delegatorStakeBase": "50181040000000000000000"
+      },
+      {
+        "delegatorAddress": "0xB619353b6C20b3825C5311f6e31d0ad26c641178",
+        "delegatorStakeBase": "28576090000000000000000"
+      },
+      {
+        "delegatorAddress": "0x96E3D4d0E4e271cB08e5dfc0c1B1dD77cA0FD089",
+        "delegatorStakeBase": "5000000000000000000000"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 132,
+    "nodeName": "Trace Labs Node 35 - Client",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173882"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d517a616b6a37516337725437726a6144714a365038517a62535032614d38393578314d4d5641377663484a45",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 133,
+    "nodeName": "Trace Labs Node 37 - Client",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "888037109375000000",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173894"]],
+    "nodePower": "394304",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a5432536e706844526e6459394737654d334d586d687869507278757050746b6f6a64504535467078416d65",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 134,
+    "nodeName": "Trace Labs Node 34 - Client",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173900"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d627757694769686e6b66384e37416677626b704c4e51423835554a485255316164324248434550435a695a51",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 135,
+    "nodeName": "Trace Labs Node 36 - Client",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "500086443777394",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735173906"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d54355447444a5a477659703148544571615a55766e7963436d323574463775645a6b753975734c5656504d73",
+    "computedNodeStake": "500086443777393",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "500086443777392"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 136,
+    "nodeName": "Trace Labs Node 38 - Client",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173912"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d594463516a4b3942415368377671344a714a5a594c45746750427a4471763142586759694553574273576977",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 137,
+    "nodeName": "Trace Labs Node 39 - Client",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "800000000000000000",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173918"]],
+    "nodePower": "320000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5172334e453162387266444252334d6b3836726b3663477550587468567267786156574b414d534475704743",
+    "computedNodeStake": "800000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "800000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 138,
+    "nodeName": "Trace Labs Node 40 - Client",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173924"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d58456e6b33566a66656d736e4b3836576738743832624257514b35354d6f58645845624c554c46614b71344d",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 139,
+    "nodeName": "OTHub",
+    "relativeNodePower": "44",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "2200000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 18,
+    "nodeOperatorFees": [["1000", "1735173930"]],
+    "nodePower": "2035315505881657837",
+    "nodeHealth": "0",
+    "nodeId": "0x516d57753339315132336842785a6d7470384b4256625973646a4b77517042754b35574e77714e4d465a645a6848",
+    "computedNodeStake": "1999999999999999999999995",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "1126172310697872503860632"
+      },
+      {
+        "delegatorAddress": "0x8dD0513D158508FF152b0Ad45562a22b39644359",
+        "delegatorStakeBase": "23588000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xb43C5279E3B5322d8cBFB617Be310c37870Bb8Cb",
+        "delegatorStakeBase": "20000219841341724448299"
+      },
+      {
+        "delegatorAddress": "0x497583C2124441CB9387AdC81759fC0950Cb6eD8",
+        "delegatorStakeBase": "8101353868072181333552"
+      },
+      {
+        "delegatorAddress": "0x4380cC0Ab24f4b83Aa6AE3efc368cAa2bC528CEC",
+        "delegatorStakeBase": "50000549603354311120749"
+      },
+      {
+        "delegatorAddress": "0xB4E13aE1379b1C0823b887C8Ed385128e05Ba61B",
+        "delegatorStakeBase": "40350000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x6c4b96cfCE013C8d63DA25f7227CbBb350fEB6E3",
+        "delegatorStakeBase": "40000439682683448896599"
+      },
+      {
+        "delegatorAddress": "0x70bB01bb6F05C7E39F0B32A4bE85D977bee59E5B",
+        "delegatorStakeBase": "1000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x19eb20A686022608bfdE3D337244e1f364c8EFb7",
+        "delegatorStakeBase": "174748618267421356290745"
+      },
+      {
+        "delegatorAddress": "0x7210C2d2B5C4AC96018CDe5f74e95CdFceFaf7fE",
+        "delegatorStakeBase": "19882526000000000000000"
+      },
+      {
+        "delegatorAddress": "0x04887a931b64e49cfd91663A82315e2b16C1961E",
+        "delegatorStakeBase": "200000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x7556E6208491Aa331026dd781AdE541cABBFA176",
+        "delegatorStakeBase": "1000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x398adAD8B6602B7cE8148B1658B92f49ED8072eF",
+        "delegatorStakeBase": "1090000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x922A00075eDBD3909aaFe75cBc20d4851E984859",
+        "delegatorStakeBase": "2500000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xb7356C5964AeEA4777248CE02547FF256E54a4C0",
+        "delegatorStakeBase": "30000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xCcA5Ff0B24b3153262ffB7eFbC8a0CE5D635a0dB",
+        "delegatorStakeBase": "212564428188001520255064"
+      },
+      {
+        "delegatorAddress": "0x36AA6595f9a50a5260EE377ea184333c0c639A55",
+        "delegatorStakeBase": "50000549603354311120749"
+      },
+      {
+        "delegatorAddress": "0x9F16BBe53cd85E44D5e83CaF7421316F7e81C8CF",
+        "delegatorStakeBase": "4247898642673606"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 140,
+    "nodeName": "Sunshine and Whiskees",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "86266071242040751",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735173948"]],
+    "nodePower": "3720",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6445546f69666361394a7259557031446b72707a6533346e36664d77783451325370694d34586847666f4368",
+    "computedNodeStake": "86266071242040751",
+    "delegators": [
+      {
+        "delegatorAddress": "0x9A47831DE1F21E61B6b9CB1Bb0392Ac0B9853359",
+        "delegatorStakeBase": "86266071242040751"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 141,
+    "nodeName": "techno_tesseract",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "100000000000000001",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735173948"]],
+    "nodePower": "5000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6162797447554c3167377462315a637043694772416250416e354e6e78663352646d7956796268565964386a",
+    "computedNodeStake": "100000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "99999999999999999"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 142,
+    "nodeName": "quantum_realm",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "3",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735173966"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d61594c3761527252367a465964433768435a31616b61754c5731534638417156446e4c45684578624c76774a",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x870904625800869E97600Eb281D8A7c707788BE8",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 143,
+    "nodeName": "cyberstorm_central",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173966"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d627571447375374e75346f6f48585a7744747679457870776b6234743476724e39636f6651674d3463315676",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 144,
+    "nodeName": "stellar_synapse",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "243594570312500000000",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173972"]],
+    "nodePower": "29669157342",
+    "nodeHealth": "0",
+    "nodeId": "0x516d53346748635479636e7242505853747354713741774e417354337755536b735858546b726872355761705165",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 145,
+    "nodeName": "synthwave_sanctuary",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173978"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d636b516b48514579725476464761546533544a4e52504a5279654754484661774b313539425752675547626d",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 146,
+    "nodeName": "galactic_gateway",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2002797200946808788",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 7,
+    "nodeOperatorFees": [["0", "1735173984"]],
+    "nodePower": "2005598",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5065733337625a36504b4450426d514e4a4338386443416b4345567845734b394875484679476b4e3552666d",
+    "computedNodeStake": "2002797200946808787",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB837947627C9eaE579b001CB007E03b27995fd02",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xA19bACE3eE6c2dc7Fa6d8D194Ba4e5f50928D06d",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x2756301b12DBd300f329F7693839011ECa868c0b",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "2002796723747719909"
+      },
+      {
+        "delegatorAddress": "0xf1E085349d492A5546658e28a470055cED37c3F4",
+        "delegatorStakeBase": "477199088873"
+      },
+      {
+        "delegatorAddress": "0xf9896e42C33a4AE029c12135A390DE542EBC340E",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 147,
+    "nodeName": "cyber_vortex",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "986250000000000000",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173990"]],
+    "nodePower": "486344",
+    "nodeHealth": "0",
+    "nodeId": "0x516d51767a4375557170667855454c51586f59796951574b5777745374385559384b366475396639503453743168",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 148,
+    "nodeName": "viper_verse",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735173996"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6465316d6a505172727639354d77514d614c4775583873365244635852424e55757971744376687958586433",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 149,
+    "nodeName": "dream_machine",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174002"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a595072747a6771507539363862717134704e42556d6f4e643579724a326d6e4d73646145557267524d716e",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 150,
+    "nodeName": "orion_breeze",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174008"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6457746d36655542714e334a34423735565331614a75367545527646417439314c6b4d696a61344671537171",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 151,
+    "nodeName": "nova_luna",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174026"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d54676d634d554370734a6f6f6e7478744e754661704e43554e54565651345147364a4d34485a716259734a6a",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 152,
+    "nodeName": "astro_sphere",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174026"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5632363965564b6e7036664c4c614674456e7a7a7433756e6768537a53524842576d796b3539694837614c4d",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 153,
+    "nodeName": "solar_flare",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "300000000000000001",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735174032"]],
+    "nodePower": "45000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5153336b5454683636486168353161434650416a5a6250326a73676d6b7a4443345a6d6f4b3131787a485668",
+    "computedNodeStake": "300000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "299999999999999999"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 154,
+    "nodeName": "tars",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "7157245087003709",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735174038"]],
+    "nodePower": "25",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5456424c4d54475964526e4a324d5757646f31715a6b41364e6278423256477675345a6a63545a7368467a74",
+    "computedNodeStake": "7157245087003709",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "7157245087003709"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 155,
+    "nodeName": "galactic_core",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "298704498466",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735174044"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d50686e4b7a566459455836414576555376576d315a617175617843744e556a46385232374772507171736937",
+    "computedNodeStake": "298704498466",
+    "delegators": [
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "298704498466"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 156,
+    "nodeName": "comet_cruiser",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174050"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d514a586674754468443158454e546456683937435a45705142377a7050704d42535557525556674d59346d6d",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 157,
+    "nodeName": "celestial_cloud",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174056"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d516544476a34685031794a51535364345038317556356939527378364e79643675677935756474634e4e6d42",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 158,
+    "nodeName": "luna_lander",
+    "relativeNodePower": "47",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "1860000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 23,
+    "nodeOperatorFees": [["0", "1735174062"]],
+    "nodePower": "2161298884563569963",
+    "nodeHealth": "0",
+    "nodeId": "0x516d515962325a58773735674a4e76716f6270653867615970685a3742427551487847664667374a744b7261385a",
+    "computedNodeStake": "1999999999999999999999998",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "502145710644098377666207"
+      },
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "300485175196125871395988"
+      },
+      {
+        "delegatorAddress": "0xC3Bd46c54286cD0BD386EEe8000AC3DB0cafad01",
+        "delegatorStakeBase": "14323000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x626713967C0d98A2701C12DE07E2D37A9EED0D5f",
+        "delegatorStakeBase": "37330020000000000000000"
+      },
+      {
+        "delegatorAddress": "0x861736FA0E2898d5aCde086C21d4fFAF170101fc",
+        "delegatorStakeBase": "121429082689045622990255"
+      },
+      {
+        "delegatorAddress": "0x0e6bE96b9835D97cAa73FDC1d018C2D1d91Dd5E1",
+        "delegatorStakeBase": "27502811000000000000000"
+      },
+      {
+        "delegatorAddress": "0xDB3B95a0567c27a0D1fd6020550dD566A903300d",
+        "delegatorStakeBase": "60400000505072867916067"
+      },
+      {
+        "delegatorAddress": "0xD28B3107724E066264F735ffedAAD0d5f35a426c",
+        "delegatorStakeBase": "82815118443849930272329"
+      },
+      {
+        "delegatorAddress": "0xD4656987dB7d5F4692637DC0F216B1EDDEE39BF7",
+        "delegatorStakeBase": "42663150564264324601845"
+      },
+      {
+        "delegatorAddress": "0x6C9cD792dfA1A8604195C630e3abc3952255e8c7",
+        "delegatorStakeBase": "300000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x52Cbd37423ACB7D545bb1CB29B360f6208f08d3c",
+        "delegatorStakeBase": "1846199000000000000000"
+      },
+      {
+        "delegatorAddress": "0xC4Aeb5fD1f73755b18BD6d3B51a478278A1cce0d",
+        "delegatorStakeBase": "40290869000000000000000"
+      },
+      {
+        "delegatorAddress": "0xA1D4682999DfEbC7FF85056fFc12727f288A2d88",
+        "delegatorStakeBase": "18175534000000000000000"
+      },
+      {
+        "delegatorAddress": "0xaF0F64222A720840BeFD808e71f24365c3c66422",
+        "delegatorStakeBase": "180000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x20BD45E3529E9aa3b59b30bA5F509a4d0F572Ab2",
+        "delegatorStakeBase": "13416000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xc20E46f7B682cfBB59bAB468adb88caFDd1A9AbE",
+        "delegatorStakeBase": "100000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x0F587D27bDBEEC9dCC204609287FA1a735Fb6f40",
+        "delegatorStakeBase": "16000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x09F331CDDd8b2A3EAc1169e938133371c3fce528",
+        "delegatorStakeBase": "7980000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xE8E5085A60E25Fd706D3e070551D5bFd958efFbb",
+        "delegatorStakeBase": "11279057000000000000000"
+      },
+      {
+        "delegatorAddress": "0x398adAD8B6602B7cE8148B1658B92f49ED8072eF",
+        "delegatorStakeBase": "8900000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xd175fbBda2e72Edf8e28E16aBB6E63F88f15ddb7",
+        "delegatorStakeBase": "10015388000000000000000"
+      },
+      {
+        "delegatorAddress": "0x95FE996AF6d08933b563b198c3a9bFE91C61C4e9",
+        "delegatorStakeBase": "103002683791753275592994"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "200165789729564313"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 159,
+    "nodeName": "cosmo_cluster",
+    "relativeNodePower": "65",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "1760000000000000",
+    "nodePublishingFactor": "114225699964069573",
+    "delegatorsCount": 7,
+    "nodeOperatorFees": [
+      ["0", "1735174068"],
+      ["50", "1737637596"]
+    ],
+    "nodePower": "3011758952254743857",
+    "nodeHealth": "0",
+    "nodeId": "0x516d507935565536785441665965703670514c4d4678523644506671756a347a524b7478447859516f5072487858",
+    "computedNodeStake": "1999999999999999999999996",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "1008740819495847608014676"
+      },
+      {
+        "delegatorAddress": "0x626713967C0d98A2701C12DE07E2D37A9EED0D5f",
+        "delegatorStakeBase": "350591275878425000584"
+      },
+      {
+        "delegatorAddress": "0x65b99F6a44B3d513F0656231854813E1810F31E5",
+        "delegatorStakeBase": "93939689046899"
+      },
+      {
+        "delegatorAddress": "0x24393a7E6b782762567D97e3800601eB7f8E80a5",
+        "delegatorStakeBase": "67960887376013277367056"
+      },
+      {
+        "delegatorAddress": "0xB5Ba55143E6719d5597E0c700772b4CcC5f6B7f8",
+        "delegatorStakeBase": "2008095083368842705320"
+      },
+      {
+        "delegatorAddress": "0x4F1442ce0232b5a178D83EC928a796098c43b026",
+        "delegatorStakeBase": "920938700756242676512469"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "905918709481352992"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 160,
+    "nodeName": "saturn_station",
+    "relativeNodePower": "73",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "1670000000000000",
+    "nodePublishingFactor": "158819168105315334",
+    "delegatorsCount": 14,
+    "nodeOperatorFees": [["0", "1735174086"]],
+    "nodePower": "3378272266267089540",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6143706464483650356a455467777553736e34734b4e343936796858314a366a634750353675373836797934",
+    "computedNodeStake": "1999999999999999999999997",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "909890226802665523121252"
+      },
+      {
+        "delegatorAddress": "0x626713967C0d98A2701C12DE07E2D37A9EED0D5f",
+        "delegatorStakeBase": "5000005007336052696303"
+      },
+      {
+        "delegatorAddress": "0xa8a809c5B9681617da775E6E16a6eae1792AfB42",
+        "delegatorStakeBase": "3643589683877720077019"
+      },
+      {
+        "delegatorAddress": "0x2549393a45A63dc08Ecf6CB2C76710DcFC6832fD",
+        "delegatorStakeBase": "10000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xB5Ba55143E6719d5597E0c700772b4CcC5f6B7f8",
+        "delegatorStakeBase": "5048848568095933137088"
+      },
+      {
+        "delegatorAddress": "0xddC60D163015CF5Ca1369D557A2ca1cC2de1F1e3",
+        "delegatorStakeBase": "30000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xa7cdd0CaB69FC447CD50B842F0cA66EE555BA1e9",
+        "delegatorStakeBase": "17670969988335765979809"
+      },
+      {
+        "delegatorAddress": "0x95FE996AF6d08933b563b198c3a9bFE91C61C4e9",
+        "delegatorStakeBase": "18874169970117731742134"
+      },
+      {
+        "delegatorAddress": "0x66b9F28422F6dDDB0745Bd1fE6740c14bC5b1C70",
+        "delegatorStakeBase": "2635028598953666705928"
+      },
+      {
+        "delegatorAddress": "0x42925F3b33d315000276F0F6a257e4FC3c06da21",
+        "delegatorStakeBase": "992222419549475461212629"
+      },
+      {
+        "delegatorAddress": "0x7191525d94dFc6cfa9e5d44C6D6ae23B7CDEE9A5",
+        "delegatorStakeBase": "5014057102577869971478"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "20175620574910627"
+      },
+      {
+        "delegatorAddress": "0xa57d7AA44517BB349FD6dEB1aC6771774bA51387",
+        "delegatorStakeBase": "664552943700445729"
+      },
+      {
+        "delegatorAddress": "0x1a4B7b5E62b4b2db338B6Cb4Bea4E34e37fb3573",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 161,
+    "nodeName": "starship_synth",
+    "relativeNodePower": "46",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "1900000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 15,
+    "nodeOperatorFees": [["0", "1735174086"]],
+    "nodePower": "2141736892022896170",
+    "nodeHealth": "0",
+    "nodeId": "0x516d61705379744545314c614b396b4d375059446569743871444d597068354c7679614742787845595669437235",
+    "computedNodeStake": "1999999999999999999999995",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "232420946504858954269884"
+      },
+      {
+        "delegatorAddress": "0x907B7a9851D372cd301a938799C00A8B464A2419",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB837947627C9eaE579b001CB007E03b27995fd02",
+        "delegatorStakeBase": "5020240324336769272842"
+      },
+      {
+        "delegatorAddress": "0x2549393a45A63dc08Ecf6CB2C76710DcFC6832fD",
+        "delegatorStakeBase": "1427745133681596114"
+      },
+      {
+        "delegatorAddress": "0x65b99F6a44B3d513F0656231854813E1810F31E5",
+        "delegatorStakeBase": "141947857457918"
+      },
+      {
+        "delegatorAddress": "0xD4656987dB7d5F4692637DC0F216B1EDDEE39BF7",
+        "delegatorStakeBase": "3290884307344512139259"
+      },
+      {
+        "delegatorAddress": "0xC4Aeb5fD1f73755b18BD6d3B51a478278A1cce0d",
+        "delegatorStakeBase": "11786863040000000000000"
+      },
+      {
+        "delegatorAddress": "0xD814336D41d4fad9c3674A7c5c54751d03Ad1da5",
+        "delegatorStakeBase": "1328266881000000000000000"
+      },
+      {
+        "delegatorAddress": "0xCcA5Ff0B24b3153262ffB7eFbC8a0CE5D635a0dB",
+        "delegatorStakeBase": "417433484588193979250585"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "100104177705126223"
+      },
+      {
+        "delegatorAddress": "0x6Cf6E24F1a5331AB13F38D093C9B409da701Ce69",
+        "delegatorStakeBase": "1114492771269707701453"
+      },
+      {
+        "delegatorAddress": "0x5A0e750798F8Fa29779049bbDbbbADEB1C81d2b9",
+        "delegatorStakeBase": "664679472595086935459"
+      },
+      {
+        "delegatorAddress": "0xF14F2B9F439e209798577c5E67A6f133DE26C030",
+        "delegatorStakeBase": "141746250255"
+      },
+      {
+        "delegatorAddress": "0xa0A6FF7EE2d71d04c20195b8A919faFFf513A9d4",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xe88a2a2C4a6FEC8d0cb94646666c93A8D953ad57",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 162,
+    "nodeName": "cosmic_crypt",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "6348956504496590287845",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 5,
+    "nodeOperatorFees": [["0", "1735174092"]],
+    "nodePower": "20154624347994",
+    "nodeHealth": "0",
+    "nodeId": "0x516d535a716935594345465657536743566436696437645a6f7235626878506350673142384b4b52626144743377",
+    "computedNodeStake": "6348956504496590287844",
+    "delegators": [
+      {
+        "delegatorAddress": "0x626713967C0d98A2701C12DE07E2D37A9EED0D5f",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x3008f3C33FeFB6f0FafD749caC0101F326A7cfb3",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1F70AB7A96554F0cc1F6a4c57f2b244E8cBA2f92",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "11315141058038955"
+      },
+      {
+        "delegatorAddress": "0xf3bCf0b7DA4f428E32864f81f7fb2ABA99f9e9Ab",
+        "delegatorStakeBase": "6348945189355532248886"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 163,
+    "nodeName": "interstellar_node",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "10003515807645273",
+    "nodeAsk": "6666666666666666",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735174098"]],
+    "nodePower": "50",
+    "nodeHealth": "0",
+    "nodeId": "0x516d647031396f7376444d77454c6132356b735a62366577544d4358486154506e6f4c786b6d615163476b327476",
+    "computedNodeStake": "10003515807645273",
+    "delegators": [
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "10003515807645273"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 164,
+    "nodeName": "fusion_link",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174104"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d616e39324c746173315276766b795058365170375557686f68556d65336b61793235464a52426433594e766d",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 165,
+    "nodeName": "elextra_stream",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "704182045094819422",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["0", "1735174110"]],
+    "nodePower": "247936",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5369773641427553596f69486d7a7159716d74744a77365a3446796168667a4b747054396a547979566d3262",
+    "computedNodeStake": "704182045094819421",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "7052"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "704182045094812369"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 166,
+    "nodeName": "titan_link",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "69278173241164718456",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 4,
+    "nodeOperatorFees": [["0", "1735174116"]],
+    "nodePower": "2399732643",
+    "nodeHealth": "0",
+    "nodeId": "0x516d4e51616a624d55636f42365a6761787178707243775368443835654c353346336b5a373556326178344a4739",
+    "computedNodeStake": "69278173241164718454",
+    "delegators": [
+      {
+        "delegatorAddress": "0x626713967C0d98A2701C12DE07E2D37A9EED0D5f",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x5a168ccbC4754fbAF66a2F1d5d3e28acf45a542b",
+        "delegatorStakeBase": "68727416929204642816"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "550756311960075636"
+      },
+      {
+        "delegatorAddress": "0xcc66b7f749fB0f0Ab60D77d65e470b3F368fcb17",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 167,
+    "nodeName": "pulsar_vertex",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2",
+    "nodeAsk": "6666666666666666",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735174122"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5138384a6d576d7856365342317266386e575958696d7044527277676a744554704777667858514462787039",
+    "computedNodeStake": "2",
+    "delegators": [
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "2"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 168,
+    "nodeName": "code_dynamo",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "4767500000000000000",
+    "nodeAsk": "6666666666666666",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174128"]],
+    "nodePower": "11364528",
+    "nodeHealth": "0",
+    "nodeId": "0x516d53583343664d5533486d52444b4d4668636e584c6171597852427a506374395031546d6a326d424e50386f77",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 169,
+    "nodeName": "aurora_byte",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "110124962069588652701",
+    "nodeAsk": "5000000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 6,
+    "nodeOperatorFees": [["0", "1735174134"]],
+    "nodePower": "6063753635",
+    "nodeHealth": "0",
+    "nodeId": "0x516d516d70676465473677697a7832466466584c71466e5843376336586436536966314175587356724c5a664448",
+    "computedNodeStake": "110124962069588652700",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x922A00075eDBD3909aaFe75cBc20d4851E984859",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x2756301b12DBd300f329F7693839011ECa868c0b",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x870904625800869E97600Eb281D8A7c707788BE8",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xa57d7AA44517BB349FD6dEB1aC6771774bA51387",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xbFae446a91215BcB0B2c6d0fe1df8286008756bc",
+        "delegatorStakeBase": "110124962069588652695"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 170,
+    "nodeName": "eon_secure",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "6666666666666666",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174140"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d65554b68675251354c4c676279565045356e715a6d4c467a7751434b66484878767862755674505164763434",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 171,
+    "nodeName": "ommm",
+    "relativeNodePower": "21",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1236117028713096381159082",
+    "nodeAsk": "1600000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 11,
+    "nodeOperatorFees": [["400", "1735174146"]],
+    "nodePower": "961316832021742922",
+    "nodeHealth": "0",
+    "nodeId": "0x516d596136614579473752573331336734736f416d5571595132554d796861657645476b5836333963764c4b6270",
+    "computedNodeStake": "1236117028713096381159081",
+    "delegators": [
+      {
+        "delegatorAddress": "0x6447B9B40536436b42424A984876d7e3B858F8f7",
+        "delegatorStakeBase": "3000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xC3Bd46c54286cD0BD386EEe8000AC3DB0cafad01",
+        "delegatorStakeBase": "15000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x3008f3C33FeFB6f0FafD749caC0101F326A7cfb3",
+        "delegatorStakeBase": "7614288938296782132387"
+      },
+      {
+        "delegatorAddress": "0x082dB5D05C2Ab1899050f1dbe4a734181EFe5dE9",
+        "delegatorStakeBase": "50000225478582627864885"
+      },
+      {
+        "delegatorAddress": "0x189CCc41AfF05Ab0E125d81c4e35ac6c5bC4F1B0",
+        "delegatorStakeBase": "60306012486732715739186"
+      },
+      {
+        "delegatorAddress": "0x50D55e6Ed4146425C52c26521FF14be90bd4d1A5",
+        "delegatorStakeBase": "19733831009999999999998"
+      },
+      {
+        "delegatorAddress": "0x27061B37194e90695589270aa785c14786EF4358",
+        "delegatorStakeBase": "996739746665731363748850"
+      },
+      {
+        "delegatorAddress": "0x47E920f0379Ca4648dADE5c79BF022c8283efc67",
+        "delegatorStakeBase": "100000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x2756301b12DBd300f329F7693839011ECa868c0b",
+        "delegatorStakeBase": "2925652133752891673775"
+      },
+      {
+        "delegatorAddress": "0x9b2D9121f91A5B647Af8D85cf0b6859e49e86FDe",
+        "delegatorStakeBase": "63699272000000000000000"
+      },
+      {
+        "delegatorAddress": "0x0a593F5e1A7e04a88078f4f99CC94145A7795009",
+        "delegatorStakeBase": "19995000000000000000000"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 172,
+    "nodeName": "LochNessMonster",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "50638096492529839407848",
+    "nodeAsk": "3333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 3,
+    "nodeOperatorFees": [["200", "1735174152"]],
+    "nodePower": "1282108408193381",
+    "nodeHealth": "0",
+    "nodeId": "0x516d646a6e586752454759724e734e57774257617963536e36515a39785576523773534876696f56534d7a7a4b34",
+    "computedNodeStake": "50638096492529839407846",
+    "delegators": [
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "799916446082879271"
+      },
+      {
+        "delegatorAddress": "0x0Db56C99B8ad68F35F4b1772a4ffEd3Fb16204F6",
+        "delegatorStakeBase": "50637196257485627785762"
+      },
+      {
+        "delegatorAddress": "0xCC5Ef20cfFe5c184892E9302d879b189f7c7da53",
+        "delegatorStakeBase": "100318598128742813"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 173,
+    "nodeName": ". }><(((.______)",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174158"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d565a567a4435486261744e4a70346b786477745267387139535157467a79635a385a4b7053674d3632424a59",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 174,
+    "nodeName": ". ><(((.______)",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "31546277398003471080",
+    "nodeAsk": "23333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735174164"]],
+    "nodePower": "497583808",
+    "nodeHealth": "0",
+    "nodeId": "0x516d63366f506150464633615467617079726b785644366b754a63333274365664706f4a5954613465584e4e6539",
+    "computedNodeStake": "31546277398003471080",
+    "delegators": [
+      {
+        "delegatorAddress": "0xd8A11E406C82c8A85561e6439ceFC713D3782efe",
+        "delegatorStakeBase": "31546277398003471080"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 175,
+    "nodeName": "test",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174170"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6534453269384a4470554e344a647839733359704761675151475077334a6f736f776a5476517535576b746f",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 176,
+    "nodeName": "Wendy",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1000000000000000000",
+    "nodeAsk": "33333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735174176"]],
+    "nodePower": "500000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d61763971384e55504a5a6d68686345786341784c5152717a3634727a7936686e75544c70464569426f527957",
+    "computedNodeStake": "1000000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "1000000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 177,
+    "nodeName": "OTnodeWnD",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "401041666483",
+    "nodeAsk": "333333333333333",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["500", "1735174182"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d61483332757a6d69716a6d6a5542573852674564475a71796f4c587733334a3767756f7536675a6b5335626b",
+    "computedNodeStake": "401041666483",
+    "delegators": [
+      {
+        "delegatorAddress": "0x626713967C0d98A2701C12DE07E2D37A9EED0D5f",
+        "delegatorStakeBase": "401041666483"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 178,
+    "nodeName": "Emcharvi",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174188"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d646e39456e706a7a39784d576773524e6259657256676d4266616f6254444a44647072323858526934516b59",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 179,
+    "nodeName": "PolyC",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174194"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5938774e443451716b74777766584d3664664b70445262735a6f326a437873756e434a4e52794237576d5236",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 180,
+    "nodeName": "ReFi",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174200"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d66524e66796151716a346d7937563274665a533651317436786f39695a5861576e4753314b6b464643613654",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 181,
+    "nodeName": "Truthchain",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174206"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6648516a6e4b4b4c4274477656783933676256446446667335733268366a6e546345516f65524b784e326545",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 182,
+    "nodeName": "OTHub.io",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174212"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5033724e6761637358444d776146774e42525964545738536565726d59617451776d357a6e4d4b56576e6450",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 183,
+    "nodeName": "TRAC_PRINTER",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["2500", "1735174218"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d64325a4d66697554437a724d394d5277796e51794c34467945757472474e387642643944457771557a707357",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 184,
+    "nodeName": "Distill Logic",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735174224"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d65354b3458686e614579553847555a39684b3636336f4b55546d526847774147537247706b575a3342534a6f",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 185,
+    "nodeName": "OTHub2",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "2000000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735174230"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d61564258417a53486453656d585353483578333543386658794a6b5448324b4c4c4675547139433176796678",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 186,
+    "nodeName": "OTHub3",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "2000000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735174236"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5432567a67446d426d77376f4b79396d74536246446b464b6f7931546446484132783747346a69564d4a5671",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 187,
+    "nodeName": "🔥HOT🔥",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1750541855013491651",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 9,
+    "nodeOperatorFees": [["3000", "1735174242"]],
+    "nodePower": "1532198",
+    "nodeHealth": "0",
+    "nodeId": "0x516d50444c764632574368525277666b4565434144516872386e555a476653336375774539584e545a4a5a78644b",
+    "computedNodeStake": "1750541855013491649",
+    "delegators": [
+      {
+        "delegatorAddress": "0x626713967C0d98A2701C12DE07E2D37A9EED0D5f",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x49eb60E1b1187430f66131E8663783757740e8D2",
+        "delegatorStakeBase": "379519444639449"
+      },
+      {
+        "delegatorAddress": "0xD28B3107724E066264F735ffedAAD0d5f35a426c",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x497583C2124441CB9387AdC81759fC0950Cb6eD8",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x70bB01bb6F05C7E39F0B32A4bE85D977bee59E5B",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xC4D83F68F783d9d833813842b006B30af2968Fa5",
+        "delegatorStakeBase": "762789437906458034"
+      },
+      {
+        "delegatorAddress": "0xe4dd1F7d2e33406CC5d81165aa2fD9Bb93fC8ba9",
+        "delegatorStakeBase": "987338771206460611"
+      },
+      {
+        "delegatorAddress": "0x873b0D0b5dE0cCA15a7E7406Bc573eb4E4F567EF",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x840D11b8Cfd350c930AF8E3642F576Dc8A101428",
+        "delegatorStakeBase": "34126455933550"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 188,
+    "nodeName": "installer_testing_10",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735174248"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d63796b44547a516970683239714558434247794e6f4b5a7552586b64537332735435644c616f557734574147",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 189,
+    "nodeName": "DMaaST",
+    "relativeNodePower": "61",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "1730000000000000",
+    "nodePublishingFactor": "83990095751268788",
+    "delegatorsCount": 17,
+    "nodeOperatorFees": [["500", "1735174266"]],
+    "nodePower": "2818922089996207549",
+    "nodeHealth": "0",
+    "nodeId": "0x516d563550734472525465424d36336736347637314a3134686b78797839336b51717a7a7a43454e743951726f43",
+    "computedNodeStake": "1999999999999999999999992",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "817046193484364045034088"
+      },
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "111407497287413787989788"
+      },
+      {
+        "delegatorAddress": "0xC3Bd46c54286cD0BD386EEe8000AC3DB0cafad01",
+        "delegatorStakeBase": "10039155833587490098616"
+      },
+      {
+        "delegatorAddress": "0x626713967C0d98A2701C12DE07E2D37A9EED0D5f",
+        "delegatorStakeBase": "5000008435643152112922"
+      },
+      {
+        "delegatorAddress": "0xe3324E63cc99f05DC482d2E73B2016143B163EDe",
+        "delegatorStakeBase": "50073824987794045193566"
+      },
+      {
+        "delegatorAddress": "0x0e6bE96b9835D97cAa73FDC1d018C2D1d91Dd5E1",
+        "delegatorStakeBase": "6134003478234890748536"
+      },
+      {
+        "delegatorAddress": "0xe6B4ACcc6a58D5998ce7d0740E471e2cdE0d3cfA",
+        "delegatorStakeBase": "2515281675990432728266"
+      },
+      {
+        "delegatorAddress": "0x49eb60E1b1187430f66131E8663783757740e8D2",
+        "delegatorStakeBase": "40020009182958956431802"
+      },
+      {
+        "delegatorAddress": "0xbf87fafCc5d86010744aDe5E1669d785958fd871",
+        "delegatorStakeBase": "10843025983294988365700"
+      },
+      {
+        "delegatorAddress": "0xD28B3107724E066264F735ffedAAD0d5f35a426c",
+        "delegatorStakeBase": "40266280472086173363126"
+      },
+      {
+        "delegatorAddress": "0x018895b05D5ebAe4571db08c0a1472b071B5e66c",
+        "delegatorStakeBase": "50639891532932229425040"
+      },
+      {
+        "delegatorAddress": "0xdcb9608eDC5920F17df68A40F82D4c6d86942209",
+        "delegatorStakeBase": "20169663940424500684942"
+      },
+      {
+        "delegatorAddress": "0x95FE996AF6d08933b563b198c3a9bFE91C61C4e9",
+        "delegatorStakeBase": "12878054238128992664872"
+      },
+      {
+        "delegatorAddress": "0x922A00075eDBD3909aaFe75cBc20d4851E984859",
+        "delegatorStakeBase": "2539589104435303756135"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "101069528088950509"
+      },
+      {
+        "delegatorAddress": "0x801E8f44f01Ee5cf0318593715391a465CeDc100",
+        "delegatorStakeBase": "810238264526915670800650"
+      },
+      {
+        "delegatorAddress": "0x4d2c06203125ca34e067C39b7178FeA6F1D1504c",
+        "delegatorStakeBase": "10189154766267251651434"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 190,
+    "nodeName": "DeSci Paranet Node",
+    "relativeNodePower": "43",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 16,
+    "nodeOperatorFees": [["500", "1735174266"]],
+    "nodePower": "2000000000000000000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6155614e3741666e4e784a714d667964756e4e527a395773794d455144563146613934616450343638375631",
+    "computedNodeStake": "1999999999999999999999991",
+    "delegators": [
+      {
+        "delegatorAddress": "0xC3Bd46c54286cD0BD386EEe8000AC3DB0cafad01",
+        "delegatorStakeBase": "24162438621722589595146"
+      },
+      {
+        "delegatorAddress": "0xB837947627C9eaE579b001CB007E03b27995fd02",
+        "delegatorStakeBase": "5034437600220547920088"
+      },
+      {
+        "delegatorAddress": "0x2549393a45A63dc08Ecf6CB2C76710DcFC6832fD",
+        "delegatorStakeBase": "11201943447570511749896"
+      },
+      {
+        "delegatorAddress": "0x828F961B9c4c1d3e7Ac88eBb5A764dd97D02a318",
+        "delegatorStakeBase": "50582190716421239710413"
+      },
+      {
+        "delegatorAddress": "0x3008f3C33FeFB6f0FafD749caC0101F326A7cfb3",
+        "delegatorStakeBase": "4659889062013020773803"
+      },
+      {
+        "delegatorAddress": "0x1F70AB7A96554F0cc1F6a4c57f2b244E8cBA2f92",
+        "delegatorStakeBase": "9637823110074248664622"
+      },
+      {
+        "delegatorAddress": "0x5a168ccbC4754fbAF66a2F1d5d3e28acf45a542b",
+        "delegatorStakeBase": "126321317949647886786"
+      },
+      {
+        "delegatorAddress": "0x42925F3b33d315000276F0F6a257e4FC3c06da21",
+        "delegatorStakeBase": "119455725644664661705120"
+      },
+      {
+        "delegatorAddress": "0xA19bACE3eE6c2dc7Fa6d8D194Ba4e5f50928D06d",
+        "delegatorStakeBase": "2500783509019866091282"
+      },
+      {
+        "delegatorAddress": "0x873b0D0b5dE0cCA15a7E7406Bc573eb4E4F567EF",
+        "delegatorStakeBase": "25294828323885491742697"
+      },
+      {
+        "delegatorAddress": "0xb4FFd9b783A71B7CB1790D02E8F744cC32dc9C1f",
+        "delegatorStakeBase": "5043591906749273965204"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xf5d3Bd875675ADe56ff2B879E3Fc08A85B590584",
+        "delegatorStakeBase": "176783507768072570583551"
+      },
+      {
+        "delegatorAddress": "0xcc66b7f749fB0f0Ab60D77d65e470b3F368fcb17",
+        "delegatorStakeBase": "739680483098253042073"
+      },
+      {
+        "delegatorAddress": "0x801E8f44f01Ee5cf0318593715391a465CeDc100",
+        "delegatorStakeBase": "910479432895582314787435"
+      },
+      {
+        "delegatorAddress": "0x2482580b38B0b709a31d183120c804AF10a6bcB1",
+        "delegatorStakeBase": "654297405592955761781874"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 191,
+    "nodeName": "Polkabot",
+    "relativeNodePower": "54",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "1400000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 30,
+    "nodeOperatorFees": [["500", "1735174278"]],
+    "nodePower": "2477119821528156579",
+    "nodeHealth": "0",
+    "nodeId": "0x516d63356a417764747a464762353654664869357969417441514a597a455a5a584b62665a704469624b524e356a",
+    "computedNodeStake": "1999999999999999999999988",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "2505000100000000000001"
+      },
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "202405828742883523064179"
+      },
+      {
+        "delegatorAddress": "0xC3Bd46c54286cD0BD386EEe8000AC3DB0cafad01",
+        "delegatorStakeBase": "37736505630836989925321"
+      },
+      {
+        "delegatorAddress": "0x18405396C4CEc8447e74D408faBEF1A9C2dC6269",
+        "delegatorStakeBase": "90151228428743259325908"
+      },
+      {
+        "delegatorAddress": "0x8dD0513D158508FF152b0Ad45562a22b39644359",
+        "delegatorStakeBase": "200827277397364340131309"
+      },
+      {
+        "delegatorAddress": "0xe3324E63cc99f05DC482d2E73B2016143B163EDe",
+        "delegatorStakeBase": "81118230410738877366750"
+      },
+      {
+        "delegatorAddress": "0x0e6bE96b9835D97cAa73FDC1d018C2D1d91Dd5E1",
+        "delegatorStakeBase": "15294540642407132161769"
+      },
+      {
+        "delegatorAddress": "0x9215A642Cf3c8b883dB416A292e6c3487D84b420",
+        "delegatorStakeBase": "50080862532687645232664"
+      },
+      {
+        "delegatorAddress": "0x23852ad4213645013E5b073738A8514F88ecf5bE",
+        "delegatorStakeBase": "15337823637388308038909"
+      },
+      {
+        "delegatorAddress": "0x2549393a45A63dc08Ecf6CB2C76710DcFC6832fD",
+        "delegatorStakeBase": "10262410269938910726760"
+      },
+      {
+        "delegatorAddress": "0x3008f3C33FeFB6f0FafD749caC0101F326A7cfb3",
+        "delegatorStakeBase": "975000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x34446D2b12bCb468403386Be511EA857e41d5C04",
+        "delegatorStakeBase": "40089985854769168663830"
+      },
+      {
+        "delegatorAddress": "0xe23A6B2ec7954704422afE8C4C422803928408bA",
+        "delegatorStakeBase": "29690683444443065148457"
+      },
+      {
+        "delegatorAddress": "0x6c4b96cfCE013C8d63DA25f7227CbBb350fEB6E3",
+        "delegatorStakeBase": "36203854016285573313504"
+      },
+      {
+        "delegatorAddress": "0xAcF01Bd31Fa84c64a8eD6C16c090E0944b108F59",
+        "delegatorStakeBase": "4732041840033484168138"
+      },
+      {
+        "delegatorAddress": "0x7386184B04D79780A25e9eeA8bF4e9374f4b8C92",
+        "delegatorStakeBase": "101071496060406684100560"
+      },
+      {
+        "delegatorAddress": "0x4b5FffA39fA909D0742F4A8242b765Ff3E7368Bc",
+        "delegatorStakeBase": "101355328109854673202991"
+      },
+      {
+        "delegatorAddress": "0x66b9F28422F6dDDB0745Bd1fE6740c14bC5b1C70",
+        "delegatorStakeBase": "33576980214152132442581"
+      },
+      {
+        "delegatorAddress": "0x922A00075eDBD3909aaFe75cBc20d4851E984859",
+        "delegatorStakeBase": "2533229554932001310840"
+      },
+      {
+        "delegatorAddress": "0xb7356C5964AeEA4777248CE02547FF256E54a4C0",
+        "delegatorStakeBase": "70001840000000000000000"
+      },
+      {
+        "delegatorAddress": "0xD814336D41d4fad9c3674A7c5c54751d03Ad1da5",
+        "delegatorStakeBase": "29998160000000000000000"
+      },
+      {
+        "delegatorAddress": "0x7191525d94dFc6cfa9e5d44C6D6ae23B7CDEE9A5",
+        "delegatorStakeBase": "5027007445444439075614"
+      },
+      {
+        "delegatorAddress": "0xb4FFd9b783A71B7CB1790D02E8F744cC32dc9C1f",
+        "delegatorStakeBase": "6565566109387068252154"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "91085206895333897"
+      },
+      {
+        "delegatorAddress": "0x67164C15e2A606f48F829Cb71B1A04db41D47917",
+        "delegatorStakeBase": "3023720705149180710"
+      },
+      {
+        "delegatorAddress": "0x1a4B7b5E62b4b2db338B6Cb4Bea4E34e37fb3573",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x801E8f44f01Ee5cf0318593715391a465CeDc100",
+        "delegatorStakeBase": "809618254851116122258489"
+      },
+      {
+        "delegatorAddress": "0x7D637Bd6C8aA6087164F9ec6F0eC79B5f9296133",
+        "delegatorStakeBase": "21835222863913671257154"
+      },
+      {
+        "delegatorAddress": "0xE7aC4EaC15d7DCe3C95D1Bd1cc8CA8B97a952845",
+        "delegatorStakeBase": "1002526628927131919373"
+      },
+      {
+        "delegatorAddress": "0x44546f0d0446CaE543dD0Ab8c7a70012e94600fe",
+        "delegatorStakeBase": "407433754398125"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 192,
+    "nodeName": "🚀event-horizon🌑",
+    "relativeNodePower": "48",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "1800000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 20,
+    "nodeOperatorFees": [["500", "1735174290"]],
+    "nodePower": "2193012082663628600",
+    "nodeHealth": "0",
+    "nodeId": "0x516d63375650634b6654514a50455252663639444737514363716a6b517a4b7a365675745a5846487a504b336775",
+    "computedNodeStake": "1999999999999999999999991",
+    "delegators": [
+      {
+        "delegatorAddress": "0x907B7a9851D372cd301a938799C00A8B464A2419",
+        "delegatorStakeBase": "211381446190465815205350"
+      },
+      {
+        "delegatorAddress": "0x0e6bE96b9835D97cAa73FDC1d018C2D1d91Dd5E1",
+        "delegatorStakeBase": "216996138771652587752071"
+      },
+      {
+        "delegatorAddress": "0x23852ad4213645013E5b073738A8514F88ecf5bE",
+        "delegatorStakeBase": "100975000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x98A96425b337c80bC9E2BD493A65e7546be8DAaE",
+        "delegatorStakeBase": "10119408035390603036014"
+      },
+      {
+        "delegatorAddress": "0x65b99F6a44B3d513F0656231854813E1810F31E5",
+        "delegatorStakeBase": "61248849194609122278971"
+      },
+      {
+        "delegatorAddress": "0xD28B3107724E066264F735ffedAAD0d5f35a426c",
+        "delegatorStakeBase": "39045968307217873771346"
+      },
+      {
+        "delegatorAddress": "0x497583C2124441CB9387AdC81759fC0950Cb6eD8",
+        "delegatorStakeBase": "35659999047529297906021"
+      },
+      {
+        "delegatorAddress": "0x4380cC0Ab24f4b83Aa6AE3efc368cAa2bC528CEC",
+        "delegatorStakeBase": "51936179448631466779030"
+      },
+      {
+        "delegatorAddress": "0xD4656987dB7d5F4692637DC0F216B1EDDEE39BF7",
+        "delegatorStakeBase": "14741782255020320018956"
+      },
+      {
+        "delegatorAddress": "0x70bB01bb6F05C7E39F0B32A4bE85D977bee59E5B",
+        "delegatorStakeBase": "136842697515437860453141"
+      },
+      {
+        "delegatorAddress": "0xC4D83F68F783d9d833813842b006B30af2968Fa5",
+        "delegatorStakeBase": "184696034137654652271695"
+      },
+      {
+        "delegatorAddress": "0xe4dd1F7d2e33406CC5d81165aa2fD9Bb93fC8ba9",
+        "delegatorStakeBase": "387426126070147747392345"
+      },
+      {
+        "delegatorAddress": "0x577112Fa4f415F3493bfab014D27444825A3C00D",
+        "delegatorStakeBase": "151716224004027576396442"
+      },
+      {
+        "delegatorAddress": "0x4b5FffA39fA909D0742F4A8242b765Ff3E7368Bc",
+        "delegatorStakeBase": "96669504321359788987228"
+      },
+      {
+        "delegatorAddress": "0x4a9F3385ef6C1a51b2b0D02dA578c3879b26b7D9",
+        "delegatorStakeBase": "10365803753564695141217"
+      },
+      {
+        "delegatorAddress": "0x7f8f605d07965a7DfDbd0C63fe1d85f46075990a",
+        "delegatorStakeBase": "289115667582365923458055"
+      },
+      {
+        "delegatorAddress": "0x66b9F28422F6dDDB0745Bd1fE6740c14bC5b1C70",
+        "delegatorStakeBase": "1062746293043308357197"
+      },
+      {
+        "delegatorAddress": "0x2756301b12DBd300f329F7693839011ECa868c0b",
+        "delegatorStakeBase": "91660590867111"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "424980220769927800"
+      },
+      {
+        "delegatorAddress": "0x44546f0d0446CaE543dD0Ab8c7a70012e94600fe",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 193,
+    "nodeName": "SBB",
+    "relativeNodePower": "100",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2019657553129634899937875",
+    "nodeAsk": "1300000000000000",
+    "nodePublishingFactor": "286990377561931546",
+    "delegatorsCount": 7,
+    "nodeOperatorFees": [["500", "1735174302"]],
+    "nodePower": "4567898500319688137",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6533734142574d76735463437765486665474845647a6a3674514a51514b32644675336e4650437457764e63",
+    "computedNodeStake": "2019657553129634899937872",
+    "delegators": [
+      {
+        "delegatorAddress": "0x907B7a9851D372cd301a938799C00A8B464A2419",
+        "delegatorStakeBase": "9547771616749040321290"
+      },
+      {
+        "delegatorAddress": "0x7232Af3552C83E646E4A43368CCDe98c4433533f",
+        "delegatorStakeBase": "500095387146619083560163"
+      },
+      {
+        "delegatorAddress": "0x497583C2124441CB9387AdC81759fC0950Cb6eD8",
+        "delegatorStakeBase": "10206587755558681828131"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x02CC95B317FfFf75878A8508885aE4842c6d2694",
+        "delegatorStakeBase": "962739773478571201445102"
+      },
+      {
+        "delegatorAddress": "0xf5d3Bd875675ADe56ff2B879E3Fc08A85B590584",
+        "delegatorStakeBase": "537067729109050531129122"
+      },
+      {
+        "delegatorAddress": "0x1a4B7b5E62b4b2db338B6Cb4Bea4E34e37fb3573",
+        "delegatorStakeBase": "304023086361654063"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 194,
+    "nodeName": "EG - Luigi",
+    "relativeNodePower": "81",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "1400000000000000",
+    "nodePublishingFactor": "177790605411329454",
+    "delegatorsCount": 10,
+    "nodeOperatorFees": [["500", "1735174308"]],
+    "nodePower": "3716120285039953921",
+    "nodeHealth": "0",
+    "nodeId": "0x516d54736f4d6452364355367a4643316f786b43504875385273547443597448346641474a76754e4c3563755877",
+    "computedNodeStake": "2000000000000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "700115213208762809804953"
+      },
+      {
+        "delegatorAddress": "0x6447B9B40536436b42424A984876d7e3B858F8f7",
+        "delegatorStakeBase": "3000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x3077F103BD9a7690c88767f6c073f286BD232317",
+        "delegatorStakeBase": "50000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x2549393a45A63dc08Ecf6CB2C76710DcFC6832fD",
+        "delegatorStakeBase": "4130000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x10E82513D367B7d99157F9f3Cd309080D2a36a97",
+        "delegatorStakeBase": "100000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xB4E13aE1379b1C0823b887C8Ed385128e05Ba61B",
+        "delegatorStakeBase": "30000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xddC60D163015CF5Ca1369D557A2ca1cC2de1F1e3",
+        "delegatorStakeBase": "30000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x42925F3b33d315000276F0F6a257e4FC3c06da21",
+        "delegatorStakeBase": "685751586791237190195047"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "200000000000000000"
+      },
+      {
+        "delegatorAddress": "0xf785D4B319a0eF4c1f4530D912dCDF4Acb2A245E",
+        "delegatorStakeBase": "400000000000000000000000"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 195,
+    "nodeName": "University of Granada",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735174314"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d556435735252337363646956445252336d623954797a52706e796f57477747734b526a5a3855506535487569",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 196,
+    "nodeName": "Positron node",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "130143320734793",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735639686"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5576514b4333754453335574315969786b75795366413370487837724a7468596555754b525769353675644e",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 197,
+    "nodeName": "PhotonPulse",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1740486294"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d57587a57734b456f676353694635756355734e6d5634534b465a4144414d5438746b58434a6272754a4c5656",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 198,
+    "nodeName": "LOAFCAT",
+    "relativeNodePower": "45",
+    "relativeNodeHealth": "0",
+    "nodeStake": "2000000000000000000000000",
+    "nodeAsk": "2100000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 10,
+    "nodeOperatorFees": [
+      ["100", "1742079972"],
+      ["10000", "1744508346"]
+    ],
+    "nodePower": "2062888603631910788",
+    "nodeHealth": "0",
+    "nodeId": "0x516d64764c6253326d6d556f34625633475052387661437731707943644441434161787171594c33696444786742",
+    "computedNodeStake": "2000000000000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x34446D2b12bCb468403386Be511EA857e41d5C04",
+        "delegatorStakeBase": "155440000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x373c828D7c2a5af763aA6Df9d17351c910aBda77",
+        "delegatorStakeBase": "100000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x6E7294Aaf2FBE6B423189dc1352B8C62E643440b",
+        "delegatorStakeBase": "554378000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x34e8beDeFb32Ca9375dB7dF4AC5be62B5Fd1098B",
+        "delegatorStakeBase": "379000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xb4208E12c77788d4f51e8204A2408A9469FE89c4",
+        "delegatorStakeBase": "50824000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x436fF2346040Bb4645E606975e72D5B11e86Af8F",
+        "delegatorStakeBase": "109000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xB5c6E62ED49FA55c25910167ba7650084Cf9a47e",
+        "delegatorStakeBase": "325358000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xC93B9eFa79F4d66875B4168C408007b956344467",
+        "delegatorStakeBase": "20000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x1B2cF4Ac80502409EC0a80531eb506699D13a486",
+        "delegatorStakeBase": "206000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xF31e8CA84382Bf02D4367905B6Fb536bEb08E11D",
+        "delegatorStakeBase": "100000000000000000000000"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 199,
+    "nodeName": "FACEMELT",
+    "relativeNodePower": "5",
+    "relativeNodeHealth": "0",
+    "nodeStake": "661255106000000000000000",
+    "nodeAsk": "2100000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 8,
+    "nodeOperatorFees": [
+      ["100", "1742131674"],
+      ["10000", "1744551348"]
+    ],
+    "nodePower": "239421862735941194",
+    "nodeHealth": "0",
+    "nodeId": "0x516d643953517a61347641723667657a645551434757746b7668674235373564524a6d6139466a6a585664477165",
+    "computedNodeStake": "661255106000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x34446D2b12bCb468403386Be511EA857e41d5C04",
+        "delegatorStakeBase": "19609000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x373c828D7c2a5af763aA6Df9d17351c910aBda77",
+        "delegatorStakeBase": "100000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x34e8beDeFb32Ca9375dB7dF4AC5be62B5Fd1098B",
+        "delegatorStakeBase": "121000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xb4208E12c77788d4f51e8204A2408A9469FE89c4",
+        "delegatorStakeBase": "505000000000000000"
+      },
+      {
+        "delegatorAddress": "0x436fF2346040Bb4645E606975e72D5B11e86Af8F",
+        "delegatorStakeBase": "86031001000000000000000"
+      },
+      {
+        "delegatorAddress": "0xB5c6E62ED49FA55c25910167ba7650084Cf9a47e",
+        "delegatorStakeBase": "100000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xC93B9eFa79F4d66875B4168C408007b956344467",
+        "delegatorStakeBase": "70000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x1B2cF4Ac80502409EC0a80531eb506699D13a486",
+        "delegatorStakeBase": "164614600000000000000000"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 200,
+    "nodeName": "🐶",
+    "relativeNodePower": "39",
+    "relativeNodeHealth": "0",
+    "nodeStake": "1767890428000000000000000",
+    "nodeAsk": "1700000000000000",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 3,
+    "nodeOperatorFees": [
+      ["5", "1742743716"],
+      ["500", "1745163846"]
+    ],
+    "nodePower": "1785638632642952410",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6158575535644c71426e324e39537764415754666d4c4838765a7a44316d3738543766517a64696264476966",
+    "computedNodeStake": "1767890428000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x90098Ee8c21E5397e8Ff1978bD40FfcD76174756",
+        "delegatorStakeBase": "88201714000000000000000"
+      },
+      {
+        "delegatorAddress": "0x47E920f0379Ca4648dADE5c79BF022c8283efc67",
+        "delegatorStakeBase": "110000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xC94b360Bb4b3cdB2ED0C6c0cDFec9e255CFf258b",
+        "delegatorStakeBase": "1569688714000000000000000"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 201,
+    "nodeName": "DKG Swarm",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "244841260269938910726760",
+    "nodeAsk": "2000000000000000",
+    "nodePublishingFactor": "437753909484",
+    "delegatorsCount": 6,
+    "nodeOperatorFees": [
+      ["10", "1743312894"],
+      ["1000", "1745732706"]
+    ],
+    "nodePower": "42015253953508506",
+    "nodeHealth": "0",
+    "nodeId": "0x516d61376f4644376446767a503264634250684776423341526d6638513341685a324d36354b5576534668674a4b",
+    "computedNodeStake": "244841260269938910726760",
+    "delegators": [
+      {
+        "delegatorAddress": "0x18405396C4CEc8447e74D408faBEF1A9C2dC6269",
+        "delegatorStakeBase": "10262410269938910726760"
+      },
+      {
+        "delegatorAddress": "0x7386184B04D79780A25e9eeA8bF4e9374f4b8C92",
+        "delegatorStakeBase": "10000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xd5cBB6237659ee930A084026a01C08Ea850a9BeA",
+        "delegatorStakeBase": "101478850000000000000000"
+      },
+      {
+        "delegatorAddress": "0x47E920f0379Ca4648dADE5c79BF022c8283efc67",
+        "delegatorStakeBase": "100000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x69a9572BEb66080CD901F9B8F8B9a50cc3245B8a",
+        "delegatorStakeBase": "73000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x9b2D9121f91A5B647Af8D85cf0b6859e49e86FDe",
+        "delegatorStakeBase": "50000000000000000000000"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 202,
+    "nodeName": "Amado5",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["10", "1747062204"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d55545067765858467652345254725a477452534d4d424e646655365a777a47584a6f7146386831474661744d",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 203,
+    "nodeName": "Amado6",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["10", "1747062246"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d4e5239706e3833565069437a353269754b6a366a31667a47784b686d7870376b526e45316f783343344d6836",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 204,
+    "nodeName": "Amado7",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["10", "1747062258"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6563756531316d436b5a4459795a66756b6d79467855677336773475476b616d445170757938665677547239",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 205,
+    "nodeName": "Amado8",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["10", "1747162854"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d63575933633462487841334d7a4d503869704b754c434751755172433445366836344a774a70794a64665563",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 206,
+    "nodeName": "Amado9",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "0",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["10", "1747162866"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d65594c667a6e4b52534e4d38653368525059597877384a6e68355a3836356a634c71734b386b3158746f3178",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 207,
+    "nodeName": "compute-edge-one",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "11133244818681",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1749719376"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d643947446b794b6246364a4e536258674e75424a676b45584d786764624e5a4b55316e3669556939664e5965",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 208,
+    "nodeName": "compute-edge-two",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": "0",
+    "nodeAsk": "0",
+    "nodePublishingFactor": "318616170719",
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1749721524"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d613542666d70694c77746b50466d374b6341754d3351696556654345793146677a5744744b6d4d6e50723650",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  }
+]

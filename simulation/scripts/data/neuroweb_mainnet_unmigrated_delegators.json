@@ -1,0 +1,1668 @@
+[
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xBbB454dF8b0A80301953C39Cd3A1A4D6304615DF",
+    "identityId": 2,
+    "sharesBalance": "500000000000000000",
+    "tracBalance": "500000000000000000"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x16AFaCF2ec0c3371A30Cd692785524d67b7ED2Dd",
+    "identityId": 3,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x16AFaCF2ec0c3371A30Cd692785524d67b7ED2Dd",
+    "identityId": 3,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x55390AC4Cf8be2F165750a0CB5aD9901E2de9cFB",
+    "identityId": 4,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x55390AC4Cf8be2F165750a0CB5aD9901E2de9cFB",
+    "identityId": 4,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0xCCA163341Db7e0a24c1d4119606402a6E1A7512E",
+    "identityId": 5,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0xCCA163341Db7e0a24c1d4119606402a6E1A7512E",
+    "identityId": 5,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0xdb391cAae14C8Ef69433a726390a6204349c46d6",
+    "identityId": 6,
+    "sharesBalance": "392449790169",
+    "tracBalance": "423746485755"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0xdb391cAae14C8Ef69433a726390a6204349c46d6",
+    "identityId": 6,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x403981616cFfCfd3F40a599CDf504a214D857e94",
+    "identityId": 7,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x669e3126cfEAc333985a804B875CFD45a9c3Ff51",
+    "identityId": 8,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x669e3126cfEAc333985a804B875CFD45a9c3Ff51",
+    "identityId": 8,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x956E719c38C874d6AAB8bbE1dd0DB9CcBA0C2aBB",
+    "identityId": 9,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x956E719c38C874d6AAB8bbE1dd0DB9CcBA0C2aBB",
+    "identityId": 9,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x748a2beecA9517f5584D18600b0074C4Ec23eA77",
+    "identityId": 10,
+    "sharesBalance": "383765432015",
+    "tracBalance": "402070419084"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x748a2beecA9517f5584D18600b0074C4Ec23eA77",
+    "identityId": 10,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x6794BDa33a3151C0aa468342246ADD26ec549E93",
+    "identityId": 11,
+    "sharesBalance": "636371611355",
+    "tracBalance": "666715763911"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x6794BDa33a3151C0aa468342246ADD26ec549E93",
+    "identityId": 11,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x6C8b4F8135418eb5fAD4A4633e0a958F3Ee516Be",
+    "identityId": 12,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x6C8b4F8135418eb5fAD4A4633e0a958F3Ee516Be",
+    "identityId": 12,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x76a7a268df15E92FD6a47733179ff922d086Ab3b",
+    "identityId": 13,
+    "sharesBalance": "333333333333333333",
+    "tracBalance": "499999999999999999"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x76a7a268df15E92FD6a47733179ff922d086Ab3b",
+    "identityId": 13,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x76a7a268df15E92FD6a47733179ff922d086Ab3b",
+    "identityId": 13,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x962B1aeF661c4F7637cC6558AbbC45b12BC3805d",
+    "identityId": 14,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x962B1aeF661c4F7637cC6558AbbC45b12BC3805d",
+    "identityId": 14,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0xF6d4f904D74Acb960636AE5E973C9583688C9E3D",
+    "identityId": 15,
+    "sharesBalance": "23692141193",
+    "tracBalance": "24239365972"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0xF6d4f904D74Acb960636AE5E973C9583688C9E3D",
+    "identityId": 15,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x4Fa048f2690deAcF238eD9f5F4F89130eb18d2e3",
+    "identityId": 16,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x4Fa048f2690deAcF238eD9f5F4F89130eb18d2e3",
+    "identityId": 16,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x57c1BE1AD77aaA186Cf0E35F1AcB77c8fCfA5c36",
+    "identityId": 17,
+    "sharesBalance": "479729268238",
+    "tracBalance": "499618934631"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x57c1BE1AD77aaA186Cf0E35F1AcB77c8fCfA5c36",
+    "identityId": 17,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0xa4931a302561A0fabFf738579c7Cbd938316F784",
+    "identityId": 18,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0xa4931a302561A0fabFf738579c7Cbd938316F784",
+    "identityId": 18,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x468b22Fab3957E1ef5673430684B7881Fc7A2746",
+    "identityId": 19,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x468b22Fab3957E1ef5673430684B7881Fc7A2746",
+    "identityId": 19,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x189398BC6327dfF0853227F004a98b49fE8f6bC0",
+    "identityId": 20,
+    "sharesBalance": "511837799637",
+    "tracBalance": "577496898303"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x189398BC6327dfF0853227F004a98b49fE8f6bC0",
+    "identityId": 20,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0xf166423dbB1e9e1Bbdb857504CBa14b49aAe7aa5",
+    "identityId": 21,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0xf166423dbB1e9e1Bbdb857504CBa14b49aAe7aa5",
+    "identityId": 21,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x3bB0563470f08840347d3646a0B76Bf21064E5a5",
+    "identityId": 22,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x3bB0563470f08840347d3646a0B76Bf21064E5a5",
+    "identityId": 22,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0xf224C361B3775F7fA11d34e5b4B5D6315C128050",
+    "identityId": 23,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0xf224C361B3775F7fA11d34e5b4B5D6315C128050",
+    "identityId": 23,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0xA00233A1eACa18105093516f58e0bAe73935229f",
+    "identityId": 24,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0xA00233A1eACa18105093516f58e0bAe73935229f",
+    "identityId": 24,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0xaa904bC72a3aa757c8b4175A38c3E17327547e4D",
+    "identityId": 25,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0xaa904bC72a3aa757c8b4175A38c3E17327547e4D",
+    "identityId": 25,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0xb4796a49f881C486F46e1Ed3bd3972Fa2b7bB5De",
+    "identityId": 26,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0xb4796a49f881C486F46e1Ed3bd3972Fa2b7bB5De",
+    "identityId": 26,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x50B9aa271D84Df073a764402605F0b7781CA61a9",
+    "identityId": 27,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x50B9aa271D84Df073a764402605F0b7781CA61a9",
+    "identityId": 27,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x646d4b0b26b29826dfc98dF5bbA0e40b1E4bA3A7",
+    "identityId": 28,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x646d4b0b26b29826dfc98dF5bbA0e40b1E4bA3A7",
+    "identityId": 28,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x71d4D3Aa5d72ad3A876ab53B1E9e8158a49a7396",
+    "identityId": 29,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x71d4D3Aa5d72ad3A876ab53B1E9e8158a49a7396",
+    "identityId": 29,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x1380480FbEbe4Ca0737542E7f56B50D7A2B3AbaD",
+    "identityId": 30,
+    "sharesBalance": "1",
+    "tracBalance": "18447265625000001"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x1380480FbEbe4Ca0737542E7f56B50D7A2B3AbaD",
+    "identityId": 30,
+    "sharesBalance": "1",
+    "tracBalance": "18447265625000001"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0xF1058742Cf07cec965b6abB858c1b899fE4C8288",
+    "identityId": 31,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0xF1058742Cf07cec965b6abB858c1b899fE4C8288",
+    "identityId": 31,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x3077f103bd9a7690c88767f6c073f286bd232317",
+    "shareContractAddress": "0x22cBCDC6ab9fC3AdEaB6f42E9d951495f0f2C89a",
+    "identityId": 32,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1ed5ea3035c2a9d3c6e89205516257fb0a8ae6cd",
+    "shareContractAddress": "0x22cBCDC6ab9fC3AdEaB6f42E9d951495f0f2C89a",
+    "identityId": 32,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xcEfe16cA9864F34AC821Ec76D82661BC7B896f8a",
+    "identityId": 33,
+    "sharesBalance": "1000000000000000000",
+    "tracBalance": "1000000000000000000"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xeC5c72A252778f69531170d968e19658BbBB93E3",
+    "identityId": 34,
+    "sharesBalance": "1000000000000000000",
+    "tracBalance": "1000000000000000000"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x85fFC97109cA170eECE459b2a7E0a7dA8de07dA3",
+    "identityId": 35,
+    "sharesBalance": "1000000000000000000",
+    "tracBalance": "1000000000000000000"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xe01c62Bb425544B11b517C2d9E59793035AB33b6",
+    "identityId": 36,
+    "sharesBalance": "915743453857244595",
+    "tracBalance": "1000022739236048255"
+  },
+  {
+    "stakerAddress": "0x70bb01bb6f05c7e39f0b32a4be85d977bee59e5b",
+    "shareContractAddress": "0xe01c62Bb425544B11b517C2d9E59793035AB33b6",
+    "identityId": 36,
+    "sharesBalance": "50975091817160195",
+    "tracBalance": "55666519631766107"
+  },
+  {
+    "stakerAddress": "0x19eb20a686022608bfde3d337244e1f364c8efb7",
+    "shareContractAddress": "0xdeD12b32986f30777B72cA21417Ef576D1B7DD66",
+    "identityId": 37,
+    "sharesBalance": "236484901107605451",
+    "tracBalance": "255849000000011376"
+  },
+  {
+    "stakerAddress": "0x7779db32a942d32c9f2aaf6ff680faa7e1e9f84f",
+    "shareContractAddress": "0x53B624Bd925c22459c1dB56c923A42e8FA41947D",
+    "identityId": 38,
+    "sharesBalance": "1",
+    "tracBalance": "25864"
+  },
+  {
+    "stakerAddress": "0x889e90447cd5657283c35ec559587e16c779995e",
+    "shareContractAddress": "0xbd5bA04F2eA971a5D2ED37215a8EDBdfef21f250",
+    "identityId": 39,
+    "sharesBalance": "0",
+    "tracBalance": "0"
+  },
+  {
+    "stakerAddress": "0x840af7a83c5fefa87a360fb98c027a40e7e58f1b",
+    "shareContractAddress": "0x75883CB9c237010d6C18EBBAae5c313Da4258026",
+    "identityId": 44,
+    "sharesBalance": "80966442949787",
+    "tracBalance": "19253246951196845"
+  },
+  {
+    "stakerAddress": "0xe4dd1f7d2e33406cc5d81165aa2fd9bb93fc8ba9",
+    "shareContractAddress": "0xa23f42B2Bc1DAE74911685388840241b4709FE72",
+    "identityId": 45,
+    "sharesBalance": "1891722",
+    "tracBalance": "99203856969764860806"
+  },
+  {
+    "stakerAddress": "0xe4dd1f7d2e33406cc5d81165aa2fd9bb93fc8ba9",
+    "shareContractAddress": "0xa9d5F415d8B054E48DE8330229b4b487F7350e8f",
+    "identityId": 46,
+    "sharesBalance": "720249520762492",
+    "tracBalance": "73352549389611930517"
+  },
+  {
+    "stakerAddress": "0xe4dd1f7d2e33406cc5d81165aa2fd9bb93fc8ba9",
+    "shareContractAddress": "0xD1EDf370CCE062882BA1bE334b0B7F1834813902",
+    "identityId": 47,
+    "sharesBalance": "48069198497694420",
+    "tracBalance": "60613757780198920684"
+  },
+  {
+    "stakerAddress": "0xe4dd1f7d2e33406cc5d81165aa2fd9bb93fc8ba9",
+    "shareContractAddress": "0xbdC69F30EF4D08de039b960F2f7cc548192d109f",
+    "identityId": 48,
+    "sharesBalance": "3475919870760598",
+    "tracBalance": "7710123103279284102"
+  },
+  {
+    "stakerAddress": "0xe4dd1f7d2e33406cc5d81165aa2fd9bb93fc8ba9",
+    "shareContractAddress": "0x1562f1e15B08F07f179231d7cfEBBD3818cF5684",
+    "identityId": 49,
+    "sharesBalance": "3212951937974134",
+    "tracBalance": "57498613697671182579"
+  },
+  {
+    "stakerAddress": "0x67164c15e2a606f48f829cb71b1a04db41d47917",
+    "shareContractAddress": "0x886C1f2CBcec9AEdE45B578cB59Cb32e5c41d644",
+    "identityId": 50,
+    "sharesBalance": "6000000000000000000",
+    "tracBalance": "6000000000000000000"
+  },
+  {
+    "stakerAddress": "0x0efe4f1ddbf44443377d05a458451c9ca1be73b8",
+    "shareContractAddress": "0x0A0B26487ae6679bD6b3615c8c6D44c23a8c6dDD",
+    "identityId": 54,
+    "sharesBalance": "50000000000000000000000",
+    "tracBalance": "54630397579332200036686"
+  },
+  {
+    "stakerAddress": "0xc4d83f68f783d9d833813842b006b30af2968fa5",
+    "shareContractAddress": "0x1465D84C94A89C039852e4d5916F4dcb10536ED2",
+    "identityId": 55,
+    "sharesBalance": "436124054959951",
+    "tracBalance": "31127973645350984897"
+  },
+  {
+    "stakerAddress": "0xc4d83f68f783d9d833813842b006b30af2968fa5",
+    "shareContractAddress": "0x4444B512283e25Cc9a6de5413d250C948C01E3D8",
+    "identityId": 56,
+    "sharesBalance": "3046593",
+    "tracBalance": "31452290852867909473"
+  },
+  {
+    "stakerAddress": "0xc4d83f68f783d9d833813842b006b30af2968fa5",
+    "shareContractAddress": "0xC8c78F285b912425cB02883ACc345be70800c759",
+    "identityId": 57,
+    "sharesBalance": "10795932114319376",
+    "tracBalance": "31578949743197332902"
+  },
+  {
+    "stakerAddress": "0xe19e7c27df88c8a705d4df18feab67030fa9b380",
+    "shareContractAddress": "0x9e979F0aE5dFaE507EC130CaB9569D563f786f9d",
+    "identityId": 59,
+    "sharesBalance": "934168410157301397",
+    "tracBalance": "996769735001928559"
+  },
+  {
+    "stakerAddress": "0xe19e7c27df88c8a705d4df18feab67030fa9b380",
+    "shareContractAddress": "0x04AB05fE44C6C7aAAe3dae74719fe637ab6E692d",
+    "identityId": 60,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x0a0d8713c3fcfd18ab9bab182142b51a16079dbc",
+    "shareContractAddress": "0x04AB05fE44C6C7aAAe3dae74719fe637ab6E692d",
+    "identityId": 60,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x3F77333479606E91fe5F692b482e0FE47c7B7Ee4",
+    "identityId": 61,
+    "sharesBalance": "193473174831",
+    "tracBalance": "206054547323"
+  },
+  {
+    "stakerAddress": "0x19eb20a686022608bfde3d337244e1f364c8efb7",
+    "shareContractAddress": "0x3F77333479606E91fe5F692b482e0FE47c7B7Ee4",
+    "identityId": 61,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x4c6d2528680c4750f815ad0912a5540aa1330a4d",
+    "shareContractAddress": "0xfc4c4684DeC996B3DdB093592917FEAbB92F9191",
+    "identityId": 62,
+    "sharesBalance": "9286237143544301167437",
+    "tracBalance": "9999999999999999999999"
+  },
+  {
+    "stakerAddress": "0x3a45bae368dd903074cda7e08f0f3d8a0a63e6de",
+    "shareContractAddress": "0xfc4c4684DeC996B3DdB093592917FEAbB92F9191",
+    "identityId": 62,
+    "sharesBalance": "6500366000481010817206",
+    "tracBalance": "7000000000000000000000"
+  },
+  {
+    "stakerAddress": "0xb6c3ff5539522323dfd6ff1d9f7cff7c4f34d6c6",
+    "shareContractAddress": "0xfc4c4684DeC996B3DdB093592917FEAbB92F9191",
+    "identityId": 62,
+    "sharesBalance": "4804699098069821424032",
+    "tracBalance": "5174000000000000000000"
+  },
+  {
+    "stakerAddress": "0xf220a79836bd4c7fe0f0760b154d955c01c6dd93",
+    "shareContractAddress": "0xfc4c4684DeC996B3DdB093592917FEAbB92F9191",
+    "identityId": 62,
+    "sharesBalance": "3568814282278494162815",
+    "tracBalance": "3843122060219513156166"
+  },
+  {
+    "stakerAddress": "0xd28b3107724e066264f735ffedaad0d5f35a426c",
+    "shareContractAddress": "0xfc4c4684DeC996B3DdB093592917FEAbB92F9191",
+    "identityId": 62,
+    "sharesBalance": "371315018851",
+    "tracBalance": "399855197655"
+  },
+  {
+    "stakerAddress": "0xf220a79836bd4c7fe0f0760b154d955c01c6dd93",
+    "shareContractAddress": "0x6557635745267aEec075f3e3fd1284f7280959F3",
+    "identityId": 64,
+    "sharesBalance": "401973240234295727",
+    "tracBalance": "70030387834983709216"
+  },
+  {
+    "stakerAddress": "0x907b7a9851d372cd301a938799c00a8b464a2419",
+    "shareContractAddress": "0xa947D46d7F346537B82aAeab3d7E8Aa5c6B6F362",
+    "identityId": 65,
+    "sharesBalance": "26963931469689",
+    "tracBalance": "28841291512583"
+  },
+  {
+    "stakerAddress": "0xaac46d1d2c446b73268988d394f8c9ca392d1deb",
+    "shareContractAddress": "0x274a16E744d9E133f4CF071138B224F59f6d494c",
+    "identityId": 66,
+    "sharesBalance": "0",
+    "tracBalance": "0"
+  },
+  {
+    "stakerAddress": "0x907b7a9851d372cd301a938799c00a8b464a2419",
+    "shareContractAddress": "0x2B59b8ec4D23c836763dDA147A7b5DE815C95FCd",
+    "identityId": 67,
+    "sharesBalance": "240088083130",
+    "tracBalance": "269049462601"
+  },
+  {
+    "stakerAddress": "0xe6b6dc9dd0c0d72cb14476193289d6575444376f",
+    "shareContractAddress": "0x243bA8409849b222c034142B2463079a42ae097f",
+    "identityId": 70,
+    "sharesBalance": "3063422838930367",
+    "tracBalance": "1497480048174996984"
+  },
+  {
+    "stakerAddress": "0xfe8c1e0d733815bdd889144ea721a39b44fda866",
+    "shareContractAddress": "0xc3b84E450C2eC23C28627899Ff2c4681c21dd501",
+    "identityId": 71,
+    "sharesBalance": "0",
+    "tracBalance": "0"
+  },
+  {
+    "stakerAddress": "0xee92c0402b937d955abec839aab42df4ced716a1",
+    "shareContractAddress": "0xE98D4fdD531d19B30476957b995400cB13B6e911",
+    "identityId": 72,
+    "sharesBalance": "51000000000000000000000",
+    "tracBalance": "55448721222343571832753"
+  },
+  {
+    "stakerAddress": "0xa8d21f6b3fbaac6de2be1b24e8bb707e0e014de5",
+    "shareContractAddress": "0x46BcfBa55564C4D8DA32414aB20c25ca37BB4416",
+    "identityId": 73,
+    "sharesBalance": "264764901292012",
+    "tracBalance": "272413194444326"
+  },
+  {
+    "stakerAddress": "0x069fefd6ea464df8f03fc29a4fafddd0eaaf2601",
+    "shareContractAddress": "0xeB443B9C64B9B24d3F227F4f55f20c321DaFC1D3",
+    "identityId": 74,
+    "sharesBalance": "2922347283",
+    "tracBalance": "2534746090012124"
+  },
+  {
+    "stakerAddress": "0x70bb01bb6f05c7e39f0b32a4be85d977bee59e5b",
+    "shareContractAddress": "0x06Fd11B210378fadF970ea2364dD25E605172d1b",
+    "identityId": 75,
+    "sharesBalance": "242741091302",
+    "tracBalance": "112641183698777242"
+  },
+  {
+    "stakerAddress": "0xd28b3107724e066264f735ffedaad0d5f35a426c",
+    "shareContractAddress": "0x06Fd11B210378fadF970ea2364dD25E605172d1b",
+    "identityId": 75,
+    "sharesBalance": "667974",
+    "tracBalance": "309965575405"
+  },
+  {
+    "stakerAddress": "0x907b7a9851d372cd301a938799c00a8b464a2419",
+    "shareContractAddress": "0x430c2C831090D8161eD4E5BaAf543A783b102C38",
+    "identityId": 76,
+    "sharesBalance": "1",
+    "tracBalance": "398"
+  },
+  {
+    "stakerAddress": "0x97cb2ac6009b2a2cc95843db610ca3f27c75bbac",
+    "shareContractAddress": "0x7e1A132ec8Fa14ea28860FE1051D005a4AB490d0",
+    "identityId": 83,
+    "sharesBalance": "87472833535782",
+    "tracBalance": "37851650737847221994"
+  },
+  {
+    "stakerAddress": "0x4bea5e7ec1b3b407acac6da91c20731fba405b30",
+    "shareContractAddress": "0xFAAe9198b3958f96e480EB49D038E23f48D0e466",
+    "identityId": 84,
+    "sharesBalance": "387639161494208",
+    "tracBalance": "123808693029657846168"
+  },
+  {
+    "stakerAddress": "0x4bea5e7ec1b3b407acac6da91c20731fba405b30",
+    "shareContractAddress": "0x5F20D229Fb8205F8FdBFB66aC0aE3DCB8ae34382",
+    "identityId": 86,
+    "sharesBalance": "240045038622384",
+    "tracBalance": "68395959653047104235"
+  },
+  {
+    "stakerAddress": "0x34446d2b12bcb468403386be511ea857e41d5c04",
+    "shareContractAddress": "0x896fB57f7A6bfa2AaED4A5e19DCD98BDA0265991",
+    "identityId": 88,
+    "sharesBalance": "969644005481549",
+    "tracBalance": "1000000003845666"
+  },
+  {
+    "stakerAddress": "0x34446d2b12bcb468403386be511ea857e41d5c04",
+    "shareContractAddress": "0x5E14780Ce7c2e12051bA94adf2a89039b5b42134",
+    "identityId": 89,
+    "sharesBalance": "3332045629",
+    "tracBalance": "821220623585123"
+  },
+  {
+    "stakerAddress": "0x34446d2b12bcb468403386be511ea857e41d5c04",
+    "shareContractAddress": "0x84FE7BD185BD8623e4aEcDC894F2F3500Df050CE",
+    "identityId": 90,
+    "sharesBalance": "16522895106",
+    "tracBalance": "936201935487467"
+  },
+  {
+    "stakerAddress": "0x34446d2b12bcb468403386be511ea857e41d5c04",
+    "shareContractAddress": "0xB42Eea74a34211Fb9AA0Fe31F945602090ED362D",
+    "identityId": 91,
+    "sharesBalance": "41480298054",
+    "tracBalance": "1224498194634728"
+  },
+  {
+    "stakerAddress": "0x7aff692b5d15b94577a59058dc28c4dd64368c60",
+    "shareContractAddress": "0x5d3d9E54297536253ef29196d14Ab0Ef935474b7",
+    "identityId": 92,
+    "sharesBalance": "606359307401572408",
+    "tracBalance": "622447504770619840"
+  },
+  {
+    "stakerAddress": "0x828f961b9c4c1d3e7ac88ebb5a764dd97d02a318",
+    "shareContractAddress": "0x384C3458BA9B881eE854a7da6B675eEfCdE89d91",
+    "identityId": 93,
+    "sharesBalance": "87243260842027616",
+    "tracBalance": "1692689416534044663"
+  },
+  {
+    "stakerAddress": "0x49eb60e1b1187430f66131e8663783757740e8d2",
+    "shareContractAddress": "0x57f28453b55EC6eaD69977262B4F928A29aC29b9",
+    "identityId": 94,
+    "sharesBalance": "120160932415924",
+    "tracBalance": "367238947334892870"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x57f28453b55EC6eaD69977262B4F928A29aC29b9",
+    "identityId": 94,
+    "sharesBalance": "12689370",
+    "tracBalance": "38781580564"
+  },
+  {
+    "stakerAddress": "0x3078c02fdf27a008bfb7eeea3cd5776acc892612",
+    "shareContractAddress": "0xf0BfC68A1bfe640d3DbA1fC70DBF498dBd19B187",
+    "identityId": 95,
+    "sharesBalance": "66133368919244",
+    "tracBalance": "182654014240957754617"
+  },
+  {
+    "stakerAddress": "0x77f949e0e0a395757bdde6510d4f4e4be168baf4",
+    "shareContractAddress": "0x7c12cd10599B68224EacAA921D3c30796d189B64",
+    "identityId": 96,
+    "sharesBalance": "51000000000000000000000",
+    "tracBalance": "53346339421287073204999"
+  },
+  {
+    "stakerAddress": "0x018895b05d5ebae4571db08c0a1472b071b5e66c",
+    "shareContractAddress": "0x9A8fB38cb2BfC0f3771777F1Fe0db49B3D461652",
+    "identityId": 97,
+    "sharesBalance": "297903740276713022",
+    "tracBalance": "305907257358868434"
+  },
+  {
+    "stakerAddress": "0xdae4d466150eb98f456286ff41179ccdb0adc081",
+    "shareContractAddress": "0xDB0cDcc7F3B7Ef75Ada35A9F0830B748737A2c36",
+    "identityId": 98,
+    "sharesBalance": "86085372836404",
+    "tracBalance": "111316962239583333052"
+  },
+  {
+    "stakerAddress": "0x706522d3b7b784b84bcf308d989e50dd3577f5ba",
+    "shareContractAddress": "0xC123C587a5cB860Bc6c51d990Fb7241D9a283cC1",
+    "identityId": 99,
+    "sharesBalance": "4802000342986791",
+    "tracBalance": "49084637367382200122"
+  },
+  {
+    "stakerAddress": "0x706522d3b7b784b84bcf308d989e50dd3577f5ba",
+    "shareContractAddress": "0xeE23a0410143bcd77BE599cfD90774854348c8Ae",
+    "identityId": 100,
+    "sharesBalance": "195510629156",
+    "tracBalance": "813863124487642950"
+  },
+  {
+    "stakerAddress": "0xfb013a35c5939ab629e88c2a91e7f4d35ed5bfa7",
+    "shareContractAddress": "0xd5D0066D58B5b0C7aF79f6894916c53a56903B23",
+    "identityId": 101,
+    "sharesBalance": "62569244800278181890319",
+    "tracBalance": "65295332584056023429637"
+  },
+  {
+    "stakerAddress": "0x67164c15e2a606f48f829cb71b1a04db41d47917",
+    "shareContractAddress": "0xd5D0066D58B5b0C7aF79f6894916c53a56903B23",
+    "identityId": 101,
+    "sharesBalance": "484203088204178160",
+    "tracBalance": "505299397226834705"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xd5D0066D58B5b0C7aF79f6894916c53a56903B23",
+    "identityId": 101,
+    "sharesBalance": "1339970481",
+    "tracBalance": "1398351833"
+  },
+  {
+    "stakerAddress": "0x7386184b04d79780a25e9eea8bf4e9374f4b8c92",
+    "shareContractAddress": "0xd5D0066D58B5b0C7aF79f6894916c53a56903B23",
+    "identityId": 101,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x02cc95b317ffff75878a8508885ae4842c6d2694",
+    "shareContractAddress": "0xd5D0066D58B5b0C7aF79f6894916c53a56903B23",
+    "identityId": 101,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x4353fb2ac5924214ef3e23aaddbca336ce254447",
+    "shareContractAddress": "0x8d0Adbe33A93f910965a3355E4Dac8f4617b7B3C",
+    "identityId": 103,
+    "sharesBalance": "50000000000000000000000",
+    "tracBalance": "51181456136049175971911"
+  },
+  {
+    "stakerAddress": "0x706522d3b7b784b84bcf308d989e50dd3577f5ba",
+    "shareContractAddress": "0x79E58E11415c8c9B322c7b6C9a2F7E18070fA80A",
+    "identityId": 104,
+    "sharesBalance": "863641617338000",
+    "tracBalance": "62188767726334372587"
+  },
+  {
+    "stakerAddress": "0x3d03843f5bbd7007a0937f38fd72bc0fbe625398",
+    "shareContractAddress": "0x18fE16e945D7dC07031576Eb11f7629Ba1E2cEB8",
+    "identityId": 105,
+    "sharesBalance": "15952786308123551",
+    "tracBalance": "64107673446462081649"
+  },
+  {
+    "stakerAddress": "0x8e9c666458788b984ebfc20e00794945e1e7cdad",
+    "shareContractAddress": "0x079511092bdDD74ED6A852881A00B9360e14669c",
+    "identityId": 106,
+    "sharesBalance": "345998492741095",
+    "tracBalance": "103066343136332559"
+  },
+  {
+    "stakerAddress": "0x8e9c666458788b984ebfc20e00794945e1e7cdad",
+    "shareContractAddress": "0xd081779a77e9e1fcd5a5684e4EcBACC8A14E616a",
+    "identityId": 107,
+    "sharesBalance": "7439954423704049",
+    "tracBalance": "7672288974086201"
+  },
+  {
+    "stakerAddress": "0x8e9c666458788b984ebfc20e00794945e1e7cdad",
+    "shareContractAddress": "0x770c33bb3EB4D4F27223Cc81131d15e1bC8d86B3",
+    "identityId": 108,
+    "sharesBalance": "933532828774726",
+    "tracBalance": "52863050664545221378"
+  },
+  {
+    "stakerAddress": "0x8e9c666458788b984ebfc20e00794945e1e7cdad",
+    "shareContractAddress": "0x3B6fA181D5D25B977d6176d3AC430c285A7Ca1b7",
+    "identityId": 109,
+    "sharesBalance": "12239621332981988",
+    "tracBalance": "59818849678283290746"
+  },
+  {
+    "stakerAddress": "0x8e9c666458788b984ebfc20e00794945e1e7cdad",
+    "shareContractAddress": "0x274225650A9280F8A183189247f32a64721A494c",
+    "identityId": 110,
+    "sharesBalance": "2520995425574",
+    "tracBalance": "69977471927163708333"
+  },
+  {
+    "stakerAddress": "0x8e9c666458788b984ebfc20e00794945e1e7cdad",
+    "shareContractAddress": "0xe63448B78056deB422Fa70872d10c2cEeeFFbE77",
+    "identityId": 111,
+    "sharesBalance": "11977828287137294",
+    "tracBalance": "91050313631315505189"
+  },
+  {
+    "stakerAddress": "0xe2a3505aa76b481e00632346a1c235889ea8f9e6",
+    "shareContractAddress": "0xe273D0d3136261Da6734E96936bA4c106d08c43B",
+    "identityId": 112,
+    "sharesBalance": "50500000000000000000000",
+    "tracBalance": "51802510532372243119320"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xF49E3d6df7c5276e18b5443aB8aF1c6a06068161",
+    "identityId": 115,
+    "sharesBalance": "507153170673062332",
+    "tracBalance": "513310785680407662"
+  },
+  {
+    "stakerAddress": "0x922a00075edbd3909aafe75cbc20d4851e984859",
+    "shareContractAddress": "0xF49E3d6df7c5276e18b5443aB8aF1c6a06068161",
+    "identityId": 115,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xf5d3bd875675ade56ff2b879e3fc08a85b590584",
+    "shareContractAddress": "0xF49E3d6df7c5276e18b5443aB8aF1c6a06068161",
+    "identityId": 115,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xd39A4A9415E2eB3D82Fe34F392dBAEe065418581",
+    "identityId": 116,
+    "sharesBalance": "497935326494051450",
+    "tracBalance": "54079780384504116865"
+  },
+  {
+    "stakerAddress": "0x626713967c0d98a2701c12de07e2d37a9eed0d5f",
+    "shareContractAddress": "0xd39A4A9415E2eB3D82Fe34F392dBAEe065418581",
+    "identityId": 116,
+    "sharesBalance": "1",
+    "tracBalance": "108"
+  },
+  {
+    "stakerAddress": "0xf5d3bd875675ade56ff2b879e3fc08a85b590584",
+    "shareContractAddress": "0xd39A4A9415E2eB3D82Fe34F392dBAEe065418581",
+    "identityId": 116,
+    "sharesBalance": "1",
+    "tracBalance": "108"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x57ae1a2D9Af46A5E7B03744B09b6996EEECC6123",
+    "identityId": 119,
+    "sharesBalance": "999995200023039890",
+    "tracBalance": "1000000000000000001"
+  },
+  {
+    "stakerAddress": "0x77d90c6aceb4ff3dcfb00ae719943775bf8331fb",
+    "shareContractAddress": "0x57ae1a2D9Af46A5E7B03744B09b6996EEECC6123",
+    "identityId": 119,
+    "sharesBalance": "479949696242",
+    "tracBalance": "479952000000"
+  },
+  {
+    "stakerAddress": "0xf5d3bd875675ade56ff2b879e3fc08a85b590584",
+    "shareContractAddress": "0x57ae1a2D9Af46A5E7B03744B09b6996EEECC6123",
+    "identityId": 119,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x602c0025fa7b4d7b9da3851315230f86e7361a60",
+    "shareContractAddress": "0xB6EC45e96a45E48911b42fC8a6C595babA33c829",
+    "identityId": 120,
+    "sharesBalance": "140434872222400",
+    "tracBalance": "676294722945601460"
+  },
+  {
+    "stakerAddress": "0xb66b2b50ba5595105a57306dd01b05d2f843178a",
+    "shareContractAddress": "0x7227EE8d3Bf2c55380E600664e65A3D06bB23E7d",
+    "identityId": 122,
+    "sharesBalance": "1221755",
+    "tracBalance": "7054408034446551991"
+  },
+  {
+    "stakerAddress": "0xd8a11e406c82c8a85561e6439cefc713d3782efe",
+    "shareContractAddress": "0x66d39d691284b8d9AEb220cBf3C3C7fe17A1Ed73",
+    "identityId": 123,
+    "sharesBalance": "9965925488",
+    "tracBalance": "70000010000000001"
+  },
+  {
+    "stakerAddress": "0x7232af3552c83e646e4a43368ccde98c4433533f",
+    "shareContractAddress": "0xFFb9F59587c8CD94Bc3cC82F340E3c6b9D957E31",
+    "identityId": 125,
+    "sharesBalance": "982424947483457817",
+    "tracBalance": "998286921809895476"
+  },
+  {
+    "stakerAddress": "0x13f2ca958dffd3f313e7352387516b2c6edcf3fb",
+    "shareContractAddress": "0xbfbC2F18814238edeA2099396bCf4E5F914Fe5D9",
+    "identityId": 126,
+    "sharesBalance": "378555864725958",
+    "tracBalance": "24282125961221645796"
+  },
+  {
+    "stakerAddress": "0x65b99f6a44b3d513f0656231854813e1810f31e5",
+    "shareContractAddress": "0x92bff1152fA6aE196635aF8e4E9ba2952717414b",
+    "identityId": 127,
+    "sharesBalance": "428284899934747885",
+    "tracBalance": "431168776792172195"
+  },
+  {
+    "stakerAddress": "0xac68e6ede891f9b314e8e189e81375ff72d02219",
+    "shareContractAddress": "0x14fb5c8E1a27c40dc797c2584bBdC69Ba1b1DF0D",
+    "identityId": 128,
+    "sharesBalance": "783039357501192",
+    "tracBalance": "445937302690971841"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xd1256DF39967089B077b041c0174eD36D0945aDA",
+    "identityId": 135,
+    "sharesBalance": "498977609558491",
+    "tracBalance": "500086443777392"
+  },
+  {
+    "stakerAddress": "0x599c59081d9b673bbddafbc933b669aa84ea3ee1",
+    "shareContractAddress": "0xd1256DF39967089B077b041c0174eD36D0945aDA",
+    "identityId": 135,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xbFcab5e4C7C86f8DF194e516215e216B50AbC7b9",
+    "identityId": 137,
+    "sharesBalance": "800000000000000000",
+    "tracBalance": "800000000000000000"
+  },
+  {
+    "stakerAddress": "0x36aa6595f9a50a5260ee377ea184333c0c639a55",
+    "shareContractAddress": "0x56b723C42C8Ff61b29846018dee8A1047CaB8453",
+    "identityId": 139,
+    "sharesBalance": "50000000000000000000000",
+    "tracBalance": "50000549603354311120749"
+  },
+  {
+    "stakerAddress": "0x9f16bbe53cd85e44d5e83caf7421316f7e81c8cf",
+    "shareContractAddress": "0x56b723C42C8Ff61b29846018dee8A1047CaB8453",
+    "identityId": 139,
+    "sharesBalance": "4247851950000000",
+    "tracBalance": "4247898642673606"
+  },
+  {
+    "stakerAddress": "0x9a47831de1f21e61b6b9cb1bb0392ac0b9853359",
+    "shareContractAddress": "0x4292f5695dF20E5Ca9a7c45e34659Ca33F7A0bb5",
+    "identityId": 140,
+    "sharesBalance": "1246545276029123",
+    "tracBalance": "86266071242040751"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xE5A6b7c688c836E6C6a64A6135C919fDa653DC44",
+    "identityId": 141,
+    "sharesBalance": "99870334079567881",
+    "tracBalance": "99999999999999999"
+  },
+  {
+    "stakerAddress": "0x599c59081d9b673bbddafbc933b669aa84ea3ee1",
+    "shareContractAddress": "0xE5A6b7c688c836E6C6a64A6135C919fDa653DC44",
+    "identityId": 141,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x870904625800869e97600eb281d8a7c707788be8",
+    "shareContractAddress": "0x2376B5CBE8bB6E61Cdb60c47cDf2A57703caB384",
+    "identityId": 142,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x599c59081d9b673bbddafbc933b669aa84ea3ee1",
+    "shareContractAddress": "0x2376B5CBE8bB6E61Cdb60c47cDf2A57703caB384",
+    "identityId": 142,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x6419C256c9AD636E510B16722B16225C87C8e913",
+    "identityId": 146,
+    "sharesBalance": "1998146624181233451",
+    "tracBalance": "2002796723747719909"
+  },
+  {
+    "stakerAddress": "0xf1e085349d492a5546658e28a470055ced37c3f4",
+    "shareContractAddress": "0x6419C256c9AD636E510B16722B16225C87C8e913",
+    "identityId": 146,
+    "sharesBalance": "476091126568",
+    "tracBalance": "477199088873"
+  },
+  {
+    "stakerAddress": "0x2756301b12dbd300f329f7693839011eca868c0b",
+    "shareContractAddress": "0x6419C256c9AD636E510B16722B16225C87C8e913",
+    "identityId": 146,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xa19bace3ee6c2dc7fa6d8d194ba4e5f50928d06d",
+    "shareContractAddress": "0x6419C256c9AD636E510B16722B16225C87C8e913",
+    "identityId": 146,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xb837947627c9eae579b001cb007e03b27995fd02",
+    "shareContractAddress": "0x6419C256c9AD636E510B16722B16225C87C8e913",
+    "identityId": 146,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xf9896e42c33a4ae029c12135a390de542ebc340e",
+    "shareContractAddress": "0x6419C256c9AD636E510B16722B16225C87C8e913",
+    "identityId": 146,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x599c59081d9b673bbddafbc933b669aa84ea3ee1",
+    "shareContractAddress": "0x6419C256c9AD636E510B16722B16225C87C8e913",
+    "identityId": 146,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xAb3aE00a4dEf504f762f817184cbDf42B2031ff3",
+    "identityId": 153,
+    "sharesBalance": "299857780128313123",
+    "tracBalance": "299999999999999999"
+  },
+  {
+    "stakerAddress": "0x599c59081d9b673bbddafbc933b669aa84ea3ee1",
+    "shareContractAddress": "0xAb3aE00a4dEf504f762f817184cbDf42B2031ff3",
+    "identityId": 153,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x599c59081d9b673bbddafbc933b669aa84ea3ee1",
+    "shareContractAddress": "0x6AaB81C845c719f2f5d434B3674678Ade6Cb6d0E",
+    "identityId": 154,
+    "sharesBalance": "7149140911339499",
+    "tracBalance": "7157245087003709"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x2E0ff391FD2D6E1d8123b6fc0a7aC40Ed9D77aaA",
+    "identityId": 155,
+    "sharesBalance": "297407646599",
+    "tracBalance": "298704498466"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x490c9d6aE3c3dc4a95Ac115e710Fa3C08e2AddD8",
+    "identityId": 158,
+    "sharesBalance": "199310504211070438",
+    "tracBalance": "200165789729564313"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x0907cd9941E3CF066dE9d441FFCD926838Ed0582",
+    "identityId": 159,
+    "sharesBalance": "897060460519749224",
+    "tracBalance": "905918709481352992"
+  },
+  {
+    "stakerAddress": "0xa57d7aa44517bb349fd6deb1ac6771774ba51387",
+    "shareContractAddress": "0xa4b6DF21192927De7B4670325A6e981A34841F48",
+    "identityId": 160,
+    "sharesBalance": "656450055804307844",
+    "tracBalance": "664552943700445729"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xa4b6DF21192927De7B4670325A6e981A34841F48",
+    "identityId": 160,
+    "sharesBalance": "19929619419843584",
+    "tracBalance": "20175620574910627"
+  },
+  {
+    "stakerAddress": "0x1a4b7b5e62b4b2db338b6cb4bea4e34e37fb3573",
+    "shareContractAddress": "0xa4b6DF21192927De7B4670325A6e981A34841F48",
+    "identityId": 160,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x6cf6e24f1a5331ab13f38d093c9b409da701ce69",
+    "shareContractAddress": "0xDd435b4135ce87E59f062d36F47d90048066616d",
+    "identityId": 161,
+    "sharesBalance": "1107184884029228507534",
+    "tracBalance": "1114492771269707701453"
+  },
+  {
+    "stakerAddress": "0x5a0e750798f8fa29779049bbdbbbadeb1c81d2b9",
+    "shareContractAddress": "0xDd435b4135ce87E59f062d36F47d90048066616d",
+    "identityId": 161,
+    "sharesBalance": "660321074979593938726",
+    "tracBalance": "664679472595086935459"
+  },
+  {
+    "stakerAddress": "0x2549393a45a63dc08ecf6cb2c76710dcfc6832fd",
+    "shareContractAddress": "0xDd435b4135ce87E59f062d36F47d90048066616d",
+    "identityId": 161,
+    "sharesBalance": "1418383206252312669",
+    "tracBalance": "1427745133681596114"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xDd435b4135ce87E59f062d36F47d90048066616d",
+    "identityId": 161,
+    "sharesBalance": "99447780407783037",
+    "tracBalance": "100104177705126223"
+  },
+  {
+    "stakerAddress": "0xf14f2b9f439e209798577c5e67a6f133de26c030",
+    "shareContractAddress": "0xDd435b4135ce87E59f062d36F47d90048066616d",
+    "identityId": 161,
+    "sharesBalance": "140816799980",
+    "tracBalance": "141746250255"
+  },
+  {
+    "stakerAddress": "0xa0a6ff7ee2d71d04c20195b8a919fafff513a9d4",
+    "shareContractAddress": "0xDd435b4135ce87E59f062d36F47d90048066616d",
+    "identityId": 161,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xe88a2a2c4a6fec8d0cb94646666c93a8d953ad57",
+    "shareContractAddress": "0xDd435b4135ce87E59f062d36F47d90048066616d",
+    "identityId": 161,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xf3bcf0b7da4f428e32864f81f7fb2aba99f9e9ab",
+    "shareContractAddress": "0x90534fBd825a695e9198b863FBEC1721dE0071Ba",
+    "identityId": 162,
+    "sharesBalance": "5590537566461192598404",
+    "tracBalance": "6348945189355532248886"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x90534fBd825a695e9198b863FBEC1721dE0071Ba",
+    "identityId": 162,
+    "sharesBalance": "9963500907336606",
+    "tracBalance": "11315141058038955"
+  },
+  {
+    "stakerAddress": "0x626713967c0d98a2701c12de07e2d37a9eed0d5f",
+    "shareContractAddress": "0x90534fBd825a695e9198b863FBEC1721dE0071Ba",
+    "identityId": 162,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x98136e72D70B0c52Bb253B9BB6902956d213F117",
+    "identityId": 163,
+    "sharesBalance": "9966806815054706",
+    "tracBalance": "10003515807645273"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x21453dd899cAc69a089698d54E88b32868cAA7EE",
+    "identityId": 165,
+    "sharesBalance": "99854449551981",
+    "tracBalance": "704182045094812369"
+  },
+  {
+    "stakerAddress": "0x599c59081d9b673bbddafbc933b669aa84ea3ee1",
+    "shareContractAddress": "0x21453dd899cAc69a089698d54E88b32868cAA7EE",
+    "identityId": 165,
+    "sharesBalance": "1",
+    "tracBalance": "7052"
+  },
+  {
+    "stakerAddress": "0x5a168ccbc4754fbaf66a2f1d5d3e28acf45a542b",
+    "shareContractAddress": "0xbD93626f3EFA1549cAD3F24d64342A97FD27a120",
+    "identityId": 166,
+    "sharesBalance": "62326350062801259201",
+    "tracBalance": "68727416929204642816"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xbD93626f3EFA1549cAD3F24d64342A97FD27a120",
+    "identityId": 166,
+    "sharesBalance": "499460509826530149",
+    "tracBalance": "550756311960075636"
+  },
+  {
+    "stakerAddress": "0xcc66b7f749fb0f0ab60d77d65e470b3f368fcb17",
+    "shareContractAddress": "0xbD93626f3EFA1549cAD3F24d64342A97FD27a120",
+    "identityId": 166,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x626713967c0d98a2701c12de07e2d37a9eed0d5f",
+    "shareContractAddress": "0xbD93626f3EFA1549cAD3F24d64342A97FD27a120",
+    "identityId": 166,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x01BDC15b4E24395d7aD27767bE191B419a2Aa968",
+    "identityId": 167,
+    "sharesBalance": "1",
+    "tracBalance": "2"
+  },
+  {
+    "stakerAddress": "0xbfae446a91215bcb0b2c6d0fe1df8286008756bc",
+    "shareContractAddress": "0x50b34075EACbBcD58f2A4Bf09f8039F004dC8307",
+    "identityId": 169,
+    "sharesBalance": "109873577318861965342",
+    "tracBalance": "110124962069588652695"
+  },
+  {
+    "stakerAddress": "0x2756301b12dbd300f329f7693839011eca868c0b",
+    "shareContractAddress": "0x50b34075EACbBcD58f2A4Bf09f8039F004dC8307",
+    "identityId": 169,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xa57d7aa44517bb349fd6deb1ac6771774ba51387",
+    "shareContractAddress": "0x50b34075EACbBcD58f2A4Bf09f8039F004dC8307",
+    "identityId": 169,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x922a00075edbd3909aafe75cbc20d4851e984859",
+    "shareContractAddress": "0x50b34075EACbBcD58f2A4Bf09f8039F004dC8307",
+    "identityId": 169,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x870904625800869e97600eb281d8a7c707788be8",
+    "shareContractAddress": "0x50b34075EACbBcD58f2A4Bf09f8039F004dC8307",
+    "identityId": 169,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x599c59081d9b673bbddafbc933b669aa84ea3ee1",
+    "shareContractAddress": "0x50b34075EACbBcD58f2A4Bf09f8039F004dC8307",
+    "identityId": 169,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x0db56c99b8ad68f35f4b1772a4ffed3fb16204f6",
+    "shareContractAddress": "0xB9Fd9153fB90BC36CeC7bc68fd390611D4Dd4B4F",
+    "identityId": 172,
+    "sharesBalance": "50476379457078254344695",
+    "tracBalance": "50637196257485627785762"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xB9Fd9153fB90BC36CeC7bc68fd390611D4Dd4B4F",
+    "identityId": 172,
+    "sharesBalance": "797376021000926413",
+    "tracBalance": "799916446082879271"
+  },
+  {
+    "stakerAddress": "0xcc5ef20cffe5c184892e9302d879b189f7c7da53",
+    "shareContractAddress": "0xB9Fd9153fB90BC36CeC7bc68fd390611D4Dd4B4F",
+    "identityId": 172,
+    "sharesBalance": "100000000000000000",
+    "tracBalance": "100318598128742813"
+  },
+  {
+    "stakerAddress": "0xd8a11e406c82c8a85561e6439cefc713d3782efe",
+    "shareContractAddress": "0xc6add3382a77c64131FB99963e4F1098Cc31Ca98",
+    "identityId": 174,
+    "sharesBalance": "3190534194293864",
+    "tracBalance": "31546277398003471080"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xdf3F455634Cbe18Faa379eB522068E1166188418",
+    "identityId": 176,
+    "sharesBalance": "1000000000000000000",
+    "tracBalance": "1000000000000000000"
+  },
+  {
+    "stakerAddress": "0x626713967c0d98a2701c12de07e2d37a9eed0d5f",
+    "shareContractAddress": "0x4CEC8F51b972742487F20AC71142f8aed170CFFb",
+    "identityId": 177,
+    "sharesBalance": "399908033247",
+    "tracBalance": "401041666483"
+  },
+  {
+    "stakerAddress": "0xe4dd1f7d2e33406cc5d81165aa2fd9bb93fc8ba9",
+    "shareContractAddress": "0x63d14DC97CF475A3b88bDb12F0e0aB91C8060677",
+    "identityId": 187,
+    "sharesBalance": "982653287298484232",
+    "tracBalance": "987338771206460611"
+  },
+  {
+    "stakerAddress": "0xc4d83f68f783d9d833813842b006b30af2968fa5",
+    "shareContractAddress": "0x63d14DC97CF475A3b88bDb12F0e0aB91C8060677",
+    "identityId": 187,
+    "sharesBalance": "759169568272332529",
+    "tracBalance": "762789437906458034"
+  },
+  {
+    "stakerAddress": "0x49eb60e1b1187430f66131e8663783757740e8d2",
+    "shareContractAddress": "0x63d14DC97CF475A3b88bDb12F0e0aB91C8060677",
+    "identityId": 187,
+    "sharesBalance": "377718409065358",
+    "tracBalance": "379519444639449"
+  },
+  {
+    "stakerAddress": "0x840d11b8cfd350c930af8e3642f576dc8a101428",
+    "shareContractAddress": "0x63d14DC97CF475A3b88bDb12F0e0aB91C8060677",
+    "identityId": 187,
+    "sharesBalance": "33964506494537",
+    "tracBalance": "34126455933550"
+  },
+  {
+    "stakerAddress": "0x497583c2124441cb9387adc81759fc0950cb6ed8",
+    "shareContractAddress": "0x63d14DC97CF475A3b88bDb12F0e0aB91C8060677",
+    "identityId": 187,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x626713967c0d98a2701c12de07e2d37a9eed0d5f",
+    "shareContractAddress": "0x63d14DC97CF475A3b88bDb12F0e0aB91C8060677",
+    "identityId": 187,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x873b0d0b5de0cca15a7e7406bc573eb4e4f567ef",
+    "shareContractAddress": "0x63d14DC97CF475A3b88bDb12F0e0aB91C8060677",
+    "identityId": 187,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xd28b3107724e066264f735ffedaad0d5f35a426c",
+    "shareContractAddress": "0x63d14DC97CF475A3b88bDb12F0e0aB91C8060677",
+    "identityId": 187,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x70bb01bb6f05c7e39f0b32a4be85d977bee59e5b",
+    "shareContractAddress": "0x63d14DC97CF475A3b88bDb12F0e0aB91C8060677",
+    "identityId": 187,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x801e8f44f01ee5cf0318593715391a465cedc100",
+    "shareContractAddress": "0x5FEa6703712cDE5935c1174c5Ec8fbAAbAadc3c0",
+    "identityId": 189,
+    "sharesBalance": "800000000000000000000000",
+    "tracBalance": "810238264526915670800650"
+  },
+  {
+    "stakerAddress": "0x4d2c06203125ca34e067c39b7178fea6f1d1504c",
+    "shareContractAddress": "0x5FEa6703712cDE5935c1174c5Ec8fbAAbAadc3c0",
+    "identityId": 189,
+    "sharesBalance": "10060403426852742542115",
+    "tracBalance": "10189154766267251651434"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x5FEa6703712cDE5935c1174c5Ec8fbAAbAadc3c0",
+    "identityId": 189,
+    "sharesBalance": "99792401829319465",
+    "tracBalance": "101069528088950509"
+  },
+  {
+    "stakerAddress": "0x801e8f44f01ee5cf0318593715391a465cedc100",
+    "shareContractAddress": "0x5F8F36A5F76CC433e8C147BbceABe32D4f54D13D",
+    "identityId": 190,
+    "sharesBalance": "900000000000000000000000",
+    "tracBalance": "910479432895582314787435"
+  },
+  {
+    "stakerAddress": "0x2482580b38b0b709a31d183120c804af10a6bcb1",
+    "shareContractAddress": "0x5F8F36A5F76CC433e8C147BbceABe32D4f54D13D",
+    "identityId": 190,
+    "sharesBalance": "646766575671999890532633",
+    "tracBalance": "654297405592955761781874"
+  },
+  {
+    "stakerAddress": "0xf5d3bd875675ade56ff2b879e3fc08a85b590584",
+    "shareContractAddress": "0x5F8F36A5F76CC433e8C147BbceABe32D4f54D13D",
+    "identityId": 190,
+    "sharesBalance": "174748765587450864605737",
+    "tracBalance": "176783507768072570583551"
+  },
+  {
+    "stakerAddress": "0xcc66b7f749fb0f0ab60d77d65e470b3f368fcb17",
+    "shareContractAddress": "0x5F8F36A5F76CC433e8C147BbceABe32D4f54D13D",
+    "identityId": 190,
+    "sharesBalance": "731166911339527747742",
+    "tracBalance": "739680483098253042073"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x5F8F36A5F76CC433e8C147BbceABe32D4f54D13D",
+    "identityId": 190,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x801e8f44f01ee5cf0318593715391a465cedc100",
+    "shareContractAddress": "0xdD2ad3D20E65D988b9Eb2C231B2A96b34C116137",
+    "identityId": 191,
+    "sharesBalance": "799999000000000000000000",
+    "tracBalance": "809618254851116122258489"
+  },
+  {
+    "stakerAddress": "0x7d637bd6c8aa6087164f9ec6f0ec79b5f9296133",
+    "shareContractAddress": "0xdD2ad3D20E65D988b9Eb2C231B2A96b34C116137",
+    "identityId": 191,
+    "sharesBalance": "21575793716657686931651",
+    "tracBalance": "21835222863913671257154"
+  },
+  {
+    "stakerAddress": "0xe7ac4eac15d7dce3c95d1bd1cc8ca8b97a952845",
+    "shareContractAddress": "0xdD2ad3D20E65D988b9Eb2C231B2A96b34C116137",
+    "identityId": 191,
+    "sharesBalance": "990615386707854393044",
+    "tracBalance": "1002526628927131919373"
+  },
+  {
+    "stakerAddress": "0x67164c15e2a606f48f829cb71b1a04db41d47917",
+    "shareContractAddress": "0xdD2ad3D20E65D988b9Eb2C231B2A96b34C116137",
+    "identityId": 191,
+    "sharesBalance": "2987795205832499362",
+    "tracBalance": "3023720705149180710"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xdD2ad3D20E65D988b9Eb2C231B2A96b34C116137",
+    "identityId": 191,
+    "sharesBalance": "90003003260419590",
+    "tracBalance": "91085206895333897"
+  },
+  {
+    "stakerAddress": "0x44546f0d0446cae543dd0ab8c7a70012e94600fe",
+    "shareContractAddress": "0xdD2ad3D20E65D988b9Eb2C231B2A96b34C116137",
+    "identityId": 191,
+    "sharesBalance": "402592943194797",
+    "tracBalance": "407433754398125"
+  },
+  {
+    "stakerAddress": "0x1a4b7b5e62b4b2db338b6cb4bea4e34e37fb3573",
+    "shareContractAddress": "0xdD2ad3D20E65D988b9Eb2C231B2A96b34C116137",
+    "identityId": 191,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x85338dAa8fc622B0ecC75d7508420376f18B656D",
+    "identityId": 192,
+    "sharesBalance": "419959423469771063",
+    "tracBalance": "424980220769927800"
+  },
+  {
+    "stakerAddress": "0x44546f0d0446cae543dd0ab8c7a70012e94600fe",
+    "shareContractAddress": "0x85338dAa8fc622B0ecC75d7508420376f18B656D",
+    "identityId": 192,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x02cc95b317ffff75878a8508885ae4842c6d2694",
+    "shareContractAddress": "0x736587044EE21aa1dD799578b7aaBC58AEeb9Cf9",
+    "identityId": 193,
+    "sharesBalance": "950000000000000000000000",
+    "tracBalance": "962739773478571201445102"
+  },
+  {
+    "stakerAddress": "0xf5d3bd875675ade56ff2b879e3fc08a85b590584",
+    "shareContractAddress": "0x736587044EE21aa1dD799578b7aaBC58AEeb9Cf9",
+    "identityId": 193,
+    "sharesBalance": "529960802190701668195703",
+    "tracBalance": "537067729109050531129122"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0x736587044EE21aa1dD799578b7aaBC58AEeb9Cf9",
+    "identityId": 193,
+    "sharesBalance": "1",
+    "tracBalance": "1"
+  },
+  {
+    "stakerAddress": "0x1a4b7b5e62b4b2db338b6cb4bea4e34e37fb3573",
+    "shareContractAddress": "0x736587044EE21aa1dD799578b7aaBC58AEeb9Cf9",
+    "identityId": 193,
+    "sharesBalance": "300000000000000000",
+    "tracBalance": "304023086361654063"
+  },
+  {
+    "stakerAddress": "0xf785d4b319a0ef4c1f4530d912dcdf4acb2a245e",
+    "shareContractAddress": "0xcB134fBf8Ae9a67d5fC94A49e7F5BA5D69Aa6E90",
+    "identityId": 194,
+    "sharesBalance": "400000000000000000000000",
+    "tracBalance": "400000000000000000000000"
+  },
+  {
+    "stakerAddress": "0xb31fb8f1629fd1523bbd4f0aef474bece3e3453e",
+    "shareContractAddress": "0xcB134fBf8Ae9a67d5fC94A49e7F5BA5D69Aa6E90",
+    "identityId": 194,
+    "sharesBalance": "200000000000000000",
+    "tracBalance": "200000000000000000"
+  }
+]

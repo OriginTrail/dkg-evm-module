@@ -1,0 +1,3064 @@
+[
+  {
+    "identityId": 0,
+    "nodeName": "",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 1,
+    "nodeName": "Aurora",
+    "relativeNodePower": "52",
+    "relativeNodeHealth": "90",
+    "nodeStake": 2000000,
+    "nodeStakeAbsolute": "2000000000000000000000000",
+    "nodeAsk": 0.00173,
+    "nodeAskAbsolute": "1730000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 24,
+    "nodeOperatorFees": [["500", "1735170760"]],
+    "nodePower": "2314224281300939907",
+    "nodeHealth": "40",
+    "nodeId": "0x516d5a37784d74674a3176426579356966764436794673784834566d53515677744b7258387a4e755a3275694b62",
+    "computedNodeStake": "1999999999999999999999989",
+    "delegators": [
+      {
+        "delegatorAddress": "0x874d218e6d28534D7aF5Ff97674BE65EDa375b18",
+        "delegatorStakeBase": "153498411871404566308445"
+      },
+      {
+        "delegatorAddress": "0xf19FdC795C314f1934210c5e60c0703C16866F7B",
+        "delegatorStakeBase": "378362374260307335000560"
+      },
+      {
+        "delegatorAddress": "0xb7ED501Cb5a6470cAF0B97085B00ddfaC601Bb59",
+        "delegatorStakeBase": "2428523038272798196406"
+      },
+      {
+        "delegatorAddress": "0x2796A1233b6919d833C98f210d4636dd1327c8Ce",
+        "delegatorStakeBase": "25306167091418395270986"
+      },
+      {
+        "delegatorAddress": "0x1F70AB7A96554F0cc1F6a4c57f2b244E8cBA2f92",
+        "delegatorStakeBase": "11496999999999999999998"
+      },
+      {
+        "delegatorAddress": "0x2e1b1e1E91318Ea5a6A122b4F5bf07c562C59301",
+        "delegatorStakeBase": "406666600000000000000"
+      },
+      {
+        "delegatorAddress": "0xcF3F1e9D688283C105CF8301EEcd905B23E9E807",
+        "delegatorStakeBase": "8118690804068569407417"
+      },
+      {
+        "delegatorAddress": "0xBa8368d2a17207638ddCe6112f4ad03003a28F0A",
+        "delegatorStakeBase": "1637316393294982040623"
+      },
+      {
+        "delegatorAddress": "0xaF0F64222A720840BeFD808e71f24365c3c66422",
+        "delegatorStakeBase": "255829663129595134483634"
+      },
+      {
+        "delegatorAddress": "0xD75c8fdD2d14f53848ABD34c7c9748Dc3e78341A",
+        "delegatorStakeBase": "12146262158809056281167"
+      },
+      {
+        "delegatorAddress": "0x851A88571Af500482399CC2CC69d9edD48332638",
+        "delegatorStakeBase": "5000000128410994972946"
+      },
+      {
+        "delegatorAddress": "0xaDB1a76cdAc5F9440DCaB127f99af52ab4b996Af",
+        "delegatorStakeBase": "3823217232603206945635"
+      },
+      {
+        "delegatorAddress": "0xCce967d8F21B62C5Eb3Fc5040C1677eF4CDE54Ba",
+        "delegatorStakeBase": "695251503233540251484"
+      },
+      {
+        "delegatorAddress": "0x2284FB05B06133cEda72A81036b48c188aABd0dD",
+        "delegatorStakeBase": "3327813120894193552601"
+      },
+      {
+        "delegatorAddress": "0x0E62bDC912A42367AE317ffD35C1b647c739C422",
+        "delegatorStakeBase": "354773388289802573268937"
+      },
+      {
+        "delegatorAddress": "0x22b750c56A1E6e20799d470A8949896DC3f55C45",
+        "delegatorStakeBase": "51063805015887252391943"
+      },
+      {
+        "delegatorAddress": "0x242bFa90a5160893c4926b7Da5A17355D67f3ffC",
+        "delegatorStakeBase": "194489651100290251059228"
+      },
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "137469964224948"
+      },
+      {
+        "delegatorAddress": "0x4988a3caef629dC9369Dd3909B035F74B7E728B2",
+        "delegatorStakeBase": "396479234604617329228288"
+      },
+      {
+        "delegatorAddress": "0x53f2736FaE551C998D4e72E519F1aCf474264de4",
+        "delegatorStakeBase": "31911192764326386"
+      },
+      {
+        "delegatorAddress": "0xA053d9d31596B505C7bA2129B31193A1C37473AF",
+        "delegatorStakeBase": "53212782782086916320261"
+      },
+      {
+        "delegatorAddress": "0xDd110F9167C16DB2F71D9F3a47D47988a5e530AD",
+        "delegatorStakeBase": "304212202585"
+      },
+      {
+        "delegatorAddress": "0xf1E085349d492A5546658e28a470055cED37c3F4",
+        "delegatorStakeBase": "920957020028288883284"
+      },
+      {
+        "delegatorAddress": "0xf46cd09FC1aEC116a10A1092f78d2c3da02547f2",
+        "delegatorStakeBase": "86982791806007675382227"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 2,
+    "nodeName": "Sayshell",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0.5,
+    "nodeStakeAbsolute": "500000000000000000",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["500", "1735170895"]],
+    "nodePower": "125000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d51767a4375557170667855454c51586f59796951574b5777745374385559384b366475396639503453743168",
+    "computedNodeStake": "500000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "500000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 3,
+    "nodeName": "Sark",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0.1,
+    "nodeStakeAbsolute": "100000000000000000",
+    "nodeAsk": 0.01,
+    "nodeAskAbsolute": "10000000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["1000", "1735170905"]],
+    "nodePower": "5000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6237656942776845364a7145574658534a3771784a64485a4745664263666d535a5572387541456276634667",
+    "computedNodeStake": "100000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "100000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 4,
+    "nodeName": "Nexon",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735170920"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5839746b4a775348717274457a735a4b4a4d4254394b6d7571544c51626e706d6a5554384844777648534131",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 5,
+    "nodeName": "Gaia",
+    "relativeNodePower": "52",
+    "relativeNodeHealth": "0",
+    "nodeStake": 2000000,
+    "nodeStakeAbsolute": "2000000000000000000000000",
+    "nodeAsk": 0.00175,
+    "nodeAskAbsolute": "1750000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 20,
+    "nodeOperatorFees": [["500", "1735170930"]],
+    "nodePower": "2301262739209399227",
+    "nodeHealth": "0",
+    "nodeId": "0x516d514e615263455a63386f396b746f525644426e57734e69344b623459433770737a6457347a4a437a70774444",
+    "computedNodeStake": "1999999999999999999999989",
+    "delegators": [
+      {
+        "delegatorAddress": "0xf19FdC795C314f1934210c5e60c0703C16866F7B",
+        "delegatorStakeBase": "281496898550870331329901"
+      },
+      {
+        "delegatorAddress": "0x7232Af3552C83E646E4A43368CCDe98c4433533f",
+        "delegatorStakeBase": "104182146758335929296774"
+      },
+      {
+        "delegatorAddress": "0x1cb3b88FA6C79E4cC3163a04d5ae7862b600E55B",
+        "delegatorStakeBase": "2421958078927834243915"
+      },
+      {
+        "delegatorAddress": "0xDA3C72d83B40acd5301d8fcF30bF6648B0e6401B",
+        "delegatorStakeBase": "9852428878837666646953"
+      },
+      {
+        "delegatorAddress": "0xcAECfCD6CE3D265B947D28d6E84B7164595fFa7A",
+        "delegatorStakeBase": "14520897389591255190793"
+      },
+      {
+        "delegatorAddress": "0x7B1ba3b9B9f284619f2deD52EbabBb8cFE7ddBe9",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xaA6Ac66852739b8B88F8e6605C0B0FA775D1eD61",
+        "delegatorStakeBase": "622324173839625222462"
+      },
+      {
+        "delegatorAddress": "0x4b5FffA39fA909D0742F4A8242b765Ff3E7368Bc",
+        "delegatorStakeBase": "207441391279875074154"
+      },
+      {
+        "delegatorAddress": "0x3f203b41906C0d099Dc82b7C71aDc27De4323001",
+        "delegatorStakeBase": "7260448694795627595396"
+      },
+      {
+        "delegatorAddress": "0xdC5387E655781d2C83067169E3cf395D8202F4d4",
+        "delegatorStakeBase": "2327036658338423885500"
+      },
+      {
+        "delegatorAddress": "0x22b750c56A1E6e20799d470A8949896DC3f55C45",
+        "delegatorStakeBase": "311162086919812611231290"
+      },
+      {
+        "delegatorAddress": "0x39DcaAfa2ebF43E8822a7Ad308b26Ec2A06CdcbA",
+        "delegatorStakeBase": "884331933336"
+      },
+      {
+        "delegatorAddress": "0x4366CdBFD0D5797E229103529C2db4ADcfd755F1",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x6746A8efdc6b503e0cFEF757288Ff41fBD034070",
+        "delegatorStakeBase": "132762490419120047458"
+      },
+      {
+        "delegatorAddress": "0x737240Ede9E72AC15EEbD2cB9d41A3071870b82d",
+        "delegatorStakeBase": "363022434739781379769"
+      },
+      {
+        "delegatorAddress": "0x88f1706c20d94A4d1551C5F799C9E3380A24C3AC",
+        "delegatorStakeBase": "602759953883"
+      },
+      {
+        "delegatorAddress": "0xB51dA33B5b218225680FB18eEFb82F7AbD9814C8",
+        "delegatorStakeBase": "20744139127987507415419"
+      },
+      {
+        "delegatorAddress": "0xB939053577269eeb39bCeEa2b9f99DE05BA7668b",
+        "delegatorStakeBase": "1244648347679250444925163"
+      },
+      {
+        "delegatorAddress": "0xDEd9521912ee0AfEd354b6B4cDB47B9941C9cC2B",
+        "delegatorStakeBase": "58060771005324234505"
+      },
+      {
+        "delegatorAddress": "0xe6F432a24657324625caA044cE3767aAD1d0A550",
+        "delegatorStakeBase": "481550393316"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 6,
+    "nodeName": "Kalgan",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735170940"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a53466366513944657342345a6a6b5433714a3356794359444c4652596243355531567956504e3437647745",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 7,
+    "nodeName": "Hardin",
+    "relativeNodePower": "54",
+    "relativeNodeHealth": "70",
+    "nodeStake": 2000000.88,
+    "nodeStakeAbsolute": "2000000887711671802662632",
+    "nodeAsk": 0.00162,
+    "nodeAskAbsolute": "1620000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 3,
+    "nodeOperatorFees": [["500", "1735170950"]],
+    "nodePower": "2390348106781366402",
+    "nodeHealth": "31",
+    "nodeId": "0x516d53583343664d5533486d52444b4d4668636e584c6171597852427a506374395031546d6a326d424e50386f77",
+    "computedNodeStake": "2000000887711671802662631",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "1691991477084900718815429"
+      },
+      {
+        "delegatorAddress": "0x874d218e6d28534D7aF5Ff97674BE65EDa375b18",
+        "delegatorStakeBase": "307191010614085289349147"
+      },
+      {
+        "delegatorAddress": "0xf70A6BEf1918334bAd085E09f50237E10A45B220",
+        "delegatorStakeBase": "818400012685794498055"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 8,
+    "nodeName": "Cinna",
+    "relativeNodePower": "90",
+    "relativeNodeHealth": "0",
+    "nodeStake": 2000000,
+    "nodeStakeAbsolute": "2000000002401150173611408",
+    "nodeAsk": 0.001745,
+    "nodeAskAbsolute": "1745000000000000",
+    "nodePublishingFactor": 25.09,
+    "delegatorsCount": 3,
+    "nodeOperatorFees": [["500", "1735170955"]],
+    "nodePower": "3964340911917455371",
+    "nodeHealth": "0",
+    "nodeId": "0x516d535a716935594345465657536743566436696437645a6f7235626878506350673142384b4b52626144743377",
+    "computedNodeStake": "2000000002401150173611407",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "273515310758670435010530"
+      },
+      {
+        "delegatorAddress": "0xf19FdC795C314f1934210c5e60c0703C16866F7B",
+        "delegatorStakeBase": "406231692151171703200206"
+      },
+      {
+        "delegatorAddress": "0xb508B13981Aa0cC16ea83EE519b79b5D364e3463",
+        "delegatorStakeBase": "1320252999491308035400671"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 9,
+    "nodeName": "Askone",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0.05,
+    "nodeAskAbsolute": "50000000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735170965"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d516d70676465473677697a7832466466584c71466e5843376336586436536966314175587356724c5a664448",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 10,
+    "nodeName": "Anacreon",
+    "relativeNodePower": "100",
+    "relativeNodeHealth": "81",
+    "nodeStake": 1999192.99,
+    "nodeStakeAbsolute": "1999192995075743712370003",
+    "nodeAsk": 0.0016,
+    "nodeAskAbsolute": "1600000000000000",
+    "nodePublishingFactor": 30.23,
+    "delegatorsCount": 29,
+    "nodeOperatorFees": [["500", "1735170970"]],
+    "nodePower": "4401685477279712197",
+    "nodeHealth": "36",
+    "nodeId": "0x516d627757694769686e6b66384e37416677626b704c4e51423835554a485255316164324248434550435a695a51",
+    "computedNodeStake": "1999192995075743712369990",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "409402733827315129541991"
+      },
+      {
+        "delegatorAddress": "0x6447B9B40536436b42424A984876d7e3B858F8f7",
+        "delegatorStakeBase": "2000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x874d218e6d28534D7aF5Ff97674BE65EDa375b18",
+        "delegatorStakeBase": "406221731958681074968292"
+      },
+      {
+        "delegatorAddress": "0xb7ED501Cb5a6470cAF0B97085B00ddfaC601Bb59",
+        "delegatorStakeBase": "5199395387300993138567"
+      },
+      {
+        "delegatorAddress": "0x6Cf9518911F98Be2f9B655EFCECCB4e988a33935",
+        "delegatorStakeBase": "10279819721819999999998"
+      },
+      {
+        "delegatorAddress": "0x712Ee4a3b10f4598e00D0F85B88D827d493d0940",
+        "delegatorStakeBase": "32395470000000000000000"
+      },
+      {
+        "delegatorAddress": "0xFd1e8266E4896601C783e2b9bF8505F6a308cf09",
+        "delegatorStakeBase": "8079750248658166581119"
+      },
+      {
+        "delegatorAddress": "0xe6B4ACcc6a58D5998ce7d0740E471e2cdE0d3cfA",
+        "delegatorStakeBase": "2538885824741756718551"
+      },
+      {
+        "delegatorAddress": "0x48e3d72961360C382548D42bB4dDA346386Bf01c",
+        "delegatorStakeBase": "25388858247417567185518"
+      },
+      {
+        "delegatorAddress": "0xdcb9608eDC5920F17df68A40F82D4c6d86942209",
+        "delegatorStakeBase": "20311086597934053748414"
+      },
+      {
+        "delegatorAddress": "0x7f5AAf1Bc0f5B2e2be88Bd2294a8694c41CCd8D6",
+        "delegatorStakeBase": "44680325221107267281743"
+      },
+      {
+        "delegatorAddress": "0x203Cb60813C25Fd26f064e676EEd43AeD4448C3c",
+        "delegatorStakeBase": "3122281165094216544367"
+      },
+      {
+        "delegatorAddress": "0xEaaaDC16d54D5A9D584478Ec420166324323d652",
+        "delegatorStakeBase": "6000682763813292797276"
+      },
+      {
+        "delegatorAddress": "0x3e23706eba2703a61694460E3B6a845758AEC896",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x3f203b41906C0d099Dc82b7C71aDc27De4323001",
+        "delegatorStakeBase": "10155543298967026874207"
+      },
+      {
+        "delegatorAddress": "0xf100f7514c1101b5D898b6a2Bd0D04d620D85d65",
+        "delegatorStakeBase": "272168560412316320228"
+      },
+      {
+        "delegatorAddress": "0x5aD5d14fD858a729736Aad114A25f89319F9A2d8",
+        "delegatorStakeBase": "20886780415811599620"
+      },
+      {
+        "delegatorAddress": "0x0E62bDC912A42367AE317ffD35C1b647c739C422",
+        "delegatorStakeBase": "45613151973296333686932"
+      },
+      {
+        "delegatorAddress": "0x53f2736FaE551C998D4e72E519F1aCf474264de4",
+        "delegatorStakeBase": "142473356797311430"
+      },
+      {
+        "delegatorAddress": "0xDd110F9167C16DB2F71D9F3a47D47988a5e530AD",
+        "delegatorStakeBase": "555617201353"
+      },
+      {
+        "delegatorAddress": "0xDEd9521912ee0AfEd354b6B4cDB47B9941C9cC2B",
+        "delegatorStakeBase": "515901599587524965209731"
+      },
+      {
+        "delegatorAddress": "0x0b23cDed376bcaD8faaF345cF2E23991aa03829f",
+        "delegatorStakeBase": "24042233205974539421998"
+      },
+      {
+        "delegatorAddress": "0x2e7797C30A53442d50a567eA451967C3411cE7Aa",
+        "delegatorStakeBase": "73064056264418274846484"
+      },
+      {
+        "delegatorAddress": "0x64B4086aE5Ac4Fd2a19deDF511f35C7666DC872f",
+        "delegatorStakeBase": "33513292886591188684884"
+      },
+      {
+        "delegatorAddress": "0xA3E17f3559E7520fEA3C87bBecb411C5199c359C",
+        "delegatorStakeBase": "30466629896901080622621"
+      },
+      {
+        "delegatorAddress": "0xC0aeA64654Af4A0b51A9e3B791cC2512E76d88d7",
+        "delegatorStakeBase": "131991596256674448284072"
+      },
+      {
+        "delegatorAddress": "0xC4e5B8Eb0ad9e04d27A1F223cED57a17D549a6D3",
+        "delegatorStakeBase": "45699944845351620933932"
+      },
+      {
+        "delegatorAddress": "0xe2279952dcc9Bc80307FAF048bDd80AFEd9ca663",
+        "delegatorStakeBase": "38662153339167471310107"
+      },
+      {
+        "delegatorAddress": "0xE23B5FD78c7230Ce4d1F414255789751f22F6d47",
+        "delegatorStakeBase": "76166574742252701556554"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 11,
+    "nodeName": "Synnax",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735170980"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d64786447576a527174453277646f616f5751464d7172555072736e466f4c4a3351634346444a336650745474",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 12,
+    "nodeName": "Oliwav",
+    "relativeNodePower": "90",
+    "relativeNodeHealth": "93",
+    "nodeStake": 2018014.5,
+    "nodeStakeAbsolute": "2018014504188067432515231",
+    "nodeAsk": 0.0016,
+    "nodeAskAbsolute": "1600000000000000",
+    "nodePublishingFactor": 23.89,
+    "delegatorsCount": 17,
+    "nodeOperatorFees": [["500", "1735170985"]],
+    "nodePower": "3985627580962238106",
+    "nodeHealth": "41",
+    "nodeId": "0x516d514865583966484e6a64425a78485674755551446451445132586e76786178644737593566676942696d4c51",
+    "computedNodeStake": "2018014504188067432515222",
+    "delegators": [
+      {
+        "delegatorAddress": "0xC40bcA6fB415A0e1307c56fCb12329e6A16A78be",
+        "delegatorStakeBase": "1722699367127025975342859"
+      },
+      {
+        "delegatorAddress": "0x874d218e6d28534D7aF5Ff97674BE65EDa375b18",
+        "delegatorStakeBase": "50667628444912528686554"
+      },
+      {
+        "delegatorAddress": "0x6Cf9518911F98Be2f9B655EFCECCB4e988a33935",
+        "delegatorStakeBase": "40193484556946253983895"
+      },
+      {
+        "delegatorAddress": "0x4C9BE7044779ff6713238Ad5Ce60298c78314C7a",
+        "delegatorStakeBase": "25333814222456264343"
+      },
+      {
+        "delegatorAddress": "0x2549393a45A63dc08Ecf6CB2C76710DcFC6832fD",
+        "delegatorStakeBase": "7093467982287754016117"
+      },
+      {
+        "delegatorAddress": "0x533cea0111Aad10CB8EbEdFCF992556A8Da1DAf1",
+        "delegatorStakeBase": "5624106757385290684207"
+      },
+      {
+        "delegatorAddress": "0x4d8AE772132CE83301e07457F12ea74B6DDccc93",
+        "delegatorStakeBase": "106028872917870907432999"
+      },
+      {
+        "delegatorAddress": "0xbC4474161cc3F712F4C5F0e5f481AC7A82fEd52f",
+        "delegatorStakeBase": "2026705137796501147462"
+      },
+      {
+        "delegatorAddress": "0xC5DC925205346AB8Cb774FECb316FD7AD7b78c6b",
+        "delegatorStakeBase": "21635615738196124302073"
+      },
+      {
+        "delegatorAddress": "0x961debf98Ecfc3085554Ff217d235CE1cb445Be9",
+        "delegatorStakeBase": "4461438969874407920722"
+      },
+      {
+        "delegatorAddress": "0xA058F05A1A54C7Fc473fe6169b5CB9E83Aa0A68f",
+        "delegatorStakeBase": "40330474307087282167533"
+      },
+      {
+        "delegatorAddress": "0x86dE4D5E5498b0d635c29E187d38C6f0bE76889A",
+        "delegatorStakeBase": "17226993671270259753428"
+      },
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "14213451423"
+      },
+      {
+        "delegatorAddress": "0x23852ad4213645013E5b073738A8514F88ecf5bE",
+        "delegatorStakeBase": "237510877747"
+      },
+      {
+        "delegatorAddress": "0x71D7d9836884ab6801160F3F12063B262f44fe7a",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x8CEA81b7F23a0F56Cd98A76cc9a82F2970bA1f7e",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "1014762939966483858"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 13,
+    "nodeName": "Cleon",
+    "relativeNodePower": "53",
+    "relativeNodeHealth": "15",
+    "nodeStake": 2007025.2,
+    "nodeStakeAbsolute": "2007025200320179890875933",
+    "nodeAsk": 0.00164,
+    "nodeAskAbsolute": "1640000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 15,
+    "nodeOperatorFees": [["500", "1735170995"]],
+    "nodePower": "2375892651108796977",
+    "nodeHealth": "7",
+    "nodeId": "0x516d61705379744545314c614b396b4d375059446569743871444d597068354c7679614742787845595669437235",
+    "computedNodeStake": "2007025200320179890875926",
+    "delegators": [
+      {
+        "delegatorAddress": "0x874d218e6d28534D7aF5Ff97674BE65EDa375b18",
+        "delegatorStakeBase": "410568824410324970530122"
+      },
+      {
+        "delegatorAddress": "0x9b3a67c038cD22c8eDa541061C213f3099650ea4",
+        "delegatorStakeBase": "10264220610258124263253"
+      },
+      {
+        "delegatorAddress": "0xe23A6B2ec7954704422afE8C4C422803928408bA",
+        "delegatorStakeBase": "51321103051290621316265"
+      },
+      {
+        "delegatorAddress": "0x48e3d72961360C382548D42bB4dDA346386Bf01c",
+        "delegatorStakeBase": "25660551525645310658132"
+      },
+      {
+        "delegatorAddress": "0xaA6Ac66852739b8B88F8e6605C0B0FA775D1eD61",
+        "delegatorStakeBase": "615853236615487455795"
+      },
+      {
+        "delegatorAddress": "0x7457667ee63BCa3c134f246af687091e7E259Bc2",
+        "delegatorStakeBase": "2073310977948479552431"
+      },
+      {
+        "delegatorAddress": "0x37D0Ab7f87c6790a53f6ac8Ab3950BC6f77Bb9Bd",
+        "delegatorStakeBase": "276760233425029011714068"
+      },
+      {
+        "delegatorAddress": "0x3F0C43a28e2fF930D194A42B97dFe2AE06C5F5Ec",
+        "delegatorStakeBase": "368583116090940577375458"
+      },
+      {
+        "delegatorAddress": "0x0E62bDC912A42367AE317ffD35C1b647c739C422",
+        "delegatorStakeBase": "31911041194594431334177"
+      },
+      {
+        "delegatorAddress": "0x22b750c56A1E6e20799d470A8949896DC3f55C45",
+        "delegatorStakeBase": "154065951359974445191428"
+      },
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xDd110F9167C16DB2F71D9F3a47D47988a5e530AD",
+        "delegatorStakeBase": "341230122489"
+      },
+      {
+        "delegatorAddress": "0xB939053577269eeb39bCeEa2b9f99DE05BA7668b",
+        "delegatorStakeBase": "338719280138518100687351"
+      },
+      {
+        "delegatorAddress": "0x6f4EbbbA78F679c5Eb4DDCB53D9051079113C5DE",
+        "delegatorStakeBase": "335980847665024894682661"
+      },
+      {
+        "delegatorAddress": "0xd1eFfD61437E29b12788F1914dA6Da3c98932352",
+        "delegatorStakeBase": "500866633674205992295"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 14,
+    "nodeName": "Sirius",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735171005"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d515962325a58773735674a4e76716f6270653867615970685a3742427551487847664667374a744b7261385a",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 15,
+    "nodeName": "Tyrann",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735171015"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a72524c697833614468756d53564778714d634d454c786152487835446d38744b62437842364579706a5536",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 16,
+    "nodeName": "Terminus",
+    "relativeNodePower": "45",
+    "relativeNodeHealth": "20",
+    "nodeStake": 2000000,
+    "nodeStakeAbsolute": "2000000000000000000000000",
+    "nodeAsk": 0.002528,
+    "nodeAskAbsolute": "2528000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 17,
+    "nodeOperatorFees": [["500", "1735171025"]],
+    "nodePower": "2008952099963693276",
+    "nodeHealth": "9",
+    "nodeId": "0x516d53346748635479636e7242505853747354713741774e417354337755536b735858546b726872355761705165",
+    "computedNodeStake": "1999999999999999999999992",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "586738305918656315379705"
+      },
+      {
+        "delegatorAddress": "0x48ED67C359E46D6AD9173de87D6e7f45B56de3A0",
+        "delegatorStakeBase": "1123160657405041662170500"
+      },
+      {
+        "delegatorAddress": "0x67BCF422Cf756d34f8abaeDe9082391e0f460374",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x70978f453C9ac86817bb4Ae2fE3Fb985F3aa5C0a",
+        "delegatorStakeBase": "79617297635137298753268"
+      },
+      {
+        "delegatorAddress": "0xC3Bd46c54286cD0BD386EEe8000AC3DB0cafad01",
+        "delegatorStakeBase": "50499694253059400549435"
+      },
+      {
+        "delegatorAddress": "0x48e3d72961360C382548D42bB4dDA346386Bf01c",
+        "delegatorStakeBase": "16847409861075624932557"
+      },
+      {
+        "delegatorAddress": "0xDA3C72d83B40acd5301d8fcF30bF6648B0e6401B",
+        "delegatorStakeBase": "513471836072298504745"
+      },
+      {
+        "delegatorAddress": "0x1F70AB7A96554F0cc1F6a4c57f2b244E8cBA2f92",
+        "delegatorStakeBase": "14171381528115014546062"
+      },
+      {
+        "delegatorAddress": "0x07cEae37D0Cff6BaEb729B885e36527Bd123baeb",
+        "delegatorStakeBase": "19999993739133671822572"
+      },
+      {
+        "delegatorAddress": "0x09F331CDDd8b2A3EAc1169e938133371c3fce528",
+        "delegatorStakeBase": "4774453849114522556644"
+      },
+      {
+        "delegatorAddress": "0xC6e93ef0F898626928fCB7f5c8563AfA3D303D8d",
+        "delegatorStakeBase": "2450904389615253268577"
+      },
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xA053d9d31596B505C7bA2129B31193A1C37473AF",
+        "delegatorStakeBase": "100063404023358257175190"
+      },
+      {
+        "delegatorAddress": "0x1EFf243Cc9f239E69Df647a2D2be0B536C3B42a0",
+        "delegatorStakeBase": "757527622810614090578"
+      },
+      {
+        "delegatorAddress": "0x24A69B6034EBbd70A215234e48E5A87515BDbeCd",
+        "delegatorStakeBase": "254242730630777612618"
+      },
+      {
+        "delegatorAddress": "0x98e7D41CB1822Fc5e86F41C0290561cfFCF87e99",
+        "delegatorStakeBase": "151255207894373793875"
+      },
+      {
+        "delegatorAddress": "0xf92aE35665eee1EC37Ea88FF7669f34Ac14a7C6c",
+        "delegatorStakeBase": "284914843664"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 17,
+    "nodeName": "Helicon",
+    "relativeNodePower": "62",
+    "relativeNodeHealth": "29",
+    "nodeStake": 1978605.49,
+    "nodeStakeAbsolute": "1978605495020786117910761",
+    "nodeAsk": 0.00161,
+    "nodeAskAbsolute": "1610000000000000",
+    "nodePublishingFactor": 6.25,
+    "delegatorsCount": 31,
+    "nodeOperatorFees": [["500", "1735171095"]],
+    "nodePower": "2755742530456333674",
+    "nodeHealth": "13",
+    "nodeId": "0x516d54676d634d554370734a6f6f6e7478744e754661704e43554e54565651345147364a4d34485a716259734a6a",
+    "computedNodeStake": "1978605495020786117910746",
+    "delegators": [
+      {
+        "delegatorAddress": "0x874d218e6d28534D7aF5Ff97674BE65EDa375b18",
+        "delegatorStakeBase": "416521937012330287998852"
+      },
+      {
+        "delegatorAddress": "0xC3Bd46c54286cD0BD386EEe8000AC3DB0cafad01",
+        "delegatorStakeBase": "17250000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x2B2616a7f474554Ac4DAc7b23d020b02525ab6BB",
+        "delegatorStakeBase": "31594391528756683078945"
+      },
+      {
+        "delegatorAddress": "0xfe8c1e0D733815Bdd889144ea721a39b44fdA866",
+        "delegatorStakeBase": "3000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x44B1baE7719350aaF9b91215332de4Eea239fE8a",
+        "delegatorStakeBase": "104130484253082571999713"
+      },
+      {
+        "delegatorAddress": "0xe58204e201456AC0c595f66Ab0aa35fB9C55D461",
+        "delegatorStakeBase": "26032126831380321703451"
+      },
+      {
+        "delegatorAddress": "0x6F4345bca4Ac638D80db7da11Cf735bFf189c2c8",
+        "delegatorStakeBase": "24983153005514772073735"
+      },
+      {
+        "delegatorAddress": "0xb7489f301092389CC327D90EFEAf18c253038951",
+        "delegatorStakeBase": "26032435025423152240258"
+      },
+      {
+        "delegatorAddress": "0xEb4F3983E82Fc975d87132aEE780E893eB8FEc08",
+        "delegatorStakeBase": "6178985624696433159530"
+      },
+      {
+        "delegatorAddress": "0x3008f3C33FeFB6f0FafD749caC0101F326A7cfb3",
+        "delegatorStakeBase": "11416818912605413045214"
+      },
+      {
+        "delegatorAddress": "0x48e3d72961360C382548D42bB4dDA346386Bf01c",
+        "delegatorStakeBase": "26032621063270642999928"
+      },
+      {
+        "delegatorAddress": "0xcAECfCD6CE3D265B947D28d6E84B7164595fFa7A",
+        "delegatorStakeBase": "15619572637962385799956"
+      },
+      {
+        "delegatorAddress": "0xcF3F1e9D688283C105CF8301EEcd905B23E9E807",
+        "delegatorStakeBase": "44417569138805356179170"
+      },
+      {
+        "delegatorAddress": "0xaA6Ac66852739b8B88F8e6605C0B0FA775D1eD61",
+        "delegatorStakeBase": "624782905518495431998"
+      },
+      {
+        "delegatorAddress": "0xB98bD08341Ea110088d2bCE3cA09Ac9AD18290Cf",
+        "delegatorStakeBase": "1517181155567413074035"
+      },
+      {
+        "delegatorAddress": "0xD75c8fdD2d14f53848ABD34c7c9748Dc3e78341A",
+        "delegatorStakeBase": "11454353267839082919968"
+      },
+      {
+        "delegatorAddress": "0x476Bb16B25D552485Bb1E2441Aa06bD329d903BE",
+        "delegatorStakeBase": "5282658131697578217600"
+      },
+      {
+        "delegatorAddress": "0xaDB1a76cdAc5F9440DCaB127f99af52ab4b996Af",
+        "delegatorStakeBase": "3673000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x3f203b41906C0d099Dc82b7C71aDc27De4323001",
+        "delegatorStakeBase": "58565776459074342773"
+      },
+      {
+        "delegatorAddress": "0x613f0B91a8e9eBCb8ddd527136bc21CaaD2c4981",
+        "delegatorStakeBase": "1731744060384453571677"
+      },
+      {
+        "delegatorAddress": "0x37D0Ab7f87c6790a53f6ac8Ab3950BC6f77Bb9Bd",
+        "delegatorStakeBase": "733342965598079005521398"
+      },
+      {
+        "delegatorAddress": "0x3F0C43a28e2fF930D194A42B97dFe2AE06C5F5Ec",
+        "delegatorStakeBase": "146719852312593343947595"
+      },
+      {
+        "delegatorAddress": "0x22b750c56A1E6e20799d470A8949896DC3f55C45",
+        "delegatorStakeBase": "130163105316353214999641"
+      },
+      {
+        "delegatorAddress": "0x10C7aaFb769BeC2Db2a872D9019d2C70F85a618c",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x12c7EE5CCaE17bf92ecd80933587F9b40430fcB1",
+        "delegatorStakeBase": "578496905268000228744"
+      },
+      {
+        "delegatorAddress": "0x4B096f14938a5BF00DDA4aE63fa5C079C658b8a8",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x51bC3dd10a9ee4946F961038CF5D50057E49eb77",
+        "delegatorStakeBase": "31238463910732643599112"
+      },
+      {
+        "delegatorAddress": "0x88E6F41c171c823c2e9242f9Ec4dBF8B544b39c0",
+        "delegatorStakeBase": "156195726379623857999569"
+      },
+      {
+        "delegatorAddress": "0xa38C19D25aD4001a901c1E2c9dF689C4BC14C222",
+        "delegatorStakeBase": "5185698115803512085585"
+      },
+      {
+        "delegatorAddress": "0xb7cb2610712E9c7b4DC21752E196B1D893944d13",
+        "delegatorStakeBase": "1023245519926260299"
+      },
+      {
+        "delegatorAddress": "0xce8453cc4200c37B25FEF3C8C90f544D1370e248",
+        "delegatorStakeBase": "624782905518495431998"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 18,
+    "nodeName": "otno_lars",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 8503.1,
+    "nodeStakeAbsolute": "8503100000000000000000",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 3,
+    "nodeOperatorFees": [["1500", "1735171105"]],
+    "nodePower": "36151354805000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d516f6f56334a36634e48337377475a6959654352504c445243777364734a63554e46506a516a583552577773",
+    "computedNodeStake": "8503100000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "3100000000000000000"
+      },
+      {
+        "delegatorAddress": "0xa423887Ff566144452d338DBC4E018daEBB28886",
+        "delegatorStakeBase": "7500000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xeF1718B4e84b47A63EC9fE66EB2A787b33C3989b",
+        "delegatorStakeBase": "1000000000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 19,
+    "nodeName": "Comporellon",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735171115"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d636b516b48514579725476464761546533544a4e52504a5279654754484661774b313539425752675547626d",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 20,
+    "nodeName": "Mallow",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0.5,
+    "nodeStakeAbsolute": "500000000000000000",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["500", "1735171120"]],
+    "nodePower": "125000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d615375314e54375235585953717659487778506d615042597a4b4d794266455669587442734a673959576165",
+    "computedNodeStake": "500000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0xCC5Ef20cfFe5c184892E9302d879b189f7c7da53",
+        "delegatorStakeBase": "500000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 21,
+    "nodeName": "Bailey",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735171130"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d514a586674754468443158454e546456683937435a45705142377a7050704d42535557525556674d59346d6d",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 22,
+    "nodeName": "Palver",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0.005,
+    "nodeAskAbsolute": "5000000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735171140"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d50545437523372774b5561774c4a784558776365725a66714332726b59577232755a6958556f366674466f53",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 23,
+    "nodeName": "AllKnower",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735171150"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5065733337625a36504b4450426d514e4a4338386443416b4345567845734b394875484679476b4e3552666d",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 24,
+    "nodeName": "Rhodia",
+    "relativeNodePower": "67",
+    "relativeNodeHealth": "68",
+    "nodeStake": 1999999.99,
+    "nodeStakeAbsolute": "1999999994172355160042797",
+    "nodeAsk": 0.00254,
+    "nodeAskAbsolute": "2540000000000000",
+    "nodePublishingFactor": 14.53,
+    "delegatorsCount": 13,
+    "nodeOperatorFees": [["500", "1735171155"]],
+    "nodePower": "2969019126387176895",
+    "nodeHealth": "30",
+    "nodeId": "0x516d627571447375374e75346f6f48585a7744747679457870776b6234743476724e39636f6651674d3463315676",
+    "computedNodeStake": "1999999994172355160042792",
+    "delegators": [
+      {
+        "delegatorAddress": "0x48ED67C359E46D6AD9173de87D6e7f45B56de3A0",
+        "delegatorStakeBase": "260212757513457394808609"
+      },
+      {
+        "delegatorAddress": "0x712Ee4a3b10f4598e00D0F85B88D827d493d0940",
+        "delegatorStakeBase": "76136081484504243339819"
+      },
+      {
+        "delegatorAddress": "0x2B2616a7f474554Ac4DAc7b23d020b02525ab6BB",
+        "delegatorStakeBase": "103671263794080665953372"
+      },
+      {
+        "delegatorAddress": "0x5EF5D89Ab637D941A82fC30872aBEBEC02D3e3F1",
+        "delegatorStakeBase": "16176864002428347115364"
+      },
+      {
+        "delegatorAddress": "0xe6B4ACcc6a58D5998ce7d0740E471e2cdE0d3cfA",
+        "delegatorStakeBase": "5183563189704033297668"
+      },
+      {
+        "delegatorAddress": "0xE8E5085A60E25Fd706D3e070551D5bFd958efFbb",
+        "delegatorStakeBase": "12713155243436215025529"
+      },
+      {
+        "delegatorAddress": "0x4b5FffA39fA909D0742F4A8242b765Ff3E7368Bc",
+        "delegatorStakeBase": "47356898528493115902634"
+      },
+      {
+        "delegatorAddress": "0xC6e93ef0F898626928fCB7f5c8563AfA3D303D8d",
+        "delegatorStakeBase": "6223509999999999999999"
+      },
+      {
+        "delegatorAddress": "0x7eE578D876f9Ef1d1deB2678AD9538e9a0ca4db0",
+        "delegatorStakeBase": "1989140538417025737647"
+      },
+      {
+        "delegatorAddress": "0xBdd13FdCAC67C73f167C30A90A51BD93e22F7241",
+        "delegatorStakeBase": "2700000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x873b0D0b5dE0cCA15a7E7406Bc573eb4E4F567EF",
+        "delegatorStakeBase": "25917815948520166488343"
+      },
+      {
+        "delegatorAddress": "0x22b750c56A1E6e20799d470A8949896DC3f55C45",
+        "delegatorStakeBase": "233260343536681498395088"
+      },
+      {
+        "delegatorAddress": "0x7b861eD96cBD628948F83fB097fB6433ca841545",
+        "delegatorStakeBase": "1208458600392632453978720"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 25,
+    "nodeName": "Terel",
+    "relativeNodePower": "52",
+    "relativeNodeHealth": "88",
+    "nodeStake": 2000000,
+    "nodeStakeAbsolute": "2000000009934490630568078",
+    "nodeAsk": 0.00172,
+    "nodeAskAbsolute": "1720000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 7,
+    "nodeOperatorFees": [["500", "1735171160"]],
+    "nodePower": "2320798153900887996",
+    "nodeHealth": "39",
+    "nodeId": "0x516d6561654c7051454e4b356548484d46364b74356971654674714144563876557a6370336a5965536768435179",
+    "computedNodeStake": "2000000009934490630568075",
+    "delegators": [
+      {
+        "delegatorAddress": "0xf19FdC795C314f1934210c5e60c0703C16866F7B",
+        "delegatorStakeBase": "25247225015790415121859"
+      },
+      {
+        "delegatorAddress": "0x6Cf9518911F98Be2f9B655EFCECCB4e988a33935",
+        "delegatorStakeBase": "61860565366077349288836"
+      },
+      {
+        "delegatorAddress": "0x31637faCEfbb72bA93679e282378148d18bd4276",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x2ca389EB130Ca46A49557b054584423a12175146",
+        "delegatorStakeBase": "135742078937584636881336"
+      },
+      {
+        "delegatorAddress": "0x5CD5A90c589e7bf5c939704CE7e36653bc92679f",
+        "delegatorStakeBase": "1777150140615038229276041"
+      },
+      {
+        "delegatorAddress": "0xC78912C51453b5A662411fbE86fc10b3AF3a0aAA",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 26,
+    "nodeName": "OTHub",
+    "relativeNodePower": "36",
+    "relativeNodeHealth": "29",
+    "nodeStake": 1787347.9,
+    "nodeStakeAbsolute": "1787347907833754950921424",
+    "nodeAsk": 0.0025,
+    "nodeAskAbsolute": "2500000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 59,
+    "nodeOperatorFees": [["1000", "1735171170"]],
+    "nodePower": "1608310121949268528",
+    "nodeHealth": "13",
+    "nodeId": "0x516d57753339315132336842785a6d7470384b4256625973646a4b77517042754b35574e77714e4d465a645a6848",
+    "computedNodeStake": "1787347907833754950921390",
+    "delegators": [
+      {
+        "delegatorAddress": "0x48ED67C359E46D6AD9173de87D6e7f45B56de3A0",
+        "delegatorStakeBase": "50393573103422488946141"
+      },
+      {
+        "delegatorAddress": "0xf19FdC795C314f1934210c5e60c0703C16866F7B",
+        "delegatorStakeBase": "85650835347920496885516"
+      },
+      {
+        "delegatorAddress": "0x18405396C4CEc8447e74D408faBEF1A9C2dC6269",
+        "delegatorStakeBase": "100140198421982945293213"
+      },
+      {
+        "delegatorAddress": "0x6Cf9518911F98Be2f9B655EFCECCB4e988a33935",
+        "delegatorStakeBase": "74580861500000000000000"
+      },
+      {
+        "delegatorAddress": "0xC3Bd46c54286cD0BD386EEe8000AC3DB0cafad01",
+        "delegatorStakeBase": "52356000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x067a421166C931DB7204bC3008e16983C1028Eb8",
+        "delegatorStakeBase": "42601820376163837217461"
+      },
+      {
+        "delegatorAddress": "0x4C9BE7044779ff6713238Ad5Ce60298c78314C7a",
+        "delegatorStakeBase": "7607974923366668146250"
+      },
+      {
+        "delegatorAddress": "0x69Ec70645D69A75D21b6b3d4c40363131C1E30E6",
+        "delegatorStakeBase": "50924421820212075564032"
+      },
+      {
+        "delegatorAddress": "0xdFf199C986eca54263b031c1528E3C2C77A293d6",
+        "delegatorStakeBase": "70374680905185763446928"
+      },
+      {
+        "delegatorAddress": "0x7232Af3552C83E646E4A43368CCDe98c4433533f",
+        "delegatorStakeBase": "118499996330968243763191"
+      },
+      {
+        "delegatorAddress": "0x98A96425b337c80bC9E2BD493A65e7546be8DAaE",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x7556E6208491Aa331026dd781AdE541cABBFA176",
+        "delegatorStakeBase": "50381155897274098530628"
+      },
+      {
+        "delegatorAddress": "0x1cb3b88FA6C79E4cC3163a04d5ae7862b600E55B",
+        "delegatorStakeBase": "6497371549535842709802"
+      },
+      {
+        "delegatorAddress": "0x34446D2b12bCb468403386Be511EA857e41d5C04",
+        "delegatorStakeBase": "185000800570617124961257"
+      },
+      {
+        "delegatorAddress": "0xe23A6B2ec7954704422afE8C4C422803928408bA",
+        "delegatorStakeBase": "54834780369367480462983"
+      },
+      {
+        "delegatorAddress": "0x48e3d72961360C382548D42bB4dDA346386Bf01c",
+        "delegatorStakeBase": "25446942744459362164717"
+      },
+      {
+        "delegatorAddress": "0x0Dff74d0E2Ba5AC1e8Eb10E22e795003CC5Bfad3",
+        "delegatorStakeBase": "50893885488918724329435"
+      },
+      {
+        "delegatorAddress": "0x95FE996AF6d08933b563b198c3a9bFE91C61C4e9",
+        "delegatorStakeBase": "30522999999999999999998"
+      },
+      {
+        "delegatorAddress": "0xDA3C72d83B40acd5301d8fcF30bF6648B0e6401B",
+        "delegatorStakeBase": "6367842952373510788098"
+      },
+      {
+        "delegatorAddress": "0x4cBD07e1b723eC2334c5c33dFC92DA94cbF8994C",
+        "delegatorStakeBase": "29999995452730546741080"
+      },
+      {
+        "delegatorAddress": "0xcAECfCD6CE3D265B947D28d6E84B7164595fFa7A",
+        "delegatorStakeBase": "1017877709778374486588"
+      },
+      {
+        "delegatorAddress": "0x50cB01E6998192c40367637fEB61ce6Cff575214",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xF99F7ec305ba1bAefA8879ef93CeDECfaD0815D7",
+        "delegatorStakeBase": "10178777097783744865887"
+      },
+      {
+        "delegatorAddress": "0xaA6Ac66852739b8B88F8e6605C0B0FA775D1eD61",
+        "delegatorStakeBase": "803855778346265869784"
+      },
+      {
+        "delegatorAddress": "0x7A0B2557b94E65d8BF16E3511f2bB9AAF62D33d1",
+        "delegatorStakeBase": "20357554195567489731774"
+      },
+      {
+        "delegatorAddress": "0x95420C8F22c95E94F0c443d4c075B819644014b0",
+        "delegatorStakeBase": "1015495782592695201430"
+      },
+      {
+        "delegatorAddress": "0xe9eCE9221c6DDBCf943f84436D60f15879F3Bb2e",
+        "delegatorStakeBase": "221011545854"
+      },
+      {
+        "delegatorAddress": "0x8862dc6Ed689996Bed3783ACAaB21e0c81B6d305",
+        "delegatorStakeBase": "12004581913210649954035"
+      },
+      {
+        "delegatorAddress": "0x691447B33b309a15AaE73F0209159c61b59eddf7",
+        "delegatorStakeBase": "30200000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xBf0b7bCb58ed411F702526c5307760d38a7682CE",
+        "delegatorStakeBase": "974108968257904383665"
+      },
+      {
+        "delegatorAddress": "0xC6e93ef0F898626928fCB7f5c8563AfA3D303D8d",
+        "delegatorStakeBase": "3827561856113564102422"
+      },
+      {
+        "delegatorAddress": "0xD6926Be19705147Adf5F4fb06322a5b46ba3a9cC",
+        "delegatorStakeBase": "2544694274445936216471"
+      },
+      {
+        "delegatorAddress": "0xAB543DfFa0E9EB2F8ED3A46aF9e9923fA4B168A1",
+        "delegatorStakeBase": "20261630000000000000000"
+      },
+      {
+        "delegatorAddress": "0x3f203b41906C0d099Dc82b7C71aDc27De4323001",
+        "delegatorStakeBase": "37656343958048752064390"
+      },
+      {
+        "delegatorAddress": "0x613f0B91a8e9eBCb8ddd527136bc21CaaD2c4981",
+        "delegatorStakeBase": "258811136048"
+      },
+      {
+        "delegatorAddress": "0xBA39CB790834d441e625f5E361D0366fa7C1603e",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB69d57ECDa4CEfFaEf277A98023777AF34aaa995",
+        "delegatorStakeBase": "11582914758120000000000"
+      },
+      {
+        "delegatorAddress": "0xCce967d8F21B62C5Eb3Fc5040C1677eF4CDE54Ba",
+        "delegatorStakeBase": "1077665418408636914556"
+      },
+      {
+        "delegatorAddress": "0x2284FB05B06133cEda72A81036b48c188aABd0dD",
+        "delegatorStakeBase": "5000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x37D0Ab7f87c6790a53f6ac8Ab3950BC6f77Bb9Bd",
+        "delegatorStakeBase": "75286953897136155705016"
+      },
+      {
+        "delegatorAddress": "0x0E62bDC912A42367AE317ffD35C1b647c739C422",
+        "delegatorStakeBase": "54222407279664660134023"
+      },
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "323144373145356716"
+      },
+      {
+        "delegatorAddress": "0xf46cd09FC1aEC116a10A1092f78d2c3da02547f2",
+        "delegatorStakeBase": "19304931708949907546863"
+      },
+      {
+        "delegatorAddress": "0x4366CdBFD0D5797E229103529C2db4ADcfd755F1",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB939053577269eeb39bCeEa2b9f99DE05BA7668b",
+        "delegatorStakeBase": "305363312933512345976610"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "100633912827967032"
+      },
+      {
+        "delegatorAddress": "0x6f4EbbbA78F679c5Eb4DDCB53D9051079113C5DE",
+        "delegatorStakeBase": "57245573376583111601663"
+      },
+      {
+        "delegatorAddress": "0x65Aa35353Fe7a6beaeAAbA1b46E3fD5B0816d4C5",
+        "delegatorStakeBase": "2035755419556748973177"
+      },
+      {
+        "delegatorAddress": "0x6d6C1F43d4A94ce113bbE82655F24fAF94F1D478",
+        "delegatorStakeBase": "63804820127"
+      },
+      {
+        "delegatorAddress": "0x7C791910960d0fa63e3B6C9dd54DCbf4A9c6C69f",
+        "delegatorStakeBase": "1476939968039813475742"
+      },
+      {
+        "delegatorAddress": "0x9157E2B9c9b8bA52c14E178ea08bA0ba2a184d9A",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xa8D3d6889053e880f57638Ac71dB049ba7C404ba",
+        "delegatorStakeBase": "5502593867633213021187"
+      },
+      {
+        "delegatorAddress": "0xbE2488EE9c4B4F5b357b511b70BBE2fbac321DaD",
+        "delegatorStakeBase": "5830403521610529059180"
+      },
+      {
+        "delegatorAddress": "0xc4bE47fF997157eA1A869cE1442ECA889121BCf3",
+        "delegatorStakeBase": "259846949745313130167"
+      },
+      {
+        "delegatorAddress": "0xD250fcfA9D50692F88913b0d14B8381a0e7C3E25",
+        "delegatorStakeBase": "498760077791403498428"
+      },
+      {
+        "delegatorAddress": "0xDE704a64C1C5c35EebFAB2906F3081cE6355ae2c",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xE86C25e6D4a9780A49095bE1DAdBeF890D218129",
+        "delegatorStakeBase": "4689903284570625"
+      },
+      {
+        "delegatorAddress": "0xF7B8BfB1c2d7185Bd804584D15104B71b695840C",
+        "delegatorStakeBase": "8740800899625639661193"
+      },
+      {
+        "delegatorAddress": "0xFb965e02dD06121DB86416774c78b176805E0eEc",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 27,
+    "nodeName": "OTHub2",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "20",
+    "nodeStake": 205354.67,
+    "nodeStakeAbsolute": "205354671241684674106998",
+    "nodeAsk": 0.0025,
+    "nodeAskAbsolute": "2500000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 64,
+    "nodeOperatorFees": [["1000", "1735171180"]],
+    "nodePower": "22349541443960151",
+    "nodeHealth": "9",
+    "nodeId": "0x516d61564258417a53486453656d585353483578333543386658794a6b5448324b4c4c4675547139433176796678",
+    "computedNodeStake": "205354671241684674106977",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "99252415643876357146077"
+      },
+      {
+        "delegatorAddress": "0x6447B9B40536436b42424A984876d7e3B858F8f7",
+        "delegatorStakeBase": "5000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x67BCF422Cf756d34f8abaeDe9082391e0f460374",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x6Cf9518911F98Be2f9B655EFCECCB4e988a33935",
+        "delegatorStakeBase": "235594382388"
+      },
+      {
+        "delegatorAddress": "0x63d28071c1574277b5Fd8F11886aDe869A660Fc9",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x31637faCEfbb72bA93679e282378148d18bd4276",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x44B1baE7719350aaF9b91215332de4Eea239fE8a",
+        "delegatorStakeBase": "983482472150955"
+      },
+      {
+        "delegatorAddress": "0x7232Af3552C83E646E4A43368CCDe98c4433533f",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x984e58e26985a24ecF7B424281A230B26dC81dD5",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xb7489f301092389CC327D90EFEAf18c253038951",
+        "delegatorStakeBase": "461284025461551268"
+      },
+      {
+        "delegatorAddress": "0xD28B3107724E066264F735ffedAAD0d5f35a426c",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x14D761b2c84d99c2b9f8aF3206dd8D764ed89D81",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x3008f3C33FeFB6f0FafD749caC0101F326A7cfb3",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x0Dff74d0E2Ba5AC1e8Eb10E22e795003CC5Bfad3",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xe73F65cC6d98da84A875158648Df19ef048a71f9",
+        "delegatorStakeBase": "1137591825765844023023"
+      },
+      {
+        "delegatorAddress": "0xDA3C72d83B40acd5301d8fcF30bF6648B0e6401B",
+        "delegatorStakeBase": "32867083715"
+      },
+      {
+        "delegatorAddress": "0x29Cc51EAA144fdB97c8a073a3Ea208ad14F7142F",
+        "delegatorStakeBase": "4134864268051825231223"
+      },
+      {
+        "delegatorAddress": "0x36c15170088e6867Fb2D3B14dd7E05dFdd6D7f0F",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x7A0B2557b94E65d8BF16E3511f2bB9AAF62D33d1",
+        "delegatorStakeBase": "30418580797482297976349"
+      },
+      {
+        "delegatorAddress": "0x23a881E335A116e8edf04AD2c254ED10Ce489ABF",
+        "delegatorStakeBase": "499999999999999999999"
+      },
+      {
+        "delegatorAddress": "0x5ab911005B61d26420278f97f8694b59d1501Ba8",
+        "delegatorStakeBase": "103670762599819556315"
+      },
+      {
+        "delegatorAddress": "0xD75c8fdD2d14f53848ABD34c7c9748Dc3e78341A",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x851A88571Af500482399CC2CC69d9edD48332638",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xc2a4d6D2CDdd3280ff22440cab6C3E44d4F774D9",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xC6e93ef0F898626928fCB7f5c8563AfA3D303D8d",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xeEC02832CdbD8A88267094B73e56a7E6d9CB8c6A",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xdC5387E655781d2C83067169E3cf395D8202F4d4",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x873b0D0b5dE0cCA15a7E7406Bc573eb4E4F567EF",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x3902F114088AC61B054EE5904c390183aBACb2b1",
+        "delegatorStakeBase": "32272108532364369447482"
+      },
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "200361728723166629"
+      },
+      {
+        "delegatorAddress": "0x39DcaAfa2ebF43E8822a7Ad308b26Ec2A06CdcbA",
+        "delegatorStakeBase": "17341335993569330"
+      },
+      {
+        "delegatorAddress": "0xe6F432a24657324625caA044cE3767aAD1d0A550",
+        "delegatorStakeBase": "22658449873"
+      },
+      {
+        "delegatorAddress": "0x23852ad4213645013E5b073738A8514F88ecf5bE",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "30029828507090592"
+      },
+      {
+        "delegatorAddress": "0x4B096f14938a5BF00DDA4aE63fa5C079C658b8a8",
+        "delegatorStakeBase": "595975296568"
+      },
+      {
+        "delegatorAddress": "0x51bC3dd10a9ee4946F961038CF5D50057E49eb77",
+        "delegatorStakeBase": "485543923151"
+      },
+      {
+        "delegatorAddress": "0xC78912C51453b5A662411fbE86fc10b3AF3a0aAA",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xc4bE47fF997157eA1A869cE1442ECA889121BCf3",
+        "delegatorStakeBase": "252125847909096636308"
+      },
+      {
+        "delegatorAddress": "0xFb965e02dD06121DB86416774c78b176805E0eEc",
+        "delegatorStakeBase": "667127870434"
+      },
+      {
+        "delegatorAddress": "0x006897E52eccDC802E7C19C88518b338f93BB2A8",
+        "delegatorStakeBase": "6913197"
+      },
+      {
+        "delegatorAddress": "0x0C00aE63e531F01daaC080fbD53b4Ef7E7bdD422",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x245F18b5d23d8a37412438d6C2C81eFbe59673f0",
+        "delegatorStakeBase": "142804576046"
+      },
+      {
+        "delegatorAddress": "0x2828bFC9bCC2670316827CbffcB49e8e5604d741",
+        "delegatorStakeBase": "980960709949135157"
+      },
+      {
+        "delegatorAddress": "0x399f26e0A3D9E223c7437c6AaBDABc57b5A838cB",
+        "delegatorStakeBase": "5034365859703500268504"
+      },
+      {
+        "delegatorAddress": "0x45Bb1B43D178628a436D447e08E3cc044C737534",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x497583C2124441CB9387AdC81759fC0950Cb6eD8",
+        "delegatorStakeBase": "103752138251"
+      },
+      {
+        "delegatorAddress": "0x4d2c06203125ca34e067C39b7178FeA6F1D1504c",
+        "delegatorStakeBase": "375398939068"
+      },
+      {
+        "delegatorAddress": "0x502d629728b9C461726BEEe240F89c5D82c5f1C5",
+        "delegatorStakeBase": "169656020287"
+      },
+      {
+        "delegatorAddress": "0x50A3c110fC546Fa9A6a3762Aa97CFFDFa106EF53",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x5A9b15aC8395293Fe22AF77c9297d1C4c71a4E07",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x6C971778A43dA24BD583A4256da91E020BE707aB",
+        "delegatorStakeBase": "192121425156973"
+      },
+      {
+        "delegatorAddress": "0x7588EeE2109b499d2019c8d419E8326E4F54f3e0",
+        "delegatorStakeBase": "6889087271966345891338"
+      },
+      {
+        "delegatorAddress": "0x7c7406263754fD33c365AdCff20C0C50f2417204",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x8757406c293Bdf16A19aa3f97e7D4139797d4cCB",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x880E0b51Ead542e182dF85A74972e0cC066E7b87",
+        "delegatorStakeBase": "46543769348044436"
+      },
+      {
+        "delegatorAddress": "0x887cc8B84CbE6ccca60697A629B038a2c686AFFF",
+        "delegatorStakeBase": "5242201089105704280951"
+      },
+      {
+        "delegatorAddress": "0x8d6FC7C57871Aef0Aa3A2A465301aF5EC20A54eb",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x94B07C199b03Ec7DcE98795899C5D08099A25E1F",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x9D41ecceDD6911C60c523D528a326f0DC2b59F4e",
+        "delegatorStakeBase": "20110748265417411325064"
+      },
+      {
+        "delegatorAddress": "0x9F16BBe53cd85E44D5e83CaF7421316F7e81C8CF",
+        "delegatorStakeBase": "168202985077760795"
+      },
+      {
+        "delegatorAddress": "0xa84d3681260939166674043992530Dc053D32911",
+        "delegatorStakeBase": "295305037671"
+      },
+      {
+        "delegatorAddress": "0xb45715a2ECe9715B764e7084718D793e371678F5",
+        "delegatorStakeBase": "5173961636609982"
+      },
+      {
+        "delegatorAddress": "0xbF49B454818783D12Bf4f3375ff17C59015e66Cb",
+        "delegatorStakeBase": "366817457550"
+      },
+      {
+        "delegatorAddress": "0xDE4e78aCAA067E90A9BE621daC6469B6ec1e73A3",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 28,
+    "nodeName": "OTHub.io",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0.5,
+    "nodeStakeAbsolute": "500000000000000000",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["10000", "1735171190"]],
+    "nodePower": "125000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5033724e6761637358444d776146774e42525964545738536565726d59617451776d357a6e4d4b56576e6450",
+    "computedNodeStake": "500000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "500000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 29,
+    "nodeName": "ommm",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 1,
+    "nodeStakeAbsolute": "1000000000000000000",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["400", "1735171200"]],
+    "nodePower": "500000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d596136614579473752573331336734736f416d5571595132554d796861657645476b5836333963764c4b6270",
+    "computedNodeStake": "1000000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "1000000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 30,
+    "nodeName": "hotnode1",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735171210"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5337714b68776b4755506a34487445546962446d535367753546734e624b78745759726e4c47456768714b35",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 31,
+    "nodeName": "hotnode2",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735171220"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a46664169554b46535555673565595231717a58696136374c596a6d3634706462523962755254647964384e",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 32,
+    "nodeName": ")><{{{.______)",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 52266.3,
+    "nodeStakeAbsolute": "52266305758109627151143",
+    "nodeAsk": 0.002,
+    "nodeAskAbsolute": "2000000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 9,
+    "nodeOperatorFees": [
+      ["300", "1735171230"],
+      ["500", "1739070180"]
+    ],
+    "nodePower": "5608122877508472",
+    "nodeHealth": "0",
+    "nodeId": "0x516d63366f506150464633615467617079726b785644366b754a63333274365664706f4a5954613465584e4e6539",
+    "computedNodeStake": "52266305758109627151136",
+    "delegators": [
+      {
+        "delegatorAddress": "0x95FE996AF6d08933b563b198c3a9bFE91C61C4e9",
+        "delegatorStakeBase": "8780701481824437189134"
+      },
+      {
+        "delegatorAddress": "0xDA3C72d83B40acd5301d8fcF30bF6648B0e6401B",
+        "delegatorStakeBase": "30458201672999999999998"
+      },
+      {
+        "delegatorAddress": "0x2e1b1e1E91318Ea5a6A122b4F5bf07c562C59301",
+        "delegatorStakeBase": "644706830142041342846"
+      },
+      {
+        "delegatorAddress": "0xaF0F64222A720840BeFD808e71f24365c3c66422",
+        "delegatorStakeBase": "536707625998195563"
+      },
+      {
+        "delegatorAddress": "0xe1abC585a258454095357442E2A709F980D4e6fA",
+        "delegatorStakeBase": "100000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x22b908c2FeA7a1e6043FfcDBc77D660D4D326961",
+        "delegatorStakeBase": "10381559065517150423595"
+      },
+      {
+        "delegatorAddress": "0x23a881E335A116e8edf04AD2c254ED10Ce489ABF",
+        "delegatorStakeBase": "500000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x0e54b1913426aD5588DD9363eCf80ABd288A4a89",
+        "delegatorStakeBase": "400600000000000000000"
+      },
+      {
+        "delegatorAddress": "0xCce967d8F21B62C5Eb3Fc5040C1677eF4CDE54Ba",
+        "delegatorStakeBase": "1000000000000000000000"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 33,
+    "nodeName": "LOAFCAT",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0.22,
+    "nodeStakeAbsolute": "221722009635242424",
+    "nodeAsk": 0.0026,
+    "nodeAskAbsolute": "2600000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [
+      ["0", "1735171240"],
+      ["10000", "1741971020"]
+    ],
+    "nodePower": "306472728",
+    "nodeHealth": "0",
+    "nodeId": "0x516d64764c6253326d6d556f34625633475052387661437731707943644441434161787171594c33696444786742",
+    "computedNodeStake": "221722009635242418",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3078C02fdf27A008BFb7eeEA3Cd5776acC892612",
+        "delegatorStakeBase": "221722009635242418"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 34,
+    "nodeName": "SwiftNodes",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0.5,
+    "nodeStakeAbsolute": "500000000000000000",
+    "nodeAsk": 0.003333333,
+    "nodeAskAbsolute": "3333333333333333",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["500", "1735171250"]],
+    "nodePower": "125000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5546474344514e574b6576516877387139343478773232375a3964674655345458626b764e45784a6e67524e",
+    "computedNodeStake": "500000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "500000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 35,
+    "nodeName": "Metcalfe, Hook 'em Horns",
+    "relativeNodePower": "45",
+    "relativeNodeHealth": "100",
+    "nodeStake": 2016899.23,
+    "nodeStakeAbsolute": "2016899233118969964934010",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 4,
+    "nodeOperatorFees": [["1500", "1735171260"]],
+    "nodePower": "2000000000000000000",
+    "nodeHealth": "44",
+    "nodeId": "0x516d537a47615455753956543757644a637958393353487355447158706e414746785751386a645a4c636e724c35",
+    "computedNodeStake": "2016899233118969964934008",
+    "delegators": [
+      {
+        "delegatorAddress": "0x22b750c56A1E6e20799d470A8949896DC3f55C45",
+        "delegatorStakeBase": "518648242109871784249580"
+      },
+      {
+        "delegatorAddress": "0x6f4EbbbA78F679c5Eb4DDCB53D9051079113C5DE",
+        "delegatorStakeBase": "691927178099807419911225"
+      },
+      {
+        "delegatorAddress": "0x7b861eD96cBD628948F83fB097fB6433ca841545",
+        "delegatorStakeBase": "657990415665867430477823"
+      },
+      {
+        "delegatorAddress": "0x0822c61A35614cF3acf5978ad82EC0fF61a07Bcb",
+        "delegatorStakeBase": "148333397243423330295380"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 36,
+    "nodeName": "TRAC_PRINTER",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 2.86,
+    "nodeStakeAbsolute": "2863950000000000000",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["9900", "1735171270"]],
+    "nodePower": "4101104",
+    "nodeHealth": "0",
+    "nodeId": "0x516d627a76674c7748447771697544335a34754866794a6a6d554554465044466334787559647372785356695632",
+    "computedNodeStake": "2863950000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x4609FFD1D9Bc8ebeeb048834721dbe43e420E528",
+        "delegatorStakeBase": "2863950000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 37,
+    "nodeName": "OTHub3",
+    "relativeNodePower": "45",
+    "relativeNodeHealth": "25",
+    "nodeStake": 1999999.99,
+    "nodeStakeAbsolute": "1999999997529035755154648",
+    "nodeAsk": 0.0025,
+    "nodeAskAbsolute": "2500000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 52,
+    "nodeOperatorFees": [["1000", "1735171275"]],
+    "nodePower": "2012313042863251778",
+    "nodeHealth": "11",
+    "nodeId": "0x516d5432567a67446d426d77376f4b79396d74536246446b464b6f7931546446484132783747346a69564d4a5671",
+    "computedNodeStake": "1999999997529035755154629",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "1093627991281899236599127"
+      },
+      {
+        "delegatorAddress": "0x70AF35BdFfe4b2d98824d1dB6022525EF65FFaFd",
+        "delegatorStakeBase": "39884792915819512264296"
+      },
+      {
+        "delegatorAddress": "0xb43C5279E3B5322d8cBFB617Be310c37870Bb8Cb",
+        "delegatorStakeBase": "63364456512682432987317"
+      },
+      {
+        "delegatorAddress": "0x175437b00dA09f18D89571b95a41a15Aa8415Eba",
+        "delegatorStakeBase": "37842307423292914373982"
+      },
+      {
+        "delegatorAddress": "0x6F4345bca4Ac638D80db7da11Cf735bFf189c2c8",
+        "delegatorStakeBase": "96065852553124978813402"
+      },
+      {
+        "delegatorAddress": "0xBCdAf14F7966522ca3A8A282aa3A13b1772D1dCA",
+        "delegatorStakeBase": "5095799219086659527241"
+      },
+      {
+        "delegatorAddress": "0x984e58e26985a24ecF7B424281A230B26dC81dD5",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x896930E77cdF937b26aD5fA0f8E5957616F496e2",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x3008f3C33FeFB6f0FafD749caC0101F326A7cfb3",
+        "delegatorStakeBase": "17400325381469841373152"
+      },
+      {
+        "delegatorAddress": "0x95FE996AF6d08933b563b198c3a9bFE91C61C4e9",
+        "delegatorStakeBase": "4123607548259253084175"
+      },
+      {
+        "delegatorAddress": "0xDA3C72d83B40acd5301d8fcF30bF6648B0e6401B",
+        "delegatorStakeBase": "3584934263605601194324"
+      },
+      {
+        "delegatorAddress": "0x02c39cC9dc7b63Ab6fdAC41F905dCD5113cf01B0",
+        "delegatorStakeBase": "50483170681572415458840"
+      },
+      {
+        "delegatorAddress": "0x1F70AB7A96554F0cc1F6a4c57f2b244E8cBA2f92",
+        "delegatorStakeBase": "1081469178223751"
+      },
+      {
+        "delegatorAddress": "0xD44976676b7928c3430bB3D68c4a909ff6d7856B",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x29Cc51EAA144fdB97c8a073a3Ea208ad14F7142F",
+        "delegatorStakeBase": "4139619995888938067624"
+      },
+      {
+        "delegatorAddress": "0x4cBD07e1b723eC2334c5c33dFC92DA94cbF8994C",
+        "delegatorStakeBase": "30000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xe304666CBbF6f836Fb97F235999b17352b74Cac7",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x3B2998a618b2a87F8EE67ef7b4C870F3Cd4d31D8",
+        "delegatorStakeBase": "20193666403106229336233"
+      },
+      {
+        "delegatorAddress": "0x58214ca260a6344C0CA8F465CD33Cd516fe5A3F7",
+        "delegatorStakeBase": "17540717595711504087330"
+      },
+      {
+        "delegatorAddress": "0x38df5EaB959095F4589686f4D725c7d0a7ba8F75",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xcF3F1e9D688283C105CF8301EEcd905B23E9E807",
+        "delegatorStakeBase": "48853740707023060681198"
+      },
+      {
+        "delegatorAddress": "0x3e23706eba2703a61694460E3B6a845758AEC896",
+        "delegatorStakeBase": "438971856106"
+      },
+      {
+        "delegatorAddress": "0x95bf08839Ca5fA3d41f66719d5582293DeF70454",
+        "delegatorStakeBase": "12904168406741006396587"
+      },
+      {
+        "delegatorAddress": "0x4b5FffA39fA909D0742F4A8242b765Ff3E7368Bc",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x38f7f812B7b08DE4aDd709c98A4891F08ddD5666",
+        "delegatorStakeBase": "21687941329774208125375"
+      },
+      {
+        "delegatorAddress": "0x851A88571Af500482399CC2CC69d9edD48332638",
+        "delegatorStakeBase": "3018422163108879641855"
+      },
+      {
+        "delegatorAddress": "0xc2a4d6D2CDdd3280ff22440cab6C3E44d4F774D9",
+        "delegatorStakeBase": "8049125768290345711615"
+      },
+      {
+        "delegatorAddress": "0x34DB6BbBC86BfB7c875bD72E4D2F075e9f9795c9",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xf70A6BEf1918334bAd085E09f50237E10A45B220",
+        "delegatorStakeBase": "807184145315372475339"
+      },
+      {
+        "delegatorAddress": "0x0e54b1913426aD5588DD9363eCf80ABd288A4a89",
+        "delegatorStakeBase": "100000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x3af16178664DD4b2500C9D02c53347e86B3e7873",
+        "delegatorStakeBase": "22068000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x3902F114088AC61B054EE5904c390183aBACb2b1",
+        "delegatorStakeBase": "8077307309051586473414"
+      },
+      {
+        "delegatorAddress": "0x3e7aa069b179ceb803d2c63B32532d8936545Caa",
+        "delegatorStakeBase": "504831706815724154588"
+      },
+      {
+        "delegatorAddress": "0x37D0Ab7f87c6790a53f6ac8Ab3950BC6f77Bb9Bd",
+        "delegatorStakeBase": "2980830000000000000000"
+      },
+      {
+        "delegatorAddress": "0x3F0C43a28e2fF930D194A42B97dFe2AE06C5F5Ec",
+        "delegatorStakeBase": "5025307851528144293"
+      },
+      {
+        "delegatorAddress": "0x0E62bDC912A42367AE317ffD35C1b647c739C422",
+        "delegatorStakeBase": "351602925917190492929431"
+      },
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "524523297710260705"
+      },
+      {
+        "delegatorAddress": "0x23852ad4213645013E5b073738A8514F88ecf5bE",
+        "delegatorStakeBase": "9408710667"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "386331582736595855"
+      },
+      {
+        "delegatorAddress": "0x1EFf243Cc9f239E69Df647a2D2be0B536C3B42a0",
+        "delegatorStakeBase": "873874213468"
+      },
+      {
+        "delegatorAddress": "0xbE2488EE9c4B4F5b357b511b70BBE2fbac321DaD",
+        "delegatorStakeBase": "5403718589755511350714"
+      },
+      {
+        "delegatorAddress": "0x399f26e0A3D9E223c7437c6AaBDABc57b5A838cB",
+        "delegatorStakeBase": "5048317068157241545884"
+      },
+      {
+        "delegatorAddress": "0x8757406c293Bdf16A19aa3f97e7D4139797d4cCB",
+        "delegatorStakeBase": "10953227257593281"
+      },
+      {
+        "delegatorAddress": "0x9D41ecceDD6911C60c523D528a326f0DC2b59F4e",
+        "delegatorStakeBase": "19067705604198109804773"
+      },
+      {
+        "delegatorAddress": "0x0689225502484E7A4ce1eaEcD428Fed4CD8C80df",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x15fB23A126174348E4ff03F217530bC01c681891",
+        "delegatorStakeBase": "706764389542013816423"
+      },
+      {
+        "delegatorAddress": "0x2799ee83D02761B7881aaa174d1c73163e1764C3",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x788b91a42Fe8D91536881ae28bFCF4Dd56605d7C",
+        "delegatorStakeBase": "440487077515"
+      },
+      {
+        "delegatorAddress": "0x840D11b8Cfd350c930AF8E3642F576Dc8A101428",
+        "delegatorStakeBase": "2627790558828027631897"
+      },
+      {
+        "delegatorAddress": "0xAb7e112FCDAF26baAC2CaB135c9655F748318cc5",
+        "delegatorStakeBase": "966963227921"
+      },
+      {
+        "delegatorAddress": "0xD4d80c5889b8863811A06163ed065241F298b95a",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xd571113086368254787902e2a0d8Fd9122e0a1CD",
+        "delegatorStakeBase": "3138033889566541344921"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 38,
+    "nodeName": "drMurlly3",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "34",
+    "nodeStake": 83048.31,
+    "nodeStakeAbsolute": "83048317205737063678227",
+    "nodeAsk": 0.002,
+    "nodeAskAbsolute": "2000000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 31,
+    "nodeOperatorFees": [["1000", "1735171285"]],
+    "nodePower": "10189199364950676",
+    "nodeHealth": "15",
+    "nodeId": "0x516d646f736d544b656a42416879587a716d696465464b5579584d6975634c5857525a76465354396d6b38623337",
+    "computedNodeStake": "83048317205737063678214",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "12998000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x31637faCEfbb72bA93679e282378148d18bd4276",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xfe8c1e0D733815Bdd889144ea721a39b44fdA866",
+        "delegatorStakeBase": "1000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x2549393a45A63dc08Ecf6CB2C76710DcFC6832fD",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x984e58e26985a24ecF7B424281A230B26dC81dD5",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x14D761b2c84d99c2b9f8aF3206dd8D764ed89D81",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1411081c256e54EC0F6F6Bc7B4936D7f2E3c0271",
+        "delegatorStakeBase": "119706402189690537937"
+      },
+      {
+        "delegatorAddress": "0xe304666CBbF6f836Fb97F235999b17352b74Cac7",
+        "delegatorStakeBase": "3668383810568690628200"
+      },
+      {
+        "delegatorAddress": "0x58214ca260a6344C0CA8F465CD33Cd516fe5A3F7",
+        "delegatorStakeBase": "15512946981526453371819"
+      },
+      {
+        "delegatorAddress": "0x2e1b1e1E91318Ea5a6A122b4F5bf07c562C59301",
+        "delegatorStakeBase": "589000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x1eDb87F1510622845B12853d11C7dFAAF14494E8",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x38df5EaB959095F4589686f4D725c7d0a7ba8F75",
+        "delegatorStakeBase": "168329266029235896425"
+      },
+      {
+        "delegatorAddress": "0x00Bc1ACBf18De6B09Cc7a78d20a0e22A63Bcc494",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xc37F44186703a322AAf77e8c7Abf5d96d0446e1E",
+        "delegatorStakeBase": "11058999999999999999999"
+      },
+      {
+        "delegatorAddress": "0x23a881E335A116e8edf04AD2c254ED10Ce489ABF",
+        "delegatorStakeBase": "1002360262956717808718"
+      },
+      {
+        "delegatorAddress": "0x2dFeC97F3221DA9d9BCCb6D2F706aD1b53411454",
+        "delegatorStakeBase": "10082905129842914289455"
+      },
+      {
+        "delegatorAddress": "0x94def13CFB8BAf13c62d18b14E402616A25AD444",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x0e54b1913426aD5588DD9363eCf80ABd288A4a89",
+        "delegatorStakeBase": "100000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xAB543DfFa0E9EB2F8ED3A46aF9e9923fA4B168A1",
+        "delegatorStakeBase": "4930331697254348"
+      },
+      {
+        "delegatorAddress": "0x3f203b41906C0d099Dc82b7C71aDc27De4323001",
+        "delegatorStakeBase": "5161649090546109348216"
+      },
+      {
+        "delegatorAddress": "0xdC5387E655781d2C83067169E3cf395D8202F4d4",
+        "delegatorStakeBase": "3337791750485372"
+      },
+      {
+        "delegatorAddress": "0x3902F114088AC61B054EE5904c390183aBACb2b1",
+        "delegatorStakeBase": "3096989454327665608929"
+      },
+      {
+        "delegatorAddress": "0xB51dA33B5b218225680FB18eEFb82F7AbD9814C8",
+        "delegatorStakeBase": "19488038539626138448781"
+      },
+      {
+        "delegatorAddress": "0x10C7aaFb769BeC2Db2a872D9019d2C70F85a618c",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x0689225502484E7A4ce1eaEcD428Fed4CD8C80df",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x077332F0da13d000F13A62F88532943822673eA0",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x102547bd0075f7228f351452F762be6047356814",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1f26633a2dE2DBd66950f5F821781EE852e7A04d",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x61e8cA6805D0deC29e156Ab57042Fa3A11a06187",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x77DAe4BcB3bfE1458AB0e2E92C3667433C6f67F5",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xAb9Ff3b61c1fbC40D1ac6610b3b1093805165fb9",
+        "delegatorStakeBase": "1"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 39,
+    "nodeName": "FACEMELT",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 162858.09,
+    "nodeStakeAbsolute": "162858090188261543999567",
+    "nodeAsk": 0.0026,
+    "nodeAskAbsolute": "2600000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 35,
+    "nodeOperatorFees": [
+      ["0", "1735171290"],
+      ["500", "1741971225"],
+      ["500", "1744567085"]
+    ],
+    "nodePower": "13486469459881616",
+    "nodeHealth": "0",
+    "nodeId": "0x516d643953517a61347641723667657a645551434757746b7668674235373564524a6d6139466a6a585664477165",
+    "computedNodeStake": "162858090188261543999555",
+    "delegators": [
+      {
+        "delegatorAddress": "0x6447B9B40536436b42424A984876d7e3B858F8f7",
+        "delegatorStakeBase": "1000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x50D55e6Ed4146425C52c26521FF14be90bd4d1A5",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x6Cf9518911F98Be2f9B655EFCECCB4e988a33935",
+        "delegatorStakeBase": "524579702836"
+      },
+      {
+        "delegatorAddress": "0x34446D2b12bCb468403386Be511EA857e41d5C04",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB598c060EF2b844286ed60e2eB5058dC69A2AD84",
+        "delegatorStakeBase": "37662393611211664609734"
+      },
+      {
+        "delegatorAddress": "0x24393a7E6b782762567D97e3800601eB7f8E80a5",
+        "delegatorStakeBase": "15725521100762724357774"
+      },
+      {
+        "delegatorAddress": "0x2e1b1e1E91318Ea5a6A122b4F5bf07c562C59301",
+        "delegatorStakeBase": "645000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x2C3d48240CA1f544fF71ab11F0ba80Da277C539f",
+        "delegatorStakeBase": "47860000000000000000"
+      },
+      {
+        "delegatorAddress": "0xF3057792478fDf9F2899af41a6366e767ed89961",
+        "delegatorStakeBase": "385550000000000000000"
+      },
+      {
+        "delegatorAddress": "0x930Ad55a9330b53D14001Ab0cBe017dA83D1D331",
+        "delegatorStakeBase": "745353230150153126760"
+      },
+      {
+        "delegatorAddress": "0x07cEae37D0Cff6BaEb729B885e36527Bd123baeb",
+        "delegatorStakeBase": "9000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x7A0B2557b94E65d8BF16E3511f2bB9AAF62D33d1",
+        "delegatorStakeBase": "50000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x95420C8F22c95E94F0c443d4c075B819644014b0",
+        "delegatorStakeBase": "1003831553951619215747"
+      },
+      {
+        "delegatorAddress": "0x3e23706eba2703a61694460E3B6a845758AEC896",
+        "delegatorStakeBase": "507131119129"
+      },
+      {
+        "delegatorAddress": "0x23a881E335A116e8edf04AD2c254ED10Ce489ABF",
+        "delegatorStakeBase": "499999999999999999999"
+      },
+      {
+        "delegatorAddress": "0xBf0b7bCb58ed411F702526c5307760d38a7682CE",
+        "delegatorStakeBase": "1120000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xED85Ace7Cc10b996A84905e5635F25228De8DF6a",
+        "delegatorStakeBase": "20000000000000000000000"
+      },
+      {
+        "delegatorAddress": "0xe390C583024720A3cf610eD6fbeCb0f8A9E53C1E",
+        "delegatorStakeBase": "1574869627290662866566"
+      },
+      {
+        "delegatorAddress": "0xb4208E12c77788d4f51e8204A2408A9469FE89c4",
+        "delegatorStakeBase": "125823191349"
+      },
+      {
+        "delegatorAddress": "0x6B06Fb68bff1BAA72F668c2705EFADb888269374",
+        "delegatorStakeBase": "346579014401"
+      },
+      {
+        "delegatorAddress": "0xfA24290d3DaE3170bD4Fc2Ca5E3698Af9e1986e6",
+        "delegatorStakeBase": "22535655595647"
+      },
+      {
+        "delegatorAddress": "0x4f1Bc75be790B26341eaeF70f788FD3A94474E2f",
+        "delegatorStakeBase": "667414977250"
+      },
+      {
+        "delegatorAddress": "0x96b915F7f8E2111A8a2123f5d0eF6DCcC74e9069",
+        "delegatorStakeBase": "706257413207"
+      },
+      {
+        "delegatorAddress": "0x73bD57e45b16cdCf75b7775B9605304A7f659483",
+        "delegatorStakeBase": "3002045593332014547329"
+      },
+      {
+        "delegatorAddress": "0x5aD5d14fD858a729736Aad114A25f89319F9A2d8",
+        "delegatorStakeBase": "21394504979213882089239"
+      },
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "20052570392450147"
+      },
+      {
+        "delegatorAddress": "0x8CEA81b7F23a0F56Cd98A76cc9a82F2970bA1f7e",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "40196153978801397"
+      },
+      {
+        "delegatorAddress": "0x61e8cA6805D0deC29e156Ab57042Fa3A11a06187",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x1a4B7b5E62b4b2db338B6Cb4Bea4E34e37fb3573",
+        "delegatorStakeBase": "100218031897667979"
+      },
+      {
+        "delegatorAddress": "0x5a1DA3E17B415D912cC34D92f9ce275eac1b5cc6",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x7bA439cb6043f603EB7fDaD70f873b566690cF07",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0x990a26caf47319ab09f8A11D79e1B3B5e67731bB",
+        "delegatorStakeBase": "1"
+      },
+      {
+        "delegatorAddress": "0xa63c0a4FE845E2A755b197953b193B56eDe0b75a",
+        "delegatorStakeBase": "49999999999999999999"
+      },
+      {
+        "delegatorAddress": "0xE75DB83E99b88Fe621620aD51137a959c8f43F6D",
+        "delegatorStakeBase": "179113253059"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 40,
+    "nodeName": "🐔",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 1,
+    "nodeStakeAbsolute": "1000000000000000000",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["2500", "1735171295"]],
+    "nodePower": "500000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d614467774a647a385558694a655237776168796770366e53446679595a45615a4173716544764b64697a5154",
+    "computedNodeStake": "1000000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "1000000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 41,
+    "nodeName": "testNode",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["10000", "1735171305"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6158564834527a345264526b357137395a777656576b4468424331317a376962504444374c79777964746d47",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 42,
+    "nodeName": "drMurlly5",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["4000", "1735171315"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d64505579317745585a39793658654d443162556b585479485778504743563131344e65555852325a35466357",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 43,
+    "nodeName": "🐋",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 3.3,
+    "nodeStakeAbsolute": "3300000000000000000",
+    "nodeAsk": 0.006666666,
+    "nodeAskAbsolute": "6666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["300", "1735171330"]],
+    "nodePower": "5445000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d51706a714b567974684447416442684e7965574e746f726b6d4a4161745474546b644d6f7942475348454147",
+    "computedNodeStake": "3300000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x3Ea854e9F4b28F3A48634ad4cd60e3Ae014a0F9e",
+        "delegatorStakeBase": "3000000000000000000"
+      },
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "300000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 44,
+    "nodeName": "drMurlly3²",
+    "relativeNodePower": "51",
+    "relativeNodeHealth": "95",
+    "nodeStake": 1999999,
+    "nodeStakeAbsolute": "1999999009672046802666161",
+    "nodeAsk": 0.0018,
+    "nodeAskAbsolute": "1800000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["1000", "1735171335"]],
+    "nodePower": "2270065263081716375",
+    "nodeHealth": "42",
+    "nodeId": "0x516d636a3265517259543246516558584b56486b6d4750786b4a6973475578335a544b39766e7738513171736b54",
+    "computedNodeStake": "1999999009672046802666160",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "1949274980297839132994683"
+      },
+      {
+        "delegatorAddress": "0xfe8c1e0D733815Bdd889144ea721a39b44fdA866",
+        "delegatorStakeBase": "50724029374207669671477"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 45,
+    "nodeName": "PolyC",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["500", "1735171345"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5938774e443451716b74777766584d3664664b70445262735a6f326a437873756e434a4e52794237576d5236",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 46,
+    "nodeName": "SpeedyWeedy",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["100", "1735171355"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d636d7544435a456d6662326858446a7970525747583679646431777643617a596b4858555535775a7a595362",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 47,
+    "nodeName": "Gnosis test run 10",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0.1,
+    "nodeStakeAbsolute": "100000000000000000",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["0", "1735171360"]],
+    "nodePower": "5000",
+    "nodeHealth": "0",
+    "nodeId": "0x516d61664a5a4d7a634638526a6947515348683167393736763837647439636e654e76315a46717233597772694b",
+    "computedNodeStake": "100000000000000000",
+    "delegators": [
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "100000000000000000"
+      }
+    ],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 48,
+    "nodeName": "DMaaST",
+    "relativeNodePower": "52",
+    "relativeNodeHealth": "43",
+    "nodeStake": 2000000.03,
+    "nodeStakeAbsolute": "2000000037211532171455364",
+    "nodeAsk": 0.00175,
+    "nodeAskAbsolute": "1750000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 3,
+    "nodeOperatorFees": [["500", "1735171365"]],
+    "nodePower": "2301262739209399227",
+    "nodeHealth": "19",
+    "nodeId": "0x516d563550734472525465424d36336736347637314a3134686b78797839336b51717a7a7a43454e743951726f43",
+    "computedNodeStake": "2000000037211532171455363",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "991384145236975306743228"
+      },
+      {
+        "delegatorAddress": "0x7232Af3552C83E646E4A43368CCDe98c4433533f",
+        "delegatorStakeBase": "500500794074631064173103"
+      },
+      {
+        "delegatorAddress": "0x0E62bDC912A42367AE317ffD35C1b647c739C422",
+        "delegatorStakeBase": "508115097899925800539032"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 49,
+    "nodeName": "DeSci Paranet Node",
+    "relativeNodePower": "45",
+    "relativeNodeHealth": "52",
+    "nodeStake": 2000000,
+    "nodeStakeAbsolute": "2000000000000000000000000",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 8,
+    "nodeOperatorFees": [["500", "1735171370"]],
+    "nodePower": "2000000000000000000",
+    "nodeHealth": "23",
+    "nodeId": "0x516d6155614e3741666e4e784a714d667964756e4e527a395773794d455144563146613934616450343638375631",
+    "computedNodeStake": "1999999999999999999999998",
+    "delegators": [
+      {
+        "delegatorAddress": "0x599C59081d9B673BBDdAfbc933B669aA84eA3eE1",
+        "delegatorStakeBase": "4049372505558661195597"
+      },
+      {
+        "delegatorAddress": "0x712Ee4a3b10f4598e00D0F85B88D827d493d0940",
+        "delegatorStakeBase": "69199160223578864560754"
+      },
+      {
+        "delegatorAddress": "0x6c4b96cfCE013C8d63DA25f7227CbBb350fEB6E3",
+        "delegatorStakeBase": "4069547010276815182331"
+      },
+      {
+        "delegatorAddress": "0x1473FCeaAb73108F17463a75A62d16eB77edEe95",
+        "delegatorStakeBase": "25212587000316007507456"
+      },
+      {
+        "delegatorAddress": "0xEa58F70F78302aE7E43a13E0617b66fbB49C15D7",
+        "delegatorStakeBase": "14695214960784773314371"
+      },
+      {
+        "delegatorAddress": "0x0E62bDC912A42367AE317ffD35C1b647c739C422",
+        "delegatorStakeBase": "844614013906979397045378"
+      },
+      {
+        "delegatorAddress": "0x54e8E41B7620A49b2451634D9fd56650f0835Bb6",
+        "delegatorStakeBase": "1014596611886515876921402"
+      },
+      {
+        "delegatorAddress": "0xcd97C87a7cf6B7292EcaEbf2180eAB7Cc168a77e",
+        "delegatorStakeBase": "23563492505989604272709"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 50,
+    "nodeName": "Polkabot",
+    "relativeNodePower": "58",
+    "relativeNodeHealth": "15",
+    "nodeStake": 2007307.51,
+    "nodeStakeAbsolute": "2007307516415328414352260",
+    "nodeAsk": 0.0014,
+    "nodeAskAbsolute": "1400000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 2,
+    "nodeOperatorFees": [["500", "1735171375"]],
+    "nodePower": "2567358467363263649",
+    "nodeHealth": "7",
+    "nodeId": "0x516d63356a417764747a464762353654664869357969417441514a597a455a5a584b62665a704469624b524e356a",
+    "computedNodeStake": "2007307516415328414352259",
+    "delegators": [
+      {
+        "delegatorAddress": "0x0E62bDC912A42367AE317ffD35C1b647c739C422",
+        "delegatorStakeBase": "740626086125148574909170"
+      },
+      {
+        "delegatorAddress": "0x02CC95B317FfFf75878A8508885aE4842c6d2694",
+        "delegatorStakeBase": "1266681430290179839443089"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 51,
+    "nodeName": "SBB",
+    "relativeNodePower": "58",
+    "relativeNodeHealth": "45",
+    "nodeStake": 2006495.16,
+    "nodeStakeAbsolute": "2006495169433421947338252",
+    "nodeAsk": 0.0014,
+    "nodeAskAbsolute": "1400000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 1,
+    "nodeOperatorFees": [["500", "1735171385"]],
+    "nodePower": "2567358467363263649",
+    "nodeHealth": "20",
+    "nodeId": "0x516d6533734142574d76735463437765486665474845647a6a3674514a51514b32644675336e4650437457764e63",
+    "computedNodeStake": "2006495169433421947338252",
+    "delegators": [
+      {
+        "delegatorAddress": "0x0E62bDC912A42367AE317ffD35C1b647c739C422",
+        "delegatorStakeBase": "2006495169433421947338252"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 52,
+    "nodeName": "EG - Luigi",
+    "relativeNodePower": "56",
+    "relativeNodeHealth": "56",
+    "nodeStake": 2003903.21,
+    "nodeStakeAbsolute": "2003903215797224882879889",
+    "nodeAsk": 0.0015,
+    "nodeAskAbsolute": "1500000000000000",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 5,
+    "nodeOperatorFees": [["500", "1735171395"]],
+    "nodePower": "2482808224329757272",
+    "nodeHealth": "25",
+    "nodeId": "0x516d54736f4d6452364355367a4643316f786b43504875385273547443597448346641474a76754e4c3563755877",
+    "computedNodeStake": "2003903215797224882879885",
+    "delegators": [
+      {
+        "delegatorAddress": "0x874d218e6d28534D7aF5Ff97674BE65EDa375b18",
+        "delegatorStakeBase": "150925649253266281647476"
+      },
+      {
+        "delegatorAddress": "0x0E62bDC912A42367AE317ffD35C1b647c739C422",
+        "delegatorStakeBase": "846803571120276235315553"
+      },
+      {
+        "delegatorAddress": "0x42d9c67a77773FAde2B14Fb4Aec95FBCE61E23eE",
+        "delegatorStakeBase": "2807217076110752838"
+      },
+      {
+        "delegatorAddress": "0xB31fB8F1629fd1523bBd4f0AEf474bEce3e3453E",
+        "delegatorStakeBase": "193184831044180840"
+      },
+      {
+        "delegatorAddress": "0x02CC95B317FfFf75878A8508885aE4842c6d2694",
+        "delegatorStakeBase": "1006170995021775210983178"
+      }
+    ],
+    "inShardingTable": true
+  },
+  {
+    "identityId": 53,
+    "nodeName": "TRACmaster",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0.001666666,
+    "nodeAskAbsolute": "1666666666666666",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["200", "1735171405"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d6446333866326e75644e627a576a6a4c4757696a6d71664d746546534142467639566432557768537243454c",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 54,
+    "nodeName": "Positron",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735632640"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d546a31534b4c756950486d66526533504d3139734d397a6e75507962485a5679756553455451784550573678",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 55,
+    "nodeName": "Positron node",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1735639650"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5576514b4333754453335574315969786b75795366413370487837724a7468596555754b525769353675644e",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 56,
+    "nodeName": "Antares",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1750865315"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d554e6e475763516765617435346e3344704c524d4853487076634744686a6e4c3277644557426e6f39654543",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 57,
+    "nodeName": "Fomalhaut",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1750865780"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d61565974465a637261536e564d707a4868647848585a4862366a75584151575a357461536857485751535568",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 58,
+    "nodeName": "Centauri",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1750865955"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5445697343766437655969414e7156477648643652477051337275317064373751786e6e3937505a50336935",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  },
+  {
+    "identityId": 59,
+    "nodeName": "Hydra",
+    "relativeNodePower": "0",
+    "relativeNodeHealth": "0",
+    "nodeStake": 0,
+    "nodeStakeAbsolute": "0",
+    "nodeAsk": 0,
+    "nodeAskAbsolute": "0",
+    "nodePublishingFactor": 0,
+    "delegatorsCount": 0,
+    "nodeOperatorFees": [["0", "1750866140"]],
+    "nodePower": "0",
+    "nodeHealth": "0",
+    "nodeId": "0x516d5a636553556737765645587163486e51624b4d69685a344b6e3565744c586248623577537a543852344a314b",
+    "computedNodeStake": "0",
+    "delegators": [],
+    "inShardingTable": false
+  }
+]
