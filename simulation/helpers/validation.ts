@@ -4,7 +4,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import { TransactionData } from './db-helpers';
 import { RPC_URLS } from './simulation-constants';
-import { addDelegator } from './simulation-helpers';
+import { addDelegator, migrateDelegator } from './simulation-helpers';
 
 export async function validateStakingTransaction(
   contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -121,6 +121,7 @@ export async function verifyMainnetStakingStorageState(
   delegatorAddress: string | null,
   blockNumber: number,
 ): Promise<void> {
+  // TODO: add MigratorM1V8 to the list of contracts to verify
   const shouldVerify =
     (tx.contract === 'Staking' &&
       [
@@ -225,6 +226,7 @@ export async function verifyMainnetStakingStorageState(
 }
 
 export async function initializeValidationVariables(
+  hre: HardhatRuntimeEnvironment,
   contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
   tx: TransactionData,
 ): Promise<{
@@ -262,6 +264,23 @@ export async function initializeValidationVariables(
       delegatorsCount = (
         await contracts.delegatorsInfo.getDelegators(identityId)
       ).length;
+
+      // If the delegator is not accounted for and requests a withdrawal, that means the delegator was not migrated in the beginning of the simulation
+      // migrate the delegator and call prepareForStakeChange for previous epochs before executing the transaction
+      if (tx.functionName === 'requestWithdrawal') {
+        await migrateDelegator(hre, contracts, tx.from);
+        const currentEpoch = await contracts.chronos.getCurrentEpoch();
+        const delegatorKey = ethers.keccak256(
+          ethers.solidityPacked(['address'], [tx.from]),
+        );
+        for (let epoch = 1; epoch < currentEpoch; epoch++) {
+          await contracts.staking._prepareForStakeChange(
+            epoch,
+            identityId,
+            delegatorKey,
+          );
+        }
+      }
     }
 
     if (tx.functionName === 'redelegate') {
@@ -280,6 +299,7 @@ export async function initializeValidationVariables(
         );
     }
   } else if (
+    // TODO: add MigratorM1V8 here
     tx.contract === 'Migrator' &&
     tx.functionName === 'migrateDelegatorData'
   ) {
@@ -307,6 +327,7 @@ export async function validateDelegatorsCount(
   isNodeDelegator: boolean,
   delegatorsCount: number,
 ) {
+  // TODO: add MigratorM1V8 here
   if (
     tx.contract === 'Migrator' &&
     tx.functionName === 'migrateDelegatorData'
@@ -329,7 +350,6 @@ export async function validateDelegatorsCount(
         console.log(
           `[VALIDATE DELEGATORS COUNT] Adding delegator ${tx.from} for identity ${tx.functionInputs[0]} - requestWithdrawal (why was this not a delegator before?)`,
         );
-        await addDelegator(hre, contracts, tx.functionInputs[0], tx.from);
       }
       await _validateDelegatorsCount(contracts, identityId, delegatorsCount);
     }
