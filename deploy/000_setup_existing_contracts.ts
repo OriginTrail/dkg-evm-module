@@ -103,6 +103,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       'StakingKPI',
       'Profile',
       'RandomSampling',
+      'MigratorM1V8',
     ];
 
     if (contractsToSkip.includes(contractName)) {

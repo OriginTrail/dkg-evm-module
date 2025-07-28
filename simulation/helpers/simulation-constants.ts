@@ -55,6 +55,12 @@ export const NETWORK_HUBS = {
   '0x882D0BF07F956b1b94BBfe9E77F47c6fc7D4EC8f': 'gnosis_mainnet',
 } as const;
 
+export const OLD_HUB_ADDRESSES = {
+  base_mainnet: '0xaBfcf2ad1718828E7D3ec20435b0d0b5EAfbDf2c',
+  neuroweb_mainnet: '0x5fA7916c48Fe6D5F1738d12Ad234b78c90B4cAdA',
+  gnosis_mainnet: '0xbEF14fc04F870c2dD65c13Df4faB6ba01A9c746b',
+} as const;
+
 /**
  * Simulation-specific constants
  */
